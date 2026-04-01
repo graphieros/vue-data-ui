@@ -1,7 +1,9 @@
 export function calcMaxAspectRatio(row, length) {
     const rowLength = row.length;
     if (rowLength === 0) {
-        throw new Error(`Max aspect ratio cannot be computed: ${row} is an empty array`);
+        throw new Error(
+            `Max aspect ratio cannot be computed: ${row} is an empty array`,
+        );
     } else {
         let minArea = Infinity;
         let maxArea = -Infinity;
@@ -18,7 +20,7 @@ export function calcMaxAspectRatio(row, length) {
         }
         const result = Math.max(
             (length ** 2 * maxArea) / sumArea ** 2,
-            sumArea ** 2 / (length ** 2 * minArea)
+            sumArea ** 2 / (length ** 2 * minArea),
         );
         return result;
     }
@@ -34,15 +36,16 @@ export function containerToRect(container) {
     };
 }
 
-export function doesAddingToRowImproveAspectRatio(currentRow, nextDatum, length) {
+export function doesAddingToRowImproveAspectRatio(
+    currentRow,
+    nextDatum,
+    length,
+) {
     if (currentRow.length === 0) {
         return true;
     } else {
         const newRow = currentRow.concat(nextDatum);
-        const currentMaxAspectRatio = calcMaxAspectRatio(
-            currentRow,
-            length
-        );
+        const currentMaxAspectRatio = calcMaxAspectRatio(currentRow, length);
         const newMaxAspectRatio = calcMaxAspectRatio(newRow, length);
         return currentMaxAspectRatio >= newMaxAspectRatio;
     }
@@ -64,9 +67,9 @@ export function flatten(matrix) {
 export function generateTreemap(data, container) {
     const input = {
         ...container,
-        children: data
-    }
-    return recurse(input)
+        children: data,
+    };
+    return recurse(input);
 }
 
 export function getArea(rect) {
@@ -76,7 +79,9 @@ export function getArea(rect) {
 export function getCoordinates(row, rect) {
     const { width, height, xOffset, yOffset } = rectToContainer(rect);
     const rowLength = row.length;
-    const sum = row.map(r => r.normalizedValue || 0).reduce((a, b) => a + b, 0);
+    const sum = row
+        .map((r) => r.normalizedValue || 0)
+        .reduce((a, b) => a + b, 0);
     const valueWidth = sum / height;
     const valueHeight = sum / width;
     let subXOffset = xOffset;
@@ -125,9 +130,7 @@ export function getShortestEdge(input) {
 
 export function normalize(data, val) {
     const dataLen = data.length;
-    const sum = data
-        .map(d => d.value ?? 0)
-        .reduce((a, b) => a + b, 0);
+    const sum = data.map((d) => d.value ?? 0).reduce((a, b) => a + b, 0);
     const multiplier = val / sum;
     const result = [];
     let elementResult, datum;
@@ -166,9 +169,7 @@ export function squarify(inputData, inputCurrentRow, inputRect, inputStack) {
         const width = getShortestEdge(rect);
         const nextDatum = data[0];
         const restData = data.slice(1, dataLength);
-        if (
-            doesAddingToRowImproveAspectRatio(currentRow, nextDatum, width)
-        ) {
+        if (doesAddingToRowImproveAspectRatio(currentRow, nextDatum, width)) {
             const newRow = currentRow.concat(nextDatum);
             data = restData;
             currentRow = newRow;
@@ -195,10 +196,7 @@ export function recurse(datum) {
     if (typeof datum.children === 'undefined' || !datum.children.length) {
         return [datum];
     } else {
-        const normalizedChildren = normalize(
-            datum.children,
-            getArea(datum)
-        )
+        const normalizedChildren = normalize(datum.children, getArea(datum));
         const squarified = squarify(normalizedChildren, [], datum, []);
 
         const squarifiedLength = squarified.length;
@@ -236,7 +234,6 @@ export function trimArea(rect, value) {
     }
 }
 
-
 const treemap = {
     calcMaxAspectRatio,
     containerToRect,
@@ -250,7 +247,7 @@ const treemap = {
     rectToContainer,
     recurse,
     squarify,
-    trimArea
-}
+    trimArea,
+};
 
 export default treemap;

@@ -1,4 +1,4 @@
-import { nextTick, onBeforeUnmount, ref } from "vue";
+import { nextTick, onBeforeUnmount, ref } from 'vue';
 
 function areNumbersFinite(valueA, valueB) {
     return Number.isFinite(valueA) && Number.isFinite(valueB);
@@ -76,7 +76,7 @@ export function useStableElementSize({
         height.value = candidateHeight;
         isStable.value = true;
 
-        if (typeof onSizeAccepted === "function") {
+        if (typeof onSizeAccepted === 'function') {
             onSizeAccepted({ width: candidateWidth, height: candidateHeight });
         }
 
@@ -103,7 +103,10 @@ export function useStableElementSize({
             return;
         }
 
-        const currentCandidateSize = { width: candidateWidth, height: candidateHeight };
+        const currentCandidateSize = {
+            width: candidateWidth,
+            height: candidateHeight,
+        };
 
         if (areSizesEqual(currentCandidateSize, lastCandidateSize)) {
             stableFrameCount += 1;

@@ -9,7 +9,7 @@ import {
     defineAsyncComponent,
     shallowRef,
     toRefs,
-} from "vue";
+} from 'vue';
 import {
     abbreviate,
     applyDataLabel,
@@ -35,36 +35,42 @@ import {
     XMLNS,
     checkNaN,
     treeShake,
-} from "../lib";
-import{
-    buildValuePercentageLabel,
-} from "../labelUtils";
-import { throttle } from "../canvas-lib";
-import { useConfig } from "../useConfig";
-import { useLoading } from "../useLoading";
-import { usePrinter } from "../usePrinter";
-import { useSvgExport } from "../useSvgExport";
-import { useNestedProp } from "../useNestedProp";
-import { useResponsive } from "../useResponsive";
-import { useThemeCheck } from "../useThemeCheck";
-import { useUserOptionState } from "../useUserOptionState";
-import { useChartAccessibility } from "../useChartAccessibility";
-import img from "../img";
-import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
-import themes from "../themes/vue_ui_nested_donuts.json";
-import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
-import BaseScanner from "../atoms/BaseScanner.vue";
-import A11yDataTable from "../atoms/A11yDataTable.vue";
-import BaseLegendToggle from "../atoms/BaseLegendToggle.vue";
+} from '../lib';
+import { buildValuePercentageLabel } from '../labelUtils';
+import { throttle } from '../canvas-lib';
+import { useConfig } from '../useConfig';
+import { useLoading } from '../useLoading';
+import { usePrinter } from '../usePrinter';
+import { useSvgExport } from '../useSvgExport';
+import { useNestedProp } from '../useNestedProp';
+import { useResponsive } from '../useResponsive';
+import { useThemeCheck } from '../useThemeCheck';
+import { useUserOptionState } from '../useUserOptionState';
+import { useChartAccessibility } from '../useChartAccessibility';
+import img from '../img';
+import Title from '../atoms/Title.vue'; // Must be ready in responsive mode
+import themes from '../themes/vue_ui_nested_donuts.json';
+import Legend from '../atoms/Legend.vue'; // Must be ready in responsive mode
+import BaseScanner from '../atoms/BaseScanner.vue';
+import A11yDataTable from '../atoms/A11yDataTable.vue';
+import BaseLegendToggle from '../atoms/BaseLegendToggle.vue';
 
 const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
 const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
-const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
-const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
-const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
-const BaseDraggableDialog = defineAsyncComponent(() => import('../atoms/BaseDraggableDialog.vue'));
+const UserOptions = defineAsyncComponent(
+    () => import('../atoms/UserOptions.vue'),
+);
+const PenAndPaper = defineAsyncComponent(
+    () => import('../atoms/PenAndPaper.vue'),
+);
+const PackageVersion = defineAsyncComponent(
+    () => import('../atoms/PackageVersion.vue'),
+);
+const BaseDraggableDialog = defineAsyncComponent(
+    () => import('../atoms/BaseDraggableDialog.vue'),
+);
 
 const { vue_ui_nested_donuts: DEFAULT_CONFIG } = useConfig();
 const { isThemeValid, warnInvalidTheme } = useThemeCheck();
@@ -90,12 +96,12 @@ const isDataset = computed({
     },
     set(bool) {
         return bool;
-    }
+    },
 });
 
 const uid = ref(createUid());
 const isTooltip = ref(false);
-const tooltipContent = ref("");
+const tooltipContent = ref('');
 const selectedSerie = ref(null);
 const step = ref(0);
 const nestedDonutsChart = ref(null);
@@ -128,7 +134,9 @@ function toggleFullscreen(state) {
 
 const FINAL_CONFIG = ref(prepareConfig());
 
-const isCursorPointer = computed(() => FINAL_CONFIG.value.userOptions.useCursorPointer);
+const isCursorPointer = computed(
+    () => FINAL_CONFIG.value.userOptions.useCursorPointer,
+);
 
 const loaderDs = {
     name: '',
@@ -148,8 +156,8 @@ const loaderDs = {
             values: [1],
             color: '#CACACA',
         },
-    ]
-}
+    ],
+};
 
 const skeletonConfig = computed(() => {
     return treeShake({
@@ -164,36 +172,40 @@ const skeletonConfig = computed(() => {
                     layout: {
                         labels: {
                             dataLabels: { show: false },
-                        }
+                        },
                     },
-                    legend: { backgroundColor: 'transparent', showValue: false, showPercentage: false },
+                    legend: {
+                        backgroundColor: 'transparent',
+                        showValue: false,
+                        showPercentage: false,
+                    },
                     title: {
                         color: '#1A1A1A',
                         subtitle: {
-                            color: '#5A5A5A'
-                        }
-                    }
-                }
-            }
+                            color: '#5A5A5A',
+                        },
+                    },
+                },
+            },
         },
-        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {}
-    })
-})
+        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {},
+    });
+});
 
 const { loading, FINAL_DATASET, manualLoading } = useLoading({
     ...toRefs(props),
     FINAL_CONFIG,
     prepareConfig,
     callback: () => {
-        Promise.resolve().then(async() => {
+        Promise.resolve().then(async () => {
             await triggerAnim();
         });
     },
     skeletonDataset: props.config?.skeletonDataset ?? [loaderDs, loaderDs],
     skeletonConfig: treeShake({
         defaultConfig: FINAL_CONFIG.value,
-        userConfig: skeletonConfig.value
-    })
+        userConfig: skeletonConfig.value,
+    }),
 });
 
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } =
@@ -226,7 +238,9 @@ function prepareConfig() {
                     userConfig: props.config,
                     defaultConfig: fused,
                 }),
-                customPalette: mergedConfig.customPalette.length ? mergedConfig.customPalette : themePalettes[theme] || palette,
+                customPalette: mergedConfig.customPalette.length
+                    ? mergedConfig.customPalette
+                    : themePalettes[theme] || palette,
             };
         }
     } else {
@@ -242,21 +256,24 @@ watch(
         if (!loading.value) {
             FINAL_CONFIG.value = prepareConfig();
         }
-        userOptionsVisible.value = !FINAL_CONFIG.value.userOptions.showOnChartHover;
+        userOptionsVisible.value =
+            !FINAL_CONFIG.value.userOptions.showOnChartHover;
         prepareChart();
         titleStep.value += 1;
         tableStep.value += 1;
         legendStep.value += 1;
 
-        mutableConfig.value.dataLabels.show = FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.show;
+        mutableConfig.value.dataLabels.show =
+            FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.show;
         mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
-        mutableConfig.value.showTooltip = FINAL_CONFIG.value.style.chart.tooltip.show;
+        mutableConfig.value.showTooltip =
+            FINAL_CONFIG.value.style.chart.tooltip.show;
 
         // Other ref resets
         svg.value.width = FINAL_CONFIG.value.style.chart.width;
         svg.value.height = FINAL_CONFIG.value.style.chart.height;
     },
-    { deep: true }
+    { deep: true },
 );
 
 const padding = computed(() => {
@@ -292,27 +309,37 @@ function animateWithGhost(finalValues, duration = 1000, stagger = 50) {
                     const ghostByGroup = [];
                     let cursor = 0;
                     props.dataset.forEach((ds, groupIndex) => {
-                        const realTotal = checkNaN(ds.series.reduce(
-                            (sum, s) =>
-                                sum + checkNaN(sanitizeArray(s.values).reduce((a, b) => a + b, 0)),
-                            0
-                        ));
+                        const realTotal = checkNaN(
+                            ds.series.reduce(
+                                (sum, s) =>
+                                    sum +
+                                    checkNaN(
+                                        sanitizeArray(s.values).reduce(
+                                            (a, b) => a + b,
+                                            0,
+                                        ),
+                                    ),
+                                0,
+                            ),
+                        );
 
-                        const animatedTotal = checkNaN(animatedValues.value
-                            .slice(cursor, cursor + ds.series.length)
-                            .reduce((a, b) => a + b, 0));
+                        const animatedTotal = checkNaN(
+                            animatedValues.value
+                                .slice(cursor, cursor + ds.series.length)
+                                .reduce((a, b) => a + b, 0),
+                        );
 
                         const ghostValue = realTotal - animatedTotal;
 
                         if (ghostValue > Number.MIN_VALUE) {
                             ghostByGroup.push({
-                                name: "__ghost__",
+                                name: '__ghost__',
                                 arcOf: ds.name,
                                 arcOfId: `${uid.value}_${groupIndex}`,
                                 id: `ghost_${uid.value}_${groupIndex}`,
                                 seriesIndex: -1,
                                 datasetIndex: groupIndex,
-                                color: "transparent",
+                                color: 'transparent',
                                 value: ghostValue,
                                 fullValue: ghostValue,
                                 absoluteValues: [],
@@ -343,7 +370,7 @@ async function triggerAnim() {
     if (FINAL_CONFIG.value.startAnimation?.show) {
         const seriesList = FINAL_DATASET.value.flatMap((d) => d.series);
         const finalValues = seriesList.map((s) =>
-            sanitizeArray(s.values).reduce((a, b) => a + b, 0)
+            sanitizeArray(s.values).reduce((a, b) => a + b, 0),
         );
 
         animatedValues.value = finalValues.map(() => 0);
@@ -351,17 +378,18 @@ async function triggerAnim() {
 
         ghostSlices.value = FINAL_DATASET.value.map((ds, i) => {
             const total = ds.series.reduce(
-                (sum, s) => sum + sanitizeArray(s.values).reduce((a, b) => a + b, 0),
-                0
+                (sum, s) =>
+                    sum + sanitizeArray(s.values).reduce((a, b) => a + b, 0),
+                0,
             );
             return {
-                name: "__ghost__",
+                name: '__ghost__',
                 arcOf: ds.name,
                 arcOfId: `${uid.value}_${i}`,
                 id: `ghost_${uid.value}_${i}`,
                 seriesIndex: -1,
                 datasetIndex: i,
-                color: "transparent",
+                color: 'transparent',
                 value: total,
                 fullValue: total,
                 absoluteValues: [],
@@ -374,7 +402,7 @@ async function triggerAnim() {
         animateWithGhost(
             finalValues,
             FINAL_CONFIG.value.startAnimation.durationMs,
-            FINAL_CONFIG.value.startAnimation.staggerMs
+            FINAL_CONFIG.value.startAnimation.staggerMs,
         ).then(() => {
             isFirstLoad.value = false;
             ghostSlices.value = [];
@@ -398,9 +426,9 @@ const debug = computed(() => !!FINAL_CONFIG.value.debug);
 function prepareChart() {
     if (objectIsEmpty(props.dataset)) {
         error({
-            componentName: "VueUiNestedDonuts",
-            type: "dataset",
-            debug: debug.value
+            componentName: 'VueUiNestedDonuts',
+            type: 'dataset',
+            debug: debug.value,
         });
         isDataset.value = false;
         manualLoading.value = true; // v3
@@ -453,7 +481,8 @@ onBeforeUnmount(() => {
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `nested_donuts_${uid.value}`,
-    fileName: FINAL_CONFIG.value.style.chart.title.text || "vue-ui-nested-donuts",
+    fileName:
+        FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-nested-donuts',
     options: FINAL_CONFIG.value.userOptions.print,
 });
 
@@ -477,28 +506,33 @@ const mutableConfig = ref({
 });
 
 // v3 - Essential to make shifting between loading config and final config work
-watch(FINAL_CONFIG, () => {
-    mutableConfig.value = {
-        dataLabels: {
-            show: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.show,
-        },
+watch(
+    FINAL_CONFIG,
+    () => {
+        mutableConfig.value = {
+            dataLabels: {
+                show: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels
+                    .show,
+            },
             showTable: FINAL_CONFIG.value.table.show,
             showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show,
-    };
-}, { immediate: true });
+        };
+    },
+    { immediate: true },
+);
 
 const svg = ref({
     width: FINAL_CONFIG.value.style.chart.width,
     height: FINAL_CONFIG.value.style.chart.height,
 });
 
-const emit = defineEmits(["selectLegend", "selectDatapoint", "copyAlt"]);
+const emit = defineEmits(['selectLegend', 'selectDatapoint', 'copyAlt']);
 
 function selectDatapoint({ datapoint, index, seriesIndex }) {
     if (FINAL_CONFIG.value.events.datapointClick) {
         FINAL_CONFIG.value.events.datapointClick({ datapoint, seriesIndex });
     }
-    emit("selectDatapoint", { datapoint, index });
+    emit('selectDatapoint', { datapoint, index });
 }
 
 function animateValue({
@@ -532,49 +566,49 @@ const immutableDataset = computed(() => {
     FINAL_DATASET.value.forEach((ds, i) => {
         if ([null, undefined].includes(ds.name)) {
             error({
-                componentName: "VueUiNestedDonuts",
-                type: "datasetSerieAttribute",
-                property: "name",
+                componentName: 'VueUiNestedDonuts',
+                type: 'datasetSerieAttribute',
+                property: 'name',
                 index: i,
-                debug: debug.value
+                debug: debug.value,
             });
         }
         if ([null, undefined].includes(ds.series)) {
             error({
-                componentName: "VueUiNestedDonuts",
-                type: "datasetSerieAttribute",
-                property: "series",
+                componentName: 'VueUiNestedDonuts',
+                type: 'datasetSerieAttribute',
+                property: 'series',
                 index: i,
-                debug: debug.value
+                debug: debug.value,
             });
         } else {
             if (ds.series.length === 0) {
                 error({
-                    componentName: "VueUiNestedDonuts",
-                    type: "datasetAttributeEmpty",
+                    componentName: 'VueUiNestedDonuts',
+                    type: 'datasetAttributeEmpty',
                     property: `series at index ${i}`,
-                    debug: debug.value
+                    debug: debug.value,
                 });
             } else {
                 ds.series.forEach((serie, j) => {
                     if ([null, undefined].includes(serie.name)) {
                         error({
-                            componentName: "VueUiNestedDonuts",
-                            type: "datasetSerieAttribute",
-                            property: "name",
+                            componentName: 'VueUiNestedDonuts',
+                            type: 'datasetSerieAttribute',
+                            property: 'name',
                             index: j,
-                            key: "serie",
-                            debug: debug.value
+                            key: 'serie',
+                            debug: debug.value,
                         });
                     }
                     if ([null, undefined].includes(serie.values)) {
                         error({
-                            componentName: "VueUiNestedDonuts",
-                            type: "datasetSerieAttribute",
-                            property: "values",
+                            componentName: 'VueUiNestedDonuts',
+                            type: 'datasetSerieAttribute',
+                            property: 'values',
                             index: j,
-                            key: "serie",
-                            debug: debug.value
+                            key: 'serie',
+                            debug: debug.value,
                         });
                     }
                 });
@@ -594,7 +628,10 @@ const immutableDataset = computed(() => {
             datasetIndex: i,
             id: `${uid.value}_${i}`,
             series: ds.series.map((serie, j) => {
-                const rawValue = sanitizeArray(serie.values).reduce((a, b) => a + b, 0);
+                const rawValue = sanitizeArray(serie.values).reduce(
+                    (a, b) => a + b,
+                    0,
+                );
 
                 return {
                     name: serie.name,
@@ -608,7 +645,7 @@ const immutableDataset = computed(() => {
                         customPalette.value[j] ||
                         palette[j % palette.length],
                     value: isFirstLoad.value
-                        ? animatedValues.value[animatedCounter++] ?? 0
+                        ? (animatedValues.value[animatedCounter++] ?? 0)
                         : rawValue,
                     absoluteValues: serie.values || [],
                 };
@@ -618,11 +655,15 @@ const immutableDataset = computed(() => {
 });
 
 // v3 - Stop skeleton loader when props.dataset becomes valid
-watch(() => props.dataset, (newVal) => {
-    if (Array.isArray(newVal) && newVal.length > 0) {
-        manualLoading.value = false;
-    }
-}, { immediate: true });
+watch(
+    () => props.dataset,
+    (newVal) => {
+        if (Array.isArray(newVal) && newVal.length > 0) {
+            manualLoading.value = false;
+        }
+    },
+    { immediate: true },
+);
 
 const donutSize = computed(() => {
     return (
@@ -669,36 +710,37 @@ const mutableDataset = ref(md.value);
 
 watch(
     () => md.value,
-    (val) => (mutableDataset.value = val)
+    (val) => (mutableDataset.value = val),
 );
 
 function toggleLegend(legendSet) {
-    const ids = legendSet.map(item => item.id);
-    if (legendSet.some(l => segregated.value.includes(l.id))) {
+    const ids = legendSet.map((item) => item.id);
+    if (legendSet.some((l) => segregated.value.includes(l.id))) {
         const removeIds = new Set(ids);
-        segregated.value = segregated.value.filter(id => !removeIds.has(id));
+        segregated.value = segregated.value.filter((id) => !removeIds.has(id));
     } else {
         segregated.value.push(...ids);
     }
 }
 
 function segregateDonut(item) {
-    emit("selectLegend", item);
+    emit('selectLegend', item);
     const target = props.dataset
         .flatMap((d, i) =>
             d.series.map((s, j) => ({
                 value: sanitizeArray(s.values).reduce((a, b) => a + b, 0),
                 id: `${uid.value}_${i}_${j}`,
                 arcOfId: `${uid.value}_${i}`,
-            }))
+            })),
         )
         .find((el) => el.id === item.id);
 
     if (!target) return;
 
-    const targetValue = immutableDataset.value
-        .flatMap(ds => ds.series)
-        .find(s => s.id === item.id)?.value ?? 0;
+    const targetValue =
+        immutableDataset.value
+            .flatMap((ds) => ds.series)
+            .find((s) => s.id === item.id)?.value ?? 0;
 
     const sourceEl = mutableDataset.value
         .flatMap((d) => d.series)
@@ -709,7 +751,7 @@ function segregateDonut(item) {
     let initVal = source;
 
     const allParentDonut = immutableDataset.value.find(
-        (el) => el.id === target.arcOfId
+        (el) => el.id === target.arcOfId,
     );
     if (!allParentDonut) return;
 
@@ -717,28 +759,32 @@ function segregateDonut(item) {
     const canSegregate = checkSegregation(
         allParentDonutIds,
         allParentDonutIds.length - 1,
-        segregated.value
+        segregated.value,
     );
 
     if (segregated.value.includes(item.id)) {
-        segregated.value = segregated.value.filter(s => s !== item.id);
+        segregated.value = segregated.value.filter((s) => s !== item.id);
 
         if (FINAL_CONFIG.value.serieToggleAnimation.show) {
             animateValue({
                 from: initVal,
                 to: targetValue,
                 duration: FINAL_CONFIG.value.serieToggleAnimation.durationMs,
-                onUpdate: val => {
-                    mutableDataset.value = mutableDataset.value.map(ds => ({
+                onUpdate: (val) => {
+                    mutableDataset.value = mutableDataset.value.map((ds) => ({
                         ...ds,
-                        series: ds.series.map(s => s.id === item.id ? { ...s, value: val } : s)
+                        series: ds.series.map((s) =>
+                            s.id === item.id ? { ...s, value: val } : s,
+                        ),
                     }));
-                }
+                },
             });
         } else {
-            mutableDataset.value = mutableDataset.value.map(ds => ({
+            mutableDataset.value = mutableDataset.value.map((ds) => ({
                 ...ds,
-                series: ds.series.map(s => s.id === item.id ? { ...s, value: targetValue } : s)
+                series: ds.series.map((s) =>
+                    s.id === item.id ? { ...s, value: targetValue } : s,
+                ),
             }));
         }
     } else if (canSegregate) {
@@ -747,20 +793,24 @@ function segregateDonut(item) {
                 from: initVal,
                 to: 0,
                 duration: FINAL_CONFIG.value.serieToggleAnimation.durationMs,
-                onUpdate: val => {
-                    mutableDataset.value = mutableDataset.value.map(ds => ({
+                onUpdate: (val) => {
+                    mutableDataset.value = mutableDataset.value.map((ds) => ({
                         ...ds,
-                        series: ds.series.map(s => s.id === item.id ? { ...s, value: val } : s)
+                        series: ds.series.map((s) =>
+                            s.id === item.id ? { ...s, value: val } : s,
+                        ),
                     }));
                 },
                 onDone: () => {
                     segregated.value.push(item.id);
-                }
+                },
             });
         } else {
-            mutableDataset.value = mutableDataset.value.map(ds => ({
+            mutableDataset.value = mutableDataset.value.map((ds) => ({
                 ...ds,
-                series: ds.series.map(s => s.id === item.id ? { ...s, value: 0 } : s)
+                series: ds.series.map((s) =>
+                    s.id === item.id ? { ...s, value: 0 } : s,
+                ),
             }));
             segregated.value.push(item.id);
         }
@@ -774,8 +824,10 @@ function validSeriesToToggle(name) {
         }
         return null;
     }
-    
-    const dp = immutableDataset.value.flatMap(d => d.series).filter((el) => el.name === name)
+
+    const dp = immutableDataset.value
+        .flatMap((d) => d.series)
+        .filter((el) => el.name === name);
 
     if (!dp) {
         if (FINAL_CONFIG.value.debug) {
@@ -783,7 +835,7 @@ function validSeriesToToggle(name) {
         }
         return null;
     }
-    return dp
+    return dp;
 }
 
 function showSeries(name) {
@@ -791,11 +843,11 @@ function showSeries(name) {
     if (dp === null) return;
 
     if (Array.isArray(dp)) {
-        dp.forEach(el => {
+        dp.forEach((el) => {
             if (segregated.value.includes(el.id)) {
-                segregateDonut({ id : el.id });
+                segregateDonut({ id: el.id });
             }
-        })
+        });
     } else {
         if (segregated.value.includes(dp.id)) {
             segregateDonut({ id: dp.id });
@@ -804,16 +856,16 @@ function showSeries(name) {
 }
 
 function hideSeries(name) {
-    const dp  = validSeriesToToggle(name);
+    const dp = validSeriesToToggle(name);
     if (dp === null) return;
     if (Array.isArray(dp)) {
-        dp.forEach(el => {
+        dp.forEach((el) => {
             if (!segregated.value.includes(el.id)) {
                 segregateDonut({ id: el.id });
             }
-        })
+        });
     } else {
-        if (!segregated.value.includes(dp.id))  {
+        if (!segregated.value.includes(dp.id)) {
             segregateDonut({ id: dp.id });
         }
     }
@@ -829,44 +881,55 @@ const donutThickness = computed(() => {
 const radii = computed(() => {
     return mutableDataset.value.map((ds, i) => {
         return (
-            donutSize.value - (i * donutSize.value) / immutableDataset.value.length
+            donutSize.value -
+            (i * donutSize.value) / immutableDataset.value.length
         );
     });
 });
 
 const donuts = computed(() => {
     return mutableDataset.value.map((ds, i) => {
-        const hasData = Math.abs(ds.series.map(s => s.value).reduce((a, b) => a + b, 0)) > 0;
-        const radius = donutSize.value - (i * donutSize.value) / mutableDataset.value.length;
+        const hasData =
+            Math.abs(ds.series.map((s) => s.value).reduce((a, b) => a + b, 0)) >
+            0;
+        const radius =
+            donutSize.value -
+            (i * donutSize.value) / mutableDataset.value.length;
         const ghost = isFirstLoad.value
             ? ghostSlices.value.find((g) => g.datasetIndex === i)
             : null;
-            const series = [...ds.series, ...(ghost ? [ghost] : [])].map((s) => ({
-                ...s,
-                value: s.value < 0.00000000001 ? Number.MIN_VALUE : s.value,
-            }));
+        const series = [...ds.series, ...(ghost ? [ghost] : [])].map((s) => ({
+            ...s,
+            value: s.value < 0.00000000001 ? Number.MIN_VALUE : s.value,
+        }));
 
-            const skeleton = makeDonut(
-                { series: [
-                    { name: '_', color: FINAL_CONFIG.value.style.chart.layout.donut.emptyFill, value: 1 }
-                ]},
-                svg.value.width / 2,
-                svg.value.height / 2,
-                radius,
-                radius,
-                1.99999,
-                2,
-                1,
-                360,
-                105.25,
-                donutThickness.value
-            )
+        const skeleton = makeDonut(
+            {
+                series: [
+                    {
+                        name: '_',
+                        color: FINAL_CONFIG.value.style.chart.layout.donut
+                            .emptyFill,
+                        value: 1,
+                    },
+                ],
+            },
+            svg.value.width / 2,
+            svg.value.height / 2,
+            radius,
+            radius,
+            1.99999,
+            2,
+            1,
+            360,
+            105.25,
+            donutThickness.value,
+        );
 
-            const fullCirclePath = `M ${svg.value.width/2},${(svg.value.height/2) + radius}
+        const fullCirclePath = `M ${svg.value.width / 2},${svg.value.height / 2 + radius}
             a ${radius},${radius} 0 1,1 0,${-2 * radius}
             a ${radius},${radius} 0 1,1 0,${2 * radius}`;
 
-    
         return {
             ...ds,
             hasData,
@@ -884,7 +947,7 @@ const donuts = computed(() => {
                 1,
                 360,
                 105.25,
-                donutThickness.value
+                donutThickness.value,
             ),
         };
     });
@@ -908,7 +971,7 @@ const gradientSets = computed(() => {
                 360,
                 105.25,
                 (donutSize.value / immutableDataset.value.length) *
-                FINAL_CONFIG.value.style.chart.layout.donut.spacingRatio
+                    FINAL_CONFIG.value.style.chart.layout.donut.spacingRatio,
             )[0],
         };
     });
@@ -921,7 +984,7 @@ const dataTooltipSlot = ref(null);
 
 function handleDatapointLeave({ datapoint, seriesIndex }) {
     if (FINAL_CONFIG.value.events.datapointLeave) {
-        FINAL_CONFIG.value.events.datapointLeave({ datapoint, seriesIndex })
+        FINAL_CONFIG.value.events.datapointLeave({ datapoint, seriesIndex });
     }
     isTooltip.value = false;
     selectedDonut.value = null;
@@ -932,25 +995,24 @@ function handleDatapointLeave({ datapoint, seriesIndex }) {
     tooltipTriggerMode.value = 'pointer';
 }
 
-function buildLabel({
-    val,
-    percentage,
-    showVal,
-    showPercentage,
-    config
-}) {
+function buildLabel({ val, percentage, showVal, showPercentage, config }) {
     return buildValuePercentageLabel({
         config,
         val,
         percentage,
         showVal,
-        showPercentage
-    })
-} 
+        showPercentage,
+    });
+}
 
-function useTooltip({ datapoint, _relativeIndex, seriesIndex, triggerMode = 'pointer' }) {
+function useTooltip({
+    datapoint,
+    _relativeIndex,
+    seriesIndex,
+    triggerMode = 'pointer',
+}) {
     if (FINAL_CONFIG.value.events.datapointEnter) {
-        FINAL_CONFIG.value.events.datapointEnter({ datapoint, seriesIndex })
+        FINAL_CONFIG.value.events.datapointEnter({ datapoint, seriesIndex });
     }
 
     tooltipTriggerMode.value = triggerMode;
@@ -959,7 +1021,7 @@ function useTooltip({ datapoint, _relativeIndex, seriesIndex, triggerMode = 'poi
     selectedDonut.value = datapoint.arcOfId;
     selectedDatapoint.value = datapoint.id;
     selectedDatapointIndex.value = seriesIndex;
-    selectedSerie.value = datapoint.id
+    selectedSerie.value = datapoint.id;
 
     dataTooltipSlot.value = {
         datapoint,
@@ -978,7 +1040,7 @@ function useTooltip({ datapoint, _relativeIndex, seriesIndex, triggerMode = 'poi
                 datapoint,
                 series: mutableDataset.value,
                 config: FINAL_CONFIG.value,
-            })
+            }),
         )
     ) {
         tooltipContent.value = customFormat({
@@ -988,7 +1050,7 @@ function useTooltip({ datapoint, _relativeIndex, seriesIndex, triggerMode = 'poi
             config: FINAL_CONFIG.value,
         });
     } else {
-        let html = "";
+        let html = '';
 
         if (
             FINAL_CONFIG.value.style.chart.tooltip.showAllItemsAtIndex &&
@@ -999,45 +1061,61 @@ function useTooltip({ datapoint, _relativeIndex, seriesIndex, triggerMode = 'poi
             });
 
             itemsAtIndex.forEach((item, i) => {
-                if (!item) return "";
+                if (!item) return '';
                 html += `
-                    <div style="display:flex; flex-direction: column; justify-content:flex-start; align-items:flex-start;padding:6px 0; ${i < itemsAtIndex.length - 1
-                        ? `border-bottom:1px solid ${FINAL_CONFIG.value.style.chart.tooltip.borderColor}`
-                        : ""
+                    <div style="display:flex; flex-direction: column; justify-content:flex-start; align-items:flex-start;padding:6px 0; ${
+                        i < itemsAtIndex.length - 1
+                            ? `border-bottom:1px solid ${FINAL_CONFIG.value.style.chart.tooltip.borderColor}`
+                            : ''
                     }">
                         <div style="display:flex; flex-direction: row; gap: 3px; justify-content:flex-start; align-items:center;">
-                            <svg viewBox="0 0 20 20" height="${FINAL_CONFIG.value.style.chart.tooltip.fontSize
-                    }" width="${FINAL_CONFIG.value.style.chart.tooltip.fontSize
-                    }">
-                                <circle cx="10" cy="10" r="10" fill="${item.color
-                    }"/>
+                            <svg viewBox="0 0 20 20" height="${
+                                FINAL_CONFIG.value.style.chart.tooltip.fontSize
+                            }" width="${
+                                FINAL_CONFIG.value.style.chart.tooltip.fontSize
+                            }">
+                                <circle cx="10" cy="10" r="10" fill="${
+                                    item.color
+                                }"/>
                             </svg>
                             <span>
-                                ${item.arcOf ?? ""} - ${item.name}
+                                ${item.arcOf ?? ''} - ${item.name}
                             </span>
                         </div>
                         <span>
                             <b>
                                 ${buildLabel({
-                                    config: FINAL_CONFIG.value.style.chart.tooltip,
-                                    showVal: FINAL_CONFIG.value.style.chart.tooltip.showValue,
-                                    showPercentage: FINAL_CONFIG.value.style.chart.tooltip.showPercentage,
+                                    config: FINAL_CONFIG.value.style.chart
+                                        .tooltip,
+                                    showVal:
+                                        FINAL_CONFIG.value.style.chart.tooltip
+                                            .showValue,
+                                    showPercentage:
+                                        FINAL_CONFIG.value.style.chart.tooltip
+                                            .showPercentage,
                                     val: applyDataLabel(
-                                        FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.formatter,
+                                        FINAL_CONFIG.value.style.chart.layout
+                                            .labels.dataLabels.formatter,
                                         datapoint.value,
                                         dataLabel({
-                                            p: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.prefix,
+                                            p: FINAL_CONFIG.value.style.chart
+                                                .layout.labels.dataLabels
+                                                .prefix,
                                             v: datapoint.value,
-                                            s: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.suffix,
-                                            r: FINAL_CONFIG.value.style.chart.tooltip.roundingValue,
+                                            s: FINAL_CONFIG.value.style.chart
+                                                .layout.labels.dataLabels
+                                                .suffix,
+                                            r: FINAL_CONFIG.value.style.chart
+                                                .tooltip.roundingValue,
                                         }),
-                                        { datapoint, seriesIndex }
+                                        { datapoint, seriesIndex },
                                     ),
                                     percentage: dataLabel({
                                         v: item.proportion * 100,
-                                        s: "%",
-                                        r: FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage,
-                                    })
+                                        s: '%',
+                                        r: FINAL_CONFIG.value.style.chart
+                                            .tooltip.roundingPercentage,
+                                    }),
                                 })}
                             </b>
                         </span>
@@ -1045,23 +1123,28 @@ function useTooltip({ datapoint, _relativeIndex, seriesIndex, triggerMode = 'poi
                 `;
             });
         } else {
-            html += `<div data-cy="donut-tooltip-name" style="width:100%;text-align:center;border-bottom:1px solid ${FINAL_CONFIG.value.style.chart.tooltip.borderColor
-                };padding-bottom:6px;margin-bottom:3px;">${datapoint.arcOf ?? ""} - ${datapoint.name
-                }</div>`;
+            html += `<div data-cy="donut-tooltip-name" style="width:100%;text-align:center;border-bottom:1px solid ${
+                FINAL_CONFIG.value.style.chart.tooltip.borderColor
+            };padding-bottom:6px;margin-bottom:3px;">${datapoint.arcOf ?? ''} - ${
+                datapoint.name
+            }</div>`;
 
             html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><svg viewBox="0 0 12 12" height="14" width="14"><circle data-cy="donut-tooltip-marker" cx="6" cy="6" r="6" stroke="none" fill="${datapoint.color}"/></svg>`;
 
             if (FINAL_CONFIG.value.style.chart.tooltip.showValue) {
                 html += `<b data-cy="donut-tooltip-value">${applyDataLabel(
-                    FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.formatter,
+                    FINAL_CONFIG.value.style.chart.layout.labels.dataLabels
+                        .formatter,
                     datapoint.value,
                     dataLabel({
-                        p: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.prefix,
+                        p: FINAL_CONFIG.value.style.chart.layout.labels
+                            .dataLabels.prefix,
                         v: datapoint.value,
-                        s: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.suffix,
+                        s: FINAL_CONFIG.value.style.chart.layout.labels
+                            .dataLabels.suffix,
                         r: FINAL_CONFIG.value.style.chart.tooltip.roundingValue,
                     }),
-                    { datapoint, seriesIndex }
+                    { datapoint, seriesIndex },
                 )}</b>`;
             }
 
@@ -1069,14 +1152,16 @@ function useTooltip({ datapoint, _relativeIndex, seriesIndex, triggerMode = 'poi
                 if (!FINAL_CONFIG.value.style.chart.tooltip.showValue) {
                     html += `<b>${dataLabel({
                         v: datapoint.proportion * 100,
-                        s: "%",
-                        r: FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage,
+                        s: '%',
+                        r: FINAL_CONFIG.value.style.chart.tooltip
+                            .roundingPercentage,
                     })}</b></div>`;
                 } else {
                     html += `<span>(${dataLabel({
                         v: datapoint.proportion * 100,
-                        s: "%",
-                        r: FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage,
+                        s: '%',
+                        r: FINAL_CONFIG.value.style.chart.tooltip
+                            .roundingPercentage,
                     })})</span></div>`;
                 }
             }
@@ -1095,7 +1180,7 @@ function isArcBigEnough(arc) {
 
 function getBlurFilter(arc, index) {
     if (!FINAL_CONFIG.value.useBlurOnHover) {
-        return "";
+        return '';
     }
     if (
         FINAL_CONFIG.value.style.chart.tooltip.showAllItemsAtIndex &&
@@ -1105,7 +1190,7 @@ function getBlurFilter(arc, index) {
             [null, undefined].includes(selectedDatapointIndex.value) ||
             selectedDatapointIndex.value === index
         ) {
-            return "";
+            return '';
         } else {
             return `url(#blur_${uid.value})`;
         }
@@ -1115,10 +1200,10 @@ function getBlurFilter(arc, index) {
         segregated.value.length
     ) {
         if ([null, undefined].includes(selectedDatapoint.value)) {
-            return "";
+            return '';
         }
         if (selectedDatapoint.value === arc.id) {
-            return "";
+            return '';
         } else {
             return `url(#blur_${uid.value})`;
         }
@@ -1128,56 +1213,64 @@ function getBlurFilter(arc, index) {
 const legendSets = computed(() => {
     return immutableDataset.value.map((ds, i) => {
         const visibleSeries = ds.series.filter(
-            (s) => !segregated.value.includes(s.id)
+            (s) => !segregated.value.includes(s.id),
         );
 
         const total = isFirstLoad.value
             ? visibleSeries
-                .map((s) => {
-                    const indexInOriginal = FINAL_DATASET.value[i].series.findIndex(
-                        (orig) => orig.name === s.name
-                    );
-                    return sanitizeArray(
-                        FINAL_DATASET.value[i].series[indexInOriginal].values
-                    ).reduce((a, b) => a + b, 0);
-                })
-                .reduce((a, b) => a + b, 0)
+                  .map((s) => {
+                      const indexInOriginal = FINAL_DATASET.value[
+                          i
+                      ].series.findIndex((orig) => orig.name === s.name);
+                      return sanitizeArray(
+                          FINAL_DATASET.value[i].series[indexInOriginal].values,
+                      ).reduce((a, b) => a + b, 0);
+                  })
+                  .reduce((a, b) => a + b, 0)
             : visibleSeries.map((s) => s.value).reduce((a, b) => a + b, 0);
 
         return ds.series.map((s, j) => {
-            const rawValue = sanitizeArray(FINAL_DATASET.value[i].series[j].values).reduce(
-                (a, b) => a + b,
-                0
-            );
+            const rawValue = sanitizeArray(
+                FINAL_DATASET.value[i].series[j].values,
+            ).reduce((a, b) => a + b, 0);
             const displayValue = isFirstLoad.value ? rawValue : s.value;
 
             const valueDisplay = applyDataLabel(
-                FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.formatter,
+                FINAL_CONFIG.value.style.chart.layout.labels.dataLabels
+                    .formatter,
                 displayValue,
                 dataLabel({
-                    p: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.prefix,
+                    p: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels
+                        .prefix,
                     v: displayValue,
-                    s: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.suffix,
+                    s: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels
+                        .suffix,
                     r: FINAL_CONFIG.value.style.chart.legend.roundingValue,
                 }),
-                { datapoint: s, seriesIndex: j }
+                { datapoint: s, seriesIndex: j },
             );
 
-            const percentageDisplay = isNaN(displayValue / total) ? '-' : segregated.value.includes(s.id) ? '-' : dataLabel({
-                v: (displayValue / total) * 100,
-                s: "%",
-                r: FINAL_CONFIG.value.style.chart.legend.roundingPercentage,
-            });
+            const percentageDisplay = isNaN(displayValue / total)
+                ? '-'
+                : segregated.value.includes(s.id)
+                  ? '-'
+                  : dataLabel({
+                        v: (displayValue / total) * 100,
+                        s: '%',
+                        r: FINAL_CONFIG.value.style.chart.legend
+                            .roundingPercentage,
+                    });
 
             const _display = buildLabel({
                 val: valueDisplay,
                 percentage: percentageDisplay,
                 showVal: FINAL_CONFIG.value.style.chart.legend.showValue,
-                showPercentage: FINAL_CONFIG.value.style.chart.legend.showPercentage,
-                config: FINAL_CONFIG.value.style.chart.legend
+                showPercentage:
+                    FINAL_CONFIG.value.style.chart.legend.showPercentage,
+                config: FINAL_CONFIG.value.style.chart.legend,
             });
 
-            const display = `${s.name}${FINAL_CONFIG.value.style.chart.legend.showPercentage || FINAL_CONFIG.value.style.chart.legend.showValue ? ': ' : ''}${_display}`
+            const display = `${s.name}${FINAL_CONFIG.value.style.chart.legend.showPercentage || FINAL_CONFIG.value.style.chart.legend.showValue ? ': ' : ''}${_display}`;
 
             return {
                 name: s.name,
@@ -1185,7 +1278,7 @@ const legendSets = computed(() => {
                 value: displayValue,
                 display,
                 svgDisplay: `${s.arcOf ? `${s.arcOf} - ` : ''}${display}`,
-                shape: "circle",
+                shape: 'circle',
                 arcOf: s.arcOf,
                 id: s.id,
                 seriesIndex: j,
@@ -1201,12 +1294,12 @@ const legendSets = computed(() => {
 
 const legendConfig = computed(() => {
     return {
-        cy: "nested-donuts-legend",
+        cy: 'nested-donuts-legend',
         backgroundColor: FINAL_CONFIG.value.style.chart.legend.backgroundColor,
         color: FINAL_CONFIG.value.style.chart.legend.color,
         fontSize: FINAL_CONFIG.value.style.chart.legend.fontSize,
         paddingBottom: 12,
-        fontWeight: FINAL_CONFIG.value.style.chart.legend.bold ? "bold" : "",
+        fontWeight: FINAL_CONFIG.value.style.chart.legend.bold ? 'bold' : '',
     };
 });
 
@@ -1226,7 +1319,7 @@ const table = computed(() => {
     return { head, body };
 });
 
-function generateCsv(callback=null) {
+function generateCsv(callback = null) {
     nextTick(() => {
         const labels = table.value.head.map((h, i) => {
             return [
@@ -1234,7 +1327,7 @@ function generateCsv(callback=null) {
                 [table.value.body[i]],
                 [
                     isNaN(table.value.body[i] / h.total)
-                        ? "-"
+                        ? '-'
                         : (table.value.body[i] / h.total) * 100,
                 ],
             ];
@@ -1242,7 +1335,7 @@ function generateCsv(callback=null) {
         const tableXls = [
             [FINAL_CONFIG.value.style.chart.title.text],
             [FINAL_CONFIG.value.style.chart.title.subtitle.text],
-            [[""], ["val"], ["%"]],
+            [[''], ['val'], ['%']],
         ].concat(labels);
 
         const csvContent = createCsvContent(tableXls);
@@ -1251,12 +1344,12 @@ function generateCsv(callback=null) {
             downloadCsv({
                 csvContent,
                 title:
-                    FINAL_CONFIG.value.style.chart.title.text || "vue-ui-nested-donuts",
+                    FINAL_CONFIG.value.style.chart.title.text ||
+                    'vue-ui-nested-donuts',
             });
         } else {
             callback(csvContent);
         }
-
     });
 }
 
@@ -1281,16 +1374,16 @@ const dataTable = computed(() => {
             },
             label,
             isNaN(table.value.body[i] / h.total)
-                ? "-"
+                ? '-'
                 : dataLabel({
-                    v: (table.value.body[i] / h.total) * 100,
-                    s: "%",
-                    r: FINAL_CONFIG.value.table.td.roundingPercentage,
-                }),
+                      v: (table.value.body[i] / h.total) * 100,
+                      s: '%',
+                      r: FINAL_CONFIG.value.table.td.roundingPercentage,
+                  }),
         ];
     });
 
-    const a11yBody = body.map(b => {
+    const a11yBody = body.map((b) => {
         return b.map((c, i) => {
             if (i === 0) {
                 return c.name;
@@ -1349,19 +1442,24 @@ function toggleAnnotator() {
     isAnnotator.value = !isAnnotator.value;
 }
 
-async function getImage({ scale = 2} = {}) {
+async function getImage({ scale = 2 } = {}) {
     if (!nestedDonutsChart.value) return;
     const { width, height } = nestedDonutsChart.value.getBoundingClientRect();
     const aspectRatio = width / height;
-    const { imageUri, base64 } = await img({ domElement: nestedDonutsChart.value, base64: true, img: true, scale})
-    return { 
-        imageUri, 
-        base64, 
+    const { imageUri, base64 } = await img({
+        domElement: nestedDonutsChart.value,
+        base64: true,
+        img: true,
+        scale,
+    });
+    return {
+        imageUri,
+        base64,
         title: FINAL_CONFIG.value.style.chart.title.text,
         width,
         height,
-        aspectRatio
-    }
+        aspectRatio,
+    };
 }
 
 const G = ref(null);
@@ -1370,52 +1468,63 @@ function autoSize() {
     if (!G.value) return;
     const { x, y, width, height } = G.value.getBBox();
     if (!svgRef.value) return;
-    svgRef.value.setAttribute('viewBox', `${x} ${y} ${width + Math.min(0, x)} ${height + Math.min(0, y)}`);
+    svgRef.value.setAttribute(
+        'viewBox',
+        `${x} ${y} ${width + Math.min(0, x)} ${height + Math.min(0, y)}`,
+    );
 }
 
 const tableComponent = computed(() => {
-    const useDialog = FINAL_CONFIG.value.table.useDialog && !FINAL_CONFIG.value.table.show;
+    const useDialog =
+        FINAL_CONFIG.value.table.useDialog && !FINAL_CONFIG.value.table.show;
     const open = mutableConfig.value.showTable;
     return {
         component: useDialog ? BaseDraggableDialog : Accordion,
         title: `${FINAL_CONFIG.value.style.chart.title.text}${FINAL_CONFIG.value.style.chart.title.subtitle.text ? `: ${FINAL_CONFIG.value.style.chart.title.subtitle.text}` : ''}`,
-        props: useDialog ? {
-            backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
-            color: FINAL_CONFIG.value.table.th.color,
-            headerColor: FINAL_CONFIG.value.table.th.color,
-            headerBg: FINAL_CONFIG.value.table.th.backgroundColor,
-            isFullscreen: isFullscreen.value,
-            fullscreenParent: nestedDonutsChart.value,
-            forcedWidth: Math.min(800, window.innerWidth * 0.8),
-            isCursorPointer: isCursorPointer.value
-        } : {
-            hideDetails: true,
-            config: {
-                open,
-                maxHeight: 10000,
-                body: {
-                    backgroundColor: FINAL_CONFIG.value.style.chart.backgroundColor,
-                    color: FINAL_CONFIG.value.style.chart.color
-                },
-                head: {
-                    backgroundColor: FINAL_CONFIG.value.style.chart.backgroundColor,
-                    color: FINAL_CONFIG.value.style.chart.color
-                }
-            }
-        }
-    }
+        props: useDialog
+            ? {
+                  backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
+                  color: FINAL_CONFIG.value.table.th.color,
+                  headerColor: FINAL_CONFIG.value.table.th.color,
+                  headerBg: FINAL_CONFIG.value.table.th.backgroundColor,
+                  isFullscreen: isFullscreen.value,
+                  fullscreenParent: nestedDonutsChart.value,
+                  forcedWidth: Math.min(800, window.innerWidth * 0.8),
+                  isCursorPointer: isCursorPointer.value,
+              }
+            : {
+                  hideDetails: true,
+                  config: {
+                      open,
+                      maxHeight: 10000,
+                      body: {
+                          backgroundColor:
+                              FINAL_CONFIG.value.style.chart.backgroundColor,
+                          color: FINAL_CONFIG.value.style.chart.color,
+                      },
+                      head: {
+                          backgroundColor:
+                              FINAL_CONFIG.value.style.chart.backgroundColor,
+                          color: FINAL_CONFIG.value.style.chart.color,
+                      },
+                  },
+              },
+    };
 });
 
-watch(() => mutableConfig.value.showTable, v => {
-    if (FINAL_CONFIG.value.table.show) return;
-    if (v && FINAL_CONFIG.value.table.useDialog && tableUnit.value) {
-        tableUnit.value.open()
-    } else {
-        if ('close' in tableUnit.value) {
-            tableUnit.value.close()
+watch(
+    () => mutableConfig.value.showTable,
+    (v) => {
+        if (FINAL_CONFIG.value.table.show) return;
+        if (v && FINAL_CONFIG.value.table.useDialog && tableUnit.value) {
+            tableUnit.value.open();
+        } else {
+            if ('close' in tableUnit.value) {
+                tableUnit.value.close();
+            }
         }
-    }
-});
+    },
+);
 
 function closeTable() {
     mutableConfig.value.showTable = false;
@@ -1427,17 +1536,19 @@ function closeTable() {
 const svgBg = computed(() => FINAL_CONFIG.value.style.chart.backgroundColor);
 const svgLegend = computed(() => FINAL_CONFIG.value.style.chart.legend);
 const svgTitle = computed(() => FINAL_CONFIG.value.style.chart.title);
-const legendSet = computed(() => legendSets.value.flat().map(el => ({
-    ...el,
-    name: el.svgDisplay
-})))
+const legendSet = computed(() =>
+    legendSets.value.flat().map((el) => ({
+        ...el,
+        name: el.svgDisplay,
+    })),
+);
 
 const { exportSvg, getSvg } = useSvgExport({
     svg: svgRef,
     title: svgTitle,
     legend: svgLegend,
     legendItems: legendSet,
-    backgroundColor: svgBg
+    backgroundColor: svgBg,
 });
 
 async function generateSvg({ isCb }) {
@@ -1448,7 +1559,14 @@ async function generateSvg({ isCb }) {
     try {
         if (isCb) {
             const { blob, url, text, dataUrl } = await getSvg();
-            await Promise.resolve(FINAL_CONFIG.value.userOptions.callbacks.svg({ blob, url, text, dataUrl }));
+            await Promise.resolve(
+                FINAL_CONFIG.value.userOptions.callbacks.svg({
+                    blob,
+                    url,
+                    text,
+                    dataUrl,
+                }),
+            );
         } else {
             await Promise.resolve(exportSvg());
         }
@@ -1458,12 +1576,12 @@ async function generateSvg({ isCb }) {
 }
 
 function onGenerateImage(payload) {
-    if (payload?.stage === "start") {
+    if (payload?.stage === 'start') {
         isCallbackImaging.value = true;
         return;
     }
 
-    if (payload?.stage === "end") {
+    if (payload?.stage === 'end') {
         isCallbackImaging.value = false;
         return;
     }
@@ -1471,19 +1589,23 @@ function onGenerateImage(payload) {
     generateImage();
 }
 
-async function copyAlt(){
+async function copyAlt() {
     emit('copyAlt', {
         config: FINAL_CONFIG.value,
-        dataset: mutableDataset.value
-    })
+        dataset: mutableDataset.value,
+    });
     if (!FINAL_CONFIG.value.userOptions.callbacks.altCopy) {
-        console.warn('Vue Data UI - A callback must be set for `altCopy` in userOptions.');
-        return
+        console.warn(
+            'Vue Data UI - A callback must be set for `altCopy` in userOptions.',
+        );
+        return;
     }
-    await Promise.resolve(FINAL_CONFIG.value.userOptions.callbacks.altCopy({ 
-        config: FINAL_CONFIG.value, 
-        dataset: mutableDataset.value
-    }));
+    await Promise.resolve(
+        FINAL_CONFIG.value.userOptions.callbacks.altCopy({
+            config: FINAL_CONFIG.value,
+            dataset: mutableDataset.value,
+        }),
+    );
 }
 
 /***************************************************************************************************
@@ -1521,7 +1643,8 @@ function onSvgKeydown(event) {
     const isActivationKey = event.key === 'Enter' || event.key === ' ';
     const isEscapeKey = event.key === 'Escape';
 
-    if (!isPreviousKey && !isNextKey && !isActivationKey && !isEscapeKey) return;
+    if (!isPreviousKey && !isNextKey && !isActivationKey && !isEscapeKey)
+        return;
 
     event.preventDefault();
     event.stopPropagation();
@@ -1544,7 +1667,7 @@ function onSvgKeydown(event) {
         selectDatapoint({
             datapoint: arc,
             index: activeTooltipIndex.value,
-            seriesIndex: arc.seriesIndex
+            seriesIndex: arc.seriesIndex,
         });
         return;
     }
@@ -1564,9 +1687,7 @@ function onSvgKeydown(event) {
 
     if (!hasValidActiveIndex) {
         if (hasValidHoveredIndex) {
-            nextIndex = isNextKey
-                ? hoveredIndex + 1
-                : hoveredIndex - 1;
+            nextIndex = isNextKey ? hoveredIndex + 1 : hoveredIndex - 1;
 
             if (nextIndex >= flatArcs.value.length) {
                 nextIndex = 0;
@@ -1602,7 +1723,7 @@ function onSvgKeydown(event) {
         relativeIndex: nextIndex,
         seriesIndex: arc.seriesIndex,
         show: true,
-        triggerMode: 'keyboard'
+        triggerMode: 'keyboard',
     });
 }
 
@@ -1613,7 +1734,7 @@ function setKeyboardTooltipPosition() {
 
     tooltipA11yPosition.value = {
         x: box.left + box.width / 2,
-        y: box.top + box.height / 2
+        y: box.top + box.height / 2,
     };
 }
 
@@ -1638,17 +1759,21 @@ defineExpose({
     toggleTooltip,
     toggleAnnotator,
     toggleFullscreen,
-    copyAlt
+    copyAlt,
 });
 </script>
 
 <template>
-    <div ref="nestedDonutsChart" :class="`vue-data-ui-component vue-ui-nested-donuts ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''
+    <div
+        ref="nestedDonutsChart"
+        :class="`vue-data-ui-component vue-ui-nested-donuts ${
+            isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''
         } ${FINAL_CONFIG.useCssAnimation ? '' : 'vue-ui-dna'}`"
         :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor}`"
-        :id="`nested_donuts_${uid}`" @mouseenter="() => setUserOptionsVisibility(true)"
-        @mouseleave="() => setUserOptionsVisibility(false)">
-
+        :id="`nested_donuts_${uid}`"
+        @mouseenter="() => setUserOptionsVisibility(true)"
+        @mouseleave="() => setUserOptionsVisibility(false)"
+    >
         <!-- A11Y -->
         <div :id="`chart-instructions-${uid}`" class="sr-only">
             <p>{{ FINAL_CONFIG.a11y.translations.keyboardNavigation }}</p>
@@ -1663,92 +1788,106 @@ defineExpose({
             :caption="FINAL_CONFIG.a11y.translations.tableCaption"
         />
 
-        <PenAndPaper 
-            v-if="FINAL_CONFIG.userOptions.buttons.annotator" 
+        <PenAndPaper
+            v-if="FINAL_CONFIG.userOptions.buttons.annotator"
             :svgRef="svgRef"
-            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor" 
+            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
             :color="FINAL_CONFIG.style.chart.color"
             :active="isAnnotator"
             :isCursorPointer="isCursorPointer"
             @close="toggleAnnotator"
         >
             <template #annotator-action-close>
-                <slot name="annotator-action-close"/>
+                <slot name="annotator-action-close" />
             </template>
             <template #annotator-action-color="{ color }">
-                <slot name="annotator-action-color" v-bind="{ color }"/>
+                <slot name="annotator-action-color" v-bind="{ color }" />
             </template>
             <template #annotator-action-draw="{ mode }">
-                <slot name="annotator-action-draw" v-bind="{ mode }"/>
+                <slot name="annotator-action-draw" v-bind="{ mode }" />
             </template>
             <template #annotator-action-undo="{ disabled }">
-                <slot name="annotator-action-undo" v-bind="{ disabled }"/>
+                <slot name="annotator-action-undo" v-bind="{ disabled }" />
             </template>
             <template #annotator-action-redo="{ disabled }">
-                <slot name="annotator-action-redo" v-bind="{ disabled }"/>
+                <slot name="annotator-action-redo" v-bind="{ disabled }" />
             </template>
             <template #annotator-action-delete="{ disabled }">
-                <slot name="annotator-action-delete" v-bind="{ disabled }"/>
+                <slot name="annotator-action-delete" v-bind="{ disabled }" />
             </template>
         </PenAndPaper>
 
-        <div ref="noTitle" v-if="hasOptionsNoTitle" class="vue-data-ui-no-title-space"
-            :style="`height:36px; width: 100%;background:transparent`" />
+        <div
+            ref="noTitle"
+            v-if="hasOptionsNoTitle"
+            class="vue-data-ui-no-title-space"
+            :style="`height:36px; width: 100%;background:transparent`"
+        />
 
         <div ref="chartTitle" v-if="FINAL_CONFIG.style.chart.title.text">
-            <Title :key="`title_${titleStep}`" :config="{
-                title: {
-                    cy: 'donut-div-title',
-                    ...FINAL_CONFIG.style.chart.title,
-                },
-                subtitle: {
-                    cy: 'donut-div-subtitle',
-                    ...FINAL_CONFIG.style.chart.title.subtitle,
-                },
-            }" />
+            <Title
+                :key="`title_${titleStep}`"
+                :config="{
+                    title: {
+                        cy: 'donut-div-title',
+                        ...FINAL_CONFIG.style.chart.title,
+                    },
+                    subtitle: {
+                        cy: 'donut-div-subtitle',
+                        ...FINAL_CONFIG.style.chart.title.subtitle,
+                    },
+                }"
+            />
         </div>
 
         <div :id="`legend-top-${uid}`" />
 
         <!-- OPTIONS -->
-        <UserOptions 
-            ref="userOptionsRef" 
-            :key="`user_option_${step}`" 
-            v-if="FINAL_CONFIG.userOptions.show && isDataset && (keepUserOptionState ? true : userOptionsVisible)" 
-            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor" 
+        <UserOptions
+            ref="userOptionsRef"
+            :key="`user_option_${step}`"
+            v-if="
+                FINAL_CONFIG.userOptions.show &&
+                isDataset &&
+                (keepUserOptionState ? true : userOptionsVisible)
+            "
+            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
             :color="FINAL_CONFIG.style.chart.color"
-            :isPrinting="isPrinting" 
-            :isImaging="isImaging" 
-            :uid="uid" 
-            :hasTooltip="FINAL_CONFIG.userOptions.buttons.tooltip && FINAL_CONFIG.style.chart.tooltip.show" 
-            :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf" 
+            :isPrinting="isPrinting"
+            :isImaging="isImaging"
+            :uid="uid"
+            :hasTooltip="
+                FINAL_CONFIG.userOptions.buttons.tooltip &&
+                FINAL_CONFIG.style.chart.tooltip.show
+            "
+            :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
             :hasXls="FINAL_CONFIG.userOptions.buttons.csv"
             :hasImg="FINAL_CONFIG.userOptions.buttons.img"
             :hasSvg="FINAL_CONFIG.userOptions.buttons.svg"
             :hasTable="FINAL_CONFIG.userOptions.buttons.table"
             :hasLabel="FINAL_CONFIG.userOptions.buttons.labels"
-            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen" 
+            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
             :hasAltCopy="FINAL_CONFIG.userOptions.buttons.altCopy"
             :isFullscreen="isFullscreen"
-            :isTooltip="mutableConfig.showTooltip" 
+            :isTooltip="mutableConfig.showTooltip"
             :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
-            :chartElement="nestedDonutsChart" 
+            :chartElement="nestedDonutsChart"
             :position="FINAL_CONFIG.userOptions.position"
-            :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator" 
-            :isAnnotation="isAnnotator" 
+            :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator"
+            :isAnnotation="isAnnotator"
             :callbacks="FINAL_CONFIG.userOptions.callbacks"
             :printScale="FINAL_CONFIG.userOptions.print.scale"
             :tableDialog="FINAL_CONFIG.table.useDialog"
             :isCursorPointer="isCursorPointer"
-            @toggleFullscreen="toggleFullscreen" 
-            @generatePdf="generatePdf" 
+            @toggleFullscreen="toggleFullscreen"
+            @generatePdf="generatePdf"
             @generateCsv="generateCsv"
-            @generateImage="onGenerateImage" 
+            @generateImage="onGenerateImage"
             @generateSvg="generateSvg"
-            @toggleTable="toggleTable" 
+            @toggleTable="toggleTable"
             @toggleLabels="toggleLabels"
-            @toggleTooltip="toggleTooltip" 
-            @toggleAnnotator="toggleAnnotator" 
+            @toggleTooltip="toggleTooltip"
+            @toggleAnnotator="toggleAnnotator"
             @copyAlt="copyAlt"
             :style="{
                 visibility: keepUserOptionState
@@ -1782,27 +1921,43 @@ defineExpose({
             <template #optionLabels v-if="$slots.optionLabels">
                 <slot name="optionLabels" />
             </template>
-            <template v-if="$slots.optionFullscreen" template #optionFullscreen="{ toggleFullscreen, isFullscreen }">
-                <slot name="optionFullscreen" v-bind="{ toggleFullscreen, isFullscreen }" />
+            <template
+                v-if="$slots.optionFullscreen"
+                template
+                #optionFullscreen="{ toggleFullscreen, isFullscreen }"
+            >
+                <slot
+                    name="optionFullscreen"
+                    v-bind="{ toggleFullscreen, isFullscreen }"
+                />
             </template>
-            <template v-if="$slots.optionAnnotator" #optionAnnotator="{ toggleAnnotator, isAnnotator }">
-                <slot name="optionAnnotator" v-bind="{ toggleAnnotator, isAnnotator }" />
+            <template
+                v-if="$slots.optionAnnotator"
+                #optionAnnotator="{ toggleAnnotator, isAnnotator }"
+            >
+                <slot
+                    name="optionAnnotator"
+                    v-bind="{ toggleAnnotator, isAnnotator }"
+                />
             </template>
-            <template v-if="$slots.optionAltCopy" #optionAltCopy="{ altCopy: c }">
-                <slot name="optionAltCopy" v-bind="{ altCopy: c }"/>
+            <template
+                v-if="$slots.optionAltCopy"
+                #optionAltCopy="{ altCopy: c }"
+            >
+                <slot name="optionAltCopy" v-bind="{ altCopy: c }" />
             </template>
         </UserOptions>
 
-        <div style="position:relative;">
-            <svg 
-                ref="svgRef" 
+        <div style="position: relative">
+            <svg
+                ref="svgRef"
                 :xmlns="XMLNS"
                 :aria-describedby="`chart-instructions-${uid}`"
                 :class="{
                     'vue-data-ui-fullscreen--on': isFullscreen,
                     'vue-data-ui-fulscreen--off': !isFullscreen,
-                    'vue-data-ui-svg': true
-                }" 
+                    'vue-data-ui-svg': true,
+                }"
                 :viewBox="`0 0 ${svg.width <= 0 ? 0.001 : svg.width} ${svg.height < 0 ? 0.001 : svg.height}`"
                 :style="`max-width:100%; overflow: visible; background:transparent;color:${FINAL_CONFIG.style.chart.color};${padding.css}`"
                 tabindex="0"
@@ -1810,43 +1965,89 @@ defineExpose({
                 @blur="onSvgBlur"
                 @keydown="onSvgKeydown"
             >
-    
                 <g ref="G" class="vue-data-ui-g">
                     <PackageVersion />
-        
+
                     <!-- BACKGROUND SLOT -->
-                    <foreignObject v-if="$slots['chart-background']" :x="0" :y="0" :width="svg.width <= 0 ? 0.001 : svg.width"
-                        :height="svg.height < 0 ? 0.001 : svg.height" :style="{
+                    <foreignObject
+                        v-if="$slots['chart-background']"
+                        :x="0"
+                        :y="0"
+                        :width="svg.width <= 0 ? 0.001 : svg.width"
+                        :height="svg.height < 0 ? 0.001 : svg.height"
+                        :style="{
                             pointerEvents: 'none',
-                        }">
+                        }"
+                    >
                         <slot name="chart-background" />
                     </foreignObject>
-        
+
                     <!-- GRADIENTS -->
                     <defs>
-                        <radialGradient v-for="(_, i) in gradientSets" :id="`radial_${uid}_${i}`">
-                            <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0" />
-                            <stop :offset="`${(1 - donutThickness / radii[i]) * 100}%`" :stop-color="setOpacity('#FFFFFF', 0)"
-                                stop-opacity="0" />
-                            <stop :offset="`${(1 - donutThickness / radii[i] / 2) * 100}%`" stop-color="#FFFFFF"
-                                :stop-opacity="FINAL_CONFIG.style.chart.gradientIntensity / 100" />
-                            <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+                        <radialGradient
+                            v-for="(_, i) in gradientSets"
+                            :id="`radial_${uid}_${i}`"
+                        >
+                            <stop
+                                offset="0%"
+                                stop-color="#FFFFFF"
+                                stop-opacity="0"
+                            />
+                            <stop
+                                :offset="`${(1 - donutThickness / radii[i]) * 100}%`"
+                                :stop-color="setOpacity('#FFFFFF', 0)"
+                                stop-opacity="0"
+                            />
+                            <stop
+                                :offset="`${(1 - donutThickness / radii[i] / 2) * 100}%`"
+                                stop-color="#FFFFFF"
+                                :stop-opacity="
+                                    FINAL_CONFIG.style.chart.gradientIntensity /
+                                    100
+                                "
+                            />
+                            <stop
+                                offset="100%"
+                                stop-color="#FFFFFF"
+                                stop-opacity="0"
+                            />
                         </radialGradient>
                     </defs>
-        
+
                     <!-- FILTERS -->
                     <defs>
-                        <filter :id="`blur_${uid}`" x="-50%" y="-50%" width="200%" height="200%">
-                            <feGaussianBlur in="SourceGraphic" :stdDeviation="2" :id="`blur_std_${uid}`" />
+                        <filter
+                            :id="`blur_${uid}`"
+                            x="-50%"
+                            y="-50%"
+                            width="200%"
+                            height="200%"
+                        >
+                            <feGaussianBlur
+                                in="SourceGraphic"
+                                :stdDeviation="2"
+                                :id="`blur_std_${uid}`"
+                            />
                             <feColorMatrix type="saturate" values="0" />
                         </filter>
-        
-                        <filter :id="`shadow_${uid}`" color-interpolation-filters="sRGB">
-                            <feDropShadow dx="0" dy="0" stdDeviation="10" flood-opacity="0.5"
-                                :flood-color="FINAL_CONFIG.style.chart.layout.donut.shadowColor" />
+
+                        <filter
+                            :id="`shadow_${uid}`"
+                            color-interpolation-filters="sRGB"
+                        >
+                            <feDropShadow
+                                dx="0"
+                                dy="0"
+                                stdDeviation="10"
+                                flood-opacity="0.5"
+                                :flood-color="
+                                    FINAL_CONFIG.style.chart.layout.donut
+                                        .shadowColor
+                                "
+                            />
                         </filter>
                     </defs>
-    
+
                     <!-- CURVED PATHS -->
                     <defs>
                         <path
@@ -1857,46 +2058,115 @@ defineExpose({
                             fill="none"
                         />
                     </defs>
-    
+
                     <!-- NESTED DONUTS -->
                     <g v-for="(item, i) in donuts">
                         <template v-if="item.hasData">
-                            <g v-for="(arc, j) in item.donut.filter((el) => !el.ghost)">
-                                <path data-cy="datapoint-arc" class="vue-ui-donut-arc-path" :d="arc.arcSlice"
-                                    :fill="arc.color" 
-                                    :stroke="FINAL_CONFIG.style.chart.layout.donut.borderColorAuto ? FINAL_CONFIG.style.chart.backgroundColor : FINAL_CONFIG.style.chart.layout.donut.borderColor"
-                                    :stroke-width="FINAL_CONFIG.style.chart.layout.donut.borderWidth"
-                                    :filter="getBlurFilter(arc, j)" />
+                            <g
+                                v-for="(arc, j) in item.donut.filter(
+                                    (el) => !el.ghost,
+                                )"
+                            >
+                                <path
+                                    data-cy="datapoint-arc"
+                                    class="vue-ui-donut-arc-path"
+                                    :d="arc.arcSlice"
+                                    :fill="arc.color"
+                                    :stroke="
+                                        FINAL_CONFIG.style.chart.layout.donut
+                                            .borderColorAuto
+                                            ? FINAL_CONFIG.style.chart
+                                                  .backgroundColor
+                                            : FINAL_CONFIG.style.chart.layout
+                                                  .donut.borderColor
+                                    "
+                                    :stroke-width="
+                                        FINAL_CONFIG.style.chart.layout.donut
+                                            .borderWidth
+                                    "
+                                    :filter="getBlurFilter(arc, j)"
+                                />
                             </g>
                         </template>
                         <template v-else>
                             <g v-for="(arc, j) in item.skeleton">
-                                <path data-cy="datapoint-arc" class="vue-ui-donut-arc-path" :d="arc.arcSlice"
-                                    :fill="arc.color" :stroke="FINAL_CONFIG.style.chart.layout.donut.borderColorAuto ? FINAL_CONFIG.style.chart.backgroundColor : FINAL_CONFIG.style.chart.layout.donut.borderColor"
-                                    :stroke-width="FINAL_CONFIG.style.chart.layout.donut.borderWidth" />
+                                <path
+                                    data-cy="datapoint-arc"
+                                    class="vue-ui-donut-arc-path"
+                                    :d="arc.arcSlice"
+                                    :fill="arc.color"
+                                    :stroke="
+                                        FINAL_CONFIG.style.chart.layout.donut
+                                            .borderColorAuto
+                                            ? FINAL_CONFIG.style.chart
+                                                  .backgroundColor
+                                            : FINAL_CONFIG.style.chart.layout
+                                                  .donut.borderColor
+                                    "
+                                    :stroke-width="
+                                        FINAL_CONFIG.style.chart.layout.donut
+                                            .borderWidth
+                                    "
+                                />
                             </g>
                         </template>
                     </g>
-        
+
                     <g v-if="FINAL_CONFIG.style.chart.useGradient">
                         <g v-for="(gradient, i) in gradientSets">
-                            <path data-cy="donut-gradient" :d="gradient.donut.arcSlice" :fill="`url(#radial_${uid}_${i})`"
-                                stroke="transparent" stroke-width="0" />
+                            <path
+                                data-cy="donut-gradient"
+                                :d="gradient.donut.arcSlice"
+                                :fill="`url(#radial_${uid}_${i})`"
+                                stroke="transparent"
+                                stroke-width="0"
+                            />
                         </g>
                     </g>
-        
-                    <g v-if="FINAL_CONFIG.style.chart.layout.labels.dataLabels.showDonutName">
-                        <template v-if="FINAL_CONFIG.style.chart.layout.labels.dataLabels.curvedDonutName">
+
+                    <g
+                        v-if="
+                            FINAL_CONFIG.style.chart.layout.labels.dataLabels
+                                .showDonutName
+                        "
+                    >
+                        <template
+                            v-if="
+                                FINAL_CONFIG.style.chart.layout.labels
+                                    .dataLabels.curvedDonutName
+                            "
+                        >
                             <g v-for="(item, i) in donuts">
                                 <g v-for="(arc, j) in item.donut">
-                                    <text 
-                                        data-cy="datapoint-name" 
-                                        :class="{ animated: FINAL_CONFIG.useCssAnimation }"
-                                        v-if="j === 0 && svg.width && svg.height" 
-                                        text-anchor="middle" 
-                                        :font-size="FINAL_CONFIG.style.chart.layout.labels.dataLabels.fontSize" :font-weight="FINAL_CONFIG.style.chart.layout.labels.dataLabels.boldDonutName ? 'bold' : 'normal'" 
-                                        :fill="FINAL_CONFIG.style.chart.layout.labels.dataLabels.color"
-                                        :dy="FINAL_CONFIG.style.chart.layout.labels.dataLabels.donutNameOffsetY"
+                                    <text
+                                        data-cy="datapoint-name"
+                                        :class="{
+                                            animated:
+                                                FINAL_CONFIG.useCssAnimation,
+                                        }"
+                                        v-if="
+                                            j === 0 && svg.width && svg.height
+                                        "
+                                        text-anchor="middle"
+                                        :font-size="
+                                            FINAL_CONFIG.style.chart.layout
+                                                .labels.dataLabels.fontSize
+                                        "
+                                        :font-weight="
+                                            FINAL_CONFIG.style.chart.layout
+                                                .labels.dataLabels.boldDonutName
+                                                ? 'bold'
+                                                : 'normal'
+                                        "
+                                        :fill="
+                                            FINAL_CONFIG.style.chart.layout
+                                                .labels.dataLabels.color
+                                        "
+                                        :dy="
+                                            FINAL_CONFIG.style.chart.layout
+                                                .labels.dataLabels
+                                                .donutNameOffsetY
+                                        "
                                     >
                                         <textPath
                                             :href="`#path-full-${i}-${uid}`"
@@ -1904,17 +2174,20 @@ defineExpose({
                                             text-anchor="middle"
                                             method="align"
                                             spacing="auto"
-                                        
                                         >
                                             {{
-                                            FINAL_CONFIG.style.chart.layout.labels.dataLabels.donutNameAbbreviation
-                                                ? abbreviate({
-                                                    source: item.name,
-                                                    length:
-                                                    FINAL_CONFIG.style.chart.layout.labels.dataLabels
-                                                        .donutNameMaxAbbreviationSize,
-                                                })
-                                                : item.name
+                                                FINAL_CONFIG.style.chart.layout
+                                                    .labels.dataLabels
+                                                    .donutNameAbbreviation
+                                                    ? abbreviate({
+                                                          source: item.name,
+                                                          length: FINAL_CONFIG
+                                                              .style.chart
+                                                              .layout.labels
+                                                              .dataLabels
+                                                              .donutNameMaxAbbreviationSize,
+                                                      })
+                                                    : item.name
                                             }}
                                         </textPath>
                                     </text>
@@ -1924,26 +2197,51 @@ defineExpose({
                         <template v-else>
                             <g v-for="(item, i) in donuts">
                                 <g v-for="(arc, j) in item.donut">
-                                    <text 
-                                        data-cy="datapoint-name" 
-                                        :class="{ animated: FINAL_CONFIG.useCssAnimation }"
-                                        v-if="j === 0 && svg.width && svg.height" 
-                                        :x="svg.width / 2" :y="arc.startY - FINAL_CONFIG.style.chart.layout.labels.dataLabels.fontSize + FINAL_CONFIG.style.chart.layout.labels.dataLabels.donutNameOffsetY" 
-                                        text-anchor="middle" 
-                                        :font-size="FINAL_CONFIG.style.chart.layout.labels.dataLabels.fontSize" 
-                                        :font-weight="FINAL_CONFIG.style.chart.layout.labels.dataLabels.boldDonutName
-                                ? 'bold'
-                                : 'normal'
-                                " :fill="FINAL_CONFIG.style.chart.layout.labels.dataLabels.color">
+                                    <text
+                                        data-cy="datapoint-name"
+                                        :class="{
+                                            animated:
+                                                FINAL_CONFIG.useCssAnimation,
+                                        }"
+                                        v-if="
+                                            j === 0 && svg.width && svg.height
+                                        "
+                                        :x="svg.width / 2"
+                                        :y="
+                                            arc.startY -
+                                            FINAL_CONFIG.style.chart.layout
+                                                .labels.dataLabels.fontSize +
+                                            FINAL_CONFIG.style.chart.layout
+                                                .labels.dataLabels
+                                                .donutNameOffsetY
+                                        "
+                                        text-anchor="middle"
+                                        :font-size="
+                                            FINAL_CONFIG.style.chart.layout
+                                                .labels.dataLabels.fontSize
+                                        "
+                                        :font-weight="
+                                            FINAL_CONFIG.style.chart.layout
+                                                .labels.dataLabels.boldDonutName
+                                                ? 'bold'
+                                                : 'normal'
+                                        "
+                                        :fill="
+                                            FINAL_CONFIG.style.chart.layout
+                                                .labels.dataLabels.color
+                                        "
+                                    >
                                         {{
-                                            FINAL_CONFIG.style.chart.layout.labels.dataLabels
+                                            FINAL_CONFIG.style.chart.layout
+                                                .labels.dataLabels
                                                 .donutNameAbbreviation
                                                 ? abbreviate({
-                                                    source: item.name,
-                                                    length:
-                                                        FINAL_CONFIG.style.chart.layout.labels.dataLabels
-                                                            .donutNameMaxAbbreviationSize,
-                                                })
+                                                      source: item.name,
+                                                      length: FINAL_CONFIG.style
+                                                          .chart.layout.labels
+                                                          .dataLabels
+                                                          .donutNameMaxAbbreviationSize,
+                                                  })
                                                 : item.name
                                         }}
                                     </text>
@@ -1951,122 +2249,278 @@ defineExpose({
                             </g>
                         </template>
                     </g>
-        
+
                     <!-- DATALABELS -->
-                    <g v-if="FINAL_CONFIG.style.chart.layout.labels.dataLabels.show">
+                    <g
+                        v-if="
+                            FINAL_CONFIG.style.chart.layout.labels.dataLabels
+                                .show
+                        "
+                    >
                         <g v-for="(item, i) in donuts">
-                            <g v-for="(arc, j) in item.donut.filter((el) => !el.ghost)" :filter="getBlurFilter(arc, j)">
-                                <text 
-                                    data-cy="datapoint-percentage" 
-                                    :class="{ animated: FINAL_CONFIG.useCssAnimation }" 
-                                    v-show="mutableConfig.dataLabels.show && FINAL_CONFIG.style.chart.layout.labels.dataLabels.showPercentage" 
-                                    :opacity="isArcBigEnough(arc) ? 1 : 0" 
-                                    :text-anchor="calcMarkerOffsetX(arc, true).anchor"
-                                    :x="calcMarkerOffsetX(
-                                        arc,
-                                        false,
-                                        FINAL_CONFIG.style.chart.layout.labels.dataLabels.offsetX
-                                    ).x || 0" 
-                                    :y="calcMarkerOffsetY(
-                                        arc,
-                                        FINAL_CONFIG.style.chart.layout.labels.dataLabels.offsetY,
-                                        FINAL_CONFIG.style.chart.layout.labels.dataLabels.offsetY
-                                    ) + (FINAL_CONFIG.style.chart.layout.labels.dataLabels.showValueFirst && FINAL_CONFIG.style.chart.layout.labels.dataLabels.showValue ? FINAL_CONFIG.style.chart.layout.labels.dataLabels.fontSize : 0)" 
-                                    :fill="FINAL_CONFIG.style.chart.layout.labels.dataLabels.useSerieColor ? arc.color : FINAL_CONFIG.style.chart.layout.labels.dataLabels.color" 
-                                    :font-size="FINAL_CONFIG.style.chart.layout.labels.dataLabels.fontSize" 
-                                    :font-weight="FINAL_CONFIG.style.chart.layout.labels.dataLabels.boldPercentage ? 'bold' : 'normal'"
+                            <g
+                                v-for="(arc, j) in item.donut.filter(
+                                    (el) => !el.ghost,
+                                )"
+                                :filter="getBlurFilter(arc, j)"
+                            >
+                                <text
+                                    data-cy="datapoint-percentage"
+                                    :class="{
+                                        animated: FINAL_CONFIG.useCssAnimation,
+                                    }"
+                                    v-show="
+                                        mutableConfig.dataLabels.show &&
+                                        FINAL_CONFIG.style.chart.layout.labels
+                                            .dataLabels.showPercentage
+                                    "
+                                    :opacity="isArcBigEnough(arc) ? 1 : 0"
+                                    :text-anchor="
+                                        calcMarkerOffsetX(arc, true).anchor
+                                    "
+                                    :x="
+                                        calcMarkerOffsetX(
+                                            arc,
+                                            false,
+                                            FINAL_CONFIG.style.chart.layout
+                                                .labels.dataLabels.offsetX,
+                                        ).x || 0
+                                    "
+                                    :y="
+                                        calcMarkerOffsetY(
+                                            arc,
+                                            FINAL_CONFIG.style.chart.layout
+                                                .labels.dataLabels.offsetY,
+                                            FINAL_CONFIG.style.chart.layout
+                                                .labels.dataLabels.offsetY,
+                                        ) +
+                                        (FINAL_CONFIG.style.chart.layout.labels
+                                            .dataLabels.showValueFirst &&
+                                        FINAL_CONFIG.style.chart.layout.labels
+                                            .dataLabels.showValue
+                                            ? FINAL_CONFIG.style.chart.layout
+                                                  .labels.dataLabels.fontSize
+                                            : 0)
+                                    "
+                                    :fill="
+                                        FINAL_CONFIG.style.chart.layout.labels
+                                            .dataLabels.useSerieColor
+                                            ? arc.color
+                                            : FINAL_CONFIG.style.chart.layout
+                                                  .labels.dataLabels.color
+                                    "
+                                    :font-size="
+                                        FINAL_CONFIG.style.chart.layout.labels
+                                            .dataLabels.fontSize
+                                    "
+                                    :font-weight="
+                                        FINAL_CONFIG.style.chart.layout.labels
+                                            .dataLabels.boldPercentage
+                                            ? 'bold'
+                                            : 'normal'
+                                    "
                                 >
                                     {{
                                         parens(
                                             dataLabel({
                                                 v: arc.proportion * 100,
-                                                s: "%",
-                                                r: FINAL_CONFIG.style.chart.layout.labels.dataLabels
+                                                s: '%',
+                                                r: FINAL_CONFIG.style.chart
+                                                    .layout.labels.dataLabels
                                                     .roundingPercentage,
                                             }),
-                                            FINAL_CONFIG.style.chart.layout.labels.dataLabels.usePercentageParens ? '(' : '',
-                                            FINAL_CONFIG.style.chart.layout.labels.dataLabels.usePercentageParens ? ')' : '',
+                                            FINAL_CONFIG.style.chart.layout
+                                                .labels.dataLabels
+                                                .usePercentageParens
+                                                ? '('
+                                                : '',
+                                            FINAL_CONFIG.style.chart.layout
+                                                .labels.dataLabels
+                                                .usePercentageParens
+                                                ? ')'
+                                                : '',
                                         )
                                     }}
                                 </text>
-    
-                                <text 
-                                    data-cy="datapoint-value" 
-                                    :class="{ animated: FINAL_CONFIG.useCssAnimation }" 
-                                    v-show="mutableConfig.dataLabels.show && FINAL_CONFIG.style.chart.layout.labels.dataLabels.showValue" 
-                                    :opacity="isArcBigEnough(arc) ? 1 : 0" 
-                                    :text-anchor="calcMarkerOffsetX(arc, true).anchor"
-                                    :x="calcMarkerOffsetX(
-                                        arc,
-                                        false,
-                                        FINAL_CONFIG.style.chart.layout.labels.dataLabels.offsetX
-                                    ).x || 0" 
-                                    :y="calcMarkerOffsetY(
-                                        arc,
-                                        FINAL_CONFIG.style.chart.layout.labels.dataLabels.offsetY,
-                                        FINAL_CONFIG.style.chart.layout.labels.dataLabels.offsetY
-                                    ) + (FINAL_CONFIG.style.chart.layout.labels.dataLabels.showValueFirst || !FINAL_CONFIG.style.chart.layout.labels.dataLabels.showPercentage ? 0 : FINAL_CONFIG.style.chart.layout.labels.dataLabels.fontSize)" 
-                                    :fill="FINAL_CONFIG.style.chart.layout.labels.dataLabels.useSerieColor ? arc.color : FINAL_CONFIG.style.chart.layout.labels.dataLabels.color" 
-                                    :font-size="FINAL_CONFIG.style.chart.layout.labels.dataLabels.fontSize" 
-                                    :font-weight="FINAL_CONFIG.style.chart.layout.labels.dataLabels.boldValue ? 'bold' : 'normal'"
+
+                                <text
+                                    data-cy="datapoint-value"
+                                    :class="{
+                                        animated: FINAL_CONFIG.useCssAnimation,
+                                    }"
+                                    v-show="
+                                        mutableConfig.dataLabels.show &&
+                                        FINAL_CONFIG.style.chart.layout.labels
+                                            .dataLabels.showValue
+                                    "
+                                    :opacity="isArcBigEnough(arc) ? 1 : 0"
+                                    :text-anchor="
+                                        calcMarkerOffsetX(arc, true).anchor
+                                    "
+                                    :x="
+                                        calcMarkerOffsetX(
+                                            arc,
+                                            false,
+                                            FINAL_CONFIG.style.chart.layout
+                                                .labels.dataLabels.offsetX,
+                                        ).x || 0
+                                    "
+                                    :y="
+                                        calcMarkerOffsetY(
+                                            arc,
+                                            FINAL_CONFIG.style.chart.layout
+                                                .labels.dataLabels.offsetY,
+                                            FINAL_CONFIG.style.chart.layout
+                                                .labels.dataLabels.offsetY,
+                                        ) +
+                                        (FINAL_CONFIG.style.chart.layout.labels
+                                            .dataLabels.showValueFirst ||
+                                        !FINAL_CONFIG.style.chart.layout.labels
+                                            .dataLabels.showPercentage
+                                            ? 0
+                                            : FINAL_CONFIG.style.chart.layout
+                                                  .labels.dataLabels.fontSize)
+                                    "
+                                    :fill="
+                                        FINAL_CONFIG.style.chart.layout.labels
+                                            .dataLabels.useSerieColor
+                                            ? arc.color
+                                            : FINAL_CONFIG.style.chart.layout
+                                                  .labels.dataLabels.color
+                                    "
+                                    :font-size="
+                                        FINAL_CONFIG.style.chart.layout.labels
+                                            .dataLabels.fontSize
+                                    "
+                                    :font-weight="
+                                        FINAL_CONFIG.style.chart.layout.labels
+                                            .dataLabels.boldValue
+                                            ? 'bold'
+                                            : 'normal'
+                                    "
                                 >
                                     {{
                                         parens(
                                             applyDataLabel(
-                                                FINAL_CONFIG.style.chart.layout.labels.dataLabels.formatter,
+                                                FINAL_CONFIG.style.chart.layout
+                                                    .labels.dataLabels
+                                                    .formatter,
                                                 arc.value,
                                                 dataLabel({
-                                                    p: FINAL_CONFIG.style.chart.layout.labels.dataLabels.prefix,
+                                                    p: FINAL_CONFIG.style.chart
+                                                        .layout.labels
+                                                        .dataLabels.prefix,
                                                     v: arc.value,
-                                                    s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix,
-                                                    r: FINAL_CONFIG.style.chart.layout.labels.dataLabels.roundingValue,
+                                                    s: FINAL_CONFIG.style.chart
+                                                        .layout.labels
+                                                        .dataLabels.suffix,
+                                                    r: FINAL_CONFIG.style.chart
+                                                        .layout.labels
+                                                        .dataLabels
+                                                        .roundingValue,
                                                 }),
-                                                { datapoint: arc, seriesIndex: i, datapointIndex: j }
+                                                {
+                                                    datapoint: arc,
+                                                    seriesIndex: i,
+                                                    datapointIndex: j,
+                                                },
                                             ),
-                                            FINAL_CONFIG.style.chart.layout.labels.dataLabels.useValueParens ? '(' : '',
-                                            FINAL_CONFIG.style.chart.layout.labels.dataLabels.useValueParens ? ')' : '',
+                                            FINAL_CONFIG.style.chart.layout
+                                                .labels.dataLabels
+                                                .useValueParens
+                                                ? '('
+                                                : '',
+                                            FINAL_CONFIG.style.chart.layout
+                                                .labels.dataLabels
+                                                .useValueParens
+                                                ? ')'
+                                                : '',
                                         )
                                     }}
                                 </text>
                             </g>
                         </g>
                     </g>
-        
+
                     <!-- TOOLTIP TRAPS -->
                     <g v-for="(item, i) in donuts">
                         <g v-for="(arc, j) in item.donut">
-                            <path 
-                                data-cy="tooltip-trap" 
+                            <path
+                                data-cy="tooltip-trap"
                                 :d="arc.arcSlice"
-                                :fill="selectedSerie === arc.id ? FINAL_CONFIG.style.chart.layout.donut.selectedColor : 'transparent'" 
-                                @mouseenter="useTooltip({
-                                    datapoint: arc,
-                                    relativeIndex: flatArcs.findIndex((a) => a.id === arc.id),
-                                    seriesIndex: arc.seriesIndex,
-                                })" 
-                                @click="selectDatapoint({ datapoint: arc, index: j, seriesIndex: arc.seriesIndex })" 
-                                @mouseleave="handleDatapointLeave({ datapoint: arc, seriesIndex: arc.seriesIndex })" 
+                                :fill="
+                                    selectedSerie === arc.id
+                                        ? FINAL_CONFIG.style.chart.layout.donut
+                                              .selectedColor
+                                        : 'transparent'
+                                "
+                                @mouseenter="
+                                    useTooltip({
+                                        datapoint: arc,
+                                        relativeIndex: flatArcs.findIndex(
+                                            (a) => a.id === arc.id,
+                                        ),
+                                        seriesIndex: arc.seriesIndex,
+                                    })
+                                "
+                                @click="
+                                    selectDatapoint({
+                                        datapoint: arc,
+                                        index: j,
+                                        seriesIndex: arc.seriesIndex,
+                                    })
+                                "
+                                @mouseleave="
+                                    handleDatapointLeave({
+                                        datapoint: arc,
+                                        seriesIndex: arc.seriesIndex,
+                                    })
+                                "
                             />
                         </g>
                     </g>
-                    <slot name="svg" :svg="{
-                        ...svg,
-                        isPrintingImg: isPrinting | isImaging | isCallbackImaging,
-                        isPrintingSvg: isCallbackSvg,
-                    }"></slot>
+                    <slot
+                        name="svg"
+                        :svg="{
+                            ...svg,
+                            isPrintingImg:
+                                isPrinting | isImaging | isCallbackImaging,
+                            isPrintingSvg: isCallbackSvg,
+                        }"
+                    ></slot>
                 </g>
             </svg>
-            <div v-if="$slots.hint" style="position: absolute; top: 100%; left: 0; width: 100%;" data-dom-to-png-ignore aria-hidden="true">
-                <slot name="hint" v-bind="{ hint: FINAL_CONFIG.a11y.translations.keyboardNavigation, isVisible: isFocus }"/>
+            <div
+                v-if="$slots.hint"
+                style="position: absolute; top: 100%; left: 0; width: 100%"
+                data-dom-to-png-ignore
+                aria-hidden="true"
+            >
+                <slot
+                    name="hint"
+                    v-bind="{
+                        hint: FINAL_CONFIG.a11y.translations.keyboardNavigation,
+                        isVisible: isFocus,
+                    }"
+                />
             </div>
         </div>
 
         <div v-if="$slots.watermark" class="vue-data-ui-watermark">
-            <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging || isCallbackImaging || isCallbackSvg }" />
+            <slot
+                name="watermark"
+                v-bind="{
+                    isPrinting:
+                        isPrinting ||
+                        isImaging ||
+                        isCallbackImaging ||
+                        isCallbackSvg,
+                }"
+            />
         </div>
 
         <!-- TOOLTIP -->
-        <Tooltip 
+        <Tooltip
             :teleportTo="FINAL_CONFIG.style.chart.tooltip.teleportTo"
             :show="mutableConfig.showTooltip && isTooltip"
             :backgroundColor="FINAL_CONFIG.style.chart.tooltip.backgroundColor"
@@ -2075,53 +2529,83 @@ defineExpose({
             :borderColor="FINAL_CONFIG.style.chart.tooltip.borderColor"
             :borderWidth="FINAL_CONFIG.style.chart.tooltip.borderWidth"
             :fontSize="FINAL_CONFIG.style.chart.tooltip.fontSize"
-            :backgroundOpacity="FINAL_CONFIG.style.chart.tooltip.backgroundOpacity"
-            :position="FINAL_CONFIG.style.chart.tooltip.position" 
+            :backgroundOpacity="
+                FINAL_CONFIG.style.chart.tooltip.backgroundOpacity
+            "
+            :position="FINAL_CONFIG.style.chart.tooltip.position"
             :offsetY="FINAL_CONFIG.style.chart.tooltip.offsetY"
-            :parent="nestedDonutsChart" 
-            :content="tooltipContent" 
+            :parent="nestedDonutsChart"
+            :content="tooltipContent"
             :isFullscreen="isFullscreen"
-            :isCustom="isFunction(FINAL_CONFIG.style.chart.tooltip.customFormat)"
+            :isCustom="
+                isFunction(FINAL_CONFIG.style.chart.tooltip.customFormat)
+            "
             :smooth="FINAL_CONFIG.style.chart.tooltip.smooth"
             :backdropFilter="FINAL_CONFIG.style.chart.tooltip.backdropFilter"
             :smoothForce="FINAL_CONFIG.style.chart.tooltip.smoothForce"
-            :smoothSnapThreshold="FINAL_CONFIG.style.chart.tooltip.smoothSnapThreshold"
+            :smoothSnapThreshold="
+                FINAL_CONFIG.style.chart.tooltip.smoothSnapThreshold
+            "
             :isA11yMode="tooltipTriggerMode === 'keyboard'"
             :a11yPosition="tooltipA11yPosition"
         >
             <template #tooltip-before>
-                <slot name="tooltip-before" v-bind="{ ...dataTooltipSlot }"></slot>
+                <slot
+                    name="tooltip-before"
+                    v-bind="{ ...dataTooltipSlot }"
+                ></slot>
             </template>
             <template #tooltip>
-                <slot name="tooltip" v-bind="{ ...dataTooltipSlot }"/>
+                <slot name="tooltip" v-bind="{ ...dataTooltipSlot }" />
             </template>
             <template #tooltip-after>
-                <slot name="tooltip-after" v-bind="{ ...dataTooltipSlot }"></slot>
+                <slot
+                    name="tooltip-after"
+                    v-bind="{ ...dataTooltipSlot }"
+                ></slot>
             </template>
         </Tooltip>
 
         <div :id="`legend-bottom-${uid}`" />
 
         <!-- LEGEND -->
-        <Teleport v-if="readyTeleport" :to="FINAL_CONFIG.style.chart.legend.position === 'top' ? `#legend-top-${uid}` : `#legend-bottom-${uid}`">
-            <div ref="chartLegend" v-if="FINAL_CONFIG.style.chart.legend.show"
-                :class="{ 'vue-ui-nested-donuts-legend': legendSets.length > 1 }">
-                <Legend 
-                    v-for="(legendSet, i) in legendSets" 
-                    :key="`legend_${i}_${legendStep}`" 
+        <Teleport
+            v-if="readyTeleport"
+            :to="
+                FINAL_CONFIG.style.chart.legend.position === 'top'
+                    ? `#legend-top-${uid}`
+                    : `#legend-bottom-${uid}`
+            "
+        >
+            <div
+                ref="chartLegend"
+                v-if="FINAL_CONFIG.style.chart.legend.show"
+                :class="{
+                    'vue-ui-nested-donuts-legend': legendSets.length > 1,
+                }"
+            >
+                <Legend
+                    v-for="(legendSet, i) in legendSets"
+                    :key="`legend_${i}_${legendStep}`"
                     :legendSet="legendSet"
                     :config="legendConfig"
                     :isCursorPointer="isCursorPointer"
                     @clickMarker="({ legend }) => segregateDonut(legend)"
                 >
                     <template #legendTitle="{ titleSet }">
-                        <div class="vue-ui-nested-donuts-legend-title" v-if="titleSet[0] && titleSet[0].arcOf">
+                        <div
+                            class="vue-ui-nested-donuts-legend-title"
+                            v-if="titleSet[0] && titleSet[0].arcOf"
+                        >
                             {{ titleSet[0].arcOf }}
                         </div>
                     </template>
                     <template #item="{ legend, index }">
-                        <div data-cy="legend-item" @click="segregateDonut(legend)"
-                            :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
+                        <div
+                            data-cy="legend-item"
+                            @click="segregateDonut(legend)"
+                            :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`"
+                        >
                             {{ legend.display }}
                         </div>
                     </template>
@@ -2129,11 +2613,24 @@ defineExpose({
                     <template #legendToggle>
                         <BaseLegendToggle
                             :key="`toggle-${i}`"
-                            v-if="legendSet.length > 2 && FINAL_CONFIG.style.chart.legend.selectAllToggle.show && !loading"
-                            :backgroundColor="FINAL_CONFIG.style.chart.legend.selectAllToggle.backgroundColor"
-                            :color="FINAL_CONFIG.style.chart.legend.selectAllToggle.color"
+                            v-if="
+                                legendSet.length > 2 &&
+                                FINAL_CONFIG.style.chart.legend.selectAllToggle
+                                    .show &&
+                                !loading
+                            "
+                            :backgroundColor="
+                                FINAL_CONFIG.style.chart.legend.selectAllToggle
+                                    .backgroundColor
+                            "
+                            :color="
+                                FINAL_CONFIG.style.chart.legend.selectAllToggle
+                                    .color
+                            "
                             :fontSize="FINAL_CONFIG.style.chart.legend.fontSize"
-                            :checked="legendSet.some(l => segregated.includes(l.id))"
+                            :checked="
+                                legendSet.some((l) => segregated.includes(l.id))
+                            "
                             :isCursorPointer="isCursorPointer"
                             @toggle="toggleLegend(legendSet)"
                         />
@@ -2161,29 +2658,37 @@ defineExpose({
                 {{ tableComponent.title }}
             </template>
             <template #actions v-if="FINAL_CONFIG.table.useDialog">
-                <button 
-                    tabindex="0" 
-                    class="vue-ui-user-options-button" 
+                <button
+                    tabindex="0"
+                    class="vue-ui-user-options-button"
                     @click="generateCsv(FINAL_CONFIG.userOptions.callbacks.csv)"
                     :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }"
                 >
-                    <BaseIcon name="fileCsv" :stroke="tableComponent.props.color"/>
+                    <BaseIcon
+                        name="fileCsv"
+                        :stroke="tableComponent.props.color"
+                    />
                 </button>
             </template>
             <template #content>
-                <DataTable 
-                    :key="`table_${tableStep}`" 
-                    :colNames="dataTable.colNames" 
+                <DataTable
+                    :key="`table_${tableStep}`"
+                    :colNames="dataTable.colNames"
                     :head="dataTable.head"
-                    :body="dataTable.body" 
-                    :config="dataTable.config" 
-                    :title="FINAL_CONFIG.table.useDialog ? '' : tableComponent.title"
+                    :body="dataTable.body"
+                    :config="dataTable.config"
+                    :title="
+                        FINAL_CONFIG.table.useDialog ? '' : tableComponent.title
+                    "
                     :withCloseButton="!FINAL_CONFIG.table.useDialog"
                     :isCursorPointer="isCursorPointer"
                     @close="closeTable"
                 >
                     <template #th="{ th }">
-                        <div v-html="th" style="display: flex; align-items: center"></div>
+                        <div
+                            v-html="th"
+                            style="display: flex; align-items: center"
+                        ></div>
                     </template>
                     <template #td="{ td }">
                         {{ td.name || td }}
@@ -2194,13 +2699,13 @@ defineExpose({
 
         <!-- v3 Skeleton loader -->
         <slot name="skeleton">
-            <BaseScanner v-if="loading"/>
+            <BaseScanner v-if="loading" />
         </slot>
     </div>
 </template>
 
 <style scoped>
-@import "../vue-data-ui.css";
+@import '../vue-data-ui.css';
 
 .vue-ui-nested-donuts * {
     transition: unset;

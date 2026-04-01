@@ -22,10 +22,10 @@ export function circle(ctx, center, radius, options = {}) {
     if (radius <= 0) return;
     ctx.save();
 
-    const { 
-        color = 'black', 
-        lineWidth = 1, 
-        lineCap = 'round', 
+    const {
+        color = 'black',
+        lineWidth = 1,
+        lineCap = 'round',
         lineJoin = 'round',
         lineDash = null,
         lineDashoffset = 0,
@@ -33,7 +33,7 @@ export function circle(ctx, center, radius, options = {}) {
         shadowBlur = 0,
         shadowOffsetX = 0,
         shadowOffsetY = 0,
-        fillStyle = '#FFFFFF'
+        fillStyle = '#FFFFFF',
     } = options;
 
     ctx.beginPath();
@@ -44,7 +44,7 @@ export function circle(ctx, center, radius, options = {}) {
     ctx.lineCap = lineCap;
     ctx.lineJoin = lineJoin;
 
-    if(lineDash) {
+    if (lineDash) {
         ctx.setLineDash(lineDash);
         ctx.lineDashoffset = lineDashoffset;
     }
@@ -90,17 +90,17 @@ export function line(ctx, coordinates, options = {}) {
     if (!coordinates.length) return;
     ctx.save();
 
-    const { 
-        color = 'black', 
-        lineWidth = 1, 
-        lineCap = 'round', 
+    const {
+        color = 'black',
+        lineWidth = 1,
+        lineCap = 'round',
         lineJoin = 'round',
         lineDash = null,
         lineDashoffset = 0,
         shadowColor = null,
         shadowBlur = 0,
         shadowOffsetX = 0,
-        shadowOffsetY = 0
+        shadowOffsetY = 0,
     } = options;
 
     ctx.beginPath();
@@ -115,8 +115,8 @@ export function line(ctx, coordinates, options = {}) {
     ctx.lineCap = lineCap;
     ctx.lineJoin = lineJoin;
 
-    if(lineDash) {
-        ctx.setLineDash(lineDash)
+    if (lineDash) {
+        ctx.setLineDash(lineDash);
         ctx.lineDashoffset = lineDashoffset;
     }
 
@@ -177,7 +177,7 @@ export function polygon(ctx, coordinates, options = {}) {
         shadowColor = null,
         shadowBlur = 0,
         shadowOffsetX = 0,
-        shadowOffsetY = 0
+        shadowOffsetY = 0,
     } = options;
 
     ctx.beginPath();
@@ -212,7 +212,7 @@ export function polygon(ctx, coordinates, options = {}) {
                 secureGradient(gradient.start.x, Number.MIN_VALUE),
                 secureGradient(gradient.start.y, Number.MIN_VALUE),
                 secureGradient(gradient.end.x, Number.MIN_VALUE * 2),
-                secureGradient(gradient.end.y, Number.MIN_VALUE * 2)
+                secureGradient(gradient.end.y, Number.MIN_VALUE * 2),
             );
         } else if (gradient.type === 'radial') {
             grd = ctx.createRadialGradient(
@@ -221,12 +221,12 @@ export function polygon(ctx, coordinates, options = {}) {
                 gradient.start.r || 0,
                 secureGradient(gradient.end.x, Number.MIN_VALUE * 2),
                 secureGradient(gradient.end.y, Number.MIN_VALUE * 2),
-                gradient.end.r || 0
+                gradient.end.r || 0,
             );
         }
 
         if (grd && gradient.stops) {
-            gradient.stops.forEach(stop => {
+            gradient.stops.forEach((stop) => {
                 grd.addColorStop(stop.offset, stop.color);
             });
             ctx.fillStyle = grd;
@@ -319,7 +319,7 @@ export function rect(ctx, coordinates, options = {}) {
                 secureGradient(gradient.start.x, Number.MIN_VALUE),
                 secureGradient(gradient.start.y, Number.MIN_VALUE),
                 secureGradient(gradient.end.x, Number.MIN_VALUE * 2),
-                secureGradient(gradient.end.y, Number.MIN_VALUE * 2)
+                secureGradient(gradient.end.y, Number.MIN_VALUE * 2),
             );
         } else if (gradient.type === 'radial') {
             grd = ctx.createRadialGradient(
@@ -328,12 +328,12 @@ export function rect(ctx, coordinates, options = {}) {
                 gradient.start.r || 0,
                 secureGradient(gradient.end.x, Number.MIN_VALUE * 2),
                 secureGradient(gradient.end.y, Number.MIN_VALUE * 2),
-                gradient.end.r || 0
+                gradient.end.r || 0,
             );
         }
 
         if (grd && gradient.stops) {
-            gradient.stops.forEach(stop => {
+            gradient.stops.forEach((stop) => {
                 grd.addColorStop(stop.offset, stop.color);
             });
             ctx.fillStyle = grd;
@@ -384,7 +384,7 @@ export function text(ctx, text, x, y, options = {}) {
         shadowOffsetY = 0,
         strokeColor = null,
         lineWidth = 1,
-        globalAlpha = 1
+        globalAlpha = 1,
     } = options;
 
     ctx.font = font;
@@ -427,15 +427,15 @@ export function throttle(func, limit = 20) {
         if (!inThrottle) {
             func.apply(context, args);
             inThrottle = true;
-            setTimeout(() => inThrottle = false, limit);
+            setTimeout(() => (inThrottle = false), limit);
         }
     };
 }
 
 /**
- * Debounces a function so that it will only execute after a specified delay 
+ * Debounces a function so that it will only execute after a specified delay
  * since the last time it was invoked.
- * 
+ *
  * @param {Function} func - The function to debounce.
  * @param {number} wait - The number of milliseconds to wait before invoking the function.
  * @param {boolean} [immediate=false] - If true, trigger the function on the leading edge instead of the trailing.
@@ -444,9 +444,9 @@ export function throttle(func, limit = 20) {
 export function debounce(func, wait, immediate = false) {
     let timeout;
 
-    return function(...args) {
+    return function (...args) {
         const context = this;
-        const later = function() {
+        const later = function () {
             timeout = null;
             if (!immediate) func.apply(context, args);
         };
@@ -473,17 +473,19 @@ export function cloneCanvas(oldCanvas) {
 export function fillStackRatios(ds) {
     let totalRatio = ds.reduce((sum, obj) => sum + (obj.stackRatio || 0), 0);
 
-    let countWithoutRatio = ds.filter(obj => obj.stackRatio === undefined).length;
+    let countWithoutRatio = ds.filter(
+        (obj) => obj.stackRatio === undefined,
+    ).length;
 
     if (countWithoutRatio === 0 && totalRatio !== 1) {
-        throw new Error("Provided ratios do not sum to 1.");
+        throw new Error('Provided ratios do not sum to 1.');
     }
 
     let remainingRatio = 1 - totalRatio;
 
     let defaultRatio = remainingRatio / countWithoutRatio;
 
-    return ds.map(d => {
+    return ds.map((d) => {
         if (d.stackRatio === undefined) {
             return { ...d, stackRatio: defaultRatio };
         }
@@ -492,7 +494,9 @@ export function fillStackRatios(ds) {
 }
 
 export function secureGradient(val, fallback) {
-    return [null, undefined, NaN, Infinity, -Infinity].includes(val) ? fallback : val
+    return [null, undefined, NaN, Infinity, -Infinity].includes(val)
+        ? fallback
+        : val;
 }
 
 const lib = {
@@ -505,7 +509,7 @@ const lib = {
     rect,
     secureGradient,
     text,
-    throttle
-}
+    throttle,
+};
 
-export default lib
+export default lib;

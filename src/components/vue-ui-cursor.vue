@@ -1,17 +1,17 @@
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount, nextTick } from "vue";
-import { useNestedProp } from "../useNestedProp";
-import { createUid, setOpacity, XMLNS } from "../lib";
-import { useConfig } from "../useConfig";
-import PackageVersion from "../atoms/PackageVersion.vue";
+import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue';
+import { useNestedProp } from '../useNestedProp';
+import { createUid, setOpacity, XMLNS } from '../lib';
+import { useConfig } from '../useConfig';
+import PackageVersion from '../atoms/PackageVersion.vue';
 
 const { vue_ui_cursor: DEFAULT_CONFIG } = useConfig();
 
 const props = defineProps({
     config: {
         type: Object,
-        default: {}
-    }
+        default: {},
+    },
 });
 
 const uid = ref(createUid());
@@ -19,17 +19,21 @@ const uid = ref(createUid());
 const FINAL_CONFIG = computed(() => {
     return useNestedProp({
         userConfig: props.config,
-        defaultConfig: DEFAULT_CONFIG
+        defaultConfig: DEFAULT_CONFIG,
     });
 });
 
 const position = ref({
     x: -100,
-    y: -100
+    y: -100,
 });
 
-const circleRadius = computed(() => Math.round(FINAL_CONFIG.value.centerCircleRadius));
-const coordinatesOffset = computed(() => Math.round(FINAL_CONFIG.value.coordinatesOffset));
+const circleRadius = computed(() =>
+    Math.round(FINAL_CONFIG.value.centerCircleRadius),
+);
+const coordinatesOffset = computed(() =>
+    Math.round(FINAL_CONFIG.value.coordinatesOffset),
+);
 
 function setClientPosition({ clientX, clientY, ...rest }) {
     position.value.x = clientX - circleRadius.value;
@@ -70,26 +74,26 @@ function getCursorContainerElement() {
     if (FINAL_CONFIG.value.parentId) {
         return document.getElementById(FINAL_CONFIG.value.parentId);
     }
-    const firstDiv = document.getElementsByTagName("div")[0];
+    const firstDiv = document.getElementsByTagName('div')[0];
     return firstDiv || null;
 }
 
 function addEventListeners(element) {
     if (!element) return;
-    element.addEventListener("mousemove", setClientPosition);
-    element.addEventListener("touchmove", setFingerPosition);
-    element.addEventListener("mouseleave", () => setVisibility(false));
-    element.addEventListener("mouseenter", () => setVisibility(true));
-    element.addEventListener("click", setClicked);
+    element.addEventListener('mousemove', setClientPosition);
+    element.addEventListener('touchmove', setFingerPosition);
+    element.addEventListener('mouseleave', () => setVisibility(false));
+    element.addEventListener('mouseenter', () => setVisibility(true));
+    element.addEventListener('click', setClicked);
 }
 
 function removeEventListeners(element) {
     if (!element) return;
-    element.removeEventListener("mousemove", setClientPosition);
-    element.removeEventListener("touchmove", setFingerPosition);
-    element.removeEventListener("mouseleave", () => setVisibility(false));
-    element.removeEventListener("mouseenter", () => setVisibility(true));
-    element.removeEventListener("click", setClicked);
+    element.removeEventListener('mousemove', setClientPosition);
+    element.removeEventListener('touchmove', setFingerPosition);
+    element.removeEventListener('mouseleave', () => setVisibility(false));
+    element.removeEventListener('mouseenter', () => setVisibility(true));
+    element.removeEventListener('click', setClicked);
 }
 
 onMounted(() => {
@@ -160,7 +164,12 @@ onBeforeUnmount(() => {
                 :cx="50"
                 :cy="50"
                 :r="circleRadius"
-                :fill="setOpacity(FINAL_CONFIG.centerCircleColor, FINAL_CONFIG.centerCircleOpacity * 100)"
+                :fill="
+                    setOpacity(
+                        FINAL_CONFIG.centerCircleColor,
+                        FINAL_CONFIG.centerCircleOpacity * 100,
+                    )
+                "
                 :stroke="FINAL_CONFIG.centerCircleStroke"
                 :stroke-width="FINAL_CONFIG.centerCircleStrokeWidth"
                 :stroke-dasharray="FINAL_CONFIG.centerCircleDasharray"
@@ -176,8 +185,18 @@ onBeforeUnmount(() => {
             />
             <g class="wave" v-if="FINAL_CONFIG.useWaveOnClick">
                 <defs>
-                    <filter :id="`blur_${uid}`" x="-50%" y="-50%" width="200%" height="200%">
-                        <feGaussianBlur in="SourceGraphic" :stdDeviation="4" :id="`blur_std_${uid}`" />
+                    <filter
+                        :id="`blur_${uid}`"
+                        x="-50%"
+                        y="-50%"
+                        width="200%"
+                        height="200%"
+                    >
+                        <feGaussianBlur
+                            in="SourceGraphic"
+                            :stdDeviation="4"
+                            :id="`blur_std_${uid}`"
+                        />
                         <feColorMatrix type="saturate" values="0" />
                     </filter>
                 </defs>
@@ -240,7 +259,10 @@ onBeforeUnmount(() => {
                     stroke-linecap="round"
                 />
             </g>
-            <g v-if="FINAL_CONFIG.showIntersectCircles" :class="{ 'rotating-circles': FINAL_CONFIG.isLoading }">
+            <g
+                v-if="FINAL_CONFIG.showIntersectCircles"
+                :class="{ 'rotating-circles': FINAL_CONFIG.isLoading }"
+            >
                 <circle
                     data-cy="intersect-circle-bottom"
                     :cx="50"
@@ -274,8 +296,17 @@ onBeforeUnmount(() => {
                 <text
                     data-cy="coordinates-x"
                     text-anchor="end"
-                    :x="-circleRadius + 50 - (FINAL_CONFIG.coordinatesFontSize / 2) + coordinatesOffset"
-                    :y="50 - (FINAL_CONFIG.coordinatesFontSize / 2) + coordinatesOffset"
+                    :x="
+                        -circleRadius +
+                        50 -
+                        FINAL_CONFIG.coordinatesFontSize / 2 +
+                        coordinatesOffset
+                    "
+                    :y="
+                        50 -
+                        FINAL_CONFIG.coordinatesFontSize / 2 +
+                        coordinatesOffset
+                    "
                     :font-size="FINAL_CONFIG.coordinatesFontSize"
                     :fill="FINAL_CONFIG.coordinatesColor"
                     style="font-variant-numeric: tabular-nums"
@@ -284,7 +315,7 @@ onBeforeUnmount(() => {
                     {{ position.x.toFixed(0) }}
                 </text>
                 <g
-                    :transform="`translate(${50 - (FINAL_CONFIG.coordinatesFontSize / 2) + coordinatesOffset}, ${-circleRadius + 50 - (FINAL_CONFIG.coordinatesFontSize / 2) + coordinatesOffset})`"
+                    :transform="`translate(${50 - FINAL_CONFIG.coordinatesFontSize / 2 + coordinatesOffset}, ${-circleRadius + 50 - FINAL_CONFIG.coordinatesFontSize / 2 + coordinatesOffset})`"
                 >
                     <text
                         data-cy="coordinates-y"

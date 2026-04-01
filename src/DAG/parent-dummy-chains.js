@@ -1,11 +1,16 @@
 export default function parentDummyChains(graph) {
     const postorderNumbers = computePostorder(graph);
 
-    graph.graph().dummyChains.forEach(startNodeId => {
+    graph.graph().dummyChains.forEach((startNodeId) => {
         let node = graph.node(startNodeId);
         const edgeObject = node.edgeObj;
 
-        const pathData = findPath(graph, postorderNumbers, edgeObject.v, edgeObject.w);
+        const pathData = findPath(
+            graph,
+            postorderNumbers,
+            edgeObject.v,
+            edgeObject.w,
+        );
         const path = pathData.path;
         const lowestCommonAncestor = pathData.lca;
 
@@ -34,7 +39,8 @@ export default function parentDummyChains(graph) {
             if (!ascending) {
                 while (
                     pathIndex < path.length - 1 &&
-                    graph.node((pathNodeId = path[pathIndex + 1])).minRank <= node.rank
+                    graph.node((pathNodeId = path[pathIndex + 1])).minRank <=
+                        node.rank
                 ) {
                     pathIndex++;
                 }
@@ -65,7 +71,11 @@ function findPath(graph, postorderNumbers, v, w) {
     do {
         parent = graph.parent(parent);
         vPath.push(parent);
-    } while (parent && (postorderNumbers[parent].low > low || limit > postorderNumbers[parent].lim));
+    } while (
+        parent &&
+        (postorderNumbers[parent].low > low ||
+            limit > postorderNumbers[parent].lim)
+    );
 
     lowestCommonAncestor = parent;
 

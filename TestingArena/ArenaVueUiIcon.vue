@@ -1,21 +1,313 @@
 <script setup>
-import { computed, onBeforeUnmount, ref } from "vue";
-import BaseIcon from "./../src/atoms/BaseIcon.vue";
+import { computed, onBeforeUnmount, ref } from 'vue';
+import BaseIcon from './../src/atoms/BaseIcon.vue';
 
-import { VueUiIcon } from "vue-data-ui";
+import { VueUiIcon } from 'vue-data-ui';
 
 const icons = ref([
-    "annotator", "chart3dBar", "chartAgePyramid", "chartBar", "chartCandlestick", "chartChestnut", "chartDonut", "chartDonutEvolution", "chartGauge", "chartHeatmap", "chartLine", "chartMoodRadar", "chartOnion", "chartQuadrant", "chartRadar", "chartRelationCircle", "chartRings", "chartScatter", "chartSparkHistogram", "chartSparkStackbar", "chartTable", "chartThermometer", "chartTiremarks", "chartVerticalBar", "chartWaffle", "chartWheel", "close", "dashboard", "digit0", "digit1", "digit2", "digit3", "digit4", "digit5", "digit6", "digit7", "digit8", "digit9", "excel", "image", "labelClose", "labelOpen", "menu", "moodFlat", "moodHappy", "moodNeutral", "moodSad", "pdf", "screenshot", "skeleton", "smiley", "sort", "spin", "tableClose", "tableOpen", "chartNestedDonuts", "chartSparkbar", "refresh", "circleQuestion", "circleExclamation", "circleCheck", "circleCancel", "moodLaughing", "moodWink", "moodEmbarrassed", "moodSurprised", "exitFullscreen", "fullscreen", "arrowRight", "arrowTop", "arrowBottom", "arrowLeft", "chartCluster", "chartSparkline", "legend", "csv", "chartGalaxy", "kpi", "kpiBox", "tooltip", "vueDataUi", "ratio", "func", "settings", "trendUp", "trendDown", "clipBoard", "zoomPlus", "zoomMinus", "clipboardLine", "clipboardDonut", "clipboardBar", "clipboardVariable", "triangle", "triangleFill", "square", "squareFill", "diamond", "diamondFill", "pentagon", "pentagonFill", "hexagon", "hexagonFill", "circle", "circleFill", "star", "starFace", "starFill", "numbers", "sigma", "mu", "lambda", "copy", "accordion", "cursor", "trend", "chartStripPlot", "chartDumbbell", "copyLeft", "chartWordCloud", "chartWordCloudZh", "stack", "unstack", "window", "chartFlow", "chartParallelCoordinatePlot", "tooltipDisabled", "pause", "play", "stop", "restart", "lap", "carouselTable", "battery", "chartStackbar", "chartBullet", "trash", "annotatorDisabled", "palette", "boxes", "chartFunnel", "chartHistoryPlot", "chartTableSparkline", "chartCirclePack", "icons", "robot", "hourglass", "computer", "htmlTag", "curlyBrackets", "curlySpread", "world", "eye", "chartRidgeline", "chartChord", "tableDialogOpen", "tableDialogClose", "minimap", "svg", "chartStackline", "zoomLock", "zoomUnlock", "lock", "unlock", "triangleInformation", "triangleExclamation", "direction", "chartDag", "chartGeo", "revert", "lineUp", "histogram", "histogramUp", "histogramDown", "document", "database", "pie", "percentage", "percentageUp", "percentageDown", "aToZ", "zToA", "zeroToNine", "nineToZero", "network", "chip", "chipAi", "chipBinary", "wifi", "key", "binary", "shield", "shieldExclam", "cloud", "cloudRain", "sun", "croissant", "plus", "minus", "person", "people", "blur", "download", "upload", "target", "sqlQuery", "sqlSearch", "gisLayerQuery", "gisLayerSearch", "scada", "apiStream", "wrench", "branches", "fork", "resize", "resizeX", "resizeY", "resizeTLBR", "resizeTRBL", "focus", "sql", "monitor", "workstation", "laptop", "folder", "folderFill", "clip", "addColumn", "addRow", "bell", "bellOff", "bellRing", "pin", "unpin", "building", "twig", "check", "doubleCheck", "plug", "unplug", "spinner1", "spinner2", "spinner3", "spinner4", "magnify", "frameLine", "pointer", "monument", "spark", "doubleSpark", "chartBump", "folderOpen", "folderOpenFill", "tag", "lightBulbOn", "lightBulbOff", "knobs", "hierarchy", "hierarchyList", "bucketFill", "bucketEmpty", "bucket", "bucketRecycle", "listType", "calendar", "envelope", "test", "sliders", "checkList", "bug", "microscope", "pi", "export", "file", "filePlus", "fileSearch", "recycle", "colorPicker", "text", "fileSvg", "filePdf", "fileCsv", "filePng", "link", "puzzle", "puzzleFill", "externalLink", "plotLine", "plotArrow", "accessibility", "npmx"
+    'annotator',
+    'chart3dBar',
+    'chartAgePyramid',
+    'chartBar',
+    'chartCandlestick',
+    'chartChestnut',
+    'chartDonut',
+    'chartDonutEvolution',
+    'chartGauge',
+    'chartHeatmap',
+    'chartLine',
+    'chartMoodRadar',
+    'chartOnion',
+    'chartQuadrant',
+    'chartRadar',
+    'chartRelationCircle',
+    'chartRings',
+    'chartScatter',
+    'chartSparkHistogram',
+    'chartSparkStackbar',
+    'chartTable',
+    'chartThermometer',
+    'chartTiremarks',
+    'chartVerticalBar',
+    'chartWaffle',
+    'chartWheel',
+    'close',
+    'dashboard',
+    'digit0',
+    'digit1',
+    'digit2',
+    'digit3',
+    'digit4',
+    'digit5',
+    'digit6',
+    'digit7',
+    'digit8',
+    'digit9',
+    'excel',
+    'image',
+    'labelClose',
+    'labelOpen',
+    'menu',
+    'moodFlat',
+    'moodHappy',
+    'moodNeutral',
+    'moodSad',
+    'pdf',
+    'screenshot',
+    'skeleton',
+    'smiley',
+    'sort',
+    'spin',
+    'tableClose',
+    'tableOpen',
+    'chartNestedDonuts',
+    'chartSparkbar',
+    'refresh',
+    'circleQuestion',
+    'circleExclamation',
+    'circleCheck',
+    'circleCancel',
+    'moodLaughing',
+    'moodWink',
+    'moodEmbarrassed',
+    'moodSurprised',
+    'exitFullscreen',
+    'fullscreen',
+    'arrowRight',
+    'arrowTop',
+    'arrowBottom',
+    'arrowLeft',
+    'chartCluster',
+    'chartSparkline',
+    'legend',
+    'csv',
+    'chartGalaxy',
+    'kpi',
+    'kpiBox',
+    'tooltip',
+    'vueDataUi',
+    'ratio',
+    'func',
+    'settings',
+    'trendUp',
+    'trendDown',
+    'clipBoard',
+    'zoomPlus',
+    'zoomMinus',
+    'clipboardLine',
+    'clipboardDonut',
+    'clipboardBar',
+    'clipboardVariable',
+    'triangle',
+    'triangleFill',
+    'square',
+    'squareFill',
+    'diamond',
+    'diamondFill',
+    'pentagon',
+    'pentagonFill',
+    'hexagon',
+    'hexagonFill',
+    'circle',
+    'circleFill',
+    'star',
+    'starFace',
+    'starFill',
+    'numbers',
+    'sigma',
+    'mu',
+    'lambda',
+    'copy',
+    'accordion',
+    'cursor',
+    'trend',
+    'chartStripPlot',
+    'chartDumbbell',
+    'copyLeft',
+    'chartWordCloud',
+    'chartWordCloudZh',
+    'stack',
+    'unstack',
+    'window',
+    'chartFlow',
+    'chartParallelCoordinatePlot',
+    'tooltipDisabled',
+    'pause',
+    'play',
+    'stop',
+    'restart',
+    'lap',
+    'carouselTable',
+    'battery',
+    'chartStackbar',
+    'chartBullet',
+    'trash',
+    'annotatorDisabled',
+    'palette',
+    'boxes',
+    'chartFunnel',
+    'chartHistoryPlot',
+    'chartTableSparkline',
+    'chartCirclePack',
+    'icons',
+    'robot',
+    'hourglass',
+    'computer',
+    'htmlTag',
+    'curlyBrackets',
+    'curlySpread',
+    'world',
+    'eye',
+    'chartRidgeline',
+    'chartChord',
+    'tableDialogOpen',
+    'tableDialogClose',
+    'minimap',
+    'svg',
+    'chartStackline',
+    'zoomLock',
+    'zoomUnlock',
+    'lock',
+    'unlock',
+    'triangleInformation',
+    'triangleExclamation',
+    'direction',
+    'chartDag',
+    'chartGeo',
+    'revert',
+    'lineUp',
+    'histogram',
+    'histogramUp',
+    'histogramDown',
+    'document',
+    'database',
+    'pie',
+    'percentage',
+    'percentageUp',
+    'percentageDown',
+    'aToZ',
+    'zToA',
+    'zeroToNine',
+    'nineToZero',
+    'network',
+    'chip',
+    'chipAi',
+    'chipBinary',
+    'wifi',
+    'key',
+    'binary',
+    'shield',
+    'shieldExclam',
+    'cloud',
+    'cloudRain',
+    'sun',
+    'croissant',
+    'plus',
+    'minus',
+    'person',
+    'people',
+    'blur',
+    'download',
+    'upload',
+    'target',
+    'sqlQuery',
+    'sqlSearch',
+    'gisLayerQuery',
+    'gisLayerSearch',
+    'scada',
+    'apiStream',
+    'wrench',
+    'branches',
+    'fork',
+    'resize',
+    'resizeX',
+    'resizeY',
+    'resizeTLBR',
+    'resizeTRBL',
+    'focus',
+    'sql',
+    'monitor',
+    'workstation',
+    'laptop',
+    'folder',
+    'folderFill',
+    'clip',
+    'addColumn',
+    'addRow',
+    'bell',
+    'bellOff',
+    'bellRing',
+    'pin',
+    'unpin',
+    'building',
+    'twig',
+    'check',
+    'doubleCheck',
+    'plug',
+    'unplug',
+    'spinner1',
+    'spinner2',
+    'spinner3',
+    'spinner4',
+    'magnify',
+    'frameLine',
+    'pointer',
+    'monument',
+    'spark',
+    'doubleSpark',
+    'chartBump',
+    'folderOpen',
+    'folderOpenFill',
+    'tag',
+    'lightBulbOn',
+    'lightBulbOff',
+    'knobs',
+    'hierarchy',
+    'hierarchyList',
+    'bucketFill',
+    'bucketEmpty',
+    'bucket',
+    'bucketRecycle',
+    'listType',
+    'calendar',
+    'envelope',
+    'test',
+    'sliders',
+    'checkList',
+    'bug',
+    'microscope',
+    'pi',
+    'export',
+    'file',
+    'filePlus',
+    'fileSearch',
+    'recycle',
+    'colorPicker',
+    'text',
+    'fileSvg',
+    'filePdf',
+    'fileCsv',
+    'filePng',
+    'link',
+    'puzzle',
+    'puzzleFill',
+    'externalLink',
+    'plotLine',
+    'plotArrow',
+    'accessibility',
+    'npmx',
 ]);
 
-const inputValue = ref("");
+const inputValue = ref('');
 const isOpen = ref(false);
 const highlightedIndex = ref(-1);
 
 const filteredOptions = computed(() => {
     const query = inputValue.value.trim().toLowerCase();
     if (!query) return icons.value;
-    return icons.value.filter((item) => String(item).toLowerCase().includes(query));
+    return icons.value.filter((item) =>
+        String(item).toLowerCase().includes(query),
+    );
 });
 
 function openList() {
@@ -38,34 +330,40 @@ function onInput(event) {
 }
 
 function onKeyDown(event) {
-    if (!isOpen.value && (event.key === "ArrowDown" || event.key === "ArrowUp")) {
+    if (
+        !isOpen.value &&
+        (event.key === 'ArrowDown' || event.key === 'ArrowUp')
+    ) {
         openList();
     }
 
     if (!isOpen.value) return;
 
-    if (event.key === "ArrowDown") {
+    if (event.key === 'ArrowDown') {
         event.preventDefault();
         const maxIndex = filteredOptions.value.length - 1;
         highlightedIndex.value = Math.min(highlightedIndex.value + 1, maxIndex);
         return;
     }
 
-    if (event.key === "ArrowUp") {
+    if (event.key === 'ArrowUp') {
         event.preventDefault();
         highlightedIndex.value = Math.max(highlightedIndex.value - 1, 0);
         return;
     }
 
-    if (event.key === "Enter") {
-        if (highlightedIndex.value >= 0 && highlightedIndex.value < filteredOptions.value.length) {
+    if (event.key === 'Enter') {
+        if (
+            highlightedIndex.value >= 0 &&
+            highlightedIndex.value < filteredOptions.value.length
+        ) {
             event.preventDefault();
             selectOption(filteredOptions.value[highlightedIndex.value]);
         }
         return;
     }
 
-    if (event.key === "Escape") {
+    if (event.key === 'Escape') {
         closeList();
     }
 }
@@ -78,10 +376,10 @@ function onDocumentPointerDown(event) {
     if (!root.contains(event.target)) closeList();
 }
 
-document.addEventListener("pointerdown", onDocumentPointerDown);
+document.addEventListener('pointerdown', onDocumentPointerDown);
 
 onBeforeUnmount(() => {
-    document.removeEventListener("pointerdown", onDocumentPointerDown);
+    document.removeEventListener('pointerdown', onDocumentPointerDown);
 });
 
 let blurTimeoutId = null;
@@ -107,9 +405,8 @@ function previous() {
         return;
     }
 
-    const prevIndex = currentIndex === 0
-        ? icons.value.length - 1
-        : currentIndex - 1;
+    const prevIndex =
+        currentIndex === 0 ? icons.value.length - 1 : currentIndex - 1;
 
     inputValue.value = icons.value[prevIndex];
 }
@@ -124,9 +421,8 @@ function next() {
         return;
     }
 
-    const nextIndex = currentIndex === icons.value.length - 1
-        ? 0
-        : currentIndex + 1;
+    const nextIndex =
+        currentIndex === icons.value.length - 1 ? 0 : currentIndex + 1;
 
     inputValue.value = icons.value[nextIndex];
 }
@@ -135,7 +431,7 @@ const pathToOffset = ref('');
 const offset = ref({
     x: 0,
     y: 0,
-})
+});
 
 function offsetSvgPath(path, n, m) {
     return path.replace(/(-?\d+(?:\.\d+)?)/g, (match, number, index, full) => {
@@ -147,13 +443,17 @@ function offsetSvgPath(path, n, m) {
 }
 
 function convertPath() {
-    pathToOffset.value = offsetSvgPath(pathToOffset.value, offset.value.x, offset.value.y);
+    pathToOffset.value = offsetSvgPath(
+        pathToOffset.value,
+        offset.value.x,
+        offset.value.y,
+    );
 }
 
 const pathToVisualize = ref('');
 
-function insertTemplate(type = "stroke", path) {
-    pathToVisualize.value += `<path d="${path ?? ''}" stroke-linecap="round" stroke-linejoin="round" ${type === 'stroke' ? 'stroke="#CCCCCC" stroke-width="1.5" fill="none"' : 'fill="#CCCCCC"'} style="opacity: 1"/>`
+function insertTemplate(type = 'stroke', path) {
+    pathToVisualize.value += `<path d="${path ?? ''}" stroke-linecap="round" stroke-linejoin="round" ${type === 'stroke' ? 'stroke="#CCCCCC" stroke-width="1.5" fill="none"' : 'fill="#CCCCCC"'} style="opacity: 1"/>`;
 }
 
 const svgPath = computed(() => {
@@ -161,21 +461,26 @@ const svgPath = computed(() => {
         const X = [];
         const Y = [];
         for (let i = 1; i < 20; i += 1) {
-            X.push(`<path d="M 0,${i} 20,${i}" stroke-width="${i % 5 === 0 ? '0.15' : '0.05'}" stroke="#3A3A3A"/>`);
-            Y.push(`<path d="M ${i},0 ${i},20" stroke-width="${i % 5 === 0 ? '0.15' : '0.05'}" stroke="#3A3A3A"/>`);
+            X.push(
+                `<path d="M 0,${i} 20,${i}" stroke-width="${i % 5 === 0 ? '0.15' : '0.05'}" stroke="#3A3A3A"/>`,
+            );
+            Y.push(
+                `<path d="M ${i},0 ${i},20" stroke-width="${i % 5 === 0 ? '0.15' : '0.05'}" stroke="#3A3A3A"/>`,
+            );
         }
         return {
-            X, Y
-        }
-    }
+            X,
+            Y,
+        };
+    };
     return `
     ${paths().X}
     ${paths().Y}
     ${pathToVisualize.value}
-    `
+    `;
 });
 
-function addPath(type = "stroke") {
+function addPath(type = 'stroke') {
     insertTemplate(type, pathToOffset.value);
 }
 
@@ -183,20 +488,21 @@ const exportName = ref('');
 
 const exportCode = computed(() => {
     return `${exportName.value}: \`${pathToVisualize.value
-            .replace(/stroke="([^"]*)"/g, (_, value) =>
-                value === 'none' ? 'stroke="none"' : 'stroke="${stroke}"'
-            )
-            .replace(/fill="([^"]*)"/g, (_, value) =>
-                value === 'none' ? 'fill="none"' : 'fill="${stroke}"'
-            )
-            .replace(/stroke-width="([^"]*)"/g, (_, value) =>
-                value === 'none' ? 'stroke-width="none"' : 'stroke-width="${strokeWidth}"'
-            )
-        }\`,`
-})
+        .replace(/stroke="([^"]*)"/g, (_, value) =>
+            value === 'none' ? 'stroke="none"' : 'stroke="${stroke}"',
+        )
+        .replace(/fill="([^"]*)"/g, (_, value) =>
+            value === 'none' ? 'fill="none"' : 'fill="${stroke}"',
+        )
+        .replace(/stroke-width="([^"]*)"/g, (_, value) =>
+            value === 'none'
+                ? 'stroke-width="none"'
+                : 'stroke-width="${strokeWidth}"',
+        )}\`,`;
+});
 
 function copyToClipboard(text) {
-    return navigator.clipboard.writeText(text)
+    return navigator.clipboard.writeText(text);
 }
 
 /**
@@ -209,16 +515,11 @@ function fitPathToViewBox(
     d,
     targetWidth = 20,
     targetHeight = 20,
-    {
-        padding = 0,
-        preserveAspect = true,
-        offsetX = 0,
-        offsetY = 0,
-    } = {}
+    { padding = 0, preserveAspect = true, offsetX = 0, offsetY = 0 } = {},
 ) {
     const tokens = d
-        .replace(/,/g, " ")
-        .replace(/([a-zA-Z])/g, " $1 ")
+        .replace(/,/g, ' ')
+        .replace(/([a-zA-Z])/g, ' $1 ')
         .trim()
         .split(/\s+/);
 
@@ -228,8 +529,12 @@ function fitPathToViewBox(
     let i = 0;
     let cmd = null;
 
-    let x = 0, y = 0;
-    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    let x = 0,
+        y = 0;
+    let minX = Infinity,
+        minY = Infinity,
+        maxX = -Infinity,
+        maxY = -Infinity;
 
     const pushPoint = (px, py) => {
         if (Number.isFinite(px) && Number.isFinite(py)) {
@@ -258,9 +563,9 @@ function fitPathToViewBox(
         i -= 1;
 
         switch (cmd) {
-            case "M":
-            case "L":
-            case "T":
+            case 'M':
+            case 'L':
+            case 'T':
                 while (i < tokens.length && !isCmd(tokens[i])) {
                     x = num(tokens[i++]);
                     y = num(tokens[i++]);
@@ -268,21 +573,21 @@ function fitPathToViewBox(
                 }
                 break;
 
-            case "H":
+            case 'H':
                 while (i < tokens.length && !isCmd(tokens[i])) {
                     x = num(tokens[i++]);
                     pushPoint(x, y);
                 }
                 break;
 
-            case "V":
+            case 'V':
                 while (i < tokens.length && !isCmd(tokens[i])) {
                     y = num(tokens[i++]);
                     pushPoint(x, y);
                 }
                 break;
 
-            case "C":
+            case 'C':
                 while (i < tokens.length && !isCmd(tokens[i])) {
                     consumePairs(2, pushPoint);
                     x = num(tokens[i++]);
@@ -291,8 +596,8 @@ function fitPathToViewBox(
                 }
                 break;
 
-            case "S":
-            case "Q":
+            case 'S':
+            case 'Q':
                 while (i < tokens.length && !isCmd(tokens[i])) {
                     consumePairs(1, pushPoint);
                     x = num(tokens[i++]);
@@ -301,7 +606,7 @@ function fitPathToViewBox(
                 }
                 break;
 
-            case "A":
+            case 'A':
                 while (i < tokens.length && !isCmd(tokens[i])) {
                     const rx = num(tokens[i++]);
                     const ry = num(tokens[i++]);
@@ -320,7 +625,7 @@ function fitPathToViewBox(
     }
 
     if (!Number.isFinite(minX)) {
-        throw new Error("Could not compute bbox: path has no points");
+        throw new Error('Could not compute bbox: path has no points');
     }
 
     const bbox = {
@@ -354,7 +659,7 @@ function fitPathToViewBox(
     const ty = padding + extraY - bbox.minY * usedSy + offsetY;
 
     const scaleNumber = (v, axis) =>
-        preserveAspect ? v * usedSx : axis === "x" ? v * usedSx : v * usedSy;
+        preserveAspect ? v * usedSx : axis === 'x' ? v * usedSx : v * usedSy;
 
     // ---------- PASS 2: rewrite ----------
     const out = [];
@@ -374,62 +679,62 @@ function fitPathToViewBox(
         i -= 1;
 
         switch (cmd) {
-            case "M":
-            case "L":
-            case "T":
+            case 'M':
+            case 'L':
+            case 'T':
                 while (i < tokens.length && !isCmd(tokens[i])) {
                     out.push(
-                        fmt(scaleNumber(take(), "x") + tx),
-                        fmt(scaleNumber(take(), "y") + ty)
+                        fmt(scaleNumber(take(), 'x') + tx),
+                        fmt(scaleNumber(take(), 'y') + ty),
                     );
                 }
                 break;
 
-            case "H":
+            case 'H':
                 while (i < tokens.length && !isCmd(tokens[i])) {
-                    out.push(fmt(scaleNumber(take(), "x") + tx));
+                    out.push(fmt(scaleNumber(take(), 'x') + tx));
                 }
                 break;
 
-            case "V":
+            case 'V':
                 while (i < tokens.length && !isCmd(tokens[i])) {
-                    out.push(fmt(scaleNumber(take(), "y") + ty));
+                    out.push(fmt(scaleNumber(take(), 'y') + ty));
                 }
                 break;
 
-            case "C":
+            case 'C':
                 while (i < tokens.length && !isCmd(tokens[i])) {
                     for (let k = 0; k < 3; k += 1) {
                         out.push(
-                            fmt(scaleNumber(take(), "x") + tx),
-                            fmt(scaleNumber(take(), "y") + ty)
+                            fmt(scaleNumber(take(), 'x') + tx),
+                            fmt(scaleNumber(take(), 'y') + ty),
                         );
                     }
                 }
                 break;
 
-            case "S":
-            case "Q":
+            case 'S':
+            case 'Q':
                 while (i < tokens.length && !isCmd(tokens[i])) {
                     for (let k = 0; k < 2; k += 1) {
                         out.push(
-                            fmt(scaleNumber(take(), "x") + tx),
-                            fmt(scaleNumber(take(), "y") + ty)
+                            fmt(scaleNumber(take(), 'x') + tx),
+                            fmt(scaleNumber(take(), 'y') + ty),
                         );
                     }
                 }
                 break;
 
-            case "A":
+            case 'A':
                 while (i < tokens.length && !isCmd(tokens[i])) {
                     out.push(
-                        fmt(scaleNumber(take(), "x")),
-                        fmt(scaleNumber(take(), "y")),
+                        fmt(scaleNumber(take(), 'x')),
+                        fmt(scaleNumber(take(), 'y')),
                         fmt(take()),
                         take(),
                         take(),
-                        fmt(scaleNumber(take(), "x") + tx),
-                        fmt(scaleNumber(take(), "y") + ty)
+                        fmt(scaleNumber(take(), 'x') + tx),
+                        fmt(scaleNumber(take(), 'y') + ty),
                     );
                 }
                 break;
@@ -440,7 +745,7 @@ function fitPathToViewBox(
     }
 
     return {
-        d: out.join(" ").replace(/\s+/g, " ").trim(),
+        d: out.join(' ').replace(/\s+/g, ' ').trim(),
         viewBox: `0 0 ${targetWidth} ${targetHeight}`,
         bbox,
         scale: preserveAspect ? usedSx : { x: usedSx, y: usedSy },
@@ -451,15 +756,18 @@ function fitPathToViewBox(
 const fitOptions = ref({
     offsetX: 0,
     offsetY: 0,
-    padding: 0
+    padding: 0,
 });
 
 function scalePath(type) {
-    insertTemplate(type, fitPathToViewBox(pathToOffset.value, 20, 20, {
-        padding: fitOptions.value.padding,
-        offsetX: fitOptions.value.offsetX,
-        offsetY: fitOptions.value.offsetY
-    }).d);
+    insertTemplate(
+        type,
+        fitPathToViewBox(pathToOffset.value, 20, 20, {
+            padding: fitOptions.value.padding,
+            offsetX: fitOptions.value.offsetX,
+            offsetY: fitOptions.value.offsetY,
+        }).d,
+    );
 }
 
 function clearMaker() {
@@ -474,18 +782,25 @@ function clearComposer() {
     fitOptions.value.offsetY = 0;
     fitOptions.value.padding = 0;
 }
-
 </script>
 
 <template>
     <div
-        style="display: flex; flex-direction:column; flex-wrap: wrap; gap: 12px; width: 100%; margin: 0 auto; margin-top: 64px; max-width: 600px; align-items:center;">
+        style="
+            display: flex;
+            flex-direction: column;
+            flex-wrap: wrap;
+            gap: 12px;
+            width: 100%;
+            margin: 0 auto;
+            margin-top: 64px;
+            max-width: 600px;
+            align-items: center;
+        "
+    >
         <div ref="rootElement">
-
             <details>
-                <summary>
-                    Icon maker
-                </summary>
+                <summary>Icon maker</summary>
                 <div class="icon-builder">
                     <label class="icon-path">
                         Path composer
@@ -495,26 +810,42 @@ function clearComposer() {
                     <div class="icon-offset">
                         <label>
                             X:
-                            <input type="number" v-model="offset.x">
+                            <input type="number" v-model="offset.x" />
                         </label>
                         <label>
                             Y:
-                            <input type="number" v-model="offset.y">
+                            <input type="number" v-model="offset.y" />
                         </label>
                         <button class="svg-btn" @click="convertPath">
                             <VueUiIcon name="ratio" stroke="#42d392" />
                         </button>
                         <button class="svg-btn" @click="addPath('stroke')">
-                            <VueUiIcon name="arrowBottom" stroke="#42d392" :stroke-width="2">
+                            <VueUiIcon
+                                name="arrowBottom"
+                                stroke="#42d392"
+                                :stroke-width="2"
+                            >
                                 <template #exp>
-                                    <VueUiIcon name="square" :size="12" :stroke-width="4" />
+                                    <VueUiIcon
+                                        name="square"
+                                        :size="12"
+                                        :stroke-width="4"
+                                    />
                                 </template>
                             </VueUiIcon>
                         </button>
                         <button class="svg-btn" @click="addPath('fill')">
-                            <VueUiIcon name="arrowBottom" stroke="#42d392" :stroke-width="2">
+                            <VueUiIcon
+                                name="arrowBottom"
+                                stroke="#42d392"
+                                :stroke-width="2"
+                            >
                                 <template #exp>
-                                    <VueUiIcon name="squareFill" :size="12" :stroke-width="4" />
+                                    <VueUiIcon
+                                        name="squareFill"
+                                        :size="12"
+                                        :stroke-width="4"
+                                    />
                                 </template>
                             </VueUiIcon>
                         </button>
@@ -526,27 +857,57 @@ function clearComposer() {
                     <div class="icon-offset">
                         <label>
                             OffsetX:
-                            <input type="number" step="0.5" v-model="fitOptions.offsetX" style="width:4.1rem"/>
+                            <input
+                                type="number"
+                                step="0.5"
+                                v-model="fitOptions.offsetX"
+                                style="width: 4.1rem"
+                            />
                         </label>
                         <label>
                             OffsetY:
-                            <input type="number" step="0.5" v-model="fitOptions.offsetY" style="width:4.1rem"/>
+                            <input
+                                type="number"
+                                step="0.5"
+                                v-model="fitOptions.offsetY"
+                                style="width: 4.1rem"
+                            />
                         </label>
                         <label>
                             Padding:
-                            <input type="number" v-model="fitOptions.padding" style="width:4.1rem"/>
+                            <input
+                                type="number"
+                                v-model="fitOptions.padding"
+                                style="width: 4.1rem"
+                            />
                         </label>
                         <button class="svg-btn" @click="scalePath('stroke')">
-                            <VueUiIcon name="arrowBottom" stroke="#42d392" :stroke-width="2">
+                            <VueUiIcon
+                                name="arrowBottom"
+                                stroke="#42d392"
+                                :stroke-width="2"
+                            >
                                 <template #exp>
-                                    <VueUiIcon name="square" :size="12" :stroke-width="4" />
+                                    <VueUiIcon
+                                        name="square"
+                                        :size="12"
+                                        :stroke-width="4"
+                                    />
                                 </template>
                             </VueUiIcon>
                         </button>
                         <button class="svg-btn" @click="scalePath('fill')">
-                            <VueUiIcon name="arrowBottom" stroke="#42d392" :stroke-width="2">
+                            <VueUiIcon
+                                name="arrowBottom"
+                                stroke="#42d392"
+                                :stroke-width="2"
+                            >
                                 <template #exp>
-                                    <VueUiIcon name="squareFill" :size="12" :stroke-width="4" />
+                                    <VueUiIcon
+                                        name="squareFill"
+                                        :size="12"
+                                        :stroke-width="4"
+                                    />
                                 </template>
                             </VueUiIcon>
                         </button>
@@ -557,38 +918,81 @@ function clearComposer() {
 
                     <div class="btn-actions">
                         Path maker
-                        <button class="svg-btn" style="margin-left: 1rem" @click="insertTemplate('stroke')">
-                            <VueUiIcon name="square" stroke="#42d392" :stroke-width="2">
+                        <button
+                            class="svg-btn"
+                            style="margin-left: 1rem"
+                            @click="insertTemplate('stroke')"
+                        >
+                            <VueUiIcon
+                                name="square"
+                                stroke="#42d392"
+                                :stroke-width="2"
+                            >
                                 <template #exp>
                                     <VueUiIcon name="plus" :size="20" />
                                 </template>
                             </VueUiIcon>
                         </button>
-                        <button class="svg-btn" style="margin-left: 1rem" @click="insertTemplate('fill')">
-                            <VueUiIcon name="squareFill" stroke="#42d392" :stroke-width="2">
+                        <button
+                            class="svg-btn"
+                            style="margin-left: 1rem"
+                            @click="insertTemplate('fill')"
+                        >
+                            <VueUiIcon
+                                name="squareFill"
+                                stroke="#42d392"
+                                :stroke-width="2"
+                            >
                                 <template #exp>
                                     <VueUiIcon name="plus" :size="20" />
                                 </template>
                             </VueUiIcon>
                         </button>
-                        <button class="svg-btn" style="margin-left: 1rem" @click="clearMaker">
+                        <button
+                            class="svg-btn"
+                            style="margin-left: 1rem"
+                            @click="clearMaker"
+                        >
                             <VueUiIcon name="close" stroke="#42d392" />
                         </button>
                     </div>
-                    <label class="icon-path" style="margin-top: 0.5rem;">
+                    <label class="icon-path" style="margin-top: 0.5rem">
                         <textarea v-model="pathToVisualize" />
                     </label>
-                    <div style="text-align:center">Preview</div>
-                    <svg class="visualizer" viewBox="0 0 20 20" width="150" v-html="svgPath"></svg>
-                    <svg class="visualizer" viewBox="0 0 20 20" style="width: 28px; margin-top: 1rem; border: none;"
-                        v-html="svgPath"></svg>
+                    <div style="text-align: center">Preview</div>
+                    <svg
+                        class="visualizer"
+                        viewBox="0 0 20 20"
+                        width="150"
+                        v-html="svgPath"
+                    ></svg>
+                    <svg
+                        class="visualizer"
+                        viewBox="0 0 20 20"
+                        style="width: 28px; margin-top: 1rem; border: none"
+                        v-html="svgPath"
+                    ></svg>
 
                     <div class="export">
                         Export
-                        <label style="margin-bottom: 0.5rem; display:flex; align-items: center;">
+                        <label
+                            style="
+                                margin-bottom: 0.5rem;
+                                display: flex;
+                                align-items: center;
+                            "
+                        >
                             Name:
-                            <input type="text" style="margin-left:0.5rem" v-model="exportName">
-                            <button class="svg-btn" style="margin-left: 1rem" @click="copyToClipboard(exportCode)">
+                            <input
+                                type="text"
+                                style="margin-left: 0.5rem"
+                                v-model="exportName"
+                            />
+                            <button
+                                class="svg-btn"
+                                style="margin-left: 1rem"
+                                @click="copyToClipboard(exportCode)"
+                            >
                                 <VueUiIcon name="copy" stroke="#42d392" />
                             </button>
                         </label>
@@ -597,32 +1001,63 @@ function clearComposer() {
                 </div>
             </details>
 
-            <div style="display: flex; flex-direction:row; align-items:center">
-                <input type="text" :value="inputValue" @input="onInput" @focus="openList" @keydown="onKeyDown"
-                    @blur="onBlur" autocomplete="off" placeholder="Search icon..." />
+            <div
+                style="display: flex; flex-direction: row; align-items: center"
+            >
+                <input
+                    type="text"
+                    :value="inputValue"
+                    @input="onInput"
+                    @focus="openList"
+                    @keydown="onKeyDown"
+                    @blur="onBlur"
+                    autocomplete="off"
+                    placeholder="Search icon..."
+                />
                 <button class="btn-reset" @click="inputValue = ''">
                     <BaseIcon name="refresh" stroke="#CCCCCC" />
                 </button>
             </div>
 
             <ul v-if="isOpen && filteredOptions.length > 0">
-                <li v-for="(item, index) in filteredOptions" :key="item" @mousedown.prevent="selectOption(item)"
-                    @mouseenter="highlightedIndex = index" :aria-selected="index === highlightedIndex">
+                <li
+                    v-for="(item, index) in filteredOptions"
+                    :key="item"
+                    @mousedown.prevent="selectOption(item)"
+                    @mouseenter="highlightedIndex = index"
+                    :aria-selected="index === highlightedIndex"
+                >
                     {{ item }}
                 </li>
             </ul>
         </div>
-        <template v-if="icons.some(i => i === inputValue)">
+        <template v-if="icons.some((i) => i === inputValue)">
             <div>
                 <label class="icon-knob">
                     <span>
-                        Adjust stroke-width: <span style="font-variant-numeric: tabular-nums; color: #42d392">{{
-                            iconFocusStrokeWidth }}</span>
+                        Adjust stroke-width:
+                        <span
+                            style="
+                                font-variant-numeric: tabular-nums;
+                                color: #42d392;
+                            "
+                            >{{ iconFocusStrokeWidth }}</span
+                        >
                     </span>
                     <div class="icon-knob-input">
-                        <input type="range" min="0.1" max="2" step="0.01" v-model="iconFocusStrokeWidth">
+                        <input
+                            type="range"
+                            min="0.1"
+                            max="2"
+                            step="0.01"
+                            v-model="iconFocusStrokeWidth"
+                        />
                         <button @click="iconFocusStrokeWidth = 1.5">
-                            <VueUiIcon name="refresh" stroke="#8A8A8A" :size="20" />
+                            <VueUiIcon
+                                name="refresh"
+                                stroke="#8A8A8A"
+                                :size="20"
+                            />
                         </button>
                     </div>
                 </label>
@@ -631,12 +1066,25 @@ function clearComposer() {
                     <input type="checkbox" v-model="darkMode" />
                 </label>
             </div>
-            <div class="icon-focus" :style="{ background: darkMode ? '#1A1A1A' : '#FFFFFF' }">
-                <BaseIcon :name="inputValue" :size="150" :strokeWidth="Number(iconFocusStrokeWidth)"
-                    :stroke="darkMode ? '#CCCCCC' : '#1A1A1A'" />
-                <div class="mini-icon-focus" :style="{ background: darkMode ? '#1A1A1A' : '#FFFFFF' }">
-                    <BaseIcon :name="inputValue" :strokeWidth="Number(iconFocusStrokeWidth)"
-                        :stroke="darkMode ? '#CCCCCC' : '#1A1A1A'" />
+            <div
+                class="icon-focus"
+                :style="{ background: darkMode ? '#1A1A1A' : '#FFFFFF' }"
+            >
+                <BaseIcon
+                    :name="inputValue"
+                    :size="150"
+                    :strokeWidth="Number(iconFocusStrokeWidth)"
+                    :stroke="darkMode ? '#CCCCCC' : '#1A1A1A'"
+                />
+                <div
+                    class="mini-icon-focus"
+                    :style="{ background: darkMode ? '#1A1A1A' : '#FFFFFF' }"
+                >
+                    <BaseIcon
+                        :name="inputValue"
+                        :strokeWidth="Number(iconFocusStrokeWidth)"
+                        :stroke="darkMode ? '#CCCCCC' : '#1A1A1A'"
+                    />
                 </div>
                 <div class="controls-left">
                     <button @click="previous">
@@ -653,7 +1101,17 @@ function clearComposer() {
     </div>
 
     <div
-        style="display: flex; flex-wrap: wrap; gap: 12px; width: 100%; margin: 0 auto; margin-top: 64px; max-width: 600px; align-items:center;">
+        style="
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            width: 100%;
+            margin: 0 auto;
+            margin-top: 64px;
+            max-width: 600px;
+            align-items: center;
+        "
+    >
         Exp
         <BaseIcon name="square" :isSpin="true" spin-duration="5s">
             <template #exp>
@@ -676,7 +1134,17 @@ function clearComposer() {
     </div>
 
     <div
-        style="display: flex; flex-wrap: wrap; gap: 12px; width: 100%; margin: 0 auto; margin-top: 64px; max-width: 600px; align-items:center;">
+        style="
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            width: 100%;
+            margin: 0 auto;
+            margin-top: 64px;
+            max-width: 600px;
+            align-items: center;
+        "
+    >
         Spinners
 
         <BaseIcon name="spinner1" :is-spin="true" />
@@ -686,7 +1154,17 @@ function clearComposer() {
     </div>
 
     <div
-        style="display: flex; flex-wrap: wrap; gap: 12px; width: 100%; margin: 0 auto; margin-top: 64px; max-width: 600px; align-items:center;">
+        style="
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            width: 100%;
+            margin: 0 auto;
+            margin-top: 64px;
+            max-width: 600px;
+            align-items: center;
+        "
+    >
         Sub
         <BaseIcon name="square">
             <template #sub>
@@ -709,7 +1187,17 @@ function clearComposer() {
     </div>
 
     <div
-        style="display: flex; flex-wrap: wrap; gap: 12px; width: 100%; margin: 0 auto; margin-top: 64px; max-width: 600px; align-items:center;">
+        style="
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            width: 100%;
+            margin: 0 auto;
+            margin-top: 64px;
+            max-width: 600px;
+            align-items: center;
+        "
+    >
         Exp & Sub
         <BaseIcon name="square">
             <template #exp>
@@ -742,28 +1230,71 @@ function clearComposer() {
     </div>
 
     <div
-        style="display: flex; flex-wrap: wrap; gap: 12px; width: 100%; margin: 0 auto; margin-top: 64px; max-width: 600px">
+        style="
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            width: 100%;
+            margin: 0 auto;
+            margin-top: 64px;
+            max-width: 600px;
+        "
+    >
         <BaseIcon v-for="icon in icons" :name="icon" stroke="#42d392" />
         <!-- <VueUiIcon v-for="icon in icons" :name="icon" stroke="#42d392"/>
         <VueUiIconTreeshaken v-for="icon in icons" :name="icon" stroke="#42d392"/> -->
     </div>
     <div
-        style="display: flex; flex-wrap: wrap; gap: 12px; width: 100%; margin: 0 auto; margin-top: 64px; margin-bottom: 64px; max-width: 1200px">
-        <div style="display:flex;flex-direction:column;align-items:center;gap:6px;width:100px" v-for="icon in icons">
+        style="
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            width: 100%;
+            margin: 0 auto;
+            margin-top: 64px;
+            margin-bottom: 64px;
+            max-width: 1200px;
+        "
+    >
+        <div
+            style="
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 6px;
+                width: 100px;
+            "
+            v-for="icon in icons"
+        >
             <BaseIcon :name="icon" stroke="#CCCCCC" :size="48" />
             <small>{{ icon }}</small>
         </div>
     </div>
     <div
-        style="display: flex; flex-wrap: wrap; gap: 12px; width: 100%; margin: 0 auto; margin-top: 64px; margin-bottom: 64px; max-width: 1200px">
-        <BaseIcon v-for="icon in icons" :name="icon" stroke="#6376DD" :size="96" />
+        style="
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            width: 100%;
+            margin: 0 auto;
+            margin-top: 64px;
+            margin-bottom: 64px;
+            max-width: 1200px;
+        "
+    >
+        <BaseIcon
+            v-for="icon in icons"
+            :name="icon"
+            stroke="#6376DD"
+            :size="96"
+        />
     </div>
 </template>
 
 <style scoped>
 .btn-reset {
-    background-color: #3A3A3A;
-    border: 1px solid #4A4A4A;
+    background-color: #3a3a3a;
+    border: 1px solid #4a4a4a;
     border-radius: 0 0.25rem 0.25rem 0;
     height: 2.1rem;
     width: 2.1rem;
@@ -775,14 +1306,14 @@ function clearComposer() {
 }
 
 .btn-reset:hover {
-    background-color: #4A4A4A;
+    background-color: #4a4a4a;
 }
 
-input[type="text"] {
-    background: #2A2A2A;
-    border: 1px solid #4A4A4A;
+input[type='text'] {
+    background: #2a2a2a;
+    border: 1px solid #4a4a4a;
     padding: 0.5rem;
-    color: #CCCCCC;
+    color: #cccccc;
     border-radius: 0.25rem 0 0 0.25rem;
     z-index: 1;
 }
@@ -795,9 +1326,9 @@ ul {
     max-height: 240px;
     min-width: 190px;
     overflow-y: auto;
-    border: 1px solid #4A4A4A;
+    border: 1px solid #4a4a4a;
     border-radius: 0.25rem;
-    background-color: #2A2A2A;
+    background-color: #2a2a2a;
     z-index: 10;
 }
 
@@ -808,12 +1339,12 @@ li {
 }
 
 li:hover,
-li[aria-selected="true"] {
-    background-color: #3A3A3A;
+li[aria-selected='true'] {
+    background-color: #3a3a3a;
 }
 
 .icon-focus {
-    border: 1px solid #4A4A4A;
+    border: 1px solid #4a4a4a;
     width: 200px;
     height: 200px;
     border-radius: 1rem;
@@ -827,7 +1358,7 @@ li[aria-selected="true"] {
     position: absolute;
     bottom: -1.5rem;
     right: -1.5rem;
-    border: 1px solid #4A4A4A;
+    border: 1px solid #4a4a4a;
     padding: 0.5rem;
     display: flex;
     align-items: center;
@@ -841,7 +1372,7 @@ li[aria-selected="true"] {
     font-size: 0.8rem;
 }
 
-.icon-knob input[type="range"] {
+.icon-knob input[type='range'] {
     accent-color: #42d392;
 }
 
@@ -856,18 +1387,18 @@ li[aria-selected="true"] {
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: #1A1A1A;
+    background-color: #1a1a1a;
     cursor: pointer;
     border-radius: 50%;
     width: 30px;
     height: 30px;
     padding: 0.25rem;
-    border: 1px solid #3A3A3A;
+    border: 1px solid #3a3a3a;
     transition: background-color 0.2s;
 }
 
 .icon-knob-input button:hover {
-    background-color: #2A2A2A;
+    background-color: #2a2a2a;
 }
 
 .icon-knob-check {
@@ -881,19 +1412,19 @@ li[aria-selected="true"] {
     user-select: none;
 }
 
-.icon-knob-check input[type="checkbox"] {
+.icon-knob-check input[type='checkbox'] {
     accent-color: #42d392;
 }
 
 .controls-left button,
 .controls-right button {
     border: none;
-    background-color: #1A1A1A;
+    background-color: #1a1a1a;
     display: flex;
     align-items: center;
     justify-content: center;
     border-radius: 50%;
-    border: 1px solid #2A2A2A;
+    border: 1px solid #2a2a2a;
     height: 2rem;
     width: 2rem;
     transition: background-color 0.2s;
@@ -902,7 +1433,7 @@ li[aria-selected="true"] {
 
 .controls-left button:hover,
 .controls-right button:hover {
-    background-color: #2A2A2A;
+    background-color: #2a2a2a;
 }
 
 .controls-left,
@@ -935,7 +1466,7 @@ li[aria-selected="true"] {
 }
 
 textarea {
-    background: #2A2A2A;
+    background: #2a2a2a;
     border-radius: 0.25rem;
     min-height: 10rem;
     color: #42d392;
@@ -944,13 +1475,13 @@ textarea {
     max-width: calc(600px - 2rem);
 }
 
-input[type="number"],
-input[type="text"] {
-    background: #2A2A2A;
+input[type='number'],
+input[type='text'] {
+    background: #2a2a2a;
     border-radius: 0.25rem;
     color: #42d392;
     padding: 0.25rem 0.5rem;
-    border: 1px solid #6A6A6A;
+    border: 1px solid #6a6a6a;
     height: 2rem;
 }
 
@@ -961,7 +1492,7 @@ input[type="text"] {
 }
 
 .svg-btn {
-    background-color: #3A3A3A;
+    background-color: #3a3a3a;
     border: none;
     border-radius: 0.25rem;
     transition: background-color 0.2s;
@@ -974,11 +1505,11 @@ input[type="text"] {
 }
 
 .svg-btn:hover {
-    background-color: #4A4A4A;
+    background-color: #4a4a4a;
 }
 
 .visualizer {
-    border: 1px solid #6A6A6A;
+    border: 1px solid #6a6a6a;
     width: 300px;
     margin: 0 auto;
 }
@@ -986,7 +1517,7 @@ input[type="text"] {
 details {
     width: 600px;
     margin: 1rem 0;
-    background: #2A2A2A;
+    background: #2a2a2a;
     padding: 1rem;
 }
 

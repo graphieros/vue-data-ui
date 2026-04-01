@@ -1,16 +1,27 @@
 export function registerAnnotatorShortcuts(ctx) {
-    const isPrimaryMod = (event) => (ctx.isMacLike.value ? event.metaKey : event.ctrlKey);
+    const isPrimaryMod = (event) =>
+        ctx.isMacLike.value ? event.metaKey : event.ctrlKey;
 
     const isTypingTarget = (element) => {
         const node = element;
         if (!node) return false;
-        const tag = (node.tagName || "").toLowerCase();
+        const tag = (node.tagName || '').toLowerCase();
         const editable = node.isContentEditable;
-        return editable || tag === "input" || tag === "textarea" || tag === "select";
+        return (
+            editable ||
+            tag === 'input' ||
+            tag === 'textarea' ||
+            tag === 'select'
+        );
     };
 
     const blockShortcuts = (event) => {
-        if (!ctx.isSummaryOpen.value || isTypingTarget(event.target) || ctx.isWriting.value) return true;
+        if (
+            !ctx.isSummaryOpen.value ||
+            isTypingTarget(event.target) ||
+            ctx.isWriting.value
+        )
+            return true;
         return false;
     };
 
@@ -29,21 +40,21 @@ export function registerAnnotatorShortcuts(ctx) {
         clearModes();
 
         switch (key) {
-            case "m":
+            case 'm':
                 ctx.isMoveMode.value = true;
                 break;
-            case "r":
+            case 'r':
                 ctx.isResizeMode.value = true;
                 break;
-            case "d":
+            case 'd':
                 ctx.isDeleteMode.value = true;
                 break;
-            case "g":
+            case 'g':
                 ctx.isSelectMode.value = true;
-                ctx.setShapeTo("group");
-                ctx.activeShape.value = "group";
+                ctx.setShapeTo('group');
+                ctx.activeShape.value = 'group';
                 break;
-            case "t":
+            case 't':
                 ctx.isTextMode.value = true;
                 ctx.isWriting.value = false;
                 ctx.showCaret.value = false;
@@ -55,17 +66,17 @@ export function registerAnnotatorShortcuts(ctx) {
 
     const pickShape = (key) => {
         switch (key) {
-            case "c":
-                ctx.setShapeTo("circle");
+            case 'c':
+                ctx.setShapeTo('circle');
                 break;
-            case "s":
-                ctx.setShapeTo("rect");
+            case 's':
+                ctx.setShapeTo('rect');
                 break;
-            case "a":
-                ctx.setShapeTo("arrow");
+            case 'a':
+                ctx.setShapeTo('arrow');
                 break;
-            case "l":
-                ctx.setShapeTo("line");
+            case 'l':
+                ctx.setShapeTo('line');
                 break;
             default:
                 break;
@@ -77,23 +88,23 @@ export function registerAnnotatorShortcuts(ctx) {
         if (!selectedShape) return;
 
         const add = (prop, delta) => {
-            if (typeof selectedShape[prop] === "number") {
+            if (typeof selectedShape[prop] === 'number') {
                 selectedShape[prop] += delta;
             }
         };
 
         switch (selectedShape.type) {
-            case "rect":
-            case "circle":
-            case "text":
-                add("x", deltaX);
-                add("y", deltaY);
+            case 'rect':
+            case 'circle':
+            case 'text':
+                add('x', deltaX);
+                add('y', deltaY);
                 break;
-            case "arrow":
-                add("x", deltaX);
-                add("y", deltaY);
-                add("endX", deltaX);
-                add("endY", deltaY);
+            case 'arrow':
+                add('x', deltaX);
+                add('y', deltaY);
+                add('endX', deltaX);
+                add('endY', deltaY);
                 break;
             default:
                 break;
@@ -104,7 +115,9 @@ export function registerAnnotatorShortcuts(ctx) {
         const selectedShape = ctx.lastSelectedShape.value;
         if (!selectedShape) return;
 
-        ctx.shapes.value = ctx.shapes.value.filter((shape) => shape.id !== selectedShape.id);
+        ctx.shapes.value = ctx.shapes.value.filter(
+            (shape) => shape.id !== selectedShape.id,
+        );
         ctx.lastSelectedShape.value = undefined;
     };
 
@@ -114,7 +127,7 @@ export function registerAnnotatorShortcuts(ctx) {
     const beginArrowBatch = () => {
         if (arrowBatchActive) return;
         arrowBatchActive = true;
-        ctx.history?.value?.begin?.("nudge");
+        ctx.history?.value?.begin?.('nudge');
     };
 
     const endArrowBatchSoon = () => {
@@ -136,7 +149,11 @@ export function registerAnnotatorShortcuts(ctx) {
     };
 
     const onKeyDown = (event) => {
-        if (isPrimaryMod(event) && !event.shiftKey && event.key.toLowerCase() === "z") {
+        if (
+            isPrimaryMod(event) &&
+            !event.shiftKey &&
+            event.key.toLowerCase() === 'z'
+        ) {
             if (blockShortcuts(event)) return;
             event.preventDefault();
             ctx.undoLastShape?.();
@@ -144,12 +161,14 @@ export function registerAnnotatorShortcuts(ctx) {
         }
 
         if (
-            (isPrimaryMod(event) && event.shiftKey && event.key.toLowerCase() === "z") ||
-            (isPrimaryMod(event) && event.key.toLowerCase() === "y")
+            (isPrimaryMod(event) &&
+                event.shiftKey &&
+                event.key.toLowerCase() === 'z') ||
+            (isPrimaryMod(event) && event.key.toLowerCase() === 'y')
         ) {
             if (blockShortcuts(event)) return;
             event.preventDefault();
-            if (typeof ctx.redoLastShape === "function") {
+            if (typeof ctx.redoLastShape === 'function') {
                 ctx.redoLastShape();
             } else {
                 ctx.history?.value?.redo?.();
@@ -161,35 +180,35 @@ export function registerAnnotatorShortcuts(ctx) {
 
         const key = event.key.toLowerCase();
 
-        if (key === "escape") {
+        if (key === 'escape') {
             event.preventDefault();
             clearModes();
             return;
         }
 
-        if (key === "delete" || key === "backspace") {
+        if (key === 'delete' || key === 'backspace') {
             event.preventDefault();
             deleteSelection();
             return;
         }
 
-        if (["m", "r", "d", "g", "t"].includes(key)) {
+        if (['m', 'r', 'd', 'g', 't'].includes(key)) {
             event.preventDefault();
             toggleMode(key);
             return;
         }
 
-        if (["c", "a", "l", "s"].includes(key)) {
+        if (['c', 'a', 'l', 's'].includes(key)) {
             event.preventDefault();
             pickShape(key);
             return;
         }
 
         const isArrowKey =
-            event.key === "ArrowUp" ||
-            event.key === "ArrowDown" ||
-            event.key === "ArrowLeft" ||
-            event.key === "ArrowRight";
+            event.key === 'ArrowUp' ||
+            event.key === 'ArrowDown' ||
+            event.key === 'ArrowLeft' ||
+            event.key === 'ArrowRight';
 
         if (isArrowKey) {
             event.preventDefault();
@@ -197,27 +216,27 @@ export function registerAnnotatorShortcuts(ctx) {
 
             const step = event.shiftKey ? 10 : 1;
 
-            if (event.key === "ArrowUp") nudge(0, -step);
-            if (event.key === "ArrowDown") nudge(0, step);
-            if (event.key === "ArrowLeft") nudge(-step, 0);
-            if (event.key === "ArrowRight") nudge(step, 0);
+            if (event.key === 'ArrowUp') nudge(0, -step);
+            if (event.key === 'ArrowDown') nudge(0, step);
+            if (event.key === 'ArrowLeft') nudge(-step, 0);
+            if (event.key === 'ArrowRight') nudge(step, 0);
 
             endArrowBatchSoon();
         }
     };
 
     const onKeyUp = (event) => {
-        if (event.key.startsWith("Arrow")) {
+        if (event.key.startsWith('Arrow')) {
             endArrowBatchSoon();
         }
     };
 
-    window.addEventListener("keydown", onKeyDown);
-    window.addEventListener("keyup", onKeyUp);
+    window.addEventListener('keydown', onKeyDown);
+    window.addEventListener('keyup', onKeyUp);
 
     return function unregister() {
-        window.removeEventListener("keydown", onKeyDown);
-        window.removeEventListener("keyup", onKeyUp);
+        window.removeEventListener('keydown', onKeyDown);
+        window.removeEventListener('keyup', onKeyUp);
         endArrowBatchNow();
     };
 }

@@ -1,19 +1,19 @@
 <script setup>
-import { 
-    computed, 
+import {
+    computed,
     defineAsyncComponent,
     nextTick,
-    onMounted, 
-    ref, 
+    onMounted,
+    ref,
     toRefs,
-    watch, 
-} from "vue";
+    watch,
+} from 'vue';
 import {
     applyDataLabel,
     checkNaN,
-    convertColorToHex, 
-    convertCustomPalette, 
-    createUid, 
+    convertColorToHex,
+    convertCustomPalette,
+    createUid,
     dataLabel,
     error,
     getMissingDatasetAttributes,
@@ -22,28 +22,34 @@ import {
     setOpacity,
     themePalettes,
     treeShake,
-    XMLNS
-} from "../lib.js";
-import { throttle } from "../canvas-lib.js";
-import { useConfig } from "../useConfig";
-import { useLoading } from "../useLoading.js";
-import { usePrinter } from "../usePrinter";
-import { useSvgExport } from "../useSvgExport.js";
-import { useNestedProp } from "../useNestedProp";
-import { useResponsive } from "../useResponsive.js";
-import { useThemeCheck } from "../useThemeCheck.js";
-import { useUserOptionState } from "../useUserOptionState";
-import { useChartAccessibility } from "../useChartAccessibility.js";
-import { usePrefersReducedMotion } from "../usePrefersMotion";
-import { useAutoSizeLabelsInsideViewbox } from "../useAutoSizeLabelsInsideViewbox.js";
-import themes from "../themes/vue_ui_thermometer.json";
-import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
-import img from "../img.js";
-import BaseScanner from "../atoms/BaseScanner.vue";
+    XMLNS,
+} from '../lib.js';
+import { throttle } from '../canvas-lib.js';
+import { useConfig } from '../useConfig';
+import { useLoading } from '../useLoading.js';
+import { usePrinter } from '../usePrinter';
+import { useSvgExport } from '../useSvgExport.js';
+import { useNestedProp } from '../useNestedProp';
+import { useResponsive } from '../useResponsive.js';
+import { useThemeCheck } from '../useThemeCheck.js';
+import { useUserOptionState } from '../useUserOptionState';
+import { useChartAccessibility } from '../useChartAccessibility.js';
+import { usePrefersReducedMotion } from '../usePrefersMotion';
+import { useAutoSizeLabelsInsideViewbox } from '../useAutoSizeLabelsInsideViewbox.js';
+import themes from '../themes/vue_ui_thermometer.json';
+import Title from '../atoms/Title.vue'; // Must be ready in responsive mode
+import img from '../img.js';
+import BaseScanner from '../atoms/BaseScanner.vue';
 
-const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
-const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
-const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
+const PackageVersion = defineAsyncComponent(
+    () => import('../atoms/PackageVersion.vue'),
+);
+const PenAndPaper = defineAsyncComponent(
+    () => import('../atoms/PenAndPaper.vue'),
+);
+const UserOptions = defineAsyncComponent(
+    () => import('../atoms/UserOptions.vue'),
+);
 
 const { vue_ui_thermometer: DEFAULT_CONFIG } = useConfig();
 const { isThemeValid, warnInvalidTheme } = useThemeCheck();
@@ -53,15 +59,15 @@ const props = defineProps({
     dataset: {
         type: Object,
         default() {
-            return {}
-        }
+            return {};
+        },
     },
     config: {
         type: Object,
         default() {
-            return {}
-        }
-    }
+            return {};
+        },
+    },
 });
 
 const emit = defineEmits(['copyAlt']);
@@ -90,7 +96,9 @@ const baseWidth = ref(FINAL_CONFIG.value.style.chart.thermometer.width);
 const HEIGHT = ref(FINAL_CONFIG.value.style.chart.height);
 const WIDTH = ref(FINAL_CONFIG.value.style.chart.width);
 
-const isCursorPointer = computed(() => FINAL_CONFIG.value.userOptions.useCursorPointer);
+const isCursorPointer = computed(
+    () => FINAL_CONFIG.value.userOptions.useCursorPointer,
+);
 
 const skeletonConfig = computed(() => {
     return treeShake({
@@ -101,45 +109,51 @@ const skeletonConfig = computed(() => {
                     animation: { use: false },
                     backgroundColor: '#99999930',
                     graduations: {
-                        stroke: '#6A6A6A'
-                    }
-                }
-            }
+                        stroke: '#6A6A6A',
+                    },
+                },
+            },
         },
-        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {}
-    })
+        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {},
+    });
 });
 
 const { loading, FINAL_DATASET } = useLoading({
     ...toRefs(props),
     FINAL_CONFIG,
     prepareConfig,
-    skeletonDataset: props.config?.skeletonDataset ?? { value: 0, from: -100, to: 100, steps: 20, colors: { from: '#A1A1A1', to: '#CACACA' } },
+    skeletonDataset: props.config?.skeletonDataset ?? {
+        value: 0,
+        from: -100,
+        to: 100,
+        steps: 20,
+        colors: { from: '#A1A1A1', to: '#CACACA' },
+    },
     skeletonConfig: treeShake({
         defaultConfig: FINAL_CONFIG.value,
-        userConfig: skeletonConfig.value
-    })
+        userConfig: skeletonConfig.value,
+    }),
 });
 
 const debug = computed(() => !!FINAL_CONFIG.value.debug);
 
 function prepareChart() {
-    if(objectIsEmpty(props.dataset)) {
+    if (objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiThermometer',
             type: 'dataset',
-            debug: debug.value
-        })
+            debug: debug.value,
+        });
     } else {
         getMissingDatasetAttributes({
             datasetObject: props.dataset,
-            requiredAttributes: ['value', 'from', 'to']
-        }).forEach(attr => {
+            requiredAttributes: ['value', 'from', 'to'],
+        }).forEach((attr) => {
             error({
                 componentName: 'VueUiThermometer',
                 type: 'datasetAttribute',
                 property: attr,
-                debug: debug.value
+                debug: debug.value,
             });
         });
     }
@@ -148,8 +162,10 @@ function prepareChart() {
         const handleResize = throttle(() => {
             const { width, height } = useResponsive({
                 chart: thermoChart.value,
-                title: FINAL_CONFIG.value.style.title.text ? chartTitle.value : null,
-                source: source.value
+                title: FINAL_CONFIG.value.style.title.text
+                    ? chartTitle.value
+                    : null,
+                source: source.value,
             });
 
             requestAnimationFrame(() => {
@@ -173,13 +189,16 @@ function prepareChart() {
     autoSizeLabels();
 }
 
-const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
-const { svgRef } = useChartAccessibility({ config: FINAL_CONFIG.value.style.title });
+const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } =
+    useUserOptionState({ config: FINAL_CONFIG.value });
+const { svgRef } = useChartAccessibility({
+    config: FINAL_CONFIG.value.style.title,
+});
 
 function prepareConfig() {
     const mergedConfig = useNestedProp({
         userConfig: props.config,
-        defaultConfig: DEFAULT_CONFIG
+        defaultConfig: DEFAULT_CONFIG,
     });
 
     const theme = mergedConfig.theme;
@@ -192,47 +211,57 @@ function prepareConfig() {
 
     const fused = useNestedProp({
         userConfig: themes[theme] || props.config,
-        defaultConfig: mergedConfig
+        defaultConfig: mergedConfig,
     });
 
     const finalConfig = useNestedProp({
         userConfig: props.config,
-        defaultConfig: fused
+        defaultConfig: fused,
     });
 
     return {
         ...finalConfig,
-        customPalette: finalConfig.customPalette.length ? finalConfig.customPalette : themePalettes[theme] || palette
-    }
+        customPalette: finalConfig.customPalette.length
+            ? finalConfig.customPalette
+            : themePalettes[theme] || palette,
+    };
 }
 
-watch(() => props.config, (_newCfg) => {
-    FINAL_CONFIG.value = prepareConfig();
-    userOptionsVisible.value = !FINAL_CONFIG.value.userOptions.showOnChartHover;
-    baseWidth.value = FINAL_CONFIG.value.style.chart.thermometer.width;
-    HEIGHT.value = FINAL_CONFIG.value.style.chart.height;
-    WIDTH.value = FINAL_CONFIG.value.style.chart.width;
-    prepareChart();
-    titleStep.value += 1;
-}, { deep: true });
+watch(
+    () => props.config,
+    (_newCfg) => {
+        FINAL_CONFIG.value = prepareConfig();
+        userOptionsVisible.value =
+            !FINAL_CONFIG.value.userOptions.showOnChartHover;
+        baseWidth.value = FINAL_CONFIG.value.style.chart.thermometer.width;
+        HEIGHT.value = FINAL_CONFIG.value.style.chart.height;
+        WIDTH.value = FINAL_CONFIG.value.style.chart.width;
+        prepareChart();
+        titleStep.value += 1;
+    },
+    { deep: true },
+);
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `thermometer__${uid.value}`,
     fileName: FINAL_CONFIG.value.style.title.text || 'vue-ui-thermometer',
-    options: FINAL_CONFIG.value.userOptions.print
+    options: FINAL_CONFIG.value.userOptions.print,
 });
 
 const hasOptionsNoTitle = computed(() => {
-    return FINAL_CONFIG.value.userOptions.show && !FINAL_CONFIG.value.style.title.text;
+    return (
+        FINAL_CONFIG.value.userOptions.show &&
+        !FINAL_CONFIG.value.style.title.text
+    );
 });
 
 const customPalette = computed(() => {
     return convertCustomPalette(FINAL_CONFIG.value.customPalette);
-})
+});
 
 const steps = computed(() => {
     return FINAL_DATASET.value.steps || 10;
-})
+});
 
 function generateColorRange(startColor, endColor, steps) {
     const colors = [];
@@ -262,7 +291,7 @@ function parseColor(color) {
 }
 
 function interpolate(start, end, step, totalSteps) {
-  return Math.round(start + (end - start) * step / totalSteps);
+    return Math.round(start + ((end - start) * step) / totalSteps);
 }
 
 function toHex(value) {
@@ -275,14 +304,14 @@ const drawingArea = computed(() => {
     const padding = FINAL_CONFIG.value.style.chart.padding;
     return {
         width: width,
-        left: (width / 2) - FINAL_CONFIG.value.style.chart.thermometer.width / 2,
-        right:(width / 2) + FINAL_CONFIG.value.style.chart.thermometer.width / 2,
+        left: width / 2 - FINAL_CONFIG.value.style.chart.thermometer.width / 2,
+        right: width / 2 + FINAL_CONFIG.value.style.chart.thermometer.width / 2,
         top: padding.top,
         bottom: height - padding.bottom - padding.top,
         height: height,
         thermoHeight: height - padding.top - padding.bottom,
         thermoWidth: FINAL_CONFIG.value.style.chart.thermometer.width,
-    }
+    };
 });
 
 const svg = computed(() => {
@@ -290,8 +319,14 @@ const svg = computed(() => {
 });
 
 const temperature = computed(() => {
-    const from = checkNaN(FINAL_DATASET.value.from) < 0 ? Math.abs(checkNaN(FINAL_DATASET.value.from)) : checkNaN(FINAL_DATASET.value.from);
-    const to = checkNaN(FINAL_DATASET.value.to) < 0 ? Math.abs(checkNaN(FINAL_DATASET.value.to)) : checkNaN(FINAL_DATASET.value.to);
+    const from =
+        checkNaN(FINAL_DATASET.value.from) < 0
+            ? Math.abs(checkNaN(FINAL_DATASET.value.from))
+            : checkNaN(FINAL_DATASET.value.from);
+    const to =
+        checkNaN(FINAL_DATASET.value.to) < 0
+            ? Math.abs(checkNaN(FINAL_DATASET.value.to))
+            : checkNaN(FINAL_DATASET.value.to);
     let max = 0;
     if (checkNaN(FINAL_DATASET.value.to) > 0) {
         max = from + to;
@@ -302,8 +337,14 @@ const temperature = computed(() => {
             max = to - from;
         }
     }
-    return (1 - (Math.abs(checkNaN(FINAL_DATASET.value.from)) + checkNaN(FINAL_DATASET.value.value)) / max )* (drawingArea.value.thermoHeight)
-})
+    return (
+        (1 -
+            (Math.abs(checkNaN(FINAL_DATASET.value.from)) +
+                checkNaN(FINAL_DATASET.value.value)) /
+                max) *
+        drawingArea.value.thermoHeight
+    );
+});
 
 const cssTemp = computed(() => {
     return `${temperature.value}px`;
@@ -314,43 +355,64 @@ const cssHeight = computed(() => {
 });
 
 const cssSpeed = computed(() => {
-    return prefersReducedMotion.value ? '0ms' : `${FINAL_CONFIG.value.style.chart.animation.speedMs}ms`;
+    return prefersReducedMotion.value
+        ? '0ms'
+        : `${FINAL_CONFIG.value.style.chart.animation.speedMs}ms`;
 });
 
 const colors = computed(() => {
     if (!FINAL_DATASET.value.colors) {
-        return generateColorRange(customPalette.value[1] || palette[1], customPalette.value[0] || palette[0], (steps.value )|| 10)
+        return generateColorRange(
+            customPalette.value[1] || palette[1],
+            customPalette.value[0] || palette[0],
+            steps.value || 10,
+        );
     } else {
         if (!FINAL_DATASET.value.colors.from) {
-            return generateColorRange(customPalette.value[0] || palette[0], convertColorToHex(FINAL_DATASET.value.colors.to), (steps.value )|| 10)
+            return generateColorRange(
+                customPalette.value[0] || palette[0],
+                convertColorToHex(FINAL_DATASET.value.colors.to),
+                steps.value || 10,
+            );
         }
         if (!FINAL_DATASET.value.colors.to) {
-            return generateColorRange(convertColorToHex(FINAL_DATASET.value.colors.from), customPalette.value[1] || palette[1], (steps.value )|| 10)
+            return generateColorRange(
+                convertColorToHex(FINAL_DATASET.value.colors.from),
+                customPalette.value[1] || palette[1],
+                steps.value || 10,
+            );
         }
     }
-    return generateColorRange(convertColorToHex(FINAL_DATASET.value.colors.from) , convertColorToHex(FINAL_DATASET.value.colors.to), (steps.value )|| 10)
+    return generateColorRange(
+        convertColorToHex(FINAL_DATASET.value.colors.from),
+        convertColorToHex(FINAL_DATASET.value.colors.to),
+        steps.value || 10,
+    );
 });
 
 const graduations = computed(() => {
     const grads = [];
     let colorIndex = 0;
     const usableHeight = drawingArea.value.thermoHeight;
-    for (let i = 0; i < usableHeight-1; i += (usableHeight / steps.value)) {
+    for (let i = 0; i < usableHeight - 1; i += usableHeight / steps.value) {
         grads.push({
             x: drawingArea.value.left,
             y: drawingArea.value.top + i,
-            qYLess: drawingArea.value.top + i + (usableHeight / steps.value / 4),
-            halfY: drawingArea.value.top + i + (usableHeight / steps.value / 2),
-            qYMore: drawingArea.value.top + i + ((usableHeight / steps.value / 4) * 3),
+            qYLess: drawingArea.value.top + i + usableHeight / steps.value / 4,
+            halfY: drawingArea.value.top + i + usableHeight / steps.value / 2,
+            qYMore:
+                drawingArea.value.top +
+                i +
+                (usableHeight / steps.value / 4) * 3,
             color: colors.value[colorIndex],
-            height: Math.max(0.1, usableHeight / steps.value)
+            height: Math.max(0.1, usableHeight / steps.value),
         });
         colorIndex += 1;
     }
     return grads;
 });
 
-const isFullscreen = ref(false)
+const isFullscreen = ref(false);
 function toggleFullscreen(state) {
     isFullscreen.value = state;
     step.value += 1;
@@ -361,24 +423,29 @@ function toggleAnnotator() {
     isAnnotator.value = !isAnnotator.value;
 }
 
-async function getImage({ scale = 2} = {}) {
+async function getImage({ scale = 2 } = {}) {
     if (!thermoChart.value) return;
     const { width, height } = thermoChart.value.getBoundingClientRect();
     const aspectRatio = width / height;
-    const { imageUri, base64 } = await img({ domElement: thermoChart.value, base64: true, img: true, scale })
-    return { 
-        imageUri, 
-        base64, 
+    const { imageUri, base64 } = await img({
+        domElement: thermoChart.value,
+        base64: true,
+        img: true,
+        scale,
+    });
+    return {
+        imageUri,
+        base64,
         title: FINAL_CONFIG.value.style.title.text,
         width,
         height,
-        aspectRatio
-    }
+        aspectRatio,
+    };
 }
 
 const label_size = computed({
     get: () => FINAL_CONFIG.value.style.chart.label.fontSize,
-    set: v => v
+    set: (v) => v,
 });
 
 const { autoSizeLabels } = useAutoSizeLabelsInsideViewbox({
@@ -386,7 +453,7 @@ const { autoSizeLabels } = useAutoSizeLabelsInsideViewbox({
     fontSize: FINAL_CONFIG.value.style.chart.label.fontSize,
     minFontSize: FINAL_CONFIG.value.style.chart.label.minFontSize,
     sizeRef: label_size,
-    labelClass: '.vue-ui-thermometer-label'
+    labelClass: '.vue-ui-thermometer-label',
 });
 
 const svgBg = computed(() => FINAL_CONFIG.value.style.chart.backgroundColor);
@@ -395,7 +462,7 @@ const svgTitle = computed(() => FINAL_CONFIG.value.style.title);
 const { exportSvg, getSvg } = useSvgExport({
     svg: svgRef,
     title: svgTitle,
-    backgroundColor: svgBg
+    backgroundColor: svgBg,
 });
 
 async function generateSvg({ isCb }) {
@@ -406,7 +473,14 @@ async function generateSvg({ isCb }) {
     try {
         if (isCb) {
             const { blob, url, text, dataUrl } = await getSvg();
-            await Promise.resolve(FINAL_CONFIG.value.userOptions.callbacks.svg({ blob, url, text, dataUrl }));
+            await Promise.resolve(
+                FINAL_CONFIG.value.userOptions.callbacks.svg({
+                    blob,
+                    url,
+                    text,
+                    dataUrl,
+                }),
+            );
         } else {
             await Promise.resolve(exportSvg());
         }
@@ -416,12 +490,12 @@ async function generateSvg({ isCb }) {
 }
 
 function onGenerateImage(payload) {
-    if (payload?.stage === "start") {
+    if (payload?.stage === 'start') {
         isCallbackImaging.value = true;
         return;
     }
 
-    if (payload?.stage === "end") {
+    if (payload?.stage === 'end') {
         isCallbackImaging.value = false;
         return;
     }
@@ -429,19 +503,23 @@ function onGenerateImage(payload) {
     generateImage();
 }
 
-async function copyAlt(){
+async function copyAlt() {
     emit('copyAlt', {
         config: FINAL_CONFIG.value,
-        dataset: FINAL_DATASET.value
-    })
+        dataset: FINAL_DATASET.value,
+    });
     if (!FINAL_CONFIG.value.userOptions.callbacks.altCopy) {
-        console.warn('Vue Data UI - A callback must be set for `altCopy` in userOptions.');
-        return
+        console.warn(
+            'Vue Data UI - A callback must be set for `altCopy` in userOptions.',
+        );
+        return;
     }
-    await Promise.resolve(FINAL_CONFIG.value.userOptions.callbacks.altCopy({ 
-        config: FINAL_CONFIG.value, 
-        dataset: FINAL_DATASET.value
-    }));
+    await Promise.resolve(
+        FINAL_CONFIG.value.userOptions.callbacks.altCopy({
+            config: FINAL_CONFIG.value,
+            dataset: FINAL_DATASET.value,
+        }),
+    );
 }
 
 const svgTitleId = computed(() => `${uid.value}-title`);
@@ -455,9 +533,9 @@ const formattedValue = computed(() => {
             p: FINAL_CONFIG.value.style.chart.label.prefix,
             v: FINAL_DATASET.value.value,
             s: FINAL_CONFIG.value.style.chart.label.suffix,
-            r: FINAL_CONFIG.value.style.chart.label.rounding
+            r: FINAL_CONFIG.value.style.chart.label.rounding,
         }),
-        { datapoint: FINAL_DATASET.value }
+        { datapoint: FINAL_DATASET.value },
     );
 });
 
@@ -481,13 +559,19 @@ defineExpose({
     generateSvg,
     toggleAnnotator,
     toggleFullscreen,
-    copyAlt
-})
-
+    copyAlt,
+});
 </script>
 
 <template>
-    <div ref="thermoChart" :class="`vue-data-ui-component vue-ui-thermometer ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`" :style="`width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor};color:${FINAL_CONFIG.style.chart.color};font-family:${FINAL_CONFIG.style.fontFamily}`" :id="`thermometer__${uid}`" @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)">
+    <div
+        ref="thermoChart"
+        :class="`vue-data-ui-component vue-ui-thermometer ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`"
+        :style="`width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor};color:${FINAL_CONFIG.style.chart.color};font-family:${FINAL_CONFIG.style.fontFamily}`"
+        :id="`thermometer__${uid}`"
+        @mouseenter="() => setUserOptionsVisibility(true)"
+        @mouseleave="() => setUserOptionsVisibility(false)"
+    >
         <PenAndPaper
             v-if="FINAL_CONFIG.userOptions.buttons.annotator"
             :svgRef="svgRef"
@@ -498,45 +582,49 @@ defineExpose({
             @close="toggleAnnotator"
         >
             <template #annotator-action-close>
-                <slot name="annotator-action-close"/>
+                <slot name="annotator-action-close" />
             </template>
             <template #annotator-action-color="{ color }">
-                <slot name="annotator-action-color" v-bind="{ color }"/>
+                <slot name="annotator-action-color" v-bind="{ color }" />
             </template>
             <template #annotator-action-draw="{ mode }">
-                <slot name="annotator-action-draw" v-bind="{ mode }"/>
+                <slot name="annotator-action-draw" v-bind="{ mode }" />
             </template>
             <template #annotator-action-undo="{ disabled }">
-                <slot name="annotator-action-undo" v-bind="{ disabled }"/>
+                <slot name="annotator-action-undo" v-bind="{ disabled }" />
             </template>
             <template #annotator-action-redo="{ disabled }">
-                <slot name="annotator-action-redo" v-bind="{ disabled }"/>
+                <slot name="annotator-action-redo" v-bind="{ disabled }" />
             </template>
             <template #annotator-action-delete="{ disabled }">
-                <slot name="annotator-action-delete" v-bind="{ disabled }"/>
+                <slot name="annotator-action-delete" v-bind="{ disabled }" />
             </template>
         </PenAndPaper>
 
         <div
             ref="noTitle"
-            v-if="hasOptionsNoTitle" 
-            class="vue-data-ui-no-title-space" 
+            v-if="hasOptionsNoTitle"
+            class="vue-data-ui-no-title-space"
             :style="`height:36px; width: 100%;background:transparent`"
         />
 
         <!-- TITLE AS DIV -->
-        <div ref="chartTitle" v-if="FINAL_CONFIG.style.title.text" :style="`width:100%`">
+        <div
+            ref="chartTitle"
+            v-if="FINAL_CONFIG.style.title.text"
+            :style="`width:100%`"
+        >
             <Title
                 :key="`title_${titleStep}`"
                 :config="{
                     title: {
                         cy: 'thermometer-div-title',
-                        ...FINAL_CONFIG.style.title
+                        ...FINAL_CONFIG.style.title,
                     },
                     subtitle: {
                         cy: 'thermometer-div-subtitle',
-                        ...FINAL_CONFIG.style.title.subtitle
-                    }
+                        ...FINAL_CONFIG.style.title.subtitle,
+                    },
                 }"
             />
         </div>
@@ -545,7 +633,11 @@ defineExpose({
         <UserOptions
             ref="details"
             :key="`user_options_${step}`"
-            v-if="FINAL_CONFIG.userOptions.show && isDataset && (keepUserOptionState ? true : userOptionsVisible)"
+            v-if="
+                FINAL_CONFIG.userOptions.show &&
+                isDataset &&
+                (keepUserOptionState ? true : userOptionsVisible)
+            "
             :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
             :color="FINAL_CONFIG.style.chart.color"
             :isImaging="isImaging"
@@ -573,11 +665,15 @@ defineExpose({
             @toggleAnnotator="toggleAnnotator"
             @copyAlt="copyAlt"
             :style="{
-                visibility: keepUserOptionState ? userOptionsVisible ? 'visible' : 'hidden' : 'visible'
+                visibility: keepUserOptionState
+                    ? userOptionsVisible
+                        ? 'visible'
+                        : 'hidden'
+                    : 'visible',
             }"
         >
             <template #menuIcon="{ isOpen, color }" v-if="$slots.menuIcon">
-                <slot name="menuIcon" v-bind="{ isOpen, color }"/>
+                <slot name="menuIcon" v-bind="{ isOpen, color }" />
             </template>
             <template #optionPdf v-if="$slots.optionPdf">
                 <slot name="optionPdf" />
@@ -588,23 +684,42 @@ defineExpose({
             <template #optionSvg v-if="$slots.optionSvg">
                 <slot name="optionSvg" />
             </template>
-            <template v-if="$slots.optionFullscreen" template #optionFullscreen="{ toggleFullscreen, isFullscreen }">
-                <slot name="optionFullscreen" v-bind="{ toggleFullscreen, isFullscreen }"/>
+            <template
+                v-if="$slots.optionFullscreen"
+                template
+                #optionFullscreen="{ toggleFullscreen, isFullscreen }"
+            >
+                <slot
+                    name="optionFullscreen"
+                    v-bind="{ toggleFullscreen, isFullscreen }"
+                />
             </template>
-            <template v-if="$slots.optionAnnotator" #optionAnnotator="{ toggleAnnotator, isAnnotator }">
-                <slot name="optionAnnotator" v-bind="{ toggleAnnotator, isAnnotator }" />
+            <template
+                v-if="$slots.optionAnnotator"
+                #optionAnnotator="{ toggleAnnotator, isAnnotator }"
+            >
+                <slot
+                    name="optionAnnotator"
+                    v-bind="{ toggleAnnotator, isAnnotator }"
+                />
             </template>
-            <template v-if="$slots.optionAltCopy" #optionAltCopy="{ altCopy: c }">
-                <slot name="optionAltCopy" v-bind="{ altCopy: c }"/>
+            <template
+                v-if="$slots.optionAltCopy"
+                #optionAltCopy="{ altCopy: c }"
+            >
+                <slot name="optionAltCopy" v-bind="{ altCopy: c }" />
             </template>
         </UserOptions>
 
         <svg
             ref="svgRef"
-            :xmlns="XMLNS" 
-            :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" 
-            width="100%" 
-            :viewBox="`0 0 ${drawingArea.width} ${drawingArea.height}`" 
+            :xmlns="XMLNS"
+            :class="{
+                'vue-data-ui-fullscreen--on': isFullscreen,
+                'vue-data-ui-fulscreen--off': !isFullscreen,
+            }"
+            width="100%"
+            :viewBox="`0 0 ${drawingArea.width} ${drawingArea.height}`"
             :style="`background:transparent`"
             :aria-labelledby="svgTitleId"
             :aria-describedby="svgDescId"
@@ -615,21 +730,24 @@ defineExpose({
             <PackageVersion />
 
             <!-- BACKGROUND SLOT -->
-            <foreignObject 
+            <foreignObject
                 v-if="$slots['chart-background']"
                 :x="0"
                 :y="0"
                 :width="drawingArea.width"
                 :height="drawingArea.height"
                 :style="{
-                    pointerEvents: 'none'
+                    pointerEvents: 'none',
                 }"
             >
-                <slot name="chart-background"/>
+                <slot name="chart-background" />
             </foreignObject>
-            
+
             <defs>
-                <clipPath :id="`vueUiPill-${uid}`" clipPathUnits="userSpaceOnUse">
+                <clipPath
+                    :id="`vueUiPill-${uid}`"
+                    clipPathUnits="userSpaceOnUse"
+                >
                     <rect
                         :x="drawingArea.left"
                         :y="drawingArea.top"
@@ -639,13 +757,27 @@ defineExpose({
                         :ry="drawingArea.thermoWidth / 2"
                     />
                 </clipPath>
-                <linearGradient 
-                    v-for="(graduation, i) in graduations" :id="`vueUiThermometerGradient_${i}_${uid}`"
-                    x1="0%" y1="0%" x2="100%" y2="0%"
+                <linearGradient
+                    v-for="(graduation, i) in graduations"
+                    :id="`vueUiThermometerGradient_${i}_${uid}`"
+                    x1="0%"
+                    y1="0%"
+                    x2="100%"
+                    y2="0%"
                 >
-                    <stop offset="0%" :stop-color="graduation.color"/>
-                    <stop offset="50%" :stop-color="setOpacity(graduation.color, 100 - FINAL_CONFIG.style.chart.graduations.gradient.intensity)"/>
-                    <stop offset="100%" :stop-color="graduation.color"/>
+                    <stop offset="0%" :stop-color="graduation.color" />
+                    <stop
+                        offset="50%"
+                        :stop-color="
+                            setOpacity(
+                                graduation.color,
+                                100 -
+                                    FINAL_CONFIG.style.chart.graduations
+                                        .gradient.intensity,
+                            )
+                        "
+                    />
+                    <stop offset="100%" :stop-color="graduation.color" />
                 </linearGradient>
             </defs>
 
@@ -658,116 +790,210 @@ defineExpose({
                     :width="drawingArea.thermoWidth"
                     fill="#FFFFFF"
                 />
-                <g v-for="(graduation, i) in graduations" :key="`graduation_${i}`">
+                <g
+                    v-for="(graduation, i) in graduations"
+                    :key="`graduation_${i}`"
+                >
                     <rect
                         data-cy="pill-graduation-rect"
                         :x="graduation.x"
                         :y="graduation.y"
                         :height="graduation.height"
                         :width="drawingArea.thermoWidth"
-                        :fill="FINAL_CONFIG.style.chart.graduations.gradient.show ? `url(#vueUiThermometerGradient_${i}_${uid})` : graduation.color"
+                        :fill="
+                            FINAL_CONFIG.style.chart.graduations.gradient.show
+                                ? `url(#vueUiThermometerGradient_${i}_${uid})`
+                                : graduation.color
+                        "
                         shape-rendering="crispEdges"
                     />
 
-                    <!-- GRADUATIONS LEFT -->                    
+                    <!-- GRADUATIONS LEFT -->
                     <line
                         data-cy="graduation-left"
-                        v-if="FINAL_CONFIG.style.chart.graduations.show && ['both', 'left'].includes(FINAL_CONFIG.style.chart.graduations.sides)"
+                        v-if="
+                            FINAL_CONFIG.style.chart.graduations.show &&
+                            ['both', 'left'].includes(
+                                FINAL_CONFIG.style.chart.graduations.sides,
+                            )
+                        "
                         :x1="graduation.x"
                         :x2="graduation.x + 10"
                         :y1="graduation.y"
                         :y2="graduation.y"
-                        :stroke-width="FINAL_CONFIG.style.chart.graduations.strokeWidth"
+                        :stroke-width="
+                            FINAL_CONFIG.style.chart.graduations.strokeWidth
+                        "
                         :stroke="FINAL_CONFIG.style.chart.graduations.stroke"
                         stroke-linecap="round"
                     />
-                    <template v-if="FINAL_CONFIG.style.chart.graduations.showIntermediate">
+                    <template
+                        v-if="
+                            FINAL_CONFIG.style.chart.graduations
+                                .showIntermediate
+                        "
+                    >
                         <line
                             data-cy="graduation-left-intermediary"
-                            v-if="FINAL_CONFIG.style.chart.graduations.show && ['both', 'left'].includes(FINAL_CONFIG.style.chart.graduations.sides)"
+                            v-if="
+                                FINAL_CONFIG.style.chart.graduations.show &&
+                                ['both', 'left'].includes(
+                                    FINAL_CONFIG.style.chart.graduations.sides,
+                                )
+                            "
                             :x1="graduation.x"
                             :x2="graduation.x + 5"
                             :y1="graduation.halfY"
                             :y2="graduation.halfY"
-                            :stroke-width="FINAL_CONFIG.style.chart.graduations.strokeWidth / 2"
-                            :stroke="FINAL_CONFIG.style.chart.graduations.stroke"
-                            stroke-linecap="round"
-                        />                    
-                        <line 
-                            data-cy="graduation-left-intermediary"
-                            v-if="FINAL_CONFIG.style.chart.graduations.show && ['both', 'left'].includes(FINAL_CONFIG.style.chart.graduations.sides)"
-                            :x1="graduation.x"
-                            :x2="graduation.x + 2.5"
-                            :y1="graduation.qYLess"
-                            :y2="graduation.qYLess"
-                            :stroke-width="FINAL_CONFIG.style.chart.graduations.strokeWidth / 2"
-                            :stroke="FINAL_CONFIG.style.chart.graduations.stroke"
+                            :stroke-width="
+                                FINAL_CONFIG.style.chart.graduations
+                                    .strokeWidth / 2
+                            "
+                            :stroke="
+                                FINAL_CONFIG.style.chart.graduations.stroke
+                            "
                             stroke-linecap="round"
                         />
                         <line
                             data-cy="graduation-left-intermediary"
-                            v-if="FINAL_CONFIG.style.chart.graduations.show && ['both', 'left'].includes(FINAL_CONFIG.style.chart.graduations.sides)"
+                            v-if="
+                                FINAL_CONFIG.style.chart.graduations.show &&
+                                ['both', 'left'].includes(
+                                    FINAL_CONFIG.style.chart.graduations.sides,
+                                )
+                            "
+                            :x1="graduation.x"
+                            :x2="graduation.x + 2.5"
+                            :y1="graduation.qYLess"
+                            :y2="graduation.qYLess"
+                            :stroke-width="
+                                FINAL_CONFIG.style.chart.graduations
+                                    .strokeWidth / 2
+                            "
+                            :stroke="
+                                FINAL_CONFIG.style.chart.graduations.stroke
+                            "
+                            stroke-linecap="round"
+                        />
+                        <line
+                            data-cy="graduation-left-intermediary"
+                            v-if="
+                                FINAL_CONFIG.style.chart.graduations.show &&
+                                ['both', 'left'].includes(
+                                    FINAL_CONFIG.style.chart.graduations.sides,
+                                )
+                            "
                             :x1="graduation.x"
                             :x2="graduation.x + 2.5"
                             :y1="graduation.qYMore"
                             :y2="graduation.qYMore"
-                            :stroke-width="FINAL_CONFIG.style.chart.graduations.strokeWidth / 2"
-                            :stroke="FINAL_CONFIG.style.chart.graduations.stroke"
+                            :stroke-width="
+                                FINAL_CONFIG.style.chart.graduations
+                                    .strokeWidth / 2
+                            "
+                            :stroke="
+                                FINAL_CONFIG.style.chart.graduations.stroke
+                            "
                             stroke-linecap="round"
                         />
-                    </template>                    
+                    </template>
 
-                    <!-- GRADUATIONS RIGHT -->                    
-                    <line 
+                    <!-- GRADUATIONS RIGHT -->
+                    <line
                         data-cy="graduation-right"
-                        v-if="FINAL_CONFIG.style.chart.graduations.show && ['both', 'right'].includes(FINAL_CONFIG.style.chart.graduations.sides)"
+                        v-if="
+                            FINAL_CONFIG.style.chart.graduations.show &&
+                            ['both', 'right'].includes(
+                                FINAL_CONFIG.style.chart.graduations.sides,
+                            )
+                        "
                         :x1="drawingArea.right"
                         :x2="drawingArea.right - 10"
                         :y1="graduation.y"
                         :y2="graduation.y"
-                        :stroke-width="FINAL_CONFIG.style.chart.graduations.strokeWidth"
+                        :stroke-width="
+                            FINAL_CONFIG.style.chart.graduations.strokeWidth
+                        "
                         :stroke="FINAL_CONFIG.style.chart.graduations.stroke"
                         stroke-linecap="round"
-                    />          
-                    <template v-if="FINAL_CONFIG.style.chart.graduations.showIntermediate">
+                    />
+                    <template
+                        v-if="
+                            FINAL_CONFIG.style.chart.graduations
+                                .showIntermediate
+                        "
+                    >
                         <line
                             data-cy="graduation-right-intermediary"
-                            v-if="FINAL_CONFIG.style.chart.graduations.show && ['both', 'right'].includes(FINAL_CONFIG.style.chart.graduations.sides)"
+                            v-if="
+                                FINAL_CONFIG.style.chart.graduations.show &&
+                                ['both', 'right'].includes(
+                                    FINAL_CONFIG.style.chart.graduations.sides,
+                                )
+                            "
                             :x1="drawingArea.right"
                             :x2="drawingArea.right - 5"
                             :y1="graduation.halfY"
                             :y2="graduation.halfY"
-                            :stroke-width="FINAL_CONFIG.style.chart.graduations.strokeWidth / 2"
-                            :stroke="FINAL_CONFIG.style.chart.graduations.stroke"
+                            :stroke-width="
+                                FINAL_CONFIG.style.chart.graduations
+                                    .strokeWidth / 2
+                            "
+                            :stroke="
+                                FINAL_CONFIG.style.chart.graduations.stroke
+                            "
                             stroke-linecap="round"
-                        />                    
+                        />
                         <line
                             data-cy="graduation-right-intermediary"
-                            v-if="FINAL_CONFIG.style.chart.graduations.show && ['both', 'right'].includes(FINAL_CONFIG.style.chart.graduations.sides)"
+                            v-if="
+                                FINAL_CONFIG.style.chart.graduations.show &&
+                                ['both', 'right'].includes(
+                                    FINAL_CONFIG.style.chart.graduations.sides,
+                                )
+                            "
                             :x1="drawingArea.right"
                             :x2="drawingArea.right - 2.5"
                             :y1="graduation.qYLess"
                             :y2="graduation.qYLess"
-                            :stroke-width="FINAL_CONFIG.style.chart.graduations.strokeWidth / 2"
-                            :stroke="FINAL_CONFIG.style.chart.graduations.stroke"
+                            :stroke-width="
+                                FINAL_CONFIG.style.chart.graduations
+                                    .strokeWidth / 2
+                            "
+                            :stroke="
+                                FINAL_CONFIG.style.chart.graduations.stroke
+                            "
                             stroke-linecap="round"
-                        />                    
+                        />
                         <line
                             data-cy="graduation-right-intermediary"
-                            v-if="FINAL_CONFIG.style.chart.graduations.show && ['both', 'right'].includes(FINAL_CONFIG.style.chart.graduations.sides)"
+                            v-if="
+                                FINAL_CONFIG.style.chart.graduations.show &&
+                                ['both', 'right'].includes(
+                                    FINAL_CONFIG.style.chart.graduations.sides,
+                                )
+                            "
                             :x1="drawingArea.right"
                             :x2="drawingArea.right - 2.5"
                             :y1="graduation.qYMore"
                             :y2="graduation.qYMore"
-                            :stroke-width="FINAL_CONFIG.style.chart.graduations.strokeWidth / 2"
-                            :stroke="FINAL_CONFIG.style.chart.graduations.stroke"
+                            :stroke-width="
+                                FINAL_CONFIG.style.chart.graduations
+                                    .strokeWidth / 2
+                            "
+                            :stroke="
+                                FINAL_CONFIG.style.chart.graduations.stroke
+                            "
                             stroke-linecap="round"
-                        />                    
-                    </template>           
+                        />
+                    </template>
                 </g>
                 <rect
                     data-cy="temperature-rect"
-                    :class="{'vue-ui-thermometer-temperature': FINAL_CONFIG.style.chart.animation.use }"
+                    :class="{
+                        'vue-ui-thermometer-temperature':
+                            FINAL_CONFIG.style.chart.animation.use,
+                    }"
                     :x="drawingArea.left"
                     :y="drawingArea.top"
                     :height="temperature"
@@ -775,13 +1001,13 @@ defineExpose({
                     fill="#FFFFFF66"
                 />
             </g>
-            <g 
+            <g
                 v-if="FINAL_CONFIG.style.chart.label.show"
                 role="status"
                 aria-live="polite"
                 :aria-label="loading ? 'Loading data' : formattedValue"
             >
-                <rect 
+                <rect
                     v-if="loading"
                     :x="drawingArea.left - 60"
                     :y="temperature + drawingArea.top - label_size / 2"
@@ -794,26 +1020,44 @@ defineExpose({
                     v-else
                     data-cy="temperature-label"
                     aria-hidden="true"
-                    :class="{'vue-ui-thermometer-temperature-value': FINAL_CONFIG.style.chart.animation.use, 'vue-ui-thermometer-label': true }"
-                    :y="temperature + drawingArea.top + (label_size / 3)"
+                    :class="{
+                        'vue-ui-thermometer-temperature-value':
+                            FINAL_CONFIG.style.chart.animation.use,
+                        'vue-ui-thermometer-label': true,
+                    }"
+                    :y="temperature + drawingArea.top + label_size / 3"
                     :x="drawingArea.left - 10"
                     text-anchor="end"
                     :fill="FINAL_CONFIG.style.chart.label.color"
                     :font-size="label_size"
-                    :font-weight="FINAL_CONFIG.style.chart.label.bold ? 'bold' : 'normal'"
+                    :font-weight="
+                        FINAL_CONFIG.style.chart.label.bold ? 'bold' : 'normal'
+                    "
                 >
                     {{ formattedValue }}
                 </text>
             </g>
-            <slot name="svg" :svg="{
-                ...svg,
-                isPrintingImg: isPrinting | isImaging | isCallbackImaging,
-                isPrintingSvg: isCallbackSvg,
-            }"/>
+            <slot
+                name="svg"
+                :svg="{
+                    ...svg,
+                    isPrintingImg: isPrinting | isImaging | isCallbackImaging,
+                    isPrintingSvg: isCallbackSvg,
+                }"
+            />
         </svg>
 
         <div v-if="$slots.watermark" class="vue-data-ui-watermark">
-            <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging || isCallbackImaging || isCallbackSvg }"/>
+            <slot
+                name="watermark"
+                v-bind="{
+                    isPrinting:
+                        isPrinting ||
+                        isImaging ||
+                        isCallbackImaging ||
+                        isCallbackSvg,
+                }"
+            />
         </div>
 
         <div v-if="$slots.source" ref="source" dir="auto">
@@ -828,7 +1072,7 @@ defineExpose({
 </template>
 
 <style scoped>
-@import "../vue-data-ui.css";
+@import '../vue-data-ui.css';
 
 .vue-ui-thermometer {
     position: relative;
@@ -839,13 +1083,13 @@ rect.vue-ui-thermometer-temperature {
 }
 
 text.vue-ui-thermometer-temperature-value {
-    opacity:0;
+    opacity: 0;
     animation: vue-ui-thermometer-value v-bind(cssSpeed) ease-in-out forwards;
 }
 
 @keyframes vue-ui-thermometer-value {
     0% {
-        opacity:0;
+        opacity: 0;
     }
     100% {
         opacity: 1;

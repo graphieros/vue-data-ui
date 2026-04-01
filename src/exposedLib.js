@@ -1,4 +1,10 @@
-import { convertColorToHex, darkenHexColor, lightenHexColor, shiftHue, treeShake } from "./lib";
+import {
+    convertColorToHex,
+    darkenHexColor,
+    lightenHexColor,
+    shiftHue,
+    treeShake,
+} from './lib';
 
 export function lightenColor(color, strength) {
     const hexColor = convertColorToHex(color);
@@ -16,14 +22,14 @@ export function shiftColorHue(color, strength) {
 }
 
 export function mergeConfigs({ defaultConfig, userConfig }) {
-    return treeShake({ defaultConfig, userConfig })
+    return treeShake({ defaultConfig, userConfig });
 }
 
 const exposedLib = {
     lightenColor,
     darkenColor,
     shiftColorHue,
-    mergeConfigs
-}
+    mergeConfigs,
+};
 
 export default exposedLib;

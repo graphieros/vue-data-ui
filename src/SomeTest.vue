@@ -1,16 +1,16 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed } from 'vue';
 
 defineProps({
     str: {
         type: String,
-        default: ''
-    }
-})
+        default: '',
+    },
+});
 </script>
 
 <template>
-    <div :style="{background: 'red', color: 'white'}">
+    <div :style="{ background: 'red', color: 'white' }">
         {{ str }}
     </div>
 </template>

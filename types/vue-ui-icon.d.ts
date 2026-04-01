@@ -1,8 +1,6 @@
 import { DefineComponent } from 'vue';
 
-export type { 
-    VueUiIconName
-} from "./vue-data-ui";
+export type { VueUiIconName } from './vue-data-ui';
 
 declare const VueUiIcon: DefineComponent<{
     name: VueUiIconName;

@@ -1,30 +1,30 @@
 <script setup>
-import { computed, ref, watch, onUnmounted, nextTick } from "vue";
-import { calcTooltipPosition } from "../calcTooltipPosition";
-import { useMouse } from "../useMouse";
-import { setOpacity } from "../lib";
-import { debounce } from "../canvas-lib";
+import { computed, ref, watch, onUnmounted, nextTick } from 'vue';
+import { calcTooltipPosition } from '../calcTooltipPosition';
+import { useMouse } from '../useMouse';
+import { setOpacity } from '../lib';
+import { debounce } from '../canvas-lib';
 
 const props = defineProps({
     teleportTo: {
         type: String,
-        default: 'body'
+        default: 'body',
     },
     backgroundColor: {
         type: String,
-        default: "#FFFFFF"
+        default: '#FFFFFF',
     },
     color: {
         type: String,
-        default: "#000000"
+        default: '#000000',
     },
     content: String,
     maxWidth: {
         type: String,
-        default: '300px'
+        default: '300px',
     },
     parent: {
-        type: Object
+        type: Object,
     },
     show: {
         type: Boolean,
@@ -36,19 +36,19 @@ const props = defineProps({
     },
     fontSize: {
         type: [Number, String],
-        default: 14
+        default: 14,
     },
     borderRadius: {
         type: Number,
-        default: 4
+        default: 4,
     },
     borderColor: {
         type: String,
-        default: '#e1e5e8'
+        default: '#e1e5e8',
     },
     borderWidth: {
         type: Number,
-        default: 1
+        default: 1,
     },
     backgroundOpacity: {
         type: Number,
@@ -56,11 +56,11 @@ const props = defineProps({
     },
     position: {
         type: String,
-        default: "center"
+        default: 'center',
     },
     offsetY: {
         type: Number,
-        default: 24
+        default: 24,
     },
     blockShiftY: {
         type: Boolean,
@@ -68,32 +68,32 @@ const props = defineProps({
     },
     isFullscreen: {
         type: Boolean,
-        default: false
+        default: false,
     },
     smooth: {
         type: Boolean,
-        default: true
+        default: true,
     },
     backdropFilter: {
         type: Boolean,
-        default: true
+        default: true,
     },
     smoothForce: {
         type: Number,
-        default: 0.18
+        default: 0.18,
     },
     smoothSnapThreshold: {
         type: Number,
-        default: 0.25
+        default: 0.25,
     },
     isA11yMode: {
         type: Boolean,
-        default: false
+        default: false,
     },
     a11yPosition: {
         type: Object,
-        default: null
-    }
+        default: null,
+    },
 });
 
 const tooltip = ref(null);
@@ -130,12 +130,17 @@ function snapshotGeometry() {
 // by the tooltip when it is rendered inside transformed ancestors.
 function hasContainingBlockStyle(style) {
     if (!style) return false;
-    if (style.transform && style.transform !== "none") return true;
-    if (style.perspective && style.perspective !== "none") return true;
-    if (style.filter && style.filter !== "none") return true;
-    if (style.backdropFilter && style.backdropFilter !== "none") return true;
-    if (style.contain && style.contain.includes("paint")) return true;
-    if (style.willChange && (style.willChange.includes("transform") || style.willChange.includes("filter"))) return true;
+    if (style.transform && style.transform !== 'none') return true;
+    if (style.perspective && style.perspective !== 'none') return true;
+    if (style.filter && style.filter !== 'none') return true;
+    if (style.backdropFilter && style.backdropFilter !== 'none') return true;
+    if (style.contain && style.contain.includes('paint')) return true;
+    if (
+        style.willChange &&
+        (style.willChange.includes('transform') ||
+            style.willChange.includes('filter'))
+    )
+        return true;
     return false;
 }
 
@@ -163,15 +168,15 @@ function getScaleFromTransform(el) {
     const style = getComputedStyle(el);
     const t = style.transform;
 
-    if (!t || t === "none") return { scaleX: 1, scaleY: 1 };
+    if (!t || t === 'none') return { scaleX: 1, scaleY: 1 };
 
     try {
         const matrix = new DOMMatrixReadOnly(t);
         const scaleX = Math.hypot(matrix.a, matrix.b);
         const scaleY = Math.hypot(matrix.c, matrix.d);
         return {
-        scaleX: scaleX || 1,
-        scaleY: scaleY || 1
+            scaleX: scaleX || 1,
+            scaleY: scaleY || 1,
         };
     } catch {
         return { scaleX: 1, scaleY: 1 };
@@ -202,7 +207,10 @@ function stepAnimation() {
     const dx = targetPosition.value.x - displayPosition.value.x;
     const dy = targetPosition.value.y - displayPosition.value.y;
 
-    if (Math.abs(dx) <= props.smoothSnapThreshold && Math.abs(dy) <= props.smoothSnapThreshold) {
+    if (
+        Math.abs(dx) <= props.smoothSnapThreshold &&
+        Math.abs(dy) <= props.smoothSnapThreshold
+    ) {
         displayPosition.value.x = targetPosition.value.x;
         displayPosition.value.y = targetPosition.value.y;
         cancelAnimation();
@@ -259,7 +267,7 @@ watch(
         await nextTick();
         snapshotGeometry();
         ensureAnimationRunning();
-    }
+    },
 );
 
 onUnmounted(() => {
@@ -275,13 +283,13 @@ const effectiveClientPosition = computed(() => {
     ) {
         return {
             x: props.a11yPosition.x,
-            y: props.a11yPosition.y
+            y: props.a11yPosition.y,
         };
     }
 
     return {
         x: displayPosition.value.x,
-        y: displayPosition.value.y
+        y: displayPosition.value.y,
     };
 });
 
@@ -293,7 +301,7 @@ const normalizedClientPosition = computed(() => {
     if (!cbRect) {
         return {
             x: effectiveClientPosition.value.x,
-            y: effectiveClientPosition.value.y
+            y: effectiveClientPosition.value.y,
         };
     }
 
@@ -301,7 +309,7 @@ const normalizedClientPosition = computed(() => {
 
     return {
         x: (effectiveClientPosition.value.x - cbRect.left) / scaleX,
-        y: (effectiveClientPosition.value.y - cbRect.top) / scaleY
+        y: (effectiveClientPosition.value.y - cbRect.top) / scaleY,
     };
 });
 
@@ -337,9 +345,9 @@ const chartProxyForCalc = computed(() => {
                 width: r.width / scaleX,
                 height: r.height / scaleY,
                 x: (r.left - cbRect.left) / scaleX,
-                y: (r.top - cbRect.top) / scaleY
+                y: (r.top - cbRect.top) / scaleY,
             };
-        }
+        },
     };
 });
 
@@ -350,15 +358,14 @@ const pixelPosition = computed(() => {
         clientPosition: normalizedClientPosition.value,
         positionPreference: props.position,
         defaultOffsetY: props.offsetY,
-        blockShiftY: props.blockShiftY
+        blockShiftY: props.blockShiftY,
     });
 
     return {
         top: Math.round(pos.top),
-        left: Math.round(pos.left)
+        left: Math.round(pos.left),
     };
 });
-
 
 const convertedBackground = computed(() => {
     return setOpacity(props.backgroundColor, props.backgroundOpacity);
@@ -366,22 +373,22 @@ const convertedBackground = computed(() => {
 
 const tooltipStyle = computed(() => {
     const base = {
-        pointerEvents: "none",
-        position: "fixed",
-        top: "0px",
-        left: "0px",
+        pointerEvents: 'none',
+        position: 'fixed',
+        top: '0px',
+        left: '0px',
         transform: `translate3d(${pixelPosition.value.left}px, ${pixelPosition.value.top}px, 0)`,
         borderRadius: `${props.borderRadius}px`,
         border: `${props.borderWidth}px solid ${props.borderColor}`,
-        zIndex: 2147483647
+        zIndex: 2147483647,
     };
 
     if (!props.isCustom) {
         Object.assign(base, {
-        background: convertedBackground.value,
-        color: props.color,
-        maxWidth: props.maxWidth,
-        fontSize: `${props.fontSize}px`
+            background: convertedBackground.value,
+            color: props.color,
+            maxWidth: props.maxWidth,
+            fontSize: `${props.fontSize}px`,
         });
     }
 
@@ -389,25 +396,24 @@ const tooltipStyle = computed(() => {
 });
 
 defineExpose({
-    placeTooltip
+    placeTooltip,
 });
-
 </script>
 
 <template>
     <teleport :to="isFullscreen ? parent : teleportTo">
-        <div 
-            ref="tooltip" 
-            role="tooltip" 
-            :aria-hidden="!show" 
-            aria-live="polite" 
-            data-cy="tooltip" 
-            v-if="show" 
+        <div
+            ref="tooltip"
+            role="tooltip"
+            :aria-hidden="!show"
+            aria-live="polite"
+            data-cy="tooltip"
+            v-if="show"
             :class="{
                 'vue-data-ui-custom-tooltip': isCustom,
                 'vue-data-ui-tooltip': !isCustom,
-                'vue-data-ui-tooltip-backdrop': backdropFilter
-            }" 
+                'vue-data-ui-tooltip-backdrop': backdropFilter,
+            }"
             :style="tooltipStyle"
         >
             <slot name="tooltip-before" />

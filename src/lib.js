@@ -1,5 +1,5 @@
-import { toRaw, isRef, unref } from "vue";
-import errors from "./errors.json";
+import { toRaw, isRef, unref } from 'vue';
+import errors from './errors.json';
 
 export function makeDonut(
     item,
@@ -12,7 +12,7 @@ export function makeDonut(
     arcAmpl = 1.45,
     degrees = 360,
     rotation = 105.25,
-    size = 0
+    size = 0,
 ) {
     const { series } = item;
     if (!series || series.length === 0) {
@@ -31,7 +31,7 @@ export function makeDonut(
         // Force 360° when single datapoint
         const proportion = isSingle ? 1 : sum > 0 ? rawVal / sum : 0;
         const ratio = proportion * (Math.PI * piProportion);
-        const midProportion = isSingle ? 0.5 : sum > 0 ? (rawVal / 2) / sum : 0.5;
+        const midProportion = isSingle ? 0.5 : sum > 0 ? rawVal / 2 / sum : 0.5;
         const midRatio = midProportion * (Math.PI * piMult);
         const { startX, startY, endX, endY, path } = createArc(
             [cx, cy],
@@ -39,7 +39,7 @@ export function makeDonut(
             [acc, ratio],
             rotation,
             degrees,
-            piMult
+            piMult,
         );
         const inner = createArc(
             [cx, cy],
@@ -48,7 +48,7 @@ export function makeDonut(
             rotation,
             degrees,
             piMult,
-            true
+            true,
         );
         const center = createArc(
             [cx, cy],
@@ -56,7 +56,7 @@ export function makeDonut(
             [acc, midRatio],
             rotation,
             degrees,
-            piMult
+            piMult,
         );
         ratios.push({
             arcSlice: `${path} L ${inner.startX} ${inner.startY} ${inner.path} L ${startX} ${startY}`,
@@ -65,7 +65,7 @@ export function makeDonut(
             ...series[i],
             proportion: checkNaN(proportion),
             ratio: checkNaN(ratio),
-            path: path.replaceAll("NaN", "0"),
+            path: path.replaceAll('NaN', '0'),
             startX: checkNaN(startX),
             startY: checkNaN(startY),
             endX: checkNaN(endX),
@@ -75,8 +75,8 @@ export function makeDonut(
                 y: inner.startY,
             },
             firstSeparator: {
-                x: Number(inner.path.split(" ").at(-2)),
-                y: Number(inner.path.split(" ").at(-1)),
+                x: Number(inner.path.split(' ').at(-2)),
+                y: Number(inner.path.split(' ').at(-1)),
             },
             center,
         });
@@ -100,7 +100,15 @@ export function rotateMatrix(x) {
     ];
 }
 
-export function createArc([cx, cy], [rx, ry], [position, ratio], phi, degrees = 360, piMult = 2, reverse = false) {
+export function createArc(
+    [cx, cy],
+    [rx, ry],
+    [position, ratio],
+    phi,
+    degrees = 360,
+    piMult = 2,
+    reverse = false,
+) {
     ratio = ratio % (piMult * Math.PI);
     const rotMatrix = rotateMatrix(phi);
     const [sX, sY] = addVector(
@@ -108,17 +116,17 @@ export function createArc([cx, cy], [rx, ry], [position, ratio], phi, degrees = 
             rx * Math.cos(position),
             ry * Math.sin(position),
         ]),
-        [cx, cy]
+        [cx, cy],
     );
     const [eX, eY] = addVector(
         matrixTimes(rotMatrix, [
             rx * Math.cos(position + ratio),
             ry * Math.sin(position + ratio),
         ]),
-        [cx, cy]
+        [cx, cy],
     );
     const fA = ratio > Math.PI ? 1 : 0;
-    const fS = ratio > 0 ? reverse ? 0 : 1 : reverse ? 1 : 0;
+    const fS = ratio > 0 ? (reverse ? 0 : 1) : reverse ? 1 : 0;
     return {
         startX: reverse ? checkNaN(eX) : checkNaN(sX),
         startY: reverse ? checkNaN(eY) : checkNaN(sY),
@@ -132,21 +140,21 @@ export function createArc([cx, cy], [rx, ry], [position, ratio], phi, degrees = 
             checkNaN(fS),
             reverse ? checkNaN(sX) : checkNaN(eX),
             reverse ? checkNaN(sY) : checkNaN(eY),
-        ].join(" ")}`,
+        ].join(' ')}`,
     };
 }
 
 export function treeShake({ defaultConfig, userConfig }) {
     const finalConfig = { ...defaultConfig };
 
-    Object.keys(finalConfig).forEach(key => {
+    Object.keys(finalConfig).forEach((key) => {
         if (Object.hasOwn(userConfig, key)) {
-            const currentVal = userConfig[key]
+            const currentVal = userConfig[key];
             if (currentVal === null) {
                 finalConfig[key] = null;
             } else if (['boolean', 'function'].includes(typeof currentVal)) {
                 finalConfig[key] = currentVal;
-            } else if (["string", "number"].includes(typeof currentVal)) {
+            } else if (['string', 'number'].includes(typeof currentVal)) {
                 if (isValidUserValue(currentVal)) {
                     finalConfig[key] = currentVal;
                 }
@@ -157,19 +165,20 @@ export function treeShake({ defaultConfig, userConfig }) {
             } else if (checkObj({ userConfig, key })) {
                 finalConfig[key] = treeShake({
                     defaultConfig: finalConfig[key],
-                    userConfig: currentVal
+                    userConfig: currentVal,
                 });
             }
         }
     });
 
     // Allow override of default empty objects in config
-    Object.keys(userConfig).forEach(key => {
+    Object.keys(userConfig).forEach((key) => {
         if (!Object.hasOwn(finalConfig, key)) {
             const val = userConfig[key];
-            finalConfig[key] = (val && typeof val === 'object' && !Array.isArray(val))
-                ? { ...val }
-                : val;
+            finalConfig[key] =
+                val && typeof val === 'object' && !Array.isArray(val)
+                    ? { ...val }
+                    : val;
         }
     });
 
@@ -177,11 +186,19 @@ export function treeShake({ defaultConfig, userConfig }) {
 }
 
 export function checkArray({ userConfig, key }) {
-    return Object.hasOwn(userConfig, key) && Array.isArray(userConfig[key]) && userConfig[key].length >= 0;
+    return (
+        Object.hasOwn(userConfig, key) &&
+        Array.isArray(userConfig[key]) &&
+        userConfig[key].length >= 0
+    );
 }
 
 export function checkObj({ userConfig, key }) {
-    return Object.hasOwn(userConfig, key) && !Array.isArray(userConfig[key]) && typeof userConfig[key] === "object";
+    return (
+        Object.hasOwn(userConfig, key) &&
+        !Array.isArray(userConfig[key]) &&
+        typeof userConfig[key] === 'object'
+    );
 }
 
 export function isValidUserValue(val) {
@@ -189,7 +206,7 @@ export function isValidUserValue(val) {
 }
 
 export function isSafeValue(val) {
-    return ![undefined, NaN, Infinity, -Infinity].includes(val)
+    return ![undefined, NaN, Infinity, -Infinity].includes(val);
 }
 
 export function forceValidValue(val, fallback = 0) {
@@ -198,21 +215,53 @@ export function forceValidValue(val, fallback = 0) {
 
 export function checkNaN(val, fallback = 0) {
     if (isNaN(val)) {
-        return fallback
+        return fallback;
     } else {
-        return val
+        return val;
     }
 }
 
 export const palette = [
-    "#1f77b4", "#aec7e8", "#ff7f0e", "#ffbb78", "#2ca02c",
-    "#98df8a", "#d62728", "#ff9896", "#9467bd", "#c5b0d5",
-    "#8c564b", "#c49c94", "#e377c2", "#f7b6d2", "#7f7f7f",
-    "#c7c7c7", "#bcbd22", "#dbdb8d", "#17becf", "#9edae5",
-    "#393b79", "#5254a3", "#6b6ecf", "#9c9ede", "#637939",
-    "#8ca252", "#b5cf6b", "#cedb9c", "#8c6d31", "#bd9e39",
-    "#e7ba52", "#e7cb94", "#843c39", "#ad494a", "#d6616b",
-    "#e7969c", "#7b4173", "#a55194", "#ce6dbd", "#de9ed6"
+    '#1f77b4',
+    '#aec7e8',
+    '#ff7f0e',
+    '#ffbb78',
+    '#2ca02c',
+    '#98df8a',
+    '#d62728',
+    '#ff9896',
+    '#9467bd',
+    '#c5b0d5',
+    '#8c564b',
+    '#c49c94',
+    '#e377c2',
+    '#f7b6d2',
+    '#7f7f7f',
+    '#c7c7c7',
+    '#bcbd22',
+    '#dbdb8d',
+    '#17becf',
+    '#9edae5',
+    '#393b79',
+    '#5254a3',
+    '#6b6ecf',
+    '#9c9ede',
+    '#637939',
+    '#8ca252',
+    '#b5cf6b',
+    '#cedb9c',
+    '#8c6d31',
+    '#bd9e39',
+    '#e7ba52',
+    '#e7cb94',
+    '#843c39',
+    '#ad494a',
+    '#d6616b',
+    '#e7969c',
+    '#7b4173',
+    '#a55194',
+    '#ce6dbd',
+    '#de9ed6',
 ];
 
 // When adding themes, also update useThemeOptions and useThemeCheck composables
@@ -233,7 +282,7 @@ export function getPalette(palette = 'default') {
 
         case 'celebrationNight':
             return themePalettes.celebrationNight;
-        
+
         case 'minimal':
             return themePalettes.minimal;
 
@@ -251,214 +300,316 @@ export const themePalettes = {
     default: palette,
     dark: palette,
     minimal: [
-        "#2A2929",
-        "#454862",
-        "#65698E",
-        "#8D99AE",
-        "#678681",
-        "#7FA09B",
-        "#9CBCA8",
-        "#76645D",
-        "#877675",
-        "#A9998C",
-        "#C6B7AB",
-        "#906C70",
-        "#B08C91",
-        "#C9ACB0",
-        "#9F816B",
-        "#B39783",
-        "#D8C3B3",
-        "#825E76",
-        "#9D7D92",
-        "#C2A6B9"
+        '#2A2929',
+        '#454862',
+        '#65698E',
+        '#8D99AE',
+        '#678681',
+        '#7FA09B',
+        '#9CBCA8',
+        '#76645D',
+        '#877675',
+        '#A9998C',
+        '#C6B7AB',
+        '#906C70',
+        '#B08C91',
+        '#C9ACB0',
+        '#9F816B',
+        '#B39783',
+        '#D8C3B3',
+        '#825E76',
+        '#9D7D92',
+        '#C2A6B9',
     ],
     minimalDark: [
-        "#524f4f",
-        "#454862",
-        "#65698E",
-        "#8D99AE",
-        "#678681",
-        "#7FA09B",
-        "#9CBCA8",
-        "#76645D",
-        "#877675",
-        "#A9998C",
-        "#C6B7AB",
-        "#906C70",
-        "#B08C91",
-        "#C9ACB0",
-        "#9F816B",
-        "#B39783",
-        "#D8C3B3",
-        "#825E76",
-        "#9D7D92",
-        "#C2A6B9"
+        '#524f4f',
+        '#454862',
+        '#65698E',
+        '#8D99AE',
+        '#678681',
+        '#7FA09B',
+        '#9CBCA8',
+        '#76645D',
+        '#877675',
+        '#A9998C',
+        '#C6B7AB',
+        '#906C70',
+        '#B08C91',
+        '#C9ACB0',
+        '#9F816B',
+        '#B39783',
+        '#D8C3B3',
+        '#825E76',
+        '#9D7D92',
+        '#C2A6B9',
     ],
     celebration: [
-        "#D32F2F",
-        "#E64A19",
-        "#F57C00",
-        "#FF9800",
-        "#FF5722",
-        "#FFC107",
-        "#FFEB3B",
-        "#FFD54F",
-        "#FF6F00",
-        "#D84315",
-        "#BF360C",
-        "#C62828",
-        "#B71C1C",
-        "#FF7043",
-        "#FF8A65",
-        "#FFB74D",
-        "#FFA726",
-        "#FFCC80",
-        "#FFE082",
-        "#FFECB3"
+        '#D32F2F',
+        '#E64A19',
+        '#F57C00',
+        '#FF9800',
+        '#FF5722',
+        '#FFC107',
+        '#FFEB3B',
+        '#FFD54F',
+        '#FF6F00',
+        '#D84315',
+        '#BF360C',
+        '#C62828',
+        '#B71C1C',
+        '#FF7043',
+        '#FF8A65',
+        '#FFB74D',
+        '#FFA726',
+        '#FFCC80',
+        '#FFE082',
+        '#FFECB3',
     ],
     celebrationNight: [
-        "#D32F2F",
-        "#E64A19",
-        "#F57C00",
-        "#FF9800",
-        "#FF5722",
-        "#FFC947",
-        "#FFEB3B",
-        "#FFD95B",
-        "#FF8800",
-        "#FF5722",
-        "#DD2C00",
-        "#F44336",
-        "#C62828",
-        "#FF6E6E",
-        "#FF867C",
-        "#FFB547",
-        "#FFA837",
-        "#FFD180",
-        "#FFE57F",
-        "#FFF59D"
+        '#D32F2F',
+        '#E64A19',
+        '#F57C00',
+        '#FF9800',
+        '#FF5722',
+        '#FFC947',
+        '#FFEB3B',
+        '#FFD95B',
+        '#FF8800',
+        '#FF5722',
+        '#DD2C00',
+        '#F44336',
+        '#C62828',
+        '#FF6E6E',
+        '#FF867C',
+        '#FFB547',
+        '#FFA837',
+        '#FFD180',
+        '#FFE57F',
+        '#FFF59D',
     ],
     concrete: [
-        "#4A6A75",
-        "#6C94A0",
-        "#7DA9B5",
-        "#8EBFCA",
-        "#9FD4E0",
-        "#B0E9F5",
-        "#C1FFFF",
-        "#5C6B5B",
-        "#6D7D6D",
-        "#7E8F7E",
-        "#8FA290",
-        "#A1B5A3",
-        "#B2C7B5",
-        "#C3DAC8",
-        "#D4ECDA",
-        "#E6FFF0",
-        "#8A9CA5",
-        "#9AA7B0",
-        "#ABB1BC",
-        "#BBCBC7",
-        "#CCD6D3",
-        "#DEE1DE",
-        "#EFECEC",
-        "#404C4D",
-        "#50605F",
-        "#617472",
-        "#718885",
-        "#829C98",
-        "#92B0AB",
-        "#A3C4BE",
-        "#B3D8D2",
-        "#C4EDE5",
-        "#D4F1E8",
-        "#404C5A",
-        "#50606C",
-        "#61747E",
-        "#718890",
-        "#829CA2",
-        "#92B0B5"
+        '#4A6A75',
+        '#6C94A0',
+        '#7DA9B5',
+        '#8EBFCA',
+        '#9FD4E0',
+        '#B0E9F5',
+        '#C1FFFF',
+        '#5C6B5B',
+        '#6D7D6D',
+        '#7E8F7E',
+        '#8FA290',
+        '#A1B5A3',
+        '#B2C7B5',
+        '#C3DAC8',
+        '#D4ECDA',
+        '#E6FFF0',
+        '#8A9CA5',
+        '#9AA7B0',
+        '#ABB1BC',
+        '#BBCBC7',
+        '#CCD6D3',
+        '#DEE1DE',
+        '#EFECEC',
+        '#404C4D',
+        '#50605F',
+        '#617472',
+        '#718885',
+        '#829C98',
+        '#92B0AB',
+        '#A3C4BE',
+        '#B3D8D2',
+        '#C4EDE5',
+        '#D4F1E8',
+        '#404C5A',
+        '#50606C',
+        '#61747E',
+        '#718890',
+        '#829CA2',
+        '#92B0B5',
     ],
     hack: [
-        "#004C00",
-        "#006600",
-        "#008000",
-        "#009900",
-        "#00B300",
-        "#00CC00",
-        "#00E600",
-        "#00FF00",
-        "#33FF33",
-        "#33E633",
-        "#33CC33",
-        "#33B333",
-        "#339933",
-        "#338033",
-        "#336633",
-        "#334C33",
-        "#333333",
-        "#00AF19",
-        "#19E619",
-        "#19CC19",
-        "#19B319",
-        "#199919",
-        "#198019",
-        "#196619",
-        "#194C19",
-        "#193319",
-        "#191919",
-        "#66FF66",
-        "#66E666",
-        "#66CC66",
-        "#66B366",
-        "#669966",
-        "#668066",
-        "#666666",
-        "#4CFF4C",
-        "#4CE64C",
-        "#4CCC4C",
-        "#4CB34C"
+        '#004C00',
+        '#006600',
+        '#008000',
+        '#009900',
+        '#00B300',
+        '#00CC00',
+        '#00E600',
+        '#00FF00',
+        '#33FF33',
+        '#33E633',
+        '#33CC33',
+        '#33B333',
+        '#339933',
+        '#338033',
+        '#336633',
+        '#334C33',
+        '#333333',
+        '#00AF19',
+        '#19E619',
+        '#19CC19',
+        '#19B319',
+        '#199919',
+        '#198019',
+        '#196619',
+        '#194C19',
+        '#193319',
+        '#191919',
+        '#66FF66',
+        '#66E666',
+        '#66CC66',
+        '#66B366',
+        '#669966',
+        '#668066',
+        '#666666',
+        '#4CFF4C',
+        '#4CE64C',
+        '#4CCC4C',
+        '#4CB34C',
     ],
     zen: [
-        "#B9B99D",
-        "#E0CFC3",
-        "#DFCA99",
-        "#DCB482",
-        "#C09E85",
-        "#8F837A",
-        "#858480",
-        "#B0B9A8",
-        "#606C5A",
-        "#5E5E5E",
-        "#4F5B75",
-        "#647393",
-        "#818EA9",
-        "#9FA9BE",
-        "#BBC4D3",
-        "#DCDFE7",
-        "#928A98",
-        "#8A9892",
-        "#B1A7AD",
-        "#C5B8A7",
-        "#EBD6CC",
-        "#D7E0D2",
-        "#E0D2D7",
-        "#E0DBD2",
-        "#D2E0DB",
-        "#DBD2E0",
-        "#C1B7A5",
-        "#A5AFC1",
-        "#E0DBD2",
-        "#D2D7E0",
-        "#F7EDE2",
-        "#97ACB7",
-        "#C4CBBC",
-        "#C3C5C5",
-        "#A0AC94"
-    ]
+        '#B9B99D',
+        '#E0CFC3',
+        '#DFCA99',
+        '#DCB482',
+        '#C09E85',
+        '#8F837A',
+        '#858480',
+        '#B0B9A8',
+        '#606C5A',
+        '#5E5E5E',
+        '#4F5B75',
+        '#647393',
+        '#818EA9',
+        '#9FA9BE',
+        '#BBC4D3',
+        '#DCDFE7',
+        '#928A98',
+        '#8A9892',
+        '#B1A7AD',
+        '#C5B8A7',
+        '#EBD6CC',
+        '#D7E0D2',
+        '#E0D2D7',
+        '#E0DBD2',
+        '#D2E0DB',
+        '#DBD2E0',
+        '#C1B7A5',
+        '#A5AFC1',
+        '#E0DBD2',
+        '#D2D7E0',
+        '#F7EDE2',
+        '#97ACB7',
+        '#C4CBBC',
+        '#C3C5C5',
+        '#A0AC94',
+    ],
 };
 
-export const opacity = ["00", "03", "05", "08", "0A", "0D", "0F", "12", "14", "17", "1A", "1C", "1F", "21", "24", "26", "29", "2B", "2E", "30", "33", "36", "38", "3B", "3D", "40", "42", "45", "47", "4A", "4D", "4F", "52", "54", "57", "59", "5C", "5E", "61", "63", "66", "69", "6B", "6E", "70", "73", "75", "78", "7A", "7D", "80", "82", "85", "87", "8A", "8C", "8F", "91", "94", "96", "99", "9C", "9E", "A1", "A3", "A6", "A8", "AB", "AD", "B0", "B3", "B5", "B8", "BA", "BD", "BF", "C2", "C4", "C7", "C9", "CC", "CF", "D1", "D4", "D6", "D9", "DB", "DE", "E0", "E3", "E6", "E8", "EB", "ED", "F0", "F2", "F5", "F7", "FA", "FC", "FF"];
+export const opacity = [
+    '00',
+    '03',
+    '05',
+    '08',
+    '0A',
+    '0D',
+    '0F',
+    '12',
+    '14',
+    '17',
+    '1A',
+    '1C',
+    '1F',
+    '21',
+    '24',
+    '26',
+    '29',
+    '2B',
+    '2E',
+    '30',
+    '33',
+    '36',
+    '38',
+    '3B',
+    '3D',
+    '40',
+    '42',
+    '45',
+    '47',
+    '4A',
+    '4D',
+    '4F',
+    '52',
+    '54',
+    '57',
+    '59',
+    '5C',
+    '5E',
+    '61',
+    '63',
+    '66',
+    '69',
+    '6B',
+    '6E',
+    '70',
+    '73',
+    '75',
+    '78',
+    '7A',
+    '7D',
+    '80',
+    '82',
+    '85',
+    '87',
+    '8A',
+    '8C',
+    '8F',
+    '91',
+    '94',
+    '96',
+    '99',
+    '9C',
+    '9E',
+    'A1',
+    'A3',
+    'A6',
+    'A8',
+    'AB',
+    'AD',
+    'B0',
+    'B3',
+    'B5',
+    'B8',
+    'BA',
+    'BD',
+    'BF',
+    'C2',
+    'C4',
+    'C7',
+    'C9',
+    'CC',
+    'CF',
+    'D1',
+    'D4',
+    'D6',
+    'D9',
+    'DB',
+    'DE',
+    'E0',
+    'E3',
+    'E6',
+    'E8',
+    'EB',
+    'ED',
+    'F0',
+    'F2',
+    'F5',
+    'F7',
+    'FA',
+    'FC',
+    'FF',
+];
 
 export function convertColorToHex(color) {
     const hexRegex = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})?$/i;
@@ -473,7 +624,7 @@ export function convertColorToHex(color) {
     if (
         color === undefined ||
         color === null ||
-        (typeof color === "number" && isNaN(color))
+        (typeof color === 'number' && isNaN(color))
     ) {
         return null;
     }
@@ -485,7 +636,7 @@ export function convertColorToHex(color) {
     if (Array.isArray(color)) {
         const [r, g, b, a = 1] = color;
         color = `rgba(${r},${g},${b},${a})`;
-    } else if (typeof color === "object") {
+    } else if (typeof color === 'object') {
         if (
             Number.isFinite(color.r) &&
             Number.isFinite(color.g) &&
@@ -496,11 +647,11 @@ export function convertColorToHex(color) {
         } else {
             return null;
         }
-    } else if (typeof color === "number") {
+    } else if (typeof color === 'number') {
         const n = color >>> 0;
-        const hex = n.toString(16).padStart(n <= 0xffffff ? 6 : 8, "0");
-        return `#${hex.length === 6 ? hex + "ff" : hex}`;
-    } else if (typeof color !== "string") {
+        const hex = n.toString(16).padStart(n <= 0xffffff ? 6 : 8, '0');
+        return `#${hex.length === 6 ? hex + 'ff' : hex}`;
+    } else if (typeof color !== 'string') {
         return null;
     }
 
@@ -508,17 +659,17 @@ export function convertColorToHex(color) {
 
     if (lchRegex.test(color)) {
         console.warn(
-            "[convertColorToHex] lch() colors are not supported. Use oklch() instead.",
+            '[convertColorToHex] lch() colors are not supported. Use oklch() instead.',
         );
         return null;
     }
 
-    if (color.toLowerCase() === "transparent") {
-        return "#FFFFFF00";
+    if (color.toLowerCase() === 'transparent') {
+        return '#FFFFFF00';
     }
 
     color = color.replace(shorthandRegex, (_, r, g, b, a) => {
-        return `#${r}${r}${g}${g}${b}${b}${a ? a + a : ""}`;
+        return `#${r}${r}${g}${g}${b}${b}${a ? a + a : ''}`;
     });
 
     let match;
@@ -620,7 +771,7 @@ export function convertOklabToSrgb(lightness, labA, labB) {
 // OKLCH utility
 export function parseCssAlpha(alphaRaw) {
     if (alphaRaw === undefined) return 1;
-    if (typeof alphaRaw === "string" && alphaRaw.endsWith("%")) {
+    if (typeof alphaRaw === 'string' && alphaRaw.endsWith('%')) {
         const percent = parseFloat(alphaRaw);
         if (!Number.isFinite(percent)) return null;
         return clampToUnitInterval(percent / 100);
@@ -655,7 +806,7 @@ export function normalizeHueDegrees(hueRaw) {
 
 export function decimalToHex(decimal) {
     const hex = Number(decimal).toString(16);
-    return hex.length === 1 ? "0" + hex : hex;
+    return hex.length === 1 ? '0' + hex : hex;
 }
 
 export function hslToRgba(h, s, l, alpha = 1) {
@@ -693,9 +844,10 @@ export function hslToRgba(h, s, l, alpha = 1) {
 }
 
 export function shiftHue(hexColor, shiftAmount) {
-
-    const nakedHex = hexColor.length === 9 ? hexColor.substring(0, 7) : hexColor;
-    const alphaChannel = hexColor.length === 9 ? hexColor.substring(7, 9) : null;
+    const nakedHex =
+        hexColor.length === 9 ? hexColor.substring(0, 7) : hexColor;
+    const alphaChannel =
+        hexColor.length === 9 ? hexColor.substring(7, 9) : null;
 
     const hexToRgb = (hex) => ({
         r: parseInt(hex.substring(1, 3), 16),
@@ -709,7 +861,9 @@ export function shiftHue(hexColor, shiftAmount) {
         b /= 255;
         const max = Math.max(r, g, b);
         const min = Math.min(r, g, b);
-        let h, s, l = (max + min) / 2;
+        let h,
+            s,
+            l = (max + min) / 2;
 
         if (max === min) {
             h = s = 0;
@@ -717,9 +871,15 @@ export function shiftHue(hexColor, shiftAmount) {
             const d = max - min;
             s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
             switch (max) {
-                case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-                case g: h = (b - r) / d + 2; break;
-                case b: h = (r - g) / d + 4; break;
+                case r:
+                    h = (g - b) / d + (g < b ? 6 : 0);
+                    break;
+                case g:
+                    h = (b - r) / d + 2;
+                    break;
+                case b:
+                    h = (r - g) / d + 4;
+                    break;
             }
             h /= 6;
         }
@@ -755,48 +915,43 @@ export function shiftHue(hexColor, shiftAmount) {
         };
     };
 
-    const rgbColor = hexToRgb(nakedHex || "#000000");
+    const rgbColor = hexToRgb(nakedHex || '#000000');
     const hslColor = rgbToHsl(rgbColor);
     hslColor.h += shiftAmount;
     hslColor.h = (hslColor.h + 1) % 1;
 
     const shiftedRgbColor = hslToRgb(hslColor);
-    const shiftedHexColor = `#${(shiftedRgbColor.r << 16 | shiftedRgbColor.g << 8 | shiftedRgbColor.b).toString(16).padStart(6, '0')}`;
-
+    const shiftedHexColor = `#${((shiftedRgbColor.r << 16) | (shiftedRgbColor.g << 8) | shiftedRgbColor.b).toString(16).padStart(6, '0')}`;
 
     return shiftedHexColor + (alphaChannel || '');
 }
-
 
 export function calcPolygonPoints({
     centerX,
     centerY,
     outerPoints,
     radius,
-    rotation
+    rotation,
 }) {
     const angle = Math.PI / outerPoints;
     const angleOffsetToCenter = rotation;
-    let points = "";
+    let points = '';
     const coordinates = [];
     for (let i = 0; i < outerPoints * 2; i += 1) {
-        let currX = centerX + Math.cos(i * angle + angleOffsetToCenter) * radius;
-        let currY = centerY + Math.sin(i * angle + angleOffsetToCenter) * radius;
+        let currX =
+            centerX + Math.cos(i * angle + angleOffsetToCenter) * radius;
+        let currY =
+            centerY + Math.sin(i * angle + angleOffsetToCenter) * radius;
         points += `${currX},${currY} `;
         coordinates.push({ x: currX, y: currY });
     }
     return {
         path: `M${points}Z`,
-        coordinates
+        coordinates,
     };
 }
 
-export function createPolygonPath({
-    plot,
-    radius,
-    sides,
-    rotation = 0
-}) {
+export function createPolygonPath({ plot, radius, sides, rotation = 0 }) {
     const centerX = plot.x;
     const centerY = plot.y;
     const outerPoints = sides / 2;
@@ -805,7 +960,7 @@ export function createPolygonPath({
         centerY,
         outerPoints,
         radius: radius + 1,
-        rotation
+        rotation,
     });
 }
 
@@ -814,12 +969,12 @@ export function calcStarPoints({
     centerY,
     innerCirclePoints,
     innerRadius,
-    outerRadius
+    outerRadius,
 }) {
     const angle = Math.PI / innerCirclePoints;
     const angleOffsetToCenterStar = 60;
     const totalPoints = innerCirclePoints * 2;
-    let points = "";
+    let points = '';
     for (let i = 0; i < totalPoints; i += 1) {
         let isEvenIndex = i % 2 == 0;
         let r = isEvenIndex ? outerRadius : innerRadius;
@@ -830,11 +985,7 @@ export function calcStarPoints({
     return points;
 }
 
-export function createStar({
-    plot,
-    radius,
-    apexes = 5
-}) {
+export function createStar({ plot, radius, apexes = 5 }) {
     const centerX = plot.x;
     const centerY = plot.y;
     const innerCirclePoints = apexes;
@@ -846,25 +997,29 @@ export function createStar({
         centerY,
         innerCirclePoints,
         innerRadius,
-        outerRadius
-    })
+        outerRadius,
+    });
 }
 
 export function giftWrap({ series }) {
-    if (!Array.isArray(series) || series.length === 0) return "";
+    if (!Array.isArray(series) || series.length === 0) return '';
 
     const pts = Array.from(
         new Map(
             series
-                .filter(p => p && Number.isFinite(p.x) && Number.isFinite(p.y))
-                .map(p => [`${p.x},${p.y}`, { x: +p.x, y: +p.y }])
-        ).values()
+                .filter(
+                    (p) => p && Number.isFinite(p.x) && Number.isFinite(p.y),
+                )
+                .map((p) => [`${p.x},${p.y}`, { x: +p.x, y: +p.y }]),
+        ).values(),
     );
-    if (pts.length === 0) return "";
-    if (pts.length === 1) return `${Math.round(pts[0].x)},${Math.round(pts[0].y)} `;
+    if (pts.length === 0) return '';
+    if (pts.length === 1)
+        return `${Math.round(pts[0].x)},${Math.round(pts[0].y)} `;
 
     const dist2 = (a, b) => {
-        const dx = a.x - b.x, dy = a.y - b.y;
+        const dx = a.x - b.x,
+            dy = a.y - b.y;
         return dx * dx + dy * dy;
     };
     const cross = (o, a, b) =>
@@ -901,41 +1056,44 @@ export function giftWrap({ series }) {
         endpoint = candidate;
     }
 
-    let result = "";
+    let result = '';
     for (const p of hull) {
         result += `${Math.round(p.x)},${Math.round(p.y)} `;
     }
     return result;
 }
 
-
 export function degreesToRadians(degrees) {
     return (degrees * Math.PI) / 180;
 }
 
-
 function clampNumber(value, min, max) {
-  return Math.min(Math.max(value, min), max);
+    return Math.min(Math.max(value, min), max);
 }
 
 function parseRgbOrRgba(input) {
     const match = input
         .trim()
-        .match(/^rgba?\(\s*([+\-]?\d+)\s*,\s*([+\-]?\d+)\s*,\s*([+\-]?\d+)\s*(?:,\s*([+\-]?[\d.]+)\s*)?\)$/i);
+        .match(
+            /^rgba?\(\s*([+\-]?\d+)\s*,\s*([+\-]?\d+)\s*,\s*([+\-]?\d+)\s*(?:,\s*([+\-]?[\d.]+)\s*)?\)$/i,
+        );
 
     if (!match) return null;
 
     const red = clampNumber(Number.parseInt(match[1], 10), 0, 255);
     const green = clampNumber(Number.parseInt(match[2], 10), 0, 255);
     const blue = clampNumber(Number.parseInt(match[3], 10), 0, 255);
-    const alpha = match[4] === undefined ? 1 : clampNumber(Number.parseFloat(match[4]), 0, 1);
+    const alpha =
+        match[4] === undefined
+            ? 1
+            : clampNumber(Number.parseFloat(match[4]), 0, 1);
 
     return { red, green, blue, alpha };
-    }
+}
 
 function parseHex(input) {
     const value = input.trim();
-    if (!value.startsWith("#")) return null;
+    if (!value.startsWith('#')) return null;
 
     const hex = value.slice(1);
 
@@ -967,7 +1125,7 @@ function parseOklch(input) {
     const match = input
         .trim()
         .match(
-        /^oklch\(\s*([+\-]?[\d.]+%?)\s+([+\-]?[\d.]+)\s+([+\-]?[\d.]+)(?:\s*\/\s*([+\-]?[\d.]+%?))?\s*\)$/i
+            /^oklch\(\s*([+\-]?[\d.]+%?)\s+([+\-]?[\d.]+)\s+([+\-]?[\d.]+)(?:\s*\/\s*([+\-]?[\d.]+%?))?\s*\)$/i,
         );
 
     if (!match) return null;
@@ -977,7 +1135,7 @@ function parseOklch(input) {
     const hueRaw = match[3];
     const alphaRaw = match[4];
 
-    const lightness = lightnessRaw.endsWith("%")
+    const lightness = lightnessRaw.endsWith('%')
         ? clampNumber(Number.parseFloat(lightnessRaw) / 100, 0, 1)
         : clampNumber(Number.parseFloat(lightnessRaw), 0, 1);
 
@@ -985,9 +1143,9 @@ function parseOklch(input) {
     const hueDegrees = Number.parseFloat(hueRaw);
 
     const alpha = alphaRaw
-        ? alphaRaw.endsWith("%")
-        ? clampNumber(Number.parseFloat(alphaRaw) / 100, 0, 1)
-        : clampNumber(Number.parseFloat(alphaRaw), 0, 1)
+        ? alphaRaw.endsWith('%')
+            ? clampNumber(Number.parseFloat(alphaRaw) / 100, 0, 1)
+            : clampNumber(Number.parseFloat(alphaRaw), 0, 1)
         : 1;
 
     // OKLCH -> OKLab
@@ -998,7 +1156,7 @@ function parseOklch(input) {
     // OKLab -> linear sRGB (Björn Ottosson)
     const l_ = lightness + 0.3963377774 * labA + 0.2158037573 * labB;
     const m_ = lightness - 0.1055613458 * labA - 0.0638541728 * labB;
-    const s_ = lightness - 0.0894841775 * labA - 1.2914855480 * labB;
+    const s_ = lightness - 0.0894841775 * labA - 1.291485548 * labB;
 
     const l = l_ * l_ * l_;
     const m = m_ * m_ * m_;
@@ -1006,7 +1164,7 @@ function parseOklch(input) {
 
     let redLinear = +4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s;
     let greenLinear = -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s;
-    let blueLinear = -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s;
+    let blueLinear = -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s;
 
     redLinear = clampNumber(redLinear, 0, 1);
     greenLinear = clampNumber(greenLinear, 0, 1);
@@ -1014,7 +1172,9 @@ function parseOklch(input) {
 
     const toSrgb8Bit = (linear) => {
         const srgb =
-        linear <= 0.0031308 ? 12.92 * linear : 1.055 * Math.pow(linear, 1 / 2.4) - 0.055;
+            linear <= 0.0031308
+                ? 12.92 * linear
+                : 1.055 * Math.pow(linear, 1 / 2.4) - 0.055;
         return clampNumber(Math.round(srgb * 255), 0, 255);
     };
 
@@ -1050,28 +1210,31 @@ function computeRelativeLuminance(red8Bit, green8Bit, blue8Bit) {
  * For semi-transparent colors, this assumes the background behind is white (same behavior as your original code).
  */
 export function adaptColorToBackground(backgroundColor) {
-    if (!backgroundColor) return "#000000";
+    if (!backgroundColor) return '#000000';
     const rgbOrRgba = parseRgbOrRgba(backgroundColor);
     const hex = parseHex(backgroundColor);
     const oklch = parseOklch(backgroundColor);
 
-    const parsed =
-        rgbOrRgba ??
-        hex ??
-        oklch;
+    const parsed = rgbOrRgba ?? hex ?? oklch;
 
     if (!parsed) {
         // Unknown format: default behavior
-        return "#000000";
+        return '#000000';
     }
 
-    const relativeLuminance = computeRelativeLuminance(parsed.red, parsed.green, parsed.blue);
+    const relativeLuminance = computeRelativeLuminance(
+        parsed.red,
+        parsed.green,
+        parsed.blue,
+    );
 
     // If transparent, blend luminance over white (same logic as original)
     const blendedLuminance =
-        parsed.alpha < 1 ? parsed.alpha * relativeLuminance + (1 - parsed.alpha) * 1 : relativeLuminance;
+        parsed.alpha < 1
+            ? parsed.alpha * relativeLuminance + (1 - parsed.alpha) * 1
+            : relativeLuminance;
 
-    return blendedLuminance > 0.3 ? "#000000" : "#FFFFFF";
+    return blendedLuminance > 0.3 ? '#000000' : '#FFFFFF';
 }
 
 function isPlainObject(x) {
@@ -1085,12 +1248,15 @@ function isPlainObject(x) {
 
 // Vue reactivity objects often expose these fields; avoid descending into them
 function looksLikeVueReactive(x) {
-    return !!x && (
-        x.__v_isRef ||
-        x.__v_isReactive ||
-        x.__v_isReadonly ||
-        x.effect ||
-        x.dep || x.deps || x.subs
+    return (
+        !!x &&
+        (x.__v_isRef ||
+            x.__v_isReactive ||
+            x.__v_isReadonly ||
+            x.effect ||
+            x.dep ||
+            x.deps ||
+            x.subs)
     );
 }
 
@@ -1145,7 +1311,10 @@ export function calcLinearProgression(plots) {
     const len = plots?.length ?? 0;
     if (len < 2) return { x1: 0, y1: 0, x2: 0, y2: 0, slope: 0, trend: 0 };
 
-    let sx = 0, sy = 0, sxy = 0, sxx = 0;
+    let sx = 0,
+        sy = 0,
+        sxy = 0,
+        sxx = 0;
     for (const { x, y } of plots) {
         sx += x;
         sy += y;
@@ -1161,7 +1330,10 @@ export function calcLinearProgression(plots) {
     const y1 = slopePx * x1 + interceptPx;
     const y2 = slopePx * x2 + interceptPx;
 
-    let vx = 0, vy = 0, vxy = 0, vxx = 0;
+    let vx = 0,
+        vy = 0,
+        vxy = 0,
+        vxx = 0;
     for (let i = 0; i < len; i += 1) {
         vx += i;
         vy += plots[i].value;
@@ -1176,7 +1348,12 @@ export function calcLinearProgression(plots) {
     const vEnd = slopeV * (len - 1) + interceptV;
 
     const EPS = 1e-9;
-    const scale = Math.max(Math.abs(vStart), Math.abs(vy / len), Math.abs(vEnd), EPS);
+    const scale = Math.max(
+        Math.abs(vStart),
+        Math.abs(vy / len),
+        Math.abs(vEnd),
+        EPS,
+    );
     const trend = (vEnd - vStart) / scale;
 
     return { x1, y1, x2, y2, slope: slopePx, trend };
@@ -1191,9 +1368,9 @@ export function calcMedian(arr) {
 export function createStraightPath(points) {
     let arr = [];
     for (let i = 0; i < points.length; i += 1) {
-        arr.push(`${checkNaN(points[i].x)},${checkNaN(points[i].y)} `)
+        arr.push(`${checkNaN(points[i].x)},${checkNaN(points[i].y)} `);
     }
-    return arr.join(' ').trim()
+    return arr.join(' ').trim();
 }
 
 // Monotone cubic interpolation
@@ -1202,7 +1379,10 @@ export function createSmoothPath(points) {
 
     const n = points.length - 1;
     const path = [`${checkNaN(points[0].x)},${checkNaN(points[0].y)}`];
-    const dx = [], dy = [], slopes = [], tangents = [];
+    const dx = [],
+        dy = [],
+        slopes = [],
+        tangents = [];
 
     for (let i = 0; i < n; i += 1) {
         dx[i] = points[i + 1].x - points[i].x;
@@ -1217,7 +1397,8 @@ export function createSmoothPath(points) {
         if (slopes[i - 1] * slopes[i] <= 0) {
             tangents[i] = 0;
         } else {
-            const harmonicMean = (2 * slopes[i - 1] * slopes[i]) / (slopes[i - 1] + slopes[i]);
+            const harmonicMean =
+                (2 * slopes[i - 1] * slopes[i]) / (slopes[i - 1] + slopes[i]);
             tangents[i] = harmonicMean;
         }
     }
@@ -1230,11 +1411,13 @@ export function createSmoothPath(points) {
         const m1 = tangents[i];
         const m2 = tangents[i + 1];
         const controlX1 = x1 + (x2 - x1) / 3;
-        const controlY1 = y1 + m1 * (x2 - x1) / 3;
+        const controlY1 = y1 + (m1 * (x2 - x1)) / 3;
         const controlX2 = x2 - (x2 - x1) / 3;
-        const controlY2 = y2 - m2 * (x2 - x1) / 3;
+        const controlY2 = y2 - (m2 * (x2 - x1)) / 3;
 
-        path.push(`C ${checkNaN(controlX1)},${checkNaN(controlY1)} ${checkNaN(controlX2)},${checkNaN(controlY2)} ${checkNaN(x2)},${checkNaN(y2)}`);
+        path.push(
+            `C ${checkNaN(controlX1)},${checkNaN(controlY1)} ${checkNaN(controlX2)},${checkNaN(controlY2)} ${checkNaN(x2)},${checkNaN(y2)}`,
+        );
     }
 
     return path.join(' ');
@@ -1246,7 +1429,7 @@ export function createSmoothPathVertical(points, smoothing = 0.2) {
         const lengthY = pointB.y - pointA.y;
         return {
             length: Math.sqrt(Math.pow(lengthX, 2) + Math.pow(lengthY, 2)),
-            angle: Math.atan2(lengthY, lengthX)
+            angle: Math.atan2(lengthY, lengthX),
         };
     }
     function controlPoint(current, previous, next, reverse) {
@@ -1266,39 +1449,50 @@ export function createSmoothPathVertical(points, smoothing = 0.2) {
         const cpe = controlPoint(point, a[i - 1], a[i + 1], true);
         return `C ${checkNaN(cps.x)},${checkNaN(cps.y)} ${checkNaN(cpe.x)},${checkNaN(cpe.y)} ${checkNaN(point.x)},${checkNaN(point.y)}`;
     }
-    const d = points.filter(p => !!p).reduce((acc, point, i, a) => i === 0
-        ? `${checkNaN(point.x)},${checkNaN(point.y)} `
-        : `${acc} ${bezierCommand(point, i, a)} `
-        , '');
+    const d = points
+        .filter((p) => !!p)
+        .reduce(
+            (acc, point, i, a) =>
+                i === 0
+                    ? `${checkNaN(point.x)},${checkNaN(point.y)} `
+                    : `${acc} ${bezierCommand(point, i, a)} `,
+            '',
+        );
 
     return d;
 }
 
-
 export function createUid() {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'
-        .replace(/[xy]/g, function (c) {
-            const r = Math.random() * 16 | 0,
-                v = c == 'x' ? r : (r & 0x3 | 0x8);
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(
+        /[xy]/g,
+        function (c) {
+            const r = (Math.random() * 16) | 0,
+                v = c == 'x' ? r : (r & 0x3) | 0x8;
             return v.toString(16);
-        });
+        },
+    );
 }
 
-export function calcMarkerOffsetX(arc, isTitle = false, offset = 16, useCss = false) {
+export function calcMarkerOffsetX(
+    arc,
+    isTitle = false,
+    offset = 16,
+    useCss = false,
+) {
     let x = 0;
     let offsetX = isTitle ? offset : 0;
-    let anchor = useCss ? 'center' : "middle";
+    let anchor = useCss ? 'center' : 'middle';
     if (arc.center.endX > arc.cx) {
         x = arc.center.endX + offset + offsetX;
-        anchor = useCss ? 'left' : "start";
+        anchor = useCss ? 'left' : 'start';
     } else if (arc.center.endX < arc.cx) {
         x = arc.center.endX - offset - offsetX;
-        anchor = useCss ? 'right' : "end";
+        anchor = useCss ? 'right' : 'end';
     } else {
         x = arc.centerX + offsetX;
-        anchor = useCss ? 'center' : "middle";
+        anchor = useCss ? 'center' : 'middle';
     }
-    return { x, anchor }
+    return { x, anchor };
 }
 
 export function calcMarkerOffsetY(arc, yOffsetTop = 16, yOffsetBottom = 16) {
@@ -1316,18 +1510,18 @@ export function offsetFromCenterPoint({
     initY,
     offset,
     centerX,
-    centerY
+    centerY,
 }) {
     const angle = Math.atan2(initY - centerY, initX - centerX);
     return {
         x: initX + offset * Math.cos(angle),
-        y: initY + offset * Math.sin(angle)
-    }
+        y: initY + offset * Math.sin(angle),
+    };
 }
 
 export function findArcMidpoint(pathElement) {
-    const el = document.createElementNS("http://www.w3.org/2000/svg", 'path')
-    el.setAttribute('d', pathElement)
+    const el = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    el.setAttribute('d', pathElement);
 
     const length = el.getTotalLength();
     let start = 0;
@@ -1357,7 +1551,13 @@ export function getCloserPoint(centerX, centerY, x, y, arcSize) {
     if (x === centerX && y === centerY) {
         return { x: centerX, y: centerY };
     }
-    const scaleFactor = getScaleFactorUsingArcSize(centerX, centerY, x, y, arcSize);
+    const scaleFactor = getScaleFactorUsingArcSize(
+        centerX,
+        centerY,
+        x,
+        y,
+        arcSize,
+    );
     let deltaX = x - centerX;
     let deltaY = y - centerY;
     deltaX *= scaleFactor;
@@ -1368,17 +1568,31 @@ export function getCloserPoint(centerX, centerY, x, y, arcSize) {
 }
 
 export function getScaleFactorUsingArcSize(centerX, centerY, x, y, arcSize) {
-    const euclidianDistance = Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2);
+    const euclidianDistance = Math.sqrt(
+        (x - centerX) ** 2 + (y - centerY) ** 2,
+    );
     const scaleFactor = 1 - arcSize / euclidianDistance;
     return scaleFactor;
 }
 
-export function calcNutArrowPath(arc, center = false, yOffsetTop = 16, yOffsetBottom = 16, toCenter = false, hideStart = false, arcSize = 0, flatLen = 12, curved = false) {
-    const { x } = findArcMidpoint(arc.path)
+export function calcNutArrowPath(
+    arc,
+    center = false,
+    yOffsetTop = 16,
+    yOffsetBottom = 16,
+    toCenter = false,
+    hideStart = false,
+    arcSize = 0,
+    flatLen = 12,
+    curved = false,
+) {
+    const { x } = findArcMidpoint(arc.path);
 
     const start = `${calcMarkerOffsetX(arc).x},${calcMarkerOffsetY(arc, yOffsetTop, yOffsetBottom) - 4} `;
 
-    let mid = "", midX, midY;
+    let mid = '',
+        midX,
+        midY;
     if (x > arc.cx) {
         midX = calcMarkerOffsetX(arc).x - flatLen;
         midY = calcMarkerOffsetY(arc, yOffsetTop, yOffsetBottom) - 4;
@@ -1424,16 +1638,16 @@ export function canShowValue(num) {
 }
 
 export function sumByAttribute(arr, attr) {
-    return [...arr].map(a => a[attr]).reduce((a, b) => a + b, 0)
+    return [...arr].map((a) => a[attr]).reduce((a, b) => a + b, 0);
 }
 
 export function makePath(plots, closed = true, bare = false) {
-    if (!plots.length) return "M0,0";
-    let path = "";
-    plots.forEach(plot => {
+    if (!plots.length) return 'M0,0';
+    let path = '';
+    plots.forEach((plot) => {
         if (!plot) return '';
         path += `${plot.x},${plot.y} `;
-    })
+    });
     if (bare) {
         return path.trim();
     } else {
@@ -1441,11 +1655,11 @@ export function makePath(plots, closed = true, bare = false) {
     }
 }
 
-export function downloadCsv({ csvContent, title = "vue-data-ui" }) {
+export function downloadCsv({ csvContent, title = 'vue-data-ui' }) {
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `${title}.csv`);
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `${title}.csv`);
     document.body.appendChild(link);
     link.click();
     link.remove();
@@ -1453,24 +1667,27 @@ export function downloadCsv({ csvContent, title = "vue-data-ui" }) {
 }
 
 /**
- * 
+ *
  * @param {string[][]} rows
- * @returns 
+ * @returns
  */
 export function createCsvContent(rows) {
-    return `data:text/csv;charset=utf-8,${rows.map(r => r.join(',')).join('\n')}`;
+    return `data:text/csv;charset=utf-8,${rows.map((r) => r.join(',')).join('\n')}`;
 }
 
 export function lightenHexColor(hexColor, percentLighter) {
     if (!/^#([0-9A-F]{3}){1,2}([0-9A-F]{2})?$/i.test(hexColor)) {
         console.warn('lightenHexColor : Invalid hex color format');
-        return "#000000";
+        return '#000000';
     }
 
     let color = hexColor.replace('#', '');
 
     if (color.length === 3) {
-        color = color.split('').map(c => c + c).join('');
+        color = color
+            .split('')
+            .map((c) => c + c)
+            .join('');
     }
 
     const r = parseInt(color.substring(0, 2), 16);
@@ -1493,13 +1710,16 @@ export function lightenHexColor(hexColor, percentLighter) {
 export function darkenHexColor(hexColor, percentDarker) {
     if (!/^#([0-9A-F]{3}){1,2}([0-9A-F]{2})?$/i.test(hexColor)) {
         console.warn('darkenHexColor: Invalid hex color format');
-        return "#000000";
+        return '#000000';
     }
 
     let color = hexColor.replace('#', '');
 
     if (color.length === 3) {
-        color = color.split('').map(c => c + c).join('');
+        color = color
+            .split('')
+            .map((c) => c + c)
+            .join('');
     }
 
     const r = parseInt(color.substring(0, 2), 16);
@@ -1550,9 +1770,18 @@ export function niceNum(range, round) {
     return niceFraction * Math.pow(10, exponent);
 }
 
-export function calculateNiceScale(minValue, maxValue, maxTicks, rough = false) {
-    const range = rough ? (maxValue - minValue) : niceNum(maxValue - minValue, false);
-    const tickSpacing = rough ? (range / (maxTicks - 1)) : niceNum(range / (maxTicks - 1), true);
+export function calculateNiceScale(
+    minValue,
+    maxValue,
+    maxTicks,
+    rough = false,
+) {
+    const range = rough
+        ? maxValue - minValue
+        : niceNum(maxValue - minValue, false);
+    const tickSpacing = rough
+        ? range / (maxTicks - 1)
+        : niceNum(range / (maxTicks - 1), true);
     const niceMin = Math.floor(minValue / tickSpacing) * tickSpacing;
     const niceMax = Math.ceil(maxValue / tickSpacing) * tickSpacing;
 
@@ -1565,13 +1794,22 @@ export function calculateNiceScale(minValue, maxValue, maxTicks, rough = false) 
         min: niceMin,
         max: niceMax,
         tickSize: tickSpacing,
-        ticks
+        ticks,
     };
 }
 
-export function calculateNiceScaleWithExactExtremes(minValue, maxValue, maxTicks, rough = false) {
-    const range = rough ? (maxValue - minValue) : niceNum(maxValue - minValue, false);
-    const tickSpacing = rough ? (range / (maxTicks - 1)) : niceNum(range / (maxTicks - 1), true);
+export function calculateNiceScaleWithExactExtremes(
+    minValue,
+    maxValue,
+    maxTicks,
+    rough = false,
+) {
+    const range = rough
+        ? maxValue - minValue
+        : niceNum(maxValue - minValue, false);
+    const tickSpacing = rough
+        ? range / (maxTicks - 1)
+        : niceNum(range / (maxTicks - 1), true);
     const niceMin = Math.floor(minValue / tickSpacing) * tickSpacing;
     const niceMax = Math.ceil(maxValue / tickSpacing) * tickSpacing;
     let ticks = [];
@@ -1585,17 +1823,24 @@ export function calculateNiceScaleWithExactExtremes(minValue, maxValue, maxTicks
     }
 
     if (ticks[0] !== minValue) ticks[0] = minValue;
-    if (ticks[ticks.length - 1] !== maxValue) ticks[ticks.length - 1] = maxValue;
+    if (ticks[ticks.length - 1] !== maxValue)
+        ticks[ticks.length - 1] = maxValue;
 
     return {
         min: minValue,
         max: maxValue,
         tickSize: tickSpacing,
-        ticks
+        ticks,
     };
 }
 
-export function interpolateColorHex(minColor, maxColor, minValue, maxValue, value) {
+export function interpolateColorHex(
+    minColor,
+    maxColor,
+    minValue,
+    maxValue,
+    value,
+) {
     const hexToRgba = (hex) => {
         let r = parseInt(hex.substring(1, 3), 16);
         let g = parseInt(hex.substring(3, 5), 16);
@@ -1613,7 +1858,9 @@ export function interpolateColorHex(minColor, maxColor, minValue, maxValue, valu
         const decimalToHex = (x) => x.toString(16).padStart(2, '0');
         const hex = `#${decimalToHex(r)}${decimalToHex(g)}${decimalToHex(b)}`;
         if (a !== 1) {
-            const alphaHex = Math.round(a * 255).toString(16).padStart(2, '0');
+            const alphaHex = Math.round(a * 255)
+                .toString(16)
+                .padStart(2, '0');
             return hex + alphaHex;
         }
         return hex;
@@ -1627,13 +1874,20 @@ export function interpolateColorHex(minColor, maxColor, minValue, maxValue, valu
 
     // Interpolate RGB components
     const interpolatedRgb = {
-        r: Math.round(minColorRgb.r + (maxColorRgb.r - minColorRgb.r) * normalizedValue),
-        g: Math.round(minColorRgb.g + (maxColorRgb.g - minColorRgb.g) * normalizedValue),
-        b: Math.round(minColorRgb.b + (maxColorRgb.b - minColorRgb.b) * normalizedValue),
+        r: Math.round(
+            minColorRgb.r + (maxColorRgb.r - minColorRgb.r) * normalizedValue,
+        ),
+        g: Math.round(
+            minColorRgb.g + (maxColorRgb.g - minColorRgb.g) * normalizedValue,
+        ),
+        b: Math.round(
+            minColorRgb.b + (maxColorRgb.b - minColorRgb.b) * normalizedValue,
+        ),
     };
 
     // Interpolate alpha channel if present
-    const interpolatedAlpha = minColorRgb.a + (maxColorRgb.a - minColorRgb.a) * normalizedValue;
+    const interpolatedAlpha =
+        minColorRgb.a + (maxColorRgb.a - minColorRgb.a) * normalizedValue;
 
     return rgbToHex({ ...interpolatedRgb, a: interpolatedAlpha });
 }
@@ -1652,13 +1906,23 @@ export function interpolateColorHex(minColor, maxColor, minValue, maxValue, valu
  * @property {locale=} locale - the region code
  * @type {DataLabel}
  */
-export function dataLabel({ p = '', v, s = '', r = 0, space = false, isAnimating = false, regex = /[^%]/g, replacement = '-', locale = null }) {
-    const num = locale ?
-        Number(Number(v).toFixed(r)).toLocaleString(locale) :
-        Number(Number(v).toFixed(r)).toLocaleString();
+export function dataLabel({
+    p = '',
+    v,
+    s = '',
+    r = 0,
+    space = false,
+    isAnimating = false,
+    regex = /[^%]/g,
+    replacement = '-',
+    locale = null,
+}) {
+    const num = locale
+        ? Number(Number(v).toFixed(r)).toLocaleString(locale)
+        : Number(Number(v).toFixed(r)).toLocaleString();
     const numStr = num === Infinity ? '∞' : num === -Infinity ? '-∞' : num;
-    const result = `${p ?? ''}${space ? ' ' : ''}${[undefined, null].includes(v) ? '-' : numStr}${space ? ' ' : ''}${s ?? ''}`
-    return isAnimating ? result.replace(regex, replacement) : result
+    const result = `${p ?? ''}${space ? ' ' : ''}${[undefined, null].includes(v) ? '-' : numStr}${space ? ' ' : ''}${s ?? ''}`;
+    return isAnimating ? result.replace(regex, replacement) : result;
 }
 
 /**
@@ -1670,22 +1934,22 @@ export function dataLabel({ p = '', v, s = '', r = 0, space = false, isAnimating
  */
 export function abbreviate({ source, length = 3 }) {
     if (!source && source !== 0) {
-        return ''
+        return '';
     }
     source = String(source);
     const sourceSplit = source.length > 1 ? source.split(' ') : [source];
     if (sourceSplit.length === 1 && sourceSplit[0].length === 1) {
-        return String(source).toUpperCase()
+        return String(source).toUpperCase();
     }
     if (sourceSplit.length === 1) {
-        return source.slice(0, length).toUpperCase()
+        return source.slice(0, length).toUpperCase();
     } else {
         const result = [];
         sourceSplit.forEach((chunk, i) => {
             if (i < length) {
-                result.push(chunk.slice(0, 1))
+                result.push(chunk.slice(0, 1));
             }
-        })
+        });
         return result.join().replaceAll(',', '').toUpperCase();
     }
 }
@@ -1700,23 +1964,38 @@ export function functionReturnsString(func) {
 
 export function objectIsEmpty(obj) {
     if (Array.isArray(obj)) {
-        return obj.length === 0
+        return obj.length === 0;
     }
     if (!obj) return true;
-    return Object.keys(obj).length === 0
+    return Object.keys(obj).length === 0;
 }
 
-export function error({ componentName, type, property = '', index = '', key = '', warn = true, debug = true }) {
+export function error({
+    componentName,
+    type,
+    property = '',
+    index = '',
+    key = '',
+    warn = true,
+    debug = true,
+}) {
     if (!debug) return;
     const message = `\n> ${errors[type].replace('#COMP#', componentName).replace('#ATTR#', property).replace('#INDX#', index).replace('#KEY#', key)}\n`;
     if (warn) {
-        console.warn(message)
+        console.warn(message);
     } else {
-        throw new Error(message)
+        throw new Error(message);
     }
 }
 
-export function generateSpiralCoordinates({ points, a, b, angleStep, startX, startY }) {
+export function generateSpiralCoordinates({
+    points,
+    a,
+    b,
+    angleStep,
+    startX,
+    startY,
+}) {
     const coordinates = [];
 
     for (let i = 0; i < points; i++) {
@@ -1731,18 +2010,28 @@ export function generateSpiralCoordinates({ points, a, b, angleStep, startX, sta
 }
 
 function boundsOf(points) {
-    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    let minX = Infinity,
+        minY = Infinity,
+        maxX = -Infinity,
+        maxY = -Infinity;
     for (const p of points) {
         if (p.x < minX) minX = p.x;
         if (p.y < minY) minY = p.y;
         if (p.x > maxX) maxX = p.x;
         if (p.y > maxY) maxY = p.y;
     }
-    return { minX, minY, maxX, maxY, width: maxX - minX || 1, height: maxY - minY || 1 };
+    return {
+        minX,
+        minY,
+        maxX,
+        maxY,
+        width: maxX - minX || 1,
+        height: maxY - minY || 1,
+    };
 }
 
 function buildSmoothPath(coordinates) {
-    if (!coordinates.length) return "";
+    if (!coordinates.length) return '';
     let path = `M${coordinates[0].x} ${coordinates[0].y}`;
     for (let i = 1; i < coordinates.length - 2; i += 2) {
         const p0 = coordinates[i - 1];
@@ -1769,9 +2058,16 @@ export function createSpiralPath({
     startY,
     boxWidth,
     boxHeight,
-    padding = 12
+    padding = 12,
 }) {
-    const raw = generateSpiralCoordinates({ points: maxPoints, a, b, angleStep, startX: 0, startY: 0 });
+    const raw = generateSpiralCoordinates({
+        points: maxPoints,
+        a,
+        b,
+        angleStep,
+        startX: 0,
+        startY: 0,
+    });
     const { minX, minY, maxX, maxY, width, height } = boundsOf(raw);
     const cx = (minX + maxX) / 2;
     const cy = (minY + maxY) / 2;
@@ -1782,18 +2078,21 @@ export function createSpiralPath({
     const ty = startY - cy * s;
     return function toPath(endPoints) {
         const n = Math.max(2, Math.min(Math.round(endPoints), raw.length));
-        const fitted = raw.slice(0, n).map(p => ({ x: p.x * s + tx, y: p.y * s + ty }));
+        const fitted = raw
+            .slice(0, n)
+            .map((p) => ({ x: p.x * s + tx, y: p.y * s + ty }));
         return buildSmoothPath(fitted);
     };
 }
-
 
 export function calculateDistance(point1, point2) {
     return Math.sqrt((point1.x - point2.x) ** 2 + (point1.y - point2.y) ** 2);
 }
 
 export function areCirclesOverlapping(circle1, circle2, threshold) {
-    const distance = Math.sqrt((circle2.x - circle1.x) ** 2 + (circle2.y - circle1.y) ** 2);
+    const distance = Math.sqrt(
+        (circle2.x - circle1.x) ** 2 + (circle2.y - circle1.y) ** 2,
+    );
     return distance < threshold;
 }
 
@@ -1826,7 +2125,14 @@ export function mergePointsByProximity(points, threshold = 0.15) {
                 const currentPoint = stack.pop();
                 cluster.push(currentPoint);
                 points.forEach((otherPoint, otherIndex) => {
-                    if (!visited[otherIndex] && areCirclesOverlapping(currentPoint, otherPoint, threshold)) {
+                    if (
+                        !visited[otherIndex] &&
+                        areCirclesOverlapping(
+                            currentPoint,
+                            otherPoint,
+                            threshold,
+                        )
+                    ) {
                         stack.push(otherPoint);
                         visited[otherIndex] = true;
                     }
@@ -1837,18 +2143,23 @@ export function mergePointsByProximity(points, threshold = 0.15) {
         }
     });
 
-    const result = clusters.map(cluster => {
-        const averageX = cluster.reduce((acc, p) => acc + p.x, 0) / cluster.length;
-        const averageY = cluster.reduce((acc, p) => acc + p.y, 0) / cluster.length;
+    const result = clusters.map((cluster) => {
+        const averageX =
+            cluster.reduce((acc, p) => acc + p.x, 0) / cluster.length;
+        const averageY =
+            cluster.reduce((acc, p) => acc + p.y, 0) / cluster.length;
         return { x: averageX, y: averageY };
     });
 
-    return result
+    return result;
 }
 
-export function getMissingDatasetAttributes({ datasetObject, requiredAttributes }) {
+export function getMissingDatasetAttributes({
+    datasetObject,
+    requiredAttributes,
+}) {
     let errors = [];
-    requiredAttributes.forEach(attribute => {
+    requiredAttributes.forEach((attribute) => {
         if (!Object.hasOwn(datasetObject, attribute)) {
             errors.push(attribute);
         }
@@ -1857,147 +2168,147 @@ export function getMissingDatasetAttributes({ datasetObject, requiredAttributes 
 }
 
 const COLOR_MAP = {
-    ALICEBLUE: "#F0F8FF",
-    ANTIQUEWHITE: "#FAEBD7",
-    AQUA: "#00FFFF",
-    AQUAMARINE: "#7FFFD4",
-    AZURE: "#F0FFFF",
-    BEIGE: "#F5F5DC",
-    BISQUE: "#FFE4C4",
-    BLACK: "#000000",
-    BLANCHEDALMOND: "#FFEBCD",
-    BLUE: "#0000FF",
-    BLUEVIOLET: "#8A2BE2",
-    BROWN: "#A52A2A",
-    BURLYWOOD: "#DEB887",
-    CADETBLUE: "#5F9EA0",
-    CHARTREUSE: "#7FFF00",
-    CHOCOLATE: "#D2691E",
-    CORAL: "#FF7F50",
-    CORNFLOWERBLUE: "#6495ED",
-    CORNSILK: "#FFF8DC",
-    CRIMSON: "#DC143C",
-    CYAN: "#00FFFF",
-    DARKBLUE: "#00008B",
-    DARKCYAN: "#008B8B",
-    DARKGOLDENROD: "#B8860B",
-    DARKGREY: "#A9A9A9",
-    DARKGREEN: "#006400",
-    DARKKHAKI: "#BDB76B",
-    DARKMAGENTA: "#8B008B",
-    DARKOLIVEGREEN: "#556B2F",
-    DARKORANGE: "#FF8C00",
-    DARKORCHID: "#9932CC",
-    DARKRED: "#8B0000",
-    DARKSALMON: "#E9967A",
-    DARKSEAGREEN: "#8FBC8F",
-    DARKSLATEBLUE: "#483D8B",
-    DARKSLATEGREY: "#2F4F4F",
-    DARKTURQUOISE: "#00CED1",
-    DARKVIOLET: "#9400D3",
-    DEEPPINK: "#FF1493",
-    DEEPSKYBLUE: "#00BFFF",
-    DIMGRAY: "#696969",
-    DODGERBLUE: "#1E90FF",
-    FIREBRICK: "#B22222",
-    FLORALWHITE: "#FFFAF0",
-    FORESTGREEN: "#228B22",
-    FUCHSIA: "#FF00FF",
-    GAINSBORO: "#DCDCDC",
-    GHOSTWHITE: "#F8F8FF",
-    GOLD: "#FFD700",
-    GOLDENROD: "#DAA520",
-    GREY: "#808080",
-    GREEN: "#008000",
-    GREENYELLOW: "#ADFF2F",
-    HONEYDEW: "#F0FFF0",
-    HOTPINK: "#FF69B4",
-    INDIANRED: "#CD5C5C",
-    INDIGO: "#4B0082",
-    IVORY: "#FFFFF0",
-    KHAKI: "#F0E68C",
-    LAVENDER: "#E6E6FA",
-    LAVENDERBLUSH: "#FFF0F5",
-    LAWNGREEN: "#7CFC00",
-    LEMONCHIFFON: "#FFFACD",
-    LIGHTBLUE: "#ADD8E6",
-    LIGHTCORAL: "#F08080",
-    LIGHTCYAN: "#E0FFFF",
-    LIGHTGOLDENRODYELLOW: "#FAFAD2",
-    LIGHTGREY: "#D3D3D3",
-    LIGHTGREEN: "#90EE90",
-    LIGHTPINK: "#FFB6C1",
-    LIGHTSALMON: "#FFA07A",
-    LIGHTSEAGREEN: "#20B2AA",
-    LIGHTSKYBLUE: "#87CEFA",
-    LIGHTSLATEGREY: "#778899",
-    LIGHTSTEELBLUE: "#B0C4DE",
-    LIGHTYELLOW: "#FFFFE0",
-    LIME: "#00FF00",
-    LIMEGREEN: "#32CD32",
-    LINEN: "#FAF0E6",
-    MAGENTA: "#FF00FF",
-    MAROON: "#800000",
-    MEDIUMAQUAMARINE: "#66CDAA",
-    MEDIUMBLUE: "#0000CD",
-    MEDIUMORCHID: "#BA55D3",
-    MEDIUMPURPLE: "#9370D8",
-    MEDIUMSEAGREEN: "#3CB371",
-    MEDIUMSLATEBLUE: "#7B68EE",
-    MEDIUMSPRINGGREEN: "#00FA9A",
-    MEDIUMTURQUOISE: "#48D1CC",
-    MEDIUMVIOLETRED: "#C71585",
-    MIDNIGHTBLUE: "#191970",
-    MINTCREAM: "#F5FFFA",
-    MISTYROSE: "#FFE4E1",
-    MOCCASIN: "#FFE4B5",
-    NAVAJOWHITE: "#FFDEAD",
-    NAVY: "#000080",
-    OLDLACE: "#FDF5E6",
-    OLIVE: "#808000",
-    OLIVEDRAB: "#6B8E23",
-    ORANGE: "#FFA500",
-    ORANGERED: "#FF4500",
-    ORCHID: "#DA70D6",
-    PALEGOLDENROD: "#EEE8AA",
-    PALEGREEN: "#98FB98",
-    PALETURQUOISE: "#AFEEEE",
-    PALEVIOLETRED: "#D87093",
-    PAPAYAWHIP: "#FFEFD5",
-    PEACHPUFF: "#FFDAB9",
-    PERU: "#CD853F",
-    PINK: "#FFC0CB",
-    PLUM: "#DDA0DD",
-    POWDERBLUE: "#B0E0E6",
-    PURPLE: "#800080",
-    RED: "#FF0000",
-    ROSYBROWN: "#BC8F8F",
-    ROYALBLUE: "#4169E1",
-    SADDLEBROWN: "#8B4513",
-    SALMON: "#FA8072",
-    SANDYBROWN: "#F4A460",
-    SEAGREEN: "#2E8B57",
-    SEASHELL: "#FFF5EE",
-    SIENNA: "#A0522D",
-    SILVER: "#C0C0C0",
-    SKYBLUE: "#87CEEB",
-    SLATEBLUE: "#6A5ACD",
-    SLATEGREY: "#708090",
-    SNOW: "#FFFAFA",
-    SPRINGGREEN: "#00FF7F",
-    STEELBLUE: "#4682B4",
-    TAN: "#D2B48C",
-    TEAL: "#008080",
-    THISTLE: "#D8BFD8",
-    TOMATO: "#FF6347",
-    TURQUOISE: "#40E0D0",
-    VIOLET: "#EE82EE",
-    WHEAT: "#F5DEB3",
-    WHITE: "#FFFFFF",
-    WHITESMOKE: "#F5F5F5",
-    YELLOW: "#FFFF00",
-    YELLOWGREEN: "#9ACD32",
-    REBECCAPURPLE: "#663399"
+    ALICEBLUE: '#F0F8FF',
+    ANTIQUEWHITE: '#FAEBD7',
+    AQUA: '#00FFFF',
+    AQUAMARINE: '#7FFFD4',
+    AZURE: '#F0FFFF',
+    BEIGE: '#F5F5DC',
+    BISQUE: '#FFE4C4',
+    BLACK: '#000000',
+    BLANCHEDALMOND: '#FFEBCD',
+    BLUE: '#0000FF',
+    BLUEVIOLET: '#8A2BE2',
+    BROWN: '#A52A2A',
+    BURLYWOOD: '#DEB887',
+    CADETBLUE: '#5F9EA0',
+    CHARTREUSE: '#7FFF00',
+    CHOCOLATE: '#D2691E',
+    CORAL: '#FF7F50',
+    CORNFLOWERBLUE: '#6495ED',
+    CORNSILK: '#FFF8DC',
+    CRIMSON: '#DC143C',
+    CYAN: '#00FFFF',
+    DARKBLUE: '#00008B',
+    DARKCYAN: '#008B8B',
+    DARKGOLDENROD: '#B8860B',
+    DARKGREY: '#A9A9A9',
+    DARKGREEN: '#006400',
+    DARKKHAKI: '#BDB76B',
+    DARKMAGENTA: '#8B008B',
+    DARKOLIVEGREEN: '#556B2F',
+    DARKORANGE: '#FF8C00',
+    DARKORCHID: '#9932CC',
+    DARKRED: '#8B0000',
+    DARKSALMON: '#E9967A',
+    DARKSEAGREEN: '#8FBC8F',
+    DARKSLATEBLUE: '#483D8B',
+    DARKSLATEGREY: '#2F4F4F',
+    DARKTURQUOISE: '#00CED1',
+    DARKVIOLET: '#9400D3',
+    DEEPPINK: '#FF1493',
+    DEEPSKYBLUE: '#00BFFF',
+    DIMGRAY: '#696969',
+    DODGERBLUE: '#1E90FF',
+    FIREBRICK: '#B22222',
+    FLORALWHITE: '#FFFAF0',
+    FORESTGREEN: '#228B22',
+    FUCHSIA: '#FF00FF',
+    GAINSBORO: '#DCDCDC',
+    GHOSTWHITE: '#F8F8FF',
+    GOLD: '#FFD700',
+    GOLDENROD: '#DAA520',
+    GREY: '#808080',
+    GREEN: '#008000',
+    GREENYELLOW: '#ADFF2F',
+    HONEYDEW: '#F0FFF0',
+    HOTPINK: '#FF69B4',
+    INDIANRED: '#CD5C5C',
+    INDIGO: '#4B0082',
+    IVORY: '#FFFFF0',
+    KHAKI: '#F0E68C',
+    LAVENDER: '#E6E6FA',
+    LAVENDERBLUSH: '#FFF0F5',
+    LAWNGREEN: '#7CFC00',
+    LEMONCHIFFON: '#FFFACD',
+    LIGHTBLUE: '#ADD8E6',
+    LIGHTCORAL: '#F08080',
+    LIGHTCYAN: '#E0FFFF',
+    LIGHTGOLDENRODYELLOW: '#FAFAD2',
+    LIGHTGREY: '#D3D3D3',
+    LIGHTGREEN: '#90EE90',
+    LIGHTPINK: '#FFB6C1',
+    LIGHTSALMON: '#FFA07A',
+    LIGHTSEAGREEN: '#20B2AA',
+    LIGHTSKYBLUE: '#87CEFA',
+    LIGHTSLATEGREY: '#778899',
+    LIGHTSTEELBLUE: '#B0C4DE',
+    LIGHTYELLOW: '#FFFFE0',
+    LIME: '#00FF00',
+    LIMEGREEN: '#32CD32',
+    LINEN: '#FAF0E6',
+    MAGENTA: '#FF00FF',
+    MAROON: '#800000',
+    MEDIUMAQUAMARINE: '#66CDAA',
+    MEDIUMBLUE: '#0000CD',
+    MEDIUMORCHID: '#BA55D3',
+    MEDIUMPURPLE: '#9370D8',
+    MEDIUMSEAGREEN: '#3CB371',
+    MEDIUMSLATEBLUE: '#7B68EE',
+    MEDIUMSPRINGGREEN: '#00FA9A',
+    MEDIUMTURQUOISE: '#48D1CC',
+    MEDIUMVIOLETRED: '#C71585',
+    MIDNIGHTBLUE: '#191970',
+    MINTCREAM: '#F5FFFA',
+    MISTYROSE: '#FFE4E1',
+    MOCCASIN: '#FFE4B5',
+    NAVAJOWHITE: '#FFDEAD',
+    NAVY: '#000080',
+    OLDLACE: '#FDF5E6',
+    OLIVE: '#808000',
+    OLIVEDRAB: '#6B8E23',
+    ORANGE: '#FFA500',
+    ORANGERED: '#FF4500',
+    ORCHID: '#DA70D6',
+    PALEGOLDENROD: '#EEE8AA',
+    PALEGREEN: '#98FB98',
+    PALETURQUOISE: '#AFEEEE',
+    PALEVIOLETRED: '#D87093',
+    PAPAYAWHIP: '#FFEFD5',
+    PEACHPUFF: '#FFDAB9',
+    PERU: '#CD853F',
+    PINK: '#FFC0CB',
+    PLUM: '#DDA0DD',
+    POWDERBLUE: '#B0E0E6',
+    PURPLE: '#800080',
+    RED: '#FF0000',
+    ROSYBROWN: '#BC8F8F',
+    ROYALBLUE: '#4169E1',
+    SADDLEBROWN: '#8B4513',
+    SALMON: '#FA8072',
+    SANDYBROWN: '#F4A460',
+    SEAGREEN: '#2E8B57',
+    SEASHELL: '#FFF5EE',
+    SIENNA: '#A0522D',
+    SILVER: '#C0C0C0',
+    SKYBLUE: '#87CEEB',
+    SLATEBLUE: '#6A5ACD',
+    SLATEGREY: '#708090',
+    SNOW: '#FFFAFA',
+    SPRINGGREEN: '#00FF7F',
+    STEELBLUE: '#4682B4',
+    TAN: '#D2B48C',
+    TEAL: '#008080',
+    THISTLE: '#D8BFD8',
+    TOMATO: '#FF6347',
+    TURQUOISE: '#40E0D0',
+    VIOLET: '#EE82EE',
+    WHEAT: '#F5DEB3',
+    WHITE: '#FFFFFF',
+    WHITESMOKE: '#F5F5F5',
+    YELLOW: '#FFFF00',
+    YELLOWGREEN: '#9ACD32',
+    REBECCAPURPLE: '#663399',
 };
 
 export function convertNameColorToHex(colorName) {
@@ -2012,7 +2323,7 @@ export function convertNameColorToHex(colorName) {
     return COLOR_MAP[upper] || COLOR_MAP[normalized] || s;
 }
 
-export const XMLNS = "http://www.w3.org/2000/svg";
+export const XMLNS = 'http://www.w3.org/2000/svg';
 
 export function calcTrend(numbers) {
     if (numbers.length < 2) {
@@ -2050,7 +2361,7 @@ export function createTSpansFromLineBreaksOnX({
     fill,
     x,
     y,
-    translateY = false
+    translateY = false,
 }) {
     const lines = content.split('\n');
     const lineCount = lines.length;
@@ -2059,8 +2370,9 @@ export function createTSpansFromLineBreaksOnX({
     const offsetY = translateY ? (totalHeight - fontSize) / 2 : 0;
 
     return lines
-        .map((line, idx) =>
-            `<tspan x="${x}" y="${y - offsetY + idx * fontSize}" fill="${fill}">${line}</tspan>`
+        .map(
+            (line, idx) =>
+                `<tspan x="${x}" y="${y - offsetY + idx * fontSize}" fill="${fill}">${line}</tspan>`,
         )
         .join('');
 }
@@ -2072,16 +2384,22 @@ export function getLineCountFromString(content) {
         fontSize: 1,
         fill: '',
         x: 0,
-        y: 0
+        y: 0,
     });
 
     return (tspans.match(/<tspan\b/g) || []).length;
 }
 
-export function createTSpansFromLineBreaksOnY({ content, fontSize, fill, x, autoOffset = false }) {
+export function createTSpansFromLineBreaksOnY({
+    content,
+    fontSize,
+    fill,
+    x,
+    autoOffset = false,
+}) {
     const lines = content.split('\n');
 
-    const offset = !autoOffset ? 0  : ((lines.length - 1) * fontSize) / 2;
+    const offset = !autoOffset ? 0 : ((lines.length - 1) * fontSize) / 2;
 
     return lines
         .map((line, idx) => {
@@ -2091,30 +2409,23 @@ export function createTSpansFromLineBreaksOnY({ content, fontSize, fill, x, auto
         .join('');
 }
 
-export function createTSpans({
-    content,
-    fontSize,
-    fill,
-    maxWords,
-    x,
-    y
-}) {
+export function createTSpans({ content, fontSize, fill, maxWords, x, y }) {
     function chunk(text, len) {
-        const words = text.split(" ");
+        const words = text.split(' ');
         const chunks = [];
 
         for (let i = 0; i < words.length; i += len) {
-            chunks.push(words.slice(i, i + len).join(" "));
+            chunks.push(words.slice(i, i + len).join(' '));
         }
 
         return chunks;
     }
-    let tspans = "";
+    let tspans = '';
     const chunks = chunk(content, maxWords);
 
     chunks.forEach((c, i) => {
-        const tspan = `<tspan x="${x}" y="${y + (i * fontSize)}" fill="${fill}">${c}</tspan>`;
-        tspans += tspan
+        const tspan = `<tspan x="${x}" y="${y + i * fontSize}" fill="${fill}">${c}</tspan>`;
+        tspans += tspan;
     });
 
     return tspans;
@@ -2122,9 +2433,9 @@ export function createTSpans({
 
 export function convertCustomPalette(colors) {
     if (!colors.length) {
-        return []
+        return [];
     }
-    return colors.map(c => convertColorToHex(c))
+    return colors.map((c) => convertColorToHex(c));
 }
 
 /**
@@ -2132,53 +2443,56 @@ export function convertCustomPalette(colors) {
  * This function processes the text by removing punctuation, splitting into words,
  * and counting the occurrences of each word. It also allows for a callback function
  * to modify each word before it's included in the final dataset.
- * 
- * @param {string} text - The plain text input to process. The function will remove 
- *                        punctuation, handle CJK characters appropriately, and count 
+ *
+ * @param {string} text - The plain text input to process. The function will remove
+ *                        punctuation, handle CJK characters appropriately, and count
  *                        word frequencies.
- * 
+ *
  * @param {function(string): string} [callback=null] - An optional callback function
- *                                                     to transform each word. The function 
- *                                                     takes a word as input and returns 
+ *                                                     to transform each word. The function
+ *                                                     takes a word as input and returns
  *                                                     a transformed word. If provided,
  *                                                     the callback should return a string.
- * 
+ *
  * @returns {Array<Object>} A dataset for a word cloud, where each object contains:
  *  - `name` (string): The word or its transformed version (if a callback is provided).
  *  - `value` (number): The frequency of the word in the input text.
- * 
+ *
  * @example
  * // Basic usage without a callback
  * const text = "Hello world! Hello everyone.";
  * const dataset = createWordCloudDatasetFromPlainText(text);
  * console.log(dataset);
  * // Output: [ { name: 'Hello', value: 2 }, { name: 'world', value: 1 }, { name: 'everyone', value: 1 } ]
- * 
+ *
  * @example
  * // Using a callback to convert words to uppercase
  * const text = "Hello world! Hello everyone.";
  * const dataset = createWordCloudDatasetFromPlainText(text, word => word.toUpperCase());
  * console.log(dataset);
  * // Output: [ { name: 'HELLO', value: 2 }, { name: 'WORLD', value: 1 }, { name: 'EVERYONE', value: 1 } ]
- * 
+ *
  * @example
  * // Handling CJK text
  * const text = "你好，世界！你好，大家！";
  * const dataset = createWordCloudDatasetFromPlainText(text);
  * console.log(dataset);
  * // Output: [ { name: '你', value: 2 }, { name: '好', value: 2 }, { name: '世', value: 1 }, { name: '界', value: 1 }, { name: '大', value: 1 }, { name: '家', value: 1 } ]
- * 
+ *
  */
 export function createWordCloudDatasetFromPlainText(text, callback = null) {
     const textWithoutPunctuation = text.replace(/[\p{P}\p{S}]+/gu, ' ').trim();
 
-    const isCJK = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}\p{Script=Thai}\p{Script=Lao}\p{Script=Khmer}\p{Script=Tibetan}\p{Script=Myanmar}\p{Script=Devanagari}]/u.test(text);
+    const isCJK =
+        /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}\p{Script=Thai}\p{Script=Lao}\p{Script=Khmer}\p{Script=Tibetan}\p{Script=Myanmar}\p{Script=Devanagari}]/u.test(
+            text,
+        );
 
     const words = isCJK
         ? [...textWithoutPunctuation]
         : textWithoutPunctuation.split(/\s+/);
 
-    const filteredWords = words.filter(word => word.trim().length > 0);
+    const filteredWords = words.filter((word) => word.trim().length > 0);
 
     const wordCountMap = filteredWords.reduce((map, word) => {
         if (map[word]) {
@@ -2189,29 +2503,39 @@ export function createWordCloudDatasetFromPlainText(text, callback = null) {
         return map;
     }, {});
 
-    return Object.keys(wordCountMap).map(word => {
+    return Object.keys(wordCountMap).map((word) => {
         let w = word;
 
-        if (typeof callback === 'function' && typeof callback(word) === 'string') {
-            w = callback(word)
+        if (
+            typeof callback === 'function' &&
+            typeof callback(word) === 'string'
+        ) {
+            w = callback(word);
         }
 
         return {
             name: w,
             value: wordCountMap[word],
-        }
+        };
     });
 }
 
 export function assignStackRatios(arr) {
-    let providedRatioSum = arr.reduce((sum, item) => sum + (item.stackRatio || 0), 0);
-    let itemsWithoutRatio = arr.filter(item => item.stackRatio === undefined).length;
+    let providedRatioSum = arr.reduce(
+        (sum, item) => sum + (item.stackRatio || 0),
+        0,
+    );
+    let itemsWithoutRatio = arr.filter(
+        (item) => item.stackRatio === undefined,
+    ).length;
     let remainingRatio = 1 - providedRatioSum;
-    let defaultRatio = itemsWithoutRatio > 0 ? remainingRatio / itemsWithoutRatio : 0;
+    let defaultRatio =
+        itemsWithoutRatio > 0 ? remainingRatio / itemsWithoutRatio : 0;
 
-    let output = arr.map(item => ({
+    let output = arr.map((item) => ({
         ...item,
-        stackRatio: item.stackRatio !== undefined ? item.stackRatio : defaultRatio
+        stackRatio:
+            item.stackRatio !== undefined ? item.stackRatio : defaultRatio,
     }));
 
     let cumulatedRatio = 0;
@@ -2220,7 +2544,7 @@ export function assignStackRatios(arr) {
         return {
             ...item,
             stackIndex: i,
-            cumulatedStackRatio: cumulatedRatio
+            cumulatedStackRatio: cumulatedRatio,
         };
     });
     return output;
@@ -2245,11 +2569,13 @@ export function getPathLengthFromCoordinates(d) {
             const oneMinusTSquared = oneMinusT * oneMinusT;
             const tSquared = t * t;
 
-            const x = oneMinusTSquared * oneMinusT * p0.x +
+            const x =
+                oneMinusTSquared * oneMinusT * p0.x +
                 3 * oneMinusTSquared * t * p1.x +
                 3 * oneMinusT * tSquared * p2.x +
                 tSquared * t * p3.x;
-            const y = oneMinusTSquared * oneMinusT * p0.y +
+            const y =
+                oneMinusTSquared * oneMinusT * p0.y +
                 3 * oneMinusTSquared * t * p1.y +
                 3 * oneMinusT * tSquared * p2.y +
                 tSquared * t * p3.y;
@@ -2262,13 +2588,19 @@ export function getPathLengthFromCoordinates(d) {
     }
 
     const commands = d.match(/[a-zA-Z][^a-zA-Z]*/g);
-    let currentX = 0, currentY = 0;
-    let startX = 0, startY = 0;
+    let currentX = 0,
+        currentY = 0;
+    let startX = 0,
+        startY = 0;
     let totalLength = 0;
 
-    commands.forEach(command => {
+    commands.forEach((command) => {
         const type = command[0];
-        const values = command.slice(1).trim().split(/[\s,]+/).map(Number);
+        const values = command
+            .slice(1)
+            .trim()
+            .split(/[\s,]+/)
+            .map(Number);
         let i = 0;
 
         switch (type) {
@@ -2278,7 +2610,12 @@ export function getPathLengthFromCoordinates(d) {
                 startX = currentX;
                 startY = currentY;
                 while (i < values.length) {
-                    totalLength += distance(currentX, currentY, values[i], values[i + 1]);
+                    totalLength += distance(
+                        currentX,
+                        currentY,
+                        values[i],
+                        values[i + 1],
+                    );
                     currentX = values[i++];
                     currentY = values[i++];
                 }
@@ -2286,7 +2623,12 @@ export function getPathLengthFromCoordinates(d) {
 
             case 'L':
                 while (i < values.length) {
-                    totalLength += distance(currentX, currentY, values[i], values[i + 1]);
+                    totalLength += distance(
+                        currentX,
+                        currentY,
+                        values[i],
+                        values[i + 1],
+                    );
                     currentX = values[i++];
                     currentY = values[i++];
                 }
@@ -2294,14 +2636,24 @@ export function getPathLengthFromCoordinates(d) {
 
             case 'H':
                 while (i < values.length) {
-                    totalLength += distance(currentX, currentY, values[i], currentY);
+                    totalLength += distance(
+                        currentX,
+                        currentY,
+                        values[i],
+                        currentY,
+                    );
                     currentX = values[i++];
                 }
                 break;
 
             case 'V':
                 while (i < values.length) {
-                    totalLength += distance(currentX, currentY, currentX, values[i]);
+                    totalLength += distance(
+                        currentX,
+                        currentY,
+                        currentX,
+                        values[i],
+                    );
                     currentY = values[i++];
                 }
                 break;
@@ -2312,7 +2664,7 @@ export function getPathLengthFromCoordinates(d) {
                         { x: currentX, y: currentY },
                         { x: values[i], y: values[i + 1] },
                         { x: values[i + 2], y: values[i + 3] },
-                        { x: values[i + 4], y: values[i + 5] }
+                        { x: values[i + 4], y: values[i + 5] },
                     );
                     currentX = values[i + 4];
                     currentY = values[i + 5];
@@ -2337,23 +2689,24 @@ export function translateSize({
     source,
     threshold = 0,
     fallback,
-    max = 24
+    max = 24,
 }) {
     const computedVal = relator / (adjuster / source);
 
     if (computedVal > max) {
-        return max
+        return max;
     }
 
-    return computedVal < threshold
-        ? fallback
-        : computedVal;
+    return computedVal < threshold ? fallback : computedVal;
 }
 
 export function sumSeries(source) {
     return source.reduce((acc, obj) => {
         obj.series.forEach((num, i) => {
-            if (![undefined, null, Infinity, -Infinity].includes(num) && !isNaN(num)) {
+            if (
+                ![undefined, null, Infinity, -Infinity].includes(num) &&
+                !isNaN(num)
+            ) {
                 acc[i] = (acc[i] || 0) + num;
             }
         });
@@ -2383,7 +2736,7 @@ export function checkFormatter(func, { value, config }) {
 
     return {
         isValid,
-        value: formattedValue
+        value: formattedValue,
     };
 }
 
@@ -2393,7 +2746,7 @@ export function applyDataLabel(func, data, fallbackValue, config) {
 }
 
 export function hasDeepProperty(obj, path) {
-    return path.split('.').every(key => {
+    return path.split('.').every((key) => {
         if (obj !== null && typeof obj === 'object' && key in obj) {
             obj = obj[key];
             return true;
@@ -2403,55 +2756,60 @@ export function hasDeepProperty(obj, path) {
 }
 
 export function sanitizeArray(arr, keys = [], keepNull = false) {
-
     function sanitizeValue(value) {
-        if (keepNull && (value === null)) return null;
+        if (keepNull && value === null) return null;
         if (typeof value === 'string' && isNaN(Number(value))) return value;
-        return (typeof value === 'number' && isFinite(value)) ? value : 0;
+        return typeof value === 'number' && isFinite(value) ? value : 0;
     }
 
     function sanitize(data) {
         if (Array.isArray(data)) {
-            return data.map(item => sanitize(item));
+            return data.map((item) => sanitize(item));
         } else if (typeof data === 'object' && data !== null) {
-
             let sanitizedObject = { ...data };
-            keys.forEach(key => {
-                if (sanitizedObject.hasOwnProperty(key) && ![
-                    'NAME',
-                    'name',
-                    'TITLE',
-                    'title',
-                    'DESCRIPTION',
-                    'description',
-                    'LABEL',
-                    'label',
-                    'TIME',
-                    'time',
-                    'PERIOD',
-                    'period',
-                    'MONTH',
-                    'month',
-                    'YEAR',
-                    'year',
-                    'MONTHS',
-                    'months',
-                    'YEARS',
-                    'years',
-                    'DAY',
-                    'day',
-                    'DAYS',
-                    'days',
-                    'HOUR',
-                    'hour',
-                    'HOURS',
-                    'hours'
-                ].includes(key) && Array.isArray(sanitizedObject[key])) {
+            keys.forEach((key) => {
+                if (
+                    sanitizedObject.hasOwnProperty(key) &&
+                    ![
+                        'NAME',
+                        'name',
+                        'TITLE',
+                        'title',
+                        'DESCRIPTION',
+                        'description',
+                        'LABEL',
+                        'label',
+                        'TIME',
+                        'time',
+                        'PERIOD',
+                        'period',
+                        'MONTH',
+                        'month',
+                        'YEAR',
+                        'year',
+                        'MONTHS',
+                        'months',
+                        'YEARS',
+                        'years',
+                        'DAY',
+                        'day',
+                        'DAYS',
+                        'days',
+                        'HOUR',
+                        'hour',
+                        'HOURS',
+                        'hours',
+                    ].includes(key) &&
+                    Array.isArray(sanitizedObject[key])
+                ) {
                     sanitizedObject[key] = sanitize(sanitizedObject[key]);
                 }
             });
             return Object.fromEntries(
-                Object.entries(sanitizedObject).map(([k, v]) => [k, sanitize(v)])
+                Object.entries(sanitizedObject).map(([k, v]) => [
+                    k,
+                    sanitize(v),
+                ]),
             );
         } else {
             return sanitizeValue(data);
@@ -2461,15 +2819,19 @@ export function sanitizeArray(arr, keys = [], keepNull = false) {
     return sanitize(arr);
 }
 
-
 export function setOpacity(hex, opac = 100) {
     if (hex.length === 9) {
-        return hex.substring(0, 7) + opacity[opac]
+        return hex.substring(0, 7) + opacity[opac];
     }
-    return hex + opacity[opac]
+    return hex + opacity[opac];
 }
 
-export function createPolarAreas({ series, center, maxRadius, hasGhost = false }) {
+export function createPolarAreas({
+    series,
+    center,
+    maxRadius,
+    hasGhost = false,
+}) {
     const totalSegments = series.length;
     const anglePerSegment = 360 / (totalSegments - (hasGhost ? 1 : 0));
 
@@ -2481,9 +2843,11 @@ export function createPolarAreas({ series, center, maxRadius, hasGhost = false }
         const endAngle = startAngle + anglePerSegment;
         const middleAngle = startAngle + anglePerSegment / 2;
 
-        const startAngleRad = degreesToRadians(startAngle) - degreesToRadians(90);
+        const startAngleRad =
+            degreesToRadians(startAngle) - degreesToRadians(90);
         const endAngleRad = degreesToRadians(endAngle) - degreesToRadians(90);
-        const middleAngleRad = degreesToRadians(middleAngle) - degreesToRadians(90);
+        const middleAngleRad =
+            degreesToRadians(middleAngle) - degreesToRadians(90);
 
         const startX = center.x + radius * Math.cos(startAngleRad);
         const startY = center.y + radius * Math.sin(startAngleRad);
@@ -2502,7 +2866,7 @@ export function createPolarAreas({ series, center, maxRadius, hasGhost = false }
         return {
             path: path.trim(),
             middlePoint: { x: middleX, y: middleY },
-            radius
+            radius,
         };
     });
 
@@ -2511,15 +2875,18 @@ export function createPolarAreas({ series, center, maxRadius, hasGhost = false }
 
 export function createShadesOfGrey(startColor, steps) {
     if (!/^#([0-9A-F]{2})\1\1$/i.test(startColor)) {
-        throw new Error("Invalid starting color. HEX must be used.");
+        throw new Error('Invalid starting color. HEX must be used.');
     }
     const hexToDec = (hex) => parseInt(hex, 16);
-    const decToHex = (dec) => dec.toString(16).padStart(2, "0");
+    const decToHex = (dec) => dec.toString(16).padStart(2, '0');
     const baseValue = hexToDec(startColor.slice(1, 3));
     const increment = Math.floor(255 / (steps - 1));
     const shades = [];
     for (let i = 0; i < steps; i++) {
-        let shadeValue = Math.min(255, Math.max(0, baseValue + increment * (i - Math.floor(steps / 2))));
+        let shadeValue = Math.min(
+            255,
+            Math.max(0, baseValue + increment * (i - Math.floor(steps / 2))),
+        );
         let hexShade = `#${decToHex(shadeValue).repeat(3)}`;
         shades.push(hexShade);
     }
@@ -2543,7 +2910,10 @@ export function largestTriangleThreeBuckets({ data, threshold }) {
     sampled.push(data[a]);
     for (let i = 0; i < threshold - 2; i += 1) {
         const bucketStart = Math.floor((i + 1) * bucketSize) + 1;
-        const bucketEnd = Math.min(Math.floor((i + 2) * bucketSize) + 1, data.length);
+        const bucketEnd = Math.min(
+            Math.floor((i + 2) * bucketSize) + 1,
+            data.length,
+        );
         const bucket = data.slice(bucketStart, bucketEnd);
         let averageX = 0;
         let averageY = 0;
@@ -2558,7 +2928,7 @@ export function largestTriangleThreeBuckets({ data, threshold }) {
         for (let j = bucketStart; j < bucketEnd; j += 1) {
             const area = Math.abs(
                 (data[a].x - averageX) * (data[j].y - data[a].y) -
-                (data[a].x - data[j].x) * (averageY - data[a].y)
+                    (data[a].x - data[j].x) * (averageY - data[a].y),
             );
             if (area > maxArea) {
                 maxArea = area;
@@ -2590,7 +2960,10 @@ export function largestTriangleThreeBucketsArray({ data, threshold }) {
     sampled.push(data[a]);
     for (let i = 0; i < threshold - 2; i += 1) {
         const bucketStart = Math.floor((i + 1) * bucketSize) + 1;
-        const bucketEnd = Math.min(Math.floor((i + 2) * bucketSize) + 1, data.length);
+        const bucketEnd = Math.min(
+            Math.floor((i + 2) * bucketSize) + 1,
+            data.length,
+        );
         const bucket = data.slice(bucketStart, bucketEnd);
         const average = bucket.reduce((a, b) => a + b, 0) / bucket.length;
         let maxArea = -1;
@@ -2614,10 +2987,14 @@ export function largestTriangleThreeBucketsArray({ data, threshold }) {
 /**
  * LTTB algorithm for an array of objects containing 'name' and 'value'.
  * @param {Array<{ name: string, value: number }>} data
- * @param {number} threshold 
+ * @param {number} threshold
  * @returns {Array<{ name: string, value: number }>}
  */
-export function largestTriangleThreeBucketsArrayObjects({ data, threshold, key = 'value' }) {
+export function largestTriangleThreeBucketsArrayObjects({
+    data,
+    threshold,
+    key = 'value',
+}) {
     if (threshold >= data.length || threshold < 3) {
         return data;
     }
@@ -2631,10 +3008,14 @@ export function largestTriangleThreeBucketsArrayObjects({ data, threshold, key =
 
     for (let i = 0; i < threshold - 2; i += 1) {
         const bucketStart = Math.floor((i + 1) * bucketSize) + 1;
-        const bucketEnd = Math.min(Math.floor((i + 2) * bucketSize) + 1, data.length);
+        const bucketEnd = Math.min(
+            Math.floor((i + 2) * bucketSize) + 1,
+            data.length,
+        );
         const bucket = data.slice(bucketStart, bucketEnd);
 
-        const average = bucket.reduce((sum, point) => sum + point[key], 0) / bucket.length;
+        const average =
+            bucket.reduce((sum, point) => sum + point[key], 0) / bucket.length;
 
         let maxArea = -1;
         let nextA = a;
@@ -2669,7 +3050,13 @@ export function createHalfCircleArc({ radius, centerX, centerY, percentage }) {
     return path.trim();
 }
 
-export function placeHTMLElementAtSVGCoordinates({ svgElement, x, y, offsetY = 0, element }) {
+export function placeHTMLElementAtSVGCoordinates({
+    svgElement,
+    x,
+    y,
+    offsetY = 0,
+    element,
+}) {
     if (!svgElement || !element) return { top: 0, left: 0 };
 
     const point = svgElement.createSVGPoint();
@@ -2683,22 +3070,22 @@ export function placeHTMLElementAtSVGCoordinates({ svgElement, x, y, offsetY = 0
     let _offsetY = 0;
 
     if (t_point.x - rect.width / 2 < svgRect.left) {
-        _offsetX = 0
+        _offsetX = 0;
     } else if (t_point.x + rect.width > svgRect.right) {
-        _offsetX = -rect.width
+        _offsetX = -rect.width;
     } else {
-        _offsetX = -rect.width / 2
+        _offsetX = -rect.width / 2;
     }
 
     if (t_point.y - offsetY - rect.height < svgRect.top) {
-        _offsetY = offsetY
+        _offsetY = offsetY;
     } else {
-        _offsetY = -rect.height - offsetY
+        _offsetY = -rect.height - offsetY;
     }
 
     return {
         top: t_point.y + _offsetY,
-        left: t_point.x + _offsetX
+        left: t_point.x + _offsetX,
     };
 }
 
@@ -2709,14 +3096,14 @@ export function placeXYTag({ svgElement, x, y, element, position }) {
     point.x = x;
     point.y = y;
     const t_point = point.matrixTransform(svgElement.getScreenCTM());
-    const { height, width } = element.getBoundingClientRect()
+    const { height, width } = element.getBoundingClientRect();
 
     let _offsetX = position === 'right' ? 0 : -width;
     let _offsetY = -(height / 2);
 
     return {
         top: t_point.y + _offsetY,
-        left: t_point.x + _offsetX
+        left: t_point.x + _offsetX,
     };
 }
 
@@ -2750,7 +3137,7 @@ export function deepClone(value) {
     }
 
     if (Array.isArray(value)) {
-        return value.map(item => deepClone(item));
+        return value.map((item) => deepClone(item));
     }
 
     const result = {};
@@ -2782,24 +3169,26 @@ export function createAreaWithCuts(plots, zero) {
 
     const segments = getAreaSegments(plots);
     if (!segments.length) return '';
-    return segments.map(seg => {
-        const start = { x: seg[0].x, y: zero };
-        const end = { x: seg.at(-1).x, y: zero };
-        const path = [];
-        seg.forEach(plot => {
-            path.push(`${plot.x},${plot.y} `);
-        });
-        return [start.x, start.y, ...path, end.x, end.y].toString();
-    }).join(';');
+    return segments
+        .map((seg) => {
+            const start = { x: seg[0].x, y: zero };
+            const end = { x: seg.at(-1).x, y: zero };
+            const path = [];
+            seg.forEach((plot) => {
+                path.push(`${plot.x},${plot.y} `);
+            });
+            return [start.x, start.y, ...path, end.x, end.y].toString();
+        })
+        .join(';');
 }
 
 export function createIndividualArea(plots, zero) {
-    const validPlots = plots.filter(p => !!p);
+    const validPlots = plots.filter((p) => !!p);
     if (!validPlots[0]) return [-10, -10, '', -10, -10].toString();
     const start = { x: validPlots[0].x, y: zero };
     const end = { x: validPlots.at(-1).x, y: zero };
     const path = [];
-    validPlots.forEach(plot => {
+    validPlots.forEach((plot) => {
         path.push(`${plot.x},${plot.y} `);
     });
     return [start.x, start.y, ...path, end.x, end.y].toString();
@@ -2810,15 +3199,17 @@ export function createIndividualAreaWithCuts(plots, zero) {
 
     const segments = getAreaSegments(plots);
     if (!segments.length) return '';
-    return segments.map(seg => {
-        const start = { x: seg[0].x, y: zero };
-        const end = { x: seg.at(-1).x, y: zero };
-        const path = [];
-        seg.forEach(plot => {
-            path.push(`${plot.x},${plot.y} `);
-        });
-        return [start.x, start.y, ...path, end.x, end.y].toString();
-    }).join(';');
+    return segments
+        .map((seg) => {
+            const start = { x: seg[0].x, y: zero };
+            const end = { x: seg.at(-1).x, y: zero };
+            const path = [];
+            seg.forEach((plot) => {
+                path.push(`${plot.x},${plot.y} `);
+            });
+            return [start.x, start.y, ...path, end.x, end.y].toString();
+        })
+        .join(';');
 }
 
 export function getValidSegments(points) {
@@ -2840,10 +3231,8 @@ export function createStraightPathWithCuts(points) {
     let d = '';
     let sawFirst = false;
 
-    const isValid = p =>
-        p.value != null &&
-        Number.isFinite(p.x) &&
-        Number.isFinite(p.y);
+    const isValid = (p) =>
+        p.value != null && Number.isFinite(p.x) && Number.isFinite(p.y);
 
     for (let i = 0; i < points.length; i++) {
         const p = points[i];
@@ -2900,12 +3289,12 @@ export function createStraightPathWithCutsSegments(points, dashedIndices = []) {
 
     const flush = () => {
         if (currentCoords.length >= 2) {
-        result.push({
-            path: currentCoords
-            .map((c, idx) => (idx === 0 ? c : `L${c}`))
-            .join(" "),
-            dashed: currentDashed,
-        });
+            result.push({
+                path: currentCoords
+                    .map((c, idx) => (idx === 0 ? c : `L${c}`))
+                    .join(' '),
+                dashed: currentDashed,
+            });
         }
         currentCoords = [];
         hasActiveSegment = false;
@@ -2932,7 +3321,7 @@ export function createStraightPathWithCutsSegments(points, dashedIndices = []) {
         // We have a previous valid point in currentCoords, but we must ensure the previous index is i-1
         // because cuts skip invalid points and we must not connect across them.
         const prevPoint = pts[i - 1];
-            if (!isValidPoint(prevPoint)) {
+        if (!isValidPoint(prevPoint)) {
             // This is the first valid point after a cut; restart group
             flush();
             currentCoords = [c];
@@ -2976,7 +3365,10 @@ export function createSmoothPathWithCuts(points) {
     for (const [idx, seg] of segments.entries()) {
         if (seg.length < 2) continue;
         const n = seg.length - 1;
-        const dx = [], dy = [], slopes = [], tangents = [];
+        const dx = [],
+            dy = [],
+            slopes = [],
+            tangents = [];
         for (let i = 0; i < n; i += 1) {
             dx[i] = seg[i + 1].x - seg[i].x;
             dy[i] = seg[i + 1].y - seg[i].y;
@@ -2988,7 +3380,9 @@ export function createSmoothPathWithCuts(points) {
             if (slopes[i - 1] * slopes[i] <= 0) {
                 tangents[i] = 0;
             } else {
-                const harmonicMean = (2 * slopes[i - 1] * slopes[i]) / (slopes[i - 1] + slopes[i]);
+                const harmonicMean =
+                    (2 * slopes[i - 1] * slopes[i]) /
+                    (slopes[i - 1] + slopes[i]);
                 tangents[i] = harmonicMean;
             }
         }
@@ -3002,9 +3396,9 @@ export function createSmoothPathWithCuts(points) {
             const m1 = tangents[i];
             const m2 = tangents[i + 1];
             const controlX1 = x1 + (x2 - x1) / 3;
-            const controlY1 = y1 + m1 * (x2 - x1) / 3;
+            const controlY1 = y1 + (m1 * (x2 - x1)) / 3;
             const controlX2 = x2 - (x2 - x1) / 3;
-            const controlY2 = y2 - m2 * (x2 - x1) / 3;
+            const controlY2 = y2 - (m2 * (x2 - x1)) / 3;
             fullPath += `C${checkNaN(controlX1)},${checkNaN(controlY1)} ${checkNaN(controlX2)},${checkNaN(controlY2)} ${checkNaN(x2)},${checkNaN(y2)} `;
         }
     }
@@ -3046,10 +3440,10 @@ function getValidSegmentsIndices(points) {
     for (let i = 0; i < points.length; i += 1) {
         const p = points[i];
         if (!isValidPoint(p)) {
-        if (current.length > 1) segments.push(current);
-        current = [];
+            if (current.length > 1) segments.push(current);
+            current = [];
         } else {
-        current.push(i);
+            current.push(i);
         }
     }
 
@@ -3058,80 +3452,80 @@ function getValidSegmentsIndices(points) {
 }
 
 function computeCubicCommandsForSegment(points, segmentIndices) {
-  // segmentIndices are global point indices, all valid, length >= 2
-  const seg = segmentIndices.map((idx) => points[idx]);
-  const n = seg.length - 1;
+    // segmentIndices are global point indices, all valid, length >= 2
+    const seg = segmentIndices.map((idx) => points[idx]);
+    const n = seg.length - 1;
 
-  const dx = [];
-  const dy = [];
-  const slopes = [];
-  const tangents = [];
+    const dx = [];
+    const dy = [];
+    const slopes = [];
+    const tangents = [];
 
-  for (let i = 0; i < n; i += 1) {
-    dx[i] = seg[i + 1].x - seg[i].x;
-    dy[i] = seg[i + 1].y - seg[i].y;
-    slopes[i] = dy[i] / dx[i];
-  }
-
-  tangents[0] = slopes[0];
-  tangents[n] = slopes[n - 1];
-
-  for (let i = 1; i < n; i += 1) {
-    if (slopes[i - 1] * slopes[i] <= 0) {
-      tangents[i] = 0;
-    } else {
-      tangents[i] =
-        (2 * slopes[i - 1] * slopes[i]) / (slopes[i - 1] + slopes[i]);
+    for (let i = 0; i < n; i += 1) {
+        dx[i] = seg[i + 1].x - seg[i].x;
+        dy[i] = seg[i + 1].y - seg[i].y;
+        slopes[i] = dy[i] / dx[i];
     }
-  }
 
-  // One "C..." command per edge i (from seg[i] to seg[i+1])
-  const commands = new Array(n);
+    tangents[0] = slopes[0];
+    tangents[n] = slopes[n - 1];
 
-  for (let i = 0; i < n; i += 1) {
-    const x1 = seg[i].x;
-    const y1 = seg[i].y;
-    const x2 = seg[i + 1].x;
-    const y2 = seg[i + 1].y;
+    for (let i = 1; i < n; i += 1) {
+        if (slopes[i - 1] * slopes[i] <= 0) {
+            tangents[i] = 0;
+        } else {
+            tangents[i] =
+                (2 * slopes[i - 1] * slopes[i]) / (slopes[i - 1] + slopes[i]);
+        }
+    }
 
-    const m1 = tangents[i];
-    const m2 = tangents[i + 1];
+    // One "C..." command per edge i (from seg[i] to seg[i+1])
+    const commands = new Array(n);
 
-    const controlX1 = x1 + (x2 - x1) / 3;
-    const controlY1 = y1 + (m1 * (x2 - x1)) / 3;
-    const controlX2 = x2 - (x2 - x1) / 3;
-    const controlY2 = y2 - (m2 * (x2 - x1)) / 3;
+    for (let i = 0; i < n; i += 1) {
+        const x1 = seg[i].x;
+        const y1 = seg[i].y;
+        const x2 = seg[i + 1].x;
+        const y2 = seg[i + 1].y;
 
-    commands[i] =
-      `C${checkNaN(controlX1)},${checkNaN(controlY1)} ` +
-      `${checkNaN(controlX2)},${checkNaN(controlY2)} ` +
-      `${checkNaN(x2)},${checkNaN(y2)}`;
-  }
+        const m1 = tangents[i];
+        const m2 = tangents[i + 1];
 
-  return {
-    startCoord: coordOf(seg[0]),
-    commands,
-  };
+        const controlX1 = x1 + (x2 - x1) / 3;
+        const controlY1 = y1 + (m1 * (x2 - x1)) / 3;
+        const controlX2 = x2 - (x2 - x1) / 3;
+        const controlY2 = y2 - (m2 * (x2 - x1)) / 3;
+
+        commands[i] =
+            `C${checkNaN(controlX1)},${checkNaN(controlY1)} ` +
+            `${checkNaN(controlX2)},${checkNaN(controlY2)} ` +
+            `${checkNaN(x2)},${checkNaN(y2)}`;
+    }
+
+    return {
+        startCoord: coordOf(seg[0]),
+        commands,
+    };
 }
 
 function groupEdgeRunsByFlag(flags) {
-  // flags length = number of edges in the segment
-  const runs = [];
-  if (!flags.length) return runs;
+    // flags length = number of edges in the segment
+    const runs = [];
+    if (!flags.length) return runs;
 
-  let start = 0;
-  let current = flags[0];
+    let start = 0;
+    let current = flags[0];
 
-  for (let i = 1; i < flags.length; i += 1) {
-    if (flags[i] !== current) {
-      runs.push({ startEdge: start, endEdge: i - 1, dashed: current });
-      start = i;
-      current = flags[i];
+    for (let i = 1; i < flags.length; i += 1) {
+        if (flags[i] !== current) {
+            runs.push({ startEdge: start, endEdge: i - 1, dashed: current });
+            start = i;
+            current = flags[i];
+        }
     }
-  }
 
-  runs.push({ startEdge: start, endEdge: flags.length - 1, dashed: current });
-  return runs;
+    runs.push({ startEdge: start, endEdge: flags.length - 1, dashed: current });
+    return runs;
 }
 
 /**
@@ -3139,57 +3533,73 @@ function groupEdgeRunsByFlag(flags) {
  * The curve pieces match the original spline exactly because control points are computed once.
  */
 export function createSmoothPathWithCutsSegments(points, dashedIndices = []) {
-  const pts = Array.isArray(points) ? points : [];
-  if (pts.length < 2) return [];
+    const pts = Array.isArray(points) ? points : [];
+    if (pts.length < 2) return [];
 
-  const dashedSegmentStarts = buildDashedSegmentStarts(pts.length, dashedIndices);
-  const validSegments = getValidSegmentsIndices(pts);
-  if (!validSegments.length) return [];
-
-  const result = [];
-
-  for (const segmentIndices of validSegments) {
-    // Precompute the exact original cubic commands for this valid segment
-    const { startCoord, commands } = computeCubicCommandsForSegment(
-      pts,
-      segmentIndices
+    const dashedSegmentStarts = buildDashedSegmentStarts(
+        pts.length,
+        dashedIndices,
     );
+    const validSegments = getValidSegmentsIndices(pts);
+    if (!validSegments.length) return [];
 
-    // Determine dashed flag per edge (edge i corresponds to global segment start = segmentIndices[i])
-    const edgeFlags = new Array(commands.length);
-    for (let i = 0; i < commands.length; i += 1) {
-      const globalStart = segmentIndices[i];
-      edgeFlags[i] = dashedSegmentStarts.has(globalStart);
+    const result = [];
+
+    for (const segmentIndices of validSegments) {
+        // Precompute the exact original cubic commands for this valid segment
+        const { startCoord, commands } = computeCubicCommandsForSegment(
+            pts,
+            segmentIndices,
+        );
+
+        // Determine dashed flag per edge (edge i corresponds to global segment start = segmentIndices[i])
+        const edgeFlags = new Array(commands.length);
+        for (let i = 0; i < commands.length; i += 1) {
+            const globalStart = segmentIndices[i];
+            edgeFlags[i] = dashedSegmentStarts.has(globalStart);
+        }
+
+        const runs = groupEdgeRunsByFlag(edgeFlags);
+
+        for (const run of runs) {
+            // Build a piece starting at the run's first point, then append the already-computed C commands
+            const runStartPointIndex = run.startEdge; // local point index in this segment
+            const pieceStartCoord =
+                runStartPointIndex === 0
+                    ? startCoord
+                    : coordOf(pts[segmentIndices[runStartPointIndex]]);
+
+            const pieceCommands = commands.slice(
+                run.startEdge,
+                run.endEdge + 1,
+            );
+
+            // No leading "M": first is just "x,y", then "C..."
+            const path = `${pieceStartCoord} ${pieceCommands.join(' ')}`.trim();
+
+            result.push({ path, dashed: run.dashed });
+        }
     }
 
-    const runs = groupEdgeRunsByFlag(edgeFlags);
-
-    for (const run of runs) {
-      // Build a piece starting at the run's first point, then append the already-computed C commands
-      const runStartPointIndex = run.startEdge; // local point index in this segment
-      const pieceStartCoord =
-        runStartPointIndex === 0
-          ? startCoord
-          : coordOf(pts[segmentIndices[runStartPointIndex]]);
-
-      const pieceCommands = commands.slice(run.startEdge, run.endEdge + 1);
-
-      // No leading "M": first is just "x,y", then "C..."
-      const path = `${pieceStartCoord} ${pieceCommands.join(" ")}`.trim();
-
-      result.push({ path, dashed: run.dashed });
-    }
-  }
-
-  return result;
+    return result;
 }
 
-export function createSmoothAreaSegments(points, zero, cut = false, close = true) {
+export function createSmoothAreaSegments(
+    points,
+    zero,
+    cut = false,
+    close = true,
+) {
     function getSegments(points) {
         const segs = [];
         let curr = [];
         for (const p of points) {
-            if (!p || p.value == null || Number.isNaN(p.x) || Number.isNaN(p.y)) {
+            if (
+                !p ||
+                p.value == null ||
+                Number.isNaN(p.x) ||
+                Number.isNaN(p.y)
+            ) {
                 if (curr.length > 1) segs.push(curr);
                 curr = [];
             } else {
@@ -3200,43 +3610,50 @@ export function createSmoothAreaSegments(points, zero, cut = false, close = true
         return segs;
     }
     const segments = cut ? getSegments(points) : [points];
-    return segments.map(seg => {
-        if (seg.length < 2) return '';
-        const n = seg.length - 1;
-        const dx = [], dy = [], slopes = [], tangents = [];
-        for (let i = 0; i < n; i += 1) {
-            dx[i] = seg[i + 1].x - seg[i].x;
-            dy[i] = seg[i + 1].y - seg[i].y;
-            slopes[i] = dy[i] / dx[i];
-        }
-        tangents[0] = slopes[0];
-        tangents[n] = slopes[n - 1];
-        for (let i = 1; i < n; i += 1) {
-            if (slopes[i - 1] * slopes[i] <= 0) {
-                tangents[i] = 0;
-            } else {
-                const harmonicMean = (2 * slopes[i - 1] * slopes[i]) / (slopes[i - 1] + slopes[i]);
-                tangents[i] = harmonicMean;
+    return segments
+        .map((seg) => {
+            if (seg.length < 2) return '';
+            const n = seg.length - 1;
+            const dx = [],
+                dy = [],
+                slopes = [],
+                tangents = [];
+            for (let i = 0; i < n; i += 1) {
+                dx[i] = seg[i + 1].x - seg[i].x;
+                dy[i] = seg[i + 1].y - seg[i].y;
+                slopes[i] = dy[i] / dx[i];
             }
-        }
-        let d = `M${seg[0].x},${zero}`;
-        d += ` L${seg[0].x},${seg[0].y}`;
-        for (let i = 0; i < n; i += 1) {
-            const x1 = seg[i].x;
-            const y1 = seg[i].y;
-            const x2 = seg[i + 1].x;
-            const y2 = seg[i + 1].y;
-            const m1 = tangents[i];
-            const m2 = tangents[i + 1];
-            const controlX1 = x1 + (x2 - x1) / 3;
-            const controlY1 = y1 + m1 * (x2 - x1) / 3;
-            const controlX2 = x2 - (x2 - x1) / 3;
-            const controlY2 = y2 - m2 * (x2 - x1) / 3;
-            d += ` C${controlX1},${controlY1} ${controlX2},${controlY2} ${x2},${y2}`;
-        }
-        d += ` L${seg[n].x},${zero} ${close ? 'Z' : ''}`;
-        return d;
-    }).filter(Boolean);
+            tangents[0] = slopes[0];
+            tangents[n] = slopes[n - 1];
+            for (let i = 1; i < n; i += 1) {
+                if (slopes[i - 1] * slopes[i] <= 0) {
+                    tangents[i] = 0;
+                } else {
+                    const harmonicMean =
+                        (2 * slopes[i - 1] * slopes[i]) /
+                        (slopes[i - 1] + slopes[i]);
+                    tangents[i] = harmonicMean;
+                }
+            }
+            let d = `M${seg[0].x},${zero}`;
+            d += ` L${seg[0].x},${seg[0].y}`;
+            for (let i = 0; i < n; i += 1) {
+                const x1 = seg[i].x;
+                const y1 = seg[i].y;
+                const x2 = seg[i + 1].x;
+                const y2 = seg[i + 1].y;
+                const m1 = tangents[i];
+                const m2 = tangents[i + 1];
+                const controlX1 = x1 + (x2 - x1) / 3;
+                const controlY1 = y1 + (m1 * (x2 - x1)) / 3;
+                const controlX2 = x2 - (x2 - x1) / 3;
+                const controlY2 = y2 - (m2 * (x2 - x1)) / 3;
+                d += ` C${controlX1},${controlY1} ${controlX2},${controlY2} ${x2},${y2}`;
+            }
+            d += ` L${seg[n].x},${zero} ${close ? 'Z' : ''}`;
+            return d;
+        })
+        .filter(Boolean);
 }
 
 export function slugify(str) {
@@ -3265,11 +3682,7 @@ export function emptyObjectToNull(obj) {
 export function deepEmptyObjectToNull(value) {
     if (Array.isArray(value)) {
         return value.map(deepEmptyObjectToNull);
-    } else if (
-        value &&
-        typeof value === 'object' &&
-        !Array.isArray(value)
-    ) {
+    } else if (value && typeof value === 'object' && !Array.isArray(value)) {
         const result = {};
         for (const key in value) {
             if (Object.hasOwn(value, key)) {
@@ -3286,17 +3699,14 @@ export function easeOutCubic(t) {
 }
 
 export function getCumulativeAverage({ values, config = {} }) {
-    const {
-        keepInvalid = true,
-        convertInvalidToZero = false,
-    } = config;
+    const { keepInvalid = true, convertInvalidToZero = false } = config;
 
     const avg = [];
     let sum = 0;
     let count = 0;
 
     function isInvalid(n) {
-        return typeof n !== "number" || !Number.isFinite(n)
+        return typeof n !== 'number' || !Number.isFinite(n);
     }
 
     function addAvg(n) {
@@ -3315,16 +3725,13 @@ export function getCumulativeAverage({ values, config = {} }) {
 }
 
 export function getCumulativeMedian({ values, config = {} }) {
-    const {
-        keepInvalid = true,
-        convertInvalidToZero = false,
-    } = config;
+    const { keepInvalid = true, convertInvalidToZero = false } = config;
 
     const medians = [];
     const list = [];
 
     function isInvalid(n) {
-        return typeof n !== "number" || !Number.isFinite(n);
+        return typeof n !== 'number' || !Number.isFinite(n);
     }
 
     function addMedian(n) {
@@ -3340,27 +3747,28 @@ export function getCumulativeMedian({ values, config = {} }) {
     }
 
     for (const v of values) {
-        if (!isInvalid(v)) addMedian(v)
+        if (!isInvalid(v)) addMedian(v);
         else if (convertInvalidToZero && keepInvalid) addMedian(0);
         else if (!convertInvalidToZero && keepInvalid) medians.push(v);
     }
     return medians;
 }
 
-export function setOpacityIfWithinBBox({
-    el,
-    container,
-    padding = 1
-}) {
+export function setOpacityIfWithinBBox({ el, container, padding = 1 }) {
     if (!el || !container) return;
 
     let elBB = el.getBBox();
     let contBB = container.getBBox();
 
-    if (elBB.x < contBB.x + padding || elBB.y < contBB.y + padding || (elBB.x + elBB.width) > (contBB.x + contBB.width - padding) || (elBB.y + elBB.height) > (contBB.y + contBB.height - padding)) {
-        el.style.opacity = '0'
+    if (
+        elBB.x < contBB.x + padding ||
+        elBB.y < contBB.y + padding ||
+        elBB.x + elBB.width > contBB.x + contBB.width - padding ||
+        elBB.y + elBB.height > contBB.y + contBB.height - padding
+    ) {
+        el.style.opacity = '0';
     } else {
-        el.style.opacity = '1'
+        el.style.opacity = '1';
     }
 }
 
@@ -3370,7 +3778,7 @@ export function autoFontSize({
     currentFontSize,
     minFontSize = 6,
     attempts = 200,
-    padding = 1
+    padding = 1,
 }) {
     if (!el || !currentFontSize) return 0;
 
@@ -3427,10 +3835,14 @@ export function autoFontSize({
  */
 export function observeClassPresenceIn(container, cssClass, onNodesPresent) {
     if (typeof cssClass !== 'string' || !cssClass.trim()) {
-        console.error('Vue Data UI - observeClassPresenceIn: cssClass must be a non-empty string');
+        console.error(
+            'Vue Data UI - observeClassPresenceIn: cssClass must be a non-empty string',
+        );
     }
     if (typeof onNodesPresent !== 'function') {
-        console.error('Vue Data UI - observeClassPresenceIn: onNodesPresent must be a function');
+        console.error(
+            'Vue Data UI - observeClassPresenceIn: onNodesPresent must be a function',
+        );
     }
 
     const selector = `.${cssClass}`;
@@ -3511,8 +3923,8 @@ export function formatSmallValue({
 
     if (removeTrailingZero) {
         str = str
-            .replace(/(\.\d*?[1-9])0+$/, '$1')   // drop zeros after last non-zero
-            .replace(/\.0+$/, '');               // drop ".0"
+            .replace(/(\.\d*?[1-9])0+$/, '$1') // drop zeros after last non-zero
+            .replace(/\.0+$/, ''); // drop ".0"
     }
 
     return str;
@@ -3528,25 +3940,25 @@ export function fib(n) {
 }
 
 export function wrapText(str, maxChars = 20) {
-    str = str.replace(/[\r\n]+/g, " ");
+    str = str.replace(/[\r\n]+/g, ' ');
 
-    const words = str.split(" ");
-    let line = "";
-    let result = "";
+    const words = str.split(' ');
+    let line = '';
+    let result = '';
 
     for (let word of words) {
-        if ((line + (line ? " " : "") + word).length <= maxChars) {
-            line += (line ? " " : "") + word;
+        if ((line + (line ? ' ' : '') + word).length <= maxChars) {
+            line += (line ? ' ' : '') + word;
         } else {
             if (line) {
-                result += (result ? "\n" : "") + line;
+                result += (result ? '\n' : '') + line;
             }
             line = word;
         }
     }
 
     if (line) {
-        result += (result ? "\n" : "") + line;
+        result += (result ? '\n' : '') + line;
     }
 
     return result;
@@ -3560,18 +3972,18 @@ export function wrapText(str, maxChars = 20) {
  *   into larger polygons (fewer path nodes).
  *
  * @param {{
-*   lineA: Array<{x:number,y:number,value?:number|null}>,
-*   lineB: Array<{x:number,y:number,value?:number|null}>,
-*   colorLineA: string,
-*   colorLineB: string,
-*   smoothA?: boolean,
-*   smoothB?: boolean, 
-*   sampleStepPx?: number,
-*   cutNullValues?: boolean,
-*   merge?: boolean
-* }} opts
-* @returns {Array<{ d: string, color: string }>}
-*/
+ *   lineA: Array<{x:number,y:number,value?:number|null}>,
+ *   lineB: Array<{x:number,y:number,value?:number|null}>,
+ *   colorLineA: string,
+ *   colorLineB: string,
+ *   smoothA?: boolean,
+ *   smoothB?: boolean,
+ *   sampleStepPx?: number,
+ *   cutNullValues?: boolean,
+ *   merge?: boolean
+ * }} opts
+ * @returns {Array<{ d: string, color: string }>}
+ */
 export function buildInterLineAreas(opts) {
     const {
         lineA,
@@ -3582,17 +3994,23 @@ export function buildInterLineAreas(opts) {
         smoothB = false,
         sampleStepPx = 2,
         cutNullValues = true, // break across gaps
-        merge = true // merge into large polygons
+        merge = true, // merge into large polygons
     } = opts || {};
 
-    if (!Array.isArray(lineA) || !Array.isArray(lineB) || !lineA.length || !lineB.length) {
+    if (
+        !Array.isArray(lineA) ||
+        !Array.isArray(lineB) ||
+        !lineA.length ||
+        !lineB.length
+    ) {
         return [];
     }
 
     const isNum = (n) => Number.isFinite(n);
 
     function getSegments(points) {
-        if (!cutNullValues) return [points.filter(p => p && isNum(p.x) && isNum(p.y))];
+        if (!cutNullValues)
+            return [points.filter((p) => p && isNum(p.x) && isNum(p.y))];
         const segs = [];
         let curr = [];
         for (const p of points) {
@@ -3610,7 +4028,10 @@ export function buildInterLineAreas(opts) {
 
     function computeTangents(seg) {
         const n = seg.length - 1;
-        const dx = new Array(n), dy = new Array(n), slopes = new Array(n), m = new Array(seg.length);
+        const dx = new Array(n),
+            dy = new Array(n),
+            slopes = new Array(n),
+            m = new Array(seg.length);
         for (let i = 0; i < n; i += 1) {
             dx[i] = seg[i + 1].x - seg[i].x;
             dy[i] = seg[i + 1].y - seg[i].y;
@@ -3622,17 +4043,24 @@ export function buildInterLineAreas(opts) {
             if (slopes[i - 1] * slopes[i] <= 0) {
                 m[i] = 0;
             } else {
-                m[i] = (2 * slopes[i - 1] * slopes[i]) / (slopes[i - 1] + slopes[i]);
+                m[i] =
+                    (2 * slopes[i - 1] * slopes[i]) /
+                    (slopes[i - 1] + slopes[i]);
             }
         }
         return m;
     }
 
     function evalMonotone(p0, p1, m0, m1, x) {
-        const x0 = p0.x, x1 = p1.x, y0 = p0.y, y1 = p1.y;
+        const x0 = p0.x,
+            x1 = p1.x,
+            y0 = p0.y,
+            y1 = p1.y;
         const h = x1 - x0;
         if (h === 0) return y0;
-        const t = (x - x0) / h, t2 = t * t, t3 = t2 * t;
+        const t = (x - x0) / h,
+            t2 = t * t,
+            t3 = t2 * t;
         const h00 = 2 * t3 - 3 * t2 + 1;
         const h10 = t3 - 2 * t2 + t;
         const h01 = -2 * t3 + 3 * t2;
@@ -3646,7 +4074,8 @@ export function buildInterLineAreas(opts) {
         if (!segments.length) return [];
 
         // global bounds
-        let xmin = Infinity, xmax = -Infinity;
+        let xmin = Infinity,
+            xmax = -Infinity;
         for (const seg of segments) {
             xmin = Math.min(xmin, seg[0].x);
             xmax = Math.max(xmax, seg[seg.length - 1].x);
@@ -3669,14 +4098,17 @@ export function buildInterLineAreas(opts) {
 
                 // locate local segment
                 for (let i = 0; i < last; i += 1) {
-                    const p0 = seg[i], p1 = seg[i + 1];
+                    const p0 = seg[i],
+                        p1 = seg[i + 1];
                     if (x + 1e-9 < p0.x || x - 1e-9 > p1.x) continue;
 
                     if (!smooth) {
                         const t = (x - p0.x) / (p1.x - p0.x || 1);
                         y = p0.y + t * (p1.y - p0.y);
                     } else {
-                        const m = seg.__tangents || (seg.__tangents = computeTangents(seg));
+                        const m =
+                            seg.__tangents ||
+                            (seg.__tangents = computeTangents(seg));
                         y = evalMonotone(p0, p1, m[i], m[i + 1], x);
                     }
                     covered = true;
@@ -3694,21 +4126,36 @@ export function buildInterLineAreas(opts) {
         return out;
     }
 
-    function lerp(a, b, t) { return a + t * (b - a); }
+    function lerp(a, b, t) {
+        return a + t * (b - a);
+    }
 
     // Refine by inserting exact crossing points so top only changes at sample boundaries
     function refineWithCrossings(sA, sB) {
-        const A = [], B = [];
+        const A = [],
+            B = [];
         const N = Math.min(sA.length, sB.length);
         for (let i = 0; i < N - 1; i += 1) {
-            const A0 = sA[i], A1 = sA[i + 1];
-            const B0 = sB[i], B1 = sB[i + 1];
+            const A0 = sA[i],
+                A1 = sA[i + 1];
+            const B0 = sB[i],
+                B1 = sB[i + 1];
 
             // propagate current sample
-            A.push(A0); B.push(B0);
+            A.push(A0);
+            B.push(B0);
 
             // skip if any hole on this interval
-            if (A0.hole || A1.hole || B0.hole || B1.hole || A0.y == null || A1.y == null || B0.y == null || B1.y == null) {
+            if (
+                A0.hole ||
+                A1.hole ||
+                B0.hole ||
+                B1.hole ||
+                A0.y == null ||
+                A1.y == null ||
+                B0.y == null ||
+                B1.y == null
+            ) {
                 continue;
             }
 
@@ -3726,7 +4173,10 @@ export function buildInterLineAreas(opts) {
             }
         }
         // add the last samples
-        if (N > 0) { A.push(sA[N - 1]); B.push(sB[N - 1]); }
+        if (N > 0) {
+            A.push(sA[N - 1]);
+            B.push(sB[N - 1]);
+        }
         return { A, B };
     }
 
@@ -3735,9 +4185,21 @@ export function buildInterLineAreas(opts) {
         const out = [];
         const N = Math.min(sA.length, sB.length);
         for (let i = 0; i < N - 1; i += 1) {
-            const A0 = sA[i], A1 = sA[i + 1];
-            const B0 = sB[i], B1 = sB[i + 1];
-            if (A0.hole || A1.hole || B0.hole || B1.hole || A0.y == null || A1.y == null || B0.y == null || B1.y == null) continue;
+            const A0 = sA[i],
+                A1 = sA[i + 1];
+            const B0 = sB[i],
+                B1 = sB[i + 1];
+            if (
+                A0.hole ||
+                A1.hole ||
+                B0.hole ||
+                B1.hole ||
+                A0.y == null ||
+                A1.y == null ||
+                B0.y == null ||
+                B1.y == null
+            )
+                continue;
 
             const d0 = A0.y - B0.y;
             const d1 = A1.y - B1.y;
@@ -3754,7 +4216,7 @@ export function buildInterLineAreas(opts) {
                 `L${top1.x},${top1.y}`,
                 `L${bot1.x},${bot1.y}`,
                 `L${bot0.x},${bot0.y}`,
-                `Z`
+                `Z`,
             ].join(' ');
             out.push({ d, color });
         }
@@ -3771,21 +4233,47 @@ export function buildInterLineAreas(opts) {
         while (i < N - 1) {
             // skip holes
             while (i < N - 1) {
-                const A0 = sA[i], B0 = sB[i], A1 = sA[i + 1], B1 = sB[i + 1];
-                if (!A0.hole && !B0.hole && !A1.hole && !B1.hole && A0.y != null && B0.y != null && A1.y != null && B1.y != null) break;
+                const A0 = sA[i],
+                    B0 = sB[i],
+                    A1 = sA[i + 1],
+                    B1 = sB[i + 1];
+                if (
+                    !A0.hole &&
+                    !B0.hole &&
+                    !A1.hole &&
+                    !B1.hole &&
+                    A0.y != null &&
+                    B0.y != null &&
+                    A1.y != null &&
+                    B1.y != null
+                )
+                    break;
                 i += 1;
             }
             if (i >= N - 1) break;
 
             const start = i;
-            const sign = Math.sign((sB[i].y - sA[i].y) || 0) || 1; // default "A above" when equal
+            const sign = Math.sign(sB[i].y - sA[i].y || 0) || 1; // default "A above" when equal
 
             // extend run while top stays same and no holes
             i += 1;
             while (i < N - 1) {
-                const A0 = sA[i], B0 = sB[i], A1 = sA[i + 1], B1 = sB[i + 1];
-                if (A0.hole || B0.hole || A1.hole || B1.hole || A0.y == null || B0.y == null || A1.y == null || B1.y == null) break;
-                const s = Math.sign((B0.y - A0.y) || 0) || 1;
+                const A0 = sA[i],
+                    B0 = sB[i],
+                    A1 = sA[i + 1],
+                    B1 = sB[i + 1];
+                if (
+                    A0.hole ||
+                    B0.hole ||
+                    A1.hole ||
+                    B1.hole ||
+                    A0.y == null ||
+                    B0.y == null ||
+                    A1.y == null ||
+                    B1.y == null
+                )
+                    break;
+                const s = Math.sign(B0.y - A0.y || 0) || 1;
                 if (s !== sign) break;
                 i += 1;
             }
@@ -3798,13 +4286,13 @@ export function buildInterLineAreas(opts) {
 
             const topPts = [];
             for (let k = start; k <= end; k += 1) {
-                topPts.push(`${top[k].x},${top[k].y}`)
-            };
+                topPts.push(`${top[k].x},${top[k].y}`);
+            }
 
             const botPts = [];
             for (let k = end; k >= start; k -= 1) {
-                botPts.push(`${bot[k].x},${bot[k].y}`)
-            };
+                botPts.push(`${bot[k].x},${bot[k].y}`);
+            }
 
             const d = `M${topPts[0]} L${topPts.slice(1).join(' L')} L${botPts.join(' L')} Z`;
             out.push({ d, color });
@@ -3817,7 +4305,10 @@ export function buildInterLineAreas(opts) {
     const sampledB = sampleLine(lineB, smoothB);
 
     // insert crossing points so top is constant between consecutive samples
-    const { A: refinedA, B: refinedB } = refineWithCrossings(sampledA, sampledB);
+    const { A: refinedA, B: refinedB } = refineWithCrossings(
+        sampledA,
+        sampledB,
+    );
 
     return merge
         ? buildMergedPolys(refinedA, refinedB)
@@ -3838,14 +4329,10 @@ export function triggerEvent(el, type, opts = {}) {
         'mouseenter',
         'mouseleave',
         'dblclick',
-        'contextmenu'
+        'contextmenu',
     ]);
 
-    const keyboardEvents = new Set([
-        'keydown',
-        'keyup',
-        'keypress'
-    ]);
+    const keyboardEvents = new Set(['keydown', 'keyup', 'keypress']);
 
     let ev;
     if (mouseEvents.has(type)) {
@@ -3868,7 +4355,10 @@ export function triggerEvent(el, type, opts = {}) {
     return ev;
 }
 
-export function triggerResize(el, { delta = 1, delay = 20, disableTransitions = true } = {}) {
+export function triggerResize(
+    el,
+    { delta = 1, delay = 20, disableTransitions = true } = {},
+) {
     if (!el || !(el instanceof HTMLElement)) return;
 
     const style = el.style;
@@ -3886,13 +4376,15 @@ export function triggerResize(el, { delta = 1, delay = 20, disableTransitions = 
 
     const isRelative = (v) => /%|em|rem/.test(v);
 
-    style.width = prev.width && isRelative(prev.width)
-        ? `calc(${prev.width} + ${delta}px)`
-        : `${Math.max(0, w + delta)}px`;
+    style.width =
+        prev.width && isRelative(prev.width)
+            ? `calc(${prev.width} + ${delta}px)`
+            : `${Math.max(0, w + delta)}px`;
 
-    style.height = prev.height && isRelative(prev.height)
-        ? `calc(${prev.height} + ${delta}px)`
-        : `${Math.max(0, h + delta)}px`;
+    style.height =
+        prev.height && isRelative(prev.height)
+            ? `calc(${prev.height} + ${delta}px)`
+            : `${Math.max(0, h + delta)}px`;
 
     void el.offsetWidth;
 
@@ -3920,103 +4412,114 @@ export function cacheLastResult(fn) {
 }
 
 // VueUiXy, VueUiStackbar, VueUiStackline
-export const buildDisplayedTimeLabels = cacheLastResult((
-    showOnlyFirstAndLast,
-    showOnlyAtModulo,
-    moduloBase,
-    visTexts,
-    allTexts,
-    startAbs,
-    selIdx,
-    maxSeriesCount
-) => {
-    if (showOnlyFirstAndLast) {
-        if (visTexts.length <= 2) {
+export const buildDisplayedTimeLabels = cacheLastResult(
+    (
+        showOnlyFirstAndLast,
+        showOnlyAtModulo,
+        moduloBase,
+        visTexts,
+        allTexts,
+        startAbs,
+        selIdx,
+        maxSeriesCount,
+    ) => {
+        if (showOnlyFirstAndLast) {
+            if (visTexts.length <= 2) {
+                return visTexts.map((t, i) => ({ text: t, absoluteIndex: i }));
+            }
+            const out = visTexts.map((t, i) => {
+                const keep =
+                    i === 0 ||
+                    i === visTexts.length - 1 ||
+                    (selIdx != null && i === selIdx);
+                return { text: keep ? t : '', absoluteIndex: i };
+            });
+            return out;
+        }
+
+        if (!showOnlyAtModulo) {
             return visTexts.map((t, i) => ({ text: t, absoluteIndex: i }));
         }
-        const out = visTexts.map((t, i) => {
-            const keep = (i === 0) || (i === visTexts.length - 1) || (selIdx != null && i === selIdx);
-            return { text: keep ? t : '', absoluteIndex: i };
-        });
-        return out;
-    }
 
-    if (!showOnlyAtModulo) {
-        return visTexts.map((t, i) => ({ text: t, absoluteIndex: i }));
-    }
-
-    const mod = Math.max(1, moduloBase || 1);
-    if (maxSeriesCount <= mod) {
-        return visTexts.map((t, i) => ({ text: t, absoluteIndex: i }));
-    }
-
-    const candidates = [];
-    for (let i = 0; i < visTexts.length; i += 1) {
-        const cur = visTexts[i] ?? '';
-        if (!cur) continue;
-        const prevAbs = startAbs + i - 1 >= 0 ? (allTexts[startAbs + i - 1] ?? '') : null;
-        if (cur !== prevAbs) candidates.push(i);
-    }
-
-    if (!candidates.length) {
-        return visTexts.map((_t, i) => ({ text: '', absoluteIndex: i }));
-    }
-
-    const C = candidates.length;
-    const base = mod;
-    const minK = Math.max(2, Math.min(base - 3, C));
-    const maxK = Math.min(C, base + 3);
-
-    let bestK = Math.min(base, C);
-    let bestScore = Infinity;
-
-    for (let k = minK; k <= maxK; k += 1) {
-        const remainder = (C - 1) % (k - 1);
-        const drift = Math.abs(k - base);
-        const score = remainder * 10 + drift;
-        if (score < bestScore) { bestScore = score; bestK = k; }
-    }
-
-    const picked = new Set();
-    if (bestK <= 1) {
-        picked.add(candidates[Math.round((C - 1) / 2)]);
-    } else {
-        const step = (C - 1) / (bestK - 1);
-        for (let j = 0; j < bestK; j += 1) {
-            picked.add(candidates[Math.round(j * step)]);
+        const mod = Math.max(1, moduloBase || 1);
+        if (maxSeriesCount <= mod) {
+            return visTexts.map((t, i) => ({ text: t, absoluteIndex: i }));
         }
-    }
 
-    return visTexts.map((t, i) => ({
-        text: picked.has(i) ? t : '',
-        absoluteIndex: i
-    }));
-});
+        const candidates = [];
+        for (let i = 0; i < visTexts.length; i += 1) {
+            const cur = visTexts[i] ?? '';
+            if (!cur) continue;
+            const prevAbs =
+                startAbs + i - 1 >= 0
+                    ? (allTexts[startAbs + i - 1] ?? '')
+                    : null;
+            if (cur !== prevAbs) candidates.push(i);
+        }
+
+        if (!candidates.length) {
+            return visTexts.map((_t, i) => ({ text: '', absoluteIndex: i }));
+        }
+
+        const C = candidates.length;
+        const base = mod;
+        const minK = Math.max(2, Math.min(base - 3, C));
+        const maxK = Math.min(C, base + 3);
+
+        let bestK = Math.min(base, C);
+        let bestScore = Infinity;
+
+        for (let k = minK; k <= maxK; k += 1) {
+            const remainder = (C - 1) % (k - 1);
+            const drift = Math.abs(k - base);
+            const score = remainder * 10 + drift;
+            if (score < bestScore) {
+                bestScore = score;
+                bestK = k;
+            }
+        }
+
+        const picked = new Set();
+        if (bestK <= 1) {
+            picked.add(candidates[Math.round((C - 1) / 2)]);
+        } else {
+            const step = (C - 1) / (bestK - 1);
+            for (let j = 0; j < bestK; j += 1) {
+                picked.add(candidates[Math.round(j * step)]);
+            }
+        }
+
+        return visTexts.map((t, i) => ({
+            text: picked.has(i) ? t : '',
+            absoluteIndex: i,
+        }));
+    },
+);
 
 export function escapeXml(str) {
     return String(str)
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;");
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;');
 }
 
 export function escapeXmlAttr(str) {
     return String(str)
-        .replaceAll("&", "&amp;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;");
+        .replaceAll('&', '&amp;')
+        .replaceAll('"', '&quot;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;');
 }
 
 export function getPathMidpoint(pathData) {
-    if (!pathData || typeof pathData !== "string") {
+    if (!pathData || typeof pathData !== 'string') {
         return null;
     }
 
-    const svg = document.createElementNS(XMLNS, "svg");
-    svg.setAttribute("xmlns", XMLNS);
-    const path = document.createElementNS(XMLNS, "path");
-    path.setAttribute("d", pathData);
+    const svg = document.createElementNS(XMLNS, 'svg');
+    svg.setAttribute('xmlns', XMLNS);
+    const path = document.createElementNS(XMLNS, 'path');
+    path.setAttribute('d', pathData);
     svg.appendChild(path);
     const totalLength = path.getTotalLength();
     const midpoint = path.getPointAtLength(totalLength / 2);
@@ -4057,7 +4560,7 @@ export function svgToClientCoords(x, y, svgEl) {
 
             return {
                 x: result.x,
-                y: result.y
+                y: result.y,
             };
         }
     }
@@ -4066,7 +4569,7 @@ export function svgToClientCoords(x, y, svgEl) {
 
     return {
         x: rect.left + x,
-        y: rect.top + y
+        y: rect.top + y,
     };
 }
 
@@ -4190,7 +4693,6 @@ const lib = {
     wrapText,
     createStraightPathWithCutsSegments,
     createSmoothPathWithCutsSegments,
-    svgToClientCoords
+    svgToClientCoords,
 };
 export default lib;
-

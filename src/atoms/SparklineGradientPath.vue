@@ -1,6 +1,6 @@
 <script setup>
-import { ref, watch } from "vue";
-import { SvgPathGradientAsync } from "../SPG";
+import { ref, watch } from 'vue';
+import { SvgPathGradientAsync } from '../SPG';
 
 const props = defineProps({
     svgPathData: { type: String, required: true },
@@ -11,7 +11,7 @@ const props = defineProps({
     segments: { type: Number, required: true },
 });
 
-const gradientMarkup = ref("");
+const gradientMarkup = ref('');
 let requestToken = 0;
 
 watch(
@@ -27,26 +27,26 @@ watch(
         const token = ++requestToken;
 
         if (!enabled) {
-            gradientMarkup.value = "";
+            gradientMarkup.value = '';
             return;
         }
 
         const result = await SvgPathGradientAsync(props.svgPathData, null, {
             segments: props.segments,
-            temperatureMode: "vertical",
+            temperatureMode: 'vertical',
             temperatureColors: [props.highColor, props.lowColor],
             attrs: {
-                "stroke-width": props.strokeWidth,
-                "stroke-linecap": "round",
-                "stroke-linejoin": "round",
+                'stroke-width': props.strokeWidth,
+                'stroke-linecap': 'round',
+                'stroke-linejoin': 'round',
             },
-            groupAttrs: { class: "vue-ui-sparkline-gradient" },
+            groupAttrs: { class: 'vue-ui-sparkline-gradient' },
         });
 
         if (token !== requestToken) return; // stale
         gradientMarkup.value = result;
     },
-    { immediate: true }
+    { immediate: true },
 );
 </script>
 

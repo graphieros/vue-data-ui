@@ -6,12 +6,15 @@ export type {
     VueUiChestnutDatasetRoot,
     VueUiChestnutConfig,
     VueUiChestnutExpose,
-} from "./vue-data-ui";
+} from './vue-data-ui';
 
-declare const VueUiChestnut: DefineComponent<{
-    config?: VueUiChestnutConfig;
-    dataset: VueUiChestnutDatasetRoot[];
-}, VueUiChestnutExpose>;
+declare const VueUiChestnut: DefineComponent<
+    {
+        config?: VueUiChestnutConfig;
+        dataset: VueUiChestnutDatasetRoot[];
+    },
+    VueUiChestnutExpose
+>;
 
 export default VueUiChestnut;
 export { VueUiChestnut };

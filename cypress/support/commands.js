@@ -26,4 +26,4 @@
 
 Cypress.Commands.add('clearDownloads', () => {
     cy.task('clearDownloads');
-  });
+});

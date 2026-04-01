@@ -2,35 +2,38 @@
 
 a,
 .green {
-  text-decoration: none;
-  color: #8A8A8A;
-  transition: 0.4s;
-  padding: 3px;
+    text-decoration: none;
+    color: #8a8a8a;
+    transition: 0.4s;
+    padding: 3px;
 }
 
 body {
-  display: flex;
-  place-items: center;
+    display: flex;
+    place-items: center;
 }
 
 #app {
-  display: grid;
-  grid-template-columns: 300px 1fr;
-  padding: 0 2rem;
-  cursor: url("data:image/svg+xml;utf8,\
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    padding: 0 2rem;
+    cursor:
+        url("data:image/svg+xml;utf8,\
 <svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20'>\
   <g transform='rotate(20 10 10)'>\
     <path d='M 7 18 L 2 2 L 18.302 7.428 L 10 10 L 7 18' fill='black' stroke='rgb(117, 230, 179)'/>\
   </g>\
-</svg>") 2 2, auto;
+</svg>")
+            2 2,
+        auto;
 }
 
 .gradient-text {
-  background: linear-gradient(90deg, rgb(66, 211, 146), #5f8aee);
-  background-size: 100% 100%;
-  background-repeat: no-repeat;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  color: transparent;
+    background: linear-gradient(90deg, rgb(66, 211, 146), #5f8aee);
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    color: transparent;
 }

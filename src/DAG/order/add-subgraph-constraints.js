@@ -2,7 +2,7 @@ export default function addSubgraphConstraints(g, cg, vs) {
     let prev = {};
     let rootPrev;
 
-    vs.forEach(v => {
+    vs.forEach((v) => {
         let child = g.parent(v);
         let parent;
         let prevChild;

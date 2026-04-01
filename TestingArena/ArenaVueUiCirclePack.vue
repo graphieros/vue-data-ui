@@ -1,64 +1,55 @@
 <script setup>
-import { ref, computed, onMounted } from "vue";
-import LocalVueUiCirclePack from "../src/components/vue-ui-circle-pack.vue";
-import LocalVueDataUi from "../src/components/vue-data-ui.vue";
-import Box from "./Box.vue";
-import convertArrayToObject from "./convertModel";
-import { useArena } from "../src/useArena";
-import VueUiPattern from "../src/atoms/vue-ui-pattern.vue";
+import { ref, computed, onMounted } from 'vue';
+import LocalVueUiCirclePack from '../src/components/vue-ui-circle-pack.vue';
+import LocalVueDataUi from '../src/components/vue-data-ui.vue';
+import Box from './Box.vue';
+import convertArrayToObject from './convertModel';
+import { useArena } from '../src/useArena';
+import VueUiPattern from '../src/atoms/vue-ui-pattern.vue';
 
-import { VueUiCirclePack } from "vue-data-ui";
-import { VueUiCirclePack as VueUiCirclePackTreeshaken } from "vue-data-ui/vue-ui-circle-pack";
-import ConfigKnobs from "./ConfigKnobs.vue";
-import { useConfigurationControls } from "./createConfigModel";
-import { useConfig } from "../src/useConfig"
-import useThemeOptions from "./useThemeOptions";
+import { VueUiCirclePack } from 'vue-data-ui';
+import { VueUiCirclePack as VueUiCirclePackTreeshaken } from 'vue-data-ui/vue-ui-circle-pack';
+import ConfigKnobs from './ConfigKnobs.vue';
+import { useConfigurationControls } from './createConfigModel';
+import { useConfig } from '../src/useConfig';
+import useThemeOptions from './useThemeOptions';
 
 const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena();
 const { vue_ui_circle_pack: DEFAULT_CONFIG } = useConfig();
 
-const {
-    CHECKBOX,
-    NUMBER,
-    RANGE,
-    TEXT,
-    COLOR,
-    SELECT,
-    createModel
-} = useConfigurationControls(DEFAULT_CONFIG);
+const { CHECKBOX, NUMBER, RANGE, TEXT, COLOR, SELECT, createModel } =
+    useConfigurationControls(DEFAULT_CONFIG);
 
 function makeDs({ name, qty, maxVal }) {
-  let datapoints = [];
-  for (let i = 0; i < qty; i += 1) {
-    datapoints.push({
-      name: `Datapoint ${i}`,
-      value: Math.random() * maxVal,
-      // color: '#FFFFFF',
-      // breakdown: [
-      //     { name: 'br 1', value: Math.random() * 10 },
-      //     { name: 'br 2', value: Math.random() * 20 },
-      //     { name: 'br 3', value: Math.random() * 30 },
-      // ]
-    });
-  }
-  return datapoints;
+    let datapoints = [];
+    for (let i = 0; i < qty; i += 1) {
+        datapoints.push({
+            name: `Datapoint ${i}`,
+            value: Math.random() * maxVal,
+            // color: '#FFFFFF',
+            // breakdown: [
+            //     { name: 'br 1', value: Math.random() * 10 },
+            //     { name: 'br 2', value: Math.random() * 20 },
+            //     { name: 'br 3', value: Math.random() * 30 },
+            // ]
+        });
+    }
+    return datapoints;
 }
 
-const dataset = ref(makeDs({ name: "Pack 1", qty: 5, maxVal: 12000 }));
+const dataset = ref(makeDs({ name: 'Pack 1', qty: 5, maxVal: 12000 }));
 
 onMounted(() => {
-  // setTimeout(() => {
-  //   dataset.value = makeDs({ name: "Pack 1", qty: 5, maxVal: 12000 })
-  // }, 2000)
-
-  // setTimeout(() => {
-  //   dataset.value = undefined;
-  // }, 4000)
-
-  // setTimeout(() => {
-  //   dataset.value = makeDs({ name: "Pack 1", qty: 12, maxVal: 12000 })
-  // }, 6000)
-})
+    // setTimeout(() => {
+    //   dataset.value = makeDs({ name: "Pack 1", qty: 5, maxVal: 12000 })
+    // }, 2000)
+    // setTimeout(() => {
+    //   dataset.value = undefined;
+    // }, 4000)
+    // setTimeout(() => {
+    //   dataset.value = makeDs({ name: "Pack 1", qty: 12, maxVal: 12000 })
+    // }, 6000)
+});
 
 // const dataset = ref([
 //   { name: 'D', value: 10 },
@@ -91,131 +82,166 @@ onMounted(() => {
 // });
 
 const model = createModel([
-    CHECKBOX("debug", { def: true }),
-    CHECKBOX("loading", { def: false }),
+    CHECKBOX('debug', { def: true }),
+    CHECKBOX('loading', { def: false }),
 
     CHECKBOX('userOptions.useCursorPointer', { def: false }),
-    CHECKBOX("userOptions.show", { def: true }),
-    COLOR("style.chart.backgroundColor", { def: "#FFFFDD" }),
-    NUMBER("style.chart.width", { def: 512, min: 0, max: 1000 }),
-    NUMBER("style.chart.height", { def: 512, min: 0, max: 1000 }),
-    COLOR("style.chart.color", { def: "#1A1A1A" }),
-    TEXT("style.chart.title.text", { def: "Title" }),
-    TEXT("style.chart.title.subtitle.text", { def: "Subtitle" }),
-    COLOR("style.chart.circles.stroke", { def: "#000000" }),
-    NUMBER("style.chart.circles.strokeWidth", { def: 1, min: 0, max: 12 }),
-    CHECKBOX("style.chart.circles.gradient.show", { def: true }),
-    RANGE("style.chart.circles.gradient.intensity", { def: 40, min: 0, max: 100 }),
-    CHECKBOX("style.chart.circles.labels.name.show", { def: true }),
-    CHECKBOX("style.chart.circles.labels.name.bold", { def: false }),
-    NUMBER("style.chart.circles.labels.name.offsetY", { def: 0, min: -100, max: 100 }),
-    TEXT("style.chart.circles.labels.name.color", { def: "auto" }),
-    CHECKBOX("style.chart.circles.labels.value.show", { def: true }),
-    TEXT("style.chart.circles.labels.value.color", { def: "auto" }),
-    NUMBER("style.chart.circles.labels.value.rounding", { def: 0, min: 0, max: 6 }),
-    TEXT("style.chart.circles.labels.value.prefix", { def: "" }),
-    TEXT("style.chart.circles.labels.value.suffix", { def: "" }),
-    CHECKBOX("style.chart.circles.labels.value.bold", { def: false }),
-    NUMBER("style.chart.circles.labels.value.offsetY", { def: 0, min: -100, max: 100 }),
-    NUMBER("userOptions.print.scale", { def: 2, min: 1, max: 5 }),
-    CHECKBOX("userOptions.print.allowTaint", { def: true }),
-    CHECKBOX("userOptions.print.useCORS", { def: true }),
-    COLOR("userOptions.print.backgroundColor", { def: "#FFFFFF" }),
-    CHECKBOX("table.show", { def: false }),
-    CHECKBOX("table.useDialog", { def: true })
+    CHECKBOX('userOptions.show', { def: true }),
+    COLOR('style.chart.backgroundColor', { def: '#FFFFDD' }),
+    NUMBER('style.chart.width', { def: 512, min: 0, max: 1000 }),
+    NUMBER('style.chart.height', { def: 512, min: 0, max: 1000 }),
+    COLOR('style.chart.color', { def: '#1A1A1A' }),
+    TEXT('style.chart.title.text', { def: 'Title' }),
+    TEXT('style.chart.title.subtitle.text', { def: 'Subtitle' }),
+    COLOR('style.chart.circles.stroke', { def: '#000000' }),
+    NUMBER('style.chart.circles.strokeWidth', { def: 1, min: 0, max: 12 }),
+    CHECKBOX('style.chart.circles.gradient.show', { def: true }),
+    RANGE('style.chart.circles.gradient.intensity', {
+        def: 40,
+        min: 0,
+        max: 100,
+    }),
+    CHECKBOX('style.chart.circles.labels.name.show', { def: true }),
+    CHECKBOX('style.chart.circles.labels.name.bold', { def: false }),
+    NUMBER('style.chart.circles.labels.name.offsetY', {
+        def: 0,
+        min: -100,
+        max: 100,
+    }),
+    TEXT('style.chart.circles.labels.name.color', { def: 'auto' }),
+    CHECKBOX('style.chart.circles.labels.value.show', { def: true }),
+    TEXT('style.chart.circles.labels.value.color', { def: 'auto' }),
+    NUMBER('style.chart.circles.labels.value.rounding', {
+        def: 0,
+        min: 0,
+        max: 6,
+    }),
+    TEXT('style.chart.circles.labels.value.prefix', { def: '' }),
+    TEXT('style.chart.circles.labels.value.suffix', { def: '' }),
+    CHECKBOX('style.chart.circles.labels.value.bold', { def: false }),
+    NUMBER('style.chart.circles.labels.value.offsetY', {
+        def: 0,
+        min: -100,
+        max: 100,
+    }),
+    NUMBER('userOptions.print.scale', { def: 2, min: 1, max: 5 }),
+    CHECKBOX('userOptions.print.allowTaint', { def: true }),
+    CHECKBOX('userOptions.print.useCORS', { def: true }),
+    COLOR('userOptions.print.backgroundColor', { def: '#FFFFFF' }),
+    CHECKBOX('table.show', { def: false }),
+    CHECKBOX('table.useDialog', { def: true }),
 ]);
 
 const { themeOptions, currentTheme } = useThemeOptions();
 
 const configTheme = computed(() => ({
-  theme: currentTheme.value
-}))
+    theme: currentTheme.value,
+}));
 
 const config = computed(() => {
-  const c = convertArrayToObject(model.value);
-  return {
-    ...c,
-    // skeletonDataset: [
-    //   { name: 'A', value: 10 },
-    //   { name: 'B', value: 5 },
-    // ],
-    // skeletonConfig: {
-    //   style: {
-    //     chart: {
-    //       backgroundColor: '#FF0000'
-    //     }
-    //   }
-    // },
-    userOptions: {
-      ...c.userOptions,
-      buttons: {
-        ...c.userOptions.buttons,
-        altCopy: true,
-      },
-      callbacks: {
-        altCopy: console.log
-      }
-    },
-    events: {
-      datapointEnter: ({ datapoint, seriesIndex }) => {
-        console.log('enter event', { datapoint, seriesIndex });
-      },
-      datapointLeave: ({ datapoint, seriesIndex }) => {
-        console.log('leave event', { datapoint, seriesIndex });
-      },
-      datapointClick: ({ datapoint, seriesIndex }) => {
-        console.log('click event', { datapoint, seriesIndex });
-      },
-    },
-    theme: currentTheme.value
-  };
+    const c = convertArrayToObject(model.value);
+    return {
+        ...c,
+        // skeletonDataset: [
+        //   { name: 'A', value: 10 },
+        //   { name: 'B', value: 5 },
+        // ],
+        // skeletonConfig: {
+        //   style: {
+        //     chart: {
+        //       backgroundColor: '#FF0000'
+        //     }
+        //   }
+        // },
+        userOptions: {
+            ...c.userOptions,
+            buttons: {
+                ...c.userOptions.buttons,
+                altCopy: true,
+            },
+            callbacks: {
+                altCopy: console.log,
+            },
+        },
+        events: {
+            datapointEnter: ({ datapoint, seriesIndex }) => {
+                console.log('enter event', { datapoint, seriesIndex });
+            },
+            datapointLeave: ({ datapoint, seriesIndex }) => {
+                console.log('leave event', { datapoint, seriesIndex });
+            },
+            datapointClick: ({ datapoint, seriesIndex }) => {
+                console.log('click event', { datapoint, seriesIndex });
+            },
+        },
+        theme: currentTheme.value,
+    };
 });
 
 const step = ref(0);
 
 function selectDatapoint(dp) {
-  console.log(dp)
+    console.log(dp);
 }
 
-onMounted(async() => {
-  if (local.value) {
-    const img = await local.value.getImage()
-    console.log(img)
-  }
-})
-
+onMounted(async () => {
+    if (local.value) {
+        const img = await local.value.getImage();
+        console.log(img);
+    }
+});
 </script>
 
 <template>
-      <div style="margin: 12px 0; color: white">
+    <div style="margin: 12px 0; color: white">
         Theme:
         <select v-model="currentTheme" @change="step += 1">
             <option v-for="opt in themeOptions">{{ opt }}</option>
         </select>
     </div>
 
-  <Box comp="VueUiCirclePack" :dataset="dataset" :config="config">
-    <template #title>VueUiCirclePack</template>
+    <Box comp="VueUiCirclePack" :dataset="dataset" :config="config">
+        <template #title>VueUiCirclePack</template>
 
-    <template #responsive>
-      <div style="width: 600px; height: 600px; resize: both; overflow: auto; background: white">
-        <LocalVueUiCirclePack :dataset="dataset" :config="{...config, responsive: true}" ref="local" :key="`local_${step}`" @selectDatapoint="selectDatapoint">
-          <!-- <template #circle="{ r, x, y, uid }">
+        <template #responsive>
+            <div
+                style="
+                    width: 600px;
+                    height: 600px;
+                    resize: both;
+                    overflow: auto;
+                    background: white;
+                "
+            >
+                <LocalVueUiCirclePack
+                    :dataset="dataset"
+                    :config="{ ...config, responsive: true }"
+                    ref="local"
+                    :key="`local_${step}`"
+                    @selectDatapoint="selectDatapoint"
+                >
+                    <!-- <template #circle="{ r, x, y, uid }">
           </template> -->
-          <!-- <template #tooltip="{ datapoint }">
+                    <!-- <template #tooltip="{ datapoint }">
             {{  datapoint }}
           </template> -->
-        </LocalVueUiCirclePack>
-      </div>
-    </template>
+                </LocalVueUiCirclePack>
+            </div>
+        </template>
 
-    <template #theme>
-      <LocalVueUiCirclePack :dataset="dataset" :config="configTheme" />
-    </template>
+        <template #theme>
+            <LocalVueUiCirclePack :dataset="dataset" :config="configTheme" />
+        </template>
 
-    <template #local>
-      <LocalVueUiCirclePack :dataset="dataset" :config="config" ref="local" :key="`local_${step}`" @selectDatapoint="selectDatapoint">
-        <!-- <template #zoom-label="{ x, y, name, value, color, zoomOpacity, currentRadius, fontSize }">
+        <template #local>
+            <LocalVueUiCirclePack
+                :dataset="dataset"
+                :config="config"
+                ref="local"
+                :key="`local_${step}`"
+                @selectDatapoint="selectDatapoint"
+            >
+                <!-- <template #zoom-label="{ x, y, name, value, color, zoomOpacity, currentRadius, fontSize }">
                 <foreignObject
                     :x="x - currentRadius / 2"
                     :y="y - currentRadius / 2"
@@ -228,11 +254,11 @@ onMounted(async() => {
                 </foreignObject>
             </template> -->
 
-        <!-- <template #pattern="{ seriesIndex, patternId }">
+                <!-- <template #pattern="{ seriesIndex, patternId }">
                 <VueUiPattern name="squares" :id="patternId" :scale="0.4"/>
             </template> -->
 
-        <!-- <template #data-label="{ x, y, name, value, color, createTSpans, fontSize, radius }">
+                <!-- <template #data-label="{ x, y, name, value, color, createTSpans, fontSize, radius }">
           <text
             :x="x"
             :y="y"
@@ -248,27 +274,45 @@ onMounted(async() => {
             maxWords: 2
           })"/>
         </template> -->
-      </LocalVueUiCirclePack>
-    </template>
+            </LocalVueUiCirclePack>
+        </template>
 
-    <template #VDUI-local>
-      <LocalVueDataUi component="VueUiCirclePack" :dataset="dataset" :config="config" ref="vduiLocal" />
-    </template>
+        <template #VDUI-local>
+            <LocalVueDataUi
+                component="VueUiCirclePack"
+                :dataset="dataset"
+                :config="config"
+                ref="vduiLocal"
+            />
+        </template>
 
-    <template #build>
-      <VueUiCirclePack :dataset="dataset" :config="config" ref="build" />
-    </template>
+        <template #build>
+            <VueUiCirclePack :dataset="dataset" :config="config" ref="build" />
+        </template>
 
-    <template #build-treesh>
-      <VueUiCirclePackTreeshaken :dataset="dataset" :config="config" ref="build" />
-    </template>
+        <template #build-treesh>
+            <VueUiCirclePackTreeshaken
+                :dataset="dataset"
+                :config="config"
+                ref="build"
+            />
+        </template>
 
-    <template #VDUI-build>
-      <VueDataUi component="VueUiCirclePack" :dataset="dataset" :config="config" ref="vduiBuild" />
-    </template>
+        <template #VDUI-build>
+            <VueDataUi
+                component="VueUiCirclePack"
+                :dataset="dataset"
+                :config="config"
+                ref="vduiBuild"
+            />
+        </template>
 
-    <template #knobs="{ summaryOpen }">
-        <ConfigKnobs :model="model" @change="step += 1" :open="summaryOpen"/>
-    </template>
-  </Box>
+        <template #knobs="{ summaryOpen }">
+            <ConfigKnobs
+                :model="model"
+                @change="step += 1"
+                :open="summaryOpen"
+            />
+        </template>
+    </Box>
 </template>

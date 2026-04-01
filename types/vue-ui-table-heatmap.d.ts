@@ -1,9 +1,9 @@
 import { DefineComponent } from 'vue';
 
-export type { 
+export type {
     VueUiTableHeatmapDatasetItem,
-    VueUiTableHeatmapConfig
-} from "./vue-data-ui";
+    VueUiTableHeatmapConfig,
+} from './vue-data-ui';
 
 declare const VueUiTableHeatmap: DefineComponent<{
     config?: VueUiTableHeatmapConfig;
@@ -11,4 +11,4 @@ declare const VueUiTableHeatmap: DefineComponent<{
 }>;
 
 export default VueUiTableHeatmap;
-export { VueUiTableHeatmap }
+export { VueUiTableHeatmap };

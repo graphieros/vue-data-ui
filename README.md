@@ -122,18 +122,18 @@ npm i vue-data-ui
 You can declare components globally in your main.js:
 
 ```js
-import { createApp } from "vue";
-import App from "./App.vue";
+import { createApp } from 'vue';
+import App from './App.vue';
 // Include the css;
-import "vue-data-ui/style.css";
+import 'vue-data-ui/style.css';
 
 // You can declare Vue Data UI components globally
-import { VueUiRadar } from "vue-data-ui";
+import { VueUiRadar } from 'vue-data-ui';
 
 const app = createApp(App);
 
-app.component("VueUiRadar", VueUiRadar);
-app.mount("#app");
+app.component('VueUiRadar', VueUiRadar);
+app.mount('#app');
 ```
 
 Or you can import just what you need into your files:
@@ -234,11 +234,11 @@ Most Vue Data UI chart components include a #svg slot you can use to introduce c
 
 ```html
 <VueUiXy :dataset="dataset" :config="config">
-  <template #svg="{ svg }">
-    <foreignObject x="100" y="0" height="100" width="150">
-      <div>This is a custom caption</div>
-    </foreignObject>
-  </template>
+    <template #svg="{ svg }">
+        <foreignObject x="100" y="0" height="100" width="150">
+            <div>This is a custom caption</div>
+        </foreignObject>
+    </template>
 </VueUiXy>
 ```
 
@@ -269,9 +269,9 @@ It is recommended to set the show legend config attribute to false, to hide the 
 
 ```html
 <VueUiDonut :config="config" :dataset="dataset">
-  <template #legend="{ legend }">
-    <div v-for="item in legend">{{ legend.name }}</div>
-  </template>
+    <template #legend="{ legend }">
+        <div v-for="item in legend">{{ legend.name }}</div>
+    </template>
 </VueUiDonut>
 ```
 
@@ -323,14 +323,14 @@ You will usually only need the `datapoint` attribute exposed by the slot, but yo
 
 ```html
 <VueUiXy :dataset :config>
-  <template #tooltip="{ ...tooltip }">
-    <div>
-      <span>{{ tooltip.timeLabel.text }}</span>
-      <div v-for="serie in tooltip.datapoint" :key="serie.id">
-        {{ serie.name }}: {{ serie.value }}
-      </div>
-    </div>
-  </template>
+    <template #tooltip="{ ...tooltip }">
+        <div>
+            <span>{{ tooltip.timeLabel.text }}</span>
+            <div v-for="serie in tooltip.datapoint" :key="serie.id">
+                {{ serie.name }}: {{ serie.value }}
+            </div>
+        </div>
+    </template>
 </VueUiXy>
 ```
 
@@ -416,14 +416,14 @@ This slot exposes the isPrinting boolean you can use to display the watermark on
 
 ```html
 <VueUiDonut :config="config" :dataset="dataset">
-  <template #watermark="{ isPrinting }">
-    <div
-      v-if="isPrinting"
-      style="font-size: 100px; opacity: 0.1; transform: rotate(-10deg)"
-    >
-      WATERMARK
-    </div>
-  </template>
+    <template #watermark="{ isPrinting }">
+        <div
+            v-if="isPrinting"
+            style="font-size: 100px; opacity: 0.1; transform: rotate(-10deg)"
+        >
+            WATERMARK
+        </div>
+    </template>
 </VueUiDonut>
 ```
 
@@ -441,9 +441,9 @@ The config option zoom.useResetSlot must be set to true to use the slot.
 
 ```html
 <VueUiXy :config="config" :dataset="dataset">
-  <template #reset-action="{ reset }">
-    <button @click="reset()">RESET ZOOM</button>
-  </template>
+    <template #reset-action="{ reset }">
+        <button @click="reset()">RESET ZOOM</button>
+    </template>
 </VueUiXy>
 ```
 
@@ -452,9 +452,9 @@ The config option zoom.useResetSlot must be set to true to use the slot.
 If for some reason you can't access the documentation website and need to get the default config object for a component:
 
 ```js
-import { getVueDataUiConfig } from "vue-data-ui";
+import { getVueDataUiConfig } from 'vue-data-ui';
 
-const defaultConfigXy = getVueDataUiConfig("vue_ui_xy");
+const defaultConfigXy = getVueDataUiConfig('vue_ui_xy');
 ```
 
 # Themes (since v2.2.9)
@@ -489,32 +489,32 @@ const donutConfig = ref({
 You can quickly setup your own theme for a given chart:
 
 ```js
-import { getVueDataUiConfig, mergeConfigs } from "vue-data-ui";
+import { getVueDataUiConfig, mergeConfigs } from 'vue-data-ui';
 
 // Get the default config and set color options
-const customTheme = getVueDataUiConfig("vue_ui_xy", {
-  colorBackground: "#1A1A1A",
-  colorTextPrimary: "#CD9077",
-  colorTextSecondary: "#825848",
-  colorGrid: "#CD9077",
-  colorBorder: "#CD9077",
+const customTheme = getVueDataUiConfig('vue_ui_xy', {
+    colorBackground: '#1A1A1A',
+    colorTextPrimary: '#CD9077',
+    colorTextSecondary: '#825848',
+    colorGrid: '#CD9077',
+    colorBorder: '#CD9077',
 });
 
 const config = computed(() => {
-  // Use the `mergeConfigs` utility to set additional configurations while preserving your theme
-  return mergeConfigs({
-    defaultConfig: customTheme,
-    userConfig: {
-      chart: {
-        title: {
-          text: "Title",
-          subtitle: {
-            text: "Subtitle",
-          },
+    // Use the `mergeConfigs` utility to set additional configurations while preserving your theme
+    return mergeConfigs({
+        defaultConfig: customTheme,
+        userConfig: {
+            chart: {
+                title: {
+                    text: 'Title',
+                    subtitle: {
+                        text: 'Subtitle',
+                    },
+                },
+            },
         },
-      },
-    },
-  });
+    });
 });
 ```
 
@@ -688,11 +688,11 @@ The user options menu can be set to appear only when hovering over the component
 
 ```js
 const config = ref({
-  userOptions: {
-    show: true,
-    showOnChartHover: true, // Default: false
-    keepStateOnChartLeave: true, // Set to false to always close the menu when hovering out of the chart
-  },
+    userOptions: {
+        show: true,
+        showOnChartHover: true, // Default: false
+        keepStateOnChartLeave: true, // Set to false to always close the menu when hovering out of the chart
+    },
 });
 ```
 
@@ -702,15 +702,15 @@ To hide a given action, set the userOption.buttons, for example:
 
 ```js
 const config = ref({
-  userOptions: {
-    show: true,
-    buttons: {
-      pdf: false,
-      fullscreen: false,
-      altCopy: true,
-      // all other pertinent actions for the component will be visible by default (list of all actions below)
+    userOptions: {
+        show: true,
+        buttons: {
+            pdf: false,
+            fullscreen: false,
+            altCopy: true,
+            // all other pertinent actions for the component will be visible by default (list of all actions below)
+        },
     },
-  },
 });
 ```
 
@@ -719,14 +719,14 @@ What happens when the button is clicked is taken care of by the component, excep
 
 ```html
 <VueUiDonut :config="config" :dataset="dataset">
-  <template #optionPdf> GENERATE PDF </template>
+    <template #optionPdf> GENERATE PDF </template>
 
-  <!-- This is the only action where scoped content is provided -->
-  <template template #optionFullscreen="{ isFullscreen, toggleFullscreen }">
-    <div @click="toggleFullscreen(isFullscreen ? 'out' : 'in')">
-      TOGGLE FULLSCREEN
-    </div>
-  </template>
+    <!-- This is the only action where scoped content is provided -->
+    <template template #optionFullscreen="{ isFullscreen, toggleFullscreen }">
+        <div @click="toggleFullscreen(isFullscreen ? 'out' : 'in')">
+            TOGGLE FULLSCREEN
+        </div>
+    </template>
 </VueUiDonut>
 ```
 
@@ -734,23 +734,23 @@ You can pass a callback through the config, for each button, to override the def
 
 ```ts
 const config = {
-  userOptions: {
-    callbacks: {
-      pdf: ({ chartElement, imageUri, base64 }) => {
-        console.log(chartElement);
-      },
-      img: ({ chartElement, imageUri, base64 }) => {
-        console.log(base64);
-      },
-      csv: (csvStr: string) => {
-        console.log(csvStr);
-      },
-      altCopy: ({ dataset: dst, config: cfg }) => {
-        console.log({ dst, cfg });
-      },
-      // the other attributes also have the same names as the buttons
+    userOptions: {
+        callbacks: {
+            pdf: ({ chartElement, imageUri, base64 }) => {
+                console.log(chartElement);
+            },
+            img: ({ chartElement, imageUri, base64 }) => {
+                console.log(base64);
+            },
+            csv: (csvStr: string) => {
+                console.log(csvStr);
+            },
+            altCopy: ({ dataset: dst, config: cfg }) => {
+                console.log({ dst, cfg });
+            },
+            // the other attributes also have the same names as the buttons
+        },
     },
-  },
 };
 ```
 
@@ -816,7 +816,7 @@ User options menu icon can be customized using the #menuIcon slot:
 
 ```html
 <template #menuIcon="{ isOpen, color }">
-  <div>{{ isOpen ? 'close' : 'open' }}</div>
+    <div>{{ isOpen ? 'close' : 'open' }}</div>
 </template>
 ```
 
@@ -824,25 +824,25 @@ Since version 3.5.1, slots are exposed to customize the chart annotator sub-menu
 
 ```html
 <VueUiXy :dataset="dataset" :config="config">
-  <template #annotator-action-close>
-    <MyCloseIcon />
-  </template>
-  <template #annotator-action-color="{ color }">
-    <MyColorIcon :color="color" />
-  </template>
-  <template #annotator-action-draw="{ mode }">
-    <MyDrawIcon v-if="mode === 'draw'" />
-    <MyTextIcon v-else />
-  </template>
-  <template #annotator-action-undo="{ disabled }">
-    <MyUndoIcon />
-  </template>
-  <template #annotator-action-redo="{ disabled }">
-    <MyRedoIcon />
-  </template>
-  <template #annotator-action-delete="{ disabled }">
-    <MyDeleteIcon />
-  </template>
+    <template #annotator-action-close>
+        <MyCloseIcon />
+    </template>
+    <template #annotator-action-color="{ color }">
+        <MyColorIcon :color="color" />
+    </template>
+    <template #annotator-action-draw="{ mode }">
+        <MyDrawIcon v-if="mode === 'draw'" />
+        <MyTextIcon v-else />
+    </template>
+    <template #annotator-action-undo="{ disabled }">
+        <MyUndoIcon />
+    </template>
+    <template #annotator-action-redo="{ disabled }">
+        <MyRedoIcon />
+    </template>
+    <template #annotator-action-delete="{ disabled }">
+        <MyDeleteIcon />
+    </template>
 </VueUiXy>
 ```
 
@@ -956,8 +956,8 @@ To activate responsiveness, set the config.responsive attribute to true:
 
 ```js
 const config = ref({
-  responsive: true,
-  // rest of your config
+    responsive: true,
+    // rest of your config
 });
 ```
 
@@ -995,11 +995,11 @@ The content placed inside this slot has pointer-events set to none, so it does n
 
 ```html
 <VueUiXy :config="config" :dataset="dataset">
-  <template #chart-background>
-    <div
-      style="width: 100%; height: 100%; background: radial-gradient(at top left, red, white)"
-    />
-  </template>
+    <template #chart-background>
+        <div
+            style="width: 100%; height: 100%; background: radial-gradient(at top left, red, white)"
+        />
+    </template>
 </VueUiXy>
 ```
 
@@ -1028,18 +1028,18 @@ A pattern element must be used inside this slot. It will be injected inside a de
 
 ```html
 <VueUiDonut :config="config" :dataset="dataset">
-  <template #pattern="{ seriesIndex, patternId }">
-    <!-- Apply a pattern on the first datapoint only -->
-    <pattern
-      v-if="seriesIndex === 0"
-      :id="patternId"
-      viewBox="0,0,10,10"
-      width="10%"
-      height="10%"
-    >
-      <polygon points="0,0 2,5 0,10 5,8 10,10 8,5 10,0 5,2" />
-    </pattern>
-  </template>
+    <template #pattern="{ seriesIndex, patternId }">
+        <!-- Apply a pattern on the first datapoint only -->
+        <pattern
+            v-if="seriesIndex === 0"
+            :id="patternId"
+            viewBox="0,0,10,10"
+            width="10%"
+            height="10%"
+        >
+            <polygon points="0,0 2,5 0,10 5,8 10,10 8,5 10,0 5,2" />
+        </pattern>
+    </template>
 </VueUiDonut>
 ```
 
@@ -1061,15 +1061,15 @@ The #pattern slot is available on the following components:
 A set of 12 readymade patterns is available through the VueUiPattern component:
 
 ```js
-import { VueUiPattern } from "vue-data-ui";
+import { VueUiPattern } from 'vue-data-ui';
 ```
 
 ```html
 <VueUiDonut :dataset="dataset" :config="config">
-  <template #pattern="{ seriesIndex, patternId }">
-    <VueUiPattern :id="patternId" name="bubbles" v-if="seriesIndex === 0" />
-    <VueUiPattern :id="patternId" name="squares" v-if="seriesIndex === 1" />
-  </template>
+    <template #pattern="{ seriesIndex, patternId }">
+        <VueUiPattern :id="patternId" name="bubbles" v-if="seriesIndex === 0" />
+        <VueUiPattern :id="patternId" name="squares" v-if="seriesIndex === 1" />
+    </template>
 </VueUiDonut>
 ```
 
@@ -1105,68 +1105,68 @@ A set of utility functions is available:
 
 ```js
 import {
-  abbreviate,
-  darkenColor,
-  lightenColor,
-  shiftColorHue,
-  createTSpans,
-  getCumulativeAverage,
-  getCumulativeMedian,
-} from "vue-data-ui";
+    abbreviate,
+    darkenColor,
+    lightenColor,
+    shiftColorHue,
+    createTSpans,
+    getCumulativeAverage,
+    getCumulativeMedian,
+} from 'vue-data-ui';
 ```
 
 ### abreviate
 
 ```js
-import { abbreviate } from "vue-data-ui";
+import { abbreviate } from 'vue-data-ui';
 
-const text = "lorem ipsum dolor sit amet";
+const text = 'lorem ipsum dolor sit amet';
 const abbreviated = abbreviate({
-  source: text,
-  length: 5,
+    source: text,
+    length: 5,
 }); // Result: LIDSA
 ```
 
 ### darkenColor
 
 ```js
-import { darkenColor } from "vue-data-ui";
+import { darkenColor } from 'vue-data-ui';
 
-const color = "#FF0000";
+const color = '#FF0000';
 const darkened = darkenColor(color, 0.5); // Result: #800000ff
 ```
 
 ### lightenColor
 
 ```js
-import { lightenColor } from "vue-data-ui";
+import { lightenColor } from 'vue-data-ui';
 
-const color = "#FF0000";
+const color = '#FF0000';
 const lightened = lightenColor(color, 0.5); // Result: #ff8080ff
 ```
 
 ### shiftColorHue
 
 ```js
-import { shiftColorHue } from "vue-data-ui";
+import { shiftColorHue } from 'vue-data-ui';
 
 // Color format can be HEX (with or without alpha channel), RGB, RGBA, or named color
-const color = "#FF0000";
+const color = '#FF0000';
 const shifted = shiftColorHue(color, 0.1); // Result: #ff9900ff
 ```
 
 ### createTSpans
 
 ```js
-import { createTSpans } from "vue-data-ui";
+import { createTSpans } from 'vue-data-ui';
 
 const textContent = createTSpans({
-  content: "This is an example of multiline text",
-  fontSize: 16,
-  fill: "#1A1A1A",
-  maxWords: 3,
-  x: 10,
-  y: 20,
+    content: 'This is an example of multiline text',
+    fontSize: 16,
+    fill: '#1A1A1A',
+    maxWords: 3,
+    x: 10,
+    y: 20,
 });
 ```
 
@@ -1174,19 +1174,19 @@ const textContent = createTSpans({
 <!-- The output must be used inside a svg text element with `v-html`, for example in a #data-label slot, or in your own svg -->
 
 <text
-  :x="10"
-  :y="20"
-  fill="#1A1A1A"
-  :font-size="16"
-  text-anchor="middle"
-  v-html="textContent"
+    :x="10"
+    :y="20"
+    fill="#1A1A1A"
+    :font-size="16"
+    text-anchor="middle"
+    v-html="textContent"
 />
 ```
 
 ### getCumulativeAverage
 
 ```js
-import { getCumulativeAverage } from "vue-data-ui";
+import { getCumulativeAverage } from 'vue-data-ui';
 
 // simple usage
 const arr = [0, 1, 2, 3, 4];
@@ -1195,25 +1195,25 @@ const cumulativeAvg = getCumulativeAverage({ values: arr });
 // Ignore invalid values entirely
 const arrWithInvalid = [1, null, 2, Infinity, NaN, undefined];
 const cumulativeAvgNoInvalid = getCumulativeAverage({
-  values: arrWithInvalid,
-  config: {
-    keepInvalid: false,
-  },
+    values: arrWithInvalid,
+    config: {
+        keepInvalid: false,
+    },
 });
 
 // Convert invalid values to zero
 const cumulativeAvgZeroed = getCumulativeAverage({
-  values: arrWithInvalid,
-  config: {
-    convertInvalidToZero: true,
-  },
+    values: arrWithInvalid,
+    config: {
+        convertInvalidToZero: true,
+    },
 });
 ```
 
 ### getCumulativeMedian
 
 ```js
-import { getCumulativeMedian } from "vue-data-ui";
+import { getCumulativeMedian } from 'vue-data-ui';
 
 // simple usage
 const arr = [0, 1, 2, 3, 4];
@@ -1222,35 +1222,35 @@ const cumulativeMed = getCumulativeMedian({ values: arr });
 // Ignore invalid values entirely
 const arrWithInvalid = [1, null, 2, Infinity, NaN, undefined];
 const cumulativeMedNoInvalid = getCumulativeMedian({
-  values: arrWithInvalid,
-  config: {
-    keepInvalid: false,
-  },
+    values: arrWithInvalid,
+    config: {
+        keepInvalid: false,
+    },
 });
 
 // Convert invalid values to zero
 const cumulativeMedZeroed = getCumulativeMedian({
-  values: arrWithInvalid,
-  config: {
-    convertInvalidToZero: true,
-  },
+    values: arrWithInvalid,
+    config: {
+        convertInvalidToZero: true,
+    },
 });
 ```
 
 ### mergeConfigs
 
 ```js
-import { mergeConfigs, getVueDataUiConfig } from "vue-data-ui";
-const defaultConfig = getVueDataUiConfig("vue_ui_xy");
+import { mergeConfigs, getVueDataUiConfig } from 'vue-data-ui';
+const defaultConfig = getVueDataUiConfig('vue_ui_xy');
 
 // Create a full config with user overrides
 const merged = mergeConfigs({
-  defaultConfig,
-  userConfig: {
-    chart: {
-      backgroundColor: "#FF0000",
+    defaultConfig,
+    userConfig: {
+        chart: {
+            backgroundColor: '#FF0000',
+        },
     },
-  },
 });
 ```
 
@@ -1291,9 +1291,9 @@ A composable that **flattens** a reactive object into a set of refs (one for eac
 - **Dynamic path support**: New paths added at runtime are discovered automatically (and proxied), so you never lose reactivity when mutating the structure.
 
 ```js
-import { useObjectBindings, getVueDataUiConfig } from "vue-data-ui";
+import { useObjectBindings, getVueDataUiConfig } from 'vue-data-ui';
 
-const config = ref(getVueDataUiConfig("vue_ui_donut")); // or your custom config for this component
+const config = ref(getVueDataUiConfig('vue_ui_donut')); // or your custom config for this component
 
 const bindings = useObjectBindings(config);
 // Now `bindings` has computed refs for each leaf path:
@@ -1308,12 +1308,12 @@ You can then use these in your template:
 
 ```html
 <template>
-  <div>
-    <input
-      type="color"
-      v-model="bindings['style.chart.backgroundColor'].value"
-    />
-  </div>
+    <div>
+        <input
+            type="color"
+            v-model="bindings['style.chart.backgroundColor'].value"
+        />
+    </div>
 </template>
 ```
 
@@ -1327,10 +1327,10 @@ Most chart components expose the following methods:
 const componentRef = ref(null);
 
 onMounted(async () => {
-  if (componentRef) {
-    const data = await componentRef.value.getData();
-    console.log(data);
-  }
+    if (componentRef) {
+        const data = await componentRef.value.getData();
+        console.log(data);
+    }
 });
 ```
 
@@ -1340,11 +1340,11 @@ onMounted(async () => {
 const componentRef = ref(null);
 
 onMounted(async () => {
-  if (componentRef) {
-    const { imgUri, base64, title, width, height, aspectRatio } =
-      await componentRef.value.getImage({ scale: 2 }); // optional scale, defaults to 2, increase for better image quality
-    console.log(imageUri);
-  }
+    if (componentRef) {
+        const { imgUri, base64, title, width, height, aspectRatio } =
+            await componentRef.value.getImage({ scale: 2 }); // optional scale, defaults to 2, increase for better image quality
+        console.log(imageUri);
+    }
 });
 ```
 
@@ -1367,13 +1367,13 @@ Example:
 const chart = ref(null); // Add this ref on the chart component
 
 function showSeriesByName(name) {
-  if (!chart.value) return;
-  chart.value.showSeries(name);
+    if (!chart.value) return;
+    chart.value.showSeries(name);
 }
 
 function hideSeriesByName(name) {
-  if (!chart.value) return;
-  chart.value.hideSeries(name);
+    if (!chart.value) return;
+    chart.value.hideSeries(name);
 }
 ```
 
@@ -1410,14 +1410,14 @@ It is possible to configure the following translations, used in hidden hints for
 
 ```js
 const config = computed(() => ({
-  a11y: {
-    translations: {
-      keyboardNavigation:
-        "Use the left and right arrow keys to move between data points.",
-      tableAvailable: "A data table for this chart is available below.",
-      tableCaption: "Chart data table",
+    a11y: {
+        translations: {
+            keyboardNavigation:
+                'Use the left and right arrow keys to move between data points.',
+            tableAvailable: 'A data table for this chart is available below.',
+            tableCaption: 'Chart data table',
+        },
     },
-  },
 }));
 ```
 
@@ -1425,10 +1425,10 @@ A #hint scoped slot is available to display a navigation hint when the chart are
 
 ```html
 <VueUiXy :dataset :config>
-  <template #hint="{ hint, isVisible }">
-    <!-- Slot content is absolutely positoned below the chart area, but you can style it to adjust the position. -->
-    <p v-if="isVisible">{{ hint }}</p>
-  </template>
+    <template #hint="{ hint, isVisible }">
+        <!-- Slot content is absolutely positoned below the chart area, but you can style it to adjust the position. -->
+        <p v-if="isVisible">{{ hint }}</p>
+    </template>
 </VueUiXy>
 ```
 
@@ -1499,9 +1499,9 @@ A slot is available to customize the contents of the button:
 
 ```html
 <VueUiXy :dataset="dataset" :config="config">
-  <template #optionAltCopy>
-    <MyAccessibilityIcon />
-  </template>
+    <template #optionAltCopy>
+        <MyAccessibilityIcon />
+    </template>
 </VueUiXy>
 ```
 
@@ -1512,6 +1512,6 @@ To have a cursor pointer on these elements, you have to opt-in through the confi
 
 ```js
 const config = computed(() => ({
-  useCursorPointer: true, // false by default
+    useCursorPointer: true, // false by default
 }));
 ```

@@ -1,4 +1,4 @@
-import { expect, test, describe } from "vitest";
+import { expect, test, describe } from 'vitest';
 
 import {
     calcMaxAspectRatio,
@@ -13,23 +13,23 @@ import {
     rectToContainer,
     squarify,
     trimArea,
-} from "../src/treemap"
+} from '../src/treemap';
 
 describe('calcMaxAspectRatio', () => {
     test('calculates max aspect ratio from a row array and a length', () => {
         const row = [
             {
                 normalizedValue: 0.25,
-                value: 1
+                value: 1,
             },
             {
                 normalizedValue: 0.5,
-                value: 2
+                value: 2,
             },
             {
                 normalizedValue: 0.75,
-                value: 3
-            }
+                value: 3,
+            },
         ];
         const len = 9;
         expect(calcMaxAspectRatio(row, len)).toBe(27);
@@ -42,13 +42,13 @@ describe('containerToRect', () => {
             xOffset: 1,
             yOffset: 2,
             width: 3,
-            height: 4
+            height: 4,
         };
         expect(containerToRect(container)).toStrictEqual({
             x0: 1,
             x1: 4,
             y0: 2,
-            y1: 6
+            y1: 6,
         });
     });
 });
@@ -58,34 +58,38 @@ describe('doesAddingToRowImproveAspectRatio', () => {
         const currentRow = [
             {
                 normalizedValue: 0.25,
-                value: 1
+                value: 1,
             },
             {
                 normalizedValue: 0.5,
-                value: 2
+                value: 2,
             },
             {
                 normalizedValue: 0.75,
-                value: 3
-            }
+                value: 3,
+            },
         ];
         const nextRow = [
             {
                 normalizedValue: 0.25,
-                value: 1
+                value: 1,
             },
             {
                 normalizedValue: 0.5,
-                value: 2
+                value: 2,
             },
             {
                 normalizedValue: 0.75,
-                value: 3
-            }
+                value: 3,
+            },
         ];
 
-        expect(doesAddingToRowImproveAspectRatio(currentRow, nextRow, 9)).toBe(true)
-        expect(doesAddingToRowImproveAspectRatio(currentRow, nextRow, 1)).toBe(false)
+        expect(doesAddingToRowImproveAspectRatio(currentRow, nextRow, 9)).toBe(
+            true,
+        );
+        expect(doesAddingToRowImproveAspectRatio(currentRow, nextRow, 1)).toBe(
+            false,
+        );
     });
 });
 
@@ -102,23 +106,23 @@ describe('generateTreemap', () => {
                         children: [
                             {
                                 name: 'P1 C1 C1',
-                                value: 10
+                                value: 10,
                             },
                             {
                                 name: 'P1 C1 C2',
-                                value: 10
-                            }
-                        ]
+                                value: 10,
+                            },
+                        ],
                     },
                     {
                         name: 'P1 C2',
-                        value: 30
+                        value: 30,
                     },
                     {
                         name: 'P1 C3',
-                        value: 50
-                    }
-                ]
+                        value: 50,
+                    },
+                ],
             },
             {
                 name: 'PARENT 2',
@@ -130,17 +134,17 @@ describe('generateTreemap', () => {
                     },
                     {
                         name: 'PZ C2',
-                        value: 25
-                    }
-                ]
-            }
+                        value: 25,
+                    },
+                ],
+            },
         ];
 
         const container = {
             x0: 0,
             y0: 0,
             x1: 128,
-            y1: 64
+            y1: 64,
         };
 
         expect(generateTreemap(dataset, container)).toStrictEqual([
@@ -151,7 +155,7 @@ describe('generateTreemap', () => {
                 x0: 0,
                 y0: 0,
                 x1: 21.333333333333336,
-                y1: 25.599999999999998
+                y1: 25.599999999999998,
             },
             {
                 name: 'P1 C1 C2',
@@ -160,7 +164,7 @@ describe('generateTreemap', () => {
                 x0: 21.333333333333336,
                 y0: 0,
                 x1: 42.66666666666667,
-                y1: 25.599999999999998
+                y1: 25.599999999999998,
             },
             {
                 name: 'P1 C2',
@@ -169,7 +173,7 @@ describe('generateTreemap', () => {
                 x0: 0,
                 y0: 25.599999999999998,
                 x1: 42.66666666666667,
-                y1: 64
+                y1: 64,
             },
             {
                 name: 'P1 C3',
@@ -178,7 +182,7 @@ describe('generateTreemap', () => {
                 x0: 42.66666666666667,
                 y0: 0,
                 x1: 85.33333333333334,
-                y1: 64
+                y1: 64,
             },
             {
                 name: 'P2 C1',
@@ -187,7 +191,7 @@ describe('generateTreemap', () => {
                 x0: 85.33333333333334,
                 y0: 0,
                 x1: 128,
-                y1: 32.000000000000014
+                y1: 32.000000000000014,
             },
             {
                 name: 'PZ C2',
@@ -196,8 +200,8 @@ describe('generateTreemap', () => {
                 x0: 85.33333333333334,
                 y0: 32.000000000000014,
                 x1: 128,
-                y1: 64.00000000000003
-            }
+                y1: 64.00000000000003,
+            },
         ]);
     });
 });
@@ -208,7 +212,7 @@ describe('getArea', () => {
             x0: 0,
             x1: 10,
             y0: 0,
-            y1: 10
+            y1: 10,
         };
         expect(getArea(rect)).toBe(100);
     });
@@ -219,22 +223,22 @@ describe('getCoordinates', () => {
         const row = [
             {
                 normalizedValue: 0.25,
-                value: 1
+                value: 1,
             },
             {
                 normalizedValue: 0.5,
-                value: 2
+                value: 2,
             },
             {
                 normalizedValue: 0.75,
-                value: 3
-            }
+                value: 3,
+            },
         ];
         const rect = {
             x0: 0,
             x1: 10,
             y0: 0,
-            y1: 10
+            y1: 10,
         };
 
         expect(getCoordinates(row, rect)).toStrictEqual([
@@ -252,7 +256,7 @@ describe('getCoordinates', () => {
                 x0: 0,
                 x1: 0.15,
                 y0: 1.6666666666666667,
-                y1: 5
+                y1: 5,
             },
             {
                 normalizedValue: 0.75,
@@ -260,11 +264,11 @@ describe('getCoordinates', () => {
                 x0: 0,
                 x1: 0.15,
                 y0: 5,
-                y1: 10
-            }
-        ])
-    })
-})
+                y1: 10,
+            },
+        ]);
+    });
+});
 
 describe('rectToContainer', () => {
     test('converts a rect format to a container format', () => {
@@ -272,13 +276,13 @@ describe('rectToContainer', () => {
             x0: 1,
             x1: 2,
             y0: 3,
-            y1: 4
+            y1: 4,
         };
         expect(rectToContainer(rect)).toStrictEqual({
             height: 1,
             width: 1,
             xOffset: 1,
-            yOffset: 3
+            yOffset: 3,
         });
     });
 });
@@ -288,24 +292,22 @@ describe('flatten', () => {
         const matrix = [
             [1, 2],
             [3, 4],
-            [5, 6]
+            [5, 6],
         ];
         const objectMatrix = [
-            [
-                { a: 1 },
-                { a: 2 }
-            ],
-            [
-                { a: 3 },
-                { a: 4 }
-            ],
-            [
-                { a: 5 },
-                { a: 6 }
-            ]
+            [{ a: 1 }, { a: 2 }],
+            [{ a: 3 }, { a: 4 }],
+            [{ a: 5 }, { a: 6 }],
         ];
         expect(flatten(matrix)).toStrictEqual([1, 2, 3, 4, 5, 6]);
-        expect(flatten(objectMatrix)).toStrictEqual([{ a: 1 }, { a: 2 }, { a: 3 }, { a: 4 }, { a: 5 }, { a: 6 }])
+        expect(flatten(objectMatrix)).toStrictEqual([
+            { a: 1 },
+            { a: 2 },
+            { a: 3 },
+            { a: 4 },
+            { a: 5 },
+            { a: 6 },
+        ]);
     });
 });
 
@@ -315,7 +317,7 @@ describe('getShortestEdge', () => {
             x0: 1,
             x1: 2,
             y0: 3,
-            y1: 4
+            y1: 4,
         };
 
         expect(getShortestEdge(rect0)).toBe(1);
@@ -324,7 +326,7 @@ describe('getShortestEdge', () => {
             x0: 2,
             x1: 2,
             y0: 3,
-            y1: 4
+            y1: 4,
         };
 
         expect(getShortestEdge(rect1)).toBe(0);
@@ -333,7 +335,7 @@ describe('getShortestEdge', () => {
             x0: 2,
             x1: 3,
             y0: 1,
-            y1: 1
+            y1: 1,
         };
 
         expect(getShortestEdge(rect2)).toBe(0);
@@ -342,7 +344,7 @@ describe('getShortestEdge', () => {
             x0: 1,
             x1: 2,
             y0: 1,
-            y1: 2
+            y1: 2,
         };
 
         expect(getShortestEdge(rect3)).toBe(1);
@@ -357,16 +359,16 @@ describe('normalize', () => {
         expect(normalize(data, val)).toStrictEqual([
             {
                 normalizedValue: 0.25,
-                value: 1
+                value: 1,
             },
             {
                 normalizedValue: 0.5,
-                value: 2
+                value: 2,
             },
             {
                 normalizedValue: 0.75,
-                value: 3
-            }
+                value: 3,
+            },
         ]);
     });
 });
@@ -377,13 +379,13 @@ describe('rectToContainer <=> containerToRect', () => {
             xOffset: 1,
             yOffset: 2,
             width: 3,
-            height: 4
+            height: 4,
         };
         expect(rectToContainer(containerToRect(container))).toStrictEqual({
             height: 4,
             width: 3,
             xOffset: 1,
-            yOffset: 2
+            yOffset: 2,
         });
     });
 });
@@ -395,10 +397,10 @@ describe('squarify', () => {
                 name: 'P1 C1',
                 value: 20,
                 children: [],
-                normalizedValue: 1092.2666666666667
+                normalizedValue: 1092.2666666666667,
             },
             { name: 'P1 C2', value: 30, normalizedValue: 1638.4 },
-            { name: 'P1 C3', value: 50, normalizedValue: 2730.666666666667 }
+            { name: 'P1 C3', value: 50, normalizedValue: 2730.666666666667 },
         ];
 
         const datum = {
@@ -409,7 +411,7 @@ describe('squarify', () => {
             x0: 0,
             y0: 0,
             x1: 85.33333333333334,
-            y1: 64
+            y1: 64,
         };
 
         expect(squarify(normalizedChildren, [], datum, [])).toStrictEqual([
@@ -421,7 +423,7 @@ describe('squarify', () => {
                 x0: 0,
                 y0: 0,
                 x1: 42.66666666666667,
-                y1: 25.599999999999998
+                y1: 25.599999999999998,
             },
             {
                 name: 'P1 C2',
@@ -430,7 +432,7 @@ describe('squarify', () => {
                 x0: 0,
                 y0: 25.599999999999998,
                 x1: 42.66666666666667,
-                y1: 64
+                y1: 64,
             },
             {
                 name: 'P1 C3',
@@ -439,8 +441,8 @@ describe('squarify', () => {
                 x0: 42.66666666666667,
                 y0: 0,
                 x1: 85.33333333333334,
-                y1: 64
-            }
+                y1: 64,
+            },
         ]);
     });
 });
@@ -451,26 +453,26 @@ describe('trimArea', () => {
             x0: 10,
             x1: 20,
             y0: 0,
-            y1: 40
+            y1: 40,
         };
         const trimmer = 10;
         expect(trimArea(rect0, trimmer)).toStrictEqual({
             x0: 10,
             x1: 20,
             y0: trimmer / 10 + rect0.y0,
-            y1: 40
+            y1: 40,
         });
         const rect1 = {
             x0: 10,
             x1: 20,
             y0: 5,
-            y1: 40
+            y1: 40,
         };
         expect(trimArea(rect1, trimmer)).toStrictEqual({
             x0: 10,
             x1: 20,
             y0: trimmer / 10 + rect1.y0,
-            y1: 40
+            y1: 40,
         });
     });
 });

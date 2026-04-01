@@ -1,4 +1,4 @@
-import { addDummyNode } from "./util.js";
+import { addDummyNode } from './util.js';
 
 export default function addBorderSegments(graph) {
     function depthFirstSearch(nodeId) {
@@ -9,13 +9,17 @@ export default function addBorderSegments(graph) {
             children.forEach(depthFirstSearch);
         }
 
-        if (Object.hasOwn(node, "minRank")) {
+        if (Object.hasOwn(node, 'minRank')) {
             node.borderLeft = [];
             node.borderRight = [];
 
-            for (let rank = node.minRank, maximumRank = node.maxRank + 1; rank < maximumRank; ++rank) {
-                addBorderNode(graph, "borderLeft", "_bl", nodeId, node, rank);
-                addBorderNode(graph, "borderRight", "_br", nodeId, node, rank);
+            for (
+                let rank = node.minRank, maximumRank = node.maxRank + 1;
+                rank < maximumRank;
+                ++rank
+            ) {
+                addBorderNode(graph, 'borderLeft', '_bl', nodeId, node, rank);
+                addBorderNode(graph, 'borderRight', '_br', nodeId, node, rank);
             }
         }
     }
@@ -23,7 +27,14 @@ export default function addBorderSegments(graph) {
     graph.children().forEach(depthFirstSearch);
 }
 
-function addBorderNode(graph, propertyName, prefix, subgraphId, subgraphNode, rank) {
+function addBorderNode(
+    graph,
+    propertyName,
+    prefix,
+    subgraphId,
+    subgraphNode,
+    rank,
+) {
     const label = {
         width: 0,
         height: 0,
@@ -32,7 +43,7 @@ function addBorderNode(graph, propertyName, prefix, subgraphId, subgraphNode, ra
     };
 
     const previousNodeId = subgraphNode[propertyName][rank - 1];
-    const currentNodeId = addDummyNode(graph, "border", label, prefix);
+    const currentNodeId = addDummyNode(graph, 'border', label, prefix);
 
     subgraphNode[propertyName][rank] = currentNodeId;
     graph.setParent(currentNodeId, subgraphId);

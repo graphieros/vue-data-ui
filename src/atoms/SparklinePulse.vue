@@ -1,5 +1,5 @@
 <script setup>
-import { computed, watch, nextTick, onBeforeUnmount } from "vue";
+import { computed, watch, nextTick, onBeforeUnmount } from 'vue';
 
 const props = defineProps({
     uid: { type: String, required: true },
@@ -36,9 +36,12 @@ function hardStopSmil() {
     const svgElement = props.svgRef?.value;
     if (!svgElement) return;
 
-    if (typeof svgElement.pauseAnimations === "function") svgElement.pauseAnimations();
-    if (typeof svgElement.setCurrentTime === "function") svgElement.setCurrentTime(0);
-    if (typeof svgElement.unpauseAnimations === "function") svgElement.unpauseAnimations();
+    if (typeof svgElement.pauseAnimations === 'function')
+        svgElement.pauseAnimations();
+    if (typeof svgElement.setCurrentTime === 'function')
+        svgElement.setCurrentTime(0);
+    if (typeof svgElement.unpauseAnimations === 'function')
+        svgElement.unpauseAnimations();
 }
 
 function addDelay(duration, delay) {
@@ -72,7 +75,7 @@ watch(
         }
         await nextTick();
         hardStopSmil();
-    }
+    },
 );
 
 watch(
@@ -80,7 +83,7 @@ watch(
     async () => {
         await nextTick();
         hardStopSmil();
-    }
+    },
 );
 
 onBeforeUnmount(() => {
@@ -94,46 +97,62 @@ onBeforeUnmount(() => {
         <template v-for="(_, i) in TRAIL_LENGTH">
             <circle
                 v-if="i % 3 === 0 /* perf optimization */"
-                :key="`sparkline_dot_${i}_${pulsePathId}`" 
-                :r="getRadius(i)" 
+                :key="`sparkline_dot_${i}_${pulsePathId}`"
+                :r="getRadius(i)"
                 :fill="pulse.color"
-                :filter="`url(#sparkline_pulse_glow_${uid})`" 
+                :filter="`url(#sparkline_pulse_glow_${uid})`"
                 opacity="0"
             >
-                <animateMotion 
-                    :begin="addDelay(pulseBegin, i * 10)" 
-                    :dur="pulseDur" 
-                    :repeatCount="pulseRepeatCount" 
+                <animateMotion
+                    :begin="addDelay(pulseBegin, i * 10)"
+                    :dur="pulseDur"
+                    :repeatCount="pulseRepeatCount"
                     :fill="pulseFillMode"
-                    :calcMode="pulseMotion.calcMode" 
+                    :calcMode="pulseMotion.calcMode"
                     :keySplines="pulseMotion.keySplines || undefined"
-                    :keyTimes="pulseMotion.keyTimes || undefined" 
-                    :keyPoints="pulseKeyPoints" 
+                    :keyTimes="pulseMotion.keyTimes || undefined"
+                    :keyPoints="pulseKeyPoints"
                     rotate="auto"
                 >
                     <mpath :href="`#${pulsePathId}`" />
                 </animateMotion>
-                <animate 
-                    attributeName="opacity" 
-                    :dur="pulseDur" 
-                    :repeatCount="pulseRepeatCount" 
+                <animate
+                    attributeName="opacity"
+                    :dur="pulseDur"
+                    :repeatCount="pulseRepeatCount"
                     :fill="pulseFillMode"
-                    :values="getAnimateOpacityValues(i)" 
-                    keyTimes="0;0.1;0.9;1" 
+                    :values="getAnimateOpacityValues(i)"
+                    keyTimes="0;0.1;0.9;1"
                 />
             </circle>
         </template>
 
         <!-- HALO -->
-        <circle :key="`sparkline_halo_${pulsePathId}`" :r="Math.max(pulse.radius * 1.3)" :fill="pulse.color"
-            opacity="0">
-            <animateMotion :begin="pulseBegin" :dur="pulseDur" :repeatCount="pulseRepeatCount"
-                :calcMode="pulseMotion.calcMode" :keySplines="pulseMotion.keySplines || undefined"
-                :keyTimes="pulseMotion.keyTimes || undefined" :keyPoints="pulseKeyPoints" rotate="auto">
+        <circle
+            :key="`sparkline_halo_${pulsePathId}`"
+            :r="Math.max(pulse.radius * 1.3)"
+            :fill="pulse.color"
+            opacity="0"
+        >
+            <animateMotion
+                :begin="pulseBegin"
+                :dur="pulseDur"
+                :repeatCount="pulseRepeatCount"
+                :calcMode="pulseMotion.calcMode"
+                :keySplines="pulseMotion.keySplines || undefined"
+                :keyTimes="pulseMotion.keyTimes || undefined"
+                :keyPoints="pulseKeyPoints"
+                rotate="auto"
+            >
                 <mpath :href="`#${pulsePathId}`" />
             </animateMotion>
-            <animate attributeName="opacity" values="0;0.35;0.35;0" keyTimes="0;0.15;0.85;1" :dur="pulseDur"
-                :repeatCount="pulseRepeatCount" />
+            <animate
+                attributeName="opacity"
+                values="0;0.35;0.35;0"
+                keyTimes="0;0.15;0.85;1"
+                :dur="pulseDur"
+                :repeatCount="pulseRepeatCount"
+            />
         </circle>
     </g>
 </template>

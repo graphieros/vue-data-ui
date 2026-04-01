@@ -1,30 +1,23 @@
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted } from 'vue';
 import LocalVueUiChord from '../src/components/vue-ui-chord.vue';
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
-import Box from "./Box.vue";
-import convertArrayToObject from "./convertModel";
-import { useArena } from "../src/useArena";
+import Box from './Box.vue';
+import convertArrayToObject from './convertModel';
+import { useArena } from '../src/useArena';
 
-import { VueUiChord } from "vue-data-ui";
-import { VueUiChord as VueUiChordTreeshaken } from "vue-data-ui/vue-ui-chord"
-import ConfigKnobs from "./ConfigKnobs.vue";
-import { useConfigurationControls } from "./createConfigModel";
-import { useConfig } from "../src/useConfig"
-import useThemeOptions from "./useThemeOptions";
+import { VueUiChord } from 'vue-data-ui';
+import { VueUiChord as VueUiChordTreeshaken } from 'vue-data-ui/vue-ui-chord';
+import ConfigKnobs from './ConfigKnobs.vue';
+import { useConfigurationControls } from './createConfigModel';
+import { useConfig } from '../src/useConfig';
+import useThemeOptions from './useThemeOptions';
 
 const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena();
 const { vue_ui_chord: DEFAULT_CONFIG } = useConfig();
 
-const {
-    CHECKBOX,
-    NUMBER,
-    RANGE,
-    TEXT,
-    COLOR,
-    SELECT,
-    createModel
-} = useConfigurationControls(DEFAULT_CONFIG);
+const { CHECKBOX, NUMBER, RANGE, TEXT, COLOR, SELECT, createModel } =
+    useConfigurationControls(DEFAULT_CONFIG);
 
 const dataset = ref(undefined);
 
@@ -32,23 +25,28 @@ onMounted(() => {
     setTimeout(() => {
         dataset.value = {
             matrix: [
-                [ 12000, 2000, 9000, 3000],
-                [ 1000, 10000, 2000, 6001], 
-                [ 2000, 1600, 8000, 8001], 
-                [ 1000, 1000, 1000, 7001]  
+                [12000, 2000, 9000, 3000],
+                [1000, 10000, 2000, 6001],
+                [2000, 1600, 8000, 8001],
+                [1000, 1000, 1000, 7001],
             ],
-            labels: ['Group A', 'Group B with a long name', 'Group C', 'Group D'],
-            colors: []
-        }
-    }, 0)
+            labels: [
+                'Group A',
+                'Group B with a long name',
+                'Group C',
+                'Group D',
+            ],
+            colors: [],
+        };
+    }, 0);
 
     // Test dataset reactivity and skeleton loader behavior
     // setTimeout(() => {
     //     dataset.value = {
     //         matrix: [
     //             [ 12000, 2000, 9000],
-    //             [ 1000, 10000, 2000], 
-    //             [ 2000, 1600], 
+    //             [ 1000, 10000, 2000],
+    //             [ 2000, 1600],
     //         ],
     //         labels: ['Group A', 'Group B with a long name', 'Group C'],
     //         colors: []
@@ -59,9 +57,9 @@ onMounted(() => {
     //     dataset.value = {
     //         matrix: [
     //             [ 12000, 2000, 9000, 3000],
-    //             [ 1000, 10000, 2000, 6001], 
-    //             [ 2000, 1600, 8000, 8001], 
-    //             [ 1000, 1000, 1000, 7001]  
+    //             [ 1000, 10000, 2000, 6001],
+    //             [ 2000, 1600, 8000, 8001],
+    //             [ 1000, 1000, 1000, 7001]
     //         ],
     //         labels: ['Group A', 'Group B with a long name', 'Group C', 'Group D'],
     //         colors: []
@@ -70,75 +68,148 @@ onMounted(() => {
 });
 
 const model = createModel([
-    CHECKBOX("debug", { def: true }),
-    CHECKBOX("loading", { def: false }),
-    CHECKBOX("responsive", { def: false }),
-    CHECKBOX("enableRotation", { def: true }),
-    NUMBER("initialRotation", { def: 0, min: 0, max: 360 }),
-    CHECKBOX("useCssAnimation", { def: true }),
+    CHECKBOX('debug', { def: true }),
+    CHECKBOX('loading', { def: false }),
+    CHECKBOX('responsive', { def: false }),
+    CHECKBOX('enableRotation', { def: true }),
+    NUMBER('initialRotation', { def: 0, min: 0, max: 360 }),
+    CHECKBOX('useCssAnimation', { def: true }),
     CHECKBOX('userOptions.useCursorPointer', { def: false }),
 
-    TEXT("style.chart.title.text", { def: "Title", label: "textContent", category: "title" }),
-    COLOR("style.chart.title.color", { def: "#1A1A1A", label: "textColor", category: "title" }),
-    NUMBER("style.chart.title.fontSize", { def: 20, min: 6, max: 48, label: "fontSize", category: "title" }),
-    CHECKBOX("style.chart.title.bold", { def: true, label: "bold", category: "title" }),
-    SELECT("style.chart.title.textAlign", ["left", "center", "right"], { def: "center" }),
-    NUMBER("style.chart.title.paddingLeft", { def: 0, min: 0, max: 24 }),
-    NUMBER("style.chart.title.paddingRight", { def: 0, min: 0, max: 24 }),
-    TEXT("style.chart.title.subtitle.text", { def: "Lorem ipsum dolor sit amet", label: "textContent", category: "subtitle" }),
-    COLOR("style.chart.title.subtitle.color", { def: "#A1A1A1", label: "textColor", category: "subtitle" }),
-    NUMBER("style.chart.title.subtitle.fontSize", { def: 16, min: 6, max: 42, label: "fontSize", category: "subtitle" }),
-    CHECKBOX("style.chart.title.subtitle.bold", { def: false, label: "bold", category: "subtitle" }),
-    COLOR("style.chart.backgroundColor", { def: "#FFFFFF" }),
-    COLOR("style.chart.color", { def: "#1A1A1A" }),
-    CHECKBOX("style.chart.legend.show", { def: true }),
-    COLOR("style.chart.legend.backgroundColor", { def: "#FFFFFF" }),
-    COLOR("style.chart.legend.color", { def: "#1A1A1A" }),
-    NUMBER("style.chart.legend.fontSize", { def: 14, min: 8, max: 42 }),
-    CHECKBOX("style.chart.legend.bold", { def: false }),
-    SELECT("style.chart.legend.position", ["top", "bottom"], { def: "bottom" }),
-    NUMBER("style.chart.arcs.innerRadiusRatio", { def: 1, min: 0.1, max: 1.5, step: 0.1 }),
-    NUMBER("style.chart.arcs.outerRadiusRatio", { def: 1, min: 0.1, max: 1.5, step: 0.1 }),
-    NUMBER("style.chart.arcs.padAngle", { def: 5, min: 0, max: 48 }),
-    COLOR("style.chart.arcs.stroke", { def: "#FFFFFF" }),
-    NUMBER("style.chart.arcs.strokeWidth", { def: 1, min: 1, max: 12 }),
-    CHECKBOX("style.chart.arcs.labels.show", { def: true }),
-    NUMBER("style.chart.arcs.labels.fontSize", { def: 14, min: 8, max: 42 }),
-    CHECKBOX("style.chart.arcs.labels.bold", { def: false }),
-    CHECKBOX("style.chart.arcs.labels.curved", { def: false }),
-    CHECKBOX("style.chart.arcs.labels.adaptColorToBackground", { def: true }),
-    COLOR("style.chart.arcs.labels.color", { def: "#1A1A1A" }),
-    NUMBER("style.chart.arcs.labels.offset", { def: 0, min: -100, max: 100 }),
-    COLOR("style.chart.ribbons.stroke", { def: "#FFFFFF" }),
-    NUMBER("style.chart.ribbons.strokeWidth", { def: 1, min: 0, max: 12 }),
-    RANGE("style.chart.ribbons.underlayerOpacity", { def: 1, min: 0, max: 1, step: 0.01 }),
-    CHECKBOX("style.chart.ribbons.labels.show", { def: true }),
-    TEXT("style.chart.ribbons.labels.prefix", { def: "P" }),
-    TEXT("style.chart.ribbons.labels.suffix", { def: "S" }),
-    NUMBER("style.chart.ribbons.labels.rounding", { def: 0, min: 0, max: 6 }),
-    NUMBER("style.chart.ribbons.labels.fontSize", { def: 14, min: 8, max: 42 }),
-    CHECKBOX("style.chart.ribbons.labels.bold", { def: false }),
-    CHECKBOX("style.chart.ribbons.labels.useSerieColor", { def: false }),
-    COLOR("style.chart.ribbons.labels.color", { def: "#1A1A1A" }),
-    NUMBER("style.chart.ribbons.labels.offset", { def: 0, min: -100, max: 100 }),
-    NUMBER("style.chart.ribbons.labels.minSeparationDeg", { def: 3, min: 0, max: 24 }),
-    COLOR("style.chart.ribbons.labels.connector.stroke", { def: "#1A1A1A" }),
-    NUMBER("style.chart.ribbons.labels.connector.strokeWidth", { def: 1, min: 0, max: 12 }),
-    CHECKBOX("style.chart.ribbons.labels.marker.show", { def: true }),
-    NUMBER("style.chart.ribbons.labels.marker.radius", { def: 3, min: 0, max: 12 }),
-    COLOR("style.chart.ribbons.labels.marker.stroke", { def: "#FFFFFF" }),
-    NUMBER("style.chart.ribbons.labels.marker.strokeWidth", { def: 1, min: 0, max: 12 }),
-    CHECKBOX("table.show", { def: false }),
-    CHECKBOX("table.useDialog", { def: true })
+    TEXT('style.chart.title.text', {
+        def: 'Title',
+        label: 'textContent',
+        category: 'title',
+    }),
+    COLOR('style.chart.title.color', {
+        def: '#1A1A1A',
+        label: 'textColor',
+        category: 'title',
+    }),
+    NUMBER('style.chart.title.fontSize', {
+        def: 20,
+        min: 6,
+        max: 48,
+        label: 'fontSize',
+        category: 'title',
+    }),
+    CHECKBOX('style.chart.title.bold', {
+        def: true,
+        label: 'bold',
+        category: 'title',
+    }),
+    SELECT('style.chart.title.textAlign', ['left', 'center', 'right'], {
+        def: 'center',
+    }),
+    NUMBER('style.chart.title.paddingLeft', { def: 0, min: 0, max: 24 }),
+    NUMBER('style.chart.title.paddingRight', { def: 0, min: 0, max: 24 }),
+    TEXT('style.chart.title.subtitle.text', {
+        def: 'Lorem ipsum dolor sit amet',
+        label: 'textContent',
+        category: 'subtitle',
+    }),
+    COLOR('style.chart.title.subtitle.color', {
+        def: '#A1A1A1',
+        label: 'textColor',
+        category: 'subtitle',
+    }),
+    NUMBER('style.chart.title.subtitle.fontSize', {
+        def: 16,
+        min: 6,
+        max: 42,
+        label: 'fontSize',
+        category: 'subtitle',
+    }),
+    CHECKBOX('style.chart.title.subtitle.bold', {
+        def: false,
+        label: 'bold',
+        category: 'subtitle',
+    }),
+    COLOR('style.chart.backgroundColor', { def: '#FFFFFF' }),
+    COLOR('style.chart.color', { def: '#1A1A1A' }),
+    CHECKBOX('style.chart.legend.show', { def: true }),
+    COLOR('style.chart.legend.backgroundColor', { def: '#FFFFFF' }),
+    COLOR('style.chart.legend.color', { def: '#1A1A1A' }),
+    NUMBER('style.chart.legend.fontSize', { def: 14, min: 8, max: 42 }),
+    CHECKBOX('style.chart.legend.bold', { def: false }),
+    SELECT('style.chart.legend.position', ['top', 'bottom'], { def: 'bottom' }),
+    NUMBER('style.chart.arcs.innerRadiusRatio', {
+        def: 1,
+        min: 0.1,
+        max: 1.5,
+        step: 0.1,
+    }),
+    NUMBER('style.chart.arcs.outerRadiusRatio', {
+        def: 1,
+        min: 0.1,
+        max: 1.5,
+        step: 0.1,
+    }),
+    NUMBER('style.chart.arcs.padAngle', { def: 5, min: 0, max: 48 }),
+    COLOR('style.chart.arcs.stroke', { def: '#FFFFFF' }),
+    NUMBER('style.chart.arcs.strokeWidth', { def: 1, min: 1, max: 12 }),
+    CHECKBOX('style.chart.arcs.labels.show', { def: true }),
+    NUMBER('style.chart.arcs.labels.fontSize', { def: 14, min: 8, max: 42 }),
+    CHECKBOX('style.chart.arcs.labels.bold', { def: false }),
+    CHECKBOX('style.chart.arcs.labels.curved', { def: false }),
+    CHECKBOX('style.chart.arcs.labels.adaptColorToBackground', { def: true }),
+    COLOR('style.chart.arcs.labels.color', { def: '#1A1A1A' }),
+    NUMBER('style.chart.arcs.labels.offset', { def: 0, min: -100, max: 100 }),
+    COLOR('style.chart.ribbons.stroke', { def: '#FFFFFF' }),
+    NUMBER('style.chart.ribbons.strokeWidth', { def: 1, min: 0, max: 12 }),
+    RANGE('style.chart.ribbons.underlayerOpacity', {
+        def: 1,
+        min: 0,
+        max: 1,
+        step: 0.01,
+    }),
+    CHECKBOX('style.chart.ribbons.labels.show', { def: true }),
+    TEXT('style.chart.ribbons.labels.prefix', { def: 'P' }),
+    TEXT('style.chart.ribbons.labels.suffix', { def: 'S' }),
+    NUMBER('style.chart.ribbons.labels.rounding', { def: 0, min: 0, max: 6 }),
+    NUMBER('style.chart.ribbons.labels.fontSize', { def: 14, min: 8, max: 42 }),
+    CHECKBOX('style.chart.ribbons.labels.bold', { def: false }),
+    CHECKBOX('style.chart.ribbons.labels.useSerieColor', { def: false }),
+    COLOR('style.chart.ribbons.labels.color', { def: '#1A1A1A' }),
+    NUMBER('style.chart.ribbons.labels.offset', {
+        def: 0,
+        min: -100,
+        max: 100,
+    }),
+    NUMBER('style.chart.ribbons.labels.minSeparationDeg', {
+        def: 3,
+        min: 0,
+        max: 24,
+    }),
+    COLOR('style.chart.ribbons.labels.connector.stroke', { def: '#1A1A1A' }),
+    NUMBER('style.chart.ribbons.labels.connector.strokeWidth', {
+        def: 1,
+        min: 0,
+        max: 12,
+    }),
+    CHECKBOX('style.chart.ribbons.labels.marker.show', { def: true }),
+    NUMBER('style.chart.ribbons.labels.marker.radius', {
+        def: 3,
+        min: 0,
+        max: 12,
+    }),
+    COLOR('style.chart.ribbons.labels.marker.stroke', { def: '#FFFFFF' }),
+    NUMBER('style.chart.ribbons.labels.marker.strokeWidth', {
+        def: 1,
+        min: 0,
+        max: 12,
+    }),
+    CHECKBOX('table.show', { def: false }),
+    CHECKBOX('table.useDialog', { def: true }),
 ]);
 
 const { themeOptions, currentTheme } = useThemeOptions();
 
 const configTheme = computed(() => ({
     theme: currentTheme.value,
-}))
+}));
 
-const config = computed(()=> {
+const config = computed(() => {
     const c = convertArrayToObject(model.value);
     return {
         ...c,
@@ -146,70 +217,75 @@ const config = computed(()=> {
             ...c.userOptions,
             buttons: {
                 ...c.userOptions.buttons,
-                altCopy: true
+                altCopy: true,
             },
             callbacks: {
-                altCopy: console.log
-            }
+                altCopy: console.log,
+            },
         },
         skeletonConfig: {
             style: {
                 chart: {
-                    backgroundColor: '#FF0000'
-                }
-            }
+                    backgroundColor: '#FF0000',
+                },
+            },
         },
         events: {
             datapointEnter: ({ datapoint, seriesIndex }) => {
-                console.log('enter event', { datapoint, seriesIndex })
+                console.log('enter event', { datapoint, seriesIndex });
             },
             datapointLeave: ({ datapoint, seriesIndex }) => {
-                console.log('leave event', { datapoint, seriesIndex })
+                console.log('leave event', { datapoint, seriesIndex });
             },
             datapointClick: ({ datapoint, seriesIndex }) => {
-                console.log('click event', { datapoint, seriesIndex })
+                console.log('click event', { datapoint, seriesIndex });
             },
         },
-        theme: currentTheme.value
-    }
-})
+        theme: currentTheme.value,
+    };
+});
 
 onMounted(async () => {
     if (local.value) {
-        const img = await local.value.getImage()
-        console.log(img)
+        const img = await local.value.getImage();
+        console.log(img);
     }
-})
-
+});
 </script>
 
 <template>
-<div style="margin: 12px 0; color: white">
-    Theme:
-    <select v-model="currentTheme" @change="step += 1">
-        <option v-for="opt in themeOptions">{{ opt }}</option>
-    </select>
-</div>
+    <div style="margin: 12px 0; color: white">
+        Theme:
+        <select v-model="currentTheme" @change="step += 1">
+            <option v-for="opt in themeOptions">{{ opt }}</option>
+        </select>
+    </div>
 
     <Box comp="VueUiChord" :dataset="dataset" :config="config">
         <template #title>VueUiChord</template>
 
         <template #responsive>
-            <div style="width: 600px; height: 600px; resize: both; overflow: auto; background: white">
-                <LocalVueUiChord 
-                    :dataset="dataset" 
+            <div
+                style="
+                    width: 600px;
+                    height: 600px;
+                    resize: both;
+                    overflow: auto;
+                    background: white;
+                "
+            >
+                <LocalVueUiChord
+                    :dataset="dataset"
                     :config="{
                         ...config,
-                        responsive: true
-                    }"/>
+                        responsive: true,
+                    }"
+                />
             </div>
         </template>
 
         <template #theme>
-            <LocalVueUiChord
-                :dataset="dataset"
-                :config="configTheme"
-            />
+            <LocalVueUiChord :dataset="dataset" :config="configTheme" />
             <!-- <LocalVueDataUi
                 component="VueUiChord"
                 :dataset="dataset"
@@ -228,23 +304,41 @@ onMounted(async () => {
         </template>
 
         <template #VDUI-local>
-            <LocalVueDataUi component="VueUiChord" :dataset="dataset" :config="config" ref="vduiLocal"/>
+            <LocalVueDataUi
+                component="VueUiChord"
+                :dataset="dataset"
+                :config="config"
+                ref="vduiLocal"
+            />
         </template>
 
         <template #build>
-            <VueUiChord :dataset="dataset" :config="config" ref="build"/>
+            <VueUiChord :dataset="dataset" :config="config" ref="build" />
         </template>
 
         <template #build-treesh>
-            <VueUiChordTreeshaken :dataset="dataset" :config="config" ref="build"/>
+            <VueUiChordTreeshaken
+                :dataset="dataset"
+                :config="config"
+                ref="build"
+            />
         </template>
 
         <template #VDUI-build>
-            <VueDataUi component="VueUiChord" :dataset="dataset" :config="config" ref="vduiBuild"/>
+            <VueDataUi
+                component="VueUiChord"
+                :dataset="dataset"
+                :config="config"
+                ref="vduiBuild"
+            />
         </template>
 
         <template #knobs="{ summaryOpen }">
-            <ConfigKnobs :model="model" @change="step += 1" :open="summaryOpen"/>
+            <ConfigKnobs
+                :model="model"
+                @change="step += 1"
+                :open="summaryOpen"
+            />
         </template>
     </Box>
 </template>

@@ -1,13 +1,13 @@
 <script setup>
-import { 
-    computed, 
-    defineAsyncComponent, 
-    nextTick, 
-    onMounted, 
-    ref, 
+import {
+    computed,
+    defineAsyncComponent,
+    nextTick,
+    onMounted,
+    ref,
     toRefs,
-    watch, 
-} from "vue";
+    watch,
+} from 'vue';
 import {
     applyDataLabel,
     calcTrend,
@@ -21,19 +21,21 @@ import {
     setOpacity,
     treeShake,
     XMLNS,
-} from "../lib"
-import { throttle } from "../canvas-lib";
-import { useConfig } from "../useConfig";
-import { useLoading } from "../useLoading";
-import { useFitSvgText } from "../useFitSvgText";
-import { useNestedProp } from "../useNestedProp";
-import { useResponsive } from "../useResponsive";
-import { useThemeCheck } from "../useThemeCheck";
-import { usePrefersReducedMotion } from "../usePrefersMotion";
-import themes from "../themes/vue_ui_spark_trend.json";
-import BaseScanner from "../atoms/BaseScanner.vue";
+} from '../lib';
+import { throttle } from '../canvas-lib';
+import { useConfig } from '../useConfig';
+import { useLoading } from '../useLoading';
+import { useFitSvgText } from '../useFitSvgText';
+import { useNestedProp } from '../useNestedProp';
+import { useResponsive } from '../useResponsive';
+import { useThemeCheck } from '../useThemeCheck';
+import { usePrefersReducedMotion } from '../usePrefersMotion';
+import themes from '../themes/vue_ui_spark_trend.json';
+import BaseScanner from '../atoms/BaseScanner.vue';
 
-const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
+const PackageVersion = defineAsyncComponent(
+    () => import('../atoms/PackageVersion.vue'),
+);
 
 const { vue_ui_spark_trend: DEFAULT_CONFIG } = useConfig();
 const { isThemeValid, warnInvalidTheme } = useThemeCheck();
@@ -43,15 +45,15 @@ const props = defineProps({
     config: {
         type: Object,
         default() {
-            return {}
-        }
+            return {};
+        },
     },
     dataset: {
         type: Array,
         default() {
-            return []
-        }
-    }
+            return [];
+        },
+    },
 });
 
 const sparkTrendChart = ref(null);
@@ -74,30 +76,36 @@ const skeletonConfig = computed(() => {
                 backgroundColor: '#99999930',
                 line: {
                     stroke: '#6A6A6A',
-                    useColorTrend: false
+                    useColorTrend: false,
                 },
-                dataLabel: { show: false, useColorTrend: false, color: '#6A6A6A' },
-            }
+                dataLabel: {
+                    show: false,
+                    useColorTrend: false,
+                    color: '#6A6A6A',
+                },
+            },
         },
-        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {}
-    })
+        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {},
+    });
 });
 
 const { loading, FINAL_DATASET, manualLoading } = useLoading({
     ...toRefs(props),
     FINAL_CONFIG,
     prepareConfig,
-    skeletonDataset: props.config?.skeletonDataset ?? [1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233],
+    skeletonDataset: props.config?.skeletonDataset ?? [
+        1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233,
+    ],
     skeletonConfig: treeShake({
         defaultConfig: FINAL_CONFIG.value,
-        userConfig: skeletonConfig.value
-    })
+        userConfig: skeletonConfig.value,
+    }),
 });
 
 function prepareConfig() {
     const mergedConfig = useNestedProp({
         userConfig: props.config,
-        defaultConfig: DEFAULT_CONFIG
+        defaultConfig: DEFAULT_CONFIG,
     });
 
     const theme = mergedConfig.theme;
@@ -107,83 +115,108 @@ function prepareConfig() {
         warnInvalidTheme(mergedConfig);
         return mergedConfig;
     }
-    
+
     const fused = useNestedProp({
         userConfig: themes[theme] || props.config,
-        defaultConfig: mergedConfig
+        defaultConfig: mergedConfig,
     });
 
     const finalConfig = useNestedProp({
         userConfig: props.config,
-        defaultConfig: fused
+        defaultConfig: fused,
     });
 
     return finalConfig;
 }
 
-const downsampled = computed(() => largestTriangleThreeBucketsArray({
-    data: FINAL_DATASET.value,
-    threshold: FINAL_CONFIG.value.downsample.threshold
-}))
+const downsampled = computed(() =>
+    largestTriangleThreeBucketsArray({
+        data: FINAL_DATASET.value,
+        threshold: FINAL_CONFIG.value.downsample.threshold,
+    }),
+);
 
-watch(() => props.config, (_newCfg) => {
-    FINAL_CONFIG.value = prepareConfig();
-    WIDTH.value = FINAL_CONFIG.value.style.width;
-    HEIGHT.value = FINAL_CONFIG.value.style.height;
-    prepareChart();
-}, { deep: true });
+watch(
+    () => props.config,
+    (_newCfg) => {
+        FINAL_CONFIG.value = prepareConfig();
+        WIDTH.value = FINAL_CONFIG.value.style.width;
+        HEIGHT.value = FINAL_CONFIG.value.style.height;
+        prepareChart();
+    },
+    { deep: true },
+);
 
 function sanitize(arr) {
-    return arr.map(v => checkNaN(v))
+    return arr.map((v) => checkNaN(v));
 }
 
-const safeDatasetCopy = ref(largestTriangleThreeBucketsArray({
-    data: FINAL_DATASET.value,
-    threshold: FINAL_CONFIG.value.downsample.threshold
-}).map(v => {
-    if(FINAL_CONFIG.value.style.animation.show && !prefersReducedMotion.value) {
-        return null
-    } else {
-        return ![undefined, Infinity, -Infinity, null, NaN].includes(v) ? v : null
-    }
-}));
+const safeDatasetCopy = ref(
+    largestTriangleThreeBucketsArray({
+        data: FINAL_DATASET.value,
+        threshold: FINAL_CONFIG.value.downsample.threshold,
+    }).map((v) => {
+        if (
+            FINAL_CONFIG.value.style.animation.show &&
+            !prefersReducedMotion.value
+        ) {
+            return null;
+        } else {
+            return ![undefined, Infinity, -Infinity, null, NaN].includes(v)
+                ? v
+                : null;
+        }
+    }),
+);
 
-watch(downsampled, (ds) => {
-    if (raf.value) {
-        cancelAnimationFrame(raf.value);
-        raf.value = null;
-    }
+watch(
+    downsampled,
+    (ds) => {
+        if (raf.value) {
+            cancelAnimationFrame(raf.value);
+            raf.value = null;
+        }
 
-    if (FINAL_CONFIG.value.style.animation.show && !prefersReducedMotion.value) {
-        safeDatasetCopy.value = Array(ds.length).fill(null);
-    } else {
-        safeDatasetCopy.value = ds.map(v =>
-        ![undefined, Infinity, -Infinity, null].includes(v) && !Number.isNaN(v) ? v : null
-        );
-    }
+        if (
+            FINAL_CONFIG.value.style.animation.show &&
+            !prefersReducedMotion.value
+        ) {
+            safeDatasetCopy.value = Array(ds.length).fill(null);
+        } else {
+            safeDatasetCopy.value = ds.map((v) =>
+                ![undefined, Infinity, -Infinity, null].includes(v) &&
+                !Number.isNaN(v)
+                    ? v
+                    : null,
+            );
+        }
 
-    animateChart();
-    nextTick(() => fitText('.vue-ui-sparktrend-progress-label', 6));
-}, { deep: true, immediate: true });
+        animateChart();
+        nextTick(() => fitText('.vue-ui-sparktrend-progress-label', 6));
+    },
+    { deep: true, immediate: true },
+);
 
 watch(
     () => JSON.stringify(props.dataset),
     () => {
         if (raf.value) {
-        cancelAnimationFrame(raf.value);
-        raf.value = null;
+            cancelAnimationFrame(raf.value);
+            raf.value = null;
         }
         manualLoading.value = objectIsEmpty(props.dataset);
 
         const ds = downsampled.value;
-        safeDatasetCopy.value = (FINAL_CONFIG.value.style.animation.show && !prefersReducedMotion.value)
-        ? Array(ds.length).fill(null)
-        : ds.map(v => (Number.isFinite(v) ? v : null));
+        safeDatasetCopy.value =
+            FINAL_CONFIG.value.style.animation.show &&
+            !prefersReducedMotion.value
+                ? Array(ds.length).fill(null)
+                : ds.map((v) => (Number.isFinite(v) ? v : null));
 
         animateChart();
         nextTick(() => fitText('.vue-ui-sparktrend-progress-label', 6));
     },
-    { deep: false, immediate: true }
+    { deep: false, immediate: true },
 );
 
 function animateChart() {
@@ -191,7 +224,13 @@ function animateChart() {
     let interval = 1000 / fps;
     let then = performance.now();
 
-    if (!loading.value && (FINAL_CONFIG.value.style.animation.show && !prefersReducedMotion.value) && FINAL_CONFIG.value.style.animation.animationFrames && FINAL_DATASET.value.length > 1) {
+    if (
+        !loading.value &&
+        FINAL_CONFIG.value.style.animation.show &&
+        !prefersReducedMotion.value &&
+        FINAL_CONFIG.value.style.animation.animationFrames &&
+        FINAL_DATASET.value.length > 1
+    ) {
         safeDatasetCopy.value = [];
         let start = 0;
 
@@ -206,7 +245,7 @@ function animateChart() {
                     start += 1;
                     raf.value = requestAnimationFrame(animate);
                 } else {
-                    cancelAnimationFrame(raf.value)
+                    cancelAnimationFrame(raf.value);
                     safeDatasetCopy.value = sanitize(downsampled.value);
                     isAnimating.value = false;
                     fitText('.vue-ui-sparktrend-progress-label', 6);
@@ -215,7 +254,7 @@ function animateChart() {
                 raf.value = requestAnimationFrame(animate);
             }
         }
-        animate()
+        animate();
     }
 }
 
@@ -226,11 +265,11 @@ onMounted(() => {
 const debug = computed(() => FINAL_CONFIG.value.debug);
 
 function prepareChart() {
-    if(objectIsEmpty(props.dataset)) {
+    if (objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiSparkTrend',
             type: 'dataset',
-            debug: debug.value
+            debug: debug.value,
         });
         manualLoading.value = true;
     }
@@ -243,7 +282,7 @@ function prepareChart() {
         const handleResize = throttle(() => {
             const { width: W, height: H } = useResponsive({
                 chart: sparkTrendChart.value,
-                source: source.value
+                source: source.value,
             });
 
             requestAnimationFrame(() => {
@@ -269,12 +308,12 @@ function prepareChart() {
 }
 
 const WIDTH = ref(FINAL_CONFIG.value.style.width);
-const HEIGHT = ref(FINAL_CONFIG.value.style.height)
+const HEIGHT = ref(FINAL_CONFIG.value.style.height);
 
 const svg = computed(() => ({
     height: HEIGHT.value,
-    width: WIDTH.value
-}))
+    width: WIDTH.value,
+}));
 
 const drawingArea = computed(() => {
     return {
@@ -282,15 +321,25 @@ const drawingArea = computed(() => {
         left: FINAL_CONFIG.value.style.padding.left,
         right: svg.value.width - FINAL_CONFIG.value.style.padding.right,
         bottom: svg.value.height - FINAL_CONFIG.value.style.padding.bottom,
-        height: svg.value.height - (FINAL_CONFIG.value.style.padding.top + FINAL_CONFIG.value.style.padding.bottom) - (FINAL_CONFIG.value.style.dataLabel.show ? FINAL_CONFIG.value.style.dataLabel.fontSize : 0),
-        width: svg.value.width - (FINAL_CONFIG.value.style.padding.left + FINAL_CONFIG.value.style.padding.right)
-    }
+        height:
+            svg.value.height -
+            (FINAL_CONFIG.value.style.padding.top +
+                FINAL_CONFIG.value.style.padding.bottom) -
+            (FINAL_CONFIG.value.style.dataLabel.show
+                ? FINAL_CONFIG.value.style.dataLabel.fontSize
+                : 0),
+        width:
+            svg.value.width -
+            (FINAL_CONFIG.value.style.padding.left +
+                FINAL_CONFIG.value.style.padding.right),
+    };
 });
 
 const extremes = computed(() => {
     const ds = sanitize(downsampled.value).filter(Number.isFinite);
     if (!ds.length) return { max: 0, min: 0 };
-    let max = ds[0], min = ds[0];
+    let max = ds[0],
+        min = ds[0];
     for (let i = 1; i < ds.length; i++) {
         const v = ds[i];
         if (v > max) max = v;
@@ -307,7 +356,7 @@ const datasetKey = computed(() => {
         ds.length,
         Number.isFinite(last) ? last : 'x',
         FINAL_CONFIG.value.downsample.threshold,
-        FINAL_CONFIG.value.style.line.smooth ? 's' : 'l'
+        FINAL_CONFIG.value.style.line.smooth ? 's' : 'l',
     ].join('-');
 });
 
@@ -317,8 +366,8 @@ const absoluteMin = computed(() => {
 });
 
 const absoluteMax = computed(() => {
-    return extremes.value.max + absoluteMin.value
-})
+    return extremes.value.max + absoluteMin.value;
+});
 
 function ratioToMax(v) {
     return v / absoluteMax.value;
@@ -328,74 +377,91 @@ const len = computed(() => downsampled.value.length);
 
 const mutableDataset = computed(() => {
     return safeDatasetCopy.value.map((v, i) => {
-        const absoluteValue = isNaN(v) || [undefined, null, "NaN", NaN, Infinity, -Infinity].includes(v) ? 0 : v || 0; // Pantalon et bretelles...
+        const absoluteValue =
+            isNaN(v) ||
+            [undefined, null, 'NaN', NaN, Infinity, -Infinity].includes(v)
+                ? 0
+                : v || 0; // Pantalon et bretelles...
         return {
             value: checkNaN(v),
             absoluteValue: checkNaN(absoluteValue),
             plotValue: checkNaN(absoluteValue + absoluteMin.value),
             toMax: ratioToMax(absoluteValue + absoluteMin.value),
-            x: drawingArea.value.left + checkNaN(i * ((drawingArea.value.width / (len.value - 1)))) - FINAL_CONFIG.value.style.padding.right,
-            y: drawingArea.value.bottom - checkNaN(drawingArea.value.height * ratioToMax(absoluteValue + absoluteMin.value))
-        }
-    })
+            x:
+                drawingArea.value.left +
+                checkNaN(i * (drawingArea.value.width / (len.value - 1))) -
+                FINAL_CONFIG.value.style.padding.right,
+            y:
+                drawingArea.value.bottom -
+                checkNaN(
+                    drawingArea.value.height *
+                        ratioToMax(absoluteValue + absoluteMin.value),
+                ),
+        };
+    });
 });
 
 const trendValue = computed(() => {
     const ds = sanitize(downsampled.value);
     if (FINAL_CONFIG.value.style.trendLabel.trendType === 'global') {
-        return calcTrend(ds)
-    } 
-    
-    if (FINAL_CONFIG.value.style.trendLabel.trendType === 'n-1' && ds.length > 1) {
-        return (((ds.at(-1) / ds.at(-2)) - 1) * 100);
+        return calcTrend(ds);
+    }
+
+    if (
+        FINAL_CONFIG.value.style.trendLabel.trendType === 'n-1' &&
+        ds.length > 1
+    ) {
+        return (ds.at(-1) / ds.at(-2) - 1) * 100;
     }
 
     if (FINAL_CONFIG.value.style.trendLabel.trendType === 'lastToFirst') {
-        return (((ds.at(-1) / ds[0]) - 1) * 100);
+        return (ds.at(-1) / ds[0] - 1) * 100;
     }
-    return 0
-})
+    return 0;
+});
 
 const trend = computed(() => {
-    if(isAnimating.value) {
-        return "neutral"
+    if (isAnimating.value) {
+        return 'neutral';
     }
-    if(trendValue.value === 0) {
-        return "neutral";
+    if (trendValue.value === 0) {
+        return 'neutral';
     }
-    if(trendValue.value > 0) {
-        return "positive";
+    if (trendValue.value > 0) {
+        return 'positive';
     } else {
-        return "negative";
+        return 'negative';
     }
 });
 
 const trendColor = computed(() => {
     return FINAL_CONFIG.value.style.arrow.colors[trend.value];
-})
-
+});
 
 const area = computed(() => {
     const start = { x: mutableDataset.value[0].x, y: svg.value.height - 6 };
-    const end = { x: mutableDataset.value[mutableDataset.value.length -1].x, y: svg.value.height - 6 };
+    const end = {
+        x: mutableDataset.value[mutableDataset.value.length - 1].x,
+        y: svg.value.height - 6,
+    };
     const path = [];
-    mutableDataset.value.forEach(v => {
-        path.push(`${v.x},${v.y} `)
+    mutableDataset.value.forEach((v) => {
+        path.push(`${v.x},${v.y} `);
     });
-    return [ start.x,start.y, ...path, end.x, end.y ].toString();
-})
+    return [start.x, start.y, ...path, end.x, end.y].toString();
+});
 
 const straightLine = computed(() => {
     let path = [];
-    mutableDataset.value.forEach(d => {
+    mutableDataset.value.forEach((d) => {
         path.push(`${d.x},${d.y} `);
-    })
+    });
     return `M ${path.toString()}`;
 });
 
 const arrowBase = computed(() => {
     return HEIGHT.value / 2 - FINAL_CONFIG.value.style.trendLabel.fontSize;
-})
+});
 
 const unitWidth = computed(() => drawingArea.value.left * 0.8);
 
@@ -417,84 +483,97 @@ const accessibleSummary = computed(() => {
         p: trendValue.value > 0 ? '+' : '',
         v: trendValue.value,
         s: '%',
-        r: FINAL_CONFIG.value.style.trendLabel.rounding
+        r: FINAL_CONFIG.value.style.trendLabel.rounding,
     });
 
-    const formattedLastValue = lastValue == null
-        ? 'not available'
-        : applyDataLabel(
-            FINAL_CONFIG.value.style.dataLabel.formatter,
-            lastValue,
-            dataLabel({
-                p: FINAL_CONFIG.value.style.dataLabel.prefix,
-                v: lastValue,
-                s: FINAL_CONFIG.value.style.dataLabel.suffix,
-                r: FINAL_CONFIG.value.style.dataLabel.rounding
-            }),
-            { datapoint: lastPoint }
-        );
+    const formattedLastValue =
+        lastValue == null
+            ? 'not available'
+            : applyDataLabel(
+                  FINAL_CONFIG.value.style.dataLabel.formatter,
+                  lastValue,
+                  dataLabel({
+                      p: FINAL_CONFIG.value.style.dataLabel.prefix,
+                      v: lastValue,
+                      s: FINAL_CONFIG.value.style.dataLabel.suffix,
+                      r: FINAL_CONFIG.value.style.dataLabel.rounding,
+                  }),
+                  { datapoint: lastPoint },
+              );
 
     const trendText =
         trend.value === 'positive'
             ? `up ${formattedTrend}`
             : trend.value === 'negative'
-                ? `down ${formattedTrend}`
-                : `stable at ${formattedTrend}`;
+              ? `down ${formattedTrend}`
+              : `stable at ${formattedTrend}`;
 
     return `Progression ${trendText}. Last value ${formattedLastValue}.`;
 });
 
 const accessibleDescriptionId = computed(() => `sparktrend-a11y-${uid.value}`);
-
 </script>
 
 <template>
-    <div 
-        ref="sparkTrendChart" 
-        class="vue-data-ui-component vue-ui-spark-trend" 
-        :id="uid" 
+    <div
+        ref="sparkTrendChart"
+        class="vue-data-ui-component vue-ui-spark-trend"
+        :id="uid"
         :style="`width:100%;font-family:${FINAL_CONFIG.style.fontFamily};background:${FINAL_CONFIG.style.backgroundColor}`"
         role="img"
         :aria-describedby="accessibleDescriptionId"
     >
-        <p
-            :id="accessibleDescriptionId"
-            class="sr-only"
-            aria-live="polite"
-        >
+        <p :id="accessibleDescriptionId" class="sr-only" aria-live="polite">
             {{ accessibleSummary }}
         </p>
-        <svg 
-            :key="datasetKey" 
-            ref="svgRef" 
-            :xmlns="XMLNS" 
-            :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`width:100%;background:transparent;overflow:visible`"
+        <svg
+            :key="datasetKey"
+            ref="svgRef"
+            :xmlns="XMLNS"
+            :viewBox="`0 0 ${svg.width} ${svg.height}`"
+            :style="`width:100%;background:transparent;overflow:visible`"
             aria-hidden="true"
         >
             <PackageVersion />
 
             <!-- BACKGROUND SLOT -->
-            <foreignObject 
+            <foreignObject
                 v-if="$slots['chart-background']"
                 :x="0"
                 :y="0"
                 :width="svg.width <= 0 ? 10 : svg.width"
                 :height="svg.height <= 0 ? 10 : svg.height"
                 :style="{
-                    pointerEvents: 'none'
+                    pointerEvents: 'none',
                 }"
             >
-                <slot name="chart-background"/>
+                <slot name="chart-background" />
             </foreignObject>
-            
+
             <!-- DEFS -->
             <defs>
                 <linearGradient
-                    x1="0%" y1="0%" x2="0%" y2="100%"
+                    x1="0%"
+                    y1="0%"
+                    x2="0%"
+                    y2="100%"
                     :id="`pill_gradient_${uid}`"
                 >
-                    <stop offset="0%" :stop-color="setOpacity(FINAL_CONFIG.style.line.useColorTrend ? trendColor : FINAL_CONFIG.style.line.stroke, FINAL_CONFIG.style.area.opacity)"/>
-                    <stop offset="100%" :stop-color="FINAL_CONFIG.style.backgroundColor" />
+                    <stop
+                        offset="0%"
+                        :stop-color="
+                            setOpacity(
+                                FINAL_CONFIG.style.line.useColorTrend
+                                    ? trendColor
+                                    : FINAL_CONFIG.style.line.stroke,
+                                FINAL_CONFIG.style.area.opacity,
+                            )
+                        "
+                    />
+                    <stop
+                        offset="100%"
+                        :stop-color="FINAL_CONFIG.style.backgroundColor"
+                    />
                 </linearGradient>
             </defs>
 
@@ -503,39 +582,92 @@ const accessibleDescriptionId = computed(() => `sparktrend-a11y-${uid.value}`);
                 <path
                     v-if="FINAL_CONFIG.style.line.smooth"
                     :d="`M ${mutableDataset[0].x},${drawingArea.bottom} ${createSmoothPath(mutableDataset)} L ${mutableDataset.at(-1).x},${drawingArea.bottom} Z`"
-                    :fill="FINAL_CONFIG.style.area.useGradient ? `url(#pill_gradient_${uid})` : setOpacity(FINAL_CONFIG.style.line.useColorTrend ? trendColor : FINAL_CONFIG.style.line.stroke, FINAL_CONFIG.style.area.opacity)"
+                    :fill="
+                        FINAL_CONFIG.style.area.useGradient
+                            ? `url(#pill_gradient_${uid})`
+                            : setOpacity(
+                                  FINAL_CONFIG.style.line.useColorTrend
+                                      ? trendColor
+                                      : FINAL_CONFIG.style.line.stroke,
+                                  FINAL_CONFIG.style.area.opacity,
+                              )
+                    "
                     stroke="none"
                 />
                 <path
                     v-else
-                    :d="`M${area}Z`" 
-                    :fill="FINAL_CONFIG.style.area.useGradient ? `url(#pill_gradient_${uid})` : setOpacity(FINAL_CONFIG.style.line.useColorTrend ? trendColor : FINAL_CONFIG.style.line.stroke, FINAL_CONFIG.style.area.opacity)"
+                    :d="`M${area}Z`"
+                    :fill="
+                        FINAL_CONFIG.style.area.useGradient
+                            ? `url(#pill_gradient_${uid})`
+                            : setOpacity(
+                                  FINAL_CONFIG.style.line.useColorTrend
+                                      ? trendColor
+                                      : FINAL_CONFIG.style.line.stroke,
+                                  FINAL_CONFIG.style.area.opacity,
+                              )
+                    "
                     stroke="none"
                 />
             </g>
 
             <!-- LINE -->
-            <path data-cy="sparkline-smooth-path" v-if="FINAL_CONFIG.style.line.smooth && mutableDataset.length" :d="`M ${createSmoothPath(mutableDataset)}`" :stroke="FINAL_CONFIG.style.line.useColorTrend ? trendColor : FINAL_CONFIG.style.line.stroke" fill="none" :stroke-width="FINAL_CONFIG.style.line.strokeWidth" :stroke-linecap="FINAL_CONFIG.style.line.strokeLinecap" :stroke-linejoin="FINAL_CONFIG.style.line.strokeLinejoin"/>
+            <path
+                data-cy="sparkline-smooth-path"
+                v-if="FINAL_CONFIG.style.line.smooth && mutableDataset.length"
+                :d="`M ${createSmoothPath(mutableDataset)}`"
+                :stroke="
+                    FINAL_CONFIG.style.line.useColorTrend
+                        ? trendColor
+                        : FINAL_CONFIG.style.line.stroke
+                "
+                fill="none"
+                :stroke-width="FINAL_CONFIG.style.line.strokeWidth"
+                :stroke-linecap="FINAL_CONFIG.style.line.strokeLinecap"
+                :stroke-linejoin="FINAL_CONFIG.style.line.strokeLinejoin"
+            />
 
-            <path data-cy="sparkline-smooth-path" v-if="!FINAL_CONFIG.style.line.smooth && mutableDataset.length" :d="straightLine" :stroke="FINAL_CONFIG.style.line.useColorTrend ? trendColor : FINAL_CONFIG.style.line.stroke" fill="none" :stroke-width="FINAL_CONFIG.style.line.strokeWidth" :stroke-linecap="FINAL_CONFIG.style.line.strokeLinecap" :stroke-linejoin="FINAL_CONFIG.style.line.strokeLinejoin"/>
-
+            <path
+                data-cy="sparkline-smooth-path"
+                v-if="!FINAL_CONFIG.style.line.smooth && mutableDataset.length"
+                :d="straightLine"
+                :stroke="
+                    FINAL_CONFIG.style.line.useColorTrend
+                        ? trendColor
+                        : FINAL_CONFIG.style.line.stroke
+                "
+                fill="none"
+                :stroke-width="FINAL_CONFIG.style.line.strokeWidth"
+                :stroke-linecap="FINAL_CONFIG.style.line.strokeLinecap"
+                :stroke-linejoin="FINAL_CONFIG.style.line.strokeLinejoin"
+            />
 
             <!-- ARROW -->
 
-            <path 
+            <path
                 v-if="loading"
                 fill="#6A6A6A"
                 :d="`M ${drawingArea.left / 2 + 6}, ${arrowBase + 7} ${drawingArea.left / 2 - 7}, ${arrowBase} ${drawingArea.left / 2 - 7}, ${arrowBase + 14} Z`"
             />
-            <path 
+            <path
                 v-else
                 :fill="trendColor"
-                :d="trend === 'positive' ? `M ${drawingArea.left / 2}, ${arrowBase} ${drawingArea.left / 2 - 7}, ${arrowBase + 12} ${drawingArea.left / 2 + 7}, ${arrowBase + 12} Z` : trend === 'negative' ? `M ${drawingArea.left / 2}, ${arrowBase + 12} ${drawingArea.left / 2 - 7}, ${arrowBase} ${drawingArea.left / 2 + 7}, ${arrowBase} Z` : `M ${drawingArea.left / 2 + 6}, ${arrowBase + 7} ${drawingArea.left / 2 - 7}, ${arrowBase} ${drawingArea.left / 2 - 7}, ${arrowBase + 14} Z`"
+                :d="
+                    trend === 'positive'
+                        ? `M ${drawingArea.left / 2}, ${arrowBase} ${drawingArea.left / 2 - 7}, ${arrowBase + 12} ${drawingArea.left / 2 + 7}, ${arrowBase + 12} Z`
+                        : trend === 'negative'
+                          ? `M ${drawingArea.left / 2}, ${arrowBase + 12} ${drawingArea.left / 2 - 7}, ${arrowBase} ${drawingArea.left / 2 + 7}, ${arrowBase} Z`
+                          : `M ${drawingArea.left / 2 + 6}, ${arrowBase + 7} ${drawingArea.left / 2 - 7}, ${arrowBase} ${drawingArea.left / 2 - 7}, ${arrowBase + 14} Z`
+                "
             />
 
-            <rect 
+            <rect
                 v-if="loading"
-                :x="drawingArea.left / 2 - FINAL_CONFIG.style.trendLabel.fontSize - 2"
+                :x="
+                    drawingArea.left / 2 -
+                    FINAL_CONFIG.style.trendLabel.fontSize -
+                    2
+                "
                 :y="HEIGHT / 2 + FINAL_CONFIG.style.trendLabel.fontSize - 2"
                 :width="FINAL_CONFIG.style.trendLabel.fontSize * 2"
                 :height="FINAL_CONFIG.style.trendLabel.fontSize"
@@ -549,20 +681,31 @@ const accessibleDescriptionId = computed(() => `sparktrend-a11y-${uid.value}`);
                 :x="drawingArea.left / 2"
                 :y="HEIGHT / 2 + FINAL_CONFIG.style.trendLabel.fontSize * 2"
                 text-anchor="middle"
-                :fill="FINAL_CONFIG.style.trendLabel.useColorTrend ? trendColor : FINAL_CONFIG.style.trendLabel.color"
+                :fill="
+                    FINAL_CONFIG.style.trendLabel.useColorTrend
+                        ? trendColor
+                        : FINAL_CONFIG.style.trendLabel.color
+                "
                 :font-size="FINAL_CONFIG.style.trendLabel.fontSize"
-                :font-weight="FINAL_CONFIG.style.trendLabel.bold ? 'bold' : 'normal'"
+                :font-weight="
+                    FINAL_CONFIG.style.trendLabel.bold ? 'bold' : 'normal'
+                "
             >
-                {{ dataLabel({
-                    p: trendValue > 0 ? '+' : '',
-                    v: trendValue,
-                    s: '%',
-                    r: FINAL_CONFIG.style.trendLabel.rounding
-                }) }}
+                {{
+                    dataLabel({
+                        p: trendValue > 0 ? '+' : '',
+                        v: trendValue,
+                        s: '%',
+                        r: FINAL_CONFIG.style.trendLabel.rounding,
+                    })
+                }}
             </text>
 
             <circle
-                v-if="mutableDataset.length && mutableDataset.at(-1).x !== undefined"
+                v-if="
+                    mutableDataset.length &&
+                    mutableDataset.at(-1).x !== undefined
+                "
                 :stroke="FINAL_CONFIG.style.backgroundColor"
                 :stroke-width="2"
                 :cx="mutableDataset.at(-1).x"
@@ -571,25 +714,39 @@ const accessibleDescriptionId = computed(() => `sparktrend-a11y-${uid.value}`);
                 :fill="loading ? '#6A6A6A' : trendColor"
             />
             <text
-                v-if="mutableDataset.length && mutableDataset.at(-1).x !== undefined && FINAL_CONFIG.style.dataLabel.show"
+                v-if="
+                    mutableDataset.length &&
+                    mutableDataset.at(-1).x !== undefined &&
+                    FINAL_CONFIG.style.dataLabel.show
+                "
                 text-anchor="middle"
                 :x="mutableDataset.at(-1).x"
-                :y="mutableDataset.at(-1).y - (FINAL_CONFIG.style.dataLabel.fontSize / 1.5)"
+                :y="
+                    mutableDataset.at(-1).y -
+                    FINAL_CONFIG.style.dataLabel.fontSize / 1.5
+                "
                 :font-size="FINAL_CONFIG.style.dataLabel.fontSize"
-                :fill="FINAL_CONFIG.style.dataLabel.useColorTrend ? trendColor : FINAL_CONFIG.style.dataLabel.color"
-                :font-weight="FINAL_CONFIG.style.dataLabel.bold ? 'bold': 'normal'"
+                :fill="
+                    FINAL_CONFIG.style.dataLabel.useColorTrend
+                        ? trendColor
+                        : FINAL_CONFIG.style.dataLabel.color
+                "
+                :font-weight="
+                    FINAL_CONFIG.style.dataLabel.bold ? 'bold' : 'normal'
+                "
             >
-                {{ applyDataLabel(
-                    FINAL_CONFIG.style.dataLabel.formatter,
-                    mutableDataset.at(-1).value,
-                    dataLabel({
-                        p: FINAL_CONFIG.style.dataLabel.prefix,
-                        v: mutableDataset.at(-1).value,
-                        s: FINAL_CONFIG.style.dataLabel.suffix,
-                        r: FINAL_CONFIG.style.dataLabel.rounding
-                    }),
-                    { datapoint: mutableDataset.at(-1)}
-                    ) 
+                {{
+                    applyDataLabel(
+                        FINAL_CONFIG.style.dataLabel.formatter,
+                        mutableDataset.at(-1).value,
+                        dataLabel({
+                            p: FINAL_CONFIG.style.dataLabel.prefix,
+                            v: mutableDataset.at(-1).value,
+                            s: FINAL_CONFIG.style.dataLabel.suffix,
+                            r: FINAL_CONFIG.style.dataLabel.rounding,
+                        }),
+                        { datapoint: mutableDataset.at(-1) },
+                    )
                 }}
             </text>
         </svg>

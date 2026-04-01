@@ -14,25 +14,27 @@ export function useTimeLabelCollision({
     targetClass = '.vue-data-ui-time-label',
     rotation = -30.0001,
     height = null,
-    width = null
+    width = null,
 }) {
-
     function getNestedProp(obj, path) {
         return path.reduce((acc, key) => acc && acc[key], obj);
     }
 
     function setNestedProp(obj, path, value) {
-        path.slice(0, -1).reduce((acc, key) => acc[key], obj)[path.slice(-1)] = value;
+        path.slice(0, -1).reduce((acc, key) => acc[key], obj)[path.slice(-1)] =
+            value;
     }
 
     function parseTranslate(transformStr) {
-        const match = /translate\(\s*([^\s,]+)\s*,\s*([^\s,]+)\s*\)/.exec(transformStr);
+        const match = /translate\(\s*([^\s,]+)\s*,\s*([^\s,]+)\s*\)/.exec(
+            transformStr,
+        );
         if (!match) {
             return { x: 0, y: 0 };
         }
         return {
             x: parseFloat(match[1]),
-            y: parseFloat(match[2])
+            y: parseFloat(match[2]),
         };
     }
 
@@ -42,9 +44,9 @@ export function useTimeLabelCollision({
         if (!container) return;
 
         const texts = Array.from(container.querySelectorAll(targetClass));
-        const textCoordinates = texts.map(t => ({
+        const textCoordinates = texts.map((t) => ({
             ...parseTranslate(t.getAttribute('transform')),
-            width: t.getBBox().width
+            width: t.getBBox().width,
         }));
 
         let collision = false;
@@ -54,11 +56,13 @@ export function useTimeLabelCollision({
             for (let j = i + 1; j < textCoordinates.length; j += 1) {
                 const a = textCoordinates[i];
                 const b = textCoordinates[j];
-        
-                if (!(
-                    a.x + a.width + collisionMargin < b.x ||
-                    b.x + b.width + collisionMargin < a.x
-                )) {
+
+                if (
+                    !(
+                        a.x + a.width + collisionMargin < b.x ||
+                        b.x + b.width + collisionMargin < a.x
+                    )
+                ) {
                     collision = true;
                     break;
                 }
@@ -69,14 +73,14 @@ export function useTimeLabelCollision({
 
         if (collision && !currentRotation) {
             setNestedProp(configRef.value, rotationPath, rotation);
-            callback && callback({ collision })
+            callback && callback({ collision });
             if (isAutoSize.value && setViewBox && forceResizeObserver) {
                 setViewBox();
                 forceResizeObserver();
             }
         } else if (!collision && currentRotation === rotation) {
             setNestedProp(configRef.value, rotationPath, 0);
-            callback && callback({ collision })
+            callback && callback({ collision });
         }
     }
 
@@ -91,17 +95,23 @@ export function useTimeLabelCollision({
     const debouncedDetect = debounce(detectTimeLabelCollision, 200);
 
     if (height && width) {
-        watch([() => width.value, () => height.value] , async([newW, newH], [oldW, oldH]) => {
-            const autoRotate = getNestedProp(configRef.value, autoRotatePath);
-            if (!autoRotate) return;
-            const ratChanged = newW !== oldW || newH !== oldH;
+        watch(
+            [() => width.value, () => height.value],
+            async ([newW, newH], [oldW, oldH]) => {
+                const autoRotate = getNestedProp(
+                    configRef.value,
+                    autoRotatePath,
+                );
+                if (!autoRotate) return;
+                const ratChanged = newW !== oldW || newH !== oldH;
 
-            if (ratChanged) {
-                debouncedDetect();
-            } else {
-                await detectTimeLabelCollision();
-            }
-        })
+                if (ratChanged) {
+                    debouncedDetect();
+                } else {
+                    await detectTimeLabelCollision();
+                }
+            },
+        );
     }
 
     watch(
@@ -109,7 +119,7 @@ export function useTimeLabelCollision({
             () => timeLabels.value,
             () => getNestedProp(configRef.value, rotationPath),
             () => slicer.value.start,
-            () => slicer.value.end
+            () => slicer.value.end,
         ],
         async ([, , newStart, newEnd], [, , oldStart, oldEnd]) => {
             const autoRotate = getNestedProp(configRef.value, autoRotatePath);
@@ -123,7 +133,7 @@ export function useTimeLabelCollision({
                 await detectTimeLabelCollision();
             }
         },
-        { immediate: true }
+        { immediate: true },
     );
 
     return { detectTimeLabelCollision };

@@ -1,20 +1,18 @@
-import VueUiXyCanvas from "./vue-ui-xy-canvas.vue";
-import { components } from "../../cypress/fixtures/vdui-components";
-import { testCommonFeatures } from "../../cypress/fixtures";
+import VueUiXyCanvas from './vue-ui-xy-canvas.vue';
+import { components } from '../../cypress/fixtures/vdui-components';
+import { testCommonFeatures } from '../../cypress/fixtures';
 
-const { dataset, config } = components.find(c => c.name === 'VueUiXyCanvas');
+const { dataset, config } = components.find((c) => c.name === 'VueUiXyCanvas');
 
 describe('<VueUiXyCanvas />', () => {
-
     it('renders', () => {
         cy.viewport(500, 560);
         cy.mount(VueUiXyCanvas, {
             props: {
                 dataset,
-                config
-            }
+                config,
+            },
         }).then(() => {
-            
             testCommonFeatures({
                 userOptions: true,
                 title: true,
@@ -23,11 +21,11 @@ describe('<VueUiXyCanvas />', () => {
                 dataTable: true,
                 slicer: true,
                 tooltipCallback: () => {
-                    cy.get('[data-cy="canvas"]').trigger('mousemove')
-                }
+                    cy.get('[data-cy="canvas"]').trigger('mousemove');
+                },
             });
 
-            cy.get('[data-cy="canvas"]').then(canvas => {
+            cy.get('[data-cy="canvas"]').then((canvas) => {
                 const c = canvas[0];
                 const ctx = c.getContext('2d');
                 const pixelData = ctx.getImageData(10, 10, 1, 1).data;
@@ -40,13 +38,16 @@ describe('<VueUiXyCanvas />', () => {
         cy.mount(VueUiXyCanvas, {
             props: {
                 dataset,
-                config
-            }
+                config,
+            },
         }).then(({ wrapper }) => {
             cy.log('@selectLegend');
-            cy.get('[data-cy="legend-item"]').first().click({ force: true }).then(() => {
-                expect(wrapper.emitted('selectLegend')).to.exist;
-            });
+            cy.get('[data-cy="legend-item"]')
+                .first()
+                .click({ force: true })
+                .then(() => {
+                    expect(wrapper.emitted('selectLegend')).to.exist;
+                });
         });
     });
 });

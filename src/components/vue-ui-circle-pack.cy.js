@@ -1,17 +1,18 @@
-import { components } from "../../cypress/fixtures/vdui-components";
-import { testCommonFeatures } from "../../cypress/fixtures";
-import VueUiCirclePack from "./vue-ui-circle-pack.vue";
+import { components } from '../../cypress/fixtures/vdui-components';
+import { testCommonFeatures } from '../../cypress/fixtures';
+import VueUiCirclePack from './vue-ui-circle-pack.vue';
 
-const { dataset, config } = components.find(c => c.name === 'VueUiCirclePack');
+const { dataset, config } = components.find(
+    (c) => c.name === 'VueUiCirclePack',
+);
 
 describe('<VueUiCirclePack />', () => {
-
     it('renders', () => {
         cy.mount(VueUiCirclePack, {
             props: {
                 dataset,
-                config
-            }
+                config,
+            },
         }).then(() => {
             testCommonFeatures({
                 userOptions: true,
@@ -21,30 +22,49 @@ describe('<VueUiCirclePack />', () => {
             });
 
             cy.log('datapoints');
-            cy.get('[data-cy="datapoint-circle"]').should('exist').and('be.visible').and('have.length', dataset.length);
-            cy.get('[data-cy="datapoint-circle-overlay"]').should('exist').and('have.length', dataset.length);
+            cy.get('[data-cy="datapoint-circle"]')
+                .should('exist')
+                .and('be.visible')
+                .and('have.length', dataset.length);
+            cy.get('[data-cy="datapoint-circle-overlay"]')
+                .should('exist')
+                .and('have.length', dataset.length);
 
             cy.log('name labels');
-            cy.get('[data-cy="label-name"]').as('nameLabels').should('exist').and('be.visible').and('have.length', dataset.length);
+            cy.get('[data-cy="label-name"]')
+                .as('nameLabels')
+                .should('exist')
+                .and('be.visible')
+                .and('have.length', dataset.length);
             cy.get('@nameLabels').each((label, _i) => {
                 cy.wrap(label).as('label');
                 cy.get('@label').contains('d_');
             });
-            
+
             cy.log('value labels');
-            cy.get('[data-cy="label-value"]').as('nameLabels').should('exist').and('be.visible').and('have.length', dataset.length);
+            cy.get('[data-cy="label-value"]')
+                .as('nameLabels')
+                .should('exist')
+                .and('be.visible')
+                .and('have.length', dataset.length);
             cy.get('@nameLabels').each((label, _i) => {
                 cy.wrap(label).as('label');
-                cy.get('@label').invoke('text').then(text => {
-                    const num = parseInt(text.trim(), 10);
-                    expect(num).to.be.a('number');
-                });
+                cy.get('@label')
+                    .invoke('text')
+                    .then((text) => {
+                        const num = parseInt(text.trim(), 10);
+                        expect(num).to.be.a('number');
+                    });
             });
 
             cy.log('tooltip');
-            cy.get('[data-cy="datapoint-circle"]').first().trigger('mouseenter', { force: true });
-            cy.get('[data-cy=tooltip]').as('tooltip').should('exist')
-            cy.get('[data-cy="datapoint-circle-overlay"]').first().should('be.visible');
+            cy.get('[data-cy="datapoint-circle"]')
+                .first()
+                .trigger('mouseenter', { force: true });
+            cy.get('[data-cy=tooltip]').as('tooltip').should('exist');
+            cy.get('[data-cy="datapoint-circle-overlay"]')
+                .first()
+                .should('be.visible');
             cy.get('[data-cy="datapoint-circle"]').first().trigger('mouseout');
             cy.get('@tooltip').should('not.exist');
         });

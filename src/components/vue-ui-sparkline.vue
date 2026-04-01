@@ -1,5 +1,16 @@
 <script setup>
-import { ref, computed, onMounted, watch, defineAsyncComponent, shallowRef, onBeforeUnmount, toRefs, nextTick, watchEffect } from "vue";
+import {
+    ref,
+    computed,
+    onMounted,
+    watch,
+    defineAsyncComponent,
+    shallowRef,
+    onBeforeUnmount,
+    toRefs,
+    nextTick,
+    watchEffect,
+} from 'vue';
 import {
     applyDataLabel,
     calcLinearProgression,
@@ -21,25 +32,29 @@ import {
     setOpacity,
     shiftHue,
     treeShake,
-    XMLNS
-} from "../lib";
-import { throttle } from "../canvas-lib";
-import { useConfig } from "../useConfig";
-import { useLoading } from "../useLoading";
-import { useNestedProp } from "../useNestedProp";
-import { useResponsive } from "../useResponsive";
-import { useThemeCheck } from "../useThemeCheck";
-import { useTimeLabels } from "../useTimeLabels";
-import { useChartAccessibility } from "../useChartAccessibility";
-import { usePrefersReducedMotion } from "../usePrefersMotion";
-import themes from "../themes/vue_ui_sparkline.json";
-import BaseScanner from "../atoms/BaseScanner.vue";
-import SparklinePulse from "../atoms/SparklinePulse.vue";
-import SparklineGradientPath from "../atoms/SparklineGradientPath.vue";
-import A11yDataTable from "../atoms/A11yDataTable.vue";
+    XMLNS,
+} from '../lib';
+import { throttle } from '../canvas-lib';
+import { useConfig } from '../useConfig';
+import { useLoading } from '../useLoading';
+import { useNestedProp } from '../useNestedProp';
+import { useResponsive } from '../useResponsive';
+import { useThemeCheck } from '../useThemeCheck';
+import { useTimeLabels } from '../useTimeLabels';
+import { useChartAccessibility } from '../useChartAccessibility';
+import { usePrefersReducedMotion } from '../usePrefersMotion';
+import themes from '../themes/vue_ui_sparkline.json';
+import BaseScanner from '../atoms/BaseScanner.vue';
+import SparklinePulse from '../atoms/SparklinePulse.vue';
+import SparklineGradientPath from '../atoms/SparklineGradientPath.vue';
+import A11yDataTable from '../atoms/A11yDataTable.vue';
 
-const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
-const SparkTooltip = defineAsyncComponent(() => import('../atoms/SparkTooltip.vue'));
+const PackageVersion = defineAsyncComponent(
+    () => import('../atoms/PackageVersion.vue'),
+);
+const SparkTooltip = defineAsyncComponent(
+    () => import('../atoms/SparkTooltip.vue'),
+);
 
 const { vue_ui_sparkline: DEFAULT_CONFIG } = useConfig();
 const { isThemeValid, warnInvalidTheme } = useThemeCheck();
@@ -49,31 +64,31 @@ const props = defineProps({
     config: {
         type: Object,
         default() {
-            return {}
-        }
+            return {};
+        },
     },
     dataset: {
         type: Array,
         default() {
-            return []
-        }
+            return [];
+        },
     },
-    showInfo : {
+    showInfo: {
         type: Boolean,
         default: true,
     },
     selectedIndex: {
         type: Number,
-        default: undefined
+        default: undefined,
     },
     heightRatio: {
         type: Number,
-        default: 1
+        default: 1,
     },
     forcedPadding: {
         type: Number,
-        default: 30
-    }
+        default: 30,
+    },
 });
 
 const isDataset = computed(() => {
@@ -90,10 +105,16 @@ const internalSelectedIndex = ref(null); // a11y
 const FINAL_CONFIG = ref(prepareConfig());
 
 function makeSkeletonDs(n) {
-    if (props.config?.skeletonDataset && Array.isArray(props.config.skeletonDataset)) {
-        return props.config.skeletonDataset.map((value) => ({ period: '-', value}))
+    if (
+        props.config?.skeletonDataset &&
+        Array.isArray(props.config.skeletonDataset)
+    ) {
+        return props.config.skeletonDataset.map((value) => ({
+            period: '-',
+            value,
+        }));
     }
-    return fib(n).map(value => ({ period: '-', value }));
+    return fib(n).map((value) => ({ period: '-', value }));
 }
 
 const skeletonConfig = computed(() => {
@@ -106,42 +127,48 @@ const skeletonConfig = computed(() => {
                 scaleMin: 0,
                 scaleMax: null,
                 animation: { show: false },
-                line: { color: '#AAAAAA', pulse: { show: false }, dashIndices: [] },
+                line: {
+                    color: '#AAAAAA',
+                    pulse: { show: false },
+                    dashIndices: [],
+                },
                 bar: { color: '#AAAAAA' },
                 area: { color: '#CACACA' },
                 zeroLine: { color: '#6A6A6A' },
                 dataLabel: { show: false },
                 tooltip: { show: false },
-            }
+            },
         },
-        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {}
-    })
-})
+        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {},
+    });
+});
 
 // v3 - Skeleton loader management
-const { loading, FINAL_DATASET, manualLoading } = useLoading(({
+const { loading, FINAL_DATASET, manualLoading } = useLoading({
     ...toRefs(props),
     FINAL_CONFIG,
     prepareConfig,
     callback: () => {
-        Promise.resolve().then(async() => {
+        Promise.resolve().then(async () => {
             await nextTick();
             animateSL();
-        })
+        });
     },
     skeletonDataset: makeSkeletonDs(12),
     skeletonConfig: treeShake({
         defaultConfig: FINAL_CONFIG.value,
-        userConfig: skeletonConfig.value
-    })
-}))
+        userConfig: skeletonConfig.value,
+    }),
+});
 
-const { svgRef } = useChartAccessibility({ config: FINAL_CONFIG.value.style.title });
+const { svgRef } = useChartAccessibility({
+    config: FINAL_CONFIG.value.style.title,
+});
 
 function prepareConfig() {
     const mergedConfig = useNestedProp({
         userConfig: props.config,
-        defaultConfig: DEFAULT_CONFIG
+        defaultConfig: DEFAULT_CONFIG,
     });
     let finalConfig = {};
 
@@ -154,15 +181,15 @@ function prepareConfig() {
         } else {
             const fused = useNestedProp({
                 userConfig: themes[theme] || props.config,
-                defaultConfig: mergedConfig
+                defaultConfig: mergedConfig,
             });
-    
+
             finalConfig = {
                 ...useNestedProp({
                     userConfig: props.config,
-                    defaultConfig: fused
+                    defaultConfig: fused,
                 }),
-            }
+            };
         }
     } else {
         finalConfig = mergedConfig;
@@ -172,7 +199,9 @@ function prepareConfig() {
 }
 
 const pulse = computed(() => FINAL_CONFIG.value?.style?.line.pulse || {});
-const pulseDur = computed(() => `${Math.max(200, Number(pulse.value.durationMs) || 4000) / 1000}s`);
+const pulseDur = computed(
+    () => `${Math.max(200, Number(pulse.value.durationMs) || 4000) / 1000}s`,
+);
 const pulsePathLength = ref(0);
 const pulseBegin = computed(() => pulse.value?.begin || '0ms');
 const pulseKeyPoints = ref('0;1');
@@ -212,7 +241,7 @@ function updatePulsePathLength() {
     const selector = `#${pulsePathId.value}`;
 
     const el = svgEl.querySelector?.(selector);
-    if (el && typeof el.getTotalLength === "function") {
+    if (el && typeof el.getTotalLength === 'function') {
         const len = el.getTotalLength();
         if (Number.isFinite(len) && len > 0) {
             pulsePathLength.value = len;
@@ -223,11 +252,11 @@ function updatePulsePathLength() {
     // Path not in DOM yet (id just changed / conditional path swap / hydration).
     requestAnimationFrame(() => {
         const el2 = svgEl.querySelector?.(selector);
-        if (el2 && typeof el2.getTotalLength === "function") {
-        const len2 = el2.getTotalLength();
-        if (Number.isFinite(len2) && len2 > 0) {
-            pulsePathLength.value = len2;
-        }
+        if (el2 && typeof el2.getTotalLength === 'function') {
+            const len2 = el2.getTotalLength();
+            if (Number.isFinite(len2) && len2 > 0) {
+                pulsePathLength.value = len2;
+            }
         }
     });
 }
@@ -258,9 +287,13 @@ const pulseMotion = computed(() => {
         };
     }
 
-    const bez = easing === 'cubic-bezier'
-        ? (Array.isArray(pulse.value?.cubicBezier) && pulse.value.cubicBezier.length === 4 ? pulse.value.cubicBezier : [0.4, 0, 0.2, 1])
-        : (presets[easing] || presets['ease-in-out']);
+    const bez =
+        easing === 'cubic-bezier'
+            ? Array.isArray(pulse.value?.cubicBezier) &&
+              pulse.value.cubicBezier.length === 4
+                ? pulse.value.cubicBezier
+                : [0.4, 0, 0.2, 1]
+            : presets[easing] || presets['ease-in-out'];
 
     return {
         calcMode: 'spline',
@@ -276,7 +309,7 @@ const pulseTrail = computed(() => {
     return {
         show: t.show !== false,
         lengthPx: t.length,
-        width: Math.max(1, Number(t.strokeWidth) || (base * 2.2)),
+        width: Math.max(1, Number(t.strokeWidth) || base * 2.2),
         opacity: Math.min(1, Math.max(0, Number(t.opacity) ?? 0.6)),
         fadeIn: 0.5,
         fadeOut: 0.2,
@@ -286,52 +319,63 @@ const pulseTrail = computed(() => {
 const downsampled = computed(() => {
     return largestTriangleThreeBucketsArrayObjects({
         data: FINAL_DATASET.value,
-        threshold: FINAL_CONFIG.value.downsample.threshold
-    })
-})
+        threshold: FINAL_CONFIG.value.downsample.threshold,
+    });
+});
 
-watch(() => props.config, (_newCfg) => {
-    if (!loading.value) {
-        FINAL_CONFIG.value = prepareConfig();
-    }
-    prepareChart();
-    svg.value.chartWidth = FINAL_CONFIG.value.style.chartWidth;
-}, { deep: true });
-
-watch(() => props.dataset, (_) => {
-    if (Array.isArray(_) && _.length > 0) {
-        manualLoading.value = false;
-    }
-    safeDatasetCopy.value = largestTriangleThreeBucketsArrayObjects({
-        data: FINAL_DATASET.value.map(d => {
-        return {
-            ...d,
-            value: ![undefined].includes(d.value) ? d.value : null
+watch(
+    () => props.config,
+    (_newCfg) => {
+        if (!loading.value) {
+            FINAL_CONFIG.value = prepareConfig();
         }
-    }),
-        threshold: FINAL_CONFIG.value.downsample.threshold
-    })
-}, { deep: true })
+        prepareChart();
+        svg.value.chartWidth = FINAL_CONFIG.value.style.chartWidth;
+    },
+    { deep: true },
+);
+
+watch(
+    () => props.dataset,
+    (_) => {
+        if (Array.isArray(_) && _.length > 0) {
+            manualLoading.value = false;
+        }
+        safeDatasetCopy.value = largestTriangleThreeBucketsArrayObjects({
+            data: FINAL_DATASET.value.map((d) => {
+                return {
+                    ...d,
+                    value: ![undefined].includes(d.value) ? d.value : null,
+                };
+            }),
+            threshold: FINAL_CONFIG.value.downsample.threshold,
+        });
+    },
+    { deep: true },
+);
 
 const safeDatasetCopy = ref(prepareDsCopy());
 
 function prepareDsCopy() {
     return largestTriangleThreeBucketsArrayObjects({
-        data: FINAL_DATASET.value.map(d => {
-            if (FINAL_CONFIG.value.style.animation.show && FINAL_DATASET.value.length > 1) {
+        data: FINAL_DATASET.value.map((d) => {
+            if (
+                FINAL_CONFIG.value.style.animation.show &&
+                FINAL_DATASET.value.length > 1
+            ) {
                 return {
                     ...d,
-                    value: null
-                }
+                    value: null,
+                };
             } else {
                 return {
                     ...d,
-                    value: ![undefined].includes(d.value) ? d.value : null
-                }
+                    value: ![undefined].includes(d.value) ? d.value : null,
+                };
             }
         }),
-        threshold: FINAL_CONFIG.value.downsample.threshold
-    })
+        threshold: FINAL_CONFIG.value.downsample.threshold,
+    });
 }
 
 const resizeObserver = shallowRef(null);
@@ -344,9 +388,13 @@ const lastAnimationKey = ref('');
 
 const animationKey = computed(() => {
     const ds = downsampled.value || [];
-    const sig = ds.map(d => `${d.period}::${Number.isFinite(d.value) ? d.value : 0}`).join("|");
+    const sig = ds
+        .map((d) => `${d.period}::${Number.isFinite(d.value) ? d.value : 0}`)
+        .join('|');
     const cfg = FINAL_CONFIG.value?.style?.animation || {};
-    const gradientPathEnabled = !!FINAL_CONFIG.value?.gradientPath?.show && !FINAL_CONFIG.value.temperatureColors.show;
+    const gradientPathEnabled =
+        !!FINAL_CONFIG.value?.gradientPath?.show &&
+        !FINAL_CONFIG.value.temperatureColors.show;
 
     return `${sig}#${!!cfg.show}#${cfg.animationFrames || 0}#${gradientPathEnabled}`;
 });
@@ -356,7 +404,7 @@ function stopAnimation() {
         cancelAnimationFrame(rafId.value);
         rafId.value = 0;
     }
-    timeoutIds.value.forEach(id => clearTimeout(id));
+    timeoutIds.value.forEach((id) => clearTimeout(id));
     timeoutIds.value = [];
     isAnimating.value = false;
 }
@@ -365,9 +413,15 @@ function animateSL() {
     const cfg = FINAL_CONFIG.value?.style?.animation || {};
     const ds = downsampled.value || [];
     const key = animationKey.value;
-    const gradientPathEnabled = !!FINAL_CONFIG.value.gradientPath.show && !FINAL_CONFIG.value.temperatureColors.show;
+    const gradientPathEnabled =
+        !!FINAL_CONFIG.value.gradientPath.show &&
+        !FINAL_CONFIG.value.temperatureColors.show;
 
-    if (key && key === lastAnimationKey.value && (isAnimating.value || safeDatasetCopy.value.length === ds.length)) {
+    if (
+        key &&
+        key === lastAnimationKey.value &&
+        (isAnimating.value || safeDatasetCopy.value.length === ds.length)
+    ) {
         return;
     }
 
@@ -429,7 +483,7 @@ watch(
         if (isLoading) return;
         await nextTick();
         pulseInstanceKey.value += 1;
-    }
+    },
 );
 
 watch(
@@ -439,7 +493,7 @@ watch(
         if (loading.value) return;
         await nextTick();
         pulseInstanceKey.value += 1;
-    }
+    },
 );
 
 const pulsePathId = computed(() => {
@@ -459,7 +513,7 @@ async function restartPulse() {
 const debug = computed(() => !!FINAL_CONFIG.value.debug);
 
 function prepareChart() {
-    if(objectIsEmpty(props.dataset)) {
+    if (objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiSparkline',
             type: 'dataset',
@@ -470,14 +524,14 @@ function prepareChart() {
         props.dataset.forEach((ds, i) => {
             getMissingDatasetAttributes({
                 datasetObject: ds,
-                requiredAttributes: ['period', 'value']
-            }).forEach(attr => {
+                requiredAttributes: ['period', 'value'],
+            }).forEach((attr) => {
                 error({
                     componentName: 'VueUiSparkline',
                     type: 'datasetSerieAttribute',
                     property: attr,
                     index: i,
-                    debug: debug.value
+                    debug: debug.value,
                 });
             });
         });
@@ -492,15 +546,19 @@ function prepareChart() {
         const handleResize = throttle(() => {
             const { width, height } = useResponsive({
                 chart: sparklineChart.value,
-                title: FINAL_CONFIG.value.style.title.show && props.showInfo ? chartTitle.value : null,
-                source: source.value
+                title:
+                    FINAL_CONFIG.value.style.title.show && props.showInfo
+                        ? chartTitle.value
+                        : null,
+                source: source.value,
             });
 
             requestAnimationFrame(() => {
                 svg.value.width = width;
                 svg.value.height = height;
-                svg.value.chartWidth = FINAL_CONFIG.value.style.chartWidth / 500 * width;
-                svg.value.padding = props.forcedPadding / 500 * width;
+                svg.value.chartWidth =
+                    (FINAL_CONFIG.value.style.chartWidth / 500) * width;
+                svg.value.padding = (props.forcedPadding / 500) * width;
             });
         });
 
@@ -514,7 +572,7 @@ function prepareChart() {
         resizeObserver.value = new ResizeObserver(handleResize);
         observedEl.value = sparklineChart.value.parentNode;
         resizeObserver.value.observe(observedEl.value);
-    };
+    }
 }
 
 onBeforeUnmount(() => {
@@ -530,29 +588,51 @@ const svg = ref({
     height: 80 * props.heightRatio,
     width: 500,
     chartWidth: FINAL_CONFIG.value.style.chartWidth,
-    padding: props.forcedPadding
+    padding: props.forcedPadding,
 });
 
-const emits = defineEmits(['hoverIndex', 'selectDatapoint'])
+const emits = defineEmits(['hoverIndex', 'selectDatapoint']);
 
 const drawingArea = computed(() => {
-    const { top: p_top, right: p_right, bottom: p_bottom, left: p_left } = FINAL_CONFIG.value.style.padding;
+    const {
+        top: p_top,
+        right: p_right,
+        bottom: p_bottom,
+        left: p_left,
+    } = FINAL_CONFIG.value.style.padding;
     return {
         top: p_top,
         left: p_left,
         right: svg.value.width - p_right,
         bottom: svg.value.height - p_bottom,
-        start: props.showInfo && FINAL_CONFIG.value.style.dataLabel.show && FINAL_CONFIG.value.style.dataLabel.position === 'left' ? svg.value.width - svg.value.chartWidth + p_left : svg.value.padding + p_left,
-        width: props.showInfo && FINAL_CONFIG.value.style.dataLabel.show ? svg.value.chartWidth - p_left - p_right : svg.value.width - svg.value.padding - p_left - p_right,
-        height: svg.value.height - p_top - p_bottom
-    }
+        start:
+            props.showInfo &&
+            FINAL_CONFIG.value.style.dataLabel.show &&
+            FINAL_CONFIG.value.style.dataLabel.position === 'left'
+                ? svg.value.width - svg.value.chartWidth + p_left
+                : svg.value.padding + p_left,
+        width:
+            props.showInfo && FINAL_CONFIG.value.style.dataLabel.show
+                ? svg.value.chartWidth - p_left - p_right
+                : svg.value.width - svg.value.padding - p_left - p_right,
+        height: svg.value.height - p_top - p_bottom,
+    };
 });
 
 const min = computed(() => {
     if (![null, undefined].includes(FINAL_CONFIG.value.style.scaleMin)) {
         return FINAL_CONFIG.value.style.scaleMin;
     } else {
-        return Math.min(...safeDatasetCopy.value.map(s => isNaN(s.value) || [undefined, null, 'NaN', NaN, Infinity, -Infinity].includes(s.value) ? 0 : s.value || 0))
+        return Math.min(
+            ...safeDatasetCopy.value.map((s) =>
+                isNaN(s.value) ||
+                [undefined, null, 'NaN', NaN, Infinity, -Infinity].includes(
+                    s.value,
+                )
+                    ? 0
+                    : s.value || 0,
+            ),
+        );
     }
 });
 
@@ -560,12 +640,21 @@ const max = computed(() => {
     if (![null, undefined].includes(FINAL_CONFIG.value.style.scaleMax)) {
         return FINAL_CONFIG.value.style.scaleMax;
     } else {
-        return Math.max(...safeDatasetCopy.value.map(s => isNaN(s.value) || [undefined, null, 'NaN', NaN, Infinity, -Infinity].includes(s.value) ? 0 : s.value || 0))
+        return Math.max(
+            ...safeDatasetCopy.value.map((s) =>
+                isNaN(s.value) ||
+                [undefined, null, 'NaN', NaN, Infinity, -Infinity].includes(
+                    s.value,
+                )
+                    ? 0
+                    : s.value || 0,
+            ),
+        );
     }
 });
 
 const absoluteMin = computed(() => {
-    const num = min.value >= 0 ? 0 : min.value
+    const num = min.value >= 0 ? 0 : min.value;
     return Math.abs(num);
 });
 
@@ -574,14 +663,17 @@ const absoluteMax = computed(() => {
 });
 
 const absoluteZero = computed(() => {
-    return drawingArea.value.bottom - (drawingArea.value.height * ratioToMax(absoluteMin.value))
-})
+    return (
+        drawingArea.value.bottom -
+        drawingArea.value.height * ratioToMax(absoluteMin.value)
+    );
+});
 
 function ratioToMax(v) {
     return isNaN(v / absoluteMax.value) ? 0 : v / absoluteMax.value;
 }
 
-const len = computed(() => (downsampled.value.length - 1) || 1);
+const len = computed(() => downsampled.value.length - 1 || 1);
 
 const timeLabels = ref([]);
 
@@ -591,11 +683,11 @@ watchEffect(() => {
 
     (async () => {
         const labels = await useTimeLabels({
-            values: downsampled.value.map(d => d.period),
+            values: downsampled.value.map((d) => d.period),
             maxDatapoints: downsampled.value.length,
             formatter: FINAL_CONFIG.value.style.dataLabel.datetimeFormatter,
             start: 0,
-            end: downsampled.value.length
+            end: downsampled.value.length,
         });
 
         if (requestId === timeLabelsRequestId) {
@@ -606,21 +698,40 @@ watchEffect(() => {
 
 const mutableDataset = computed(() => {
     return safeDatasetCopy.value.map((s, i) => {
-        const absoluteValue = isNaN(s.value) || [undefined, null, 'NaN', NaN, Infinity, -Infinity].includes(s.value) ? 0 : (s.value || 0);
-        const width = drawingArea.value.width / len.value
+        const absoluteValue =
+            isNaN(s.value) ||
+            [undefined, null, 'NaN', NaN, Infinity, -Infinity].includes(s.value)
+                ? 0
+                : s.value || 0;
+        const width = drawingArea.value.width / len.value;
         return {
             value: s.value,
             absoluteValue,
-            period: timeLabels.value && timeLabels.value[i] && timeLabels.value[i].text ? timeLabels.value[i].text : s.period,
+            period:
+                timeLabels.value &&
+                timeLabels.value[i] &&
+                timeLabels.value[i].text
+                    ? timeLabels.value[i].text
+                    : s.period,
             plotValue: absoluteValue + absoluteMin.value,
             toMax: ratioToMax(absoluteValue + absoluteMin.value),
-            x: drawingArea.value.start + (i * width),
-            y: drawingArea.value.bottom - (drawingArea.value.height * ratioToMax(absoluteValue + absoluteMin.value)),
+            x: drawingArea.value.start + i * width,
+            y:
+                drawingArea.value.bottom -
+                drawingArea.value.height *
+                    ratioToMax(absoluteValue + absoluteMin.value),
             id: `plot_${uid.value}_${i}`,
-            color: isBar.value ? FINAL_CONFIG.value.style.bar.color : FINAL_CONFIG.value.style.area.useGradient ? shiftHue(FINAL_CONFIG.value.style.line.color, 0.05 * ( 1 - (i / len.value))) : FINAL_CONFIG.value.style.line.color,
-            width
-        }
-    })
+            color: isBar.value
+                ? FINAL_CONFIG.value.style.bar.color
+                : FINAL_CONFIG.value.style.area.useGradient
+                  ? shiftHue(
+                        FINAL_CONFIG.value.style.line.color,
+                        0.05 * (1 - i / len.value),
+                    )
+                  : FINAL_CONFIG.value.style.line.color,
+            width,
+        };
+    });
 });
 
 const currentSelectedIndex = computed(() => {
@@ -646,22 +757,30 @@ const currentSelectedIndex = computed(() => {
 });
 
 const area = computed(() => {
-    const start = { x: mutableDataset.value[0].x || 0, y: (svg.value.height || 0) - 6 };
-    const end = { x: mutableDataset.value[mutableDataset.value.length -1].x || 0, y: (svg.value.height || 0) - 6 };
+    const start = {
+        x: mutableDataset.value[0].x || 0,
+        y: (svg.value.height || 0) - 6,
+    };
+    const end = {
+        x: mutableDataset.value[mutableDataset.value.length - 1].x || 0,
+        y: (svg.value.height || 0) - 6,
+    };
     const path = [];
-    mutableDataset.value.forEach(v => {
-        path.push(`${v.x || 0},${v.y || 0} `)
+    mutableDataset.value.forEach((v) => {
+        path.push(`${v.x || 0},${v.y || 0} `);
     });
-    return [ start.x,start.y, ...path, end.x, end.y ].toString();
+    return [start.x, start.y, ...path, end.x, end.y].toString();
 });
-
 
 const selectedPlot = ref(undefined);
 const previousSelectedPlot = ref(undefined);
 
 function selectPlot(plot, index) {
     if (FINAL_CONFIG.value.events.datapointEnter) {
-        FINAL_CONFIG.value.events.datapointEnter({ datapoint: plot, seriesIndex: index });
+        FINAL_CONFIG.value.events.datapointEnter({
+            datapoint: plot,
+            seriesIndex: index,
+        });
     }
 
     internalSelectedIndex.value = index;
@@ -677,7 +796,10 @@ function selectPlot(plot, index) {
 
 function unselectPlot(plot, index) {
     if (FINAL_CONFIG.value.events.datapointLeave) {
-        FINAL_CONFIG.value.events.datapointLeave({ datapoint: plot, seriesIndex: index });
+        FINAL_CONFIG.value.events.datapointLeave({
+            datapoint: plot,
+            seriesIndex: index,
+        });
     }
 
     previousSelectedPlot.value = selectedPlot.value;
@@ -694,36 +816,41 @@ const dataLabelValues = computed(() => {
             sum: null,
             average: null,
             median: null,
-            trend: null
-        }
+            trend: null,
+        };
     } else {
-        const ds = mutableDataset.value.map(m => m.absoluteValue);
-        const sum = ds.reduce((a, b) => a + b, 0)
+        const ds = mutableDataset.value.map((m) => m.absoluteValue);
+        const sum = ds.reduce((a, b) => a + b, 0);
         return {
-            latest: mutableDataset.value[mutableDataset.value.length -1] ? mutableDataset.value[mutableDataset.value.length -1].absoluteValue : 0,
+            latest: mutableDataset.value[mutableDataset.value.length - 1]
+                ? mutableDataset.value[mutableDataset.value.length - 1]
+                      .absoluteValue
+                : 0,
             sum,
             average: sum / mutableDataset.value.length,
             median: calcMedian(ds),
-            trend: calcLinearProgression(mutableDataset.value.map(({x, y, absoluteValue}) => {
-                return {
-                    x,
-                    y,
-                    value: absoluteValue
-                }
-            })).trend
-        }
+            trend: calcLinearProgression(
+                mutableDataset.value.map(({ x, y, absoluteValue }) => {
+                    return {
+                        x,
+                        y,
+                        value: absoluteValue,
+                    };
+                }),
+            ).trend,
+        };
     }
 });
 
 const dataLabel = computed(() => {
-    if(!isDataset.value) {
-        return 0
+    if (!isDataset.value) {
+        return 0;
     }
     if (FINAL_CONFIG.value.style.dataLabel.valueType === 'latest') {
-        return dataLabelValues.value.latest
-    } else if(FINAL_CONFIG.value.style.dataLabel.valueType === 'sum') {
+        return dataLabelValues.value.latest;
+    } else if (FINAL_CONFIG.value.style.dataLabel.valueType === 'sum') {
         return dataLabelValues.value.sum;
-    } else if(FINAL_CONFIG.value.style.dataLabel.valueType === "average") {
+    } else if (FINAL_CONFIG.value.style.dataLabel.valueType === 'average') {
         return dataLabelValues.value.average;
     } else {
         return 0;
@@ -736,13 +863,19 @@ const isBar = computed(() => {
 
 function selectDatapoint(datapoint, index) {
     if (FINAL_CONFIG.value.events.datapointClick) {
-        FINAL_CONFIG.value.events.datapointClick({ datapoint, seriesIndex: index })
+        FINAL_CONFIG.value.events.datapointClick({
+            datapoint,
+            seriesIndex: index,
+        });
     }
-    emits('selectDatapoint', { datapoint, index })
+    emits('selectDatapoint', { datapoint, index });
 }
 
 const hasDashedSegments = computed(() => {
-    return Array.isArray(FINAL_CONFIG.value.style.line.dashIndices) && FINAL_CONFIG.value.style.line.dashIndices.length > 0;
+    return (
+        Array.isArray(FINAL_CONFIG.value.style.line.dashIndices) &&
+        FINAL_CONFIG.value.style.line.dashIndices.length > 0
+    );
 });
 
 const smoothLinePath = computed(() => {
@@ -759,7 +892,7 @@ const dashedSmoothSegments = computed(() => {
     if (isBar.value || !hasDashedSegments.value) return [];
     return createSmoothPathWithCutsSegments(
         mutableDataset.value,
-        FINAL_CONFIG.value.style.line.dashIndices
+        FINAL_CONFIG.value.style.line.dashIndices,
     );
 });
 
@@ -767,7 +900,7 @@ const dashedStraightSegments = computed(() => {
     if (isBar.value || !hasDashedSegments.value) return [];
     return createStraightPathWithCutsSegments(
         mutableDataset.value,
-        FINAL_CONFIG.value.style.line.dashIndices
+        FINAL_CONFIG.value.style.line.dashIndices,
     );
 });
 
@@ -783,8 +916,10 @@ const gradientSvgPathData = computed(() => {
 const temperatureColors = computed(() => {
     if (!FINAL_CONFIG.value.temperatureColors.show) return null;
     if (FINAL_CONFIG.value.temperatureColors.colors.length === 0) return null;
-    return FINAL_CONFIG.value.temperatureColors.colors.map(c => convertColorToHex(c));
-})
+    return FINAL_CONFIG.value.temperatureColors.colors.map((c) =>
+        convertColorToHex(c),
+    );
+});
 
 watch(
     () => [
@@ -799,7 +934,7 @@ watch(
         await nextTick();
         updatePulsePathLength();
     },
-    { immediate: true }
+    { immediate: true },
 );
 
 onMounted(async () => {
@@ -812,7 +947,7 @@ watch(
     async (isLoading) => {
         if (isLoading) return;
         await restartPulse();
-    }
+    },
 );
 
 watch(
@@ -821,7 +956,7 @@ watch(
         if (animating) return;
         if (loading.value) return;
         await restartPulse();
-    }
+    },
 );
 
 watch(
@@ -839,7 +974,7 @@ watch(
         internalSelectedIndex.value = newIndex;
         activeTooltipIndex.value = newIndex;
         selectedPlot.value = plot;
-    }
+    },
 );
 
 /***************************************************************************************************
@@ -866,7 +1001,10 @@ function onSvgFocus() {
     }
     activeTooltipIndex.value = null;
     if (!selectedPlot.value && mutableDataset.value.length) {
-        selectPlot(mutableDataset.value.at(-1), mutableDataset.value.length - 1);
+        selectPlot(
+            mutableDataset.value.at(-1),
+            mutableDataset.value.length - 1,
+        );
     }
     isFocus.value = true;
 }
@@ -902,25 +1040,20 @@ function onSvgKeydown(event) {
     let nextIndex = activeTooltipIndex.value;
 
     const hasValidActiveIndex =
-        nextIndex !== null &&
-        nextIndex >= 0 &&
-        nextIndex < plotCount;
+        nextIndex !== null && nextIndex >= 0 && nextIndex < plotCount;
 
-    const hoveredIndex =
-        selectedPlot.value
-            ? mutableDataset.value.findIndex(plot => plot.id === selectedPlot.value.id)
-            : -1;
+    const hoveredIndex = selectedPlot.value
+        ? mutableDataset.value.findIndex(
+              (plot) => plot.id === selectedPlot.value.id,
+          )
+        : -1;
 
     const hasValidHoveredIndex =
-        hoveredIndex !== null &&
-        hoveredIndex >= 0 &&
-        hoveredIndex < plotCount;
+        hoveredIndex !== null && hoveredIndex >= 0 && hoveredIndex < plotCount;
 
     if (!hasValidActiveIndex) {
         if (hasValidHoveredIndex) {
-            nextIndex = isRightArrow
-                ? hoveredIndex + 1
-                : hoveredIndex - 1;
+            nextIndex = isRightArrow ? hoveredIndex + 1 : hoveredIndex - 1;
 
             if (nextIndex >= plotCount) {
                 nextIndex = 0;
@@ -959,15 +1092,18 @@ const a11yTable = computed(() => {
         FINAL_CONFIG.value.translations.period,
         FINAL_CONFIG.value.translations.value,
     ];
-    const rows = mutableDataset.value.map(d => [d.period, d.absoluteValue]);
+    const rows = mutableDataset.value.map((d) => [d.period, d.absoluteValue]);
     return { headers, rows };
-})
-
+});
 </script>
 
 <template>
-    <div ref="sparklineChart"  class="vue-data-ui-component vue-ui-sparkline" :id="uid" :style="`width:100%;font-family:${FINAL_CONFIG.style.fontFamily};`">
-
+    <div
+        ref="sparklineChart"
+        class="vue-data-ui-component vue-ui-sparkline"
+        :id="uid"
+        :style="`width:100%;font-family:${FINAL_CONFIG.style.fontFamily};`"
+    >
         <p :id="`chart-instructions-${uid}`" class="sr-only">
             {{ FINAL_CONFIG.a11y.translations.keyboardNavigation }}
         </p>
@@ -982,32 +1118,46 @@ const a11yTable = computed(() => {
         />
 
         <!-- SLOT BEFORE -->
-        <slot 
-            name="before" 
-            v-bind="{ 
-                selected: selectedPlot, 
+        <slot
+            name="before"
+            v-bind="{
+                selected: selectedPlot,
                 latest: dataLabelValues.latest,
                 sum: dataLabelValues.sum,
                 average: dataLabelValues.average,
                 median: dataLabelValues.median,
-                trend: dataLabelValues.trend
+                trend: dataLabelValues.trend,
             }"
         />
 
         <!-- TITLE -->
-        <div data-cy="title" ref="chartTitle" v-if="FINAL_CONFIG.style.title.show && showInfo" class="vue-ui-sparkline-title" :style="`display:flex;align-items:center;width:100%;color:${FINAL_CONFIG.style.title.color};background:${FINAL_CONFIG.style.backgroundColor};justify-content:${FINAL_CONFIG.style.title.textAlign === 'left' ? 'flex-start' : FINAL_CONFIG.style.title.textAlign === 'right' ? 'flex-end' : 'center'};height:${FINAL_CONFIG.style.title.fontSize * 2}px;font-size:${FINAL_CONFIG.style.title.fontSize}px;font-weight:${FINAL_CONFIG.style.title.bold ? 'bold' : 'normal'};`">
-            <span data-cy="sparkline-period-label" :style="`padding:${FINAL_CONFIG.style.title.textAlign === 'left' ? '0 0 0 12px' : FINAL_CONFIG.style.title.textAlign === 'right' ? '0 12px 0 0' : '0'}`">
-                {{ selectedPlot ? selectedPlot.period : FINAL_CONFIG.style.title.text }}
+        <div
+            data-cy="title"
+            ref="chartTitle"
+            v-if="FINAL_CONFIG.style.title.show && showInfo"
+            class="vue-ui-sparkline-title"
+            :style="`display:flex;align-items:center;width:100%;color:${FINAL_CONFIG.style.title.color};background:${FINAL_CONFIG.style.backgroundColor};justify-content:${FINAL_CONFIG.style.title.textAlign === 'left' ? 'flex-start' : FINAL_CONFIG.style.title.textAlign === 'right' ? 'flex-end' : 'center'};height:${FINAL_CONFIG.style.title.fontSize * 2}px;font-size:${FINAL_CONFIG.style.title.fontSize}px;font-weight:${FINAL_CONFIG.style.title.bold ? 'bold' : 'normal'};`"
+        >
+            <span
+                data-cy="sparkline-period-label"
+                :style="`padding:${FINAL_CONFIG.style.title.textAlign === 'left' ? '0 0 0 12px' : FINAL_CONFIG.style.title.textAlign === 'right' ? '0 12px 0 0' : '0'}`"
+            >
+                {{
+                    selectedPlot
+                        ? selectedPlot.period
+                        : FINAL_CONFIG.style.title.text
+                }}
             </span>
         </div>
 
         <!-- CHART -->
-        <div style="position:relative">
+        <div style="position: relative">
             <svg
                 ref="svgRef"
                 :xmlns="XMLNS"
                 data-cy="sparkline-svg"
-                :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`background:${FINAL_CONFIG.style.backgroundColor};overflow:visible;direction:ltr`"
+                :viewBox="`0 0 ${svg.width} ${svg.height}`"
+                :style="`background:${FINAL_CONFIG.style.backgroundColor};overflow:visible;direction:ltr`"
                 tabindex="0"
                 :aria-describedby="`chart-instructions-${uid}`"
                 @mouseleave="previousSelectedPlot = undefined"
@@ -1016,39 +1166,85 @@ const a11yTable = computed(() => {
                 @keydown="onSvgKeydown"
             >
                 <PackageVersion />
-    
+
                 <!-- BACKGROUND SLOT -->
-                <foreignObject 
+                <foreignObject
                     v-if="$slots['chart-background']"
                     :x="0"
                     :y="0"
                     :width="svg.width <= 0 ? 10 : svg.width"
                     :height="svg.height <= 0 ? 10 : svg.height"
                     :style="{
-                        pointerEvents: 'none'
+                        pointerEvents: 'none',
                     }"
                 >
-                    <slot name="chart-background"/>
+                    <slot name="chart-background" />
                 </foreignObject>
-                
+
                 <!-- DEFS -->
                 <defs>
                     <linearGradient
-                        x1="0%" y1="0%" x2="100%" y2="0%"
+                        x1="0%"
+                        y1="0%"
+                        x2="100%"
+                        y2="0%"
                         :id="`sparkline_gradient_${uid}`"
                     >
-                        <stop offset="0%" :stop-color="setOpacity(shiftHue(FINAL_CONFIG.style.area.color, 0.05), FINAL_CONFIG.style.area.opacity)"/>
-                        <stop offset="100%" :stop-color="setOpacity(FINAL_CONFIG.style.area.color, FINAL_CONFIG.style.area.opacity)" />
+                        <stop
+                            offset="0%"
+                            :stop-color="
+                                setOpacity(
+                                    shiftHue(
+                                        FINAL_CONFIG.style.area.color,
+                                        0.05,
+                                    ),
+                                    FINAL_CONFIG.style.area.opacity,
+                                )
+                            "
+                        />
+                        <stop
+                            offset="100%"
+                            :stop-color="
+                                setOpacity(
+                                    FINAL_CONFIG.style.area.color,
+                                    FINAL_CONFIG.style.area.opacity,
+                                )
+                            "
+                        />
                     </linearGradient>
-                    <linearGradient x2="0%" y2="100%" :id="`sparkline_bar_gradient_pos_${uid}`">
-                        <stop offset="0%" :stop-color="FINAL_CONFIG.style.bar.color"/>
-                        <stop offset="100%" :stop-color="shiftHue(FINAL_CONFIG.style.bar.color, 0.05)"/>
+                    <linearGradient
+                        x2="0%"
+                        y2="100%"
+                        :id="`sparkline_bar_gradient_pos_${uid}`"
+                    >
+                        <stop
+                            offset="0%"
+                            :stop-color="FINAL_CONFIG.style.bar.color"
+                        />
+                        <stop
+                            offset="100%"
+                            :stop-color="
+                                shiftHue(FINAL_CONFIG.style.bar.color, 0.05)
+                            "
+                        />
                     </linearGradient>
-                    <linearGradient x2="0%" y2="100%" :id="`sparkline_bar_gradient_neg_${uid}`">
-                        <stop offset="0%" :stop-color="shiftHue(FINAL_CONFIG.style.bar.color, 0.05)"/>
-                        <stop offset="100%" :stop-color="FINAL_CONFIG.style.bar.color"/>
+                    <linearGradient
+                        x2="0%"
+                        y2="100%"
+                        :id="`sparkline_bar_gradient_neg_${uid}`"
+                    >
+                        <stop
+                            offset="0%"
+                            :stop-color="
+                                shiftHue(FINAL_CONFIG.style.bar.color, 0.05)
+                            "
+                        />
+                        <stop
+                            offset="100%"
+                            :stop-color="FINAL_CONFIG.style.bar.color"
+                        />
                     </linearGradient>
-    
+
                     <filter
                         :id="`sparkline_pulse_glow_${uid}`"
                         filterUnits="userSpaceOnUse"
@@ -1056,57 +1252,86 @@ const a11yTable = computed(() => {
                         y="-50"
                         width="100"
                         height="100"
-                        >
-                        <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur" />
+                    >
+                        <feGaussianBlur
+                            in="SourceGraphic"
+                            stdDeviation="3"
+                            result="blur"
+                        />
                         <feMerge>
                             <feMergeNode in="blur" />
                             <feMergeNode in="SourceGraphic" />
                         </feMerge>
                     </filter>
-    
+
                     <linearGradient
-                        v-if="FINAL_CONFIG.temperatureColors.show && !!temperatureColors"
+                        v-if="
+                            FINAL_CONFIG.temperatureColors.show &&
+                            !!temperatureColors
+                        "
                         :id="`temperature_grad_sparkline_${uid}`"
                         gradientTransform="rotate(90)"
                     >
-                        <stop 
+                        <stop
                             v-for="(color, i) in temperatureColors"
                             :key="`temperature_grad_stop_${i}_${uid}`"
                             :stop-color="color"
-                            :offset="setGradientOffset(i, temperatureColors.length)"
+                            :offset="
+                                setGradientOffset(i, temperatureColors.length)
+                            "
                         />
                     </linearGradient>
                 </defs>
-    
-    
+
                 <!-- AREA -->
-                <g v-if="FINAL_CONFIG.style.area.show && !isBar && mutableDataset[0] && mutableDataset.length > 1">
+                <g
+                    v-if="
+                        FINAL_CONFIG.style.area.show &&
+                        !isBar &&
+                        mutableDataset[0] &&
+                        mutableDataset.length > 1
+                    "
+                >
                     <path
                         class="vue-ui-sparkline-area"
                         data-cy="sparkline-smooth-area"
                         v-if="FINAL_CONFIG.style.line.smooth"
                         :d="`M ${mutableDataset[0].x},${drawingArea.bottom} ${createSmoothPath(mutableDataset)} L ${mutableDataset.at(-1).x},${drawingArea.bottom} Z`"
-                        :fill="FINAL_CONFIG.style.area.useGradient ? `url(#sparkline_gradient_${uid})` : setOpacity(FINAL_CONFIG.style.area.color, FINAL_CONFIG.style.area.opacity)"
+                        :fill="
+                            FINAL_CONFIG.style.area.useGradient
+                                ? `url(#sparkline_gradient_${uid})`
+                                : setOpacity(
+                                      FINAL_CONFIG.style.area.color,
+                                      FINAL_CONFIG.style.area.opacity,
+                                  )
+                        "
                         stroke-linecap="round"
                         stroke-linejoin="round"
                         :style="{
-                            transition: loading ? undefined : 'all 0.2s'
+                            transition: loading ? undefined : 'all 0.2s',
                         }"
                     />
                     <path
                         class="vue-ui-sparkline-area"
                         data-cy="sparkline-angle-area"
                         v-else
-                        :d="`M${area}Z`" 
-                        :fill="FINAL_CONFIG.style.area.useGradient ? `url(#sparkline_gradient_${uid})` : setOpacity(FINAL_CONFIG.style.area.color, FINAL_CONFIG.style.area.opacity)"
+                        :d="`M${area}Z`"
+                        :fill="
+                            FINAL_CONFIG.style.area.useGradient
+                                ? `url(#sparkline_gradient_${uid})`
+                                : setOpacity(
+                                      FINAL_CONFIG.style.area.color,
+                                      FINAL_CONFIG.style.area.opacity,
+                                  )
+                        "
                         stroke-linecap="round"
                         stroke-linejoin="round"
                         :style="{
-                            transition: loading ? undefined : 'all 0.2s'
+                            transition: loading ? undefined : 'all 0.2s',
                         }"
                     />
                 </g>
-    
+
                 <template v-if="FINAL_CONFIG.style.line.smooth && !isBar">
                     <path
                         :id="pulsePathId"
@@ -1125,14 +1350,22 @@ const a11yTable = computed(() => {
                             class="vue-ui-sparkline-path"
                             data-cy="sparkline-smooth-path"
                             :d="`M ${segment.path}`"
-                            :stroke="!!temperatureColors ? `url(#temperature_grad_sparkline_${uid})` : FINAL_CONFIG.style.line.color"
+                            :stroke="
+                                !!temperatureColors
+                                    ? `url(#temperature_grad_sparkline_${uid})`
+                                    : FINAL_CONFIG.style.line.color
+                            "
                             fill="none"
                             :stroke-width="FINAL_CONFIG.style.line.strokeWidth"
                             stroke-linecap="round"
                             stroke-linejoin="round"
-                            :stroke-dasharray="segment.dashed ? FINAL_CONFIG.style.line.dashArray : 0"
+                            :stroke-dasharray="
+                                segment.dashed
+                                    ? FINAL_CONFIG.style.line.dashArray
+                                    : 0
+                            "
                             :style="{
-                                transition: loading ? undefined : 'all 0.2s'
+                                transition: loading ? undefined : 'all 0.2s',
                             }"
                         />
                     </template>
@@ -1142,13 +1375,17 @@ const a11yTable = computed(() => {
                         class="vue-ui-sparkline-path"
                         data-cy="sparkline-smooth-path"
                         :d="`M ${smoothLinePath || '0,0'}`"
-                        :stroke="!!temperatureColors ? `url(#temperature_grad_sparkline_${uid})` : FINAL_CONFIG.style.line.color"
+                        :stroke="
+                            !!temperatureColors
+                                ? `url(#temperature_grad_sparkline_${uid})`
+                                : FINAL_CONFIG.style.line.color
+                        "
                         fill="none"
                         :stroke-width="FINAL_CONFIG.style.line.strokeWidth"
                         stroke-linecap="round"
                         stroke-linejoin="round"
                         :style="{
-                            transition: loading ? undefined : 'all 0.2s'
+                            transition: loading ? undefined : 'all 0.2s',
                         }"
                     />
                 </template>
@@ -1171,14 +1408,22 @@ const a11yTable = computed(() => {
                             class="vue-ui-sparkline-path"
                             data-cy="sparkline-straight-line"
                             :d="`M ${segment.path}`"
-                            :stroke="!!temperatureColors ? `url(#temperature_grad_sparkline_${uid})` : FINAL_CONFIG.style.line.color"
+                            :stroke="
+                                !!temperatureColors
+                                    ? `url(#temperature_grad_sparkline_${uid})`
+                                    : FINAL_CONFIG.style.line.color
+                            "
                             fill="none"
                             :stroke-width="FINAL_CONFIG.style.line.strokeWidth"
                             stroke-linecap="round"
                             stroke-linejoin="round"
-                            :stroke-dasharray="segment.dashed ? FINAL_CONFIG.style.line.dashArray * 2 : 0"
+                            :stroke-dasharray="
+                                segment.dashed
+                                    ? FINAL_CONFIG.style.line.dashArray * 2
+                                    : 0
+                            "
                             :style="{
-                                transition: loading ? undefined : 'all 0.2s'
+                                transition: loading ? undefined : 'all 0.2s',
                             }"
                         />
                     </template>
@@ -1188,27 +1433,35 @@ const a11yTable = computed(() => {
                         class="vue-ui-sparkline-path"
                         data-cy="sparkline-straight-line"
                         :d="`M ${straightLinePath || '0,0'}`"
-                        :stroke="!!temperatureColors ? `url(#temperature_grad_sparkline_${uid})` : FINAL_CONFIG.style.line.color"
+                        :stroke="
+                            !!temperatureColors
+                                ? `url(#temperature_grad_sparkline_${uid})`
+                                : FINAL_CONFIG.style.line.color
+                        "
                         fill="none"
                         :stroke-width="FINAL_CONFIG.style.line.strokeWidth"
                         stroke-linecap="round"
                         stroke-linejoin="round"
                         :style="{
-                            transition: loading ? undefined : 'all 0.2s'
+                            transition: loading ? undefined : 'all 0.2s',
                         }"
                     />
                 </template>
-    
+
                 <SparklineGradientPath
                     v-if="gradientSvgPathData && !temperatureColors"
                     :svgPathData="gradientSvgPathData"
-                    :enabled="FINAL_CONFIG.gradientPath.show && !isBar && !temperatureColors"
+                    :enabled="
+                        FINAL_CONFIG.gradientPath.show &&
+                        !isBar &&
+                        !temperatureColors
+                    "
                     :strokeWidth="FINAL_CONFIG.style.line.strokeWidth"
                     :highColor="FINAL_CONFIG.gradientPath.colors.high"
                     :lowColor="FINAL_CONFIG.gradientPath.colors.low"
                     :segments="FINAL_CONFIG.gradientPath.segments"
                 />
-    
+
                 <SparklinePulse
                     v-if="pulseMounted && pulseEnabled"
                     :uid="uid"
@@ -1228,33 +1481,61 @@ const a11yTable = computed(() => {
                     :loading="loading"
                     :isBar="isBar"
                 />
-                
+
                 <g v-for="(plot, i) in mutableDataset">
                     <rect
                         data-cy="datapoint-bar"
                         v-if="isBar"
                         :x="plot.x - plot.width / 2"
-                        :y="isNaN(plot.absoluteValue > 0 ? plot.y : absoluteZero) ? 0 : plot.absoluteValue > 0 ? plot.y : absoluteZero"
+                        :y="
+                            isNaN(
+                                plot.absoluteValue > 0 ? plot.y : absoluteZero,
+                            )
+                                ? 0
+                                : plot.absoluteValue > 0
+                                  ? plot.y
+                                  : absoluteZero
+                        "
                         :width="plot.width"
-                        :height="isNaN(Math.abs(plot.y - absoluteZero)) ? 0 : Math.abs(plot.y - absoluteZero)"
-                        :fill="plot.absoluteValue > 0 ? `url(#sparkline_bar_gradient_pos_${uid})` : `url(#sparkline_bar_gradient_neg_${uid})`"
+                        :height="
+                            isNaN(Math.abs(plot.y - absoluteZero))
+                                ? 0
+                                : Math.abs(plot.y - absoluteZero)
+                        "
+                        :fill="
+                            plot.absoluteValue > 0
+                                ? `url(#sparkline_bar_gradient_pos_${uid})`
+                                : `url(#sparkline_bar_gradient_neg_${uid})`
+                        "
                         :rx="FINAL_CONFIG.style.bar.borderRadius"
                     />
                     <!-- VERTICAL INDICATORS -->
                     <line
                         data-cy="selection-indicator"
-                        v-if="FINAL_CONFIG.style.verticalIndicator.show && ((selectedPlot && plot.id === selectedPlot.id) || currentSelectedIndex === i)"
+                        v-if="
+                            FINAL_CONFIG.style.verticalIndicator.show &&
+                            ((selectedPlot && plot.id === selectedPlot.id) ||
+                                currentSelectedIndex === i)
+                        "
                         :x1="plot.x"
                         :x2="plot.x"
                         :y1="drawingArea.top - 6"
                         :y2="drawingArea.bottom"
-                        :stroke="FINAL_CONFIG.style.verticalIndicator.color || plot.color"
-                        :stroke-width="FINAL_CONFIG.style.verticalIndicator.strokeWidth"
+                        :stroke="
+                            FINAL_CONFIG.style.verticalIndicator.color ||
+                            plot.color
+                        "
+                        :stroke-width="
+                            FINAL_CONFIG.style.verticalIndicator.strokeWidth
+                        "
                         stroke-linecap="round"
-                        :stroke-dasharray="FINAL_CONFIG.style.verticalIndicator.strokeDasharray || 0"
+                        :stroke-dasharray="
+                            FINAL_CONFIG.style.verticalIndicator
+                                .strokeDasharray || 0
+                        "
                     />
                 </g>
-    
+
                 <!-- ZERO BASE -->
                 <line
                     data-cy="sparkline-zero-axis"
@@ -1264,64 +1545,122 @@ const a11yTable = computed(() => {
                     :y1="forceValidValue(absoluteZero, drawingArea.bottom)"
                     :y2="forceValidValue(absoluteZero, drawingArea.bottom)"
                     :stroke="FINAL_CONFIG.style.zeroLine.color"
-                    :stroke-dasharray="FINAL_CONFIG.style.zeroLine.strokeWidth * 2"
+                    :stroke-dasharray="
+                        FINAL_CONFIG.style.zeroLine.strokeWidth * 2
+                    "
                     :stroke-width="FINAL_CONFIG.style.zeroLine.strokeWidth"
                     stroke-linecap="round"
                 />
-                
+
                 <!-- PLOTS -->
-                <g v-if="FINAL_CONFIG.style.plot.show" v-for="(plot, i) in mutableDataset">
+                <g
+                    v-if="FINAL_CONFIG.style.plot.show"
+                    v-for="(plot, i) in mutableDataset"
+                >
                     <circle
                         data-cy="selection-plot"
-                        v-if="(selectedPlot && plot.id === selectedPlot.id) || selectedIndex === i || FINAL_DATASET.length === 1" 
-                        :cx="plot.x" 
-                        :cy="plot.y" 
+                        v-if="
+                            (selectedPlot && plot.id === selectedPlot.id) ||
+                            selectedIndex === i ||
+                            FINAL_DATASET.length === 1
+                        "
+                        :cx="plot.x"
+                        :cy="plot.y"
                         :r="FINAL_CONFIG.style.plot.radius"
                         :fill="plot.color"
                         :stroke="FINAL_CONFIG.style.plot.stroke"
                         :stroke-width="FINAL_CONFIG.style.plot.strokeWidth"
                     />
                 </g>
-    
+
                 <!-- DATALABEL -->
                 <text
                     v-if="showInfo && FINAL_CONFIG.style.dataLabel.show"
                     data-cy="sparkline-datalabel"
-                    :x="FINAL_CONFIG.style.dataLabel.position === 'left' ? 12 + FINAL_CONFIG.style.dataLabel.offsetX : drawingArea.width + 12 + FINAL_CONFIG.style.dataLabel.offsetX"
-                    :y="svg.height / 2 + FINAL_CONFIG.style.dataLabel.fontSize / 2.5 + FINAL_CONFIG.style.dataLabel.offsetY"
+                    :x="
+                        FINAL_CONFIG.style.dataLabel.position === 'left'
+                            ? 12 + FINAL_CONFIG.style.dataLabel.offsetX
+                            : drawingArea.width +
+                              12 +
+                              FINAL_CONFIG.style.dataLabel.offsetX
+                    "
+                    :y="
+                        svg.height / 2 +
+                        FINAL_CONFIG.style.dataLabel.fontSize / 2.5 +
+                        FINAL_CONFIG.style.dataLabel.offsetY
+                    "
                     :font-size="FINAL_CONFIG.style.dataLabel.fontSize"
-                    :font-weight="FINAL_CONFIG.style.dataLabel.bold ? 'bold' : 'normal'"
+                    :font-weight="
+                        FINAL_CONFIG.style.dataLabel.bold ? 'bold' : 'normal'
+                    "
                     :fill="FINAL_CONFIG.style.dataLabel.color"
                 >
-                    {{ selectedPlot ? applyDataLabel(
-                            FINAL_CONFIG.style.dataLabel.formatter,
-                            selectedPlot.absoluteValue,
-                            dl({p: FINAL_CONFIG.style.dataLabel.prefix, v: selectedPlot.absoluteValue, s: FINAL_CONFIG.style.dataLabel.suffix, r: FINAL_CONFIG.style.dataLabel.roundingValue }), { datapoint: selectedPlot }
-                        ) : applyDataLabel(
-                            FINAL_CONFIG.style.dataLabel.formatter,
-                            dataLabel,
-                            dl({p: FINAL_CONFIG.style.dataLabel.prefix, v: dataLabel, s: FINAL_CONFIG.style.dataLabel.suffix, r: FINAL_CONFIG.style.dataLabel.roundingValue }),
-                        ) 
+                    {{
+                        selectedPlot
+                            ? applyDataLabel(
+                                  FINAL_CONFIG.style.dataLabel.formatter,
+                                  selectedPlot.absoluteValue,
+                                  dl({
+                                      p: FINAL_CONFIG.style.dataLabel.prefix,
+                                      v: selectedPlot.absoluteValue,
+                                      s: FINAL_CONFIG.style.dataLabel.suffix,
+                                      r: FINAL_CONFIG.style.dataLabel
+                                          .roundingValue,
+                                  }),
+                                  { datapoint: selectedPlot },
+                              )
+                            : applyDataLabel(
+                                  FINAL_CONFIG.style.dataLabel.formatter,
+                                  dataLabel,
+                                  dl({
+                                      p: FINAL_CONFIG.style.dataLabel.prefix,
+                                      v: dataLabel,
+                                      s: FINAL_CONFIG.style.dataLabel.suffix,
+                                      r: FINAL_CONFIG.style.dataLabel
+                                          .roundingValue,
+                                  }),
+                              )
                     }}
                 </text>
-    
+
                 <!-- MOUSE TRAP -->
                 <rect
                     v-for="(plot, i) in mutableDataset"
                     data-cy="tooltip-trap"
-                    :x="plot.x - ((drawingArea.width / (len + 1) > svg.padding ? svg.padding : drawingArea.width / (len + 1)) / 2)"
+                    :x="
+                        plot.x -
+                        (drawingArea.width / (len + 1) > svg.padding
+                            ? svg.padding
+                            : drawingArea.width / (len + 1)) /
+                            2
+                    "
                     :y="drawingArea.top - 6"
                     :height="drawingArea.height + 6"
-                    :width="(drawingArea.width / (len + 1) > svg.padding ? svg.padding: drawingArea.width / (len + 1))"
+                    :width="
+                        drawingArea.width / (len + 1) > svg.padding
+                            ? svg.padding
+                            : drawingArea.width / (len + 1)
+                    "
                     fill="transparent"
                     @mouseenter="() => selectPlot(plot, i)"
                     @mouseleave="() => unselectPlot(plot, i)"
                     @click="() => selectDatapoint(plot, i)"
                 />
-                <slot name="svg" :svg="svg"/>
+                <slot name="svg" :svg="svg" />
             </svg>
-            <div v-if="$slots.hint" style="position: absolute; top: 100%; left: 0; width: 100%;" data-dom-to-png-ignore aria-hidden="true">
-                <slot name="hint" v-bind="{ hint: FINAL_CONFIG.a11y.translations.keyboardNavigation, isVisible: isFocus }"/>
+            <div
+                v-if="$slots.hint"
+                style="position: absolute; top: 100%; left: 0; width: 100%"
+                data-dom-to-png-ignore
+                aria-hidden="true"
+            >
+                <slot
+                    name="hint"
+                    v-bind="{
+                        hint: FINAL_CONFIG.a11y.translations.keyboardNavigation,
+                        isVisible: isFocus,
+                    }"
+                />
             </div>
         </div>
 
@@ -1331,7 +1670,10 @@ const a11yTable = computed(() => {
             :y="selectedPlot.y"
             :prevX="previousSelectedPlot.x"
             :prevY="previousSelectedPlot.y"
-            :offsetY="FINAL_CONFIG.style.plot.radius * 3 + FINAL_CONFIG.style.tooltip.offsetY"
+            :offsetY="
+                FINAL_CONFIG.style.plot.radius * 3 +
+                FINAL_CONFIG.style.tooltip.offsetY
+            "
             :svgRef="svgRef"
             :background="FINAL_CONFIG.style.tooltip.backgroundColor"
             :color="FINAL_CONFIG.style.tooltip.color"
@@ -1342,19 +1684,20 @@ const a11yTable = computed(() => {
             :backgroundOpacity="FINAL_CONFIG.style.tooltip.backgroundOpacity"
         >
             <slot name="tooltip" v-bind="{ ...selectedPlot }">
-                {{ selectedPlot.period }}: {{ 
+                {{ selectedPlot.period }}:
+                {{
                     applyDataLabel(
                         FINAL_CONFIG.style.dataLabel.formatter,
                         selectedPlot.absoluteValue,
                         dl({
-                            p: FINAL_CONFIG.style.dataLabel.prefix, 
-                            v: selectedPlot.absoluteValue, 
-                            s: FINAL_CONFIG.style.dataLabel.suffix, 
-                            r: FINAL_CONFIG.style.dataLabel.roundingValue 
-                        }), 
-                        { datapoint: selectedPlot }
-                ) 
-            }}
+                            p: FINAL_CONFIG.style.dataLabel.prefix,
+                            v: selectedPlot.absoluteValue,
+                            s: FINAL_CONFIG.style.dataLabel.suffix,
+                            r: FINAL_CONFIG.style.dataLabel.roundingValue,
+                        }),
+                        { datapoint: selectedPlot },
+                    )
+                }}
             </slot>
         </SparkTooltip>
 
@@ -1364,7 +1707,7 @@ const a11yTable = computed(() => {
 
         <!-- v3 Skeleton loader -->
         <slot name="skeleton">
-            <BaseScanner v-if="loading"/>
+            <BaseScanner v-if="loading" />
         </slot>
     </div>
 </template>

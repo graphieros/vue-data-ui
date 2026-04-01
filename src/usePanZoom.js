@@ -5,7 +5,7 @@ export default function usePanZoom(
     initialViewBox = { x: 0, y: 0, width: 100, height: 100 },
     speed = 1,
     activeRef,
-    callbackOnZoom = null
+    callbackOnZoom = null,
 ) {
     const initial = ref({ ...initialViewBox });
     const viewBox = ref({ ...initial.value });
@@ -18,11 +18,12 @@ export default function usePanZoom(
     const pinchStartScale = ref(1);
     const startClient = ref({ x: 0, y: 0 });
 
-    const isZoom = computed(() =>
-        viewBox.value.x !== initial.value.x ||
-        viewBox.value.y !== initial.value.y ||
-        viewBox.value.width !== initial.value.width ||
-        viewBox.value.height !== initial.value.height
+    const isZoom = computed(
+        () =>
+            viewBox.value.x !== initial.value.x ||
+            viewBox.value.y !== initial.value.y ||
+            viewBox.value.width !== initial.value.width ||
+            viewBox.value.height !== initial.value.height,
     );
 
     let zoomAnimationFrame = null;
@@ -99,12 +100,13 @@ export default function usePanZoom(
         let t0 = null;
         const duration = 200;
 
-        const ease = t => (t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t);
+        const ease = (t) => (t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t);
 
-        const step = ts => {
+        const step = (ts) => {
             if (t0 == null) t0 = ts;
             const p = Math.min((ts - t0) / duration, 1);
-            const desiredScale = startScale + (targetScale - startScale) * ease(p);
+            const desiredScale =
+                startScale + (targetScale - startScale) * ease(p);
             const relativeFactor = desiredScale / scale.value;
             applyZoom(relativeFactor, cursorPoint);
 
@@ -155,8 +157,10 @@ export default function usePanZoom(
             const targetScale = pinchStartScale.value * absoluteFactor;
             const relativeFactor = targetScale / scale.value;
 
-            const midX = (event.touches[0].clientX + event.touches[1].clientX) / 2;
-            const midY = (event.touches[0].clientY + event.touches[1].clientY) / 2;
+            const midX =
+                (event.touches[0].clientX + event.touches[1].clientX) / 2;
+            const midY =
+                (event.touches[0].clientY + event.touches[1].clientY) / 2;
             const midPoint = toSvgPoint({ clientX: midX, clientY: midY });
 
             viewBox.value = { ...pinchStartViewBox.value };
@@ -227,7 +231,9 @@ export default function usePanZoom(
         svg.addEventListener('wheel', zoom, { passive: false });
         svg.addEventListener('dblclick', doubleClickZoom);
 
-        svg.addEventListener('touchstart', handleTouchStart, { passive: false });
+        svg.addEventListener('touchstart', handleTouchStart, {
+            passive: false,
+        });
         svg.addEventListener('touchmove', handleTouchMove, { passive: false });
         svg.addEventListener('touchend', handleTouchEnd);
         svg.addEventListener('touchcancel', handleTouchEnd);
@@ -272,7 +278,7 @@ export default function usePanZoom(
     function zoomByFactor(factor, animated = false) {
         const center = {
             x: viewBox.value.x + viewBox.value.width / 2,
-            y: viewBox.value.y + viewBox.value.height / 2
+            y: viewBox.value.y + viewBox.value.height / 2,
         };
         if (animated) {
             animateZoom(factor, center);
@@ -281,5 +287,12 @@ export default function usePanZoom(
         }
     }
 
-    return { viewBox, resetZoom, isZoom, setInitialViewBox, scale, zoomByFactor };
+    return {
+        viewBox,
+        resetZoom,
+        isZoom,
+        setInitialViewBox,
+        scale,
+        zoomByFactor,
+    };
 }

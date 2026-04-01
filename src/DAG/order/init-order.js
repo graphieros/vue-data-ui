@@ -1,4 +1,4 @@
-import * as util from "../util.js";
+import * as util from '../util.js';
 
 /*
  * Assigns an initial order value for each node by performing a DFS search
@@ -14,8 +14,8 @@ import * as util from "../util.js";
 
 export default function initOrder(g) {
     const visited = {};
-    const simpleNodes = g.nodes().filter(v => g.children(v).length === 0);
-    const simpleNodesRanks = simpleNodes.map(v => g.node(v).rank);
+    const simpleNodes = g.nodes().filter((v) => g.children(v).length === 0);
+    const simpleNodesRanks = simpleNodes.map((v) => g.node(v).rank);
     const maxRank = util.applyWithChunking(Math.max, simpleNodesRanks);
     const layers = util.range(maxRank + 1).map(() => []);
 
@@ -30,7 +30,7 @@ export default function initOrder(g) {
     }
 
     const orderedVs = simpleNodes.sort(
-        (a, b) => g.node(a).rank - g.node(b).rank
+        (a, b) => g.node(a).rank - g.node(b).rank,
     );
 
     orderedVs.forEach(dfs);

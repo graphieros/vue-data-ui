@@ -1,29 +1,38 @@
-import { colorsToRgba, interpolateRgbaColor } from "./color-utils";
-import { clampNumber, formatNumber, inverseLerp, parseOptionalNumber, roundNumber, toTwoDigitHex } from "./number-utils";
+import { colorsToRgba, interpolateRgbaColor } from './color-utils';
+import {
+    clampNumber,
+    formatNumber,
+    inverseLerp,
+    parseOptionalNumber,
+    roundNumber,
+    toTwoDigitHex,
+} from './number-utils';
 
-const XMLNS = "http://www.w3.org/2000/svg";
+const XMLNS = 'http://www.w3.org/2000/svg';
 let sharedHiddenSvg = null;
 let sharedHiddenPath = null;
 
 function createOffscreenPathForJob(pathData) {
-    if (typeof document === "undefined") {
-        throw new Error("SvgPathGradientAsync: document is not available (browser-only implementation).");
+    if (typeof document === 'undefined') {
+        throw new Error(
+            'SvgPathGradientAsync: document is not available (browser-only implementation).',
+        );
     }
 
-    const svgElement = document.createElementNS(XMLNS, "svg");
-    svgElement.setAttribute("width", "0");
-    svgElement.setAttribute("height", "0");
-    svgElement.setAttribute("viewBox", "0 0 0 0");
-    svgElement.style.position = "absolute";
-    svgElement.style.left = "-10000px";
-    svgElement.style.top = "-10000px";
-    svgElement.style.visibility = "hidden";
-    svgElement.style.pointerEvents = "none";
+    const svgElement = document.createElementNS(XMLNS, 'svg');
+    svgElement.setAttribute('width', '0');
+    svgElement.setAttribute('height', '0');
+    svgElement.setAttribute('viewBox', '0 0 0 0');
+    svgElement.style.position = 'absolute';
+    svgElement.style.left = '-10000px';
+    svgElement.style.top = '-10000px';
+    svgElement.style.visibility = 'hidden';
+    svgElement.style.pointerEvents = 'none';
 
-    const pathElement = document.createElementNS(XMLNS, "path");
+    const pathElement = document.createElementNS(XMLNS, 'path');
 
-    if (pathData === "M ") pathData = "M 0,0";
-    pathElement.setAttribute("d", pathData);
+    if (pathData === 'M ') pathData = 'M 0,0';
+    pathElement.setAttribute('d', pathData);
 
     svgElement.appendChild(pathElement);
     document.body.appendChild(svgElement);
@@ -40,29 +49,29 @@ function destroyOffscreenPathForJob(handle) {
     }
 }
 
-
 const gradientCache = new Map();
 let globalJobId = 0;
 
 function makeCacheKey(pathData, colors, options) {
-    const mode = options.temperatureMode ?? "none";
-    const seg = options.segments ?? "auto";
+    const mode = options.temperatureMode ?? 'none';
+    const seg = options.segments ?? 'auto';
     const tol = options.flattenTolerance ?? 0.25;
     const sw =
         options.strokeWidth ??
-        parseOptionalNumber((options.attrs ?? {})["stroke-width"]) ??
+        parseOptionalNumber((options.attrs ?? {})['stroke-width']) ??
         1;
 
-    const cs = options.colorSpace ?? "linearRGB";
-    const tc = mode !== "none" ? (options.temperatureColors ?? []) : colors ?? [];
-    const colorSig = Array.isArray(tc) ? tc.join("|") : String(tc);
+    const cs = options.colorSpace ?? 'linearRGB';
+    const tc =
+        mode !== 'none' ? (options.temperatureColors ?? []) : (colors ?? []);
+    const colorSig = Array.isArray(tc) ? tc.join('|') : String(tc);
 
     return `${mode}#${cs}#${seg}#${tol}#${sw}#${colorSig}#${pathData}`;
 }
 
 function getOrCreateCacheEntry(key) {
     if (!gradientCache.has(key)) {
-        gradientCache.set(key, { value: "", computing: false, jobId: 0 });
+        gradientCache.set(key, { value: '', computing: false, jobId: 0 });
     }
     return gradientCache.get(key);
 }
@@ -115,53 +124,72 @@ function getOrCreateCacheEntry(key) {
  * @throws If executed outside a browser environment (no `document`).
  */
 function SvgPathGradient(pathData, colors = null, options = {}) {
-    if (!pathData || typeof pathData !== "string") {
-        throw new Error("SvgPathGradient: pathData must be a non-empty string.");
+    if (!pathData || typeof pathData !== 'string') {
+        throw new Error(
+            'SvgPathGradient: pathData must be a non-empty string.',
+        );
     }
-    
+
     const temperatureMode = options.temperatureMode ?? null;
 
     if (temperatureMode === null) {
         if (!Array.isArray(colors) || colors.length === 0) {
-            throw new Error("SvgPathGradient: colors must be a non-empty array when temperatureMode is not enabled.");
+            throw new Error(
+                'SvgPathGradient: colors must be a non-empty array when temperatureMode is not enabled.',
+            );
         }
     }
 
-    const returnMode = options.returnMode ?? "string";
+    const returnMode = options.returnMode ?? 'string';
 
-    const decimalPlaces = typeof options.decimalPlaces === "number" ? options.decimalPlaces : 3;
+    const decimalPlaces =
+        typeof options.decimalPlaces === 'number' ? options.decimalPlaces : 3;
     const flattenTolerance =
-        typeof options.flattenTolerance === "number" && options.flattenTolerance > 0 ? options.flattenTolerance : 0.25;
+        typeof options.flattenTolerance === 'number' &&
+        options.flattenTolerance > 0
+            ? options.flattenTolerance
+            : 0.25;
 
     const segmentAttributeMap = options.attrs ? { ...options.attrs } : {};
-    const groupAttributeMap = options.groupAttrs ? { ...options.groupAttrs } : {};
+    const groupAttributeMap = options.groupAttrs
+        ? { ...options.groupAttrs }
+        : {};
 
-    const strokeWidthFromAttributes = parseOptionalNumber(segmentAttributeMap["stroke-width"]);
+    const strokeWidthFromAttributes = parseOptionalNumber(
+        segmentAttributeMap['stroke-width'],
+    );
     const strokeWidth =
-        typeof options.strokeWidth === "number" && options.strokeWidth > 0
+        typeof options.strokeWidth === 'number' && options.strokeWidth > 0
             ? options.strokeWidth
-            : typeof strokeWidthFromAttributes === "number" && strokeWidthFromAttributes > 0
-                ? strokeWidthFromAttributes
-                : 1;
+            : typeof strokeWidthFromAttributes === 'number' &&
+                strokeWidthFromAttributes > 0
+              ? strokeWidthFromAttributes
+              : 1;
 
     const svgPathElement = getSharedOffscreenPath(pathData);
     const totalLength = svgPathElement.getTotalLength();
 
     const rgbaStopsInput =
-    temperatureMode === null
-        ? colorsToRgba(colors, options.colorReferenceElement)
-        : [];
+        temperatureMode === null
+            ? colorsToRgba(colors, options.colorReferenceElement)
+            : [];
 
     if (temperatureMode === null && !(totalLength > 0)) {
         const stroke = normalizeOutputColor(rgbaStopsInput[0]);
 
-        if (returnMode === "dom") {
-            if (typeof document === "undefined") {
-                throw new Error("SvgPathGradient: document is not available (browser-only implementation).");
+        if (returnMode === 'dom') {
+            if (typeof document === 'undefined') {
+                throw new Error(
+                    'SvgPathGradient: document is not available (browser-only implementation).',
+                );
             }
 
             const group = createGroupNode(groupAttributeMap);
-            const pathNode = createPathNodeFromSharedAttributes(pathData, stroke, segmentAttributeMap);
+            const pathNode = createPathNodeFromSharedAttributes(
+                pathData,
+                stroke,
+                segmentAttributeMap,
+            );
             group.appendChild(pathNode);
 
             return { group, segments: [pathNode] };
@@ -175,20 +203,26 @@ function SvgPathGradient(pathData, colors = null, options = {}) {
                     segmentAttributeMap,
                 }),
             ],
-            groupAttributeMap
+            groupAttributeMap,
         );
     }
 
     if (temperatureMode === null && rgbaStopsInput.length === 1) {
         const stroke = normalizeOutputColor(rgbaStopsInput[0]);
 
-        if (returnMode === "dom") {
-            if (typeof document === "undefined") {
-                throw new Error("SvgPathGradient: document is not available (browser-only implementation).");
+        if (returnMode === 'dom') {
+            if (typeof document === 'undefined') {
+                throw new Error(
+                    'SvgPathGradient: document is not available (browser-only implementation).',
+                );
             }
 
             const group = createGroupNode(groupAttributeMap);
-            const pathNode = createPathNodeFromSharedAttributes(pathData, stroke, segmentAttributeMap);
+            const pathNode = createPathNodeFromSharedAttributes(
+                pathData,
+                stroke,
+                segmentAttributeMap,
+            );
             group.appendChild(pathNode);
 
             return { group, segments: [pathNode] };
@@ -202,62 +236,87 @@ function SvgPathGradient(pathData, colors = null, options = {}) {
                     segmentAttributeMap,
                 }),
             ],
-            groupAttributeMap
+            groupAttributeMap,
         );
     }
 
-    const colorSpace = options.colorSpace ?? "linearRGB";
+    const colorSpace = options.colorSpace ?? 'linearRGB';
 
     if (temperatureMode !== null) {
         const tc = options.temperatureColors;
         if (!Array.isArray(tc) || tc.length !== 2) {
-            throw new Error('SvgPathGradient: temperatureColors must be a tuple of exactly 2 colors when temperatureMode is enabled.');
+            throw new Error(
+                'SvgPathGradient: temperatureColors must be a tuple of exactly 2 colors when temperatureMode is enabled.',
+            );
         }
     }
 
     const temperatureRgbaStops =
         temperatureMode !== null
-            ? (colorsToRgba(options.temperatureColors, options.colorReferenceElement))
+            ? colorsToRgba(
+                  options.temperatureColors,
+                  options.colorReferenceElement,
+              )
             : null;
 
     const gradientStops =
-    temperatureMode === null
-        ? (() => {
-                const evenStops = buildEvenStops(rgbaStopsInput);
-                const stops = new Array(evenStops.length);
-                for (let i = 0; i < evenStops.length; i += 1) {
-                    stops[i] = { position: evenStops[i].position, rgba: evenStops[i].rgba };
-                }
-                return stops;
-            })()
-        : [];
+        temperatureMode === null
+            ? (() => {
+                  const evenStops = buildEvenStops(rgbaStopsInput);
+                  const stops = new Array(evenStops.length);
+                  for (let i = 0; i < evenStops.length; i += 1) {
+                      stops[i] = {
+                          position: evenStops[i].position,
+                          rgba: evenStops[i].rgba,
+                      };
+                  }
+                  return stops;
+              })()
+            : [];
 
-    const maxSegmentLength = computeMaxSegmentLength(totalLength, strokeWidth, options.maxSegmentLength);
-    const segmentCount = computeSegmentCount(totalLength, options.segments, maxSegmentLength);
+    const maxSegmentLength = computeMaxSegmentLength(
+        totalLength,
+        strokeWidth,
+        options.maxSegmentLength,
+    );
+    const segmentCount = computeSegmentCount(
+        totalLength,
+        options.segments,
+        maxSegmentLength,
+    );
     const baseSegmentLength = totalLength / segmentCount;
 
     let overlapLength =
-        typeof options.overlap === "number" && options.overlap >= 0 ? options.overlap : strokeWidth * 0.5;
+        typeof options.overlap === 'number' && options.overlap >= 0
+            ? options.overlap
+            : strokeWidth * 0.5;
 
     const maximumAllowedOverlap = baseSegmentLength * 0.45;
-    if (overlapLength > maximumAllowedOverlap) overlapLength = maximumAllowedOverlap;
+    if (overlapLength > maximumAllowedOverlap)
+        overlapLength = maximumAllowedOverlap;
 
     const samplePointLimitPerSegment =
-        typeof options.samplePointLimitPerSegment === "number" && options.samplePointLimitPerSegment > 10
+        typeof options.samplePointLimitPerSegment === 'number' &&
+        options.samplePointLimitPerSegment > 10
             ? options.samplePointLimitPerSegment
             : 250;
 
-    const sharedSegmentAttributesString = buildSharedSegmentAttributesString(segmentAttributeMap);
+    const sharedSegmentAttributesString =
+        buildSharedSegmentAttributesString(segmentAttributeMap);
 
-    const segmentPathStrings = returnMode === "string" ? new Array(segmentCount) : [];
-    const segmentNodes = returnMode === "dom" ? new Array(segmentCount) : [];
+    const segmentPathStrings =
+        returnMode === 'string' ? new Array(segmentCount) : [];
+    const segmentNodes = returnMode === 'dom' ? new Array(segmentCount) : [];
     let producedCount = 0;
 
-    const temperatureSegmentPathData = temperatureMode !== null ? new Array(segmentCount) : null;
-    const temperatureSegmentBounds = temperatureMode !== null ? new Array(segmentCount) : null;
+    const temperatureSegmentPathData =
+        temperatureMode !== null ? new Array(segmentCount) : null;
+    const temperatureSegmentBounds =
+        temperatureMode !== null ? new Array(segmentCount) : null;
 
     let stopIndex = 0;
-    const lastStopIndex = temperatureMode === null ? gradientStops.length - 2 : 0;
+    const lastStopIndex =
+        temperatureMode === null ? gradientStops.length - 2 : 0;
 
     for (let segmentIndex = 0; segmentIndex < segmentCount; segmentIndex += 1) {
         const rawStartLength = segmentIndex * baseSegmentLength;
@@ -267,7 +326,8 @@ function SvgPathGradient(pathData, colors = null, options = {}) {
         let endLength = rawEndLength;
 
         if (segmentIndex !== 0) startLength = rawStartLength - overlapLength;
-        if (segmentIndex !== segmentCount - 1) endLength = rawEndLength + overlapLength;
+        if (segmentIndex !== segmentCount - 1)
+            endLength = rawEndLength + overlapLength;
 
         startLength = clampNumber(startLength, 0, totalLength);
         endLength = clampNumber(endLength, 0, totalLength);
@@ -281,7 +341,7 @@ function SvgPathGradient(pathData, colors = null, options = {}) {
                 endLength,
                 flattenTolerance,
                 decimalPlaces,
-                samplePointLimitPerSegment
+                samplePointLimitPerSegment,
             );
 
             temperatureSegmentPathData[producedCount] = sampled.pathData;
@@ -293,11 +353,19 @@ function SvgPathGradient(pathData, colors = null, options = {}) {
         const midpointLength = (startLength + endLength) * 0.5;
         const gradientPosition = midpointLength / totalLength;
 
-        while (stopIndex < lastStopIndex && gradientPosition > gradientStops[stopIndex + 1].position) {
+        while (
+            stopIndex < lastStopIndex &&
+            gradientPosition > gradientStops[stopIndex + 1].position
+        ) {
             stopIndex += 1;
         }
 
-        const strokeColor = evaluateGradientAtIndex(gradientStops, gradientPosition, colorSpace, stopIndex);
+        const strokeColor = evaluateGradientAtIndex(
+            gradientStops,
+            gradientPosition,
+            colorSpace,
+            stopIndex,
+        );
 
         const segmentPathData = buildSegmentPathDataFromArcLengthSampling(
             svgPathElement,
@@ -305,33 +373,39 @@ function SvgPathGradient(pathData, colors = null, options = {}) {
             endLength,
             flattenTolerance,
             decimalPlaces,
-            samplePointLimitPerSegment
+            samplePointLimitPerSegment,
         );
 
-        if (returnMode === "dom") {
-            const node = createPathNodeFromSharedAttributes(segmentPathData, strokeColor, segmentAttributeMap);
+        if (returnMode === 'dom') {
+            const node = createPathNodeFromSharedAttributes(
+                segmentPathData,
+                strokeColor,
+                segmentAttributeMap,
+            );
             segmentNodes[producedCount] = node;
         } else {
             segmentPathStrings[producedCount] = buildPathElementStringFast(
                 segmentPathData,
                 strokeColor,
-                sharedSegmentAttributesString
+                sharedSegmentAttributesString,
             );
         }
         producedCount += 1;
     }
 
     if (temperatureMode !== null) {
-        if (producedCount !== temperatureSegmentPathData.length) temperatureSegmentPathData.length = producedCount;
-        if (producedCount !== temperatureSegmentBounds.length) temperatureSegmentBounds.length = producedCount;
+        if (producedCount !== temperatureSegmentPathData.length)
+            temperatureSegmentPathData.length = producedCount;
+        if (producedCount !== temperatureSegmentBounds.length)
+            temperatureSegmentBounds.length = producedCount;
 
         let globalMin = Number.POSITIVE_INFINITY;
         let globalMax = Number.NEGATIVE_INFINITY;
 
         for (let i = 0; i < temperatureSegmentBounds.length; i += 1) {
             const b = temperatureSegmentBounds[i];
-            const minCoord = temperatureMode === "vertical" ? b.minY : b.minX;
-            const maxCoord = temperatureMode === "vertical" ? b.maxY : b.maxX;
+            const minCoord = temperatureMode === 'vertical' ? b.minY : b.minX;
+            const maxCoord = temperatureMode === 'vertical' ? b.maxY : b.maxX;
 
             if (minCoord < globalMin) globalMin = minCoord;
             if (maxCoord > globalMax) globalMax = maxCoord;
@@ -343,31 +417,40 @@ function SvgPathGradient(pathData, colors = null, options = {}) {
         for (let i = 0; i < temperatureSegmentBounds.length; i += 1) {
             const b = temperatureSegmentBounds[i];
 
-            const segMin = temperatureMode === "vertical" ? b.minY : b.minX;
-            const segMax = temperatureMode === "vertical" ? b.maxY : b.maxX;
+            const segMin = temperatureMode === 'vertical' ? b.minY : b.minX;
+            const segMax = temperatureMode === 'vertical' ? b.maxY : b.maxX;
 
             const coordValue = (segMin + segMax) * 0.5;
 
             const t = inverseLerp(coordValue, globalMin, globalMax, true);
 
             const mixed =
-                temperatureMode === "vertical"
+                temperatureMode === 'vertical'
                     ? interpolateRgbaColor(high, low, t, colorSpace)
                     : interpolateRgbaColor(low, high, t, colorSpace);
 
             const strokeColor = normalizeOutputColor(mixed);
             const segmentPathData = temperatureSegmentPathData[i];
 
-            if (returnMode === "dom") {
-                segmentNodes[i] = createPathNodeFromSharedAttributes(segmentPathData, strokeColor, segmentAttributeMap);
+            if (returnMode === 'dom') {
+                segmentNodes[i] = createPathNodeFromSharedAttributes(
+                    segmentPathData,
+                    strokeColor,
+                    segmentAttributeMap,
+                );
             } else {
-                segmentPathStrings[i] = buildPathElementStringFast(segmentPathData, strokeColor, sharedSegmentAttributesString);
+                segmentPathStrings[i] = buildPathElementStringFast(
+                    segmentPathData,
+                    strokeColor,
+                    sharedSegmentAttributesString,
+                );
             }
         }
     }
 
-    if (returnMode === "dom") {
-        if (producedCount !== segmentNodes.length) segmentNodes.length = producedCount;
+    if (returnMode === 'dom') {
+        if (producedCount !== segmentNodes.length)
+            segmentNodes.length = producedCount;
 
         const group = createGroupNode(groupAttributeMap);
         for (let i = 0; i < segmentNodes.length; i += 1) {
@@ -377,7 +460,8 @@ function SvgPathGradient(pathData, colors = null, options = {}) {
         return { group, segments: segmentNodes };
     }
 
-    if (producedCount !== segmentPathStrings.length) segmentPathStrings.length = producedCount;
+    if (producedCount !== segmentPathStrings.length)
+        segmentPathStrings.length = producedCount;
     return wrapGroup(segmentPathStrings, groupAttributeMap);
 }
 
@@ -397,8 +481,8 @@ function SvgPathGradient(pathData, colors = null, options = {}) {
  * @returns A newly created `SVGGElement` ready to receive generated segment nodes.
  */
 function createGroupNode(groupAttributeMap) {
-    const group = document.createElementNS(XMLNS, "g");
-    group.setAttribute("data-svg-path-gradient", "true");
+    const group = document.createElementNS(XMLNS, 'g');
+    group.setAttribute('data-svg-path-gradient', 'true');
 
     const keys = Object.keys(groupAttributeMap);
     for (let i = 0; i < keys.length; i += 1) {
@@ -432,20 +516,24 @@ function createGroupNode(groupAttributeMap) {
  * @param segmentAttributeMap Key-value map of attributes to apply to the `<path>` element.
  * @returns A fully configured `SVGPathElement`.
  */
-function createPathNodeFromSharedAttributes(pathData, stroke, segmentAttributeMap) {
-    const path = document.createElementNS(XMLNS, "path");
-    path.setAttribute("d", pathData);
-    path.setAttribute("stroke", stroke);
+function createPathNodeFromSharedAttributes(
+    pathData,
+    stroke,
+    segmentAttributeMap,
+) {
+    const path = document.createElementNS(XMLNS, 'path');
+    path.setAttribute('d', pathData);
+    path.setAttribute('stroke', stroke);
 
-    const fillValue = segmentAttributeMap.fill ?? "none";
-    path.setAttribute("fill", fillValue);
+    const fillValue = segmentAttributeMap.fill ?? 'none';
+    path.setAttribute('fill', fillValue);
 
     const keys = Object.keys(segmentAttributeMap);
     for (let i = 0; i < keys.length; i += 1) {
         const name = keys[i];
-        if (name === "d") continue;
-        if (name === "stroke") continue;
-        if (name === "fill") continue;
+        if (name === 'd') continue;
+        if (name === 'stroke') continue;
+        if (name === 'fill') continue;
         path.setAttribute(name, segmentAttributeMap[name]);
     }
 
@@ -471,22 +559,24 @@ function createPathNodeFromSharedAttributes(pathData, stroke, segmentAttributeMa
  * @throws If executed outside a browser environment (no `document`).
  */
 function getSharedOffscreenPath(pathData) {
-    if (typeof document === "undefined") {
-        throw new Error("SvgPathGradient: document is not available (browser-only implementation).");
+    if (typeof document === 'undefined') {
+        throw new Error(
+            'SvgPathGradient: document is not available (browser-only implementation).',
+        );
     }
 
     if (!sharedHiddenSvg) {
-        const svgElement = document.createElementNS(XMLNS, "svg");
-        svgElement.setAttribute("width", "0");
-        svgElement.setAttribute("height", "0");
-        svgElement.setAttribute("viewBox", "0 0 0 0");
-        svgElement.style.position = "absolute";
-        svgElement.style.left = "-10000px";
-        svgElement.style.top = "-10000px";
-        svgElement.style.visibility = "hidden";
-        svgElement.style.pointerEvents = "none";
+        const svgElement = document.createElementNS(XMLNS, 'svg');
+        svgElement.setAttribute('width', '0');
+        svgElement.setAttribute('height', '0');
+        svgElement.setAttribute('viewBox', '0 0 0 0');
+        svgElement.style.position = 'absolute';
+        svgElement.style.left = '-10000px';
+        svgElement.style.top = '-10000px';
+        svgElement.style.visibility = 'hidden';
+        svgElement.style.pointerEvents = 'none';
 
-        const pathElement = document.createElementNS(XMLNS, "path");
+        const pathElement = document.createElementNS(XMLNS, 'path');
 
         svgElement.appendChild(pathElement);
         document.body.appendChild(svgElement);
@@ -497,7 +587,7 @@ function getSharedOffscreenPath(pathData) {
     if (pathData === 'M ') {
         pathData = 'M 0,0';
     }
-    sharedHiddenPath.setAttribute("d", pathData);
+    sharedHiddenPath.setAttribute('d', pathData);
     return sharedHiddenPath ?? '';
 }
 
@@ -525,15 +615,23 @@ function getSharedOffscreenPath(pathData) {
  * @param providedMaxSegmentLength Optional explicit maximum segment length.
  * @returns A strictly positive maximum segment length in user units.
  */
-function computeMaxSegmentLength(totalLength, strokeWidth, providedMaxSegmentLength) {
-    if (typeof providedMaxSegmentLength === "number" && providedMaxSegmentLength > 0) {
+function computeMaxSegmentLength(
+    totalLength,
+    strokeWidth,
+    providedMaxSegmentLength,
+) {
+    if (
+        typeof providedMaxSegmentLength === 'number' &&
+        providedMaxSegmentLength > 0
+    ) {
         return providedMaxSegmentLength;
     }
     let recommended = strokeWidth * 0.75;
     if (recommended < 0.5) recommended = 0.5;
     if (recommended > 8) recommended = 8;
     const lengthBasedMaximum = totalLength / 2;
-    if (recommended > lengthBasedMaximum && lengthBasedMaximum > 0) recommended = lengthBasedMaximum;
+    if (recommended > lengthBasedMaximum && lengthBasedMaximum > 0)
+        recommended = lengthBasedMaximum;
     if (recommended <= 0) recommended = 1;
     return recommended;
 }
@@ -562,10 +660,13 @@ function computeMaxSegmentLength(totalLength, strokeWidth, providedMaxSegmentLen
  * @returns A positive integer representing the number of segments to generate.
  */
 function computeSegmentCount(totalLength, providedSegments, maxSegmentLength) {
-    if (typeof providedSegments === "number" && providedSegments >= 1) {
+    if (typeof providedSegments === 'number' && providedSegments >= 1) {
         return Math.floor(providedSegments);
     }
-    const safeMaxSegmentLength = typeof maxSegmentLength === "number" && maxSegmentLength > 0 ? maxSegmentLength : 2;
+    const safeMaxSegmentLength =
+        typeof maxSegmentLength === 'number' && maxSegmentLength > 0
+            ? maxSegmentLength
+            : 2;
     const estimated = Math.ceil(totalLength / safeMaxSegmentLength);
     return estimated < 1 ? 1 : estimated;
 }
@@ -610,7 +711,7 @@ function buildSegmentPathDataFromArcLengthSampling(
     endLength,
     samplingStep,
     decimalPlaces,
-    samplePointLimit
+    samplePointLimit,
 ) {
     const segmentLength = endLength - startLength;
 
@@ -622,7 +723,7 @@ function buildSegmentPathDataFromArcLengthSampling(
 
     const firstPoint = pathElement.getPointAtLength(startLength);
     let pathData = `M ${formatNumber(roundNumber(firstPoint.x, decimalPlaces))} ${formatNumber(
-        roundNumber(firstPoint.y, decimalPlaces)
+        roundNumber(firstPoint.y, decimalPlaces),
     )}`;
 
     for (let sampleIndex = 1; sampleIndex < sampleCount; sampleIndex += 1) {
@@ -630,7 +731,7 @@ function buildSegmentPathDataFromArcLengthSampling(
         const point = pathElement.getPointAtLength(lengthAtSample);
 
         pathData += ` L ${formatNumber(roundNumber(point.x, decimalPlaces))} ${formatNumber(
-            roundNumber(point.y, decimalPlaces)
+            roundNumber(point.y, decimalPlaces),
         )}`;
     }
 
@@ -658,7 +759,7 @@ function buildSegmentPathDataFromArcLengthSamplingWithBounds(
     endLength,
     samplingStep,
     decimalPlaces,
-    samplePointLimit
+    samplePointLimit,
 ) {
     const segmentLength = endLength - startLength;
 
@@ -676,7 +777,7 @@ function buildSegmentPathDataFromArcLengthSamplingWithBounds(
     let maxY = firstPoint.y;
 
     let pathData = `M ${formatNumber(roundNumber(firstPoint.x, decimalPlaces))} ${formatNumber(
-        roundNumber(firstPoint.y, decimalPlaces)
+        roundNumber(firstPoint.y, decimalPlaces),
     )}`;
 
     for (let sampleIndex = 1; sampleIndex < sampleCount; sampleIndex += 1) {
@@ -689,7 +790,7 @@ function buildSegmentPathDataFromArcLengthSamplingWithBounds(
         if (point.y > maxY) maxY = point.y;
 
         pathData += ` L ${formatNumber(roundNumber(point.x, decimalPlaces))} ${formatNumber(
-            roundNumber(point.y, decimalPlaces)
+            roundNumber(point.y, decimalPlaces),
         )}`;
     }
 
@@ -761,12 +862,7 @@ function buildEvenStops(rgbaColors) {
  * @param lowerStopIndex Previously used lower stop index (used as a fast starting point).
  * @returns Interpolated color as a CSS string (hex or rgba()).
  */
-function evaluateGradientAtIndex(
-    stops,
-    position,
-    colorSpace,
-    lowerStopIndex
-) {
+function evaluateGradientAtIndex(stops, position, colorSpace, lowerStopIndex) {
     const clampedPosition = clampNumber(position, 0, 1);
 
     let idx = lowerStopIndex;
@@ -774,7 +870,8 @@ function evaluateGradientAtIndex(
     if (idx > stops.length - 2) idx = stops.length - 2;
 
     while (idx > 0 && clampedPosition < stops[idx].position) idx -= 1;
-    while (idx < stops.length - 2 && clampedPosition > stops[idx + 1].position) idx += 1;
+    while (idx < stops.length - 2 && clampedPosition > stops[idx + 1].position)
+        idx += 1;
 
     const lowerStop = stops[idx];
     const upperStop = stops[idx + 1];
@@ -782,7 +879,12 @@ function evaluateGradientAtIndex(
     const span = upperStop.position - lowerStop.position;
     const localT = span > 0 ? (clampedPosition - lowerStop.position) / span : 0;
 
-    const interpolated = interpolateColor(lowerStop.rgba, upperStop.rgba, localT, colorSpace);
+    const interpolated = interpolateColor(
+        lowerStop.rgba,
+        upperStop.rgba,
+        localT,
+        colorSpace,
+    );
     return normalizeOutputColor(interpolated);
 }
 
@@ -816,7 +918,7 @@ function evaluateGradientAtIndex(
 function interpolateColor(from, to, t, colorSpace) {
     const clampedT = clampNumber(t, 0, 1);
 
-    if (colorSpace === "linearRGB") {
+    if (colorSpace === 'linearRGB') {
         const fromRedLinear = srgbChannelToLinear(from.red);
         const fromGreenLinear = srgbChannelToLinear(from.green);
         const fromBlueLinear = srgbChannelToLinear(from.blue);
@@ -825,9 +927,12 @@ function interpolateColor(from, to, t, colorSpace) {
         const toGreenLinear = srgbChannelToLinear(to.green);
         const toBlueLinear = srgbChannelToLinear(to.blue);
 
-        const mixedRedLinear = fromRedLinear + (toRedLinear - fromRedLinear) * clampedT;
-        const mixedGreenLinear = fromGreenLinear + (toGreenLinear - fromGreenLinear) * clampedT;
-        const mixedBlueLinear = fromBlueLinear + (toBlueLinear - fromBlueLinear) * clampedT;
+        const mixedRedLinear =
+            fromRedLinear + (toRedLinear - fromRedLinear) * clampedT;
+        const mixedGreenLinear =
+            fromGreenLinear + (toGreenLinear - fromGreenLinear) * clampedT;
+        const mixedBlueLinear =
+            fromBlueLinear + (toBlueLinear - fromBlueLinear) * clampedT;
 
         return {
             red: linearChannelToSrgb(mixedRedLinear),
@@ -945,15 +1050,15 @@ function normalizeOutputColor(color) {
  *          ready to be injected into a `<path>` element.
  */
 function buildSharedSegmentAttributesString(segmentAttributeMap) {
-    const fillValue = segmentAttributeMap.fill ?? "none";
+    const fillValue = segmentAttributeMap.fill ?? 'none';
 
     let output = `fill="${escapeAttribute(fillValue)}"`;
 
     const keys = Object.keys(segmentAttributeMap);
     for (let i = 0; i < keys.length; i += 1) {
         const attributeName = keys[i];
-        if (attributeName === "stroke") continue;
-        if (attributeName === "d") continue;
+        if (attributeName === 'stroke') continue;
+        if (attributeName === 'd') continue;
         const attributeValue = segmentAttributeMap[attributeName];
         output += ` ${attributeName}="${escapeAttribute(attributeValue)}"`;
     }
@@ -1009,18 +1114,20 @@ function buildPathElementStringFast(pathData, stroke, sharedAttributes) {
  */
 function buildPathElementString(input) {
     const attributePairs = [];
-    const fillValue = input.segmentAttributeMap.fill ?? "none";
+    const fillValue = input.segmentAttributeMap.fill ?? 'none';
     attributePairs.push(`fill="${escapeAttribute(fillValue)}"`);
     attributePairs.push(`stroke="${escapeAttribute(input.stroke)}"`);
 
     for (const attributeName of Object.keys(input.segmentAttributeMap)) {
-        if (attributeName === "stroke") continue;
-        if (attributeName === "d") continue;
+        if (attributeName === 'stroke') continue;
+        if (attributeName === 'd') continue;
         const attributeValue = input.segmentAttributeMap[attributeName];
-        attributePairs.push(`${attributeName}="${escapeAttribute(attributeValue)}"`);
+        attributePairs.push(
+            `${attributeName}="${escapeAttribute(attributeValue)}"`,
+        );
     }
 
-    return `<path d="${escapeAttribute(input.pathData)}" ${attributePairs.join(" ")} />`;
+    return `<path d="${escapeAttribute(input.pathData)}" ${attributePairs.join(' ')} />`;
 }
 
 /**
@@ -1043,10 +1150,14 @@ function buildPathElementString(input) {
 function wrapGroup(pathElementStrings, groupAttributeMap) {
     const groupAttributePairs = [];
     for (const attributeName of Object.keys(groupAttributeMap)) {
-        groupAttributePairs.push(`${attributeName}="${escapeAttribute(groupAttributeMap[attributeName])}"`);
+        groupAttributePairs.push(
+            `${attributeName}="${escapeAttribute(groupAttributeMap[attributeName])}"`,
+        );
     }
-    const groupAttributes = groupAttributePairs.length ? " " + groupAttributePairs.join(" ") : "";
-    return `<g data-svg-path-gradient="true"${groupAttributes}>${pathElementStrings.join("")}</g>`;
+    const groupAttributes = groupAttributePairs.length
+        ? ' ' + groupAttributePairs.join(' ')
+        : '';
+    return `<g data-svg-path-gradient="true"${groupAttributes}>${pathElementStrings.join('')}</g>`;
 }
 
 /**
@@ -1071,7 +1182,11 @@ function wrapGroup(pathElementStrings, groupAttributeMap) {
  * @returns Escaped string safe for inclusion in a quoted attribute.
  */
 function escapeAttribute(value) {
-    return String(value).replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+    return String(value)
+        .replaceAll('&', '&amp;')
+        .replaceAll('"', '&quot;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;');
 }
 
 function SvgPathGradientAsync(pathData, colors = null, options = {}) {
@@ -1079,37 +1194,57 @@ function SvgPathGradientAsync(pathData, colors = null, options = {}) {
         let jobHandle = null;
 
         try {
-            if (!pathData || typeof pathData !== "string") {
-                throw new Error("SvgPathGradientAsync: pathData must be a non-empty string.");
+            if (!pathData || typeof pathData !== 'string') {
+                throw new Error(
+                    'SvgPathGradientAsync: pathData must be a non-empty string.',
+                );
             }
 
             const temperatureMode = options.temperatureMode ?? null;
 
             if (temperatureMode === null) {
                 if (!Array.isArray(colors) || colors.length === 0) {
-                    throw new Error("SvgPathGradientAsync: colors must be a non-empty array when temperatureMode is not enabled.");
+                    throw new Error(
+                        'SvgPathGradientAsync: colors must be a non-empty array when temperatureMode is not enabled.',
+                    );
                 }
             }
 
-            const returnMode = options.returnMode ?? "string";
-            if (returnMode !== "string") {
-                throw new Error('SvgPathGradientAsync: only returnMode="string" is supported for the async version.');
+            const returnMode = options.returnMode ?? 'string';
+            if (returnMode !== 'string') {
+                throw new Error(
+                    'SvgPathGradientAsync: only returnMode="string" is supported for the async version.',
+                );
             }
 
-            const decimalPlaces = typeof options.decimalPlaces === "number" ? options.decimalPlaces : 3;
+            const decimalPlaces =
+                typeof options.decimalPlaces === 'number'
+                    ? options.decimalPlaces
+                    : 3;
             const flattenTolerance =
-                typeof options.flattenTolerance === "number" && options.flattenTolerance > 0 ? options.flattenTolerance : 0.25;
+                typeof options.flattenTolerance === 'number' &&
+                options.flattenTolerance > 0
+                    ? options.flattenTolerance
+                    : 0.25;
 
-            const segmentAttributeMap = options.attrs ? { ...options.attrs } : {};
-            const groupAttributeMap = options.groupAttrs ? { ...options.groupAttrs } : {};
+            const segmentAttributeMap = options.attrs
+                ? { ...options.attrs }
+                : {};
+            const groupAttributeMap = options.groupAttrs
+                ? { ...options.groupAttrs }
+                : {};
 
-            const strokeWidthFromAttributes = parseOptionalNumber(segmentAttributeMap["stroke-width"]);
+            const strokeWidthFromAttributes = parseOptionalNumber(
+                segmentAttributeMap['stroke-width'],
+            );
             const strokeWidth =
-                typeof options.strokeWidth === "number" && options.strokeWidth > 0
+                typeof options.strokeWidth === 'number' &&
+                options.strokeWidth > 0
                     ? options.strokeWidth
-                    : typeof strokeWidthFromAttributes === "number" && strokeWidthFromAttributes > 0
-                        ? strokeWidthFromAttributes
-                        : 1;
+                    : typeof strokeWidthFromAttributes === 'number' &&
+                        strokeWidthFromAttributes > 0
+                      ? strokeWidthFromAttributes
+                      : 1;
 
             // IMPORTANT: per-job path element (no shared mutation across frames)
             jobHandle = createOffscreenPathForJob(pathData);
@@ -1123,7 +1258,10 @@ function SvgPathGradientAsync(pathData, colors = null, options = {}) {
                     : [];
 
             // Degenerate / single-color: resolve immediately.
-            if (temperatureMode === null && (!(totalLength > 0) || rgbaStopsInput.length === 1)) {
+            if (
+                temperatureMode === null &&
+                (!(totalLength > 0) || rgbaStopsInput.length === 1)
+            ) {
                 const stroke = normalizeOutputColor(rgbaStopsInput[0]);
                 const out = wrapGroup(
                     [
@@ -1133,182 +1271,251 @@ function SvgPathGradientAsync(pathData, colors = null, options = {}) {
                             segmentAttributeMap,
                         }),
                     ],
-                    groupAttributeMap
+                    groupAttributeMap,
                 );
                 destroyOffscreenPathForJob(jobHandle);
                 resolve(out);
                 return;
             }
 
-            const colorSpace = options.colorSpace ?? "linearRGB";
+            const colorSpace = options.colorSpace ?? 'linearRGB';
 
             if (temperatureMode !== null) {
                 const tc = options.temperatureColors;
                 if (!Array.isArray(tc) || tc.length !== 2) {
-                    throw new Error("SvgPathGradientAsync: temperatureColors must be a tuple of exactly 2 colors when temperatureMode is enabled.");
+                    throw new Error(
+                        'SvgPathGradientAsync: temperatureColors must be a tuple of exactly 2 colors when temperatureMode is enabled.',
+                    );
                 }
             }
 
             const temperatureRgbaStops =
                 temperatureMode !== null
-                    ? colorsToRgba(options.temperatureColors, options.colorReferenceElement)
+                    ? colorsToRgba(
+                          options.temperatureColors,
+                          options.colorReferenceElement,
+                      )
                     : null;
 
             const gradientStops =
                 temperatureMode === null
                     ? (() => {
-                        const evenStops = buildEvenStops(rgbaStopsInput);
-                        const stops = new Array(evenStops.length);
-                        for (let i = 0; i < evenStops.length; i += 1) {
-                            stops[i] = { position: evenStops[i].position, rgba: evenStops[i].rgba };
-                        }
-                        return stops;
-                    })()
+                          const evenStops = buildEvenStops(rgbaStopsInput);
+                          const stops = new Array(evenStops.length);
+                          for (let i = 0; i < evenStops.length; i += 1) {
+                              stops[i] = {
+                                  position: evenStops[i].position,
+                                  rgba: evenStops[i].rgba,
+                              };
+                          }
+                          return stops;
+                      })()
                     : [];
 
-            const maxSegmentLength = computeMaxSegmentLength(totalLength, strokeWidth, options.maxSegmentLength);
-            const segmentCount = computeSegmentCount(totalLength, options.segments, maxSegmentLength);
+            const maxSegmentLength = computeMaxSegmentLength(
+                totalLength,
+                strokeWidth,
+                options.maxSegmentLength,
+            );
+            const segmentCount = computeSegmentCount(
+                totalLength,
+                options.segments,
+                maxSegmentLength,
+            );
             const baseSegmentLength = totalLength / segmentCount;
 
             let overlapLength =
-                typeof options.overlap === "number" && options.overlap >= 0 ? options.overlap : strokeWidth * 0.5;
+                typeof options.overlap === 'number' && options.overlap >= 0
+                    ? options.overlap
+                    : strokeWidth * 0.5;
 
             const maximumAllowedOverlap = baseSegmentLength * 0.45;
-            if (overlapLength > maximumAllowedOverlap) overlapLength = maximumAllowedOverlap;
+            if (overlapLength > maximumAllowedOverlap)
+                overlapLength = maximumAllowedOverlap;
 
             const samplePointLimitPerSegment =
-                typeof options.samplePointLimitPerSegment === "number" && options.samplePointLimitPerSegment > 10
+                typeof options.samplePointLimitPerSegment === 'number' &&
+                options.samplePointLimitPerSegment > 10
                     ? options.samplePointLimitPerSegment
                     : 250;
 
-            const sharedSegmentAttributesString = buildSharedSegmentAttributesString(segmentAttributeMap);
+            const sharedSegmentAttributesString =
+                buildSharedSegmentAttributesString(segmentAttributeMap);
 
             // Build everything in memory; publish once.
             const segmentPathStrings = [];
-            const temperatureSegmentPathData = temperatureMode !== null ? [] : null;
-            const temperatureSegmentBounds = temperatureMode !== null ? [] : null;
+            const temperatureSegmentPathData =
+                temperatureMode !== null ? [] : null;
+            const temperatureSegmentBounds =
+                temperatureMode !== null ? [] : null;
 
             let stopIndex = 0;
-            const lastStopIndex = temperatureMode === null ? gradientStops.length - 2 : 0;
+            const lastStopIndex =
+                temperatureMode === null ? gradientStops.length - 2 : 0;
 
             let segmentIndex = 0;
 
             const step = () => {
-    // Dynamic per-frame budget (ms). Keep below ~16ms for 60fps.
-    // 6–10ms is a good range to leave time for Vue/layout/paint.
-    const frameStart = performance.now();
-    const frameBudget = typeof options.frameBudgetMs === "number" ? options.frameBudgetMs : 8;
+                // Dynamic per-frame budget (ms). Keep below ~16ms for 60fps.
+                // 6–10ms is a good range to leave time for Vue/layout/paint.
+                const frameStart = performance.now();
+                const frameBudget =
+                    typeof options.frameBudgetMs === 'number'
+                        ? options.frameBudgetMs
+                        : 8;
 
-    // Process as many segments as we can within the budget.
-    while (segmentIndex < segmentCount && (performance.now() - frameStart) < frameBudget) {
-        const rawStartLength = segmentIndex * baseSegmentLength;
-        const rawEndLength = (segmentIndex + 1) * baseSegmentLength;
+                // Process as many segments as we can within the budget.
+                while (
+                    segmentIndex < segmentCount &&
+                    performance.now() - frameStart < frameBudget
+                ) {
+                    const rawStartLength = segmentIndex * baseSegmentLength;
+                    const rawEndLength = (segmentIndex + 1) * baseSegmentLength;
 
-        let startLength = rawStartLength;
-        let endLength = rawEndLength;
+                    let startLength = rawStartLength;
+                    let endLength = rawEndLength;
 
-        if (segmentIndex !== 0) startLength = rawStartLength - overlapLength;
-        if (segmentIndex !== segmentCount - 1) endLength = rawEndLength + overlapLength;
+                    if (segmentIndex !== 0)
+                        startLength = rawStartLength - overlapLength;
+                    if (segmentIndex !== segmentCount - 1)
+                        endLength = rawEndLength + overlapLength;
 
-        startLength = clampNumber(startLength, 0, totalLength);
-        endLength = clampNumber(endLength, 0, totalLength);
+                    startLength = clampNumber(startLength, 0, totalLength);
+                    endLength = clampNumber(endLength, 0, totalLength);
 
-        if (endLength > startLength) {
-            if (temperatureMode !== null) {
-                const sampled = buildSegmentPathDataFromArcLengthSamplingWithBounds(
-                    svgPathElement,
-                    startLength,
-                    endLength,
-                    flattenTolerance,
-                    decimalPlaces,
-                    samplePointLimitPerSegment
-                );
-                temperatureSegmentPathData.push(sampled.pathData);
-                temperatureSegmentBounds.push(sampled.bounds);
-            } else {
-                const midpointLength = (startLength + endLength) * 0.5;
-                const gradientPosition = midpointLength / totalLength;
+                    if (endLength > startLength) {
+                        if (temperatureMode !== null) {
+                            const sampled =
+                                buildSegmentPathDataFromArcLengthSamplingWithBounds(
+                                    svgPathElement,
+                                    startLength,
+                                    endLength,
+                                    flattenTolerance,
+                                    decimalPlaces,
+                                    samplePointLimitPerSegment,
+                                );
+                            temperatureSegmentPathData.push(sampled.pathData);
+                            temperatureSegmentBounds.push(sampled.bounds);
+                        } else {
+                            const midpointLength =
+                                (startLength + endLength) * 0.5;
+                            const gradientPosition =
+                                midpointLength / totalLength;
 
-                while (stopIndex < lastStopIndex && gradientPosition > gradientStops[stopIndex + 1].position) {
-                    stopIndex += 1;
+                            while (
+                                stopIndex < lastStopIndex &&
+                                gradientPosition >
+                                    gradientStops[stopIndex + 1].position
+                            ) {
+                                stopIndex += 1;
+                            }
+
+                            const strokeColor = evaluateGradientAtIndex(
+                                gradientStops,
+                                gradientPosition,
+                                colorSpace,
+                                stopIndex,
+                            );
+
+                            const segmentPathData =
+                                buildSegmentPathDataFromArcLengthSampling(
+                                    svgPathElement,
+                                    startLength,
+                                    endLength,
+                                    flattenTolerance,
+                                    decimalPlaces,
+                                    samplePointLimitPerSegment,
+                                );
+
+                            segmentPathStrings.push(
+                                buildPathElementStringFast(
+                                    segmentPathData,
+                                    strokeColor,
+                                    sharedSegmentAttributesString,
+                                ),
+                            );
+                        }
+                    }
+
+                    segmentIndex += 1;
                 }
 
-                const strokeColor = evaluateGradientAtIndex(
-                    gradientStops,
-                    gradientPosition,
-                    colorSpace,
-                    stopIndex
-                );
+                // Not finished: schedule next frame.
+                if (segmentIndex < segmentCount) {
+                    requestAnimationFrame(step);
+                    return;
+                }
 
-                const segmentPathData = buildSegmentPathDataFromArcLengthSampling(
-                    svgPathElement,
-                    startLength,
-                    endLength,
-                    flattenTolerance,
-                    decimalPlaces,
-                    samplePointLimitPerSegment
-                );
+                // Temperature second pass: compute colors once all bounds exist.
+                if (temperatureMode !== null) {
+                    let globalMin = Number.POSITIVE_INFINITY;
+                    let globalMax = Number.NEGATIVE_INFINITY;
 
-                segmentPathStrings.push(
-                    buildPathElementStringFast(segmentPathData, strokeColor, sharedSegmentAttributesString)
-                );
-            }
-        }
+                    for (
+                        let i = 0;
+                        i < temperatureSegmentBounds.length;
+                        i += 1
+                    ) {
+                        const b = temperatureSegmentBounds[i];
+                        const minCoord =
+                            temperatureMode === 'vertical' ? b.minY : b.minX;
+                        const maxCoord =
+                            temperatureMode === 'vertical' ? b.maxY : b.maxX;
+                        if (minCoord < globalMin) globalMin = minCoord;
+                        if (maxCoord > globalMax) globalMax = maxCoord;
+                    }
 
-        segmentIndex += 1;
-    }
+                    const high = temperatureRgbaStops[0];
+                    const low = temperatureRgbaStops[1];
 
-    // Not finished: schedule next frame.
-    if (segmentIndex < segmentCount) {
-        requestAnimationFrame(step);
-        return;
-    }
+                    segmentPathStrings.length = 0;
 
-    // Temperature second pass: compute colors once all bounds exist.
-    if (temperatureMode !== null) {
-        let globalMin = Number.POSITIVE_INFINITY;
-        let globalMax = Number.NEGATIVE_INFINITY;
+                    for (
+                        let i = 0;
+                        i < temperatureSegmentBounds.length;
+                        i += 1
+                    ) {
+                        const b = temperatureSegmentBounds[i];
+                        const segMin =
+                            temperatureMode === 'vertical' ? b.minY : b.minX;
+                        const segMax =
+                            temperatureMode === 'vertical' ? b.maxY : b.maxX;
+                        const coordValue = (segMin + segMax) * 0.5;
 
-        for (let i = 0; i < temperatureSegmentBounds.length; i += 1) {
-            const b = temperatureSegmentBounds[i];
-            const minCoord = temperatureMode === "vertical" ? b.minY : b.minX;
-            const maxCoord = temperatureMode === "vertical" ? b.maxY : b.maxX;
-            if (minCoord < globalMin) globalMin = minCoord;
-            if (maxCoord > globalMax) globalMax = maxCoord;
-        }
+                        const t = inverseLerp(
+                            coordValue,
+                            globalMin,
+                            globalMax,
+                            true,
+                        );
 
-        const high = temperatureRgbaStops[0];
-        const low = temperatureRgbaStops[1];
+                        const mixed =
+                            temperatureMode === 'vertical'
+                                ? interpolateRgbaColor(high, low, t, colorSpace)
+                                : interpolateRgbaColor(
+                                      low,
+                                      high,
+                                      t,
+                                      colorSpace,
+                                  );
 
-        segmentPathStrings.length = 0;
+                        const strokeColor = normalizeOutputColor(mixed);
+                        const segmentPathData = temperatureSegmentPathData[i];
 
-        for (let i = 0; i < temperatureSegmentBounds.length; i += 1) {
-            const b = temperatureSegmentBounds[i];
-            const segMin = temperatureMode === "vertical" ? b.minY : b.minX;
-            const segMax = temperatureMode === "vertical" ? b.maxY : b.maxX;
-            const coordValue = (segMin + segMax) * 0.5;
+                        segmentPathStrings.push(
+                            buildPathElementStringFast(
+                                segmentPathData,
+                                strokeColor,
+                                sharedSegmentAttributesString,
+                            ),
+                        );
+                    }
+                }
 
-            const t = inverseLerp(coordValue, globalMin, globalMax, true);
-
-            const mixed =
-                temperatureMode === "vertical"
-                    ? interpolateRgbaColor(high, low, t, colorSpace)
-                    : interpolateRgbaColor(low, high, t, colorSpace);
-
-            const strokeColor = normalizeOutputColor(mixed);
-            const segmentPathData = temperatureSegmentPathData[i];
-
-            segmentPathStrings.push(
-                buildPathElementStringFast(segmentPathData, strokeColor, sharedSegmentAttributesString)
-            );
-        }
-    }
-
-    const out = wrapGroup(segmentPathStrings, groupAttributeMap);
-    destroyOffscreenPathForJob(jobHandle);
-    resolve(out);
-};
-
+                const out = wrapGroup(segmentPathStrings, groupAttributeMap);
+                destroyOffscreenPathForJob(jobHandle);
+                resolve(out);
+            };
 
             requestAnimationFrame(step);
         } catch (e) {
@@ -1317,6 +1524,5 @@ function SvgPathGradientAsync(pathData, colors = null, options = {}) {
         }
     });
 }
-
 
 export { SvgPathGradient, SvgPathGradientAsync };

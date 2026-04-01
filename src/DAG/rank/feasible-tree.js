@@ -1,5 +1,5 @@
-import Graph from "../graph.js";
-import { slack as calculateSlack } from "./util.js";
+import Graph from '../graph.js';
+import { slack as calculateSlack } from './util.js';
 
 /*
  * Constructs a spanning tree with tight edges and adjusted the input node's
@@ -32,7 +32,7 @@ export default function feasibleTree(graph) {
 
     const tree = new Graph();
 
-    graph.nodes().forEach(nodeId => {
+    graph.nodes().forEach((nodeId) => {
         tree.setNode(nodeId, {});
     });
 
@@ -51,7 +51,7 @@ export default function feasibleTree(graph) {
 
         if (!bestEdge) {
             // No more edges that connect inside to outside; choose any remaining node.
-            const remainingNodeId = nodes.find(nodeId => !inTree.has(nodeId));
+            const remainingNodeId = nodes.find((nodeId) => !inTree.has(nodeId));
             inTree.add(remainingNodeId);
             tree.setNode(remainingNodeId, {});
             continue;
@@ -72,9 +72,9 @@ export default function feasibleTree(graph) {
 }
 
 function initializeRanks(graph) {
-    graph.nodes().forEach(nodeId => {
+    graph.nodes().forEach((nodeId) => {
         const label = graph.node(nodeId) || {};
-        if (!Object.prototype.hasOwnProperty.call(label, "rank")) {
+        if (!Object.prototype.hasOwnProperty.call(label, 'rank')) {
             label.rank = 0;
             graph.setNode(nodeId, label);
         }
@@ -88,7 +88,7 @@ function initializeRanks(graph) {
 function findBestTighteningEdge(graph, inTree) {
     let best = null;
 
-    graph.edges().forEach(edgeObject => {
+    graph.edges().forEach((edgeObject) => {
         const tailInTree = inTree.has(edgeObject.v);
         const headInTree = inTree.has(edgeObject.w);
 
@@ -132,7 +132,7 @@ function shiftRanksSubgraph(graph, inTree, anchorNodeId, delta) {
         return;
     }
 
-    graph.nodes().forEach(nodeId => {
+    graph.nodes().forEach((nodeId) => {
         if (!inTree.has(nodeId)) {
             const nodeLabel = graph.node(nodeId);
             nodeLabel.rank += delta;

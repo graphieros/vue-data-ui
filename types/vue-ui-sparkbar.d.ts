@@ -1,10 +1,10 @@
 import { DefineComponent } from 'vue';
 
-export type { 
+export type {
     VueUiSparkbarDatasetItem,
     VueUiSparkbarConfig,
-    VueUiSparkbarEvent
-} from "./vue-data-ui";
+    VueUiSparkbarEvent,
+} from './vue-data-ui';
 
 declare const VueUiSparkbar: DefineComponent<{
     config?: VueUiSparkbarConfig;
@@ -12,4 +12,4 @@ declare const VueUiSparkbar: DefineComponent<{
 }>;
 
 export default VueUiSparkbar;
-export { VueUiSparkbar }
+export { VueUiSparkbar };

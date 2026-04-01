@@ -1,18 +1,18 @@
 <script setup>
-import { ref, computed } from "vue";
-import { lightenColor } from "../exposedLib";
-import BaseIcon from "./BaseIcon.vue";
+import { ref, computed } from 'vue';
+import { lightenColor } from '../exposedLib';
+import BaseIcon from './BaseIcon.vue';
 
 const props = defineProps({
     config: {
         type: Object,
         default() {
-            return {}
-        }
+            return {};
+        },
     },
     scale: {
         type: Number,
-        default: 0
+        default: 0,
     },
     withDirection: {
         type: Boolean,
@@ -25,95 +25,101 @@ const props = defineProps({
     isCursorPointer: {
         type: Boolean,
         default: false,
-    }
+    },
 });
 
 const emit = defineEmits(['zoomIn', 'zoomOut', 'resetZoom', 'switchDirection']);
-
 </script>
 
 <template>
-<div 
-    :class="{'vue-data-ui-zoom-controls': true, 'vue-data-ui-zoom-controls-fullscreen': isFullscreen }"
-    data-dom-to-png-ignore
-    :style="{
-        border: config.style.chart.controls.border,
-        backgroundColor: config.style.chart.controls.backgroundColor,
-        padding: config.style.chart.controls.padding,
-        borderRadius: config.style.chart.controls.borderRadius,
-        '--vue-data-ui-zoom-control-button-color': config.style.chart.controls.buttonColor,
-        '--vue-data-ui-zoom-control-button-color-hover': lightenColor(config.style.chart.controls.buttonColor, 0.2)
-    }"    
->
-    <button 
-        @click="emit('zoomOut')" 
-        class="vue-data-ui-zoom-controls-button"
-        data-cy-zoom-out
-        :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }"
-    >
-        <BaseIcon 
-            name="zoomMinus" 
-            :stroke="config.style.chart.controls.color" 
-            :size="config.style.chart.controls.fontSize * 1.2"
-        />
-    </button>
-    <button 
-        class="vue-data-ui-zoom-controls-button-zoom"
-        @click="emit('resetZoom')"
-        data-cy-zoom-reset
+    <div
+        :class="{
+            'vue-data-ui-zoom-controls': true,
+            'vue-data-ui-zoom-controls-fullscreen': isFullscreen,
+        }"
+        data-dom-to-png-ignore
         :style="{
-            color: config.style.chart.controls.color,
-            width: config.style.chart.controls.fontSize * 4 + 'px',
+            border: config.style.chart.controls.border,
+            backgroundColor: config.style.chart.controls.backgroundColor,
+            padding: config.style.chart.controls.padding,
             borderRadius: config.style.chart.controls.borderRadius,
-            fontSize: config.style.chart.controls.fontSize + 'px',
-            cursor: isCursorPointer ? 'pointer' : 'default'
+            '--vue-data-ui-zoom-control-button-color':
+                config.style.chart.controls.buttonColor,
+            '--vue-data-ui-zoom-control-button-color-hover': lightenColor(
+                config.style.chart.controls.buttonColor,
+                0.2,
+            ),
         }"
     >
-        {{ Math.round(scale * 100) }}%
-    </button>
-    <button 
-        @click="emit('zoomIn')" 
-        class="vue-data-ui-zoom-controls-button"
-        data-cy-zoom-in
-        :style="{
-            cursor: isCursorPointer ? 'pointer' : 'default'
-        }"
-    >
-        <BaseIcon 
-            name="zoomPlus" 
-            :stroke="config.style.chart.controls.color" 
-            :size="config.style.chart.controls.fontSize * 1.2"
-        />
-    </button>
-    <button
-        :disabled="scale === 1"
-        @click="emit('resetZoom')" 
-        class="vue-data-ui-zoom-controls-button"
-        :style="{
-            cursor: isCursorPointer ? 'pointer' : 'default'
-        }"
-    >
-        <BaseIcon 
-            name="revert" 
-            :stroke="config.style.chart.controls.color" 
-            :size="config.style.chart.controls.fontSize * 1.2"
-        />
-    </button>
-    <button
-        v-if="withDirection" 
-        @click="emit('switchDirection')" 
-        class="vue-data-ui-zoom-controls-button"
-        :style="{
-            cursor: isCursorPointer ? 'pointer' : 'default'
-        }"
-    >
-        <BaseIcon 
-            name="direction" 
-            :stroke="config.style.chart.controls.color" 
-            :size="config.style.chart.controls.fontSize * 1.2"
-        />
-    </button>
-</div>
+        <button
+            @click="emit('zoomOut')"
+            class="vue-data-ui-zoom-controls-button"
+            data-cy-zoom-out
+            :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }"
+        >
+            <BaseIcon
+                name="zoomMinus"
+                :stroke="config.style.chart.controls.color"
+                :size="config.style.chart.controls.fontSize * 1.2"
+            />
+        </button>
+        <button
+            class="vue-data-ui-zoom-controls-button-zoom"
+            @click="emit('resetZoom')"
+            data-cy-zoom-reset
+            :style="{
+                color: config.style.chart.controls.color,
+                width: config.style.chart.controls.fontSize * 4 + 'px',
+                borderRadius: config.style.chart.controls.borderRadius,
+                fontSize: config.style.chart.controls.fontSize + 'px',
+                cursor: isCursorPointer ? 'pointer' : 'default',
+            }"
+        >
+            {{ Math.round(scale * 100) }}%
+        </button>
+        <button
+            @click="emit('zoomIn')"
+            class="vue-data-ui-zoom-controls-button"
+            data-cy-zoom-in
+            :style="{
+                cursor: isCursorPointer ? 'pointer' : 'default',
+            }"
+        >
+            <BaseIcon
+                name="zoomPlus"
+                :stroke="config.style.chart.controls.color"
+                :size="config.style.chart.controls.fontSize * 1.2"
+            />
+        </button>
+        <button
+            :disabled="scale === 1"
+            @click="emit('resetZoom')"
+            class="vue-data-ui-zoom-controls-button"
+            :style="{
+                cursor: isCursorPointer ? 'pointer' : 'default',
+            }"
+        >
+            <BaseIcon
+                name="revert"
+                :stroke="config.style.chart.controls.color"
+                :size="config.style.chart.controls.fontSize * 1.2"
+            />
+        </button>
+        <button
+            v-if="withDirection"
+            @click="emit('switchDirection')"
+            class="vue-data-ui-zoom-controls-button"
+            :style="{
+                cursor: isCursorPointer ? 'pointer' : 'default',
+            }"
+        >
+            <BaseIcon
+                name="direction"
+                :stroke="config.style.chart.controls.color"
+                :size="config.style.chart.controls.fontSize * 1.2"
+            />
+        </button>
+    </div>
 </template>
 
 <style scoped>
@@ -132,8 +138,8 @@ const emit = defineEmits(['zoomIn', 'zoomOut', 'resetZoom', 'switchDirection']);
 .vue-data-ui-zoom-controls-button,
 .vue-data-ui-zoom-controls-button-zoom {
     display: flex;
-    align-items:center;
-    justify-content:center;
+    align-items: center;
+    justify-content: center;
     padding: 0.25rem;
     border: none;
     transition: all 0.2s ease-in-out;
@@ -141,7 +147,6 @@ const emit = defineEmits(['zoomIn', 'zoomOut', 'resetZoom', 'switchDirection']);
 }
 
 .vue-data-ui-zoom-controls-button {
-
     width: fit-content;
     height: fit-content;
     border-radius: 50%;
@@ -149,8 +154,11 @@ const emit = defineEmits(['zoomIn', 'zoomOut', 'resetZoom', 'switchDirection']);
 
 .vue-data-ui-zoom-controls-button:hover,
 .vue-data-ui-zoom-controls-button-zoom:hover {
-    box-shadow: 0 3px 6px rgba(0,0,0,0.2);
-    background-color: var(--vue-data-ui-zoom-control-button-color-hover, transparent);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+    background-color: var(
+        --vue-data-ui-zoom-control-button-color-hover,
+        transparent
+    );
 }
 
 .vue-data-ui-zoom-controls-fullscreen {
@@ -161,7 +169,7 @@ const emit = defineEmits(['zoomIn', 'zoomOut', 'resetZoom', 'switchDirection']);
 }
 
 button:disabled {
-    cursor:not-allowed;
+    cursor: not-allowed;
     opacity: 0.3;
 }
 

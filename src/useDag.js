@@ -1,12 +1,12 @@
-"use strict";
+'use strict';
 
-import { ref, watchEffect, unref } from "vue";
-import Graph from "./DAG/graph.js";
-import layout from "./DAG/layout.js";
-import { createUid, getPathMidpoint } from "./lib.js";
+import { ref, watchEffect, unref } from 'vue';
+import Graph from './DAG/graph.js';
+import layout from './DAG/layout.js';
+import { createUid, getPathMidpoint } from './lib.js';
 
 const defaultDagConfiguration = {
-    rankDirection: "TB",       // "TB", "BT", "LR", "RL"
+    rankDirection: 'TB', // "TB", "BT", "LR", "RL"
     nodeSeparation: 50,
     rankSeparation: 50,
     edgeSeparation: 10,
@@ -17,22 +17,23 @@ const defaultDagConfiguration = {
     curvedEdges: false,
     padding: 20,
     // "undirected" | "normal" | "vee"
-    arrowShape: "normal",
-    arrowSize: 10
+    arrowShape: 'normal',
+    arrowSize: 10,
 };
 
 function buildStraightPath(points) {
-    if (!points.length) return "";
+    if (!points.length) return '';
     return points
-        .map((point, index) =>
-            `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`
+        .map(
+            (point, index) =>
+                `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`,
         )
-        .join(" ");
+        .join(' ');
 }
 
 // Curved path with a straight last segment to keep arrow orientation stable
 function buildCurvedPath(points) {
-    if (!points.length) return "";
+    if (!points.length) return '';
 
     if (points.length === 1) {
         const point = points[0];
@@ -80,7 +81,7 @@ export function useDag(options) {
 
         const finalConfiguration = {
             ...defaultDagConfiguration,
-            ...userConfiguration
+            ...userConfiguration,
         };
 
         // Fresh graph instance on every run: full recompute
@@ -91,28 +92,28 @@ export function useDag(options) {
             nodesep: finalConfiguration.nodeSeparation,
             ranksep: finalConfiguration.rankSeparation,
             edgesep: finalConfiguration.edgeSeparation,
-            align: finalConfiguration.align
+            align: finalConfiguration.align,
         });
 
-        rawNodes.forEach(node => {
+        rawNodes.forEach((node) => {
             graphInstance.setNode(node.id, {
                 label: node.label,
                 width: node.width ?? finalConfiguration.nodeWidth,
-                height: node.height ?? finalConfiguration.nodeHeight
+                height: node.height ?? finalConfiguration.nodeHeight,
             });
         });
 
-        rawEdges.forEach(edge => {
+        rawEdges.forEach((edge) => {
             graphInstance.setEdge(edge.from, edge.to, {
                 weight: edge.weight ?? 1,
                 minlen: edge.minLength ?? 1,
-                arrowShape: finalConfiguration.arrowShape ?? 'normal'
+                arrowShape: finalConfiguration.arrowShape ?? 'normal',
             });
         });
 
         layout(graphInstance);
 
-        const laidOutNodes = rawNodes.map(node => {
+        const laidOutNodes = rawNodes.map((node) => {
             const graphNode = graphInstance.node(node.id);
             return {
                 id: node.id,
@@ -121,13 +122,13 @@ export function useDag(options) {
                 y: graphNode.y,
                 width: graphNode.width,
                 height: graphNode.height,
-                original: node
+                original: node,
             };
         });
 
         const laidOutEdges = graphInstance
             .edges()
-            .map(edgeObject => {
+            .map((edgeObject) => {
                 const edgeLabel = graphInstance.edge(edgeObject);
                 const points = edgeLabel.points || [];
 
@@ -139,12 +140,15 @@ export function useDag(options) {
                     ? buildCurvedPath(points)
                     : buildStraightPath(points);
 
-                const useMarker = finalConfiguration.arrowShape !== "undirected";
+                const useMarker =
+                    finalConfiguration.arrowShape !== 'undirected';
                 const markerEnd = useMarker
                     ? `url(#${arrowMarkerIdentifier})`
                     : null;
 
-                const thisRawEdge = rawEdges.find(e => e?.from === edgeObject.v && e?.to === edgeObject.w);
+                const thisRawEdge = rawEdges.find(
+                    (e) => e?.from === edgeObject.v && e?.to === edgeObject.w,
+                );
 
                 return {
                     id: `${edgeObject.v}->${edgeObject.w}->${createUid()}`,
@@ -156,7 +160,7 @@ export function useDag(options) {
                     original: {
                         ...thisRawEdge,
                         ...edgeLabel,
-                    }
+                    },
                 };
             })
             .filter(Boolean);
@@ -167,20 +171,20 @@ export function useDag(options) {
             layoutData.value = {
                 nodes: [],
                 edges: laidOutEdges,
-                viewBox: "0 0 0 0",
+                viewBox: '0 0 0 0',
                 arrowShape: finalConfiguration.arrowShape,
-                arrowSize: finalConfiguration.arrowSize
+                arrowSize: finalConfiguration.arrowSize,
             };
             return;
         }
 
-        const xValues = laidOutNodes.flatMap(node => [
+        const xValues = laidOutNodes.flatMap((node) => [
             node.x - node.width / 2,
-            node.x + node.width / 2
+            node.x + node.width / 2,
         ]);
-        const yValues = laidOutNodes.flatMap(node => [
+        const yValues = laidOutNodes.flatMap((node) => [
             node.y - node.height / 2,
-            node.y + node.height / 2
+            node.y + node.height / 2,
         ]);
 
         const minX = Math.min(...xValues) - padding;
@@ -190,13 +194,15 @@ export function useDag(options) {
 
         layoutData.value = {
             nodes: laidOutNodes,
-            edges: laidOutEdges.map(e => ({
+            edges: laidOutEdges.map((e) => ({
                 ...e,
-                midpoint: e.pathData ? getPathMidpoint(e.pathData) : { x: 0, y: 0 }
+                midpoint: e.pathData
+                    ? getPathMidpoint(e.pathData)
+                    : { x: 0, y: 0 },
             })),
             viewBox: `${minX} ${minY} ${maxX - minX} ${maxY - minY}`,
             arrowShape: finalConfiguration.arrowShape,
-            arrowSize: finalConfiguration.arrowSize
+            arrowSize: finalConfiguration.arrowSize,
         };
     }
 
@@ -208,7 +214,7 @@ export function useDag(options) {
 
             computeLayoutInternal(rawNodes, rawEdges, userConfiguration);
         } catch (error) {
-            console.error("[useDag] layout error:", error);
+            console.error('[useDag] layout error:', error);
             lastError.value = error;
             layoutData.value = null;
         }
@@ -223,6 +229,6 @@ export function useDag(options) {
             const rawEdges = unref(edges) || [];
             const userConfiguration = unref(configuration) || {};
             computeLayoutInternal(rawNodes, rawEdges, userConfiguration);
-        }
+        },
     };
 }

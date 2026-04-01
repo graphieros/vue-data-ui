@@ -1,4 +1,4 @@
-import { useConfig } from "./useConfig";
+import { useConfig } from './useConfig';
 
 const availableComponents = [
     'vue_ui_xy',
@@ -68,11 +68,13 @@ const availableComponents = [
     'vue_ui_table',
     'vue_ui_digits',
     'vue_ui_circle_pack',
-]
+];
 
 export default function getVueDataUiConfig(type, options = {}) {
     if (!availableComponents.includes(type)) {
-        console.error(`VueDataUi - getVueDataUiConfig : ${type} is not a valid component name for this utility.\nUse snake case names, for example 'vue_ui_xy', 'vue_ui_donut', etc.`);
+        console.error(
+            `VueDataUi - getVueDataUiConfig : ${type} is not a valid component name for this utility.\nUse snake case names, for example 'vue_ui_xy', 'vue_ui_donut', etc.`,
+        );
         return {};
     }
     return useConfig(options)[type];

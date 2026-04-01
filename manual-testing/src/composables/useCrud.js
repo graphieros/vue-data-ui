@@ -1,27 +1,30 @@
-import { computed, ref } from "vue";
-import { createUid } from "../../../src/lib";
+import { computed, ref } from 'vue';
+import { createUid } from '../../../src/lib';
 
 export default function useCrud(baseUrlOverride) {
-    const baseUrl = computed(() => baseUrlOverride ?? "/api/items");
+    const baseUrl = computed(() => baseUrlOverride ?? '/api/items');
 
     const items = ref([]);
     const selectedItem = ref(null);
 
     const isLoading = ref(false);
-    const errorMessage = ref("");
+    const errorMessage = ref('');
 
     function clearError() {
-        errorMessage.value = "";
+        errorMessage.value = '';
     }
 
     async function requestJson(input, init) {
         const response = await fetch(input, init);
 
         if (!response.ok) {
-            let details = "";
+            let details = '';
             try {
                 const maybeJson = await response.json();
-                details = typeof (maybeJson && maybeJson.error) === "string" ? ` - ${maybeJson.error}` : "";
+                details =
+                    typeof (maybeJson && maybeJson.error) === 'string'
+                        ? ` - ${maybeJson.error}`
+                        : '';
             } catch {
                 // ignore
             }
@@ -40,7 +43,9 @@ export default function useCrud(baseUrlOverride) {
             items.value = Array.isArray(data && data.items) ? data.items : [];
             return items.value;
         } catch (error) {
-            errorMessage.value = String(error && error.message ? error.message : error);
+            errorMessage.value = String(
+                error && error.message ? error.message : error,
+            );
             return [];
         } finally {
             isLoading.value = false;
@@ -57,7 +62,9 @@ export default function useCrud(baseUrlOverride) {
             selectedItem.value = data && data.item ? data.item : null;
             return selectedItem.value;
         } catch (error) {
-            errorMessage.value = String(error && error.message ? error.message : error);
+            errorMessage.value = String(
+                error && error.message ? error.message : error,
+            );
             selectedItem.value = null;
             return null;
         } finally {
@@ -75,8 +82,8 @@ export default function useCrud(baseUrlOverride) {
 
         try {
             const data = await requestJson(baseUrl.value, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload ?? {}),
             });
 
@@ -88,7 +95,9 @@ export default function useCrud(baseUrlOverride) {
 
             return created;
         } catch (error) {
-            errorMessage.value = String(error && error.message ? error.message : error);
+            errorMessage.value = String(
+                error && error.message ? error.message : error,
+            );
             return null;
         } finally {
             isLoading.value = false;
@@ -102,29 +111,36 @@ export default function useCrud(baseUrlOverride) {
         try {
             const url = `${baseUrl.value}/${encodeURIComponent(String(identifier))}`;
             const data = await requestJson(url, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(patch ?? {}),
             });
 
             const updated = data && data.item ? data.item : null;
 
             if (updated) {
-                const index = items.value.findIndex((entry) => String(entry && entry.id) === String(identifier));
+                const index = items.value.findIndex(
+                    (entry) => String(entry && entry.id) === String(identifier),
+                );
                 if (index >= 0) {
                     const next = items.value.slice();
                     next[index] = updated;
                     items.value = next;
                 }
 
-                if (selectedItem.value && String(selectedItem.value.id) === String(identifier)) {
+                if (
+                    selectedItem.value &&
+                    String(selectedItem.value.id) === String(identifier)
+                ) {
                     selectedItem.value = updated;
                 }
             }
 
             return updated;
         } catch (error) {
-            errorMessage.value = String(error && error.message ? error.message : error);
+            errorMessage.value = String(
+                error && error.message ? error.message : error,
+            );
             return null;
         } finally {
             isLoading.value = false;
@@ -137,25 +153,32 @@ export default function useCrud(baseUrlOverride) {
 
         try {
             const url = `${baseUrl.value}/${encodeURIComponent(String(identifier))}`;
-            const data = await requestJson(url, { method: "DELETE" });
+            const data = await requestJson(url, { method: 'DELETE' });
 
-            items.value = items.value.filter((entry) => String(entry && entry.id) !== String(identifier));
+            items.value = items.value.filter(
+                (entry) => String(entry && entry.id) !== String(identifier),
+            );
 
-            if (selectedItem.value && String(selectedItem.value.id) === String(identifier)) {
+            if (
+                selectedItem.value &&
+                String(selectedItem.value.id) === String(identifier)
+            ) {
                 selectedItem.value = null;
             }
 
             return data && data.deleted ? data.deleted : null;
         } catch (error) {
-            errorMessage.value = String(error && error.message ? error.message : error);
+            errorMessage.value = String(
+                error && error.message ? error.message : error,
+            );
             return null;
         } finally {
             isLoading.value = false;
         }
     }
 
-    const toBeDone = computed(() => items.value.filter(item => !item.done));
-    const done = computed(() => items.value.filter(item => item.done));
+    const toBeDone = computed(() => items.value.filter((item) => !item.done));
+    const done = computed(() => items.value.filter((item) => item.done));
 
     return {
         baseUrl,

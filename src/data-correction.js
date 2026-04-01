@@ -32,7 +32,7 @@ export function movingAverage(data, halfWindow) {
     }
 
     // Position-based blend: near start → mostly trailing, near end → mostly leading
-    const result = data.map(d => ({ ...d }));
+    const result = data.map((d) => ({ ...d }));
     for (let i = 1; i < n - 1; i += 1) {
         const t = i / (n - 1);
         result[i].value = (1 - t) * trailing[i] + t * leading[i];
@@ -72,7 +72,7 @@ export function smoothing(data, tau) {
 
     // Position-based blend: near start → mostly forward, near end → mostly backward
     // This ensures smooth transitions from both fixed endpoints
-    const result = data.map(d => ({ ...d }));
+    const result = data.map((d) => ({ ...d }));
     for (let i = 1; i < n - 1; i += 1) {
         const t = i / (n - 1);
         result[i].value = (1 - t) * forward[i] + t * backward[i];

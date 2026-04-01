@@ -5,7 +5,7 @@ import {
     getValue,
     setValue,
     useObjectBindings,
-} from '../src/useObjectBindings'
+} from '../src/useObjectBindings';
 
 describe('extractAllPaths', () => {
     test('simple flat object', () => {
@@ -80,7 +80,11 @@ describe('useObjectBindings', () => {
         });
         const bindings = useObjectBindings(config);
 
-        expect(Object.keys(bindings).sort()).toEqual(['enabled', 'user.age', 'user.name']);
+        expect(Object.keys(bindings).sort()).toEqual([
+            'enabled',
+            'user.age',
+            'user.name',
+        ]);
         expect(bindings['user.name'].value).toBe('Alice');
         expect(bindings['enabled'].value).toBe(true);
     });
@@ -133,34 +137,34 @@ describe('useObjectBindings', () => {
 
 describe('useObjectBindings with optional keys', () => {
     test('creates binding for an optional property added after initialization', async () => {
+        const testObj = ref({ foo: 'bar' });
+        const bindings = useObjectBindings(testObj);
 
-        const testObj = ref({ foo: 'bar' })
-        const bindings = useObjectBindings(testObj)
+        expect(Object.keys(bindings)).toContain('foo');
+        expect(Object.keys(bindings)).not.toContain('hello');
 
-        expect(Object.keys(bindings)).toContain('foo')
-        expect(Object.keys(bindings)).not.toContain('hello')
+        testObj.value.hello = 'world';
+        await nextTick();
 
-        testObj.value.hello = 'world'
-        await nextTick()
-
-        expect(Object.keys(bindings)).toContain('hello')
-        expect(bindings['hello'].value).toBe('world')
-    })
+        expect(Object.keys(bindings)).toContain('hello');
+        expect(bindings['hello'].value).toBe('world');
+    });
 
     test('setting the newly added binding updates the source object', async () => {
+        const testObj = ref({ foo: 'bar' });
+        const bindings = useObjectBindings(testObj);
+        testObj.value.hello = 'world';
+        await nextTick();
 
-        const testObj = ref({ foo: 'bar' })
-        const bindings = useObjectBindings(testObj)
-        testObj.value.hello = 'world'
-        await nextTick()
-
-        bindings['hello'].value = 'planets'
-        expect(testObj.value.hello).toBe('planets')
-    })
-})
+        bindings['hello'].value = 'planets';
+        expect(testObj.value.hello).toBe('planets');
+    });
+});
 
 describe('useObjectBindings – error handling (warnings)', () => {
-    const consoleMock = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+    const consoleMock = vi
+        .spyOn(console, 'warn')
+        .mockImplementation(() => undefined);
 
     afterAll(() => {
         consoleMock.mockReset();
@@ -171,46 +175,46 @@ describe('useObjectBindings – error handling (warnings)', () => {
     });
 
     test('warns when accessing a non-existent binding', () => {
-        const config = ref({ foo: 'bar' })
-        const bindings = useObjectBindings(config)
-        const result = bindings['baz']
-        expect(result).to.equal('')
+        const config = ref({ foo: 'bar' });
+        const bindings = useObjectBindings(config);
+        const result = bindings['baz'];
+        expect(result).to.equal('');
         expect(consoleMock).toHaveBeenCalledWith(
-            'Vue Data UI - useObjectBindings: no binding found for key "baz". Please verify you are binding to a property path which exists on the object.'
-        )
-    })
+            'Vue Data UI - useObjectBindings: no binding found for key "baz". Please verify you are binding to a property path which exists on the object.',
+        );
+    });
 
     test('warns when setting a non-existent binding via assignment', () => {
-        const config = ref({ foo: 'bar' })
-        const bindings = useObjectBindings(config)
+        const config = ref({ foo: 'bar' });
+        const bindings = useObjectBindings(config);
 
         // Assignment triggers warning and injects a new computed binding
-        bindings['baz'] = 'qux'
+        bindings['baz'] = 'qux';
         expect(consoleMock).toHaveBeenCalledWith(
-            'Vue Data UI - useObjectBindings: cannot set unknown binding "baz".'
-        )
-        expect(config.value.baz).toBe('qux')
+            'Vue Data UI - useObjectBindings: cannot set unknown binding "baz".',
+        );
+        expect(config.value.baz).toBe('qux');
 
-        const newBinding = bindings['baz']
-        expect(newBinding).toBeDefined()
+        const newBinding = bindings['baz'];
+        expect(newBinding).toBeDefined();
         // But reading .value will throw, since getValue impl expects an array:
         expect(() => {
-            newBinding.value
-        }).toThrow(TypeError)
-    })
+            newBinding.value;
+        }).toThrow(TypeError);
+    });
 
     test('warns when attempting to set .value on a non-existent binding', () => {
-        const config = ref({ foo: 'bar' })
-        const bindings = useObjectBindings(config)
-        let error
+        const config = ref({ foo: 'bar' });
+        const bindings = useObjectBindings(config);
+        let error;
         try {
-            bindings['baz'].value = 'qux'
+            bindings['baz'].value = 'qux';
         } catch (e) {
-            error = e
+            error = e;
         }
-        expect(error).toBeInstanceOf(TypeError)
+        expect(error).toBeInstanceOf(TypeError);
         expect(consoleMock).toHaveBeenCalledWith(
-            'Vue Data UI - useObjectBindings: no binding found for key "baz". Please verify you are binding to a property path which exists on the object.'
-        )
-    })
-})
+            'Vue Data UI - useObjectBindings: no binding found for key "baz". Please verify you are binding to a property path which exists on the object.',
+        );
+    });
+});

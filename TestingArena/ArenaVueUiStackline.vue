@@ -1,29 +1,30 @@
 <script setup>
-import { ref, computed, onMounted } from "vue";
-import LocalVueUiStackline from "../src/components/vue-ui-stackline.vue";
+import { ref, computed, onMounted } from 'vue';
+import LocalVueUiStackline from '../src/components/vue-ui-stackline.vue';
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
-import Box from "./Box.vue";
-import convertArrayToObject from "./convertModel";
-import { useArena } from "../src/useArena";
-import { VueUiStackline } from "vue-data-ui";
-import { VueUiStackline as VueUiStacklineTreeshaken } from "vue-data-ui/vue-ui-stackline";
-import ConfigKnobs from "./ConfigKnobs.vue";
-import { useConfigurationControls } from "./createConfigModel";
-import { useConfig } from "../src/useConfig"
-import useThemeOptions from "./useThemeOptions";
-
-const { local, build, vduiLocal, vduiBuild, toggleTable, toggleLabels, toggleStack } = useArena();
-const { vue_ui_stackline: DEFAULT_CONFIG } = useConfig();
+import Box from './Box.vue';
+import convertArrayToObject from './convertModel';
+import { useArena } from '../src/useArena';
+import { VueUiStackline } from 'vue-data-ui';
+import { VueUiStackline as VueUiStacklineTreeshaken } from 'vue-data-ui/vue-ui-stackline';
+import ConfigKnobs from './ConfigKnobs.vue';
+import { useConfigurationControls } from './createConfigModel';
+import { useConfig } from '../src/useConfig';
+import useThemeOptions from './useThemeOptions';
 
 const {
-    CHECKBOX,
-    NUMBER,
-    RANGE,
-    TEXT,
-    COLOR,
-    SELECT,
-    createModel
-} = useConfigurationControls(DEFAULT_CONFIG);
+    local,
+    build,
+    vduiLocal,
+    vduiBuild,
+    toggleTable,
+    toggleLabels,
+    toggleStack,
+} = useArena();
+const { vue_ui_stackline: DEFAULT_CONFIG } = useConfig();
+
+const { CHECKBOX, NUMBER, RANGE, TEXT, COLOR, SELECT, createModel } =
+    useConfigurationControls(DEFAULT_CONFIG);
 
 const selectedX = ref(undefined);
 
@@ -33,7 +34,9 @@ function generateDayTimestamps(length) {
     start.setHours(0, 0, 0, 0);
 
     for (let i = 0; i < length; i += 1) {
-        result.push(new Date(start.getTime() + i * 24 * 60 * 60 * 1000).getTime());
+        result.push(
+            new Date(start.getTime() + i * 24 * 60 * 60 * 1000).getTime(),
+        );
     }
 
     return result;
@@ -63,7 +66,7 @@ function generateDayTimestamps(length) {
 //         {
 //             name: '',
 //             series: [1, 2, 3, 5, 8, 13, 21, 34, 55, 89],
-//             color: '#CACACA' 
+//             color: '#CACACA'
 //         }
 // ])
 
@@ -89,35 +92,35 @@ function makeDs(n) {
     for (let i = 0; i < n; i += 1) {
         if (i > 10 && i < 20) {
             // arr.push(null);
-            arr.push(Math.random() * -20)
+            arr.push(Math.random() * -20);
         } else {
-            arr.push(Math.random() * 10 + i)
+            arr.push(Math.random() * 10 + i);
         }
     }
-    return arr
+    return arr;
 }
 
 const dataset = ref([
     {
         name: 'Series A',
         series: makeDs(24),
-        shape: 'triangle'
+        shape: 'triangle',
     },
     {
         name: 'Series B',
         series: makeDs(24),
-        shape: 'square'
+        shape: 'square',
     },
     {
         name: 'Series C',
         series: makeDs(24),
-        shape: 'star'
+        shape: 'star',
     },
     {
         name: 'Series D',
         series: makeDs(24),
         shape: 'diamond',
-        standalone: true
+        standalone: true,
     },
     {
         name: 'Series E',
@@ -128,193 +131,336 @@ const dataset = ref([
 ]);
 
 const model = createModel([
-    CHECKBOX("loading", { def: false }),
-    CHECKBOX("debug", { def: false }),
+    CHECKBOX('loading', { def: false }),
+    CHECKBOX('debug', { def: false }),
 
     CHECKBOX('userOptions.useCursorPointer', { def: false }),
-    SELECT("userOptions.position", ["left", "right"], { def: "right" }),
-    SELECT("orientation", ["vertical", "horizontal"], { def: "vertical" }),
-    CHECKBOX("responsive", { def: false }),
-    SELECT("theme", ["", "zen", "hack", "concrete"], { def: "" }),
-    CHECKBOX("useCssAnimation", { def: true }),
-    COLOR("style.chart.backgroundColor", { def: "#FFFFFF" }),
-    COLOR("style.chart.color", { def: "#1A1A1A" }),
-    NUMBER("style.chart.height", { def: 500, min: 200, max: 1000 }),
-    NUMBER("style.chart.width", { def: 800, min: 200, max: 1000 }),
-    NUMBER("style.chart.padding.top", { def: 12, min: 0, max: 100 }),
-    NUMBER("style.chart.padding.right", { def: 24, min: 0, max: 100 }),
-    NUMBER("style.chart.padding.bottom", { def: 12, min: 0, max: 100 }),
-    NUMBER("style.chart.padding.left", { def: 12, min: 0, max: 100 }),
+    SELECT('userOptions.position', ['left', 'right'], { def: 'right' }),
+    SELECT('orientation', ['vertical', 'horizontal'], { def: 'vertical' }),
+    CHECKBOX('responsive', { def: false }),
+    SELECT('theme', ['', 'zen', 'hack', 'concrete'], { def: '' }),
+    CHECKBOX('useCssAnimation', { def: true }),
+    COLOR('style.chart.backgroundColor', { def: '#FFFFFF' }),
+    COLOR('style.chart.color', { def: '#1A1A1A' }),
+    NUMBER('style.chart.height', { def: 500, min: 200, max: 1000 }),
+    NUMBER('style.chart.width', { def: 800, min: 200, max: 1000 }),
+    NUMBER('style.chart.padding.top', { def: 12, min: 0, max: 100 }),
+    NUMBER('style.chart.padding.right', { def: 24, min: 0, max: 100 }),
+    NUMBER('style.chart.padding.bottom', { def: 12, min: 0, max: 100 }),
+    NUMBER('style.chart.padding.left', { def: 12, min: 0, max: 100 }),
 
-    TEXT("style.chart.title.text", { def: "Lorem ipsum" }),
-    COLOR("style.chart.title.color", { def: "#1A1A1A" }),
-    NUMBER("style.chart.title.fontSize", { def: 20, min: 8, max: 42 }),
-    CHECKBOX("style.chart.title.bold", { def: true }),
-    TEXT("style.chart.title.subtitle.text", { def: "Lorem ipsum dolor sit amet" }),
-    COLOR("style.chart.title.subtitle.color", { def: "#CCCCCC" }),
-    NUMBER("style.chart.title.subtitle.fontSize", { def: 16, min: 8, max: 42 }),
-    CHECKBOX("style.chart.title.subtitle.bold", { def: false }),
-    SELECT("style.chart.title.textAlign", ["left", "center", "right"], { def: "center" }),
+    TEXT('style.chart.title.text', { def: 'Lorem ipsum' }),
+    COLOR('style.chart.title.color', { def: '#1A1A1A' }),
+    NUMBER('style.chart.title.fontSize', { def: 20, min: 8, max: 42 }),
+    CHECKBOX('style.chart.title.bold', { def: true }),
+    TEXT('style.chart.title.subtitle.text', {
+        def: 'Lorem ipsum dolor sit amet',
+    }),
+    COLOR('style.chart.title.subtitle.color', { def: '#CCCCCC' }),
+    NUMBER('style.chart.title.subtitle.fontSize', { def: 16, min: 8, max: 42 }),
+    CHECKBOX('style.chart.title.subtitle.bold', { def: false }),
+    SELECT('style.chart.title.textAlign', ['left', 'center', 'right'], {
+        def: 'center',
+    }),
 
-    CHECKBOX("style.chart.legend.show", { def: true }),
-    CHECKBOX("style.chart.legend.bold", { def: false }),
-    COLOR("style.chart.legend.backgroundColor", { def: "#FFFFFF" }),
-    COLOR("style.chart.legend.color", { def: "#1A1A1A" }),
-    NUMBER("style.chart.legend.fontSize", { def: 14, min: 8, max: 42 }),
-    SELECT("style.chart.legend.position", ["top", "bottom"], { def: "bottom" }),
+    CHECKBOX('style.chart.legend.show', { def: true }),
+    CHECKBOX('style.chart.legend.bold', { def: false }),
+    COLOR('style.chart.legend.backgroundColor', { def: '#FFFFFF' }),
+    COLOR('style.chart.legend.color', { def: '#1A1A1A' }),
+    NUMBER('style.chart.legend.fontSize', { def: 14, min: 8, max: 42 }),
+    SELECT('style.chart.legend.position', ['top', 'bottom'], { def: 'bottom' }),
     CHECKBOX('style.chart.legend.selectAllToggle.show', { def: true }),
 
-    CHECKBOX("style.chart.zoom.show", { def: true }),
+    CHECKBOX('style.chart.zoom.show', { def: true }),
     RANGE('style.chart.zoom.maxWidth', { def: null, min: 100, max: 1000 }),
-    COLOR("style.chart.zoom.color", { def: "#CCCCCC" }),
-    COLOR("style.chart.zoom.highlightColor", { def: "#5A5A5A" }),
-    NUMBER("style.chart.zoom.fontSize", { def: 14, min: 8, max: 42 }),
-    NUMBER("style.chart.zoom.startIndex", { def: null, min: 0, max: 100 }),
-    NUMBER("style.chart.zoom.endIndex", { def: null, min: 0, max: 100 }),
-    CHECKBOX("style.chart.zoom.enableRangeHandles", { def: true }),
-    CHECKBOX("style.chart.zoom.enableSelectionDrag", { def: true }),
-    CHECKBOX("style.chart.zoom.focusOnDrag", { def: true }),
-    NUMBER("style.chart.zoom.focusRangeRatio", { def: 0.2, min: 0.1, max: 0.9, step: 0.1 }),
+    COLOR('style.chart.zoom.color', { def: '#CCCCCC' }),
+    COLOR('style.chart.zoom.highlightColor', { def: '#5A5A5A' }),
+    NUMBER('style.chart.zoom.fontSize', { def: 14, min: 8, max: 42 }),
+    NUMBER('style.chart.zoom.startIndex', { def: null, min: 0, max: 100 }),
+    NUMBER('style.chart.zoom.endIndex', { def: null, min: 0, max: 100 }),
+    CHECKBOX('style.chart.zoom.enableRangeHandles', { def: true }),
+    CHECKBOX('style.chart.zoom.enableSelectionDrag', { def: true }),
+    CHECKBOX('style.chart.zoom.focusOnDrag', { def: true }),
+    NUMBER('style.chart.zoom.focusRangeRatio', {
+        def: 0.2,
+        min: 0.1,
+        max: 0.9,
+        step: 0.1,
+    }),
 
-    CHECKBOX("style.chart.zoom.preview.enable", { def: true }),
-    COLOR("style.chart.zoom.preview.stroke", { def: "#1f77b4" }),
-    COLOR("style.chart.zoom.preview.fill", { def: "#1f77b420" }),
-    NUMBER("style.chart.zoom.preview.strokeDasharray", { def: 0, min: 0, max: 12 }),
-    NUMBER("style.chart.zoom.preview.strokeWidth", { def: 2, min: 0, max: 12 }),
+    CHECKBOX('style.chart.zoom.preview.enable', { def: true }),
+    COLOR('style.chart.zoom.preview.stroke', { def: '#1f77b4' }),
+    COLOR('style.chart.zoom.preview.fill', { def: '#1f77b420' }),
+    NUMBER('style.chart.zoom.preview.strokeDasharray', {
+        def: 0,
+        min: 0,
+        max: 12,
+    }),
+    NUMBER('style.chart.zoom.preview.strokeWidth', { def: 2, min: 0, max: 12 }),
 
-    CHECKBOX("style.chart.zoom.minimap.show", { def: true }),
-    CHECKBOX("style.chart.zoom.minimap.smooth", { def: true }),
-    COLOR("style.chart.zoom.minimap.selectedColor", { def: "#1f77b4" }),
-    RANGE("style.chart.zoom.minimap.selectedColorOpacity", { def: 0.2, min: 0, max: 1, step: 0.01 }),
-    COLOR("style.chart.zoom.minimap.lineColor", { def: "#1A1A1A" }),
-    NUMBER("style.chart.zoom.minimap.selectionRadius", { def: 2, min: 0, max: 24 }),
-    COLOR("style.chart.zoom.minimap.indicatorColor", { def: "#1A1A1A" }),
-    CHECKBOX("style.chart.zoom.minimap.verticalHandles", { def: false }),
-    CHECKBOX("style.chart.zoom.minimap.compact", { def: true }),
-    CHECKBOX("style.chart.zoom.minimap.merged", { def: false }),
+    CHECKBOX('style.chart.zoom.minimap.show', { def: true }),
+    CHECKBOX('style.chart.zoom.minimap.smooth', { def: true }),
+    COLOR('style.chart.zoom.minimap.selectedColor', { def: '#1f77b4' }),
+    RANGE('style.chart.zoom.minimap.selectedColorOpacity', {
+        def: 0.2,
+        min: 0,
+        max: 1,
+        step: 0.01,
+    }),
+    COLOR('style.chart.zoom.minimap.lineColor', { def: '#1A1A1A' }),
+    NUMBER('style.chart.zoom.minimap.selectionRadius', {
+        def: 2,
+        min: 0,
+        max: 24,
+    }),
+    COLOR('style.chart.zoom.minimap.indicatorColor', { def: '#1A1A1A' }),
+    CHECKBOX('style.chart.zoom.minimap.verticalHandles', { def: false }),
+    CHECKBOX('style.chart.zoom.minimap.compact', { def: true }),
+    CHECKBOX('style.chart.zoom.minimap.merged', { def: false }),
 
-    CHECKBOX("style.chart.tooltip.show", { def: true }),
-    COLOR("style.chart.tooltip.backgroundColor", { def: "#FFFFFF" }),
-    COLOR("style.chart.tooltip.color", { def: "#1A1A1A" }),
-    NUMBER("style.chart.tooltip.fontSize", { def: 14, min: 8, max: 42 }),
-    NUMBER("style.chart.tooltip.borderRadius", { def: 4, min: 0, max: 24 }),
-    COLOR("style.chart.tooltip.borderColor", { def: "#E1E5E8" }),
-    NUMBER("style.chart.tooltip.borderWidth", { def: 1, min: 0, max: 12 }),
-    RANGE("style.chart.tooltip.backgroundOpacity", { def: 20, min: 0, max: 100 }),
-    SELECT("style.chart.tooltip.position", ["left", "center", "right"], { def: "center" }),
-    NUMBER("style.chart.tooltip.offsetY", { def: 24, min: 0, max: 64 }),
-    CHECKBOX("style.chart.tooltip.showValue", { def: true }),
-    CHECKBOX("style.chart.tooltip.showPercentage", { def: true }),
-    NUMBER("style.chart.tooltip.roundingValue", { def: 2, min: 0, max: 6 }),
-    NUMBER("style.chart.tooltip.roundingPercentage", { def: 0, min: 0, max: 6 }),
-    CHECKBOX("style.chart.tooltip.showTimeLabel", { def: true }),
-    CHECKBOX("style.chart.tooltip.showTotal", { def: true }),
-    TEXT("style.chart.tooltip.totalTranslation", { def: "Total" }),
+    CHECKBOX('style.chart.tooltip.show', { def: true }),
+    COLOR('style.chart.tooltip.backgroundColor', { def: '#FFFFFF' }),
+    COLOR('style.chart.tooltip.color', { def: '#1A1A1A' }),
+    NUMBER('style.chart.tooltip.fontSize', { def: 14, min: 8, max: 42 }),
+    NUMBER('style.chart.tooltip.borderRadius', { def: 4, min: 0, max: 24 }),
+    COLOR('style.chart.tooltip.borderColor', { def: '#E1E5E8' }),
+    NUMBER('style.chart.tooltip.borderWidth', { def: 1, min: 0, max: 12 }),
+    RANGE('style.chart.tooltip.backgroundOpacity', {
+        def: 20,
+        min: 0,
+        max: 100,
+    }),
+    SELECT('style.chart.tooltip.position', ['left', 'center', 'right'], {
+        def: 'center',
+    }),
+    NUMBER('style.chart.tooltip.offsetY', { def: 24, min: 0, max: 64 }),
+    CHECKBOX('style.chart.tooltip.showValue', { def: true }),
+    CHECKBOX('style.chart.tooltip.showPercentage', { def: true }),
+    NUMBER('style.chart.tooltip.roundingValue', { def: 2, min: 0, max: 6 }),
+    NUMBER('style.chart.tooltip.roundingPercentage', {
+        def: 0,
+        min: 0,
+        max: 6,
+    }),
+    CHECKBOX('style.chart.tooltip.showTimeLabel', { def: true }),
+    CHECKBOX('style.chart.tooltip.showTotal', { def: true }),
+    TEXT('style.chart.tooltip.totalTranslation', { def: 'Total' }),
 
-    COLOR("style.chart.highlighter.color", { def: "#1A1A1A" }),
-    RANGE("style.chart.highlighter.opacity", { def: 5, min: 0, max: 30 }),
-    CHECKBOX("style.chart.highlighter.useLine", { def: false }),
-    NUMBER("style.chart.highlighter.lineDasharray", { def: 2, min: 0, max: 12 }),
-    NUMBER("style.chart.highlighter.lineWidth", { def: 1, min: 1, max: 6 }),
+    COLOR('style.chart.highlighter.color', { def: '#1A1A1A' }),
+    RANGE('style.chart.highlighter.opacity', { def: 5, min: 0, max: 30 }),
+    CHECKBOX('style.chart.highlighter.useLine', { def: false }),
+    NUMBER('style.chart.highlighter.lineDasharray', {
+        def: 2,
+        min: 0,
+        max: 12,
+    }),
+    NUMBER('style.chart.highlighter.lineWidth', { def: 1, min: 1, max: 6 }),
 
-    CHECKBOX("style.chart.lines.useArea", { def: true }),
-    CHECKBOX("style.chart.lines.smooth", { def: true }),
-    RANGE("style.chart.line.areaOpacity", { def: 0.5, min: 0, max: 1, step: 0.01 }),
-    CHECKBOX("style.chart.lines.distributed", { def: false }),
-    CHECKBOX("style.chart.lines.showDistributedPercentage", { def: false }),
-    NUMBER("style.chart.lines.strokeWidth", { def: 1, min: 0, max: 12 }),
+    CHECKBOX('style.chart.lines.useArea', { def: true }),
+    CHECKBOX('style.chart.lines.smooth', { def: true }),
+    RANGE('style.chart.line.areaOpacity', {
+        def: 0.5,
+        min: 0,
+        max: 1,
+        step: 0.01,
+    }),
+    CHECKBOX('style.chart.lines.distributed', { def: false }),
+    CHECKBOX('style.chart.lines.showDistributedPercentage', { def: false }),
+    NUMBER('style.chart.lines.strokeWidth', { def: 1, min: 0, max: 12 }),
 
-    CHECKBOX("style.chart.lines.gradient.show", { def: true }),
-    RANGE("style.chart.lines.gradient.intensity", { def: 20, min: 0, max: 100 }),
+    CHECKBOX('style.chart.lines.gradient.show', { def: true }),
+    RANGE('style.chart.lines.gradient.intensity', {
+        def: 20,
+        min: 0,
+        max: 100,
+    }),
 
-    CHECKBOX("style.chart.lines.totalValues.show", { def: true }),
-    NUMBER("style.chart.lines.totalValues.offsetY", { def: 6, min: -100, max: 100 }),
-    NUMBER("style.chart.lines.totalValues.offsetX", { def: 6, min: -100, max: 100 }),
-    NUMBER("style.chart.lines.totalValues.fontSize", { def: 16, min: 8, max: 42 }),
-    CHECKBOX("style.chart.lines.totalValues.bold", { def: true }),
-    COLOR("style.chart.lines.totalValues.color", { def: "#1A1A1A" }),
+    CHECKBOX('style.chart.lines.totalValues.show', { def: true }),
+    NUMBER('style.chart.lines.totalValues.offsetY', {
+        def: 6,
+        min: -100,
+        max: 100,
+    }),
+    NUMBER('style.chart.lines.totalValues.offsetX', {
+        def: 6,
+        min: -100,
+        max: 100,
+    }),
+    NUMBER('style.chart.lines.totalValues.fontSize', {
+        def: 16,
+        min: 8,
+        max: 42,
+    }),
+    CHECKBOX('style.chart.lines.totalValues.bold', { def: true }),
+    COLOR('style.chart.lines.totalValues.color', { def: '#1A1A1A' }),
 
-    CHECKBOX("style.chart.lines.dataLabels.show", { def: true }),
-    CHECKBOX("style.chart.lines.dataLabels.hideEmptyValues", { def: true }),
-    CHECKBOX("style.chart.lines.dataLabels.hideEmptyPercentages", { def: true }),
-    NUMBER("style.chart.lines.dataLabels.offsetY", { def: 0, min: -100, max: 100 }),
-    CHECKBOX("style.chart.lines.dataLabels.adaptColorToBackground", { def: true }),
-    COLOR("style.chart.lines.dataLabels.color", { def: "#1A1A1A" }),
-    NUMBER("style.chart.lines.dataLabels.fontSize", { def: 14, min: 8, max: 42 }),
-    CHECKBOX("style.chart.lines.dataLabels.bold", { def: false }),
-    NUMBER("style.chart.lines.dataLabels.rounding", { def: 0, min: 0, max: 6 }),
-    TEXT("style.chart.lines.dataLabels.prefix", { def: "" }),
-    TEXT("style.chart.lines.dataLabels.suffix", { def: "" }),
-    NUMBER("style.chart.lines.dataLabels.hideUnderValue", { def: null, min: 0, max: 100 }),
-    NUMBER("style.chart.lines.dataLabels.hideUnderPercentage", { def: 0, min: 0, max: 100 }),
+    CHECKBOX('style.chart.lines.dataLabels.show', { def: true }),
+    CHECKBOX('style.chart.lines.dataLabels.hideEmptyValues', { def: true }),
+    CHECKBOX('style.chart.lines.dataLabels.hideEmptyPercentages', {
+        def: true,
+    }),
+    NUMBER('style.chart.lines.dataLabels.offsetY', {
+        def: 0,
+        min: -100,
+        max: 100,
+    }),
+    CHECKBOX('style.chart.lines.dataLabels.adaptColorToBackground', {
+        def: true,
+    }),
+    COLOR('style.chart.lines.dataLabels.color', { def: '#1A1A1A' }),
+    NUMBER('style.chart.lines.dataLabels.fontSize', {
+        def: 14,
+        min: 8,
+        max: 42,
+    }),
+    CHECKBOX('style.chart.lines.dataLabels.bold', { def: false }),
+    NUMBER('style.chart.lines.dataLabels.rounding', { def: 0, min: 0, max: 6 }),
+    TEXT('style.chart.lines.dataLabels.prefix', { def: '' }),
+    TEXT('style.chart.lines.dataLabels.suffix', { def: '' }),
+    NUMBER('style.chart.lines.dataLabels.hideUnderValue', {
+        def: null,
+        min: 0,
+        max: 100,
+    }),
+    NUMBER('style.chart.lines.dataLabels.hideUnderPercentage', {
+        def: 0,
+        min: 0,
+        max: 100,
+    }),
 
-    SELECT("style.chart.grid.scale.ticks", [2, 5, 10, 20], { def: 10 }),
-    NUMBER("style.chart.grid.scale.scaleMin", { def: null, min: -1000, max: 1000 }),
-    NUMBER("style.chart.grid.scale.scaleMax", { def: null, min: -1000, max: 1000 }),
+    SELECT('style.chart.grid.scale.ticks', [2, 5, 10, 20], { def: 10 }),
+    NUMBER('style.chart.grid.scale.scaleMin', {
+        def: null,
+        min: -1000,
+        max: 1000,
+    }),
+    NUMBER('style.chart.grid.scale.scaleMax', {
+        def: null,
+        min: -1000,
+        max: 1000,
+    }),
 
-    CHECKBOX("style.chart.grid.x.showAxis", { def: true }),
-    CHECKBOX("style.chart.grid.x.showHorizontalLines", { def: true }),
-    COLOR("style.chart.grid.x.linesColor", { def: "red" }),
-    NUMBER("style.chart.grid.x.linesThickness", { def: 0.5, min: 0, max: 12 }),
-    NUMBER("style.chart.grid.x.linesStrokeDasharray", { def: 2, min: 0, max: 12 }),
+    CHECKBOX('style.chart.grid.x.showAxis', { def: true }),
+    CHECKBOX('style.chart.grid.x.showHorizontalLines', { def: true }),
+    COLOR('style.chart.grid.x.linesColor', { def: 'red' }),
+    NUMBER('style.chart.grid.x.linesThickness', { def: 0.5, min: 0, max: 12 }),
+    NUMBER('style.chart.grid.x.linesStrokeDasharray', {
+        def: 2,
+        min: 0,
+        max: 12,
+    }),
 
-    COLOR("style.chart.grid.x.axisColor", { def: "#E1E5E8" }),
-    NUMBER("style.chart.grid.x.axisThickness", { def: 2, min: 0, max: 12 }),
-    CHECKBOX("style.chart.grid.x.axisName.show", { def: true }),
-    TEXT("style.chart.grid.x.axisName.text", { def: "X AXIS" }),
-    NUMBER("style.chart.grid.x.axisName.fontSize", { def: 14, min: 8, max: 42 }),
-    COLOR("style.chart.grid.x.axisName.color", { def: "#1A1A1A" }),
-    CHECKBOX("style.chart.grid.x.axisName.bold", { def: false }),
-    NUMBER("style.chart.grid.x.axisName.offsetY", { def: 0, min: -100, max: 100 }),
+    COLOR('style.chart.grid.x.axisColor', { def: '#E1E5E8' }),
+    NUMBER('style.chart.grid.x.axisThickness', { def: 2, min: 0, max: 12 }),
+    CHECKBOX('style.chart.grid.x.axisName.show', { def: true }),
+    TEXT('style.chart.grid.x.axisName.text', { def: 'X AXIS' }),
+    NUMBER('style.chart.grid.x.axisName.fontSize', {
+        def: 14,
+        min: 8,
+        max: 42,
+    }),
+    COLOR('style.chart.grid.x.axisName.color', { def: '#1A1A1A' }),
+    CHECKBOX('style.chart.grid.x.axisName.bold', { def: false }),
+    NUMBER('style.chart.grid.x.axisName.offsetY', {
+        def: 0,
+        min: -100,
+        max: 100,
+    }),
 
-    CHECKBOX("style.chart.grid.x.timeLabels.show", { def: true }),
-    NUMBER("style.chart.grid.x.timeLabels.offsetY", { def: 0, min: -100, max: 100 }),
-    RANGE("style.chart.grid.x.timeLabels.rotation", { def: 0, min: -90, max: 90 }),
-    CHECKBOX("style.chart.grid.x.timeLabels.autoRotate.enable", { def: true }),
-    NUMBER("style.chart.grid.x.timeLabels.autoRotate.angle", { def: -90, min: -90, max: 90 }),
-    CHECKBOX("style.chart.grid.x.timeLabels.showOnlyAtModulo", { def: false }),
-    CHECKBOX("style.chart.grid.x.timeLabels.showOnlyFirstAndLast", { def: false }),
-    NUMBER("style.chart.grid.x.timeLabels.modulo", { def: 12, min: 2, max: 12 }),
-    NUMBER("style.chart.grid.x.timeLabels.fontSize", { def: 14, min: 8, max: 42 }),
-    COLOR("style.chart.grid.x.timeLabels.color", { def: "#1A1A1A" }),
-    CHECKBOX("style.chart.grid.x.timeLabels.bold", { def: false }),
+    CHECKBOX('style.chart.grid.x.timeLabels.show', { def: true }),
+    NUMBER('style.chart.grid.x.timeLabels.offsetY', {
+        def: 0,
+        min: -100,
+        max: 100,
+    }),
+    RANGE('style.chart.grid.x.timeLabels.rotation', {
+        def: 0,
+        min: -90,
+        max: 90,
+    }),
+    CHECKBOX('style.chart.grid.x.timeLabels.autoRotate.enable', { def: true }),
+    NUMBER('style.chart.grid.x.timeLabels.autoRotate.angle', {
+        def: -90,
+        min: -90,
+        max: 90,
+    }),
+    CHECKBOX('style.chart.grid.x.timeLabels.showOnlyAtModulo', { def: false }),
+    CHECKBOX('style.chart.grid.x.timeLabels.showOnlyFirstAndLast', {
+        def: false,
+    }),
+    NUMBER('style.chart.grid.x.timeLabels.modulo', {
+        def: 12,
+        min: 2,
+        max: 12,
+    }),
+    NUMBER('style.chart.grid.x.timeLabels.fontSize', {
+        def: 14,
+        min: 8,
+        max: 42,
+    }),
+    COLOR('style.chart.grid.x.timeLabels.color', { def: '#1A1A1A' }),
+    CHECKBOX('style.chart.grid.x.timeLabels.bold', { def: false }),
 
-    CHECKBOX("style.chart.grid.y.showAxis", { def: true }),
-    CHECKBOX("style.chart.grid.y.showVerticalLines", { def: true }),
-    COLOR("style.chart.grid.y.linesColor", { def: "#FF00FF" }),
-    NUMBER("style.chart.grid.y.linesThickness", { def: 0.5, min: 0, max: 12 }),
-    NUMBER("style.chart.grid.y.linesStrokeDasharray", { def: 2, min: 0, max: 12 }),
+    CHECKBOX('style.chart.grid.y.showAxis', { def: true }),
+    CHECKBOX('style.chart.grid.y.showVerticalLines', { def: true }),
+    COLOR('style.chart.grid.y.linesColor', { def: '#FF00FF' }),
+    NUMBER('style.chart.grid.y.linesThickness', { def: 0.5, min: 0, max: 12 }),
+    NUMBER('style.chart.grid.y.linesStrokeDasharray', {
+        def: 2,
+        min: 0,
+        max: 12,
+    }),
 
-    COLOR("style.chart.grid.y.axisColor", { def: "#E1E5E8" }),
-    NUMBER("style.chart.grid.y.axisThickness", { def: 2, min: 0, max: 12 }),
-    CHECKBOX("style.chart.grid.y.axisName.show", { def: true }),
-    TEXT("style.chart.grid.y.axisName.text", { def: "Y AXIS" }),
-    NUMBER("style.chart.grid.y.axisName.fontSize", { def: 14, min: 8, max: 42 }),
-    COLOR("style.chart.grid.y.axisName.color", { def: "#1A1A1A" }),
-    CHECKBOX("style.chart.grid.y.axisName.bold", { def: false }),
-    NUMBER("style.chart.grid.y.axisName.offsetX", { def: 0, min: -100, max: 100 }),
+    COLOR('style.chart.grid.y.axisColor', { def: '#E1E5E8' }),
+    NUMBER('style.chart.grid.y.axisThickness', { def: 2, min: 0, max: 12 }),
+    CHECKBOX('style.chart.grid.y.axisName.show', { def: true }),
+    TEXT('style.chart.grid.y.axisName.text', { def: 'Y AXIS' }),
+    NUMBER('style.chart.grid.y.axisName.fontSize', {
+        def: 14,
+        min: 8,
+        max: 42,
+    }),
+    COLOR('style.chart.grid.y.axisName.color', { def: '#1A1A1A' }),
+    CHECKBOX('style.chart.grid.y.axisName.bold', { def: false }),
+    NUMBER('style.chart.grid.y.axisName.offsetX', {
+        def: 0,
+        min: -100,
+        max: 100,
+    }),
 
-    CHECKBOX("style.chart.grid.y.axisLabels.show", { def: true }),
-    COLOR("style.chart.grid.y.axisLabels.color", { def: "#1A1A1A" }),
-    NUMBER("style.chart.grid.y.axisLabels.fontSize", { def: 14, min: -100, max: 100 }),
-    CHECKBOX("style.chart.grid.y.axisLabels.bold", { def: false }),
-    NUMBER("style.chart.grid.y.axisLabels.rounding", { def: 2, min: 0, max: 6 }),
+    CHECKBOX('style.chart.grid.y.axisLabels.show', { def: true }),
+    COLOR('style.chart.grid.y.axisLabels.color', { def: '#1A1A1A' }),
+    NUMBER('style.chart.grid.y.axisLabels.fontSize', {
+        def: 14,
+        min: -100,
+        max: 100,
+    }),
+    CHECKBOX('style.chart.grid.y.axisLabels.bold', { def: false }),
+    NUMBER('style.chart.grid.y.axisLabels.rounding', {
+        def: 2,
+        min: 0,
+        max: 6,
+    }),
 
-    CHECKBOX("style.chart.grid.frame.show", { def: true }),
-    COLOR("style.chart.grid.frame.stroke", { def: "#CCCCCC" }),
-    NUMBER("style.chart.grid.frame.strokeWidth", { def: 4, min: 0, max: 12 }),
-    TEXT("style.chart.grid.frame.strokeLinecap", { def: "round" }),
-    TEXT("style.chart.grid.frame.strokeLinejoin", { def: "round" }),
-    NUMBER("style.chart.grid.frame.strokeDasharray", { def: 0, min: 0, max: 24 }),
+    CHECKBOX('style.chart.grid.frame.show', { def: true }),
+    COLOR('style.chart.grid.frame.stroke', { def: '#CCCCCC' }),
+    NUMBER('style.chart.grid.frame.strokeWidth', { def: 4, min: 0, max: 12 }),
+    TEXT('style.chart.grid.frame.strokeLinecap', { def: 'round' }),
+    TEXT('style.chart.grid.frame.strokeLinejoin', { def: 'round' }),
+    NUMBER('style.chart.grid.frame.strokeDasharray', {
+        def: 0,
+        min: 0,
+        max: 24,
+    }),
 
-    CHECKBOX("userOptions.showOnChartHover", { def: true }),
-    CHECKBOX("userOptions.keepStateOnChartLeave", { def: true }),
+    CHECKBOX('userOptions.showOnChartHover', { def: true }),
+    CHECKBOX('userOptions.keepStateOnChartLeave', { def: true }),
 
-    NUMBER("userOptions.print.scale", { def: 2, min: 1, max: 5 }),
+    NUMBER('userOptions.print.scale', { def: 2, min: 1, max: 5 }),
 
-    NUMBER("table.td.roundingValue", { def: 2, min: 0, max: 6 }),
-    CHECKBOX("table.show", { def: false }),
-    CHECKBOX("table.useDialog", { def: true })
+    NUMBER('table.td.roundingValue', { def: 2, min: 0, max: 6 }),
+    CHECKBOX('table.show', { def: false }),
+    CHECKBOX('table.useDialog', { def: true }),
 ]);
 
 const { themeOptions, currentTheme } = useThemeOptions();
@@ -331,16 +477,16 @@ const config = computed(() => {
         //             backgroundColor: '#FF0000'
         //         }
         //     }
-        // },  
+        // },
         userOptions: {
             ...c.userOptions,
             buttons: {
                 ...c.userOptions.buttons,
-                altCopy: true
+                altCopy: true,
             },
             callbacks: {
-                altCopy: console.log
-            }
+                altCopy: console.log,
+            },
         },
         theme: currentTheme.value,
         events: {
@@ -349,7 +495,7 @@ const config = computed(() => {
             },
             datapointLeave: () => {
                 selectedX.value = undefined;
-            }
+            },
         },
         style: {
             ...c.style,
@@ -358,10 +504,15 @@ const config = computed(() => {
                 zoom: {
                     ...c.style.chart.zoom,
                     useDefaultFormat: false,
-                    customFormat: ({ absoluteIndex, seriesIndex, datapoint, timeLabel }) => {
+                    customFormat: ({
+                        absoluteIndex,
+                        seriesIndex,
+                        datapoint,
+                        timeLabel,
+                    }) => {
                         // console.log({ absoluteIndex, seriesIndex, datapoint, timeLabel });
-                        return `T - ${timeLabel.text}`
-                    }
+                        return `T - ${timeLabel.text}`;
+                    },
                 },
                 tooltip: {
                     ...c.style.chart.tooltip,
@@ -380,9 +531,9 @@ const config = computed(() => {
                             ...c.style.chart.grid.x.timeLabels,
                             values: generateDayTimestamps(100),
                             datetimeFormatter: {
-                                enable: true
-                            }
-                        }
+                                enable: true,
+                            },
+                        },
                     },
                     y: {
                         ...c.style.chart.grid.y,
@@ -390,12 +541,12 @@ const config = computed(() => {
                             // formatter: ({ value }) => {
                             //     return 'BOO' + value
                             // }
-                        }
-                    }
-                }
-            }
-        }
-    }
+                        },
+                    },
+                },
+            },
+        },
+    };
 });
 
 // onMounted(() => {
@@ -429,7 +580,6 @@ const config = computed(() => {
 function selectX({ dataset, index, indexLabel }) {
     // console.log({ dataset, index, indexLabel });
 }
-
 </script>
 
 <template>
@@ -444,13 +594,21 @@ function selectX({ dataset, index, indexLabel }) {
         <template #title>VueUiStackline</template>
 
         <template #responsive>
-            <div style="width: 600px; height: 600px; resize: both; overflow: auto; background: white">
+            <div
+                style="
+                    width: 600px;
+                    height: 600px;
+                    resize: both;
+                    overflow: auto;
+                    background: white;
+                "
+            >
                 <LocalVueUiStackline
                     ref="resp"
                     :dataset="dataset"
                     :config="{
                         ...config,
-                        responsive: true
+                        responsive: true,
                     }"
                 >
                     <!-- <template #tooltip="{ datapoint, timeLabel }">
@@ -465,7 +623,13 @@ function selectX({ dataset, index, indexLabel }) {
         </template>
 
         <template #local>
-            <LocalVueUiStackline :dataset="dataset" :config="config" ref="local" @selectX="selectX" :selectedXIndex="selectedX">
+            <LocalVueUiStackline
+                :dataset="dataset"
+                :config="config"
+                ref="local"
+                @selectX="selectX"
+                :selectedXIndex="selectedX"
+            >
                 <!-- <template #pattern="{ datapoint, patternId }">
                     <pattern :id="patternId" width="70" height="8" patternTransform="scale(2)"
                         patternUnits="userSpaceOnUse" opacity="0.5">
@@ -481,29 +645,48 @@ function selectX({ dataset, index, indexLabel }) {
         </template>
 
         <template #VDUI-local>
-            <LocalVueDataUi component="VueUiStackline" :dataset="dataset" :config="config" :selectedXIndex="selectedX"/>
+            <LocalVueDataUi
+                component="VueUiStackline"
+                :dataset="dataset"
+                :config="config"
+                :selectedXIndex="selectedX"
+            />
         </template>
 
         <template #build>
-            <VueUiStackline :dataset="dataset" :config="config" :selectedXIndex="selectedX">
-
+            <VueUiStackline
+                :dataset="dataset"
+                :config="config"
+                :selectedXIndex="selectedX"
+            >
             </VueUiStackline>
         </template>
 
         <template #build-treesh>
-            <VueUiStacklineTreeshaken :dataset="dataset" :config="config" :selectedXIndex="selectedX">
-
+            <VueUiStacklineTreeshaken
+                :dataset="dataset"
+                :config="config"
+                :selectedXIndex="selectedX"
+            >
             </VueUiStacklineTreeshaken>
         </template>
 
         <template #VDUI-build>
-            <VueDataUi component="VueUiStackline" :dataset="dataset" :config="config" :selectedXIndex="selectedX">
-
+            <VueDataUi
+                component="VueUiStackline"
+                :dataset="dataset"
+                :config="config"
+                :selectedXIndex="selectedX"
+            >
             </VueDataUi>
         </template>
 
         <template #knobs="{ summaryOpen }">
-            <ConfigKnobs :model="model" @change="step += 1" :open="summaryOpen"/>
+            <ConfigKnobs
+                :model="model"
+                @change="step += 1"
+                :open="summaryOpen"
+            />
         </template>
     </Box>
 </template>

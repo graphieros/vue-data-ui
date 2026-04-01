@@ -1,23 +1,23 @@
 <script setup>
-import { 
-    computed, 
-    defineAsyncComponent, 
-    nextTick, 
-    onBeforeUnmount, 
-    onMounted, 
-    ref, 
-    shallowRef, 
+import {
+    computed,
+    defineAsyncComponent,
+    nextTick,
+    onBeforeUnmount,
+    onMounted,
+    ref,
+    shallowRef,
     toRefs,
-    watch, 
-} from "vue";
+    watch,
+} from 'vue';
 import {
     applyDataLabel,
     checkNaN,
-    convertColorToHex, 
-    convertCustomPalette, 
-    createCsvContent, 
-    createPolygonPath, 
-    createUid, 
+    convertColorToHex,
+    convertCustomPalette,
+    createCsvContent,
+    createPolygonPath,
+    createUid,
     dataLabel,
     downloadCsv,
     error,
@@ -25,42 +25,50 @@ import {
     getMissingDatasetAttributes,
     isFunction,
     makePath,
-    objectIsEmpty, 
+    objectIsEmpty,
     palette,
     setOpacity,
     shiftHue,
     themePalettes,
     treeShake,
-    XMLNS
-} from "../lib";
-import { throttle } from "../canvas-lib";
-import { useConfig } from "../useConfig";
-import { useLoading } from "../useLoading";
-import { usePrinter } from "../usePrinter";
-import { useSvgExport } from "../useSvgExport.js";
-import { useResponsive } from "../useResponsive";
-import { useNestedProp } from "../useNestedProp";
-import { useThemeCheck } from "../useThemeCheck.js";
-import { useUserOptionState } from "../useUserOptionState";
-import { useChartAccessibility } from "../useChartAccessibility";
-import { useAutoSizeLabelsInsideViewbox } from "../useAutoSizeLabelsInsideViewbox.js";
-import img from "../img";
-import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
-import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
-import themes from "../themes/vue_ui_radar.json";
-import BaseScanner from "../atoms/BaseScanner.vue";
-import A11yDataTable from "../atoms/A11yDataTable.vue";
-import BaseLegendToggle from "../atoms/BaseLegendToggle.vue";
+    XMLNS,
+} from '../lib';
+import { throttle } from '../canvas-lib';
+import { useConfig } from '../useConfig';
+import { useLoading } from '../useLoading';
+import { usePrinter } from '../usePrinter';
+import { useSvgExport } from '../useSvgExport.js';
+import { useResponsive } from '../useResponsive';
+import { useNestedProp } from '../useNestedProp';
+import { useThemeCheck } from '../useThemeCheck.js';
+import { useUserOptionState } from '../useUserOptionState';
+import { useChartAccessibility } from '../useChartAccessibility';
+import { useAutoSizeLabelsInsideViewbox } from '../useAutoSizeLabelsInsideViewbox.js';
+import img from '../img';
+import Title from '../atoms/Title.vue'; // Must be ready in responsive mode
+import Legend from '../atoms/Legend.vue'; // Must be ready in responsive mode
+import themes from '../themes/vue_ui_radar.json';
+import BaseScanner from '../atoms/BaseScanner.vue';
+import A11yDataTable from '../atoms/A11yDataTable.vue';
+import BaseLegendToggle from '../atoms/BaseLegendToggle.vue';
 
 const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
 const SparkBar = defineAsyncComponent(() => import('./vue-ui-sparkbar.vue'));
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
 const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
-const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
-const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
-const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
-const BaseDraggableDialog = defineAsyncComponent(() => import('../atoms/BaseDraggableDialog.vue'));
+const PenAndPaper = defineAsyncComponent(
+    () => import('../atoms/PenAndPaper.vue'),
+);
+const UserOptions = defineAsyncComponent(
+    () => import('../atoms/UserOptions.vue'),
+);
+const PackageVersion = defineAsyncComponent(
+    () => import('../atoms/PackageVersion.vue'),
+);
+const BaseDraggableDialog = defineAsyncComponent(
+    () => import('../atoms/BaseDraggableDialog.vue'),
+);
 
 const { vue_ui_radar: DEFAULT_CONFIG } = useConfig();
 const { isThemeValid, warnInvalidTheme } = useThemeCheck();
@@ -69,24 +77,24 @@ const props = defineProps({
     config: {
         type: Object,
         default() {
-            return {}
-        }
+            return {};
+        },
     },
     dataset: {
         type: Object,
         default() {
-            return {}
-        }
-    }
+            return {};
+        },
+    },
 });
 
 const isDataset = computed(() => {
-    return !!props.dataset && Object.keys(props.dataset).length
-})
+    return !!props.dataset && Object.keys(props.dataset).length;
+});
 
 const uid = ref(createUid());
 const isTooltip = ref(false);
-const tooltipContent = ref("");
+const tooltipContent = ref('');
 const step = ref(0);
 const radarChart = ref(null);
 const chartTitle = ref(null);
@@ -109,7 +117,9 @@ const isFocus = ref(false); // a11y
 
 const FINAL_CONFIG = ref(prepareConfig());
 
-const isCursorPointer = computed(() => FINAL_CONFIG.value.userOptions.useCursorPointer);
+const isCursorPointer = computed(
+    () => FINAL_CONFIG.value.userOptions.useCursorPointer,
+);
 
 const skeletonConfig = computed(() => {
     return treeShake({
@@ -122,24 +132,24 @@ const skeletonConfig = computed(() => {
                     backgroundColor: '#99999930',
                     layout: {
                         grid: {
-                            stroke: '#6A6A6A90'
+                            stroke: '#6A6A6A90',
                         },
                         labels: {
-                            dataLabels: { show: false }
+                            dataLabels: { show: false },
                         },
                         outerPolygon: {
-                            stroke: '#6A6A6A'
-                        }
+                            stroke: '#6A6A6A',
+                        },
                     },
                     legend: {
-                        backgroundColor: 'transparent'
-                    }
-                }
-            }
+                        backgroundColor: 'transparent',
+                    },
+                },
+            },
         },
-        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {}
-    })
-})
+        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {},
+    });
+});
 
 const { loading, FINAL_DATASET } = useLoading({
     ...toRefs(props),
@@ -149,10 +159,10 @@ const { loading, FINAL_DATASET } = useLoading({
         Promise.resolve().then(async () => {
             await nextTick();
             mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
-        })
+        });
     },
     skeletonDataset: props.config?.skeletonDataset ?? {
-        categories: [{ name: '_', color: '#6A6A6A'}, ],
+        categories: [{ name: '_', color: '#6A6A6A' }],
         series: [
             { name: '_', values: [0.6], target: 1 },
             { name: '_', values: [0.6], target: 1 },
@@ -160,21 +170,24 @@ const { loading, FINAL_DATASET } = useLoading({
             { name: '_', values: [0.6], target: 1 },
             { name: '_', values: [0.6], target: 1 },
             { name: '_', values: [0.6], target: 1 },
-        ]
+        ],
     },
     skeletonConfig: treeShake({
         defaultConfig: FINAL_CONFIG.value,
-        userConfig: skeletonConfig.value
-    })
-})
+        userConfig: skeletonConfig.value,
+    }),
+});
 
-const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
-const { svgRef } = useChartAccessibility({ config: FINAL_CONFIG.value.style.chart.title });
+const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } =
+    useUserOptionState({ config: FINAL_CONFIG.value });
+const { svgRef } = useChartAccessibility({
+    config: FINAL_CONFIG.value.style.chart.title,
+});
 
 function prepareConfig() {
     const mergedConfig = useNestedProp({
         userConfig: props.config,
-        defaultConfig: DEFAULT_CONFIG
+        defaultConfig: DEFAULT_CONFIG,
     });
 
     const theme = mergedConfig.theme;
@@ -187,33 +200,43 @@ function prepareConfig() {
 
     const fused = useNestedProp({
         userConfig: themes[theme] || props.config,
-        defaultConfig: mergedConfig
+        defaultConfig: mergedConfig,
     });
 
     const finalConfig = useNestedProp({
         userConfig: props.config,
-        defaultConfig: fused
+        defaultConfig: fused,
     });
 
     return {
         ...finalConfig,
-        customPalette: finalConfig.customPalette.length ? finalConfig.customPalette : themePalettes[theme] || palette
-    }
+        customPalette: finalConfig.customPalette.length
+            ? finalConfig.customPalette
+            : themePalettes[theme] || palette,
+    };
 }
 
-watch(() => props.config, (_newCfg) => {
-    FINAL_CONFIG.value = prepareConfig();
-    userOptionsVisible.value = !FINAL_CONFIG.value.userOptions.showOnChartHover;
-    prepareChart();
-    titleStep.value += 1;
-    tableStep.value += 1;
-    legendStep.value += 1;
+watch(
+    () => props.config,
+    (_newCfg) => {
+        FINAL_CONFIG.value = prepareConfig();
+        userOptionsVisible.value =
+            !FINAL_CONFIG.value.userOptions.showOnChartHover;
+        prepareChart();
+        titleStep.value += 1;
+        tableStep.value += 1;
+        legendStep.value += 1;
 
-    // Reset mutable config
-    mutableConfig.value.dataLabels.show = FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.show;
-    mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
-    mutableConfig.value.showTooltip = FINAL_CONFIG.value.style.chart.tooltip? FINAL_CONFIG.value.style.chart.tooltip.show : false;
-}, { deep: true });
+        // Reset mutable config
+        mutableConfig.value.dataLabels.show =
+            FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.show;
+        mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
+        mutableConfig.value.showTooltip = FINAL_CONFIG.value.style.chart.tooltip
+            ? FINAL_CONFIG.value.style.chart.tooltip.show
+            : false;
+    },
+    { deep: true },
+);
 
 const resizeObserver = shallowRef(null);
 const observedEl = shallowRef(null);
@@ -221,22 +244,26 @@ const observedEl = shallowRef(null);
 const debug = computed(() => FINAL_CONFIG.value.debug);
 
 function prepareChart() {
-    if(objectIsEmpty(props.dataset)) {
+    if (objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiRadar',
             type: 'dataset',
-            debug: debug.value
-        })
+            debug: debug.value,
+        });
     }
 
     if (FINAL_CONFIG.value.responsive) {
         const handleResize = throttle(() => {
             const { width, height } = useResponsive({
                 chart: radarChart.value,
-                title: FINAL_CONFIG.value.style.chart.title.text ? chartTitle.value : null,
-                legend: FINAL_CONFIG.value.style.chart.legend.show ? chartLegend.value : null,
+                title: FINAL_CONFIG.value.style.chart.title.text
+                    ? chartTitle.value
+                    : null,
+                legend: FINAL_CONFIG.value.style.chart.legend.show
+                    ? chartLegend.value
+                    : null,
                 source: source.value,
-                noTitle: noTitle.value
+                noTitle: noTitle.value,
             });
 
             requestAnimationFrame(() => {
@@ -277,11 +304,14 @@ onBeforeUnmount(() => {
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `vue-ui-radar_${uid.value}`,
     fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-radar',
-    options: FINAL_CONFIG.value.userOptions.print
+    options: FINAL_CONFIG.value.userOptions.print,
 });
 
 const hasOptionsNoTitle = computed(() => {
-    return FINAL_CONFIG.value.userOptions.show && !FINAL_CONFIG.value.style.chart.title.text;
+    return (
+        FINAL_CONFIG.value.userOptions.show &&
+        !FINAL_CONFIG.value.style.chart.title.text
+    );
 });
 
 const customPalette = computed(() => {
@@ -293,7 +323,7 @@ const mutableConfig = ref({
         show: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.show,
     },
     showTable: FINAL_CONFIG.value.table.show,
-    showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show
+    showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show,
 });
 
 const sparkBarConfig = computed(() => {
@@ -302,26 +332,28 @@ const sparkBarConfig = computed(() => {
             backgroundColor: '#FFFFFF00',
             animation: {
                 show: FINAL_CONFIG.value.style.chart.tooltip.animation.show,
-                animationFrames: FINAL_CONFIG.value.style.chart.tooltip.animation.animationFrames
+                animationFrames:
+                    FINAL_CONFIG.value.style.chart.tooltip.animation
+                        .animationFrames,
             },
             labels: {
                 fontSize: FINAL_CONFIG.value.style.chart.tooltip.fontSize,
                 name: {
-                    color: FINAL_CONFIG.value.style.chart.tooltip.color
+                    color: FINAL_CONFIG.value.style.chart.tooltip.color,
                 },
             },
             gutter: {
                 backgroundColor: '#CCCCCC',
-                opacity: 30
-            }
-        }
-    }
-})
+                opacity: 30,
+            },
+        },
+    };
+});
 
 const svg = ref({
     height: 312,
     width: 512,
-})
+});
 
 const emit = defineEmits(['selectLegend', 'copyAlt']);
 
@@ -333,7 +365,7 @@ function toggleLegend() {
     if (segregated.value.length) {
         segregated.value = [];
     } else {
-        legendSet.value.forEach((_,i) => {
+        legendSet.value.forEach((_, i) => {
             segregated.value.push(i);
         });
     }
@@ -341,36 +373,41 @@ function toggleLegend() {
 
 function segregate(index) {
     isAnimating.value = true;
-    if(segregated.value.includes(index)) {
+    if (segregated.value.includes(index)) {
         inSegregation.value = index;
-        segregated.value = segregated.value.filter(s => s !== index);
+        segregated.value = segregated.value.filter((s) => s !== index);
         setTimeout(() => {
             isAnimating.value = false;
             inSegregation.value = null;
-        }, 500)
-    }else {
+        }, 500);
+    } else {
         segregated.value.push(index);
         setTimeout(() => {
             isAnimating.value = false;
-        }, 500)
+        }, 500);
     }
-    emit('selectLegend', legendSet.value.filter((_, i) => !segregated.value.includes(i)).map(l => {
-        return {
-            name: l.name,
-            color: l.color,
-            proportion: l.totalProportion
-        }
-    }))
+    emit(
+        'selectLegend',
+        legendSet.value
+            .filter((_, i) => !segregated.value.includes(i))
+            .map((l) => {
+                return {
+                    name: l.name,
+                    color: l.color,
+                    proportion: l.totalProportion,
+                };
+            }),
+    );
 }
 
 function getData() {
-    return legendSet.value.map(l => {
+    return legendSet.value.map((l) => {
         return {
             name: l.name,
             color: l.color,
-            proportion: l.totalProportion
-        }
-    })
+            proportion: l.totalProportion,
+        };
+    });
 }
 
 function validateRadarDataset() {
@@ -380,13 +417,14 @@ function validateRadarDataset() {
         error({
             componentName: 'VueUiRadar',
             type: 'dataset',
-            debug: debug.value
+            debug: debug.value,
         });
         error({
             componentName: 'VueUiRadar',
             type: 'datasetAttribute',
-            property: 'categories ({ name: string; prefix?: string; suffix?: string}[])',
-            debug: debug.value
+            property:
+                'categories ({ name: string; prefix?: string; suffix?: string}[])',
+            debug: debug.value,
         });
         return;
     }
@@ -396,22 +434,22 @@ function validateRadarDataset() {
             componentName: 'VueUiRadar',
             type: 'datasetAttributeEmpty',
             property: 'categories',
-            debug: debug.value
+            debug: debug.value,
         });
     } else {
         ds.categories.forEach((cat, i) => {
-        getMissingDatasetAttributes({
-            datasetObject: cat,
-            requiredAttributes: ['name']
-        }).forEach(attr => {
-            error({
-                componentName: 'VueUiRadar',
-                type: 'datasetAttribute',
-                property: `category.${attr} at index ${i}`,
-                index: i,
-                debug: debug.value
+            getMissingDatasetAttributes({
+                datasetObject: cat,
+                requiredAttributes: ['name'],
+            }).forEach((attr) => {
+                error({
+                    componentName: 'VueUiRadar',
+                    type: 'datasetAttribute',
+                    property: `category.${attr} at index ${i}`,
+                    index: i,
+                    debug: debug.value,
+                });
             });
-        });
         });
     }
 
@@ -419,24 +457,25 @@ function validateRadarDataset() {
         error({
             componentName: 'VueUiRadar',
             type: 'datasetAttribute',
-            property: 'series ({ name: string; values: number[]; color?: string; target: number}[])',
-            debug: debug.value
+            property:
+                'series ({ name: string; values: number[]; color?: string; target: number}[])',
+            debug: debug.value,
         });
     } else {
         ds.series.forEach((serie, i) => {
-        getMissingDatasetAttributes({
-            datasetObject: serie,
-            requiredAttributes: ['name', 'values', 'target']
-        }).forEach(attr => {
-            error({
-                componentName: 'VueUiRadar',
-                type: 'datasetSerieAttribute',
-                key: 'series',
-                property: attr,
-                index: i,
-                debug: debug.value
+            getMissingDatasetAttributes({
+                datasetObject: serie,
+                requiredAttributes: ['name', 'values', 'target'],
+            }).forEach((attr) => {
+                error({
+                    componentName: 'VueUiRadar',
+                    type: 'datasetSerieAttribute',
+                    key: 'series',
+                    property: attr,
+                    index: i,
+                    debug: debug.value,
+                });
             });
-        });
         });
     }
 }
@@ -444,7 +483,7 @@ function validateRadarDataset() {
 watch(
     () => FINAL_DATASET.value,
     () => validateRadarDataset(),
-    { deep: true, immediate: true }
+    { deep: true, immediate: true },
 );
 
 const datasetCopy = computed(() => {
@@ -457,23 +496,29 @@ const datasetCopy = computed(() => {
     return cats.map((c, i) => ({
         name: c?.name ?? '',
         categoryId: `radar_category_${uid.value}_${i}`,
-        color: convertColorToHex(c?.color) || colors[i] || palette[i % palette.length],
+        color:
+            convertColorToHex(c?.color) ||
+            colors[i] ||
+            palette[i % palette.length],
         prefix: c?.prefix ?? '',
         suffix: c?.suffix ?? '',
     }));
 });
 
 const seriesCopy = computed(() => {
-    return FINAL_DATASET.value.series
-        .map((s, i) => {
-            return {
-                ...s,
-                color: convertColorToHex(s.color) || customPalette.value[i] || palette[i] || palette[i % palette.length],
-                serieId: `radar_serie_${uid.value}_${i}`,
-                formatter: s.formatter || null,
-                absoluteIndex: i
-            }
-        });
+    return FINAL_DATASET.value.series.map((s, i) => {
+        return {
+            ...s,
+            color:
+                convertColorToHex(s.color) ||
+                customPalette.value[i] ||
+                palette[i] ||
+                palette[i % palette.length],
+            serieId: `radar_serie_${uid.value}_${i}`,
+            formatter: s.formatter || null,
+            absoluteIndex: i,
+        };
+    });
 });
 
 function validSeriesToToggle(name) {
@@ -483,7 +528,7 @@ function validSeriesToToggle(name) {
         }
         return null;
     }
-    const dp = legendSet.value.find(d => d.name === name);
+    const dp = legendSet.value.find((d) => d.name === name);
     if (!dp) {
         if (FINAL_CONFIG.value.debug) {
             console.warn(`VueUiRadar - Series name not found "${name}"`);
@@ -502,117 +547,129 @@ function showSeries(name) {
 }
 
 function hideSeries(name) {
-    const dp  = validSeriesToToggle(name);
+    const dp = validSeriesToToggle(name);
     if (dp === null) return;
-    if (!segregated.value.includes(dp.absoluteIndex))  {
+    if (!segregated.value.includes(dp.absoluteIndex)) {
         segregate(dp.absoluteIndex);
     }
 }
 
-const max = computed(() => Math.max(...seriesCopy.value
-        .flatMap(s => s.values)));
+const max = computed(() =>
+    Math.max(...seriesCopy.value.flatMap((s) => s.values)),
+);
 
 const apexes = computed(() => {
     return seriesCopy.value.length;
 });
 
 const polygonRadius = computed(() => {
-    return Math.min(svg.value.width, svg.value.height) / 3
-})
+    return Math.min(svg.value.width, svg.value.height) / 3;
+});
 
 const outerPolygon = computed(() => {
     return createPolygonPath({
-        plot: { x: svg.value.width / 2, y: svg.value.height / 2},
+        plot: { x: svg.value.width / 2, y: svg.value.height / 2 },
         radius: polygonRadius.value,
         sides: apexes.value,
         rotation: 0,
-    })
+    });
 });
 
 const innerPolygons = computed(() => {
     const polygons = [];
-    for (let i = 0; i < polygonRadius.value; i += (polygonRadius.value / FINAL_CONFIG.value.style.chart.layout.grid.graduations)) {
+    for (
+        let i = 0;
+        i < polygonRadius.value;
+        i +=
+            polygonRadius.value /
+            FINAL_CONFIG.value.style.chart.layout.grid.graduations
+    ) {
         polygons.push(i);
     }
     return polygons;
-})
+});
 
 const radar = computed(() => {
-    return outerPolygon.value.coordinates.map((c, i) => {
-        const plots = seriesCopy.value[i].values.map(v => {
+    return outerPolygon.value.coordinates
+        .map((c, i) => {
+            const plots = seriesCopy.value[i].values.map((v) => {
                 return plot({
                     centerX: svg.value.width / 2,
                     centerY: svg.value.height / 2,
                     apexX: c.x,
                     apexY: c.y,
-                    proportion: v / (seriesCopy.value[i].target || max.value)
-                })
+                    proportion: v / (seriesCopy.value[i].target || max.value),
+                });
             });
-        return {
-            ...c,
-            ...seriesCopy.value[i],
-            plots,
-        }
-    }).map(r => {
-        return {
-            ...r,
-            labelX: offset(r).x,
-            labelY: offset(r).y,
-            labelAnchor: offset(r).anchor
-        }
-    })
+            return {
+                ...c,
+                ...seriesCopy.value[i],
+                plots,
+            };
+        })
+        .map((r) => {
+            return {
+                ...r,
+                labelX: offset(r).x,
+                labelY: offset(r).y,
+                labelAnchor: offset(r).anchor,
+            };
+        });
 });
 
-function offset({x, y}) {
-    let anchor = "middle";
+function offset({ x, y }) {
+    let anchor = 'middle';
     x = Math.round(x);
     y = Math.round(y);
-    if(x > svg.value.width / 2) {
+    if (x > svg.value.width / 2) {
         x += 12;
-        anchor="start";
+        anchor = 'start';
     }
-    if(x < svg.value.width / 2) {
+    if (x < svg.value.width / 2) {
         x -= 12;
-        anchor="end"
+        anchor = 'end';
     }
-    if(y > svg.value.height / 2 + 1) {
+    if (y > svg.value.height / 2 + 1) {
         y += 20;
     }
-    if(y < svg.value.height / 2 - 1) {
+    if (y < svg.value.height / 2 - 1) {
         y -= 12;
     }
-    if(y === svg.value.height / 2) {
-        y += 4
+    if (y === svg.value.height / 2) {
+        y += 4;
     }
-    return {x, y, anchor}
+    return { x, y, anchor };
 }
 
 const labelFontSize = computed({
     get: () => FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.fontSize,
-    set: v => v
-})
+    set: (v) => v,
+});
 
 const { autoSizeLabels } = useAutoSizeLabelsInsideViewbox({
     svgRef,
     fontSize: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.fontSize,
     minFontSize: 6,
     sizeRef: labelFontSize,
-    labelClass: '.vue-ui-radar-apex-label'
+    labelClass: '.vue-ui-radar-apex-label',
 });
 
 function plot({ centerX, centerY, apexX, apexY, proportion }) {
     return {
         x: centerX + (apexX - centerX) * proportion,
-        y: centerY + (apexY - centerY) * proportion
-    }
+        y: centerY + (apexY - centerY) * proportion,
+    };
 }
 
 const legendSet = computed(() => {
-    const ratios = seriesCopy.value.map((s,i) => {
-        return s.values.map(v => v / (s.target || max.value))
+    const ratios = seriesCopy.value.map((s, i) => {
+        return s.values.map((v) => v / (s.target || max.value));
     });
-    return datasetCopy.value.map((d,i) => {
-        const totalProportion = checkNaN(ratios.map(r => r[i]).reduce((a, b) => a + b, 0) / seriesCopy.value.length);
+    return datasetCopy.value.map((d, i) => {
+        const totalProportion = checkNaN(
+            ratios.map((r) => r[i]).reduce((a, b) => a + b, 0) /
+                seriesCopy.value.length,
+        );
         return {
             ...d,
             absoluteIndex: i,
@@ -624,10 +681,10 @@ const legendSet = computed(() => {
             display: `${d.name}: ${dataLabel({
                 v: (totalProportion ?? 0) * 100,
                 s: '%',
-                r: FINAL_CONFIG.value.style.chart.legend.roundingPercentage
-            })}`
-        }
-    })
+                r: FINAL_CONFIG.value.style.chart.legend.roundingPercentage,
+            })}`,
+        };
+    });
 });
 
 const legendConfig = computed(() => {
@@ -637,18 +694,18 @@ const legendConfig = computed(() => {
         color: FINAL_CONFIG.value.style.chart.legend.color,
         fontSize: FINAL_CONFIG.value.style.chart.legend.fontSize,
         paddingBottom: 12,
-        fontWeight: FINAL_CONFIG.value.style.chart.legend.bold ? 'bold' : ''
-    }
-})
+        fontWeight: FINAL_CONFIG.value.style.chart.legend.bold ? 'bold' : '',
+    };
+});
 
 const dataTable = computed(() => {
     const head = [
-        { name: FINAL_CONFIG.value.translations.datapoint, color: "" },
-        { name: FINAL_CONFIG.value.translations.target, color: "" },
-        ...legendSet.value
+        { name: FINAL_CONFIG.value.translations.datapoint, color: '' },
+        { name: FINAL_CONFIG.value.translations.target, color: '' },
+        ...legendSet.value,
     ];
 
-    const body = FINAL_DATASET.value.series.map(ds => {
+    const body = FINAL_DATASET.value.series.map((ds) => {
         return [
             ds.name,
             applyDataLabel(
@@ -658,38 +715,47 @@ const dataTable = computed(() => {
                     p: ds.prefix,
                     v: ds.target,
                     s: ds.suffix,
-                    r: FINAL_CONFIG.value.table.td.roundingValue
-                })
+                    r: FINAL_CONFIG.value.table.td.roundingValue,
+                }),
             ),
             ...ds.values.map((v, i) => {
                 return `${applyDataLabel(
                     ds.formatter,
                     v,
-                    dataLabel({p: datasetCopy.value[i]?.prefix ?? '', v, s: datasetCopy.value[i]?.suffix ?? '', r:FINAL_CONFIG.value.table.td.roundingValue})
-                )} (${isNaN(v / ds.target) ? '' : dataLabel({
-                    v: v / ds.target * 100,
-                    s: '%',
-                    r: FINAL_CONFIG.value.table.td.roundingPercentage
-                })})`
-            })
-        ]
+                    dataLabel({
+                        p: datasetCopy.value[i]?.prefix ?? '',
+                        v,
+                        s: datasetCopy.value[i]?.suffix ?? '',
+                        r: FINAL_CONFIG.value.table.td.roundingValue,
+                    }),
+                )} (${
+                    isNaN(v / ds.target)
+                        ? ''
+                        : dataLabel({
+                              v: (v / ds.target) * 100,
+                              s: '%',
+                              r: FINAL_CONFIG.value.table.td.roundingPercentage,
+                          })
+                })`;
+            }),
+        ];
     });
     const config = {
         th: {
             backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
             color: FINAL_CONFIG.value.table.th.color,
-            outline: FINAL_CONFIG.value.table.th.outline
+            outline: FINAL_CONFIG.value.table.th.outline,
         },
         td: {
             backgroundColor: FINAL_CONFIG.value.table.td.backgroundColor,
             color: FINAL_CONFIG.value.table.td.color,
-            outline: FINAL_CONFIG.value.table.td.outline
+            outline: FINAL_CONFIG.value.table.td.outline,
         },
-        breakpoint: FINAL_CONFIG.value.table.responsiveBreakpoint
+        breakpoint: FINAL_CONFIG.value.table.responsiveBreakpoint,
     };
 
-    return { head, body, config, colNames: head }
-})
+    return { head, body, config, colNames: head };
+});
 
 const selectedIndex = ref(null);
 const sparkBarData = ref([]);
@@ -703,19 +769,28 @@ function onTrapLeave(apex, i) {
     tooltipTriggerMode.value = 'pointer';
 
     if (FINAL_CONFIG.value.events.datapointLeave) {
-        FINAL_CONFIG.value.events.datapointLeave({ datapoint: apex, seriesIndex: i });
+        FINAL_CONFIG.value.events.datapointLeave({
+            datapoint: apex,
+            seriesIndex: i,
+        });
     }
 }
 
 function onTrapClick(apex, i) {
     if (FINAL_CONFIG.value.events.datapointClick) {
-        FINAL_CONFIG.value.events.datapointClick({ datapoint: apex, seriesIndex: i});
+        FINAL_CONFIG.value.events.datapointClick({
+            datapoint: apex,
+            seriesIndex: i,
+        });
     }
 }
 
 function useTooltip(apex, i, triggerMode = 'pointer') {
     if (FINAL_CONFIG.value.events.datapointEnter) {
-        FINAL_CONFIG.value.events.datapointEnter({ datapoint: apex, seriesIndex: i });
+        FINAL_CONFIG.value.events.datapointEnter({
+            datapoint: apex,
+            seriesIndex: i,
+        });
     }
 
     tooltipTriggerMode.value = triggerMode;
@@ -732,24 +807,37 @@ function useTooltip(apex, i, triggerMode = 'pointer') {
         series: {
             categories: cats,
             datapoints: seriesCopy.value,
-            radar: radar.value
+            radar: radar.value,
         },
-        config: FINAL_CONFIG.value
+        config: FINAL_CONFIG.value,
     };
 
     const customFormat = FINAL_CONFIG.value.style.chart.tooltip.customFormat;
 
-    if (isFunction(customFormat) && functionReturnsString(() => customFormat({
-        seriesIndex: i,
-        datapoint: apex,
-        series: { categories: cats, datapoints: seriesCopy.value, radar: radar.value },
-        config: FINAL_CONFIG.value
-    }))) {
+    if (
+        isFunction(customFormat) &&
+        functionReturnsString(() =>
+            customFormat({
+                seriesIndex: i,
+                datapoint: apex,
+                series: {
+                    categories: cats,
+                    datapoints: seriesCopy.value,
+                    radar: radar.value,
+                },
+                config: FINAL_CONFIG.value,
+            }),
+        )
+    ) {
         tooltipContent.value = customFormat({
             seriesIndex: i,
             datapoint: apex,
-            series: { categories: cats, datapoints: seriesCopy.value, radar: radar.value },
-            config: FINAL_CONFIG.value
+            series: {
+                categories: cats,
+                datapoints: seriesCopy.value,
+                radar: radar.value,
+            },
+            config: FINAL_CONFIG.value,
         });
         return;
     }
@@ -760,7 +848,9 @@ function useTooltip(apex, i, triggerMode = 'pointer') {
         if (!segregated.value.includes(k)) {
             const cat = cats[k];
             const rawVal = apex.values[k];
-            const pct = isNaN(rawVal / apex.target) ? 0 : (rawVal / apex.target) * 100;
+            const pct = isNaN(rawVal / apex.target)
+                ? 0
+                : (rawVal / apex.target) * 100;
 
             const valueLabel = applyDataLabel(
                 apex.formatter,
@@ -769,56 +859,81 @@ function useTooltip(apex, i, triggerMode = 'pointer') {
                     p: datasetCopy.value[k].prefix,
                     v: rawVal,
                     s: datasetCopy.value[k].suffix,
-                    r: FINAL_CONFIG.value.style.chart.tooltip.roundingValue
+                    r: FINAL_CONFIG.value.style.chart.tooltip.roundingValue,
                 }),
-                { datapoint: apex }
+                { datapoint: apex },
             );
 
             const percentageLabel = dataLabel({
                 v: pct,
                 s: '%',
-                r: FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage
+                r: FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage,
             });
 
-            const display = FINAL_CONFIG.value.style.chart.tooltip.showValue && FINAL_CONFIG.value.style.chart.tooltip.showPercentage ? `${valueLabel} (${percentageLabel})` : FINAL_CONFIG.value.style.chart.tooltip.showValue && !FINAL_CONFIG.value.style.chart.tooltip.showPercentage ? valueLabel : !FINAL_CONFIG.value.style.chart.tooltip.showValue && FINAL_CONFIG.value.style.chart.tooltip.showPercentage ? `${percentageLabel}` :  '';
+            const display =
+                FINAL_CONFIG.value.style.chart.tooltip.showValue &&
+                FINAL_CONFIG.value.style.chart.tooltip.showPercentage
+                    ? `${valueLabel} (${percentageLabel})`
+                    : FINAL_CONFIG.value.style.chart.tooltip.showValue &&
+                        !FINAL_CONFIG.value.style.chart.tooltip.showPercentage
+                      ? valueLabel
+                      : !FINAL_CONFIG.value.style.chart.tooltip.showValue &&
+                          FINAL_CONFIG.value.style.chart.tooltip.showPercentage
+                        ? `${percentageLabel}`
+                        : '';
 
             sparkBarData.value.push({
                 name: cat?.name ?? `#${k + 1}`,
-                value: apex.values[k] / apex.target * 100,
+                value: (apex.values[k] / apex.target) * 100,
                 color: cat?.color,
                 suffix: display,
                 prefix: '',
-                rounding: FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage,
-                formatter: apex.formatter
+                rounding:
+                    FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage,
+                formatter: apex.formatter,
             });
         }
     }
 }
 
-function generateCsv(callback=null) {
+function generateCsv(callback = null) {
     nextTick(() => {
-        const title = [[FINAL_CONFIG.value.style.chart.title.text], [FINAL_CONFIG.value.style.chart.title.subtitle.text], [""]];
-        const head = [[""],[FINAL_CONFIG.value.translations.target], ...legendSet.value.flatMap(l => [[l.name], ["%"]])];
+        const title = [
+            [FINAL_CONFIG.value.style.chart.title.text],
+            [FINAL_CONFIG.value.style.chart.title.subtitle.text],
+            [''],
+        ];
+        const head = [
+            [''],
+            [FINAL_CONFIG.value.translations.target],
+            ...legendSet.value.flatMap((l) => [[l.name], ['%']]),
+        ];
         const body = FINAL_DATASET.value.series.map((s, i) => {
-            return [ s.name, s.target, ...s.values.flatMap(v => {
-                return [
-                    v, isNaN(v / s.target) ? '' : v / s.target * 100
-                ]
-            })]
+            return [
+                s.name,
+                s.target,
+                ...s.values.flatMap((v) => {
+                    return [v, isNaN(v / s.target) ? '' : (v / s.target) * 100];
+                }),
+            ];
         });
 
         const tableXls = title.concat([head]).concat(body);
         const csvContent = createCsvContent(tableXls);
 
         if (!callback) {
-            downloadCsv({ csvContent, title: FINAL_CONFIG.value.style.chart.title.text || "vue-ui-radar"})
+            downloadCsv({
+                csvContent,
+                title:
+                    FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-radar',
+            });
         } else {
             callback(csvContent);
         }
     });
 }
 
-const isFullscreen = ref(false)
+const isFullscreen = ref(false);
 function toggleFullscreen(state) {
     isFullscreen.value = state;
     step.value += 1;
@@ -837,64 +952,77 @@ function toggleAnnotator() {
     isAnnotator.value = !isAnnotator.value;
 }
 
-async function getImage({ scale = 2} = {}) {
+async function getImage({ scale = 2 } = {}) {
     if (!radarChart.value) return;
     const { width, height } = radarChart.value.getBoundingClientRect();
-    const aspectRatio = width / height; 
-    const { imageUri, base64 } = await img({ domElement: radarChart.value, base64: true, img: true, scale })
-    return { 
-        imageUri, 
-        base64, 
+    const aspectRatio = width / height;
+    const { imageUri, base64 } = await img({
+        domElement: radarChart.value,
+        base64: true,
+        img: true,
+        scale,
+    });
+    return {
+        imageUri,
+        base64,
         title: FINAL_CONFIG.value.style.chart.title.text,
         width,
         height,
-        aspectRatio
-    }
+        aspectRatio,
+    };
 }
 
 const tableComponent = computed(() => {
-    const useDialog = FINAL_CONFIG.value.table.useDialog && !FINAL_CONFIG.value.table.show;
+    const useDialog =
+        FINAL_CONFIG.value.table.useDialog && !FINAL_CONFIG.value.table.show;
     const open = mutableConfig.value.showTable;
     return {
         component: useDialog ? BaseDraggableDialog : Accordion,
         title: `${FINAL_CONFIG.value.style.chart.title.text}${FINAL_CONFIG.value.style.chart.title.subtitle.text ? `: ${FINAL_CONFIG.value.style.chart.title.subtitle.text}` : ''}`,
-        props: useDialog ? {
-            backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
-            color: FINAL_CONFIG.value.table.th.color,
-            headerColor: FINAL_CONFIG.value.table.th.color,
-            headerBg: FINAL_CONFIG.value.table.th.backgroundColor,
-            isFullscreen: isFullscreen.value,
-            fullscreenParent: radarChart.value,
-            forcedWidth: Math.min(800, window.innerWidth * 0.8),
-            isCursorPointer: isCursorPointer.value
-        } : {
-            hideDetails: true,
-            config: {
-                open,
-                maxHeight: 10000,
-                body: {
-                    backgroundColor: FINAL_CONFIG.value.style.chart.backgroundColor,
-                    color: FINAL_CONFIG.value.style.chart.color
-                },
-                head: {
-                    backgroundColor: FINAL_CONFIG.value.style.chart.backgroundColor,
-                    color: FINAL_CONFIG.value.style.chart.color
-                }
-            }
-        }
-    }
+        props: useDialog
+            ? {
+                  backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
+                  color: FINAL_CONFIG.value.table.th.color,
+                  headerColor: FINAL_CONFIG.value.table.th.color,
+                  headerBg: FINAL_CONFIG.value.table.th.backgroundColor,
+                  isFullscreen: isFullscreen.value,
+                  fullscreenParent: radarChart.value,
+                  forcedWidth: Math.min(800, window.innerWidth * 0.8),
+                  isCursorPointer: isCursorPointer.value,
+              }
+            : {
+                  hideDetails: true,
+                  config: {
+                      open,
+                      maxHeight: 10000,
+                      body: {
+                          backgroundColor:
+                              FINAL_CONFIG.value.style.chart.backgroundColor,
+                          color: FINAL_CONFIG.value.style.chart.color,
+                      },
+                      head: {
+                          backgroundColor:
+                              FINAL_CONFIG.value.style.chart.backgroundColor,
+                          color: FINAL_CONFIG.value.style.chart.color,
+                      },
+                  },
+              },
+    };
 });
 
-watch(() => mutableConfig.value.showTable, v => {
-    if (FINAL_CONFIG.value.table.show) return;
-    if (v && FINAL_CONFIG.value.table.useDialog && tableUnit.value) {
-        tableUnit.value.open()
-    } else {
-        if ('close' in tableUnit.value) {
-            tableUnit.value.close()
+watch(
+    () => mutableConfig.value.showTable,
+    (v) => {
+        if (FINAL_CONFIG.value.table.show) return;
+        if (v && FINAL_CONFIG.value.table.useDialog && tableUnit.value) {
+            tableUnit.value.open();
+        } else {
+            if ('close' in tableUnit.value) {
+                tableUnit.value.close();
+            }
         }
-    }
-});
+    },
+);
 
 function closeTable() {
     mutableConfig.value.showTable = false;
@@ -904,9 +1032,9 @@ function closeTable() {
 }
 
 const svgLegendItems = computed(() => {
-    return legendSet.value.map(l => ({
+    return legendSet.value.map((l) => ({
         ...l,
-        name: l.display
+        name: l.display,
     }));
 });
 
@@ -919,7 +1047,7 @@ const { exportSvg, getSvg } = useSvgExport({
     title: svgTitle,
     legend: svgLegend,
     legendItems: svgLegendItems,
-    backgroundColor: svgBg
+    backgroundColor: svgBg,
 });
 
 async function generateSvg({ isCb }) {
@@ -930,7 +1058,14 @@ async function generateSvg({ isCb }) {
     try {
         if (isCb) {
             const { blob, url, text, dataUrl } = await getSvg();
-            await Promise.resolve(FINAL_CONFIG.value.userOptions.callbacks.svg({ blob, url, text, dataUrl }));
+            await Promise.resolve(
+                FINAL_CONFIG.value.userOptions.callbacks.svg({
+                    blob,
+                    url,
+                    text,
+                    dataUrl,
+                }),
+            );
         } else {
             await Promise.resolve(exportSvg());
         }
@@ -940,12 +1075,12 @@ async function generateSvg({ isCb }) {
 }
 
 function onGenerateImage(payload) {
-    if (payload?.stage === "start") {
+    if (payload?.stage === 'start') {
         isCallbackImaging.value = true;
         return;
     }
 
-    if (payload?.stage === "end") {
+    if (payload?.stage === 'end') {
         isCallbackImaging.value = false;
         return;
     }
@@ -953,19 +1088,23 @@ function onGenerateImage(payload) {
     generateImage();
 }
 
-async function copyAlt(){
+async function copyAlt() {
     emit('copyAlt', {
         config: FINAL_CONFIG.value,
-        dataset: radar.value
-    })
+        dataset: radar.value,
+    });
     if (!FINAL_CONFIG.value.userOptions.callbacks.altCopy) {
-        console.warn('Vue Data UI - A callback must be set for `altCopy` in userOptions.');
-        return
+        console.warn(
+            'Vue Data UI - A callback must be set for `altCopy` in userOptions.',
+        );
+        return;
     }
-    await Promise.resolve(FINAL_CONFIG.value.userOptions.callbacks.altCopy({ 
-        config: FINAL_CONFIG.value, 
-        dataset: radar.value
-    }));
+    await Promise.resolve(
+        FINAL_CONFIG.value.userOptions.callbacks.altCopy({
+            config: FINAL_CONFIG.value,
+            dataset: radar.value,
+        }),
+    );
 }
 
 /***************************************************************************************************
@@ -996,7 +1135,7 @@ function setKeyboardTooltipPositionFromIndex(index) {
 
     tooltipA11yPosition.value = {
         x: box.left + (apex.labelX / svg.value.width) * box.width,
-        y: box.top + (apex.labelY / svg.value.height) * box.height
+        y: box.top + (apex.labelY / svg.value.height) * box.height,
     };
 }
 
@@ -1010,7 +1149,8 @@ function onSvgKeydown(event) {
     const isActivationKey = event.key === 'Enter' || event.key === ' ';
     const isEscapeKey = event.key === 'Escape';
 
-    if (!isPreviousKey && !isNextKey && !isActivationKey && !isEscapeKey) return;
+    if (!isPreviousKey && !isNextKey && !isActivationKey && !isEscapeKey)
+        return;
 
     event.preventDefault();
     event.stopPropagation();
@@ -1033,7 +1173,11 @@ function onSvgKeydown(event) {
 
     let nextIndex = activeTooltipIndex.value;
 
-    if (nextIndex === null || nextIndex < 0 || nextIndex >= radar.value.length) {
+    if (
+        nextIndex === null ||
+        nextIndex < 0 ||
+        nextIndex >= radar.value.length
+    ) {
         nextIndex = isNextKey ? 0 : radar.value.length - 1;
     } else if (isNextKey) {
         nextIndex += 1;
@@ -1057,7 +1201,7 @@ function onSvgKeydown(event) {
 }
 
 const a11yTable = computed(() => {
-    const headers = dataTable.value?.colNames?.map(h => h.name ?? h) ?? [];
+    const headers = dataTable.value?.colNames?.map((h) => h.name ?? h) ?? [];
     const rows = dataTable.value?.body ?? [];
     return { headers, rows };
 });
@@ -1075,18 +1219,18 @@ defineExpose({
     toggleTooltip,
     toggleAnnotator,
     toggleFullscreen,
-    copyAlt
+    copyAlt,
 });
-
 </script>
 
 <template>
-    <div 
+    <div
         :class="`vue-data-ui-component vue-ui-radar ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${FINAL_CONFIG.useCssAnimation ? '' : 'vue-ui-dna'}`"
         ref="radarChart"
         :id="`vue-ui-radar_${uid}`"
         :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; ${FINAL_CONFIG.responsive ? 'height: 100%;' : ''} text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor}`"
-        @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)"
+        @mouseenter="() => setUserOptionsVisibility(true)"
+        @mouseleave="() => setUserOptionsVisibility(false)"
     >
         <div :id="`chart-instructions-${uid}`" class="sr-only">
             <p>{{ FINAL_CONFIG.a11y.translations.keyboardNavigation }}</p>
@@ -1101,7 +1245,7 @@ defineExpose({
             :caption="FINAL_CONFIG.a11y.translations.tableCaption"
         />
 
-        <PenAndPaper 
+        <PenAndPaper
             v-if="FINAL_CONFIG.userOptions.buttons.annotator"
             :svgRef="svgRef"
             :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
@@ -1111,44 +1255,48 @@ defineExpose({
             @close="toggleAnnotator"
         >
             <template #annotator-action-close>
-                <slot name="annotator-action-close"/>
+                <slot name="annotator-action-close" />
             </template>
             <template #annotator-action-color="{ color }">
-                <slot name="annotator-action-color" v-bind="{ color }"/>
+                <slot name="annotator-action-color" v-bind="{ color }" />
             </template>
             <template #annotator-action-draw="{ mode }">
-                <slot name="annotator-action-draw" v-bind="{ mode }"/>
+                <slot name="annotator-action-draw" v-bind="{ mode }" />
             </template>
             <template #annotator-action-undo="{ disabled }">
-                <slot name="annotator-action-undo" v-bind="{ disabled }"/>
+                <slot name="annotator-action-undo" v-bind="{ disabled }" />
             </template>
             <template #annotator-action-redo="{ disabled }">
-                <slot name="annotator-action-redo" v-bind="{ disabled }"/>
+                <slot name="annotator-action-redo" v-bind="{ disabled }" />
             </template>
             <template #annotator-action-delete="{ disabled }">
-                <slot name="annotator-action-delete" v-bind="{ disabled }"/>
+                <slot name="annotator-action-delete" v-bind="{ disabled }" />
             </template>
         </PenAndPaper>
 
         <div
             ref="noTitle"
-            v-if="hasOptionsNoTitle" 
-            class="vue-data-ui-no-title-space" 
+            v-if="hasOptionsNoTitle"
+            class="vue-data-ui-no-title-space"
             :style="`height:36px; width: 100%;background:transparent`"
         />
 
         <!-- TITLE AS DIV -->
-        <div ref="chartTitle" v-if="FINAL_CONFIG.style.chart.title.text" :style="`width:100%;background:transparent;padding-bottom:12px`">
+        <div
+            ref="chartTitle"
+            v-if="FINAL_CONFIG.style.chart.title.text"
+            :style="`width:100%;background:transparent;padding-bottom:12px`"
+        >
             <Title
                 :key="`title_${titleStep}`"
                 :config="{
                     title: {
                         cy: 'radar-div-title',
-                        ...FINAL_CONFIG.style.chart.title
+                        ...FINAL_CONFIG.style.chart.title,
                     },
                     subtitle: {
                         cy: 'radar-div-subtitle',
-                        ...FINAL_CONFIG.style.chart.title.subtitle
+                        ...FINAL_CONFIG.style.chart.title.subtitle,
                     },
                 }"
             />
@@ -1160,13 +1308,20 @@ defineExpose({
         <UserOptions
             ref="userOptionsRef"
             :key="`user_options_${step}`"
-            v-if="FINAL_CONFIG.userOptions.show && isDataset && (keepUserOptionState ? true : userOptionsVisible)"
+            v-if="
+                FINAL_CONFIG.userOptions.show &&
+                isDataset &&
+                (keepUserOptionState ? true : userOptionsVisible)
+            "
             :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
             :color="FINAL_CONFIG.style.chart.color"
             :isImaging="isImaging"
             :isPrinting="isPrinting"
             :uid="uid"
-            :hasTooltip="FINAL_CONFIG.userOptions.buttons.tooltip && FINAL_CONFIG.style.chart.tooltip.show"
+            :hasTooltip="
+                FINAL_CONFIG.userOptions.buttons.tooltip &&
+                FINAL_CONFIG.style.chart.tooltip.show
+            "
             :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
             :hasImg="FINAL_CONFIG.userOptions.buttons.img"
             :hasSvg="FINAL_CONFIG.userOptions.buttons.svg"
@@ -1195,14 +1350,18 @@ defineExpose({
             @toggleAnnotator="toggleAnnotator"
             @copyAlt="copyAlt"
             :style="{
-                visibility: keepUserOptionState ? userOptionsVisible ? 'visible' : 'hidden' : 'visible'
+                visibility: keepUserOptionState
+                    ? userOptionsVisible
+                        ? 'visible'
+                        : 'hidden'
+                    : 'visible',
             }"
         >
             <template #menuIcon="{ isOpen, color }" v-if="$slots.menuIcon">
-                <slot name="menuIcon" v-bind="{ isOpen, color }"/>
+                <slot name="menuIcon" v-bind="{ isOpen, color }" />
             </template>
             <template #optionTooltip v-if="$slots.optionTooltip">
-                <slot name="optionTooltip"/>
+                <slot name="optionTooltip" />
             </template>
             <template #optionPdf v-if="$slots.optionPdf">
                 <slot name="optionPdf" />
@@ -1219,58 +1378,100 @@ defineExpose({
             <template #optionTable v-if="$slots.optionTable">
                 <slot name="optionTable" />
             </template>
-            <template v-if="$slots.optionFullscreen" template #optionFullscreen="{ toggleFullscreen, isFullscreen }">
-                <slot name="optionFullscreen" v-bind="{ toggleFullscreen, isFullscreen }"/>
+            <template
+                v-if="$slots.optionFullscreen"
+                template
+                #optionFullscreen="{ toggleFullscreen, isFullscreen }"
+            >
+                <slot
+                    name="optionFullscreen"
+                    v-bind="{ toggleFullscreen, isFullscreen }"
+                />
             </template>
-            <template v-if="$slots.optionAnnotator" #optionAnnotator="{ toggleAnnotator, isAnnotator }">
-                <slot name="optionAnnotator" v-bind="{ toggleAnnotator, isAnnotator }" />
+            <template
+                v-if="$slots.optionAnnotator"
+                #optionAnnotator="{ toggleAnnotator, isAnnotator }"
+            >
+                <slot
+                    name="optionAnnotator"
+                    v-bind="{ toggleAnnotator, isAnnotator }"
+                />
             </template>
-            <template v-if="$slots.optionAltCopy" #optionAltCopy="{ altCopy: c }">
-                <slot name="optionAltCopy" v-bind="{ altCopy: c }"/>
+            <template
+                v-if="$slots.optionAltCopy"
+                #optionAltCopy="{ altCopy: c }"
+            >
+                <slot name="optionAltCopy" v-bind="{ altCopy: c }" />
             </template>
         </UserOptions>
 
         <!-- CHART -->
-        <div style="position: relative;">
+        <div style="position: relative">
             <svg
                 ref="svgRef"
                 :xmlns="XMLNS"
                 :aria-describedby="`chart-instructions-${uid}`"
-                :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" 
-                :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`" :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color}`" 
+                :class="{
+                    'vue-data-ui-fullscreen--on': isFullscreen,
+                    'vue-data-ui-fulscreen--off': !isFullscreen,
+                }"
+                :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`"
+                :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
                 tabindex="0"
                 @focus="onSvgFocus"
                 @blur="onSvgBlur"
                 @keydown="onSvgKeydown"
             >
                 <PackageVersion />
-    
+
                 <!-- BACKGROUND SLOT -->
-                <foreignObject 
+                <foreignObject
                     v-if="$slots['chart-background']"
                     :x="0"
                     :y="0"
                     :width="svg.width <= 0 ? 10 : svg.width"
                     :height="svg.height <= 0 ? 10 : svg.height"
                     :style="{
-                        pointerEvents: 'none'
+                        pointerEvents: 'none',
                     }"
                 >
-                    <slot name="chart-background"/>
+                    <slot name="chart-background" />
                 </foreignObject>
-    
+
                 <!-- DEFS -->
                 <defs>
                     <radialGradient
-                        cx="50%" cy="50%" r="50%" fx="50%" fy="50%"
+                        cx="50%"
+                        cy="50%"
+                        r="50%"
+                        fx="50%"
+                        fy="50%"
                         v-for="(d, i) in datasetCopy"
                         :id="`radar_gradient_${uid}_${i}`"
                     >
-                        <stop offset="0%" :stop-color="setOpacity(shiftHue(d.color, 0.05), FINAL_CONFIG.style.chart.layout.dataPolygon.opacity)"/>
-                        <stop offset="100%" :stop-color="setOpacity(d.color, FINAL_CONFIG.style.chart.layout.dataPolygon.opacity)" />
+                        <stop
+                            offset="0%"
+                            :stop-color="
+                                setOpacity(
+                                    shiftHue(d.color, 0.05),
+                                    FINAL_CONFIG.style.chart.layout.dataPolygon
+                                        .opacity,
+                                )
+                            "
+                        />
+                        <stop
+                            offset="100%"
+                            :stop-color="
+                                setOpacity(
+                                    d.color,
+                                    FINAL_CONFIG.style.chart.layout.dataPolygon
+                                        .opacity,
+                                )
+                            "
+                        />
                     </radialGradient>
                 </defs>
-    
+
                 <!-- GRID -->
                 <g v-if="FINAL_CONFIG.style.chart.layout.grid.show">
                     <!-- RADIAL LINES -->
@@ -1282,79 +1483,163 @@ defineExpose({
                         :x2="line.x"
                         :y2="line.y"
                         :stroke="FINAL_CONFIG.style.chart.layout.grid.stroke"
-                        :stroke-width="FINAL_CONFIG.style.chart.layout.grid.strokeWidth"
+                        :stroke-width="
+                            FINAL_CONFIG.style.chart.layout.grid.strokeWidth
+                        "
                     />
                     <!-- INNER POLYGONS -->
-                    <g v-if="FINAL_CONFIG.style.chart.layout.grid.graduations > 0">
+                    <g
+                        v-if="
+                            FINAL_CONFIG.style.chart.layout.grid.graduations > 0
+                        "
+                    >
                         <path
                             data-cy="polygon-inner"
                             v-for="radius in innerPolygons"
-                            :d="createPolygonPath({
-                                plot: { x: svg.width / 2, y: svg.height / 2 },
-                                radius: radius,
-                                sides: apexes,
-                                rotation: 0
-                            }).path"
+                            :d="
+                                createPolygonPath({
+                                    plot: {
+                                        x: svg.width / 2,
+                                        y: svg.height / 2,
+                                    },
+                                    radius: radius,
+                                    sides: apexes,
+                                    rotation: 0,
+                                }).path
+                            "
                             fill="none"
-                            :stroke="FINAL_CONFIG.style.chart.layout.grid.stroke"
-                            :stroke-width="FINAL_CONFIG.style.chart.layout.grid.strokeWidth"
+                            :stroke="
+                                FINAL_CONFIG.style.chart.layout.grid.stroke
+                            "
+                            :stroke-width="
+                                FINAL_CONFIG.style.chart.layout.grid.strokeWidth
+                            "
                         />
                     </g>
                 </g>
-    
+
                 <!-- OUTER POLYGON -->
                 <path
                     data-cy="polygon-outer"
-                    :d="outerPolygon.path" 
-                    fill="none" 
-                    :stroke="FINAL_CONFIG.style.chart.layout.outerPolygon.stroke" 
-                    :stroke-width="FINAL_CONFIG.style.chart.layout.outerPolygon.strokeWidth" 
-                    stroke-linejoin="round" 
+                    :d="outerPolygon.path"
+                    fill="none"
+                    :stroke="
+                        FINAL_CONFIG.style.chart.layout.outerPolygon.stroke
+                    "
+                    :stroke-width="
+                        FINAL_CONFIG.style.chart.layout.outerPolygon.strokeWidth
+                    "
+                    stroke-linejoin="round"
                     stroke-linecap="round"
                 />
-    
+
                 <!-- APEX LABELS -->
-                <g v-if="FINAL_CONFIG.style.chart.layout.labels.dataLabels.show">
-                <text v-for="(label, i) in radar"
-                    data-cy="label-apex"
-                    class="vue-ui-radar-apex-label"
-                    :x="label.labelX"
-                    :y="label.labelY"
-                    :text-anchor="label.labelAnchor"
-                    :font-size="FINAL_CONFIG.style.chart.layout.labels.dataLabels.fontSize"
-                    :fill="FINAL_CONFIG.style.chart.layout.labels.dataLabels.color"
-                    @mouseenter="useTooltip(label, i, 'pointer')"
-                    @mouseleave="onTrapLeave(label, i)"
-                    @click="onTrapClick(label, i)"
+                <g
+                    v-if="
+                        FINAL_CONFIG.style.chart.layout.labels.dataLabels.show
+                    "
                 >
-                    {{ label.name }}
-                </text>
+                    <text
+                        v-for="(label, i) in radar"
+                        data-cy="label-apex"
+                        class="vue-ui-radar-apex-label"
+                        :x="label.labelX"
+                        :y="label.labelY"
+                        :text-anchor="label.labelAnchor"
+                        :font-size="
+                            FINAL_CONFIG.style.chart.layout.labels.dataLabels
+                                .fontSize
+                        "
+                        :fill="
+                            FINAL_CONFIG.style.chart.layout.labels.dataLabels
+                                .color
+                        "
+                        @mouseenter="useTooltip(label, i, 'pointer')"
+                        @mouseleave="onTrapLeave(label, i)"
+                        @click="onTrapClick(label, i)"
+                    >
+                        {{ label.name }}
+                    </text>
                 </g>
-    
+
                 <!-- PLOTS -->
                 <g v-for="(d, i) in datasetCopy">
                     <g>
                         <polygon
                             data-cy="polygon-datapoint-wrapper"
-                            :points="makePath(radar.map(r => r.plots[i]), false, true)"
+                            :points="
+                                makePath(
+                                    radar.map((r) => r.plots[i]),
+                                    false,
+                                    true,
+                                )
+                            "
                             :stroke="FINAL_CONFIG.style.chart.backgroundColor"
-                            :stroke-width="FINAL_CONFIG.style.chart.layout.dataPolygon.strokeWidth + 1"
+                            :stroke-width="
+                                FINAL_CONFIG.style.chart.layout.dataPolygon
+                                    .strokeWidth + 1
+                            "
                             fill="none"
-                            v-if="FINAL_CONFIG.useCssAnimation || (!FINAL_CONFIG.useCssAnimation && !segregated.includes(i))"
-                            :class="{ 'animated-out': segregated.includes(i) && FINAL_CONFIG.useCssAnimation, 'animated-in': isAnimating && inSegregation === i && FINAL_CONFIG.useCssAnimation }"
+                            v-if="
+                                FINAL_CONFIG.useCssAnimation ||
+                                (!FINAL_CONFIG.useCssAnimation &&
+                                    !segregated.includes(i))
+                            "
+                            :class="{
+                                'animated-out':
+                                    segregated.includes(i) &&
+                                    FINAL_CONFIG.useCssAnimation,
+                                'animated-in':
+                                    isAnimating &&
+                                    inSegregation === i &&
+                                    FINAL_CONFIG.useCssAnimation,
+                            }"
                         />
                         <polygon
                             data-cy="polygon-datapoint"
-                            :points="makePath(radar.map(r => r.plots[i]), false, true)"
+                            :points="
+                                makePath(
+                                    radar.map((r) => r.plots[i]),
+                                    false,
+                                    true,
+                                )
+                            "
                             :stroke="d.color"
-                            :stroke-width="FINAL_CONFIG.style.chart.layout.dataPolygon.strokeWidth"
-                            v-if="FINAL_CONFIG.useCssAnimation || (!FINAL_CONFIG.useCssAnimation && !segregated.includes(i))"
-                            :fill="FINAL_CONFIG.style.chart.layout.dataPolygon.transparent ? 'transparent' : FINAL_CONFIG.style.chart.layout.dataPolygon.useGradient ? `url(#radar_gradient_${uid}_${i})` : setOpacity(d.color, FINAL_CONFIG.style.chart.layout.dataPolygon.opacity)"
-                            :class="{ 'animated-out': segregated.includes(i) && FINAL_CONFIG.useCssAnimation, 'animated-in': isAnimating && inSegregation === i && FINAL_CONFIG.useCssAnimation }"
+                            :stroke-width="
+                                FINAL_CONFIG.style.chart.layout.dataPolygon
+                                    .strokeWidth
+                            "
+                            v-if="
+                                FINAL_CONFIG.useCssAnimation ||
+                                (!FINAL_CONFIG.useCssAnimation &&
+                                    !segregated.includes(i))
+                            "
+                            :fill="
+                                FINAL_CONFIG.style.chart.layout.dataPolygon
+                                    .transparent
+                                    ? 'transparent'
+                                    : FINAL_CONFIG.style.chart.layout
+                                            .dataPolygon.useGradient
+                                      ? `url(#radar_gradient_${uid}_${i})`
+                                      : setOpacity(
+                                            d.color,
+                                            FINAL_CONFIG.style.chart.layout
+                                                .dataPolygon.opacity,
+                                        )
+                            "
+                            :class="{
+                                'animated-out':
+                                    segregated.includes(i) &&
+                                    FINAL_CONFIG.useCssAnimation,
+                                'animated-in':
+                                    isAnimating &&
+                                    inSegregation === i &&
+                                    FINAL_CONFIG.useCssAnimation,
+                            }"
                         />
                     </g>
                 </g>
-                
+
                 <g v-if="FINAL_CONFIG.style.chart.layout.plots.show">
                     <g v-for="(category, i) in radar">
                         <circle
@@ -1362,33 +1647,88 @@ defineExpose({
                             v-for="(p, j) in category.plots"
                             :cx="p.x"
                             :cy="p.y"
-                            :fill="segregated.includes(j) ? 'transparent' : datasetCopy[j] ? datasetCopy[j].color : 'transparent'"
-                            :r="selectedIndex !== null && selectedIndex === i ? FINAL_CONFIG.style.chart.layout.plots.radius * 1.6 : FINAL_CONFIG.style.chart.layout.plots.radius"
-                            :stroke="segregated.includes(j) ? 'transparent' : FINAL_CONFIG.style.chart.backgroundColor"
+                            :fill="
+                                segregated.includes(j)
+                                    ? 'transparent'
+                                    : datasetCopy[j]
+                                      ? datasetCopy[j].color
+                                      : 'transparent'
+                            "
+                            :r="
+                                selectedIndex !== null && selectedIndex === i
+                                    ? FINAL_CONFIG.style.chart.layout.plots
+                                          .radius * 1.6
+                                    : FINAL_CONFIG.style.chart.layout.plots
+                                          .radius
+                            "
+                            :stroke="
+                                segregated.includes(j)
+                                    ? 'transparent'
+                                    : FINAL_CONFIG.style.chart.backgroundColor
+                            "
                             :stroke-width="0.5"
-                            :class="{ 'animated-out': segregated.includes(j) && FINAL_CONFIG.useCssAnimation, 'animated-in': isAnimating && inSegregation === j && FINAL_CONFIG.useCssAnimation }"
+                            :class="{
+                                'animated-out':
+                                    segregated.includes(j) &&
+                                    FINAL_CONFIG.useCssAnimation,
+                                'animated-in':
+                                    isAnimating &&
+                                    inSegregation === j &&
+                                    FINAL_CONFIG.useCssAnimation,
+                            }"
                         />
                     </g>
                 </g>
-                <slot name="svg" :svg="{
-                    ...svg,
-                    isPrintingImg: isPrinting | isImaging | isCallbackImaging,
-                    isPrintingSvg: isCallbackSvg,
-                }"/>
+                <slot
+                    name="svg"
+                    :svg="{
+                        ...svg,
+                        isPrintingImg:
+                            isPrinting | isImaging | isCallbackImaging,
+                        isPrintingSvg: isCallbackSvg,
+                    }"
+                />
             </svg>
-            <div v-if="$slots.hint" style="position: absolute; top: 100%; left: 0; width: 100%;" data-dom-to-png-ignore aria-hidden="true">
-                <slot name="hint" v-bind="{ hint: FINAL_CONFIG.a11y.translations.keyboardNavigation, isVisible: isFocus }"/>
+            <div
+                v-if="$slots.hint"
+                style="position: absolute; top: 100%; left: 0; width: 100%"
+                data-dom-to-png-ignore
+                aria-hidden="true"
+            >
+                <slot
+                    name="hint"
+                    v-bind="{
+                        hint: FINAL_CONFIG.a11y.translations.keyboardNavigation,
+                        isVisible: isFocus,
+                    }"
+                />
             </div>
         </div>
 
         <div v-if="$slots.watermark" class="vue-data-ui-watermark">
-            <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging || isCallbackImaging || isCallbackSvg }"/>
+            <slot
+                name="watermark"
+                v-bind="{
+                    isPrinting:
+                        isPrinting ||
+                        isImaging ||
+                        isCallbackImaging ||
+                        isCallbackSvg,
+                }"
+            />
         </div>
 
         <div :id="`legend-bottom-${uid}`" />
 
         <!-- LEGEND -->
-        <Teleport v-if="readyTeleport" :to="FINAL_CONFIG.style.chart.legend.position === 'top' ? `#legend-top-${uid}` : `#legend-bottom-${uid}`">
+        <Teleport
+            v-if="readyTeleport"
+            :to="
+                FINAL_CONFIG.style.chart.legend.position === 'top'
+                    ? `#legend-top-${uid}`
+                    : `#legend-bottom-${uid}`
+            "
+        >
             <div ref="chartLegend">
                 <Legend
                     v-if="FINAL_CONFIG.style.chart.legend.show"
@@ -1396,19 +1736,35 @@ defineExpose({
                     :legendSet="legendSet"
                     :config="legendConfig"
                     :isCursorPointer="isCursorPointer"
-                    @clickMarker="({i}) => segregate(i)"
+                    @clickMarker="({ i }) => segregate(i)"
                 >
                     <template #item="{ legend, index }">
-                        <div data-cy="legend-item" @click="legend.segregate()" :style="`opacity:${segregated.includes(index) ? 0.5 : 1}`" v-if="!loading">
+                        <div
+                            data-cy="legend-item"
+                            @click="legend.segregate()"
+                            :style="`opacity:${segregated.includes(index) ? 0.5 : 1}`"
+                            v-if="!loading"
+                        >
                             {{ legend.display }}
                         </div>
                     </template>
 
                     <template #legendToggle>
                         <BaseLegendToggle
-                            v-if="legendSet.length > 2 && FINAL_CONFIG.style.chart.legend.selectAllToggle.show && !loading"
-                            :backgroundColor="FINAL_CONFIG.style.chart.legend.selectAllToggle.backgroundColor"
-                            :color="FINAL_CONFIG.style.chart.legend.selectAllToggle.color"
+                            v-if="
+                                legendSet.length > 2 &&
+                                FINAL_CONFIG.style.chart.legend.selectAllToggle
+                                    .show &&
+                                !loading
+                            "
+                            :backgroundColor="
+                                FINAL_CONFIG.style.chart.legend.selectAllToggle
+                                    .backgroundColor
+                            "
+                            :color="
+                                FINAL_CONFIG.style.chart.legend.selectAllToggle
+                                    .color
+                            "
                             :fontSize="FINAL_CONFIG.style.chart.legend.fontSize"
                             :checked="segregated.length > 0"
                             :isCursorPointer="isCursorPointer"
@@ -1424,7 +1780,6 @@ defineExpose({
             <slot name="source" />
         </div>
 
-
         <!-- TOOLTIP -->
         <Tooltip
             :teleportTo="FINAL_CONFIG.style.chart.tooltip.teleportTo"
@@ -1434,43 +1789,89 @@ defineExpose({
             :borderRadius="FINAL_CONFIG.style.chart.tooltip.borderRadius"
             :borderColor="FINAL_CONFIG.style.chart.tooltip.borderColor"
             :borderWidth="FINAL_CONFIG.style.chart.tooltip.borderWidth"
-            :backgroundOpacity="FINAL_CONFIG.style.chart.tooltip.backgroundOpacity"
+            :backgroundOpacity="
+                FINAL_CONFIG.style.chart.tooltip.backgroundOpacity
+            "
             :fontSize="FINAL_CONFIG.style.chart.tooltip.fontSize"
             :position="FINAL_CONFIG.style.chart.tooltip.position"
             :offsetY="FINAL_CONFIG.style.chart.tooltip.offsetY"
             :parent="radarChart"
             :content="tooltipContent"
             :isFullscreen="isFullscreen"
-            :isCustom="FINAL_CONFIG.style.chart.tooltip.customFormat && typeof FINAL_CONFIG.style.chart.tooltip.customFormat === 'function'"
+            :isCustom="
+                FINAL_CONFIG.style.chart.tooltip.customFormat &&
+                typeof FINAL_CONFIG.style.chart.tooltip.customFormat ===
+                    'function'
+            "
             :smooth="FINAL_CONFIG.style.chart.tooltip.smooth"
             :backdropFilter="FINAL_CONFIG.style.chart.tooltip.backdropFilter"
             :smoothForce="FINAL_CONFIG.style.chart.tooltip.smoothForce"
-            :smoothSnapThreshold="FINAL_CONFIG.style.chart.tooltip.smoothSnapThreshold"
+            :smoothSnapThreshold="
+                FINAL_CONFIG.style.chart.tooltip.smoothSnapThreshold
+            "
             :isA11yMode="tooltipTriggerMode === 'keyboard'"
             :a11yPosition="tooltipA11yPosition"
         >
             <template #tooltip-before>
-                <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>
+                <slot
+                    name="tooltip-before"
+                    v-bind="{ ...dataTooltipSlot }"
+                ></slot>
             </template>
             <template #tooltip>
-                <slot name="tooltip" v-bind="{ ...dataTooltipSlot }"/>
+                <slot name="tooltip" v-bind="{ ...dataTooltipSlot }" />
             </template>
             <template #tooltip-after>
-                <div style="max-width: 200px;margin:0 auto" v-if="!['function'].includes(typeof FINAL_CONFIG.style.chart.tooltip.customFormat) && !$slots.tooltip">
-                    <SparkBar :dataset="sparkBarData" :config="sparkBarConfig" :backgroundOpacity="0">
+                <div
+                    style="max-width: 200px; margin: 0 auto"
+                    v-if="
+                        !['function'].includes(
+                            typeof FINAL_CONFIG.style.chart.tooltip
+                                .customFormat,
+                        ) && !$slots.tooltip
+                    "
+                >
+                    <SparkBar
+                        :dataset="sparkBarData"
+                        :config="sparkBarConfig"
+                        :backgroundOpacity="0"
+                    >
                         <template #data-label="{ bar }">
-                            <div class="vue-ui-radar-tooltip-datalabel" style="width: 100%">
-                                <span class="vue-ui-radar-tooltip-datalabel-name">
-                                    {{ bar.name + (FINAL_CONFIG.style.chart.tooltip.showValue || FINAL_CONFIG.style.chart.tooltip.showPercentage ? ':' : '') }}
+                            <div
+                                class="vue-ui-radar-tooltip-datalabel"
+                                style="width: 100%"
+                            >
+                                <span
+                                    class="vue-ui-radar-tooltip-datalabel-name"
+                                >
+                                    {{
+                                        bar.name +
+                                        (FINAL_CONFIG.style.chart.tooltip
+                                            .showValue ||
+                                        FINAL_CONFIG.style.chart.tooltip
+                                            .showPercentage
+                                            ? ':'
+                                            : '')
+                                    }}
                                 </span>
-                                <span v-if="FINAL_CONFIG.style.chart.tooltip.showValue || FINAL_CONFIG.style.chart.tooltip.showPercentage">
+                                <span
+                                    v-if="
+                                        FINAL_CONFIG.style.chart.tooltip
+                                            .showValue ||
+                                        FINAL_CONFIG.style.chart.tooltip
+                                            .showPercentage
+                                    "
+                                >
                                     {{ bar.suffix }}
                                 </span>
                             </div>
                         </template>
                     </SparkBar>
                 </div>
-                <slot name="tooltip-after" v-bind="{...dataTooltipSlot}"></slot>
+                <slot
+                    name="tooltip-after"
+                    v-bind="{ ...dataTooltipSlot }"
+                ></slot>
             </template>
         </Tooltip>
 
@@ -1485,13 +1886,16 @@ defineExpose({
                 {{ tableComponent.title }}
             </template>
             <template #actions v-if="FINAL_CONFIG.table.useDialog">
-                <button 
-                    tabindex="0" 
-                    class="vue-ui-user-options-button" 
+                <button
+                    tabindex="0"
+                    class="vue-ui-user-options-button"
                     @click="generateCsv(FINAL_CONFIG.userOptions.callbacks.csv)"
-                    :style="{ cursor: isCursorPointer ? 'pointer' : 'default'}"
+                    :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }"
                 >
-                    <BaseIcon name="fileCsv" :stroke="tableComponent.props.color"/>
+                    <BaseIcon
+                        name="fileCsv"
+                        :stroke="tableComponent.props.color"
+                    />
                 </button>
             </template>
             <template #content>
@@ -1501,7 +1905,9 @@ defineExpose({
                     :head="dataTable.head"
                     :body="dataTable.body"
                     :config="dataTable.config"
-                    :title="FINAL_CONFIG.table.useDialog ? '' : tableComponent.title"
+                    :title="
+                        FINAL_CONFIG.table.useDialog ? '' : tableComponent.title
+                    "
                     :withCloseButton="!FINAL_CONFIG.table.useDialog"
                     :isCursorPointer="isCursorPointer"
                     @close="closeTable"
@@ -1524,26 +1930,29 @@ defineExpose({
 </template>
 
 <style scoped>
-@import "../vue-data-ui.css";
-.vue-ui-radar *{
+@import '../vue-data-ui.css';
+.vue-ui-radar * {
     transition: unset;
 }
 
-path, line, rect, circle {
+path,
+line,
+rect,
+circle {
     animation: xyAnimation 0.5s ease-in-out !important;
     transform-origin: center;
 }
 @keyframes xyAnimation {
     0% {
-        transform: scale(0.9,0.9);
+        transform: scale(0.9, 0.9);
         opacity: 0;
     }
     80% {
-        transform: scale(1.02,1.02);
+        transform: scale(1.02, 1.02);
         opacity: 1;
     }
     to {
-        transform: scale(1,1);
+        transform: scale(1, 1);
         opacity: 1;
     }
 }
@@ -1555,10 +1964,10 @@ path, line, rect, circle {
     align-items: center;
     display: flex;
     flex-direction: column;
-    height:100%;
+    height: 100%;
     justify-content: center;
-    text-align:center;
-    width:100%;
+    text-align: center;
+    width: 100%;
 }
 
 polygon {
@@ -1568,7 +1977,7 @@ polygon {
 .vue-ui-radar-tooltip-datalabel {
     display: flex;
     flex-wrap: wrap;
-    align-items:center;
+    align-items: center;
     gap: 4px;
 }
 

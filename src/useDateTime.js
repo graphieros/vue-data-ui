@@ -9,12 +9,14 @@ export function useDateTime({
         months: [],
         shortMonths: [],
         days: [],
-        shortDays: []
+        shortDays: [],
     },
     januaryAsYear = false,
 }) {
     const non31DayMonths = [2, 4, 6, 9, 11];
-    const daysCntOfYear = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
+    const daysCntOfYear = [
+        0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334,
+    ];
 
     function monthMod(month) {
         return month % 12;
@@ -49,7 +51,7 @@ export function useDateTime({
             return getTimeStamp(dateStr);
         }
         const fallback = Date.parse(
-            dateStr.replace(/-/g, '/').replace(/[a-z]+/gi, ' ')
+            dateStr.replace(/-/g, '/').replace(/[a-z]+/gi, ' '),
         );
         return getTimeStamp(fallback);
     }
@@ -65,19 +67,35 @@ export function useDateTime({
 
         // Escape any backslash prefixed token sequence
         const tokenNames = [
-            'yyyy', 'yy', 'y',
-            'MMMM', 'MMM', 'MM', 'M',
-            'dddd', 'ddd', 'dd', 'd',
-            'HH', 'H', 'hh', 'h',
-            'mm', 'm', 'ss', 's',
-            'fff', 'ff', 'f',
-            'TT', 'T', 'tt', 't',
-            'K'
+            'yyyy',
+            'yy',
+            'y',
+            'MMMM',
+            'MMM',
+            'MM',
+            'M',
+            'dddd',
+            'ddd',
+            'dd',
+            'd',
+            'HH',
+            'H',
+            'hh',
+            'h',
+            'mm',
+            'm',
+            'ss',
+            's',
+            'fff',
+            'ff',
+            'f',
+            'TT',
+            'T',
+            'tt',
+            't',
+            'K',
         ];
-        const escRe = new RegExp(
-            `\\\\(${tokenNames.join('|')})`,
-            'g'
-        );
+        const escRe = new RegExp(`\\\\(${tokenNames.join('|')})`, 'g');
         const literals = [];
         format = format.replace(escRe, (_, tok) => {
             literals.push(tok);
@@ -109,7 +127,7 @@ export function useDateTime({
         // If januaryAsYear, show the year instead of "January"/"Jan"
         if (januaryAsYear && M === 1) {
             MMMM[1] = String(y);
-            MMM[1]  = String(y);
+            MMM[1] = String(y);
         }
 
         format = format
@@ -171,7 +189,8 @@ export function useDateTime({
         let K = utc || !tz ? 'Z' : tz > 0 ? '+' : '-';
         if (!utc) {
             tz = Math.abs(tz);
-            const tzH = Math.floor(tz / 60), tzM = tz % 60;
+            const tzH = Math.floor(tz / 60),
+                tzM = tz % 60;
             K += pad(tzH) + ':' + pad(tzM);
         }
         format = format.replace(/(^|[^\\])K/g, `$1${K}`);
@@ -213,14 +232,14 @@ export function useDateTime({
             minMonth: parseInt(minP[1], 10) - 1,
             maxMonth: parseInt(maxP[1], 10) - 1,
             minYear: parseInt(minP[0], 10),
-            maxYear: parseInt(maxP[0], 10)
+            maxYear: parseInt(maxP[0], 10),
         };
     }
 
     // YEAR / MONTH CALCULATIONS
 
     function isLeapYear(year) {
-        return (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
+        return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
     }
 
     function calculateLastDaysOfMonth(month, year, subtract) {
@@ -240,9 +259,7 @@ export function useDateTime({
     function determineDaysOfMonths(month, year) {
         month = monthMod(month);
         if (non31DayMonths.includes(month)) {
-            return month === 2
-                ? (isLeapYear(year) ? 29 : 28)
-                : 30;
+            return month === 2 ? (isLeapYear(year) ? 29 : 28) : 30;
         }
         return 31;
     }
@@ -259,6 +276,6 @@ export function useDateTime({
         calculateLastDaysOfMonth,
         determineDaysOfYear,
         determineRemainingDaysOfYear,
-        determineDaysOfMonths
+        determineDaysOfMonths,
     };
 }

@@ -1,5 +1,5 @@
-import { useDateTime } from "./useDateTime";
-import { useLocale } from "./useLocale";
+import { useDateTime } from './useDateTime';
+import { useLocale } from './useLocale';
 
 const SECONDS_IN_DAY = 24 * 60 * 60;
 
@@ -15,7 +15,7 @@ export async function useTimeLabels({
     maxDatapoints,
     formatter: xl,
     start: sliceStart,
-    end: sliceEnd
+    end: sliceEnd,
 }) {
     const out = [];
     if (!xl.enable || values.length === 0) {
@@ -25,20 +25,21 @@ export async function useTimeLabels({
         return out;
     }
 
-    const formattedValues = values.map(v => {
+    const formattedValues = values.map((v) => {
         const f = new Date(v).getTime();
-        return isNaN(f) ? v : f
+        return isNaN(f) ? v : f;
     });
 
     const window = formattedValues.slice(sliceStart, sliceEnd);
     if (window.length === 0) return [];
-    const minX = window[0], maxX = window[window.length - 1];
+    const minX = window[0],
+        maxX = window[window.length - 1];
 
     let localeData;
     try {
         ({ data: localeData } = await useLocale(xl.locale));
     } catch (e) {
-        ({ data: localeData } = await useLocale("en"));
+        ({ data: localeData } = await useLocale('en'));
     }
 
     const dt = useDateTime({
@@ -57,7 +58,7 @@ export async function useTimeLabels({
 
     let tickInterval;
     switch (true) {
-        case (daysDiff / 365) > 5:
+        case daysDiff / 365 > 5:
             tickInterval = 'years';
             break;
         case daysDiff > 800:
@@ -100,10 +101,20 @@ export async function useTimeLabels({
 
     let xUnit;
     if (tickInterval === 'years') xUnit = 'year';
-    else if (['half_year', 'months', 'months_fortnight', 'months_days', 'week_days'].includes(tickInterval)) xUnit = 'month';
+    else if (
+        [
+            'half_year',
+            'months',
+            'months_fortnight',
+            'months_days',
+            'week_days',
+        ].includes(tickInterval)
+    )
+        xUnit = 'month';
     else if (tickInterval === 'days') xUnit = 'day';
     else if (tickInterval === 'hours') xUnit = 'hour';
-    else if (['minutes_fives', 'minutes'].includes(tickInterval)) xUnit = 'minute';
+    else if (['minutes_fives', 'minutes'].includes(tickInterval))
+        xUnit = 'minute';
     else xUnit = 'second';
 
     const fmt = xl.options[xUnit] ?? xl.options.hour;
@@ -120,7 +131,10 @@ export async function useTimeLabels({
                 break;
             case 'month': {
                 const m = xl.useUTC ? d.getUTCMonth() : d.getMonth();
-                text = (xl.januaryAsYear && m === 0) ? dt.formatDate(d, yearFmt) : dt.formatDate(d, monthFmt);
+                text =
+                    xl.januaryAsYear && m === 0
+                        ? dt.formatDate(d, yearFmt)
+                        : dt.formatDate(d, monthFmt);
                 break;
             }
             case 'day':

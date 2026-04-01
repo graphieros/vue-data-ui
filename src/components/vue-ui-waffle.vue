@@ -1,24 +1,24 @@
 <script setup>
-import { 
-    computed, 
-    defineAsyncComponent, 
-    nextTick, 
-    onBeforeUnmount, 
-    onMounted, 
-    ref, 
-    shallowRef, 
-    toRefs, 
-    useSlots, 
-    watch, 
-} from "vue";
-import { 
+import {
+    computed,
+    defineAsyncComponent,
+    nextTick,
+    onBeforeUnmount,
+    onMounted,
+    ref,
+    shallowRef,
+    toRefs,
+    useSlots,
+    watch,
+} from 'vue';
+import {
     abbreviate,
     adaptColorToBackground,
     applyDataLabel,
     convertColorToHex,
     convertCustomPalette,
     createCsvContent,
-    createUid, 
+    createUid,
     dataLabel,
     downloadCsv,
     error,
@@ -31,38 +31,44 @@ import {
     shiftHue,
     themePalettes,
     treeShake,
-    XMLNS
-} from "../lib";
-import { 
-    buildValuePercentageLabel 
-} from "../labelUtils";
-import { throttle } from "../canvas-lib";
-import { useConfig } from "../useConfig";
-import { useLoading } from "../useLoading";
-import { usePrinter } from "../usePrinter";
-import { useSvgExport } from "../useSvgExport";
-import { useNestedProp } from "../useNestedProp";
-import { useResponsive } from "../useResponsive";
-import { useThemeCheck } from "../useThemeCheck";
-import { useUserOptionState } from "../useUserOptionState";
-import { useChartAccessibility } from "../useChartAccessibility";
-import img from "../img";
-import Shape from "../atoms/Shape.vue";
-import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
-import themes from "../themes/vue_ui_waffle.json";
-import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
-import BaseScanner from "../atoms/BaseScanner.vue";
-import A11yDataTable from "../atoms/A11yDataTable.vue";
-import BaseLegendToggle from "../atoms/BaseLegendToggle.vue";
+    XMLNS,
+} from '../lib';
+import { buildValuePercentageLabel } from '../labelUtils';
+import { throttle } from '../canvas-lib';
+import { useConfig } from '../useConfig';
+import { useLoading } from '../useLoading';
+import { usePrinter } from '../usePrinter';
+import { useSvgExport } from '../useSvgExport';
+import { useNestedProp } from '../useNestedProp';
+import { useResponsive } from '../useResponsive';
+import { useThemeCheck } from '../useThemeCheck';
+import { useUserOptionState } from '../useUserOptionState';
+import { useChartAccessibility } from '../useChartAccessibility';
+import img from '../img';
+import Shape from '../atoms/Shape.vue';
+import Title from '../atoms/Title.vue'; // Must be ready in responsive mode
+import themes from '../themes/vue_ui_waffle.json';
+import Legend from '../atoms/Legend.vue'; // Must be ready in responsive mode
+import BaseScanner from '../atoms/BaseScanner.vue';
+import A11yDataTable from '../atoms/A11yDataTable.vue';
+import BaseLegendToggle from '../atoms/BaseLegendToggle.vue';
 
 const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
 const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
-const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
-const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
-const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
-const BaseDraggableDialog = defineAsyncComponent(() => import('../atoms/BaseDraggableDialog.vue'));
+const UserOptions = defineAsyncComponent(
+    () => import('../atoms/UserOptions.vue'),
+);
+const PenAndPaper = defineAsyncComponent(
+    () => import('../atoms/PenAndPaper.vue'),
+);
+const PackageVersion = defineAsyncComponent(
+    () => import('../atoms/PackageVersion.vue'),
+);
+const BaseDraggableDialog = defineAsyncComponent(
+    () => import('../atoms/BaseDraggableDialog.vue'),
+);
 
 const { vue_ui_waffle: DEFAULT_CONFIG } = useConfig();
 const { isThemeValid, warnInvalidTheme } = useThemeCheck();
@@ -71,14 +77,14 @@ const props = defineProps({
     config: {
         type: Object,
         default() {
-            return {}
-        }
+            return {};
+        },
     },
     dataset: {
         type: Array,
         default() {
-            return []
-        }
+            return [];
+        },
     },
 });
 
@@ -90,12 +96,12 @@ const isDataset = computed({
     },
     set(bool) {
         return bool;
-    }
+    },
 });
 
 const uid = ref(createUid());
 const isTooltip = ref(false);
-const tooltipContent = ref("");
+const tooltipContent = ref('');
 const selectedSerie = ref(null);
 const step = ref(0);
 const waffleChart = ref(null);
@@ -119,7 +125,9 @@ const isFocus = ref(false); // a11y
 
 const FINAL_CONFIG = ref(prepareConfig());
 
-const isCursorPointer = computed(() => FINAL_CONFIG.value.userOptions.useCursorPointer);
+const isCursorPointer = computed(
+    () => FINAL_CONFIG.value.userOptions.useCursorPointer,
+);
 
 const skeletonConfig = computed(() => {
     return treeShake({
@@ -132,22 +140,22 @@ const skeletonConfig = computed(() => {
                     backgroundColor: '#99999930',
                     layout: {
                         labels: {
-                            captions: { show: false }
+                            captions: { show: false },
                         },
                         rect: {
-                            stroke: '#999999'
-                        }
+                            stroke: '#999999',
+                        },
                     },
                     legend: {
                         backgroundColor: 'transparent',
                         showValue: false,
-                        showPercentage: false
-                    }
-                }
-            }
+                        showPercentage: false,
+                    },
+                },
+            },
         },
-        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {}
-    })
+        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {},
+    });
 });
 
 // v3 - Skeleton loader management
@@ -158,7 +166,7 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
     callback: () => {
         Promise.resolve().then(async () => {
             datasetCopy.value = prepareDataset();
-        })
+        });
     },
     skeletonDataset: props.config?.skeletonDataset ?? [
         {
@@ -179,17 +187,20 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
     ],
     skeletonConfig: treeShake({
         defaultConfig: FINAL_CONFIG.value,
-        userConfig: skeletonConfig.value
-    })
+        userConfig: skeletonConfig.value,
+    }),
 });
 
-const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
-const { svgRef } = useChartAccessibility({ config: FINAL_CONFIG.value.style.chart.title });
+const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } =
+    useUserOptionState({ config: FINAL_CONFIG.value });
+const { svgRef } = useChartAccessibility({
+    config: FINAL_CONFIG.value.style.chart.title,
+});
 
 function prepareConfig() {
     const mergedConfig = useNestedProp({
         userConfig: props.config,
-        defaultConfig: DEFAULT_CONFIG
+        defaultConfig: DEFAULT_CONFIG,
     });
 
     const theme = mergedConfig.theme;
@@ -202,34 +213,42 @@ function prepareConfig() {
 
     const fused = useNestedProp({
         userConfig: themes[theme] || props.config,
-        defaultConfig: mergedConfig
+        defaultConfig: mergedConfig,
     });
 
     const finalConfig = useNestedProp({
         userConfig: props.config,
-        defaultConfig: fused
+        defaultConfig: fused,
     });
 
     return {
         ...finalConfig,
-        customPalette: finalConfig.customPalette.length ? finalConfig.customPalette : themePalettes[theme] || palette
-    }
+        customPalette: finalConfig.customPalette.length
+            ? finalConfig.customPalette
+            : themePalettes[theme] || palette,
+    };
 }
 
-watch(() => props.config, (_newCfg) => {
-    if (!loading.value) {
-        FINAL_CONFIG.value = prepareConfig();
-    }
-    userOptionsVisible.value = !FINAL_CONFIG.value.userOptions.showOnChartHover;
-    prepareChart();
-    titleStep.value += 1;
-    tableStep.value += 1;
-    legendStep.value += 1;
+watch(
+    () => props.config,
+    (_newCfg) => {
+        if (!loading.value) {
+            FINAL_CONFIG.value = prepareConfig();
+        }
+        userOptionsVisible.value =
+            !FINAL_CONFIG.value.userOptions.showOnChartHover;
+        prepareChart();
+        titleStep.value += 1;
+        tableStep.value += 1;
+        legendStep.value += 1;
 
-    // Reset mutable config
-    mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
-    mutableConfig.value.showTooltip = FINAL_CONFIG.value.style.chart.tooltip.show;
-}, { deep: true });
+        // Reset mutable config
+        mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
+        mutableConfig.value.showTooltip =
+            FINAL_CONFIG.value.style.chart.tooltip.show;
+    },
+    { deep: true },
+);
 
 const resizeObserver = shallowRef(null);
 const observedEl = shallowRef(null);
@@ -237,26 +256,26 @@ const observedEl = shallowRef(null);
 const debug = computed(() => !!FINAL_CONFIG.value.debug);
 
 function prepareChart() {
-    if(objectIsEmpty(props.dataset)) {
+    if (objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiWaffle',
             type: 'dataset',
-            debug: debug.value
-        })
+            debug: debug.value,
+        });
         isDataset.value = false;
         manualLoading.value = true; // v3
     } else {
         props.dataset.forEach((ds, i) => {
             getMissingDatasetAttributes({
                 datasetObject: ds,
-                requiredAttributes: ['name', 'values']
-            }).forEach(attr => {
+                requiredAttributes: ['name', 'values'],
+            }).forEach((attr) => {
                 error({
                     componentName: 'VueUiWaffle',
                     type: 'datasetSerieAttribute',
                     property: attr,
                     index: i,
-                    debug: debug.value
+                    debug: debug.value,
                 });
             });
         });
@@ -271,10 +290,14 @@ function prepareChart() {
         const handleResize = throttle(() => {
             const { width, height } = useResponsive({
                 chart: waffleChart.value,
-                title: FINAL_CONFIG.value.style.chart.title.text ? chartTitle.value : null,
-                legend: FINAL_CONFIG.value.style.chart.legend.show ? chartLegend.value : null,
+                title: FINAL_CONFIG.value.style.chart.title.text
+                    ? chartTitle.value
+                    : null,
+                legend: FINAL_CONFIG.value.style.chart.legend.show
+                    ? chartLegend.value
+                    : null,
                 source: source.value,
-                noTitle: noTitle.value
+                noTitle: noTitle.value,
             });
 
             requestAnimationFrame(() => {
@@ -282,7 +305,7 @@ function prepareChart() {
                 svg.value.height = height;
                 drawingArea.value.width = width;
                 drawingArea.value.height = height;
-            })
+            });
         });
 
         if (resizeObserver.value) {
@@ -312,70 +335,95 @@ onBeforeUnmount(() => {
     }
 });
 
-
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `vue-ui-waffle_${uid.value}`,
     fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-waffle',
-    options: FINAL_CONFIG.value.userOptions.print
+    options: FINAL_CONFIG.value.userOptions.print,
 });
 
 const hasOptionsNoTitle = computed(() => {
-    return FINAL_CONFIG.value.userOptions.show && !FINAL_CONFIG.value.style.chart.title.text;
+    return (
+        FINAL_CONFIG.value.userOptions.show &&
+        !FINAL_CONFIG.value.style.chart.title.text
+    );
 });
 
 const customPalette = computed(() => {
     return convertCustomPalette(FINAL_CONFIG.value.customPalette);
-})
-
+});
 
 const mutableConfig = ref({
     showTable: FINAL_CONFIG.value.table.show,
-    showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show
+    showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show,
 });
 
 // v3 - Essential to make shifting between loading config and final config work
-watch(FINAL_CONFIG, () => {
-    mutableConfig.value = {
-        showTable: FINAL_CONFIG.value.table.show,
-        showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show
-    };
-}, { immediate: true });
+watch(
+    FINAL_CONFIG,
+    () => {
+        mutableConfig.value = {
+            showTable: FINAL_CONFIG.value.table.show,
+            showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show,
+        };
+    },
+    { immediate: true },
+);
 
 const svg = ref({
     height: 512,
-    width: 512
+    width: 512,
 });
 
 const drawingArea = ref({
     top: 0,
     left: 0,
     height: 512,
-    width: 512
+    width: 512,
 });
 
 const rectDimension = computed(() => {
-    return ((drawingArea.value.width - (FINAL_CONFIG.value.style.chart.layout.grid.size * FINAL_CONFIG.value.style.chart.layout.grid.spaceBetween )) / FINAL_CONFIG.value.style.chart.layout.grid.size);
+    return (
+        (drawingArea.value.width -
+            FINAL_CONFIG.value.style.chart.layout.grid.size *
+                FINAL_CONFIG.value.style.chart.layout.grid.spaceBetween) /
+        FINAL_CONFIG.value.style.chart.layout.grid.size
+    );
 });
 
 const rectDimensionY = computed(() => {
-    return ((drawingArea.value.height - (FINAL_CONFIG.value.style.chart.layout.grid.size * FINAL_CONFIG.value.style.chart.layout.grid.spaceBetween )) / FINAL_CONFIG.value.style.chart.layout.grid.size);
-})
+    return (
+        (drawingArea.value.height -
+            FINAL_CONFIG.value.style.chart.layout.grid.size *
+                FINAL_CONFIG.value.style.chart.layout.grid.spaceBetween) /
+        FINAL_CONFIG.value.style.chart.layout.grid.size
+    );
+});
 
 const absoluteRectDimension = computed(() => {
-    return Math.max(0.0001, ((drawingArea.value.width) / FINAL_CONFIG.value.style.chart.layout.grid.size));
+    return Math.max(
+        0.0001,
+        drawingArea.value.width /
+            FINAL_CONFIG.value.style.chart.layout.grid.size,
+    );
 });
 
 const absoluteRectDimensionY = computed(() => {
-    return Math.max(0.0001, ((drawingArea.value.height) / FINAL_CONFIG.value.style.chart.layout.grid.size));
-})
+    return Math.max(
+        0.0001,
+        drawingArea.value.height /
+            FINAL_CONFIG.value.style.chart.layout.grid.size,
+    );
+});
 
 function calculateProportions(numbers) {
-    const totalSquares = FINAL_CONFIG.value.style.chart.layout.grid.size * FINAL_CONFIG.value.style.chart.layout.grid.size;
+    const totalSquares =
+        FINAL_CONFIG.value.style.chart.layout.grid.size *
+        FINAL_CONFIG.value.style.chart.layout.grid.size;
     const totalSum = numbers.reduce((a, b) => a + b, 0);
-    const proportions = numbers.map(num => (num / totalSum) * totalSquares);
+    const proportions = numbers.map((num) => (num / totalSum) * totalSquares);
 
     const intParts = proportions.map(Math.floor);
-    const fractionalParts = proportions.map(num => num % 1);
+    const fractionalParts = proportions.map((num) => num % 1);
 
     let remainingSquares = totalSquares - intParts.reduce((a, b) => a + b, 0);
 
@@ -392,15 +440,22 @@ function calculateProportions(numbers) {
 const allDatapointsAreEmpty = ref(false);
 
 function prepareDataset() {
-    allDatapointsAreEmpty.value = FINAL_DATASET.value.flatMap(ds => ds.values.reduce((a, b) => a + b, 0)).reduce((a, b) => a + b, 0) === 0;
+    allDatapointsAreEmpty.value =
+        FINAL_DATASET.value
+            .flatMap((ds) => ds.values.reduce((a, b) => a + b, 0))
+            .reduce((a, b) => a + b, 0) === 0;
 
     return FINAL_DATASET.value.map((s, i) => {
         return {
             ...s,
-            color: convertColorToHex(s.color) || customPalette.value[i] || palette[i] || palette[i % palette.length],
+            color:
+                convertColorToHex(s.color) ||
+                customPalette.value[i] ||
+                palette[i] ||
+                palette[i % palette.length],
             uid: `serie_${i}`,
-            absoluteIndex: i
-        }
+            absoluteIndex: i,
+        };
     });
 }
 
@@ -408,55 +463,62 @@ const datasetCopyReference = computed(() => {
     return prepareDataset();
 });
 
-const datasetCopy = ref(datasetCopyReference.value)
+const datasetCopy = ref(datasetCopyReference.value);
 
 // v3 - Stop skeleton loader when props.dataset becomes valid
-watch(() => props.dataset, (newVal) => {
-    if (Array.isArray(newVal) && newVal.length > 0) {
-        manualLoading.value = false;
-    }
-}, { immediate: true });
+watch(
+    () => props.dataset,
+    (newVal) => {
+        if (Array.isArray(newVal) && newVal.length > 0) {
+            manualLoading.value = false;
+        }
+    },
+    { immediate: true },
+);
 
-watch(() => props.dataset, (_) => {
-    datasetCopy.value = prepareDataset();
-}, { deep: true })
+watch(
+    () => props.dataset,
+    (_) => {
+        datasetCopy.value = prepareDataset();
+    },
+    { deep: true },
+);
 
 const proportions = computed(() => {
     const numbers = datasetCopy.value
-        .filter((serie,i) => !segregated.value.includes(serie.uid))
+        .filter((serie, i) => !segregated.value.includes(serie.uid))
         .map((serie, i) => {
             if (allDatapointsAreEmpty.value) {
                 return 1;
             } else {
-                return (serie.values || []).reduce((a,b) => a + b, 0)
+                return (serie.values || []).reduce((a, b) => a + b, 0);
             }
         });
     return calculateProportions(numbers);
 });
 
 const immutableProportions = computed(() => {
-    const numbers = datasetCopy.value
-        .map((serie, i) => {
-            if (allDatapointsAreEmpty.value) {
-                return 1;
-            } else {
-                return (serie.values || []).reduce((a,b) => a + b);
-            }
-        });
+    const numbers = datasetCopy.value.map((serie, i) => {
+        if (allDatapointsAreEmpty.value) {
+            return 1;
+        } else {
+            return (serie.values || []).reduce((a, b) => a + b);
+        }
+    });
     return calculateProportions(numbers);
 });
 
 const waffleSet = computed(() => {
     FINAL_DATASET.value.forEach((ds, i) => {
-        if([null, undefined].includes(ds.values)) {
+        if ([null, undefined].includes(ds.values)) {
             error({
                 componentName: 'VueUiWaffle',
                 type: 'datasetSerieAttribute',
                 property: 'values (number[])',
-                index: i
+                index: i,
             });
         }
-    })
+    });
     return datasetCopy.value
         .filter((serie, i) => !segregated.value.includes(serie.uid))
         .map((serie, i) => {
@@ -465,45 +527,44 @@ const waffleSet = computed(() => {
                 uid: serie.uid,
                 name: serie.name,
                 color: serie.color,
-                value: (serie.values || []).reduce((a,b) => a + b, 0),
+                value: (serie.values || []).reduce((a, b) => a + b, 0),
                 absoluteValues: serie.values || [],
-                proportion: proportions.value[i]
-            }
-        })
+                proportion: proportions.value[i],
+            };
+        });
 });
 
 const immutableSet = computed(() => {
-    return datasetCopy.value
-        .map((serie, i) => {
-            return {
-                absoluteIndex: serie.absoluteIndex,
-                uid: serie.uid,
-                name: serie.name,
-                color: serie.color,
-                value: (serie.values || []).reduce((a,b) => a + b, 0),
-                absoluteValues: serie.values || [],
-                proportion: immutableProportions.value[i]
-            }
-        })
+    return datasetCopy.value.map((serie, i) => {
+        return {
+            absoluteIndex: serie.absoluteIndex,
+            uid: serie.uid,
+            name: serie.name,
+            color: serie.color,
+            value: (serie.values || []).reduce((a, b) => a + b, 0),
+            absoluteValues: serie.values || [],
+            proportion: immutableProportions.value[i],
+        };
+    });
 });
 
 function getData() {
-    return immutableSet.value.map(ds => {
+    return immutableSet.value.map((ds) => {
         return {
             name: ds.name,
             color: ds.color,
             value: ds.value,
-            proportion: ds.proportion
-        }
+            proportion: ds.proportion,
+        };
     });
 }
 
 const cumulatedSet = computed(() => {
-    let cumulativeProportion = 0; 
+    let cumulativeProportion = 0;
 
     return waffleSet.value.map((serie, i) => {
         const start = cumulativeProportion;
-        const end = start + serie.proportion; 
+        const end = start + serie.proportion;
 
         const rects = [];
         for (let j = Math.floor(start); j < Math.floor(end); j += 1) {
@@ -514,45 +575,71 @@ const cumulatedSet = computed(() => {
 
         return {
             ...serie,
-            start, 
+            start,
             rects,
         };
     });
 });
 
 const rects = computed(() => {
-    return cumulatedSet.value.flatMap((serie, s) => {
-        return serie.rects.map((rect, i) => {
-            return {
-                isFirst: i === 0,
-                isLongEnough: rect.length > 2,
-                name: serie.name,
-                color: serie.color,
-                value: serie.value,
-                serieIndex: s,
-                absoluteStartIndex: i < 3,
-                serieId: serie.uid,
-                ...serie
-            }
+    return cumulatedSet.value
+        .flatMap((serie, s) => {
+            return serie.rects.map((rect, i) => {
+                return {
+                    isFirst: i === 0,
+                    isLongEnough: rect.length > 2,
+                    name: serie.name,
+                    color: serie.color,
+                    value: serie.value,
+                    serieIndex: s,
+                    absoluteStartIndex: i < 3,
+                    serieId: serie.uid,
+                    ...serie,
+                };
+            });
         })
-    }).map((s, i) => {
-        return {
-            ...s,
-            isAbsoluteFirst: i % FINAL_CONFIG.value.style.chart.layout.grid.size === 0,
-        }
-    })
+        .map((s, i) => {
+            return {
+                ...s,
+                isAbsoluteFirst:
+                    i % FINAL_CONFIG.value.style.chart.layout.grid.size === 0,
+            };
+        });
 });
 
 const positions = computed(() => {
     const grid = [];
-    for(let i = 0; i < FINAL_CONFIG.value.style.chart.layout.grid.size; i += 1) {
-        for(let j = 0; j < FINAL_CONFIG.value.style.chart.layout.grid.size; j += 1) {
+    for (
+        let i = 0;
+        i < FINAL_CONFIG.value.style.chart.layout.grid.size;
+        i += 1
+    ) {
+        for (
+            let j = 0;
+            j < FINAL_CONFIG.value.style.chart.layout.grid.size;
+            j += 1
+        ) {
             grid.push({
                 isStartOfLine: j === 0,
-                position: FINAL_CONFIG.value.style.chart.layout.grid.vertical ? i : j,
-                x: (FINAL_CONFIG.value.style.chart.layout.grid.vertical ? i : j) * (rectDimension.value + FINAL_CONFIG.value.style.chart.layout.grid.spaceBetween),
-                y: (FINAL_CONFIG.value.style.chart.layout.grid.vertical ? j : i) * (rectDimensionY.value + FINAL_CONFIG.value.style.chart.layout.grid.spaceBetween) + drawingArea.value.top,
-            })
+                position: FINAL_CONFIG.value.style.chart.layout.grid.vertical
+                    ? i
+                    : j,
+                x:
+                    (FINAL_CONFIG.value.style.chart.layout.grid.vertical
+                        ? i
+                        : j) *
+                    (rectDimension.value +
+                        FINAL_CONFIG.value.style.chart.layout.grid
+                            .spaceBetween),
+                y:
+                    (FINAL_CONFIG.value.style.chart.layout.grid.vertical
+                        ? j
+                        : i) *
+                        (rectDimensionY.value +
+                            FINAL_CONFIG.value.style.chart.layout.grid
+                                .spaceBetween) +
+                    drawingArea.value.top,
+            });
         }
     }
     return grid;
@@ -570,7 +657,7 @@ function setSeriesValuesById(seriesId, nextValue) {
         if (dataSeries.uid === seriesId) {
             return {
                 ...dataSeries,
-                values: [nextValue]
+                values: [nextValue],
             };
         }
         return dataSeries;
@@ -594,12 +681,7 @@ function cancelAnimationBySeriesId(seriesId) {
     }
 }
 
-function animateSeriesValue({
-    seriesId,
-    fromValue,
-    toValue,
-    mode
-}) {
+function animateSeriesValue({ seriesId, fromValue, toValue, mode }) {
     cancelAnimationBySeriesId(seriesId);
 
     activeAnimationCount.value += 1;
@@ -609,27 +691,30 @@ function animateSeriesValue({
 
     return new Promise((resolve) => {
         function onFrame() {
-            const isIncreasing = mode === "increase";
+            const isIncreasing = mode === 'increase';
 
             if (isIncreasing) {
                 if (currentValue >= toValue) {
                     setSeriesValuesById(seriesId, toValue);
                     activeAnimationCount.value -= 1;
-                    if (activeAnimationCount.value <= 0) isAnimating.value = false;
+                    if (activeAnimationCount.value <= 0)
+                        isAnimating.value = false;
                     delete animationFrameUpBySeriesId.value[seriesId];
                     resolve();
                     return;
                 }
 
-                currentValue += (toValue * 0.025);
+                currentValue += toValue * 0.025;
                 if (currentValue > toValue) currentValue = toValue;
                 setSeriesValuesById(seriesId, currentValue);
-                animationFrameUpBySeriesId.value[seriesId] = requestAnimationFrame(onFrame);
+                animationFrameUpBySeriesId.value[seriesId] =
+                    requestAnimationFrame(onFrame);
             } else {
                 if (currentValue <= fromValue / 100) {
                     setSeriesValuesById(seriesId, 0);
                     activeAnimationCount.value -= 1;
-                    if (activeAnimationCount.value <= 0) isAnimating.value = false;
+                    if (activeAnimationCount.value <= 0)
+                        isAnimating.value = false;
                     delete animationFrameDownBySeriesId.value[seriesId];
                     resolve();
                     return;
@@ -637,7 +722,8 @@ function animateSeriesValue({
 
                 currentValue /= 1.15;
                 setSeriesValuesById(seriesId, currentValue);
-                animationFrameDownBySeriesId.value[seriesId] = requestAnimationFrame(onFrame);
+                animationFrameDownBySeriesId.value[seriesId] =
+                    requestAnimationFrame(onFrame);
             }
         }
 
@@ -654,7 +740,9 @@ function toggleLegend() {
         if (hasAnySegregated) {
             segregated.value = [];
         } else {
-            segregated.value = legendSet.value.map((legendItem) => legendItem.uid);
+            segregated.value = legendSet.value.map(
+                (legendItem) => legendItem.uid,
+            );
         }
         return;
     }
@@ -666,7 +754,9 @@ function toggleLegend() {
             segregate(seriesId, true);
         });
     } else {
-        const seriesIdsToHide = legendSet.value.map((legendItem) => legendItem.uid);
+        const seriesIdsToHide = legendSet.value.map(
+            (legendItem) => legendItem.uid,
+        );
 
         seriesIdsToHide.forEach((seriesId) => {
             segregate(seriesId, true);
@@ -679,11 +769,14 @@ function segregate(seriesId, allowHideAll = false) {
 
     const canHideMore =
         allowHideAll ||
-        (segregated.value.length < legendSet.value.length - 1 && legendSet.value.length > 1);
+        (segregated.value.length < legendSet.value.length - 1 &&
+            legendSet.value.length > 1);
 
     if (!FINAL_CONFIG.value.useAnimation) {
         if (segregated.value.includes(seriesId)) {
-            segregated.value = segregated.value.filter((item) => item !== seriesId);
+            segregated.value = segregated.value.filter(
+                (item) => item !== seriesId,
+            );
         } else if (canHideMore) {
             segregated.value.push(seriesId);
         }
@@ -702,18 +795,21 @@ function segregate(seriesId, allowHideAll = false) {
             seriesId,
             fromValue: sourceValue,
             toValue: targetValue,
-            mode: "increase"
+            mode: 'increase',
         }).then(() => {
             emit(
-                "selectLegend",
+                'selectLegend',
                 waffleSet.value.map((waffleItem) => ({
                     name: waffleItem.name,
                     color: waffleItem.color,
                     value: waffleItem.value,
                     proportion:
                         waffleItem.proportion /
-                        (Math.pow(FINAL_CONFIG.value.style.chart.layout.grid.size, 2))
-                }))
+                        Math.pow(
+                            FINAL_CONFIG.value.style.chart.layout.grid.size,
+                            2,
+                        ),
+                })),
             );
         });
 
@@ -726,7 +822,7 @@ function segregate(seriesId, allowHideAll = false) {
         seriesId,
         fromValue: sourceValue,
         toValue: 0,
-        mode: "decrease"
+        mode: 'decrease',
     }).then(() => {
         if (!segregated.value.includes(seriesId)) {
             segregated.value.push(seriesId);
@@ -735,15 +831,18 @@ function segregate(seriesId, allowHideAll = false) {
         setSeriesValuesById(seriesId, 0);
 
         emit(
-            "selectLegend",
+            'selectLegend',
             waffleSet.value.map((waffleItem) => ({
                 name: waffleItem.name,
                 color: waffleItem.color,
                 value: waffleItem.value,
                 proportion:
                     waffleItem.proportion /
-                    (Math.pow(FINAL_CONFIG.value.style.chart.layout.grid.size, 2))
-            }))
+                    Math.pow(
+                        FINAL_CONFIG.value.style.chart.layout.grid.size,
+                        2,
+                    ),
+            })),
         );
     });
 }
@@ -755,7 +854,7 @@ function validSeriesToToggle(name) {
         }
         return null;
     }
-    const dp = immutableSet.value.find(d => d.name === name);
+    const dp = immutableSet.value.find((d) => d.name === name);
     if (!dp) {
         if (FINAL_CONFIG.value.debug) {
             console.warn(`VueUiWaffle - Series name not found "${name}"`);
@@ -774,59 +873,77 @@ function showSeries(name) {
 }
 
 function hideSeries(name) {
-    const dp  = validSeriesToToggle(name);
+    const dp = validSeriesToToggle(name);
     if (dp === null) return;
-    if (!segregated.value.includes(dp.uid))  {
+    if (!segregated.value.includes(dp.uid)) {
         segregate(dp.uid);
     }
 }
 
-function buildLabel({
-    val,
-    percentage,
-    showVal,
-    showPercentage,
-    config
-}) {
+function buildLabel({ val, percentage, showVal, showPercentage, config }) {
     return buildValuePercentageLabel({
         config,
         val,
         percentage,
         showVal,
-        showPercentage
-    })
-} 
+        showPercentage,
+    });
+}
 
 const legendSet = computed(() => {
     return datasetCopy.value
         .map((serie, i) => {
-            const value = (serie.values || []).reduce((a,b) => a + b, 0);
-            const proportion = value / datasetCopy.value.map(ds => (ds.values || []).reduce((a,b) => a + b, 0)).reduce((a, b) => a + b, 0);
+            const value = (serie.values || []).reduce((a, b) => a + b, 0);
+            const proportion =
+                value /
+                datasetCopy.value
+                    .map((ds) => (ds.values || []).reduce((a, b) => a + b, 0))
+                    .reduce((a, b) => a + b, 0);
             return {
                 name: serie.name,
-                color: serie.color || customPalette[i] || palette[i] || palette[i % palette.length],
+                color:
+                    serie.color ||
+                    customPalette[i] ||
+                    palette[i] ||
+                    palette[i % palette.length],
                 value,
                 proportion,
                 uid: serie.uid,
-                shape: 'square'
-            }
+                shape: 'square',
+            };
         })
         .map((el, i) => {
-            const valueDisplay = applyDataLabel(FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.formatter, el.value, dataLabel({
-                    p: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.prefix,
+            const valueDisplay = applyDataLabel(
+                FINAL_CONFIG.value.style.chart.layout.labels.dataLabels
+                    .formatter,
+                el.value,
+                dataLabel({
+                    p: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels
+                        .prefix,
                     v: el.value,
-                    s: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.suffix,
-                    r: FINAL_CONFIG.value.style.chart.legend.roundingValue
-                }), { datapoint: el, index: i });
-            
-            const percentageDisplay = isNaN(el.value / total.value) ? '-' : dataLabel({v: el.value /total.value * 100, s: '%', r: FINAL_CONFIG.value.style.chart.legend.roundingPercentage });
+                    s: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels
+                        .suffix,
+                    r: FINAL_CONFIG.value.style.chart.legend.roundingValue,
+                }),
+                { datapoint: el, index: i },
+            );
+
+            const percentageDisplay = isNaN(el.value / total.value)
+                ? '-'
+                : dataLabel({
+                      v: (el.value / total.value) * 100,
+                      s: '%',
+                      r: FINAL_CONFIG.value.style.chart.legend
+                          .roundingPercentage,
+                  });
 
             const display = buildLabel({
                 val: valueDisplay,
                 percentage: percentageDisplay,
                 showVal: FINAL_CONFIG.value.style.chart.legend.showValue,
-                showPercentage: FINAL_CONFIG.value.style.chart.legend.showPercentage,
-                config: FINAL_CONFIG.value.style.chart.legend
+                showPercentage:
+                    FINAL_CONFIG.value.style.chart.legend.showPercentage,
+                config: FINAL_CONFIG.value.style.chart.legend,
             });
 
             return {
@@ -834,9 +951,9 @@ const legendSet = computed(() => {
                 opacity: segregated.value.includes(el.uid) ? 0.5 : 1,
                 segregate: () => segregate(el.uid),
                 isSegregated: segregated.value.includes(el.uid),
-                display: `${el.name}${FINAL_CONFIG.value.style.chart.legend.showPercentage || FINAL_CONFIG.value.style.chart.legend.showValue ? ': ' : ''}${display}`
-            }
-        })
+                display: `${el.name}${FINAL_CONFIG.value.style.chart.legend.showPercentage || FINAL_CONFIG.value.style.chart.legend.showValue ? ': ' : ''}${display}`,
+            };
+        });
 });
 
 const legendConfig = computed(() => {
@@ -846,12 +963,12 @@ const legendConfig = computed(() => {
         color: FINAL_CONFIG.value.style.chart.legend.color,
         fontSize: FINAL_CONFIG.value.style.chart.legend.fontSize,
         paddingBottom: 12,
-        fontWeight: FINAL_CONFIG.value.style.chart.legend.bold ? 'bold' : ''
-    }
+        fontWeight: FINAL_CONFIG.value.style.chart.legend.bold ? 'bold' : '',
+    };
 });
 
 const total = computed(() => {
-    return waffleSet.value.map(s => s.value).reduce((a,b) => a + b, 0);
+    return waffleSet.value.map((s) => s.value).reduce((a, b) => a + b, 0);
 });
 
 const dataTooltipSlot = ref(null);
@@ -871,18 +988,24 @@ const navigableSeries = computed(() => {
                 color: rect.color,
                 value: rect.value,
                 proportion: rect.proportion,
-                rectIndexes: [rectIndex]
+                rectIndexes: [rectIndex],
             });
         } else {
             grouped.get(rect.serieIndex).rectIndexes.push(rectIndex);
         }
     });
 
-    return Array.from(grouped.values()).sort((a, b) => a.serieIndex - b.serieIndex);
+    return Array.from(grouped.values()).sort(
+        (a, b) => a.serieIndex - b.serieIndex,
+    );
 });
 
 function getSeriesNavigationEntry(seriesIndex) {
-    return navigableSeries.value.find((series) => series.serieIndex === seriesIndex) || null;
+    return (
+        navigableSeries.value.find(
+            (series) => series.serieIndex === seriesIndex,
+        ) || null
+    );
 }
 
 function getRepresentativeRectIndexForSeries(seriesIndex) {
@@ -894,7 +1017,10 @@ function getRepresentativeRectIndexForSeries(seriesIndex) {
 function selectDatapoint(index) {
     const selected = rects.value[index];
     if (FINAL_CONFIG.value.events.datapointClick) {
-        FINAL_CONFIG.value.events.datapointClick({ datapoint: selected, seriesIndex: selected.serieIndex });
+        FINAL_CONFIG.value.events.datapointClick({
+            datapoint: selected,
+            seriesIndex: selected.serieIndex,
+        });
     }
 }
 
@@ -902,7 +1028,10 @@ function onTrapLeave(index) {
     const selected = rects.value[index];
 
     if (FINAL_CONFIG.value.events.datapointLeave) {
-        FINAL_CONFIG.value.events.datapointLeave({ datapoint: selected, seriesIndex: selected.serieIndex});
+        FINAL_CONFIG.value.events.datapointLeave({
+            datapoint: selected,
+            seriesIndex: selected.serieIndex,
+        });
     }
 
     selectedSeriesIndex.value = null;
@@ -925,13 +1054,16 @@ function useTooltip(index, triggerMode = 'pointer') {
         datapoint: selected,
         seriesIndex: selected.absoluteIndex,
         series: datasetCopy.value,
-        config: FINAL_CONFIG.value
+        config: FINAL_CONFIG.value,
     };
 
-    if (FINAL_CONFIG.value.events.datapointEnter && selectedSeriesIndex.value !== selected.serieIndex) {
+    if (
+        FINAL_CONFIG.value.events.datapointEnter &&
+        selectedSeriesIndex.value !== selected.serieIndex
+    ) {
         FINAL_CONFIG.value.events.datapointEnter({
             datapoint: selected,
-            seriesIndex: selected.serieIndex
+            seriesIndex: selected.serieIndex,
         });
     }
 
@@ -948,18 +1080,18 @@ function useTooltip(index, triggerMode = 'pointer') {
                 seriesIndex: selected.absoluteIndex,
                 datapoint: selected,
                 series: datasetCopy.value,
-                config: FINAL_CONFIG.value
-            })
+                config: FINAL_CONFIG.value,
+            }),
         )
     ) {
         tooltipContent.value = customFormat({
             seriesIndex: selected.absoluteIndex,
             datapoint: selected,
             series: datasetCopy.value,
-            config: FINAL_CONFIG.value
+            config: FINAL_CONFIG.value,
         });
     } else {
-        let html = "";
+        let html = '';
 
         html += `<div data-cy="waffle-tooltip-name" style="width:100%;text-align:center;border-bottom:1px solid ${FINAL_CONFIG.value.style.chart.tooltip.borderColor};padding-bottom:6px;margin-bottom:3px;">${selected.name}</div>`;
         html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><svg viewBox="0 0 60 60" height="14" width="14"><rect data-cy="waffle-tooltip-marker" x="0" y="0" height="60" width="60" stroke="none" rx="1" fill="${selected.color}" />${slots.pattern ? `<rect x="0" y="0" height="60" width="60" stroke="none" rx="1" stroke="none" fill="url(#pattern_${uid.value}_${selected.absoluteIndex})"/>` : ''}</svg>`;
@@ -967,27 +1099,33 @@ function useTooltip(index, triggerMode = 'pointer') {
         html += `<b>${buildLabel({
             config: FINAL_CONFIG.value.style.chart.tooltip,
             showVal: FINAL_CONFIG.value.style.chart.tooltip.showValue,
-            showPercentage: FINAL_CONFIG.value.style.chart.tooltip.showPercentage,
+            showPercentage:
+                FINAL_CONFIG.value.style.chart.tooltip.showPercentage,
             val: `<span data-cy="waffle-tooltip-value">${applyDataLabel(
-                FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.formatter,
+                FINAL_CONFIG.value.style.chart.layout.labels.dataLabels
+                    .formatter,
                 selected.value,
                 dataLabel({
-                    p: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.prefix,
+                    p: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels
+                        .prefix,
                     v: selected.value,
-                    s: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.suffix,
-                    r: FINAL_CONFIG.value.style.chart.tooltip.roundingValue
+                    s: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels
+                        .suffix,
+                    r: FINAL_CONFIG.value.style.chart.tooltip.roundingValue,
                 }),
                 {
                     datapoint: selected,
                     seriesIndex: selected.absoluteIndex,
-                    series: datasetCopy.value
-                }
+                    series: datasetCopy.value,
+                },
             )}</span>`,
             percentage: `<span data-cy="waffle-tooltip-percentage">${dataLabel({
-                v: allDatapointsAreEmpty.value ? 1 / FINAL_DATASET.value.length * 100 : selected.value / total.value * 100,
+                v: allDatapointsAreEmpty.value
+                    ? (1 / FINAL_DATASET.value.length) * 100
+                    : (selected.value / total.value) * 100,
                 s: '%',
-                r: FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage
-            })}</span>`
+                r: FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage,
+            })}</span>`,
         })}</b></div>`;
 
         tooltipContent.value = html;
@@ -996,18 +1134,22 @@ function useTooltip(index, triggerMode = 'pointer') {
 const emit = defineEmits(['selectLegend', 'copyAlt']);
 
 const table = computed(() => {
-    const head = waffleSet.value.map(ds => {
+    const head = waffleSet.value.map((ds) => {
         return {
             name: ds.name,
-            color: ds.color
-        }
+            color: ds.color,
+        };
     });
-    const body = waffleSet.value.map(ds => ds.value);
+    const body = waffleSet.value.map((ds) => ds.value);
     return { head, body };
 });
 
 function getBlurFilter(index) {
-    if (FINAL_CONFIG.value.useBlurOnHover && ![null, undefined].includes(selectedSerie.value) && selectedSerie.value !== index) {
+    if (
+        FINAL_CONFIG.value.useBlurOnHover &&
+        ![null, undefined].includes(selectedSerie.value) &&
+        selectedSerie.value !== index
+    ) {
         return `url(#blur_${uid.value})`;
     } else {
         return '';
@@ -1015,56 +1157,102 @@ function getBlurFilter(index) {
 }
 
 function showDataLabel(i, position) {
-    if (!FINAL_CONFIG.value.style.chart.layout.labels.captions.show) return false;
+    if (!FINAL_CONFIG.value.style.chart.layout.labels.captions.show)
+        return false;
 
-    return rects.value.length 
-        && !isAnimating.value 
-        && !FINAL_CONFIG.value.style.chart.layout.grid.vertical 
-        && ((rects.value[i].isFirst 
-        && position.position < FINAL_CONFIG.value.style.chart.layout.grid.size - 2) 
-        || (rects.value[i].isAbsoluteFirst && i % FINAL_CONFIG.value.style.chart.layout.grid.size === 0 && rects.value[i].absoluteStartIndex))
+    return (
+        rects.value.length &&
+        !isAnimating.value &&
+        !FINAL_CONFIG.value.style.chart.layout.grid.vertical &&
+        ((rects.value[i].isFirst &&
+            position.position <
+                FINAL_CONFIG.value.style.chart.layout.grid.size - 2) ||
+            (rects.value[i].isAbsoluteFirst &&
+                i % FINAL_CONFIG.value.style.chart.layout.grid.size === 0 &&
+                rects.value[i].absoluteStartIndex))
+    );
 }
 
 function getCaption(i, position = null) {
     const valueLabel = applyDataLabel(
         FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.formatter,
         rects.value[i].value,
-        dataLabel({ p: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.prefix, 
-            v: rects.value[i].value, 
-            s: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.suffix, 
-            r: FINAL_CONFIG.value.style.chart.layout.labels.captions.roundingValue 
+        dataLabel({
+            p: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.prefix,
+            v: rects.value[i].value,
+            s: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.suffix,
+            r: FINAL_CONFIG.value.style.chart.layout.labels.captions
+                .roundingValue,
         }),
-        { datapoint: rects.value[i], position }
+        { datapoint: rects.value[i], position },
     );
-    const percentageLabel = dataLabel({ v: rects.value[i].proportion, s: '%', r: FINAL_CONFIG.value.style.chart.layout.labels.captions.roundingPercentage });
-    const nameLabel = (FINAL_CONFIG.value.style.chart.layout.labels.captions.serieNameAbbreviation ? abbreviate({ source: rects.value[i].name, length: FINAL_CONFIG.value.style.chart.layout.labels.captions.serieNameMaxAbbreviationSize}) : rects.value[i].name) + (FINAL_CONFIG.value.style.chart.layout.labels.captions.showPercentage || FINAL_CONFIG.value.style.chart.layout.labels.captions.showValue ? ':' : '');
+    const percentageLabel = dataLabel({
+        v: rects.value[i].proportion,
+        s: '%',
+        r: FINAL_CONFIG.value.style.chart.layout.labels.captions
+            .roundingPercentage,
+    });
+    const nameLabel =
+        (FINAL_CONFIG.value.style.chart.layout.labels.captions
+            .serieNameAbbreviation
+            ? abbreviate({
+                  source: rects.value[i].name,
+                  length: FINAL_CONFIG.value.style.chart.layout.labels.captions
+                      .serieNameMaxAbbreviationSize,
+              })
+            : rects.value[i].name) +
+        (FINAL_CONFIG.value.style.chart.layout.labels.captions.showPercentage ||
+        FINAL_CONFIG.value.style.chart.layout.labels.captions.showValue
+            ? ':'
+            : '');
 
-    const name = FINAL_CONFIG.value.style.chart.layout.labels.captions.showSerieName ? nameLabel : '';
+    const name = FINAL_CONFIG.value.style.chart.layout.labels.captions
+        .showSerieName
+        ? nameLabel
+        : '';
 
     const display = buildLabel({
         val: valueLabel,
         percentage: percentageLabel,
-        showVal: FINAL_CONFIG.value.style.chart.layout.labels.captions.showValue,
-        showPercentage: FINAL_CONFIG.value.style.chart.layout.labels.captions.showPercentage,
-        config: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels
+        showVal:
+            FINAL_CONFIG.value.style.chart.layout.labels.captions.showValue,
+        showPercentage:
+            FINAL_CONFIG.value.style.chart.layout.labels.captions
+                .showPercentage,
+        config: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels,
     });
 
     return `${name} ${display}`;
 }
 
-function generateCsv(callback=null) {
+function generateCsv(callback = null) {
     nextTick(() => {
-        const labels = table.value.head.map((h,i) => {
-            return [[
-                h.name
-            ],[table.value.body[i]], [isNaN(table.value.body[i] / total.value) ? '-' : table.value.body[i] / total.value * 100]]
+        const labels = table.value.head.map((h, i) => {
+            return [
+                [h.name],
+                [table.value.body[i]],
+                [
+                    isNaN(table.value.body[i] / total.value)
+                        ? '-'
+                        : (table.value.body[i] / total.value) * 100,
+                ],
+            ];
         });
-        const tableXls = [[FINAL_CONFIG.value.style.chart.title.text],[FINAL_CONFIG.value.style.chart.title.subtitle.text],[[""],["val"],["%"]]].concat(labels);
+        const tableXls = [
+            [FINAL_CONFIG.value.style.chart.title.text],
+            [FINAL_CONFIG.value.style.chart.title.subtitle.text],
+            [[''], ['val'], ['%']],
+        ].concat(labels);
 
         const csvContent = createCsvContent(tableXls);
 
         if (!callback) {
-            downloadCsv({ csvContent, title: FINAL_CONFIG.value.style.chart.title.text || "vue-ui-waffle"})
+            downloadCsv({
+                csvContent,
+                title:
+                    FINAL_CONFIG.value.style.chart.title.text ||
+                    'vue-ui-waffle',
+            });
         } else {
             callback(csvContent);
         }
@@ -1078,69 +1266,76 @@ const dataTable = computed(() => {
             FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.formatter,
             total.value,
             dataLabel({
-                p:FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.prefix, 
-                v:total.value, 
-                s: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.suffix, 
-                r: FINAL_CONFIG.value.table.td.roundingValue
-            })
+                p: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels
+                    .prefix,
+                v: total.value,
+                s: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels
+                    .suffix,
+                r: FINAL_CONFIG.value.table.td.roundingValue,
+            }),
         ),
-        '100%'
+        '100%',
     ];
 
-    const body = table.value.head.map((h,i) => {
+    const body = table.value.head.map((h, i) => {
         return [
             {
                 color: h.color,
-                name: h.name
+                name: h.name,
             },
             applyDataLabel(
-                FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.formatter,
+                FINAL_CONFIG.value.style.chart.layout.labels.dataLabels
+                    .formatter,
                 table.value.body[i],
                 dataLabel({
-                    p:FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.prefix, 
-                    v: table.value.body[i], 
-                    s:FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.suffix, 
-                    r:FINAL_CONFIG.value.table.td.roundingValue 
-                })
+                    p: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels
+                        .prefix,
+                    v: table.value.body[i],
+                    s: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels
+                        .suffix,
+                    r: FINAL_CONFIG.value.table.td.roundingValue,
+                }),
             ),
-            isNaN(table.value.body[i] / total.value) ? "-" : dataLabel({
-                v: table.value.body[i] / total.value * 100,
-                s: '%',
-                r: FINAL_CONFIG.value.table.td.roundingPercentage
-            })
-        ]
+            isNaN(table.value.body[i] / total.value)
+                ? '-'
+                : dataLabel({
+                      v: (table.value.body[i] / total.value) * 100,
+                      s: '%',
+                      r: FINAL_CONFIG.value.table.td.roundingPercentage,
+                  }),
+        ];
     });
 
     const config = {
         th: {
             backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
             color: FINAL_CONFIG.value.table.th.color,
-            outline: FINAL_CONFIG.value.table.th.outline
+            outline: FINAL_CONFIG.value.table.th.outline,
         },
         td: {
             backgroundColor: FINAL_CONFIG.value.table.td.backgroundColor,
             color: FINAL_CONFIG.value.table.td.color,
-            outline: FINAL_CONFIG.value.table.td.outline
+            outline: FINAL_CONFIG.value.table.td.outline,
         },
         shape: 'square',
-        breakpoint: FINAL_CONFIG.value.table.responsiveBreakpoint
-    }
+        breakpoint: FINAL_CONFIG.value.table.responsiveBreakpoint,
+    };
 
     const colNames = [
         FINAL_CONFIG.value.table.columnNames.series,
         FINAL_CONFIG.value.table.columnNames.value,
-        FINAL_CONFIG.value.table.columnNames.percentage
-    ]
+        FINAL_CONFIG.value.table.columnNames.percentage,
+    ];
 
     return {
         head,
         body,
         config,
-        colNames
-    }
+        colNames,
+    };
 });
 
-const isFullscreen = ref(false)
+const isFullscreen = ref(false);
 function toggleFullscreen(state) {
     isFullscreen.value = state;
     step.value += 1;
@@ -1159,64 +1354,77 @@ function toggleAnnotator() {
     isAnnotator.value = !isAnnotator.value;
 }
 
-async function getImage({ scale = 2} = {}) {
+async function getImage({ scale = 2 } = {}) {
     if (!waffleChart.value) return;
     const { width, height } = waffleChart.value.getBoundingClientRect();
-    const aspectRatio = width / height; 
-    const { imageUri, base64 } = await img({ domElement: waffleChart.value, base64: true, img: true, scale})
-    return { 
-        imageUri, 
-        base64, 
+    const aspectRatio = width / height;
+    const { imageUri, base64 } = await img({
+        domElement: waffleChart.value,
+        base64: true,
+        img: true,
+        scale,
+    });
+    return {
+        imageUri,
+        base64,
         title: FINAL_CONFIG.value.style.chart.title.text,
         width,
         height,
-        aspectRatio
-    }
+        aspectRatio,
+    };
 }
 
 const tableComponent = computed(() => {
-    const useDialog = FINAL_CONFIG.value.table.useDialog && !FINAL_CONFIG.value.table.show;
+    const useDialog =
+        FINAL_CONFIG.value.table.useDialog && !FINAL_CONFIG.value.table.show;
     const open = mutableConfig.value.showTable;
     return {
         component: useDialog ? BaseDraggableDialog : Accordion,
         title: `${FINAL_CONFIG.value.style.chart.title.text}${FINAL_CONFIG.value.style.chart.title.subtitle.text ? `: ${FINAL_CONFIG.value.style.chart.title.subtitle.text}` : ''}`,
-        props: useDialog ? {
-            backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
-            color: FINAL_CONFIG.value.table.th.color,
-            headerColor: FINAL_CONFIG.value.table.th.color,
-            headerBg: FINAL_CONFIG.value.table.th.backgroundColor,
-            isFullscreen: isFullscreen.value,
-            fullscreenParent: waffleChart.value,
-            forcedWidth: Math.min(500, window.innerWidth * 0.8),
-            isCursorPointer: isCursorPointer.value
-        } : {
-            hideDetails: true,
-            config: {
-                open,
-                maxHeight: 10000,
-                body: {
-                    backgroundColor: FINAL_CONFIG.value.style.chart.backgroundColor,
-                    color: FINAL_CONFIG.value.style.chart.color
-                },
-                head: {
-                    backgroundColor: FINAL_CONFIG.value.style.chart.backgroundColor,
-                    color: FINAL_CONFIG.value.style.chart.color
-                }
-            }
-        }
-    }
+        props: useDialog
+            ? {
+                  backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
+                  color: FINAL_CONFIG.value.table.th.color,
+                  headerColor: FINAL_CONFIG.value.table.th.color,
+                  headerBg: FINAL_CONFIG.value.table.th.backgroundColor,
+                  isFullscreen: isFullscreen.value,
+                  fullscreenParent: waffleChart.value,
+                  forcedWidth: Math.min(500, window.innerWidth * 0.8),
+                  isCursorPointer: isCursorPointer.value,
+              }
+            : {
+                  hideDetails: true,
+                  config: {
+                      open,
+                      maxHeight: 10000,
+                      body: {
+                          backgroundColor:
+                              FINAL_CONFIG.value.style.chart.backgroundColor,
+                          color: FINAL_CONFIG.value.style.chart.color,
+                      },
+                      head: {
+                          backgroundColor:
+                              FINAL_CONFIG.value.style.chart.backgroundColor,
+                          color: FINAL_CONFIG.value.style.chart.color,
+                      },
+                  },
+              },
+    };
 });
 
-watch(() => mutableConfig.value.showTable, v => {
-    if (FINAL_CONFIG.value.table.show) return;
-    if (v && FINAL_CONFIG.value.table.useDialog && tableUnit.value) {
-        tableUnit.value.open()
-    } else {
-        if ('close' in tableUnit.value) {
-            tableUnit.value.close()
+watch(
+    () => mutableConfig.value.showTable,
+    (v) => {
+        if (FINAL_CONFIG.value.table.show) return;
+        if (v && FINAL_CONFIG.value.table.useDialog && tableUnit.value) {
+            tableUnit.value.open();
+        } else {
+            if ('close' in tableUnit.value) {
+                tableUnit.value.close();
+            }
         }
-    }
-});
+    },
+);
 
 function closeTable() {
     mutableConfig.value.showTable = false;
@@ -1226,9 +1434,9 @@ function closeTable() {
 }
 
 const svgLegendItems = computed(() => {
-    return legendSet.value.map(l => ({
+    return legendSet.value.map((l) => ({
         ...l,
-        name: l.display
+        name: l.display,
     }));
 });
 
@@ -1241,8 +1449,8 @@ const { exportSvg, getSvg } = useSvgExport({
     title: svgTitle,
     legend: svgLegend,
     legendItems: svgLegendItems,
-    backgroundColor: svgBg
-})
+    backgroundColor: svgBg,
+});
 
 async function generateSvg({ isCb }) {
     isCallbackSvg.value = true;
@@ -1252,7 +1460,14 @@ async function generateSvg({ isCb }) {
     try {
         if (isCb) {
             const { blob, url, text, dataUrl } = await getSvg();
-            await Promise.resolve(FINAL_CONFIG.value.userOptions.callbacks.svg({ blob, url, text, dataUrl }));
+            await Promise.resolve(
+                FINAL_CONFIG.value.userOptions.callbacks.svg({
+                    blob,
+                    url,
+                    text,
+                    dataUrl,
+                }),
+            );
         } else {
             await Promise.resolve(exportSvg());
         }
@@ -1262,12 +1477,12 @@ async function generateSvg({ isCb }) {
 }
 
 function onGenerateImage(payload) {
-    if (payload?.stage === "start") {
+    if (payload?.stage === 'start') {
         isCallbackImaging.value = true;
         return;
     }
 
-    if (payload?.stage === "end") {
+    if (payload?.stage === 'end') {
         isCallbackImaging.value = false;
         return;
     }
@@ -1275,19 +1490,23 @@ function onGenerateImage(payload) {
     generateImage();
 }
 
-async function copyAlt(){
+async function copyAlt() {
     emit('copyAlt', {
         config: FINAL_CONFIG.value,
-        dataset: FINAL_DATASET.value
-    })
+        dataset: FINAL_DATASET.value,
+    });
     if (!FINAL_CONFIG.value.userOptions.callbacks.altCopy) {
-        console.warn('Vue Data UI - A callback must be set for `altCopy` in userOptions.');
-        return
+        console.warn(
+            'Vue Data UI - A callback must be set for `altCopy` in userOptions.',
+        );
+        return;
     }
-    await Promise.resolve(FINAL_CONFIG.value.userOptions.callbacks.altCopy({ 
-        config: FINAL_CONFIG.value, 
-        dataset: FINAL_DATASET.value
-    }));
+    await Promise.resolve(
+        FINAL_CONFIG.value.userOptions.callbacks.altCopy({
+            config: FINAL_CONFIG.value,
+            dataset: FINAL_DATASET.value,
+        }),
+    );
 }
 
 /***************************************************************************************************
@@ -1318,7 +1537,8 @@ function onSvgKeydown(event) {
     const isActivationKey = event.key === 'Enter' || event.key === ' ';
     const isEscapeKey = event.key === 'Escape';
 
-    if (!isPreviousKey && !isNextKey && !isActivationKey && !isEscapeKey) return;
+    if (!isPreviousKey && !isNextKey && !isActivationKey && !isEscapeKey)
+        return;
 
     event.preventDefault();
     event.stopPropagation();
@@ -1335,7 +1555,9 @@ function onSvgKeydown(event) {
     if (isActivationKey) {
         if (activeTooltipIndex.value === null) return;
 
-        const rectIndex = getRepresentativeRectIndexForSeries(activeTooltipIndex.value);
+        const rectIndex = getRepresentativeRectIndexForSeries(
+            activeTooltipIndex.value,
+        );
         if (rectIndex === null) return;
 
         selectDatapoint(rectIndex);
@@ -1343,7 +1565,7 @@ function onSvgKeydown(event) {
     }
 
     const currentNavigationIndex = navigableSeries.value.findIndex(
-        (series) => series.serieIndex === activeTooltipIndex.value
+        (series) => series.serieIndex === activeTooltipIndex.value,
     );
 
     let nextSeries = null;
@@ -1353,18 +1575,23 @@ function onSvgKeydown(event) {
             ? navigableSeries.value[0]
             : navigableSeries.value[navigableSeries.value.length - 1];
     } else if (isNextKey) {
-        nextSeries = navigableSeries.value[
-            (currentNavigationIndex + 1) % navigableSeries.value.length
-        ];
+        nextSeries =
+            navigableSeries.value[
+                (currentNavigationIndex + 1) % navigableSeries.value.length
+            ];
     } else {
-        nextSeries = navigableSeries.value[
-            (currentNavigationIndex - 1 + navigableSeries.value.length) % navigableSeries.value.length
-        ];
+        nextSeries =
+            navigableSeries.value[
+                (currentNavigationIndex - 1 + navigableSeries.value.length) %
+                    navigableSeries.value.length
+            ];
     }
 
     if (!nextSeries) return;
 
-    const rectIndex = getRepresentativeRectIndexForSeries(nextSeries.serieIndex);
+    const rectIndex = getRepresentativeRectIndexForSeries(
+        nextSeries.serieIndex,
+    );
     if (rectIndex === null) return;
 
     setKeyboardTooltipPositionFromSeriesIndex(nextSeries.serieIndex);
@@ -1384,8 +1611,16 @@ function setKeyboardTooltipPositionFromSeriesIndex(seriesIndex) {
             if (!position) return null;
 
             return {
-                x: position.x + FINAL_CONFIG.value.style.chart.layout.grid.spaceBetween / 2 + absoluteRectDimension.value / 2,
-                y: position.y + FINAL_CONFIG.value.style.chart.layout.grid.spaceBetween / 2 + absoluteRectDimensionY.value / 2
+                x:
+                    position.x +
+                    FINAL_CONFIG.value.style.chart.layout.grid.spaceBetween /
+                        2 +
+                    absoluteRectDimension.value / 2,
+                y:
+                    position.y +
+                    FINAL_CONFIG.value.style.chart.layout.grid.spaceBetween /
+                        2 +
+                    absoluteRectDimensionY.value / 2,
             };
         })
         .filter(Boolean);
@@ -1404,7 +1639,7 @@ function setKeyboardTooltipPositionFromSeriesIndex(seriesIndex) {
 
     tooltipA11yPosition.value = {
         x: box.left + (svgX / svg.value.width) * box.width,
-        y: box.top + (svgY / svg.value.height) * box.height
+        y: box.top + (svgY / svg.value.height) * box.height,
     };
 }
 
@@ -1427,18 +1662,18 @@ defineExpose({
     toggleTooltip,
     toggleAnnotator,
     toggleFullscreen,
-    copyAlt
+    copyAlt,
 });
-
 </script>
 
 <template>
-    <div 
-        :class="`vue-data-ui-component vue-ui-waffle ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`" 
-        ref="waffleChart" 
+    <div
+        :class="`vue-data-ui-component vue-ui-waffle ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`"
+        ref="waffleChart"
         :id="`vue-ui-waffle_${uid}`"
         :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor};${FINAL_CONFIG.responsive ? 'height: 100%' : ''}`"
-        @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)"
+        @mouseenter="() => setUserOptionsVisibility(true)"
+        @mouseleave="() => setUserOptionsVisibility(false)"
     >
         <!-- A11Y -->
         <div :id="`chart-instructions-${uid}`" class="sr-only">
@@ -1454,7 +1689,7 @@ defineExpose({
             :caption="FINAL_CONFIG.a11y.translations.tableCaption"
         />
 
-        <PenAndPaper 
+        <PenAndPaper
             v-if="FINAL_CONFIG.userOptions.buttons.annotator"
             :svgRef="svgRef"
             :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
@@ -1464,44 +1699,48 @@ defineExpose({
             @close="toggleAnnotator"
         >
             <template #annotator-action-close>
-                <slot name="annotator-action-close"/>
+                <slot name="annotator-action-close" />
             </template>
             <template #annotator-action-color="{ color }">
-                <slot name="annotator-action-color" v-bind="{ color }"/>
+                <slot name="annotator-action-color" v-bind="{ color }" />
             </template>
             <template #annotator-action-draw="{ mode }">
-                <slot name="annotator-action-draw" v-bind="{ mode }"/>
+                <slot name="annotator-action-draw" v-bind="{ mode }" />
             </template>
             <template #annotator-action-undo="{ disabled }">
-                <slot name="annotator-action-undo" v-bind="{ disabled }"/>
+                <slot name="annotator-action-undo" v-bind="{ disabled }" />
             </template>
             <template #annotator-action-redo="{ disabled }">
-                <slot name="annotator-action-redo" v-bind="{ disabled }"/>
+                <slot name="annotator-action-redo" v-bind="{ disabled }" />
             </template>
             <template #annotator-action-delete="{ disabled }">
-                <slot name="annotator-action-delete" v-bind="{ disabled }"/>
+                <slot name="annotator-action-delete" v-bind="{ disabled }" />
             </template>
         </PenAndPaper>
 
         <div
             ref="noTitle"
-            v-if="hasOptionsNoTitle" 
-            class="vue-data-ui-no-title-space" 
+            v-if="hasOptionsNoTitle"
+            class="vue-data-ui-no-title-space"
             :style="`height:36px; width: 100%;background:transparent`"
         />
 
         <!-- TITLE AS DIV -->
-        <div ref="chartTitle" v-if="FINAL_CONFIG.style.chart.title.text" :style="`width:100%;background:transparent;padding-bottom:12px`">
+        <div
+            ref="chartTitle"
+            v-if="FINAL_CONFIG.style.chart.title.text"
+            :style="`width:100%;background:transparent;padding-bottom:12px`"
+        >
             <Title
                 :key="`title_${titleStep}`"
                 :config="{
                     title: {
                         cy: 'waffle-title',
-                        ...FINAL_CONFIG.style.chart.title
+                        ...FINAL_CONFIG.style.chart.title,
                     },
                     subtitle: {
                         cy: 'waffle-subtitle',
-                        ...FINAL_CONFIG.style.chart.title.subtitle
+                        ...FINAL_CONFIG.style.chart.title.subtitle,
                     },
                 }"
             />
@@ -1513,13 +1752,20 @@ defineExpose({
         <UserOptions
             ref="userOptionsRef"
             :key="`user_options_${step}`"
-            v-if="FINAL_CONFIG.userOptions.show && isDataset && (keepUserOptionState ? true : userOptionsVisible)"
+            v-if="
+                FINAL_CONFIG.userOptions.show &&
+                isDataset &&
+                (keepUserOptionState ? true : userOptionsVisible)
+            "
             :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
             :color="FINAL_CONFIG.style.chart.color"
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uid"
-            :hasTooltip="FINAL_CONFIG.userOptions.buttons.tooltip && FINAL_CONFIG.style.chart.tooltip.show"
+            :hasTooltip="
+                FINAL_CONFIG.userOptions.buttons.tooltip &&
+                FINAL_CONFIG.style.chart.tooltip.show
+            "
             :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
             :hasImg="FINAL_CONFIG.userOptions.buttons.img"
             :hasSvg="FINAL_CONFIG.userOptions.buttons.svg"
@@ -1548,14 +1794,18 @@ defineExpose({
             @toggleAnnotator="toggleAnnotator"
             @copyAlt="copyAlt"
             :style="{
-                visibility: keepUserOptionState ? userOptionsVisible ? 'visible' : 'hidden' : 'visible'
+                visibility: keepUserOptionState
+                    ? userOptionsVisible
+                        ? 'visible'
+                        : 'hidden'
+                    : 'visible',
             }"
         >
             <template #menuIcon="{ isOpen, color }" v-if="$slots.menuIcon">
-                <slot name="menuIcon" v-bind="{ isOpen, color }"/>
+                <slot name="menuIcon" v-bind="{ isOpen, color }" />
             </template>
             <template #optionTooltip v-if="$slots.optionTooltip">
-                <slot name="optionTooltip"/>
+                <slot name="optionTooltip" />
             </template>
             <template #optionPdf v-if="$slots.optionPdf">
                 <slot name="optionPdf" />
@@ -1572,53 +1822,96 @@ defineExpose({
             <template #optionTable v-if="$slots.optionTable">
                 <slot name="optionTable" />
             </template>
-            <template v-if="$slots.optionFullscreen" template #optionFullscreen="{ toggleFullscreen, isFullscreen }">
-                <slot name="optionFullscreen" v-bind="{ toggleFullscreen, isFullscreen }"/>
+            <template
+                v-if="$slots.optionFullscreen"
+                template
+                #optionFullscreen="{ toggleFullscreen, isFullscreen }"
+            >
+                <slot
+                    name="optionFullscreen"
+                    v-bind="{ toggleFullscreen, isFullscreen }"
+                />
             </template>
-            <template v-if="$slots.optionAnnotator" #optionAnnotator="{ toggleAnnotator, isAnnotator }">
-                <slot name="optionAnnotator" v-bind="{ toggleAnnotator, isAnnotator }" />
+            <template
+                v-if="$slots.optionAnnotator"
+                #optionAnnotator="{ toggleAnnotator, isAnnotator }"
+            >
+                <slot
+                    name="optionAnnotator"
+                    v-bind="{ toggleAnnotator, isAnnotator }"
+                />
             </template>
-            <template v-if="$slots.optionAltCopy" #optionAltCopy="{ altCopy: c }">
-                <slot name="optionAltCopy" v-bind="{ altCopy: c }"/>
+            <template
+                v-if="$slots.optionAltCopy"
+                #optionAltCopy="{ altCopy: c }"
+            >
+                <slot name="optionAltCopy" v-bind="{ altCopy: c }" />
             </template>
         </UserOptions>
 
         <!-- CHART -->
-        <div style="position:relative;">
-            <svg 
+        <div style="position: relative">
+            <svg
                 ref="svgRef"
                 :xmlns="XMLNS"
                 :aria-describedby="`chart-instructions-${uid}`"
-                :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" 
+                :class="{
+                    'vue-data-ui-fullscreen--on': isFullscreen,
+                    'vue-data-ui-fulscreen--off': !isFullscreen,
+                }"
                 data-cy="waffle-svg"
                 tabindex="0"
-                :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`" 
+                :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`"
                 :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
                 @focus="onSvgFocus"
                 @blur="onSvgBlur"
                 @keydown="onSvgKeydown"
             >
                 <PackageVersion />
-    
+
                 <!-- DEFS -->
                 <defs>
-                    <radialGradient cx="50%" cy="50%" r="50%" fx="50%" fy="50%" v-for="(rect,i) in rects" :id="`gradient_${uid}_${i}`">
-                        <stop offset="0%" :stop-color="setOpacity(shiftHue(rect.color, 0.05), 100 - FINAL_CONFIG.style.chart.layout.rect.gradientIntensity)"/>
+                    <radialGradient
+                        cx="50%"
+                        cy="50%"
+                        r="50%"
+                        fx="50%"
+                        fy="50%"
+                        v-for="(rect, i) in rects"
+                        :id="`gradient_${uid}_${i}`"
+                    >
+                        <stop
+                            offset="0%"
+                            :stop-color="
+                                setOpacity(
+                                    shiftHue(rect.color, 0.05),
+                                    100 -
+                                        FINAL_CONFIG.style.chart.layout.rect
+                                            .gradientIntensity,
+                                )
+                            "
+                        />
                         <stop offset="100%" :stop-color="rect.color" />
                     </radialGradient>
                 </defs>
-    
+
                 <!-- RECTS -->
                 <defs>
-                    <filter :id="`blur_${uid}`" x="-50%" y="-50%" width="200%" height="200%">
+                    <filter
+                        :id="`blur_${uid}`"
+                        x="-50%"
+                        y="-50%"
+                        width="200%"
+                        height="200%"
+                    >
                         <feGaussianBlur in="SourceGraphic" :stdDeviation="2" />
                         <feColorMatrix type="saturate" values="0" />
                     </filter>
                 </defs>
-    
+
                 <!-- CUSTOM CELLS SLOTS -->
                 <template v-if="FINAL_CONFIG.useCustomCells && rects.length">
-                    <foreignObject 
+                    <foreignObject
                         v-for="(position, i) in positions"
                         :x="position.x"
                         :y="position.y"
@@ -1626,11 +1919,26 @@ defineExpose({
                         :width="rectDimension <= 0 ? 0.0001 : rectDimension"
                         class="vue-ui-waffle-custom-cell-foreignObject"
                     >
-                        <slot name="cell" v-bind="{ cell: {...position, color: rects[i].color, ...rects[i]}, isSelected: [null, undefined].includes(selectedSerie) ? true : rects[i].serieIndex === selectedSerie }"/>
+                        <slot
+                            name="cell"
+                            v-bind="{
+                                cell: {
+                                    ...position,
+                                    color: rects[i].color,
+                                    ...rects[i],
+                                },
+                                isSelected: [null, undefined].includes(
+                                    selectedSerie,
+                                )
+                                    ? true
+                                    : rects[i].serieIndex === selectedSerie,
+                            }"
+                        />
                     </foreignObject>
-                </template> 
-    
-                <rect v-if="!rects.length && !FINAL_CONFIG.useCustomCells"
+                </template>
+
+                <rect
+                    v-if="!rects.length && !FINAL_CONFIG.useCustomCells"
                     :x="12"
                     :y="12"
                     :height="drawingArea.height - 24"
@@ -1639,57 +1947,114 @@ defineExpose({
                     fill="none"
                     stroke="black"
                 />
-    
-                <template v-else-if="rects.length && !FINAL_CONFIG.useCustomCells">
-    
+
+                <template
+                    v-else-if="rects.length && !FINAL_CONFIG.useCustomCells"
+                >
                     <g v-if="$slots.pattern">
                         <defs v-for="ds in datasetCopyReference">
-                            <slot name="pattern" v-bind="{seriesIndex: ds.absoluteIndex, patternId: `pattern_${uid}_${ds.absoluteIndex}`}"/>
+                            <slot
+                                name="pattern"
+                                v-bind="{
+                                    seriesIndex: ds.absoluteIndex,
+                                    patternId: `pattern_${uid}_${ds.absoluteIndex}`,
+                                }"
+                            />
                         </defs>
                     </g>
-    
+
                     <rect
                         data-cy="datapoint-underlayer"
                         v-for="(position, i) in positions"
-                        :rx="FINAL_CONFIG.style.chart.layout.rect.rounded ? FINAL_CONFIG.style.chart.layout.rect.rounding : 0"
-                        :x="position.x + FINAL_CONFIG.style.chart.layout.grid.spaceBetween / 2"
-                        :y="position.y + FINAL_CONFIG.style.chart.layout.grid.spaceBetween / 2"
+                        :rx="
+                            FINAL_CONFIG.style.chart.layout.rect.rounded
+                                ? FINAL_CONFIG.style.chart.layout.rect.rounding
+                                : 0
+                        "
+                        :x="
+                            position.x +
+                            FINAL_CONFIG.style.chart.layout.grid.spaceBetween /
+                                2
+                        "
+                        :y="
+                            position.y +
+                            FINAL_CONFIG.style.chart.layout.grid.spaceBetween /
+                                2
+                        "
                         :height="rectDimensionY <= 0 ? 0.0001 : rectDimensionY"
                         :width="rectDimension <= 0 ? 0.0001 : rectDimension"
                         fill="white"
                         :stroke="FINAL_CONFIG.style.chart.layout.rect.stroke"
-                        :stroke-width="FINAL_CONFIG.style.chart.layout.rect.strokeWidth"
+                        :stroke-width="
+                            FINAL_CONFIG.style.chart.layout.rect.strokeWidth
+                        "
                         :filter="getBlurFilter(rects[i].serieIndex)"
                     />
                     <rect
                         data-cy="datapoint-rect"
                         v-for="(position, i) in positions"
-                        :rx="FINAL_CONFIG.style.chart.layout.rect.rounded ? FINAL_CONFIG.style.chart.layout.rect.rounding : 0"
-                        :x="position.x + FINAL_CONFIG.style.chart.layout.grid.spaceBetween / 2"
-                        :y="position.y + FINAL_CONFIG.style.chart.layout.grid.spaceBetween / 2"
+                        :rx="
+                            FINAL_CONFIG.style.chart.layout.rect.rounded
+                                ? FINAL_CONFIG.style.chart.layout.rect.rounding
+                                : 0
+                        "
+                        :x="
+                            position.x +
+                            FINAL_CONFIG.style.chart.layout.grid.spaceBetween /
+                                2
+                        "
+                        :y="
+                            position.y +
+                            FINAL_CONFIG.style.chart.layout.grid.spaceBetween /
+                                2
+                        "
                         :height="rectDimensionY <= 0 ? 0.0001 : rectDimensionY"
                         :width="rectDimension <= 0 ? 0.0001 : rectDimension"
-                        :fill="FINAL_CONFIG.style.chart.layout.rect.useGradient && FINAL_CONFIG.style.chart.layout.rect.gradientIntensity > 0 ? `url(#gradient_${uid}_${i})` : rects[i].color"
+                        :fill="
+                            FINAL_CONFIG.style.chart.layout.rect.useGradient &&
+                            FINAL_CONFIG.style.chart.layout.rect
+                                .gradientIntensity > 0
+                                ? `url(#gradient_${uid}_${i})`
+                                : rects[i].color
+                        "
                         :stroke="FINAL_CONFIG.style.chart.layout.rect.stroke"
-                        :stroke-width="FINAL_CONFIG.style.chart.layout.rect.strokeWidth"
+                        :stroke-width="
+                            FINAL_CONFIG.style.chart.layout.rect.strokeWidth
+                        "
                         :filter="getBlurFilter(rects[i].serieIndex)"
                     />
                     <g v-if="$slots.pattern">
                         <rect
                             v-for="(position, i) in positions"
-                            :rx="FINAL_CONFIG.style.chart.layout.rect.rounded ? FINAL_CONFIG.style.chart.layout.rect.rounding : 0"
-                            :x="position.x + FINAL_CONFIG.style.chart.layout.grid.spaceBetween / 2"
-                            :y="position.y + FINAL_CONFIG.style.chart.layout.grid.spaceBetween / 2"
-                            :height="rectDimensionY <= 0 ? 0.0001 : rectDimensionY"
+                            :rx="
+                                FINAL_CONFIG.style.chart.layout.rect.rounded
+                                    ? FINAL_CONFIG.style.chart.layout.rect
+                                          .rounding
+                                    : 0
+                            "
+                            :x="
+                                position.x +
+                                FINAL_CONFIG.style.chart.layout.grid
+                                    .spaceBetween /
+                                    2
+                            "
+                            :y="
+                                position.y +
+                                FINAL_CONFIG.style.chart.layout.grid
+                                    .spaceBetween /
+                                    2
+                            "
+                            :height="
+                                rectDimensionY <= 0 ? 0.0001 : rectDimensionY
+                            "
                             :width="rectDimension <= 0 ? 0.0001 : rectDimension"
                             :fill="`url(#pattern_${uid}_${rects[i].absoluteIndex})`"
                             stroke="none"
                             :filter="getBlurFilter(rects[i].serieIndex)"
                         />
-                    
                     </g>
                 </template>
-    
+
                 <!-- DATA LABELS -->
                 <template v-for="(position, i) in positions">
                     <text
@@ -1697,19 +2062,45 @@ defineExpose({
                         data-cy="datapoint-caption"
                         v-if="showDataLabel(i, position)"
                         v-text="getCaption(i, position)"
-                        :x="(position.x + FINAL_CONFIG.style.chart.layout.labels.captions.offsetX + FINAL_CONFIG.style.chart.layout.grid.spaceBetween / 2) + 6"
-                        :y="position.y + FINAL_CONFIG.style.chart.layout.labels.captions.offsetY + FINAL_CONFIG.style.chart.layout.grid.spaceBetween / 2 + absoluteRectDimensionY / 2 + FINAL_CONFIG.style.chart.layout.labels.captions.fontSize / 3"
-                        :font-size="FINAL_CONFIG.style.chart.layout.labels.captions.fontSize"
+                        :x="
+                            position.x +
+                            FINAL_CONFIG.style.chart.layout.labels.captions
+                                .offsetX +
+                            FINAL_CONFIG.style.chart.layout.grid.spaceBetween /
+                                2 +
+                            6
+                        "
+                        :y="
+                            position.y +
+                            FINAL_CONFIG.style.chart.layout.labels.captions
+                                .offsetY +
+                            FINAL_CONFIG.style.chart.layout.grid.spaceBetween /
+                                2 +
+                            absoluteRectDimensionY / 2 +
+                            FINAL_CONFIG.style.chart.layout.labels.captions
+                                .fontSize /
+                                3
+                        "
+                        :font-size="
+                            FINAL_CONFIG.style.chart.layout.labels.captions
+                                .fontSize
+                        "
                         :fill="adaptColorToBackground(rects[i].color)"
                         :filter="getBlurFilter(rects[i].serieIndex)"
                     />
                 </template>
-        
+
                 <rect
                     data-cy="tooltip-trap"
                     v-for="(position, i) in positions"
-                    :x="position.x + FINAL_CONFIG.style.chart.layout.grid.spaceBetween / 2"
-                    :y="position.y + FINAL_CONFIG.style.chart.layout.grid.spaceBetween / 2"
+                    :x="
+                        position.x +
+                        FINAL_CONFIG.style.chart.layout.grid.spaceBetween / 2
+                    "
+                    :y="
+                        position.y +
+                        FINAL_CONFIG.style.chart.layout.grid.spaceBetween / 2
+                    "
                     :height="absoluteRectDimensionY"
                     :width="absoluteRectDimension"
                     fill="transparent"
@@ -1718,56 +2109,105 @@ defineExpose({
                     @mouseleave="onTrapLeave(i)"
                     @click="selectDatapoint(i)"
                 />
-                <slot name="svg" :svg="{
-                    ...svg,
-                    isPrintingImg: isPrinting | isImaging | isCallbackImaging,
-                    isPrintingSvg: isCallbackSvg,
-                }"/>
+                <slot
+                    name="svg"
+                    :svg="{
+                        ...svg,
+                        isPrintingImg:
+                            isPrinting | isImaging | isCallbackImaging,
+                        isPrintingSvg: isCallbackSvg,
+                    }"
+                />
             </svg>
 
-            <div v-if="$slots.hint" style="position: absolute; top: 100%; left: 0; width: 100%;" data-dom-to-png-ignore aria-hidden="true">
-                <slot name="hint" v-bind="{ hint: FINAL_CONFIG.a11y.translations.keyboardNavigation, isVisible: isFocus }"/>
+            <div
+                v-if="$slots.hint"
+                style="position: absolute; top: 100%; left: 0; width: 100%"
+                data-dom-to-png-ignore
+                aria-hidden="true"
+            >
+                <slot
+                    name="hint"
+                    v-bind="{
+                        hint: FINAL_CONFIG.a11y.translations.keyboardNavigation,
+                        isVisible: isFocus,
+                    }"
+                />
             </div>
         </div>
 
         <div v-if="$slots.watermark" class="vue-data-ui-watermark">
-            <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging || isCallbackImaging || isCallbackSvg }"/>
+            <slot
+                name="watermark"
+                v-bind="{
+                    isPrinting:
+                        isPrinting ||
+                        isImaging ||
+                        isCallbackImaging ||
+                        isCallbackSvg,
+                }"
+            />
         </div>
 
         <div :id="`legend-bottom-${uid}`" />
 
         <!-- LEGEND -->
-        <Teleport v-if="readyTeleport" :to="FINAL_CONFIG.style.chart.legend.position === 'top' ? `#legend-top-${uid}` : `#legend-bottom-${uid}`">
-            <div ref="chartLegend">        
+        <Teleport
+            v-if="readyTeleport"
+            :to="
+                FINAL_CONFIG.style.chart.legend.position === 'top'
+                    ? `#legend-top-${uid}`
+                    : `#legend-bottom-${uid}`
+            "
+        >
+            <div ref="chartLegend">
                 <Legend
                     v-if="FINAL_CONFIG.style.chart.legend.show"
                     :key="`legend_${legendStep}`"
                     :legendSet="legendSet"
                     :config="legendConfig"
                     :isCursorPointer="isCursorPointer"
-                    @clickMarker="({legend}) => segregate(legend.uid)"
+                    @clickMarker="({ legend }) => segregate(legend.uid)"
                 >
-                    <template #legend-pattern="{ legend, index }" v-if="$slots.pattern">
+                    <template
+                        #legend-pattern="{ legend, index }"
+                        v-if="$slots.pattern"
+                    >
                         <Shape
                             :shape="legend.shape"
                             :radius="30"
                             stroke="none"
-                            :plot="{ x: 30, y: 30}"
+                            :plot="{ x: 30, y: 30 }"
                             :fill="`url(#pattern_${uid}_${index})`"
                         />
                     </template>
-    
+
                     <template #item="{ legend }">
-                        <div data-cy="legend-item" @click="legend.segregate()" :style="`opacity:${segregated.includes(legend.uid) ? 0.5 : 1}`">
+                        <div
+                            data-cy="legend-item"
+                            @click="legend.segregate()"
+                            :style="`opacity:${segregated.includes(legend.uid) ? 0.5 : 1}`"
+                        >
                             {{ legend.display }}
                         </div>
                     </template>
 
                     <template #legendToggle>
                         <BaseLegendToggle
-                            v-if="legendSet.length > 2 && FINAL_CONFIG.style.chart.legend.selectAllToggle.show && !loading"
-                            :backgroundColor="FINAL_CONFIG.style.chart.legend.selectAllToggle.backgroundColor"
-                            :color="FINAL_CONFIG.style.chart.legend.selectAllToggle.color"
+                            v-if="
+                                legendSet.length > 2 &&
+                                FINAL_CONFIG.style.chart.legend.selectAllToggle
+                                    .show &&
+                                !loading
+                            "
+                            :backgroundColor="
+                                FINAL_CONFIG.style.chart.legend.selectAllToggle
+                                    .backgroundColor
+                            "
+                            :color="
+                                FINAL_CONFIG.style.chart.legend.selectAllToggle
+                                    .color
+                            "
                             :fontSize="FINAL_CONFIG.style.chart.legend.fontSize"
                             :checked="segregated.length > 0"
                             :isCursorPointer="isCursorPointer"
@@ -1775,7 +2215,7 @@ defineExpose({
                         />
                     </template>
                 </Legend>
-        
+
                 <slot v-else name="legend" v-bind:legend="legendSet"></slot>
             </div>
         </Teleport>
@@ -1787,35 +2227,53 @@ defineExpose({
         <!-- TOOLTIP -->
         <Tooltip
             :teleportTo="FINAL_CONFIG.style.chart.tooltip.teleportTo"
-            :show="mutableConfig.showTooltip && isTooltip && segregated.length < props.dataset.length"
+            :show="
+                mutableConfig.showTooltip &&
+                isTooltip &&
+                segregated.length < props.dataset.length
+            "
             :backgroundColor="FINAL_CONFIG.style.chart.tooltip.backgroundColor"
             :color="FINAL_CONFIG.style.chart.tooltip.color"
             :borderRadius="FINAL_CONFIG.style.chart.tooltip.borderRadius"
             :borderColor="FINAL_CONFIG.style.chart.tooltip.borderColor"
             :borderWidth="FINAL_CONFIG.style.chart.tooltip.borderWidth"
-            :backgroundOpacity="FINAL_CONFIG.style.chart.tooltip.backgroundOpacity"
+            :backgroundOpacity="
+                FINAL_CONFIG.style.chart.tooltip.backgroundOpacity
+            "
             :position="FINAL_CONFIG.style.chart.tooltip.position"
             :offsetY="FINAL_CONFIG.style.chart.tooltip.offsetY"
             :parent="waffleChart"
             :content="tooltipContent"
-            :isCustom="FINAL_CONFIG.style.chart.tooltip.customFormat && typeof FINAL_CONFIG.style.chart.tooltip.customFormat === 'function'"
+            :isCustom="
+                FINAL_CONFIG.style.chart.tooltip.customFormat &&
+                typeof FINAL_CONFIG.style.chart.tooltip.customFormat ===
+                    'function'
+            "
             :fontSize="FINAL_CONFIG.style.chart.tooltip.fontSize"
             :isFullscreen="isFullscreen"
             :smooth="FINAL_CONFIG.style.chart.tooltip.smooth"
             :backdropFilter="FINAL_CONFIG.style.chart.tooltip.backdropFilter"
             :smoothForce="FINAL_CONFIG.style.chart.tooltip.smoothForce"
-            :smoothSnapThreshold="FINAL_CONFIG.style.chart.tooltip.smoothSnapThreshold"
+            :smoothSnapThreshold="
+                FINAL_CONFIG.style.chart.tooltip.smoothSnapThreshold
+            "
             :isA11yMode="tooltipTriggerMode === 'keyboard'"
             :a11yPosition="tooltipA11yPosition"
         >
             <template #tooltip-before>
-                <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>
+                <slot
+                    name="tooltip-before"
+                    v-bind="{ ...dataTooltipSlot }"
+                ></slot>
             </template>
             <template #tooltip>
-                <slot name="tooltip" v-bind="{ ...dataTooltipSlot }"/>
+                <slot name="tooltip" v-bind="{ ...dataTooltipSlot }" />
             </template>
             <template #tooltip-after>
-                <slot name="tooltip-after" v-bind="{...dataTooltipSlot}"></slot>
+                <slot
+                    name="tooltip-after"
+                    v-bind="{ ...dataTooltipSlot }"
+                ></slot>
             </template>
         </Tooltip>
 
@@ -1830,31 +2288,39 @@ defineExpose({
                 {{ tableComponent.title }}
             </template>
             <template #actions v-if="FINAL_CONFIG.table.useDialog">
-                <button 
+                <button
                     tabindex="0"
-                    class="vue-ui-user-options-button" 
+                    class="vue-ui-user-options-button"
                     @click="generateCsv(FINAL_CONFIG.userOptions.callbacks.csv)"
                     :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }"
                 >
-                    <BaseIcon name="fileCsv" :stroke="tableComponent.props.color"/>
+                    <BaseIcon
+                        name="fileCsv"
+                        :stroke="tableComponent.props.color"
+                    />
                 </button>
             </template>
-            <template #content>            
+            <template #content>
                 <DataTable
                     :key="`table_${tableStep}`"
                     :colNames="dataTable.colNames"
-                    :head="dataTable.head" 
+                    :head="dataTable.head"
                     :body="dataTable.body"
                     :config="dataTable.config"
-                    :title="FINAL_CONFIG.table.useDialog ? '' : tableComponent.title"
+                    :title="
+                        FINAL_CONFIG.table.useDialog ? '' : tableComponent.title
+                    "
                     :withCloseButton="!FINAL_CONFIG.table.useDialog"
                     :isCursorPointer="isCursorPointer"
                     @close="closeTable"
                 >
-                    <template #th="{th}">
-                        <div v-html="th" style="display:flex;align-items:center"></div>
+                    <template #th="{ th }">
+                        <div
+                            v-html="th"
+                            style="display: flex; align-items: center"
+                        ></div>
                     </template>
-                    <template #td="{td}">
+                    <template #td="{ td }">
                         {{ td.name || td }}
                     </template>
                 </DataTable>
@@ -1863,15 +2329,15 @@ defineExpose({
 
         <!-- v3 Skeleton loader -->
         <slot name="skeleton">
-            <BaseScanner v-if="loading"/>
+            <BaseScanner v-if="loading" />
         </slot>
     </div>
 </template>
 
 <style scoped>
-@import "../vue-data-ui.css";
+@import '../vue-data-ui.css';
 
-.vue-ui-waffle *{
+.vue-ui-waffle * {
     transition: unset;
 }
 .vue-ui-waffle {
@@ -1882,10 +2348,10 @@ defineExpose({
     align-items: center;
     display: flex;
     flex-direction: column;
-    height:100%;
+    height: 100%;
     justify-content: center;
-    text-align:center;
-    width:100%;
+    text-align: center;
+    width: 100%;
 }
 
 svg:focus {

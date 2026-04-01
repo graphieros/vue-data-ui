@@ -1,45 +1,51 @@
 <script setup>
-import { 
-    computed, 
-    defineAsyncComponent, 
-    nextTick, 
-    onBeforeUnmount, 
-    onMounted, 
-    ref, 
+import {
+    computed,
+    defineAsyncComponent,
+    nextTick,
+    onBeforeUnmount,
+    onMounted,
+    ref,
     toRefs,
-    watch, 
-} from "vue";
-import { 
-    convertColorToHex, 
-    createTSpansFromLineBreaksOnY, 
-    createUid, 
-    error, 
-    objectIsEmpty, 
-    treeShake, 
-    XMLNS 
-} from "../lib";
-import { throttle } from "../canvas-lib";
-import usePanZoom from "../usePanZoom";
-import { useDag } from "../useDag";
-import { useConfig } from "../useConfig";
-import { useLoading } from "../useLoading";
-import { usePrinter } from "../usePrinter";
-import { useSvgExport } from "../useSvgExport";
-import { useNestedProp } from "../useNestedProp";
-import { useThemeCheck } from "../useThemeCheck";
-import { useUserOptionState } from "../useUserOptionState";
-import { useChartAccessibility } from "../useChartAccessibility";
-import { useResponsive } from "../useResponsive";
-import img from "../img";
-import Title from "../atoms/Title.vue";
-import themes from "../themes/vue_ui_dag.json";
-import BaseScanner from "../atoms/BaseScanner.vue";
-import A11yDataTable from "../atoms/A11yDataTable.vue";
-import BaseZoomControls from "../atoms/BaseZoomControls.vue";
+    watch,
+} from 'vue';
+import {
+    convertColorToHex,
+    createTSpansFromLineBreaksOnY,
+    createUid,
+    error,
+    objectIsEmpty,
+    treeShake,
+    XMLNS,
+} from '../lib';
+import { throttle } from '../canvas-lib';
+import usePanZoom from '../usePanZoom';
+import { useDag } from '../useDag';
+import { useConfig } from '../useConfig';
+import { useLoading } from '../useLoading';
+import { usePrinter } from '../usePrinter';
+import { useSvgExport } from '../useSvgExport';
+import { useNestedProp } from '../useNestedProp';
+import { useThemeCheck } from '../useThemeCheck';
+import { useUserOptionState } from '../useUserOptionState';
+import { useChartAccessibility } from '../useChartAccessibility';
+import { useResponsive } from '../useResponsive';
+import img from '../img';
+import Title from '../atoms/Title.vue';
+import themes from '../themes/vue_ui_dag.json';
+import BaseScanner from '../atoms/BaseScanner.vue';
+import A11yDataTable from '../atoms/A11yDataTable.vue';
+import BaseZoomControls from '../atoms/BaseZoomControls.vue';
 
-const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
-const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
-const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
+const PenAndPaper = defineAsyncComponent(
+    () => import('../atoms/PenAndPaper.vue'),
+);
+const UserOptions = defineAsyncComponent(
+    () => import('../atoms/UserOptions.vue'),
+);
+const PackageVersion = defineAsyncComponent(
+    () => import('../atoms/PackageVersion.vue'),
+);
 
 const { vue_ui_dag: DEFAULT_CONFIG } = useConfig();
 const { isThemeValid, warnInvalidTheme } = useThemeCheck();
@@ -50,19 +56,25 @@ const props = defineProps({
         default() {
             return {
                 nodes: [],
-                edges: []
-            }
-        }
+                edges: [],
+            };
+        },
     },
     config: {
         type: Object,
         default() {
-            return {}
-        }
-    }
+            return {};
+        },
+    },
 });
 
-const emit = defineEmits(['onNodeClick', 'onMidpointEnter', 'onMidpointLeave', 'copyAlt', 'rotate'])
+const emit = defineEmits([
+    'onNodeClick',
+    'onMidpointEnter',
+    'onMidpointLeave',
+    'copyAlt',
+    'rotate',
+]);
 
 const dagChart = ref(null);
 const uid = ref(createUid());
@@ -79,15 +91,17 @@ const isCallbackSvg = ref(false);
 const resizeObserver = ref(null);
 const observedEl = ref(null);
 
-const activeA11yItemId = ref(null); 
+const activeA11yItemId = ref(null);
 const activeA11yItemType = ref(null); // "node" | "midpoint"
 const activeA11yItemIndex = ref(null);
-const tooltipTriggerMode = ref("pointer");
+const tooltipTriggerMode = ref('pointer');
 const isFocus = ref(false);
 
 const FINAL_CONFIG = ref(prepareConfig());
 
-const isCursorPointer = computed(() => FINAL_CONFIG.value.userOptions.useCursorPointer);
+const isCursorPointer = computed(
+    () => FINAL_CONFIG.value.userOptions.useCursorPointer,
+);
 
 const WIDTH = ref(FINAL_CONFIG.value.style.chart.width);
 const HEIGHT = ref(FINAL_CONFIG.value.style.chart.height);
@@ -95,22 +109,25 @@ const HEIGHT = ref(FINAL_CONFIG.value.style.chart.height);
 const tooltipPosition = ref({ x: 0, y: 0 }); // anchor (screen coords)
 const tooltipEdge = ref(null);
 const tooltipRef = ref(null);
-const tooltipStyle = ref({ left: "0px", top: "0px" });
-const tooltipPlacement = ref("top");
+const tooltipStyle = ref({ left: '0px', top: '0px' });
+const tooltipPlacement = ref('top');
 
 const isNodeTooltip = ref(false);
 const nodeTooltipPosition = ref({ x: 0, y: 0 });
 const nodeTooltipOffset = ref({ x: 0, y: 0 });
 const nodeTooltipNode = ref(null);
 const nodeTooltipRef = ref(null);
-const nodeTooltipStyle = ref({ left: "0px", top: "0px" });
-const nodeTooltipPlacement = ref("top");
+const nodeTooltipStyle = ref({ left: '0px', top: '0px' });
+const nodeTooltipPlacement = ref('top');
 
 const isTooltip = ref(false);
 const isAnnotator = ref(false);
 
-const { svgRef } = useChartAccessibility({ config: FINAL_CONFIG.value.style.chart.title });
-const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
+const { svgRef } = useChartAccessibility({
+    config: FINAL_CONFIG.value.style.chart.title,
+});
+const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } =
+    useUserOptionState({ config: FINAL_CONFIG.value });
 const direction = ref(FINAL_CONFIG.value.style.chart.layout.rankDirection);
 
 const skeletonConfig = computed(() => {
@@ -122,21 +139,21 @@ const skeletonConfig = computed(() => {
                     backgroundColor: '#99999930',
                     nodes: {
                         stroke: '#CCCCCC',
-                        backgroundColor: '#DDDDDD50'
+                        backgroundColor: '#DDDDDD50',
                     },
                     edges: {
                         stroke: '#CCCCCC',
                     },
                     midpoints: {
                         stroke: '#CCCCCC',
-                        fill: '#CCCCCC'
-                    }
-                }
-            }
+                        fill: '#CCCCCC',
+                    },
+                },
+            },
         },
-        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {}
-    })
-})
+        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {},
+    });
+});
 
 const { loading, FINAL_DATASET, manualLoading } = useLoading({
     ...toRefs(props),
@@ -151,18 +168,18 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
         edges: [
             { from: 'A', to: 'B' },
             { from: 'A', to: 'C' },
-        ]
+        ],
     },
     skeletonConfig: treeShake({
         defaultConfig: FINAL_CONFIG.value,
-        userConfig: skeletonConfig.value
-    })
-})
+        userConfig: skeletonConfig.value,
+    }),
+});
 
 function prepareConfig() {
     const mergedConfig = useNestedProp({
         userConfig: props.config,
-        defaultConfig: DEFAULT_CONFIG
+        defaultConfig: DEFAULT_CONFIG,
     });
 
     const theme = mergedConfig.theme;
@@ -175,12 +192,12 @@ function prepareConfig() {
 
     const fused = useNestedProp({
         userConfig: themes[theme] || props.config,
-        defaultConfig: mergedConfig
+        defaultConfig: mergedConfig,
     });
 
     const finalConfig = useNestedProp({
         userConfig: props.config,
-        defaultConfig: fused
+        defaultConfig: fused,
     });
 
     return finalConfig;
@@ -193,12 +210,12 @@ onMounted(async () => {
         error({
             componentName: 'VueUiDag',
             type: 'dataset',
-            debug: debug.value
+            debug: debug.value,
         });
         isDataset.value = false;
         manualLoading.value = true;
     }
-    if(!props.dataset.nodes) {
+    if (!props.dataset.nodes) {
         error({
             componentName: 'VueUiDag',
             type: 'datasetAttributeEmpty',
@@ -215,24 +232,29 @@ onMounted(async () => {
     setupResponsive();
 });
 
-watch(() => props.config, async (_newCfg) => {
-    if (!loading.value) {
-        FINAL_CONFIG.value = prepareConfig();
-    }
-    userOptionsVisible.value = !FINAL_CONFIG.value.userOptions.showOnChartHover;
-    titleStep.value += 1;
-    direction.value = FINAL_CONFIG.value.style.chart.layout.rankDirection;
-    WIDTH.value = FINAL_CONFIG.value.style.chart.width;
-    HEIGHT.value = FINAL_CONFIG.value.style.chart.height;
-    panZoomActive.value = FINAL_CONFIG.value.style.chart.zoom.active;
-    await nextTick();
-    setupResponsive();
-}, { deep: true });
+watch(
+    () => props.config,
+    async (_newCfg) => {
+        if (!loading.value) {
+            FINAL_CONFIG.value = prepareConfig();
+        }
+        userOptionsVisible.value =
+            !FINAL_CONFIG.value.userOptions.showOnChartHover;
+        titleStep.value += 1;
+        direction.value = FINAL_CONFIG.value.style.chart.layout.rankDirection;
+        WIDTH.value = FINAL_CONFIG.value.style.chart.width;
+        HEIGHT.value = FINAL_CONFIG.value.style.chart.height;
+        panZoomActive.value = FINAL_CONFIG.value.style.chart.zoom.active;
+        await nextTick();
+        setupResponsive();
+    },
+    { deep: true },
+);
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `dag_${uid.value}`,
     fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-dag',
-    options: FINAL_CONFIG.value.userOptions.print
+    options: FINAL_CONFIG.value.userOptions.print,
 });
 
 const svgBg = computed(() => FINAL_CONFIG.value.style.chart.backgroundColor);
@@ -243,7 +265,7 @@ const { exportSvg, getSvg } = useSvgExport({
     title: svgTitle,
     legend: undefined,
     legendItems: undefined,
-    backgroundColor: svgBg
+    backgroundColor: svgBg,
 });
 
 async function generateSvg({ isCb }) {
@@ -254,7 +276,14 @@ async function generateSvg({ isCb }) {
     try {
         if (isCb) {
             const { blob, url, text, dataUrl } = await getSvg();
-            await Promise.resolve(FINAL_CONFIG.value.userOptions.callbacks.svg({ blob, url, text, dataUrl }));
+            await Promise.resolve(
+                FINAL_CONFIG.value.userOptions.callbacks.svg({
+                    blob,
+                    url,
+                    text,
+                    dataUrl,
+                }),
+            );
         } else {
             await Promise.resolve(exportSvg());
         }
@@ -280,7 +309,7 @@ function createTooltipPlacementUpdater({
     styleRef,
     placementRef,
     offsetRef,
-    margin = 24
+    margin = 24,
 }) {
     return function updateTooltipPlacement() {
         const el = tooltipRef.value;
@@ -298,20 +327,20 @@ function createTooltipPlacementUpdater({
 
         let top = anchorY - offsetY - rect.height - margin;
         let left = anchorX - rect.width / 2;
-        let placement = "top";
+        let placement = 'top';
 
         if (top < margin) {
             const candidateTop = anchorY + offsetY + margin;
             if (candidateTop + rect.height <= vh - margin) {
                 top = candidateTop;
-                placement = "bottom";
+                placement = 'bottom';
             } else {
                 top = anchorY - rect.height / 2;
                 if (top < margin) top = margin;
                 if (top + rect.height > vh - margin) {
                     top = vh - rect.height - margin;
                 }
-                placement = "center";
+                placement = 'center';
             }
         }
 
@@ -323,7 +352,7 @@ function createTooltipPlacementUpdater({
         const overflowLeft = left <= margin;
         const overflowRight = left + rect.width >= vw - margin;
 
-        if ((overflowLeft || overflowRight) && placement !== "center") {
+        if ((overflowLeft || overflowRight) && placement !== 'center') {
             let horizPlacement;
             let horizLeft;
 
@@ -331,17 +360,14 @@ function createTooltipPlacementUpdater({
             const spaceRight = vw - (anchorX + offsetX) - margin;
 
             if (spaceRight >= spaceLeft) {
-                horizPlacement = "right";
+                horizPlacement = 'right';
                 horizLeft = anchorX + offsetX + margin;
             } else {
-                horizPlacement = "left";
+                horizPlacement = 'left';
                 horizLeft = anchorX - offsetX - margin - rect.width;
             }
 
-            if (
-                horizLeft >= margin &&
-                horizLeft + rect.width <= vw - margin
-            ) {
+            if (horizLeft >= margin && horizLeft + rect.width <= vw - margin) {
                 left = horizLeft;
                 top = anchorY - rect.height / 2;
                 if (top < margin) top = margin;
@@ -355,44 +381,50 @@ function createTooltipPlacementUpdater({
         placementRef.value = placement;
         styleRef.value = {
             left: `${left}px`,
-            top: `${top}px`
+            top: `${top}px`,
         };
     };
 }
 
-const initialNodes = computed(() => FINAL_DATASET.value.nodes.map(node => {
-    return {
-        ...node,
-        backgroundColor: node.backgroundColor ? convertColorToHex(node.backgroundColor) : FINAL_CONFIG.value.style.chart.nodes.backgroundColor,
-        color: node.color ? convertColorToHex(node.color) : FINAL_CONFIG.value.style.chart.nodes.labels.color
-    }
-}));
+const initialNodes = computed(() =>
+    FINAL_DATASET.value.nodes.map((node) => {
+        return {
+            ...node,
+            backgroundColor: node.backgroundColor
+                ? convertColorToHex(node.backgroundColor)
+                : FINAL_CONFIG.value.style.chart.nodes.backgroundColor,
+            color: node.color
+                ? convertColorToHex(node.color)
+                : FINAL_CONFIG.value.style.chart.nodes.labels.color,
+        };
+    }),
+);
 
 const initialEdges = computed(() => FINAL_DATASET.value.edges);
 
 const dagConfiguration = computed(() => {
     return {
         ...FINAL_CONFIG.value.style.chart.layout,
-        rankDirection: direction.value
+        rankDirection: direction.value,
     };
 });
 
 const { layoutData, lastError, arrowMarkerIdentifier } = useDag({
     nodes: initialNodes,
     edges: initialEdges,
-    configuration: dagConfiguration
+    configuration: dagConfiguration,
 });
 
 function getNodeById(id) {
     if (!layoutData.value) return null;
-    return layoutData.value.nodes.find(node => node.id === id);
+    return layoutData.value.nodes.find((node) => node.id === id);
 }
 
 const edgeColors = computed(() => {
     if (!layoutData.value) return [];
     const defaultColor = FINAL_CONFIG.value.style.chart.edges.stroke;
     const colors = new Set();
-    layoutData.value.edges.forEach(edge => {
+    layoutData.value.edges.forEach((edge) => {
         colors.add({
             id: edge.id,
             from: edge.from,
@@ -419,7 +451,7 @@ const userViewBox = computed(() => {
 
     return {
         width: hasWidth ? width : null,
-        height: hasHeight ? height : null
+        height: hasHeight ? height : null,
     };
 });
 
@@ -432,12 +464,14 @@ const {
     scale,
     zoomByFactor,
 } = usePanZoom(
-        svgRef,
-        { x: 0, y: 0, width: 100, height: 100 },
-        1,
-        panZoomActive,
-        () => { isNodeTooltip.value = false; }
-    );
+    svgRef,
+    { x: 0, y: 0, width: 100, height: 100 },
+    1,
+    panZoomActive,
+    () => {
+        isNodeTooltip.value = false;
+    },
+);
 
 function toggleZoom() {
     panZoomActive.value = !panZoomActive.value;
@@ -447,7 +481,7 @@ function updateInitialViewBoxFromLayout() {
     const layoutViewBox = layoutData.value && layoutData.value.viewBox;
     if (!layoutViewBox) return;
 
-    const parts = String(layoutViewBox).split(" ").map(Number);
+    const parts = String(layoutViewBox).split(' ').map(Number);
     if (parts.length !== 4) return;
 
     const [layoutX, layoutY, layoutWidth, layoutHeight] = parts;
@@ -482,7 +516,7 @@ function updateInitialViewBoxFromLayout() {
 
     setInitialViewBox(
         { x: targetX, y: targetY, width: targetWidth, height: targetHeight },
-        { overwriteCurrentIfNotZoomed: true }
+        { overwriteCurrentIfNotZoomed: true },
     );
 }
 
@@ -491,24 +525,27 @@ watch(
     () => {
         updateInitialViewBoxFromLayout();
     },
-    { immediate: true }
+    { immediate: true },
 );
 
 watch(
     () => userViewBox.value,
     () => {
         updateInitialViewBoxFromLayout();
-    }
+    },
 );
 
-watch(() => isAnnotator.value, (isActive) => {
-    panZoomActive.value = !isActive;
-})
+watch(
+    () => isAnnotator.value,
+    (isActive) => {
+        panZoomActive.value = !isActive;
+    },
+);
 
 const svgViewBox = computed(() => {
     const vb = panZoomViewBox.value;
     if (!vb) {
-        return "0 0 0 0";
+        return '0 0 0 0';
     }
     return `${vb.x} ${vb.y} ${vb.width} ${vb.height}`;
 });
@@ -533,10 +570,13 @@ function zoomOut() {
     zoomByFactor(1 / zoomStepFactor, true);
 }
 
-const directions = ["TB", "RL", "BT", "LR"];
+const directions = ['TB', 'RL', 'BT', 'LR'];
 
 function switchDirection() {
-    direction.value = directions[(directions.indexOf(direction.value) + 1) % directions.length];
+    direction.value =
+        directions[
+            (directions.indexOf(direction.value) + 1) % directions.length
+        ];
     resetZoom();
     emit('rotate', direction.value);
 }
@@ -547,7 +587,7 @@ const updateTooltipPlacement = createTooltipPlacementUpdater({
     anchorRef: tooltipPosition,
     styleRef: tooltipStyle,
     placementRef: tooltipPlacement,
-    isNode: false
+    isNode: false,
 });
 
 const updateNodeTooltipPlacement = createTooltipPlacementUpdater({
@@ -556,7 +596,7 @@ const updateNodeTooltipPlacement = createTooltipPlacementUpdater({
     anchorRef: nodeTooltipPosition,
     styleRef: nodeTooltipStyle,
     placementRef: nodeTooltipPlacement,
-    offsetRef: nodeTooltipOffset
+    offsetRef: nodeTooltipOffset,
 });
 
 const hoveredEdgeId = ref(null);
@@ -577,17 +617,19 @@ async function showMidpointTooltip(edge) {
 
     tooltipPosition.value = {
         x: screenPoint.x,
-        y: screenPoint.y
+        y: screenPoint.y,
     };
-    
+
     tooltipEdge.value = edge;
     isTooltip.value = true;
 
-    if (FINAL_CONFIG.value.style.chart.midpoints.selectedEdge.animated === true) {
+    if (
+        FINAL_CONFIG.value.style.chart.midpoints.selectedEdge.animated === true
+    ) {
         hoveredEdgeId.value = edge.id;
         startEdgeAnimations();
     }
-    
+
     await nextTick();
     updateTooltipPlacement();
 }
@@ -595,9 +637,11 @@ async function showMidpointTooltip(edge) {
 function hideMidpointTooltip() {
     isTooltip.value = false;
     tooltipEdge.value = null;
-    emit("onMidpointLeave");
+    emit('onMidpointLeave');
 
-    if (FINAL_CONFIG.value.style.chart.midpoints.selectedEdge.animated === true) {
+    if (
+        FINAL_CONFIG.value.style.chart.midpoints.selectedEdge.animated === true
+    ) {
         hoveredEdgeId.value = null;
         startEdgeAnimations();
     }
@@ -628,12 +672,12 @@ async function showNodeTooltip(node) {
 
     nodeTooltipOffset.value = {
         x: nodeWidthPx / 2,
-        y: nodeHeightPx / 2
+        y: nodeHeightPx / 2,
     };
 
     nodeTooltipPosition.value = {
         x: screenPoint.x,
-        y: screenPoint.y
+        y: screenPoint.y,
     };
 
     nodeTooltipNode.value = node;
@@ -658,14 +702,19 @@ function handleDocumentClick(event) {
     }
 
     const midpointTooltipElement = tooltipRef.value;
-    if (midpointTooltipElement && midpointTooltipElement.contains(event.target)) {
+    if (
+        midpointTooltipElement &&
+        midpointTooltipElement.contains(event.target)
+    ) {
         return;
     }
 
     const svgElement = svgRef.value;
     if (svgElement && svgElement.contains(event.target)) {
-        const nodeGroup = event.target.closest(".vue-ui-dag-node");
-        const midpointElement = event.target.closest(".vue-ui-dag-edge-midpoint");
+        const nodeGroup = event.target.closest('.vue-ui-dag-node');
+        const midpointElement = event.target.closest(
+            '.vue-ui-dag-edge-midpoint',
+        );
 
         if (nodeGroup || midpointElement) {
             return;
@@ -681,7 +730,7 @@ function handleDocumentClick(event) {
 }
 
 function handleDocumentKeydown(event) {
-    if (event.key !== "Escape") return;
+    if (event.key !== 'Escape') return;
 
     if (isNodeTooltip.value) {
         hideNodeTooltip();
@@ -693,13 +742,13 @@ function handleDocumentKeydown(event) {
 }
 
 onMounted(() => {
-    document.addEventListener("mousedown", handleDocumentClick);
-    document.addEventListener("keydown", handleDocumentKeydown);
+    document.addEventListener('mousedown', handleDocumentClick);
+    document.addEventListener('keydown', handleDocumentKeydown);
 });
 
 onBeforeUnmount(() => {
-    document.removeEventListener("mousedown", handleDocumentClick);
-    document.removeEventListener("keydown", handleDocumentKeydown);
+    document.removeEventListener('mousedown', handleDocumentClick);
+    document.removeEventListener('keydown', handleDocumentKeydown);
 
     if (resizeObserver.value) {
         if (observedEl.value) {
@@ -727,9 +776,13 @@ function setupResponsive() {
 
         const { width, height } = useResponsive({
             chart: dagChart.value,
-            title: FINAL_CONFIG.value.style.chart.title.text ? chartTitle.value : null,
-            legend: FINAL_CONFIG.value.style.chart.controls.show ? zoomControls.value?.$el : null,
-            source: source.value
+            title: FINAL_CONFIG.value.style.chart.title.text
+                ? chartTitle.value
+                : null,
+            legend: FINAL_CONFIG.value.style.chart.controls.show
+                ? zoomControls.value?.$el
+                : null,
+            source: source.value,
         });
 
         requestAnimationFrame(() => {
@@ -757,15 +810,15 @@ function setupResponsive() {
 function getIdealDashoffsetDelta(pathElement, options = {}) {
     const {
         direction = -1,
-        mode = "oneLapNearest",
-        dasharray = null
+        mode = 'oneLapNearest',
+        dasharray = null,
     } = options;
 
-    if (!pathElement || typeof pathElement.getTotalLength !== "function") {
+    if (!pathElement || typeof pathElement.getTotalLength !== 'function') {
         if (debug.value) {
             console.warn(
-                "VueUiDag @getIdealDashoffsetDelta: invalid path element",
-                pathElement
+                'VueUiDag @getIdealDashoffsetDelta: invalid path element',
+                pathElement,
             );
         }
         return 0;
@@ -775,10 +828,10 @@ function getIdealDashoffsetDelta(pathElement, options = {}) {
 
     const dasharrayValue =
         dasharray ??
-        pathElement.getAttribute("stroke-dasharray") ??
-        (typeof getComputedStyle === "function"
-        ? getComputedStyle(pathElement).strokeDasharray
-        : "");
+        pathElement.getAttribute('stroke-dasharray') ??
+        (typeof getComputedStyle === 'function'
+            ? getComputedStyle(pathElement).strokeDasharray
+            : '');
 
     const patternLength = sumDasharray(dasharrayValue);
 
@@ -791,18 +844,18 @@ function getIdealDashoffsetDelta(pathElement, options = {}) {
     const floorMultiple = Math.max(1, Math.floor(pathLength / patternLength));
 
     let delta;
-    if (mode === "pattern") delta = patternLength;
-    else if (mode === "oneLapCeil") delta = ceilMultiple * patternLength;
-    else if (mode === "oneLapFloor") delta = floorMultiple * patternLength;
+    if (mode === 'pattern') delta = patternLength;
+    else if (mode === 'oneLapCeil') delta = ceilMultiple * patternLength;
+    else if (mode === 'oneLapFloor') delta = floorMultiple * patternLength;
     else delta = nearestMultiple * patternLength;
 
     return direction * delta;
 
     function sumDasharray(value) {
-        if (!value || value === "none") return NaN;
+        if (!value || value === 'none') return NaN;
 
         const numbers = String(value)
-            .replace(/,/g, " ")
+            .replace(/,/g, ' ')
             .trim()
             .split(/\s+/)
             .map((token) => Number.parseFloat(token))
@@ -810,7 +863,10 @@ function getIdealDashoffsetDelta(pathElement, options = {}) {
 
         if (!numbers.length) return NaN;
 
-        const sum = numbers.reduce((accumulator, current) => accumulator + current, 0);
+        const sum = numbers.reduce(
+            (accumulator, current) => accumulator + current,
+            0,
+        );
         return numbers.length % 2 === 1 ? sum * 2 : sum;
     }
 }
@@ -849,96 +905,133 @@ function startEdgeAnimations() {
 
     const referenceDistance =
         Number(animationDefaults.referenceDistance) > 0
-        ? Number(animationDefaults.referenceDistance)
-        : 24;
+            ? Number(animationDefaults.referenceDistance)
+            : 24;
 
     edges.forEach((edge) => {
-        const isMidpointSelectedAnimated = FINAL_CONFIG.value.style.chart.midpoints.selectedEdge.animated === true 
-            && hoveredEdgeId.value != null 
-            && edge.id === hoveredEdgeId.value;
+        const isMidpointSelectedAnimated =
+            FINAL_CONFIG.value.style.chart.midpoints.selectedEdge.animated ===
+                true &&
+            hoveredEdgeId.value != null &&
+            edge.id === hoveredEdgeId.value;
 
-        const isAnimated = !!edge?.original?.animated || !!edge?.animated || isMidpointSelectedAnimated;
+        const isAnimated =
+            !!edge?.original?.animated ||
+            !!edge?.animated ||
+            isMidpointSelectedAnimated;
 
         const pathElement = edgePathElementByIdentifier.value.get(edge.id);
         if (!pathElement) return;
 
         if (!isAnimated) {
-            pathElement.style.strokeDasharray = "0";
-            pathElement.style.strokeDashoffset = "0";
+            pathElement.style.strokeDasharray = '0';
+            pathElement.style.strokeDashoffset = '0';
             return;
         }
 
-        const dasharrayValue = edge?.original?.dasharray ?? animationDefaults.dasharray;
+        const dasharrayValue =
+            edge?.original?.dasharray ?? animationDefaults.dasharray;
 
         pathElement.style.strokeDasharray = String(dasharrayValue);
-        pathElement.style.strokeDashoffset = "0";
+        pathElement.style.strokeDashoffset = '0';
 
-        const hasEdgeDirection = ![undefined, null].includes(edge?.original?.animationDirection);
-        const hasConfigDirection = ![undefined, null].includes(animationDefaults.animationDirection);
+        const hasEdgeDirection = ![undefined, null].includes(
+            edge?.original?.animationDirection,
+        );
+        const hasConfigDirection = ![undefined, null].includes(
+            animationDefaults.animationDirection,
+        );
 
         const direction = hasEdgeDirection
             ? Number(edge.original.animationDirection)
             : hasConfigDirection
-                ? Number(animationDefaults.animationDirection)
-                : -1;
+              ? Number(animationDefaults.animationDirection)
+              : -1;
 
         const dashoffsetDelta = getIdealDashoffsetDelta(pathElement, {
             direction,
-            mode: "oneLapNearest",
+            mode: 'oneLapNearest',
             dasharray: String(dasharrayValue),
         });
 
-        const durationReferenceMsRaw = edge?.original?.animationDurationMs ?? animationDefaults.animationDurationMs ?? 1000;
+        const durationReferenceMsRaw =
+            edge?.original?.animationDurationMs ??
+            animationDefaults.animationDurationMs ??
+            1000;
 
         const durationReferenceMs = Number(durationReferenceMsRaw);
-        const hasDurationReference = Number.isFinite(durationReferenceMs) && durationReferenceMs > 0;
+        const hasDurationReference =
+            Number.isFinite(durationReferenceMs) && durationReferenceMs > 0;
 
         const speedUnitsPerMs = hasDurationReference
             ? referenceDistance / durationReferenceMs
             : referenceDistance / 1000;
 
-        const durationMilliseconds = Math.max(1, Math.round(Math.abs(dashoffsetDelta) / Math.max(1e-9, speedUnitsPerMs)));
+        const durationMilliseconds = Math.max(
+            1,
+            Math.round(
+                Math.abs(dashoffsetDelta) / Math.max(1e-9, speedUnitsPerMs),
+            ),
+        );
 
-        const animationHandle = pathElement.animate([{ strokeDashoffset: 0 }, { strokeDashoffset: dashoffsetDelta }], { duration: durationMilliseconds, iterations: Infinity, easing: "linear" });
+        const animationHandle = pathElement.animate(
+            [{ strokeDashoffset: 0 }, { strokeDashoffset: dashoffsetDelta }],
+            {
+                duration: durationMilliseconds,
+                iterations: Infinity,
+                easing: 'linear',
+            },
+        );
         edgeAnimationByIdentifier.value.set(edge.id, animationHandle);
     });
 }
 
-watch(() => layoutData.value && layoutData.value.edges, async () => {
+watch(
+    () => layoutData.value && layoutData.value.edges,
+    async () => {
         await nextTick();
         startEdgeAnimations();
     },
-    { deep: true, immediate: true }
+    { deep: true, immediate: true },
 );
 
 onBeforeUnmount(() => {
     stopAllEdgeAnimations();
 });
 
-async function getImage({ scale = 2} = {}) {
-    if (!dagChart.value) return
-    const { width, height } = dagChart.value.getBoundingClientRect()
-    const aspectRatio = width / height
-    const { imageUri, base64 } = await img({ domElement: dagChart.value, base64: true, img: true, scale})
-    return { 
-        imageUri, 
-        base64, 
-        title: FINAL_CONFIG.value.style.chart.title.text ?? 'vue-ui-dag', 
-        width, 
-        height, 
-        aspectRatio 
-    }
+async function getImage({ scale = 2 } = {}) {
+    if (!dagChart.value) return;
+    const { width, height } = dagChart.value.getBoundingClientRect();
+    const aspectRatio = width / height;
+    const { imageUri, base64 } = await img({
+        domElement: dagChart.value,
+        base64: true,
+        img: true,
+        scale,
+    });
+    return {
+        imageUri,
+        base64,
+        title: FINAL_CONFIG.value.style.chart.title.text ?? 'vue-ui-dag',
+        width,
+        height,
+        aspectRatio,
+    };
 }
 
 const backgroundPatternGridSpacing = computed(() => {
     const nodeHeight = Number(FINAL_CONFIG.value.style.chart.layout.nodeHeight);
     return Number.isFinite(nodeHeight) && nodeHeight > 0
-        ? nodeHeight / FINAL_CONFIG.value.style.chart.backgroundPattern.spacingRatio
+        ? nodeHeight /
+              FINAL_CONFIG.value.style.chart.backgroundPattern.spacingRatio
         : 12;
 });
 
 const backgroundPatternDotRadius = computed(() => {
-    return backgroundPatternGridSpacing.value * (FINAL_CONFIG.value.style.chart.backgroundPattern.dotRadiusRatio / 100);
+    return (
+        backgroundPatternGridSpacing.value *
+        (FINAL_CONFIG.value.style.chart.backgroundPattern.dotRadiusRatio / 100)
+    );
 });
 
 const hoveredNodeId = ref(null);
@@ -956,10 +1049,11 @@ function setHoveredNode(nodeId) {
 
     hoveredNodeId.value = nodeId;
 
-
     if (
-        FINAL_CONFIG.value.style.chart.nodes.selected.downstreamEdges.animated === true ||
-        FINAL_CONFIG.value.style.chart.nodes.selected.upstreamEdges.animated === true
+        FINAL_CONFIG.value.style.chart.nodes.selected.downstreamEdges
+            .animated === true ||
+        FINAL_CONFIG.value.style.chart.nodes.selected.upstreamEdges.animated ===
+            true
     ) {
         // restart only when actual hovered node changes
         startEdgeAnimations();
@@ -967,13 +1061,13 @@ function setHoveredNode(nodeId) {
 }
 
 function onNodePointerEnter(nodeId) {
-    tooltipTriggerMode.value = "pointer";
+    tooltipTriggerMode.value = 'pointer';
     hoveredEdgeId.value = null;
     setHoveredNode(nodeId);
 }
 
 async function onMidpointPointerEnter(edge) {
-    tooltipTriggerMode.value = "pointer";
+    tooltipTriggerMode.value = 'pointer';
     hoveredNodeId.value = null;
     await showMidpointTooltip(edge);
 }
@@ -989,7 +1083,12 @@ function scheduleClearHoveredNode(nodeId) {
         // Only clear if we are still leaving the same node
         if (hoveredNodeId.value === nodeId) {
             hoveredNodeId.value = null;
-            if (FINAL_CONFIG.value.style.chart.nodes.selected.downstreamEdges.animated === true || FINAL_CONFIG.value.style.chart.nodes.selected.upstreamEdges.animated === true) {
+            if (
+                FINAL_CONFIG.value.style.chart.nodes.selected.downstreamEdges
+                    .animated === true ||
+                FINAL_CONFIG.value.style.chart.nodes.selected.upstreamEdges
+                    .animated === true
+            ) {
                 startEdgeAnimations();
             }
         }
@@ -999,61 +1098,101 @@ function scheduleClearHoveredNode(nodeId) {
 function setEdge(edge) {
     const isHighlightedFrom = edge.from === hoveredNodeId.value;
     const isHighlightedTo = edge.to === hoveredNodeId.value;
-    const isKeyboardSelectedMidpoint = activeA11yItemType.value === "midpoint" && activeA11yItemId.value === edge.id;
-    const isActive = hoveredEdgeId.value === edge.id || tooltipEdge.value?.id === edge.id || isKeyboardSelectedMidpoint;
+    const isKeyboardSelectedMidpoint =
+        activeA11yItemType.value === 'midpoint' &&
+        activeA11yItemId.value === edge.id;
+    const isActive =
+        hoveredEdgeId.value === edge.id ||
+        tooltipEdge.value?.id === edge.id ||
+        isKeyboardSelectedMidpoint;
 
-    let stroke = edge.original.color ?? FINAL_CONFIG.value.style.chart.edges.stroke;
+    let stroke =
+        edge.original.color ?? FINAL_CONFIG.value.style.chart.edges.stroke;
 
-    if (isActive && FINAL_CONFIG.value.style.chart.midpoints.selectedEdge.stroke != null) {
+    if (
+        isActive &&
+        FINAL_CONFIG.value.style.chart.midpoints.selectedEdge.stroke != null
+    ) {
         stroke = FINAL_CONFIG.value.style.chart.midpoints.selectedEdge.stroke;
-    } else if (isHighlightedFrom && FINAL_CONFIG.value.style.chart.nodes.selected.downstreamEdges.stroke != null) {
-        stroke = FINAL_CONFIG.value.style.chart.nodes.selected.downstreamEdges.stroke;
-    } else if (isHighlightedTo && FINAL_CONFIG.value.style.chart.nodes.selected.upstreamEdges.stroke != null) {
-        stroke = FINAL_CONFIG.value.style.chart.nodes.selected.upstreamEdges.stroke;
+    } else if (
+        isHighlightedFrom &&
+        FINAL_CONFIG.value.style.chart.nodes.selected.downstreamEdges.stroke !=
+            null
+    ) {
+        stroke =
+            FINAL_CONFIG.value.style.chart.nodes.selected.downstreamEdges
+                .stroke;
+    } else if (
+        isHighlightedTo &&
+        FINAL_CONFIG.value.style.chart.nodes.selected.upstreamEdges.stroke !=
+            null
+    ) {
+        stroke =
+            FINAL_CONFIG.value.style.chart.nodes.selected.upstreamEdges.stroke;
     }
 
-    if (isHighlightedFrom && FINAL_CONFIG.value.style.chart.nodes.selected.downstreamEdges.animated === true) {
+    if (
+        isHighlightedFrom &&
+        FINAL_CONFIG.value.style.chart.nodes.selected.downstreamEdges
+            .animated === true
+    ) {
         edge.animated = true;
-    } else if (isHighlightedTo && FINAL_CONFIG.value.style.chart.nodes.selected.upstreamEdges.animated === true) {
+    } else if (
+        isHighlightedTo &&
+        FINAL_CONFIG.value.style.chart.nodes.selected.upstreamEdges.animated ===
+            true
+    ) {
         edge.animated = true;
-    } else if (isKeyboardSelectedMidpoint && FINAL_CONFIG.value.style.chart.midpoints.selectedEdge.animated === true) {
+    } else if (
+        isKeyboardSelectedMidpoint &&
+        FINAL_CONFIG.value.style.chart.midpoints.selectedEdge.animated === true
+    ) {
         edge.animated = true;
     } else {
-        const thisEdge = layoutData.value?.edges.find(e => e.id === edge.id);
+        const thisEdge = layoutData.value?.edges.find((e) => e.id === edge.id);
         edge.animated = thisEdge?.original?.animated ?? false;
     }
 
     return {
         d: edge.pathData,
-        fill: "none",
+        fill: 'none',
         stroke,
-        "stroke-width": FINAL_CONFIG.value.style.chart.edges.strokeWidth * (isActive || edge.from === hoveredNodeId.value ? 2 : 1),
-        "stroke-linecap": "round",
-        "stroke-linejoin": "round",
+        'stroke-width':
+            FINAL_CONFIG.value.style.chart.edges.strokeWidth *
+            (isActive || edge.from === hoveredNodeId.value ? 2 : 1),
+        'stroke-linecap': 'round',
+        'stroke-linejoin': 'round',
     };
 }
 
 function isNodeA11yActive(nodeId) {
-    return activeA11yItemType.value === "node" && activeA11yItemId.value === nodeId;
+    return (
+        activeA11yItemType.value === 'node' && activeA11yItemId.value === nodeId
+    );
 }
 
 function setNode(node) {
     const isHovered = hoveredNodeId.value === node.id;
-    const isKeyboardSelected = activeA11yItemType.value === "node" && activeA11yItemId.value === node.id;
+    const isKeyboardSelected =
+        activeA11yItemType.value === 'node' &&
+        activeA11yItemId.value === node.id;
     const isHighlighted = isHovered || isKeyboardSelected;
 
     const fill =
-        isHighlighted && FINAL_CONFIG.value.style.chart.nodes.selected.backgroundColor != null
+        isHighlighted &&
+        FINAL_CONFIG.value.style.chart.nodes.selected.backgroundColor != null
             ? FINAL_CONFIG.value.style.chart.nodes.selected.backgroundColor
             : node.original.backgroundColor;
 
     const stroke =
-        isHighlighted && FINAL_CONFIG.value.style.chart.nodes.selected.stroke != null
+        isHighlighted &&
+        FINAL_CONFIG.value.style.chart.nodes.selected.stroke != null
             ? FINAL_CONFIG.value.style.chart.nodes.selected.stroke
             : FINAL_CONFIG.value.style.chart.nodes.stroke;
 
     const strokeWidth =
-        isHighlighted && FINAL_CONFIG.value.style.chart.nodes.selected.strokeWidth != null
+        isHighlighted &&
+        FINAL_CONFIG.value.style.chart.nodes.selected.strokeWidth != null
             ? FINAL_CONFIG.value.style.chart.nodes.selected.strokeWidth
             : FINAL_CONFIG.value.style.chart.nodes.strokeWidth;
 
@@ -1065,24 +1204,44 @@ function setNode(node) {
         rx: FINAL_CONFIG.value.style.chart.nodes.borderRadius,
         fill,
         stroke,
-        "stroke-width": strokeWidth,
+        'stroke-width': strokeWidth,
     };
 }
 
 function setMidpoint(edge) {
     const isHighlightedFrom = edge.from === hoveredNodeId.value;
     const isHighlightedTo = edge.to === hoveredNodeId.value;
-    const isKeyboardSelected = activeA11yItemType.value === "midpoint" && activeA11yItemId.value === edge.id;
-    const isActive = hoveredEdgeId.value === edge.id || tooltipEdge.value?.id === edge.id || isKeyboardSelected;
+    const isKeyboardSelected =
+        activeA11yItemType.value === 'midpoint' &&
+        activeA11yItemId.value === edge.id;
+    const isActive =
+        hoveredEdgeId.value === edge.id ||
+        tooltipEdge.value?.id === edge.id ||
+        isKeyboardSelected;
 
-    let stroke = edge.original.color ?? FINAL_CONFIG.value.style.chart.edges.stroke;
+    let stroke =
+        edge.original.color ?? FINAL_CONFIG.value.style.chart.edges.stroke;
 
-    if (isActive && FINAL_CONFIG.value.style.chart.midpoints.selectedEdge.stroke != null) {
+    if (
+        isActive &&
+        FINAL_CONFIG.value.style.chart.midpoints.selectedEdge.stroke != null
+    ) {
         stroke = FINAL_CONFIG.value.style.chart.midpoints.selectedEdge.stroke;
-    } else if (isHighlightedFrom && FINAL_CONFIG.value.style.chart.nodes.selected.downstreamEdges.stroke != null) {
-        stroke = FINAL_CONFIG.value.style.chart.nodes.selected.downstreamEdges.stroke;
-    } else if (isHighlightedTo && FINAL_CONFIG.value.style.chart.nodes.selected.upstreamEdges.stroke != null) {
-        stroke = FINAL_CONFIG.value.style.chart.nodes.selected.upstreamEdges.stroke;
+    } else if (
+        isHighlightedFrom &&
+        FINAL_CONFIG.value.style.chart.nodes.selected.downstreamEdges.stroke !=
+            null
+    ) {
+        stroke =
+            FINAL_CONFIG.value.style.chart.nodes.selected.downstreamEdges
+                .stroke;
+    } else if (
+        isHighlightedTo &&
+        FINAL_CONFIG.value.style.chart.nodes.selected.upstreamEdges.stroke !=
+            null
+    ) {
+        stroke =
+            FINAL_CONFIG.value.style.chart.nodes.selected.upstreamEdges.stroke;
     }
 
     return {
@@ -1090,34 +1249,59 @@ function setMidpoint(edge) {
         cy: edge.midpoint.y,
         r: FINAL_CONFIG.value.style.chart.midpoints.radius,
         fill: isKeyboardSelected
-            ? FINAL_CONFIG.value.style.chart.midpoints.selectedEdge.stroke ?? FINAL_CONFIG.value.style.chart.midpoints.fill
+            ? (FINAL_CONFIG.value.style.chart.midpoints.selectedEdge.stroke ??
+              FINAL_CONFIG.value.style.chart.midpoints.fill)
             : FINAL_CONFIG.value.style.chart.midpoints.fill,
         stroke,
-        "stroke-width": FINAL_CONFIG.value.style.chart.edges.strokeWidth * (isActive || edge.from === hoveredNodeId.value ? 2 : 1),
+        'stroke-width':
+            FINAL_CONFIG.value.style.chart.edges.strokeWidth *
+            (isActive || edge.from === hoveredNodeId.value ? 2 : 1),
     };
 }
 
 function arrowColor(edge) {
     const isHighlightedFrom = edge.from === hoveredNodeId.value;
     const isHighlightedTo = edge.to === hoveredNodeId.value;
-    const isKeyboardSelectedMidpoint = activeA11yItemType.value === "midpoint" && activeA11yItemId.value === edge.id;
-    const isActive = hoveredEdgeId.value === edge.id || tooltipEdge.value?.id === edge.id || isKeyboardSelectedMidpoint;
+    const isKeyboardSelectedMidpoint =
+        activeA11yItemType.value === 'midpoint' &&
+        activeA11yItemId.value === edge.id;
+    const isActive =
+        hoveredEdgeId.value === edge.id ||
+        tooltipEdge.value?.id === edge.id ||
+        isKeyboardSelectedMidpoint;
 
-    let stroke = edge.color ?? edge.original?.color ?? FINAL_CONFIG.value.style.chart.edges.stroke;
+    let stroke =
+        edge.color ??
+        edge.original?.color ??
+        FINAL_CONFIG.value.style.chart.edges.stroke;
 
-    if (isActive && FINAL_CONFIG.value.style.chart.midpoints.selectedEdge.stroke != null) {
+    if (
+        isActive &&
+        FINAL_CONFIG.value.style.chart.midpoints.selectedEdge.stroke != null
+    ) {
         stroke = FINAL_CONFIG.value.style.chart.midpoints.selectedEdge.stroke;
-    } else if (isHighlightedFrom && FINAL_CONFIG.value.style.chart.nodes.selected.downstreamEdges.stroke != null) {
-        stroke = FINAL_CONFIG.value.style.chart.nodes.selected.downstreamEdges.stroke;
-    } else if (isHighlightedTo && FINAL_CONFIG.value.style.chart.nodes.selected.upstreamEdges.stroke != null) {
-        stroke = FINAL_CONFIG.value.style.chart.nodes.selected.upstreamEdges.stroke;
+    } else if (
+        isHighlightedFrom &&
+        FINAL_CONFIG.value.style.chart.nodes.selected.downstreamEdges.stroke !=
+            null
+    ) {
+        stroke =
+            FINAL_CONFIG.value.style.chart.nodes.selected.downstreamEdges
+                .stroke;
+    } else if (
+        isHighlightedTo &&
+        FINAL_CONFIG.value.style.chart.nodes.selected.upstreamEdges.stroke !=
+            null
+    ) {
+        stroke =
+            FINAL_CONFIG.value.style.chart.nodes.selected.upstreamEdges.stroke;
     }
 
     return stroke;
 }
 
 function makeMarkerId(edgeIdentifier) {
-    return `${arrowMarkerIdentifier}-${String(edgeIdentifier).replace(/[^a-zA-Z0-9_-]/g, "_")}`;
+    return `${arrowMarkerIdentifier}-${String(edgeIdentifier).replace(/[^a-zA-Z0-9_-]/g, '_')}`;
 }
 
 function getData() {
@@ -1125,12 +1309,12 @@ function getData() {
 }
 
 function onGenerateImage(payload) {
-    if (payload?.stage === "start") {
+    if (payload?.stage === 'start') {
         isCallbackImaging.value = true;
         return;
     }
 
-    if (payload?.stage === "end") {
+    if (payload?.stage === 'end') {
         isCallbackImaging.value = false;
         return;
     }
@@ -1138,19 +1322,23 @@ function onGenerateImage(payload) {
     generateImage();
 }
 
-async function copyAlt(){
+async function copyAlt() {
     emit('copyAlt', {
         config: FINAL_CONFIG.value,
-        dataset: FINAL_DATASET.value
-    })
+        dataset: FINAL_DATASET.value,
+    });
     if (!FINAL_CONFIG.value.userOptions.callbacks.altCopy) {
-        console.warn('Vue Data UI - A callback must be set for `altCopy` in userOptions.');
-        return
+        console.warn(
+            'Vue Data UI - A callback must be set for `altCopy` in userOptions.',
+        );
+        return;
     }
-    await Promise.resolve(FINAL_CONFIG.value.userOptions.callbacks.altCopy({ 
-        config: FINAL_CONFIG.value, 
-        dataset: FINAL_DATASET.value
-    }));
+    await Promise.resolve(
+        FINAL_CONFIG.value.userOptions.callbacks.altCopy({
+            config: FINAL_CONFIG.value,
+            dataset: FINAL_DATASET.value,
+        }),
+    );
 }
 
 /***************************************************************************************************
@@ -1161,11 +1349,11 @@ const a11yNodes = computed(() => {
 
     return nodes.map((node) => ({
         id: node.id,
-        type: "node",
+        type: 'node',
         x: node.x,
         y: node.y,
         label: node.label ?? node.id,
-        raw: node
+        raw: node,
     }));
 });
 
@@ -1175,17 +1363,16 @@ const a11yMidpoints = computed(() => {
     const edges = layoutData.value?.edges ?? [];
 
     return edges
-        .filter(edge => edge?.midpoint)
+        .filter((edge) => edge?.midpoint)
         .map((edge) => ({
             id: edge.id,
-            type: "midpoint",
+            type: 'midpoint',
             x: edge.midpoint.x,
             y: edge.midpoint.y,
             label: `${getNodeById(edge.from)?.label ?? edge.from} → ${getNodeById(edge.to)?.label ?? edge.to}`,
-            raw: edge
+            raw: edge,
         }));
 });
-
 
 const a11yItems = computed(() => {
     return [...a11yNodes.value, ...a11yMidpoints.value].sort((a, b) => {
@@ -1207,27 +1394,23 @@ const a11yTable = computed(() => {
     const edges = layoutData.value?.edges ?? [];
 
     const headers = [
-        FINAL_CONFIG.value.a11y?.translations?.node ?? "Node",
-        FINAL_CONFIG.value.a11y?.translations?.parents ?? "Parents",
-        FINAL_CONFIG.value.a11y?.translations?.children ?? "Children"
+        FINAL_CONFIG.value.a11y?.translations?.node ?? 'Node',
+        FINAL_CONFIG.value.a11y?.translations?.parents ?? 'Parents',
+        FINAL_CONFIG.value.a11y?.translations?.children ?? 'Children',
     ];
 
     const rows = nodes.map((node) => {
         const parents = edges
-            .filter(edge => edge.to === node.id)
-            .map(edge => getNodeById(edge.from)?.label ?? edge.from)
-            .join(", ");
+            .filter((edge) => edge.to === node.id)
+            .map((edge) => getNodeById(edge.from)?.label ?? edge.from)
+            .join(', ');
 
         const children = edges
-            .filter(edge => edge.from === node.id)
-            .map(edge => getNodeById(edge.to)?.label ?? edge.to)
-            .join(", ");
+            .filter((edge) => edge.from === node.id)
+            .map((edge) => getNodeById(edge.to)?.label ?? edge.to)
+            .join(', ');
 
-        return [
-            node.label ?? node.id,
-            parents || "—",
-            children || "—"
-        ];
+        return [node.label ?? node.id, parents || '—', children || '—'];
     });
 
     return { headers, rows };
@@ -1238,22 +1421,27 @@ function getA11yItemKey(item) {
 }
 
 function getActiveA11yItem() {
-    if (activeA11yItemId.value == null || activeA11yItemType.value == null) return null;
+    if (activeA11yItemId.value == null || activeA11yItemType.value == null)
+        return null;
 
-    return a11yItems.value.find(item =>
-        item.id === activeA11yItemId.value && item.type === activeA11yItemType.value
-    ) ?? null;
+    return (
+        a11yItems.value.find(
+            (item) =>
+                item.id === activeA11yItemId.value &&
+                item.type === activeA11yItemType.value,
+        ) ?? null
+    );
 }
 
 async function syncA11ySelectionWithInteraction(item) {
     if (!item) return;
 
-    if (item.type === "node") {
+    if (item.type === 'node') {
         hideMidpointTooltip();
         return;
     }
 
-    if (item.type === "midpoint") {
+    if (item.type === 'midpoint') {
         hideNodeTooltip();
         await showMidpointTooltip(item.raw);
     }
@@ -1264,19 +1452,23 @@ function setActiveA11yItem(item) {
 
     activeA11yItemId.value = item.id;
     activeA11yItemType.value = item.type;
-    activeA11yItemIndex.value = a11yItemIndexMap.value.get(getA11yItemKey(item)) ?? null;
+    activeA11yItemIndex.value =
+        a11yItemIndexMap.value.get(getA11yItemKey(item)) ?? null;
 
-    if (item.type === "node") {
+    if (item.type === 'node') {
         setHoveredNode(item.id);
         hoveredEdgeId.value = null;
         return;
     }
 
-    if (item.type === "midpoint") {
+    if (item.type === 'midpoint') {
         hoveredNodeId.value = null;
         hoveredEdgeId.value = item.id;
 
-        if (FINAL_CONFIG.value.style.chart.midpoints.selectedEdge.animated === true) {
+        if (
+            FINAL_CONFIG.value.style.chart.midpoints.selectedEdge.animated ===
+            true
+        ) {
             startEdgeAnimations();
         }
     }
@@ -1293,7 +1485,10 @@ function clearA11ySelection() {
 
     if (!isTooltip.value) {
         hoveredEdgeId.value = null;
-        if (FINAL_CONFIG.value.style.chart.midpoints.selectedEdge.animated === true) {
+        if (
+            FINAL_CONFIG.value.style.chart.midpoints.selectedEdge.animated ===
+            true
+        ) {
             startEdgeAnimations();
         }
     }
@@ -1315,12 +1510,12 @@ function getDirectionalCandidateScore(currentItem, candidate, direction) {
     const dx = candidate.x - currentItem.x;
     const dy = candidate.y - currentItem.y;
 
-    if (direction === "right" && dx <= 0) return Infinity;
-    if (direction === "left" && dx >= 0) return Infinity;
-    if (direction === "down" && dy <= 0) return Infinity;
-    if (direction === "up" && dy >= 0) return Infinity;
+    if (direction === 'right' && dx <= 0) return Infinity;
+    if (direction === 'left' && dx >= 0) return Infinity;
+    if (direction === 'down' && dy <= 0) return Infinity;
+    if (direction === 'up' && dy >= 0) return Infinity;
 
-    if (direction === "right" || direction === "left") {
+    if (direction === 'right' || direction === 'left') {
         return Math.abs(dx) * 1000 + Math.abs(dy);
     }
 
@@ -1328,14 +1523,20 @@ function getDirectionalCandidateScore(currentItem, candidate, direction) {
 }
 
 function findNextDirectionalItem(currentItem, direction) {
-    const candidates = a11yItems.value.filter(item => getA11yItemKey(item) !== getA11yItemKey(currentItem));
+    const candidates = a11yItems.value.filter(
+        (item) => getA11yItemKey(item) !== getA11yItemKey(currentItem),
+    );
     if (!candidates.length) return null;
 
     let bestCandidate = null;
     let bestScore = Infinity;
 
     candidates.forEach((candidate) => {
-        const score = getDirectionalCandidateScore(currentItem, candidate, direction);
+        const score = getDirectionalCandidateScore(
+            currentItem,
+            candidate,
+            direction,
+        );
         if (score < bestScore) {
             bestScore = score;
             bestCandidate = candidate;
@@ -1344,7 +1545,7 @@ function findNextDirectionalItem(currentItem, direction) {
 
     if (bestCandidate) return bestCandidate;
 
-    if (direction === "right" || direction === "down") {
+    if (direction === 'right' || direction === 'down') {
         return a11yItems.value[0] ?? null;
     }
 
@@ -1353,8 +1554,8 @@ function findNextDirectionalItem(currentItem, direction) {
 
 async function activateA11yItem(item) {
     if (!item) return;
-    tooltipTriggerMode.value = "keyboard";
-    if (item.type === "node") {
+    tooltipTriggerMode.value = 'keyboard';
+    if (item.type === 'node') {
         hideMidpointTooltip();
         await showNodeTooltip(item.raw);
     }
@@ -1365,14 +1566,21 @@ async function onSvgKeydown(event) {
     if (document.activeElement !== svgRef.value) return;
     if (!a11yItems.value.length) return;
 
-    const isLeftKey = event.key === "ArrowLeft";
-    const isRightKey = event.key === "ArrowRight";
-    const isUpKey = event.key === "ArrowUp";
-    const isDownKey = event.key === "ArrowDown";
-    const isActivationKey = event.key === "Enter" || event.key === " ";
-    const isEscapeKey = event.key === "Escape";
+    const isLeftKey = event.key === 'ArrowLeft';
+    const isRightKey = event.key === 'ArrowRight';
+    const isUpKey = event.key === 'ArrowUp';
+    const isDownKey = event.key === 'ArrowDown';
+    const isActivationKey = event.key === 'Enter' || event.key === ' ';
+    const isEscapeKey = event.key === 'Escape';
 
-    if (!isLeftKey && !isRightKey && !isUpKey && !isDownKey && !isActivationKey && !isEscapeKey) {
+    if (
+        !isLeftKey &&
+        !isRightKey &&
+        !isUpKey &&
+        !isDownKey &&
+        !isActivationKey &&
+        !isEscapeKey
+    ) {
         return;
     }
 
@@ -1391,7 +1599,7 @@ async function onSvgKeydown(event) {
     if (isActivationKey) {
         if (!activeItem) return;
 
-        if (activeItem.type === "node") {
+        if (activeItem.type === 'node') {
             await activateA11yItem(activeItem);
         }
         return;
@@ -1408,13 +1616,13 @@ async function onSvgKeydown(event) {
     let nextItem = null;
 
     if (isRightKey) {
-        nextItem = findNextDirectionalItem(activeItem, "right");
+        nextItem = findNextDirectionalItem(activeItem, 'right');
     } else if (isLeftKey) {
-        nextItem = findNextDirectionalItem(activeItem, "left");
+        nextItem = findNextDirectionalItem(activeItem, 'left');
     } else if (isDownKey) {
-        nextItem = findNextDirectionalItem(activeItem, "down");
+        nextItem = findNextDirectionalItem(activeItem, 'down');
     } else if (isUpKey) {
-        nextItem = findNextDirectionalItem(activeItem, "up");
+        nextItem = findNextDirectionalItem(activeItem, 'up');
     }
 
     if (!nextItem) return;
@@ -1437,13 +1645,13 @@ defineExpose({
     zoomOut,
     resetZoom,
     switchDirection,
-    copyAlt
-})
+    copyAlt,
+});
 </script>
 
 <template>
-    <div 
-        :class="`vue-data-ui-component vue-ui-dag ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${FINAL_CONFIG.responsive ? 'vue-ui-dag-responsive' : ''}`" 
+    <div
+        :class="`vue-data-ui-component vue-ui-dag ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${FINAL_CONFIG.responsive ? 'vue-ui-dag-responsive' : ''}`"
         :id="`dag_${uid}`"
         ref="dagChart"
         :style="{
@@ -1451,7 +1659,7 @@ defineExpose({
             backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
             padding: '0.5rem',
         }"
-        @mouseenter="onChartEnter" 
+        @mouseenter="onChartEnter"
         @mouseleave="onChartLeave"
     >
         <div :id="`chart-instructions-${uid}`" class="sr-only">
@@ -1481,29 +1689,33 @@ defineExpose({
             @close="toggleAnnotator"
         >
             <template #annotator-action-close>
-                <slot name="annotator-action-close"/>
+                <slot name="annotator-action-close" />
             </template>
             <template #annotator-action-color="{ color }">
-                <slot name="annotator-action-color" v-bind="{ color }"/>
+                <slot name="annotator-action-color" v-bind="{ color }" />
             </template>
             <template #annotator-action-draw="{ mode }">
-                <slot name="annotator-action-draw" v-bind="{ mode }"/>
+                <slot name="annotator-action-draw" v-bind="{ mode }" />
             </template>
             <template #annotator-action-undo="{ disabled }">
-                <slot name="annotator-action-undo" v-bind="{ disabled }"/>
+                <slot name="annotator-action-undo" v-bind="{ disabled }" />
             </template>
             <template #annotator-action-redo="{ disabled }">
-                <slot name="annotator-action-redo" v-bind="{ disabled }"/>
+                <slot name="annotator-action-redo" v-bind="{ disabled }" />
             </template>
             <template #annotator-action-delete="{ disabled }">
-                <slot name="annotator-action-delete" v-bind="{ disabled }"/>
+                <slot name="annotator-action-delete" v-bind="{ disabled }" />
             </template>
         </PenAndPaper>
 
         <UserOptions
             ref="userOptionsRef"
             :key="`user_option_${step}`"
-            v-if="FINAL_CONFIG.userOptions.show && isDataset && (keepUserOptionState ? true : userOptionsVisible)"
+            v-if="
+                FINAL_CONFIG.userOptions.show &&
+                isDataset &&
+                (keepUserOptionState ? true : userOptionsVisible)
+            "
             :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
             :color="FINAL_CONFIG.style.chart.color"
             :isPrinting="isPrinting"
@@ -1521,7 +1733,7 @@ defineExpose({
             :isFullscreen="isFullscreen"
             :chartElement="dagChart"
             :position="FINAL_CONFIG.userOptions.position"
-            :titles="{...FINAL_CONFIG.userOptions.buttonTitles }"
+            :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
             :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator"
             :isAnnotation="isAnnotator"
             :callbacks="FINAL_CONFIG.userOptions.callbacks"
@@ -1537,11 +1749,15 @@ defineExpose({
             @toggleZoom="toggleZoom"
             @copyAlt="copyAlt"
             :style="{
-                visibility: keepUserOptionState ? userOptionsVisible ? 'visible' : 'hidden' : 'visible'
+                visibility: keepUserOptionState
+                    ? userOptionsVisible
+                        ? 'visible'
+                        : 'hidden'
+                    : 'visible',
             }"
         >
             <template #menuIcon="{ isOpen, color }" v-if="$slots.menuIcon">
-                <slot name="menuIcon" v-bind="{ isOpen, color }"/>
+                <slot name="menuIcon" v-bind="{ isOpen, color }" />
             </template>
             <template #optionPdf v-if="$slots.optionPdf">
                 <slot name="optionPdf" />
@@ -1552,22 +1768,45 @@ defineExpose({
             <template #optionSvg v-if="$slots.optionSvg">
                 <slot name="optionSvg" />
             </template>
-            <template v-if="$slots.optionFullscreen" template #optionFullscreen="{ toggleFullscreen, isFullscreen }">
-                <slot name="optionFullscreen" v-bind="{ toggleFullscreen, isFullscreen }"/>
+            <template
+                v-if="$slots.optionFullscreen"
+                template
+                #optionFullscreen="{ toggleFullscreen, isFullscreen }"
+            >
+                <slot
+                    name="optionFullscreen"
+                    v-bind="{ toggleFullscreen, isFullscreen }"
+                />
             </template>
-            <template v-if="$slots.optionAnnotator" #optionAnnotator="{ toggleAnnotator, isAnnotator }">
-                <slot name="optionAnnotator" v-bind="{ toggleAnnotator, isAnnotator }" />
+            <template
+                v-if="$slots.optionAnnotator"
+                #optionAnnotator="{ toggleAnnotator, isAnnotator }"
+            >
+                <slot
+                    name="optionAnnotator"
+                    v-bind="{ toggleAnnotator, isAnnotator }"
+                />
             </template>
-            <template v-if="$slots.optionZoom" #optionZoom="{ toggleZoom, isZoomLocked }">
-                <slot name="optionZoom" v-bind="{ toggleZoom , isZoomLocked }"/>
+            <template
+                v-if="$slots.optionZoom"
+                #optionZoom="{ toggleZoom, isZoomLocked }"
+            >
+                <slot name="optionZoom" v-bind="{ toggleZoom, isZoomLocked }" />
             </template>
-            <template v-if="$slots.optionAltCopy" #optionAltCopy="{ altCopy: c }">
-                <slot name="optionAltCopy" v-bind="{ altCopy: c }"/>
+            <template
+                v-if="$slots.optionAltCopy"
+                #optionAltCopy="{ altCopy: c }"
+            >
+                <slot name="optionAltCopy" v-bind="{ altCopy: c }" />
             </template>
         </UserOptions>
 
         <!-- TITLE -->
-        <div ref="chartTitle" v-if="FINAL_CONFIG.style.chart.title.text" :style="`width:100%;background:transparent;`">
+        <div
+            ref="chartTitle"
+            v-if="FINAL_CONFIG.style.chart.title.text"
+            :style="`width:100%;background:transparent;`"
+        >
             <Title
                 :key="`title_${titleStep}`"
                 :config="{
@@ -1577,15 +1816,19 @@ defineExpose({
                     },
                     subtitle: {
                         cy: 'dag-subtitle',
-                        ...FINAL_CONFIG.style.chart.title.subtitle
-                    }
+                        ...FINAL_CONFIG.style.chart.title.subtitle,
+                    },
                 }"
             />
         </div>
 
         <BaseZoomControls
             ref="zoomControls"
-            v-if="FINAL_CONFIG.style.chart.controls.position === 'top' && !loading && FINAL_CONFIG.style.chart.controls.show"
+            v-if="
+                FINAL_CONFIG.style.chart.controls.position === 'top' &&
+                !loading &&
+                FINAL_CONFIG.style.chart.controls.show
+            "
             :config="FINAL_CONFIG"
             :scale="scale"
             :isFullscreen="isFullscreen"
@@ -1596,26 +1839,29 @@ defineExpose({
             @switchDirection="switchDirection"
         />
 
-        <div style="position:relative;">
-            <svg 
-                v-if="layoutData" 
+        <div style="position: relative">
+            <svg
+                v-if="layoutData"
                 ref="svgRef"
-                :class="{'vue-ui-dag-svg': true, 'vue-data-ui-loading': loading }" 
+                :class="{
+                    'vue-ui-dag-svg': true,
+                    'vue-data-ui-loading': loading,
+                }"
                 :viewBox="svgViewBox"
                 :xmlns="XMLNS"
                 :style="{
                     backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
                     height: '100%',
-                    width: '100%'
+                    width: '100%',
                 }"
                 tabindex="0"
                 :aria-describedby="`chart-instructions-${uid}`"
                 @focus="onSvgFocus"
                 @blur="onSvgBlur"
-                @keydown="onSvgKeydown"  
+                @keydown="onSvgKeydown"
             >
                 <PackageVersion />
-    
+
                 <defs v-if="FINAL_CONFIG.style.chart.backgroundPattern.show">
                     <pattern
                         :id="`dag_bg_pattern_${uid}`"
@@ -1623,37 +1869,48 @@ defineExpose({
                         :width="backgroundPatternGridSpacing"
                         :height="backgroundPatternGridSpacing"
                     >
-                        <slot name="background-pattern" v-bind="{
-                            x: backgroundPatternGridSpacing / 2,
-                            y: backgroundPatternGridSpacing / 2,
-                            color: FINAL_CONFIG.style.chart.backgroundPattern.dotColor
-                        }">
+                        <slot
+                            name="background-pattern"
+                            v-bind="{
+                                x: backgroundPatternGridSpacing / 2,
+                                y: backgroundPatternGridSpacing / 2,
+                                color: FINAL_CONFIG.style.chart
+                                    .backgroundPattern.dotColor,
+                            }"
+                        >
                             <circle
                                 :cx="backgroundPatternGridSpacing / 2"
                                 :cy="backgroundPatternGridSpacing / 2"
                                 :r="backgroundPatternDotRadius"
-                                :fill="FINAL_CONFIG.style.chart.backgroundPattern.dotColor"
+                                :fill="
+                                    FINAL_CONFIG.style.chart.backgroundPattern
+                                        .dotColor
+                                "
                             />
                         </slot>
                     </pattern>
                 </defs>
-    
-                <rect 
-                    v-if="FINAL_CONFIG.style.chart.backgroundPattern.show" 
+
+                <rect
+                    v-if="FINAL_CONFIG.style.chart.backgroundPattern.show"
                     :x="panZoomViewBox?.x ?? 0"
                     :y="panZoomViewBox?.y ?? 0"
                     :width="panZoomViewBox?.width ?? 0"
                     :height="panZoomViewBox?.height ?? 0"
-                    :fill="`url(#dag_bg_pattern_${uid})`" 
+                    :fill="`url(#dag_bg_pattern_${uid})`"
                     :style="{
                         pointerEvents: 'none',
-                        opacity: FINAL_CONFIG.style.chart.backgroundPattern.opacity
+                        opacity:
+                            FINAL_CONFIG.style.chart.backgroundPattern.opacity,
                     }"
                 />
-    
+
                 <!-- Arrow marker. Hidden when arrowShape is "undirected". -->
                 <defs v-if="layoutData.arrowShape !== 'undirected'">
-                    <template v-for="edge in layoutData.edges" :key="`marker_${edge.id}`">
+                    <template
+                        v-for="edge in layoutData.edges"
+                        :key="`marker_${edge.id}`"
+                    >
                         <marker
                             :id="makeMarkerId(edge.id)"
                             :markerWidth="layoutData.arrowSize"
@@ -1666,27 +1923,36 @@ defineExpose({
                             <!-- `normal` arrow -->
                             <path
                                 v-if="layoutData.arrowShape === 'normal'"
-                                :d="`M 0 0 L ${layoutData.arrowSize} ${layoutData.arrowSize/2} L 0 ${layoutData.arrowSize} Z`"
+                                :d="`M 0 0 L ${layoutData.arrowSize} ${layoutData.arrowSize / 2} L 0 ${layoutData.arrowSize} Z`"
                                 :fill="arrowColor(edge)"
                                 :stroke="arrowColor(edge)"
                                 stroke-width="0"
-                                style="transition: stroke 0.2s ease-in-out, fill 0.2s ease-in-out, stroke-width 0.2s ease-in-out"
+                                style="
+                                    transition:
+                                        stroke 0.2s ease-in-out,
+                                        fill 0.2s ease-in-out,
+                                        stroke-width 0.2s ease-in-out;
+                                "
                             />
-    
+
                             <!-- `vee` arrow -->
                             <path
                                 v-else
-                                :d="`M 0 0 L ${layoutData.arrowSize} ${layoutData.arrowSize/2} L 0 ${layoutData.arrowSize} L ${layoutData.arrowSize / 3} ${layoutData.arrowSize / 2} Z`"
+                                :d="`M 0 0 L ${layoutData.arrowSize} ${layoutData.arrowSize / 2} L 0 ${layoutData.arrowSize} L ${layoutData.arrowSize / 3} ${layoutData.arrowSize / 2} Z`"
                                 :fill="arrowColor(edge)"
                                 :stroke="arrowColor(edge)"
                                 stroke-width="0"
-                                style="transition: stroke 0.2s ease-in-out, fill 0.2s ease-in-out, stroke-width 0.2s ease-in-out"
+                                style="
+                                    transition:
+                                        stroke 0.2s ease-in-out,
+                                        fill 0.2s ease-in-out,
+                                        stroke-width 0.2s ease-in-out;
+                                "
                             />
                         </marker>
                     </template>
                 </defs>
-    
-    
+
                 <!-- Edges -->
                 <g class="vue-ui-dag-edges">
                     <template v-for="edge in layoutData.edges" :key="edge.id">
@@ -1694,7 +1960,12 @@ defineExpose({
                             data-cy-edge
                             :ref="registerEdgePathElement(edge.id)"
                             v-bind="setEdge(edge)"
-                            style="pointer-events: none; transition: stroke-width 0.2s ease-in-out, stroke 0.2s ease-in-out;"
+                            style="
+                                pointer-events: none;
+                                transition:
+                                    stroke-width 0.2s ease-in-out,
+                                    stroke 0.2s ease-in-out;
+                            "
                         />
                         <circle
                             data-cy-midpoint
@@ -1703,20 +1974,28 @@ defineExpose({
                             :data-a11y-midpoint-id="edge.id"
                             v-bind="setMidpoint(edge)"
                             :aria-label="`${getNodeById(edge.from)?.label ?? edge.from} to ${getNodeById(edge.to)?.label ?? edge.to}`"
-                            style="transition: stroke-width 0.2s ease-in-out, stroke 0.2s ease-in-out, fill 0.2s ease-in-out;"
+                            style="
+                                transition:
+                                    stroke-width 0.2s ease-in-out,
+                                    stroke 0.2s ease-in-out,
+                                    fill 0.2s ease-in-out;
+                            "
                             @mouseenter="onMidpointPointerEnter(edge)"
                             @mouseleave="hideMidpointTooltip"
                         />
                     </template>
                 </g>
-    
+
                 <!-- Nodes -->
                 <g class="vue-ui-dag-nodes">
                     <g
                         v-for="node in layoutData.nodes"
                         :key="node.id"
                         class="vue-ui-dag-node"
-                        @click.stop="FINAL_CONFIG.style.chart.nodes.tooltip.showOnClick && showNodeTooltip(node)"
+                        @click.stop="
+                            FINAL_CONFIG.style.chart.nodes.tooltip
+                                .showOnClick && showNodeTooltip(node)
+                        "
                         @mouseenter="onNodePointerEnter(node.id)"
                         @mouseleave="scheduleClearHoveredNode(node.id)"
                     >
@@ -1727,49 +2006,73 @@ defineExpose({
                                 :data-a11y-node-id="node.id"
                                 :aria-label="`${node.label ?? node.id}`"
                                 :style="{
-                                    cursor: FINAL_CONFIG.style.chart.nodes.tooltip.showOnClick && isCursorPointer ? 'pointer' : 'default',
-                                    transition: 'stroke 0.2s ease-in-out, stroke-width 0.2s ease-in-out, fill 0.2s ease-in-out',
+                                    cursor:
+                                        FINAL_CONFIG.style.chart.nodes.tooltip
+                                            .showOnClick && isCursorPointer
+                                            ? 'pointer'
+                                            : 'default',
+                                    transition:
+                                        'stroke 0.2s ease-in-out, stroke-width 0.2s ease-in-out, fill 0.2s ease-in-out',
                                 }"
-                            />                        
+                            />
                         </template>
-    
+
                         <!-- Full `node` slot to customize the node entirely using a div -->
-                        <foreignObject 
+                        <foreignObject
                             v-if="$slots.node"
                             :x="node.x - node.width / 2"
                             :y="node.y - node.height / 2"
                             :width="node.width"
                             :height="node.height"
                         >
-                            <slot name="node" v-bind="{ node, orientation: direction }"/>
+                            <slot
+                                name="node"
+                                v-bind="{ node, orientation: direction }"
+                            />
                         </foreignObject>
                     </g>
                 </g>
-    
+
                 <!-- Edge arrows -->
                 <g class="vue-ui-dag-edges">
-                    <path 
-                        v-for="edge in layoutData.edges" 
-                        :key="edge.id" 
-                        :d="edge.pathData" 
-                        fill="none" 
+                    <path
+                        v-for="edge in layoutData.edges"
+                        :key="edge.id"
+                        :d="edge.pathData"
+                        fill="none"
                         stroke="transparent"
-                        :stroke-width="FINAL_CONFIG.style.chart.edges.strokeWidth * ((edge.from === hoveredNodeId || edge.id === tooltipEdge?.id) ? 1.3 : 1)" 
-                        stroke-linecap="round" 
+                        :stroke-width="
+                            FINAL_CONFIG.style.chart.edges.strokeWidth *
+                            (edge.from === hoveredNodeId ||
+                            edge.id === tooltipEdge?.id
+                                ? 1.3
+                                : 1)
+                        "
+                        stroke-linecap="round"
                         stroke-linejoin="round"
-                        :marker-end="layoutData.arrowShape === 'undirected'
-                            ? null
-                            : `url(#${makeMarkerId(edge.id)})`"
-                        style="pointer-events: none; transition: stroke-width 0.2s ease-in-out, stroke 0.2s ease-in-out"
+                        :marker-end="
+                            layoutData.arrowShape === 'undirected'
+                                ? null
+                                : `url(#${makeMarkerId(edge.id)})`
+                        "
+                        style="
+                            pointer-events: none;
+                            transition:
+                                stroke-width 0.2s ease-in-out,
+                                stroke 0.2s ease-in-out;
+                        "
                     />
                 </g>
-    
+
                 <!-- Node labels (last layer to overlap edges when offset is applied) -->
                 <g class="vue-ui-dag-node-labels">
-                    <g 
-                        v-for="node in layoutData.nodes" 
-                        :key="node.id" 
-                        @click.stop="FINAL_CONFIG.style.chart.nodes.tooltip.showOnClick && showNodeTooltip(node)"
+                    <g
+                        v-for="node in layoutData.nodes"
+                        :key="node.id"
+                        @click.stop="
+                            FINAL_CONFIG.style.chart.nodes.tooltip
+                                .showOnClick && showNodeTooltip(node)
+                        "
                         @mouseenter="setHoveredNode(node.id)"
                         @mouseleave="scheduleClearHoveredNode(node.id)"
                     >
@@ -1777,67 +2080,152 @@ defineExpose({
                             <!-- with `node-label` slot -->
                             <text
                                 v-if="$slots['node-label']"
-                                :x="node.x" 
-                                :y="node.y + FINAL_CONFIG.style.chart.nodes.labels.fontSize / 3" 
-                                text-anchor="middle" 
-                                :font-size="FINAL_CONFIG.style.chart.nodes.labels.fontSize"
-                                :fill="hoveredNodeId === node.id && FINAL_CONFIG.style.chart.nodes.selected.labelColor != null ? FINAL_CONFIG.style.chart.nodes.selected.labelColor : node.original.color"
-                                :font-weight="FINAL_CONFIG.style.chart.nodes.labels.bold ? 'bold' : 'normal'"
-                                style="transition: fill 0.2s ease-in-out;"
+                                :x="node.x"
+                                :y="
+                                    node.y +
+                                    FINAL_CONFIG.style.chart.nodes.labels
+                                        .fontSize /
+                                        3
+                                "
+                                text-anchor="middle"
+                                :font-size="
+                                    FINAL_CONFIG.style.chart.nodes.labels
+                                        .fontSize
+                                "
+                                :fill="
+                                    hoveredNodeId === node.id &&
+                                    FINAL_CONFIG.style.chart.nodes.selected
+                                        .labelColor != null
+                                        ? FINAL_CONFIG.style.chart.nodes
+                                              .selected.labelColor
+                                        : node.original.color
+                                "
+                                :font-weight="
+                                    FINAL_CONFIG.style.chart.nodes.labels.bold
+                                        ? 'bold'
+                                        : 'normal'
+                                "
+                                style="transition: fill 0.2s ease-in-out"
                             >
-                                <slot name="node-label" v-bind="{ node, orientation: direction }">
+                                <slot
+                                    name="node-label"
+                                    v-bind="{ node, orientation: direction }"
+                                >
                                     {{ node.label }}
                                 </slot>
                             </text>
-    
+
                             <!-- default label, multiline when provided with /n -->
-                            <text 
+                            <text
                                 data-cy-node-label
-                                v-else-if="!$slots['free-node-label'] && !$slots.node"
-                                :x="node.x" 
-                                :y="node.y + FINAL_CONFIG.style.chart.nodes.labels.fontSize / 3" 
-                                text-anchor="middle" 
-                                :font-size="FINAL_CONFIG.style.chart.nodes.labels.fontSize"
-                                :fill="(hoveredNodeId === node.id || isNodeA11yActive(node.id)) && FINAL_CONFIG.style.chart.nodes.selected.labelColor != null
-                                    ? FINAL_CONFIG.style.chart.nodes.selected.labelColor
-                                    : node.original.color"
-                                :font-weight="FINAL_CONFIG.style.chart.nodes.labels.bold ? 'bold' : 'normal'"
+                                v-else-if="
+                                    !$slots['free-node-label'] && !$slots.node
+                                "
+                                :x="node.x"
+                                :y="
+                                    node.y +
+                                    FINAL_CONFIG.style.chart.nodes.labels
+                                        .fontSize /
+                                        3
+                                "
+                                text-anchor="middle"
+                                :font-size="
+                                    FINAL_CONFIG.style.chart.nodes.labels
+                                        .fontSize
+                                "
+                                :fill="
+                                    (hoveredNodeId === node.id ||
+                                        isNodeA11yActive(node.id)) &&
+                                    FINAL_CONFIG.style.chart.nodes.selected
+                                        .labelColor != null
+                                        ? FINAL_CONFIG.style.chart.nodes
+                                              .selected.labelColor
+                                        : node.original.color
+                                "
+                                :font-weight="
+                                    FINAL_CONFIG.style.chart.nodes.labels.bold
+                                        ? 'bold'
+                                        : 'normal'
+                                "
                                 style="transition: fill 0.2s ease-in-out"
-                                v-html="createTSpansFromLineBreaksOnY({
-                                    content: node.label,
-                                    fontSize: FINAL_CONFIG.style.chart.nodes.labels.fontSize,
-                                    fontWeight: FINAL_CONFIG.style.chart.nodes.labels.bold ? 'bold' : 'normal',
-                                    fill:(hoveredNodeId === node.id || isNodeA11yActive(node.id)) && FINAL_CONFIG.style.chart.nodes.selected.labelColor != null
-                                        ? FINAL_CONFIG.style.chart.nodes.selected.labelColor
-                                        : node.original.color,
-                                    x: node.x,
-                                    y: node.y,
-                                    autoOffset: true
-                                })"
+                                v-html="
+                                    createTSpansFromLineBreaksOnY({
+                                        content: node.label,
+                                        fontSize:
+                                            FINAL_CONFIG.style.chart.nodes
+                                                .labels.fontSize,
+                                        fontWeight: FINAL_CONFIG.style.chart
+                                            .nodes.labels.bold
+                                            ? 'bold'
+                                            : 'normal',
+                                        fill:
+                                            (hoveredNodeId === node.id ||
+                                                isNodeA11yActive(node.id)) &&
+                                            FINAL_CONFIG.style.chart.nodes
+                                                .selected.labelColor != null
+                                                ? FINAL_CONFIG.style.chart.nodes
+                                                      .selected.labelColor
+                                                : node.original.color,
+                                        x: node.x,
+                                        y: node.y,
+                                        autoOffset: true,
+                                    })
+                                "
                             />
                         </template>
-    
+
                         <g v-if="$slots['free-node-label']">
-                            <slot name="free-node-label" v-bind="{ node, layoutData, orientation: direction }"/>
+                            <slot
+                                name="free-node-label"
+                                v-bind="{
+                                    node,
+                                    layoutData,
+                                    orientation: direction,
+                                }"
+                            />
                         </g>
                     </g>
                 </g>
-    
-                <slot name="svg" :svg="{ 
-                    drawingArea: panZoomViewBox,
-                    data: layoutData,
-                    orientation: direction,
-                    isPrintingImg: isPrinting | isImaging | isCallbackImaging,
-                    isPrintingSvg: isCallbackSvg,
-                }"/>
+
+                <slot
+                    name="svg"
+                    :svg="{
+                        drawingArea: panZoomViewBox,
+                        data: layoutData,
+                        orientation: direction,
+                        isPrintingImg:
+                            isPrinting | isImaging | isCallbackImaging,
+                        isPrintingSvg: isCallbackSvg,
+                    }"
+                />
             </svg>
-            <div v-if="$slots.hint" style="position: absolute; top: 100%; left: 0; width: 100%" data-dom-to-png-ignore aria-hidden="true">
-                <slot name="hint" v-bind="{ hint: FINAL_CONFIG.a11y.translations.keyboardNavigation, isVisible: isFocus }"/>
+            <div
+                v-if="$slots.hint"
+                style="position: absolute; top: 100%; left: 0; width: 100%"
+                data-dom-to-png-ignore
+                aria-hidden="true"
+            >
+                <slot
+                    name="hint"
+                    v-bind="{
+                        hint: FINAL_CONFIG.a11y.translations.keyboardNavigation,
+                        isVisible: isFocus,
+                    }"
+                />
             </div>
         </div>
 
         <div v-if="$slots.watermark" class="vue-data-ui-watermark">
-            <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging || isCallbackImaging || isCallbackSvg }"/>
+            <slot
+                name="watermark"
+                v-bind="{
+                    isPrinting:
+                        isPrinting ||
+                        isImaging ||
+                        isCallbackImaging ||
+                        isCallbackSvg,
+                }"
+            />
         </div>
 
         <!-- Midpoint tooltip -->
@@ -1849,15 +2237,30 @@ defineExpose({
                     class="vue-ui-dag-tooltip"
                     :style="{
                         ...tooltipStyle,
-                        maxWidth: FINAL_CONFIG.style.chart.midpoints.tooltip.maxWidth,
-                        '--vue-data-ui-dag-tooltip-background': FINAL_CONFIG.style.chart.midpoints.tooltip.backgroundColor,
-                        '--vue-data-ui-dag-tooltip-color': FINAL_CONFIG.style.chart.midpoints.tooltip.color
+                        maxWidth:
+                            FINAL_CONFIG.style.chart.midpoints.tooltip.maxWidth,
+                        '--vue-data-ui-dag-tooltip-background':
+                            FINAL_CONFIG.style.chart.midpoints.tooltip
+                                .backgroundColor,
+                        '--vue-data-ui-dag-tooltip-color':
+                            FINAL_CONFIG.style.chart.midpoints.tooltip.color,
                     }"
                     :data-position="tooltipPlacement"
                 >
-                    <slot name="tooltip-midpoint" v-bind="{ edge: tooltipEdge, layoutData }">
+                    <slot
+                        name="tooltip-midpoint"
+                        v-bind="{ edge: tooltipEdge, layoutData }"
+                    >
                         <div v-if="tooltipEdge">
-                            {{ getNodeById(tooltipEdge.from)?.label ?? tooltipEdge.from }} → {{ getNodeById(tooltipEdge.to)?.label ?? tooltipEdge.to }}
+                            {{
+                                getNodeById(tooltipEdge.from)?.label ??
+                                tooltipEdge.from
+                            }}
+                            →
+                            {{
+                                getNodeById(tooltipEdge.to)?.label ??
+                                tooltipEdge.to
+                            }}
                         </div>
                     </slot>
                 </div>
@@ -1866,21 +2269,31 @@ defineExpose({
 
         <!-- Node tooltip -->
         <Transition name="fade">
-            <Teleport :to="isFullscreen ? dagChart : 'body'" v-if="isNodeTooltip">
+            <Teleport
+                :to="isFullscreen ? dagChart : 'body'"
+                v-if="isNodeTooltip"
+            >
                 <div
                     data-cy-tooltip-node
                     ref="nodeTooltipRef"
                     class="vue-ui-dag-node-tooltip"
                     :style="{
-                        maxWidth: FINAL_CONFIG.style.chart.nodes.tooltip.maxWidth,
+                        maxWidth:
+                            FINAL_CONFIG.style.chart.nodes.tooltip.maxWidth,
                         left: nodeTooltipStyle.left,
                         top: nodeTooltipStyle.top,
-                        '--vue-data-ui-dag-node-tooltip-background': FINAL_CONFIG.style.chart.nodes.tooltip.backgroundColor,
-                        '--vue-data-ui-dag-node-tooltip-color': FINAL_CONFIG.style.chart.nodes.tooltip.color
+                        '--vue-data-ui-dag-node-tooltip-background':
+                            FINAL_CONFIG.style.chart.nodes.tooltip
+                                .backgroundColor,
+                        '--vue-data-ui-dag-node-tooltip-color':
+                            FINAL_CONFIG.style.chart.nodes.tooltip.color,
                     }"
                     :data-position="nodeTooltipPlacement"
                 >
-                    <slot name="tooltip-node" v-bind="{ node: nodeTooltipNode, layoutData }">
+                    <slot
+                        name="tooltip-node"
+                        v-bind="{ node: nodeTooltipNode, layoutData }"
+                    >
                         <div v-if="nodeTooltipNode">
                             {{ nodeTooltipNode.label }}
                         </div>
@@ -1891,7 +2304,11 @@ defineExpose({
 
         <BaseZoomControls
             ref="zoomControls"
-            v-if="FINAL_CONFIG.style.chart.controls.position === 'bottom' && !loading && FINAL_CONFIG.style.chart.controls.show"
+            v-if="
+                FINAL_CONFIG.style.chart.controls.position === 'bottom' &&
+                !loading &&
+                FINAL_CONFIG.style.chart.controls.show
+            "
             :config="FINAL_CONFIG"
             :scale="scale"
             :isFullscreen="isFullscreen"
@@ -1908,13 +2325,13 @@ defineExpose({
         </div>
 
         <slot name="skeleton">
-            <BaseScanner v-if="loading"/>
+            <BaseScanner v-if="loading" />
         </slot>
     </div>
 </template>
 
 <style scoped>
-@import "../vue-data-ui.css";
+@import '../vue-data-ui.css';
 
 .vue-ui-dag {
     overflow: hidden;
@@ -1934,9 +2351,9 @@ defineExpose({
 .vue-ui-dag-tooltip {
     position: fixed;
     pointer-events: none;
-    background: var(--vue-data-ui-dag-tooltip-background, #E1E5E8);
-    color: var(--vue-data-ui-dag-tooltip-color, #2D353C);
-    box-shadow: 0 3px 6px -3px rgba(0,0,0,0.2);
+    background: var(--vue-data-ui-dag-tooltip-background, #e1e5e8);
+    color: var(--vue-data-ui-dag-tooltip-color, #2d353c);
+    box-shadow: 0 3px 6px -3px rgba(0, 0, 0, 0.2);
     padding: 0.35rem 0.55rem;
     border-radius: 4px;
     font-size: 12px;
@@ -1946,51 +2363,55 @@ defineExpose({
 }
 
 .vue-ui-dag-tooltip::after {
-    content: "";
+    content: '';
     position: absolute;
     left: 50%;
     transform: translateX(-50%);
     border-style: solid;
 }
 
-.vue-ui-dag-tooltip[data-position="top"]::after {
+.vue-ui-dag-tooltip[data-position='top']::after {
     bottom: -8px;
     border-width: 8px 8px 0 8px;
-    border-color: var(--vue-data-ui-dag-tooltip-background, #E1E5E8) transparent transparent transparent;
+    border-color: var(--vue-data-ui-dag-tooltip-background, #e1e5e8) transparent
+        transparent transparent;
 }
 
-.vue-ui-dag-tooltip[data-position="bottom"]::after {
+.vue-ui-dag-tooltip[data-position='bottom']::after {
     top: -8px;
     border-width: 0 8px 8px 8px;
-    border-color: transparent transparent var(--vue-data-ui-dag-tooltip-background, #E1E5E8) transparent;
+    border-color: transparent transparent
+        var(--vue-data-ui-dag-tooltip-background, #e1e5e8) transparent;
 }
 
-.vue-ui-dag-tooltip[data-position="left"]::after {
+.vue-ui-dag-tooltip[data-position='left']::after {
     top: 50%;
     transform: translateY(-50%);
     left: 100%;
     border-width: 8px 0 8px 8px;
-    border-color: transparent transparent transparent var(--vue-data-ui-dag-tooltip-background, #E1E5E8);
+    border-color: transparent transparent transparent
+        var(--vue-data-ui-dag-tooltip-background, #e1e5e8);
 }
 
-.vue-ui-dag-tooltip[data-position="right"]::after {
+.vue-ui-dag-tooltip[data-position='right']::after {
     top: 50%;
     transform: translateY(-50%);
     left: -8px;
     border-width: 8px 8px 8px 0;
-    border-color: transparent var(--vue-data-ui-dag-tooltip-background, #E1E5E8) transparent transparent;
+    border-color: transparent var(--vue-data-ui-dag-tooltip-background, #e1e5e8)
+        transparent transparent;
 }
 
-.vue-ui-dag-tooltip[data-position="center"]::after {
+.vue-ui-dag-tooltip[data-position='center']::after {
     display: none;
 }
 
 .vue-ui-dag-node-tooltip {
     position: fixed;
     pointer-events: auto;
-    background: var(--vue-data-ui-dag-node-tooltip-background, #FFFFFF);
-    color: var(--vue-data-ui-dag-node-tooltip-color, #2D353C);
-    box-shadow: 0 3px 6px -3px rgba(0,0,0,0.2);
+    background: var(--vue-data-ui-dag-node-tooltip-background, #ffffff);
+    color: var(--vue-data-ui-dag-node-tooltip-color, #2d353c);
+    box-shadow: 0 3px 6px -3px rgba(0, 0, 0, 0.2);
     padding: 0.5rem 0.75rem;
     border-radius: 4px;
     font-size: 12px;
@@ -2000,44 +2421,49 @@ defineExpose({
 }
 
 .vue-ui-dag-node-tooltip::after {
-    content: "";
+    content: '';
     position: absolute;
     left: 50%;
     transform: translateX(-50%);
     border-style: solid;
 }
 
-.vue-ui-dag-node-tooltip[data-position="top"]::after {
+.vue-ui-dag-node-tooltip[data-position='top']::after {
     bottom: -8px;
     border-width: 8px 8px 0 8px;
-    border-color: var(--vue-data-ui-dag-node-tooltip-background, #FFFFFF) transparent transparent transparent;
+    border-color: var(--vue-data-ui-dag-node-tooltip-background, #ffffff)
+        transparent transparent transparent;
 }
 
-.vue-ui-dag-node-tooltip[data-position="bottom"]::after {
+.vue-ui-dag-node-tooltip[data-position='bottom']::after {
     top: -8px;
     border-width: 0 8px 8px 8px;
-    border-color: transparent transparent var(--vue-data-ui-dag-node-tooltip-background, #FFFFFF) transparent;
+    border-color: transparent transparent
+        var(--vue-data-ui-dag-node-tooltip-background, #ffffff) transparent;
 }
 
-.vue-ui-dag-node-tooltip[data-position="left"]::after {
+.vue-ui-dag-node-tooltip[data-position='left']::after {
     top: 50%;
     transform: translateY(-50%);
     left: 100%;
     border-width: 8px 0 8px 8px;
-    border-color: transparent transparent transparent var(--vue-data-ui-dag-node-tooltip-background, #E1E5E8);
+    border-color: transparent transparent transparent
+        var(--vue-data-ui-dag-node-tooltip-background, #e1e5e8);
 }
 
-.vue-ui-dag-node-tooltip[data-position="right"]::after {
+.vue-ui-dag-node-tooltip[data-position='right']::after {
     top: 50%;
     left: -8px;
     right: auto;
     bottom: auto;
     transform: translateY(-50%);
     border-width: 8px 8px 8px 0;
-    border-color: transparent var(--vue-data-ui-dag-node-tooltip-background, #FFFFFF) transparent transparent;
+    border-color: transparent
+        var(--vue-data-ui-dag-node-tooltip-background, #ffffff) transparent
+        transparent;
 }
 
-.vue-ui-dag-node-tooltip[data-position="center"]::after {
+.vue-ui-dag-node-tooltip[data-position='center']::after {
     display: none;
 }
 

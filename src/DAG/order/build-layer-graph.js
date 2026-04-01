@@ -1,5 +1,5 @@
-import Graph from "../graph.js";
-import * as util from "../util.js";
+import Graph from '../graph.js';
+import * as util from '../util.js';
 
 /*
  * Constructs a graph that can be used to sort a layer of nodes. The graph will
@@ -42,9 +42,9 @@ export default function buildLayerGraph(g, rank, relationship, nodesWithRank) {
     const root = createRootNode(g);
     const result = new Graph({ compound: true })
         .setGraph({ root })
-        .setDefaultNodeLabel(v => g.node(v));
+        .setDefaultNodeLabel((v) => g.node(v));
 
-    nodesWithRank.forEach(v => {
+    nodesWithRank.forEach((v) => {
         const node = g.node(v);
         const parent = g.parent(v);
 
@@ -57,20 +57,20 @@ export default function buildLayerGraph(g, rank, relationship, nodesWithRank) {
             result.setParent(v, parent || root);
 
             // Copy incident edges of the requested type (inEdges or outEdges)
-            g[relationship](v).forEach(e => {
+            g[relationship](v).forEach((e) => {
                 const u = e.v === v ? e.w : e.v;
                 const existing = result.edge(u, v);
                 const existingWeight = existing ? existing.weight : 0;
 
                 result.setEdge(u, v, {
-                    weight: g.edge(e).weight + existingWeight
+                    weight: g.edge(e).weight + existingWeight,
                 });
             });
 
-            if (Object.hasOwn(node, "minRank")) {
+            if (Object.hasOwn(node, 'minRank')) {
                 result.setNode(v, {
                     borderLeft: node.borderLeft[rank],
-                    borderRight: node.borderRight[rank]
+                    borderRight: node.borderRight[rank],
                 });
             }
         }
@@ -81,6 +81,6 @@ export default function buildLayerGraph(g, rank, relationship, nodesWithRank) {
 
 function createRootNode(g) {
     let id;
-    while (g.hasNode((id = util.uniqueId("_root"))));
+    while (g.hasNode((id = util.uniqueId('_root'))));
     return id;
 }

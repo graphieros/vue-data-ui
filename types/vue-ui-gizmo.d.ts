@@ -1,9 +1,6 @@
 import { DefineComponent } from 'vue';
 
-export type { 
-    VueUiGizmoConfig,
-    VueUiGizmoDataset
-} from "./vue-data-ui";
+export type { VueUiGizmoConfig, VueUiGizmoDataset } from './vue-data-ui';
 
 declare const VueUiGizmo: DefineComponent<{
     dataset: VueUiGizmoDataset;

@@ -1,6 +1,6 @@
 /**
  * For vue-ui-donut
- * 
+ *
  * Computes clustered label layouts for small donut arcs in 'classic' donut mode.
  *
  * This composable:
@@ -20,7 +20,7 @@
  * some paths do not connect directly to the arcs when Y is below the arc
  */
 
-import { computed } from "vue";
+import { computed } from 'vue';
 
 export function useSmallArcLayoutsClassic(dependencies) {
     const {
@@ -35,7 +35,7 @@ export function useSmallArcLayoutsClassic(dependencies) {
         calcMarkerOffsetY,
         animatingIndex,
         segregated,
-        isSmallArc
+        isSmallArc,
     } = dependencies;
 
     const smallArcLayoutsClassic = computed(() => {
@@ -112,7 +112,10 @@ export function useSmallArcLayoutsClassic(dependencies) {
              */
             const radialDeltaX = midX - centerX;
             const radialDeltaY = midY - centerY;
-            const radialLength = Math.sqrt(radialDeltaX * radialDeltaX + radialDeltaY * radialDeltaY) || 1;
+            const radialLength =
+                Math.sqrt(
+                    radialDeltaX * radialDeltaX + radialDeltaY * radialDeltaY,
+                ) || 1;
 
             // Normalized radial direction (unit vector)
             const radialUnitX = radialDeltaX / radialLength;
@@ -132,14 +135,17 @@ export function useSmallArcLayoutsClassic(dependencies) {
                  */
                 const fromCenterX = x - centerX;
                 const fromCenterY = y - centerY;
-                const fromCenterLength = Math.sqrt(fromCenterX * fromCenterX + fromCenterY * fromCenterY) || 1;
+                const fromCenterLength =
+                    Math.sqrt(
+                        fromCenterX * fromCenterX + fromCenterY * fromCenterY,
+                    ) || 1;
 
                 if (fromCenterLength >= safeRadius) return { x, y };
 
                 const factor = safeRadius / fromCenterLength;
                 return {
                     x: centerX + fromCenterX * factor,
-                    y: centerY + fromCenterY * factor
+                    y: centerY + fromCenterY * factor,
                 };
             }
 
@@ -200,18 +206,21 @@ export function useSmallArcLayoutsClassic(dependencies) {
                  * - normalized maps distance into 0 to 1
                  * - eased smooths the transition to avoid abrupt changes between arcs
                  */
-                const normalized = Math.max(0, Math.min(1, (distance - 18) / (56 - 12))); // 0 to 1
+                const normalized = Math.max(
+                    0,
+                    Math.min(1, (distance - 18) / (56 - 12)),
+                ); // 0 to 1
                 const eased = normalized * normalized * (3 - 2 * normalized);
 
                 /**
                  * Offset controls perpendicular bulge (visual curvature)
                  * radialBias nudges outward to avoid paths from colliding with donut
                  */
-                let offset = 2.5 + eased * 4.; // 2.5 to 7
+                let offset = 2.5 + eased * 4; // 2.5 to 7
                 let radialBias = 1.0 + eased * 2.5; // 1 to 3.5
 
                 // Slight reduction to keep the curve from looking too curly
-                offset *= 0.90;
+                offset *= 0.9;
 
                 /**
                  * Raw control point combines:
@@ -220,8 +229,14 @@ export function useSmallArcLayoutsClassic(dependencies) {
                  * - slight radial push outward (radialBias)
                  */
                 const rawControl = {
-                    x: baseX + perpendicularUnitX * offset + radialUnitX * radialBias,
-                    y: baseY + perpendicularUnitY * offset + radialUnitY * radialBias
+                    x:
+                        baseX +
+                        perpendicularUnitX * offset +
+                        radialUnitX * radialBias,
+                    y:
+                        baseY +
+                        perpendicularUnitY * offset +
+                        radialUnitY * radialBias,
                 };
 
                 // Ensure control point stays outside the safe donut radius.
@@ -246,18 +261,26 @@ export function useSmallArcLayoutsClassic(dependencies) {
             // First control point: push the curve outward along the radial direction
             const rawControlPoint1 = {
                 x: midX + radialUnitX * outwardStrength,
-                y: midY + radialUnitY * outwardStrength
+                y: midY + radialUnitY * outwardStrength,
             };
 
             /**
              * Second control point: places the approach handle on an outside “column” on the label side
              * Pulled closer to the label to avoid excessive ballooning
              */
-            const outsideColumnX = centerX + side * Math.max(Math.abs(bandX - centerX), safeRadius);
+            const outsideColumnX =
+                centerX +
+                side * Math.max(Math.abs(bandX - centerX), safeRadius);
 
             const rawControlPoint2 = {
-                x: bandX - side * Math.min(horizontalPull, Math.abs(outsideColumnX - bandX) * 0.75),
-                y: bandY
+                x:
+                    bandX -
+                    side *
+                        Math.min(
+                            horizontalPull,
+                            Math.abs(outsideColumnX - bandX) * 0.75,
+                        ),
+                y: bandY,
             };
 
             // Ensure both CP stay outside the safe donut radius
@@ -289,7 +312,7 @@ export function useSmallArcLayoutsClassic(dependencies) {
              * Split the label name by newline to support multi-line labels
              * Only extra lines beyond the first add extra vertical height
              */
-            const nameLines = String(arcName ?? "").split(/\n/g);
+            const nameLines = String(arcName ?? '').split(/\n/g);
             const extraNameLines = Math.max(0, nameLines.length - 1);
 
             // Line height for additional name lines (slightly tighter than baseLineHeight).
@@ -329,7 +352,7 @@ export function useSmallArcLayoutsClassic(dependencies) {
                 midY,
                 inlineMarkerX,
                 inlineMarkerY,
-                labelHeight
+                labelHeight,
             };
         }
 
@@ -414,25 +437,40 @@ export function useSmallArcLayoutsClassic(dependencies) {
              * Bottom quadrants are sorted descending by Y so labels stack from bottom to top
              * Secondary sort by index ensures stability when Y positions are tied
              */
-            const isTopBand = quadrantKey.startsWith("T");
+            const isTopBand = quadrantKey.startsWith('T');
 
             if (isTopBand) {
-                candidateList.sort((a, b) => a.inlineMarkerY - b.inlineMarkerY || a.index - b.index);
+                candidateList.sort(
+                    (a, b) =>
+                        a.inlineMarkerY - b.inlineMarkerY || a.index - b.index,
+                );
                 return;
             }
 
-            candidateList.sort((a, b) => b.inlineMarkerY - a.inlineMarkerY || a.index - b.index);
+            candidateList.sort(
+                (a, b) =>
+                    b.inlineMarkerY - a.inlineMarkerY || a.index - b.index,
+            );
         }
 
-        function createLayoutEntry({ side, markerX, markerY, labelY, connectorPath }) {
+        function createLayoutEntry({
+            side,
+            markerX,
+            markerY,
+            labelY,
+            connectorPath,
+        }) {
             return {
                 side,
-                labelX: side === 'left' ? markerX - markerTextGap : markerX + markerTextGap,
+                labelX:
+                    side === 'left'
+                        ? markerX - markerTextGap
+                        : markerX + markerTextGap,
                 labelY: labelY + fontBaselineOffset,
                 textAnchor: side === 'left' ? 'end' : 'start',
                 markerX,
                 markerY,
-                connectorPath
+                connectorPath,
             };
         }
 
@@ -441,7 +479,7 @@ export function useSmallArcLayoutsClassic(dependencies) {
             side,
             bandMarkerX,
             startY,
-            direction
+            direction,
         }) {
             /**
              * currentY is the running Y cursor for stacking labels in a band
@@ -449,7 +487,7 @@ export function useSmallArcLayoutsClassic(dependencies) {
              */
             let currentY = startY;
 
-            candidateList.forEach(candidate => {
+            candidateList.forEach((candidate) => {
                 const { index, midX, midY, labelHeight } = candidate;
 
                 /**
@@ -468,12 +506,12 @@ export function useSmallArcLayoutsClassic(dependencies) {
 
                 // Marker is positioned on the same Y as the label baseline cluster line
                 const markerY = labelY;
-            
+
                 const connectorPath = makeConnectorPathForSmallArcs({
                     midX,
                     midY,
                     bandX: bandMarkerX,
-                    bandY: markerY
+                    bandY: markerY,
                 });
 
                 layouts[index] = createLayoutEntry({
@@ -481,7 +519,7 @@ export function useSmallArcLayoutsClassic(dependencies) {
                     markerX: bandMarkerX,
                     markerY,
                     labelY,
-                    connectorPath
+                    connectorPath,
                 });
             });
         }
@@ -507,10 +545,10 @@ export function useSmallArcLayoutsClassic(dependencies) {
             TL: [],
             TR: [],
             BL: [],
-            BR: []
+            BR: [],
         };
 
-        candidateList.forEach(candidate => {
+        candidateList.forEach((candidate) => {
             candidatesByQuadrant[getQuadrantKey(candidate)].push(candidate);
         });
 
@@ -520,8 +558,11 @@ export function useSmallArcLayoutsClassic(dependencies) {
          * -----------------------------------------------------------------------------------------
          * Sorting defines label stacking order to minimize path crossing
          */
-        Object.keys(candidatesByQuadrant).forEach(quadrantKey => {
-            sortCandidatesForQuadrant(candidatesByQuadrant[quadrantKey], quadrantKey);
+        Object.keys(candidatesByQuadrant).forEach((quadrantKey) => {
+            sortCandidatesForQuadrant(
+                candidatesByQuadrant[quadrantKey],
+                quadrantKey,
+            );
         });
 
         /**
@@ -535,7 +576,7 @@ export function useSmallArcLayoutsClassic(dependencies) {
             side: 'left',
             bandMarkerX: leftBandMarkerX,
             startY: topPadding,
-            direction: 'down'
+            direction: 'down',
         });
 
         placeCandidatesIntoBand({
@@ -543,7 +584,7 @@ export function useSmallArcLayoutsClassic(dependencies) {
             side: 'right',
             bandMarkerX: rightBandMarkerX,
             startY: topPadding,
-            direction: 'down'
+            direction: 'down',
         });
 
         /**
@@ -556,7 +597,7 @@ export function useSmallArcLayoutsClassic(dependencies) {
                 side: 'left',
                 bandMarkerX: leftBandMarkerX,
                 startY: bottomPadding,
-                direction: 'up'
+                direction: 'up',
             });
         }
 
@@ -566,7 +607,7 @@ export function useSmallArcLayoutsClassic(dependencies) {
                 side: 'right',
                 bandMarkerX: rightBandMarkerX,
                 startY: bottomPadding,
-                direction: 'up'
+                direction: 'up',
             });
         }
 

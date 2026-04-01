@@ -42,15 +42,23 @@ function createDeterministicRandomGenerator(seedNumber) {
 
         intermediateValue ^=
             intermediateValue +
-            Math.imul(intermediateValue ^ (intermediateValue >>> 7), intermediateValue | 61);
+            Math.imul(
+                intermediateValue ^ (intermediateValue >>> 7),
+                intermediateValue | 61,
+            );
 
-        return ((intermediateValue ^ (intermediateValue >>> 14)) >>> 0) / 4294967296;
+        return (
+            ((intermediateValue ^ (intermediateValue >>> 14)) >>> 0) /
+            4294967296
+        );
     };
 }
 
 function pickValue(values, generateRandomNumber, fallbackValue) {
     if (!Array.isArray(values) || values.length === 0) {
-        console.error('VueUiPatternSeed - pickValue requires a non-empty array');
+        console.error(
+            'VueUiPatternSeed - pickValue requires a non-empty array',
+        );
         return fallbackValue;
     }
 
@@ -76,37 +84,17 @@ function escapeSvgAttribute(value) {
         .replace(/>/g, '&gt;');
 }
 
-function createLineElement(
-    x1,
-    y1,
-    x2,
-    y2,
-    stroke,
-    strokeWidth,
-    opacity,
-) {
+function createLineElement(x1, y1, x2, y2, stroke, strokeWidth, opacity) {
     const safeStroke = escapeSvgAttribute(stroke);
     return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${safeStroke}" stroke-width="${strokeWidth}" opacity="${opacity}" shape-rendering="crispEdges" stroke-linecap="round" stroke-linejoin="round" />`;
 }
 
-function createCircleElement(
-    centerX,
-    centerY,
-    radius,
-    fill,
-    opacity,
-) {
+function createCircleElement(centerX, centerY, radius, fill, opacity) {
     const safeFill = escapeSvgAttribute(fill);
     return `<circle cx="${centerX}" cy="${centerY}" r="${radius}" fill="${safeFill}" opacity="${opacity}" />`;
 }
 
-function createPathElement(
-    pathData,
-    fill,
-    stroke,
-    strokeWidth,
-    opacity,
-) {
+function createPathElement(pathData, fill, stroke, strokeWidth, opacity) {
     const safeFill = escapeSvgAttribute(fill);
     const safeStroke = escapeSvgAttribute(stroke);
     return `<path d="${pathData}" fill="${safeFill}" stroke="${safeStroke}" stroke-width="${strokeWidth}" opacity="${opacity}" stroke-linecap="round" stroke-linejoin="round" />`;
@@ -130,13 +118,7 @@ function createRectangleElement(
     return `<rect x="${x}" y="${y}" width="${width}" height="${height}" fill="${safeFill}" opacity="${opacity}"${transform} />`;
 }
 
-function createDiamondElement(
-    centerX,
-    centerY,
-    size,
-    fill,
-    opacity,
-) {
+function createDiamondElement(centerX, centerY, size, fill, opacity) {
     const halfSize = size / 2;
     const pathData = [
         `M ${centerX} ${centerY - halfSize}`,
@@ -175,22 +157,13 @@ function createDotsPatternMarkup(
     generateRandomNumber,
 ) {
     const radius = pickValue(
-        [
-            tileSize * 0.08,
-            tileSize * 0.1,
-            tileSize * 0.12,
-        ],
+        [tileSize * 0.08, tileSize * 0.1, tileSize * 0.12],
         generateRandomNumber,
         tileSize * 0.1,
     );
 
     const layoutVariant = pickValue(
-        [
-            'grid',
-            'offsetGrid',
-            'corners',
-            'centered',
-        ],
+        ['grid', 'offsetGrid', 'corners', 'centered'],
         generateRandomNumber,
         'grid',
     );
@@ -198,37 +171,145 @@ function createDotsPatternMarkup(
     switch (layoutVariant) {
         case 'offsetGrid':
             return [
-                createCircleElement(tileSize * 0.25, tileSize * 0.25, radius, foregroundColor, opacity),
-                createCircleElement(tileSize * 0.75, tileSize * 0.25, radius, foregroundColor, opacity),
-                createCircleElement(tileSize * 0.5, tileSize * 0.5, radius, foregroundColor, opacity),
-                createCircleElement(tileSize * 0.25, tileSize * 0.75, radius, foregroundColor, opacity),
-                createCircleElement(tileSize * 0.75, tileSize * 0.75, radius, foregroundColor, opacity),
+                createCircleElement(
+                    tileSize * 0.25,
+                    tileSize * 0.25,
+                    radius,
+                    foregroundColor,
+                    opacity,
+                ),
+                createCircleElement(
+                    tileSize * 0.75,
+                    tileSize * 0.25,
+                    radius,
+                    foregroundColor,
+                    opacity,
+                ),
+                createCircleElement(
+                    tileSize * 0.5,
+                    tileSize * 0.5,
+                    radius,
+                    foregroundColor,
+                    opacity,
+                ),
+                createCircleElement(
+                    tileSize * 0.25,
+                    tileSize * 0.75,
+                    radius,
+                    foregroundColor,
+                    opacity,
+                ),
+                createCircleElement(
+                    tileSize * 0.75,
+                    tileSize * 0.75,
+                    radius,
+                    foregroundColor,
+                    opacity,
+                ),
             ].join('');
 
         case 'corners':
             return [
-                createCircleElement(tileSize * 0.2, tileSize * 0.2, radius, foregroundColor, opacity),
-                createCircleElement(tileSize * 0.8, tileSize * 0.2, radius, foregroundColor, opacity),
-                createCircleElement(tileSize * 0.2, tileSize * 0.8, radius, foregroundColor, opacity),
-                createCircleElement(tileSize * 0.8, tileSize * 0.8, radius, foregroundColor, opacity),
+                createCircleElement(
+                    tileSize * 0.2,
+                    tileSize * 0.2,
+                    radius,
+                    foregroundColor,
+                    opacity,
+                ),
+                createCircleElement(
+                    tileSize * 0.8,
+                    tileSize * 0.2,
+                    radius,
+                    foregroundColor,
+                    opacity,
+                ),
+                createCircleElement(
+                    tileSize * 0.2,
+                    tileSize * 0.8,
+                    radius,
+                    foregroundColor,
+                    opacity,
+                ),
+                createCircleElement(
+                    tileSize * 0.8,
+                    tileSize * 0.8,
+                    radius,
+                    foregroundColor,
+                    opacity,
+                ),
             ].join('');
 
         case 'centered':
             return [
-                createCircleElement(tileSize * 0.5, tileSize * 0.2, radius, foregroundColor, opacity),
-                createCircleElement(tileSize * 0.2, tileSize * 0.5, radius, foregroundColor, opacity),
-                createCircleElement(tileSize * 0.5, tileSize * 0.5, radius, foregroundColor, opacity),
-                createCircleElement(tileSize * 0.8, tileSize * 0.5, radius, foregroundColor, opacity),
-                createCircleElement(tileSize * 0.5, tileSize * 0.8, radius, foregroundColor, opacity),
+                createCircleElement(
+                    tileSize * 0.5,
+                    tileSize * 0.2,
+                    radius,
+                    foregroundColor,
+                    opacity,
+                ),
+                createCircleElement(
+                    tileSize * 0.2,
+                    tileSize * 0.5,
+                    radius,
+                    foregroundColor,
+                    opacity,
+                ),
+                createCircleElement(
+                    tileSize * 0.5,
+                    tileSize * 0.5,
+                    radius,
+                    foregroundColor,
+                    opacity,
+                ),
+                createCircleElement(
+                    tileSize * 0.8,
+                    tileSize * 0.5,
+                    radius,
+                    foregroundColor,
+                    opacity,
+                ),
+                createCircleElement(
+                    tileSize * 0.5,
+                    tileSize * 0.8,
+                    radius,
+                    foregroundColor,
+                    opacity,
+                ),
             ].join('');
 
         case 'grid':
         default:
             return [
-                createCircleElement(tileSize * 0.25, tileSize * 0.25, radius, foregroundColor, opacity),
-                createCircleElement(tileSize * 0.75, tileSize * 0.25, radius, foregroundColor, opacity),
-                createCircleElement(tileSize * 0.25, tileSize * 0.75, radius, foregroundColor, opacity),
-                createCircleElement(tileSize * 0.75, tileSize * 0.75, radius, foregroundColor, opacity),
+                createCircleElement(
+                    tileSize * 0.25,
+                    tileSize * 0.25,
+                    radius,
+                    foregroundColor,
+                    opacity,
+                ),
+                createCircleElement(
+                    tileSize * 0.75,
+                    tileSize * 0.25,
+                    radius,
+                    foregroundColor,
+                    opacity,
+                ),
+                createCircleElement(
+                    tileSize * 0.25,
+                    tileSize * 0.75,
+                    radius,
+                    foregroundColor,
+                    opacity,
+                ),
+                createCircleElement(
+                    tileSize * 0.75,
+                    tileSize * 0.75,
+                    radius,
+                    foregroundColor,
+                    opacity,
+                ),
             ].join('');
     }
 }
@@ -241,24 +322,13 @@ function createLinePatternMarkup(
     generateRandomNumber,
 ) {
     const lineFamily = pickValue(
-        [
-            'diagonal',
-            'vertical',
-            'horizontal',
-            'crosshatch',
-            'grid',
-        ],
+        ['diagonal', 'vertical', 'horizontal', 'crosshatch', 'grid'],
         generateRandomNumber,
         'diagonal',
     );
 
     const spacing = pickValue(
-        [
-            tileSize * 0.28,
-            tileSize * 0.33,
-            tileSize * 0.4,
-            tileSize * 0.5,
-        ],
+        [tileSize * 0.28, tileSize * 0.33, tileSize * 0.4, tileSize * 0.5],
         generateRandomNumber,
         tileSize * 0.33,
     );
@@ -267,7 +337,7 @@ function createLinePatternMarkup(
         case 'vertical': {
             const positions = [0, spacing, spacing * 2];
             return positions
-                .map(positionX =>
+                .map((positionX) =>
                     createLineElement(
                         positionX,
                         0,
@@ -284,7 +354,7 @@ function createLinePatternMarkup(
         case 'horizontal': {
             const positions = [0, spacing, spacing * 2];
             return positions
-                .map(positionY =>
+                .map((positionY) =>
                     createLineElement(
                         0,
                         positionY,
@@ -401,21 +471,13 @@ function createShapePatternMarkup(
     generateRandomNumber,
 ) {
     const shapeFamily = pickValue(
-        [
-            'diamonds',
-            'squares',
-            'mixed',
-        ],
+        ['diamonds', 'squares', 'mixed'],
         generateRandomNumber,
         'diamonds',
     );
 
     const shapeSize = pickValue(
-        [
-            tileSize * 0.16,
-            tileSize * 0.2,
-            tileSize * 0.24,
-        ],
+        [tileSize * 0.16, tileSize * 0.2, tileSize * 0.24],
         generateRandomNumber,
         tileSize * 0.2,
     );
@@ -534,11 +596,7 @@ function createAccentPatternMarkup(
     }
 
     const accentFamily = pickValue(
-        [
-            'singleDot',
-            'cornerDiamond',
-            'softBand',
-        ],
+        ['singleDot', 'cornerDiamond', 'softBand'],
         generateRandomNumber,
         'singleDot',
     );
@@ -599,11 +657,7 @@ function createPrettyPatternMarkup(
     );
 
     const primaryFamily = pickValue(
-        [
-            'lines',
-            'dots',
-            'shapes',
-        ],
+        ['lines', 'dots', 'shapes'],
         generateRandomNumber,
         'lines',
     );
@@ -643,10 +697,7 @@ function createPrettyPatternMarkup(
     return `${primaryMarkup}${accentMarkup}`;
 }
 
-export function createSeededSvgPattern(
-    seed,
-    options = {},
-) {
+export function createSeededSvgPattern(seed, options = {}) {
     try {
         const disambiguator = options?.disambiguator ?? '';
         const normalizedSeed = `${String(seed ?? '')}::${String(disambiguator)}`;
@@ -659,7 +710,8 @@ export function createSeededSvgPattern(
         );
 
         const seedNumber = createSeedNumber(normalizedSeed);
-        const generateRandomNumber = createDeterministicRandomGenerator(seedNumber);
+        const generateRandomNumber =
+            createDeterministicRandomGenerator(seedNumber);
 
         const availableSizes = [];
         for (let size = minimumSize; size <= maximumSize; size += 2) {
@@ -703,7 +755,10 @@ export function createSeededSvgPattern(
             contentMarkup: contentParts.join(''),
         };
     } catch (error) {
-        console.error('VueUiPatternSeed - Failed to create seeded SVG pattern', error);
+        console.error(
+            'VueUiPatternSeed - Failed to create seeded SVG pattern',
+            error,
+        );
 
         return {
             width: 8,
@@ -736,7 +791,10 @@ export function createPatternDef({
 
         return `<defs><pattern id="${escapeSvgAttribute(id)}" patternUnits="userSpaceOnUse" width="${pattern.width}" height="${pattern.height}" patternTransform="rotate(${pattern.rotation})">${pattern.contentMarkup}</pattern></defs>`;
     } catch (error) {
-        console.error('VueUiPatternSeed - Failed to create chart pattern slot markup', error);
+        console.error(
+            'VueUiPatternSeed - Failed to create chart pattern slot markup',
+            error,
+        );
         return `<defs><pattern id="${escapeSvgAttribute(id)}" patternUnits="userSpaceOnUse" width="8" height="8" patternTransform="rotate(0)"></pattern></defs>`;
     }
 }

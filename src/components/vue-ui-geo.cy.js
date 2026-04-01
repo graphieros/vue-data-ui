@@ -2,10 +2,9 @@ import VueUiGeo from './vue-ui-geo.vue';
 import { components } from '../../cypress/fixtures/vdui-components';
 import { testCommonFeatures } from '../../cypress/fixtures';
 
-const { config, dataset } = components.find(c => c.name === 'VueUiGeo');
+const { config, dataset } = components.find((c) => c.name === 'VueUiGeo');
 
 describe('<VueUiGeo />', () => {
-
     function commonTest() {
         testCommonFeatures({
             userOptions: true,
@@ -14,8 +13,10 @@ describe('<VueUiGeo />', () => {
             legend: false,
             dataTable: false,
             tooltipCallback: () => {
-                cy.get('[data-cy="tooltip-trap-territory"]').first().trigger('mouseenter', { force: true });
-            } 
+                cy.get('[data-cy="tooltip-trap-territory"]')
+                    .first()
+                    .trigger('mouseenter', { force: true });
+            },
         });
     }
 
@@ -23,7 +24,7 @@ describe('<VueUiGeo />', () => {
         cy.mount(VueUiGeo, {
             props: {
                 dataset,
-                config
+                config,
             },
         }).then(({ wrapper }) => {
             commonTest();

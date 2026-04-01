@@ -1,19 +1,22 @@
 import { DefineComponent } from 'vue';
 
-export type { 
+export type {
     VueUiScatterDatasetValueItem,
     VueUiScatterDatasetItem,
     VueUiScatterConfig,
     VueUiScatterDatapoint,
     VueUiScatterSeries,
     VueUiScatterExpose,
-    VueUiScatterEvent
-} from "./vue-data-ui";
+    VueUiScatterEvent,
+} from './vue-data-ui';
 
-declare const VueUiScatter: DefineComponent<{
-    config?: VueUiScatterConfig;
-    dataset: VueUiScatterDatasetItem[];
-}, VueUiScatterExpose>;
+declare const VueUiScatter: DefineComponent<
+    {
+        config?: VueUiScatterConfig;
+        dataset: VueUiScatterDatasetItem[];
+    },
+    VueUiScatterExpose
+>;
 
 export default VueUiScatter;
-export { VueUiScatter }
+export { VueUiScatter };

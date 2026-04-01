@@ -1,150 +1,160 @@
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted } from 'vue';
 import LocalVueUiRelationCircle from '../src/components/vue-ui-relation-circle.vue';
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
-import Box from "./Box.vue";
-import convertArrayToObject from "./convertModel";
-import { VueUiRelationCircle } from "vue-data-ui";
-import { VueUiRelationCircle as VueUiRelationCircleTreeshaken } from "vue-data-ui/vue-ui-relation-circle";
-import ConfigKnobs from "./ConfigKnobs.vue";
-import { useConfigurationControls } from "./createConfigModel";
-import { useConfig } from "../src/useConfig"
-import useThemeOptions from "./useThemeOptions";
+import Box from './Box.vue';
+import convertArrayToObject from './convertModel';
+import { VueUiRelationCircle } from 'vue-data-ui';
+import { VueUiRelationCircle as VueUiRelationCircleTreeshaken } from 'vue-data-ui/vue-ui-relation-circle';
+import ConfigKnobs from './ConfigKnobs.vue';
+import { useConfigurationControls } from './createConfigModel';
+import { useConfig } from '../src/useConfig';
+import useThemeOptions from './useThemeOptions';
 
 const { vue_ui_relation_circle: DEFAULT_CONFIG } = useConfig();
 
-const {
-    CHECKBOX,
-    NUMBER,
-    RANGE,
-    TEXT,
-    COLOR,
-    SELECT,
-    createModel
-} = useConfigurationControls(DEFAULT_CONFIG);
+const { CHECKBOX, NUMBER, RANGE, TEXT, COLOR, SELECT, createModel } =
+    useConfigurationControls(DEFAULT_CONFIG);
 
 const dataset = ref(undefined);
 
 onMounted(() => {
     setTimeout(() => {
         dataset.value = [
-    {
-        id: "01",
-        label: "Lorem",
-        relations: ["02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"],
-        weights: [5, 3, 20, 2, 9, 3, 1, 2, 3, 7, 1],
-    },
-    {
-        id: "02",
-        label: "Ipsum",
-        relations: ["01", "03"],
-        weights: [3, 2],
-    },
-    {
-        id: "03",
-        label: "Dolor",
-        relations: ["01", "02"],
-        weights: [2, 5],
-    },
-    {
-        id: "04",
-        label: "Consectetur",
-        relations: ["01", "05", "10"],
-        weights: [3, 1, 4],
-    },
-    {
-        id: "05",
-        label: "Amet",
-        relations: ["01", "04", "07", "10"],
-        weights: [2, 3, 4, 5],
-    },
-    {
-        id: "06",
-        label: "Rherum",
-        relations: ["01", "02"],
-        weights: [4, 1],
-    },
-    {
-        id: "07",
-        label: "Delecta",
-        relations: ["01", "02", "08", "12"],
-        weights: [4, 8, 2, 1],
-    },
-    {
-        id: "08",
-        label: "Nitimur",
-        relations: ["01", "07", "12", "01"],
-        weights: [7, 3, 2, 3],
-    },
-    {
-        id: "09",
-        label: "Vetitum",
-        relations: ["01"],
-        weights: [1],
-    },
-    {
-        id: "10",
-        label: "Monumentum",
-        relations: ["01", "04", "05"],
-        weights: [4, 1, 4],
-    },
-    {
-        id: "11",
-        label: "Aere",
-        relations: ["01"],
-        weights: [3],
-    },
-    {
-        id: "12",
-        label: "Perennius",
-        relations: ["01", "07", "08"],
-        weights: [8, 1, 1],
-    }
-]
+            {
+                id: '01',
+                label: 'Lorem',
+                relations: [
+                    '02',
+                    '03',
+                    '04',
+                    '05',
+                    '06',
+                    '07',
+                    '08',
+                    '09',
+                    '10',
+                    '11',
+                    '12',
+                ],
+                weights: [5, 3, 20, 2, 9, 3, 1, 2, 3, 7, 1],
+            },
+            {
+                id: '02',
+                label: 'Ipsum',
+                relations: ['01', '03'],
+                weights: [3, 2],
+            },
+            {
+                id: '03',
+                label: 'Dolor',
+                relations: ['01', '02'],
+                weights: [2, 5],
+            },
+            {
+                id: '04',
+                label: 'Consectetur',
+                relations: ['01', '05', '10'],
+                weights: [3, 1, 4],
+            },
+            {
+                id: '05',
+                label: 'Amet',
+                relations: ['01', '04', '07', '10'],
+                weights: [2, 3, 4, 5],
+            },
+            {
+                id: '06',
+                label: 'Rherum',
+                relations: ['01', '02'],
+                weights: [4, 1],
+            },
+            {
+                id: '07',
+                label: 'Delecta',
+                relations: ['01', '02', '08', '12'],
+                weights: [4, 8, 2, 1],
+            },
+            {
+                id: '08',
+                label: 'Nitimur',
+                relations: ['01', '07', '12', '01'],
+                weights: [7, 3, 2, 3],
+            },
+            {
+                id: '09',
+                label: 'Vetitum',
+                relations: ['01'],
+                weights: [1],
+            },
+            {
+                id: '10',
+                label: 'Monumentum',
+                relations: ['01', '04', '05'],
+                weights: [4, 1, 4],
+            },
+            {
+                id: '11',
+                label: 'Aere',
+                relations: ['01'],
+                weights: [3],
+            },
+            {
+                id: '12',
+                label: 'Perennius',
+                relations: ['01', '07', '08'],
+                weights: [8, 1, 1],
+            },
+        ];
     }, 2000);
-})
+});
 
 const model = createModel([
-    CHECKBOX("debug", { def: true }),
-    CHECKBOX("loading", { def: false }),
-    CHECKBOX("responsive", { def: false }),
-    CHECKBOX("responsiveProportionalSizing", { def: false }),
-    CHECKBOX("userOptions.show", { def: true }),
-    CHECKBOX("userOptions.buttons.pdf", { def: true }),
-    CHECKBOX("userOptions.buttons.img", { def: true }),
-    CHECKBOX("userOptions.buttons.fullscreen", { def: true }),
-    SELECT("userOptions.position", ["left", "right"], { def: "right" }),
-    CHECKBOX("userOptions.showOnChartHover", { def: true }),
-    CHECKBOX("userOptions.keepStateOnChartLeave", { def: true }),
-    NUMBER("userOptions.print.scale", { def: 2, min: 1, max: 5 }),
-    CHECKBOX("userOptions.print.allowTaint", { def: true }),
-    CHECKBOX("userOptions.print.useCORS", { def: true }),
-    COLOR("userOptions.print.backgroundColor", { def: "#FFFFFF" }),
-    COLOR("style.color", { def: "#1A1A1A" }),
-    COLOR("style.backgroundColor", { def: "#FFFFFF" }),
-    TEXT("style.fontFamily", { def: "inherit" }),
-    NUMBER("style.size", { def: 400, min: 100, max: 1000 }),
-    RANGE("style.limit", { def: 50, min: 2, max: 100 }),
-    CHECKBOX("style.animation.show", { def: true }),
-    NUMBER("style.animation.speedMs", { def: 300, min: 0, max: 1000 }),
-    COLOR("style.labels.color", { def: "#1A1A1A" }),
-    NUMBER("style.labels.fontSize", { def: 14, min: 8, max: 48 }),
-    CHECKBOX("style.links.curved", { def: false }),
-    NUMBER("style.links.maxWidth", { def: 5, min: 0, max: 100 }),
-    NUMBER("style.circle.radiusProportion", { def: 0.2, min: 0.1, max: 1, step: 0.01 }),
-    COLOR("style.circle.stroke", { def: "#CCCCCC" }),
-    NUMBER("style.circle.strokeWidth", { def: 1, min: 0, max: 12 }),
-    NUMBER("style.circle.offsetY", { def: 0, min: -100, max: 100 }),
-    NUMBER("style.plot.radius", { def: 2, min: 0, max: 24 }),
-    COLOR("style.plot.color", { def: "#1A1A1A" }),
-    TEXT("style.title.text", { def: "Lorem ipsum dolor sit amet" }),
-    COLOR("style.title.color", { def: "#1A1A1A" }),
-    NUMBER("style.title.fontSize", { def: 20, min: 8, max: 48 }),
-    CHECKBOX("style.title.bold", { def: true }),
-    COLOR("style.title.subtitle.color", { def: "#CCCCCC" }),
-    TEXT("style.title.subtitle.text", { def: "Lorem ipsum dolor sit amet" }),
-    NUMBER("style.title.subtitle.fontSize", { def: 16, min: 8, max: 48 }),
-    CHECKBOX("style.title.subtitle.bold", { def: false })
+    CHECKBOX('debug', { def: true }),
+    CHECKBOX('loading', { def: false }),
+    CHECKBOX('responsive', { def: false }),
+    CHECKBOX('responsiveProportionalSizing', { def: false }),
+    CHECKBOX('userOptions.show', { def: true }),
+    CHECKBOX('userOptions.buttons.pdf', { def: true }),
+    CHECKBOX('userOptions.buttons.img', { def: true }),
+    CHECKBOX('userOptions.buttons.fullscreen', { def: true }),
+    SELECT('userOptions.position', ['left', 'right'], { def: 'right' }),
+    CHECKBOX('userOptions.showOnChartHover', { def: true }),
+    CHECKBOX('userOptions.keepStateOnChartLeave', { def: true }),
+    NUMBER('userOptions.print.scale', { def: 2, min: 1, max: 5 }),
+    CHECKBOX('userOptions.print.allowTaint', { def: true }),
+    CHECKBOX('userOptions.print.useCORS', { def: true }),
+    COLOR('userOptions.print.backgroundColor', { def: '#FFFFFF' }),
+    COLOR('style.color', { def: '#1A1A1A' }),
+    COLOR('style.backgroundColor', { def: '#FFFFFF' }),
+    TEXT('style.fontFamily', { def: 'inherit' }),
+    NUMBER('style.size', { def: 400, min: 100, max: 1000 }),
+    RANGE('style.limit', { def: 50, min: 2, max: 100 }),
+    CHECKBOX('style.animation.show', { def: true }),
+    NUMBER('style.animation.speedMs', { def: 300, min: 0, max: 1000 }),
+    COLOR('style.labels.color', { def: '#1A1A1A' }),
+    NUMBER('style.labels.fontSize', { def: 14, min: 8, max: 48 }),
+    CHECKBOX('style.links.curved', { def: false }),
+    NUMBER('style.links.maxWidth', { def: 5, min: 0, max: 100 }),
+    NUMBER('style.circle.radiusProportion', {
+        def: 0.2,
+        min: 0.1,
+        max: 1,
+        step: 0.01,
+    }),
+    COLOR('style.circle.stroke', { def: '#CCCCCC' }),
+    NUMBER('style.circle.strokeWidth', { def: 1, min: 0, max: 12 }),
+    NUMBER('style.circle.offsetY', { def: 0, min: -100, max: 100 }),
+    NUMBER('style.plot.radius', { def: 2, min: 0, max: 24 }),
+    COLOR('style.plot.color', { def: '#1A1A1A' }),
+    TEXT('style.title.text', { def: 'Lorem ipsum dolor sit amet' }),
+    COLOR('style.title.color', { def: '#1A1A1A' }),
+    NUMBER('style.title.fontSize', { def: 20, min: 8, max: 48 }),
+    CHECKBOX('style.title.bold', { def: true }),
+    COLOR('style.title.subtitle.color', { def: '#CCCCCC' }),
+    TEXT('style.title.subtitle.text', { def: 'Lorem ipsum dolor sit amet' }),
+    NUMBER('style.title.subtitle.fontSize', { def: 16, min: 8, max: 48 }),
+    CHECKBOX('style.title.subtitle.bold', { def: false }),
 ]);
 
 const { themeOptions, currentTheme } = useThemeOptions();
@@ -164,11 +174,11 @@ const config = computed(() => {
             ...c.userOptions,
             buttons: {
                 ...c.userOptions.buttons,
-                altCopy: true
+                altCopy: true,
             },
             callbacks: {
-                altCopy: console.log
-            }
+                altCopy: console.log,
+            },
         },
         events: {
             datapointEnter: ({ datapoint, seriesIndex }) => {
@@ -182,7 +192,7 @@ const config = computed(() => {
             },
         },
         theme: currentTheme.value,
-        customPalette: ['#6376DD', "#DD3322", "#66DDAA"],
+        customPalette: ['#6376DD', '#DD3322', '#66DDAA'],
         style: {
             ...c.style,
             // weightLabels: {
@@ -191,21 +201,20 @@ const config = computed(() => {
             //         return value
             //     }
             // }
-        }
-    }
-})
+        },
+    };
+});
 
-const step = ref(0)
+const step = ref(0);
 
-const local = ref(null)
+const local = ref(null);
 
-onMounted(async() => {
+onMounted(async () => {
     if (local.value) {
-        const img = await local.value.getImage()
-        console.log(img)
+        const img = await local.value.getImage();
+        console.log(img);
     }
-})
-
+});
 </script>
 
 <template>
@@ -220,11 +229,23 @@ onMounted(async() => {
         <template #title>VueUiRelationCircle</template>
 
         <template #responsive>
-            <div style="width: 600px; height: 600px; resize: both; overflow: auto; background: white">
-                <LocalVueUiRelationCircle :key="`responsive_${step}`" :dataset="dataset" :config="{
-                    ...config,
-                    responsive: true
-                }">
+            <div
+                style="
+                    width: 600px;
+                    height: 600px;
+                    resize: both;
+                    overflow: auto;
+                    background: white;
+                "
+            >
+                <LocalVueUiRelationCircle
+                    :key="`responsive_${step}`"
+                    :dataset="dataset"
+                    :config="{
+                        ...config,
+                        responsive: true,
+                    }"
+                >
                     <!-- <template #dataLabel="{ x,y,color,weight }">
                         <circle :cx="x" :cy="y" r="12" :fill="color"/>
                     </template> -->
@@ -232,13 +253,30 @@ onMounted(async() => {
                         <div style="width: 100%; height: 100%; background: radial-gradient(at top left, red, white)"/>
                     </template> -->
                     <template #watermark="{ isPrinting }">
-                        <div v-if="isPrinting" style="font-size: 100px; opacity: 0.1; transform: rotate(-10deg)">
+                        <div
+                            v-if="isPrinting"
+                            style="
+                                font-size: 100px;
+                                opacity: 0.1;
+                                transform: rotate(-10deg);
+                            "
+                        >
                             WATERMARK
                         </div>
                     </template>
                     <template #source>
-                        <div style="width:100%;font-size:10px;text-align:left">
-                            SOURCE: Lorem ipsum dolor sit, amet consectetur adipisicing elit. Tenetur, molestiae perspiciatis nam quae libero, deserunt in aperiam unde officia sint saepe laboriosam ducimus aspernatur labore! Sapiente aspernatur corrupti quis ad.
+                        <div
+                            style="
+                                width: 100%;
+                                font-size: 10px;
+                                text-align: left;
+                            "
+                        >
+                            SOURCE: Lorem ipsum dolor sit, amet consectetur
+                            adipisicing elit. Tenetur, molestiae perspiciatis
+                            nam quae libero, deserunt in aperiam unde officia
+                            sint saepe laboriosam ducimus aspernatur labore!
+                            Sapiente aspernatur corrupti quis ad.
                         </div>
                     </template>
                 </LocalVueUiRelationCircle>
@@ -246,29 +284,46 @@ onMounted(async() => {
         </template>
 
         <template #theme>
-            <LocalVueUiRelationCircle :dataset="dataset" :config="configTheme" />
+            <LocalVueUiRelationCircle
+                :dataset="dataset"
+                :config="configTheme"
+            />
         </template>
 
         <template #local>
-            <LocalVueUiRelationCircle :dataset="dataset" :config="config" :key="`local_${step}`" ref="local">
-                <template #optionPdf>
-                    PRINT PDF
-                </template>
+            <LocalVueUiRelationCircle
+                :dataset="dataset"
+                :config="config"
+                :key="`local_${step}`"
+                ref="local"
+            >
+                <template #optionPdf> PRINT PDF </template>
                 <template #svg="{ svg }">
                     <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
                     <text :x="30" :y="30" text-anchor="middle">#SVG</text>
                 </template>
                 <template #watermark="{ isPrinting }">
-                    <div v-if="isPrinting" style="font-size: 100px; opacity: 0.1; transform: rotate(-10deg)">
+                    <div
+                        v-if="isPrinting"
+                        style="
+                            font-size: 100px;
+                            opacity: 0.1;
+                            transform: rotate(-10deg);
+                        "
+                    >
                         WATERMARK
                     </div>
-                </template>  
+                </template>
             </LocalVueUiRelationCircle>
         </template>
 
         <template #VDUI-local>
-            <LocalVueDataUi component="VueUiRelationCircle" :dataset="dataset" :config="config"
-                :key="`vdui_local_${step}`">
+            <LocalVueDataUi
+                component="VueUiRelationCircle"
+                :dataset="dataset"
+                :config="config"
+                :key="`vdui_local_${step}`"
+            >
                 <template #svg="{ svg }">
                     <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
                     <text :x="30" :y="30" text-anchor="middle">#SVG</text>
@@ -277,7 +332,11 @@ onMounted(async() => {
         </template>
 
         <template #build>
-            <VueUiRelationCircle :dataset="dataset" :config="config" :key="`build_${step}`">
+            <VueUiRelationCircle
+                :dataset="dataset"
+                :config="config"
+                :key="`build_${step}`"
+            >
                 <template #svg="{ svg }">
                     <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
                     <text :x="30" :y="30" text-anchor="middle">#SVG</text>
@@ -286,7 +345,11 @@ onMounted(async() => {
         </template>
 
         <template #build-treesh>
-            <VueUiRelationCircleTreeshaken :dataset="dataset" :config="config" :key="`build_${step}`">
+            <VueUiRelationCircleTreeshaken
+                :dataset="dataset"
+                :config="config"
+                :key="`build_${step}`"
+            >
                 <template #svg="{ svg }">
                     <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
                     <text :x="30" :y="30" text-anchor="middle">#SVG</text>
@@ -295,7 +358,12 @@ onMounted(async() => {
         </template>
 
         <template #VDUI-build>
-            <VueDataUi component="VueUiRelationCircle" :dataset="dataset" :config="config" :key="`vdui_build_${step}`">
+            <VueDataUi
+                component="VueUiRelationCircle"
+                :dataset="dataset"
+                :config="config"
+                :key="`vdui_build_${step}`"
+            >
                 <template #svg="{ svg }">
                     <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
                     <text :x="30" :y="30" text-anchor="middle">#SVG</text>
@@ -304,7 +372,11 @@ onMounted(async() => {
         </template>
 
         <template #knobs="{ summaryOpen }">
-            <ConfigKnobs :model="model" @change="step += 1" :open="summaryOpen"/>
+            <ConfigKnobs
+                :model="model"
+                @change="step += 1"
+                :open="summaryOpen"
+            />
         </template>
     </Box>
 </template>

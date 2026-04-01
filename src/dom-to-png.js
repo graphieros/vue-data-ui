@@ -1,4 +1,4 @@
-import { XMLNS } from "./lib";
+import { XMLNS } from './lib';
 
 /**
  * Recursively finds all <img> tags in the given clone,
@@ -9,8 +9,8 @@ import { XMLNS } from "./lib";
  */
 async function inlineAllImages(clone) {
     const imgEls = clone.querySelectorAll('img');
-    const promises = Array.from(imgEls).map(imgEl => {
-        return new Promise(resolve => {
+    const promises = Array.from(imgEls).map((imgEl) => {
+        return new Promise((resolve) => {
             if (!imgEl.src || imgEl.src.startsWith('data:')) return resolve();
 
             if (imgEl.complete && imgEl.naturalWidth !== 0) {
@@ -40,7 +40,9 @@ async function inlineAllImages(clone) {
                 }
                 resolve();
             };
-            image.onerror = function () { resolve(); };
+            image.onerror = function () {
+                resolve();
+            };
             image.src = imgEl.src;
         });
     });
@@ -48,15 +50,14 @@ async function inlineAllImages(clone) {
     await Promise.all(promises);
 }
 
-
 /**
  * Removes all elements in the given DOM subtree that have the data-dom-to-png-ignore attribute.
  * @param {HTMLElement} root - The root of the cloned DOM tree.
  */
 function removeIgnoredElements(root) {
     const ignored = root.querySelectorAll('[data-dom-to-png-ignore]');
-    ignored.forEach(el => {
-        el.remove()
+    ignored.forEach((el) => {
+        el.remove();
     });
 }
 
@@ -76,7 +77,7 @@ function applyAllComputedStylesDeep(clone, original, inheritedFontFamily) {
 
     let inlineStyle = clone.getAttribute('style');
     if (typeof inlineStyle !== 'string') inlineStyle = '';
-    inlineStyle.split(';').forEach(s => {
+    inlineStyle.split(';').forEach((s) => {
         if (typeof s === 'string' && s.trim()) {
             const [prop, val] = s.split(':');
             if (prop && val !== undefined) styleMap[prop.trim()] = val.trim();
@@ -93,7 +94,8 @@ function applyAllComputedStylesDeep(clone, original, inheritedFontFamily) {
     styleMap['background-color'] = computedStyle.backgroundColor;
 
     let fontFamily = computedStyle.fontFamily || inheritedFontFamily || '';
-    if (!fontFamily ||
+    if (
+        !fontFamily ||
         fontFamily.trim() === '' ||
         fontFamily === 'inherit' ||
         fontFamily === 'initial' ||
@@ -122,7 +124,7 @@ function applyAllComputedStylesDeep(clone, original, inheritedFontFamily) {
         styleMap['white-space'] = 'nowrap';
     }
 
-    ['box-sizing', 'padding', 'margin', 'border'].forEach(prop => {
+    ['box-sizing', 'padding', 'margin', 'border'].forEach((prop) => {
         styleMap[prop] = computedStyle.getPropertyValue(prop);
     });
 
@@ -140,7 +142,11 @@ function applyAllComputedStylesDeep(clone, original, inheritedFontFamily) {
     const originalChildren = original.children || [];
     for (let i = 0; i < cloneChildren.length; i++) {
         if (cloneChildren[i].nodeType === 1 && originalChildren[i]) {
-            applyAllComputedStylesDeep(cloneChildren[i], originalChildren[i], fontFamily);
+            applyAllComputedStylesDeep(
+                cloneChildren[i],
+                originalChildren[i],
+                fontFamily,
+            );
         }
     }
 }
@@ -153,7 +159,7 @@ function applyAllComputedStylesDeep(clone, original, inheritedFontFamily) {
  */
 function setFontFamilyOnAllSvgTextElements(svgElement, fontFamily) {
     const textElements = svgElement.querySelectorAll('text');
-    textElements.forEach(textEl => {
+    textElements.forEach((textEl) => {
         textEl.setAttribute('font-family', fontFamily);
         textEl.style.fontFamily = fontFamily;
     });
@@ -168,7 +174,7 @@ function setFontFamilyOnAllSvgTextElements(svgElement, fontFamily) {
 function toBase64Unicode(str) {
     const utf8Bytes = new TextEncoder().encode(str);
     let binary = '';
-    utf8Bytes.forEach(b => binary += String.fromCharCode(b));
+    utf8Bytes.forEach((b) => (binary += String.fromCharCode(b)));
     return btoa(binary);
 }
 
@@ -182,22 +188,27 @@ function toBase64Unicode(str) {
 function svgElementToPngDataUrl(svgEl, width, height) {
     const serializer = new XMLSerializer();
     let svgString = serializer.serializeToString(svgEl);
-    if (!svgString.match(/^<svg[^>]+xmlns="http\:\/\/www\.w3\.org\/2000\/svg"/)) {
-        svgString = svgString.replace(/^<svg/, '<svg xmlns="http://www.w3.org/2000/svg"');
+    if (
+        !svgString.match(/^<svg[^>]+xmlns="http\:\/\/www\.w3\.org\/2000\/svg"/)
+    ) {
+        svgString = svgString.replace(
+            /^<svg/,
+            '<svg xmlns="http://www.w3.org/2000/svg"',
+        );
     }
     const base64 = window.btoa(unescape(encodeURIComponent(svgString)));
     const img = new window.Image();
     img.src = `data:image/svg+xml;base64,${base64}`;
     return new Promise((resolve, reject) => {
         img.onload = function () {
-            const canvas = document.createElement("canvas");
+            const canvas = document.createElement('canvas');
             canvas.width = width;
             canvas.height = height;
-            const ctx = canvas.getContext("2d");
+            const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, width, height);
-            resolve(canvas.toDataURL("image/png", 1.0));
+            resolve(canvas.toDataURL('image/png', 1.0));
         };
-        img.onerror = err => reject(err);
+        img.onerror = (err) => reject(err);
     });
 }
 
@@ -234,8 +245,9 @@ function extractFontFaceRules() {
             if (!rules) continue;
             for (const rule of rules) {
                 if (
-                    (typeof CSSFontFaceRule !== "undefined" && rule instanceof CSSFontFaceRule) ||
-                    rule.cssText.trim().startsWith("@font-face")
+                    (typeof CSSFontFaceRule !== 'undefined' &&
+                        rule instanceof CSSFontFaceRule) ||
+                    rule.cssText.trim().startsWith('@font-face')
                 ) {
                     fontCssRules.push(rule.cssText);
                 }
@@ -247,7 +259,6 @@ function extractFontFaceRules() {
     }
     return fontCssRules;
 }
-
 
 /**
  * Injects all @font-face CSS rules into an SVG element as an embedded <style> tag within <defs>.
@@ -261,7 +272,8 @@ function injectFontFaceStyles(svgEl) {
     const style = document.createElement('style');
     style.setAttribute('type', 'text/css');
     style.textContent = fontRules.join('\n');
-    const defs = svgEl.querySelector('defs') || document.createElementNS(XMLNS, 'defs');
+    const defs =
+        svgEl.querySelector('defs') || document.createElementNS(XMLNS, 'defs');
     defs.appendChild(style);
     if (!svgEl.querySelector('defs')) {
         svgEl.insertBefore(defs, svgEl.firstChild);
@@ -315,23 +327,33 @@ function inlineForeignObjectStylesInClone(cloneSvg, liveSvg) {
  */
 function injectCriticalStylesIntoForeignObjects(cloneSvg) {
     const foreignObjects = cloneSvg.querySelectorAll('foreignObject');
-    foreignObjects.forEach(fo => {
+    foreignObjects.forEach((fo) => {
         let css = '';
         const elements = Array.from(fo.querySelectorAll('*'));
         if (elements.length === 0) return;
 
         for (const sheet of document.styleSheets) {
             let rules;
-            try { rules = sheet.cssRules; } catch { continue; }
+            try {
+                rules = sheet.cssRules;
+            } catch {
+                continue;
+            }
             if (!rules) continue;
             for (const rule of rules) {
-                if (typeof CSSStyleRule !== "undefined" && !(rule instanceof CSSStyleRule)) continue;
+                if (
+                    typeof CSSStyleRule !== 'undefined' &&
+                    !(rule instanceof CSSStyleRule)
+                )
+                    continue;
                 try {
                     // Only include if any element matches this selector
-                    if (elements.some(el => el.matches(rule.selectorText))) {
-                        css += rule.cssText + "\n";
+                    if (elements.some((el) => el.matches(rule.selectorText))) {
+                        css += rule.cssText + '\n';
                     }
-                } catch { continue; }
+                } catch {
+                    continue;
+                }
             }
         }
         if (css) {
@@ -350,7 +372,7 @@ function injectCriticalStylesIntoForeignObjects(cloneSvg) {
  */
 function ensureForeignObjectRootNamespace(cloneSvg) {
     const foreignObjects = cloneSvg.querySelectorAll('foreignObject');
-    foreignObjects.forEach(fo => {
+    foreignObjects.forEach((fo) => {
         const root = fo.firstElementChild;
         if (root && root.tagName.toLowerCase() !== 'svg') {
             root.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
@@ -398,9 +420,11 @@ function walkAllAndApply(cloneNode, liveNode) {
 
 function forceInlineImageStyles(clone, original) {
     const originalImgs = Array.from(original.querySelectorAll('img'));
-    clone.querySelectorAll('img').forEach(img => {
+    clone.querySelectorAll('img').forEach((img) => {
         const src = img.getAttribute('src');
-        const match = originalImgs.find(oimg => oimg.getAttribute('src') === src);
+        const match = originalImgs.find(
+            (oimg) => oimg.getAttribute('src') === src,
+        );
         if (match) {
             const computedStyle = window.getComputedStyle(match);
             let styleString = '';
@@ -428,7 +452,7 @@ function forceInlineImageStyles(clone, original) {
  * @param {Object} params - Parameters for PNG export.
  * @param {HTMLElement} params.container - The DOM element to export. Should contain HTML, SVG, or canvas content.
  * @param {number} [params.scale=2] - Scaling factor for higher resolution output (e.g., 2 for retina). Default is 2.
- * @param {boolean} [params.base64=false] -  If true, resolves the image as base64, else resolves the image 
+ * @param {boolean} [params.base64=false] -  If true, resolves the image as base64, else resolves the image
  *
  * @returns {Promise<string>} Resolves to a PNG data URL of the rendered container.
  *
@@ -441,10 +465,11 @@ function forceInlineImageStyles(clone, original) {
  * @throws {Error} If container is not provided or rendering fails.
  */
 async function domToPng({ container, scale = 2, base64 = false }) {
-    if (!container) throw new Error("No container provided");
+    if (!container) throw new Error('No container provided');
 
     await document.fonts.ready;
-    let containerFontFamily = window.getComputedStyle(container).fontFamily || 'Helvetica';
+    let containerFontFamily =
+        window.getComputedStyle(container).fontFamily || 'Helvetica';
     if (!containerFontFamily.toLowerCase().includes('helvetica')) {
         containerFontFamily += ', Helvetica';
     }
@@ -461,8 +486,10 @@ async function domToPng({ container, scale = 2, base64 = false }) {
             img.src = originalCanvas.toDataURL('image/png');
             img.width = originalCanvas.width;
             img.height = originalCanvas.height;
-            img.style.width = originalCanvas.style.width || originalCanvas.width + 'px';
-            img.style.height = originalCanvas.style.height || originalCanvas.height + 'px';
+            img.style.width =
+                originalCanvas.style.width || originalCanvas.width + 'px';
+            img.style.height =
+                originalCanvas.style.height || originalCanvas.height + 'px';
             cloneCanvas.replaceWith(img);
         }
     }
@@ -485,14 +512,18 @@ async function domToPng({ container, scale = 2, base64 = false }) {
         const svgHeight = bbox.height;
         const scaledWidth = Math.round(svgWidth * scale);
         const scaledHeight = Math.round(svgHeight * scale);
-        const pngDataUrl = await svgElementToPngDataUrl(cloneSvg, scaledWidth, scaledHeight);
+        const pngDataUrl = await svgElementToPngDataUrl(
+            cloneSvg,
+            scaledWidth,
+            scaledHeight,
+        );
 
         const img = document.createElement('img');
         img.src = pngDataUrl;
         img.width = svgWidth;
         img.height = svgHeight;
-        img.style.width = svgWidth + "px";
-        img.style.height = svgHeight + "px";
+        img.style.width = svgWidth + 'px';
+        img.style.height = svgHeight + 'px';
         cloneSvg.parentNode.replaceChild(img, cloneSvg);
     }
 
@@ -503,7 +534,9 @@ async function domToPng({ container, scale = 2, base64 = false }) {
 
     const { width, height } = container.getBoundingClientRect();
     const exportWidth = Math.round(Math.max(clone.scrollWidth, width) * scale);
-    const exportHeight = Math.round((Math.max(clone.scrollHeight, height) * 1.01) * scale);
+    const exportHeight = Math.round(
+        Math.max(clone.scrollHeight, height) * 1.01 * scale,
+    );
 
     const temp_svg = document.createElementNS(XMLNS, 'svg');
     temp_svg.setAttribute('viewBox', `0 0 ${exportWidth} ${exportHeight}`);
@@ -519,9 +552,9 @@ async function domToPng({ container, scale = 2, base64 = false }) {
     fo.setAttribute('style', `font-family:${containerFontFamily};`);
 
     clone.style.transform = `scale(${scale})`;
-    clone.style.transformOrigin = "top left";
-    clone.style.width = width + "px";
-    clone.style.height = height + "px";
+    clone.style.transformOrigin = 'top left';
+    clone.style.width = width + 'px';
+    clone.style.height = height + 'px';
     clone.style.background = window.getComputedStyle(container).backgroundColor;
 
     fo.appendChild(clone);
@@ -533,31 +566,30 @@ async function domToPng({ container, scale = 2, base64 = false }) {
     const encodedData = toBase64Unicode(svgString);
 
     const img = new window.Image();
-    img.crossOrigin = "anonymous";
+    img.crossOrigin = 'anonymous';
     const b64 = `data:image/svg+xml;base64,${encodedData}`;
     img.src = b64;
 
     if (base64) {
         return new Promise((resolve) => {
             resolve(b64);
-        })
-    }else {
+        });
+    } else {
         return new Promise((resolve, reject) => {
-            
             img.onload = function () {
                 try {
-                    const canvas = document.createElement("canvas");
+                    const canvas = document.createElement('canvas');
                     canvas.width = exportWidth;
                     canvas.height = exportHeight;
-                    const ctx = canvas.getContext("2d");
+                    const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, exportWidth, exportHeight);
-                    resolve(canvas.toDataURL("image/png", 1.0));
+                    resolve(canvas.toDataURL('image/png', 1.0));
                 } catch (err) {
-                    reject("Failed to draw SVG on canvas: " + err);
+                    reject('Failed to draw SVG on canvas: ' + err);
                 }
             };
             img.onerror = function () {
-                reject("Failed to load SVG image for conversion");
+                reject('Failed to load SVG image for conversion');
             };
         });
     }

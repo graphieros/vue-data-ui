@@ -1,21 +1,28 @@
 <script setup>
-import { ref, watch, onMounted, onBeforeUnmount, computed, nextTick } from "vue";
-import { dataLabel, createUid, XMLNS } from "../lib";
-import BaseIcon from "./BaseIcon.vue";
-import { lightenHexColor } from "../lib";
-import ColorPicker from "./ColorPicker.vue";
+import {
+    ref,
+    watch,
+    onMounted,
+    onBeforeUnmount,
+    computed,
+    nextTick,
+} from 'vue';
+import { dataLabel, createUid, XMLNS } from '../lib';
+import BaseIcon from './BaseIcon.vue';
+import { lightenHexColor } from '../lib';
+import ColorPicker from './ColorPicker.vue';
 
 const props = defineProps({
     parent: {
-        type: HTMLElement
+        type: HTMLElement,
     },
     backgroundColor: {
         type: String,
-        default: '#FFFFFF'
+        default: '#FFFFFF',
     },
     color: {
         type: String,
-        default: '#2D353C'
+        default: '#2D353C',
     },
     active: {
         type: Boolean,
@@ -23,8 +30,8 @@ const props = defineProps({
     },
     isCursorPointer: {
         type: Boolean,
-        default: false
-    }
+        default: false,
+    },
 });
 
 const emit = defineEmits(['close']);
@@ -32,14 +39,14 @@ const emit = defineEmits(['close']);
 const stack = ref([]);
 const redoStack = ref([]);
 
-const viewBox = ref("0 0 0 0");
+const viewBox = ref('0 0 0 0');
 
-const currentColor = ref(props.color)
+const currentColor = ref(props.color);
 const strokeWidth = ref(1);
 
-const G = ref(null)
+const G = ref(null);
 const isEditingText = ref(false);
-const editingTextNode = ref(null); 
+const editingTextNode = ref(null);
 const editingTextAnchor = ref({ x: 0, y: 0 });
 const editingTextContent = ref(['']);
 const editingCaret = ref({ row: 0, col: 0 });
@@ -61,7 +68,7 @@ const iconMap = {
     text: 'text',
     line: 'plotLine',
     draw: 'annotator',
-}
+};
 
 function switchMode() {
     if (modeIndex.value + 1 >= modes.length) modeIndex.value = 0;
@@ -69,7 +76,7 @@ function switchMode() {
 }
 
 function nextId() {
-    return _id ++;
+    return _id++;
 }
 
 function toSvgPoint(event) {
@@ -79,7 +86,9 @@ function toSvgPoint(event) {
     const point = svg.createSVGPoint();
 
     const isTouch = !!event.touches?.length || !!event.changedTouches?.length;
-    const touch = isTouch ? (event.touches?.[0] || event.changedTouches?.[0]) : null;
+    const touch = isTouch
+        ? event.touches?.[0] || event.changedTouches?.[0]
+        : null;
 
     const clientX = touch ? touch.clientX : event.clientX;
     const clientY = touch ? touch.clientY : event.clientY;
@@ -100,19 +109,25 @@ function startSvgTextEditing(event) {
     editingTextContent.value = [''];
     editingCaret.value = { row: 0, col: 0 };
 
-    const textNode = document.createElementNS("http://www.w3.org/2000/svg", "text");
-    textNode.setAttribute("x", x);
-    textNode.setAttribute("y", y);
-    textNode.setAttribute("fill", currentColor.value);
-    textNode.setAttribute("font-size", fontSize.value);
-    textNode.setAttribute("font-family", "sans-serif");
-    textNode.setAttribute("class", "vue-data-ui-doodle");
-    textNode.setAttribute("dominant-baseline", "hanging");
-    textNode.setAttribute("pointer-events", "all");
+    const textNode = document.createElementNS(
+        'http://www.w3.org/2000/svg',
+        'text',
+    );
+    textNode.setAttribute('x', x);
+    textNode.setAttribute('y', y);
+    textNode.setAttribute('fill', currentColor.value);
+    textNode.setAttribute('font-size', fontSize.value);
+    textNode.setAttribute('font-family', 'sans-serif');
+    textNode.setAttribute('class', 'vue-data-ui-doodle');
+    textNode.setAttribute('dominant-baseline', 'hanging');
+    textNode.setAttribute('pointer-events', 'all');
 
-    const tspan = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
-    tspan.setAttribute("x", x);
-    tspan.setAttribute("dy", "0");
+    const tspan = document.createElementNS(
+        'http://www.w3.org/2000/svg',
+        'tspan',
+    );
+    tspan.setAttribute('x', x);
+    tspan.setAttribute('dy', '0');
     tspan.textContent = '';
     textNode.appendChild(tspan);
     textNode.style.pointerEvents = 'none';
@@ -227,10 +242,13 @@ function updateSvgTextDisplay() {
     const { x, y } = editingTextAnchor.value;
     while (textNode.firstChild) textNode.removeChild(textNode.firstChild);
     editingTextContent.value.forEach((line, i) => {
-        const tspan = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
-        tspan.setAttribute("x", x);
-        tspan.setAttribute("dy", i === 0 ? "0" : `${fontSize.value * 1.2}`);
-        tspan.textContent = line.length ? line : "\u200B";
+        const tspan = document.createElementNS(
+            'http://www.w3.org/2000/svg',
+            'tspan',
+        );
+        tspan.setAttribute('x', x);
+        tspan.setAttribute('dy', i === 0 ? '0' : `${fontSize.value * 1.2}`);
+        tspan.textContent = line.length ? line : '\u200B';
         textNode.appendChild(tspan);
     });
 }
@@ -253,12 +271,15 @@ function drawSvgCaret() {
         tempText += '\u00A0';
     }
 
-    const measureText = document.createElementNS("http://www.w3.org/2000/svg", "text");
-    measureText.setAttribute("x", x);
-    measureText.setAttribute("y", y);
-    measureText.setAttribute("font-size", fontPx);
-    measureText.setAttribute("font-family", "sans-serif");
-    measureText.textContent = tempText || "";
+    const measureText = document.createElementNS(
+        'http://www.w3.org/2000/svg',
+        'text',
+    );
+    measureText.setAttribute('x', x);
+    measureText.setAttribute('y', y);
+    measureText.setAttribute('font-size', fontPx);
+    measureText.setAttribute('font-family', 'sans-serif');
+    measureText.textContent = tempText || '';
     G.value.appendChild(measureText);
     const bbox = measureText.getBBox();
     G.value.removeChild(measureText);
@@ -267,13 +288,16 @@ function drawSvgCaret() {
     let caretY = y + row * fontPx * 1.2;
     let caretX = x + bbox.width;
 
-    const caret = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-    caret.setAttribute("x", caretX);
-    caret.setAttribute("y", caretY);
-    caret.setAttribute("width", 1);
-    caret.setAttribute("height", fontPx);
-    caret.setAttribute("fill", currentColor.value);
-    caret.setAttribute("class", "vue-data-ui-svg-caret");
+    const caret = document.createElementNS(
+        'http://www.w3.org/2000/svg',
+        'rect',
+    );
+    caret.setAttribute('x', caretX);
+    caret.setAttribute('y', caretY);
+    caret.setAttribute('width', 1);
+    caret.setAttribute('height', fontPx);
+    caret.setAttribute('fill', currentColor.value);
+    caret.setAttribute('class', 'vue-data-ui-svg-caret');
     G.value.appendChild(caret);
 }
 
@@ -284,7 +308,7 @@ function handleSvgTextBlur(e) {
         const tspans = editingTextNode.value.children;
         if (
             tspans.length === 1 &&
-            (tspans[0].textContent === "" || tspans[0].textContent === "\u200B")
+            (tspans[0].textContent === '' || tspans[0].textContent === '\u200B')
         ) {
             editingTextNode.value.remove();
         }
@@ -298,12 +322,16 @@ function cleanupSvgTextEditing(remove = false) {
     const caret = G.value?.querySelector('.vue-data-ui-svg-caret');
     caret && G.value.removeChild(caret);
 
-    const isEmpty = editingTextContent.value.every(line =>
-        !line || line === "\u200B"
+    const isEmpty = editingTextContent.value.every(
+        (line) => !line || line === '\u200B',
     );
 
     if (remove || isEmpty) {
-        if (editingTextNode.value && G.value && G.value.contains(editingTextNode.value)) {
+        if (
+            editingTextNode.value &&
+            G.value &&
+            G.value.contains(editingTextNode.value)
+        ) {
             G.value.removeChild(editingTextNode.value);
         }
     } else {
@@ -314,9 +342,13 @@ function cleanupSvgTextEditing(remove = false) {
             y: editingTextAnchor.value.y,
             color: currentColor.value,
             fontSize: fontSize.value,
-            lines: editingTextContent.value.map(line => line),
+            lines: editingTextContent.value.map((line) => line),
         });
-        if (editingTextNode.value && G.value && G.value.contains(editingTextNode.value)) {
+        if (
+            editingTextNode.value &&
+            G.value &&
+            G.value.contains(editingTextNode.value)
+        ) {
             G.value.removeChild(editingTextNode.value);
         }
     }
@@ -326,7 +358,6 @@ function cleanupSvgTextEditing(remove = false) {
     editingTextContent.value = [''];
     editingCaret.value = { row: 0, col: 0 };
 }
-
 
 const buttonBorderColor = computed(() => {
     return lightenHexColor(props.color, 0.6);
@@ -352,7 +383,7 @@ onMounted(() => {
             const { width, height } = props.parent.getBoundingClientRect();
             setViewBox({ width, height });
         }
-    })
+    });
     G.value = svgElement.value.querySelector('g');
 });
 
@@ -367,23 +398,25 @@ watch(
         const { width, height } = props.parent.getBoundingClientRect();
         setViewBox({ width, height });
     },
-    { immediate: true }
+    { immediate: true },
 );
 
 watch(mode, (v) => {
     if (!svgElement.value) return;
 
-    svgElement.value.removeEventListener("mousedown", startSvgTextEditing);
-    svgElement.value.removeEventListener("touchstart", startSvgTextEditing);
+    svgElement.value.removeEventListener('mousedown', startSvgTextEditing);
+    svgElement.value.removeEventListener('touchstart', startSvgTextEditing);
 
-    if (v === "text") {
-        svgElement.value.addEventListener("mousedown", startSvgTextEditing);
-        svgElement.value.addEventListener("touchstart", startSvgTextEditing, { passive: false });
+    if (v === 'text') {
+        svgElement.value.addEventListener('mousedown', startSvgTextEditing);
+        svgElement.value.addEventListener('touchstart', startSvgTextEditing, {
+            passive: false,
+        });
     }
 });
 
 const isDrawing = ref(false);
-const currentPath = ref("");
+const currentPath = ref('');
 const svgElement = ref(null);
 
 const isLineDrawing = ref(false);
@@ -393,9 +426,9 @@ watch(
     () => props.active,
     (active) => {
         if (!svgElement.value) return;
-        svgElement.value.style.touchAction = active ? "none" : "";
+        svgElement.value.style.touchAction = active ? 'none' : '';
     },
-    { immediate: true }
+    { immediate: true },
 );
 
 function startDrawing(event) {
@@ -409,7 +442,7 @@ function startDrawing(event) {
 
 function draw(event) {
     if (event.cancelable) event.preventDefault();
-    if (mode.value !== "draw") return;
+    if (mode.value !== 'draw') return;
     if (!isDrawing.value || !svgElement.value) return;
     const { x, y } = getRelativePosition(event);
     currentPath.value += ` ${x} ${y}`;
@@ -421,8 +454,8 @@ function useArrowMarker() {
 
     let defs = svg.querySelector(`defs#${ARROW_DEFS_ID.value}`);
     if (!defs) {
-        defs = document.createElementNS(XMLNS, "defs");
-        defs.setAttribute("id", ARROW_DEFS_ID.value);
+        defs = document.createElementNS(XMLNS, 'defs');
+        defs.setAttribute('id', ARROW_DEFS_ID.value);
         svg.appendChild(defs);
     }
 
@@ -430,20 +463,20 @@ function useArrowMarker() {
 
     const size = 6;
 
-    const marker = document.createElementNS(XMLNS, "marker");
-    marker.setAttribute("id", arrowMarkerId.value);
-    marker.setAttribute("markerUnits", "strokeWidth");
-    marker.setAttribute("markerWidth", String(size));
-    marker.setAttribute("markerHeight", String(size));
-    marker.setAttribute("refX", String(size - 2));
-    marker.setAttribute("refY", String(size / 2));
-    marker.setAttribute("orient", "auto");
-    marker.setAttribute("viewBox", `0 0 ${size} ${size}`);
+    const marker = document.createElementNS(XMLNS, 'marker');
+    marker.setAttribute('id', arrowMarkerId.value);
+    marker.setAttribute('markerUnits', 'strokeWidth');
+    marker.setAttribute('markerWidth', String(size));
+    marker.setAttribute('markerHeight', String(size));
+    marker.setAttribute('refX', String(size - 2));
+    marker.setAttribute('refY', String(size / 2));
+    marker.setAttribute('orient', 'auto');
+    marker.setAttribute('viewBox', `0 0 ${size} ${size}`);
 
-    const path = document.createElementNS(XMLNS, "path");
-    path.setAttribute("d", `M 0 0 L ${size} ${size / 2} L 0 ${size} z`);
-    path.setAttribute("fill", "context-stroke");
-    path.setAttribute("stroke", "none");
+    const path = document.createElementNS(XMLNS, 'path');
+    path.setAttribute('d', `M 0 0 L ${size} ${size / 2} L 0 ${size} z`);
+    path.setAttribute('fill', 'context-stroke');
+    path.setAttribute('stroke', 'none');
 
     marker.appendChild(path);
     defs.appendChild(marker);
@@ -451,27 +484,30 @@ function useArrowMarker() {
 
 function startLine(event) {
     if (event.cancelable) event.preventDefault();
-    if (!["line", "arrow"].includes(mode.value)) return;
+    if (!['line', 'arrow'].includes(mode.value)) return;
     if (!svgElement.value || !G.value) return;
 
-    if (mode.value === "arrow") useArrowMarker();
+    if (mode.value === 'arrow') useArrowMarker();
 
     isLineDrawing.value = true;
     const { x, y } = getRelativePosition(event);
     currentLineStart.value = { x, y };
 
-    currentLine.value = document.createElementNS(XMLNS, "line");
-    currentLine.value.setAttribute("x1", x);
-    currentLine.value.setAttribute("y1", y);
-    currentLine.value.setAttribute("x2", x);
-    currentLine.value.setAttribute("y2", y);
-    currentLine.value.setAttribute("stroke", currentColor.value);
-    currentLine.value.setAttribute("stroke-width", strokeWidth.value);
-    currentLine.value.setAttribute("stroke-linecap", "round");
-    currentLine.value.setAttribute("class", "vue-data-ui-doodle");
+    currentLine.value = document.createElementNS(XMLNS, 'line');
+    currentLine.value.setAttribute('x1', x);
+    currentLine.value.setAttribute('y1', y);
+    currentLine.value.setAttribute('x2', x);
+    currentLine.value.setAttribute('y2', y);
+    currentLine.value.setAttribute('stroke', currentColor.value);
+    currentLine.value.setAttribute('stroke-width', strokeWidth.value);
+    currentLine.value.setAttribute('stroke-linecap', 'round');
+    currentLine.value.setAttribute('class', 'vue-data-ui-doodle');
 
-    if (mode.value === "arrow") {
-        currentLine.value.setAttribute("marker-end", `url(#${arrowMarkerId.value})`);
+    if (mode.value === 'arrow') {
+        currentLine.value.setAttribute(
+            'marker-end',
+            `url(#${arrowMarkerId.value})`,
+        );
     }
 
     G.value.appendChild(currentLine.value);
@@ -479,12 +515,12 @@ function startLine(event) {
 
 function drawLine(event) {
     if (event.cancelable) event.preventDefault();
-    if (!["line", "arrow"].includes(mode.value)) return;
+    if (!['line', 'arrow'].includes(mode.value)) return;
     if (!isLineDrawing.value || !currentLine.value) return;
 
     const { x, y } = getRelativePosition(event);
-    currentLine.value.setAttribute("x2", x);
-    currentLine.value.setAttribute("y2", y);
+    currentLine.value.setAttribute('x2', x);
+    currentLine.value.setAttribute('y2', y);
 }
 
 function endLine(event) {
@@ -492,18 +528,18 @@ function endLine(event) {
     if (!isLineDrawing.value || !currentLine.value) return;
 
     const { x, y } = getRelativePosition(event);
-    currentLine.value.setAttribute("x2", x);
-    currentLine.value.setAttribute("y2", y);
+    currentLine.value.setAttribute('x2', x);
+    currentLine.value.setAttribute('y2', y);
 
     stack.value.push({
         id: nextId(),
         type: mode.value, // 'line' or 'arrow'
-        x1: parseFloat(currentLine.value.getAttribute("x1")),
-        y1: parseFloat(currentLine.value.getAttribute("y1")),
+        x1: parseFloat(currentLine.value.getAttribute('x1')),
+        y1: parseFloat(currentLine.value.getAttribute('y1')),
         x2: x,
         y2: y,
         strokeWidth: strokeWidth.value,
-        color: currentColor.value
+        color: currentColor.value,
     });
 
     redoStack.value = [];
@@ -527,7 +563,9 @@ function smoothPath(path) {
         return path;
     }
     const smoothedCoordinates = reduceNoise(coordinates);
-    const smoothedPath = [`M ${smoothedCoordinates[0]} ${smoothedCoordinates[1]}`]; // Keep M x y incipit
+    const smoothedPath = [
+        `M ${smoothedCoordinates[0]} ${smoothedCoordinates[1]}`,
+    ]; // Keep M x y incipit
     for (let i = 2; i < smoothedCoordinates.length - 2; i += 2) {
         const x1 = smoothedCoordinates[i - 2];
         const y1 = smoothedCoordinates[i - 1];
@@ -540,7 +578,7 @@ function smoothPath(path) {
     const lastX = smoothedCoordinates[smoothedCoordinates.length - 2];
     const lastY = smoothedCoordinates[smoothedCoordinates.length - 1];
     smoothedPath.push(`L ${lastX} ${lastY}`);
-    return smoothedPath.join(" ");
+    return smoothedPath.join(' ');
 }
 
 function reduceNoise(coordinates, smoothingFactor = 1) {
@@ -562,7 +600,8 @@ function optimizeSvgPath(path) {
     const commands = path.trim().split(/\s+/);
     let optimizedPath = '';
     let currentCommand = '';
-    let currentX = null, currentY = null;
+    let currentX = null,
+        currentY = null;
     for (let i = 0; i < commands.length; i += 1) {
         const command = commands[i];
         if (isNaN(command)) {
@@ -626,16 +665,16 @@ function optimizeSvgPath(path) {
 
 function stopDrawing(event) {
     if (event?.cancelable) event.preventDefault();
-    if (mode.value !== "draw") return;
+    if (mode.value !== 'draw') return;
     if (isDrawing.value) {
         stack.value.push({
             id: nextId(),
             strokeWidth: strokeWidth.value,
             path: optimizeSvgPath(smoothPath(currentPath.value)),
-            color: currentColor.value
+            color: currentColor.value,
         });
         redoStack.value = [];
-        currentPath.value = "";
+        currentPath.value = '';
     }
     isDrawing.value = false;
 }
@@ -646,7 +685,9 @@ function getRelativePosition(event) {
     const svgRect = svgElement.value.getBoundingClientRect();
 
     const isTouch = !!event.touches?.length || !!event.changedTouches?.length;
-    const touch = isTouch ? (event.touches?.[0] || event.changedTouches?.[0]) : null;
+    const touch = isTouch
+        ? event.touches?.[0] || event.changedTouches?.[0]
+        : null;
 
     const clientX = touch ? touch.clientX : event.clientX;
     const clientY = touch ? touch.clientY : event.clientY;
@@ -667,7 +708,7 @@ function deleteLastDraw() {
 function redoLastDraw() {
     if (redoStack.value.length > 0) {
         const lastUndonePath = redoStack.value.pop();
-        stack.value.push(lastUndonePath); 
+        stack.value.push(lastUndonePath);
     }
 }
 
@@ -677,7 +718,6 @@ function reset() {
 }
 
 const range = ref(null);
-
 </script>
 
 <template>
@@ -686,7 +726,7 @@ const range = ref(null);
         data-dom-to-png-ignore
         :class="{
             'vue-ui-pen-and-paper-actions': true,
-            'visible': active
+            visible: active,
         }"
         :style="{ backgroundColor: backgroundColor }"
     >
@@ -695,24 +735,24 @@ const range = ref(null);
             :style="{
                 backgroundColor: backgroundColor,
                 border: `1px solid ${buttonBorderColor}`,
-                cursor: isCursorPointer ? 'pointer' : 'default'
+                cursor: isCursorPointer ? 'pointer' : 'default',
             }"
             @click="emit('close')"
         >
-            <BaseIcon name="close" :stroke="color"/>
+            <BaseIcon name="close" :stroke="color" />
         </button>
         <button
             data-cy="pen-and-paper-color-picker"
             :class="{
-                'vue-ui-pen-and-paper-action': true, 
+                'vue-ui-pen-and-paper-action': true,
             }"
             :style="{
                 padding: '0 !important',
-                cursor: isCursorPointer ? 'pointer' : 'default'
+                cursor: isCursorPointer ? 'pointer' : 'default',
             }"
-            >
-            <ColorPicker 
-                v-model:value="currentColor" 
+        >
+            <ColorPicker
+                v-model:value="currentColor"
                 :backgroundColor="backgroundColor"
                 :buttonBorderColor="buttonBorderColor"
             />
@@ -725,99 +765,107 @@ const range = ref(null);
             :style="{
                 backgroundColor: backgroundColor,
                 border: `1px solid ${buttonBorderColor}`,
-                cursor: isCursorPointer ? 'pointer' : 'default'
+                cursor: isCursorPointer ? 'pointer' : 'default',
             }"
-            >
+        >
             <BaseIcon :name="iconMap[mode]" :stroke="color" />
-            <div :style="{
-                position: 'absolute',
-                bottom: '-20px',
-                color: buttonBorderColor,
-                width: '100%',
-                textAlign: 'center',
-                fontSize: '12px'
-            }">
-                {{ dataLabel({
-                    v: mode === 'text' ? fontSize : strokeWidth,
-                    s: 'px',
-                    r: 1
-                }) }}
+            <div
+                :style="{
+                    position: 'absolute',
+                    bottom: '-20px',
+                    color: buttonBorderColor,
+                    width: '100%',
+                    textAlign: 'center',
+                    fontSize: '12px',
+                }"
+            >
+                {{
+                    dataLabel({
+                        v: mode === 'text' ? fontSize : strokeWidth,
+                        s: 'px',
+                        r: 1,
+                    })
+                }}
             </div>
         </button>
 
         <button
             data-cy="pen-and-paper-undo"
             :class="{
-                'vue-ui-pen-and-paper-action': true, 
-                'vue-ui-pen-and-paper-action-disabled': !stack.length
+                'vue-ui-pen-and-paper-action': true,
+                'vue-ui-pen-and-paper-action-disabled': !stack.length,
             }"
             :disabled="!stack.length"
             :style="{
                 backgroundColor: backgroundColor,
                 border: `1px solid ${buttonBorderColor}`,
                 marginTop: '20px',
-                cursor: isCursorPointer ? 'pointer' : 'default'
+                cursor: isCursorPointer ? 'pointer' : 'default',
             }"
             @click="deleteLastDraw"
         >
-            <BaseIcon name="refresh" :stroke="color"/>
+            <BaseIcon name="refresh" :stroke="color" />
         </button>
         <button
             data-cy="pen-and-paper-redo"
             :class="{
-                'vue-ui-pen-and-paper-action': true, 
-                'vue-ui-pen-and-paper-action-disabled': !redoStack.length
+                'vue-ui-pen-and-paper-action': true,
+                'vue-ui-pen-and-paper-action-disabled': !redoStack.length,
             }"
             :style="{
                 backgroundColor: backgroundColor,
                 border: `1px solid ${buttonBorderColor}`,
-                cursor: isCursorPointer ? 'pointer' : 'default'
+                cursor: isCursorPointer ? 'pointer' : 'default',
             }"
             @click="redoLastDraw"
         >
-            <BaseIcon name="refresh" :stroke="color" style="transform: scaleX(-1)"/>
+            <BaseIcon
+                name="refresh"
+                :stroke="color"
+                style="transform: scaleX(-1)"
+            />
         </button>
         <button
             data-cy="pen-and-paper-reset"
             :class="{
-                'vue-ui-pen-and-paper-action': true, 
-                'vue-ui-pen-and-paper-action-disabled': !stack.length
+                'vue-ui-pen-and-paper-action': true,
+                'vue-ui-pen-and-paper-action-disabled': !stack.length,
             }"
             class="vue-ui-pen-and-paper-action"
             :style="{
                 backgroundColor: backgroundColor,
                 border: `1px solid ${buttonBorderColor}`,
-                cursor: isCursorPointer ? 'pointer' : 'default'
+                cursor: isCursorPointer ? 'pointer' : 'default',
             }"
             @click="reset"
         >
-            <BaseIcon name="trash" :stroke="color"/>
+            <BaseIcon name="trash" :stroke="color" />
         </button>
 
         <input
             data-cy="pen-and-paper-thickness"
-            v-if="mode === 'draw'" 
-            ref="range" 
-            type="range" 
-            class="vertical-range" 
-            :min="0.5" 
-            :max="12" 
-            :step="0.1" 
+            v-if="mode === 'draw'"
+            ref="range"
+            type="range"
+            class="vertical-range"
+            :min="0.5"
+            :max="12"
+            :step="0.1"
             v-model="strokeWidth"
-            :style="{ accentColor: color }" 
+            :style="{ accentColor: color }"
         />
 
         <input
             data-cy="pen-and-paper-font-size"
-            v-if="mode === 'text'" 
-            ref="range" 
-            type="range" 
-            class="vertical-range" 
-            :min="3" 
-            :max="48" 
-            :step="0.1" 
+            v-if="mode === 'text'"
+            ref="range"
+            type="range"
+            class="vertical-range"
+            :min="3"
+            :max="48"
+            :step="0.1"
             v-model="fontSize"
-            :style="{ accentColor: color }" 
+            :style="{ accentColor: color }"
         />
     </div>
     <svg
@@ -830,22 +878,75 @@ const range = ref(null);
             'vue-ui-pen-and-paper': true,
             inactive: !active,
         }"
-        @mousedown="mode === 'draw' ? startDrawing($event) : (mode === 'line' || mode === 'arrow') ? startLine($event) : null"
-        @mousemove="mode === 'draw' ? draw($event) : (mode === 'line' || mode === 'arrow') ? drawLine($event) : null"
-        @mouseup="mode === 'draw' ? stopDrawing($event) : (mode === 'line' || mode === 'arrow') ? endLine($event) : null"
-        @mouseleave="mode === 'draw' ? stopDrawing($event) : (mode === 'line' || mode === 'arrow') ? endLine($event) : null"
-        @touchstart.prevent="mode === 'draw' ? startDrawing($event) : (mode === 'line' || mode === 'arrow') ? startLine($event) : null"
-        @touchmove.prevent="mode === 'draw' ? draw($event) : (mode === 'line' || mode === 'arrow') ? drawLine($event) : null"
-        @touchend="mode === 'draw' ? stopDrawing($event) : (mode === 'line' || mode === 'arrow') ? endLine($event) : null"
-        @touchcancel="mode === 'draw' ? stopDrawing($event) : (mode === 'line' || mode === 'arrow') ? endLine($event) : null"
+        @mousedown="
+            mode === 'draw'
+                ? startDrawing($event)
+                : mode === 'line' || mode === 'arrow'
+                  ? startLine($event)
+                  : null
+        "
+        @mousemove="
+            mode === 'draw'
+                ? draw($event)
+                : mode === 'line' || mode === 'arrow'
+                  ? drawLine($event)
+                  : null
+        "
+        @mouseup="
+            mode === 'draw'
+                ? stopDrawing($event)
+                : mode === 'line' || mode === 'arrow'
+                  ? endLine($event)
+                  : null
+        "
+        @mouseleave="
+            mode === 'draw'
+                ? stopDrawing($event)
+                : mode === 'line' || mode === 'arrow'
+                  ? endLine($event)
+                  : null
+        "
+        @touchstart.prevent="
+            mode === 'draw'
+                ? startDrawing($event)
+                : mode === 'line' || mode === 'arrow'
+                  ? startLine($event)
+                  : null
+        "
+        @touchmove.prevent="
+            mode === 'draw'
+                ? draw($event)
+                : mode === 'line' || mode === 'arrow'
+                  ? drawLine($event)
+                  : null
+        "
+        @touchend="
+            mode === 'draw'
+                ? stopDrawing($event)
+                : mode === 'line' || mode === 'arrow'
+                  ? endLine($event)
+                  : null
+        "
+        @touchcancel="
+            mode === 'draw'
+                ? stopDrawing($event)
+                : mode === 'line' || mode === 'arrow'
+                  ? endLine($event)
+                  : null
+        "
     >
         <g ref="G">
             <template v-for="item in stack" :key="item.id">
-                <circle v-if="item.path && item.path.replace('M', '').split(' ').length === 2"
-                        :cx="item.path.replace('M', '').split(' ')[0]"
-                        :cy="item.path.replace('M', '').split(' ')[1]"
-                        :r="item.strokeWidth / 2"
-                        :fill="item.color"/>
+                <circle
+                    v-if="
+                        item.path &&
+                        item.path.replace('M', '').split(' ').length === 2
+                    "
+                    :cx="item.path.replace('M', '').split(' ')[0]"
+                    :cy="item.path.replace('M', '').split(' ')[1]"
+                    :r="item.strokeWidth / 2"
+                    :fill="item.color"
+                />
 
                 <line
                     v-else-if="item.type === 'line'"
@@ -870,15 +971,17 @@ const range = ref(null);
                     :marker-end="`url(#${arrowMarkerId})`"
                 />
 
-                <path v-else-if="item.path"
+                <path
+                    v-else-if="item.path"
                     class="vue-ui-pen-and-paper-path"
                     :d="item.path"
                     :stroke="item.color"
                     :stroke-width="item.strokeWidth"
-                    fill="none" 
+                    fill="none"
                 />
 
-                <text v-else-if="item.type === 'text'"
+                <text
+                    v-else-if="item.type === 'text'"
                     :x="item.x"
                     :y="item.y"
                     :fill="item.color"
@@ -888,15 +991,24 @@ const range = ref(null);
                     class="vue-ui-pen-and-paper-text"
                 >
                     <tspan
-                    v-for="(line, idx) in item.lines"
-                    :key="idx"
-                    :x="item.x"
-                    :dy="idx === 0 ? '0' : item.fontSize * 1.2"
-                    >{{ line.length ? line : '\u200B' }}</tspan>
+                        v-for="(line, idx) in item.lines"
+                        :key="idx"
+                        :x="item.x"
+                        :dy="idx === 0 ? '0' : item.fontSize * 1.2"
+                    >
+                        {{ line.length ? line : '\u200B' }}
+                    </tspan>
                 </text>
             </template>
-        </G>
-        <path class="vue-ui-pen-and-paper-path vue-ui-pen-and-paper-path-drawing" v-if="isDrawing" :d="smoothPath(currentPath)" :stroke="currentColor" :stroke-width="strokeWidth * 1.1" fill="none" />
+        </g>
+        <path
+            class="vue-ui-pen-and-paper-path vue-ui-pen-and-paper-path-drawing"
+            v-if="isDrawing"
+            :d="smoothPath(currentPath)"
+            :stroke="currentColor"
+            :stroke-width="strokeWidth * 1.1"
+            fill="none"
+        />
     </svg>
 </template>
 
@@ -911,11 +1023,14 @@ const range = ref(null);
     z-index: 0;
 }
 
-.vue-ui-pen-and-paper[data-mode="draw"] {
-    cursor: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAABg2lDQ1BJQ0MgcHJvZmlsZQAAKJF9kT1Iw0AcxV9TpSIVh2YQcchQnSyIijhKFYtgobQVWnUwufQLmjQkKS6OgmvBwY/FqoOLs64OroIg+AHi6OSk6CIl/i8ptIjx4Lgf7+497t4BQrPKNKtnAtB020wn4lIuvyqFXhGGiAhCiMnMMpKZxSx8x9c9Any9i/Es/3N/jgG1YDEgIBHPMcO0iTeIZzZtg/M+scjKskp8Tjxu0gWJH7muePzGueSywDNFM5ueJxaJpVIXK13MyqZGPE0cVTWd8oWcxyrnLc5atc7a9+QvDBf0lQzXaY4ggSUkkYIEBXVUUIWNGK06KRbStB/38Q+7/hS5FHJVwMixgBo0yK4f/A9+d2sVpya9pHAc6H1xnI9RILQLtBqO833sOK0TIPgMXOkdf60JzH6S3uho0SNgcBu4uO5oyh5wuQMMPRmyKbtSkKZQLALvZ/RNeSByC/Sveb2193H6AGSpq+Ub4OAQGCtR9rrPu/u6e/v3TLu/H5C7crM1WjgWAAAABmJLR0QAqwB5AHWF+8OUAAAACXBIWXMAAC4jAAAuIwF4pT92AAAAB3RJTUUH5gwUExIUagzGcQAAABl0RVh0Q29tbWVudABDcmVhdGVkIHdpdGggR0lNUFeBDhcAAABfSURBVBjTldAxDoNQDIPhL0+q1L33P1AvAhN7xfK6WAgoLfSfrNiykpQtE+7RLzx2vgF9D3o8lWDmn1QVVMP0LZQGmNtqp1/cmou0XHdG/+sYeGZwFBqPCub8rkcvvAGvsi1VYarR8wAAAABJRU5ErkJggg==') 5 5, auto;
+.vue-ui-pen-and-paper[data-mode='draw'] {
+    cursor:
+        url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAABg2lDQ1BJQ0MgcHJvZmlsZQAAKJF9kT1Iw0AcxV9TpSIVh2YQcchQnSyIijhKFYtgobQVWnUwufQLmjQkKS6OgmvBwY/FqoOLs64OroIg+AHi6OSk6CIl/i8ptIjx4Lgf7+497t4BQrPKNKtnAtB020wn4lIuvyqFXhGGiAhCiMnMMpKZxSx8x9c9Any9i/Es/3N/jgG1YDEgIBHPMcO0iTeIZzZtg/M+scjKskp8Tjxu0gWJH7muePzGueSywDNFM5ueJxaJpVIXK13MyqZGPE0cVTWd8oWcxyrnLc5atc7a9+QvDBf0lQzXaY4ggSUkkYIEBXVUUIWNGK06KRbStB/38Q+7/hS5FHJVwMixgBo0yK4f/A9+d2sVpya9pHAc6H1xnI9RILQLtBqO833sOK0TIPgMXOkdf60JzH6S3uho0SNgcBu4uO5oyh5wuQMMPRmyKbtSkKZQLALvZ/RNeSByC/Sveb2193H6AGSpq+Ub4OAQGCtR9rrPu/u6e/v3TLu/H5C7crM1WjgWAAAABmJLR0QAqwB5AHWF+8OUAAAACXBIWXMAAC4jAAAuIwF4pT92AAAAB3RJTUUH5gwUExIUagzGcQAAABl0RVh0Q29tbWVudABDcmVhdGVkIHdpdGggR0lNUFeBDhcAAABfSURBVBjTldAxDoNQDIPhL0+q1L33P1AvAhN7xfK6WAgoLfSfrNiykpQtE+7RLzx2vgF9D3o8lWDmn1QVVMP0LZQGmNtqp1/cmou0XHdG/+sYeGZwFBqPCub8rkcvvAGvsi1VYarR8wAAAABJRU5ErkJggg==')
+            5 5,
+        auto;
 }
 
-.vue-ui-pen-and-paper[data-mode="text"] {
+.vue-ui-pen-and-paper[data-mode='text'] {
     cursor: text;
 }
 
@@ -934,8 +1049,8 @@ const range = ref(null);
 }
 .vue-ui-pen-and-paper-action {
     display: flex;
-    align-items:center;
-    justify-content:center;
+    align-items: center;
+    justify-content: center;
     height: 32px;
     width: 32px;
     padding: 2px;
@@ -943,7 +1058,7 @@ const range = ref(null);
     position: relative;
 }
 .vue-ui-pen-and-paper-action:hover {
-    box-shadow: 2px 2px 6px rgba(0,0,0,0.3);
+    box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.3);
 }
 .vue-ui-pen-and-paper-action-disabled {
     opacity: 0.5;
@@ -954,7 +1069,7 @@ const range = ref(null);
     stroke-linejoin: round;
 }
 
-input[type="range"].vertical-range {
+input[type='range'].vertical-range {
     writing-mode: vertical-lr;
     position: absolute;
     top: 50%;
@@ -962,8 +1077,8 @@ input[type="range"].vertical-range {
     left: 36px;
 }
 
-.vue-ui-pen-and-paper[data-mode="line"],
-.vue-ui-pen-and-paper[data-mode="arrow"] {
+.vue-ui-pen-and-paper[data-mode='line'],
+.vue-ui-pen-and-paper[data-mode='arrow'] {
     cursor: crosshair;
 }
 </style>

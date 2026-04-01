@@ -8,14 +8,16 @@ export type {
     VueUiAgePyramidSideData,
     VueUiAgePyramidSeries,
     VueUiAgePyramidExpose,
-    VueUiAgePyramidEvent
+    VueUiAgePyramidEvent,
+} from './vue-data-ui';
 
-} from "./vue-data-ui";
-
-declare const VueUiAgePyramid: DefineComponent<{
-    config?: VueUiAgePyramidConfig;
-    dataset: VueUiAgePyramidDataset;
-}, VueUiAgePyramidExpose>;
+declare const VueUiAgePyramid: DefineComponent<
+    {
+        config?: VueUiAgePyramidConfig;
+        dataset: VueUiAgePyramidDataset;
+    },
+    VueUiAgePyramidExpose
+>;
 
 export default VueUiAgePyramid;
 export { VueUiAgePyramid };

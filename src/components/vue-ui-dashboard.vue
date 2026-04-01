@@ -1,6 +1,6 @@
 <script setup>
 import { ref, watch, computed, defineAsyncComponent } from 'vue';
-import { useNestedProp } from "../useNestedProp";
+import { useNestedProp } from '../useNestedProp';
 import { useConfig } from '../useConfig';
 import { createUid } from '../lib';
 import { usePrinter } from '../usePrinter';
@@ -9,70 +9,196 @@ import { useUserOptionState } from '../useUserOptionState';
 import PenAndPaper from '../atoms/PenAndPaper.vue';
 
 const builtInComponents = {
-    VueDataUi : defineAsyncComponent(() => import("../components/vue-data-ui.vue")),
-    VueUi3dBar : defineAsyncComponent(() => import("../components/vue-ui-3d-bar.vue")),
-    VueUiAccordion : defineAsyncComponent(() => import("../components/vue-ui-accordion.vue")),
-    VueUiAgePyramid : defineAsyncComponent(() => import("../components/vue-ui-age-pyramid.vue")),
-    VueUiAnnotator : defineAsyncComponent(() => import("../components/vue-ui-annotator.vue")),
-    VueUiCandlestick : defineAsyncComponent(() => import("../components/vue-ui-candlestick.vue")),
-    VueUiChestnut : defineAsyncComponent(() => import("../components/vue-ui-chestnut.vue")),
-    VueUiDigits : defineAsyncComponent(() => import("../components/vue-ui-digits.vue")),
-    VueUiDonut : defineAsyncComponent(() => import("../components/vue-ui-donut.vue")),
-    VueUiDonutEvolution : defineAsyncComponent(() => import("../components/vue-ui-donut-evolution.vue")),
-    VueUiDumbbell : defineAsyncComponent(() => import("../components/vue-ui-dumbbell.vue")),
-    VueUiFlow : defineAsyncComponent(() => import("../components/vue-ui-flow.vue")),
-    VueUiGalaxy : defineAsyncComponent(() => import("../components/vue-ui-galaxy.vue")),
-    VueUiGauge : defineAsyncComponent(() => import("../components/vue-ui-gauge.vue")),
-    VueUiHeatmap : defineAsyncComponent(() => import("../components/vue-ui-heatmap.vue")),
-    VueUiKpi : defineAsyncComponent(() => import("../components/vue-ui-kpi.vue")),
-    VueUiMiniLoader : defineAsyncComponent(() => import("../components/vue-ui-mini-loader.vue")),
-    VueUiMolecule : defineAsyncComponent(() => import("../components/vue-ui-molecule.vue")),
-    VueUiMoodRadar : defineAsyncComponent(() => import("../components/vue-ui-mood-radar.vue")),
-    VueUiNestedDonuts : defineAsyncComponent(() => import("../components/vue-ui-nested-donuts.vue")),
-    VueUiOnion : defineAsyncComponent(() => import("../components/vue-ui-onion.vue")),
-    VueUiParallelCoordinatePlot : defineAsyncComponent(() => import("../components/vue-ui-parallel-coordinate-plot.vue")),
-    VueUiQuadrant : defineAsyncComponent(() => import("../components/vue-ui-quadrant.vue")),
-    VueUiQuickChart : defineAsyncComponent(() => import("../components/vue-ui-quick-chart.vue")),
-    VueUiRadar : defineAsyncComponent(() => import("../components/vue-ui-radar.vue")),
-    VueUiRating : defineAsyncComponent(() => import("../components/vue-ui-rating.vue")),
-    VueUiRelationCircle : defineAsyncComponent(() => import("../components/vue-ui-relation-circle.vue")),
-    VueUiRings : defineAsyncComponent(() => import("../components/vue-ui-rings.vue")),
-    VueUiScatter : defineAsyncComponent(() => import("../components/vue-ui-scatter.vue")),
-    VueUiSkeleton : defineAsyncComponent(() => import("../components/vue-ui-skeleton.vue")),
-    VueUiSmiley : defineAsyncComponent(() => import("../components/vue-ui-smiley.vue")),
-    VueUiSparkHistogram : defineAsyncComponent(() => import("../components/vue-ui-sparkhistogram.vue")),
-    VueUiSparkStackbar : defineAsyncComponent(() => import("../components/vue-ui-sparkstackbar.vue")),
-    VueUiSparkTrend : defineAsyncComponent(() => import("../components/vue-ui-spark-trend.vue")),
-    VueUiSparkbar : defineAsyncComponent(() => import("../components/vue-ui-sparkbar.vue")),
-    VueUiSparkgauge : defineAsyncComponent(() => import('../components/vue-ui-sparkgauge.vue')),
-    VueUiSparkline : defineAsyncComponent(() => import("../components/vue-ui-sparkline.vue")),
-    VueUiStripPlot : defineAsyncComponent(() => import("../components/vue-ui-strip-plot.vue")),
-    VueUiTable : defineAsyncComponent(() => import("../components/vue-ui-table.vue")),
-    VueUiTableHeatmap : defineAsyncComponent(() => import("../components/vue-ui-table-heatmap.vue")),
-    VueUiTableSparkline : defineAsyncComponent(() => import("../components/vue-ui-table-sparkline.vue")),
-    VueUiThermometer : defineAsyncComponent(() => import("../components/vue-ui-thermometer.vue")),
-    VueUiTimer : defineAsyncComponent(() => import("../components/vue-ui-timer.vue")),
-    VueUiTiremarks : defineAsyncComponent(() => import("../components/vue-ui-tiremarks.vue")),
-    VueUiTreemap : defineAsyncComponent(() => import("../components/vue-ui-treemap.vue")),
-    VueUiVerticalBar : defineAsyncComponent(() => import("../components/vue-ui-horizontal-bar.vue")),
-    VueUiHorizontalBar : defineAsyncComponent(() => import("../components/vue-ui-horizontal-bar.vue")),
-    VueUiWaffle : defineAsyncComponent(() => import("../components/vue-ui-waffle.vue")),
-    VueUiWheel : defineAsyncComponent(() => import("../components/vue-ui-wheel.vue")),
-    VueUiWordCloud : defineAsyncComponent(() => import("../components/vue-ui-word-cloud.vue")),
-    VueUiXy : defineAsyncComponent(() => import("../components/vue-ui-xy.vue")),
-    VueUiXyCanvas : defineAsyncComponent(() => import("../components/vue-ui-xy-canvas.vue")),
-    VueUiCarouselTable : defineAsyncComponent(() => import('../components/vue-ui-carousel-table.vue')),
-    VueUiGizmo : defineAsyncComponent(() => import('../components/vue-ui-gizmo.vue')),
-    VueUiStackbar : defineAsyncComponent(() => import('../components/vue-ui-stackbar.vue')),
-    VueUiStackline : defineAsyncComponent(() => import('../components/vue-ui-stackline.vue')),
-    VueUiBullet : defineAsyncComponent(() => import('../components/vue-ui-bullet.vue')),
-    VueUiFunnel : defineAsyncComponent(() => import('../components/vue-ui-funnel.vue')),
-    VueUiHistoryPlot : defineAsyncComponent(() => import('../components/vue-ui-history-plot.vue')),
-    VueUiCirclePack : defineAsyncComponent(() => import('../components/vue-ui-circle-pack.vue')),
-    VueUiWorld : defineAsyncComponent(() => import('../components/vue-ui-world.vue')),
-    VueUiChord: defineAsyncComponent(() => import('../components/vue-ui-chord.vue')),
-    VueUiRidgeline: defineAsyncComponent(() => import('../components/vue-ui-ridgeline.vue')),
-    VueUiDag: defineAsyncComponent(() => import('../components/vue-ui-dag.vue')),
+    VueDataUi: defineAsyncComponent(
+        () => import('../components/vue-data-ui.vue'),
+    ),
+    VueUi3dBar: defineAsyncComponent(
+        () => import('../components/vue-ui-3d-bar.vue'),
+    ),
+    VueUiAccordion: defineAsyncComponent(
+        () => import('../components/vue-ui-accordion.vue'),
+    ),
+    VueUiAgePyramid: defineAsyncComponent(
+        () => import('../components/vue-ui-age-pyramid.vue'),
+    ),
+    VueUiAnnotator: defineAsyncComponent(
+        () => import('../components/vue-ui-annotator.vue'),
+    ),
+    VueUiCandlestick: defineAsyncComponent(
+        () => import('../components/vue-ui-candlestick.vue'),
+    ),
+    VueUiChestnut: defineAsyncComponent(
+        () => import('../components/vue-ui-chestnut.vue'),
+    ),
+    VueUiDigits: defineAsyncComponent(
+        () => import('../components/vue-ui-digits.vue'),
+    ),
+    VueUiDonut: defineAsyncComponent(
+        () => import('../components/vue-ui-donut.vue'),
+    ),
+    VueUiDonutEvolution: defineAsyncComponent(
+        () => import('../components/vue-ui-donut-evolution.vue'),
+    ),
+    VueUiDumbbell: defineAsyncComponent(
+        () => import('../components/vue-ui-dumbbell.vue'),
+    ),
+    VueUiFlow: defineAsyncComponent(
+        () => import('../components/vue-ui-flow.vue'),
+    ),
+    VueUiGalaxy: defineAsyncComponent(
+        () => import('../components/vue-ui-galaxy.vue'),
+    ),
+    VueUiGauge: defineAsyncComponent(
+        () => import('../components/vue-ui-gauge.vue'),
+    ),
+    VueUiHeatmap: defineAsyncComponent(
+        () => import('../components/vue-ui-heatmap.vue'),
+    ),
+    VueUiKpi: defineAsyncComponent(
+        () => import('../components/vue-ui-kpi.vue'),
+    ),
+    VueUiMiniLoader: defineAsyncComponent(
+        () => import('../components/vue-ui-mini-loader.vue'),
+    ),
+    VueUiMolecule: defineAsyncComponent(
+        () => import('../components/vue-ui-molecule.vue'),
+    ),
+    VueUiMoodRadar: defineAsyncComponent(
+        () => import('../components/vue-ui-mood-radar.vue'),
+    ),
+    VueUiNestedDonuts: defineAsyncComponent(
+        () => import('../components/vue-ui-nested-donuts.vue'),
+    ),
+    VueUiOnion: defineAsyncComponent(
+        () => import('../components/vue-ui-onion.vue'),
+    ),
+    VueUiParallelCoordinatePlot: defineAsyncComponent(
+        () => import('../components/vue-ui-parallel-coordinate-plot.vue'),
+    ),
+    VueUiQuadrant: defineAsyncComponent(
+        () => import('../components/vue-ui-quadrant.vue'),
+    ),
+    VueUiQuickChart: defineAsyncComponent(
+        () => import('../components/vue-ui-quick-chart.vue'),
+    ),
+    VueUiRadar: defineAsyncComponent(
+        () => import('../components/vue-ui-radar.vue'),
+    ),
+    VueUiRating: defineAsyncComponent(
+        () => import('../components/vue-ui-rating.vue'),
+    ),
+    VueUiRelationCircle: defineAsyncComponent(
+        () => import('../components/vue-ui-relation-circle.vue'),
+    ),
+    VueUiRings: defineAsyncComponent(
+        () => import('../components/vue-ui-rings.vue'),
+    ),
+    VueUiScatter: defineAsyncComponent(
+        () => import('../components/vue-ui-scatter.vue'),
+    ),
+    VueUiSkeleton: defineAsyncComponent(
+        () => import('../components/vue-ui-skeleton.vue'),
+    ),
+    VueUiSmiley: defineAsyncComponent(
+        () => import('../components/vue-ui-smiley.vue'),
+    ),
+    VueUiSparkHistogram: defineAsyncComponent(
+        () => import('../components/vue-ui-sparkhistogram.vue'),
+    ),
+    VueUiSparkStackbar: defineAsyncComponent(
+        () => import('../components/vue-ui-sparkstackbar.vue'),
+    ),
+    VueUiSparkTrend: defineAsyncComponent(
+        () => import('../components/vue-ui-spark-trend.vue'),
+    ),
+    VueUiSparkbar: defineAsyncComponent(
+        () => import('../components/vue-ui-sparkbar.vue'),
+    ),
+    VueUiSparkgauge: defineAsyncComponent(
+        () => import('../components/vue-ui-sparkgauge.vue'),
+    ),
+    VueUiSparkline: defineAsyncComponent(
+        () => import('../components/vue-ui-sparkline.vue'),
+    ),
+    VueUiStripPlot: defineAsyncComponent(
+        () => import('../components/vue-ui-strip-plot.vue'),
+    ),
+    VueUiTable: defineAsyncComponent(
+        () => import('../components/vue-ui-table.vue'),
+    ),
+    VueUiTableHeatmap: defineAsyncComponent(
+        () => import('../components/vue-ui-table-heatmap.vue'),
+    ),
+    VueUiTableSparkline: defineAsyncComponent(
+        () => import('../components/vue-ui-table-sparkline.vue'),
+    ),
+    VueUiThermometer: defineAsyncComponent(
+        () => import('../components/vue-ui-thermometer.vue'),
+    ),
+    VueUiTimer: defineAsyncComponent(
+        () => import('../components/vue-ui-timer.vue'),
+    ),
+    VueUiTiremarks: defineAsyncComponent(
+        () => import('../components/vue-ui-tiremarks.vue'),
+    ),
+    VueUiTreemap: defineAsyncComponent(
+        () => import('../components/vue-ui-treemap.vue'),
+    ),
+    VueUiVerticalBar: defineAsyncComponent(
+        () => import('../components/vue-ui-horizontal-bar.vue'),
+    ),
+    VueUiHorizontalBar: defineAsyncComponent(
+        () => import('../components/vue-ui-horizontal-bar.vue'),
+    ),
+    VueUiWaffle: defineAsyncComponent(
+        () => import('../components/vue-ui-waffle.vue'),
+    ),
+    VueUiWheel: defineAsyncComponent(
+        () => import('../components/vue-ui-wheel.vue'),
+    ),
+    VueUiWordCloud: defineAsyncComponent(
+        () => import('../components/vue-ui-word-cloud.vue'),
+    ),
+    VueUiXy: defineAsyncComponent(() => import('../components/vue-ui-xy.vue')),
+    VueUiXyCanvas: defineAsyncComponent(
+        () => import('../components/vue-ui-xy-canvas.vue'),
+    ),
+    VueUiCarouselTable: defineAsyncComponent(
+        () => import('../components/vue-ui-carousel-table.vue'),
+    ),
+    VueUiGizmo: defineAsyncComponent(
+        () => import('../components/vue-ui-gizmo.vue'),
+    ),
+    VueUiStackbar: defineAsyncComponent(
+        () => import('../components/vue-ui-stackbar.vue'),
+    ),
+    VueUiStackline: defineAsyncComponent(
+        () => import('../components/vue-ui-stackline.vue'),
+    ),
+    VueUiBullet: defineAsyncComponent(
+        () => import('../components/vue-ui-bullet.vue'),
+    ),
+    VueUiFunnel: defineAsyncComponent(
+        () => import('../components/vue-ui-funnel.vue'),
+    ),
+    VueUiHistoryPlot: defineAsyncComponent(
+        () => import('../components/vue-ui-history-plot.vue'),
+    ),
+    VueUiCirclePack: defineAsyncComponent(
+        () => import('../components/vue-ui-circle-pack.vue'),
+    ),
+    VueUiWorld: defineAsyncComponent(
+        () => import('../components/vue-ui-world.vue'),
+    ),
+    VueUiChord: defineAsyncComponent(
+        () => import('../components/vue-ui-chord.vue'),
+    ),
+    VueUiRidgeline: defineAsyncComponent(
+        () => import('../components/vue-ui-ridgeline.vue'),
+    ),
+    VueUiDag: defineAsyncComponent(
+        () => import('../components/vue-ui-dag.vue'),
+    ),
 };
 
 const { vue_ui_dashboard: DEFAULT_CONFIG } = useConfig();
@@ -83,17 +209,19 @@ const svgRef = ref(null);
 
 const props = defineProps({
     dataset: Array,
-    config: Object
+    config: Object,
 });
 
 const FINAL_CONFIG = computed(() => {
     return useNestedProp({
         userConfig: props.config,
-        defaultConfig: DEFAULT_CONFIG
+        defaultConfig: DEFAULT_CONFIG,
     });
 });
 
-const isCursorPointer = computed(() => FINAL_CONFIG.value.userOptions.useCursorPointer);
+const isCursorPointer = computed(
+    () => FINAL_CONFIG.value.userOptions.useCursorPointer,
+);
 
 const uid = ref(createUid());
 
@@ -103,33 +231,41 @@ function toggleLock() {
     isLocked.value = !isLocked.value;
 }
 
-watch(() => props.config, () => {
-    isLocked.value = FINAL_CONFIG.value.locked;
-    userOptionsVisible.value = !FINAL_CONFIG.value.userOptions.showOnChartHover;
-})
+watch(
+    () => props.config,
+    () => {
+        isLocked.value = FINAL_CONFIG.value.locked;
+        userOptionsVisible.value =
+            !FINAL_CONFIG.value.userOptions.showOnChartHover;
+    },
+);
 
 const gridSize = 1;
 
 function setItems() {
     return props.dataset.map((item, i) => ({
         ...item,
-        index: i
-    }))
+        index: i,
+    }));
 }
 
 const items = ref(setItems());
 
-watch(() => props.dataset, () => {
-    items.value = setItems();
-})
+watch(
+    () => props.dataset,
+    () => {
+        items.value = setItems();
+    },
+);
 
 const resolvedItems = computed(() =>
-    items.value.map(item => ({
+    items.value.map((item) => ({
         ...item,
-        resolvedComponent: typeof item.component === 'string'
-            ? builtInComponents[item.component]
-            : item.component
-    }))
+        resolvedComponent:
+            typeof item.component === 'string'
+                ? builtInComponents[item.component]
+                : item.component,
+    })),
 );
 
 const dragging = ref(null);
@@ -143,14 +279,17 @@ const isPaused = ref(false);
 
 function handleInteraction(event) {
     const target = event.target;
-    if ((target.tagName === "INPUT" && target.type === "range") || target.classList.contains('range-handle')) {
+    if (
+        (target.tagName === 'INPUT' && target.type === 'range') ||
+        target.classList.contains('range-handle')
+    ) {
         isPaused.value = true;
     }
 }
 
 function handleInteractionEnd(event) {
     const target = event.target;
-    if (target.tagName === "INPUT" && target.type === "range") {
+    if (target.tagName === 'INPUT' && target.type === 'range') {
         isPaused.value = false;
     }
 }
@@ -160,12 +299,12 @@ const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     fileName: FINAL_CONFIG.value.userOptions.print.filename || 'dashboard',
     options: {
         ...FINAL_CONFIG.value.userOptions.print,
-        aspectRatio: FINAL_CONFIG.value.style.board.aspectRatio
+        aspectRatio: FINAL_CONFIG.value.style.board.aspectRatio,
     },
 });
 
-function startDrag (index) {
-    if(isLocked.value) return;
+function startDrag(index) {
+    if (isLocked.value) return;
     isDragOrResize.value = true;
     changeIndex.value = index;
     if (resizing.value === null) {
@@ -201,39 +340,50 @@ function startDrag (index) {
             item.top = 100 - item.height;
         }
     }
-};
+}
 
 function startResize(index, direction) {
     isDragOrResize.value = true;
     changeIndex.value = index;
     resizing.value = { index, direction };
     const item = items.value[index];
-    resizeStart.value = { x: event.clientX, y: event.clientY, initialWidth: item.width, initialHeight: item.height };
-};
+    resizeStart.value = {
+        x: event.clientX,
+        y: event.clientY,
+        initialWidth: item.width,
+        initialHeight: item.height,
+    };
+}
 
 function checkDirection(item, deltaX, deltaY) {
     if (resizing.value.direction.includes('top')) {
-        const newHeight = item.height - (deltaY / dashboardContainer.value.offsetHeight) * 100;
+        const newHeight =
+            item.height -
+            (deltaY / dashboardContainer.value.offsetHeight) * 100;
         if (newHeight >= gridSize) {
             item.top += (deltaY / dashboardContainer.value.offsetHeight) * 100;
             item.height = newHeight;
         }
     }
     if (resizing.value.direction.includes('bottom')) {
-        const newHeight = item.height + (deltaY / dashboardContainer.value.offsetHeight) * 100;
-            if (newHeight >= gridSize) {
+        const newHeight =
+            item.height +
+            (deltaY / dashboardContainer.value.offsetHeight) * 100;
+        if (newHeight >= gridSize) {
             item.height = newHeight;
         }
     }
     if (resizing.value.direction.includes('left')) {
-        const newWidth = item.width - (deltaX / dashboardContainer.value.offsetWidth) * 100;
+        const newWidth =
+            item.width - (deltaX / dashboardContainer.value.offsetWidth) * 100;
         if (newWidth >= gridSize) {
             item.left += (deltaX / dashboardContainer.value.offsetWidth) * 100;
             item.width = newWidth;
         }
     }
     if (resizing.value.direction.includes('right')) {
-        const newWidth = item.width + (deltaX / dashboardContainer.value.offsetWidth) * 100;
+        const newWidth =
+            item.width + (deltaX / dashboardContainer.value.offsetWidth) * 100;
         if (newWidth >= gridSize) {
             item.width = newWidth;
         }
@@ -248,8 +398,10 @@ function onMouseMove(event) {
         const deltaX = event.clientX - dragStart.value.x;
         const deltaY = event.clientY - dragStart.value.y;
 
-        const newLeft = item.left + (deltaX / dashboardContainer.value.offsetWidth) * 100;
-        const newTop = item.top + (deltaY / dashboardContainer.value.offsetHeight) * 100;
+        const newLeft =
+            item.left + (deltaX / dashboardContainer.value.offsetWidth) * 100;
+        const newTop =
+            item.top + (deltaY / dashboardContainer.value.offsetHeight) * 100;
 
         if (
             newLeft >= 0 &&
@@ -270,16 +422,19 @@ function onMouseMove(event) {
         checkDirection(item, deltaX, deltaY);
         resizeStart.value = { x: event.clientX, y: event.clientY };
     }
-};
+}
 
-const emit = defineEmits(["change", "copyAlt"]);
+const emit = defineEmits(['change', 'copyAlt']);
 
-watch(items, (change) => {
-    if(change && !isDragOrResize.value) {
-        emit("change", items.value);
-    }
-    }, { deep: true}
-)
+watch(
+    items,
+    (change) => {
+        if (change && !isDragOrResize.value) {
+            emit('change', items.value);
+        }
+    },
+    { deep: true },
+);
 
 function stopDragResize() {
     dragging.value = null;
@@ -293,7 +448,7 @@ function stopDragResize() {
         item.width = Math.round((item.width / 100) * 100);
         item.height = Math.round((item.height / 100) * 100);
     });
-};
+}
 
 function onTouchStart(index) {
     if (isLocked.value || isPaused.value) return;
@@ -301,9 +456,12 @@ function onTouchStart(index) {
     changeIndex.value = index;
     if (resizing.value === null) {
         dragging.value = index;
-        dragStart.value = { x: event.touches[0].clientX, y: event.touches[0].clientY };
+        dragStart.value = {
+            x: event.touches[0].clientX,
+            y: event.touches[0].clientY,
+        };
     }
-};
+}
 
 function onTouchResizeStart(index, direction, event) {
     isDragOrResize.value = true;
@@ -311,9 +469,14 @@ function onTouchResizeStart(index, direction, event) {
     if (resizing.value === null) {
         resizing.value = { index, direction };
         const item = items.value[index];
-        resizeStart.value = { x: event.touches[0].clientX, y: event.touches[0].clientY, initialWidth: item.width, initialHeight: item.height };
+        resizeStart.value = {
+            x: event.touches[0].clientX,
+            y: event.touches[0].clientY,
+            initialWidth: item.width,
+            initialHeight: item.height,
+        };
     }
-};
+}
 
 function onTouchResizeMove(event) {
     isDragOrResize.value = true;
@@ -323,9 +486,12 @@ function onTouchResizeMove(event) {
         const deltaX = event.touches[0].clientX - resizeStart.value.x;
         const deltaY = event.touches[0].clientY - resizeStart.value.y;
         checkDirection(item, deltaX, deltaY);
-        resizeStart.value = { x: event.touches[0].clientX, y: event.touches[0].clientY };
+        resizeStart.value = {
+            x: event.touches[0].clientX,
+            y: event.touches[0].clientY,
+        };
     }
-};
+}
 
 function onTouchMove(event) {
     if (isLocked.value || isPaused.value) return;
@@ -336,8 +502,10 @@ function onTouchMove(event) {
         const deltaX = event.touches[0].clientX - dragStart.value.x;
         const deltaY = event.touches[0].clientY - dragStart.value.y;
 
-        const newLeft = item.left + (deltaX / dashboardContainer.value.offsetWidth) * 100;
-        const newTop = item.top + (deltaY / dashboardContainer.value.offsetHeight) * 100;
+        const newLeft =
+            item.left + (deltaX / dashboardContainer.value.offsetWidth) * 100;
+        const newTop =
+            item.top + (deltaY / dashboardContainer.value.offsetHeight) * 100;
 
         if (
             newLeft >= 0 &&
@@ -348,9 +516,12 @@ function onTouchMove(event) {
             item.left = newLeft;
             item.top = newTop;
         }
-        dragStart.value = { x: event.touches[0].clientX, y: event.touches[0].clientY };
+        dragStart.value = {
+            x: event.touches[0].clientX,
+            y: event.touches[0].clientY,
+        };
     }
-};
+}
 
 function onTouchEnd() {
     isDragOrResize.value = false;
@@ -363,7 +534,7 @@ function onTouchEnd() {
         item.width = Math.round((item.width / 100) * 100);
         item.height = Math.round((item.height / 100) * 100);
     });
-};
+}
 
 const itemBorder = computed(() => {
     return FINAL_CONFIG.value.style.item.borderColor;
@@ -376,16 +547,17 @@ const aspectRatio = computed(() => {
 });
 const boardColor = computed(() => {
     return FINAL_CONFIG.value.style.board.backgroundColor;
-})
+});
 const borderBoard = computed(() => {
     return FINAL_CONFIG.value.style.board.border;
-})
+});
 
 function getItemsPositions() {
     return items.value;
 }
 
-const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
+const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } =
+    useUserOptionState({ config: FINAL_CONFIG.value });
 
 const isAnnotator = ref(false);
 function toggleAnnotator() {
@@ -400,32 +572,36 @@ function hideOptions() {
     setUserOptionsVisibility(false);
 }
 
-async function copyAlt(){
+async function copyAlt() {
     emit('copyAlt', {
         config: FINAL_CONFIG.value,
-        dataset: resolvedItems.value
-    })
+        dataset: resolvedItems.value,
+    });
     if (!FINAL_CONFIG.value.userOptions.callbacks.altCopy) {
-        console.warn('Vue Data UI - A callback must be set for `altCopy` in userOptions.');
-        return
+        console.warn(
+            'Vue Data UI - A callback must be set for `altCopy` in userOptions.',
+        );
+        return;
     }
-    await Promise.resolve(FINAL_CONFIG.value.userOptions.callbacks.altCopy({ 
-        config: FINAL_CONFIG.value, 
-        dataset: resolvedItems.value
-    }));
+    await Promise.resolve(
+        FINAL_CONFIG.value.userOptions.callbacks.altCopy({
+            config: FINAL_CONFIG.value,
+            dataset: resolvedItems.value,
+        }),
+    );
 }
 
 defineExpose({
     generatePdf,
     getItemsPositions,
     toggleLock,
-    copyAlt
-})
+    copyAlt,
+});
 </script>
 
 <template>
     <div
-        :id="`vue-ui-dashboard_${uid}`" 
+        :id="`vue-ui-dashboard_${uid}`"
         @mousedown="handleInteraction"
         @mouseup="handleInteractionEnd"
         @touchstart="handleInteraction"
@@ -434,18 +610,19 @@ defineExpose({
         @mouseleave="hideOptions"
         ref="dashboardRef"
         :style="{
-            position: 'relative'
+            position: 'relative',
         }"
         class="vue-data-ui-component"
     >
-        <div 
-            class="vue-ui-dashboard-container" 
-            ref="dashboardContainer" 
-            :style="`outline:${borderBoard}; background:${boardColor}; aspect-ratio:${aspectRatio};${isAnnotator ? 'pointer-events:none' : ''}`">
-            <div 
-                class="vue-ui-dashboard-grid-container" 
-                ref="container" 
-                @mousemove="onMouseMove" 
+        <div
+            class="vue-ui-dashboard-container"
+            ref="dashboardContainer"
+            :style="`outline:${borderBoard}; background:${boardColor}; aspect-ratio:${aspectRatio};${isAnnotator ? 'pointer-events:none' : ''}`"
+        >
+            <div
+                class="vue-ui-dashboard-grid-container"
+                ref="container"
+                @mousemove="onMouseMove"
                 @mouseup="stopDragResize"
                 @touchmove="onTouchMove"
                 @touchend="onTouchEnd"
@@ -455,63 +632,93 @@ defineExpose({
                 <div
                     v-for="(item, index) in resolvedItems"
                     :key="item.id"
-                    :class="{'vue-ui-dashboard-grid-item': true, 'vue-ui-dashboard-grid-item--locked': isLocked }"
+                    :class="{
+                        'vue-ui-dashboard-grid-item': true,
+                        'vue-ui-dashboard-grid-item--locked': isLocked,
+                    }"
                     :style="{
                         width: `${item.width}%`,
                         height: `${item.height}%`,
                         left: `${item.left}%`,
                         top: `${item.top}%`,
                         cursor: 'move',
-                        boxShadow: changeIndex === index ? '0 6px 12px -3px rgba(0,0,0,0.3)' : '',
-                        zIndex: changeIndex === index ? resolvedItems.length + 1 : item.index,
-                        backgroundColor: FINAL_CONFIG.style.item.backgroundColor
+                        boxShadow:
+                            changeIndex === index
+                                ? '0 6px 12px -3px rgba(0,0,0,0.3)'
+                                : '',
+                        zIndex:
+                            changeIndex === index
+                                ? resolvedItems.length + 1
+                                : item.index,
+                        backgroundColor:
+                            FINAL_CONFIG.style.item.backgroundColor,
                     }"
                     @mousedown="startDrag(index)"
                     @touchstart="onTouchStart(index, item)"
                 >
-                    <template v-if="!isLocked">                    
+                    <template v-if="!isLocked">
                         <div
                             class="vue-ui-dashboard-resize-handle vue-ui-dashboard-top-left"
                             @mousedown="startResize(index, 'top-left')"
-                            @touchstart="onTouchResizeStart(index, 'top-left', $event)"
+                            @touchstart="
+                                onTouchResizeStart(index, 'top-left', $event)
+                            "
                             @touchmove="onTouchResizeMove($event)"
                             @touchend="onTouchEnd"
                         ></div>
                         <div
                             class="vue-ui-dashboard-resize-handle vue-ui-dashboard-top-right"
                             @mousedown="startResize(index, 'top-right')"
-                            @touchstart="onTouchResizeStart(index, 'top-right', $event)"
+                            @touchstart="
+                                onTouchResizeStart(index, 'top-right', $event)
+                            "
                             @touchmove="onTouchResizeMove($event)"
                             @touchend="onTouchEnd"
                         ></div>
                         <div
                             class="vue-ui-dashboard-resize-handle vue-ui-dashboard-bottom-left"
                             @mousedown="startResize(index, 'bottom-left')"
-                            @touchstart="onTouchResizeStart(index, 'bottom-left', $event)"
+                            @touchstart="
+                                onTouchResizeStart(index, 'bottom-left', $event)
+                            "
                             @touchmove="onTouchResizeMove($event)"
                             @touchend="onTouchEnd"
                         ></div>
                         <div
                             class="vue-ui-dashboard-resize-handle vue-ui-dashboard-bottom-right"
                             @mousedown="startResize(index, 'bottom-right')"
-                            @touchstart="onTouchResizeStart(index, 'bottom-right', $event)"
+                            @touchstart="
+                                onTouchResizeStart(
+                                    index,
+                                    'bottom-right',
+                                    $event,
+                                )
+                            "
                             @touchmove="onTouchResizeMove($event)"
                             @touchend="onTouchEnd"
                         ></div>
                     </template>
 
-                    <slot name="top" :item="item" :index="index"/>
-                    
+                    <slot name="top" :item="item" :index="index" />
+
                     <component
                         :is="item.resolvedComponent"
                         v-bind="item.props"
                         v-if="item.resolvedComponent"
                     />
                     <template v-else>
-                        <slot name="content" :item="item" :index="index" :left="item.left" :top="item.top" :height="item.height" :width="item.width"></slot>
+                        <slot
+                            name="content"
+                            :item="item"
+                            :index="index"
+                            :left="item.left"
+                            :top="item.top"
+                            :height="item.height"
+                            :width="item.width"
+                        ></slot>
                     </template>
 
-                    <slot name="bottom" :item="item" :index="index"/>
+                    <slot name="bottom" :item="item" :index="index" />
                 </div>
             </div>
         </div>
@@ -524,52 +731,61 @@ defineExpose({
                 position: 'absolute',
                 top: 0,
                 left: 0,
-                zIndex: resolvedItems.length + 1
+                zIndex: resolvedItems.length + 1,
             }"
             ref="svgRef"
         />
 
-        <PenAndPaper 
-            v-if="FINAL_CONFIG.userOptions.buttons.annotator && dashboardContainer && svgRef" 
+        <PenAndPaper
+            v-if="
+                FINAL_CONFIG.userOptions.buttons.annotator &&
+                dashboardContainer &&
+                svgRef
+            "
             :color="FINAL_CONFIG.style.board.color"
-            :backgroundColor="FINAL_CONFIG.style.board.backgroundColor" 
-            :active="isAnnotator" 
+            :backgroundColor="FINAL_CONFIG.style.board.backgroundColor"
+            :active="isAnnotator"
             :svgRef="svgRef"
             :isCursorPointer="isCursorPointer"
             @close="toggleAnnotator"
             :style="{
-                zIndex: resolvedItems.length + 1
+                zIndex: resolvedItems.length + 1,
             }"
         >
             <template #annotator-action-close>
-                <slot name="annotator-action-close"/>
+                <slot name="annotator-action-close" />
             </template>
             <template #annotator-action-color="{ color }">
-                <slot name="annotator-action-color" v-bind="{ color }"/>
+                <slot name="annotator-action-color" v-bind="{ color }" />
             </template>
             <template #annotator-action-draw="{ mode }">
-                <slot name="annotator-action-draw" v-bind="{ mode }"/>
+                <slot name="annotator-action-draw" v-bind="{ mode }" />
             </template>
             <template #annotator-action-undo="{ disabled }">
-                <slot name="annotator-action-undo" v-bind="{ disabled }"/>
+                <slot name="annotator-action-undo" v-bind="{ disabled }" />
             </template>
             <template #annotator-action-redo="{ disabled }">
-                <slot name="annotator-action-redo" v-bind="{ disabled }"/>
+                <slot name="annotator-action-redo" v-bind="{ disabled }" />
             </template>
             <template #annotator-action-delete="{ disabled }">
-                <slot name="annotator-action-delete" v-bind="{ disabled }"/>
+                <slot name="annotator-action-delete" v-bind="{ disabled }" />
             </template>
         </PenAndPaper>
 
         <UserOptions
-            v-if="((FINAL_CONFIG.allowPrint /* deprecated, but still ok */) || FINAL_CONFIG.userOptions.show) && (FINAL_CONFIG.userOptions.buttons.pdf || FINAL_CONFIG.userOptions.buttons.img)"
+            v-if="
+                (FINAL_CONFIG.allowPrint /* deprecated, but still ok */ ||
+                    FINAL_CONFIG.userOptions.show) &&
+                (FINAL_CONFIG.userOptions.buttons.pdf ||
+                    FINAL_CONFIG.userOptions.buttons.img)
+            "
             ref="userOptionsRef"
             :backgroundColor="FINAL_CONFIG.style.board.backgroundColor"
             :color="FINAL_CONFIG.style.board.color"
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uid"
-            :position="FINAL_CONFIG.userOptions.position" 
+            :position="FINAL_CONFIG.userOptions.position"
             :hasTooltip="false"
             :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
             :hasImg="FINAL_CONFIG.userOptions.buttons.img"
@@ -580,16 +796,23 @@ defineExpose({
             :hasAltCopy="FINAL_CONFIG.userOptions.buttons.altCopy"
             :chartElement="dashboardContainer"
             :callbacks="FINAL_CONFIG.userOptions.callbacks"
-            :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator" 
+            :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator"
             :isAnnotation="isAnnotator"
             :printScale="FINAL_CONFIG.userOptions.print.scale"
             :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
             :isCursorPointer="isCursorPointer"
-            @generatePdf="generatePdf" 
+            @generatePdf="generatePdf"
             @generateImage="generateImage"
             @toggleAnnotator="toggleAnnotator"
             @copyAlt="copyAlt"
-            :style="{ visibility: keepUserOptionState ? userOptionsVisible ? 'visible' : 'hidden' : 'visible', zIndex: resolvedItems.length + 1 }"
+            :style="{
+                visibility: keepUserOptionState
+                    ? userOptionsVisible
+                        ? 'visible'
+                        : 'hidden'
+                    : 'visible',
+                zIndex: resolvedItems.length + 1,
+            }"
         >
             <template #menuIcon="{ isOpen, color }" v-if="$slots.menuIcon">
                 <slot name="menuIcon" v-bind="{ isOpen, color }" />
@@ -600,11 +823,20 @@ defineExpose({
             <template #optionImg v-if="$slots.optionImg">
                 <slot name="optionImg" />
             </template>
-            <template v-if="$slots.optionAnnotator" #optionAnnotator="{ toggleAnnotator, isAnnotator }">
-                <slot name="optionAnnotator" v-bind="{ toggleAnnotator, isAnnotator }" />
+            <template
+                v-if="$slots.optionAnnotator"
+                #optionAnnotator="{ toggleAnnotator, isAnnotator }"
+            >
+                <slot
+                    name="optionAnnotator"
+                    v-bind="{ toggleAnnotator, isAnnotator }"
+                />
             </template>
-            <template v-if="$slots.optionAltCopy" #optionAltCopy="{ altCopy: c }">
-                <slot name="optionAltCopy" v-bind="{ altCopy: c }"/>
+            <template
+                v-if="$slots.optionAltCopy"
+                #optionAltCopy="{ altCopy: c }"
+            >
+                <slot name="optionAltCopy" v-bind="{ altCopy: c }" />
             </template>
         </UserOptions>
     </div>

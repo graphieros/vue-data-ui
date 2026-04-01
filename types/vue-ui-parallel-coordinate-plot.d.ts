@@ -1,6 +1,6 @@
 import { DefineComponent } from 'vue';
 
-export type { 
+export type {
     VueUiParallelCoordinatePlotDatasetSerieItem,
     VueUiParallelCoordinatePlotDatasetItem,
     VueUiParallelCoordinatePlotConfig,
@@ -8,13 +8,16 @@ export type {
     VueUiParallelCoordinatePlotDatapointSelection,
     VueUiParallelCoordinatePlotScaleSelection,
     VueUiParallelCoordinatePlotExpose,
-    VueUiParallelCoordinatePlotEvent
-} from "./vue-data-ui";
+    VueUiParallelCoordinatePlotEvent,
+} from './vue-data-ui';
 
-declare const VueUiParallelCoordinatePlot: DefineComponent<{
-    config?: VueUiParallelCoordinatePlotConfig;
-    dataset: VueUiParallelCoordinatePlotDatasetItem[];
-}, VueUiParallelCoordinatePlotExpose>;
+declare const VueUiParallelCoordinatePlot: DefineComponent<
+    {
+        config?: VueUiParallelCoordinatePlotConfig;
+        dataset: VueUiParallelCoordinatePlotDatasetItem[];
+    },
+    VueUiParallelCoordinatePlotExpose
+>;
 
 export default VueUiParallelCoordinatePlot;
 export { VueUiParallelCoordinatePlot };

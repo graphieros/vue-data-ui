@@ -1,13 +1,13 @@
 <script setup>
-import { 
-    computed, 
-    defineAsyncComponent, 
-    nextTick, 
-    onMounted, 
-    ref, 
+import {
+    computed,
+    defineAsyncComponent,
+    nextTick,
+    onMounted,
+    ref,
     toRefs,
-    watch, 
-} from "vue";
+    watch,
+} from 'vue';
 import {
     applyDataLabel,
     convertColorToHex,
@@ -21,42 +21,48 @@ import {
     functionReturnsString,
     getMissingDatasetAttributes,
     isFunction,
-    objectIsEmpty, 
+    objectIsEmpty,
     palette,
     sanitizeArray,
     themePalettes,
     treeShake,
-    XMLNS
-} from "../lib";
-import{
-    buildValuePercentageLabel,
-} from "../labelUtils";
-import { throttle } from "../canvas-lib";
-import { useConfig } from "../useConfig";
-import { useLoading } from "../useLoading";
-import { usePrinter } from "../usePrinter";
-import { useSvgExport } from "../useSvgExport";
-import { useNestedProp } from "../useNestedProp";
-import { useResponsive } from "../useResponsive";
-import { useThemeCheck } from "../useThemeCheck";
-import { useUserOptionState } from "../useUserOptionState";
-import { useChartAccessibility } from "../useChartAccessibility";
-import img from "../img";
-import Title from "../atoms/Title.vue";
-import Legend from "../atoms/Legend.vue";
-import themes from "../themes/vue_ui_galaxy.json";
-import BaseScanner from "../atoms/BaseScanner.vue";
-import A11yDataTable from "../atoms/A11yDataTable.vue";
-import BaseLegendToggle from "../atoms/BaseLegendToggle.vue";
+    XMLNS,
+} from '../lib';
+import { buildValuePercentageLabel } from '../labelUtils';
+import { throttle } from '../canvas-lib';
+import { useConfig } from '../useConfig';
+import { useLoading } from '../useLoading';
+import { usePrinter } from '../usePrinter';
+import { useSvgExport } from '../useSvgExport';
+import { useNestedProp } from '../useNestedProp';
+import { useResponsive } from '../useResponsive';
+import { useThemeCheck } from '../useThemeCheck';
+import { useUserOptionState } from '../useUserOptionState';
+import { useChartAccessibility } from '../useChartAccessibility';
+import img from '../img';
+import Title from '../atoms/Title.vue';
+import Legend from '../atoms/Legend.vue';
+import themes from '../themes/vue_ui_galaxy.json';
+import BaseScanner from '../atoms/BaseScanner.vue';
+import A11yDataTable from '../atoms/A11yDataTable.vue';
+import BaseLegendToggle from '../atoms/BaseLegendToggle.vue';
 
 const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
 const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
-const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
-const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
-const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
-const BaseDraggableDialog = defineAsyncComponent(() => import('../atoms/BaseDraggableDialog.vue'));
+const PenAndPaper = defineAsyncComponent(
+    () => import('../atoms/PenAndPaper.vue'),
+);
+const UserOptions = defineAsyncComponent(
+    () => import('../atoms/UserOptions.vue'),
+);
+const PackageVersion = defineAsyncComponent(
+    () => import('../atoms/PackageVersion.vue'),
+);
+const BaseDraggableDialog = defineAsyncComponent(
+    () => import('../atoms/BaseDraggableDialog.vue'),
+);
 
 const { vue_ui_galaxy: DEFAULT_CONFIG } = useConfig();
 const { isThemeValid, warnInvalidTheme } = useThemeCheck();
@@ -65,21 +71,21 @@ const props = defineProps({
     config: {
         type: Object,
         default() {
-            return {}
-        }
+            return {};
+        },
     },
     dataset: {
         type: Array,
         default() {
-            return []
-        }
+            return [];
+        },
     },
 });
 
 const uid = ref(createUid());
 const galaxyChart = ref(null);
 const isTooltip = ref(false);
-const tooltipContent = ref("");
+const tooltipContent = ref('');
 const selectedSerie = ref(null);
 const step = ref(0);
 const titleStep = ref(0);
@@ -109,7 +115,9 @@ const isDataset = computed(() => {
 
 const FINAL_CONFIG = ref(prepareConfig());
 
-const isCursorPointer = computed(() => FINAL_CONFIG.value.userOptions.useCursorPointer);
+const isCursorPointer = computed(
+    () => FINAL_CONFIG.value.userOptions.useCursorPointer,
+);
 
 const skeletonConfig = computed(() => {
     return treeShake({
@@ -121,14 +129,14 @@ const skeletonConfig = computed(() => {
                 chart: {
                     backgroundColor: '#99999930',
                     legend: {
-                        backgroundColor: 'transparent'
-                    }
-                }
-            }
+                        backgroundColor: 'transparent',
+                    },
+                },
+            },
         },
-        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {}
-    })
-})
+        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {},
+    });
+});
 
 const { loading, FINAL_DATASET } = useLoading({
     ...toRefs(props),
@@ -141,15 +149,15 @@ const { loading, FINAL_DATASET } = useLoading({
         });
     },
     skeletonDataset: props.config?.skeletonDataset ?? [
-        { name: '_', values: [21], color: '#DBDBDB'},
-        { name: '_', values: [13], color: '#C4C4C4'},
-        { name: '_', values: [8], color: '#ADADAD'},
+        { name: '_', values: [21], color: '#DBDBDB' },
+        { name: '_', values: [13], color: '#C4C4C4' },
+        { name: '_', values: [8], color: '#ADADAD' },
     ],
     skeletonConfig: treeShake({
         defaultConfig: FINAL_CONFIG.value,
-        userConfig: skeletonConfig.value
-    })
-})
+        userConfig: skeletonConfig.value,
+    }),
+});
 
 onMounted(() => {
     readyTeleport.value = true;
@@ -159,37 +167,41 @@ onMounted(() => {
 const debug = computed(() => !!FINAL_CONFIG.value.debug);
 
 function prepareChart() {
-    if(objectIsEmpty(props.dataset)) {
+    if (objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiGalaxy',
             type: 'dataset',
-            debug: debug.value
-        })
+            debug: debug.value,
+        });
     } else {
         props.dataset.forEach((ds, i) => {
             getMissingDatasetAttributes({
                 datasetObject: ds,
-                requiredAttributes: ['name', 'values']
-            }).forEach(attr => {
+                requiredAttributes: ['name', 'values'],
+            }).forEach((attr) => {
                 error({
                     componentName: 'VueUiGalaxy',
                     type: 'datasetSerieAttribute',
                     property: attr,
                     index: i,
-                    debug: debug.value
-                })
-            })
-        })
+                    debug: debug.value,
+                });
+            });
+        });
     }
 
     if (FINAL_CONFIG.value.responsive) {
         const handleResize = throttle(() => {
             const { width, height } = useResponsive({
                 chart: galaxyChart.value,
-                title: FINAL_CONFIG.value.style.chart.title.text ? chartTitle.value : null,
-                legend: FINAL_CONFIG.value.style.chart.legend.show ? chartLegend.value : null,
+                title: FINAL_CONFIG.value.style.chart.title.text
+                    ? chartTitle.value
+                    : null,
+                legend: FINAL_CONFIG.value.style.chart.legend.show
+                    ? chartLegend.value
+                    : null,
                 noTitle: noTitle.value,
-                source: source.value
+                source: source.value,
             });
 
             requestAnimationFrame(() => {
@@ -211,73 +223,88 @@ function prepareChart() {
     }
 }
 
-const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
-const { svgRef } = useChartAccessibility({ config: FINAL_CONFIG.value.style.chart.title });
+const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } =
+    useUserOptionState({ config: FINAL_CONFIG.value });
+const { svgRef } = useChartAccessibility({
+    config: FINAL_CONFIG.value.style.chart.title,
+});
 
 function prepareConfig() {
     const mergedConfig = useNestedProp({
         userConfig: props.config,
-        defaultConfig: DEFAULT_CONFIG
+        defaultConfig: DEFAULT_CONFIG,
     });
 
     const theme = mergedConfig.theme;
     if (!theme) return mergedConfig;
-    
+
     if (!isThemeValid.value(mergedConfig)) {
         warnInvalidTheme(mergedConfig);
         return mergedConfig;
     }
-    
+
     const fused = useNestedProp({
         userConfig: themes[theme] || props.config,
-        defaultConfig: mergedConfig
+        defaultConfig: mergedConfig,
     });
 
     const finalConfig = useNestedProp({
         userConfig: props.config,
-        defaultConfig: fused
+        defaultConfig: fused,
     });
 
     return {
         ...finalConfig,
-        customPalette: finalConfig.customPalette.length ? finalConfig.customPalette : themePalettes[theme] || palette
-    }
+        customPalette: finalConfig.customPalette.length
+            ? finalConfig.customPalette
+            : themePalettes[theme] || palette,
+    };
 }
 
-watch(() => props.config, (_newCfg) => {
-    FINAL_CONFIG.value = prepareConfig();
-    userOptionsVisible.value = !FINAL_CONFIG.value.userOptions.showOnChartHover;
-    prepareChart();
-    titleStep.value += 1;
-    tableStep.value += 1;
-    legendStep.value += 1;
+watch(
+    () => props.config,
+    (_newCfg) => {
+        FINAL_CONFIG.value = prepareConfig();
+        userOptionsVisible.value =
+            !FINAL_CONFIG.value.userOptions.showOnChartHover;
+        prepareChart();
+        titleStep.value += 1;
+        tableStep.value += 1;
+        legendStep.value += 1;
 
-    // Reset mutable config
-    mutableConfig.value.dataLabels.show = FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.show;
-    mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
-    mutableConfig.value.showTooltip = FINAL_CONFIG.value.style.chart.tooltip.show;
-}, { deep: true });
+        // Reset mutable config
+        mutableConfig.value.dataLabels.show =
+            FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.show;
+        mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
+        mutableConfig.value.showTooltip =
+            FINAL_CONFIG.value.style.chart.tooltip.show;
+    },
+    { deep: true },
+);
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `galaxy_${uid.value}`,
     fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-galaxy',
-    options: FINAL_CONFIG.value.userOptions.print
+    options: FINAL_CONFIG.value.userOptions.print,
 });
 
 const hasOptionsNoTitle = computed(() => {
-    return FINAL_CONFIG.value.userOptions.show && !FINAL_CONFIG.value.style.chart.title.text;
+    return (
+        FINAL_CONFIG.value.userOptions.show &&
+        !FINAL_CONFIG.value.style.chart.title.text
+    );
 });
 
 const customPalette = computed(() => {
     return convertCustomPalette(FINAL_CONFIG.value.customPalette);
-})
+});
 
 const mutableConfig = ref({
     dataLabels: {
         show: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.show,
     },
     showTable: FINAL_CONFIG.value.table.show,
-    showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show
+    showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show,
 });
 
 const WIDTH = ref(250);
@@ -288,9 +315,8 @@ const Y = ref(0);
 const svg = computed(() => ({
     width: WIDTH.value,
     height: HEIGHT.value,
-    viewBox: `${X.value} ${Y.value} ${WIDTH.value} ${HEIGHT.value}`
+    viewBox: `${X.value} ${Y.value} ${WIDTH.value} ${HEIGHT.value}`,
 }));
-
 
 const emit = defineEmits(['selectLegend', 'selectDatapoint', 'copyAlt']);
 
@@ -300,25 +326,28 @@ function toggleLegend() {
     if (segregated.value.length) {
         segregated.value = [];
     } else {
-        legendSet.value.forEach(l => {
+        legendSet.value.forEach((l) => {
             segregated.value.push(l.id);
         });
     }
 }
 
 function segregate(datapoint) {
-    if(segregated.value.includes(datapoint.id)) {
-        segregated.value = segregated.value.filter(s => s !== datapoint.id);
-    }else {
+    if (segregated.value.includes(datapoint.id)) {
+        segregated.value = segregated.value.filter((s) => s !== datapoint.id);
+    } else {
         segregated.value.push(datapoint.id);
     }
-    emit('selectLegend', galaxySet.value.map(ds => {
-        return {
-            name: ds.name,
-            color: ds.color,
-            value: ds.value
-        }
-    }));
+    emit(
+        'selectLegend',
+        galaxySet.value.map((ds) => {
+            return {
+                name: ds.name,
+                color: ds.color,
+                value: ds.value,
+            };
+        }),
+    );
 }
 
 function validSeriesToToggle(name) {
@@ -328,7 +357,7 @@ function validSeriesToToggle(name) {
         }
         return null;
     }
-    const dp = immutableSet.value.find(d => d.name === name);
+    const dp = immutableSet.value.find((d) => d.name === name);
     if (!dp) {
         if (FINAL_CONFIG.value.debug) {
             console.warn(`VueUiGalaxy - Series name not found "${name}"`);
@@ -342,14 +371,14 @@ function showSeries(name) {
     const dp = validSeriesToToggle(name);
     if (dp === null) return;
     if (segregated.value.includes(dp.id)) {
-        segregate({ id : dp.id });
+        segregate({ id: dp.id });
     }
 }
 
 function hideSeries(name) {
-    const dp  = validSeriesToToggle(name);
+    const dp = validSeriesToToggle(name);
     if (dp === null) return;
-    if (!segregated.value.includes(dp.id))  {
+    if (!segregated.value.includes(dp.id)) {
         segregate({ id: dp.id });
     }
 }
@@ -359,44 +388,56 @@ const immutableSet = computed(() => {
         .map((serie, i) => {
             return {
                 name: serie.name,
-                color: convertColorToHex(serie.color) || customPalette.value[i] || palette[i] || palette[i % palette.length],
-                value: serie.values ? sanitizeArray(serie.values).reduce((a,b) => a + b, 0) : 0,
+                color:
+                    convertColorToHex(serie.color) ||
+                    customPalette.value[i] ||
+                    palette[i] ||
+                    palette[i % palette.length],
+                value: serie.values
+                    ? sanitizeArray(serie.values).reduce((a, b) => a + b, 0)
+                    : 0,
                 absoluteValues: sanitizeArray(serie.values),
                 id: createUid(),
-            }
+            };
         })
-        .sort((a,b) => b.value - a.value).map((d, i) => {
+        .sort((a, b) => b.value - a.value)
+        .map((d, i) => {
             return {
                 ...d,
-                absoluteIndex: i
-            }
-        })
+                absoluteIndex: i,
+            };
+        });
 });
 
 function getData() {
-    return immutableSet.value.map(ds => {
+    return immutableSet.value.map((ds) => {
         return {
             name: ds.name,
             color: ds.color,
-            value: ds.value
-        }
+            value: ds.value,
+        };
     });
 }
 
 const total = computed(() => {
-    return immutableSet.value.filter((ds) => !segregated.value.includes(ds.id)).map(ds => ds.value).reduce((a, b) => a + b, 0);
+    return immutableSet.value
+        .filter((ds) => !segregated.value.includes(ds.id))
+        .map((ds) => ds.value)
+        .reduce((a, b) => a + b, 0);
 });
 
 const maxPath = ref(190);
 
 const segregatedSet = computed(() => {
-    return immutableSet.value.filter(ds => !segregated.value.includes(ds.id))
+    return immutableSet.value.filter((ds) => !segregated.value.includes(ds.id));
 });
 
-const effectivePadding = computed(() =>
-    (FINAL_CONFIG.value.style.chart.layout.arcs.strokeWidth +
-    FINAL_CONFIG.value.style.chart.layout.arcs.borderWidth) / 2 +
-    (FINAL_CONFIG.value.style.chart.layout.padding ?? 12)
+const effectivePadding = computed(
+    () =>
+        (FINAL_CONFIG.value.style.chart.layout.arcs.strokeWidth +
+            FINAL_CONFIG.value.style.chart.layout.arcs.borderWidth) /
+            2 +
+        (FINAL_CONFIG.value.style.chart.layout.padding ?? 12),
 );
 
 const toSpiralPath = computed(() => {
@@ -405,12 +446,16 @@ const toSpiralPath = computed(() => {
         a: FINAL_CONFIG.value.style.chart.layout.arcs.a ?? 6,
         b: FINAL_CONFIG.value.style.chart.layout.arcs.b ?? 6,
         angleStep: FINAL_CONFIG.value.style.chart.layout.arcs.angleStep ?? 0.07,
-        startX: svg.value.width / 2 + FINAL_CONFIG.value.style.chart.layout.arcs.offsetX,
-        startY: svg.value.height / 2 + FINAL_CONFIG.value.style.chart.layout.arcs.offsetY,
+        startX:
+            svg.value.width / 2 +
+            FINAL_CONFIG.value.style.chart.layout.arcs.offsetX,
+        startY:
+            svg.value.height / 2 +
+            FINAL_CONFIG.value.style.chart.layout.arcs.offsetY,
         boxWidth: svg.value.width,
         boxHeight: svg.value.height,
-        padding: effectivePadding.value
-    })
+        padding: effectivePadding.value,
+    });
 });
 
 const galaxySet = computed(() => {
@@ -418,39 +463,48 @@ const galaxySet = computed(() => {
     for (let i = 0; i < segregatedSet.value.length; i += 1) {
         const serie = segregatedSet.value[i];
         const endPoints =
-        ((serie.value / total.value) * maxPath.value) +
-        (i > 0 && res.length ? res[i - 1].points : 0);
+            (serie.value / total.value) * maxPath.value +
+            (i > 0 && res.length ? res[i - 1].points : 0);
 
         res.push({
             points: endPoints,
             ...serie,
             seriesIndex: i,
             proportion: serie.value / total.value,
-            path: toSpiralPath.value(endPoints)
+            path: toSpiralPath.value(endPoints),
         });
     }
     return res
-        .filter(dp => !segregated.value.includes(dp.id))
+        .filter((dp) => !segregated.value.includes(dp.id))
         .toSorted((a, b) => b.points - a.points);
 });
 
 function getStrokeWidth(datapoint) {
     const size = Math.min(WIDTH.value, HEIGHT.value);
-    
-    const mult = selectedSerie.value === datapoint.id && FINAL_CONFIG.value.style.chart.layout.arcs.hoverEffect.show ? FINAL_CONFIG.value.style.chart.layout.arcs.hoverEffect.multiplicator : 1;
 
-    const border = (FINAL_CONFIG.value.style.chart.layout.arcs.strokeWidth + FINAL_CONFIG.value.style.chart.layout.arcs.borderWidth) * mult;
+    const mult =
+        selectedSerie.value === datapoint.id &&
+        FINAL_CONFIG.value.style.chart.layout.arcs.hoverEffect.show
+            ? FINAL_CONFIG.value.style.chart.layout.arcs.hoverEffect
+                  .multiplicator
+            : 1;
+
+    const border =
+        (FINAL_CONFIG.value.style.chart.layout.arcs.strokeWidth +
+            FINAL_CONFIG.value.style.chart.layout.arcs.borderWidth) *
+        mult;
     const path = FINAL_CONFIG.value.style.chart.layout.arcs.strokeWidth * mult;
-    const blur =  (FINAL_CONFIG.value.style.chart.layout.arcs.strokeWidth / 2) * mult;
+    const blur =
+        (FINAL_CONFIG.value.style.chart.layout.arcs.strokeWidth / 2) * mult;
 
     return {
-        border: border / 180 * size,
-        path: path / 180 * size,
-        blur: blur / 180 * size
-    }
+        border: (border / 180) * size,
+        path: (path / 180) * size,
+        blur: (blur / 180) * size,
+    };
 }
 
-const isFullscreen = ref(false)
+const isFullscreen = ref(false);
 function toggleFullscreen(state) {
     isFullscreen.value = state;
     step.value += 1;
@@ -468,22 +522,31 @@ function clearSerieSelection() {
 function updateTooltipA11yPosition(serieId) {
     if (!svgRef.value || !serieId) return;
 
-    const trap = svgRef.value.querySelector(`[data-a11y-serie-id="${serieId}"]`);
+    const trap = svgRef.value.querySelector(
+        `[data-a11y-serie-id="${serieId}"]`,
+    );
     if (!trap) return;
 
     const box = trap.getBoundingClientRect();
 
     tooltipA11yPosition.value = {
-        x: box.left + (box.width / 2),
-        y: box.top + (box.height / 2)
+        x: box.left + box.width / 2,
+        y: box.top + box.height / 2,
     };
 }
 
 function onTrapLeave(datapoint) {
     if (FINAL_CONFIG.value.events.datapointLeave) {
-        FINAL_CONFIG.value.events.datapointLeave({ datapoint, seriesIndex: datapoint.absoluteIndex });
+        FINAL_CONFIG.value.events.datapointLeave({
+            datapoint,
+            seriesIndex: datapoint.absoluteIndex,
+        });
     }
-    if (activeTooltipSerieId.value === datapoint.id && tooltipTriggerMode.value === 'keyboard') return;
+    if (
+        activeTooltipSerieId.value === datapoint.id &&
+        tooltipTriggerMode.value === 'keyboard'
+    )
+        return;
     isTooltip.value = false;
     selectedSerie.value = null;
 }
@@ -491,29 +554,37 @@ function onTrapLeave(datapoint) {
 function onTrapClick(datapoint) {
     emit('selectDatapoint', datapoint);
     if (FINAL_CONFIG.value.events.datapointClick) {
-        FINAL_CONFIG.value.events.datapointClick({ datapoint, seriesIndex: datapoint.absoluteIndex });
+        FINAL_CONFIG.value.events.datapointClick({
+            datapoint,
+            seriesIndex: datapoint.absoluteIndex,
+        });
     }
 }
 
-function buildLabel({
-    val,
-    percentage,
-    showVal,
-    showPercentage,
-}) {
+function buildLabel({ val, percentage, showVal, showPercentage }) {
     const cfg = FINAL_CONFIG.value.style.chart.layout.labels.dataLabels;
     return buildValuePercentageLabel({
         config: cfg,
         val,
         percentage,
         showVal,
-        showPercentage
-    })
-} 
+        showPercentage,
+    });
+}
 
-function useTooltip({ datapoint, _relativeIndex, seriesIndex, show=false, triggerMode = 'pointer', flatIndex = null }) {
+function useTooltip({
+    datapoint,
+    _relativeIndex,
+    seriesIndex,
+    show = false,
+    triggerMode = 'pointer',
+    flatIndex = null,
+}) {
     if (FINAL_CONFIG.value.events.datapointEnter) {
-        FINAL_CONFIG.value.events.datapointEnter({ datapoint, seriesIndex: datapoint.absoluteIndex });
+        FINAL_CONFIG.value.events.datapointEnter({
+            datapoint,
+            seriesIndex: datapoint.absoluteIndex,
+        });
     }
 
     if (!mutableConfig.value.showTooltip) return;
@@ -526,49 +597,58 @@ function useTooltip({ datapoint, _relativeIndex, seriesIndex, show=false, trigge
         datapoint,
         seriesIndex,
         series: immutableSet.value,
-        config: FINAL_CONFIG.value
-    }
+        config: FINAL_CONFIG.value,
+    };
 
     isTooltip.value = show;
     selectedSerie.value = datapoint.id;
-    let html = "";
+    let html = '';
     const customFormat = FINAL_CONFIG.value.style.chart.tooltip.customFormat;
 
-    if(isFunction(customFormat) && functionReturnsString(() => customFormat({
-        seriesIndex,
-        datapoint,
-        series: immutableSet.value,
-        config: FINAL_CONFIG.value
-    }))) {
+    if (
+        isFunction(customFormat) &&
+        functionReturnsString(() =>
+            customFormat({
+                seriesIndex,
+                datapoint,
+                series: immutableSet.value,
+                config: FINAL_CONFIG.value,
+            }),
+        )
+    ) {
         tooltipContent.value = customFormat({
             seriesIndex,
             datapoint,
             series: immutableSet.value,
-            config: FINAL_CONFIG.value
-        })
+            config: FINAL_CONFIG.value,
+        });
     } else {
         html += `<div data-cy="galaxy-tooltip-name" style="width:100%;text-align:center;border-bottom:1px solid ${FINAL_CONFIG.value.style.chart.tooltip.borderColor};padding-bottom:6px;margin-bottom:3px;">${datapoint.name}</div>`;
         html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><svg viewBox="0 0 12 12" height="14" width="14"><circle data-cy="galaxy-tooltip-marker" cx="6" cy="6" r="6" stroke="none" fill="${datapoint.color}"/></svg>`;
 
         html += `<b>${buildLabel({
             showVal: FINAL_CONFIG.value.style.chart.tooltip.showValue,
-            showPercentage: FINAL_CONFIG.value.style.chart.tooltip.showPercentage,
+            showPercentage:
+                FINAL_CONFIG.value.style.chart.tooltip.showPercentage,
             val: applyDataLabel(
-                FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.formatter,
+                FINAL_CONFIG.value.style.chart.layout.labels.dataLabels
+                    .formatter,
                 datapoint.value,
                 dataLabel({
-                    p: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.prefix, 
-                    v: datapoint.value, 
-                    s: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.suffix, 
-                    r: FINAL_CONFIG.value.style.chart.tooltip.roundingValue
+                    p: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels
+                        .prefix,
+                    v: datapoint.value,
+                    s: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels
+                        .suffix,
+                    r: FINAL_CONFIG.value.style.chart.tooltip.roundingValue,
                 }),
-                { datapoint, seriesIndex }
+                { datapoint, seriesIndex },
             ),
             percentage: dataLabel({
-                    v: datapoint.proportion * 100,
-                    s: '%',
-                    r: FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage
-                })
+                v: datapoint.proportion * 100,
+                s: '%',
+                r: FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage,
+            }),
         })}</b></div>`;
 
         tooltipContent.value = `<div>${html}</div>`;
@@ -582,34 +662,53 @@ function useTooltip({ datapoint, _relativeIndex, seriesIndex, show=false, trigge
 }
 
 const legendSet = computed(() => {
-    return immutableSet.value
-        .map((el, i) => {
-            const valueDisplay = applyDataLabel(FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.formatter, el.value, dataLabel({
-                    p: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.prefix,
-                    v: el.value,
-                    s: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.suffix,
-                    r: FINAL_CONFIG.value.style.chart.legend.roundingValue
-                }), { datapoint: el, index: i });
+    return immutableSet.value.map((el, i) => {
+        const valueDisplay = applyDataLabel(
+            FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.formatter,
+            el.value,
+            dataLabel({
+                p: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels
+                    .prefix,
+                v: el.value,
+                s: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels
+                    .suffix,
+                r: FINAL_CONFIG.value.style.chart.legend.roundingValue,
+            }),
+            { datapoint: el, index: i },
+        );
 
-            const percentageDisplay = isNaN(el.value / total.value) || segregated.value.includes(el.id) ? '-' : dataLabel({v: el.value / total.value * 100, s: '%', r: FINAL_CONFIG.value.style.chart.legend.roundingPercentage });
+        const percentageDisplay =
+            isNaN(el.value / total.value) || segregated.value.includes(el.id)
+                ? '-'
+                : dataLabel({
+                      v: (el.value / total.value) * 100,
+                      s: '%',
+                      r: FINAL_CONFIG.value.style.chart.legend
+                          .roundingPercentage,
+                  });
 
-            const display = buildLabel({
-                showVal: FINAL_CONFIG.value.style.chart.legend.showValue,
-                showPercentage: FINAL_CONFIG.value.style.chart.legend.showPercentage,
-                val: valueDisplay,
-                percentage: percentageDisplay
-            });
-
-            return {
-                ...el,
-                proportion: (el.value || 0) / FINAL_DATASET.value.map(m => (m.values || []).reduce((a, b) => a + b, 0)).reduce((a, b) => a + b, 0),
-                opacity: segregated.value.includes(el.id) ? 0.5 : 1,
-                shape: el.shape || 'circle',
-                segregate: () => segregate(el),
-                isSegregated: segregated.value.includes(el.id),
-                display: `${el.name}${FINAL_CONFIG.value.style.chart.legend.showPercentage || FINAL_CONFIG.value.style.chart.legend.showValue ? ': ' : ''}${display}`
-            }
+        const display = buildLabel({
+            showVal: FINAL_CONFIG.value.style.chart.legend.showValue,
+            showPercentage:
+                FINAL_CONFIG.value.style.chart.legend.showPercentage,
+            val: valueDisplay,
+            percentage: percentageDisplay,
         });
+
+        return {
+            ...el,
+            proportion:
+                (el.value || 0) /
+                FINAL_DATASET.value
+                    .map((m) => (m.values || []).reduce((a, b) => a + b, 0))
+                    .reduce((a, b) => a + b, 0),
+            opacity: segregated.value.includes(el.id) ? 0.5 : 1,
+            shape: el.shape || 'circle',
+            segregate: () => segregate(el),
+            isSegregated: segregated.value.includes(el.id),
+            display: `${el.name}${FINAL_CONFIG.value.style.chart.legend.showPercentage || FINAL_CONFIG.value.style.chart.legend.showValue ? ': ' : ''}${display}`,
+        };
+    });
 });
 
 const legendConfig = computed(() => {
@@ -619,34 +718,49 @@ const legendConfig = computed(() => {
         color: FINAL_CONFIG.value.style.chart.legend.color,
         fontSize: FINAL_CONFIG.value.style.chart.legend.fontSize,
         paddingBottom: 12,
-        fontWeight: FINAL_CONFIG.value.style.chart.legend.bold ? 'bold' : ''
-    }
+        fontWeight: FINAL_CONFIG.value.style.chart.legend.bold ? 'bold' : '',
+    };
 });
 
 const table = computed(() => {
-    const head = galaxySet.value.map(ds => {
+    const head = galaxySet.value.map((ds) => {
         return {
             name: ds.name,
-            color: ds.color
-        }
+            color: ds.color,
+        };
     });
-    const body = galaxySet.value.map(ds => ds.value);
+    const body = galaxySet.value.map((ds) => ds.value);
     return { head, body };
 });
 
-function generateCsv(callback=null) {
+function generateCsv(callback = null) {
     nextTick(() => {
-        const labels = table.value.head.map((h,i) => {
-            return [[
-                h.name
-            ],[table.value.body[i]], [isNaN(table.value.body[i] / total.value) ? '-' : table.value.body[i] / total.value * 100]]
+        const labels = table.value.head.map((h, i) => {
+            return [
+                [h.name],
+                [table.value.body[i]],
+                [
+                    isNaN(table.value.body[i] / total.value)
+                        ? '-'
+                        : (table.value.body[i] / total.value) * 100,
+                ],
+            ];
         });
-        const tableXls = [[FINAL_CONFIG.value.style.chart.title.text],[FINAL_CONFIG.value.style.chart.title.subtitle.text],[[""],["val"],["%"]]].concat(labels);
+        const tableXls = [
+            [FINAL_CONFIG.value.style.chart.title.text],
+            [FINAL_CONFIG.value.style.chart.title.subtitle.text],
+            [[''], ['val'], ['%']],
+        ].concat(labels);
 
         const csvContent = createCsvContent(tableXls);
 
-        if(!callback) {
-            downloadCsv({ csvContent, title: FINAL_CONFIG.value.style.chart.title.text || "vue-ui-galaxy" })
+        if (!callback) {
+            downloadCsv({
+                csvContent,
+                title:
+                    FINAL_CONFIG.value.style.chart.title.text ||
+                    'vue-ui-galaxy',
+            });
         } else {
             callback(csvContent);
         }
@@ -655,52 +769,65 @@ function generateCsv(callback=null) {
 
 const dataTable = computed(() => {
     const head = [
-        ` <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 16v2a1 1 0 0 1 -1 1h-11l6 -7l-6 -7h11a1 1 0 0 1 1 1v2" /></svg>`, dataLabel({p: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.prefix, v: total.value, s: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.suffix, r: FINAL_CONFIG.value.table.td.roundingValue}),
-        '100%'
+        ` <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 16v2a1 1 0 0 1 -1 1h-11l6 -7l-6 -7h11a1 1 0 0 1 1 1v2" /></svg>`,
+        dataLabel({
+            p: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.prefix,
+            v: total.value,
+            s: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.suffix,
+            r: FINAL_CONFIG.value.table.td.roundingValue,
+        }),
+        '100%',
     ];
 
-    const body = table.value.head.map((h,i) => {
-        const label = dataLabel({p: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.prefix, v: table.value.body[i], s: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.suffix, r: FINAL_CONFIG.value.table.td.roundingValue});
+    const body = table.value.head.map((h, i) => {
+        const label = dataLabel({
+            p: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.prefix,
+            v: table.value.body[i],
+            s: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.suffix,
+            r: FINAL_CONFIG.value.table.td.roundingValue,
+        });
         return [
             {
                 color: h.color,
-                name: h.name
+                name: h.name,
             },
             label,
-            isNaN(table.value.body[i] / total.value) ? "-" : dataLabel({
-                v: table.value.body[i] / total.value * 100,
-                s: '%',
-                r: FINAL_CONFIG.value.table.td.roundingPercentage
-            })
-        ]
+            isNaN(table.value.body[i] / total.value)
+                ? '-'
+                : dataLabel({
+                      v: (table.value.body[i] / total.value) * 100,
+                      s: '%',
+                      r: FINAL_CONFIG.value.table.td.roundingPercentage,
+                  }),
+        ];
     });
 
     const config = {
         th: {
             backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
             color: FINAL_CONFIG.value.table.th.color,
-            outline: FINAL_CONFIG.value.table.th.outline
+            outline: FINAL_CONFIG.value.table.th.outline,
         },
         td: {
             backgroundColor: FINAL_CONFIG.value.table.td.backgroundColor,
             color: FINAL_CONFIG.value.table.td.color,
-            outline: FINAL_CONFIG.value.table.td.outline
+            outline: FINAL_CONFIG.value.table.td.outline,
         },
-        breakpoint: FINAL_CONFIG.value.table.responsiveBreakpoint
-    }
+        breakpoint: FINAL_CONFIG.value.table.responsiveBreakpoint,
+    };
 
     const colNames = [
         FINAL_CONFIG.value.table.columnNames.series,
         FINAL_CONFIG.value.table.columnNames.value,
-        FINAL_CONFIG.value.table.columnNames.percentage
-    ]
+        FINAL_CONFIG.value.table.columnNames.percentage,
+    ];
 
     return {
         colNames,
         head,
         body,
-        config
-    }
+        config,
+    };
 });
 
 function toggleTable() {
@@ -716,64 +843,77 @@ function toggleAnnotator() {
     isAnnotator.value = !isAnnotator.value;
 }
 
-async function getImage({ scale = 2} = {}) {
+async function getImage({ scale = 2 } = {}) {
     if (!galaxyChart.value) return;
     const { width, height } = galaxyChart.value.getBoundingClientRect();
     const aspectRatio = width / height;
-    const { imageUri, base64 } = await img({ domElement: galaxyChart.value, base64: true, img: true, scale})
-    return { 
-        imageUri, 
-        base64, 
+    const { imageUri, base64 } = await img({
+        domElement: galaxyChart.value,
+        base64: true,
+        img: true,
+        scale,
+    });
+    return {
+        imageUri,
+        base64,
         title: FINAL_CONFIG.value.style.chart.title.text,
         width,
         height,
-        aspectRatio
-    }
+        aspectRatio,
+    };
 }
 
 const tableComponent = computed(() => {
-    const useDialog = FINAL_CONFIG.value.table.useDialog && !FINAL_CONFIG.value.table.show;
+    const useDialog =
+        FINAL_CONFIG.value.table.useDialog && !FINAL_CONFIG.value.table.show;
     const open = mutableConfig.value.showTable;
     return {
         component: useDialog ? BaseDraggableDialog : Accordion,
         title: `${FINAL_CONFIG.value.style.chart.title.text}${FINAL_CONFIG.value.style.chart.title.subtitle.text ? `: ${FINAL_CONFIG.value.style.chart.title.subtitle.text}` : ''}`,
-        props: useDialog ? {
-            backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
-            color: FINAL_CONFIG.value.table.th.color,
-            headerColor: FINAL_CONFIG.value.table.th.color,
-            headerBg: FINAL_CONFIG.value.table.th.backgroundColor,
-            isFullscreen: isFullscreen.value,
-            fullscreenParent: galaxyChart.value,
-            forcedWidth: Math.min(500, window.innerWidth * 0.8),
-            isCursorPointer: isCursorPointer.value
-        } : {
-            hideDetails: true,
-            config: {
-                open,
-                maxHeight: 10000,
-                body: {
-                    backgroundColor: FINAL_CONFIG.value.style.chart.backgroundColor,
-                    color: FINAL_CONFIG.value.style.chart.color
-                },
-                head: {
-                    backgroundColor: FINAL_CONFIG.value.style.chart.backgroundColor,
-                    color: FINAL_CONFIG.value.style.chart.color
-                }
-            }
-        }
-    }
+        props: useDialog
+            ? {
+                  backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
+                  color: FINAL_CONFIG.value.table.th.color,
+                  headerColor: FINAL_CONFIG.value.table.th.color,
+                  headerBg: FINAL_CONFIG.value.table.th.backgroundColor,
+                  isFullscreen: isFullscreen.value,
+                  fullscreenParent: galaxyChart.value,
+                  forcedWidth: Math.min(500, window.innerWidth * 0.8),
+                  isCursorPointer: isCursorPointer.value,
+              }
+            : {
+                  hideDetails: true,
+                  config: {
+                      open,
+                      maxHeight: 10000,
+                      body: {
+                          backgroundColor:
+                              FINAL_CONFIG.value.style.chart.backgroundColor,
+                          color: FINAL_CONFIG.value.style.chart.color,
+                      },
+                      head: {
+                          backgroundColor:
+                              FINAL_CONFIG.value.style.chart.backgroundColor,
+                          color: FINAL_CONFIG.value.style.chart.color,
+                      },
+                  },
+              },
+    };
 });
 
-watch(() => mutableConfig.value.showTable, v => {
-    if (FINAL_CONFIG.value.table.show) return;
-    if (v && FINAL_CONFIG.value.table.useDialog && tableUnit.value) {
-        tableUnit.value.open()
-    } else {
-        if ('close' in tableUnit.value) {
-            tableUnit.value.close()
+watch(
+    () => mutableConfig.value.showTable,
+    (v) => {
+        if (FINAL_CONFIG.value.table.show) return;
+        if (v && FINAL_CONFIG.value.table.useDialog && tableUnit.value) {
+            tableUnit.value.open();
+        } else {
+            if ('close' in tableUnit.value) {
+                tableUnit.value.close();
+            }
         }
-    }
-});
+    },
+);
 
 function closeTable() {
     mutableConfig.value.showTable = false;
@@ -783,9 +923,9 @@ function closeTable() {
 }
 
 const svgLegendItems = computed(() => {
-    return legendSet.value.map(l => ({
+    return legendSet.value.map((l) => ({
         ...l,
-        name: l.display
+        name: l.display,
     }));
 });
 
@@ -798,7 +938,7 @@ const { exportSvg, getSvg } = useSvgExport({
     title: svgTitle,
     legend: svgLegend,
     legendItems: svgLegendItems,
-    backgroundColor: svgBg
+    backgroundColor: svgBg,
 });
 
 async function generateSvg({ isCb }) {
@@ -809,7 +949,14 @@ async function generateSvg({ isCb }) {
     try {
         if (isCb) {
             const { blob, url, text, dataUrl } = await getSvg();
-            await Promise.resolve(FINAL_CONFIG.value.userOptions.callbacks.svg({ blob, url, text, dataUrl }));
+            await Promise.resolve(
+                FINAL_CONFIG.value.userOptions.callbacks.svg({
+                    blob,
+                    url,
+                    text,
+                    dataUrl,
+                }),
+            );
         } else {
             await Promise.resolve(exportSvg());
         }
@@ -819,12 +966,12 @@ async function generateSvg({ isCb }) {
 }
 
 function onGenerateImage(payload) {
-    if (payload?.stage === "start") {
+    if (payload?.stage === 'start') {
         isCallbackImaging.value = true;
         return;
     }
 
-    if (payload?.stage === "end") {
+    if (payload?.stage === 'end') {
         isCallbackImaging.value = false;
         return;
     }
@@ -832,24 +979,28 @@ function onGenerateImage(payload) {
     generateImage();
 }
 
-async function copyAlt(){
+async function copyAlt() {
     emit('copyAlt', {
         config: FINAL_CONFIG.value,
-        dataset: immutableSet.value
-    })
+        dataset: immutableSet.value,
+    });
     if (!FINAL_CONFIG.value.userOptions.callbacks.altCopy) {
-        console.warn('Vue Data UI - A callback must be set for `altCopy` in userOptions.');
-        return
+        console.warn(
+            'Vue Data UI - A callback must be set for `altCopy` in userOptions.',
+        );
+        return;
     }
-    await Promise.resolve(FINAL_CONFIG.value.userOptions.callbacks.altCopy({ 
-        config: FINAL_CONFIG.value, 
-        dataset: immutableSet.value
-    }));
+    await Promise.resolve(
+        FINAL_CONFIG.value.userOptions.callbacks.altCopy({
+            config: FINAL_CONFIG.value,
+            dataset: immutableSet.value,
+        }),
+    );
 }
 
 /***************************************************************************************************
  * a11y
-***************************************************************************************************/
+ ***************************************************************************************************/
 function onSvgFocus() {
     activeTooltipIndex.value = null;
     activeTooltipSerieId.value = null;
@@ -871,7 +1022,8 @@ function onSvgKeydown(event) {
     const isActivationKey = event.key === 'Enter' || event.key === ' ';
     const isEscapeKey = event.key === 'Escape';
 
-    if (!isPreviousKey && !isNextKey && !isActivationKey && !isEscapeKey) return;
+    if (!isPreviousKey && !isNextKey && !isActivationKey && !isEscapeKey)
+        return;
 
     event.preventDefault();
     event.stopPropagation();
@@ -893,7 +1045,11 @@ function onSvgKeydown(event) {
 
     let nextIndex = activeTooltipIndex.value;
 
-    if (nextIndex === null || nextIndex < 0 || nextIndex >= a11ySeries.value.length) {
+    if (
+        nextIndex === null ||
+        nextIndex < 0 ||
+        nextIndex >= a11ySeries.value.length
+    ) {
         nextIndex = isNextKey ? 0 : a11ySeries.value.length - 1;
     } else {
         nextIndex += isNextKey ? 1 : -1;
@@ -915,7 +1071,7 @@ function onSvgKeydown(event) {
         seriesIndex: entry.datapoint.seriesIndex,
         show: true,
         triggerMode: 'keyboard',
-        flatIndex: nextIndex
+        flatIndex: nextIndex,
     });
 }
 
@@ -928,7 +1084,7 @@ const a11yTable = computed(() => {
 const a11ySeries = computed(() => {
     return galaxySet.value.map((datapoint, index) => ({
         datapoint,
-        index
+        index,
     }));
 });
 
@@ -945,24 +1101,25 @@ defineExpose({
     toggleTooltip,
     toggleAnnotator,
     toggleFullscreen,
-    copyAlt
+    copyAlt,
 });
-
 </script>
 
 <template>
-    <div 
-        ref="galaxyChart" 
-        :class="`vue-data-ui-component vue-ui-galaxy ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${FINAL_CONFIG.useCssAnimation ? '' : 'vue-ui-dna'} ${loading ? 'loading' : ''}`" 
-        :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;${!FINAL_CONFIG.style.chart.title.text ? 'padding-top:36px' : ''};background:${FINAL_CONFIG.style.chart.backgroundColor}`" 
-        :id="`galaxy_${uid}`" 
-        @mouseenter="() => setUserOptionsVisibility(true)" 
-        @mouseleave="() => {
-            setUserOptionsVisibility(false);
-            if (!isFocus) {
-                clearSerieSelection();
+    <div
+        ref="galaxyChart"
+        :class="`vue-data-ui-component vue-ui-galaxy ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${FINAL_CONFIG.useCssAnimation ? '' : 'vue-ui-dna'} ${loading ? 'loading' : ''}`"
+        :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;${!FINAL_CONFIG.style.chart.title.text ? 'padding-top:36px' : ''};background:${FINAL_CONFIG.style.chart.backgroundColor}`"
+        :id="`galaxy_${uid}`"
+        @mouseenter="() => setUserOptionsVisibility(true)"
+        @mouseleave="
+            () => {
+                setUserOptionsVisibility(false);
+                if (!isFocus) {
+                    clearSerieSelection();
+                }
             }
-        }"
+        "
     >
         <div :id="`chart-instructions-${uid}`" class="sr-only">
             <p>{{ FINAL_CONFIG.a11y.translations.keyboardNavigation }}</p>
@@ -987,44 +1144,48 @@ defineExpose({
             @close="toggleAnnotator"
         >
             <template #annotator-action-close>
-                <slot name="annotator-action-close"/>
+                <slot name="annotator-action-close" />
             </template>
             <template #annotator-action-color="{ color }">
-                <slot name="annotator-action-color" v-bind="{ color }"/>
+                <slot name="annotator-action-color" v-bind="{ color }" />
             </template>
             <template #annotator-action-draw="{ mode }">
-                <slot name="annotator-action-draw" v-bind="{ mode }"/>
+                <slot name="annotator-action-draw" v-bind="{ mode }" />
             </template>
             <template #annotator-action-undo="{ disabled }">
-                <slot name="annotator-action-undo" v-bind="{ disabled }"/>
+                <slot name="annotator-action-undo" v-bind="{ disabled }" />
             </template>
             <template #annotator-action-redo="{ disabled }">
-                <slot name="annotator-action-redo" v-bind="{ disabled }"/>
+                <slot name="annotator-action-redo" v-bind="{ disabled }" />
             </template>
             <template #annotator-action-delete="{ disabled }">
-                <slot name="annotator-action-delete" v-bind="{ disabled }"/>
+                <slot name="annotator-action-delete" v-bind="{ disabled }" />
             </template>
         </PenAndPaper>
 
         <div
             ref="noTitle"
-            v-if="hasOptionsNoTitle" 
-            class="vue-data-ui-no-title-space" 
+            v-if="hasOptionsNoTitle"
+            class="vue-data-ui-no-title-space"
             :style="`height:36px; width: 100%;background:transparent`"
         />
 
-        <div ref="chartTitle" v-if="FINAL_CONFIG.style.chart.title.text" :style="`width:100%;background:transparent;padding-bottom:24px`">            
+        <div
+            ref="chartTitle"
+            v-if="FINAL_CONFIG.style.chart.title.text"
+            :style="`width:100%;background:transparent;padding-bottom:24px`"
+        >
             <Title
                 :key="`title_${titleStep}`"
                 :config="{
                     title: {
                         cy: 'galaxy-div-title',
-                        ...FINAL_CONFIG.style.chart.title
+                        ...FINAL_CONFIG.style.chart.title,
                     },
                     subtitle: {
                         cy: 'galaxy-div-subtitle',
-                        ...FINAL_CONFIG.style.chart.title.subtitle
-                    }
+                        ...FINAL_CONFIG.style.chart.title.subtitle,
+                    },
                 }"
             />
         </div>
@@ -1035,13 +1196,20 @@ defineExpose({
         <UserOptions
             ref="userOptionsRef"
             :key="`user_option_${step}`"
-            v-if="FINAL_CONFIG.userOptions.show && isDataset && (keepUserOptionState ? true : userOptionsVisible)"
+            v-if="
+                FINAL_CONFIG.userOptions.show &&
+                isDataset &&
+                (keepUserOptionState ? true : userOptionsVisible)
+            "
             :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
             :color="FINAL_CONFIG.style.chart.color"
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uid"
-            :hasTooltip="FINAL_CONFIG.userOptions.buttons.tooltip && FINAL_CONFIG.style.chart.tooltip.show"
+            :hasTooltip="
+                FINAL_CONFIG.userOptions.buttons.tooltip &&
+                FINAL_CONFIG.style.chart.tooltip.show
+            "
             :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
             :hasXls="FINAL_CONFIG.userOptions.buttons.csv"
             :hasImg="FINAL_CONFIG.userOptions.buttons.img"
@@ -1070,14 +1238,18 @@ defineExpose({
             @toggleAnnotator="toggleAnnotator"
             @copyAlt="copyAlt"
             :style="{
-                visibility: keepUserOptionState ? userOptionsVisible ? 'visible' : 'hidden' : 'visible'
+                visibility: keepUserOptionState
+                    ? userOptionsVisible
+                        ? 'visible'
+                        : 'hidden'
+                    : 'visible',
             }"
         >
             <template #menuIcon="{ isOpen, color }" v-if="$slots.menuIcon">
-                <slot name="menuIcon" v-bind="{ isOpen, color }"/>
+                <slot name="menuIcon" v-bind="{ isOpen, color }" />
             </template>
             <template #optionTooltip v-if="$slots.optionTooltip">
-                <slot name="optionTooltip"/>
+                <slot name="optionTooltip" />
             </template>
             <template #optionPdf v-if="$slots.optionPdf">
                 <slot name="optionPdf" />
@@ -1094,53 +1266,86 @@ defineExpose({
             <template #optionTable v-if="$slots.optionTable">
                 <slot name="optionTable" />
             </template>
-            <template v-if="$slots.optionFullscreen" template #optionFullscreen="{ toggleFullscreen, isFullscreen }">
-                <slot name="optionFullscreen" v-bind="{ toggleFullscreen, isFullscreen }"/>
+            <template
+                v-if="$slots.optionFullscreen"
+                template
+                #optionFullscreen="{ toggleFullscreen, isFullscreen }"
+            >
+                <slot
+                    name="optionFullscreen"
+                    v-bind="{ toggleFullscreen, isFullscreen }"
+                />
             </template>
-            <template v-if="$slots.optionAnnotator" #optionAnnotator="{ toggleAnnotator, isAnnotator }">
-                <slot name="optionAnnotator" v-bind="{ toggleAnnotator, isAnnotator }" />
+            <template
+                v-if="$slots.optionAnnotator"
+                #optionAnnotator="{ toggleAnnotator, isAnnotator }"
+            >
+                <slot
+                    name="optionAnnotator"
+                    v-bind="{ toggleAnnotator, isAnnotator }"
+                />
             </template>
-            <template v-if="$slots.optionAltCopy" #optionAltCopy="{ altCopy: c }">
-                <slot name="optionAltCopy" v-bind="{ altCopy: c }"/>
+            <template
+                v-if="$slots.optionAltCopy"
+                #optionAltCopy="{ altCopy: c }"
+            >
+                <slot name="optionAltCopy" v-bind="{ altCopy: c }" />
             </template>
         </UserOptions>
 
-        <div style="position:relative;">
+        <div style="position: relative">
             <svg
                 ref="svgRef"
                 :xmlns="XMLNS"
                 :aria-describedby="`chart-instructions-${uid}`"
-                :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" 
-                data-cy="galaxy-svg" 
-                :viewBox="svg.viewBox" :style="`max-width:100%; overflow: visible; background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
+                :class="{
+                    'vue-data-ui-fullscreen--on': isFullscreen,
+                    'vue-data-ui-fulscreen--off': !isFullscreen,
+                }"
+                data-cy="galaxy-svg"
+                :viewBox="svg.viewBox"
+                :style="`max-width:100%; overflow: visible; background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
                 tabindex="0"
                 @focus="onSvgFocus"
                 @blur="onSvgBlur"
                 @keydown="onSvgKeydown"
             >
                 <PackageVersion />
-    
+
                 <!-- BACKGROUND SLOT -->
-                <foreignObject 
+                <foreignObject
                     v-if="$slots['chart-background']"
                     :x="0"
                     :y="0"
                     :width="svg.width"
                     :height="svg.height"
                     :style="{
-                        pointerEvents: 'none'
+                        pointerEvents: 'none',
                     }"
                 >
-                    <slot name="chart-background"/>
+                    <slot name="chart-background" />
                 </foreignObject>
-                
+
                 <!-- GRADIENT -->
                 <defs>
-                    <filter :id="`blur_${uid}`" x="-50%" y="-50%" width="200%" height="200%">
-                        <feGaussianBlur in="SourceGraphic" :stdDeviation="100 / FINAL_CONFIG.style.chart.layout.arcs.gradient.intensity" />
+                    <filter
+                        :id="`blur_${uid}`"
+                        x="-50%"
+                        y="-50%"
+                        width="200%"
+                        height="200%"
+                    >
+                        <feGaussianBlur
+                            in="SourceGraphic"
+                            :stdDeviation="
+                                100 /
+                                FINAL_CONFIG.style.chart.layout.arcs.gradient
+                                    .intensity
+                            "
+                        />
                     </filter>
                 </defs>
-    
+
                 <!-- PATHS -->
                 <g v-for="datapoint in galaxySet">
                     <path
@@ -1150,7 +1355,7 @@ defineExpose({
                         fill="none"
                         :stroke="FINAL_CONFIG.style.chart.backgroundColor"
                         :stroke-width="getStrokeWidth(datapoint).border"
-                        stroke-linecap="round"                    
+                        stroke-linecap="round"
                     />
                     <path
                         data-cy="datapoint-path"
@@ -1162,18 +1367,27 @@ defineExpose({
                         stroke-linecap="round"
                         :class="`${selectedSerie && selectedSerie !== datapoint.id && FINAL_CONFIG.useBlurOnHover ? 'vue-ui-galaxy-blur' : ''}`"
                     />
-                    <g :filter="`url(#blur_${uid})`" v-if="datapoint.value && FINAL_CONFIG.style.chart.layout.arcs.gradient.show">
+                    <g
+                        :filter="`url(#blur_${uid})`"
+                        v-if="
+                            datapoint.value &&
+                            FINAL_CONFIG.style.chart.layout.arcs.gradient.show
+                        "
+                    >
                         <path
                             :d="datapoint.path"
                             fill="none"
-                            :stroke="FINAL_CONFIG.style.chart.layout.arcs.gradient.color"
+                            :stroke="
+                                FINAL_CONFIG.style.chart.layout.arcs.gradient
+                                    .color
+                            "
                             :stroke-width="getStrokeWidth(datapoint).blur"
                             stroke-linecap="round"
                             :class="`vue-ui-galaxy-gradient ${selectedSerie && selectedSerie !== datapoint.id && FINAL_CONFIG.useBlurOnHover ? 'vue-ui-galaxy-blur' : ''}`"
                         />
                     </g>
                 </g>
-    
+
                 <!-- TRAPS -->
                 <g v-for="(datapoint, i) in galaxySet">
                     <path
@@ -1183,71 +1397,125 @@ defineExpose({
                         :d="datapoint.path"
                         fill="none"
                         stroke="transparent"
-                        :stroke-width="FINAL_CONFIG.style.chart.layout.arcs.strokeWidth + FINAL_CONFIG.style.chart.layout.arcs.borderWidth"
+                        :stroke-width="
+                            FINAL_CONFIG.style.chart.layout.arcs.strokeWidth +
+                            FINAL_CONFIG.style.chart.layout.arcs.borderWidth
+                        "
                         stroke-linecap="round"
                         :aria-label="`${datapoint.name}: ${dataLabel({
-                            p: FINAL_CONFIG.style.chart.layout.labels.dataLabels.prefix,
+                            p: FINAL_CONFIG.style.chart.layout.labels.dataLabels
+                                .prefix,
                             v: datapoint.value,
-                            s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix,
-                            r: FINAL_CONFIG.style.chart.tooltip.roundingValue
+                            s: FINAL_CONFIG.style.chart.layout.labels.dataLabels
+                                .suffix,
+                            r: FINAL_CONFIG.style.chart.tooltip.roundingValue,
                         })}`"
-                        @mouseenter="useTooltip({
-                            datapoint,
-                            relativeIndex: i,
-                            seriesIndex: datapoint.seriesIndex,
-                            show: true,
-                            triggerMode: 'pointer',
-                            flatIndex: i
-                        })"
+                        @mouseenter="
+                            useTooltip({
+                                datapoint,
+                                relativeIndex: i,
+                                seriesIndex: datapoint.seriesIndex,
+                                show: true,
+                                triggerMode: 'pointer',
+                                flatIndex: i,
+                            })
+                        "
                         @mouseleave="onTrapLeave(datapoint)"
                         @click="onTrapClick(datapoint)"
                     />
                 </g>
-                <slot name="svg" :svg="{
-                    ...svg,
-                    isPrintingImg: isPrinting | isImaging | isCallbackImaging,
-                    isPrintingSvg: isCallbackSvg,
-                }"/>
+                <slot
+                    name="svg"
+                    :svg="{
+                        ...svg,
+                        isPrintingImg:
+                            isPrinting | isImaging | isCallbackImaging,
+                        isPrintingSvg: isCallbackSvg,
+                    }"
+                />
             </svg>
-            <div v-if="$slots.hint" style="position: absolute; top: 100%; left: 0; width: 100%;" data-dom-to-png-ignore aria-hidden="true">
-                <slot name="hint" v-bind="{ hint: FINAL_CONFIG.a11y.translations.keyboardNavigation, isVisible: isFocus }"/>
+            <div
+                v-if="$slots.hint"
+                style="position: absolute; top: 100%; left: 0; width: 100%"
+                data-dom-to-png-ignore
+                aria-hidden="true"
+            >
+                <slot
+                    name="hint"
+                    v-bind="{
+                        hint: FINAL_CONFIG.a11y.translations.keyboardNavigation,
+                        isVisible: isFocus,
+                    }"
+                />
             </div>
         </div>
 
         <div v-if="$slots.watermark" class="vue-data-ui-watermark">
-            <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging || isCallbackImaging || isCallbackSvg }"/>
+            <slot
+                name="watermark"
+                v-bind="{
+                    isPrinting:
+                        isPrinting ||
+                        isImaging ||
+                        isCallbackImaging ||
+                        isCallbackSvg,
+                }"
+            />
         </div>
 
         <div :id="`legend-bottom-${uid}`" />
 
         <!-- LEGEND -->
-        <Teleport v-if="readyTeleport" :to="FINAL_CONFIG.style.chart.legend.position === 'top' ? `#legend-top-${uid}` : `#legend-bottom-${uid}`">
+        <Teleport
+            v-if="readyTeleport"
+            :to="
+                FINAL_CONFIG.style.chart.legend.position === 'top'
+                    ? `#legend-top-${uid}`
+                    : `#legend-bottom-${uid}`
+            "
+        >
             <div ref="chartLegend">
                 <Legend
                     v-if="FINAL_CONFIG.style.chart.legend.show"
                     :key="`legend_${legendStep}`"
                     :legendSet="legendSet"
                     :config="legendConfig"
-                    @clickMarker="({legend}) => segregate(legend)"
+                    @clickMarker="({ legend }) => segregate(legend)"
                 >
                     <template #item="{ legend, index }">
-                        <div :data-cy="`legend-item-${index}`" @click="segregate(legend)" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`" v-if="!loading">
+                        <div
+                            :data-cy="`legend-item-${index}`"
+                            @click="segregate(legend)"
+                            :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`"
+                            v-if="!loading"
+                        >
                             {{ legend.display }}
                         </div>
                     </template>
 
                     <template #legendToggle>
                         <BaseLegendToggle
-                            v-if="legendSet.length > 2 && FINAL_CONFIG.style.chart.legend.selectAllToggle.show && !loading"
-                            :backgroundColor="FINAL_CONFIG.style.chart.legend.selectAllToggle.backgroundColor"
-                            :color="FINAL_CONFIG.style.chart.legend.selectAllToggle.color"
+                            v-if="
+                                legendSet.length > 2 &&
+                                FINAL_CONFIG.style.chart.legend.selectAllToggle
+                                    .show &&
+                                !loading
+                            "
+                            :backgroundColor="
+                                FINAL_CONFIG.style.chart.legend.selectAllToggle
+                                    .backgroundColor
+                            "
+                            :color="
+                                FINAL_CONFIG.style.chart.legend.selectAllToggle
+                                    .color
+                            "
                             :fontSize="FINAL_CONFIG.style.chart.legend.fontSize"
                             :checked="segregated.length > 0"
                             @toggle="toggleLegend"
                         />
                     </template>
                 </Legend>
-                
+
                 <slot name="legend" v-bind:legend="legendSet" />
             </div>
         </Teleport>
@@ -1266,28 +1534,40 @@ defineExpose({
             :borderColor="FINAL_CONFIG.style.chart.tooltip.borderColor"
             :borderWidth="FINAL_CONFIG.style.chart.tooltip.borderWidth"
             :fontSize="FINAL_CONFIG.style.chart.tooltip.fontSize"
-            :backgroundOpacity="FINAL_CONFIG.style.chart.tooltip.backgroundOpacity"
+            :backgroundOpacity="
+                FINAL_CONFIG.style.chart.tooltip.backgroundOpacity
+            "
             :position="FINAL_CONFIG.style.chart.tooltip.position"
             :offsetY="FINAL_CONFIG.style.chart.tooltip.offsetY"
             :parent="galaxyChart"
             :content="tooltipContent"
             :isFullscreen="isFullscreen"
-            :isCustom="isFunction(FINAL_CONFIG.style.chart.tooltip.customFormat)"
+            :isCustom="
+                isFunction(FINAL_CONFIG.style.chart.tooltip.customFormat)
+            "
             :smooth="FINAL_CONFIG.style.chart.tooltip.smooth"
             :backdropFilter="FINAL_CONFIG.style.chart.tooltip.backdropFilter"
             :smoothForce="FINAL_CONFIG.style.chart.tooltip.smoothForce"
-            :smoothSnapThreshold="FINAL_CONFIG.style.chart.tooltip.smoothSnapThreshold"
+            :smoothSnapThreshold="
+                FINAL_CONFIG.style.chart.tooltip.smoothSnapThreshold
+            "
             :isA11yMode="tooltipTriggerMode === 'keyboard'"
             :a11yPosition="tooltipA11yPosition"
         >
             <template #tooltip-before>
-                <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>
+                <slot
+                    name="tooltip-before"
+                    v-bind="{ ...dataTooltipSlot }"
+                ></slot>
             </template>
             <template #tooltip>
-                <slot name="tooltip" v-bind="{ ...dataTooltipSlot }"/>
+                <slot name="tooltip" v-bind="{ ...dataTooltipSlot }" />
             </template>
             <template #tooltip-after>
-                <slot name="tooltip-after" v-bind="{...dataTooltipSlot}"></slot>
+                <slot
+                    name="tooltip-after"
+                    v-bind="{ ...dataTooltipSlot }"
+                ></slot>
             </template>
         </Tooltip>
 
@@ -1302,29 +1582,37 @@ defineExpose({
                 {{ tableComponent.title }}
             </template>
             <template #actions v-if="FINAL_CONFIG.table.useDialog">
-                <button 
-                    tabindex="0" 
-                    class="vue-ui-user-options-button" 
+                <button
+                    tabindex="0"
+                    class="vue-ui-user-options-button"
                     @click="generateCsv(FINAL_CONFIG.userOptions.callbacks.csv)"
                     :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }"
                 >
-                    <BaseIcon name="fileCsv" :stroke="tableComponent.props.color"/>
+                    <BaseIcon
+                        name="fileCsv"
+                        :stroke="tableComponent.props.color"
+                    />
                 </button>
             </template>
             <template #content>
                 <DataTable
                     :key="`table_${tableStep}`"
                     :colNames="dataTable.colNames"
-                    :head="dataTable.head" 
+                    :head="dataTable.head"
                     :body="dataTable.body"
                     :config="dataTable.config"
-                    :title="FINAL_CONFIG.table.useDialog ? '' : tableComponent.title"
+                    :title="
+                        FINAL_CONFIG.table.useDialog ? '' : tableComponent.title
+                    "
                     :withCloseButton="!FINAL_CONFIG.table.useDialog"
                     :isCursorPointer="isCursorPointer"
                     @close="closeTable"
                 >
                     <template #th="{ th }">
-                        <div v-html="th" style="display:flex;align-items:center"></div>
+                        <div
+                            v-html="th"
+                            style="display: flex; align-items: center"
+                        ></div>
                     </template>
                     <template #td="{ td }">
                         {{ td.name || td }}
@@ -1341,7 +1629,7 @@ defineExpose({
 </template>
 
 <style scoped>
-.vue-ui-galaxy *{
+.vue-ui-galaxy * {
     transition: unset;
 }
 .vue-ui-galaxy {
@@ -1361,15 +1649,15 @@ path {
 
 @keyframes galaxy {
     0% {
-        transform: scale(0.9,0.9);
+        transform: scale(0.9, 0.9);
         opacity: 0;
     }
     80% {
-        transform: scale(1.02,1.02);
+        transform: scale(1.02, 1.02);
         opacity: 1;
     }
     to {
-        transform: scale(1,1);
+        transform: scale(1, 1);
         opacity: 1;
     }
 }
@@ -1378,10 +1666,10 @@ path {
     align-items: center;
     display: flex;
     flex-direction: column;
-    height:100%;
+    height: 100%;
     justify-content: center;
-    text-align:center;
-    width:100%;
+    text-align: center;
+    width: 100%;
 }
 
 .vue-ui-dna * {

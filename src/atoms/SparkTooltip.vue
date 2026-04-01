@@ -1,6 +1,6 @@
 <script setup>
-import { ref, watch, nextTick, toRef, onMounted, computed } from "vue";
-import { placeHTMLElementAtSVGCoordinates, setOpacity } from "../lib";
+import { ref, watch, nextTick, toRef, onMounted, computed } from 'vue';
+import { placeHTMLElementAtSVGCoordinates, setOpacity } from '../lib';
 
 const props = defineProps({
     svgRef: { type: Object },
@@ -15,7 +15,7 @@ const props = defineProps({
     borderWidth: { type: Number, default: 0 },
     borderColor: { type: String, default: '#FFFFFF' },
     color: { type: String },
-    fontSize: { type: Number }
+    fontSize: { type: Number },
 });
 
 const svg = toRef(props.svgRef);
@@ -24,10 +24,9 @@ const top = ref(0);
 const left = ref(0);
 const transitionEnabled = ref(false);
 
-
 const convertedBackground = computed(() => {
     return setOpacity(props.background, props.backgroundOpacity);
-})
+});
 
 const updateTooltipPosition = async () => {
     if (!svg.value || !tooltipRef.value) return;
@@ -37,7 +36,7 @@ const updateTooltipPosition = async () => {
         element: tooltipRef.value,
         x: props.x,
         y: props.y,
-        offsetY: props.offsetY
+        offsetY: props.offsetY,
     });
 
     const prevPosition = placeHTMLElementAtSVGCoordinates({
@@ -45,7 +44,7 @@ const updateTooltipPosition = async () => {
         element: tooltipRef.value,
         x: props.prevX,
         y: props.prevY,
-        offsetY: props.offsetY
+        offsetY: props.offsetY,
     });
 
     if (!newPosition || !prevPosition) return;
@@ -54,7 +53,7 @@ const updateTooltipPosition = async () => {
     top.value = prevPosition.top;
     left.value = prevPosition.left;
 
-    await nextTick(); 
+    await nextTick();
 
     setTimeout(() => {
         transitionEnabled.value = true;
@@ -68,25 +67,27 @@ onMounted(updateTooltipPosition);
 watch(
     () => [props.x, props.y, props.prevX, props.prevY],
     () => updateTooltipPosition(),
-    { immediate: true }
+    { immediate: true },
 );
 </script>
 
 <template>
-    <div 
-        ref="tooltipRef" 
+    <div
+        ref="tooltipRef"
         class="vue-data-ui-spark-tooltip"
         :style="{
             position: 'fixed',
-            top: `${top}px`, 
-            left: `${left}px`, 
+            top: `${top}px`,
+            left: `${left}px`,
             pointerEvents: 'none',
             background: convertedBackground,
             color: props.color,
             fontSize: `${props.fontSize}px`,
             borderRadius: `${props.borderRadius}px`,
             border: `${props.borderWidth}px solid ${props.borderColor}`,
-            transition: transitionEnabled ? 'top 0.3s ease-out, left 0.3s ease-out' : 'none'
+            transition: transitionEnabled
+                ? 'top 0.3s ease-out, left 0.3s ease-out'
+                : 'none',
         }"
     >
         <slot></slot>
@@ -95,7 +96,7 @@ watch(
 
 <style scoped>
 .vue-data-ui-spark-tooltip {
-    box-shadow: 0 6px 12px -6px rgba(0,0,0,0.2);
+    box-shadow: 0 6px 12px -6px rgba(0, 0, 0, 0.2);
     backdrop-filter: blur(10px);
     padding: 0 0.5rem;
     -webkit-backdrop-filter: blur(10px);

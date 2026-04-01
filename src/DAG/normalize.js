@@ -1,8 +1,8 @@
-import { addDummyNode } from "./util.js";
+import { addDummyNode } from './util.js';
 
 export function run(graph) {
     graph.graph().dummyChains = [];
-    graph.edges().forEach(edgeObject => normalizeEdge(graph, edgeObject));
+    graph.edges().forEach((edgeObject) => normalizeEdge(graph, edgeObject));
 }
 
 /*
@@ -41,7 +41,11 @@ function normalizeEdge(graph, edgeObject) {
     let attributes;
     let stepIndex;
 
-    for (stepIndex = 0, ++tailRank; tailRank < headRank; ++stepIndex, ++tailRank) {
+    for (
+        stepIndex = 0, ++tailRank;
+        tailRank < headRank;
+        ++stepIndex, ++tailRank
+    ) {
         edgeLabel.points = [];
 
         attributes = {
@@ -52,12 +56,12 @@ function normalizeEdge(graph, edgeObject) {
             rank: tailRank,
         };
 
-        dummyNodeId = addDummyNode(graph, "edge", attributes, "_d");
+        dummyNodeId = addDummyNode(graph, 'edge', attributes, '_d');
 
         if (tailRank === labelRank) {
             attributes.width = edgeLabel.width;
             attributes.height = edgeLabel.height;
-            attributes.dummy = "edge-label";
+            attributes.dummy = 'edge-label';
             attributes.labelpos = edgeLabel.labelpos;
         }
 
@@ -74,7 +78,7 @@ function normalizeEdge(graph, edgeObject) {
 }
 
 export function undo(graph) {
-    graph.graph().dummyChains.forEach(dummyNodeId => {
+    graph.graph().dummyChains.forEach((dummyNodeId) => {
         let node = graph.node(dummyNodeId);
         const originalLabel = node.edgeLabel;
 
@@ -88,7 +92,7 @@ export function undo(graph) {
 
             originalLabel.points.push({ x: node.x, y: node.y });
 
-            if (node.dummy === "edge-label") {
+            if (node.dummy === 'edge-label') {
                 originalLabel.x = node.x;
                 originalLabel.y = node.y;
                 originalLabel.width = node.width;

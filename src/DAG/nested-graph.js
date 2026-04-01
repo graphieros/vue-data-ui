@@ -1,7 +1,7 @@
-import util from "./util.js";
+import util from './util.js';
 
 export function run(graph) {
-    const root = util.addDummyNode(graph, "root", {}, "_root");
+    const root = util.addDummyNode(graph, 'root', {}, '_root');
     const depths = treeDepths(graph);
     const depthsArray = Object.values(depths);
     const height = util.applyWithChunking(Math.max, depthsArray) - 1;
@@ -11,7 +11,7 @@ export function run(graph) {
     graph.graph().nestingRoot = root;
 
     // Multiply minlen by nodeSeparation to align nodes on non-border ranks.
-    graph.edges().forEach(edgeObject => {
+    graph.edges().forEach((edgeObject) => {
         graph.edge(edgeObject).minlen *= nodeSeparation;
     });
 
@@ -19,8 +19,16 @@ export function run(graph) {
     const weight = sumWeights(graph) + 1;
 
     // Create border nodes and link them up.
-    graph.children().forEach(childId => {
-        depthFirstSearch(graph, root, nodeSeparation, weight, height, depths, childId);
+    graph.children().forEach((childId) => {
+        depthFirstSearch(
+            graph,
+            root,
+            nodeSeparation,
+            weight,
+            height,
+            depths,
+            childId,
+        );
     });
 
     // Save the multiplier for node layers for later removal of empty border layers.
@@ -50,7 +58,15 @@ export function run(graph) {
  * The nesting graph idea comes from Sander, "Layout of Compound Directed Graphs."
  */
 
-function depthFirstSearch(graph, root, nodeSeparation, weight, height, depths, nodeId) {
+function depthFirstSearch(
+    graph,
+    root,
+    nodeSeparation,
+    weight,
+    height,
+    depths,
+    nodeId,
+) {
     const children = graph.children(nodeId);
 
     if (!children.length) {
@@ -60,8 +76,8 @@ function depthFirstSearch(graph, root, nodeSeparation, weight, height, depths, n
         return;
     }
 
-    const topBorderNodeId = util.addBorderNode(graph, "_bt");
-    const bottomBorderNodeId = util.addBorderNode(graph, "_bb");
+    const topBorderNodeId = util.addBorderNode(graph, '_bt');
+    const bottomBorderNodeId = util.addBorderNode(graph, '_bb');
 
     const label = graph.node(nodeId);
 
@@ -71,12 +87,22 @@ function depthFirstSearch(graph, root, nodeSeparation, weight, height, depths, n
     graph.setParent(bottomBorderNodeId, nodeId);
     label.borderBottom = bottomBorderNodeId;
 
-    children.forEach(childId => {
-        depthFirstSearch(graph, root, nodeSeparation, weight, height, depths, childId);
+    children.forEach((childId) => {
+        depthFirstSearch(
+            graph,
+            root,
+            nodeSeparation,
+            weight,
+            height,
+            depths,
+            childId,
+        );
 
         const childNode = graph.node(childId);
         const childTop = childNode.borderTop ? childNode.borderTop : childId;
-        const childBottom = childNode.borderBottom ? childNode.borderBottom : childId;
+        const childBottom = childNode.borderBottom
+            ? childNode.borderBottom
+            : childId;
 
         const currentWeight = childNode.borderTop ? weight : 2 * weight;
         const minimumLength =
@@ -110,13 +136,13 @@ function treeDepths(graph) {
         const children = graph.children(nodeId);
 
         if (children && children.length) {
-            children.forEach(childId => depthFirstSearch(childId, depth + 1));
+            children.forEach((childId) => depthFirstSearch(childId, depth + 1));
         }
 
         depths[nodeId] = depth;
     }
 
-    graph.children().forEach(nodeId => depthFirstSearch(nodeId, 1));
+    graph.children().forEach((nodeId) => depthFirstSearch(nodeId, 1));
 
     return depths;
 }
@@ -133,7 +159,7 @@ export function cleanup(graph) {
     graph.removeNode(graphLabel.nestingRoot);
     delete graphLabel.nestingRoot;
 
-    graph.edges().forEach(edgeObject => {
+    graph.edges().forEach((edgeObject) => {
         const edge = graph.edge(edgeObject);
         if (edge.nestingEdge) {
             graph.removeEdge(edgeObject);

@@ -14,16 +14,18 @@
 }
 
 .vue-data-ui-scanner::before {
-    content: "";
+    content: '';
     position: absolute;
     top: 0;
     left: -50%;
     width: 50%;
     height: 100%;
-    background: linear-gradient(to right,
+    background: linear-gradient(
+        to right,
         transparent,
         rgba(255, 255, 255, 0.2),
-        transparent);
+        transparent
+    );
     filter: blur(8px);
     animation: scan 2.5s cubic-bezier(0.45, 0, 0.55, 1) infinite;
 }

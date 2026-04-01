@@ -1,8 +1,8 @@
-import * as util from "../util.js";
+import * as util from '../util.js';
 
 export default function sort(entries, biasRight) {
-    const parts = util.partition(entries, entry => {
-        return Object.hasOwn(entry, "barycenter");
+    const parts = util.partition(entries, (entry) => {
+        return Object.hasOwn(entry, 'barycenter');
     });
 
     const sortable = parts.lhs;
@@ -17,7 +17,7 @@ export default function sort(entries, biasRight) {
 
     vsIndex = consumeUnsortable(vs, unsortable, vsIndex);
 
-    sortable.forEach(entry => {
+    sortable.forEach((entry) => {
         vsIndex += entry.vs.length;
         vs.push(entry.vs);
 

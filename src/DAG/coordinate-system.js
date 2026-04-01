@@ -1,7 +1,7 @@
 export function adjust(graph) {
     const rankDirection = graph.graph().rankdir.toLowerCase();
 
-    if (rankDirection === "lr" || rankDirection === "rl") {
+    if (rankDirection === 'lr' || rankDirection === 'rl') {
         swapWidthAndHeight(graph);
     }
 }
@@ -9,22 +9,22 @@ export function adjust(graph) {
 export function undo(graph) {
     const rankDirection = graph.graph().rankdir.toLowerCase();
 
-    if (rankDirection === "bt" || rankDirection === "rl") {
+    if (rankDirection === 'bt' || rankDirection === 'rl') {
         reverseY(graph);
     }
 
-    if (rankDirection === "lr" || rankDirection === "rl") {
+    if (rankDirection === 'lr' || rankDirection === 'rl') {
         swapXY(graph);
         swapWidthAndHeight(graph);
     }
 }
 
 function swapWidthAndHeight(graph) {
-    graph.nodes().forEach(nodeId => {
+    graph.nodes().forEach((nodeId) => {
         swapWidthAndHeightOnAttributes(graph.node(nodeId));
     });
 
-    graph.edges().forEach(edgeObject => {
+    graph.edges().forEach((edgeObject) => {
         swapWidthAndHeightOnAttributes(graph.edge(edgeObject));
     });
 }
@@ -36,16 +36,16 @@ function swapWidthAndHeightOnAttributes(attributes) {
 }
 
 function reverseY(graph) {
-    graph.nodes().forEach(nodeId => {
+    graph.nodes().forEach((nodeId) => {
         reverseYOnAttributes(graph.node(nodeId));
     });
 
-    graph.edges().forEach(edgeObject => {
+    graph.edges().forEach((edgeObject) => {
         const edge = graph.edge(edgeObject);
 
         edge.points.forEach(reverseYOnAttributes);
 
-        if (Object.hasOwn(edge, "y")) {
+        if (Object.hasOwn(edge, 'y')) {
             reverseYOnAttributes(edge);
         }
     });
@@ -56,16 +56,16 @@ function reverseYOnAttributes(attributes) {
 }
 
 function swapXY(graph) {
-    graph.nodes().forEach(nodeId => {
+    graph.nodes().forEach((nodeId) => {
         swapXYOnAttributes(graph.node(nodeId));
     });
 
-    graph.edges().forEach(edgeObject => {
+    graph.edges().forEach((edgeObject) => {
         const edge = graph.edge(edgeObject);
 
         edge.points.forEach(swapXYOnAttributes);
 
-        if (Object.hasOwn(edge, "x")) {
+        if (Object.hasOwn(edge, 'x')) {
             swapXYOnAttributes(edge);
         }
     });

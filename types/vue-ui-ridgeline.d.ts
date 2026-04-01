@@ -1,6 +1,6 @@
 import { DefineComponent } from 'vue';
 
-export type { 
+export type {
     VueUiRidgelineDatapoint,
     VueUiRidgelineDatasetItem,
     VueUiRidgelineDatapointEventUnit,
@@ -8,13 +8,16 @@ export type {
     VueUiRidgelineDatapointEvent,
     VueUiRidgelineConfig,
     VueUiRidgelineExpose,
-    VueUiRidgelineEvent
-} from "./vue-data-ui";
+    VueUiRidgelineEvent,
+} from './vue-data-ui';
 
-declare const VueUiRidgeline: DefineComponent<{
-    config?: VueUiRidgelineConfig;
-    dataset: VueUiRidgelineDatasetItem[]
-},VueUiRidgelineExpose>;
+declare const VueUiRidgeline: DefineComponent<
+    {
+        config?: VueUiRidgelineConfig;
+        dataset: VueUiRidgelineDatasetItem[];
+    },
+    VueUiRidgelineExpose
+>;
 
 export default VueUiRidgeline;
-export { VueUiRidgeline }
+export { VueUiRidgeline };

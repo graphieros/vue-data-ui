@@ -1,56 +1,64 @@
 <script setup>
-import { 
-    computed, 
-    defineAsyncComponent, 
-    nextTick, 
-    onMounted, 
-    ref, 
+import {
+    computed,
+    defineAsyncComponent,
+    nextTick,
+    onMounted,
+    ref,
     toRefs,
-    watch, 
-} from "vue";
-import { 
+    watch,
+} from 'vue';
+import {
     adaptColorToBackground,
     applyDataLabel,
-    calcMarkerOffsetX, 
-    calcMarkerOffsetY, 
-    calcNutArrowPath, 
-    convertColorToHex, 
-    convertCustomPalette, 
-    createCsvContent, 
+    calcMarkerOffsetX,
+    calcMarkerOffsetY,
+    calcNutArrowPath,
+    convertColorToHex,
+    convertCustomPalette,
+    createCsvContent,
     createUid,
     dataLabel,
     downloadCsv,
     error,
     getMissingDatasetAttributes,
     makeDonut,
-    objectIsEmpty, 
+    objectIsEmpty,
     palette,
     setOpacity,
     shiftHue,
     themePalettes,
     treeShake,
-    XMLNS
-} from "../lib";
-import { useConfig } from "../useConfig";
-import { useLoading } from "../useLoading";
-import { usePrinter } from "../usePrinter";
-import { useSvgExport } from "../useSvgExport";
-import { useNestedProp } from "../useNestedProp";
-import { useThemeCheck } from "../useThemeCheck";
-import { useTableResponsive } from "../useTableResponsive";
-import { useUserOptionState } from "../useUserOptionState";
-import { useChartAccessibility } from "../useChartAccessibility";
-import img from "../img";
-import themes from "../themes/vue_ui_chestnut.json";
-import BaseScanner from "../atoms/BaseScanner.vue";
-import A11yDataTable from "../atoms/A11yDataTable.vue";
+    XMLNS,
+} from '../lib';
+import { useConfig } from '../useConfig';
+import { useLoading } from '../useLoading';
+import { usePrinter } from '../usePrinter';
+import { useSvgExport } from '../useSvgExport';
+import { useNestedProp } from '../useNestedProp';
+import { useThemeCheck } from '../useThemeCheck';
+import { useTableResponsive } from '../useTableResponsive';
+import { useUserOptionState } from '../useUserOptionState';
+import { useChartAccessibility } from '../useChartAccessibility';
+import img from '../img';
+import themes from '../themes/vue_ui_chestnut.json';
+import BaseScanner from '../atoms/BaseScanner.vue';
+import A11yDataTable from '../atoms/A11yDataTable.vue';
 
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
-const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
-const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
-const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
-const BaseDraggableDialog = defineAsyncComponent(() => import('../atoms/BaseDraggableDialog.vue'));
+const PenAndPaper = defineAsyncComponent(
+    () => import('../atoms/PenAndPaper.vue'),
+);
+const UserOptions = defineAsyncComponent(
+    () => import('../atoms/UserOptions.vue'),
+);
+const PackageVersion = defineAsyncComponent(
+    () => import('../atoms/PackageVersion.vue'),
+);
+const BaseDraggableDialog = defineAsyncComponent(
+    () => import('../atoms/BaseDraggableDialog.vue'),
+);
 
 const { vue_ui_chestnut: DEFAULT_CONFIG } = useConfig();
 const { isThemeValid, warnInvalidTheme } = useThemeCheck();
@@ -59,15 +67,15 @@ const props = defineProps({
     config: {
         type: Object,
         default() {
-            return {}
-        }
+            return {};
+        },
     },
     dataset: {
         type: Array,
         default() {
-            return []
-        }
-    }
+            return [];
+        },
+    },
 });
 
 const isDataset = computed(() => {
@@ -91,12 +99,14 @@ const accessibilityCursor = ref({
     rootIndex: 0,
     branchIndex: 0,
     nutIndex: 0,
-    locked: false
+    locked: false,
 });
 
 const FINAL_CONFIG = ref(prepareConfig());
 
-const isCursorPointer = computed(() => FINAL_CONFIG.value.userOptions.useCursorPointer);
+const isCursorPointer = computed(
+    () => FINAL_CONFIG.value.userOptions.useCursorPointer,
+);
 
 const skeletonConfig = computed(() => {
     return treeShake({
@@ -110,24 +120,24 @@ const skeletonConfig = computed(() => {
                         grandTotal: { show: false },
                         roots: {
                             stroke: '#6A6A6A',
-                            labels: { show: false }
+                            labels: { show: false },
                         },
                         verticalSeparator: { stroke: 'transparent' },
                         branches: {
                             stroke: '#6A6A6A',
                             underlayerColor: '#6A6A6A90',
-                            labels: { 
+                            labels: {
                                 show: false,
-                                dataLabels: { show: false }
-                            }
-                        }
-                    }
-                }
-            }
+                                dataLabels: { show: false },
+                            },
+                        },
+                    },
+                },
+            },
         },
-        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {}
-    })
-})
+        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {},
+    });
+});
 
 const { loading, FINAL_DATASET } = useLoading({
     ...toRefs(props),
@@ -142,35 +152,35 @@ const { loading, FINAL_DATASET } = useLoading({
                     name: '_',
                     value: 32,
                     breakdown: [
-                        { name: '_', value: 16, color: '#CACACA'},
-                        { name: '_', value: 16, color: '#6A6A6A'},
-                    ]
+                        { name: '_', value: 16, color: '#CACACA' },
+                        { name: '_', value: 16, color: '#6A6A6A' },
+                    ],
                 },
                 {
                     name: '_',
                     value: 16,
                     breakdown: [
-                        { name: '_', value: 8, color: '#CACACA'},
-                        { name: '_', value: 8, color: '#6A6A6A'},
-                    ]
+                        { name: '_', value: 8, color: '#CACACA' },
+                        { name: '_', value: 8, color: '#6A6A6A' },
+                    ],
                 },
                 {
                     name: '_',
                     value: 8,
                     breakdown: [
-                        { name: '_', value: 4, color: '#CACACA'},
-                        { name: '_', value: 4, color: '#6A6A6A'},
-                    ]
+                        { name: '_', value: 4, color: '#CACACA' },
+                        { name: '_', value: 4, color: '#6A6A6A' },
+                    ],
                 },
                 {
                     name: '_',
                     value: 4,
                     breakdown: [
-                        { name: '_', value: 2, color: '#CACACA'},
-                        { name: '_', value: 2, color: '#6A6A6A'},
-                    ]
+                        { name: '_', value: 2, color: '#CACACA' },
+                        { name: '_', value: 2, color: '#6A6A6A' },
+                    ],
                 },
-            ]
+            ],
         },
         {
             name: '_',
@@ -180,50 +190,53 @@ const { loading, FINAL_DATASET } = useLoading({
                     name: '_',
                     value: 24,
                     breakdown: [
-                        { name: '_', value: 12, color: '#CACACA'},
-                        { name: '_', value: 12, color: '#6A6A6A'},
-                    ]
+                        { name: '_', value: 12, color: '#CACACA' },
+                        { name: '_', value: 12, color: '#6A6A6A' },
+                    ],
                 },
                 {
                     name: '_',
                     value: 12,
                     breakdown: [
-                        { name: '_', value: 6, color: '#CACACA'},
-                        { name: '_', value: 6, color: '#6A6A6A'},
-                    ]
+                        { name: '_', value: 6, color: '#CACACA' },
+                        { name: '_', value: 6, color: '#6A6A6A' },
+                    ],
                 },
                 {
                     name: '_',
                     value: 6,
                     breakdown: [
-                        { name: '_', value: 3, color: '#CACACA'},
-                        { name: '_', value: 3, color: '#6A6A6A'},
-                    ]
+                        { name: '_', value: 3, color: '#CACACA' },
+                        { name: '_', value: 3, color: '#6A6A6A' },
+                    ],
                 },
                 {
                     name: '_',
                     value: 2,
                     breakdown: [
-                        { name: '_', value: 1, color: '#CACACA'},
-                        { name: '_', value: 1, color: '#6A6A6A'},
-                    ]
+                        { name: '_', value: 1, color: '#CACACA' },
+                        { name: '_', value: 1, color: '#6A6A6A' },
+                    ],
                 },
-            ]
+            ],
         },
     ],
     skeletonConfig: treeShake({
         defaultConfig: FINAL_CONFIG.value,
-        userConfig: skeletonConfig.value
-    })
-})
+        userConfig: skeletonConfig.value,
+    }),
+});
 
-const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
-const { svgRef } = useChartAccessibility({ config: FINAL_CONFIG.value.style.chart.layout.title });
+const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } =
+    useUserOptionState({ config: FINAL_CONFIG.value });
+const { svgRef } = useChartAccessibility({
+    config: FINAL_CONFIG.value.style.chart.layout.title,
+});
 
 function prepareConfig() {
     const mergedConfig = useNestedProp({
         userConfig: props.config,
-        defaultConfig: DEFAULT_CONFIG
+        defaultConfig: DEFAULT_CONFIG,
     });
 
     const theme = mergedConfig.theme;
@@ -236,34 +249,42 @@ function prepareConfig() {
 
     const fused = useNestedProp({
         userConfig: themes[theme] || props.config,
-        defaultConfig: mergedConfig
+        defaultConfig: mergedConfig,
     });
 
     const finalConfig = useNestedProp({
         userConfig: props.config,
-        defaultConfig: fused
+        defaultConfig: fused,
     });
 
     return {
         ...finalConfig,
-        customPalette: finalConfig.customPalette.length ? finalConfig.customPalette : themePalettes[theme] || palette
-    }
+        customPalette: finalConfig.customPalette.length
+            ? finalConfig.customPalette
+            : themePalettes[theme] || palette,
+    };
 }
 
-watch(() => props.config, (_newCfg) => {
-    FINAL_CONFIG.value = prepareConfig();
-    userOptionsVisible.value = !FINAL_CONFIG.value.userOptions.showOnChartHover;
+watch(
+    () => props.config,
+    (_newCfg) => {
+        FINAL_CONFIG.value = prepareConfig();
+        userOptionsVisible.value =
+            !FINAL_CONFIG.value.userOptions.showOnChartHover;
 
-    // Reset mutable config
-    mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
+        // Reset mutable config
+        mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
 
-    prepareChart();
-}, { deep: true });
+        prepareChart();
+    },
+    { deep: true },
+);
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `vue-ui-chestnut_${uid.value}`,
-    fileName: FINAL_CONFIG.value.style.chart.layout.title.text || 'vue-ui-chestnut',
-    options: FINAL_CONFIG.value.userOptions.print
+    fileName:
+        FINAL_CONFIG.value.style.chart.layout.title.text || 'vue-ui-chestnut',
+    options: FINAL_CONFIG.value.userOptions.print,
 });
 
 const hasOptionsNoTitle = computed(() => {
@@ -272,24 +293,28 @@ const hasOptionsNoTitle = computed(() => {
 
 const customPalette = computed(() => {
     return convertCustomPalette(FINAL_CONFIG.value.customPalette);
-})
+});
 
 const mutableConfig = ref({
     showTable: FINAL_CONFIG.value.table.show,
 });
 
 // v3 - Essential to make shifting between loading config and final config work
-watch(FINAL_CONFIG, () => {
-    mutableConfig.value = {
-        showTable: FINAL_CONFIG.value.table.show,
-    }
-}, { immediate: true });
+watch(
+    FINAL_CONFIG,
+    () => {
+        mutableConfig.value = {
+            showTable: FINAL_CONFIG.value.table.show,
+        };
+    },
+    { immediate: true },
+);
 
-const tableContainer = ref(null)
+const tableContainer = ref(null);
 
 const breakpoint = computed(() => {
-    return FINAL_CONFIG.value.table.responsiveBreakpoint
-})
+    return FINAL_CONFIG.value.table.responsiveBreakpoint;
+});
 
 const svg = ref({
     gap: 6,
@@ -311,58 +336,66 @@ const drawableArea = computed(() => {
         top: svg.value.padding.top,
         right: svg.value.width - svg.value.padding.right,
         bottom: svg.value.height - svg.value.padding.bottom,
-        width: svg.value.width - (svg.value.padding.left + svg.value.padding.right),
-        height: svg.value.height - (svg.value.padding.top + svg.value.padding.bottom),
-        seedX: svg.value.padding.left + 64
-    }
+        width:
+            svg.value.width -
+            (svg.value.padding.left + svg.value.padding.right),
+        height:
+            svg.value.height -
+            (svg.value.padding.top + svg.value.padding.bottom),
+        seedX: svg.value.padding.left + 64,
+    };
 });
 
 const treeTotal = computed(() => {
-    return FINAL_DATASET.value.flatMap(root => (root.branches || []).map(branch => (branch.value || 0))).reduce((a,b) => a + b, 0);
-})
+    return FINAL_DATASET.value
+        .flatMap((root) =>
+            (root.branches || []).map((branch) => branch.value || 0),
+        )
+        .reduce((a, b) => a + b, 0);
+});
 
 const mutableDataset = computed(() => {
     FINAL_DATASET.value.forEach((ds, i) => {
         getMissingDatasetAttributes({
             datasetObject: ds,
-            requiredAttributes: ['name', 'branches']
-        }).forEach(attr => {
+            requiredAttributes: ['name', 'branches'],
+        }).forEach((attr) => {
             error({
                 componentName: 'VueUiChestnut',
                 type: 'datasetSerieAttribute',
                 property: attr,
                 index: i,
-                debug: debug.value
+                debug: debug.value,
             });
         });
 
-        if(ds.branches) {
+        if (ds.branches) {
             ds.branches.forEach((branch, j) => {
                 getMissingDatasetAttributes({
                     datasetObject: branch,
-                    requiredAttributes: ['name', 'value']
-                }).forEach(attr => {
+                    requiredAttributes: ['name', 'value'],
+                }).forEach((attr) => {
                     error({
                         componentName: 'VueUiChestnut',
                         type: 'datasetSerieAttribute',
                         property: attr,
                         index: `${i} - ${j}`,
-                        debug: debug.value
+                        debug: debug.value,
                     });
                 });
 
-                if(branch.breakdown) {
+                if (branch.breakdown) {
                     branch.breakdown.forEach((b, k) => {
                         getMissingDatasetAttributes({
                             datasetObject: b,
-                            requiredAttributes: ['name', 'value']
-                        }).forEach(attr => {
+                            requiredAttributes: ['name', 'value'],
+                        }).forEach((attr) => {
                             error({
                                 componentName: 'VueUiChestnut',
                                 type: 'datasetSerieAttribute',
                                 property: attr,
                                 index: `${i} - ${j} - ${k}`,
-                                debug: debug.value
+                                debug: debug.value,
                             });
                         });
                     });
@@ -372,12 +405,18 @@ const mutableDataset = computed(() => {
     });
 
     return FINAL_DATASET.value.map((root, i) => {
-        const rootTotal = (root.branches || []).map(branch => (branch.value || 0)).reduce((a, b) => a + b, 0);
+        const rootTotal = (root.branches || [])
+            .map((branch) => branch.value || 0)
+            .reduce((a, b) => a + b, 0);
         return {
             ...root,
-            color: convertColorToHex(root.color) || customPalette.value[i] || palette[i] || palette[i % palette.length],
+            color:
+                convertColorToHex(root.color) ||
+                customPalette.value[i] ||
+                palette[i] ||
+                palette[i % palette.length],
             id: root.id || `root_${i}_${uid.value}`,
-            type: "root",
+            type: 'root',
             total: rootTotal,
             rootIndex: i,
             branches: (root.branches || []).map((branch, j) => {
@@ -385,11 +424,15 @@ const mutableDataset = computed(() => {
                     ...branch,
                     rootName: root.name,
                     rootIndex: i,
-                    color: convertColorToHex(root.color) || customPalette.value[i] || palette[i] || palette[i % palette.length],
+                    color:
+                        convertColorToHex(root.color) ||
+                        customPalette.value[i] ||
+                        palette[i] ||
+                        palette[i % palette.length],
                     value: branch.value >= 0 ? branch.value : 0,
                     id: branch.id || `branch_${i}_${j}_${uid.value}`,
                     proportionToRoot: branch.value / rootTotal,
-                    type: "branch",
+                    type: 'branch',
                     breakdown: (branch.breakdown || []).map((nut, k) => {
                         return {
                             table: {
@@ -404,10 +447,10 @@ const mutableDataset = computed(() => {
                                 nutValue: nut.value,
                                 nutToTotal: nut.value / treeTotal.value,
                                 nutToRoot: nut.value / rootTotal,
-                                nutToBranch: nut.value / branch.value
+                                nutToBranch: nut.value / branch.value,
                             },
                             ...nut,
-                            type: "nut",
+                            type: 'nut',
                             branchName: branch.name,
                             rootName: root.name,
                             branchTotal: branch.value >= 0 ? branch.value : 0,
@@ -416,13 +459,17 @@ const mutableDataset = computed(() => {
                             proportionToTree: nut.value / treeTotal.value,
                             rootIndex: i,
                             id: nut.id || `nut_${i}_${j}_${k}_${uid.value}`,
-                            color: convertColorToHex(nut.color) || customPalette.value[k] || palette[k] || palette[k % palette.length],
-                            value: nut.value >= 0 ? nut.value : 0
-                        }
+                            color:
+                                convertColorToHex(nut.color) ||
+                                customPalette.value[k] ||
+                                palette[k] ||
+                                palette[k % palette.length],
+                            value: nut.value >= 0 ? nut.value : 0,
+                        };
                     }),
-                }
+                };
             }),
-        }
+        };
     });
 });
 
@@ -430,18 +477,33 @@ function getData() {
     return mutableDataset.value;
 }
 
-const emit = defineEmits(['selectRoot', 'selectBranch', 'selectNut', 'copyAlt']);
+const emit = defineEmits([
+    'selectRoot',
+    'selectBranch',
+    'selectNut',
+    'copyAlt',
+]);
 
 const totalBranches = computed(() => {
-    return mutableDataset.value.flatMap(root => root.branches).length;
+    return mutableDataset.value.flatMap((root) => root.branches).length;
 });
 
 const maxRoot = computed(() => {
-    return Math.max(...mutableDataset.value.map(root => root.branches.map(branch => branch.value).reduce((a,b) => a + b, 0)));
+    return Math.max(
+        ...mutableDataset.value.map((root) =>
+            root.branches
+                .map((branch) => branch.value)
+                .reduce((a, b) => a + b, 0),
+        ),
+    );
 });
 
 const maxBranch = computed(() => {
-    return Math.max(...mutableDataset.value.flatMap(root => root.branches.map(branch => branch.value)));
+    return Math.max(
+        ...mutableDataset.value.flatMap((root) =>
+            root.branches.map((branch) => branch.value),
+        ),
+    );
 });
 
 const earth = computed(() => {
@@ -449,43 +511,64 @@ const earth = computed(() => {
 });
 
 const roots = computed(() => {
-    return mutableDataset.value.sort((a, b) => b.total - a.total).map((root, i) => {
-        const maxRadius = drawableArea.value.height / mutableDataset.value.length / 2;
-        const radius = (root.total / maxRoot.value) * (maxRadius > 64 ? 64 : maxRadius);
-        return {
-            ...root,
-            x: drawableArea.value.seedX,
-            y: drawableArea.value.top + drawableArea.value.height / mutableDataset.value.length * (i+1) - (drawableArea.value.height / mutableDataset.value.length / 2 + svg.value.gap / 2),
-            r: radius < svg.value.branchSize /2 ? svg.value.branchSize/2 : radius 
-        }
-    })
+    return mutableDataset.value
+        .sort((a, b) => b.total - a.total)
+        .map((root, i) => {
+            const maxRadius =
+                drawableArea.value.height / mutableDataset.value.length / 2;
+            const radius =
+                (root.total / maxRoot.value) *
+                (maxRadius > 64 ? 64 : maxRadius);
+            return {
+                ...root,
+                x: drawableArea.value.seedX,
+                y:
+                    drawableArea.value.top +
+                    (drawableArea.value.height / mutableDataset.value.length) *
+                        (i + 1) -
+                    (drawableArea.value.height /
+                        mutableDataset.value.length /
+                        2 +
+                        svg.value.gap / 2),
+                r:
+                    radius < svg.value.branchSize / 2
+                        ? svg.value.branchSize / 2
+                        : radius,
+            };
+        });
 });
 
 const canopea = computed(() => {
-    if(FINAL_CONFIG.value.style.chart.layout.branches.widthRatio <= 0) {
+    if (FINAL_CONFIG.value.style.chart.layout.branches.widthRatio <= 0) {
         return 0.1;
     }
-    if(FINAL_CONFIG.value.style.chart.layout.branches.widthRatio > 1.8) {
+    if (FINAL_CONFIG.value.style.chart.layout.branches.widthRatio > 1.8) {
         return 1.8;
     }
-    return FINAL_CONFIG.value.style.chart.layout.branches.widthRatio
-})
-
+    return FINAL_CONFIG.value.style.chart.layout.branches.widthRatio;
+});
 
 const seeds = computed(() => {
-    return roots.value.flatMap(root => root.branches);
-})
+    return roots.value.flatMap((root) => root.branches);
+});
 
 const branches = computed(() => {
-    return seeds.value.sort((a,b) => b.value - a.value).map((branch, i) => {
-        return {
-            ...branch,
-            y1: (i * svg.value.branchSize) + drawableArea.value.top + (i * svg.value.gap),
-            y2: (i * svg.value.branchSize) + (svg.value.branchSize),
-            x1: earth.value,
-            x2: (384 * branch.value / maxBranch.value * canopea.value) + earth.value
-        }
-    })
+    return seeds.value
+        .sort((a, b) => b.value - a.value)
+        .map((branch, i) => {
+            return {
+                ...branch,
+                y1:
+                    i * svg.value.branchSize +
+                    drawableArea.value.top +
+                    i * svg.value.gap,
+                y2: i * svg.value.branchSize + svg.value.branchSize,
+                x1: earth.value,
+                x2:
+                    ((384 * branch.value) / maxBranch.value) * canopea.value +
+                    earth.value,
+            };
+        });
 });
 
 const rootsOrdered = computed(() => {
@@ -495,7 +578,7 @@ const rootsOrdered = computed(() => {
 const branchesByRoot = computed(() => {
     return rootsOrdered.value.map((root) => {
         return branches.value
-            .filter(branch => branch.rootIndex === root.rootIndex)
+            .filter((branch) => branch.rootIndex === root.rootIndex)
             .sort((a, b) => a.y1 - b.y1);
     });
 });
@@ -511,7 +594,7 @@ const nutsByRootAndBranch = computed(() => {
                     branchId: branch.id,
                     branchName: branch.name,
                     branchValue: branch.value,
-                    rootName: branch.rootName
+                    rootName: branch.rootName,
                 };
             });
         });
@@ -519,8 +602,8 @@ const nutsByRootAndBranch = computed(() => {
 });
 
 function getRoot(branch) {
-    const root = roots.value.find(r => r.rootIndex === branch.rootIndex);
-    return {x: root.x, y: root.y, r: root.r}
+    const root = roots.value.find((r) => r.rootIndex === branch.rootIndex);
+    return { x: root.x, y: root.y, r: root.r };
 }
 
 const selectedNut = ref(null);
@@ -545,7 +628,10 @@ function isFocused(part) {
         }
 
         if (part.type === 'nut') {
-            return part.branchName === selectedNut.value.name && part.rootIndex === selectedNut.value.rootIndex;
+            return (
+                part.branchName === selectedNut.value.name &&
+                part.rootIndex === selectedNut.value.rootIndex
+            );
         }
 
         return false;
@@ -561,7 +647,10 @@ function isFocused(part) {
         }
 
         if (part.type === 'nut') {
-            return part.branchName === selectedBranch.value.name && part.rootIndex === selectedBranch.value.rootIndex;
+            return (
+                part.branchName === selectedBranch.value.name &&
+                part.rootIndex === selectedBranch.value.rootIndex
+            );
         }
 
         return false;
@@ -583,21 +672,27 @@ function isFocused(part) {
         return false;
     }
 
-    if (
-        hasKeyboardFocusOnChart.value &&
-        hasStartedKeyboardNavigation.value
-    ) {
+    if (hasKeyboardFocusOnChart.value && hasStartedKeyboardNavigation.value) {
         if (accessibilityCursor.value.level === 'root') {
             if (part.type === 'root') {
-                return keyboardFocusedRoot.value && part.id === keyboardFocusedRoot.value.id;
+                return (
+                    keyboardFocusedRoot.value &&
+                    part.id === keyboardFocusedRoot.value.id
+                );
             }
 
             if (part.type === 'branch') {
-                return keyboardFocusedRoot.value && part.rootIndex === keyboardFocusedRoot.value.rootIndex;
+                return (
+                    keyboardFocusedRoot.value &&
+                    part.rootIndex === keyboardFocusedRoot.value.rootIndex
+                );
             }
 
             if (part.type === 'nut') {
-                return keyboardFocusedRoot.value && part.rootIndex === keyboardFocusedRoot.value.rootIndex;
+                return (
+                    keyboardFocusedRoot.value &&
+                    part.rootIndex === keyboardFocusedRoot.value.rootIndex
+                );
             }
 
             return false;
@@ -605,11 +700,17 @@ function isFocused(part) {
 
         if (accessibilityCursor.value.level === 'branch') {
             if (part.type === 'root') {
-                return keyboardFocusedRoot.value && part.rootIndex === keyboardFocusedRoot.value.rootIndex;
+                return (
+                    keyboardFocusedRoot.value &&
+                    part.rootIndex === keyboardFocusedRoot.value.rootIndex
+                );
             }
 
             if (part.type === 'branch') {
-                return keyboardFocusedBranch.value && part.id === keyboardFocusedBranch.value.id;
+                return (
+                    keyboardFocusedBranch.value &&
+                    part.id === keyboardFocusedBranch.value.id
+                );
             }
 
             if (part.type === 'nut') {
@@ -621,15 +722,25 @@ function isFocused(part) {
 
         if (accessibilityCursor.value.level === 'nut') {
             if (part.type === 'root') {
-                return keyboardFocusedRoot.value && part.rootIndex === keyboardFocusedRoot.value.rootIndex;
+                return (
+                    keyboardFocusedRoot.value &&
+                    part.rootIndex === keyboardFocusedRoot.value.rootIndex
+                );
             }
 
             if (part.type === 'branch') {
-                return keyboardFocusedNutBranch.value && part.id === keyboardFocusedNutBranch.value.id;
+                return (
+                    keyboardFocusedNutBranch.value &&
+                    part.id === keyboardFocusedNutBranch.value.id
+                );
             }
 
             if (part.type === 'nut') {
-                return keyboardFocusedNutBranch.value && part.branchName === keyboardFocusedNutBranch.value.name && part.rootIndex === keyboardFocusedNutBranch.value.rootIndex;
+                return (
+                    keyboardFocusedNutBranch.value &&
+                    part.branchName === keyboardFocusedNutBranch.value.name &&
+                    part.rootIndex === keyboardFocusedNutBranch.value.rootIndex
+                );
             }
 
             return false;
@@ -642,8 +753,12 @@ function isFocused(part) {
 function pickNut(branch) {
     resetTree();
 
-    const rootPosition = rootsOrdered.value.findIndex(root => root.rootIndex === branch.rootIndex);
-    const branchPosition = (branchesByRoot.value[rootPosition] || []).findIndex(item => item.id === branch.id);
+    const rootPosition = rootsOrdered.value.findIndex(
+        (root) => root.rootIndex === branch.rootIndex,
+    );
+    const branchPosition = (branchesByRoot.value[rootPosition] || []).findIndex(
+        (item) => item.id === branch.id,
+    );
 
     if (rootPosition !== -1) {
         accessibilityCursor.value.rootIndex = rootPosition;
@@ -660,7 +775,7 @@ function pickNut(branch) {
         selectedNut.value = branch;
         selectedBranch.value = branch;
         openNut.value = makeDonut(
-            { series: branch.breakdown, base: 1},
+            { series: branch.breakdown, base: 1 },
             branch.x2 + 24 + FINAL_CONFIG.value.style.chart.layout.nuts.offsetX,
             branch.y1 + svg.value.branchSize / 2,
             80,
@@ -678,8 +793,12 @@ function leaveNut() {
 }
 
 function pickBranch(branch) {
-    const rootPosition = rootsOrdered.value.findIndex(root => root.rootIndex === branch.rootIndex);
-    const branchPosition = (branchesByRoot.value[rootPosition] || []).findIndex(item => item.id === branch.id);
+    const rootPosition = rootsOrdered.value.findIndex(
+        (root) => root.rootIndex === branch.rootIndex,
+    );
+    const branchPosition = (branchesByRoot.value[rootPosition] || []).findIndex(
+        (item) => item.id === branch.id,
+    );
 
     if (rootPosition !== -1) {
         accessibilityCursor.value.rootIndex = rootPosition;
@@ -706,7 +825,9 @@ function pickBranch(branch) {
 }
 
 function pickRoot(root) {
-    const rootPosition = rootsOrdered.value.findIndex(item => item.id === root.id);
+    const rootPosition = rootsOrdered.value.findIndex(
+        (item) => item.id === root.id,
+    );
 
     if (rootPosition !== -1) {
         accessibilityCursor.value.rootIndex = rootPosition;
@@ -729,8 +850,9 @@ function pickRoot(root) {
 }
 
 function placeLegendTopOrBottom() {
-    const overflowsBottom = drawableArea.value.bottom - (selectedNut.value.y1 + 180) < 0;
-    if(overflowsBottom) {
+    const overflowsBottom =
+        drawableArea.value.bottom - (selectedNut.value.y1 + 180) < 0;
+    if (overflowsBottom) {
         return 0;
     } else {
         return drawableArea.value.bottom;
@@ -738,7 +860,11 @@ function placeLegendTopOrBottom() {
 }
 
 function isArcBigEnough(arc) {
-    return arc.proportion * 100 > FINAL_CONFIG.value.style.chart.layout.nuts.selected.labels.dataLabels.hideUnderValue;
+    return (
+        arc.proportion * 100 >
+        FINAL_CONFIG.value.style.chart.layout.nuts.selected.labels.dataLabels
+            .hideUnderValue
+    );
 }
 
 onMounted(() => {
@@ -748,15 +874,18 @@ onMounted(() => {
 const debug = computed(() => FINAL_CONFIG.value.debug);
 
 function prepareChart() {
-    if(objectIsEmpty(props.dataset)) {
+    if (objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiChestnut',
             type: 'dataset',
-            debug: debug.value
-        })
+            debug: debug.value,
+        });
     }
 
-    const height = totalBranches.value * (svg.value.branchSize + svg.value.gap) + svg.value.padding.top + svg.value.padding.bottom;
+    const height =
+        totalBranches.value * (svg.value.branchSize + svg.value.gap) +
+        svg.value.padding.top +
+        svg.value.padding.bottom;
     svg.value.height = height;
 }
 
@@ -779,45 +908,77 @@ const table = computed(() => {
     const body = mutableDataset.value.flatMap((root, i) => {
         return root.branches.flatMap((branch, j) => {
             return branch.breakdown.flatMap((nut, k) => {
-                return nut.table
-            })
-        })
+                return nut.table;
+            });
+        });
     });
 
-    return { head, body }
+    return { head, body };
 });
 
-function generateCsv(callback=null) {
+function generateCsv(callback = null) {
     nextTick(() => {
-        const title = [[FINAL_CONFIG.value.style.chart.layout.title.text], [FINAL_CONFIG.value.style.chart.layout.title.subtitle.text], [""],["Grand total", treeTotal.value],[""]];
+        const title = [
+            [FINAL_CONFIG.value.style.chart.layout.title.text],
+            [FINAL_CONFIG.value.style.chart.layout.title.subtitle.text],
+            [''],
+            ['Grand total', treeTotal.value],
+            [''],
+        ];
         const head = table.value.head;
         const body = table.value.body.map((tr, i) => {
             return [
-                table.value.body[i-1] && table.value.body[i-1].rootName === tr.rootName ? '' : tr.rootName,
-                table.value.body[i-1] && table.value.body[i-1].rootName === tr.rootName ? '' : tr.rootValue,
-                table.value.body[i-1] && table.value.body[i-1].rootName === tr.rootName ? '' : tr.rootToTotal,
-                table.value.body[i-1] && table.value.body[i-1].branchName === tr.branchName ? '' : tr.branchName,
-                table.value.body[i-1] && table.value.body[i-1].branchName === tr.branchName ? '' : tr.branchValue,
-                table.value.body[i-1] && table.value.body[i-1].branchName === tr.branchName ? '' : tr.branchToRoot,
-                table.value.body[i-1] && table.value.body[i-1].branchName === tr.branchName ? '' : tr.branchToTotal,
+                table.value.body[i - 1] &&
+                table.value.body[i - 1].rootName === tr.rootName
+                    ? ''
+                    : tr.rootName,
+                table.value.body[i - 1] &&
+                table.value.body[i - 1].rootName === tr.rootName
+                    ? ''
+                    : tr.rootValue,
+                table.value.body[i - 1] &&
+                table.value.body[i - 1].rootName === tr.rootName
+                    ? ''
+                    : tr.rootToTotal,
+                table.value.body[i - 1] &&
+                table.value.body[i - 1].branchName === tr.branchName
+                    ? ''
+                    : tr.branchName,
+                table.value.body[i - 1] &&
+                table.value.body[i - 1].branchName === tr.branchName
+                    ? ''
+                    : tr.branchValue,
+                table.value.body[i - 1] &&
+                table.value.body[i - 1].branchName === tr.branchName
+                    ? ''
+                    : tr.branchToRoot,
+                table.value.body[i - 1] &&
+                table.value.body[i - 1].branchName === tr.branchName
+                    ? ''
+                    : tr.branchToTotal,
                 tr.nutName,
                 tr.nutValue,
                 tr.nutToBranch,
                 tr.nutToRoot,
-                tr.nutToTotal
-            ]
+                tr.nutToTotal,
+            ];
         });
         const tableXls = title.concat([head]).concat(body);
         const csvContent = createCsvContent(tableXls);
-        if(!callback) {
-            downloadCsv({ csvContent, title: FINAL_CONFIG.value.style.chart.layout.title.text || 'vue-ui-chestnut'})
+        if (!callback) {
+            downloadCsv({
+                csvContent,
+                title:
+                    FINAL_CONFIG.value.style.chart.layout.title.text ||
+                    'vue-ui-chestnut',
+            });
         } else {
             callback(csvContent);
         }
     });
 }
 
-const isFullscreen = ref(false)
+const isFullscreen = ref(false);
 function toggleFullscreen(state) {
     isFullscreen.value = state;
     step.value += 1;
@@ -832,81 +993,94 @@ function toggleAnnotator() {
     isAnnotator.value = !isAnnotator.value;
 }
 
-async function getImage({ scale = 2} = {}) {
+async function getImage({ scale = 2 } = {}) {
     if (!chestnutChart.value) return;
     const { width, height } = chestnutChart.value.getBoundingClientRect();
-    const aspectRatio = width / height; 
-    const { imageUri, base64 } = await img({ domElement: chestnutChart.value, base64: true, img: true, scale})
-    return { 
-        imageUri, 
-        base64, 
+    const aspectRatio = width / height;
+    const { imageUri, base64 } = await img({
+        domElement: chestnutChart.value,
+        base64: true,
+        img: true,
+        scale,
+    });
+    return {
+        imageUri,
+        base64,
         title: FINAL_CONFIG.value.style.chart.layout.title.text,
         width,
         height,
-        aspectRatio
-    }
+        aspectRatio,
+    };
 }
 
 function getLinkPath(branch) {
     const root = getRoot(branch);
     const x0 = branch.x1;
     const y0 = branch.y1;
-    const t  = svg.value.branchSize;
+    const t = svg.value.branchSize;
     const xR = root.x + root.r / 2;
     const yR = root.y;
-    const k  = 20;
+    const k = 20;
     return [
         `M ${x0},${y0}`,
         `C ${x0 - k},${y0} ${x0 - k},${y0} ${xR},${yR}`,
         `C ${xR},${yR} ${x0 - k},${y0 + t} ${x0},${y0 + t}`,
-        `Z`
+        `Z`,
     ].join(' ');
 }
 
 const tableComponent = computed(() => {
-    const useDialog = FINAL_CONFIG.value.table.useDialog && !FINAL_CONFIG.value.table.show;
+    const useDialog =
+        FINAL_CONFIG.value.table.useDialog && !FINAL_CONFIG.value.table.show;
     const open = mutableConfig.value.showTable;
     return {
         component: useDialog ? BaseDraggableDialog : Accordion,
         title: `${FINAL_CONFIG.value.style.chart.layout.title.text}${FINAL_CONFIG.value.style.chart.layout.title.subtitle.text ? `: ${FINAL_CONFIG.value.style.chart.layout.title.subtitle.text}` : ''}`,
-        props: useDialog ? {
-            backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
-            color: FINAL_CONFIG.value.table.th.color,
-            headerColor: FINAL_CONFIG.value.table.th.color,
-            headerBg: FINAL_CONFIG.value.table.th.backgroundColor,
-            isFullscreen: isFullscreen.value,
-            fullscreenParent: chestnutChart.value,
-            forcedWidth: Math.min(800, window.innerWidth * 0.8),
-            isCursorPointer: isCursorPointer.value
-        } : {
-            hideDetails: true,
-            config: {
-                open,
-                maxHeight: 10000,
-                body: {
-                    backgroundColor: FINAL_CONFIG.value.style.chart.backgroundColor,
-                    color: FINAL_CONFIG.value.style.chart.color
-                },
-                head: {
-                    backgroundColor: FINAL_CONFIG.value.style.chart.backgroundColor,
-                    color: FINAL_CONFIG.value.style.chart.color
-                }
-            }
-        }
-    }
+        props: useDialog
+            ? {
+                  backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
+                  color: FINAL_CONFIG.value.table.th.color,
+                  headerColor: FINAL_CONFIG.value.table.th.color,
+                  headerBg: FINAL_CONFIG.value.table.th.backgroundColor,
+                  isFullscreen: isFullscreen.value,
+                  fullscreenParent: chestnutChart.value,
+                  forcedWidth: Math.min(800, window.innerWidth * 0.8),
+                  isCursorPointer: isCursorPointer.value,
+              }
+            : {
+                  hideDetails: true,
+                  config: {
+                      open,
+                      maxHeight: 10000,
+                      body: {
+                          backgroundColor:
+                              FINAL_CONFIG.value.style.chart.backgroundColor,
+                          color: FINAL_CONFIG.value.style.chart.color,
+                      },
+                      head: {
+                          backgroundColor:
+                              FINAL_CONFIG.value.style.chart.backgroundColor,
+                          color: FINAL_CONFIG.value.style.chart.color,
+                      },
+                  },
+              },
+    };
 });
 
-watch(() => mutableConfig.value.showTable, async (v) => {
-    if (FINAL_CONFIG.value.table.show) return;
-    if (v && FINAL_CONFIG.value.table.useDialog && tableUnit.value) {
-        await nextTick();
-        tableUnit.value.open();
-    } else {
-        if ('close' in tableUnit.value) {
-            tableUnit.value.close()
+watch(
+    () => mutableConfig.value.showTable,
+    async (v) => {
+        if (FINAL_CONFIG.value.table.show) return;
+        if (v && FINAL_CONFIG.value.table.useDialog && tableUnit.value) {
+            await nextTick();
+            tableUnit.value.open();
+        } else {
+            if ('close' in tableUnit.value) {
+                tableUnit.value.close();
+            }
         }
-    }
-})
+    },
+);
 
 const { isResponsive } = useTableResponsive(tableContainer, breakpoint);
 
@@ -918,33 +1092,35 @@ function closeTable() {
 }
 
 const legendSet = computed(() => {
-    return mutableDataset.value.map((root,i) => {
+    return mutableDataset.value.map((root, i) => {
         return {
-        ...root,
-        display: `${root.name}: ${applyDataLabel(
-            FINAL_CONFIG.value.style.chart.layout.roots.labels.formatter,
-            root.total,
-            dataLabel({
-                p: FINAL_CONFIG.value.style.chart.layout.legend.prefix,
-                v: root.total,
-                s: FINAL_CONFIG.value.style.chart.layout.legend.suffix,
-                r: FINAL_CONFIG.value.style.chart.layout.legend.roundingValue
-            }),
-            { datapoint: root }
-        )} (${dataLabel({
-            v: root.total / treeTotal.value * 100,
-            s: '%',
-            r: FINAL_CONFIG.value.style.chart.layout.legend.roundingPercentage
-        })})`
-    }
-    })
+            ...root,
+            display: `${root.name}: ${applyDataLabel(
+                FINAL_CONFIG.value.style.chart.layout.roots.labels.formatter,
+                root.total,
+                dataLabel({
+                    p: FINAL_CONFIG.value.style.chart.layout.legend.prefix,
+                    v: root.total,
+                    s: FINAL_CONFIG.value.style.chart.layout.legend.suffix,
+                    r: FINAL_CONFIG.value.style.chart.layout.legend
+                        .roundingValue,
+                }),
+                { datapoint: root },
+            )} (${dataLabel({
+                v: (root.total / treeTotal.value) * 100,
+                s: '%',
+                r: FINAL_CONFIG.value.style.chart.layout.legend
+                    .roundingPercentage,
+            })})`,
+        };
+    });
 });
 
 const svgLegendItems = computed(() => {
-    return legendSet.value.map(l => ({
+    return legendSet.value.map((l) => ({
         color: l.color,
         name: l.display,
-        shape: 'circle'
+        shape: 'circle',
     }));
 });
 
@@ -954,7 +1130,7 @@ const svgLegend = computed(() => ({
     ...FINAL_CONFIG.value.style.chart.layout.legend,
     textAlign: 'center',
     show: true,
-    position: 'bottom'
+    position: 'bottom',
 }));
 
 const svgTitle = computed(() => FINAL_CONFIG.value.style.chart.layout.title);
@@ -965,7 +1141,7 @@ const { exportSvg, getSvg } = useSvgExport({
     legend: svgLegend,
     legendItems: svgLegendItems,
     backgroundColor: svgBg,
-    titleEmbedded: true
+    titleEmbedded: true,
 });
 
 async function generateSvg({ isCb }) {
@@ -976,7 +1152,14 @@ async function generateSvg({ isCb }) {
     try {
         if (isCb) {
             const { blob, url, text, dataUrl } = await getSvg();
-            await Promise.resolve(FINAL_CONFIG.value.userOptions.callbacks.svg({ blob, url, text, dataUrl }));
+            await Promise.resolve(
+                FINAL_CONFIG.value.userOptions.callbacks.svg({
+                    blob,
+                    url,
+                    text,
+                    dataUrl,
+                }),
+            );
         } else {
             await Promise.resolve(exportSvg());
         }
@@ -986,12 +1169,12 @@ async function generateSvg({ isCb }) {
 }
 
 function onGenerateImage(payload) {
-    if (payload?.stage === "start") {
+    if (payload?.stage === 'start') {
         isCallbackImaging.value = true;
         return;
     }
 
-    if (payload?.stage === "end") {
+    if (payload?.stage === 'end') {
         isCallbackImaging.value = false;
         return;
     }
@@ -999,19 +1182,23 @@ function onGenerateImage(payload) {
     generateImage();
 }
 
-async function copyAlt(){
+async function copyAlt() {
     emit('copyAlt', {
         config: FINAL_CONFIG.value,
-        dataset: mutableDataset.value
-    })
+        dataset: mutableDataset.value,
+    });
     if (!FINAL_CONFIG.value.userOptions.callbacks.altCopy) {
-        console.warn('Vue Data UI - A callback must be set for `altCopy` in userOptions.');
-        return
+        console.warn(
+            'Vue Data UI - A callback must be set for `altCopy` in userOptions.',
+        );
+        return;
     }
-    await Promise.resolve(FINAL_CONFIG.value.userOptions.callbacks.altCopy({ 
-        config: FINAL_CONFIG.value, 
-        dataset: mutableDataset.value
-    }));
+    await Promise.resolve(
+        FINAL_CONFIG.value.userOptions.callbacks.altCopy({
+            config: FINAL_CONFIG.value,
+            dataset: mutableDataset.value,
+        }),
+    );
 }
 
 /***************************************************************************************************
@@ -1025,13 +1212,13 @@ function getRootAnnouncement(root) {
         p: FINAL_CONFIG.value.style.chart.layout.legend.prefix,
         v: root.total,
         s: FINAL_CONFIG.value.style.chart.layout.legend.suffix,
-        r: FINAL_CONFIG.value.style.chart.layout.legend.roundingValue
+        r: FINAL_CONFIG.value.style.chart.layout.legend.roundingValue,
     });
 
     const percentageLabel = dataLabel({
-        v: root.total / treeTotal.value * 100,
+        v: (root.total / treeTotal.value) * 100,
         s: '%',
-        r: FINAL_CONFIG.value.style.chart.layout.legend.roundingPercentage
+        r: FINAL_CONFIG.value.style.chart.layout.legend.roundingPercentage,
     });
 
     return `Root ${root.name}. Value ${valueLabel}. ${percentageLabel} of total.`;
@@ -1041,16 +1228,19 @@ function getBranchAnnouncement(branch) {
     if (!branch) return '';
 
     const valueLabel = dataLabel({
-        p: FINAL_CONFIG.value.style.chart.layout.branches.labels.dataLabels.prefix,
+        p: FINAL_CONFIG.value.style.chart.layout.branches.labels.dataLabels
+            .prefix,
         v: branch.value,
-        s: FINAL_CONFIG.value.style.chart.layout.branches.labels.dataLabels.suffix,
-        r: FINAL_CONFIG.value.style.chart.layout.branches.labels.dataLabels.roundingValue
+        s: FINAL_CONFIG.value.style.chart.layout.branches.labels.dataLabels
+            .suffix,
+        r: FINAL_CONFIG.value.style.chart.layout.branches.labels.dataLabels
+            .roundingValue,
     });
 
     const percentageToRoot = dataLabel({
         v: branch.proportionToRoot * 100,
         s: '%',
-        r: FINAL_CONFIG.value.style.chart.layout.legend.roundingPercentage
+        r: FINAL_CONFIG.value.style.chart.layout.legend.roundingPercentage,
     });
 
     return `Branch ${branch.name}. Root ${branch.rootName}. Value ${valueLabel}. ${percentageToRoot} of root ${branch.rootName}.`;
@@ -1063,13 +1253,15 @@ function getNutAnnouncement(nut) {
         p: FINAL_CONFIG.value.style.chart.layout.legend.prefix,
         v: nut.value,
         s: FINAL_CONFIG.value.style.chart.layout.legend.suffix,
-        r: FINAL_CONFIG.value.style.chart.layout.nuts.selected.labels.roundingValue
+        r: FINAL_CONFIG.value.style.chart.layout.nuts.selected.labels
+            .roundingValue,
     });
 
     const percentageToBranch = dataLabel({
         v: nut.proportionToBranch * 100,
         s: '%',
-        r: FINAL_CONFIG.value.style.chart.layout.nuts.selected.labels.roundingPercentage
+        r: FINAL_CONFIG.value.style.chart.layout.nuts.selected.labels
+            .roundingPercentage,
     });
 
     return `Nut ${nut.name}. Branch ${nut.branchName}. Root ${nut.rootName}. Value ${valueLabel}. ${percentageToBranch} of branch ${nut.branchName}.`;
@@ -1080,13 +1272,16 @@ const currentRoot = computed(() => {
 });
 
 const currentBranch = computed(() => {
-    const rootBranches = branchesByRoot.value[accessibilityCursor.value.rootIndex] || [];
+    const rootBranches =
+        branchesByRoot.value[accessibilityCursor.value.rootIndex] || [];
     return rootBranches[accessibilityCursor.value.branchIndex] || null;
 });
 
 const currentNut = computed(() => {
-    const rootBranches = nutsByRootAndBranch.value[accessibilityCursor.value.rootIndex] || [];
-    const branchNuts = rootBranches[accessibilityCursor.value.branchIndex] || [];
+    const rootBranches =
+        nutsByRootAndBranch.value[accessibilityCursor.value.rootIndex] || [];
+    const branchNuts =
+        rootBranches[accessibilityCursor.value.branchIndex] || [];
     return branchNuts[accessibilityCursor.value.nutIndex] || null;
 });
 
@@ -1109,11 +1304,15 @@ const hasKeyboardFocusOnChart = computed(() => {
 
 function announceCurrentCursor() {
     if (accessibilityCursor.value.level === 'root') {
-        accessibilityAnnouncement.value = getRootAnnouncement(currentRoot.value);
+        accessibilityAnnouncement.value = getRootAnnouncement(
+            currentRoot.value,
+        );
         return;
     }
     if (accessibilityCursor.value.level === 'branch') {
-        accessibilityAnnouncement.value = getBranchAnnouncement(currentBranch.value);
+        accessibilityAnnouncement.value = getBranchAnnouncement(
+            currentBranch.value,
+        );
         return;
     }
     if (accessibilityCursor.value.level === 'nut') {
@@ -1127,13 +1326,14 @@ function resetAccessibilityCursor() {
         rootIndex: 0,
         branchIndex: 0,
         nutIndex: 0,
-        locked: false
+        locked: false,
     };
     accessibilityAnnouncement.value = '';
 }
 
 function clampBranchIndex() {
-    const rootBranches = branchesByRoot.value[accessibilityCursor.value.rootIndex] || [];
+    const rootBranches =
+        branchesByRoot.value[accessibilityCursor.value.rootIndex] || [];
     if (!rootBranches.length) {
         accessibilityCursor.value.branchIndex = 0;
         return;
@@ -1147,8 +1347,10 @@ function clampBranchIndex() {
 }
 
 function clampNutIndex() {
-    const rootBranches = nutsByRootAndBranch.value[accessibilityCursor.value.rootIndex] || [];
-    const branchNuts = rootBranches[accessibilityCursor.value.branchIndex] || [];
+    const rootBranches =
+        nutsByRootAndBranch.value[accessibilityCursor.value.rootIndex] || [];
+    const branchNuts =
+        rootBranches[accessibilityCursor.value.branchIndex] || [];
     if (!branchNuts.length) {
         accessibilityCursor.value.nutIndex = 0;
         return;
@@ -1196,7 +1398,8 @@ function moveVertical(stepDirection) {
 function moveHorizontal(stepDirection) {
     if (stepDirection > 0) {
         if (accessibilityCursor.value.level === 'root') {
-            const rootBranches = branchesByRoot.value[accessibilityCursor.value.rootIndex] || [];
+            const rootBranches =
+                branchesByRoot.value[accessibilityCursor.value.rootIndex] || [];
             if (!rootBranches.length) return;
 
             accessibilityCursor.value.level = 'branch';
@@ -1207,8 +1410,12 @@ function moveHorizontal(stepDirection) {
         }
 
         if (accessibilityCursor.value.level === 'branch') {
-            const rootBranches = nutsByRootAndBranch.value[accessibilityCursor.value.rootIndex] || [];
-            const branchNuts = rootBranches[accessibilityCursor.value.branchIndex] || [];
+            const rootBranches =
+                nutsByRootAndBranch.value[
+                    accessibilityCursor.value.rootIndex
+                ] || [];
+            const branchNuts =
+                rootBranches[accessibilityCursor.value.branchIndex] || [];
             if (!branchNuts.length) return;
 
             accessibilityCursor.value.level = 'nut';
@@ -1255,7 +1462,11 @@ function activateCurrentCursor() {
         accessibilityAnnouncement.value = `${getBranchAnnouncement(currentBranch.value)} selected.`;
         return;
     }
-    if (accessibilityCursor.value.level === 'nut' && currentBranch.value && currentNut.value) {
+    if (
+        accessibilityCursor.value.level === 'nut' &&
+        currentBranch.value &&
+        currentNut.value
+    ) {
         pickNut(currentBranch.value);
         accessibilityAnnouncement.value = `${getNutAnnouncement(currentNut.value)} details opened.`;
     }
@@ -1283,7 +1494,8 @@ function onSvgKeydown(event) {
     const isActivate = event.key === 'Enter' || event.key === ' ';
     const isEscape = event.key === 'Escape';
 
-    if (!isUp && !isDown && !isLeft && !isRight && !isActivate && !isEscape) return;
+    if (!isUp && !isDown && !isLeft && !isRight && !isActivate && !isEscape)
+        return;
 
     event.preventDefault();
     event.stopPropagation();
@@ -1331,20 +1543,44 @@ function onSvgKeydown(event) {
 const a11yTable = computed(() => {
     return {
         headers: table.value.head,
-        rows: table.value.body.map((row) => ([
+        rows: table.value.body.map((row) => [
             row.rootName,
             row.rootValue,
-            dataLabel({ v: row.rootToTotal * 100, s: '%', r: FINAL_CONFIG.value.table.td.roundingPercentage }),
+            dataLabel({
+                v: row.rootToTotal * 100,
+                s: '%',
+                r: FINAL_CONFIG.value.table.td.roundingPercentage,
+            }),
             row.branchName,
             row.branchValue,
-            dataLabel({ v: row.branchToRoot * 100, s: '%', r: FINAL_CONFIG.value.table.td.roundingPercentage }),
-            dataLabel({ v: row.branchToTotal * 100, s: '%', r: FINAL_CONFIG.value.table.td.roundingPercentage }),
+            dataLabel({
+                v: row.branchToRoot * 100,
+                s: '%',
+                r: FINAL_CONFIG.value.table.td.roundingPercentage,
+            }),
+            dataLabel({
+                v: row.branchToTotal * 100,
+                s: '%',
+                r: FINAL_CONFIG.value.table.td.roundingPercentage,
+            }),
             row.nutName,
             row.nutValue,
-            dataLabel({ v: row.nutToBranch * 100, s: '%', r: FINAL_CONFIG.value.table.td.roundingPercentage }),
-            dataLabel({ v: row.nutToRoot * 100, s: '%', r: FINAL_CONFIG.value.table.td.roundingPercentage }),
-            dataLabel({ v: row.nutToTotal * 100, s: '%', r: FINAL_CONFIG.value.table.td.roundingPercentage })
-        ]))
+            dataLabel({
+                v: row.nutToBranch * 100,
+                s: '%',
+                r: FINAL_CONFIG.value.table.td.roundingPercentage,
+            }),
+            dataLabel({
+                v: row.nutToRoot * 100,
+                s: '%',
+                r: FINAL_CONFIG.value.table.td.roundingPercentage,
+            }),
+            dataLabel({
+                v: row.nutToTotal * 100,
+                s: '%',
+                r: FINAL_CONFIG.value.table.td.roundingPercentage,
+            }),
+        ]),
     };
 });
 
@@ -1358,18 +1594,18 @@ defineExpose({
     toggleTable,
     toggleAnnotator,
     toggleFullscreen,
-    copyAlt
+    copyAlt,
 });
-
 </script>
 
 <template>
-    <div 
+    <div
         :class="`vue-data-ui-component vue-ui-chestnut ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`"
         ref="chestnutChart"
         :id="`vue-ui-chestnut_${uid}`"
         :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor}`"
-        @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)"
+        @mouseenter="() => setUserOptionsVisibility(true)"
+        @mouseleave="() => setUserOptionsVisibility(false)"
     >
         <!-- A11Y -->
         <div :id="`chart-instructions-${uid}`" class="sr-only">
@@ -1399,29 +1635,29 @@ defineExpose({
             @close="toggleAnnotator"
         >
             <template #annotator-action-close>
-                <slot name="annotator-action-close"/>
+                <slot name="annotator-action-close" />
             </template>
             <template #annotator-action-color="{ color }">
-                <slot name="annotator-action-color" v-bind="{ color }"/>
+                <slot name="annotator-action-color" v-bind="{ color }" />
             </template>
             <template #annotator-action-draw="{ mode }">
-                <slot name="annotator-action-draw" v-bind="{ mode }"/>
+                <slot name="annotator-action-draw" v-bind="{ mode }" />
             </template>
             <template #annotator-action-undo="{ disabled }">
-                <slot name="annotator-action-undo" v-bind="{ disabled }"/>
+                <slot name="annotator-action-undo" v-bind="{ disabled }" />
             </template>
             <template #annotator-action-redo="{ disabled }">
-                <slot name="annotator-action-redo" v-bind="{ disabled }"/>
+                <slot name="annotator-action-redo" v-bind="{ disabled }" />
             </template>
             <template #annotator-action-delete="{ disabled }">
-                <slot name="annotator-action-delete" v-bind="{ disabled }"/>
+                <slot name="annotator-action-delete" v-bind="{ disabled }" />
             </template>
         </PenAndPaper>
 
         <div
             ref="noTitle"
-            v-if="hasOptionsNoTitle" 
-            class="vue-data-ui-no-title-space" 
+            v-if="hasOptionsNoTitle"
+            class="vue-data-ui-no-title-space"
             :style="`height:36px; width: 100%;background:transparent`"
         />
 
@@ -1429,7 +1665,11 @@ defineExpose({
         <UserOptions
             ref="userOptionsRef"
             :key="`user_options_${step}`"
-            v-if="FINAL_CONFIG.userOptions.show && isDataset && (keepUserOptionState ? true : userOptionsVisible)"
+            v-if="
+                FINAL_CONFIG.userOptions.show &&
+                isDataset &&
+                (keepUserOptionState ? true : userOptionsVisible)
+            "
             :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
             :color="FINAL_CONFIG.style.chart.color"
             :isImaging="isImaging"
@@ -1461,11 +1701,15 @@ defineExpose({
             @toggleAnnotator="toggleAnnotator"
             @copyAlt="copyAlt"
             :style="{
-                visibility: keepUserOptionState ? userOptionsVisible ? 'visible' : 'hidden' : 'visible'
+                visibility: keepUserOptionState
+                    ? userOptionsVisible
+                        ? 'visible'
+                        : 'hidden'
+                    : 'visible',
             }"
         >
             <template #menuIcon="{ isOpen, color }" v-if="$slots.menuIcon">
-                <slot name="menuIcon" v-bind="{ isOpen, color }"/>
+                <slot name="menuIcon" v-bind="{ isOpen, color }" />
             </template>
             <template #optionPdf v-if="$slots.optionPdf">
                 <slot name="optionPdf" />
@@ -1482,24 +1726,44 @@ defineExpose({
             <template #optionTable v-if="$slots.optionTable">
                 <slot name="optionTable" />
             </template>
-            <template v-if="$slots.optionFullscreen" template #optionFullscreen="{ toggleFullscreen, isFullscreen }">
-                <slot name="optionFullscreen" v-bind="{ toggleFullscreen, isFullscreen }"/>
+            <template
+                v-if="$slots.optionFullscreen"
+                template
+                #optionFullscreen="{ toggleFullscreen, isFullscreen }"
+            >
+                <slot
+                    name="optionFullscreen"
+                    v-bind="{ toggleFullscreen, isFullscreen }"
+                />
             </template>
-            <template v-if="$slots.optionAnnotator" #optionAnnotator="{ toggleAnnotator, isAnnotator }">
-                <slot name="optionAnnotator" v-bind="{ toggleAnnotator, isAnnotator }" />
+            <template
+                v-if="$slots.optionAnnotator"
+                #optionAnnotator="{ toggleAnnotator, isAnnotator }"
+            >
+                <slot
+                    name="optionAnnotator"
+                    v-bind="{ toggleAnnotator, isAnnotator }"
+                />
             </template>
-            <template v-if="$slots.optionAltCopy" #optionAltCopy="{ altCopy: c }">
-                <slot name="optionAltCopy" v-bind="{ altCopy: c }"/>
+            <template
+                v-if="$slots.optionAltCopy"
+                #optionAltCopy="{ altCopy: c }"
+            >
+                <slot name="optionAltCopy" v-bind="{ altCopy: c }" />
             </template>
         </UserOptions>
 
-        <div style="position: relative;">
+        <div style="position: relative">
             <svg
                 ref="svgRef"
                 :xmlns="XMLNS"
                 :aria-describedby="`chart-instructions-${uid}`"
-                :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
-                v-if="svg.height > 0" :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`"
+                :class="{
+                    'vue-data-ui-fullscreen--on': isFullscreen,
+                    'vue-data-ui-fulscreen--off': !isFullscreen,
+                }"
+                v-if="svg.height > 0"
+                :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`"
                 :style="`overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
                 tabindex="0"
                 @focus="onSvgFocus"
@@ -1509,17 +1773,17 @@ defineExpose({
                 <PackageVersion />
 
                 <!-- BACKGROUND SLOT -->
-                <foreignObject 
+                <foreignObject
                     v-if="$slots['chart-background']"
                     :x="0"
                     :y="0"
                     :width="svg.width <= 0 ? 10 : svg.width"
                     :height="svg.height <= 0 ? 10 : svg.height"
                     :style="{
-                        pointerEvents: 'none'
+                        pointerEvents: 'none',
                     }"
                 >
-                    <slot name="chart-background"/>
+                    <slot name="chart-background" />
                 </foreignObject>
 
                 <!-- TITLE AS G -->
@@ -1529,72 +1793,206 @@ defineExpose({
                         v-if="FINAL_CONFIG.style.chart.layout.title.text"
                         text-anchor="middle"
                         :fill="FINAL_CONFIG.style.chart.layout.title.color"
-                        :font-weight="FINAL_CONFIG.style.chart.layout.title.bold ? 'bold' : 'normal'"
-                        :font-size="FINAL_CONFIG.style.chart.layout.title.fontSize"
+                        :font-weight="
+                            FINAL_CONFIG.style.chart.layout.title.bold
+                                ? 'bold'
+                                : 'normal'
+                        "
+                        :font-size="
+                            FINAL_CONFIG.style.chart.layout.title.fontSize
+                        "
                         :x="svg.width / 2"
-                        :y="12 + FINAL_CONFIG.style.chart.layout.title.fontSize + FINAL_CONFIG.style.chart.layout.title.offsetY"
-                        @click="() => { resetTree(); resetAccessibilityCursor(); hasStartedKeyboardNavigation = false; }"
+                        :y="
+                            12 +
+                            FINAL_CONFIG.style.chart.layout.title.fontSize +
+                            FINAL_CONFIG.style.chart.layout.title.offsetY
+                        "
+                        @click="
+                            () => {
+                                resetTree();
+                                resetAccessibilityCursor();
+                                hasStartedKeyboardNavigation = false;
+                            }
+                        "
                     >
                         {{ FINAL_CONFIG.style.chart.layout.title.text }}
                     </text>
                     <text
                         data-cy="chestnut-subtitle"
-                        v-if="FINAL_CONFIG.style.chart.layout.title.subtitle.text"
+                        v-if="
+                            FINAL_CONFIG.style.chart.layout.title.subtitle.text
+                        "
                         text-anchor="middle"
-                        :fill="FINAL_CONFIG.style.chart.layout.title.subtitle.color"
-                        :font-weight="FINAL_CONFIG.style.chart.layout.title.subtitle.bold ? 'bold' : 'normal'"
-                        :font-size="FINAL_CONFIG.style.chart.layout.title.subtitle.fontSize"
+                        :fill="
+                            FINAL_CONFIG.style.chart.layout.title.subtitle.color
+                        "
+                        :font-weight="
+                            FINAL_CONFIG.style.chart.layout.title.subtitle.bold
+                                ? 'bold'
+                                : 'normal'
+                        "
+                        :font-size="
+                            FINAL_CONFIG.style.chart.layout.title.subtitle
+                                .fontSize
+                        "
                         :x="svg.width / 2"
-                        :y="48 + FINAL_CONFIG.style.chart.layout.title.subtitle.fontSize + FINAL_CONFIG.style.chart.layout.title.subtitle.offsetY"
-                        @click="() => { resetTree(); resetAccessibilityCursor(); hasStartedKeyboardNavigation = false; }"
+                        :y="
+                            48 +
+                            FINAL_CONFIG.style.chart.layout.title.subtitle
+                                .fontSize +
+                            FINAL_CONFIG.style.chart.layout.title.subtitle
+                                .offsetY
+                        "
+                        @click="
+                            () => {
+                                resetTree();
+                                resetAccessibilityCursor();
+                                hasStartedKeyboardNavigation = false;
+                            }
+                        "
                     >
-                        {{ FINAL_CONFIG.style.chart.layout.title.subtitle.text }}
+                        {{
+                            FINAL_CONFIG.style.chart.layout.title.subtitle.text
+                        }}
                     </text>
                 </g>
 
                 <!-- DEFS -->
                 <defs>
                     <radialGradient
-                        cx="50%" cy="50%" r="50%" fx="50%" fy="50%"
+                        cx="50%"
+                        cy="50%"
+                        r="50%"
+                        fx="50%"
+                        fy="50%"
                         v-for="(d, i) in mutableDataset"
                         :id="`root_gradient_${uid}_${d.rootIndex}`"
                     >
-                        <stop offset="0%" :stop-color="setOpacity(shiftHue(d.color, 0.05), 100 - FINAL_CONFIG.style.chart.layout.roots.gradientIntensity)"/>
+                        <stop
+                            offset="0%"
+                            :stop-color="
+                                setOpacity(
+                                    shiftHue(d.color, 0.05),
+                                    100 -
+                                        FINAL_CONFIG.style.chart.layout.roots
+                                            .gradientIntensity,
+                                )
+                            "
+                        />
                         <stop offset="100%" :stop-color="d.color" />
                     </radialGradient>
                     <linearGradient
-                        x1="0%" y1="0%" x2="100%" y2="0%"
+                        x1="0%"
+                        y1="0%"
+                        x2="100%"
+                        y2="0%"
                         v-for="d in mutableDataset"
                         :id="`branch_gradient_${uid}_${d.rootIndex}`"
                     >
                         <stop offset="0%" :stop-color="d.color" />
-                        <stop offset="100%" :stop-color="setOpacity(shiftHue(d.color, 0.02), 100 - FINAL_CONFIG.style.chart.layout.branches.gradientIntensity)"/>
+                        <stop
+                            offset="100%"
+                            :stop-color="
+                                setOpacity(
+                                    shiftHue(d.color, 0.02),
+                                    100 -
+                                        FINAL_CONFIG.style.chart.layout.branches
+                                            .gradientIntensity,
+                                )
+                            "
+                        />
                     </linearGradient>
                     <!-- picked nut core gradient -->
                     <radialGradient
-                        cx="50%" cy="50%" r="50%" fx="50%" fy="50%"
+                        cx="50%"
+                        cy="50%"
+                        r="50%"
+                        fx="50%"
+                        fy="50%"
                         :id="`nutpick_${uid}`"
                     >
-                        <stop offset="0%" :stop-color="setOpacity('#FFFFFF', 0)"/>
-                        <stop offset="80%" :stop-color="setOpacity('#FFFFFF', FINAL_CONFIG.style.chart.layout.nuts.selected.gradientIntensity)"/>
-                        <stop offset="100%" :stop-color="setOpacity('#FFFFFF', 0)"/>
+                        <stop
+                            offset="0%"
+                            :stop-color="setOpacity('#FFFFFF', 0)"
+                        />
+                        <stop
+                            offset="80%"
+                            :stop-color="
+                                setOpacity(
+                                    '#FFFFFF',
+                                    FINAL_CONFIG.style.chart.layout.nuts
+                                        .selected.gradientIntensity,
+                                )
+                            "
+                        />
+                        <stop
+                            offset="100%"
+                            :stop-color="setOpacity('#FFFFFF', 0)"
+                        />
                     </radialGradient>
                     <radialGradient
-                        cx="50%" cy="50%" r="50%" fx="50%" fy="50%"
+                        cx="50%"
+                        cy="50%"
+                        r="50%"
+                        fx="50%"
+                        fy="50%"
                         :id="`nut_${uid}`"
                     >
-                        <stop offset="0%" :stop-color="setOpacity('#FFFFFF', 0)"/>
-                        <stop offset="80%" :stop-color="setOpacity('#FFFFFF', FINAL_CONFIG.style.chart.layout.nuts.gradientIntensity)"/>
-                        <stop offset="100%" :stop-color="setOpacity('#FFFFFF', 0)"/>
+                        <stop
+                            offset="0%"
+                            :stop-color="setOpacity('#FFFFFF', 0)"
+                        />
+                        <stop
+                            offset="80%"
+                            :stop-color="
+                                setOpacity(
+                                    '#FFFFFF',
+                                    FINAL_CONFIG.style.chart.layout.nuts
+                                        .gradientIntensity,
+                                )
+                            "
+                        />
+                        <stop
+                            offset="100%"
+                            :stop-color="setOpacity('#FFFFFF', 0)"
+                        />
                     </radialGradient>
                     <!-- picked nut underlayer -->
                     <radialGradient
-                        cx="50%" cy="50%" r="50%" fx="50%" fy="50%"
+                        cx="50%"
+                        cy="50%"
+                        r="50%"
+                        fx="50%"
+                        fy="50%"
                         :id="`nut_underlayer_${uid}`"
                     >
-                        <stop offset="0%" :stop-color="setOpacity(FINAL_CONFIG.style.chart.backgroundColor, 100)"/>
-                        <stop offset="80%" :stop-color="setOpacity(FINAL_CONFIG.style.chart.backgroundColor, 60)"/>
-                        <stop offset="100%" :stop-color="setOpacity(FINAL_CONFIG.style.chart.backgroundColor, 0)"/>
+                        <stop
+                            offset="0%"
+                            :stop-color="
+                                setOpacity(
+                                    FINAL_CONFIG.style.chart.backgroundColor,
+                                    100,
+                                )
+                            "
+                        />
+                        <stop
+                            offset="80%"
+                            :stop-color="
+                                setOpacity(
+                                    FINAL_CONFIG.style.chart.backgroundColor,
+                                    60,
+                                )
+                            "
+                        />
+                        <stop
+                            offset="100%"
+                            :stop-color="
+                                setOpacity(
+                                    FINAL_CONFIG.style.chart.backgroundColor,
+                                    0,
+                                )
+                            "
+                        />
                     </radialGradient>
                 </defs>
 
@@ -1602,117 +2000,229 @@ defineExpose({
                 <g v-if="FINAL_CONFIG.style.chart.layout.grandTotal.show">
                     <text
                         :x="drawableArea.seedX"
-                        :y="32 + FINAL_CONFIG.style.chart.layout.grandTotal.offsetY"
-                        :font-size="FINAL_CONFIG.style.chart.layout.grandTotal.fontSize"
-                        :font-weight="FINAL_CONFIG.style.chart.layout.grandTotal.bold ? 'bold' : 'normal'"
+                        :y="
+                            32 +
+                            FINAL_CONFIG.style.chart.layout.grandTotal.offsetY
+                        "
+                        :font-size="
+                            FINAL_CONFIG.style.chart.layout.grandTotal.fontSize
+                        "
+                        :font-weight="
+                            FINAL_CONFIG.style.chart.layout.grandTotal.bold
+                                ? 'bold'
+                                : 'normal'
+                        "
                         :fill="FINAL_CONFIG.style.chart.layout.grandTotal.color"
                         text-anchor="middle"
-                        @click="() => { resetTree(); resetAccessibilityCursor(); hasStartedKeyboardNavigation = false; }"
+                        @click="
+                            () => {
+                                resetTree();
+                                resetAccessibilityCursor();
+                                hasStartedKeyboardNavigation = false;
+                            }
+                        "
                     >
                         {{ FINAL_CONFIG.style.chart.layout.grandTotal.text }}
                     </text>
                     <text
                         :x="drawableArea.seedX"
-                        :y="38 + FINAL_CONFIG.style.chart.layout.grandTotal.fontSize + FINAL_CONFIG.style.chart.layout.grandTotal.offsetY"
-                        :font-size="FINAL_CONFIG.style.chart.layout.grandTotal.fontSize"
-                        :font-weight="FINAL_CONFIG.style.chart.layout.grandTotal.bold ? 'bold' : 'normal'"
+                        :y="
+                            38 +
+                            FINAL_CONFIG.style.chart.layout.grandTotal
+                                .fontSize +
+                            FINAL_CONFIG.style.chart.layout.grandTotal.offsetY
+                        "
+                        :font-size="
+                            FINAL_CONFIG.style.chart.layout.grandTotal.fontSize
+                        "
+                        :font-weight="
+                            FINAL_CONFIG.style.chart.layout.grandTotal.bold
+                                ? 'bold'
+                                : 'normal'
+                        "
                         :fill="FINAL_CONFIG.style.chart.layout.grandTotal.color"
                         text-anchor="middle"
-                        @click="() => { resetTree(); resetAccessibilityCursor(); hasStartedKeyboardNavigation = false; }"
+                        @click="
+                            () => {
+                                resetTree();
+                                resetAccessibilityCursor();
+                                hasStartedKeyboardNavigation = false;
+                            }
+                        "
                     >
-                        {{ applyDataLabel(
-                            FINAL_CONFIG.style.chart.layout.grandTotal.formatter,
-                            treeTotal,
-                            dataLabel({
-                                p: FINAL_CONFIG.style.chart.layout.grandTotal.prefix,
-                                v: treeTotal,
-                                s: FINAL_CONFIG.style.chart.layout.grandTotal.suffix,
-                                r: FINAL_CONFIG.style.chart.layout.grandTotal.roundingValue
-                            })) 
+                        {{
+                            applyDataLabel(
+                                FINAL_CONFIG.style.chart.layout.grandTotal
+                                    .formatter,
+                                treeTotal,
+                                dataLabel({
+                                    p: FINAL_CONFIG.style.chart.layout
+                                        .grandTotal.prefix,
+                                    v: treeTotal,
+                                    s: FINAL_CONFIG.style.chart.layout
+                                        .grandTotal.suffix,
+                                    r: FINAL_CONFIG.style.chart.layout
+                                        .grandTotal.roundingValue,
+                                }),
+                            )
                         }}
                     </text>
-                    
                 </g>
 
                 <!-- LINKS -->
                 <g v-for="branch in branches">
                     <defs>
                         <linearGradient :id="`link_grad_${branch.id}`">
-                            <stop offset="0%" :stop-color="branch.color"/>
-                            <stop offset="100%" :stop-color="setOpacity(branch.color, FINAL_CONFIG.style.chart.layout.links.opacity)"/>
+                            <stop offset="0%" :stop-color="branch.color" />
+                            <stop
+                                offset="100%"
+                                :stop-color="
+                                    setOpacity(
+                                        branch.color,
+                                        FINAL_CONFIG.style.chart.layout.links
+                                            .opacity,
+                                    )
+                                "
+                            />
                         </linearGradient>
                     </defs>
-                    <path 
+                    <path
                         :d="getLinkPath(branch)"
-                        :stroke="setOpacity(branch.color, FINAL_CONFIG.style.chart.layout.links.opacity)"
+                        :stroke="
+                            setOpacity(
+                                branch.color,
+                                FINAL_CONFIG.style.chart.layout.links.opacity,
+                            )
+                        "
                         :fill="`url(#link_grad_${branch.id})`"
                         stroke-linecap="round"
                         stroke-linejoin="round"
                         :style="`opacity:${isFocused(branch) ? 1 : 0}`"
-                        @click="() => { resetTree(); resetAccessibilityCursor(); hasStartedKeyboardNavigation = false; }"
+                        @click="
+                            () => {
+                                resetTree();
+                                resetAccessibilityCursor();
+                                hasStartedKeyboardNavigation = false;
+                            }
+                        "
                     />
                 </g>
 
                 <!-- ROOTS -->
-                <circle 
-                    v-for="root in roots" 
-                    :cx="root.x" 
-                    :cy="root.y" 
-                    :r="root.r" 
-                    :fill="FINAL_CONFIG.style.chart.layout.roots.underlayerColor"
+                <circle
+                    v-for="root in roots"
+                    :cx="root.x"
+                    :cy="root.y"
+                    :r="root.r"
+                    :fill="
+                        FINAL_CONFIG.style.chart.layout.roots.underlayerColor
+                    "
                     stroke="none"
                     :style="`cursor:${isCursorPointer ? 'pointer' : 'default'}; opacity:${isFocused(root) ? 1 : 0.05}`"
                 />
-                <circle 
-                    v-for="(root, i) in roots" 
+                <circle
+                    v-for="(root, i) in roots"
                     :data-cy="`chestnut-root-${i}`"
                     :aria-label="getRootAnnouncement(root)"
-                    :cx="root.x" 
-                    :cy="root.y" 
-                    :r="root.r" 
-                    :fill="FINAL_CONFIG.style.chart.layout.roots.useGradient ? `url(#root_gradient_${uid}_${root.rootIndex})` : root.color"
-                    :stroke="FINAL_CONFIG.style.chart.layout.roots.stroke" 
-                    :stroke-width="FINAL_CONFIG.style.chart.layout.roots.strokeWidth"
+                    :cx="root.x"
+                    :cy="root.y"
+                    :r="root.r"
+                    :fill="
+                        FINAL_CONFIG.style.chart.layout.roots.useGradient
+                            ? `url(#root_gradient_${uid}_${root.rootIndex})`
+                            : root.color
+                    "
+                    :stroke="FINAL_CONFIG.style.chart.layout.roots.stroke"
+                    :stroke-width="
+                        FINAL_CONFIG.style.chart.layout.roots.strokeWidth
+                    "
                     :style="`cursor:${isCursorPointer ? 'pointer' : 'default'}; opacity:${isFocused(root) ? 1 : 0.05}`"
                     @click="pickRoot(root)"
                 />
                 <g v-if="FINAL_CONFIG.style.chart.layout.roots.labels.show">
                     <!-- ROOT TOTAL -->
-                    <text v-for="(root, i) in roots"
+                    <text
+                        v-for="(root, i) in roots"
                         :data-cy="`chestnut-root-label-${i}`"
                         :x="root.x"
-                        :y="root.y + FINAL_CONFIG.style.chart.layout.roots.labels.fontSize / 2.6"
+                        :y="
+                            root.y +
+                            FINAL_CONFIG.style.chart.layout.roots.labels
+                                .fontSize /
+                                2.6
+                        "
                         text-anchor="middle"
-                        :font-size="FINAL_CONFIG.style.chart.layout.roots.labels.fontSize"
-                        :fill="FINAL_CONFIG.style.chart.layout.roots.labels.adaptColorToBackground ? adaptColorToBackground(root.color) : FINAL_CONFIG.style.chart.layout.roots.labels.color"
+                        :font-size="
+                            FINAL_CONFIG.style.chart.layout.roots.labels
+                                .fontSize
+                        "
+                        :fill="
+                            FINAL_CONFIG.style.chart.layout.roots.labels
+                                .adaptColorToBackground
+                                ? adaptColorToBackground(root.color)
+                                : FINAL_CONFIG.style.chart.layout.roots.labels
+                                      .color
+                        "
                         font-weight="bold"
                         :style="`cursor:${isCursorPointer ? 'pointer' : 'default'}; opacity:${isFocused(root) ? 1 : 0.05}`"
                         @click="pickRoot(root)"
                     >
-                        {{ applyDataLabel(
-                            FINAL_CONFIG.style.chart.layout.roots.labels.formatter,
-                            root.total,
-                            dataLabel({
-                                p: FINAL_CONFIG.style.chart.layout.roots.labels.prefix,
-                                v: root.total,
-                                s: FINAL_CONFIG.style.chart.layout.roots.labels.suffix,
-                                r: FINAL_CONFIG.style.chart.layout.roots.labels.roundingValue
-                            }),
-                            { datapoint: root }
-                            ) 
+                        {{
+                            applyDataLabel(
+                                FINAL_CONFIG.style.chart.layout.roots.labels
+                                    .formatter,
+                                root.total,
+                                dataLabel({
+                                    p: FINAL_CONFIG.style.chart.layout.roots
+                                        .labels.prefix,
+                                    v: root.total,
+                                    s: FINAL_CONFIG.style.chart.layout.roots
+                                        .labels.suffix,
+                                    r: FINAL_CONFIG.style.chart.layout.roots
+                                        .labels.roundingValue,
+                                }),
+                                { datapoint: root },
+                            )
                         }}
                     </text>
                     <!-- ROOT NAME LABEL -->
-                    <g v-for="root in roots"> 
-                        <g v-if="(selectedNut && root.rootIndex === selectedNut.rootIndex) || (selectedBranch && root.rootIndex === selectedBranch.rootIndex) || (selectedRoot && root.rootIndex === selectedRoot.rootIndex)">
+                    <g v-for="root in roots">
+                        <g
+                            v-if="
+                                (selectedNut &&
+                                    root.rootIndex === selectedNut.rootIndex) ||
+                                (selectedBranch &&
+                                    root.rootIndex ===
+                                        selectedBranch.rootIndex) ||
+                                (selectedRoot &&
+                                    root.rootIndex === selectedRoot.rootIndex)
+                            "
+                        >
                             <text
                                 :x="root.x"
                                 :y="root.y + root.r + 24"
                                 text-anchor="middle"
-                                :fill="FINAL_CONFIG.style.chart.layout.roots.labels.name.color"
-                                :font-size="FINAL_CONFIG.style.chart.layout.roots.labels.name.fontSize"
-                                :font-weight="FINAL_CONFIG.style.chart.layout.roots.labels.name.bold ? 'bold' : 'normal'"
-                                @click="() => { resetTree(); resetAccessibilityCursor(); hasStartedKeyboardNavigation = false; }"
+                                :fill="
+                                    FINAL_CONFIG.style.chart.layout.roots.labels
+                                        .name.color
+                                "
+                                :font-size="
+                                    FINAL_CONFIG.style.chart.layout.roots.labels
+                                        .name.fontSize
+                                "
+                                :font-weight="
+                                    FINAL_CONFIG.style.chart.layout.roots.labels
+                                        .name.bold
+                                        ? 'bold'
+                                        : 'normal'
+                                "
+                                @click="
+                                    () => {
+                                        resetTree();
+                                        resetAccessibilityCursor();
+                                        hasStartedKeyboardNavigation = false;
+                                    }
+                                "
                             >
                                 {{ root.name }}
                             </text>
@@ -1721,20 +2231,22 @@ defineExpose({
                 </g>
 
                 <!-- BRANCHES -->
-                <rect 
+                <rect
                     data-cy="chestnut-branch"
                     v-for="branch in branches"
                     :x="branch.x1"
                     :y="branch.y1"
                     :height="svg.branchSize"
                     :width="branch.x2 - branch.x1"
-                    :fill="FINAL_CONFIG.style.chart.layout.branches.underlayerColor"
+                    :fill="
+                        FINAL_CONFIG.style.chart.layout.branches.underlayerColor
+                    "
                     :rx="FINAL_CONFIG.style.chart.layout.branches.borderRadius"
                     stroke="none"
                     :style="`opacity:${isFocused(branch) ? 1 : 0.05}`"
                     @click="pickBranch(branch)"
                 />
-                <rect 
+                <rect
                     v-for="(branch, i) in branches"
                     :data-cy="`chestnut-branch-${i}`"
                     :aria-label="getBranchAnnouncement(branch)"
@@ -1742,59 +2254,84 @@ defineExpose({
                     :y="branch.y1"
                     :height="svg.branchSize"
                     :width="branch.x2 - branch.x1"
-                    :fill="FINAL_CONFIG.style.chart.layout.branches.useGradient ? `url(#branch_gradient_${uid}_${branch.rootIndex})` : branch.color"
+                    :fill="
+                        FINAL_CONFIG.style.chart.layout.branches.useGradient
+                            ? `url(#branch_gradient_${uid}_${branch.rootIndex})`
+                            : branch.color
+                    "
                     :rx="FINAL_CONFIG.style.chart.layout.branches.borderRadius"
                     :stroke="FINAL_CONFIG.style.chart.layout.branches.stroke"
-                    :stroke-width="FINAL_CONFIG.style.chart.layout.branches.strokeWidth"
+                    :stroke-width="
+                        FINAL_CONFIG.style.chart.layout.branches.strokeWidth
+                    "
                     :style="`cursor:${isCursorPointer ? 'pointer' : 'default'}; opacity:${isFocused(branch) ? 1 : 0.05}`"
                     @click="pickBranch(branch)"
                 />
-                <g v-if="FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.show">
+                <g
+                    v-if="
+                        FINAL_CONFIG.style.chart.layout.branches.labels
+                            .dataLabels.show
+                    "
+                >
                     <g v-for="branch in branches">
                         <!-- BRANCH TOTAL -->
                         <text
-                            v-if="branch.proportionToRoot * 100 > FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.hideUnderValue"    
+                            v-if="
+                                branch.proportionToRoot * 100 >
+                                FINAL_CONFIG.style.chart.layout.branches.labels
+                                    .dataLabels.hideUnderValue
+                            "
                             :x="branch.x1 + 6"
                             :y="branch.y1 + svg.branchSize / 1.5"
                             text-anchor="start"
                             :fill="adaptColorToBackground(branch.color)"
-                            :font-size="FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.fontSize"
+                            :font-size="
+                                FINAL_CONFIG.style.chart.layout.branches.labels
+                                    .dataLabels.fontSize
+                            "
                             font-weight="bold"
                             :style="`cursor:${isCursorPointer ? 'pointer' : 'default'}; opacity:${isFocused(branch) ? 1 : 0.05}`"
                             @click="pickBranch(branch)"
                         >
-                            {{ applyDataLabel(
-                                FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.formatter,
-                                branch.value,
-                                dataLabel({
-                                    p: FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.prefix,
-                                    v: branch.value,
-                                    s: FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.suffix,
-                                    r: FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.roundingValue
-                                }),
-                                { datapoint: branch }
+                            {{
+                                applyDataLabel(
+                                    FINAL_CONFIG.style.chart.layout.branches
+                                        .labels.dataLabels.formatter,
+                                    branch.value,
+                                    dataLabel({
+                                        p: FINAL_CONFIG.style.chart.layout
+                                            .branches.labels.dataLabels.prefix,
+                                        v: branch.value,
+                                        s: FINAL_CONFIG.style.chart.layout
+                                            .branches.labels.dataLabels.suffix,
+                                        r: FINAL_CONFIG.style.chart.layout
+                                            .branches.labels.dataLabels
+                                            .roundingValue,
+                                    }),
+                                    { datapoint: branch },
                                 )
                             }}
                         </text>
                     </g>
-
                 </g>
 
                 <!-- NUTS -->
 
                 <g v-for="(branch, b) in branches">
-                    <path 
+                    <path
                         v-for="(arc, i) in makeDonut(
-                            { series: branch.breakdown, base:1 },
-                            branch.x2 + 24 + FINAL_CONFIG.style.chart.layout.nuts.offsetX, 
+                            { series: branch.breakdown, base: 1 },
+                            branch.x2 +
+                                24 +
+                                FINAL_CONFIG.style.chart.layout.nuts.offsetX,
                             branch.y1 + svg.branchSize / 2,
                             svg.branchSize / 3,
-                            svg.branchSize / 3
+                            svg.branchSize / 3,
                         )"
                         :data-cy="`chestnut-nut-${b}`"
-                        :d="arc.path" 
-                        :stroke="arc.color" 
-                        :stroke-width="10" 
+                        :d="arc.path"
+                        :stroke="arc.color"
+                        :stroke-width="10"
                         fill="none"
                         :style="`opacity:${isFocused(branch) ? 1 : 0.1}`"
                     />
@@ -1803,8 +2340,16 @@ defineExpose({
                     <circle
                         :data-cy="`chestnut-trap-${b}`"
                         :aria-label="`Open details for branch ${branch.name} in root ${branch.rootName}`"
-                        :fill="FINAL_CONFIG.style.chart.layout.nuts.useGradient ? `url(#nut_${uid})` : 'transparent'"
-                        :cx="branch.x2 + 24 + FINAL_CONFIG.style.chart.layout.nuts.offsetX"
+                        :fill="
+                            FINAL_CONFIG.style.chart.layout.nuts.useGradient
+                                ? `url(#nut_${uid})`
+                                : 'transparent'
+                        "
+                        :cx="
+                            branch.x2 +
+                            24 +
+                            FINAL_CONFIG.style.chart.layout.nuts.offsetX
+                        "
                         :cy="branch.y1 + svg.branchSize / 2"
                         :r="svg.branchSize / 2 + 2"
                         @click="pickNut(branch)"
@@ -1812,14 +2357,34 @@ defineExpose({
                     />
                 </g>
 
-                <g v-if="FINAL_CONFIG.style.chart.layout.branches.labels.show && !selectedBranch">
+                <g
+                    v-if="
+                        FINAL_CONFIG.style.chart.layout.branches.labels.show &&
+                        !selectedBranch
+                    "
+                >
                     <text
                         v-for="branch in branches"
-                        :x="branch.x2 + svg.branchSize + 24 + FINAL_CONFIG.style.chart.layout.nuts.offsetX"
+                        :x="
+                            branch.x2 +
+                            svg.branchSize +
+                            24 +
+                            FINAL_CONFIG.style.chart.layout.nuts.offsetX
+                        "
                         :y="branch.y1 + svg.branchSize / 2 + 5"
-                        :font-size="FINAL_CONFIG.style.chart.layout.branches.labels.fontSize"
-                        :font-weight="FINAL_CONFIG.style.chart.layout.branches.labels.bold ? 'bold' : 'normal'"
-                        :fill="FINAL_CONFIG.style.chart.layout.branches.labels.color"
+                        :font-size="
+                            FINAL_CONFIG.style.chart.layout.branches.labels
+                                .fontSize
+                        "
+                        :font-weight="
+                            FINAL_CONFIG.style.chart.layout.branches.labels.bold
+                                ? 'bold'
+                                : 'normal'
+                        "
+                        :fill="
+                            FINAL_CONFIG.style.chart.layout.branches.labels
+                                .color
+                        "
                         text-anchor="start"
                         :style="`opacity:${isFocused(branch) ? 1 : 0.1}`"
                     >
@@ -1827,15 +2392,19 @@ defineExpose({
                     </text>
                 </g>
 
-                
                 <!-- VERTICAL SEPARATOR -->
-                <line 
+                <line
                     :x1="256 + svg.padding.left"
                     :x2="256 + svg.padding.left"
                     :y1="drawableArea.top"
                     :y2="drawableArea.bottom"
-                    :stroke="FINAL_CONFIG.style.chart.layout.verticalSeparator.stroke"
-                    :stroke-width="FINAL_CONFIG.style.chart.layout.verticalSeparator.strokeWidth"
+                    :stroke="
+                        FINAL_CONFIG.style.chart.layout.verticalSeparator.stroke
+                    "
+                    :stroke-width="
+                        FINAL_CONFIG.style.chart.layout.verticalSeparator
+                            .strokeWidth
+                    "
                 />
 
                 <!-- ROOT LEGEND -->
@@ -1847,34 +2416,77 @@ defineExpose({
                     :width="svg.width"
                     style="overflow: visible"
                     data-no-svg-export
-                    @click="() => { resetTree(); resetAccessibilityCursor(); hasStartedKeyboardNavigation = false; }"
+                    @click="
+                        () => {
+                            resetTree();
+                            resetAccessibilityCursor();
+                            hasStartedKeyboardNavigation = false;
+                        }
+                    "
                 >
-                    <div style="width: 100%;height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column">
-                        <div style="display: flex; align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;flex-direction:row">
-                            <div v-for="root in roots" :style="`display:flex;align-items:center;gap:3px;flex-direction:row;font-size:${FINAL_CONFIG.style.chart.layout.legend.fontSize}px;`">
+                    <div
+                        style="
+                            width: 100%;
+                            height: 100%;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            flex-direction: column;
+                        "
+                    >
+                        <div
+                            style="
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                gap: 12px;
+                                flex-wrap: wrap;
+                                flex-direction: row;
+                            "
+                        >
+                            <div
+                                v-for="root in roots"
+                                :style="`display:flex;align-items:center;gap:3px;flex-direction:row;font-size:${FINAL_CONFIG.style.chart.layout.legend.fontSize}px;`"
+                            >
                                 <svg viewBox="0 0 20 20" height="16" width="16">
-                                    <circle cx="10" cy="10" r="10" :fill="root.color" stroke="none"/>
+                                    <circle
+                                        cx="10"
+                                        cy="10"
+                                        r="10"
+                                        :fill="root.color"
+                                        stroke="none"
+                                    />
                                 </svg>
                                 <template v-if="!loading">
                                     <span>{{ root.name }}:</span>
                                     <b>
-                                        {{ applyDataLabel(
-                                            FINAL_CONFIG.style.chart.layout.roots.labels.formatter,
-                                            root.total,
-                                            dataLabel({
-                                                p: FINAL_CONFIG.style.chart.layout.legend.prefix,
-                                                v: root.total,
-                                                s: FINAL_CONFIG.style.chart.layout.legend.suffix,
-                                                r: FINAL_CONFIG.style.chart.layout.legend.roundingValue
-                                            }),
-                                            { datapoint: root }
-                                        ) }}
+                                        {{
+                                            applyDataLabel(
+                                                FINAL_CONFIG.style.chart.layout
+                                                    .roots.labels.formatter,
+                                                root.total,
+                                                dataLabel({
+                                                    p: FINAL_CONFIG.style.chart
+                                                        .layout.legend.prefix,
+                                                    v: root.total,
+                                                    s: FINAL_CONFIG.style.chart
+                                                        .layout.legend.suffix,
+                                                    r: FINAL_CONFIG.style.chart
+                                                        .layout.legend
+                                                        .roundingValue,
+                                                }),
+                                                { datapoint: root },
+                                            )
+                                        }}
                                     </b>
-                                    ({{ dataLabel({
-                                        v: root.total / treeTotal * 100,
-                                        s: '%',
-                                        r: FINAL_CONFIG.style.chart.layout.legend.roundingPercentage
-                                    }) }})
+                                    ({{
+                                        dataLabel({
+                                            v: (root.total / treeTotal) * 100,
+                                            s: '%',
+                                            r: FINAL_CONFIG.style.chart.layout
+                                                .legend.roundingPercentage,
+                                        })
+                                    }})
                                 </template>
                             </div>
                         </div>
@@ -1891,120 +2503,283 @@ defineExpose({
                         :height="svg.height - drawableArea.bottom"
                         :width="svg.width"
                         style="overflow: visible"
-                        @click="() => { resetTree(); resetAccessibilityCursor(); hasStartedKeyboardNavigation = false; }"
+                        @click="
+                            () => {
+                                resetTree();
+                                resetAccessibilityCursor();
+                                hasStartedKeyboardNavigation = false;
+                            }
+                        "
                     >
-                        <div style="width: 100%;height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column">
+                        <div
+                            style="
+                                width: 100%;
+                                height: 100%;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                flex-direction: column;
+                            "
+                        >
                             <b>{{ selectedNut.name }}</b>
-                            <div style="display: flex; align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;flex-direction:row">
-                                <div v-for="(nut, i) in selectedNut.breakdown" :style="`display:flex;align-items:center;gap:6px;flex-direction:row;font-size:${FINAL_CONFIG.style.chart.layout.legend.fontSize}px;`">
-                                    <svg viewBox="0 0 20 20" height="16" width="16">
-                                        <circle cx="10" cy="10" r="10" :fill="nut.color" stroke="none"/>
+                            <div
+                                style="
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                    gap: 12px;
+                                    flex-wrap: wrap;
+                                    flex-direction: row;
+                                "
+                            >
+                                <div
+                                    v-for="(nut, i) in selectedNut.breakdown"
+                                    :style="`display:flex;align-items:center;gap:6px;flex-direction:row;font-size:${FINAL_CONFIG.style.chart.layout.legend.fontSize}px;`"
+                                >
+                                    <svg
+                                        viewBox="0 0 20 20"
+                                        height="16"
+                                        width="16"
+                                    >
+                                        <circle
+                                            cx="10"
+                                            cy="10"
+                                            r="10"
+                                            :fill="nut.color"
+                                            stroke="none"
+                                        />
                                     </svg>
-                                    <span>{{ nut.name }}: <b>{{ FINAL_CONFIG.style.chart.layout.legend.prefix }} {{ nut.value.toFixed(FINAL_CONFIG.style.chart.layout.nuts.selected.labels.roundingValue) }} {{ FINAL_CONFIG.style.chart.layout.legend.suffix }}</b> ({{ (nut.proportionToBranch * 100).toFixed(FINAL_CONFIG.style.chart.layout.nuts.selected.labels.roundingPercentage) }}%)</span>
+                                    <span
+                                        >{{ nut.name }}:
+                                        <b
+                                            >{{
+                                                FINAL_CONFIG.style.chart.layout
+                                                    .legend.prefix
+                                            }}
+                                            {{
+                                                nut.value.toFixed(
+                                                    FINAL_CONFIG.style.chart
+                                                        .layout.nuts.selected
+                                                        .labels.roundingValue,
+                                                )
+                                            }}
+                                            {{
+                                                FINAL_CONFIG.style.chart.layout
+                                                    .legend.suffix
+                                            }}</b
+                                        >
+                                        ({{
+                                            (
+                                                nut.proportionToBranch * 100
+                                            ).toFixed(
+                                                FINAL_CONFIG.style.chart.layout
+                                                    .nuts.selected.labels
+                                                    .roundingPercentage,
+                                            )
+                                        }}%)</span
+                                    >
                                 </div>
                             </div>
                         </div>
                     </foreignObject>
                     <circle
-                        :cx="selectedNut.x2 + 24 + FINAL_CONFIG.style.chart.layout.nuts.offsetX"
+                        :cx="
+                            selectedNut.x2 +
+                            24 +
+                            FINAL_CONFIG.style.chart.layout.nuts.offsetX
+                        "
                         :cy="selectedNut.y1 + svg.branchSize / 2"
                         :r="256"
                         :fill="`url(#nut_underlayer_${uid})`"
                         @click="leaveNut"
-                        :class="FINAL_CONFIG.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
+                        :class="
+                            FINAL_CONFIG.style.chart.layout.nuts.selected
+                                .useMotion
+                                ? 'vue-ui-chestnut-animated'
+                                : ''
+                        "
                     />
                     <!-- LABEL CONNECTOR -->
                     <g v-for="arc in openNut">
                         <path
                             v-if="isArcBigEnough(arc)"
-                            :d="calcNutArrowPath(
-                                arc,
-                                {
-                                    x: selectedNut.x2 + 24 + FINAL_CONFIG.style.chart.layout.nuts.offsetX,
-                                    y: selectedNut.y1 + svg.branchSize / 2
-                                },
-                                16,
-                                16,
-                                false,
-                                false,
-                                64,
-                            )"
+                            :d="
+                                calcNutArrowPath(
+                                    arc,
+                                    {
+                                        x:
+                                            selectedNut.x2 +
+                                            24 +
+                                            FINAL_CONFIG.style.chart.layout.nuts
+                                                .offsetX,
+                                        y: selectedNut.y1 + svg.branchSize / 2,
+                                    },
+                                    16,
+                                    16,
+                                    false,
+                                    false,
+                                    64,
+                                )
+                            "
                             :stroke="arc.color"
                             stroke-width="1"
                             stroke-linecap="round"
                             stroke-linejoin="round"
                             fill="none"
-                            :class="FINAL_CONFIG.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
+                            :class="
+                                FINAL_CONFIG.style.chart.layout.nuts.selected
+                                    .useMotion
+                                    ? 'vue-ui-chestnut-animated'
+                                    : ''
+                            "
                         />
                     </g>
                     <circle
-                        :cx="selectedNut.x2 + 24 + FINAL_CONFIG.style.chart.layout.nuts.offsetX"
+                        :cx="
+                            selectedNut.x2 +
+                            24 +
+                            FINAL_CONFIG.style.chart.layout.nuts.offsetX
+                        "
                         :cy="selectedNut.y1 + svg.branchSize / 2"
                         :r="118"
                         :fill="FINAL_CONFIG.style.chart.backgroundColor"
                         @click="leaveNut"
-                        :class="FINAL_CONFIG.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
+                        :class="
+                            FINAL_CONFIG.style.chart.layout.nuts.selected
+                                .useMotion
+                                ? 'vue-ui-chestnut-animated'
+                                : ''
+                        "
                     />
-                    <path 
-                        v-for="arc in openNut" 
-                        :d="arc.path" 
-                        :stroke="arc.color" 
-                        :stroke-width="64" 
-                        fill="none" 
-                        @click="leaveNut" 
-                        :class="FINAL_CONFIG.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
+                    <path
+                        v-for="arc in openNut"
+                        :d="arc.path"
+                        :stroke="arc.color"
+                        :stroke-width="64"
+                        fill="none"
+                        @click="leaveNut"
+                        :class="
+                            FINAL_CONFIG.style.chart.layout.nuts.selected
+                                .useMotion
+                                ? 'vue-ui-chestnut-animated'
+                                : ''
+                        "
                     />
                     <!-- NUT PICK CORE -->
                     <circle
-                        :cx="selectedNut.x2 + 24 + FINAL_CONFIG.style.chart.layout.nuts.offsetX"
+                        :cx="
+                            selectedNut.x2 +
+                            24 +
+                            FINAL_CONFIG.style.chart.layout.nuts.offsetX
+                        "
                         :cy="selectedNut.y1 + svg.branchSize / 2"
                         :r="110"
                         :fill="`url(#nutpick_${uid})`"
                         @click="leaveNut"
-                        :class="FINAL_CONFIG.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
+                        :class="
+                            FINAL_CONFIG.style.chart.layout.nuts.selected
+                                .useMotion
+                                ? 'vue-ui-chestnut-animated'
+                                : ''
+                        "
                     />
                     <circle
-                        :cx="selectedNut.x2 + 24 + FINAL_CONFIG.style.chart.layout.nuts.offsetX"
+                        :cx="
+                            selectedNut.x2 +
+                            24 +
+                            FINAL_CONFIG.style.chart.layout.nuts.offsetX
+                        "
                         :cy="selectedNut.y1 + svg.branchSize / 2"
                         :r="64"
                         :fill="FINAL_CONFIG.style.chart.backgroundColor"
                         @click="leaveNut"
-                        :class="FINAL_CONFIG.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
+                        :class="
+                            FINAL_CONFIG.style.chart.layout.nuts.selected
+                                .useMotion
+                                ? 'vue-ui-chestnut-animated'
+                                : ''
+                        "
                     />
 
                     <text
-                        :x="selectedNut.x2 + 24 + FINAL_CONFIG.style.chart.layout.nuts.offsetX"
+                        :x="
+                            selectedNut.x2 +
+                            24 +
+                            FINAL_CONFIG.style.chart.layout.nuts.offsetX
+                        "
                         :y="selectedNut.y1 + 8"
-                        :fill="FINAL_CONFIG.style.chart.layout.nuts.selected.labels.core.total.color"
-                        :font-size="FINAL_CONFIG.style.chart.layout.nuts.selected.labels.core.total.fontSize"
-                        :font-weight="FINAL_CONFIG.style.chart.layout.nuts.selected.labels.core.total.bold ? 'bold' : 'normal'"
+                        :fill="
+                            FINAL_CONFIG.style.chart.layout.nuts.selected.labels
+                                .core.total.color
+                        "
+                        :font-size="
+                            FINAL_CONFIG.style.chart.layout.nuts.selected.labels
+                                .core.total.fontSize
+                        "
+                        :font-weight="
+                            FINAL_CONFIG.style.chart.layout.nuts.selected.labels
+                                .core.total.bold
+                                ? 'bold'
+                                : 'normal'
+                        "
                         text-anchor="middle"
                         @click="leaveNut"
-                        :class="FINAL_CONFIG.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
+                        :class="
+                            FINAL_CONFIG.style.chart.layout.nuts.selected
+                                .useMotion
+                                ? 'vue-ui-chestnut-animated'
+                                : ''
+                        "
                     >
                         {{ FINAL_CONFIG.translations.total }}
                     </text>
                     <text
-                        :x="selectedNut.x2 + 24 + FINAL_CONFIG.style.chart.layout.nuts.offsetX"
+                        :x="
+                            selectedNut.x2 +
+                            24 +
+                            FINAL_CONFIG.style.chart.layout.nuts.offsetX
+                        "
                         :y="selectedNut.y1 + 36"
-                        :fill="FINAL_CONFIG.style.chart.layout.nuts.selected.labels.core.value.color"
-                        :font-size="FINAL_CONFIG.style.chart.layout.nuts.selected.labels.core.value.fontSize"
-                        :font-weight="FINAL_CONFIG.style.chart.layout.nuts.selected.labels.core.value.bold ? 'bold' : 'normal'"
+                        :fill="
+                            FINAL_CONFIG.style.chart.layout.nuts.selected.labels
+                                .core.value.color
+                        "
+                        :font-size="
+                            FINAL_CONFIG.style.chart.layout.nuts.selected.labels
+                                .core.value.fontSize
+                        "
+                        :font-weight="
+                            FINAL_CONFIG.style.chart.layout.nuts.selected.labels
+                                .core.value.bold
+                                ? 'bold'
+                                : 'normal'
+                        "
                         text-anchor="middle"
                         @click="leaveNut"
-                        :class="FINAL_CONFIG.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
+                        :class="
+                            FINAL_CONFIG.style.chart.layout.nuts.selected
+                                .useMotion
+                                ? 'vue-ui-chestnut-animated'
+                                : ''
+                        "
                     >
-                        {{ applyDataLabel(
-                            FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.formatter,
-                            selectedNut.value,
-                            dataLabel({
-                                p: FINAL_CONFIG.style.chart.layout.nuts.selected.labels.core.value.prefix,
-                                v: selectedNut.value,
-                                s: FINAL_CONFIG.style.chart.layout.nuts.selected.labels.core.value.suffix,
-                                r: FINAL_CONFIG.style.chart.layout.nuts.selected.roundingValue
-                            }),
-                            { datapoint: selectedNut }
-                        ) }}
+                        {{
+                            applyDataLabel(
+                                FINAL_CONFIG.style.chart.layout.nuts.selected
+                                    .labels.dataLabels.formatter,
+                                selectedNut.value,
+                                dataLabel({
+                                    p: FINAL_CONFIG.style.chart.layout.nuts
+                                        .selected.labels.core.value.prefix,
+                                    v: selectedNut.value,
+                                    s: FINAL_CONFIG.style.chart.layout.nuts
+                                        .selected.labels.core.value.suffix,
+                                    r: FINAL_CONFIG.style.chart.layout.nuts
+                                        .selected.roundingValue,
+                                }),
+                                { datapoint: selectedNut },
+                            )
+                        }}
                     </text>
 
                     <!-- NUT PICK DATALABELS -->
@@ -2013,11 +2788,24 @@ defineExpose({
                             v-if="isArcBigEnough(arc)"
                             :x="calcMarkerOffsetX(arc).x"
                             :text-anchor="calcMarkerOffsetX(arc).anchor"
-                            :y="calcMarkerOffsetY(arc) - (FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.fontSize / 6)"
+                            :y="
+                                calcMarkerOffsetY(arc) -
+                                FINAL_CONFIG.style.chart.layout.nuts.selected
+                                    .labels.dataLabels.fontSize /
+                                    6
+                            "
                             :fill="arc.color"
-                            :font-size="FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.fontSize / 2"
-                            :style="`font-weight:${FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.bold ? 'bold': ''}`"
-                            :class="FINAL_CONFIG.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
+                            :font-size="
+                                FINAL_CONFIG.style.chart.layout.nuts.selected
+                                    .labels.dataLabels.fontSize / 2
+                            "
+                            :style="`font-weight:${FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.bold ? 'bold' : ''}`"
+                            :class="
+                                FINAL_CONFIG.style.chart.layout.nuts.selected
+                                    .useMotion
+                                    ? 'vue-ui-chestnut-animated'
+                                    : ''
+                            "
                         >
                             ⬤
                         </text>
@@ -2026,10 +2814,21 @@ defineExpose({
                             :x="calcMarkerOffsetX(arc, true).x"
                             :text-anchor="calcMarkerOffsetX(arc, true).anchor"
                             :y="calcMarkerOffsetY(arc)"
-                            :fill="FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.color"
-                            :font-size="FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.fontSize"
-                            :style="`font-weight:${FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.bold ? 'bold': ''}`"
-                            :class="FINAL_CONFIG.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
+                            :fill="
+                                FINAL_CONFIG.style.chart.layout.nuts.selected
+                                    .labels.dataLabels.color
+                            "
+                            :font-size="
+                                FINAL_CONFIG.style.chart.layout.nuts.selected
+                                    .labels.dataLabels.fontSize
+                            "
+                            :style="`font-weight:${FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.bold ? 'bold' : ''}`"
+                            :class="
+                                FINAL_CONFIG.style.chart.layout.nuts.selected
+                                    .useMotion
+                                    ? 'vue-ui-chestnut-animated'
+                                    : ''
+                            "
                         >
                             {{ selectedNut.breakdown[i].name }}
                         </text>
@@ -2039,137 +2838,282 @@ defineExpose({
                             v-if="isArcBigEnough(arc)"
                             :x="calcMarkerOffsetX(arc, true).x"
                             :text-anchor="calcMarkerOffsetX(arc).anchor"
-                            :y="calcMarkerOffsetY(arc) + FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.fontSize"
-                            :fill="FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.color"
-                            :font-size="FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.fontSize"
-                            :style="`font-weight:${FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.bold ? 'bold': ''}`"
-                            :class="FINAL_CONFIG.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
+                            :y="
+                                calcMarkerOffsetY(arc) +
+                                FINAL_CONFIG.style.chart.layout.nuts.selected
+                                    .labels.dataLabels.fontSize
+                            "
+                            :fill="
+                                FINAL_CONFIG.style.chart.layout.nuts.selected
+                                    .labels.dataLabels.color
+                            "
+                            :font-size="
+                                FINAL_CONFIG.style.chart.layout.nuts.selected
+                                    .labels.dataLabels.fontSize
+                            "
+                            :style="`font-weight:${FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.bold ? 'bold' : ''}`"
+                            :class="
+                                FINAL_CONFIG.style.chart.layout.nuts.selected
+                                    .useMotion
+                                    ? 'vue-ui-chestnut-animated'
+                                    : ''
+                            "
                         >
-                            {{ dataLabel({
-                                v: (selectedNut.breakdown[i].value / selectedNut.value * 100),
-                                s: '%',
-                                r: FINAL_CONFIG.style.chart.layout.nuts.selected.labels.roundingPercentage
-                            }) }}
-
-                            {{ FINAL_CONFIG.translations.of }} {{ selectedNut.breakdown[i].branchName }}
-
-                            {{ applyDataLabel(
-                                FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.formatter,
-                                selectedNut.breakdown[i].value,
+                            {{
                                 dataLabel({
-                                    p: FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.prefix,
-                                    v: selectedNut.breakdown[i].value,
-                                    s: FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.suffix,
-                                    r: FINAL_CONFIG.style.chart.layout.nuts.selected.roundingValue
-                                }),
-                                { datapoint: openNut, seriesIndex: i }
-                            ) }}
+                                    v:
+                                        (selectedNut.breakdown[i].value /
+                                            selectedNut.value) *
+                                        100,
+                                    s: '%',
+                                    r: FINAL_CONFIG.style.chart.layout.nuts
+                                        .selected.labels.roundingPercentage,
+                                })
+                            }}
+
+                            {{ FINAL_CONFIG.translations.of }}
+                            {{ selectedNut.breakdown[i].branchName }}
+
+                            {{
+                                applyDataLabel(
+                                    FINAL_CONFIG.style.chart.layout.nuts
+                                        .selected.labels.dataLabels.formatter,
+                                    selectedNut.breakdown[i].value,
+                                    dataLabel({
+                                        p: FINAL_CONFIG.style.chart.layout.nuts
+                                            .selected.labels.dataLabels.prefix,
+                                        v: selectedNut.breakdown[i].value,
+                                        s: FINAL_CONFIG.style.chart.layout.nuts
+                                            .selected.labels.dataLabels.suffix,
+                                        r: FINAL_CONFIG.style.chart.layout.nuts
+                                            .selected.roundingValue,
+                                    }),
+                                    { datapoint: openNut, seriesIndex: i },
+                                )
+                            }}
                         </text>
                         <text
                             v-if="isArcBigEnough(arc)"
                             :x="calcMarkerOffsetX(arc, true).x"
                             :text-anchor="calcMarkerOffsetX(arc).anchor"
-                            :y="calcMarkerOffsetY(arc) + FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.fontSize * 2"
-                            :fill="FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.color"
-                            :font-size="FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.fontSize"
-                            :style="`font-weight:${FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.bold ? 'bold': ''}`"
-                            :class="FINAL_CONFIG.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
+                            :y="
+                                calcMarkerOffsetY(arc) +
+                                FINAL_CONFIG.style.chart.layout.nuts.selected
+                                    .labels.dataLabels.fontSize *
+                                    2
+                            "
+                            :fill="
+                                FINAL_CONFIG.style.chart.layout.nuts.selected
+                                    .labels.dataLabels.color
+                            "
+                            :font-size="
+                                FINAL_CONFIG.style.chart.layout.nuts.selected
+                                    .labels.dataLabels.fontSize
+                            "
+                            :style="`font-weight:${FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.bold ? 'bold' : ''}`"
+                            :class="
+                                FINAL_CONFIG.style.chart.layout.nuts.selected
+                                    .useMotion
+                                    ? 'vue-ui-chestnut-animated'
+                                    : ''
+                            "
                         >
-                            {{ dataLabel({
-                                v: (selectedNut.breakdown[i].proportionToRoot * 100),
-                                s: '%',
-                                r: FINAL_CONFIG.style.chart.layout.nuts.selected.labels.roundingPercentage
-                            })}} 
-                            {{ FINAL_CONFIG.translations.of }} {{ selectedNut.breakdown[i].rootName }}
+                            {{
+                                dataLabel({
+                                    v:
+                                        selectedNut.breakdown[i]
+                                            .proportionToRoot * 100,
+                                    s: '%',
+                                    r: FINAL_CONFIG.style.chart.layout.nuts
+                                        .selected.labels.roundingPercentage,
+                                })
+                            }}
+                            {{ FINAL_CONFIG.translations.of }}
+                            {{ selectedNut.breakdown[i].rootName }}
                         </text>
                         <text
                             v-if="isArcBigEnough(arc)"
                             :x="calcMarkerOffsetX(arc, true).x"
                             :text-anchor="calcMarkerOffsetX(arc).anchor"
-                            :y="calcMarkerOffsetY(arc) + FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.fontSize * 3"
-                            :fill="FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.color"
-                            :font-size="FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.fontSize"
-                            :style="`font-weight:${FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.bold ? 'bold': ''}`"
-                            :class="FINAL_CONFIG.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
+                            :y="
+                                calcMarkerOffsetY(arc) +
+                                FINAL_CONFIG.style.chart.layout.nuts.selected
+                                    .labels.dataLabels.fontSize *
+                                    3
+                            "
+                            :fill="
+                                FINAL_CONFIG.style.chart.layout.nuts.selected
+                                    .labels.dataLabels.color
+                            "
+                            :font-size="
+                                FINAL_CONFIG.style.chart.layout.nuts.selected
+                                    .labels.dataLabels.fontSize
+                            "
+                            :style="`font-weight:${FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.bold ? 'bold' : ''}`"
+                            :class="
+                                FINAL_CONFIG.style.chart.layout.nuts.selected
+                                    .useMotion
+                                    ? 'vue-ui-chestnut-animated'
+                                    : ''
+                            "
                         >
-                            {{ dataLabel({
-                                v: (selectedNut.breakdown[i].proportionToTree * 100),
-                                s: '%',
-                                r: FINAL_CONFIG.style.chart.layout.nuts.selected.labels.roundingPercentage
-                            }) }} {{ FINAL_CONFIG.translations.proportionToTree }}
+                            {{
+                                dataLabel({
+                                    v:
+                                        selectedNut.breakdown[i]
+                                            .proportionToTree * 100,
+                                    s: '%',
+                                    r: FINAL_CONFIG.style.chart.layout.nuts
+                                        .selected.labels.roundingPercentage,
+                                })
+                            }}
+                            {{ FINAL_CONFIG.translations.proportionToTree }}
                         </text>
                     </g>
                 </g>
-                
+
                 <!-- BRANCH DATALABELS -->
                 <g v-for="branch in branches">
-                    <text 
-                        v-if="selectedBranch && selectedBranch.id === branch.id && !selectedNut"
+                    <text
+                        v-if="
+                            selectedBranch &&
+                            selectedBranch.id === branch.id &&
+                            !selectedNut
+                        "
                         :x="branch.x1 + 6"
                         :y="branch.y1 + svg.branchSize + 24"
                         font-weight="bold"
                         text-anchor="start"
-                        :font-size="FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.fontSize"
-                        :fill="FINAL_CONFIG.style.chart.layout.branches.labels.color"
-                        @click="() => { resetTree(); resetAccessibilityCursor(); hasStartedKeyboardNavigation = false; }"
+                        :font-size="
+                            FINAL_CONFIG.style.chart.layout.branches.labels
+                                .dataLabels.fontSize
+                        "
+                        :fill="
+                            FINAL_CONFIG.style.chart.layout.branches.labels
+                                .color
+                        "
+                        @click="
+                            () => {
+                                resetTree();
+                                resetAccessibilityCursor();
+                                hasStartedKeyboardNavigation = false;
+                            }
+                        "
                     >
                         {{ branch.name }}:
-                        {{ applyDataLabel(
-                            FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.formatter,
-                            branch.value,
-                            dataLabel({
-                                p: FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.prefix,
-                                v: branch.value,
-                                s: FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.suffix,
-                                r: FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.roundingValue
-                            }),
-                            { datapoint: branch }
-                        )}}
+                        {{
+                            applyDataLabel(
+                                FINAL_CONFIG.style.chart.layout.branches.labels
+                                    .dataLabels.formatter,
+                                branch.value,
+                                dataLabel({
+                                    p: FINAL_CONFIG.style.chart.layout.branches
+                                        .labels.dataLabels.prefix,
+                                    v: branch.value,
+                                    s: FINAL_CONFIG.style.chart.layout.branches
+                                        .labels.dataLabels.suffix,
+                                    r: FINAL_CONFIG.style.chart.layout.branches
+                                        .labels.dataLabels.roundingValue,
+                                }),
+                                { datapoint: branch },
+                            )
+                        }}
                     </text>
-                    <text 
-                        v-if="selectedBranch && selectedBranch.id === branch.id && !selectedNut"
+                    <text
+                        v-if="
+                            selectedBranch &&
+                            selectedBranch.id === branch.id &&
+                            !selectedNut
+                        "
                         :x="branch.x1 + 6"
                         :y="branch.y1 + svg.branchSize + 48"
                         text-anchor="start"
-                        :font-size="FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.fontSize"
-                        :fill="FINAL_CONFIG.style.chart.layout.branches.labels.color"
-                        @click="() => { resetTree(); resetAccessibilityCursor(); hasStartedKeyboardNavigation = false; }"
+                        :font-size="
+                            FINAL_CONFIG.style.chart.layout.branches.labels
+                                .dataLabels.fontSize
+                        "
+                        :fill="
+                            FINAL_CONFIG.style.chart.layout.branches.labels
+                                .color
+                        "
+                        @click="
+                            () => {
+                                resetTree();
+                                resetAccessibilityCursor();
+                                hasStartedKeyboardNavigation = false;
+                            }
+                        "
                     >
-                        {{ dataLabel({
-                            v: branch.proportionToRoot * 100,
-                            s: '%',
-                            r: FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.roundingPercentage
-                        })}}
-                        {{ FINAL_CONFIG.translations.of }} 
+                        {{
+                            dataLabel({
+                                v: branch.proportionToRoot * 100,
+                                s: '%',
+                                r: FINAL_CONFIG.style.chart.layout.branches
+                                    .labels.dataLabels.roundingPercentage,
+                            })
+                        }}
+                        {{ FINAL_CONFIG.translations.of }}
                         {{ branch.rootName }}
                     </text>
-                    <text 
-                        v-if="selectedBranch && selectedBranch.id === branch.id && !selectedNut"
+                    <text
+                        v-if="
+                            selectedBranch &&
+                            selectedBranch.id === branch.id &&
+                            !selectedNut
+                        "
                         :x="branch.x1 + 6"
                         :y="branch.y1 + svg.branchSize + 72"
                         text-anchor="start"
-                        :font-size="FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.fontSize"
-                        :fill="FINAL_CONFIG.style.chart.layout.branches.labels.color"
-                        @click="() => { resetTree(); resetAccessibilityCursor(); hasStartedKeyboardNavigation = false; }"
+                        :font-size="
+                            FINAL_CONFIG.style.chart.layout.branches.labels
+                                .dataLabels.fontSize
+                        "
+                        :fill="
+                            FINAL_CONFIG.style.chart.layout.branches.labels
+                                .color
+                        "
+                        @click="
+                            () => {
+                                resetTree();
+                                resetAccessibilityCursor();
+                                hasStartedKeyboardNavigation = false;
+                            }
+                        "
                     >
-                        {{ dataLabel({
-                            v: branch.value / treeTotal * 100,
-                            s: '%',
-                            r: FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.roundingPercentage
-                        }) }}
+                        {{
+                            dataLabel({
+                                v: (branch.value / treeTotal) * 100,
+                                s: '%',
+                                r: FINAL_CONFIG.style.chart.layout.branches
+                                    .labels.dataLabels.roundingPercentage,
+                            })
+                        }}
                         {{ FINAL_CONFIG.translations.proportionToTree }}
                     </text>
-            </g>
-            <slot name="svg" :svg="{
-                ...svg,
-                isPrintingImg: isPrinting | isImaging | isCallbackImaging,
-                isPrintingSvg: isCallbackSvg,
-            }"/>
+                </g>
+                <slot
+                    name="svg"
+                    :svg="{
+                        ...svg,
+                        isPrintingImg:
+                            isPrinting | isImaging | isCallbackImaging,
+                        isPrintingSvg: isCallbackSvg,
+                    }"
+                />
             </svg>
         </div>
 
         <div v-if="$slots.watermark" class="vue-data-ui-watermark">
-            <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging || isCallbackImaging || isCallbackSvg }"/>
+            <slot
+                name="watermark"
+                v-bind="{
+                    isPrinting:
+                        isPrinting ||
+                        isImaging ||
+                        isCallbackImaging ||
+                        isCallbackSvg,
+                }"
+            />
         </div>
 
         <slot name="legend" v-bind:legend="mutableDataset"></slot>
@@ -2189,116 +3133,454 @@ defineExpose({
                 {{ tableComponent.title }}
             </template>
             <template #actions v-if="FINAL_CONFIG.table.useDialog">
-                <button tabindex="0" class="vue-ui-user-options-button" @click="generateCsv(FINAL_CONFIG.userOptions.callbacks.csv)">
-                    <BaseIcon name="fileCsv" :stroke="tableComponent.props.color"/>
+                <button
+                    tabindex="0"
+                    class="vue-ui-user-options-button"
+                    @click="generateCsv(FINAL_CONFIG.userOptions.callbacks.csv)"
+                >
+                    <BaseIcon
+                        name="fileCsv"
+                        :stroke="tableComponent.props.color"
+                    />
                 </button>
             </template>
             <template #content>
-                <div ref="tableContainer" class="vue-ui-chestnut-table" :style="`${FINAL_CONFIG.table.useDialog ? '' : 'max-height: 300px;margin-top:24px'}`">
-                    <div :style="`${FINAL_CONFIG.table.useDialog ? '' : 'padding-top:36px;'}position: relative`">
-                        <div v-if="!FINAL_CONFIG.table.useDialog" role="button" tabindex="0" :style="`width:32px; position: absolute; top: 0; left:4px; padding: 0 0px; display: flex; align-items:center;justify-content:center;height: 36px; width: 32px; cursor:${isCursorPointer ? 'pointer' : 'default'}; background:${FINAL_CONFIG.table.th.backgroundColor};`" @click="closeTable" @keypress.enter="closeTable">
-                            <BaseIcon name="close" :stroke="FINAL_CONFIG.table.th.color" :stroke-width="2" />
-                        </div>        
-                        <div style="width: 100%" :class="{'vue-ui-responsive': isResponsive}">
-                            <table data-cy="chestnut-table" class="vue-ui-data-table">
-                                <caption v-if="!FINAL_CONFIG.table.useDialog" :style="{backgroundColor: FINAL_CONFIG.table.th.backgroundColor, color: FINAL_CONFIG.table.th.color, outline: FINAL_CONFIG.table.th.outline }" class="vue-ui-data-table__caption">
-                                    {{ FINAL_CONFIG.style.chart.layout.title.text }} <span v-if="FINAL_CONFIG.style.chart.layout.title.subtitle.text">{{  FINAL_CONFIG.style.chart.layout.title.subtitle.text }}</span>
+                <div
+                    ref="tableContainer"
+                    class="vue-ui-chestnut-table"
+                    :style="`${FINAL_CONFIG.table.useDialog ? '' : 'max-height: 300px;margin-top:24px'}`"
+                >
+                    <div
+                        :style="`${FINAL_CONFIG.table.useDialog ? '' : 'padding-top:36px;'}position: relative`"
+                    >
+                        <div
+                            v-if="!FINAL_CONFIG.table.useDialog"
+                            role="button"
+                            tabindex="0"
+                            :style="`width:32px; position: absolute; top: 0; left:4px; padding: 0 0px; display: flex; align-items:center;justify-content:center;height: 36px; width: 32px; cursor:${isCursorPointer ? 'pointer' : 'default'}; background:${FINAL_CONFIG.table.th.backgroundColor};`"
+                            @click="closeTable"
+                            @keypress.enter="closeTable"
+                        >
+                            <BaseIcon
+                                name="close"
+                                :stroke="FINAL_CONFIG.table.th.color"
+                                :stroke-width="2"
+                            />
+                        </div>
+                        <div
+                            style="width: 100%"
+                            :class="{ 'vue-ui-responsive': isResponsive }"
+                        >
+                            <table
+                                data-cy="chestnut-table"
+                                class="vue-ui-data-table"
+                            >
+                                <caption
+                                    v-if="!FINAL_CONFIG.table.useDialog"
+                                    :style="{
+                                        backgroundColor:
+                                            FINAL_CONFIG.table.th
+                                                .backgroundColor,
+                                        color: FINAL_CONFIG.table.th.color,
+                                        outline: FINAL_CONFIG.table.th.outline,
+                                    }"
+                                    class="vue-ui-data-table__caption"
+                                >
+                                    {{
+                                        FINAL_CONFIG.style.chart.layout.title
+                                            .text
+                                    }}
+                                    <span
+                                        v-if="
+                                            FINAL_CONFIG.style.chart.layout
+                                                .title.subtitle.text
+                                        "
+                                        >{{
+                                            FINAL_CONFIG.style.chart.layout
+                                                .title.subtitle.text
+                                        }}</span
+                                    >
                                 </caption>
                                 <thead>
-                                    <tr role="row" :style="`background:${FINAL_CONFIG.table.th.backgroundColor};color:${FINAL_CONFIG.table.th.color}`">
-                                        <th :style="`outline:${FINAL_CONFIG.table.th.outline}`" v-for="th in table.head">
+                                    <tr
+                                        role="row"
+                                        :style="`background:${FINAL_CONFIG.table.th.backgroundColor};color:${FINAL_CONFIG.table.th.color}`"
+                                    >
+                                        <th
+                                            :style="`outline:${FINAL_CONFIG.table.th.outline}`"
+                                            v-for="th in table.head"
+                                        >
                                             {{ th }}
                                         </th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr v-for="(tr, i) in table.body" :class="{'vue-ui-data-table__tbody__row' : true, 'vue-ui-data-table__tbody__row-even': i % 2 === 0, 'vue-ui-data-table__tbody__row-odd': i % 2 !== 0}" :style="`background:${FINAL_CONFIG.table.td.backgroundColor};color:${FINAL_CONFIG.table.td.color}`">
-                                        <td class="vue-ui-data-table__tbody__td" :style="`outline:${FINAL_CONFIG.table.td.outline}`" :data-cell="table.head[0]">
-                                            <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">
-                                                <span v-if="table.body[i-1]  && table.body[i - 1].rootName === tr.rootName">
+                                    <tr
+                                        v-for="(tr, i) in table.body"
+                                        :class="{
+                                            'vue-ui-data-table__tbody__row': true,
+                                            'vue-ui-data-table__tbody__row-even':
+                                                i % 2 === 0,
+                                            'vue-ui-data-table__tbody__row-odd':
+                                                i % 2 !== 0,
+                                        }"
+                                        :style="`background:${FINAL_CONFIG.table.td.backgroundColor};color:${FINAL_CONFIG.table.td.color}`"
+                                    >
+                                        <td
+                                            class="vue-ui-data-table__tbody__td"
+                                            :style="`outline:${FINAL_CONFIG.table.td.outline}`"
+                                            :data-cell="table.head[0]"
+                                        >
+                                            <div
+                                                style="
+                                                    display: flex;
+                                                    align-items: center;
+                                                    gap: 5px;
+                                                    justify-content: flex-end;
+                                                    width: 100%;
+                                                    padding-right: 3px;
+                                                "
+                                            >
+                                                <span
+                                                    v-if="
+                                                        table.body[i - 1] &&
+                                                        table.body[i - 1]
+                                                            .rootName ===
+                                                            tr.rootName
+                                                    "
+                                                >
                                                 </span>
                                                 <span v-else>
                                                     {{ tr.rootName }}
                                                 </span>
                                             </div>
                                         </td>
-                                        <td class="vue-ui-data-table__tbody__td" :style="`outline:${FINAL_CONFIG.table.td.outline}`" :data-cell="table.head[1]">
-                                            <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">
-                                                <span v-if="table.body[i-1]  && table.body[i - 1].rootName === tr.rootName">
+                                        <td
+                                            class="vue-ui-data-table__tbody__td"
+                                            :style="`outline:${FINAL_CONFIG.table.td.outline}`"
+                                            :data-cell="table.head[1]"
+                                        >
+                                            <div
+                                                style="
+                                                    display: flex;
+                                                    align-items: center;
+                                                    gap: 5px;
+                                                    justify-content: flex-end;
+                                                    width: 100%;
+                                                    padding-right: 3px;
+                                                "
+                                            >
+                                                <span
+                                                    v-if="
+                                                        table.body[i - 1] &&
+                                                        table.body[i - 1]
+                                                            .rootName ===
+                                                            tr.rootName
+                                                    "
+                                                >
                                                 </span>
                                                 <span v-else>
-                                                    {{ tr.rootValue.toFixed(FINAL_CONFIG.table.td.roundingValue) }}
-                                                </span>                           
+                                                    {{
+                                                        tr.rootValue.toFixed(
+                                                            FINAL_CONFIG.table
+                                                                .td
+                                                                .roundingValue,
+                                                        )
+                                                    }}
+                                                </span>
                                             </div>
                                         </td>
-                                        <td class="vue-ui-data-table__tbody__td" :style="`outline:${FINAL_CONFIG.table.td.outline}`" :data-cell="table.head[2]">
-                                            <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">
-                                                <span v-if="table.body[i-1]  && table.body[i - 1].rootName === tr.rootName">
+                                        <td
+                                            class="vue-ui-data-table__tbody__td"
+                                            :style="`outline:${FINAL_CONFIG.table.td.outline}`"
+                                            :data-cell="table.head[2]"
+                                        >
+                                            <div
+                                                style="
+                                                    display: flex;
+                                                    align-items: center;
+                                                    gap: 5px;
+                                                    justify-content: flex-end;
+                                                    width: 100%;
+                                                    padding-right: 3px;
+                                                "
+                                            >
+                                                <span
+                                                    v-if="
+                                                        table.body[i - 1] &&
+                                                        table.body[i - 1]
+                                                            .rootName ===
+                                                            tr.rootName
+                                                    "
+                                                >
                                                 </span>
                                                 <span v-else>
-                                                    {{ (tr.rootToTotal * 100).toFixed(FINAL_CONFIG.table.td.roundingPercentage) }}%
-                                                </span> 
+                                                    {{
+                                                        (
+                                                            tr.rootToTotal * 100
+                                                        ).toFixed(
+                                                            FINAL_CONFIG.table
+                                                                .td
+                                                                .roundingPercentage,
+                                                        )
+                                                    }}%
+                                                </span>
                                             </div>
                                         </td>
-                                        <td class="vue-ui-data-table__tbody__td" :style="`outline:${FINAL_CONFIG.table.td.outline}`" :data-cell="table.head[3]">
-                                            <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">
-                                                <span v-if="table.body[i-1]  && table.body[i - 1].branchName === tr.branchName">
+                                        <td
+                                            class="vue-ui-data-table__tbody__td"
+                                            :style="`outline:${FINAL_CONFIG.table.td.outline}`"
+                                            :data-cell="table.head[3]"
+                                        >
+                                            <div
+                                                style="
+                                                    display: flex;
+                                                    align-items: center;
+                                                    gap: 5px;
+                                                    justify-content: flex-end;
+                                                    width: 100%;
+                                                    padding-right: 3px;
+                                                "
+                                            >
+                                                <span
+                                                    v-if="
+                                                        table.body[i - 1] &&
+                                                        table.body[i - 1]
+                                                            .branchName ===
+                                                            tr.branchName
+                                                    "
+                                                >
                                                 </span>
                                                 <span v-else>
                                                     {{ tr.branchName }}
-                                                </span> 
+                                                </span>
                                             </div>
                                         </td>
-                                        <td class="vue-ui-data-table__tbody__td" :style="`outline:${FINAL_CONFIG.table.td.outline}`" :data-cell="table.head[4]">
-                                            <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">
-                                                <span v-if="table.body[i-1]  && table.body[i - 1].branchName === tr.branchName">
+                                        <td
+                                            class="vue-ui-data-table__tbody__td"
+                                            :style="`outline:${FINAL_CONFIG.table.td.outline}`"
+                                            :data-cell="table.head[4]"
+                                        >
+                                            <div
+                                                style="
+                                                    display: flex;
+                                                    align-items: center;
+                                                    gap: 5px;
+                                                    justify-content: flex-end;
+                                                    width: 100%;
+                                                    padding-right: 3px;
+                                                "
+                                            >
+                                                <span
+                                                    v-if="
+                                                        table.body[i - 1] &&
+                                                        table.body[i - 1]
+                                                            .branchName ===
+                                                            tr.branchName
+                                                    "
+                                                >
                                                 </span>
                                                 <span v-else>
-                                                    {{ tr.branchValue.toFixed(FINAL_CONFIG.table.td.roundingValue) }}
-                                                </span> 
+                                                    {{
+                                                        tr.branchValue.toFixed(
+                                                            FINAL_CONFIG.table
+                                                                .td
+                                                                .roundingValue,
+                                                        )
+                                                    }}
+                                                </span>
                                             </div>
                                         </td>
-                                        <td class="vue-ui-data-table__tbody__td" :style="`outline:${FINAL_CONFIG.table.td.outline}`" :data-cell="table.head[5]">
-                                            <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">
-                                                <span v-if="table.body[i-1]  && table.body[i - 1].branchName === tr.branchName">
+                                        <td
+                                            class="vue-ui-data-table__tbody__td"
+                                            :style="`outline:${FINAL_CONFIG.table.td.outline}`"
+                                            :data-cell="table.head[5]"
+                                        >
+                                            <div
+                                                style="
+                                                    display: flex;
+                                                    align-items: center;
+                                                    gap: 5px;
+                                                    justify-content: flex-end;
+                                                    width: 100%;
+                                                    padding-right: 3px;
+                                                "
+                                            >
+                                                <span
+                                                    v-if="
+                                                        table.body[i - 1] &&
+                                                        table.body[i - 1]
+                                                            .branchName ===
+                                                            tr.branchName
+                                                    "
+                                                >
                                                 </span>
                                                 <span v-else>
-                                                    {{ (tr.branchToRoot * 100).toFixed(FINAL_CONFIG.table.td.roundingPercentage) }}%
+                                                    {{
+                                                        (
+                                                            tr.branchToRoot *
+                                                            100
+                                                        ).toFixed(
+                                                            FINAL_CONFIG.table
+                                                                .td
+                                                                .roundingPercentage,
+                                                        )
+                                                    }}%
                                                 </span>
                                             </div>
                                         </td>
-                                        <td class="vue-ui-data-table__tbody__td" :style="`outline:${FINAL_CONFIG.table.td.outline}`" :data-cell="table.head[6]">
-                                            <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">
-                                                <span v-if="table.body[i-1]  && table.body[i - 1].branchName === tr.branchName">
+                                        <td
+                                            class="vue-ui-data-table__tbody__td"
+                                            :style="`outline:${FINAL_CONFIG.table.td.outline}`"
+                                            :data-cell="table.head[6]"
+                                        >
+                                            <div
+                                                style="
+                                                    display: flex;
+                                                    align-items: center;
+                                                    gap: 5px;
+                                                    justify-content: flex-end;
+                                                    width: 100%;
+                                                    padding-right: 3px;
+                                                "
+                                            >
+                                                <span
+                                                    v-if="
+                                                        table.body[i - 1] &&
+                                                        table.body[i - 1]
+                                                            .branchName ===
+                                                            tr.branchName
+                                                    "
+                                                >
                                                 </span>
                                                 <span v-else>
-                                                    {{ (tr.branchToTotal * 100).toFixed(FINAL_CONFIG.table.td.roundingPercentage) }}%
+                                                    {{
+                                                        (
+                                                            tr.branchToTotal *
+                                                            100
+                                                        ).toFixed(
+                                                            FINAL_CONFIG.table
+                                                                .td
+                                                                .roundingPercentage,
+                                                        )
+                                                    }}%
                                                 </span>
                                             </div>
                                         </td>
-                                        <td class="vue-ui-data-table__tbody__td" :style="`outline:${FINAL_CONFIG.table.td.outline}`" :data-cell="table.head[7]">
-                                            <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">
+                                        <td
+                                            class="vue-ui-data-table__tbody__td"
+                                            :style="`outline:${FINAL_CONFIG.table.td.outline}`"
+                                            :data-cell="table.head[7]"
+                                        >
+                                            <div
+                                                style="
+                                                    display: flex;
+                                                    align-items: center;
+                                                    gap: 5px;
+                                                    justify-content: flex-end;
+                                                    width: 100%;
+                                                    padding-right: 3px;
+                                                "
+                                            >
                                                 {{ tr.nutName }}
                                             </div>
                                         </td>
-                                        <td class="vue-ui-data-table__tbody__td" :style="`outline:${FINAL_CONFIG.table.td.outline}`" :data-cell="table.head[8]">
-                                            <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">
-                                                {{ tr.nutValue.toFixed(FINAL_CONFIG.table.td.roundingValue) }}
+                                        <td
+                                            class="vue-ui-data-table__tbody__td"
+                                            :style="`outline:${FINAL_CONFIG.table.td.outline}`"
+                                            :data-cell="table.head[8]"
+                                        >
+                                            <div
+                                                style="
+                                                    display: flex;
+                                                    align-items: center;
+                                                    gap: 5px;
+                                                    justify-content: flex-end;
+                                                    width: 100%;
+                                                    padding-right: 3px;
+                                                "
+                                            >
+                                                {{
+                                                    tr.nutValue.toFixed(
+                                                        FINAL_CONFIG.table.td
+                                                            .roundingValue,
+                                                    )
+                                                }}
                                             </div>
                                         </td>
-                                        <td class="vue-ui-data-table__tbody__td" :style="`outline:${FINAL_CONFIG.table.td.outline}`" :data-cell="table.head[9]">
-                                            <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">
-                                                {{ (tr.nutToBranch * 100).toFixed(FINAL_CONFIG.table.td.roundingPercentage) }}%
+                                        <td
+                                            class="vue-ui-data-table__tbody__td"
+                                            :style="`outline:${FINAL_CONFIG.table.td.outline}`"
+                                            :data-cell="table.head[9]"
+                                        >
+                                            <div
+                                                style="
+                                                    display: flex;
+                                                    align-items: center;
+                                                    gap: 5px;
+                                                    justify-content: flex-end;
+                                                    width: 100%;
+                                                    padding-right: 3px;
+                                                "
+                                            >
+                                                {{
+                                                    (
+                                                        tr.nutToBranch * 100
+                                                    ).toFixed(
+                                                        FINAL_CONFIG.table.td
+                                                            .roundingPercentage,
+                                                    )
+                                                }}%
                                             </div>
                                         </td>
-                                        <td class="vue-ui-data-table__tbody__td" :style="`outline:${FINAL_CONFIG.table.td.outline}`" :data-cell="table.head[10]">
-                                            <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">
-                                                {{ (tr.nutToRoot * 100).toFixed(FINAL_CONFIG.table.td.roundingPercentage) }}%
+                                        <td
+                                            class="vue-ui-data-table__tbody__td"
+                                            :style="`outline:${FINAL_CONFIG.table.td.outline}`"
+                                            :data-cell="table.head[10]"
+                                        >
+                                            <div
+                                                style="
+                                                    display: flex;
+                                                    align-items: center;
+                                                    gap: 5px;
+                                                    justify-content: flex-end;
+                                                    width: 100%;
+                                                    padding-right: 3px;
+                                                "
+                                            >
+                                                {{
+                                                    (
+                                                        tr.nutToRoot * 100
+                                                    ).toFixed(
+                                                        FINAL_CONFIG.table.td
+                                                            .roundingPercentage,
+                                                    )
+                                                }}%
                                             </div>
                                         </td>
-                                        <td class="vue-ui-data-table__tbody__td" :style="`outline:${FINAL_CONFIG.table.td.outline}`" :data-cell="table.head[11]">
-                                            <div style="display: flex; align-items:center; gap: 5px; justify-content:flex-end; width:100%; padding-right:3px;">
-                                                {{ (tr.nutToTotal * 100).toFixed(FINAL_CONFIG.table.td.roundingPercentage) }}%
+                                        <td
+                                            class="vue-ui-data-table__tbody__td"
+                                            :style="`outline:${FINAL_CONFIG.table.td.outline}`"
+                                            :data-cell="table.head[11]"
+                                        >
+                                            <div
+                                                style="
+                                                    display: flex;
+                                                    align-items: center;
+                                                    gap: 5px;
+                                                    justify-content: flex-end;
+                                                    width: 100%;
+                                                    padding-right: 3px;
+                                                "
+                                            >
+                                                {{
+                                                    (
+                                                        tr.nutToTotal * 100
+                                                    ).toFixed(
+                                                        FINAL_CONFIG.table.td
+                                                            .roundingPercentage,
+                                                    )
+                                                }}%
                                             </div>
                                         </td>
                                     </tr>
@@ -2314,13 +3596,13 @@ defineExpose({
         <slot name="skeleton">
             <BaseScanner v-if="loading" />
         </slot>
-    </div>  
+    </div>
 </template>
 
 <style scoped lang="scss">
-@import "../vue-data-ui.css";
+@import '../vue-data-ui.css';
 
-.vue-ui-chestnut *{
+.vue-ui-chestnut * {
     transition: unset;
 }
 .vue-ui-chestnut {
@@ -2329,7 +3611,7 @@ defineExpose({
 }
 
 .vue-ui-chestnut-animated {
-    opacity:0;
+    opacity: 0;
     animation: chestnut-opacity 0.2s ease-in-out forwards;
 }
 
@@ -2339,7 +3621,7 @@ defineExpose({
         opacity: 0;
     }
     to {
-        transform: scale(1,1);
+        transform: scale(1, 1);
         opacity: 1;
     }
 }
@@ -2351,7 +3633,7 @@ defineExpose({
 }
 .vue-ui-data-table thead {
     position: sticky;
-    top:0;
+    top: 0;
     font-weight: 400;
     user-select: none;
 }
@@ -2359,7 +3641,7 @@ defineExpose({
 table {
     width: 100%;
     padding: 1rem;
-    border-collapse:collapse;
+    border-collapse: collapse;
     overflow-x: auto;
 }
 
@@ -2400,13 +3682,17 @@ caption {
     }
 
     td::before {
-        content: attr(data-cell) ": ";
+        content: attr(data-cell) ': ';
         font-weight: 700;
         text-transform: capitalize;
     }
 }
 
-path, circle, rect, text, line {
+path,
+circle,
+rect,
+text,
+line {
     transition: opacity 0.3s ease-in-out !important;
 }
 

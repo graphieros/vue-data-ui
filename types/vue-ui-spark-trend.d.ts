@@ -1,8 +1,6 @@
 import { DefineComponent } from 'vue';
 
-export type { 
-    VueUiSparkTrendConfig
-} from "./vue-data-ui";
+export type { VueUiSparkTrendConfig } from './vue-data-ui';
 
 declare const VueUiSparkTrend: DefineComponent<{
     dataset: Array<number | null>;
@@ -10,4 +8,4 @@ declare const VueUiSparkTrend: DefineComponent<{
 }>;
 
 export default VueUiSparkTrend;
-export { VueUiSparkTrend }
+export { VueUiSparkTrend };

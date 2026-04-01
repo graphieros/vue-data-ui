@@ -1,5 +1,9 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest';
-import { preloadTheme, getThemeConfigSync, __testing } from '../src/getThemeConfig';
+import {
+    preloadTheme,
+    getThemeConfigSync,
+    __testing,
+} from '../src/getThemeConfig';
 
 describe('getThemeConfig', () => {
     let calls;
@@ -24,14 +28,14 @@ describe('getThemeConfig', () => {
     });
 
     test('returns theme object when JSON file exists (after preload)', async () => {
-        await preloadTheme('vue_ui_chord');                 // loads once
-        const theme = getThemeConfigSync('vue_ui_chord');   // sync read
+        await preloadTheme('vue_ui_chord'); // loads once
+        const theme = getThemeConfigSync('vue_ui_chord'); // sync read
         expect(theme).toEqual({ debug: true });
         expect(calls).toBe(1);
     });
 
     test('returns null when theme file does not exist', async () => {
-        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => { });
+        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
         const res = await preloadTheme('non_existing_theme');
         expect(res).toBeNull();
         expect(warnSpy).toHaveBeenCalled();
@@ -42,11 +46,11 @@ describe('getThemeConfig', () => {
     });
 
     test('uses cached theme on second call (module loaded once)', async () => {
-        await preloadTheme('vue_ui_chord');                   // first (and only) load
-        const first = getThemeConfigSync('vue_ui_chord');    // from cache
-        const second = getThemeConfigSync('vue_ui_chord');    // from cache
-        expect(second).toBe(first);                           // same ref
-        expect(calls).toBe(1);                                // loader once
+        await preloadTheme('vue_ui_chord'); // first (and only) load
+        const first = getThemeConfigSync('vue_ui_chord'); // from cache
+        const second = getThemeConfigSync('vue_ui_chord'); // from cache
+        expect(second).toBe(first); // same ref
+        expect(calls).toBe(1); // loader once
         expect(__testing.cacheSize()).toBe(1);
     });
 

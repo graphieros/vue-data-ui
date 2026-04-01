@@ -1,14 +1,14 @@
 <script setup>
-import { 
-    computed, 
-    defineAsyncComponent, 
-    nextTick, 
-    onMounted, 
-    ref, 
-    toRefs, 
-    watch, 
-} from "vue";
-import { 
+import {
+    computed,
+    defineAsyncComponent,
+    nextTick,
+    onMounted,
+    ref,
+    toRefs,
+    watch,
+} from 'vue';
+import {
     applyDataLabel,
     createUid,
     dataLabel,
@@ -18,22 +18,24 @@ import {
     setOpacity,
     shiftHue,
     treeShake,
-    XMLNS 
-} from "../lib";
-import { throttle } from "../canvas-lib";
-import { useConfig } from "../useConfig";
-import { useLoading } from "../useLoading";
-import { useFitSvgText } from "../useFitSvgText";
-import { useNestedProp } from "../useNestedProp";
-import { useResponsive } from "../useResponsive";
-import { useThemeCheck } from "../useThemeCheck";
-import { useChartAccessibility } from "../useChartAccessibility";
-import Shape from "../atoms/Shape.vue";
-import themes from "../themes/vue_ui_sparkhistogram.json";
-import BaseScanner from "../atoms/BaseScanner.vue";
-import A11yDataTable from "../atoms/A11yDataTable.vue";
+    XMLNS,
+} from '../lib';
+import { throttle } from '../canvas-lib';
+import { useConfig } from '../useConfig';
+import { useLoading } from '../useLoading';
+import { useFitSvgText } from '../useFitSvgText';
+import { useNestedProp } from '../useNestedProp';
+import { useResponsive } from '../useResponsive';
+import { useThemeCheck } from '../useThemeCheck';
+import { useChartAccessibility } from '../useChartAccessibility';
+import Shape from '../atoms/Shape.vue';
+import themes from '../themes/vue_ui_sparkhistogram.json';
+import BaseScanner from '../atoms/BaseScanner.vue';
+import A11yDataTable from '../atoms/A11yDataTable.vue';
 
-const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
+const PackageVersion = defineAsyncComponent(
+    () => import('../atoms/PackageVersion.vue'),
+);
 
 const { vue_ui_sparkhistogram: DEFAULT_CONFIG } = useConfig();
 const { isThemeValid, warnInvalidTheme } = useThemeCheck();
@@ -42,15 +44,15 @@ const props = defineProps({
     config: {
         type: Object,
         default() {
-            return {}
-        }
+            return {};
+        },
     },
     dataset: {
         type: Array,
         default() {
             return [];
-        }
-    }
+        },
+    },
 });
 
 const uid = ref(createUid());
@@ -72,11 +74,11 @@ const skeletonConfig = computed(() => {
             style: {
                 animation: { show: false },
                 backgroundColor: '#99999930',
-            }
+            },
         },
-        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {}
-    })
-})
+        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {},
+    });
+});
 
 const { loading, FINAL_DATASET, manualLoading } = useLoading({
     ...toRefs(props),
@@ -99,19 +101,21 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
     ],
     skeletonConfig: treeShake({
         defaultConfig: FINAL_CONFIG.value,
-        userConfig: skeletonConfig.value
-    })
-})
+        userConfig: skeletonConfig.value,
+    }),
+});
 
 const WIDTH = ref(FINAL_CONFIG.value.style.layout.width);
 const HEIGHT = ref(FINAL_CONFIG.value.style.layout.height);
 
-const { svgRef } = useChartAccessibility({ config: FINAL_CONFIG.value.style.title });
+const { svgRef } = useChartAccessibility({
+    config: FINAL_CONFIG.value.style.title,
+});
 
 function prepareConfig() {
     const mergedConfig = useNestedProp({
         userConfig: props.config,
-        defaultConfig: DEFAULT_CONFIG
+        defaultConfig: DEFAULT_CONFIG,
     });
 
     const theme = mergedConfig.theme;
@@ -124,12 +128,12 @@ function prepareConfig() {
 
     const fused = useNestedProp({
         userConfig: themes[theme] || props.config,
-        defaultConfig: mergedConfig
+        defaultConfig: mergedConfig,
     });
 
     const finalConfig = useNestedProp({
         userConfig: props.config,
-        defaultConfig: fused
+        defaultConfig: fused,
     });
 
     return finalConfig;
@@ -142,24 +146,24 @@ onMounted(() => {
 const debug = computed(() => !!FINAL_CONFIG.value.debug);
 
 function prepareChart() {
-    if(objectIsEmpty(props.dataset)) {
+    if (objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiSparkHistogram',
             type: 'dataset',
-            debug: debug.value
-        })
+            debug: debug.value,
+        });
     } else {
         props.dataset.forEach((ds, i) => {
             getMissingDatasetAttributes({
                 datasetObject: ds,
-                requiredAttributes: ['value']
-            }).forEach(attr => {
+                requiredAttributes: ['value'],
+            }).forEach((attr) => {
                 error({
                     componentName: 'VueUiSparkHistogram',
                     type: 'datasetSerieAttribute',
                     property: attr,
                     index: i,
-                    debug: debug.value
+                    debug: debug.value,
                 });
             });
         });
@@ -169,16 +173,27 @@ function prepareChart() {
         const handleResize = throttle(() => {
             const { width, height } = useResponsive({
                 chart: histogramChart.value,
-                title: FINAL_CONFIG.value.style.title.text ? chartTitle.value : null,
-                source: source.value
+                title: FINAL_CONFIG.value.style.title.text
+                    ? chartTitle.value
+                    : null,
+                source: source.value,
             });
 
-            const _timeLabelHeight = FINAL_CONFIG.value.style.labels.timeLabel.show ? FINAL_CONFIG.value.style.labels.timeLabel.fontSize * 2 : 0;
-            const _valueLabelHeight = FINAL_CONFIG.value.style.labels.valueLabel.show ? FINAL_CONFIG.value.style.labels.valueLabel.fontSize * 2 : 0;
+            const _timeLabelHeight = FINAL_CONFIG.value.style.labels.timeLabel
+                .show
+                ? FINAL_CONFIG.value.style.labels.timeLabel.fontSize * 2
+                : 0;
+            const _valueLabelHeight = FINAL_CONFIG.value.style.labels.valueLabel
+                .show
+                ? FINAL_CONFIG.value.style.labels.valueLabel.fontSize * 2
+                : 0;
 
             requestAnimationFrame(() => {
                 WIDTH.value = Math.max(10, width);
-                HEIGHT.value = Math.max(10, height - 12 - _timeLabelHeight - _valueLabelHeight);
+                HEIGHT.value = Math.max(
+                    10,
+                    height - 12 - _timeLabelHeight - _valueLabelHeight,
+                );
             });
         });
 
@@ -194,14 +209,22 @@ function prepareChart() {
     }
 }
 
-watch(() => props.config, (_newCfg) => {
-    FINAL_CONFIG.value = prepareConfig();
-    prepareChart();
-}, { deep: true });
+watch(
+    () => props.config,
+    (_newCfg) => {
+        FINAL_CONFIG.value = prepareConfig();
+        prepareChart();
+    },
+    { deep: true },
+);
 
 const drawingArea = computed(() => {
-    const _timeLabelHeight = FINAL_CONFIG.value.style.labels.timeLabel.show ? FINAL_CONFIG.value.style.labels.timeLabel.fontSize * 2 : 0;
-    const _valueLabelHeight = FINAL_CONFIG.value.style.labels.valueLabel.show ? FINAL_CONFIG.value.style.labels.valueLabel.fontSize * 2 : 0;
+    const _timeLabelHeight = FINAL_CONFIG.value.style.labels.timeLabel.show
+        ? FINAL_CONFIG.value.style.labels.timeLabel.fontSize * 2
+        : 0;
+    const _valueLabelHeight = FINAL_CONFIG.value.style.labels.valueLabel.show
+        ? FINAL_CONFIG.value.style.labels.valueLabel.fontSize * 2
+        : 0;
 
     const height = HEIGHT.value + _timeLabelHeight + _valueLabelHeight;
     const width = WIDTH.value;
@@ -209,9 +232,19 @@ const drawingArea = computed(() => {
     const bottom = height - FINAL_CONFIG.value.style.layout.padding.bottom;
     const left = FINAL_CONFIG.value.style.layout.padding.left;
     const right = width - FINAL_CONFIG.value.style.layout.padding.right;
-    const centerY = top + ((height - top - FINAL_CONFIG.value.style.layout.padding.bottom) / 2);
-    const drawingHeight = height - FINAL_CONFIG.value.style.layout.padding.top - FINAL_CONFIG.value.style.layout.padding.bottom - _timeLabelHeight - _valueLabelHeight;
-    const drawingWidth = width - FINAL_CONFIG.value.style.layout.padding.left - FINAL_CONFIG.value.style.layout.padding.right;
+    const centerY =
+        top +
+        (height - top - FINAL_CONFIG.value.style.layout.padding.bottom) / 2;
+    const drawingHeight =
+        height -
+        FINAL_CONFIG.value.style.layout.padding.top -
+        FINAL_CONFIG.value.style.layout.padding.bottom -
+        _timeLabelHeight -
+        _valueLabelHeight;
+    const drawingWidth =
+        width -
+        FINAL_CONFIG.value.style.layout.padding.left -
+        FINAL_CONFIG.value.style.layout.padding.right;
     return {
         bottom,
         centerY,
@@ -222,11 +255,13 @@ const drawingArea = computed(() => {
         right,
         top,
         width,
-    }
+    };
 });
 
 const maxVal = computed(() => {
-    return Math.max(...FINAL_DATASET.value.map(ds => Math.abs(ds.value || 0)))
+    return Math.max(
+        ...FINAL_DATASET.value.map((ds) => Math.abs(ds.value || 0)),
+    );
 });
 
 function toMax(val) {
@@ -234,19 +269,41 @@ function toMax(val) {
 }
 
 const computedDataset = computed(() => {
-    return FINAL_DATASET.value.map((dp,i) => {
+    return FINAL_DATASET.value.map((dp, i) => {
         const proportion = toMax(dp.value || 0);
         const height = drawingArea.value.drawingHeight * proportion;
-        const unitWidth = drawingArea.value.drawingWidth / FINAL_DATASET.value.length;
-        const gap = unitWidth * (FINAL_CONFIG.value.style.bars.gap / 100)
+        const unitWidth =
+            drawingArea.value.drawingWidth / FINAL_DATASET.value.length;
+        const gap = unitWidth * (FINAL_CONFIG.value.style.bars.gap / 100);
         const width = unitWidth - gap;
         const y = drawingArea.value.centerY - height / 2;
-        const x = drawingArea.value.left + (gap / 2  + (i * unitWidth));
-        const trapX = drawingArea.value.left + (i * unitWidth);
-        const intensity = typeof dp.intensity === 'undefined' ? 100 : Math.round(dp.intensity * 100);
-        const color = dp.color ? dp.color : dp.value >= 0 ? setOpacity(FINAL_CONFIG.value.style.bars.colors.positive, intensity) : setOpacity(FINAL_CONFIG.value.style.bars.colors.negative, intensity);
-        const stroke = dp.color ? dp.color : dp.value >= 0 ? FINAL_CONFIG.value.style.bars.colors.positive : FINAL_CONFIG.value.style.bars.colors.negative;
-        const gradient = dp.color ? `url(#gradient_datapoint_${i}_${uid.value})` :  dp.value >=  0 ? `url(#gradient_positive_${i}_${uid.value})` : `url(#gradient_negative_${i}_${uid.value})`;
+        const x = drawingArea.value.left + (gap / 2 + i * unitWidth);
+        const trapX = drawingArea.value.left + i * unitWidth;
+        const intensity =
+            typeof dp.intensity === 'undefined'
+                ? 100
+                : Math.round(dp.intensity * 100);
+        const color = dp.color
+            ? dp.color
+            : dp.value >= 0
+              ? setOpacity(
+                    FINAL_CONFIG.value.style.bars.colors.positive,
+                    intensity,
+                )
+              : setOpacity(
+                    FINAL_CONFIG.value.style.bars.colors.negative,
+                    intensity,
+                );
+        const stroke = dp.color
+            ? dp.color
+            : dp.value >= 0
+              ? FINAL_CONFIG.value.style.bars.colors.positive
+              : FINAL_CONFIG.value.style.bars.colors.negative;
+        const gradient = dp.color
+            ? `url(#gradient_datapoint_${i}_${uid.value})`
+            : dp.value >= 0
+              ? `url(#gradient_positive_${i}_${uid.value})`
+              : `url(#gradient_negative_${i}_${uid.value})`;
         const textAnchor = x + width / 2;
         return {
             ...dp,
@@ -261,8 +318,8 @@ const computedDataset = computed(() => {
             unitWidth,
             width,
             x,
-            y
-        }
+            y,
+        };
     });
 });
 
@@ -274,20 +331,23 @@ function getTopLabel(datapoint, index) {
             p: FINAL_CONFIG.value.style.labels.value.prefix,
             v: datapoint.value,
             s: FINAL_CONFIG.value.style.labels.value.suffix,
-            r: FINAL_CONFIG.value.style.labels.value.rounding
+            r: FINAL_CONFIG.value.style.labels.value.rounding,
         }),
-        { datapoint, seriesIndex: index }
-    )
+        { datapoint, seriesIndex: index },
+    );
 }
 
 const selectedIndex = ref(null);
 
-const emits = defineEmits(['selectDatapoint'])
+const emits = defineEmits(['selectDatapoint']);
 
 function selectDatapoint(datapoint, index) {
     emits('selectDatapoint', { datapoint, index });
     if (FINAL_CONFIG.value.events.datapointClick) {
-        FINAL_CONFIG.value.events.datapointClick({ datapoint, seriesIndex: index })
+        FINAL_CONFIG.value.events.datapointClick({
+            datapoint,
+            seriesIndex: index,
+        });
     }
 }
 
@@ -296,7 +356,10 @@ function onTrapEnter(datapoint, index) {
     keyboardIndex.value = index;
     selectedIndex.value = index;
     if (FINAL_CONFIG.value.events.datapointEnter) {
-        FINAL_CONFIG.value.events.datapointEnter({ datapoint, seriesIndex: index });
+        FINAL_CONFIG.value.events.datapointEnter({
+            datapoint,
+            seriesIndex: index,
+        });
     }
 }
 
@@ -305,7 +368,10 @@ function onTrapLeave(datapoint, index) {
     selectedIndex.value = null;
     keyboardIndex.value = null;
     if (FINAL_CONFIG.value.events.datapointLeave) {
-        FINAL_CONFIG.value.events.datapointLeave({ datapoint, seriesIndex: index });
+        FINAL_CONFIG.value.events.datapointLeave({
+            datapoint,
+            seriesIndex: index,
+        });
     }
 }
 
@@ -316,10 +382,12 @@ function onChartMouseLeave() {
 }
 
 const animation = computed(() => {
-    return `${FINAL_CONFIG.value.style.animation.speedMs}ms`
-})
+    return `${FINAL_CONFIG.value.style.animation.speedMs}ms`;
+});
 
-const unitWidth = computed(() => (drawingArea.value.drawingWidth / FINAL_DATASET.value.length) * 0.9);
+const unitWidth = computed(
+    () => (drawingArea.value.drawingWidth / FINAL_DATASET.value.length) * 0.9,
+);
 
 const { fitText } = useFitSvgText({
     svgRef,
@@ -328,16 +396,34 @@ const { fitText } = useFitSvgText({
 
 onMounted(async () => {
     await nextTick();
-    fitText('.vue-ui-sparkhistogram-top-label', FINAL_CONFIG.value.style.labels.value.minFontSize);
-    fitText('.vue-ui-sparkhistogram-bottom-label', FINAL_CONFIG.value.style.labels.valueLabel.minFontSize);
-    fitText('.vue-ui-sparkhistogram-time-label', FINAL_CONFIG.value.style.labels.timeLabel.minFontSize);
+    fitText(
+        '.vue-ui-sparkhistogram-top-label',
+        FINAL_CONFIG.value.style.labels.value.minFontSize,
+    );
+    fitText(
+        '.vue-ui-sparkhistogram-bottom-label',
+        FINAL_CONFIG.value.style.labels.valueLabel.minFontSize,
+    );
+    fitText(
+        '.vue-ui-sparkhistogram-time-label',
+        FINAL_CONFIG.value.style.labels.timeLabel.minFontSize,
+    );
 });
 
-watch([WIDTH, HEIGHT, () => FINAL_DATASET.value], async() => {
+watch([WIDTH, HEIGHT, () => FINAL_DATASET.value], async () => {
     await nextTick();
-    fitText('.vue-ui-sparkhistogram-top-label', FINAL_CONFIG.value.style.labels.value.minFontSize);
-    fitText('.vue-ui-sparkhistogram-bottom-label', FINAL_CONFIG.value.style.labels.valueLabel.minFontSize);
-    fitText('.vue-ui-sparkhistogram-time-label', FINAL_CONFIG.value.style.labels.timeLabel.minFontSize);
+    fitText(
+        '.vue-ui-sparkhistogram-top-label',
+        FINAL_CONFIG.value.style.labels.value.minFontSize,
+    );
+    fitText(
+        '.vue-ui-sparkhistogram-bottom-label',
+        FINAL_CONFIG.value.style.labels.valueLabel.minFontSize,
+    );
+    fitText(
+        '.vue-ui-sparkhistogram-time-label',
+        FINAL_CONFIG.value.style.labels.timeLabel.minFontSize,
+    );
 });
 
 /***************************************************************************************************
@@ -365,7 +451,8 @@ function onSvgKeydown(event) {
     const isActivationKey = event.key === 'Enter' || event.key === ' ';
     const isEscapeKey = event.key === 'Escape';
 
-    if (!isPreviousKey && !isNextKey && !isActivationKey && !isEscapeKey) return;
+    if (!isPreviousKey && !isNextKey && !isActivationKey && !isEscapeKey)
+        return;
 
     event.preventDefault();
     event.stopPropagation();
@@ -389,7 +476,11 @@ function onSvgKeydown(event) {
 
     let nextIndex = keyboardIndex.value;
 
-    if (nextIndex === null || nextIndex < 0 || nextIndex >= computedDataset.value.length) {
+    if (
+        nextIndex === null ||
+        nextIndex < 0 ||
+        nextIndex >= computedDataset.value.length
+    ) {
         nextIndex = isNextKey ? 0 : computedDataset.value.length - 1;
     } else if (isNextKey) {
         nextIndex += 1;
@@ -411,7 +502,7 @@ function onSvgKeydown(event) {
     if (FINAL_CONFIG.value.events.datapointEnter) {
         FINAL_CONFIG.value.events.datapointEnter({
             datapoint,
-            seriesIndex: nextIndex
+            seriesIndex: nextIndex,
         });
     }
 }
@@ -421,7 +512,7 @@ const a11yTable = computed(() => {
         FINAL_CONFIG.value.a11y?.translations?.series ?? 'Series',
         FINAL_CONFIG.value.a11y?.translations?.time ?? 'Time',
         FINAL_CONFIG.value.a11y?.translations?.value ?? 'Value',
-        FINAL_CONFIG.value.a11y?.translations?.valueLabel ?? 'Label'
+        FINAL_CONFIG.value.a11y?.translations?.valueLabel ?? 'Label',
     ];
 
     const rows = computedDataset.value.map((datapoint, index) => {
@@ -429,7 +520,7 @@ const a11yTable = computed(() => {
             index + 1,
             datapoint.timeLabel ?? '',
             datapoint.value ?? '',
-            datapoint.valueLabel ?? ''
+            datapoint.valueLabel ?? '',
         ];
     });
 
@@ -438,10 +529,10 @@ const a11yTable = computed(() => {
 </script>
 
 <template>
-    <div 
+    <div
         class="vue-data-ui-component vue-ui-spark-histogram"
         ref="histogramChart"
-        :style="`width:100%;background:${FINAL_CONFIG.style.backgroundColor};font-family:${FINAL_CONFIG.style.fontFamily}`" 
+        :style="`width:100%;background:${FINAL_CONFIG.style.backgroundColor};font-family:${FINAL_CONFIG.style.fontFamily}`"
         @mouseleave="onChartMouseLeave"
     >
         <div :id="`chart-instructions-${uid}`" class="sr-only">
@@ -458,37 +549,64 @@ const a11yTable = computed(() => {
         />
 
         <!-- TITLE -->
-        <div ref="chartTitle" v-if="FINAL_CONFIG.style.title.text" :style="`width:calc(100% - 12px);background:transparent;margin:0 auto;margin:${FINAL_CONFIG.style.title.margin};padding: 0 6px;text-align:${FINAL_CONFIG.style.title.textAlign}`">
-            <div data-cy="title" :style="`font-size:${FINAL_CONFIG.style.title.fontSize}px;color:${FINAL_CONFIG.style.title.color};font-weight:${FINAL_CONFIG.style.title.bold ? 'bold' : 'normal'}`">
-                {{ FINAL_CONFIG.style.title.text }} 
-                <span data-cy="title-selection" v-if="selectedIndex !== null">- 
-                    {{ computedDataset[selectedIndex].timeLabel || '' }} 
-                    {{ applyDataLabel(
-                        FINAL_CONFIG.style.labels.value.formatter,
-                        computedDataset[selectedIndex].value,
-                        dataLabel({
-                            p: FINAL_CONFIG.style.labels.value.prefix,
-                            v: computedDataset[selectedIndex].value,
-                            s: FINAL_CONFIG.style.labels.value.suffix,
-                            r: FINAL_CONFIG.style.labels.value.rounding
-                        }),
-                        { datapoint: computedDataset[selectedIndex], seriesIndex: selectedIndex }
-                        ) 
+        <div
+            ref="chartTitle"
+            v-if="FINAL_CONFIG.style.title.text"
+            :style="`width:calc(100% - 12px);background:transparent;margin:0 auto;margin:${FINAL_CONFIG.style.title.margin};padding: 0 6px;text-align:${FINAL_CONFIG.style.title.textAlign}`"
+        >
+            <div
+                data-cy="title"
+                :style="`font-size:${FINAL_CONFIG.style.title.fontSize}px;color:${FINAL_CONFIG.style.title.color};font-weight:${FINAL_CONFIG.style.title.bold ? 'bold' : 'normal'}`"
+            >
+                {{ FINAL_CONFIG.style.title.text }}
+                <span data-cy="title-selection" v-if="selectedIndex !== null"
+                    >-
+                    {{ computedDataset[selectedIndex].timeLabel || '' }}
+                    {{
+                        applyDataLabel(
+                            FINAL_CONFIG.style.labels.value.formatter,
+                            computedDataset[selectedIndex].value,
+                            dataLabel({
+                                p: FINAL_CONFIG.style.labels.value.prefix,
+                                v: computedDataset[selectedIndex].value,
+                                s: FINAL_CONFIG.style.labels.value.suffix,
+                                r: FINAL_CONFIG.style.labels.value.rounding,
+                            }),
+                            {
+                                datapoint: computedDataset[selectedIndex],
+                                seriesIndex: selectedIndex,
+                            },
+                        )
                     }}
                 </span>
-                <span data-cy="title-selection-value-label" v-if="![undefined, null].includes(selectedIndex) && ![null, undefined].includes(computedDataset[selectedIndex].valueLabel)">{{ ` (${computedDataset[selectedIndex].valueLabel || 0})`}}</span>
+                <span
+                    data-cy="title-selection-value-label"
+                    v-if="
+                        ![undefined, null].includes(selectedIndex) &&
+                        ![null, undefined].includes(
+                            computedDataset[selectedIndex].valueLabel,
+                        )
+                    "
+                    >{{
+                        ` (${computedDataset[selectedIndex].valueLabel || 0})`
+                    }}</span
+                >
             </div>
-            <div data-cy="subtitle" v-if="FINAL_CONFIG.style.title.subtitle.text" :style="`font-size:${FINAL_CONFIG.style.title.subtitle.fontSize}px;color:${FINAL_CONFIG.style.title.subtitle.color};font-weight:${FINAL_CONFIG.style.title.subtitle.bold ? 'bold' : 'normal'}`">
+            <div
+                data-cy="subtitle"
+                v-if="FINAL_CONFIG.style.title.subtitle.text"
+                :style="`font-size:${FINAL_CONFIG.style.title.subtitle.fontSize}px;color:${FINAL_CONFIG.style.title.subtitle.color};font-weight:${FINAL_CONFIG.style.title.subtitle.bold ? 'bold' : 'normal'}`"
+            >
                 {{ FINAL_CONFIG.style.title.subtitle.text }}
-            </div>    
+            </div>
         </div>
 
-        <div style="position:relative;">
+        <div style="position: relative">
             <svg
                 ref="svgRef"
-                :xmlns="XMLNS" 
-                data-cy="sparkhistogram-svg" 
-                :viewBox="`0 0 ${drawingArea.width} ${drawingArea.height}`" 
+                :xmlns="XMLNS"
+                data-cy="sparkhistogram-svg"
+                :viewBox="`0 0 ${drawingArea.width} ${drawingArea.height}`"
                 style="overflow: visible"
                 :aria-describedby="`chart-instructions-${uid}`"
                 tabindex="0"
@@ -497,79 +615,177 @@ const a11yTable = computed(() => {
                 @keydown="onSvgKeydown"
             >
                 <PackageVersion />
-    
+
                 <!-- BACKGROUND SLOT -->
-                <foreignObject 
+                <foreignObject
                     v-if="$slots['chart-background']"
                     :x="0"
                     :y="0"
                     :width="drawingArea.width"
                     :height="drawingArea.height"
                     :style="{
-                        pointerEvents: 'none'
+                        pointerEvents: 'none',
                     }"
                 >
-                    <slot name="chart-background"/>
+                    <slot name="chart-background" />
                 </foreignObject>
-                
+
                 <defs>
-                    <radialGradient v-for="(posGrad, i) in computedDataset" :id="`gradient_positive_${i}_${uid}`"  cy="50%" cx="50%" r="50%" fx="50%" fy="50%">
-                        <stop offset="0%" :stop-color="setOpacity(shiftHue(FINAL_CONFIG.style.bars.colors.positive, 0.05), posGrad.intensity)"/>
-                        <stop offset="100%" :stop-color="setOpacity(FINAL_CONFIG.style.bars.colors.positive, posGrad.intensity)"/>
+                    <radialGradient
+                        v-for="(posGrad, i) in computedDataset"
+                        :id="`gradient_positive_${i}_${uid}`"
+                        cy="50%"
+                        cx="50%"
+                        r="50%"
+                        fx="50%"
+                        fy="50%"
+                    >
+                        <stop
+                            offset="0%"
+                            :stop-color="
+                                setOpacity(
+                                    shiftHue(
+                                        FINAL_CONFIG.style.bars.colors.positive,
+                                        0.05,
+                                    ),
+                                    posGrad.intensity,
+                                )
+                            "
+                        />
+                        <stop
+                            offset="100%"
+                            :stop-color="
+                                setOpacity(
+                                    FINAL_CONFIG.style.bars.colors.positive,
+                                    posGrad.intensity,
+                                )
+                            "
+                        />
                     </radialGradient>
-    
-                    <radialGradient v-for="(negGrad, i) in computedDataset" :id="`gradient_negative_${i}_${uid}`"  cy="50%" cx="50%" r="50%" fx="50%" fy="50%">
-                        <stop offset="0%" :stop-color="setOpacity(shiftHue(FINAL_CONFIG.style.bars.colors.negative, 0.05), negGrad.intensity)"/>
-                        <stop offset="100%" :stop-color="setOpacity(FINAL_CONFIG.style.bars.colors.negative, negGrad.intensity)"/>
+
+                    <radialGradient
+                        v-for="(negGrad, i) in computedDataset"
+                        :id="`gradient_negative_${i}_${uid}`"
+                        cy="50%"
+                        cx="50%"
+                        r="50%"
+                        fx="50%"
+                        fy="50%"
+                    >
+                        <stop
+                            offset="0%"
+                            :stop-color="
+                                setOpacity(
+                                    shiftHue(
+                                        FINAL_CONFIG.style.bars.colors.negative,
+                                        0.05,
+                                    ),
+                                    negGrad.intensity,
+                                )
+                            "
+                        />
+                        <stop
+                            offset="100%"
+                            :stop-color="
+                                setOpacity(
+                                    FINAL_CONFIG.style.bars.colors.negative,
+                                    negGrad.intensity,
+                                )
+                            "
+                        />
                     </radialGradient>
-    
-                    <radialGradient v-for="(dp, i) in computedDataset" :id="`gradient_datapoint_${i}_${uid}`"  cy="50%" cx="50%" r="50%" fx="50%" fy="50%">
-                        <stop offset="0%" :stop-color="setOpacity(shiftHue(dp.color, 0.05), dp.intensity)"/>
-                        <stop offset="100%" :stop-color="setOpacity(dp.color, dp.intensity)"/>
+
+                    <radialGradient
+                        v-for="(dp, i) in computedDataset"
+                        :id="`gradient_datapoint_${i}_${uid}`"
+                        cy="50%"
+                        cx="50%"
+                        r="50%"
+                        fx="50%"
+                        fy="50%"
+                    >
+                        <stop
+                            offset="0%"
+                            :stop-color="
+                                setOpacity(
+                                    shiftHue(dp.color, 0.05),
+                                    dp.intensity,
+                                )
+                            "
+                        />
+                        <stop
+                            offset="100%"
+                            :stop-color="setOpacity(dp.color, dp.intensity)"
+                        />
                     </radialGradient>
                 </defs>
-    
+
                 <g v-for="(rect, i) in computedDataset">
                     <rect
                         v-if="selectedIndex !== null && selectedIndex === i"
                         data-cy="tooltip-trap"
-                        :height="drawingArea.height" 
-                        :width="rect.unitWidth" 
-                        :fill="FINAL_CONFIG.style.selector.fill" 
-                        :x="rect.trapX" 
-                        :y="0" 
+                        :height="drawingArea.height"
+                        :width="rect.unitWidth"
+                        :fill="FINAL_CONFIG.style.selector.fill"
+                        :x="rect.trapX"
+                        :y="0"
                         :stroke="FINAL_CONFIG.style.selector.stroke"
                         :stroke-width="FINAL_CONFIG.style.selector.strokeWidth"
                         :rx="FINAL_CONFIG.style.selector.borderRadius"
-                        :stroke-dasharray="FINAL_CONFIG.style.selector.strokeDasharray"
+                        :stroke-dasharray="
+                            FINAL_CONFIG.style.selector.strokeDasharray
+                        "
                     />
                 </g>
-                
-                <g v-if="!FINAL_CONFIG.style.bars.shape || FINAL_CONFIG.style.bars.shape === 'square'">
-                    <rect v-for="(rect, i) in computedDataset"
+
+                <g
+                    v-if="
+                        !FINAL_CONFIG.style.bars.shape ||
+                        FINAL_CONFIG.style.bars.shape === 'square'
+                    "
+                >
+                    <rect
+                        v-for="(rect, i) in computedDataset"
                         data-cy="datapoint-rect"
                         :x="rect.x"
                         :y="rect.y"
                         :height="rect.height"
                         :width="rect.width"
-                        :fill="FINAL_CONFIG.style.bars.colors.gradient.show ? rect.gradient : rect.color"
+                        :fill="
+                            FINAL_CONFIG.style.bars.colors.gradient.show
+                                ? rect.gradient
+                                : rect.color
+                        "
                         :stroke="rect.stroke"
                         :stroke-width="FINAL_CONFIG.style.bars.strokeWidth"
-                        :rx="`${FINAL_CONFIG.style.bars.borderRadius * rect.proportion / 12}%`"
-                        :class="{'vue-ui-sparkhistogram-shape' : FINAL_CONFIG.style.animation.show }"
+                        :rx="`${(FINAL_CONFIG.style.bars.borderRadius * rect.proportion) / 12}%`"
+                        :class="{
+                            'vue-ui-sparkhistogram-shape':
+                                FINAL_CONFIG.style.animation.show,
+                        }"
                     />
                 </g>
-                <g v-else>                
-                    <Shape 
+                <g v-else>
+                    <Shape
                         v-for="(rect, _i) in computedDataset"
-                        :plot="{ x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 }"
-                        :color="FINAL_CONFIG.style.bars.colors.gradient.show ? rect.gradient : rect.color"
+                        :plot="{
+                            x: rect.x + rect.width / 2,
+                            y: rect.y + rect.height / 2,
+                        }"
+                        :color="
+                            FINAL_CONFIG.style.bars.colors.gradient.show
+                                ? rect.gradient
+                                : rect.color
+                        "
                         :shape="FINAL_CONFIG.style.bars.shape"
                         :radius="Math.min(rect.height * 0.4, rect.width * 0.4)"
-                        :class="{'vue-ui-sparkhistogram-shape' : FINAL_CONFIG.style.animation.show }"
+                        :class="{
+                            'vue-ui-sparkhistogram-shape':
+                                FINAL_CONFIG.style.animation.show,
+                        }"
                     />
                 </g>
-    
+
                 <template v-if="!loading">
                     <g v-for="(val, i) in computedDataset">
                         <text
@@ -578,38 +794,62 @@ const a11yTable = computed(() => {
                             data-cy="datapoint-label-value"
                             text-anchor="middle"
                             :x="val.textAnchor"
-                            :y="val.y - (FINAL_CONFIG.style.labels.value.fontSize / 3) + FINAL_CONFIG.style.labels.value.offsetY"
-                            :font-size="FINAL_CONFIG.style.labels.value.fontSize"
-                            :font-weight="FINAL_CONFIG.style.labels.value.bold ? 'bold' : 'normal'"
+                            :y="
+                                val.y -
+                                FINAL_CONFIG.style.labels.value.fontSize / 3 +
+                                FINAL_CONFIG.style.labels.value.offsetY
+                            "
+                            :font-size="
+                                FINAL_CONFIG.style.labels.value.fontSize
+                            "
+                            :font-weight="
+                                FINAL_CONFIG.style.labels.value.bold
+                                    ? 'bold'
+                                    : 'normal'
+                            "
                             :fill="FINAL_CONFIG.style.labels.value.color"
                         >
                             {{ getTopLabel(val, i) }}
                         </text>
                     </g>
-        
+
                     <g v-for="(label, _i) in computedDataset">
-                        <text 
+                        <text
                             class="vue-ui-sparkhistogram-bottom-label"
                             data-cy="datapoint-label-valueLabel"
-                            v-if="label.valueLabel && FINAL_CONFIG.style.labels.valueLabel.show"
+                            v-if="
+                                label.valueLabel &&
+                                FINAL_CONFIG.style.labels.valueLabel.show
+                            "
                             :x="label.textAnchor"
-                            :y="label.y + label.height + FINAL_CONFIG.style.labels.valueLabel.fontSize"
-                            :font-size="FINAL_CONFIG.style.labels.valueLabel.fontSize"
+                            :y="
+                                label.y +
+                                label.height +
+                                FINAL_CONFIG.style.labels.valueLabel.fontSize
+                            "
+                            :font-size="
+                                FINAL_CONFIG.style.labels.valueLabel.fontSize
+                            "
                             text-anchor="middle"
                             :fill="FINAL_CONFIG.style.labels.valueLabel.color"
                         >
                             {{ label.valueLabel }}
                         </text>
                     </g>
-        
+
                     <g v-for="(time, _i) in computedDataset">
                         <text
                             class="vue-ui-sparkhistogram-time-label"
                             data-cy="datapoint-label-time"
-                            v-if="time.timeLabel && FINAL_CONFIG.style.labels.timeLabel.show"
+                            v-if="
+                                time.timeLabel &&
+                                FINAL_CONFIG.style.labels.timeLabel.show
+                            "
                             :x="time.textAnchor"
                             :y="drawingArea.height"
-                            :font-size="FINAL_CONFIG.style.labels.timeLabel.fontSize"
+                            :font-size="
+                                FINAL_CONFIG.style.labels.timeLabel.fontSize
+                            "
                             :fill="FINAL_CONFIG.style.labels.timeLabel.color"
                             text-anchor="middle"
                         >
@@ -617,25 +857,36 @@ const a11yTable = computed(() => {
                         </text>
                     </g>
                 </template>
-    
+
                 <!-- TOOLTIP TRAPS -->
                 <g v-for="(rect, i) in computedDataset">
                     <rect
                         data-cy="tooltip-trap"
-                        :height="drawingArea.height" 
-                        :width="rect.unitWidth" 
-                        fill="transparent" 
-                        :x="rect.trapX" 
-                        :y="0" 
-                        @mouseover="onTrapEnter(rect, i)" 
-                        @mouseleave="onTrapLeave(rect, i)" 
+                        :height="drawingArea.height"
+                        :width="rect.unitWidth"
+                        fill="transparent"
+                        :x="rect.trapX"
+                        :y="0"
+                        @mouseover="onTrapEnter(rect, i)"
+                        @mouseleave="onTrapLeave(rect, i)"
                         @click="() => selectDatapoint(rect, i)"
                     />
                 </g>
             </svg>
 
-            <div v-if="$slots.hint" style="position: absolute; top: 100%; left: 0; width: 100%;" data-dom-to-png-ignore aria-hidden="true">
-                <slot name="hint" v-bind="{ hint: FINAL_CONFIG.a11y.translations.keyboardNavigation, isVisible: isFocus }"/>
+            <div
+                v-if="$slots.hint"
+                style="position: absolute; top: 100%; left: 0; width: 100%"
+                data-dom-to-png-ignore
+                aria-hidden="true"
+            >
+                <slot
+                    name="hint"
+                    v-bind="{
+                        hint: FINAL_CONFIG.a11y.translations.keyboardNavigation,
+                        isVisible: isFocus,
+                    }"
+                />
             </div>
         </div>
 

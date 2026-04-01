@@ -1,5 +1,5 @@
-import Graph from "./graph.js";
-import layout from "./layout.js";
+import Graph from './graph.js';
+import layout from './layout.js';
 
 /**
  *
@@ -44,21 +44,21 @@ export function computeDagLayout({
         ranksep: graph.ranksep ?? 50,
         marginx: graph.marginx ?? 20,
         marginy: graph.marginy ?? 20,
-        rankdir: graph.rankdir ?? "TB",
-        ranker: graph.ranker ?? "network-simplex",
+        rankdir: graph.rankdir ?? 'TB',
+        ranker: graph.ranker ?? 'network-simplex',
         align: graph.align,
         acyclicer: graph.acyclicer,
     });
 
-    nodes.forEach(node => {
+    nodes.forEach((node) => {
         dagGraph.setNode(node.id, {
             width: node.width,
             height: node.height,
-            ...("data" in node ? { data: node.data } : {}),
+            ...('data' in node ? { data: node.data } : {}),
         });
     });
 
-    edges.forEach(edge => {
+    edges.forEach((edge) => {
         const edgeId = edge.id ?? `${edge.from}->${edge.to}`;
         dagGraph.setEdge(
             { v: edge.from, w: edge.to, name: edgeId },
@@ -68,8 +68,8 @@ export function computeDagLayout({
                 width: 0,
                 height: 0,
                 labeloffset: 10,
-                labelpos: "r",
-                ...("data" in edge ? { data: edge.data } : {}),
+                labelpos: 'r',
+                ...('data' in edge ? { data: edge.data } : {}),
             },
         );
     });
@@ -79,7 +79,7 @@ export function computeDagLayout({
     const graphLabel = dagGraph.graph();
 
     const positionedNodes = {};
-    dagGraph.nodes().forEach(nodeId => {
+    dagGraph.nodes().forEach((nodeId) => {
         const node = dagGraph.node(nodeId);
         positionedNodes[nodeId] = {
             x: node.x,
@@ -90,7 +90,7 @@ export function computeDagLayout({
         };
     });
 
-    const positionedEdges = dagGraph.edges().map(edgeObj => {
+    const positionedEdges = dagGraph.edges().map((edgeObj) => {
         const edgeLabel = dagGraph.edge(edgeObj);
 
         const resultEdge = {
@@ -102,8 +102,8 @@ export function computeDagLayout({
         };
 
         if (
-            Object.prototype.hasOwnProperty.call(edgeLabel, "x") &&
-            Object.prototype.hasOwnProperty.call(edgeLabel, "y")
+            Object.prototype.hasOwnProperty.call(edgeLabel, 'x') &&
+            Object.prototype.hasOwnProperty.call(edgeLabel, 'y')
         ) {
             resultEdge.label = {
                 x: edgeLabel.x,

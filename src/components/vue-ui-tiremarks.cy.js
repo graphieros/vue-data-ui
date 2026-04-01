@@ -1,34 +1,39 @@
-import VueUiTiremarks from "./vue-ui-tiremarks.vue";
-import { components } from "../../cypress/fixtures/vdui-components";
-import { testCommonFeatures } from "../../cypress/fixtures";
+import VueUiTiremarks from './vue-ui-tiremarks.vue';
+import { components } from '../../cypress/fixtures/vdui-components';
+import { testCommonFeatures } from '../../cypress/fixtures';
 
-const { dataset, config } = components.find(c => c.name === 'VueUiTiremarks');
+const { dataset, config } = components.find((c) => c.name === 'VueUiTiremarks');
 
 describe('<VueUiTiremarks />', () => {
-    
     it('renders', () => {
         cy.spy(window, 'requestAnimationFrame').as('rafSpy');
         cy.mount(VueUiTiremarks, {
             props: {
                 dataset,
-                config
-            }
+                config,
+            },
         }).then(() => {
-
             cy.log('Animating');
             cy.get('@rafSpy').should('have.been.called');
-            
+
             testCommonFeatures({
                 userOptions: true,
                 title: true,
-                subtitle: true
+                subtitle: true,
             });
 
             cy.log('ticks');
-            cy.get('[data-cy="tick"]').should('exist').and('have.css', 'opacity', '1').and('have.length', 100);
+            cy.get('[data-cy="tick"]')
+                .should('exist')
+                .and('have.css', 'opacity', '1')
+                .and('have.length', 100);
 
             cy.log('data label');
-            cy.get('[data-cy="data-label"]').should('exist').and('be.visible').and('contain', dataset.percentage).and('contain', '%');
+            cy.get('[data-cy="data-label"]')
+                .should('exist')
+                .and('be.visible')
+                .and('contain', dataset.percentage)
+                .and('contain', '%');
         });
     });
 });

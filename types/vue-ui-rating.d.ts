@@ -1,10 +1,10 @@
 import { DefineComponent } from 'vue';
 
-export type { 
+export type {
     VueUiRatingDatasetDetailed,
     VueUiRatingDataset,
-    VueUiRatingConfig
-} from "./vue-data-ui";
+    VueUiRatingConfig,
+} from './vue-data-ui';
 
 declare const VueUiRating: DefineComponent<{
     config?: VueUiRatingConfig;
@@ -12,4 +12,4 @@ declare const VueUiRating: DefineComponent<{
 }>;
 
 export default VueUiRating;
-export { VueUiRating }
+export { VueUiRating };

@@ -1,37 +1,45 @@
 <script setup>
-import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount, watchEffect } from "vue";
-import BaseIcon from "./BaseIcon.vue";
-import { adaptColorToBackground } from "../lib";
-import vClickOutside from "../directives/vClickOutside";
+import {
+    ref,
+    computed,
+    watch,
+    nextTick,
+    onMounted,
+    onBeforeUnmount,
+    watchEffect,
+} from 'vue';
+import BaseIcon from './BaseIcon.vue';
+import { adaptColorToBackground } from '../lib';
+import vClickOutside from '../directives/vClickOutside';
 
 const props = defineProps({
-    value: { 
-        type: String, 
-        default: "#ffffff" 
+    value: {
+        type: String,
+        default: '#ffffff',
     },
-    size: { 
-        type: String, 
-        default: "50px" 
+    size: {
+        type: String,
+        default: '50px',
     },
-    backgroundColor: { 
-        type: String, 
-        default: "#FFFFFF" 
+    backgroundColor: {
+        type: String,
+        default: '#FFFFFF',
     },
-    buttonBorderColor: { 
-        type: String, 
-        default: "#FFFFFF" 
+    buttonBorderColor: {
+        type: String,
+        default: '#FFFFFF',
     },
-    teleported: { 
-        type: Boolean, 
-        default: false
+    teleported: {
+        type: Boolean,
+        default: false,
     },
     isCursorPointer: {
         type: Boolean,
-        default: false
-    }
+        default: false,
+    },
 });
 
-const emit = defineEmits(["update:value"]);
+const emit = defineEmits(['update:value']);
 
 const wrapperRef = ref(null);
 const buttonRef = ref(null);
@@ -43,20 +51,20 @@ const pos = ref({ top: 0, left: 0 });
 
 const colorPickerStyle = computed(() => ({
     backgroundColor: props.value,
-    width: "100%",
-    height: "100%",
+    width: '100%',
+    height: '100%',
     cursor: props.isCursorPointer ? 'pointer' : 'default',
 }));
 
 const iconColor = computed(() => adaptColorToBackground(props.value));
 
 function setColor(color) {
-    emit("update:value", color);
+    emit('update:value', color);
     isOpen.value = false;
 }
 
 function updateColor(e) {
-    emit("update:value", e.target.value);
+    emit('update:value', e.target.value);
 }
 
 function triggerColorPicker(e) {
@@ -101,14 +109,14 @@ watchEffect((onCleanup) => {
     if (!el) return;
     const onBlur = () => releaseNativeLock();
     const onChange = () => releaseNativeLock();
-    const onInput = () => { }; // keep open; value handled in @input on template
-    el.addEventListener("blur", onBlur);
-    el.addEventListener("change", onChange);
-    el.addEventListener("input", onInput);
+    const onInput = () => {}; // keep open; value handled in @input on template
+    el.addEventListener('blur', onBlur);
+    el.addEventListener('change', onChange);
+    el.addEventListener('input', onInput);
     onCleanup(() => {
-        el.removeEventListener("blur", onBlur);
-        el.removeEventListener("change", onChange);
-        el.removeEventListener("input", onInput);
+        el.removeEventListener('blur', onBlur);
+        el.removeEventListener('change', onChange);
+        el.removeEventListener('input', onInput);
     });
 });
 
@@ -116,60 +124,58 @@ function onWindowFocus() {
     releaseNativeLock();
 }
 function onVisibilityChange() {
-    if (document.visibilityState === "visible") releaseNativeLock();
+    if (document.visibilityState === 'visible') releaseNativeLock();
 }
 
 onMounted(() => {
-    window.addEventListener("scroll", onScrollOrResize, { passive: true });
-    window.addEventListener("resize", onScrollOrResize, { passive: true });
-    window.addEventListener("focus", onWindowFocus);
-    document.addEventListener("visibilitychange", onVisibilityChange);
+    window.addEventListener('scroll', onScrollOrResize, { passive: true });
+    window.addEventListener('resize', onScrollOrResize, { passive: true });
+    window.addEventListener('focus', onWindowFocus);
+    document.addEventListener('visibilitychange', onVisibilityChange);
 });
 onBeforeUnmount(() => {
-    window.removeEventListener("scroll", onScrollOrResize);
-    window.removeEventListener("resize", onScrollOrResize);
-    window.removeEventListener("focus", onWindowFocus);
-    document.removeEventListener("visibilitychange", onVisibilityChange);
+    window.removeEventListener('scroll', onScrollOrResize);
+    window.removeEventListener('resize', onScrollOrResize);
+    window.removeEventListener('focus', onWindowFocus);
+    document.removeEventListener('visibilitychange', onVisibilityChange);
 });
 
 watch(
     () => props.value,
     (newVal) => {
         if (colorInput.value) colorInput.value.value = newVal;
-    }
+    },
 );
 
 const palette = ref([
-    "#000000",
-    "#FFFFFF",
-    "#FF5733",
-    "#33FF57",
-    "#3357FF",
-    "#FFC300",
-    "#800080",
-    "#FF1493",
-    "#00CED1",
+    '#000000',
+    '#FFFFFF',
+    '#FF5733',
+    '#33FF57',
+    '#3357FF',
+    '#FFC300',
+    '#800080',
+    '#FF1493',
+    '#00CED1',
 ]);
 </script>
 
 <template>
-    <div 
-        ref="wrapperRef" 
-        data-cy="color-picker" 
-        v-click-outside="closeIfOpen" 
+    <div
+        ref="wrapperRef"
+        data-cy="color-picker"
+        v-click-outside="closeIfOpen"
         @keydown.esc="closeIfOpen"
-        style="height: 100%; 
-        width: 100%; 
-        position: relative"
+        style="height: 100%; width: 100%; position: relative"
         :aria-expanded="isOpen ? 'true' : 'false'"
         aria-haspopup="dialog"
         :aria-label="`Choose color. Current color ${value}`"
     >
-        <button 
-            ref="buttonRef" 
-            class="icon" 
-            data-cy="color-picker-icon" 
-            @click="togglePicker" 
+        <button
+            ref="buttonRef"
+            class="icon"
+            data-cy="color-picker-icon"
+            @click="togglePicker"
             :style="colorPickerStyle"
             type="button"
         >
@@ -178,100 +184,135 @@ const palette = ref([
             </slot>
         </button>
 
-        <div 
-            v-if="isOpen && !teleported" 
+        <div
+            v-if="isOpen && !teleported"
             class="vue-ui-color-picker"
             role="dialog"
             aria-label="Color picker"
-            :style="{ 
+            :style="{
                 backgroundColor: backgroundColor,
                 position: 'absolute',
                 left: `calc(100% + 30px)`,
                 top: '50%',
-                transform: 'translateY(-18%)'
-            }" 
-            @mousedown.stop 
-            @click.stop 
+                transform: 'translateY(-18%)',
+            }"
+            @mousedown.stop
+            @click.stop
             @touchstart.stop
             @keydown.esc="closeIfOpen"
         >
-            <button 
-                v-for="c in palette" 
+            <button
+                v-for="c in palette"
                 :key="c"
                 :aria-label="`Select color ${c}`"
                 :aria-pressed="value === c ? 'true' : 'false'"
-                data-cy="color-picker-option" 
+                data-cy="color-picker-option"
                 class="vue-ui-color-picker-option"
-                type="button" 
-                :style="{ backgroundColor: c, outline: `1px solid ${buttonBorderColor}`, cursor: isCursorPointer ? 'pointer' : 'default' }"
-                @click="() => setColor(c)" 
-                
-            />
-            <button 
-                class="vue-ui-color-picker-option" 
                 type="button"
-                :style="{ backgroundColor: value, outline: `1px solid ${buttonBorderColor}`, cursor: isCursorPointer ? 'pointer' : 'default' }"
+                :style="{
+                    backgroundColor: c,
+                    outline: `1px solid ${buttonBorderColor}`,
+                    cursor: isCursorPointer ? 'pointer' : 'default',
+                }"
+                @click="() => setColor(c)"
+            />
+            <button
+                class="vue-ui-color-picker-option"
+                type="button"
+                :style="{
+                    backgroundColor: value,
+                    outline: `1px solid ${buttonBorderColor}`,
+                    cursor: isCursorPointer ? 'pointer' : 'default',
+                }"
                 aria-label="Open native color picker"
-                @click.stop="triggerColorPicker" 
-                @mousedown.stop 
+                @click.stop="triggerColorPicker"
+                @mousedown.stop
                 @touchstart.stop
             >
-                <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-46%)">
-                    <BaseIcon name="colorPicker" :stroke="iconColor" :size="22" />
+                <div
+                    style="
+                        position: absolute;
+                        top: 50%;
+                        left: 50%;
+                        transform: translate(-50%, -46%);
+                    "
+                >
+                    <BaseIcon
+                        name="colorPicker"
+                        :stroke="iconColor"
+                        :size="22"
+                    />
                 </div>
-                <input 
-                    ref="colorInput" 
-                    type="color" 
-                    :value="value" 
-                    class="hidden-input" 
-                    @input="updateColor" 
+                <input
+                    ref="colorInput"
+                    type="color"
+                    :value="value"
+                    class="hidden-input"
+                    @input="updateColor"
                 />
             </button>
         </div>
 
-        <teleport 
-            to="body" 
-            v-if="isOpen && teleported"
-        >
-            <div 
-                tabindex="0" 
-                class="vue-ui-color-picker" 
+        <teleport to="body" v-if="isOpen && teleported">
+            <div
+                tabindex="0"
+                class="vue-ui-color-picker"
                 :style="{
                     backgroundColor: backgroundColor,
                     position: 'fixed',
                     top: pos.top + 'px',
                     left: pos.left + 'px',
-                    zIndex: 2147483647
-                }" 
-                @mousedown.stop 
-                @click.stop @touchstart.stop
+                    zIndex: 2147483647,
+                }"
+                @mousedown.stop
+                @click.stop
+                @touchstart.stop
             >
-                <button 
-                    v-for="c in palette" 
-                    :key="c" 
-                    data-cy="color-picker-option" 
+                <button
+                    v-for="c in palette"
+                    :key="c"
+                    data-cy="color-picker-option"
                     class="vue-ui-color-picker-option"
-                    type="button" 
-                    :style="{ backgroundColor: c, outline: `1px solid ${buttonBorderColor}`, cursor: isCursorPointer ? 'pointer' : 'default' }"
-                    @click="() => setColor(c)" 
-                />
-                <button 
-                    class="vue-ui-color-picker-option" 
                     type="button"
-                    :style="{ backgroundColor: value, outline: `1px solid ${buttonBorderColor}`, cursor: isCursorPointer ? 'cursor' : 'default' }"
-                    @click.stop="triggerColorPicker" 
-                    @mousedown.stop 
+                    :style="{
+                        backgroundColor: c,
+                        outline: `1px solid ${buttonBorderColor}`,
+                        cursor: isCursorPointer ? 'pointer' : 'default',
+                    }"
+                    @click="() => setColor(c)"
+                />
+                <button
+                    class="vue-ui-color-picker-option"
+                    type="button"
+                    :style="{
+                        backgroundColor: value,
+                        outline: `1px solid ${buttonBorderColor}`,
+                        cursor: isCursorPointer ? 'cursor' : 'default',
+                    }"
+                    @click.stop="triggerColorPicker"
+                    @mousedown.stop
                     @touchstart.stop
                 >
-                    <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-46%)">
-                        <BaseIcon name="colorPicker" :stroke="iconColor" :size="22" />
+                    <div
+                        style="
+                            position: absolute;
+                            top: 50%;
+                            left: 50%;
+                            transform: translate(-50%, -46%);
+                        "
+                    >
+                        <BaseIcon
+                            name="colorPicker"
+                            :stroke="iconColor"
+                            :size="22"
+                        />
                     </div>
-                    <input 
-                        ref="colorInput" 
-                        type="color" 
-                        :value="value" 
-                        class="hidden-input" 
-                        @input="updateColor" 
+                    <input
+                        ref="colorInput"
+                        type="color"
+                        :value="value"
+                        class="hidden-input"
+                        @input="updateColor"
                     />
                 </button>
             </div>

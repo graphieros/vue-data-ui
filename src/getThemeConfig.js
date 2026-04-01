@@ -5,7 +5,7 @@ const THEME_LOADERS = Object.fromEntries(
         const m = path.match(/\/themes\/(.+)\.json$/);
         const type = m ? m[1] : path;
         return [type, load];
-    })
+    }),
 );
 
 const _cache = new Map();
@@ -51,5 +51,7 @@ export async function preloadThemes(types = []) {
 export const __testing = {
     clearCache: () => _cache.clear(),
     cacheSize: () => _cache.size,
-    setLoader: (fn) => { _loader = fn; },
+    setLoader: (fn) => {
+        _loader = fn;
+    },
 };

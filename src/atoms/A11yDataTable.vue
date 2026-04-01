@@ -4,7 +4,7 @@ const props = defineProps({
     head: { Array, default: () => [] },
     body: { Array, default: () => [] },
     caption: { String, default: 'Data table' },
-    notice: { String, default: 'A data table is available below.' }
+    notice: { String, default: 'A data table is available below.' },
 });
 </script>
 
@@ -12,10 +12,19 @@ const props = defineProps({
     <div :id="`chart-data-table-${uid}`" class="sr-only" data-dom-to-png-ignore>
         <p>{{ notice }}</p>
         <table>
-            <caption>{{ caption }}</caption>
+            <caption>
+                {{
+                    caption
+                }}
+            </caption>
             <thead>
                 <tr>
-                    <th role="cell" v-for="(th, i) in head" :key="`a11y-head-${i}-${uid}`" scope="col">
+                    <th
+                        role="cell"
+                        v-for="(th, i) in head"
+                        :key="`a11y-head-${i}-${uid}`"
+                        scope="col"
+                    >
                         <slot name="th" :th="th">
                             {{ th }}
                         </slot>
@@ -25,7 +34,10 @@ const props = defineProps({
             <tbody>
                 <tr v-for="(row, i) in body" :key="`a11y-body-${i}-${uid}`">
                     <th scope="row">{{ row[0] }}</th>
-                    <td v-for="(td, j) in row.slice(1)" :key="`a11y-cell-${i}-${j}-${uid}`">
+                    <td
+                        v-for="(td, j) in row.slice(1)"
+                        :key="`a11y-cell-${i}-${j}-${uid}`"
+                    >
                         <slot name="td" :td="td">
                             {{ td }}
                         </slot>

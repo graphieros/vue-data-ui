@@ -1,49 +1,49 @@
 <script setup>
-import { computed } from "vue";
-import BaseIcon from "./BaseIcon.vue";
+import { computed } from 'vue';
+import BaseIcon from './BaseIcon.vue';
 
 const props = defineProps({
     min: {
         type: Number,
-        default: 0
+        default: 0,
     },
     max: {
         type: Number,
-        default: 0
+        default: 0,
     },
     inputColor: {
         type: String,
-        default: '#1A1A1A'
+        default: '#1A1A1A',
     },
     background: {
         type: String,
-        default: '#FFFFFF'
+        default: '#FFFFFF',
     },
     borderColor: {
         type: String,
-        default: '#FFFFFF'
+        default: '#FFFFFF',
     },
     selectColor: {
         type: String,
-        default: '#4A4A4A'
+        default: '#4A4A4A',
     },
     textColor: {
         type: String,
-        default: '#1A1A1A'
+        default: '#1A1A1A',
     },
     useResetSlot: {
         type: Boolean,
-        default: false
+        default: false,
     },
     value: {
         type: Number,
-        default: 0
+        default: 0,
     },
     source: {
         type: Number,
         default: 0,
-    }
-})
+    },
+});
 
 const slicerColor = computed(() => props.inputColor);
 const backgroundColor = computed(() => props.background);
@@ -63,26 +63,37 @@ const highlightStyle = computed(() => {
     return {
         left: `${startPercent}%`,
         width: `${endPercent - startPercent}%`,
-        background: props.selectColor
+        background: props.selectColor,
     };
 });
-    
 </script>
 
 <template>
     <div data-dom-to-png-ignore>
         <div v-if="value !== source" class="reset-wrapper">
-            <button v-if="!useResetSlot" data-cy-reset tabindex="0" role="button" class="vue-data-ui-refresh-button"
-                @click="reset">
+            <button
+                v-if="!useResetSlot"
+                data-cy-reset
+                tabindex="0"
+                role="button"
+                class="vue-data-ui-refresh-button"
+                @click="reset"
+            >
                 <BaseIcon name="refresh" :stroke="textColor" />
             </button>
             <slot v-else name="reset-action" :reset="reset" />
         </div>
-        <div v-else class="reset-wrapper"/>
+        <div v-else class="reset-wrapper" />
         <div class="mono-slicer">
             <div class="slider-track"></div>
             <div class="range-highlight" :style="highlightStyle"></div>
-            <input type="range" :min="min" :max="max" :value="Number(value)" @input="emit('update:value', Number($event.target.value))" />
+            <input
+                type="range"
+                :min="min"
+                :max="max"
+                :value="Number(value)"
+                @input="emit('update:value', Number($event.target.value))"
+            />
         </div>
     </div>
 </template>
@@ -104,7 +115,7 @@ const highlightStyle = computed(() => {
     height: 40px;
 }
 
-input[type="range"] {
+input[type='range'] {
     position: absolute;
     left: 0;
     width: 100%;
@@ -114,7 +125,7 @@ input[type="range"] {
     z-index: 3;
 }
 
-input[type="range"]::-webkit-slider-thumb {
+input[type='range']::-webkit-slider-thumb {
     -webkit-appearance: none;
     pointer-events: auto;
     width: 20px;
@@ -133,7 +144,7 @@ input[type="range"]::-webkit-slider-thumb {
     }
 }
 
-input[type="range"]::-moz-range-thumb {
+input[type='range']::-moz-range-thumb {
     pointer-events: auto;
     width: 20px;
     height: 20px;
@@ -151,7 +162,7 @@ input[type="range"]::-moz-range-thumb {
     }
 }
 
-input[type="range"]::-ms-thumb {
+input[type='range']::-ms-thumb {
     pointer-events: auto;
     width: 20px;
     height: 20px;
@@ -207,7 +218,7 @@ input[type="range"]::-ms-thumb {
         outline: 1px solid v-bind(slicerColor);
     }
     &:hover {
-        transform: rotate(-90deg)
+        transform: rotate(-90deg);
     }
 }
 
