@@ -89,7 +89,7 @@
         "dev": "node add-dev-dep.cjs && npm i && vite",
         "clean": "node cleanup.cjs",
         "build": "npm run clean && vite build --mode production && node copy-types.cjs && npm i",
-        "prod": "node pretty && node del-dev-dep.cjs && node check-types.cjs && npm run test && npx cypress run --component && npm run clean && vite build --mode production && node copy-types.cjs && node post-build.cjs",
+        "prod": "npm run pretty && node del-dev-dep.cjs && node check-types.cjs && npm run test && npx cypress run --component && npm run clean && vite build --mode production && node copy-types.cjs && node post-build.cjs",
         "prod:publish": "npm run prod && node publish-build.cjs",
         "test": "vitest --run",
         "test:w": "vitest --watch",
