@@ -10,6 +10,9 @@ import { useConfigurationControls } from "./createConfigModel";
 import { useConfig } from "../src/useConfig"
 import { VueUiDonut as VueUiDonutTreeshaken } from "vue-data-ui/vue-ui-donut";
 import useThemeOptions from "./useThemeOptions";
+import LocalPatternSlot from "../src/atoms/vue-ui-pattern-seed.vue";
+import { VueUiPatternSeed } from "vue-data-ui/vue-ui-pattern-seed";
+import { createPatternDef } from "vue-data-ui/utils";
 
 const { vue_ui_donut: DEFAULT_CONFIG } = useConfig();
 
@@ -370,6 +373,19 @@ const config = computed(() => {
                 ...c.style,
                 chart: {
                     ...c.style.chart,
+                    tooltip: {
+                        customFormat: ({ seriesIndex }) => {
+                            let pat = createPatternDef({
+                                id: 'A',
+                                seed: seriesIndex
+                            })
+
+                            return `<svg viewBox="0 0 100 100" width="100" height="100">
+                                ${pat}
+                                <rect fill="url(#A)" x="0" y="0" width="100" height="100"/>  
+                            </svg>`
+                        }
+                    },
                     layout: {
                         ...c.style.chart.layout,
                         labels: {
@@ -491,6 +507,18 @@ onMounted(async () => {
                         responsive: true
                     }">
 
+                    <!-- <template #pattern="{ patternId, seriesIndex }">
+                        <VueUiPatternSeed
+                            v-if="seriesIndex != 0"
+                            :id="patternId"
+                            :seed="seriesIndex"
+                            foreground-color="#1A1A1A"
+                            fallback-color="transparent"
+                            :max-size="24"
+                            :min-size="16"
+                        />
+                    </template> -->
+
                     <!-- <template #tooltip="{ datapoint }">
                         {{ datapoint.name }} - {{ datapoint.color }}
                     </template> -->
@@ -520,7 +548,19 @@ onMounted(async () => {
         </template>
 
         <template #theme>
-            <LocalVueUiDonut :dataset="dataset" :config="configTheme"/>
+            <LocalVueUiDonut :dataset="dataset" :config="configTheme">
+                <template #pattern="{ patternId, seriesIndex }">
+                    <VueUiPatternSeed
+                        v-if="seriesIndex != 0"
+                        :id="patternId"
+                        :seed="seriesIndex"
+                        foreground-color="#1A1A1A"
+                        fallback-color="transparent"
+                        :max-size="24"
+                        :min-size="16"
+                    />
+                </template>
+            </LocalVueUiDonut>
         </template>
 
         <template #local>

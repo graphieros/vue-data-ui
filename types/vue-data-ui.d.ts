@@ -10595,6 +10595,16 @@ declare module "vue-data-ui" {
         y: number
     }
 
+    export const VueUiPatternSeed: DefineComponent<{
+        id: string;
+        seed: string | number;
+        foregroundColor?: string;
+        backgroundColor?: string;
+        maxSize?: number;
+        minSize?: number;
+        disambiguator?: string | number;
+    }>;    
+
     //--------------------------------------------------------------------------------------------//
 
     /**

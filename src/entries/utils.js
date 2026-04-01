@@ -22,6 +22,10 @@ import {
     mergeConfigs,
 } from "../exposedLib";
 
+import {
+    createPatternDef
+} from "../patternUtils";
+
 import { useObjectBindings } from "../useObjectBindings";
 
 export { applyDataCorrection };
@@ -44,11 +48,14 @@ export { lightenColor, darkenColor, shiftColorHue, mergeConfigs };
 
 export { useObjectBindings };
 
+export { createPatternDef };
+
 const vueDataUiUtilities = {
     applyDataCorrection,
     getVueDataUiConfig,
     getThemeConfig,
     abbreviate,
+    createPatternDef,
     createSmoothPath,
     createStraightPath,
     createTSpans,
