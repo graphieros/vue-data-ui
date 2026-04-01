@@ -253,8 +253,8 @@ describe('createPatternDef', () => {
             seed: 'Series A',
         });
 
-        expect(markup.startsWith('<pattern')).toBe(true);
-        expect(markup.endsWith('</pattern>')).toBe(true);
+        expect(markup.startsWith('<defs><pattern')).toBe(true);
+        expect(markup.endsWith('</pattern></defs>')).toBe(true);
         expect(markup).toContain('patternUnits="userSpaceOnUse"');
         expect(markup).toContain('patternTransform="rotate(');
     });
@@ -283,7 +283,7 @@ describe('createPatternDef', () => {
         });
 
         expect(markup).toBe(
-            '<pattern id="pattern-a" patternUnits="userSpaceOnUse" width="8" height="8" patternTransform="rotate(0)"></pattern>',
+            '<defs><pattern id="pattern-a" patternUnits="userSpaceOnUse" width="8" height="8" patternTransform="rotate(0)"></pattern></defs>',
         );
         expect(consoleErrorSpy).toHaveBeenCalled();
     });
