@@ -7,13 +7,16 @@ export type {
     VueUiChordDatapointRibbon,
     VueUiChordConfig,
     VueUiChordExpose,
-    VueUiChordEvent
-} from "./vue-data-ui";
+    VueUiChordEvent,
+} from './vue-data-ui';
 
-declare const VueUiChord: DefineComponent<{
-    config?: VueUiChordConfig;
-    dataset: VueUiChordDataset
-}, VueUiChordExpose>;
+declare const VueUiChord: DefineComponent<
+    {
+        config?: VueUiChordConfig;
+        dataset: VueUiChordDataset;
+    },
+    VueUiChordExpose
+>;
 
 export default VueUiChord;
 export { VueUiChord };

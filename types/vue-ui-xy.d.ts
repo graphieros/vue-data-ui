@@ -11,14 +11,17 @@ export type {
     VueUiXySeries,
     VueUiXyDatapointItem,
     VueUiXyExpose,
-    VueUiXyEvent
+    VueUiXyEvent,
 } from './vue-data-ui';
 
-declare const VueUiXy: DefineComponent<{
-    config?: VueUiXyConfig;
-    dataset: VueUiXyDatasetItem[];
-    selectedXIndex?: number | null;
-}, VueUiXyExpose>;
+declare const VueUiXy: DefineComponent<
+    {
+        config?: VueUiXyConfig;
+        dataset: VueUiXyDatasetItem[];
+        selectedXIndex?: number | null;
+    },
+    VueUiXyExpose
+>;
 
 export default VueUiXy;
 export { VueUiXy };

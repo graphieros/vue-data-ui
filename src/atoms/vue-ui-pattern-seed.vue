@@ -5,7 +5,7 @@
  * Using patterns helps users with vision deficency (like achromatopsia) to distinguish
  * series in the context of data visualisation.
  */
-import { computed } from 'vue'
+import { computed } from 'vue';
 import { createSeededSvgPattern } from '../patternUtils';
 
 const props = defineProps({
@@ -24,18 +24,18 @@ const pattern = computed(() =>
         backgroundColor: props.backgroundColor,
         minimumSize: props.minSize,
         maximumSize: props.maxSize,
-        disambiguator: props.disambiguator
+        disambiguator: props.disambiguator,
     }),
-)
+);
 </script>
 
 <template>
-    <pattern 
-        :id 
-        :width="pattern.width" 
+    <pattern
+        :id
+        :width="pattern.width"
         :height="pattern.height"
-        :patternTransform="`rotate(${pattern.rotation})`" 
-        patternUnits="userSpaceOnUse" 
-        v-html="pattern.contentMarkup" 
+        :patternTransform="`rotate(${pattern.rotation})`"
+        patternUnits="userSpaceOnUse"
+        v-html="pattern.contentMarkup"
     />
 </template>

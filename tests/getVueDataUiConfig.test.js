@@ -1,11 +1,10 @@
-import { expect, test, describe } from "vitest";
-import getVueDataUiConfig from "../src/getVueDataUiConfig";
-import { useConfig } from "../src/useConfig";
+import { expect, test, describe } from 'vitest';
+import getVueDataUiConfig from '../src/getVueDataUiConfig';
+import { useConfig } from '../src/useConfig';
 
 describe('getVueDataUiConfig', () => {
-
     const components = [
-        "heatmap",
+        'heatmap',
         '3d_bar',
         'accordion',
         'age_pyramid',
@@ -51,13 +50,17 @@ describe('getVueDataUiConfig', () => {
         'waffle',
         'wheel',
         'xy',
-    ]
+    ];
 
-    components.forEach(component => {
+    components.forEach((component) => {
         test(`returns vue_ui_${component} config`, () => {
-            const expectedConfig = useConfig()[`vue_ui_${component}`]
-            expect(getVueDataUiConfig(`vue_ui_${component}`)).not.toBeUndefined();
-            expect(getVueDataUiConfig(`vue_ui_${component}`)).toStrictEqual(expectedConfig);
-        })
-    })
-})
+            const expectedConfig = useConfig()[`vue_ui_${component}`];
+            expect(
+                getVueDataUiConfig(`vue_ui_${component}`),
+            ).not.toBeUndefined();
+            expect(getVueDataUiConfig(`vue_ui_${component}`)).toStrictEqual(
+                expectedConfig,
+            );
+        });
+    });
+});

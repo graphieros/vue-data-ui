@@ -1,18 +1,29 @@
 <template>
-    <div class="vue-data-ui-component vue-ui-table-main" :style="`font-family: ${FINAL_CONFIG.fontFamily}`">
-        <div class="vue-ui-table-export-hub" 
-            :style="{ top: exportButtonTop + 'px' }" v-if="FINAL_CONFIG.style.exportMenu.show">
-            <button 
-                @click="isExportRequest = !isExportRequest" 
+    <div
+        class="vue-data-ui-component vue-ui-table-main"
+        :style="`font-family: ${FINAL_CONFIG.fontFamily}`"
+    >
+        <div
+            class="vue-ui-table-export-hub"
+            :style="{ top: exportButtonTop + 'px' }"
+            v-if="FINAL_CONFIG.style.exportMenu.show"
+        >
+            <button
+                @click="isExportRequest = !isExportRequest"
                 v-html="icons.export"
-                :style="`background:${FINAL_CONFIG.style.exportMenu.backgroundColor};color:${FINAL_CONFIG.style.exportMenu.color};cursor:${isCursorPointer ? 'pointer' : 'default'}`" />
-            <div class="vue-ui-table-export-hub-dropdown" :data-is-open="isExportRequest || 'false'"
-                :style="`background:${FINAL_CONFIG.style.exportMenu.backgroundColor};color:${FINAL_CONFIG.style.exportMenu.color}`">
-                <b class="vue-ui-table-export-hub-title">
-                    Export
-                </b>
-                <button class="close-dropdown" @click="isExportRequest = false"
-                    :style="`background:${FINAL_CONFIG.style.closeButtons.backgroundColor};color:${FINAL_CONFIG.style.closeButtons.color};border-radius:${FINAL_CONFIG.style.closeButtons.borderRadius}`">
+                :style="`background:${FINAL_CONFIG.style.exportMenu.backgroundColor};color:${FINAL_CONFIG.style.exportMenu.color};cursor:${isCursorPointer ? 'pointer' : 'default'}`"
+            />
+            <div
+                class="vue-ui-table-export-hub-dropdown"
+                :data-is-open="isExportRequest || 'false'"
+                :style="`background:${FINAL_CONFIG.style.exportMenu.backgroundColor};color:${FINAL_CONFIG.style.exportMenu.color}`"
+            >
+                <b class="vue-ui-table-export-hub-title"> Export </b>
+                <button
+                    class="close-dropdown"
+                    @click="isExportRequest = false"
+                    :style="`background:${FINAL_CONFIG.style.closeButtons.backgroundColor};color:${FINAL_CONFIG.style.closeButtons.color};border-radius:${FINAL_CONFIG.style.closeButtons.borderRadius}`"
+                >
                     ✖
                 </button>
                 <div class="vue-ui-table-export-hub-options">
@@ -21,66 +32,111 @@
                             {{ FINAL_CONFIG.translations.exportAllLabel }}
                             ({{ bodyCopy.length }})
                         </div>
-                        <button id="exportAll" @click="createXls('all')"
-                            :style="`background:${FINAL_CONFIG.style.exportMenu.buttons.backgroundColor};color:${FINAL_CONFIG.style.exportMenu.buttons.color};cursor:${isCursorPointer ? 'pointer' : 'default'}`">
+                        <button
+                            id="exportAll"
+                            @click="createXls('all')"
+                            :style="`background:${FINAL_CONFIG.style.exportMenu.buttons.backgroundColor};color:${FINAL_CONFIG.style.exportMenu.buttons.color};cursor:${isCursorPointer ? 'pointer' : 'default'}`"
+                        >
                             <div v-html="icons.fileDownload" />
-                            <span>{{ FINAL_CONFIG.translations.exportAllButton }}</span>
+                            <span>{{
+                                FINAL_CONFIG.translations.exportAllButton
+                            }}</span>
                         </button>
                     </div>
                     <div class="vue-ui-table-export-hub-option-wrapper">
                         <div class="label">
                             {{ FINAL_CONFIG.translations.exportPageLabel }}
                         </div>
-                        <button id="exportPage" @click="createXls('page')"
-                            :style="`background:${FINAL_CONFIG.style.exportMenu.buttons.backgroundColor};color:${FINAL_CONFIG.style.exportMenu.buttons.color};cursor:${isCursorPointer ? 'pointer' : 'default'}`">
+                        <button
+                            id="exportPage"
+                            @click="createXls('page')"
+                            :style="`background:${FINAL_CONFIG.style.exportMenu.buttons.backgroundColor};color:${FINAL_CONFIG.style.exportMenu.buttons.color};cursor:${isCursorPointer ? 'pointer' : 'default'}`"
+                        >
                             <div v-html="icons.fileDownload" />
-                            <span>{{ FINAL_CONFIG.translations.exportPageButton }}</span>
+                            <span>{{
+                                FINAL_CONFIG.translations.exportPageButton
+                            }}</span>
                         </button>
                     </div>
                     <div class="vue-ui-table-dialog-field">
-                        <label class="label vue-ui-table-dialog-input-label" style="width:100%;">
-                            <span style="width:fit-content">
+                        <label
+                            class="label vue-ui-table-dialog-input-label"
+                            style="width: 100%"
+                        >
+                            <span style="width: fit-content">
                                 {{ FINAL_CONFIG.translations.filename }}
                             </span>
-                            <input name="filename" ref="filenameInputRef" @keydown.space.stop pattern=".*" class="vue-ui-table-dialog-input" type="text" v-model="filename"/>
+                            <input
+                                name="filename"
+                                ref="filenameInputRef"
+                                @keydown.space.stop
+                                pattern=".*"
+                                class="vue-ui-table-dialog-input"
+                                type="text"
+                                v-model="filename"
+                            />
                         </label>
-                        <button v-if="!!filename" class="vue-ui-table-dialog-field-button" @click="filename = ''" :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }">
-                            <BaseIcon name="close" :stroke="FINAL_CONFIG.style.exportMenu.color" :size="18"/>
+                        <button
+                            v-if="!!filename"
+                            class="vue-ui-table-dialog-field-button"
+                            @click="filename = ''"
+                            :style="{
+                                cursor: isCursorPointer ? 'pointer' : 'default',
+                            }"
+                        >
+                            <BaseIcon
+                                name="close"
+                                :stroke="FINAL_CONFIG.style.exportMenu.color"
+                                :size="18"
+                            />
                         </button>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="vue-ui-table__wrapper" :style="`max-height:${FINAL_CONFIG.maxHeight}px`" ref="tableWrapper">
+        <div
+            class="vue-ui-table__wrapper"
+            :style="`max-height:${FINAL_CONFIG.maxHeight}px`"
+            ref="tableWrapper"
+        >
             <table class="vue-ui-table">
                 <caption
                     class="vue-ui-table__caption"
-                    ref="tableCaption" 
+                    ref="tableCaption"
                     v-if="FINAL_CONFIG.style.title.text"
                     :style="{
                         textAlign: FINAL_CONFIG.style.title.textAlign,
-                        paddingLeft: FINAL_CONFIG.style.title.paddingLeft + 'px',
-                        paddingRight: FINAL_CONFIG.style.title.paddingRight + 'px',
-                        backgroundColor: FINAL_CONFIG.style.title.backgroundColor,
-                        boxShadow: `${FINAL_CONFIG.style.title.backgroundColor} -1px 0px 0px 0px`
+                        paddingLeft:
+                            FINAL_CONFIG.style.title.paddingLeft + 'px',
+                        paddingRight:
+                            FINAL_CONFIG.style.title.paddingRight + 'px',
+                        backgroundColor:
+                            FINAL_CONFIG.style.title.backgroundColor,
+                        boxShadow: `${FINAL_CONFIG.style.title.backgroundColor} -1px 0px 0px 0px`,
                     }"
                 >
                     <span
                         :style="{
                             fontSize: FINAL_CONFIG.style.title.fontSize + 'px',
-                            fontWeight: FINAL_CONFIG.style.title.bold ? 'bold' : 'normal',
-                            color: FINAL_CONFIG.style.title.color
+                            fontWeight: FINAL_CONFIG.style.title.bold
+                                ? 'bold'
+                                : 'normal',
+                            color: FINAL_CONFIG.style.title.color,
                         }"
                     >
                         {{ FINAL_CONFIG.style.title.text }}
                     </span>
                     <template v-if="FINAL_CONFIG.style.title.subtitle.text">
-                        <br>
+                        <br />
                         <span
                             :style="{
-                                fontSize: FINAL_CONFIG.style.title.subtitle.fontSize,
-                                fontWeight: FINAL_CONFIG.style.title.subtitle.bold ? 'bold' : 'normal',
-                                color: FINAL_CONFIG.style.title.subtitle.color
+                                fontSize:
+                                    FINAL_CONFIG.style.title.subtitle.fontSize,
+                                fontWeight: FINAL_CONFIG.style.title.subtitle
+                                    .bold
+                                    ? 'bold'
+                                    : 'normal',
+                                color: FINAL_CONFIG.style.title.subtitle.color,
                             }"
                         >
                             {{ FINAL_CONFIG.style.title.subtitle.text }}
@@ -88,20 +144,33 @@
                     </template>
                 </caption>
                 <!-- TABLE HEAD -->
-                <thead id="tableHead" class="vue-ui-table__head" :style="{
-                    background: FINAL_CONFIG.style.th.backgroundColor,
-                    boxShadow: `-1px 0 0 ${FINAL_CONFIG.style.th.backgroundColor}`,
-                    top: exportButtonTop - 3 + 'px'
-                }">
+                <thead
+                    id="tableHead"
+                    class="vue-ui-table__head"
+                    :style="{
+                        background: FINAL_CONFIG.style.th.backgroundColor,
+                        boxShadow: `-1px 0 0 ${FINAL_CONFIG.style.th.backgroundColor}`,
+                        top: exportButtonTop - 3 + 'px',
+                    }"
+                >
                     <!-- HEADERS -->
                     <tr>
                         <th class="invisible-cell"></th>
-                        <th v-for="(th, i) in tableHead" :key="`thead_${i}`"
+                        <th
+                            v-for="(th, i) in tableHead"
+                            :key="`thead_${i}`"
                             :style="`overflow: visible;background:${FINAL_CONFIG.style.th.backgroundColor};color:${FINAL_CONFIG.style.th.color};outline:${FINAL_CONFIG.style.th.outline}`"
-                            :class="{ 'th-has-nan': hasNaN[i] }">
+                            :class="{ 'th-has-nan': hasNaN[i] }"
+                        >
                             <span
-                                v-if="hasNumericTypes && ([constants.TEXT, constants.DATE].includes(th.type) || th.isPercentage)">{{
-                                th.name }}
+                                v-if="
+                                    hasNumericTypes &&
+                                    ([constants.TEXT, constants.DATE].includes(
+                                        th.type,
+                                    ) ||
+                                        th.isPercentage)
+                                "
+                                >{{ th.name }}
                                 <span v-if="th.isPercentage">
                                     / {{ th.percentageTo }}
                                 </span>
@@ -113,25 +182,67 @@
                         <!-- SUM -->
                         <tr>
                             <th class="invisible-cell"></th>
-                            <th v-for="(th, i) in tableHead" :key="`thead_${i}`"
-                                :class="{ 'th-numeric': true, 'th-has-nan': hasNaN[i] }"
-                                :style="`background:${FINAL_CONFIG.style.th.backgroundColor};color:${FINAL_CONFIG.style.th.color};outline:${FINAL_CONFIG.style.th.outline}`">
-                                <span v-if="th.sum && !hasNaN[i]"
-                                    style="display: flex; align-items:center; justify-content:flex-end;">
-                                    <span v-html="icons.sum" style="margin-bottom:-4px; margin-right: 3px" />
-                                    {{ dataLabel({
-                                        p: th.prefix,
-                                        v: Number(getSum(i)),
-                                        s: th.suffix,
-                                        r: th.decimals
-                                    }) }}
-                                    <span v-if="percentages[i] && th.percentageTo && !th.isPercentage"
-                                        style="margin-left:3px">
-                                        ({{ isNaN(getSum(i) / getSum(percentages[i].referenceIndex)) ? '-' : dataLabel({
-                                            v: (getSum(i) / getSum(percentages[i].referenceIndex) * 100),
-                                            s: '%',
-                                            r: th.decimals
-                                        })}})
+                            <th
+                                v-for="(th, i) in tableHead"
+                                :key="`thead_${i}`"
+                                :class="{
+                                    'th-numeric': true,
+                                    'th-has-nan': hasNaN[i],
+                                }"
+                                :style="`background:${FINAL_CONFIG.style.th.backgroundColor};color:${FINAL_CONFIG.style.th.color};outline:${FINAL_CONFIG.style.th.outline}`"
+                            >
+                                <span
+                                    v-if="th.sum && !hasNaN[i]"
+                                    style="
+                                        display: flex;
+                                        align-items: center;
+                                        justify-content: flex-end;
+                                    "
+                                >
+                                    <span
+                                        v-html="icons.sum"
+                                        style="
+                                            margin-bottom: -4px;
+                                            margin-right: 3px;
+                                        "
+                                    />
+                                    {{
+                                        dataLabel({
+                                            p: th.prefix,
+                                            v: Number(getSum(i)),
+                                            s: th.suffix,
+                                            r: th.decimals,
+                                        })
+                                    }}
+                                    <span
+                                        v-if="
+                                            percentages[i] &&
+                                            th.percentageTo &&
+                                            !th.isPercentage
+                                        "
+                                        style="margin-left: 3px"
+                                    >
+                                        ({{
+                                            isNaN(
+                                                getSum(i) /
+                                                    getSum(
+                                                        percentages[i]
+                                                            .referenceIndex,
+                                                    ),
+                                            )
+                                                ? '-'
+                                                : dataLabel({
+                                                      v:
+                                                          (getSum(i) /
+                                                              getSum(
+                                                                  percentages[i]
+                                                                      .referenceIndex,
+                                                              )) *
+                                                          100,
+                                                      s: '%',
+                                                      r: th.decimals,
+                                                  })
+                                        }})
                                     </span>
                                 </span>
                             </th>
@@ -140,16 +251,27 @@
                         <!-- AVERAGE -->
                         <tr>
                             <th class="invisible-cell"></th>
-                            <th v-for="(th, i) in tableHead" :key="`thead_${i}`"
-                                :class="{ 'th-numeric': true, 'th-has-nan': hasNaN[i] }"
-                                :style="`background:${FINAL_CONFIG.style.th.backgroundColor};color:${FINAL_CONFIG.style.th.color};outline:${FINAL_CONFIG.style.th.outline}`">
+                            <th
+                                v-for="(th, i) in tableHead"
+                                :key="`thead_${i}`"
+                                :class="{
+                                    'th-numeric': true,
+                                    'th-has-nan': hasNaN[i],
+                                }"
+                                :style="`background:${FINAL_CONFIG.style.th.backgroundColor};color:${FINAL_CONFIG.style.th.color};outline:${FINAL_CONFIG.style.th.outline}`"
+                            >
                                 <span v-if="th.average && !hasNaN[i]">
-                                    ~ {{ isNaN(getAverage(i)) ? '' : dataLabel({
-                                        p: th.prefix,
-                                        v: Number(getAverage(i)),
-                                        s: th.suffix,
-                                        r: th.decimals
-                                    })}}
+                                    ~
+                                    {{
+                                        isNaN(getAverage(i))
+                                            ? ''
+                                            : dataLabel({
+                                                  p: th.prefix,
+                                                  v: Number(getAverage(i)),
+                                                  s: th.suffix,
+                                                  r: th.decimals,
+                                              })
+                                    }}
                                 </span>
                             </th>
                         </tr>
@@ -157,45 +279,128 @@
                         <!-- FILTERS & SORTS -->
                         <tr>
                             <th class="invisible-cell"></th>
-                            <th v-for="(th, i) in tableHead" :key="`thead_${i}`" :class="{ 'th-has-nan': hasNaN[i] }"
-                                :style="`background:${FINAL_CONFIG.style.th.backgroundColor};color:${FINAL_CONFIG.style.th.color};outline:${FINAL_CONFIG.style.th.outline}`">
+                            <th
+                                v-for="(th, i) in tableHead"
+                                :key="`thead_${i}`"
+                                :class="{ 'th-has-nan': hasNaN[i] }"
+                                :style="`background:${FINAL_CONFIG.style.th.backgroundColor};color:${FINAL_CONFIG.style.th.color};outline:${FINAL_CONFIG.style.th.outline}`"
+                            >
                                 <div class="th-filter">
                                     <!-- DATE -->
-                                    <template v-if="th.type === constants.DATE && dates[i]">
+                                    <template
+                                        v-if="
+                                            th.type === constants.DATE &&
+                                            dates[i]
+                                        "
+                                    >
                                         <div class="th-date">
                                             <div class="date-wrapper--inputs">
                                                 <div class="date-fieldset">
                                                     <label :for="`from_${i}`">
-                                                        {{ FINAL_CONFIG.translations.from }}
+                                                        {{
+                                                            FINAL_CONFIG
+                                                                .translations
+                                                                .from
+                                                        }}
                                                     </label>
-                                                    <input :id="`from_${i}`" type="date" v-model="dates[i].from"
-                                                        @input="filterBody(); setFilterDatesIndexes(i)"
-                                                        :style="`background:${FINAL_CONFIG.style.inputs.backgroundColor};color:${FINAL_CONFIG.style.inputs.color};border:${FINAL_CONFIG.style.inputs.border}`">
+                                                    <input
+                                                        :id="`from_${i}`"
+                                                        type="date"
+                                                        v-model="dates[i].from"
+                                                        @input="
+                                                            filterBody();
+                                                            setFilterDatesIndexes(
+                                                                i,
+                                                            );
+                                                        "
+                                                        :style="`background:${FINAL_CONFIG.style.inputs.backgroundColor};color:${FINAL_CONFIG.style.inputs.color};border:${FINAL_CONFIG.style.inputs.border}`"
+                                                    />
                                                 </div>
                                                 <div class="date-fieldset">
                                                     <label :for="`to_${i}`">
-                                                        {{ FINAL_CONFIG.translations.to }}
+                                                        {{
+                                                            FINAL_CONFIG
+                                                                .translations.to
+                                                        }}
                                                     </label>
-                                                    <input :id="`to_${i}`" type="date" v-model="dates[i].to" @input="filterBody();
-                                                    setFilterDatesIndexes(i)"
-                                                        :style="`background:${FINAL_CONFIG.style.inputs.backgroundColor};color:${FINAL_CONFIG.style.inputs.color};border:${FINAL_CONFIG.style.inputs.border}`">
+                                                    <input
+                                                        :id="`to_${i}`"
+                                                        type="date"
+                                                        v-model="dates[i].to"
+                                                        @input="
+                                                            filterBody();
+                                                            setFilterDatesIndexes(
+                                                                i,
+                                                            );
+                                                        "
+                                                        :style="`background:${FINAL_CONFIG.style.inputs.backgroundColor};color:${FINAL_CONFIG.style.inputs.color};border:${FINAL_CONFIG.style.inputs.border}`"
+                                                    />
                                                 </div>
                                             </div>
                                             <div class="date-wrapper--button">
-                                                <button v-if="th.isSort" @click="sortTh(i, $event)"
-                                                    :class="{ 'th-button-active': [constants.DESC, constants.ASC].includes(sorts[i]) }"
-                                                    :style="`cursor:${isCursorPointer ? 'pointer' : 'default'}; background:${[constants.DESC, constants.ASC].includes(sorts[i]) ? '' : FINAL_CONFIG.style.th.buttons.filter.inactive.backgroundColor};color:${[constants.DESC, constants.ASC].includes(sorts[i]) ? '' : FINAL_CONFIG.style.th.buttons.filter.inactive.color}`">
-                                                    <span v-if="sorts[i] === constants.ASC"
-                                                        v-html="[constants.DATE].includes(th.type) ? icons.sort09 : icons.sortAZ" />
-                                                    <span v-else-if="sorts[i] === constants.DESC"
-                                                        v-html="[constants.DATE].includes(th.type) ? icons.sort90 : icons.sortZA" />
-                                                    <span v-else v-html="icons.arrowSort" />
+                                                <button
+                                                    v-if="th.isSort"
+                                                    @click="sortTh(i, $event)"
+                                                    :class="{
+                                                        'th-button-active': [
+                                                            constants.DESC,
+                                                            constants.ASC,
+                                                        ].includes(sorts[i]),
+                                                    }"
+                                                    :style="`cursor:${isCursorPointer ? 'pointer' : 'default'}; background:${[constants.DESC, constants.ASC].includes(sorts[i]) ? '' : FINAL_CONFIG.style.th.buttons.filter.inactive.backgroundColor};color:${[constants.DESC, constants.ASC].includes(sorts[i]) ? '' : FINAL_CONFIG.style.th.buttons.filter.inactive.color}`"
+                                                >
+                                                    <span
+                                                        v-if="
+                                                            sorts[i] ===
+                                                            constants.ASC
+                                                        "
+                                                        v-html="
+                                                            [
+                                                                constants.DATE,
+                                                            ].includes(th.type)
+                                                                ? icons.sort09
+                                                                : icons.sortAZ
+                                                        "
+                                                    />
+                                                    <span
+                                                        v-else-if="
+                                                            sorts[i] ===
+                                                            constants.DESC
+                                                        "
+                                                        v-html="
+                                                            [
+                                                                constants.DATE,
+                                                            ].includes(th.type)
+                                                                ? icons.sort90
+                                                                : icons.sortZA
+                                                        "
+                                                    />
+                                                    <span
+                                                        v-else
+                                                        v-html="icons.arrowSort"
+                                                    />
                                                 </button>
-                                                <button 
-                                                    @click="resetDates(i); resetFilter(i, th, $event)"
-                                                    :disabled="!filteredDatesIndexes[i] && isResetDisabled(i, th)"
+                                                <button
+                                                    @click="
+                                                        resetDates(i);
+                                                        resetFilter(
+                                                            i,
+                                                            th,
+                                                            $event,
+                                                        );
+                                                    "
+                                                    :disabled="
+                                                        !filteredDatesIndexes[
+                                                            i
+                                                        ] &&
+                                                        isResetDisabled(i, th)
+                                                    "
                                                     class="th-reset"
-                                                    :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }"
+                                                    :style="{
+                                                        cursor: isCursorPointer
+                                                            ? 'pointer'
+                                                            : 'default',
+                                                    }"
                                                 >
                                                     ✖
                                                 </button>
@@ -204,84 +409,206 @@
                                     </template>
 
                                     <!-- SEARCH -->
-                                    <input v-if="th.isSearch" :placeholder="FINAL_CONFIG.translations.inputPlaceholder"
-                                        v-model="searches[i]" @input="debounce(filterBody, 400)" :name="`search_${i}`"
-                                        :style="`background:${FINAL_CONFIG.style.inputs.backgroundColor};color:${FINAL_CONFIG.style.inputs.color};border:${FINAL_CONFIG.style.inputs.border}`">
+                                    <input
+                                        v-if="th.isSearch"
+                                        :placeholder="
+                                            FINAL_CONFIG.translations
+                                                .inputPlaceholder
+                                        "
+                                        v-model="searches[i]"
+                                        @input="debounce(filterBody, 400)"
+                                        :name="`search_${i}`"
+                                        :style="`background:${FINAL_CONFIG.style.inputs.backgroundColor};color:${FINAL_CONFIG.style.inputs.color};border:${FINAL_CONFIG.style.inputs.border}`"
+                                    />
                                     <!-- SORT -->
-                                    <button v-if="!hasNaN[i] && th.isSort && th.type !== constants.DATE"
+                                    <button
+                                        v-if="
+                                            !hasNaN[i] &&
+                                            th.isSort &&
+                                            th.type !== constants.DATE
+                                        "
                                         @click="sortTh(i, $event)"
-                                        :class="{ 'th-button-active': [constants.DESC, constants.ASC].includes(sorts[i]) }"
-                                        :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${[constants.DESC, constants.ASC].includes(sorts[i]) ? '' : FINAL_CONFIG.style.th.buttons.filter.inactive.backgroundColor};color:${[constants.DESC, constants.ASC].includes(sorts[i]) ? '' : FINAL_CONFIG.style.th.buttons.filter.inactive.color}`">
-                                        <span v-if="sorts[i] === constants.ASC"
-                                            v-html="[constants.NUMERIC].includes(th.type) ? icons.sort09 : icons.sortZA" />
-                                        <span v-else-if="sorts[i] === constants.DESC"
-                                            v-html="[constants.NUMERIC].includes(th.type) ? icons.sort90 : icons.sortAZ" />
+                                        :class="{
+                                            'th-button-active': [
+                                                constants.DESC,
+                                                constants.ASC,
+                                            ].includes(sorts[i]),
+                                        }"
+                                        :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${[constants.DESC, constants.ASC].includes(sorts[i]) ? '' : FINAL_CONFIG.style.th.buttons.filter.inactive.backgroundColor};color:${[constants.DESC, constants.ASC].includes(sorts[i]) ? '' : FINAL_CONFIG.style.th.buttons.filter.inactive.color}`"
+                                    >
+                                        <span
+                                            v-if="sorts[i] === constants.ASC"
+                                            v-html="
+                                                [constants.NUMERIC].includes(
+                                                    th.type,
+                                                )
+                                                    ? icons.sort09
+                                                    : icons.sortZA
+                                            "
+                                        />
+                                        <span
+                                            v-else-if="
+                                                sorts[i] === constants.DESC
+                                            "
+                                            v-html="
+                                                [constants.NUMERIC].includes(
+                                                    th.type,
+                                                )
+                                                    ? icons.sort90
+                                                    : icons.sortAZ
+                                            "
+                                        />
                                         <span v-else v-html="icons.arrowSort" />
                                     </button>
 
                                     <!-- TOGGLE MULTISELECT -->
-                                    <button v-if="th.isMultiselect" @click="toggleMultiselect(i, th, $event)"
+                                    <button
+                                        v-if="th.isMultiselect"
+                                        @click="
+                                            toggleMultiselect(i, th, $event)
+                                        "
                                         v-html="icons.filter"
-                                        :class="{ 'th-button-active': multiselects[i] && multiselects[i].length !== getDropdownOptions(i).length }"
-                                        :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${multiselects[i] && multiselects[i].length !== getDropdownOptions(i).length ? '' : FINAL_CONFIG.style.th.buttons.filter.inactive.backgroundColor};color:${multiselects[i] && multiselects[i].length !== getDropdownOptions(i).length ? '' : FINAL_CONFIG.style.th.buttons.filter.inactive.color}`" />
+                                        :class="{
+                                            'th-button-active':
+                                                multiselects[i] &&
+                                                multiselects[i].length !==
+                                                    getDropdownOptions(i)
+                                                        .length,
+                                        }"
+                                        :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${multiselects[i] && multiselects[i].length !== getDropdownOptions(i).length ? '' : FINAL_CONFIG.style.th.buttons.filter.inactive.backgroundColor};color:${multiselects[i] && multiselects[i].length !== getDropdownOptions(i).length ? '' : FINAL_CONFIG.style.th.buttons.filter.inactive.color}`"
+                                    />
 
                                     <!-- SHOW CHART -->
-                                    <button 
-                                        v-if="currentSelectionSpan.col === i && canChart"
-                                        @click="showChart = !showChart" 
+                                    <button
+                                        v-if="
+                                            currentSelectionSpan.col === i &&
+                                            canChart
+                                        "
+                                        @click="showChart = !showChart"
                                         v-html="icons.chart"
-                                        :class="{ 'th-button-active': showChart }"
-                                        :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${showChart ? '' : FINAL_CONFIG.style.th.buttons.filter.inactive.backgroundColor};color:${showChart ? '' : FINAL_CONFIG.style.th.buttons.filter.inactive.color}`" />
+                                        :class="{
+                                            'th-button-active': showChart,
+                                        }"
+                                        :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${showChart ? '' : FINAL_CONFIG.style.th.buttons.filter.inactive.backgroundColor};color:${showChart ? '' : FINAL_CONFIG.style.th.buttons.filter.inactive.color}`"
+                                    />
 
-                                    <div v-if="th.rangeFilter && rangeFilters[i] && !hasNaN[i]" class="th-range-filter">
-                                        <label :for="`rangeMin${i}`"><span style="color:grey">ᒥ</span> min <span
-                                                style="color:grey">ᒣ</span></label>
-                                        <input type="number" :id="`rangeMin${i}`" :max="immutableRangeFilters[i].max"
-                                            :min="immutableRangeFilters[i].min" v-model.number="rangeFilters[i].min"
+                                    <div
+                                        v-if="
+                                            th.rangeFilter &&
+                                            rangeFilters[i] &&
+                                            !hasNaN[i]
+                                        "
+                                        class="th-range-filter"
+                                    >
+                                        <label :for="`rangeMin${i}`"
+                                            ><span style="color: grey">ᒥ</span>
+                                            min
+                                            <span style="color: grey"
+                                                >ᒣ</span
+                                            ></label
+                                        >
+                                        <input
+                                            type="number"
+                                            :id="`rangeMin${i}`"
+                                            :max="immutableRangeFilters[i].max"
+                                            :min="immutableRangeFilters[i].min"
+                                            v-model.number="rangeFilters[i].min"
                                             @input="debounce(filterBody, 400)"
-                                            :style="`background:${FINAL_CONFIG.style.inputs.backgroundColor};color:${FINAL_CONFIG.style.inputs.color};border:${FINAL_CONFIG.style.inputs.border}`">
-                                        <input type="number" :id="`rangeMax${i}`" :max="immutableRangeFilters[i].max"
-                                            :min="immutableRangeFilters[i].min" v-model.number="rangeFilters[i].max"
+                                            :style="`background:${FINAL_CONFIG.style.inputs.backgroundColor};color:${FINAL_CONFIG.style.inputs.color};border:${FINAL_CONFIG.style.inputs.border}`"
+                                        />
+                                        <input
+                                            type="number"
+                                            :id="`rangeMax${i}`"
+                                            :max="immutableRangeFilters[i].max"
+                                            :min="immutableRangeFilters[i].min"
+                                            v-model.number="rangeFilters[i].max"
                                             @input="debounce(filterBody, 400)"
-                                            :style="`background:${FINAL_CONFIG.style.inputs.backgroundColor};color:${FINAL_CONFIG.style.inputs.color};border:${FINAL_CONFIG.style.inputs.border}`">
-                                        <label :for="`rangeMax${i}`"><span style="color:grey">ᒪ</span> max <span
-                                                style="color:grey">ᒧ</span></label>
+                                            :style="`background:${FINAL_CONFIG.style.inputs.backgroundColor};color:${FINAL_CONFIG.style.inputs.color};border:${FINAL_CONFIG.style.inputs.border}`"
+                                        />
+                                        <label :for="`rangeMax${i}`"
+                                            ><span style="color: grey">ᒪ</span>
+                                            max
+                                            <span style="color: grey"
+                                                >ᒧ</span
+                                            ></label
+                                        >
                                     </div>
 
                                     <!-- RESET -->
-                                    <button 
-                                        v-if="canResetColumn(i, th)" 
+                                    <button
+                                        v-if="canResetColumn(i, th)"
                                         @click="resetFilter(i, th, $event)"
-                                        :disabled="isResetDisabled(i, th)" 
+                                        :disabled="isResetDisabled(i, th)"
                                         class="th-reset"
-                                        :style="{ cursor: isCursorPointer ? 'pointer' : 'default'}"
+                                        :style="{
+                                            cursor: isCursorPointer
+                                                ? 'pointer'
+                                                : 'default',
+                                        }"
                                     >
                                         ✖
                                     </button>
 
                                     <!-- MULTISELECT DROPDOWN -->
-                                    <div class="th-dropdown" v-if="th.isMultiselect" data-is-open="false"
+                                    <div
+                                        class="th-dropdown"
+                                        v-if="th.isMultiselect"
+                                        data-is-open="false"
                                         :id="`th_dropdown_${i}`"
-                                        :style="`background:${FINAL_CONFIG.style.dropdowns.backgroundColor};color:${FINAL_CONFIG.style.dropdowns.color}`">
-                                        <button class="close-dropdown" @click="toggleMultiselect(i, th, $event)"
-                                            :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${FINAL_CONFIG.style.closeButtons.backgroundColor};color:${FINAL_CONFIG.style.closeButtons.color}`">
+                                        :style="`background:${FINAL_CONFIG.style.dropdowns.backgroundColor};color:${FINAL_CONFIG.style.dropdowns.color}`"
+                                    >
+                                        <button
+                                            class="close-dropdown"
+                                            @click="
+                                                toggleMultiselect(i, th, $event)
+                                            "
+                                            :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${FINAL_CONFIG.style.closeButtons.backgroundColor};color:${FINAL_CONFIG.style.closeButtons.color}`"
+                                        >
                                             ✖
                                         </button>
-                                        <span class="th-option" v-for="(option, j) in getDropdownOptions(i)"
-                                            :key="`th_option_${i}_${j}`" @click="selectDropdownOption(option, i)"
-                                            @keyup.enter="selectDropdownOption(option, i)"
-                                            @keyup.space="selectDropdownOption(option, i)"
+                                        <span
+                                            class="th-option"
+                                            v-for="(
+                                                option, j
+                                            ) in getDropdownOptions(i)"
+                                            :key="`th_option_${i}_${j}`"
+                                            @click="
+                                                selectDropdownOption(option, i)
+                                            "
+                                            @keyup.enter="
+                                                selectDropdownOption(option, i)
+                                            "
+                                            @keyup.space="
+                                                selectDropdownOption(option, i)
+                                            "
                                             :style="`opacity:${isDropdownOptionSelected(option, i) ? 1 : 0.5}`"
-                                            tabindex="0">
-                                            <span v-if="isDropdownOptionSelected(option, i)"
+                                            tabindex="0"
+                                        >
+                                            <span
+                                                v-if="
+                                                    isDropdownOptionSelected(
+                                                        option,
+                                                        i,
+                                                    )
+                                                "
                                                 :style="`color:${FINAL_CONFIG.style.dropdowns.icons.selected.color};margin-right:5px`"
-                                                class="th-icon-green">
-                                                {{ FINAL_CONFIG.style.dropdowns.icons.selected.unicode }}
+                                                class="th-icon-green"
+                                            >
+                                                {{
+                                                    FINAL_CONFIG.style.dropdowns
+                                                        .icons.selected.unicode
+                                                }}
                                             </span>
-                                            <span v-else
+                                            <span
+                                                v-else
                                                 :style="`color:${FINAL_CONFIG.style.dropdowns.icons.unselected.color};margin-right:5px`"
-                                                class="th-icon-red">
-                                                {{ FINAL_CONFIG.style.dropdowns.icons.unselected.unicode }}
+                                                class="th-icon-red"
+                                            >
+                                                {{
+                                                    FINAL_CONFIG.style.dropdowns
+                                                        .icons.unselected
+                                                        .unicode
+                                                }}
                                             </span>
                                             <span>
                                                 {{ option }}
@@ -296,64 +623,122 @@
                     <!-- COLUMN SELECTOR -->
                     <tr>
                         <th class="invisible-cell"></th>
-                        <th v-for="(colSelector, i) in tableHead" :key="`col_selector_${i}`"
-                            :class="{ 'vue-ui-table-col-selector': !hasNaN[i], 'th-has-nan': hasNaN[i] }"
-                            :style="`background:${i === selectedColumn && !hasNaN[i] ? FINAL_CONFIG.style.th.selected.backgroundColor : FINAL_CONFIG.style.th.backgroundColor};color:${i === selectedColumn && !hasNaN[i] ? FINAL_CONFIG.style.th.selected.color : FINAL_CONFIG.style.th.color};outline:${FINAL_CONFIG.style.th.outline}`">
-                            <div v-if="!hasNaN[i]"
-                                v-html="tableHead[i].type === constants.NUMERIC ? icons.chevronDown : ''"
-                                :class="{ 'col-selector': tableHead[i].type === constants.NUMERIC }" tabindex="0"
-                                :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }"
-                                @click.stop="selectColumn(i)" @keyup.enter="selectColumn(i)" />
+                        <th
+                            v-for="(colSelector, i) in tableHead"
+                            :key="`col_selector_${i}`"
+                            :class="{
+                                'vue-ui-table-col-selector': !hasNaN[i],
+                                'th-has-nan': hasNaN[i],
+                            }"
+                            :style="`background:${i === selectedColumn && !hasNaN[i] ? FINAL_CONFIG.style.th.selected.backgroundColor : FINAL_CONFIG.style.th.backgroundColor};color:${i === selectedColumn && !hasNaN[i] ? FINAL_CONFIG.style.th.selected.color : FINAL_CONFIG.style.th.color};outline:${FINAL_CONFIG.style.th.outline}`"
+                        >
+                            <div
+                                v-if="!hasNaN[i]"
+                                v-html="
+                                    tableHead[i].type === constants.NUMERIC
+                                        ? icons.chevronDown
+                                        : ''
+                                "
+                                :class="{
+                                    'col-selector':
+                                        tableHead[i].type === constants.NUMERIC,
+                                }"
+                                tabindex="0"
+                                :style="{
+                                    cursor: isCursorPointer
+                                        ? 'pointer'
+                                        : 'default',
+                                }"
+                                @click.stop="selectColumn(i)"
+                                @keyup.enter="selectColumn(i)"
+                            />
                         </th>
                     </tr>
                 </thead>
 
                 <!-- TABLE BODY -->
-                <tbody @click="closeAllDropdowns" @keydown="navigateCell($event)">
-                    <tr v-for="(tr, i) in visibleRows" :key="`tbody_${i}`" :data-row="i % 2 === 0 ? 'odd' : 'even'"
+                <tbody
+                    @click="closeAllDropdowns"
+                    @keydown="navigateCell($event)"
+                >
+                    <tr
+                        v-for="(tr, i) in visibleRows"
+                        :key="`tbody_${i}`"
+                        :data-row="i % 2 === 0 ? 'odd' : 'even'"
                         :class="`tr_${uid}`"
-                        :style="`${i % 2 === 0 ? `background:${FINAL_CONFIG.style.rows.odd.backgroundColor};color:${FINAL_CONFIG.style.rows.odd.color}` : `background:${FINAL_CONFIG.style.rows.even.backgroundColor};color:${FINAL_CONFIG.style.rows.even.color}`}`">
-                        <td 
-                            class="vue-ui-table-td-iteration" 
+                        :style="`${i % 2 === 0 ? `background:${FINAL_CONFIG.style.rows.odd.backgroundColor};color:${FINAL_CONFIG.style.rows.odd.color}` : `background:${FINAL_CONFIG.style.rows.even.backgroundColor};color:${FINAL_CONFIG.style.rows.even.color}`}`"
+                    >
+                        <td
+                            class="vue-ui-table-td-iteration"
                             :data-row="i % 2 === 0 ? 'odd' : 'even'"
                             :style="{
-                                outline: FINAL_CONFIG.style.rows.outline
+                                outline: FINAL_CONFIG.style.rows.outline,
                             }"
                         >
                             {{ tr.absoluteIndex + 1 }}
                         </td>
-                        <td 
-                            :data-row="i % 2 === 0 ? 'odd' : 'even'" 
-                            v-for="(td, j) in tr.td" 
+                        <td
+                            :data-row="i % 2 === 0 ? 'odd' : 'even'"
+                            v-for="(td, j) in tr.td"
                             :key="`td_${i}_${j}`"
-                            :style="isNumeric(td) || dataset.header[j].type === constants.DATE ? `text-align:right;font-variant-numeric: tabular-nums;outline:${FINAL_CONFIG.style.rows.outline}` : `outline:${FINAL_CONFIG.style.rows.outline}`"
-                            @click="selectTd({
-                                td,
-                                rowIndex: i,
-                                colIndex: j,
-                                headerType: dataset.header[j].type,
-                                event: $event
-                            })" @keyup.enter="selectTd({
-                                td,
-                                rowIndex: i,
-                                colIndex: j,
-                                headerType: dataset.header[j].type,
-                                event: $event
-                            })" @keyup.space="selectTd({
-                                td,
-                                rowIndex: i,
-                                colIndex: j,
-                                headerType: dataset.header[j].type,
-                                event: $event
-                            })"
-                            :class="{ 'td-numeric': dataset.header[j].type === constants.NUMERIC, 'td-focusable': true, 'td-has-nan': hasNaN[j] }"
-                            :id="`cell_${i}_${j}_${uid}`" tabindex="0">
+                            :style="
+                                isNumeric(td) ||
+                                dataset.header[j].type === constants.DATE
+                                    ? `text-align:right;font-variant-numeric: tabular-nums;outline:${FINAL_CONFIG.style.rows.outline}`
+                                    : `outline:${FINAL_CONFIG.style.rows.outline}`
+                            "
+                            @click="
+                                selectTd({
+                                    td,
+                                    rowIndex: i,
+                                    colIndex: j,
+                                    headerType: dataset.header[j].type,
+                                    event: $event,
+                                })
+                            "
+                            @keyup.enter="
+                                selectTd({
+                                    td,
+                                    rowIndex: i,
+                                    colIndex: j,
+                                    headerType: dataset.header[j].type,
+                                    event: $event,
+                                })
+                            "
+                            @keyup.space="
+                                selectTd({
+                                    td,
+                                    rowIndex: i,
+                                    colIndex: j,
+                                    headerType: dataset.header[j].type,
+                                    event: $event,
+                                })
+                            "
+                            :class="{
+                                'td-numeric':
+                                    dataset.header[j].type ===
+                                    constants.NUMERIC,
+                                'td-focusable': true,
+                                'td-has-nan': hasNaN[j],
+                            }"
+                            :id="`cell_${i}_${j}_${uid}`"
+                            tabindex="0"
+                        >
                             <!-- ICON -->
-                            <span v-if="tr.meta && tr.meta.markerIndices.includes(j) && tr.meta.unicodeIcon"
-                                :style="`color:${tr.meta.color};margin-right:3px`" v-html="tr.meta.unicodeIcon" />
+                            <span
+                                v-if="
+                                    tr.meta &&
+                                    tr.meta.markerIndices.includes(j) &&
+                                    tr.meta.unicodeIcon
+                                "
+                                :style="`color:${tr.meta.color};margin-right:3px`"
+                                v-html="tr.meta.unicodeIcon"
+                            />
 
                             <!-- DATE -->
-                            <span v-if="dataset.header[j].type === constants.DATE">
+                            <span
+                                v-if="dataset.header[j].type === constants.DATE"
+                            >
                                 {{ dataset.header[j].prefix }}
                                 {{ new Date(td).toLocaleString().slice(0, 10) }}
                                 {{ dataset.header[j].suffix }}
@@ -361,39 +746,74 @@
 
                             <!-- PERCENTAGE -->
                             <span v-else-if="dataset.header[j].isPercentage">
-                                {{ dataLabel({
-                                    v: Number(td * 100),
-                                    s: '%',
-                                    r: dataset.header[j].decimals,
-                                }) }}
+                                {{
+                                    dataLabel({
+                                        v: Number(td * 100),
+                                        s: '%',
+                                        r: dataset.header[j].decimals,
+                                    })
+                                }}
                             </span>
 
                             <!-- NUMERIC VALUE WITH PERCENTAGE TO SUM OF ANOTHER COL -->
                             <span
-                                v-else-if="(percentages[j] && dataset.header[j].percentageTo && !dataset.header[j].isPercentage)"
-                                :class="{ 'td-nan': isNaN(Number(td)) }">
-                                {{ isNaN(Number(td)) ? `${td} is not ${constants.NUMERIC}` : dataLabel({
-                                    p: dataset.header[j].prefix,
-                                    v: Number(td),
-                                    s: dataset.header[j].suffix,
-                                    r: dataset.header[j].decimals
-                                }) }}
-                                ({{ isNaN(Number(td)) ? '' : dataLabel({
-                                    v: Number((td / getSum(percentages[j].referenceIndex) * 100)),
-                                    s: '%',
-                                    r: dataset.header[j].decimals
-                                })}})
+                                v-else-if="
+                                    percentages[j] &&
+                                    dataset.header[j].percentageTo &&
+                                    !dataset.header[j].isPercentage
+                                "
+                                :class="{ 'td-nan': isNaN(Number(td)) }"
+                            >
+                                {{
+                                    isNaN(Number(td))
+                                        ? `${td} is not ${constants.NUMERIC}`
+                                        : dataLabel({
+                                              p: dataset.header[j].prefix,
+                                              v: Number(td),
+                                              s: dataset.header[j].suffix,
+                                              r: dataset.header[j].decimals,
+                                          })
+                                }}
+                                ({{
+                                    isNaN(Number(td))
+                                        ? ''
+                                        : dataLabel({
+                                              v: Number(
+                                                  (td /
+                                                      getSum(
+                                                          percentages[j]
+                                                              .referenceIndex,
+                                                      )) *
+                                                      100,
+                                              ),
+                                              s: '%',
+                                              r: dataset.header[j].decimals,
+                                          })
+                                }})
                             </span>
 
                             <!-- NUMERIC -->
-                            <span v-else-if="dataset.header[j].type === constants.NUMERIC"
-                                :class="{ 'td-nan': isNaN(Number(td)) }">
-                                {{ isNaN(Number(td)) ? `${td} is not ${constants.NUMERIC}` : dataLabel({
-                                    p: dataset.header[j].prefix,
-                                    v: Number(td.toFixed(dataset.header[j].decimals)),
-                                    s: dataset.header[j].suffix,
-                                    r: dataset.header[j].decimals
-                                }) }}
+                            <span
+                                v-else-if="
+                                    dataset.header[j].type === constants.NUMERIC
+                                "
+                                :class="{ 'td-nan': isNaN(Number(td)) }"
+                            >
+                                {{
+                                    isNaN(Number(td))
+                                        ? `${td} is not ${constants.NUMERIC}`
+                                        : dataLabel({
+                                              p: dataset.header[j].prefix,
+                                              v: Number(
+                                                  td.toFixed(
+                                                      dataset.header[j]
+                                                          .decimals,
+                                                  ),
+                                              ),
+                                              s: dataset.header[j].suffix,
+                                              r: dataset.header[j].decimals,
+                                          })
+                                }}
                             </span>
 
                             <!-- ALL OTHER -->
@@ -409,111 +829,215 @@
         </div>
 
         <!-- INFO BAR (active if numeric cells are selected) -->
-        <div :class="{ 'td-selector-info': true, 'td-selector-info--active': currentSelectionSpan.col !== undefined && currentSelectionSpan.rows.length }"
-            :style="`background:${FINAL_CONFIG.style.infoBar.backgroundColor};color:${FINAL_CONFIG.style.infoBar.color}`">
-            <template v-if="currentSelectionSpan.col !== undefined && currentSelectionSpan.rows.length">
+        <div
+            :class="{
+                'td-selector-info': true,
+                'td-selector-info--active':
+                    currentSelectionSpan.col !== undefined &&
+                    currentSelectionSpan.rows.length,
+            }"
+            :style="`background:${FINAL_CONFIG.style.infoBar.backgroundColor};color:${FINAL_CONFIG.style.infoBar.color}`"
+        >
+            <template
+                v-if="
+                    currentSelectionSpan.col !== undefined &&
+                    currentSelectionSpan.rows.length
+                "
+            >
                 <div v-html="icons.table" class="td-selector-icon" />
                 <span>
                     <!-- NAME OF SELECTED COLUMN -->
                     <b>
                         {{ dataset.header[currentSelectionSpan.col].name }}
-                        <span v-if="dataset.header[currentSelectionSpan.col].isPercentage">
-                            / {{ dataset.header[percentages[currentSelectionSpan.col].referenceIndex].name }}
+                        <span
+                            v-if="
+                                dataset.header[currentSelectionSpan.col]
+                                    .isPercentage
+                            "
+                        >
+                            /
+                            {{
+                                dataset.header[
+                                    percentages[currentSelectionSpan.col]
+                                        .referenceIndex
+                                ].name
+                            }}
                         </span>
                     </b>
 
                     <!-- NB OF SELECTED CELLS -->
-                    <span style="margin-left:12px">
-                        {{ FINAL_CONFIG.translations.nb }} : <b class="format-num">{{ currentSelectionSpan.rows.length
-                            }}</b>
+                    <span style="margin-left: 12px">
+                        {{ FINAL_CONFIG.translations.nb }} :
+                        <b class="format-num">{{
+                            currentSelectionSpan.rows.length
+                        }}</b>
                     </span>
 
                     <!-- SUM OF SELECTED CELLS -->
                     <span style="margin-left: 12px">
                         {{ FINAL_CONFIG.translations.sum }} :
-                        <b class="format-num" v-if="dataset.header[currentSelectionSpan.col].isPercentage">
+                        <b
+                            class="format-num"
+                            v-if="
+                                dataset.header[currentSelectionSpan.col]
+                                    .isPercentage
+                            "
+                        >
                             {{ selectedCellsCalculations.sumPercentage }}
                         </b>
                         <b v-else class="format-num">
-                            {{ dataset.header[currentSelectionSpan.col].prefix }}
+                            {{
+                                dataset.header[currentSelectionSpan.col].prefix
+                            }}
                             {{ selectedCellsCalculations.sumRegular }}
-                            {{ dataset.header[currentSelectionSpan.col].suffix }}
+                            {{
+                                dataset.header[currentSelectionSpan.col].suffix
+                            }}
                         </b>
-                        <b v-if="dataset.header[currentSelectionSpan.col].isPercentage">%</b>
+                        <b
+                            v-if="
+                                dataset.header[currentSelectionSpan.col]
+                                    .isPercentage
+                            "
+                            >%</b
+                        >
                     </span>
 
                     <!-- AVERAGE OF SELECTED CELLS -->
                     <span style="margin-left: 12px">
                         {{ FINAL_CONFIG.translations.average }} :
-                        <b v-if="dataset.header[currentSelectionSpan.col].isPercentage" class="format-num">
+                        <b
+                            v-if="
+                                dataset.header[currentSelectionSpan.col]
+                                    .isPercentage
+                            "
+                            class="format-num"
+                        >
                             {{ selectedCellsCalculations.averagePercentage }}
                         </b>
                         <b v-else class="format-num">
-                            {{ dataset.header[currentSelectionSpan.col].prefix }}
+                            {{
+                                dataset.header[currentSelectionSpan.col].prefix
+                            }}
                             {{ selectedCellsCalculations.averageRegular }}
-                            {{ dataset.header[currentSelectionSpan.col].suffix }}
+                            {{
+                                dataset.header[currentSelectionSpan.col].suffix
+                            }}
                         </b>
-                        <b v-if="dataset.header[currentSelectionSpan.col].isPercentage">%</b>
+                        <b
+                            v-if="
+                                dataset.header[currentSelectionSpan.col]
+                                    .isPercentage
+                            "
+                            >%</b
+                        >
                     </span>
                 </span>
-                <button @click="resetSelection" class="td-selector-info-reset"
-                    :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${FINAL_CONFIG.style.closeButtons.backgroundColor};color:${FINAL_CONFIG.style.closeButtons.color};border-radius:${FINAL_CONFIG.style.closeButtons.borderRadius}`">
+                <button
+                    @click="resetSelection"
+                    class="td-selector-info-reset"
+                    :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${FINAL_CONFIG.style.closeButtons.backgroundColor};color:${FINAL_CONFIG.style.closeButtons.color};border-radius:${FINAL_CONFIG.style.closeButtons.borderRadius}`"
+                >
                     ✖
                 </button>
             </template>
         </div>
 
         <!-- PAGINATOR -->
-        <div class="vue-ui-table-paginator format-num" v-if="bodyCopy.length > 10">
-            {{ FINAL_CONFIG.translations.totalRows }} : {{ dataset.body.length }} |
+        <div
+            class="vue-ui-table-paginator format-num"
+            v-if="bodyCopy.length > 10"
+        >
+            {{ FINAL_CONFIG.translations.totalRows }} :
+            {{ dataset.body.length }} |
             {{ FINAL_CONFIG.translations.paginatorLabel }} :
-            <select id="paginatorSelector" v-model.number="itemsPerPage" v-if="bodyCopy.length > 10"
-                @change="resetSelection(); onPageChange();"
-                :style="`background:${FINAL_CONFIG.style.inputs.backgroundColor};color:${FINAL_CONFIG.style.inputs.color};border:${FINAL_CONFIG.style.inputs.border}`">
+            <select
+                id="paginatorSelector"
+                v-model.number="itemsPerPage"
+                v-if="bodyCopy.length > 10"
+                @change="
+                    resetSelection();
+                    onPageChange();
+                "
+                :style="`background:${FINAL_CONFIG.style.inputs.backgroundColor};color:${FINAL_CONFIG.style.inputs.color};border:${FINAL_CONFIG.style.inputs.border}`"
+            >
                 <template v-for="(option, i) in paginatorOptions">
-                    <option :key="`paginator_option_${i}`"
-                        v-if="bodyCopy.length > option || dataset.body.length === option">
+                    <option
+                        :key="`paginator_option_${i}`"
+                        v-if="
+                            bodyCopy.length > option ||
+                            dataset.body.length === option
+                        "
+                    >
                         {{ option }}
                     </option>
                 </template>
             </select>
         </div>
         <div class="vue-ui-table-size-warning" v-if="itemsPerPage >= 250">
-            <span v-html="icons.warning" />{{ FINAL_CONFIG.translations.sizeWarning }}
+            <span v-html="icons.warning" />{{
+                FINAL_CONFIG.translations.sizeWarning
+            }}
         </div>
 
         <!-- PAGINATION -->
-        <div class="vue-ui-table-navigation-indicator" v-if="pages.length > 1 && pages.length <= 10"
-            :style="`background:${FINAL_CONFIG.style.pagination.navigationIndicator.backgroundColor};width:calc(${(currentPage / (pages.length - 1)) * 100}%)`" />
+        <div
+            class="vue-ui-table-navigation-indicator"
+            v-if="pages.length > 1 && pages.length <= 10"
+            :style="`background:${FINAL_CONFIG.style.pagination.navigationIndicator.backgroundColor};width:calc(${(currentPage / (pages.length - 1)) * 100}%)`"
+        />
         <div class="vue-ui-table-pagination format-num" v-if="pages.length > 1">
             <!-- PREVIOUS PAGE -->
-            <button class="vue-ui-table-navigation" @click.stop="navigate('previous')" v-html="icons.chevronLeft"
+            <button
+                class="vue-ui-table-navigation"
+                @click.stop="navigate('previous')"
+                v-html="icons.chevronLeft"
                 :disabled="currentPage === 0"
-                :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${FINAL_CONFIG.style.pagination.buttons.backgroundColor};color:${FINAL_CONFIG.style.pagination.buttons.color};opacity:${currentPage === 0 ? FINAL_CONFIG.style.pagination.buttons.opacityDisabled : 1}`" />
+                :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${FINAL_CONFIG.style.pagination.buttons.backgroundColor};color:${FINAL_CONFIG.style.pagination.buttons.color};opacity:${currentPage === 0 ? FINAL_CONFIG.style.pagination.buttons.opacityDisabled : 1}`"
+            />
             <template v-if="pages.length > 3">
                 <!-- FIRST PAGE -->
-                <button class="vue-ui-table-navigation" @click.stop="navigate(1)" :disabled="currentPage === 0"
-                    :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${FINAL_CONFIG.style.pagination.buttons.backgroundColor};color:${FINAL_CONFIG.style.pagination.buttons.color};opacity:${currentPage === 0 ? FINAL_CONFIG.style.pagination.buttons.opacityDisabled : 1}`">
+                <button
+                    class="vue-ui-table-navigation"
+                    @click.stop="navigate(1)"
+                    :disabled="currentPage === 0"
+                    :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${FINAL_CONFIG.style.pagination.buttons.backgroundColor};color:${FINAL_CONFIG.style.pagination.buttons.color};opacity:${currentPage === 0 ? FINAL_CONFIG.style.pagination.buttons.opacityDisabled : 1}`"
+                >
                     1
                 </button>
                 <!-- PAGE SCROLLER -->
-                <div v-if="pages.length > 10" class="vue-ui-table-page-scroller-wrapper" :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }">
+                <div
+                    v-if="pages.length > 10"
+                    class="vue-ui-table-page-scroller-wrapper"
+                    :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }"
+                >
                     <label for="pageScroller" style="font-size: 14px">
                         {{ FINAL_CONFIG.translations.page }}
                         {{ currentPage + 1 }} / {{ pages.length }}
                     </label>
-                    <input class="vue-ui-table-page-scroller" id="pageScroller" type="range" step="1" :min="0"
-                        :max="pages.length - 1" @input="updateCurrentPage($event)" :value="currentPage"
-                        :style="`background:${FINAL_CONFIG.style.inputs.backgroundColor};color:${FINAL_CONFIG.style.inputs.color};border:${FINAL_CONFIG.style.inputs.border};accent-color:${FINAL_CONFIG.style.inputs.accentColor}`">
+                    <input
+                        class="vue-ui-table-page-scroller"
+                        id="pageScroller"
+                        type="range"
+                        step="1"
+                        :min="0"
+                        :max="pages.length - 1"
+                        @input="updateCurrentPage($event)"
+                        :value="currentPage"
+                        :style="`background:${FINAL_CONFIG.style.inputs.backgroundColor};color:${FINAL_CONFIG.style.inputs.color};border:${FINAL_CONFIG.style.inputs.border};accent-color:${FINAL_CONFIG.style.inputs.accentColor}`"
+                    />
                 </div>
                 <span v-else>
                     {{ FINAL_CONFIG.translations.page }}
                     {{ currentPage + 1 }} / {{ pages.length }}
                 </span>
                 <!-- LAST PAGE -->
-                <button class="vue-ui-table-navigation" @click.stop="navigate(pages.length)"
+                <button
+                    class="vue-ui-table-navigation"
+                    @click.stop="navigate(pages.length)"
                     :disabled="currentPage === pages.length - 1"
-                    :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${FINAL_CONFIG.style.pagination.buttons.backgroundColor};color:${FINAL_CONFIG.style.pagination.buttons.color};opacity:${currentPage === pages.length - 1 ? FINAL_CONFIG.style.pagination.buttons.opacityDisabled : 1}`">
+                    :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${FINAL_CONFIG.style.pagination.buttons.backgroundColor};color:${FINAL_CONFIG.style.pagination.buttons.color};opacity:${currentPage === pages.length - 1 ? FINAL_CONFIG.style.pagination.buttons.opacityDisabled : 1}`"
+                >
                     {{ pages.length }}
                 </button>
             </template>
@@ -522,9 +1046,13 @@
                 {{ currentPage + 1 }} / {{ pages.length }}
             </template>
             <!-- NEXT PAGE -->
-            <button class="vue-ui-table-navigation" @click.stop="navigate('next')" v-html="icons.chevronRight"
+            <button
+                class="vue-ui-table-navigation"
+                @click.stop="navigate('next')"
+                v-html="icons.chevronRight"
                 :disabled="currentPage === pages.length - 1"
-                :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${FINAL_CONFIG.style.pagination.buttons.backgroundColor};color:${FINAL_CONFIG.style.pagination.buttons.color};opacity:${currentPage === pages.length - 1 ? FINAL_CONFIG.style.pagination.buttons.opacityDisabled : 1}`" />
+                :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${FINAL_CONFIG.style.pagination.buttons.backgroundColor};color:${FINAL_CONFIG.style.pagination.buttons.color};opacity:${currentPage === pages.length - 1 ? FINAL_CONFIG.style.pagination.buttons.opacityDisabled : 1}`"
+            />
         </div>
 
         <!-- CHART MODAL -->
@@ -543,121 +1071,221 @@
         >
             <template #before>
                 <div class="vue-ui-table-chart-modal-options">
-                    <button v-if="availableDonutCategories.length" @click="showDonutOptions = true" v-html="icons.donut"
-                        :class="{ 'is-active-chart': chart.type === constants.DONUT || showDonutOptions }"
-                        :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${chart.type === constants.DONUT || showDonutOptions ? FINAL_CONFIG.style.chart.modal.buttons.selected.backgroundColor : FINAL_CONFIG.style.chart.modal.buttons.unselected.backgroundColor};color:${chart.type === constants.DONUT || showDonutOptions ? FINAL_CONFIG.style.chart.modal.buttons.selected.color : FINAL_CONFIG.style.chart.modal.buttons.unselected.color}`" />
-                    <button @click="chart.type = constants.LINE; showDonutOptions = false" v-html="icons.chart"
-                        :class="{ 'is-active-chart': chart.type === constants.LINE && !showDonutOptions }"
-                        :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${chart.type === constants.LINE && !showDonutOptions ? FINAL_CONFIG.style.chart.modal.buttons.selected.backgroundColor : FINAL_CONFIG.style.chart.modal.buttons.unselected.backgroundColor};color:${chart.type === constants.LINE && !showDonutOptions ? FINAL_CONFIG.style.chart.modal.buttons.selected.color : FINAL_CONFIG.style.chart.modal.buttons.unselected.color}`" />
-                    <button @click="chart.type = constants.BAR; showDonutOptions = false" v-html="icons.bar"
-                        :class="{ 'is-active-chart': chart.type === constants.BAR && !showDonutOptions }"
-                        :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${chart.type === constants.BAR && !showDonutOptions ? FINAL_CONFIG.style.chart.modal.buttons.selected.backgroundColor : FINAL_CONFIG.style.chart.modal.buttons.unselected.backgroundColor};color:${chart.type === constants.BAR && !showDonutOptions ? FINAL_CONFIG.style.chart.modal.buttons.selected.color : FINAL_CONFIG.style.chart.modal.buttons.unselected.color}`" />
+                    <button
+                        v-if="availableDonutCategories.length"
+                        @click="showDonutOptions = true"
+                        v-html="icons.donut"
+                        :class="{
+                            'is-active-chart':
+                                chart.type === constants.DONUT ||
+                                showDonutOptions,
+                        }"
+                        :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${chart.type === constants.DONUT || showDonutOptions ? FINAL_CONFIG.style.chart.modal.buttons.selected.backgroundColor : FINAL_CONFIG.style.chart.modal.buttons.unselected.backgroundColor};color:${chart.type === constants.DONUT || showDonutOptions ? FINAL_CONFIG.style.chart.modal.buttons.selected.color : FINAL_CONFIG.style.chart.modal.buttons.unselected.color}`"
+                    />
+                    <button
+                        @click="
+                            chart.type = constants.LINE;
+                            showDonutOptions = false;
+                        "
+                        v-html="icons.chart"
+                        :class="{
+                            'is-active-chart':
+                                chart.type === constants.LINE &&
+                                !showDonutOptions,
+                        }"
+                        :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${chart.type === constants.LINE && !showDonutOptions ? FINAL_CONFIG.style.chart.modal.buttons.selected.backgroundColor : FINAL_CONFIG.style.chart.modal.buttons.unselected.backgroundColor};color:${chart.type === constants.LINE && !showDonutOptions ? FINAL_CONFIG.style.chart.modal.buttons.selected.color : FINAL_CONFIG.style.chart.modal.buttons.unselected.color}`"
+                    />
+                    <button
+                        @click="
+                            chart.type = constants.BAR;
+                            showDonutOptions = false;
+                        "
+                        v-html="icons.bar"
+                        :class="{
+                            'is-active-chart':
+                                chart.type === constants.BAR &&
+                                !showDonutOptions,
+                        }"
+                        :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${chart.type === constants.BAR && !showDonutOptions ? FINAL_CONFIG.style.chart.modal.buttons.selected.backgroundColor : FINAL_CONFIG.style.chart.modal.buttons.unselected.backgroundColor};color:${chart.type === constants.BAR && !showDonutOptions ? FINAL_CONFIG.style.chart.modal.buttons.selected.color : FINAL_CONFIG.style.chart.modal.buttons.unselected.color}`"
+                    />
                 </div>
             </template>
 
             <template #content>
-                <div style="width:100%; height: fit-content">
+                <div style="width: 100%; height: fit-content">
                     <!-- DONUT OPTIONS -->
-                    <div v-if="showDonutOptions && availableDonutCategories.length"
-                        :style="`background:${FINAL_CONFIG.style.chart.modal.backgroundColor};color:${FINAL_CONFIG.style.chart.modal.color}`">
+                    <div
+                        v-if="
+                            showDonutOptions && availableDonutCategories.length
+                        "
+                        :style="`background:${FINAL_CONFIG.style.chart.modal.backgroundColor};color:${FINAL_CONFIG.style.chart.modal.color}`"
+                    >
                         <fieldset class="vue-ui-table-fieldset">
                             <legend>
-                                {{ FINAL_CONFIG.translations.chooseCategoryColumn }}
+                                {{
+                                    FINAL_CONFIG.translations
+                                        .chooseCategoryColumn
+                                }}
                             </legend>
                             <div class="vue-ui-table-fieldset-wrapper">
-                                <template v-for="(option, i) in availableDonutCategories" :key="`donut_radio_${i}`">
+                                <template
+                                    v-for="(
+                                        option, i
+                                    ) in availableDonutCategories"
+                                    :key="`donut_radio_${i}`"
+                                >
                                     <div class="vue-ui-table-fieldset-option">
-                                        <input type="radio" :name="option.name" :id="option.name"
-                                            :checked="selectedDonutCategory && option.name === selectedDonutCategory.name"
-                                            @input="selectedDonutCategory = availableDonutCategories[i]"
-                                            :style="`background:${FINAL_CONFIG.style.inputs.backgroundColor};color:${FINAL_CONFIG.style.inputs.color};border:${FINAL_CONFIG.style.inputs.border};accent-color:${FINAL_CONFIG.style.inputs.accentColor}`" />
+                                        <input
+                                            type="radio"
+                                            :name="option.name"
+                                            :id="option.name"
+                                            :checked="
+                                                selectedDonutCategory &&
+                                                option.name ===
+                                                    selectedDonutCategory.name
+                                            "
+                                            @input="
+                                                selectedDonutCategory =
+                                                    availableDonutCategories[i]
+                                            "
+                                            :style="`background:${FINAL_CONFIG.style.inputs.backgroundColor};color:${FINAL_CONFIG.style.inputs.color};border:${FINAL_CONFIG.style.inputs.border};accent-color:${FINAL_CONFIG.style.inputs.accentColor}`"
+                                        />
                                         <label :for="option.name">
                                             {{ option.name }}
                                         </label>
                                     </div>
                                 </template>
                             </div>
-                            <button class="vue-ui-table-generate-donut" :disabled="!selectedDonutCategory"
+                            <button
+                                class="vue-ui-table-generate-donut"
+                                :disabled="!selectedDonutCategory"
                                 @click="applyDonutOption"
-                                :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${FINAL_CONFIG.style.chart.modal.buttons.selected.backgroundColor};color:${FINAL_CONFIG.style.chart.modal.buttons.selected.color}`">
-                                <div style="margin-bottom: -3px" v-html="icons.donut" />
+                                :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${FINAL_CONFIG.style.chart.modal.buttons.selected.backgroundColor};color:${FINAL_CONFIG.style.chart.modal.buttons.selected.color}`"
+                            >
+                                <div
+                                    style="margin-bottom: -3px"
+                                    v-html="icons.donut"
+                                />
                                 {{ FINAL_CONFIG.translations.makeDonut }}
                             </button>
                         </fieldset>
                     </div>
 
                     <!-- BAR | LINE CHARTS -->
-                    <template v-if="[constants.BAR, constants.LINE].includes(chart.type) && !showDonutOptions">
-                        <label v-if="chartTimeLabelOptions.length > 1" :style="{
-                            color: FINAL_CONFIG.style.chart.modal.color,
-                        }">
+                    <template
+                        v-if="
+                            [constants.BAR, constants.LINE].includes(
+                                chart.type,
+                            ) && !showDonutOptions
+                        "
+                    >
+                        <label
+                            v-if="chartTimeLabelOptions.length > 1"
+                            :style="{
+                                color: FINAL_CONFIG.style.chart.modal.color,
+                            }"
+                        >
                             {{ FINAL_CONFIG.translations.xAxisLabels }}
                             <select v-model="chartTimeLabelSourceModel">
-                                <option v-for="opt in chartTimeLabelOptions">{{ opt }}</option>
+                                <option v-for="opt in chartTimeLabelOptions">
+                                    {{ opt }}
+                                </option>
                             </select>
                         </label>
                         <div style="width: 100%; margin-bottom: 12px">
-                            <VueUiXy :key="`chart_line_${chartStep}`" :dataset="chartData.xyDatasetLine" :config="chartData.xyConfig" v-if="chart.type === constants.LINE"/>
-                            <VueUiXy :key="`chart_bar_${chartStep}`" :dataset="chartData.xyDatasetBar" :config="chartData.xyConfig" v-if="chart.type === constants.BAR"/>
+                            <VueUiXy
+                                :key="`chart_line_${chartStep}`"
+                                :dataset="chartData.xyDatasetLine"
+                                :config="chartData.xyConfig"
+                                v-if="chart.type === constants.LINE"
+                            />
+                            <VueUiXy
+                                :key="`chart_bar_${chartStep}`"
+                                :dataset="chartData.xyDatasetBar"
+                                :config="chartData.xyConfig"
+                                v-if="chart.type === constants.BAR"
+                            />
                         </div>
-                        <div v-if="currentSelectionSpan.rows.length >= 2" class="chart-trend"
-                            :style="`color:${FINAL_CONFIG.style.chart.modal.color}`">
-                            <span>---</span> Trend: {{ dataLabel({
-                                v: chartData.progression.trend * 100,
-                                s: '%',
-                                r: 1
-                            }) }}
+                        <div
+                            v-if="currentSelectionSpan.rows.length >= 2"
+                            class="chart-trend"
+                            :style="`color:${FINAL_CONFIG.style.chart.modal.color}`"
+                        >
+                            <span>---</span> Trend:
+                            {{
+                                dataLabel({
+                                    v: chartData.progression.trend * 100,
+                                    s: '%',
+                                    r: 1,
+                                })
+                            }}
                         </div>
                     </template>
 
                     <!-- DONUT CHART -->
-                    <template v-if="[constants.DONUT].includes(chart.type) && !showDonutOptions">
+                    <template
+                        v-if="
+                            [constants.DONUT].includes(chart.type) &&
+                            !showDonutOptions
+                        "
+                    >
                         <div style="width: 100%; margin-bottom: 32px">
-                            <VueUiDonut :dataset="currentDonut" :config="chartData.donutConfig"/>
+                            <VueUiDonut
+                                :dataset="currentDonut"
+                                :config="chartData.donutConfig"
+                            />
                         </div>
                     </template>
                 </div>
             </template>
         </BaseDraggableDialog>
     </div>
-
 </template>
 
 <script setup>
-import { 
+import {
     adaptColorToBackground,
-    calcLinearProgression,  
-    convertConfigColors, 
+    calcLinearProgression,
+    convertConfigColors,
     createCsvContent,
-    dataLabel, 
-    downloadCsv, 
-    lightenHexColor, 
-    palette, 
+    dataLabel,
+    downloadCsv,
+    lightenHexColor,
+    palette,
     treeShake,
     setOpacity,
     createUid,
-} from "../lib";
-import { useConfig } from "../useConfig";
-import VueUiXy from "./vue-ui-xy.vue";
-import VueUiDonut from "./vue-ui-donut.vue";
-import BaseIcon from "../atoms/BaseIcon.vue";
-import { computed, ref, nextTick, onMounted, watch, defineAsyncComponent } from "vue";
+} from '../lib';
+import { useConfig } from '../useConfig';
+import VueUiXy from './vue-ui-xy.vue';
+import VueUiDonut from './vue-ui-donut.vue';
+import BaseIcon from '../atoms/BaseIcon.vue';
+import {
+    computed,
+    ref,
+    nextTick,
+    onMounted,
+    watch,
+    defineAsyncComponent,
+} from 'vue';
 
-const BaseDraggableDialog = defineAsyncComponent(() => import('../atoms/BaseDraggableDialog.vue'));
+const BaseDraggableDialog = defineAsyncComponent(
+    () => import('../atoms/BaseDraggableDialog.vue'),
+);
 
 const props = defineProps({
     config: {
         type: Object,
         default() {
-            return {}
-        }
+            return {};
+        },
     },
     dataset: {
         type: Object,
         default() {
-            return {}
-        }
-    }
+            return {};
+        },
+    },
 });
 
 const emit = defineEmits(['page-change']);
@@ -667,11 +1295,11 @@ const { vue_ui_table: DEFAULT_CONFIG } = useConfig();
 const uid = createUid();
 const rafId = ref(null);
 const tableCaption = ref(null);
-const buttonTimeout  = ref(null);
+const buttonTimeout = ref(null);
 const chart = ref({
     height: 316,
     type: 'bar',
-    width: 512
+    width: 512,
 });
 const constants = ref({
     ASC: 1,
@@ -685,18 +1313,18 @@ const constants = ref({
     TEXT: 'text',
 });
 
-const clientX =  ref(100);
-const clientY =  ref(100);
-const dragOffsetX =  ref(0);
-const dragOffsetY =  ref(0);
-const modalWidth =  ref(400);
-const modalHeight =  ref(200);
+const clientX = ref(100);
+const clientY = ref(100);
+const dragOffsetX = ref(0);
+const dragOffsetY = ref(0);
+const modalWidth = ref(400);
+const modalHeight = ref(200);
 
 const cssClass = ref({
-    CELL: "smart-td-selected",
-    FIRST_TD: "smart-td-selected-first",
-    LAST_TD: "smart-td-selected-last",
-    ROW: "smart-td-selected-neighbor",
+    CELL: 'smart-td-selected',
+    FIRST_TD: 'smart-td-selected-first',
+    LAST_TD: 'smart-td-selected-last',
+    ROW: 'smart-td-selected-neighbor',
 });
 
 const currentDonut = ref(undefined);
@@ -704,7 +1332,7 @@ const currentFilter = ref(undefined);
 
 const currentSelectionSpan = ref({
     col: undefined,
-    rows: []
+    rows: [],
 });
 
 const currentPage = ref(0);
@@ -720,8 +1348,23 @@ const percentages = ref({});
 const rangeFilters = ref({});
 const searches = ref({});
 const sorts = ref({});
-const itemsPerPage = ref(props.config.rowsPerPage ? props.config.rowsPerPage : 25);
-const paginatorOptions = ref([...new Set([10, 25, 50, 100, 250, 500, props.config.rowsPerPage ? props.config.rowsPerPage : 25, props.dataset.body.length])].sort((a, b) => a - b))
+const itemsPerPage = ref(
+    props.config.rowsPerPage ? props.config.rowsPerPage : 25,
+);
+const paginatorOptions = ref(
+    [
+        ...new Set([
+            10,
+            25,
+            50,
+            100,
+            250,
+            500,
+            props.config.rowsPerPage ? props.config.rowsPerPage : 25,
+            props.dataset.body.length,
+        ]),
+    ].sort((a, b) => a - b),
+);
 
 const selectedColumn = ref(undefined);
 const selectedDonutCategory = ref(undefined);
@@ -732,39 +1375,52 @@ const chartTimeLabelSourceModel = ref('');
 const filename = ref('');
 const showDonutOptions = ref(false);
 
-const bodyCopy = ref(JSON.parse(JSON.stringify(props.dataset.body)).map((el, i) => {
-    return {
-        ...el,
-        absoluteIndex: i,
-    }
-}));
+const bodyCopy = ref(
+    JSON.parse(JSON.stringify(props.dataset.body)).map((el, i) => {
+        return {
+            ...el,
+            absoluteIndex: i,
+        };
+    }),
+);
 
-const tableBody = ref(JSON.parse(JSON.stringify(props.dataset.body)).map((el, i) => {
-    return {
-        ...el,
-        absoluteIndex: i
-    }
-}));
+const tableBody = ref(
+    JSON.parse(JSON.stringify(props.dataset.body)).map((el, i) => {
+        return {
+            ...el,
+            absoluteIndex: i,
+        };
+    }),
+);
 
-const tableHead = ref(JSON.parse(JSON.stringify(props.dataset.header)).map((head, i) => {
-    return {
-        average: Object.hasOwn(head, 'average') ? head.average : false,
-        decimals: Object.hasOwn(head, 'decimals') ? head.decimals : 0,
-        isMultiselect: Object.hasOwn(head, 'isMultiselect') ? head.isMultiselect : false,
-        isPercentage: Object.hasOwn(head, 'isPercentage') ? head.isPercentage : false,
-        isSearch: Object.hasOwn(head, 'isSearch') ? head.isSearch : false,
-        isSort: Object.hasOwn(head, 'isSort') ? head.isSort : false,
-        name: head.name, // this attribute is mandatory
-        percentageTo: Object.hasOwn(head, 'percentageTo') ? head.percentageTo : undefined,
-        prefix: Object.hasOwn(head, 'prefix') ? head.prefix : '',
-        rangeFilter: Object.hasOwn(head, 'rangeFilter') ? head.rangeFilter : false,
-        suffix: Object.hasOwn(head, 'suffix') ? head.suffix : '',
-        sum: Object.hasOwn(head, 'sum') ? head.sum : false,
-        type: head.type, // this attribute is mandatory
-        index: i
-    }
-}));
-
+const tableHead = ref(
+    JSON.parse(JSON.stringify(props.dataset.header)).map((head, i) => {
+        return {
+            average: Object.hasOwn(head, 'average') ? head.average : false,
+            decimals: Object.hasOwn(head, 'decimals') ? head.decimals : 0,
+            isMultiselect: Object.hasOwn(head, 'isMultiselect')
+                ? head.isMultiselect
+                : false,
+            isPercentage: Object.hasOwn(head, 'isPercentage')
+                ? head.isPercentage
+                : false,
+            isSearch: Object.hasOwn(head, 'isSearch') ? head.isSearch : false,
+            isSort: Object.hasOwn(head, 'isSort') ? head.isSort : false,
+            name: head.name, // this attribute is mandatory
+            percentageTo: Object.hasOwn(head, 'percentageTo')
+                ? head.percentageTo
+                : undefined,
+            prefix: Object.hasOwn(head, 'prefix') ? head.prefix : '',
+            rangeFilter: Object.hasOwn(head, 'rangeFilter')
+                ? head.rangeFilter
+                : false,
+            suffix: Object.hasOwn(head, 'suffix') ? head.suffix : '',
+            sum: Object.hasOwn(head, 'sum') ? head.sum : false,
+            type: head.type, // this attribute is mandatory
+            index: i,
+        };
+    }),
+);
 
 const exportButtonTop = computed(() => {
     if (!tableCaption.value) return 3;
@@ -773,32 +1429,57 @@ const exportButtonTop = computed(() => {
 
 const FINAL_CONFIG = computed(() => {
     if (!Object.keys(props.config || {}).length) {
-        return DEFAULT_CONFIG
+        return DEFAULT_CONFIG;
     }
     const reconcilied = treeShake({
         defaultConfig: DEFAULT_CONFIG,
-        userConfig: props.config
+        userConfig: props.config,
     });
     return convertConfigColors(reconcilied);
 });
 
 const isCursorPointer = computed(() => FINAL_CONFIG.value.useCursorPointer);
-const colorCancelInactive = computed(() => FINAL_CONFIG.value.style.th.buttons.cancel.inactive.backgroundColor);
-const textColorCancelInactive = computed(() => FINAL_CONFIG.value.style.th.buttons.cancel.inactive.color);
-const colorCancelActive = computed(() => FINAL_CONFIG.value.style.th.buttons.cancel.active.backgroundColor);
-const colorButtonSortActive = computed(() => FINAL_CONFIG.value.style.th.buttons.filter.active.backgroundColor);
-const colorButtonSortActiveColorText = computed(() => FINAL_CONFIG.value.style.th.buttons.filter.active.color);
+const colorCancelInactive = computed(
+    () => FINAL_CONFIG.value.style.th.buttons.cancel.inactive.backgroundColor,
+);
+const textColorCancelInactive = computed(
+    () => FINAL_CONFIG.value.style.th.buttons.cancel.inactive.color,
+);
+const colorCancelActive = computed(
+    () => FINAL_CONFIG.value.style.th.buttons.cancel.active.backgroundColor,
+);
+const colorButtonSortActive = computed(
+    () => FINAL_CONFIG.value.style.th.buttons.filter.active.backgroundColor,
+);
+const colorButtonSortActiveColorText = computed(
+    () => FINAL_CONFIG.value.style.th.buttons.filter.active.color,
+);
 
-const colorCancelActiveLight = computed(() => lightenHexColor(colorCancelActive.value, 0.33));
-const colorCancelActiveOutline = computed(() => setOpacity(colorCancelActive.value, 33));
-const colorButtonSortActiveLight = computed(() => lightenHexColor(colorButtonSortActive.value, 0.33));
-const colorButtonSortActiveOutline = computed(() => setOpacity(colorButtonSortActive, 33));
+const colorCancelActiveLight = computed(() =>
+    lightenHexColor(colorCancelActive.value, 0.33),
+);
+const colorCancelActiveOutline = computed(() =>
+    setOpacity(colorCancelActive.value, 33),
+);
+const colorButtonSortActiveLight = computed(() =>
+    lightenHexColor(colorButtonSortActive.value, 0.33),
+);
+const colorButtonSortActiveOutline = computed(() =>
+    setOpacity(colorButtonSortActive, 33),
+);
 
-const dateHeaders = computed(() => [...tableHead.value].filter(th => th.type === constants.value.DATE));
-const chartTimeLabelOptions = computed(() => ['', ...dateHeaders.value.map(th => th.name)]);
+const dateHeaders = computed(() =>
+    [...tableHead.value].filter((th) => th.type === constants.value.DATE),
+);
+const chartTimeLabelOptions = computed(() => [
+    '',
+    ...dateHeaders.value.map((th) => th.name),
+]);
 
 const chartTimeLabelSourceIndex = computed(() => {
-    const src = dateHeaders.value.find(th => th.name === chartTimeLabelSourceModel.value);
+    const src = dateHeaders.value.find(
+        (th) => th.name === chartTimeLabelSourceModel.value,
+    );
     return src ? src.index : null;
 });
 
@@ -810,28 +1491,34 @@ const pages = computed(() => {
         }
     }
     return _pages;
-})
+});
 
 const visibleRows = computed(() => pages.value[currentPage.value]);
 
 const chartTimeLabels = computed(() => {
-    if (chartTimeLabelSourceIndex.value == null) return []
-    return visibleRows.value.map(r => r.td[chartTimeLabelSourceIndex.value]);
+    if (chartTimeLabelSourceIndex.value == null) return [];
+    return visibleRows.value.map((r) => r.td[chartTimeLabelSourceIndex.value]);
 });
 
 const availableDonutCategories = computed(() => {
-    return Object.keys(multiselects.value).map(index => {
+    return Object.keys(multiselects.value).map((index) => {
         return {
             index,
             name: props.dataset.header[index].name,
             options: multiselects.value[index],
-        }
+        };
     });
 });
 
-const canChart = computed(() => FINAL_CONFIG.value.useChart && currentSelectionSpan.value.rows.length > 1);
+const canChart = computed(
+    () =>
+        FINAL_CONFIG.value.useChart &&
+        currentSelectionSpan.value.rows.length > 1,
+);
 
-const hasNumericTypes = computed(() => props.dataset.header.map(h => h.type).includes(constants.value.NUMERIC));
+const hasNumericTypes = computed(() =>
+    props.dataset.header.map((h) => h.type).includes(constants.value.NUMERIC),
+);
 
 const icons = computed(() => ({
     arrowSort: `<svg xmlns="http://www.w3.org/2000/svg" width="${iconSize.value}" height="${iconSize.value}" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 9l4 -4l4 4m-4 -4v14" /><path d="M21 15l-4 4l-4 -4m4 4v-14" /></svg>`,
@@ -852,27 +1539,62 @@ const icons = computed(() => ({
     sum: `<svg xmlns="http://www.w3.org/2000/svg" width="${iconSize.value}" height="${iconSize.value}" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 16v2a1 1 0 0 1 -1 1h-11l6 -7l-6 -7h11a1 1 0 0 1 1 1v2" /></svg>`,
     table: `<svg xmlns="http://www.w3.org/2000/svg" width="${iconSize.value}" height="${iconSize.value}" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" fill="white" d="M 10 2, 21 2, 21 21, 10 21Z"/><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 5a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v14a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-14z" /><path d="M3 10h18" /><path d="M10 3v18" /></svg>`,
     warning: `<svg xmlns="http://www.w3.org/2000/svg" width="${iconSize.value * 0.8}" height="${iconSize.value * 0.8}" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10.24 3.957l-8.422 14.06a1.989 1.989 0 0 0 1.7 2.983h16.845a1.989 1.989 0 0 0 1.7 -2.983l-8.423 -14.06a1.989 1.989 0 0 0 -3.4 0z" /><path d="M12 9v4" /><path d="M12 17h.01" /></svg>`,
-    grip: `<svg xmlns="http://www.w3.org/2000/svg" width="${iconSize.value}" height="${iconSize.value}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M5 15m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M12 9m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M12 15m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M19 9m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M19 15m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /></svg>`
+    grip: `<svg xmlns="http://www.w3.org/2000/svg" width="${iconSize.value}" height="${iconSize.value}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M5 15m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M12 9m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M12 15m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M19 9m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M19 15m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /></svg>`,
 }));
 
-const rows = computed(() => bodyCopy.value.map(row => row.td));
+const rows = computed(() => bodyCopy.value.map((row) => row.td));
 
 const selectedCellsCalculations = computed(() => {
     return {
-        sumPercentage: Number((currentSelectionSpan.value.rows.map(r => r.value).reduce((a, b) => a + b, 0) * 100).toFixed(props.dataset.header[currentSelectionSpan.value.col].decimals)).toLocaleString(),
-        sumRegular: Number(currentSelectionSpan.value.rows.map(r => r.value).reduce((a, b) => a + b, 0).toFixed(props.dataset.header[currentSelectionSpan.value.col].decimals)).toLocaleString(),
-        averagePercentage: Number((currentSelectionSpan.value.rows.map(r => r.value).reduce((a, b) => a + b, 0) / currentSelectionSpan.value.rows.length * 100).toFixed(props.dataset.header[currentSelectionSpan.value.col].decimals)).toLocaleString(),
-        averageRegular: Number((currentSelectionSpan.value.rows.map(r => r.value).reduce((a, b) => a + b, 0) / currentSelectionSpan.value.rows.length).toFixed(props.dataset.header[currentSelectionSpan.value.col].decimals)).toLocaleString()
-    }
+        sumPercentage: Number(
+            (
+                currentSelectionSpan.value.rows
+                    .map((r) => r.value)
+                    .reduce((a, b) => a + b, 0) * 100
+            ).toFixed(
+                props.dataset.header[currentSelectionSpan.value.col].decimals,
+            ),
+        ).toLocaleString(),
+        sumRegular: Number(
+            currentSelectionSpan.value.rows
+                .map((r) => r.value)
+                .reduce((a, b) => a + b, 0)
+                .toFixed(
+                    props.dataset.header[currentSelectionSpan.value.col]
+                        .decimals,
+                ),
+        ).toLocaleString(),
+        averagePercentage: Number(
+            (
+                (currentSelectionSpan.value.rows
+                    .map((r) => r.value)
+                    .reduce((a, b) => a + b, 0) /
+                    currentSelectionSpan.value.rows.length) *
+                100
+            ).toFixed(
+                props.dataset.header[currentSelectionSpan.value.col].decimals,
+            ),
+        ).toLocaleString(),
+        averageRegular: Number(
+            (
+                currentSelectionSpan.value.rows
+                    .map((r) => r.value)
+                    .reduce((a, b) => a + b, 0) /
+                currentSelectionSpan.value.rows.length
+            ).toFixed(
+                props.dataset.header[currentSelectionSpan.value.col].decimals,
+            ),
+        ).toLocaleString(),
+    };
 });
 
 const chartModalDimensions = ref({
     width: 1000,
-    height: 500
+    height: 500,
 });
 
 function setChartModalDimensions({ width, height }) {
-    chartModalDimensions.value = { width, height }
+    chartModalDimensions.value = { width, height };
 }
 
 const chartData = computed(() => {
@@ -881,13 +1603,29 @@ const chartData = computed(() => {
     const width = chartModalDimensions.value.width;
     const items = currentSelectionSpan.value.rows.length;
     const slot = width / items;
-    const max = Math.max(...currentSelectionSpan.value.rows.map(row => row.value));
-    const min = Math.min(...currentSelectionSpan.value.rows.map(row => row.value));
+    const max = Math.max(
+        ...currentSelectionSpan.value.rows.map((row) => row.value),
+    );
+    const min = Math.min(
+        ...currentSelectionSpan.value.rows.map((row) => row.value),
+    );
 
-    const hasPercentageTo = props.dataset.header[currentSelectionSpan.value.col].isPercentage && props.dataset.header[currentSelectionSpan.value.col].percentageTo;
-    const isDonut = chart.value.type === constants.value.DONUT && selectedDonutCategory.value && selectedDonutCategory.value.name;
+    const hasPercentageTo =
+        props.dataset.header[currentSelectionSpan.value.col].isPercentage &&
+        props.dataset.header[currentSelectionSpan.value.col].percentageTo;
+    const isDonut =
+        chart.value.type === constants.value.DONUT &&
+        selectedDonutCategory.value &&
+        selectedDonutCategory.value.name;
 
-    const title = props.dataset.header[currentSelectionSpan.value.col].name + (hasPercentageTo ? ` / ${props.dataset.header[percentages.value[currentSelectionSpan.value.col].referenceIndex].name}` : '') + (isDonut ? ` ${FINAL_CONFIG.value.translations.by} ${selectedDonutCategory.value.name}` : '');
+    const title =
+        props.dataset.header[currentSelectionSpan.value.col].name +
+        (hasPercentageTo
+            ? ` / ${props.dataset.header[percentages.value[currentSelectionSpan.value.col].referenceIndex].name}`
+            : '') +
+        (isDonut
+            ? ` ${FINAL_CONFIG.value.translations.by} ${selectedDonutCategory.value.name}`
+            : '');
 
     const prefix = props.dataset.header[currentSelectionSpan.value.col].prefix;
     const suffix = props.dataset.header[currentSelectionSpan.value.col].suffix;
@@ -895,27 +1633,28 @@ const chartData = computed(() => {
     const xyDatasetLine = [
         {
             name: title,
-            series: currentSelectionSpan.value.rows.map(r => r.value),
+            series: currentSelectionSpan.value.rows.map((r) => r.value),
             type: 'line',
             useProgression: true,
             smooth: FINAL_CONFIG.value.style.chart.layout.line.smooth,
             color: FINAL_CONFIG.value.style.chart.layout.line.stroke,
-            useArea: FINAL_CONFIG.value.style.chart.layout.line.useArea
-        }
-    ]
+            useArea: FINAL_CONFIG.value.style.chart.layout.line.useArea,
+        },
+    ];
     const xyDatasetBar = [
         {
             name: title,
-            series: currentSelectionSpan.value.rows.map(r => r.value),
+            series: currentSelectionSpan.value.rows.map((r) => r.value),
             type: 'bar',
             useProgression: true,
-            color: FINAL_CONFIG.value.style.chart.layout.bar.fill
-        }
-    ]
+            color: FINAL_CONFIG.value.style.chart.layout.bar.fill,
+        },
+    ];
 
     const bg = FINAL_CONFIG.value.style.chart.modal.backgroundColor;
-    const textColor = adaptColorToBackground(bg)
-    const rounding = props.dataset.header[currentSelectionSpan.value.col].decimals;
+    const textColor = adaptColorToBackground(bg);
+    const rounding =
+        props.dataset.header[currentSelectionSpan.value.col].decimals;
 
     const xyConfig = {
         useCssAnimation: false,
@@ -927,7 +1666,7 @@ const chartData = computed(() => {
             labels: {
                 fontSize: 18,
                 prefix,
-                suffix
+                suffix,
             },
             grid: {
                 stroke: lightenHexColor(textColor, 0.5),
@@ -937,11 +1676,16 @@ const chartData = computed(() => {
                         color: textColor,
                         show: chartTimeLabels.value.length,
                         values: chartTimeLabels.value,
-                        datetimeFormatter: FINAL_CONFIG.value.style.chart.layout.datetimeFormatter,
-                        showOnlyAtModulo: FINAL_CONFIG.value.style.chart.layout.timeLabels.showOnlyAtModulo,
-                        modulo: FINAL_CONFIG.value.style.chart.layout.timeLabels.modulo
+                        datetimeFormatter:
+                            FINAL_CONFIG.value.style.chart.layout
+                                .datetimeFormatter,
+                        showOnlyAtModulo:
+                            FINAL_CONFIG.value.style.chart.layout.timeLabels
+                                .showOnlyAtModulo,
+                        modulo: FINAL_CONFIG.value.style.chart.layout.timeLabels
+                            .modulo,
                     },
-                }
+                },
             },
             highlighter: {
                 color: textColor,
@@ -962,79 +1706,90 @@ const chartData = computed(() => {
                 color: textColor,
                 backgroundColor: bg,
                 showPercentage: false,
-                roundingValue: rounding
+                roundingValue: rounding,
             },
             userOptions: {
                 buttons: {
                     pdf: false,
                     csv: false,
                     table: false,
-                    annotator: false
-                }
+                    annotator: false,
+                },
             },
             zoom: {
                 show: FINAL_CONFIG.value.style.chart.layout.zoom.show,
                 focusOnDrag: true,
                 minimap: {
-                    show: true
-                }
+                    show: true,
+                },
             },
         },
         line: {
             labels: {
                 show: true,
                 color: textColor,
-                rounding
+                rounding,
             },
             dot: {
                 useSerieColor: false,
                 fill: FINAL_CONFIG.value.style.chart.layout.line.plot.fill,
-                strokeWidth: FINAL_CONFIG.value.style.chart.layout.line.plot.strokeWidth
-            }
+                strokeWidth:
+                    FINAL_CONFIG.value.style.chart.layout.line.plot.strokeWidth,
+            },
         },
         bar: {
             useGradient: false,
             border: {
                 useSerieColor: false,
                 stroke: FINAL_CONFIG.value.style.chart.layout.bar.stroke,
-                strokeWidth: FINAL_CONFIG.value.style.chart.layout.bar.strokeWidth
+                strokeWidth:
+                    FINAL_CONFIG.value.style.chart.layout.bar.strokeWidth,
             },
             labels: {
                 show: true,
                 color: textColor,
-                rounding
-            }
-        }
-    }
+                rounding,
+            },
+        },
+    };
 
     const relativeZero = min >= 0 ? 0 : Math.abs(min);
     const absoluteMax = max + relativeZero;
 
-    const isPercentage = props.dataset.header[currentSelectionSpan.value.col].isPercentage;
+    const isPercentage =
+        props.dataset.header[currentSelectionSpan.value.col].isPercentage;
 
     const plots = currentSelectionSpan.value.rows.map((row, i) => {
         return {
-            x: (slot * i) + slot / 2,
-            y: (1 - ((row.value + relativeZero) / absoluteMax)) * height,
+            x: slot * i + slot / 2,
+            y: (1 - (row.value + relativeZero) / absoluteMax) * height,
             value: isPercentage ? row.value * 100 : row.value,
-            suffix: isPercentage ? '%' : props.dataset.header[currentSelectionSpan.value.col].suffix ? props.dataset.header[currentSelectionSpan.value.col].suffix : '',
-            prefix: props.dataset.header[currentSelectionSpan.value.col].prefix ? props.dataset.header[currentSelectionSpan.value.col].prefix : '',
+            suffix: isPercentage
+                ? '%'
+                : props.dataset.header[currentSelectionSpan.value.col].suffix
+                  ? props.dataset.header[currentSelectionSpan.value.col].suffix
+                  : '',
+            prefix: props.dataset.header[currentSelectionSpan.value.col].prefix
+                ? props.dataset.header[currentSelectionSpan.value.col].prefix
+                : '',
             index: row.index,
-            absoluteValue: isPercentage ? Math.abs(row.value) * 100 : Math.abs(row.value)
-        }
+            absoluteValue: isPercentage
+                ? Math.abs(row.value) * 100
+                : Math.abs(row.value),
+        };
     });
 
     const donutConfig = {
         useCssAnimation: false,
         userOptions: {
-                position: 'left',
-                buttons: {
-                    pdf: false,
-                    csv: false,
-                    table: false,
-                    annotator: false
-                }
+            position: 'left',
+            buttons: {
+                pdf: false,
+                csv: false,
+                table: false,
+                annotator: false,
             },
+        },
         style: {
             chart: {
                 backgroundColor: bg,
@@ -1050,22 +1805,22 @@ const chartData = computed(() => {
                             prefix,
                         },
                         value: {
-                            rounding
+                            rounding,
                         },
                         percentage: {
                             color: textColor,
-                            rounding
+                            rounding,
                         },
                         name: {
-                            color: textColor
+                            color: textColor,
                         },
                         hollow: {
                             average: {
                                 color: textColor,
                                 text: FINAL_CONFIG.value.translations.average,
                                 value: {
-                                    color: textColor
-                                }
+                                    color: textColor,
+                                },
                             },
                             total: {
                                 color: textColor,
@@ -1073,21 +1828,21 @@ const chartData = computed(() => {
                                 text: FINAL_CONFIG.value.translations.total,
                                 value: {
                                     color: textColor,
-                                    offsetY: -12
-                                }
-                            }
-                        }
-                    }
+                                    offsetY: -12,
+                                },
+                            },
+                        },
+                    },
                 },
                 legend: {
                     backgroundColor: bg,
                     color: textColor,
                     roundingValue: rounding,
-                    roundingPercentage: rounding
+                    roundingPercentage: rounding,
                 },
                 padding: {
                     left: 12,
-                    right: 12
+                    right: 12,
                 },
                 title: {
                     text: title,
@@ -1099,40 +1854,58 @@ const chartData = computed(() => {
                     color: textColor,
                     backgroundColor: bg,
                     roundingValue: rounding,
-                    roundingValue: rounding
+                    roundingValue: rounding,
                 },
-            }
+            },
         },
-    }
+    };
 
-    return { 
-        donutConfig, 
-        xyConfig, 
-        xyDatasetLine, 
-        xyDatasetBar, 
-        progression: plots.length >= 2 ? calcLinearProgression(plots) : false 
+    return {
+        donutConfig,
+        xyConfig,
+        xyDatasetLine,
+        xyDatasetBar,
+        progression: plots.length >= 2 ? calcLinearProgression(plots) : false,
     };
 });
 
 // Stock piled methods (and yes, this was converted from options API...)
 
 function applyDonutOption() {
-    const donutSet = selectedDonutCategory.value.options.map((option, i) => {
-        return {
-            name: option,
-            color: palette[i] || palette[i % palette.length],
-            values: [visibleRows.value
-                .filter((row, i) => row.td[selectedDonutCategory.value.index] === option && currentSelectionSpan.value.rows.map(row => row.index).includes(i))
-                .map(row => row.td[currentSelectionSpan.value.col])
-                .reduce((a, b) => Math.abs(a) + Math.abs(b), 0)],
-            absoluteValue: visibleRows.value
-                .filter((row, i) => row.td[selectedDonutCategory.value.index] === option && currentSelectionSpan.value.rows.map(row => row.index).includes(i))
-                .map(row => row.td[currentSelectionSpan.value.col])
-                .reduce((a, b) => a + b, 0)
-        }
-    }).sort((a, b) => b.value - a.value);
+    const donutSet = selectedDonutCategory.value.options
+        .map((option, i) => {
+            return {
+                name: option,
+                color: palette[i] || palette[i % palette.length],
+                values: [
+                    visibleRows.value
+                        .filter(
+                            (row, i) =>
+                                row.td[selectedDonutCategory.value.index] ===
+                                    option &&
+                                currentSelectionSpan.value.rows
+                                    .map((row) => row.index)
+                                    .includes(i),
+                        )
+                        .map((row) => row.td[currentSelectionSpan.value.col])
+                        .reduce((a, b) => Math.abs(a) + Math.abs(b), 0),
+                ],
+                absoluteValue: visibleRows.value
+                    .filter(
+                        (row, i) =>
+                            row.td[selectedDonutCategory.value.index] ===
+                                option &&
+                            currentSelectionSpan.value.rows
+                                .map((row) => row.index)
+                                .includes(i),
+                    )
+                    .map((row) => row.td[currentSelectionSpan.value.col])
+                    .reduce((a, b) => a + b, 0),
+            };
+        })
+        .sort((a, b) => b.value - a.value);
 
-    currentDonut.value = donutSet
+    currentDonut.value = donutSet;
     nextTick(() => {
         chart.value.type = constants.value.DONUT;
         showDonutOptions.value = false;
@@ -1140,22 +1913,29 @@ function applyDonutOption() {
 }
 
 function canResetColumn(colIndex, th) {
-    return !hasNaN.value[colIndex] && (th.isSort || th.isSearch || th.isMultiselect || th.rangeFilter) && ![constants.value.DATE].includes(th.type);
+    return (
+        !hasNaN.value[colIndex] &&
+        (th.isSort || th.isSearch || th.isMultiselect || th.rangeFilter) &&
+        ![constants.value.DATE].includes(th.type)
+    );
 }
 
 function createXls(selection = 'all') {
-    const head = props.dataset.header.map(h => h.name);
-    const body = selection === 'all' ? bodyCopy.value.map(b => b.td) : visibleRows.value.map(r => r.td);
+    const head = props.dataset.header.map((h) => h.name);
+    const body =
+        selection === 'all'
+            ? bodyCopy.value.map((b) => b.td)
+            : visibleRows.value.map((r) => r.td);
     const table = [head].concat(body);
     const csvContent = createCsvContent(table);
-    downloadCsv({ csvContent, title: filename.value })
+    downloadCsv({ csvContent, title: filename.value });
 }
 
 ////////////////////////////// FIXME
 function closeAllDropdowns() {
-    const dropdowns = document.getElementsByClassName("th-dropdown"); // FIXME: this needs to be more instance specific
+    const dropdowns = document.getElementsByClassName('th-dropdown'); // FIXME: this needs to be more instance specific
     if (!dropdowns.length) return;
-    Array.from(dropdowns).forEach(dropdown => {
+    Array.from(dropdowns).forEach((dropdown) => {
         dropdown.dataset.isOpen = false;
     });
 }
@@ -1170,18 +1950,20 @@ function debounce(fn, delay) {
 function resetSelection() {
     const rows = document.getElementsByClassName(`tr_${uid}`);
 
-    Array.from(rows).forEach(tr => {
-        Array.from(tr.getElementsByTagName("td")).forEach(td => {
+    Array.from(rows).forEach((tr) => {
+        Array.from(tr.getElementsByTagName('td')).forEach((td) => {
             if (td.dataset.row === 'even') {
-                td.style.background = FINAL_CONFIG.value.style.rows.even.backgroundColor;
+                td.style.background =
+                    FINAL_CONFIG.value.style.rows.even.backgroundColor;
                 td.style.color = FINAL_CONFIG.value.style.rows.even.color;
             } else {
-                td.style.background = FINAL_CONFIG.value.style.rows.odd.backgroundColor;
+                td.style.background =
+                    FINAL_CONFIG.value.style.rows.odd.backgroundColor;
                 td.style.color = FINAL_CONFIG.value.style.rows.odd.color;
             }
         });
     });
-    Array.from(rows).forEach(tr => tr.dataset.selected = "false");
+    Array.from(rows).forEach((tr) => (tr.dataset.selected = 'false'));
     if (currentPage.value > pages.value.length - 1) {
         currentPage.value = pages.value.length - 1;
     }
@@ -1192,15 +1974,18 @@ function resetSelection() {
     currentSelectionSpan.value = {
         col: undefined,
         rows: [],
-    }
+    };
     clientX.value = 100;
     clientY.value = 100;
 }
 
 function filterByRange(arr, index) {
-    bodyCopy.value = arr.filter(el => {
-        return el.td[index] >= rangeFilters.value[index].min && el[index] <= rangeFilters.value[index].max
-    })
+    bodyCopy.value = arr.filter((el) => {
+        return (
+            el.td[index] >= rangeFilters.value[index].min &&
+            el[index] <= rangeFilters.value[index].max
+        );
+    });
 }
 
 function sortByNumber(arr, index) {
@@ -1212,7 +1997,7 @@ function sortByNumber(arr, index) {
     if (sorts.value[index] === constants.value.DESC) {
         arr = arr.sort((a, b) => {
             return b[index] - a[index];
-        })
+        });
     } else {
         return 0;
     }
@@ -1220,11 +2005,11 @@ function sortByNumber(arr, index) {
 
 function sortBody() {
     resetSelection();
-    Object.keys(rangeFilters.value).forEach(index => {
+    Object.keys(rangeFilters.value).forEach((index) => {
         filterByRange(bodyCopy.value, index);
     });
 
-    Object.keys(sorts.value).forEach(index => {
+    Object.keys(sorts.value).forEach((index) => {
         sortByNumber(bodyCopy.value, index);
     });
 
@@ -1235,8 +2020,10 @@ function sortBody() {
     props.dataset.header.forEach((col, i) => {
         if (col.isPercentage) {
             const referenceIndex = percentages.value[i].referenceIndex;
-            const sum = bodyCopy.value.map(el => el.td[referenceIndex]).reduce((a, b) => a + b, 0);
-            bodyCopy.value.forEach(row => {
+            const sum = bodyCopy.value
+                .map((el) => el.td[referenceIndex])
+                .reduce((a, b) => a + b, 0);
+            bodyCopy.value.forEach((row) => {
                 row.td[i] = row.td[referenceIndex] / sum;
             });
         }
@@ -1250,15 +2037,19 @@ function sortBody() {
 }
 
 function filterBody() {
-    bodyCopy.value = tableBody.value.filter(el => {
+    bodyCopy.value = tableBody.value.filter((el) => {
         for (const index in searches.value) {
-            if (!el.td[index].toUpperCase().includes(searches.value[index].toUpperCase())) {
+            if (
+                !el.td[index]
+                    .toUpperCase()
+                    .includes(searches.value[index].toUpperCase())
+            ) {
                 return false;
             }
         }
         for (const index in multiselects.value) {
             const filter = multiselects.value[index];
-            if (!filter.some(f => f === el.td[index])) {
+            if (!filter.some((f) => f === el.td[index])) {
                 return false;
             }
         }
@@ -1277,14 +2068,16 @@ function filterBody() {
 }
 
 function getAverage(index) {
-    return rows.value
-        .map(td => td[index])
-        .map(el => isNaN(Number(el)) ? 0 : el)
-        .reduce((a, b) => a + b, 0) / bodyCopy.value.length;
+    return (
+        rows.value
+            .map((td) => td[index])
+            .map((el) => (isNaN(Number(el)) ? 0 : el))
+            .reduce((a, b) => a + b, 0) / bodyCopy.value.length
+    );
 }
 
 function getDatesRange(index) {
-    const dates = props.dataset.body.map(row => new Date(row.td[index]));
+    const dates = props.dataset.body.map((row) => new Date(row.td[index]));
     const rawMin = new Date(Math.min(...dates));
     const rawMax = new Date(Math.max(...dates));
     const minYear = rawMin.getFullYear();
@@ -1297,25 +2090,29 @@ function getDatesRange(index) {
     const max = `${maxYear}-${maxMonth}-${maxDay}`;
     return {
         from: min,
-        to: max
-    }
+        to: max,
+    };
 }
 
 function getDropdownOptions(index) {
-    return [...new Set(props.dataset.body.map(el => {
-        return el.td[index];
-    }))]
+    return [
+        ...new Set(
+            props.dataset.body.map((el) => {
+                return el.td[index];
+            }),
+        ),
+    ];
 }
 
 function getSum(index) {
     return rows.value
-        .map(td => td[index])
-        .map(el => isNaN(Number(el)) ? 0 : el)
+        .map((td) => td[index])
+        .map((el) => (isNaN(Number(el)) ? 0 : el))
         .reduce((a, b) => a + b, 0);
 }
 
 function includesNaN(arr) {
-    return arr.includes(NaN)
+    return arr.includes(NaN);
 }
 
 function isDropdownOptionSelected(option, index) {
@@ -1326,7 +2123,7 @@ function isDropdownOptionSelected(option, index) {
 }
 
 function isNumeric(value) {
-    return !isNaN(Number(String(value).replaceAll("%", '')));
+    return !isNaN(Number(String(value).replaceAll('%', '')));
 }
 
 function isResetDisabled(index, th) {
@@ -1337,51 +2134,90 @@ function isResetDisabled(index, th) {
 
     const isRangeAltered = (index) => {
         if (rangeFilter && rangeFilters.value[index]) {
-            return Math.round(rangeFilters.value[index].min) === immutableRangeFilters.value[index].min && Math.round(rangeFilters.value[index].max) === immutableRangeFilters.value[index].max;
+            return (
+                Math.round(rangeFilters.value[index].min) ===
+                    immutableRangeFilters.value[index].min &&
+                Math.round(rangeFilters.value[index].max) ===
+                    immutableRangeFilters.value[index].max
+            );
         }
-    }
+    };
 
     if (isSort && isSearch && isMultiselect && rangeFilter) {
-        return ["", undefined].includes(searches.value[index]) && [undefined].includes(sorts.value[index]) && multiselects.value[index].length === getDropdownOptions(index).length && isRangeAltered(index);
-    }
-    else if (isSort && isSearch && isMultiselect) {
-        return ["", undefined].includes(searches.value[index]) && [undefined].includes(sorts.value[index]) && multiselects.value[index].length === getDropdownOptions(index).length;
-    }
-    else if (isSort && isSearch && rangeFilter) {
-        return ["", undefined].includes(searches.value[index]) && [undefined].includes(sorts.value[index]) && isRangeAltered(index);
-    }
-    else if (isSort && isSearch) {
-        return ["", undefined].includes(searches.value[index]) && [undefined].includes(sorts.value[index]);
-    }
-    else if (isSort && isMultiselect && rangeFilter) {
-        return [undefined].includes(sorts.value[index]) && multiselects.value[index].length === getDropdownOptions(index).length && isRangeAltered(index);
-    }
-    else if (isSort && isMultiselect) {
-        return [undefined].includes(sorts.value[index]) && multiselects.value[index].length === getDropdownOptions(index).length;
-    }
-    else if (isSearch && isMultiselect && rangeFilter) {
-        return ["", undefined].includes(searches.value[index]) && multiselects.value[index].length === getDropdownOptions(index).length && isRangeAltered(index);
-    }
-    else if (isSearch && isMultiselect) {
-        return ["", undefined].includes(searches.value[index]) && multiselects.value[index].length === getDropdownOptions(index).length;
-    }
-    else if (isSearch && rangeFilter) {
-        return ["", undefined].includes(searches.value[index]) && isRangeAltered(index);
-    }
-    else if (isSearch) {
-        return ["", undefined].includes(searches.value[index]);
-    }
-    else if (isSort && rangeFilter) {
-        return [undefined].includes(sorts.value[index]) && isRangeAltered(index);
-    }
-    else if (isSort) {
+        return (
+            ['', undefined].includes(searches.value[index]) &&
+            [undefined].includes(sorts.value[index]) &&
+            multiselects.value[index].length ===
+                getDropdownOptions(index).length &&
+            isRangeAltered(index)
+        );
+    } else if (isSort && isSearch && isMultiselect) {
+        return (
+            ['', undefined].includes(searches.value[index]) &&
+            [undefined].includes(sorts.value[index]) &&
+            multiselects.value[index].length ===
+                getDropdownOptions(index).length
+        );
+    } else if (isSort && isSearch && rangeFilter) {
+        return (
+            ['', undefined].includes(searches.value[index]) &&
+            [undefined].includes(sorts.value[index]) &&
+            isRangeAltered(index)
+        );
+    } else if (isSort && isSearch) {
+        return (
+            ['', undefined].includes(searches.value[index]) &&
+            [undefined].includes(sorts.value[index])
+        );
+    } else if (isSort && isMultiselect && rangeFilter) {
+        return (
+            [undefined].includes(sorts.value[index]) &&
+            multiselects.value[index].length ===
+                getDropdownOptions(index).length &&
+            isRangeAltered(index)
+        );
+    } else if (isSort && isMultiselect) {
+        return (
+            [undefined].includes(sorts.value[index]) &&
+            multiselects.value[index].length ===
+                getDropdownOptions(index).length
+        );
+    } else if (isSearch && isMultiselect && rangeFilter) {
+        return (
+            ['', undefined].includes(searches.value[index]) &&
+            multiselects.value[index].length ===
+                getDropdownOptions(index).length &&
+            isRangeAltered(index)
+        );
+    } else if (isSearch && isMultiselect) {
+        return (
+            ['', undefined].includes(searches.value[index]) &&
+            multiselects.value[index].length ===
+                getDropdownOptions(index).length
+        );
+    } else if (isSearch && rangeFilter) {
+        return (
+            ['', undefined].includes(searches.value[index]) &&
+            isRangeAltered(index)
+        );
+    } else if (isSearch) {
+        return ['', undefined].includes(searches.value[index]);
+    } else if (isSort && rangeFilter) {
+        return (
+            [undefined].includes(sorts.value[index]) && isRangeAltered(index)
+        );
+    } else if (isSort) {
         return [undefined].includes(sorts.value[index]);
-    }
-    else if (isMultiselect && rangeFilter) {
-        return multiselects.value[index].length === getDropdownOptions(index).length && isRangeAltered(index);
-    }
-    else if (isMultiselect) {
-        return multiselects.value[index].length === getDropdownOptions(index).length;
+    } else if (isMultiselect && rangeFilter) {
+        return (
+            multiselects.value[index].length ===
+                getDropdownOptions(index).length && isRangeAltered(index)
+        );
+    } else if (isMultiselect) {
+        return (
+            multiselects.value[index].length ===
+            getDropdownOptions(index).length
+        );
     }
 }
 
@@ -1390,12 +2226,12 @@ function getCurrentPageData() {
         totalPages: pages.value.length,
         itemsPerPage: itemsPerPage.value,
         currentPage: currentPage.value,
-        currentPageData: visibleRows.value.map(r => r.td)
-    }
+        currentPageData: visibleRows.value.map((r) => r.td),
+    };
 }
 
 defineExpose({
-    getCurrentPageData
+    getCurrentPageData,
 });
 
 function onPageChange() {
@@ -1414,7 +2250,11 @@ function navigate(direction) {
     } else if (direction === 'previous' && currentPage.value >= 1) {
         currentPage.value -= 1;
     } else {
-        if (direction - 1 < 0 || direction > pages.value.length || direction === 'previous') {
+        if (
+            direction - 1 < 0 ||
+            direction > pages.value.length ||
+            direction === 'previous'
+        ) {
             return;
         }
         currentPage.value = direction - 1;
@@ -1422,11 +2262,12 @@ function navigate(direction) {
 
     onPageChange();
 
-    tableWrapper.value && tableWrapper.value.scrollTo({
-        top: 0,
-        left: 0,
-        behavior: "smooth"
-    });
+    tableWrapper.value &&
+        tableWrapper.value.scrollTo({
+            top: 0,
+            left: 0,
+            behavior: 'smooth',
+        });
 }
 
 function navigateCell(event) {
@@ -1445,10 +2286,18 @@ function navigateCell(event) {
     const currentRow = parseInt(match[1]);
     const currentCol = parseInt(match[2]);
 
-    const nextCellRow = document.getElementById(`cell_${currentRow}_${currentCol + 1}_${uid}`);
-    const previousCellRow = document.getElementById(`cell_${currentRow}_${currentCol - 1}_${uid}`);
-    const nextCellCol = document.getElementById(`cell_${currentRow + 1}_${currentCol}_${uid}`);
-    const previousCellCol = document.getElementById(`cell_${currentRow - 1}_${currentCol}_${uid}`);
+    const nextCellRow = document.getElementById(
+        `cell_${currentRow}_${currentCol + 1}_${uid}`,
+    );
+    const previousCellRow = document.getElementById(
+        `cell_${currentRow}_${currentCol - 1}_${uid}`,
+    );
+    const nextCellCol = document.getElementById(
+        `cell_${currentRow + 1}_${currentCol}_${uid}`,
+    );
+    const previousCellCol = document.getElementById(
+        `cell_${currentRow - 1}_${currentCol}_${uid}`,
+    );
 
     let nextCell;
     switch (true) {
@@ -1474,7 +2323,7 @@ function navigateCell(event) {
 
     if (!nextCell) return;
     nextCell.focus();
-    nextCell.scrollIntoView({ behavior: "smooth", block: "center" }); // FIXME: NOT GR8
+    nextCell.scrollIntoView({ behavior: 'smooth', block: 'center' }); // FIXME: NOT GR8
 }
 
 function stringToNumber(str) {
@@ -1491,10 +2340,12 @@ async function prepareBodyCopy() {
 
         tableHead.value.forEach((th, i) => {
             if (th.isSearch) {
-                Object.assign(searches.value, { [i]: "" });
+                Object.assign(searches.value, { [i]: '' });
             }
             if (th.isMultiselect) {
-                Object.assign(multiselects.value, { [i]: getDropdownOptions(i) });
+                Object.assign(multiselects.value, {
+                    [i]: getDropdownOptions(i),
+                });
             }
             if (th.type === constants.value.DATE) {
                 Object.assign(dates.value, { [i]: getDatesRange(i) });
@@ -1504,46 +2355,83 @@ async function prepareBodyCopy() {
                 Object.assign(percentages.value, {
                     [i]: {
                         reference: th.percentageTo,
-                        referenceIndex: props.dataset.header.map(el => el.name).indexOf(th.percentageTo)
-                    }
+                        referenceIndex: props.dataset.header
+                            .map((el) => el.name)
+                            .indexOf(th.percentageTo),
+                    },
                 });
             }
 
             if (th.rangeFilter) {
                 Object.assign(rangeFilters.value, {
                     [i]: {
-                        min: Math.round(Math.min(...props.dataset.body.map(el => el.td).map(el => el[i]))),
-                        max: Math.round(Math.max(...props.dataset.body.map(el => el.td).map(el => el[i]))),
-                    }
+                        min: Math.round(
+                            Math.min(
+                                ...props.dataset.body
+                                    .map((el) => el.td)
+                                    .map((el) => el[i]),
+                            ),
+                        ),
+                        max: Math.round(
+                            Math.max(
+                                ...props.dataset.body
+                                    .map((el) => el.td)
+                                    .map((el) => el[i]),
+                            ),
+                        ),
+                    },
                 });
                 Object.assign(immutableRangeFilters.value, {
                     [i]: {
-                        min: Math.round(Math.min(...props.dataset.body.map(el => el.td).map(el => el[i]))),
-                        max: Math.round(Math.max(...props.dataset.body.map(el => el.td).map(el => el[i]))),
-                    }
+                        min: Math.round(
+                            Math.min(
+                                ...props.dataset.body
+                                    .map((el) => el.td)
+                                    .map((el) => el[i]),
+                            ),
+                        ),
+                        max: Math.round(
+                            Math.max(
+                                ...props.dataset.body
+                                    .map((el) => el.td)
+                                    .map((el) => el[i]),
+                            ),
+                        ),
+                    },
                 });
             }
 
             if (th.isPercentage) {
-                const baseIndex = props.dataset.header.map(el => el.name).indexOf(th.percentageTo);
-                const sum = props.dataset.body.map(el => el.td[baseIndex]).reduce((a, b) => a + b, 0);
+                const baseIndex = props.dataset.header
+                    .map((el) => el.name)
+                    .indexOf(th.percentageTo);
+                const sum = props.dataset.body
+                    .map((el) => el.td[baseIndex])
+                    .reduce((a, b) => a + b, 0);
                 searchHelper.push([i, baseIndex, sum]);
             }
 
             if (th.type === constants.value.NUMERIC && !th.isPercentage) {
-                Object.assign(hasNaN.value, { [i]: includesNaN(props.dataset.body.map(el => Number(el.td[i]))) })
+                Object.assign(hasNaN.value, {
+                    [i]: includesNaN(
+                        props.dataset.body.map((el) => Number(el.td[i])),
+                    ),
+                });
             }
         });
 
         bodyCopy.value.forEach((el, index) => {
-            searchHelper.map(helper => {
+            searchHelper.map((helper) => {
                 const [index, baseIndex, sum] = helper;
                 el.td[index] = el.td[baseIndex] / sum;
             });
             // Implements a sorting index for each column type
             // Also applied on tableBody as it is used when reseting filters to initial state
             el.td.forEach((td, i) => {
-                if (props.dataset.header[i].type === constants.value.TEXT && props.dataset.header[i].isSearch) {
+                if (
+                    props.dataset.header[i].type === constants.value.TEXT &&
+                    props.dataset.header[i].isSearch
+                ) {
                     el[i] = stringToNumber(td);
                 }
                 if (props.dataset.header[i].type === constants.value.DATE) {
@@ -1553,7 +2441,7 @@ async function prepareBodyCopy() {
                     el[i] = isNaN(Number(td)) ? i : td;
                 }
                 tableBody.value[index][i] = el[i];
-            })
+            });
         });
         resolve(true);
     });
@@ -1562,7 +2450,7 @@ async function prepareBodyCopy() {
 function promiseWithAsyncFunction(asyncFunction, callback) {
     return new Promise((resolve, reject) => {
         asyncFunction()
-            .then(data => {
+            .then((data) => {
                 try {
                     const result = callback(data);
                     resolve(result);
@@ -1570,7 +2458,7 @@ function promiseWithAsyncFunction(asyncFunction, callback) {
                     reject(error);
                 }
             })
-            .catch(error => {
+            .catch((error) => {
                 reject(error);
             });
     });
@@ -1579,8 +2467,8 @@ function promiseWithAsyncFunction(asyncFunction, callback) {
 async function resetDates(index) {
     dates.value[index] = {
         from: getDatesRange(index).from,
-        to: getDatesRange(index).to
-    }
+        to: getDatesRange(index).to,
+    };
     filteredDatesIndexes.value[index] = false;
     await nextTick();
     filterBody();
@@ -1589,9 +2477,9 @@ async function resetDates(index) {
 function resetFilter(index, th, event) {
     const target = event.currentTarget;
     clearTimeout(buttonTimeout.value);
-    target.classList.add("clicked");
+    target.classList.add('clicked');
     buttonTimeout.value = setTimeout(() => {
-        target.classList.remove("clicked");
+        target.classList.remove('clicked');
     }, 200);
     currentFilter.value = undefined;
 
@@ -1606,14 +2494,13 @@ function resetFilter(index, th, event) {
             sorts.value[index] = undefined;
         }
         if (th.isSearch) {
-            searches.value[index] = "";
+            searches.value[index] = '';
         }
-    }
-    else if (th.type === constants.value.NUMERIC) {
+    } else if (th.type === constants.value.NUMERIC) {
         sorts.value[index] = undefined;
     } else if (th.type === constants.value.TEXT) {
         sorts.value[index] = undefined;
-        searches.value[index] = "";
+        searches.value[index] = '';
     } else if (th.type === constants.value.DATE) {
         sorts.value[index] = undefined;
     }
@@ -1631,55 +2518,80 @@ function selectTd({ td, rowIndex, colIndex, headerType, event }) {
     const tr = event.currentTarget.parentNode;
     currentSelectionSpan.value.col = colIndex;
 
-    if (currentSelectionSpan.value.rows.map(row => row.index).includes(rowIndex)) {
-        tr.dataset.selected = "false";
-        currentSelectionSpan.value.rows = currentSelectionSpan.value.rows.filter(row => row.index !== rowIndex);
+    if (
+        currentSelectionSpan.value.rows
+            .map((row) => row.index)
+            .includes(rowIndex)
+    ) {
+        tr.dataset.selected = 'false';
+        currentSelectionSpan.value.rows =
+            currentSelectionSpan.value.rows.filter(
+                (row) => row.index !== rowIndex,
+            );
         event.currentTarget.classList.remove(cssClass.value.CELL);
         Array.from(tr.children).forEach((td, i) => {
             if (td.dataset.row === 'even') {
-                td.style.background = FINAL_CONFIG.value.style.rows.even.backgroundColor;
+                td.style.background =
+                    FINAL_CONFIG.value.style.rows.even.backgroundColor;
                 td.style.color = FINAL_CONFIG.value.style.rows.even.olor;
             } else {
-                td.style.background = FINAL_CONFIG.value.style.rows.odd.backgroundColor;
+                td.style.background =
+                    FINAL_CONFIG.value.style.rows.odd.backgroundColor;
                 td.style.color = FINAL_CONFIG.value.style.rows.odd.color;
             }
         });
 
         if (event.currentTarget.dataset.row === 'even') {
-            event.currentTarget.style.background = FINAL_CONFIG.value.style.rows.even.backgroundColor;
-            event.currentTarget.style.color = FINAL_CONFIG.value.style.rows.even.color;
+            event.currentTarget.style.background =
+                FINAL_CONFIG.value.style.rows.even.backgroundColor;
+            event.currentTarget.style.color =
+                FINAL_CONFIG.value.style.rows.even.color;
         } else {
-            event.currentTarget.style.background = FINAL_CONFIG.value.style.rows.odd.backgroundColor;
-            event.currentTarget.style.color = FINAL_CONFIG.value.style.rows.odd.color;
+            event.currentTarget.style.background =
+                FINAL_CONFIG.value.style.rows.odd.backgroundColor;
+            event.currentTarget.style.color =
+                FINAL_CONFIG.value.style.rows.odd.color;
         }
-
     } else {
-        tr.dataset.selected = "true";
+        tr.dataset.selected = 'true';
         currentSelectionSpan.value.rows.push({
             index: rowIndex,
-            value: td
+            value: td,
         });
         Array.from(tr.children).forEach((td, i) => {
             if (td.dataset.row === 'even') {
-                td.style.background = FINAL_CONFIG.value.style.rows.even.selectedNeighbors.backgroundColor;
-                td.style.color = FINAL_CONFIG.value.style.rows.even.selectedNeighbors.color;
+                td.style.background =
+                    FINAL_CONFIG.value.style.rows.even.selectedNeighbors.backgroundColor;
+                td.style.color =
+                    FINAL_CONFIG.value.style.rows.even.selectedNeighbors.color;
             } else {
-                td.style.background = FINAL_CONFIG.value.style.rows.odd.selectedNeighbors.backgroundColor;
-                td.style.color = FINAL_CONFIG.value.style.rows.odd.selectedNeighbors.color;
+                td.style.background =
+                    FINAL_CONFIG.value.style.rows.odd.selectedNeighbors.backgroundColor;
+                td.style.color =
+                    FINAL_CONFIG.value.style.rows.odd.selectedNeighbors.color;
             }
         });
 
         if (event.currentTarget.dataset.row === 'odd') {
-            event.currentTarget.style.background = FINAL_CONFIG.value.style.rows.odd.selectedCell.backgroundColor;
-            event.currentTarget.style.color = FINAL_CONFIG.value.style.rows.odd.selectedCell.color;
+            event.currentTarget.style.background =
+                FINAL_CONFIG.value.style.rows.odd.selectedCell.backgroundColor;
+            event.currentTarget.style.color =
+                FINAL_CONFIG.value.style.rows.odd.selectedCell.color;
         } else {
-            event.currentTarget.style.background = FINAL_CONFIG.value.style.rows.even.selectedCell.backgroundColor;
-            event.currentTarget.style.color = FINAL_CONFIG.value.style.rows.even.selectedCell.color;
+            event.currentTarget.style.background =
+                FINAL_CONFIG.value.style.rows.even.selectedCell.backgroundColor;
+            event.currentTarget.style.color =
+                FINAL_CONFIG.value.style.rows.even.selectedCell.color;
         }
     }
-    currentSelectionSpan.value.rows = currentSelectionSpan.value.rows.sort((a, b) => a.index - b.index); // Guarantees the chart will display plots in the same order than the visible rows
+    currentSelectionSpan.value.rows = currentSelectionSpan.value.rows.sort(
+        (a, b) => a.index - b.index,
+    ); // Guarantees the chart will display plots in the same order than the visible rows
 
-    if (chart.value.type === constants.value.DONUT && currentSelectionSpan.value.rows.length > 0) {
+    if (
+        chart.value.type === constants.value.DONUT &&
+        currentSelectionSpan.value.rows.length > 0
+    ) {
         applyDonutOption();
     }
 }
@@ -1693,8 +2605,10 @@ function selectColumn(index) {
                 colIndex: index,
                 headerType: constants.value.NUMERIC,
                 event: {
-                    currentTarget: document.getElementById(`cell_${i}_${index}_${uid}`)
-                }
+                    currentTarget: document.getElementById(
+                        `cell_${i}_${index}_${uid}`,
+                    ),
+                },
             });
         });
         selectedColumn.value = index;
@@ -1706,7 +2620,9 @@ function selectColumn(index) {
 
 async function selectDropdownOption(option, index) {
     if (multiselects.value[index].includes(option)) {
-        multiselects.value[index] = multiselects.value[index].filter(el => el !== option);
+        multiselects.value[index] = multiselects.value[index].filter(
+            (el) => el !== option,
+        );
     } else {
         multiselects.value[index].push(option);
     }
@@ -1715,16 +2631,19 @@ async function selectDropdownOption(option, index) {
 }
 
 function setFilterDatesIndexes(index) {
-    filteredDatesIndexes.value[index] = !(getDatesRange(index).from === dates.value[index].from && getDatesRange(index).to === dates.value[index].to);
+    filteredDatesIndexes.value[index] = !(
+        getDatesRange(index).from === dates.value[index].from &&
+        getDatesRange(index).to === dates.value[index].to
+    );
 }
 
 function sortTh(index, event) {
     currentFilter.value = index;
     const target = event.currentTarget;
     clearTimeout(buttonTimeout.value);
-    target.classList.add("clicked");
+    target.classList.add('clicked');
     buttonTimeout.value = setTimeout(() => {
-        target.classList.remove("clicked");
+        target.classList.remove('clicked');
     }, 200);
     const record = sorts.value[index];
     if (record === 1) {
@@ -1738,9 +2657,9 @@ function sortTh(index, event) {
 function toggleMultiselect(index, _th, event) {
     const target = event.currentTarget;
     clearTimeout(buttonTimeout.value);
-    target.classList.add("clicked");
+    target.classList.add('clicked');
     buttonTimeout.value = setTimeout(() => {
-        target.classList.remove("clicked");
+        target.classList.remove('clicked');
     }, 200);
 
     const menu = document.getElementById(`th_dropdown_${index}`); // FIXME: add uid
@@ -1793,18 +2712,22 @@ function elementDrag(e) {
         clientX.value = e.clientX - dragOffsetX.value;
         clientY.value = e.clientY - dragOffsetY.value - 40;
         if (clientX.value < 0) clientX.value = 0;
-        if (clientX.value + rect.width > window.innerWidth) clientX.value = window.innerWidth - rect.width - 48
+        if (clientX.value + rect.width > window.innerWidth)
+            clientX.value = window.innerWidth - rect.width - 48;
         if (clientY.value < 0) clientY.value = 0;
-        if (clientY.value + rect.height > window.innerHeight) clientY.value = window.innerHeight - rect.height - 24;
+        if (clientY.value + rect.height > window.innerHeight)
+            clientY.value = window.innerHeight - rect.height - 24;
     }
 }
 
 onMounted(() => {
     if (props.dataset.header.length === 0) {
-        throw new Error("vue-ui-table error: missing header data.\nProvide an array of objects of type:\n{\n name: string;\n type: string; ('text' | 'numeric' | 'date')\n average: boolean;\n decimals: number | undefined;\n sum: boolean;\n isSort:boolean;\n isSearch: boolean;\n isMultiselect: boolean;\n isPercentage: boolean;\n percentageTo: string; (or '')\n}");
+        throw new Error(
+            "vue-ui-table error: missing header data.\nProvide an array of objects of type:\n{\n name: string;\n type: string; ('text' | 'numeric' | 'date')\n average: boolean;\n decimals: number | undefined;\n sum: boolean;\n isSort:boolean;\n isSearch: boolean;\n isMultiselect: boolean;\n isPercentage: boolean;\n percentageTo: string; (or '')\n}",
+        );
     }
     if (props.dataset.body.length === 0) {
-        throw new Error("vue-ui-table error: missing body data");
+        throw new Error('vue-ui-table error: missing body data');
     }
     isLoading.value = true;
 
@@ -1813,73 +2736,100 @@ onMounted(() => {
         isLoading.value = false;
     });
 
-    document.addEventListener("keydown", (e) => {
+    document.addEventListener('keydown', (e) => {
         const focusedElement = document.activeElement;
-        const isTableCellFocused = focusedElement && Array.from(focusedElement.classList).includes('td-focusable');
+        const isTableCellFocused =
+            focusedElement &&
+            Array.from(focusedElement.classList).includes('td-focusable');
 
-        if (isTableCellFocused && e.key.includes("Arrow") || e.code === 'Space') {
+        if (
+            (isTableCellFocused && e.key.includes('Arrow')) ||
+            e.code === 'Space'
+        ) {
             e.preventDefault();
         }
-    })
+    });
     filename.value = FINAL_CONFIG.value.style.exportMenu.filename;
-    chartTimeLabelSourceModel.value = dateHeaders.value[0]?.name ?? ''
+    chartTimeLabelSourceModel.value = dateHeaders.value[0]?.name ?? '';
 });
 
-watch(() => props.dataset, (newVal) => {
-    isLoading.value = true;
-    bodyCopy.value = JSON.parse(JSON.stringify(newVal.body)).map((el, i) => ({
-        ...el,
-        absoluteIndex: i
-    }));
-    tableBody.value = JSON.parse(JSON.stringify(newVal.body)).map((el, i) => ({
-        ...el,
-        absoluteIndex: i
-    }));
-    tableHead.value = JSON.parse(JSON.stringify(newVal.header)).map((head, i) => ({
-        average: Object.hasOwn(head, 'average') ? head.average : false,
-        decimals: Object.hasOwn(head, 'decimals') ? head.decimals : 0,
-        isMultiselect: Object.hasOwn(head, 'isMultiselect') ? head.isMultiselect : false,
-        isPercentage: Object.hasOwn(head, 'isPercentage') ? head.isPercentage : false,
-        isSearch: Object.hasOwn(head, 'isSearch') ? head.isSearch : false,
-        isSort: Object.hasOwn(head, 'isSort') ? head.isSort : false,
-        name: head.name,
-        percentageTo: Object.hasOwn(head, 'percentageTo') ? head.percentageTo : undefined,
-        prefix: Object.hasOwn(head, 'prefix') ? head.prefix : '',
-        rangeFilter: Object.hasOwn(head, 'rangeFilter') ? head.rangeFilter : false,
-        suffix: Object.hasOwn(head, 'suffix') ? head.suffix : '',
-        sum: Object.hasOwn(head, 'sum') ? head.sum : false,
-        type: head.type,
-        index: i
-    }));
+watch(
+    () => props.dataset,
+    (newVal) => {
+        isLoading.value = true;
+        bodyCopy.value = JSON.parse(JSON.stringify(newVal.body)).map(
+            (el, i) => ({
+                ...el,
+                absoluteIndex: i,
+            }),
+        );
+        tableBody.value = JSON.parse(JSON.stringify(newVal.body)).map(
+            (el, i) => ({
+                ...el,
+                absoluteIndex: i,
+            }),
+        );
+        tableHead.value = JSON.parse(JSON.stringify(newVal.header)).map(
+            (head, i) => ({
+                average: Object.hasOwn(head, 'average') ? head.average : false,
+                decimals: Object.hasOwn(head, 'decimals') ? head.decimals : 0,
+                isMultiselect: Object.hasOwn(head, 'isMultiselect')
+                    ? head.isMultiselect
+                    : false,
+                isPercentage: Object.hasOwn(head, 'isPercentage')
+                    ? head.isPercentage
+                    : false,
+                isSearch: Object.hasOwn(head, 'isSearch')
+                    ? head.isSearch
+                    : false,
+                isSort: Object.hasOwn(head, 'isSort') ? head.isSort : false,
+                name: head.name,
+                percentageTo: Object.hasOwn(head, 'percentageTo')
+                    ? head.percentageTo
+                    : undefined,
+                prefix: Object.hasOwn(head, 'prefix') ? head.prefix : '',
+                rangeFilter: Object.hasOwn(head, 'rangeFilter')
+                    ? head.rangeFilter
+                    : false,
+                suffix: Object.hasOwn(head, 'suffix') ? head.suffix : '',
+                sum: Object.hasOwn(head, 'sum') ? head.sum : false,
+                type: head.type,
+                index: i,
+            }),
+        );
 
-    currentSelectionSpan.value = { col: undefined, rows: [] };
-    selectedColumn.value = undefined;
-    
-    // this.currentPage = 0;
-    itemsPerPage.value = props.config.rowsPerPage ? props.config.rowsPerPage : 25;
-    percentages.value = {};
-    dates.value = {};
-    filteredDatesIndexes.value = {};
-    hasNaN.value = {};
-    immutableRangeFilters.value = {};
-    rangeFilters.value = {};
-    multiselects.value = {};
-    searches.value = {};
-    sorts.value = {};
-    showChart.value = false;
-    currentDonut.value = undefined;
-    selectedDonutCategory.value = undefined;
-    selectedPlot.value = undefined;
-    showDonutOptions.value = false;
-    currentSelectionSpan.value.col = undefined;
-    currentSelectionSpan.value.rows = []
+        currentSelectionSpan.value = { col: undefined, rows: [] };
+        selectedColumn.value = undefined;
 
-    promiseWithAsyncFunction(prepareBodyCopy, async () => {
-        updateCurrentPage();
-        await nextTick();
-        isLoading.value = false;
-    });
-}, { immediate: true, deep: true });
+        // this.currentPage = 0;
+        itemsPerPage.value = props.config.rowsPerPage
+            ? props.config.rowsPerPage
+            : 25;
+        percentages.value = {};
+        dates.value = {};
+        filteredDatesIndexes.value = {};
+        hasNaN.value = {};
+        immutableRangeFilters.value = {};
+        rangeFilters.value = {};
+        multiselects.value = {};
+        searches.value = {};
+        sorts.value = {};
+        showChart.value = false;
+        currentDonut.value = undefined;
+        selectedDonutCategory.value = undefined;
+        selectedPlot.value = undefined;
+        showDonutOptions.value = false;
+        currentSelectionSpan.value.col = undefined;
+        currentSelectionSpan.value.rows = [];
+
+        promiseWithAsyncFunction(prepareBodyCopy, async () => {
+            updateCurrentPage();
+            await nextTick();
+            isLoading.value = false;
+        });
+    },
+    { immediate: true, deep: true },
+);
 
 const filenameInputRef = ref(null);
 watch(isExportRequest, (bool) => {
@@ -1893,7 +2843,6 @@ watch(showChart, (bool) => {
         chartModal.value && chartModal.value.close();
     }
 });
-
 </script>
 
 <style>
@@ -2071,7 +3020,11 @@ button.th-reset:disabled {
 }
 
 button.th-reset:not(:disabled) {
-    background: radial-gradient(at top, v-bind(colorCancelActiveLight), v-bind(colorCancelActive));
+    background: radial-gradient(
+        at top,
+        v-bind(colorCancelActiveLight),
+        v-bind(colorCancelActive)
+    );
     border: 1px solid v-bind(colorCancelActive);
     color: white;
 }
@@ -2081,15 +3034,15 @@ button.th-reset:not(:disabled) {
     outline: 3px solid v-bind(colorCancelActiveOutline);
 }
 
-.vue-ui-table-main [data-is-open="false"] {
+.vue-ui-table-main [data-is-open='false'] {
     transform: scale(0, 0);
 }
 
-.vue-ui-table-main .th-dropdown[data-is-open="true"] {
+.vue-ui-table-main .th-dropdown[data-is-open='true'] {
     animation: open-dropdown 0.2s ease-in;
 }
 
-.vue-ui-table-main .th-dropdown[data-is-open="false"] {
+.vue-ui-table-main .th-dropdown[data-is-open='false'] {
     animation: close-dropdown 0.2s ease-in;
 }
 
@@ -2146,7 +3099,11 @@ button.th-reset:not(:disabled) {
 }
 
 .vue-ui-table-main .th-button-active {
-    background: radial-gradient(at top, v-bind(colorButtonSortActiveLight), v-bind(colorButtonSortActive));
+    background: radial-gradient(
+        at top,
+        v-bind(colorButtonSortActiveLight),
+        v-bind(colorButtonSortActive)
+    );
     color: v-bind(colorButtonSortActiveColorText);
 }
 
@@ -2178,7 +3135,7 @@ button.th-reset:not(:disabled) {
     gap: 3px;
 }
 
-.vue-ui-table-main input[type="date"] {
+.vue-ui-table-main input[type='date'] {
     border-radius: 4px;
     font-size: 12px;
     font-variant-numeric: tabular-nums;
@@ -2234,7 +3191,7 @@ button.th-reset:not(:disabled) {
 .vue-ui-table-main button.td-selector-info-reset {
     background: transparent;
     border: none;
-    color: #F17171;
+    color: #f17171;
     height: 14px;
     margin-left: 24px;
     padding: 0;
@@ -2315,7 +3272,7 @@ button.th-reset:not(:disabled) {
 .vue-ui-table-main .vue-ui-table-size-warning {
     align-items: center;
     bottom: -24px;
-    color: #F17171;
+    color: #f17171;
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
@@ -2431,11 +3388,11 @@ button.th-reset:not(:disabled) {
     opacity: 0;
 }
 
-.vue-ui-table-main .vue-ui-table-export-hub-dropdown[data-is-open="true"] {
+.vue-ui-table-main .vue-ui-table-export-hub-dropdown[data-is-open='true'] {
     animation: open-dropdown 0.2s ease-in forwards;
 }
 
-.vue-ui-table-main .vue-ui-table-export-hub-dropdown[data-is-open="false"] {
+.vue-ui-table-main .vue-ui-table-export-hub-dropdown[data-is-open='false'] {
     animation: close-dropdown 0.2s ease-in;
 }
 
@@ -2502,12 +3459,12 @@ input.vue-ui-table-dialog-input {
 }
 
 .vue-ui-table-main .td-nan {
-    background: #F17171;
+    background: #f17171;
 }
 
 .vue-ui-table-main .td-has-nan,
 .vue-ui-table-main .th-has-nan {
-    background: #F17171;
+    background: #f17171;
     min-width: 100px;
     color: white;
 }
@@ -2556,7 +3513,7 @@ label {
     display: flex;
     flex-direction: row;
     gap: 6px;
-    align-items:center;
+    align-items: center;
     font-size: 12px;
 }
 </style>

@@ -5,13 +5,16 @@ export type {
     VueUiCirclePackDatapoint,
     VueUiCirclePackConfig,
     VueUiCirclePackExpose,
-    VueUiCirclePackEvent
-} from "./vue-data-ui";
+    VueUiCirclePackEvent,
+} from './vue-data-ui';
 
-declare const VueUiCirclePack: DefineComponent<{
-    config?: VueUiCirclePackConfig;
-    dataset: VueUiCirclePackDatasetItem[];
-}, VueUiCirclePackExpose>;
+declare const VueUiCirclePack: DefineComponent<
+    {
+        config?: VueUiCirclePackConfig;
+        dataset: VueUiCirclePackDatasetItem[];
+    },
+    VueUiCirclePackExpose
+>;
 
 export default VueUiCirclePack;
 export { VueUiCirclePack };

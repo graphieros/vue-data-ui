@@ -1,4 +1,4 @@
-import * as util from "../util.js";
+import * as util from '../util.js';
 
 /*
  * Given a list of entries of the form {v, barycenter, weight} and a
@@ -30,13 +30,13 @@ export default function resolveConflicts(entries, cg) {
     const mappedEntries = {};
 
     entries.forEach((entry, i) => {
-        const tmp = mappedEntries[entry.v] = {
+        const tmp = (mappedEntries[entry.v] = {
             indegree: 0,
             in: [],
             out: [],
             vs: [entry.v],
-            i
-        };
+            i,
+        });
 
         if (entry.barycenter !== undefined) {
             tmp.barycenter = entry.barycenter;
@@ -44,7 +44,7 @@ export default function resolveConflicts(entries, cg) {
         }
     });
 
-    cg.edges().forEach(e => {
+    cg.edges().forEach((e) => {
         const entryV = mappedEntries[e.v];
         const entryW = mappedEntries[e.w];
         if (entryV !== undefined && entryW !== undefined) {
@@ -53,7 +53,9 @@ export default function resolveConflicts(entries, cg) {
         }
     });
 
-    const sourceSet = Object.values(mappedEntries).filter(entry => !entry.indegree);
+    const sourceSet = Object.values(mappedEntries).filter(
+        (entry) => !entry.indegree,
+    );
 
     return processConflicts(sourceSet);
 }
@@ -62,7 +64,7 @@ function processConflicts(sourceSet) {
     const entries = [];
 
     function handleIn(vEntry) {
-        return uEntry => {
+        return (uEntry) => {
             if (uEntry.merged) return;
 
             if (
@@ -76,7 +78,7 @@ function processConflicts(sourceSet) {
     }
 
     function handleOut(vEntry) {
-        return wEntry => {
+        return (wEntry) => {
             wEntry.in.push(vEntry);
             if (--wEntry.indegree === 0) {
                 sourceSet.push(wEntry);
@@ -93,8 +95,8 @@ function processConflicts(sourceSet) {
     }
 
     return entries
-        .filter(entry => !entry.merged)
-        .map(entry => util.pick(entry, ["vs", "i", "barycenter", "weight"]));
+        .filter((entry) => !entry.merged)
+        .map((entry) => util.pick(entry, ['vs', 'i', 'barycenter', 'weight']));
 }
 
 function mergeEntries(target, source) {

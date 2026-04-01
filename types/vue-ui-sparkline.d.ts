@@ -1,10 +1,10 @@
 import { DefineComponent } from 'vue';
 
-export type { 
+export type {
     VueUiSparklineDatasetItem,
     VueUiSparklineConfig,
-    VueUiSparklineEvent
-} from "./vue-data-ui";
+    VueUiSparklineEvent,
+} from './vue-data-ui';
 
 declare const VueUiSparkline: DefineComponent<{
     config?: VueUiSparklineConfig;
@@ -12,4 +12,4 @@ declare const VueUiSparkline: DefineComponent<{
 }>;
 
 export default VueUiSparkline;
-export { VueUiSparkline }
+export { VueUiSparkline };

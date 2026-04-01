@@ -94,7 +94,7 @@ export function useObjectBindings(configRef, options) {
         Object.keys(bindings).forEach((k) => delete bindings[k]);
         const paths = extractAllPaths(configRef.value, [], skipArrays);
         for (const path of paths) {
-            const key = path.join(delimiter)
+            const key = path.join(delimiter);
             bindings[key] = computed({
                 get: () => getValue(configRef.value, path),
                 set: (val) => setValue(configRef.value, path, val),
@@ -113,13 +113,20 @@ export function useObjectBindings(configRef, options) {
                     return Reflect.get(target, prop);
                 } else {
                     // prop doesn't exist on target, add it and return
-                    setPropertyByPath(configRef.value, prop, undefined, delimiter);
+                    setPropertyByPath(
+                        configRef.value,
+                        prop,
+                        undefined,
+                        delimiter,
+                    );
                     bindings[prop] = computed({
                         get: () => getValue(configRef.value, prop),
-                        set: (val) => setValue(configRef.value, prop, val)
+                        set: (val) => setValue(configRef.value, prop, val),
                     });
                     if (!prop.startsWith('__v_')) {
-                        console.warn(`Vue Data UI - useObjectBindings: no binding found for key "${prop}". Please verify you are binding to a property path which exists on the object.`);
+                        console.warn(
+                            `Vue Data UI - useObjectBindings: no binding found for key "${prop}". Please verify you are binding to a property path which exists on the object.`,
+                        );
                     }
                     return ''; // Signals to Vue there is something to be tracked, so to hand the computed on the next read
                 }
@@ -135,16 +142,18 @@ export function useObjectBindings(configRef, options) {
                     setPropertyByPath(configRef.value, prop, value, delimiter);
                     bindings[prop] = computed({
                         get: () => getValue(configRef.value, prop),
-                        set: (val) => setValue(configRef.value, prop, val)
+                        set: (val) => setValue(configRef.value, prop, val),
                     });
-                    if(!prop.startsWith('__v_')) {
-                        console.warn(`Vue Data UI - useObjectBindings: cannot set unknown binding "${prop}".`);
+                    if (!prop.startsWith('__v_')) {
+                        console.warn(
+                            `Vue Data UI - useObjectBindings: cannot set unknown binding "${prop}".`,
+                        );
                     }
                     return true;
                 }
             }
             return true;
-        }
+        },
     };
 
     return markRaw(new Proxy(bindings, handler));

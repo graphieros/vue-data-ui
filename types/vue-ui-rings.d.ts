@@ -1,17 +1,20 @@
 import { DefineComponent } from 'vue';
 
-export type { 
+export type {
     VueUiRingsConfig,
     VueUiRingsDatapoint,
     VueUiRingsDatasetItem,
     VueUiRingsExpose,
-    VueUiRingsEvent
-} from "./vue-data-ui";
+    VueUiRingsEvent,
+} from './vue-data-ui';
 
-declare const VueUiRings: DefineComponent<{
-    config?: VueUiRingsConfig;
-    dataset: VueUiRingsDatasetItem[];
-}, VueUiRingsExpose>;
+declare const VueUiRings: DefineComponent<
+    {
+        config?: VueUiRingsConfig;
+        dataset: VueUiRingsDatasetItem[];
+    },
+    VueUiRingsExpose
+>;
 
 export default VueUiRings;
-export { VueUiRings }
+export { VueUiRings };

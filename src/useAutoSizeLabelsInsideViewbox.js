@@ -1,4 +1,4 @@
-import { autoFontSize } from "./lib";
+import { autoFontSize } from './lib';
 
 export function useAutoSizeLabelsInsideViewbox({
     svgRef,
@@ -6,7 +6,7 @@ export function useAutoSizeLabelsInsideViewbox({
     minFontSize,
     sizeRef,
     labelClass,
-    labelTypes = []
+    labelTypes = [],
 }) {
     let rafScheduled = null;
 
@@ -19,7 +19,14 @@ export function useAutoSizeLabelsInsideViewbox({
         return leftOK && rightOK && topOK && bottomOK;
     }
 
-    function shrinkToFit(el, bounds, startSize, minSize, attempts = 120, padding = 1) {
+    function shrinkToFit(
+        el,
+        bounds,
+        startSize,
+        minSize,
+        attempts = 120,
+        padding = 1,
+    ) {
         let current = startSize;
         let tries = 0;
         while (tries < attempts) {
@@ -36,7 +43,10 @@ export function useAutoSizeLabelsInsideViewbox({
         const container = svgRef.value;
         if (!container) return;
 
-        const [x, y, w, h] = container.getAttribute("viewBox").split(" ").map(Number);
+        const [x, y, w, h] = container
+            .getAttribute('viewBox')
+            .split(' ')
+            .map(Number);
         const bounds = { x, y, width: w, height: h };
 
         if (!labelTypes.length) {
@@ -45,8 +55,8 @@ export function useAutoSizeLabelsInsideViewbox({
                     selector: labelClass,
                     baseSize: fontSize,
                     minSize: minFontSize,
-                    sizeRef
-                }
+                    sizeRef,
+                },
             ];
         }
 
@@ -64,7 +74,7 @@ export function useAutoSizeLabelsInsideViewbox({
                     currentFontSize: baseSize,
                     minFontSize: minSize,
                     attempts: 200,
-                    padding: 1
+                    padding: 1,
                 });
 
                 const final = shrinkToFit(el, bounds, initial, minSize, 120, 1);

@@ -9,16 +9,20 @@ export function useLoading({
     prepareConfig,
     callback = null,
     dsIsNumber = false,
-    allowEmptyDataset = false
+    allowEmptyDataset = false,
 }) {
     const manualLoading = ref(false);
 
     const loading = computed(() => {
         const configLoading = unref(config)?.loading ?? false;
         const ds = unref(dataset);
-        const datasetEmpty = allowEmptyDataset ? false : dsIsNumber ? [null, undefined].includes(ds) : ds == null 
-            || (Array.isArray(ds) && ds.length === 0) 
-            || Object.keys(ds).length === 0
+        const datasetEmpty = allowEmptyDataset
+            ? false
+            : dsIsNumber
+              ? [null, undefined].includes(ds)
+              : ds == null ||
+                (Array.isArray(ds) && ds.length === 0) ||
+                Object.keys(ds).length === 0;
 
         return manualLoading.value || configLoading || datasetEmpty;
     });
@@ -31,5 +35,11 @@ export function useLoading({
         callback && callback();
     });
 
-    return { loading, FINAL_DATASET, manualLoading, skeletonDataset, skeletonConfig };
+    return {
+        loading,
+        FINAL_DATASET,
+        manualLoading,
+        skeletonDataset,
+        skeletonConfig,
+    };
 }

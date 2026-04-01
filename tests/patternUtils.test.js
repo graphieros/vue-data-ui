@@ -66,7 +66,9 @@ describe('createSeededSvgPattern', () => {
             disambiguator: '1',
         });
 
-        expect(firstPattern.contentMarkup).not.toBe(secondPattern.contentMarkup);
+        expect(firstPattern.contentMarkup).not.toBe(
+            secondPattern.contentMarkup,
+        );
     });
 
     test('returns an object with the expected shape', () => {
@@ -171,7 +173,9 @@ describe('createSeededSvgPattern', () => {
     });
 
     test('returns a safe fallback object if String conversion of seed throws', () => {
-        const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+        const consoleErrorSpy = vi
+            .spyOn(console, 'error')
+            .mockImplementation(() => {});
         const invalidSeed = {
             toString() {
                 throw new Error('broken toString');
@@ -270,7 +274,9 @@ describe('createPatternDef', () => {
     });
 
     test('returns safe fallback markup if pattern creation flow throws', () => {
-        const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+        const consoleErrorSpy = vi
+            .spyOn(console, 'error')
+            .mockImplementation(() => {});
         const invalidSeed = {
             toString() {
                 throw new Error('broken seed');

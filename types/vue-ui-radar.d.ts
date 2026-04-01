@@ -1,6 +1,6 @@
 import { DefineComponent } from 'vue';
 
-export type { 
+export type {
     VueUiRadarConfig,
     VueUiRadarDatapoint,
     VueUiRadarCategory,
@@ -10,13 +10,16 @@ export type {
     VueUiRadarDatasetSerieItem,
     VueUiRadarDataset,
     VueUiRadarExpose,
-    VueUiRadarEvent
-} from "./vue-data-ui";
+    VueUiRadarEvent,
+} from './vue-data-ui';
 
-declare const VueUiRadar: DefineComponent<{
-    config?: VueUiRadarConfig;
-    dataset: VueUiRadarDataset;
-}, VueUiRadarExpose>;
+declare const VueUiRadar: DefineComponent<
+    {
+        config?: VueUiRadarConfig;
+        dataset: VueUiRadarDataset;
+    },
+    VueUiRadarExpose
+>;
 
 export default VueUiRadar;
 export { VueUiRadar };

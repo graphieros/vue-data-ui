@@ -1,6 +1,6 @@
-const DEFAULT_EDGE_NAME = "\x00";
-const GRAPH_NODE = "\x00";
-const EDGE_KEY_DELIM = "\x01";
+const DEFAULT_EDGE_NAME = '\x00';
+const GRAPH_NODE = '\x00';
+const EDGE_KEY_DELIM = '\x01';
 
 // Implementation notes:
 //
@@ -59,9 +59,15 @@ class Graph {
 
     constructor(opts) {
         if (opts) {
-            this._isDirected = Object.hasOwn(opts, "directed") ? opts.directed : true;
-            this._isMultigraph = Object.hasOwn(opts, "multigraph") ? opts.multigraph : false;
-            this._isCompound = Object.hasOwn(opts, "compound") ? opts.compound : false;
+            this._isDirected = Object.hasOwn(opts, 'directed')
+                ? opts.directed
+                : true;
+            this._isMultigraph = Object.hasOwn(opts, 'multigraph')
+                ? opts.multigraph
+                : false;
+            this._isCompound = Object.hasOwn(opts, 'compound')
+                ? opts.compound
+                : false;
         }
 
         if (this._isCompound) {
@@ -112,7 +118,6 @@ class Graph {
         return this._label;
     }
 
-
     /* === Node functions ========== */
 
     /**
@@ -124,7 +129,7 @@ class Graph {
      */
     setDefaultNodeLabel(newDefault) {
         this._defaultNodeLabelFn = newDefault;
-        if (typeof newDefault !== "function") {
+        if (typeof newDefault !== 'function') {
             this._defaultNodeLabelFn = () => newDefault;
         }
 
@@ -154,7 +159,9 @@ class Graph {
      */
     sources() {
         const self = this;
-        return this.nodes().filter(v => Object.keys(self._in[v]).length === 0);
+        return this.nodes().filter(
+            (v) => Object.keys(self._in[v]).length === 0,
+        );
     }
 
     /**
@@ -163,7 +170,9 @@ class Graph {
      */
     sinks() {
         const self = this;
-        return this.nodes().filter(v => Object.keys(self._out[v]).length === 0);
+        return this.nodes().filter(
+            (v) => Object.keys(self._out[v]).length === 0,
+        );
     }
 
     /**
@@ -173,7 +182,7 @@ class Graph {
     setNodes(nodeIds, value) {
         const args = arguments;
         const self = this;
-        nodeIds.forEach(nodeId => {
+        nodeIds.forEach((nodeId) => {
             if (args.length > 1) {
                 self.setNode(nodeId, value);
             } else {
@@ -197,7 +206,8 @@ class Graph {
             return this;
         }
 
-        this._nodes[nodeId] = arguments.length > 1 ? value : this._defaultNodeLabelFn(nodeId);
+        this._nodes[nodeId] =
+            arguments.length > 1 ? value : this._defaultNodeLabelFn(nodeId);
         if (this._isCompound) {
             this._parent[nodeId] = GRAPH_NODE;
             this._children[nodeId] = {};
@@ -235,12 +245,13 @@ class Graph {
     removeNode(nodeId) {
         const self = this;
         if (Object.hasOwn(this._nodes, nodeId)) {
-            const removeEdge = edgeId => self.removeEdge(self._edgeObjs[edgeId]);
+            const removeEdge = (edgeId) =>
+                self.removeEdge(self._edgeObjs[edgeId]);
             delete this._nodes[nodeId];
             if (this._isCompound) {
                 this._removeFromParentsChildList(nodeId);
                 delete this._parent[nodeId];
-                this.children(nodeId).forEach(child => {
+                this.children(nodeId).forEach((child) => {
                     self.setParent(child);
                 });
                 delete this._children[nodeId];
@@ -264,17 +275,25 @@ class Graph {
      */
     setParent(nodeId, parentId) {
         if (!this._isCompound) {
-            throw new Error("Cannot set parent in a non-compound graph");
+            throw new Error('Cannot set parent in a non-compound graph');
         }
 
         if (parentId === undefined) {
             parentId = GRAPH_NODE;
         } else {
-            parentId += "";
-            for (let ancestor = parentId; ancestor !== undefined; ancestor = this.parent(ancestor)) {
+            parentId += '';
+            for (
+                let ancestor = parentId;
+                ancestor !== undefined;
+                ancestor = this.parent(ancestor)
+            ) {
                 if (ancestor === nodeId) {
                     throw new Error(
-                        "Setting " + parentId + " as parent of " + nodeId + " would create a cycle",
+                        'Setting ' +
+                            parentId +
+                            ' as parent of ' +
+                            nodeId +
+                            ' would create a cycle',
                     );
                 }
             }
@@ -396,7 +415,7 @@ class Graph {
             }
         });
 
-        Object.values(this._edgeObjs).forEach(edgeObject => {
+        Object.values(this._edgeObjs).forEach((edgeObject) => {
             if (copy.hasNode(edgeObject.v) && copy.hasNode(edgeObject.w)) {
                 copy.setEdge(edgeObject, self.edge(edgeObject));
             }
@@ -416,7 +435,9 @@ class Graph {
         }
 
         if (this._isCompound) {
-            copy.nodes().forEach(nodeId => copy.setParent(nodeId, findParent(nodeId)));
+            copy.nodes().forEach((nodeId) =>
+                copy.setParent(nodeId, findParent(nodeId)),
+            );
         }
 
         return copy;
@@ -433,7 +454,7 @@ class Graph {
      */
     setDefaultEdgeLabel(newDefault) {
         this._defaultEdgeLabelFn = newDefault;
-        if (typeof newDefault !== "function") {
+        if (typeof newDefault !== 'function') {
             this._defaultEdgeLabelFn = () => newDefault;
         }
 
@@ -490,7 +511,7 @@ class Graph {
         let valueSpecified = false;
         const arg0 = arguments[0];
 
-        if (typeof arg0 === "object" && arg0 !== null && "v" in arg0) {
+        if (typeof arg0 === 'object' && arg0 !== null && 'v' in arg0) {
             v = arg0.v;
             w = arg0.w;
             name = arg0.name;
@@ -508,10 +529,10 @@ class Graph {
             }
         }
 
-        v = "" + v;
-        w = "" + w;
+        v = '' + v;
+        w = '' + w;
         if (name !== undefined) {
-            name = "" + name;
+            name = '' + name;
         }
 
         let edgeId = edgeArgsToId(this._isDirected, v, w, name);
@@ -523,13 +544,17 @@ class Graph {
         }
 
         if (name !== undefined && !this._isMultigraph) {
-            throw new Error("Cannot set a named edge when isMultigraph = false");
+            throw new Error(
+                'Cannot set a named edge when isMultigraph = false',
+            );
         }
 
         this.setNode(v);
         this.setNode(w);
 
-        this._edgeLabels[edgeId] = valueSpecified ? value : this._defaultEdgeLabelFn(v, w, name);
+        this._edgeLabels[edgeId] = valueSpecified
+            ? value
+            : this._defaultEdgeLabelFn(v, w, name);
 
         const edgeObj = edgeArgsToObj(this._isDirected, v, w, name);
         v = edgeObj.v;
@@ -563,7 +588,7 @@ class Graph {
      */
     edgeAsObj() {
         const edge = this.edge(...arguments);
-        if (typeof edge !== "object") {
+        if (typeof edge !== 'object') {
             return { label: edge };
         }
 
@@ -618,7 +643,7 @@ class Graph {
             if (!fromNodeId) {
                 return edges;
             }
-            return edges.filter(edge => edge.v === fromNodeId);
+            return edges.filter((edge) => edge.v === fromNodeId);
         }
     }
 
@@ -634,7 +659,7 @@ class Graph {
             if (!toNodeId) {
                 return edges;
             }
-            return edges.filter(edge => edge.w === toNodeId);
+            return edges.filter((edge) => edge.w === toNodeId);
         }
     }
 
@@ -666,8 +691,8 @@ function decrementOrRemoveEntry(map, key) {
 }
 
 function edgeArgsToId(isDirected, v_, w_, name) {
-    let v = "" + v_;
-    let w = "" + w_;
+    let v = '' + v_;
+    let w = '' + w_;
     if (!isDirected && v > w) {
         const tmp = v;
         v = w;
@@ -683,8 +708,8 @@ function edgeArgsToId(isDirected, v_, w_, name) {
 }
 
 function edgeArgsToObj(isDirected, v_, w_, name) {
-    let v = "" + v_;
-    let w = "" + w_;
+    let v = '' + v_;
+    let w = '' + w_;
     if (!isDirected && v > w) {
         const tmp = v;
         v = w;

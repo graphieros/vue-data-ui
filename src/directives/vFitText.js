@@ -1,23 +1,26 @@
 export default {
     mounted(el, binding) {
-        fit(el, binding.value)
+        fit(el, binding.value);
     },
     updated(el, binding) {
-        fit(el, binding.value)
-    }
-}
+        fit(el, binding.value);
+    },
+};
 
-function fit(el, {
-    cellWidth,
-    cellHeight,
-    maxFontSize,
-    minFontSize,
-    index,
-    reportRotation,
-    reportHide,
-    rotateAll,
-    hideAll
-}) {
+function fit(
+    el,
+    {
+        cellWidth,
+        cellHeight,
+        maxFontSize,
+        minFontSize,
+        index,
+        reportRotation,
+        reportHide,
+        rotateAll,
+        hideAll,
+    },
+) {
     el.removeAttribute('transform');
     el.removeAttribute('visibility');
 
@@ -31,7 +34,7 @@ function fit(el, {
         reportRotation(index, false);
         reportHide(index, false);
     } else {
-        const shrinkFs = Math.floor(maxFontSize * cellWidth / length);
+        const shrinkFs = Math.floor((maxFontSize * cellWidth) / length);
         if (shrinkFs >= minFontSize) {
             el.setAttribute('font-size', shrinkFs);
             reportRotation(index, false);
@@ -58,7 +61,7 @@ function fit(el, {
         if (needed <= cellHeight) {
             reportHide(index, false);
         } else {
-            const shrinkFs2 = Math.floor(maxFontSize * cellHeight / needed);
+            const shrinkFs2 = Math.floor((maxFontSize * cellHeight) / needed);
             if (shrinkFs2 >= minFontSize) {
                 el.setAttribute('font-size', shrinkFs2);
                 reportHide(index, false);

@@ -1,21 +1,32 @@
 <template>
     <template v-for="(node, i) in dataset">
         <template v-if="node.polygonPath && node.polygonPath.coordinates">
-            <template v-for="(coordinate, index) in node.polygonPath.coordinates" :key="`node_${i}_${index}`">
+            <template
+                v-for="(coordinate, index) in node.polygonPath.coordinates"
+                :key="`node_${i}_${index}`"
+            >
                 <circle
                     data-cy="recursive-circle"
-                    :cx="coordinate.x" 
-                    :cy="coordinate.y" 
-                    :r="node.circleRadius" 
+                    :cx="coordinate.x"
+                    :cy="coordinate.y"
+                    :r="node.circleRadius"
                     :fill="`url(#gradient_${node.color})`"
-                    :stroke="hoveredUid && hoveredUid === node.uid ? strokeHovered : stroke" 
-                    :stroke-width="hoveredUid && hoveredUid === node.uid ? node.circleRadius / 6 : node.circleRadius / 12" 
-                    style="cursor:pointer"
+                    :stroke="
+                        hoveredUid && hoveredUid === node.uid
+                            ? strokeHovered
+                            : stroke
+                    "
+                    :stroke-width="
+                        hoveredUid && hoveredUid === node.uid
+                            ? node.circleRadius / 6
+                            : node.circleRadius / 12
+                    "
+                    style="cursor: pointer"
                     @click="click(node)"
-                    @mouseover="hover(node)" 
-                    @mouseleave="hover(null)" 
+                    @mouseover="hover(node)"
+                    @mouseleave="hover(null)"
                 />
-                <foreignObject 
+                <foreignObject
                     v-if="$slots.node"
                     :x="coordinate.x - node.circleRadius"
                     :y="coordinate.y - node.circleRadius"
@@ -23,24 +34,24 @@
                     :width="node.circleRadius * 2"
                     style="overflow: visible"
                     @click.stop="click(node)"
-                    @mouseover="hover(node)" 
-                    @mouseleave="hover(null)" 
+                    @mouseover="hover(node)"
+                    @mouseleave="hover(null)"
                 >
-                    <slot name="node" v-bind="{ node }"/>
+                    <slot name="node" v-bind="{ node }" />
                 </foreignObject>
             </template>
             <template v-if="node.nodes && node.nodes.length > 0">
-                <RecursiveCircles 
-                    :dataset="node.nodes" 
-                    :color="color" 
-                    :stroke="stroke" 
-                    :strokeHovered="strokeHovered" 
-                    :hoveredUid="hoveredUid" 
-                    @click="click" 
-                    @hover="hover" 
+                <RecursiveCircles
+                    :dataset="node.nodes"
+                    :color="color"
+                    :stroke="stroke"
+                    :strokeHovered="strokeHovered"
+                    :hoveredUid="hoveredUid"
+                    @click="click"
+                    @hover="hover"
                 >
                     <template #node="{ node }">
-                        <slot name="node" v-bind="{ node }"/>
+                        <slot name="node" v-bind="{ node }" />
                     </template>
                 </RecursiveCircles>
             </template>
@@ -95,6 +106,6 @@ watch(
     (newDataset) => {
         nodes.value = newDataset || [];
     },
-    { immediate: true }
+    { immediate: true },
 );
 </script>

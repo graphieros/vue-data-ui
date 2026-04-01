@@ -1,4 +1,4 @@
-import { ref} from "vue";
+import { ref } from 'vue';
 
 export function useArena() {
     const local = ref(null);
@@ -19,14 +19,14 @@ export function useArena() {
         vduiLocal.value.toggleTable();
         vduiBuild.value.toggleTable();
     }
-    
+
     function toggleSort() {
         local.value.toggleSort();
         build.value.toggleSort();
         vduiLocal.value.toggleSort();
         vduiBuild.value.toggleSort();
     }
-    
+
     function toggleStack() {
         local.value.toggleStack();
         build.value.toggleStack();
@@ -42,6 +42,6 @@ export function useArena() {
         local,
         build,
         vduiLocal,
-        vduiBuild
-    }
+        vduiBuild,
+    };
 }

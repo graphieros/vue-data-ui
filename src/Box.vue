@@ -1,19 +1,19 @@
 <script setup>
-import { ref } from "vue";
+import { ref } from 'vue';
 const showConfig = ref(false);
 
 const props = defineProps({
     open: {
         type: Boolean,
-        default: false
+        default: false,
     },
     misc: {
         type: Boolean,
-        default: false
-    }
-})
+        default: false,
+    },
+});
 
-const emit = defineEmits(['copy'])
+const emit = defineEmits(['copy']);
 
 const isCopying = ref(false);
 
@@ -24,50 +24,136 @@ function copy() {
         isCopying.value = false;
     }, 1000);
 }
-
 </script>
 
 <template>
-    <div style="width: 100%;margin-top:12px; background: #2A2A2A;">
+    <div style="width: 100%; margin-top: 12px; background: #2a2a2a">
         <details :open="open">
-            <summary style="user-select:none;cursor:pointer;height:30px;background:linear-gradient(to right, #2A2A2A, #1A1A1A);line-height:24px;font-size:24px;padding:12px; display: flex; align-items:center; gap: 6px">
-                <div style="color:#42d392; display: flex; justify-content: space-between; width: 100%">
-                    <div style="display: flex; align-items:center; gap:12px">
+            <summary
+                style="
+                    user-select: none;
+                    cursor: pointer;
+                    height: 30px;
+                    background: linear-gradient(to right, #2a2a2a, #1a1a1a);
+                    line-height: 24px;
+                    font-size: 24px;
+                    padding: 12px;
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                "
+            >
+                <div
+                    style="
+                        color: #42d392;
+                        display: flex;
+                        justify-content: space-between;
+                        width: 100%;
+                    "
+                >
+                    <div style="display: flex; align-items: center; gap: 12px">
                         <slot name="title"></slot>
                     </div>
-                    <div style="display: flex; align-items:center; gap: 12px">
+                    <div style="display: flex; align-items: center; gap: 12px">
                         <slot name="info"></slot>
                     </div>
                 </div>
             </summary>
-            <div style="display: flex; flex-direction: row; gap: 24px; align-items:center;justify-content:center; padding: 24px">
-                <slot name="misc"/>
+            <div
+                style="
+                    display: flex;
+                    flex-direction: row;
+                    gap: 24px;
+                    align-items: center;
+                    justify-content: center;
+                    padding: 24px;
+                "
+            >
+                <slot name="misc" />
             </div>
-            <div style="display: flex; flex-direction:column;" v-if="!misc">
+            <div style="display: flex; flex-direction: column" v-if="!misc">
                 <button class="btn" @click="showConfig = !showConfig">
-                    Config &nbsp;<span v-if="showConfig">&lt;</span><span v-else>&gt;</span>
+                    Config &nbsp;<span v-if="showConfig">&lt;</span
+                    ><span v-else>&gt;</span>
                 </button>
-                <br>
-                <small style="margin-left: 24px; margin-bottom: 12px; color: #AAAAAA" v-if="showConfig">Click to copy</small>
-                <code :class="{cde: true, wow: isCopying}" v-if="showConfig" @click="copy">
+                <br />
+                <small
+                    style="
+                        margin-left: 24px;
+                        margin-bottom: 12px;
+                        color: #aaaaaa;
+                    "
+                    v-if="showConfig"
+                    >Click to copy</small
+                >
+                <code
+                    :class="{ cde: true, wow: isCopying }"
+                    v-if="showConfig"
+                    @click="copy"
+                >
                     <slot name="config"></slot>
                 </code>
             </div>
-            <div style="padding-left:24px">
-                <slot name="general"/>
+            <div style="padding-left: 24px">
+                <slot name="general" />
             </div>
-            <div style="display: flex;flex-direction:row; gap:12px; align-items:center;justify-content:center;background:#2A2A2A;padding:12px" v-if="!misc">
-                <div style="width:100%;padding:12px;">
-                    <div style="width:100%;text-align:center;color: #ff6400;margin-bottom:12px">DEV</div>
+            <div
+                style="
+                    display: flex;
+                    flex-direction: row;
+                    gap: 12px;
+                    align-items: center;
+                    justify-content: center;
+                    background: #2a2a2a;
+                    padding: 12px;
+                "
+                v-if="!misc"
+            >
+                <div style="width: 100%; padding: 12px">
+                    <div
+                        style="
+                            width: 100%;
+                            text-align: center;
+                            color: #ff6400;
+                            margin-bottom: 12px;
+                        "
+                    >
+                        DEV
+                    </div>
 
-                    <div style="resize:both;overflow: auto; border: 1px solid #ff6400; padding: 12px; border-radius: 6px">
+                    <div
+                        style="
+                            resize: both;
+                            overflow: auto;
+                            border: 1px solid #ff6400;
+                            padding: 12px;
+                            border-radius: 6px;
+                        "
+                    >
                         <slot name="dev"></slot>
                     </div>
                 </div>
-                <div style="width:100%;padding:12px">
-                    <div style="width:100%;text-align:center;color: #42d392;margin-bottom:12px">PRODUCTION</div>
+                <div style="width: 100%; padding: 12px">
+                    <div
+                        style="
+                            width: 100%;
+                            text-align: center;
+                            color: #42d392;
+                            margin-bottom: 12px;
+                        "
+                    >
+                        PRODUCTION
+                    </div>
 
-                    <div style="resize:both;overflow: auto; border: 1px solid #42d392; padding: 12px;border-radius: 6px">
+                    <div
+                        style="
+                            resize: both;
+                            overflow: auto;
+                            border: 1px solid #42d392;
+                            padding: 12px;
+                            border-radius: 6px;
+                        "
+                    >
                         <slot name="prod"></slot>
                     </div>
                 </div>
@@ -81,21 +167,21 @@ function copy() {
     border: none;
     width: 100px;
     height: 40px;
-    background: linear-gradient(to bottom right, #42d392, #42d392AA);
+    background: linear-gradient(to bottom right, #42d392, #42d392aa);
     font-weight: bold;
     cursor: pointer;
     border-radius: 6px;
     margin-top: 24px;
     margin-left: 24px;
-    box-shadow: 0 6px 12px -6px rgba(0, 0,0,0.6);
+    box-shadow: 0 6px 12px -6px rgba(0, 0, 0, 0.6);
     color: white;
 }
 
 .btn:hover {
-    background: linear-gradient(to top left, #42d392, #42d392AA);
+    background: linear-gradient(to top left, #42d392, #42d392aa);
 }
 .cde {
-    background: #1A1A1A;
+    background: #1a1a1a;
     margin-left: 24px;
     margin-right: 24px;
     color: #fafafa;
@@ -106,7 +192,7 @@ function copy() {
 }
 
 summary::marker {
-    color: #A6A6A6;
+    color: #a6a6a6;
 }
 .wow {
     animation: wow 0.2s ease-in-out;
@@ -124,13 +210,13 @@ summary::marker {
 }
 
 @keyframes details-show {
-  from {
-    opacity:0;
-    transform: var(--details-translate, translateY(-0.5em));
-  }
+    from {
+        opacity: 0;
+        transform: var(--details-translate, translateY(-0.5em));
+    }
 }
 
 details[open] > *:not(summary) {
-  animation: details-show 250ms ease-in-out;
+    animation: details-show 250ms ease-in-out;
 }
 </style>

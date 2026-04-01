@@ -15,9 +15,27 @@
             "itemSize": 32,
             "backgroundColor": "#FFFFFF",
             "colors": {
-                "activeReadonly": ["#e20001", "#ff9f03", "#ffd004", "#61c900", "#059f00"],
-                "active": ["#e20001", "#ff9f03", "#ffd004", "#61c900", "#059f00"],
-                "inactive": ["#e1e5e8","#e1e5e8","#e1e5e8","#e1e5e8","#e1e5e8"]
+                "activeReadonly": [
+                    "#e20001",
+                    "#ff9f03",
+                    "#ffd004",
+                    "#61c900",
+                    "#059f00"
+                ],
+                "active": [
+                    "#e20001",
+                    "#ff9f03",
+                    "#ffd004",
+                    "#61c900",
+                    "#059f00"
+                ],
+                "inactive": [
+                    "#e1e5e8",
+                    "#e1e5e8",
+                    "#e1e5e8",
+                    "#e1e5e8",
+                    "#e1e5e8"
+                ]
             },
             "icons": {
                 "filled": false,
@@ -45,18 +63,18 @@
                 "roundingValue": 0,
                 "position": "bottom",
                 "offsetY": 0,
-                "offsetX":0
+                "offsetX": 0
             },
             "tooltip": {
                 "show": true,
                 "fontSize": 14,
                 "offsetY": 0,
-                "color":"#2D353C",
+                "color": "#2D353C",
                 "bold": true,
-                "backgroundColor":"#FFFFFF",
+                "backgroundColor": "#FFFFFF",
                 "borderColor": "#e1e5e8",
                 "borderRadius": 4,
-                "boxShadow":"0 6px 12px -6px rgba(0,0,0,0.2)"
+                "boxShadow": "0 6px 12px -6px rgba(0,0,0,0.2)"
             }
         }
     }

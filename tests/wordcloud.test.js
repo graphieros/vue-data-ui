@@ -1,4 +1,4 @@
-import { describe, test, expect, vi } from "vitest";
+import { describe, test, expect, vi } from 'vitest';
 import {
     getWordBitmap,
     canPlaceAt,
@@ -8,17 +8,17 @@ import {
     // helpers
     buildSingleWordMask,
     buildFirstWordMask,
-    buildLastWordMask
-} from "../src/wordcloud"
+    buildLastWordMask,
+} from '../src/wordcloud';
 
 function createMockContext2D() {
     return {
         save: vi.fn(),
         restore: vi.fn(),
-        font: "",
-        textAlign: "",
-        textBaseline: "",
-        fillStyle: "",
+        font: '',
+        textAlign: '',
+        textBaseline: '',
+        fillStyle: '',
         clearRect: vi.fn(),
         fillText: vi.fn(),
         measureText: vi.fn().mockImplementation((text) => ({
@@ -53,20 +53,20 @@ function createMockCanvas() {
     };
 }
 
-vi.stubGlobal("document", {
+vi.stubGlobal('document', {
     createElement: (tag) =>
-        tag === "canvas"
+        tag === 'canvas'
             ? createMockCanvas()
             : {
-                getContext: () => createMockContext2D(),
-            },
+                  getContext: () => createMockContext2D(),
+              },
 });
 
-describe("getWordBitmap", () => {
-    test("returns correct width, height, and wordMask", () => {
+describe('getWordBitmap', () => {
+    test('returns correct width, height, and wordMask', () => {
         const canvas = createMockCanvas();
         const ctx = createMockContext2D();
-        const word = { name: "hello" };
+        const word = { name: 'hello' };
         const fontSize = 20;
         const pad = 4;
         const svg = { style: {} };
@@ -86,10 +86,10 @@ describe("getWordBitmap", () => {
         expect(res.wordMask[0]).toHaveLength(2);
     });
 
-    test("applies bold style if svg.style.bold is true", () => {
+    test('applies bold style if svg.style.bold is true', () => {
         const canvas = createMockCanvas();
         const ctx = createMockContext2D();
-        const word = { name: "bold" };
+        const word = { name: 'bold' };
         const fontSize = 15;
         const pad = 2;
         const svg = { style: { bold: true } };
@@ -101,12 +101,12 @@ describe("getWordBitmap", () => {
             ctx,
             svg,
         });
-        expect(ctx.font.startsWith("bold ")).toBe(true);
+        expect(ctx.font.startsWith('bold ')).toBe(true);
     });
 });
 
-describe("canPlaceAt", () => {
-    test("returns true if no collision and inside mask bounds", () => {
+describe('canPlaceAt', () => {
+    test('returns true if no collision and inside mask bounds', () => {
         const mask = new Uint8Array(100);
         const maskW = 10;
         const maskH = 10;
@@ -119,12 +119,10 @@ describe("canPlaceAt", () => {
             [3, 3],
         ];
 
-        expect(
-            canPlaceAt({ mask, maskW, maskH, wx, wy, wordMask })
-        ).toBe(true);
+        expect(canPlaceAt({ mask, maskW, maskH, wx, wy, wordMask })).toBe(true);
     });
 
-    test("returns false if wordMask goes outside mask bounds", () => {
+    test('returns false if wordMask goes outside mask bounds', () => {
         const mask = new Uint8Array(100);
         const maskW = 10;
         const maskH = 10;
@@ -135,12 +133,12 @@ describe("canPlaceAt", () => {
             [2, 2], // (10,10)
         ];
 
-        expect(
-            canPlaceAt({ mask, maskW, maskH, wx, wy, wordMask })
-        ).toBe(false);
+        expect(canPlaceAt({ mask, maskW, maskH, wx, wy, wordMask })).toBe(
+            false,
+        );
     });
 
-    test("returns false if there is a collision", () => {
+    test('returns false if there is a collision', () => {
         const mask = new Uint8Array(100);
         mask[22] = 1; // collision at (2,2)
         const maskW = 10;
@@ -153,14 +151,14 @@ describe("canPlaceAt", () => {
             [3, 3],
         ];
 
-        expect(
-            canPlaceAt({ mask, maskW, maskH, wx, wy, wordMask })
-        ).toBe(false);
+        expect(canPlaceAt({ mask, maskW, maskH, wx, wy, wordMask })).toBe(
+            false,
+        );
     });
 });
 
-describe("markMask", () => {
-    test("sets mask values to 1 at the correct positions", () => {
+describe('markMask', () => {
+    test('sets mask values to 1 at the correct positions', () => {
         const mask = new Uint8Array(100);
         const maskW = 10;
         const maskH = 10;
@@ -178,7 +176,7 @@ describe("markMask", () => {
         expect(mask.reduce((sum, v) => sum + v, 0)).toBe(2);
     });
 
-    test("ignores out-of-bounds mask points", () => {
+    test('ignores out-of-bounds mask points', () => {
         const mask = new Uint8Array(100);
         const maskW = 10;
         const maskH = 10;
@@ -196,8 +194,8 @@ describe("markMask", () => {
     });
 });
 
-describe("dilateWordMask", () => {
-    test("adds neighbors according to dilation", () => {
+describe('dilateWordMask', () => {
+    test('adds neighbors according to dilation', () => {
         const wordMask = [
             [2, 2],
             [3, 2],
@@ -211,15 +209,15 @@ describe("dilateWordMask", () => {
         expect(result).toContainEqual([3, 2]);
         expect(result).toContainEqual([2, 1]);
         expect(result).toContainEqual([3, 3]);
-        expect(result.every(([x, y]) => x >= 0 && x < w && y >= 0 && y < h)).toBe(
-            true
-        );
+        expect(
+            result.every(([x, y]) => x >= 0 && x < w && y >= 0 && y < h),
+        ).toBe(true);
         const asStrings = result.map(([x, y]) => `${x},${y}`);
         const uniq = Array.from(new Set(asStrings));
         expect(result.length).toBe(uniq.length);
     });
 
-    test("returns original wordMask if dilation is 0", () => {
+    test('returns original wordMask if dilation is 0', () => {
         const wordMask = [
             [1, 1],
             [2, 2],
@@ -234,11 +232,11 @@ describe("dilateWordMask", () => {
     });
 });
 
-describe("positionWordsAsync", () => {
-    test("places words asynchronously and calls onProgress", async () => {
+describe('positionWordsAsync', () => {
+    test('places words asynchronously and calls onProgress', async () => {
         const words = [
-            { name: "one", value: 10 },
-            { name: "two", value: 5 },
+            { name: 'one', value: 10 },
+            { name: 'two', value: 5 },
         ];
 
         const svg = {
@@ -263,9 +261,9 @@ describe("positionWordsAsync", () => {
         const maxScaledFontSize = svg.maxFontSize * 4;
 
         for (const w of result) {
-            expect(typeof w.x).toBe("number");
-            expect(typeof w.y).toBe("number");
-            expect(typeof w.fontSize).toBe("number");
+            expect(typeof w.x).toBe('number');
+            expect(typeof w.y).toBe('number');
+            expect(typeof w.fontSize).toBe('number');
             expect(w.fontSize).toBeGreaterThanOrEqual(svg.minFontSize);
             expect(w.fontSize).toBeLessThanOrEqual(maxScaledFontSize);
             expect(w.width).toBeGreaterThan(0);
@@ -276,15 +274,15 @@ describe("positionWordsAsync", () => {
         expect(onProgress.mock.calls.length).toBeLessThanOrEqual(words.length);
 
         const [firstCallArg] = onProgress.mock.calls[0];
-        expect(firstCallArg).toHaveProperty("word");
-        expect(firstCallArg).toHaveProperty("all");
+        expect(firstCallArg).toHaveProperty('word');
+        expect(firstCallArg).toHaveProperty('all');
         expect(Array.isArray(firstCallArg.all)).toBe(true);
     });
 
-    test("places words with strictPixelPadding enabled", async () => {
+    test('places words with strictPixelPadding enabled', async () => {
         const words = [
-            { name: "one", value: 10 },
-            { name: "two", value: 5 },
+            { name: 'one', value: 10 },
+            { name: 'two', value: 5 },
         ];
 
         const svg = {
@@ -309,9 +307,9 @@ describe("positionWordsAsync", () => {
         const maxScaledFontSize = svg.maxFontSize * 4;
 
         for (const w of result) {
-            expect(typeof w.x).toBe("number");
-            expect(typeof w.y).toBe("number");
-            expect(typeof w.fontSize).toBe("number");
+            expect(typeof w.x).toBe('number');
+            expect(typeof w.y).toBe('number');
+            expect(typeof w.fontSize).toBe('number');
             expect(w.fontSize).toBeGreaterThanOrEqual(svg.minFontSize);
             expect(w.fontSize).toBeLessThanOrEqual(maxScaledFontSize);
             expect(w.width).toBeGreaterThan(0);
@@ -322,51 +320,47 @@ describe("positionWordsAsync", () => {
         expect(onProgress.mock.calls.length).toBeLessThanOrEqual(words.length);
 
         const [firstCallArg] = onProgress.mock.calls[0];
-        expect(firstCallArg).toHaveProperty("word");
-        expect(firstCallArg).toHaveProperty("all");
+        expect(firstCallArg).toHaveProperty('word');
+        expect(firstCallArg).toHaveProperty('all');
         expect(Array.isArray(firstCallArg.all)).toBe(true);
     });
 });
 
-
-describe("Bitmask builders", () => {
-    describe("buildSingleWordMask", () => {
-        test("creates a mask with bits [bitStart, bitEnd] set", () => {
+describe('Bitmask builders', () => {
+    describe('buildSingleWordMask', () => {
+        test('creates a mask with bits [bitStart, bitEnd] set', () => {
             // Expected: bits 2,3,4 set -> binary ...00011100
-            const expected =
-                (0b111 << 2) >>> 0; // shift 3 bits into position 2 → 0b00011100
+            const expected = (0b111 << 2) >>> 0; // shift 3 bits into position 2 → 0b00011100
             expect(buildSingleWordMask(2, 4)).toBe(expected);
         });
 
-        test("single bit range works", () => {
+        test('single bit range works', () => {
             const expected = (1 << 5) >>> 0; // only bit 5 set
             expect(buildSingleWordMask(5, 5)).toBe(expected);
         });
     });
 
-    describe("buildFirstWordMask", () => {
-        test("sets bits from bitStart to 31", () => {
+    describe('buildFirstWordMask', () => {
+        test('sets bits from bitStart to 31', () => {
             // bitStart = 3 → bits 3..31 set
-            const expected =
-                (~0 << 3) >>> 0; // shift all-ones left by 3
+            const expected = (~0 << 3) >>> 0; // shift all-ones left by 3
             expect(buildFirstWordMask(3)).toBe(expected);
         });
 
-        test("bitStart = 0 sets all bits", () => {
-            expect(buildFirstWordMask(0)).toBe(0xFFFFFFFF >>> 0);
+        test('bitStart = 0 sets all bits', () => {
+            expect(buildFirstWordMask(0)).toBe(0xffffffff >>> 0);
         });
     });
 
-    describe("buildLastWordMask", () => {
-        test("sets bits 0..bitEnd", () => {
+    describe('buildLastWordMask', () => {
+        test('sets bits 0..bitEnd', () => {
             // bitEnd = 4 → 0b00011111
-            const expected =
-                (1 << (4 + 1)) - 1; // (1<<5)-1 = 0b11111
+            const expected = (1 << (4 + 1)) - 1; // (1<<5)-1 = 0b11111
             expect(buildLastWordMask(4)).toBe(expected >>> 0);
         });
 
-        test("bitEnd = 31 sets all bits", () => {
-            expect(buildLastWordMask(31)).toBe(0xFFFFFFFF >>> 0);
+        test('bitEnd = 31 sets all bits', () => {
+            expect(buildLastWordMask(31)).toBe(0xffffffff >>> 0);
         });
     });
 });

@@ -1,5 +1,5 @@
-import { asNonCompoundGraph, buildLayerMatrix } from "../util.js";
-import { positionX } from "./bk.js";
+import { asNonCompoundGraph, buildLayerMatrix } from '../util.js';
+import { positionX } from './bk.js';
 
 export default function position(g) {
     const nonCompoundGraph = asNonCompoundGraph(g);

@@ -47,7 +47,7 @@ export default {
             const dy = (event.clientY ?? 0) - state.startY;
             const { moveThreshold } = getConfig();
 
-            if ((dx * dx + dy * dy) >= moveThreshold * moveThreshold) {
+            if (dx * dx + dy * dy >= moveThreshold * moveThreshold) {
                 state.moved = true;
             }
         };
@@ -62,7 +62,10 @@ export default {
             const path = event.composedPath ? event.composedPath() : [];
 
             for (const target of targets) {
-                const node = target && typeof target === 'object' && 'value' in target ? target.value : target;
+                const node =
+                    target && typeof target === 'object' && 'value' in target
+                        ? target.value
+                        : target;
                 if (!node) continue;
                 if (node === event.target) return true;
                 if (node.contains && node.contains(event.target)) return true;
@@ -107,8 +110,16 @@ export default {
         if (!h) return;
 
         window.removeEventListener('scroll', h.onScrollCapture, true);
-        document.removeEventListener('pointerdown', h.onPointerDownCapture, true);
-        document.removeEventListener('pointermove', h.onPointerMoveCapture, true);
+        document.removeEventListener(
+            'pointerdown',
+            h.onPointerDownCapture,
+            true,
+        );
+        document.removeEventListener(
+            'pointermove',
+            h.onPointerMoveCapture,
+            true,
+        );
         document.removeEventListener('pointerup', h.onPointerUpCapture, true);
         document.removeEventListener('click', h.onClickCapture, true);
 

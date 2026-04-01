@@ -9,14 +9,21 @@ fs.readFile('package.json', 'utf8', (err, data) => {
 
     packageJson.devDependencies = {
         ...packageJson.devDependencies,
-        "vue-data-ui": "file:../vue-data-ui"
+        'vue-data-ui': 'file:../vue-data-ui',
     };
 
-    fs.writeFile('package.json', JSON.stringify(packageJson, null, 2), 'utf8', (err) => {
-        if (err) {
-            console.error('Error writing to package.json:', err);
-            return;
-        }
-        console.log('-- DEV MODE : Local vue-data-ui package added successfully --');
-    });
+    fs.writeFile(
+        'package.json',
+        JSON.stringify(packageJson, null, 2),
+        'utf8',
+        (err) => {
+            if (err) {
+                console.error('Error writing to package.json:', err);
+                return;
+            }
+            console.log(
+                '-- DEV MODE : Local vue-data-ui package added successfully --',
+            );
+        },
+    );
 });

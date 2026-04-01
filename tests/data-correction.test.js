@@ -1,5 +1,9 @@
-import { describe, expect, test } from "vitest";
-import { applyDataCorrection, movingAverage, smoothing } from "../src/data-correction";
+import { describe, expect, test } from 'vitest';
+import {
+    applyDataCorrection,
+    movingAverage,
+    smoothing,
+} from '../src/data-correction';
 
 /**
  * Notes:
@@ -85,23 +89,23 @@ function expectedSmoothing(data, tau) {
     return result;
 }
 
-describe("movingAverage", () => {
-    test("returns the same array reference when disabled (halfWindow <= 0)", () => {
-        const data = createDataset([1, 2, 3, 4, 5], { tag: "x" });
+describe('movingAverage', () => {
+    test('returns the same array reference when disabled (halfWindow <= 0)', () => {
+        const data = createDataset([1, 2, 3, 4, 5], { tag: 'x' });
         const originalSnapshot = shallowClone(data);
         const out = movingAverage(data, 0);
         expect(out).toBe(data);
         expect(out).toEqual(originalSnapshot);
     });
 
-    test("returns the same array reference when length < 3 (even if halfWindow > 0)", () => {
-        const data = createDataset([10, 20], { tag: "short" });
+    test('returns the same array reference when length < 3 (even if halfWindow > 0)', () => {
+        const data = createDataset([10, 20], { tag: 'short' });
         const out = movingAverage(data, 2);
         expect(out).toBe(data);
         expect(valuesOf(out)).toEqual([10, 20]);
     });
 
-    test("returns a new array and shallow-cloned items when enabled and length >= 3", () => {
+    test('returns a new array and shallow-cloned items when enabled and length >= 3', () => {
         const data = createDataset([1, 2, 3], { meta: { nested: true } });
         const out = movingAverage(data, 1);
         expect(out).not.toBe(data);
@@ -113,7 +117,7 @@ describe("movingAverage", () => {
         }
     });
 
-    test("preserves first and last points (values unchanged) when enabled", () => {
+    test('preserves first and last points (values unchanged) when enabled', () => {
         const data = createDataset([5, 100, 6, 200, 7]);
         const out = movingAverage(data, 2);
 
@@ -121,13 +125,13 @@ describe("movingAverage", () => {
         expect(out[out.length - 1].value).toBe(7);
     });
 
-    test("computes blended moving average correctly for a known small example", () => {
+    test('computes blended moving average correctly for a known small example', () => {
         const data = createDataset([1, 2, 3, 4, 5]);
         const out = movingAverage(data, 1);
         expect(valuesOf(out)).toEqual([1, 1.75, 3, 4.25, 5]);
     });
 
-    test("matches an independently computed expected result across different halfWindow values", () => {
+    test('matches an independently computed expected result across different halfWindow values', () => {
         const data = createDataset([3, -1, 4, 1, 5, -9, 2, 6]);
         for (const halfWindow of [1, 2, 3]) {
             const out = movingAverage(data, halfWindow);
@@ -138,17 +142,17 @@ describe("movingAverage", () => {
         }
     });
 
-    test("does not mutate the input objects when enabled (original remains identical)", () => {
-        const data = createDataset([1, 10, 1, 10, 1], { label: "original" });
+    test('does not mutate the input objects when enabled (original remains identical)', () => {
+        const data = createDataset([1, 10, 1, 10, 1], { label: 'original' });
         const before = shallowClone(data);
         void movingAverage(data, 2);
         expect(data).toEqual(before);
     });
 });
 
-describe("smoothing", () => {
-    test("returns the same array reference when disabled (tau <= 0)", () => {
-        const data = createDataset([1, 2, 3, 4], { tag: "x" });
+describe('smoothing', () => {
+    test('returns the same array reference when disabled (tau <= 0)', () => {
+        const data = createDataset([1, 2, 3, 4], { tag: 'x' });
         const before = shallowClone(data);
 
         const out = smoothing(data, 0);
@@ -157,14 +161,14 @@ describe("smoothing", () => {
         expect(out).toEqual(before);
     });
 
-    test("returns the same array reference when length < 3 (even if tau > 0)", () => {
-        const data = createDataset([10, 20], { tag: "short" });
+    test('returns the same array reference when length < 3 (even if tau > 0)', () => {
+        const data = createDataset([10, 20], { tag: 'short' });
         const out = smoothing(data, 10);
         expect(out).toBe(data);
         expect(valuesOf(out)).toEqual([10, 20]);
     });
 
-    test("returns a new array and shallow-cloned items when enabled and length >= 3", () => {
+    test('returns a new array and shallow-cloned items when enabled and length >= 3', () => {
         const data = createDataset([1, 2, 3], { meta: { nested: true } });
         const out = smoothing(data, 2);
         expect(out).not.toBe(data);
@@ -175,20 +179,20 @@ describe("smoothing", () => {
         }
     });
 
-    test("preserves first and last points (values unchanged) when enabled", () => {
+    test('preserves first and last points (values unchanged) when enabled', () => {
         const data = createDataset([10, 0, 0, 0, 20]);
         const out = smoothing(data, 3);
         expect(out[0].value).toBe(10);
         expect(out[out.length - 1].value).toBe(20);
     });
 
-    test("computes forward-backward blend correctly for a known small example (tau = 1)", () => {
+    test('computes forward-backward blend correctly for a known small example (tau = 1)', () => {
         const data = createDataset([0, 10, 0]);
         const out = smoothing(data, 1);
         expect(valuesOf(out)).toEqual([0, 5, 0]);
     });
 
-    test("matches an independently computed expected result across different tau values", () => {
+    test('matches an independently computed expected result across different tau values', () => {
         const data = createDataset([3, -1, 4, 1, 5, -9, 2, 6]);
         for (const tau of [0.5, 1, 2, 10]) {
             const out = smoothing(data, tau);
@@ -199,48 +203,60 @@ describe("smoothing", () => {
         }
     });
 
-    test("does not mutate the input objects when enabled (original remains identical)", () => {
-        const data = createDataset([1, 10, 1, 10, 1], { label: "original" });
+    test('does not mutate the input objects when enabled (original remains identical)', () => {
+        const data = createDataset([1, 10, 1, 10, 1], { label: 'original' });
         const before = shallowClone(data);
         void smoothing(data, 2);
         expect(data).toEqual(before);
     });
 });
 
-describe("applyDataCorrection", () => {
-    test("applies movingAverage then smoothing in sequence (matches manual composition)", () => {
-        const data = createDataset([1, 2, 100, 3, 4], { tag: "x" });
+describe('applyDataCorrection', () => {
+    test('applies movingAverage then smoothing in sequence (matches manual composition)', () => {
+        const data = createDataset([1, 2, 100, 3, 4], { tag: 'x' });
         const settings = { averageWindow: 1, smoothingTau: 2 };
         const out = applyDataCorrection(data, settings);
-        const manual = smoothing(movingAverage(data, settings.averageWindow), settings.smoothingTau);
+        const manual = smoothing(
+            movingAverage(data, settings.averageWindow),
+            settings.smoothingTau,
+        );
         expect(out).toEqual(manual);
         expect(valuesOf(out)).toEqual(valuesOf(manual));
     });
 
-    test("returns the original array reference when both operations are disabled", () => {
+    test('returns the original array reference when both operations are disabled', () => {
         const data = createDataset([1, 2, 3, 4, 5]);
-        const out = applyDataCorrection(data, { averageWindow: 0, smoothingTau: 0 });
+        const out = applyDataCorrection(data, {
+            averageWindow: 0,
+            smoothingTau: 0,
+        });
         expect(out).toBe(data);
         expect(valuesOf(out)).toEqual([1, 2, 3, 4, 5]);
     });
 
-    test("returns the original array reference when data length < 3 regardless of settings", () => {
+    test('returns the original array reference when data length < 3 regardless of settings', () => {
         const data = createDataset([10, 20]);
-        const out = applyDataCorrection(data, { averageWindow: 10, smoothingTau: 10 });
+        const out = applyDataCorrection(data, {
+            averageWindow: 10,
+            smoothingTau: 10,
+        });
         expect(out).toBe(data);
         expect(valuesOf(out)).toEqual([10, 20]);
     });
 
-    test("does not mutate the input data when enabled", () => {
-        const data = createDataset([1, 2, 100, 3, 4], { label: "original" });
+    test('does not mutate the input data when enabled', () => {
+        const data = createDataset([1, 2, 100, 3, 4], { label: 'original' });
         const before = shallowClone(data);
         void applyDataCorrection(data, { averageWindow: 2, smoothingTau: 3 });
         expect(data).toEqual(before);
     });
 
-    test("preserves first and last points after full correction when enabled", () => {
+    test('preserves first and last points after full correction when enabled', () => {
         const data = createDataset([9, 0, 5, 0, 1, 0, 7]);
-        const out = applyDataCorrection(data, { averageWindow: 2, smoothingTau: 2 });
+        const out = applyDataCorrection(data, {
+            averageWindow: 2,
+            smoothingTau: 2,
+        });
         expect(out[0].value).toBe(9);
         expect(out[out.length - 1].value).toBe(7);
     });

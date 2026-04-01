@@ -76,34 +76,37 @@ export class Timer {
         function formatTime(milliseconds) {
             let totalSeconds = Math.floor(milliseconds / 1000);
             let hundredths = Math.floor((milliseconds % 1000) / 10);
-        
+
             let hours = Math.floor(totalSeconds / 3600);
             let minutes = Math.floor((totalSeconds % 3600) / 60);
             let seconds = totalSeconds % 60;
-        
+
             let formattedTime = '';
-        
+
             if (showH) {
                 formattedTime += String(hours).padStart(2, '0') + ':';
             }
-        
+
             formattedTime += String(minutes).padStart(2, '0') + ':';
             formattedTime += String(seconds).padStart(2, '0');
-        
+
             if (showMs) {
                 formattedTime += '.' + String(hundredths).padStart(2, '0');
             }
-        
+
             return formattedTime;
         }
 
         this.start = () => {
             this.isPaused = false;
-            worker.postMessage({ action: 'start', data: { interval: this.interval } });
+            worker.postMessage({
+                action: 'start',
+                data: { interval: this.interval },
+            });
         };
 
         this.pause = () => {
-            if(this.isPaused) {
+            if (this.isPaused) {
                 this.resume();
             } else {
                 this.isPaused = true;
@@ -132,7 +135,7 @@ export class Timer {
         this.restart = () => {
             this.stop();
             this.start();
-        }
+        };
 
         this.lap = () => {
             return new Promise((resolve) => {
@@ -144,7 +147,7 @@ export class Timer {
                         const lapData = {
                             timestamp: timestamp || 0,
                             elapsed: elapsed,
-                            formatted: formattedTime
+                            formatted: formattedTime,
                         };
                         resolve(lapData);
                     }
@@ -159,7 +162,7 @@ export class Timer {
             callback({
                 timestamp: timestamp || 0,
                 elapsed: this.elapsed,
-                formatted: formatTime(this.elapsed)
+                formatted: formatTime(this.elapsed),
             });
         };
 

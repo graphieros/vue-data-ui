@@ -1,11 +1,11 @@
 import { DefineComponent } from 'vue';
 
-export type { 
+export type {
     VueUiSparkStackbarDatapoint,
     VueUiSparkStackbarConfig,
     VueUiSparkStackbarDatasetItem,
-    VueUiSparkStackbarEvent
-} from "./vue-data-ui";
+    VueUiSparkStackbarEvent,
+} from './vue-data-ui';
 
 declare const VueUiSparkStackbar: DefineComponent<{
     config?: VueUiSparkStackbarConfig;
@@ -13,4 +13,4 @@ declare const VueUiSparkStackbar: DefineComponent<{
 }>;
 
 export default VueUiSparkStackbar;
-export { VueUiSparkStackbar }
+export { VueUiSparkStackbar };

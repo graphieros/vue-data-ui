@@ -1,17 +1,20 @@
 import { DefineComponent } from 'vue';
 
-export type { 
+export type {
     VueUiRelationCircleConfig,
     VueUiRelationCircleDatasetItem,
     VueUiRelationCircleDatapoint,
     VueUiRelationCircleExpose,
-    VueUiRelationCircleEvent
-} from "./vue-data-ui";
+    VueUiRelationCircleEvent,
+} from './vue-data-ui';
 
-declare const VueUiRelationCircle: DefineComponent<{
-    config?: VueUiRelationCircleConfig;
-    dataset: VueUiRelationCircleDatasetItem[];
-}, VueUiRelationCircleExpose>;
+declare const VueUiRelationCircle: DefineComponent<
+    {
+        config?: VueUiRelationCircleConfig;
+        dataset: VueUiRelationCircleDatasetItem[];
+    },
+    VueUiRelationCircleExpose
+>;
 
 export default VueUiRelationCircle;
-export { VueUiRelationCircle }
+export { VueUiRelationCircle };

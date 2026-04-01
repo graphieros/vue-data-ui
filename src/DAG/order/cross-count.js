@@ -1,4 +1,4 @@
-import { zipObject } from "../util.js";
+import { zipObject } from '../util.js';
 
 /*
  * A function that takes a layering (an array of layers, each with an array of
@@ -29,7 +29,7 @@ function twoLayerCrossCount(g, northLayer, southLayer) {
     // Map nodes in the south layer to their indices
     const southPos = zipObject(
         southLayer,
-        southLayer.map((v, i) => i)
+        southLayer.map((v, i) => i),
     );
 
     // Sort edges between north and south by (northPos, southPos)

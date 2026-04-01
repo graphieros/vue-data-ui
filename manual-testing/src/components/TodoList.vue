@@ -1,10 +1,15 @@
 <script setup>
-import { ref, computed, onMounted } from "vue";
-import useCrud from "../composables/useCrud";
-import { createUid, treeShake } from "../../../src/lib";
-import { VueUiDonut, VueUiHorizontalBar, VueUiIcon, VueUiXy } from "vue-data-ui";
-import PendingTodoList from "./PendingTodoList.vue";
-import DoneTodoList from "./DoneTodoList.vue";
+import { ref, computed, onMounted } from 'vue';
+import useCrud from '../composables/useCrud';
+import { createUid, treeShake } from '../../../src/lib';
+import {
+    VueUiDonut,
+    VueUiHorizontalBar,
+    VueUiIcon,
+    VueUiXy,
+} from 'vue-data-ui';
+import PendingTodoList from './PendingTodoList.vue';
+import DoneTodoList from './DoneTodoList.vue';
 import { components } from '../../../cypress/fixtures/vdui-components';
 
 const {
@@ -17,7 +22,7 @@ const {
     createOne,
     updateOne,
     deleteOne,
-} = useCrud("/api/items");
+} = useCrud('/api/items');
 
 onMounted(() => {
     readAll();
@@ -32,21 +37,21 @@ const chooseChecklistDialog = ref(null);
 const priority = {
     0: 'Low',
     1: 'Medium',
-    2: 'High'
-}
+    2: 'High',
+};
 
 const priorityColors = {
     0: '#5f8aee',
     1: '#ff7f0e',
-    2: '#e84242'
-}
+    2: '#e84242',
+};
 
 const typeColors = {
     bug: '#e84242',
     feature: '#42d392',
     dev: '#1A1A1A',
-    docs: '#579ecf'
-}
+    docs: '#579ecf',
+};
 
 const todoTemplate = ref({
     title: '',
@@ -60,7 +65,7 @@ const todoTemplate = ref({
     withComponentCheckList: false,
     checkList: {},
     withCustomCheckList: false,
-    customCheckList: {}
+    customCheckList: {},
 });
 
 const filters = ref({
@@ -68,12 +73,18 @@ const filters = ref({
     author: null,
     description: null,
     component: null,
-    type: null
+    type: null,
 });
 
 const noFilters = computed(() => {
-    return filters.value.priority == null && filters.value.author == null && filters.value.description === null && filters.value.component == null && filters.value.type == null;
-})
+    return (
+        filters.value.priority == null &&
+        filters.value.author == null &&
+        filters.value.description === null &&
+        filters.value.component == null &&
+        filters.value.type == null
+    );
+});
 
 function resetFilter(key, all = false) {
     if (all) {
@@ -82,32 +93,80 @@ function resetFilter(key, all = false) {
             author: null,
             description: null,
             component: null,
-            type: null
-        }
+            type: null,
+        };
     } else {
         filters.value[key] = null;
     }
 }
 
 const authors = computed(() => {
-    return new Set(...[items.value.map(n => n.author)])
+    return new Set(...[items.value.map((n) => n.author)]);
 });
 
 const filtered = computed(() => {
     return {
         _todo: toBeDone.value
-            .filter(el => filters.value.description ? (el.description).toUpperCase().includes(filters.value.description.toUpperCase()) : true)
-            .filter(el => filters.value.author ? el.author === filters.value.author : true)
-            .filter(el => ![null, '', undefined].includes(filters.value.priority) ? el.priority == filters.value.priority : true)
-            .filter(el => ![null, '', undefined].includes(filters.value.type) ? el.type == filters.value.type : true)
-            .filter(el => filters.value.component ? el.component.toUpperCase().includes(filters.value.component.toUpperCase()) : true),
+            .filter((el) =>
+                filters.value.description
+                    ? el.description
+                          .toUpperCase()
+                          .includes(filters.value.description.toUpperCase())
+                    : true,
+            )
+            .filter((el) =>
+                filters.value.author
+                    ? el.author === filters.value.author
+                    : true,
+            )
+            .filter((el) =>
+                ![null, '', undefined].includes(filters.value.priority)
+                    ? el.priority == filters.value.priority
+                    : true,
+            )
+            .filter((el) =>
+                ![null, '', undefined].includes(filters.value.type)
+                    ? el.type == filters.value.type
+                    : true,
+            )
+            .filter((el) =>
+                filters.value.component
+                    ? el.component
+                          .toUpperCase()
+                          .includes(filters.value.component.toUpperCase())
+                    : true,
+            ),
         _done: done.value
-            .filter(el => filters.value.description ? (el.description).toUpperCase().includes(filters.value.description.toUpperCase()) : true)
-            .filter(el => filters.value.author ? el.author === filters.value.author : true)
-            .filter(el => ![null, '', undefined].includes(filters.value.priority) ? el.priority == filters.value.priority : true)
-            .filter(el => ![null, '', undefined].includes(filters.value.type) ? el.type == filters.value.type : true)
-            .filter(el => filters.value.component ? el.component.toUpperCase().includes(filters.value.component.toUpperCase()) : true),
-    }
+            .filter((el) =>
+                filters.value.description
+                    ? el.description
+                          .toUpperCase()
+                          .includes(filters.value.description.toUpperCase())
+                    : true,
+            )
+            .filter((el) =>
+                filters.value.author
+                    ? el.author === filters.value.author
+                    : true,
+            )
+            .filter((el) =>
+                ![null, '', undefined].includes(filters.value.priority)
+                    ? el.priority == filters.value.priority
+                    : true,
+            )
+            .filter((el) =>
+                ![null, '', undefined].includes(filters.value.type)
+                    ? el.type == filters.value.type
+                    : true,
+            )
+            .filter((el) =>
+                filters.value.component
+                    ? el.component
+                          .toUpperCase()
+                          .includes(filters.value.component.toUpperCase())
+                    : true,
+            ),
+    };
 });
 
 const exchangeTemplate = ref({ author: '', comment: '' });
@@ -124,12 +183,16 @@ function resetExchange() {
 }
 
 const hasErrors = computed(() => {
-    return !pendingTodo.value.title || !pendingTodo.value.author || !pendingTodo.value.description;
+    return (
+        !pendingTodo.value.title ||
+        !pendingTodo.value.author ||
+        !pendingTodo.value.description
+    );
 });
 
 const hasExchangeErrors = computed(() => {
     return !pendingExchange.value.author || !pendingExchange.value.comment;
-})
+});
 
 const mode = ref('Create');
 
@@ -148,7 +211,7 @@ async function addExchange() {
     pendingTodo.value.exchanges.push({
         ...pendingExchange.value,
         id: createUid(),
-        createdAt: Date.now()
+        createdAt: Date.now(),
     });
     await updateTodo();
     closeExchangeDialog();
@@ -157,7 +220,7 @@ async function addExchange() {
 async function deleteExchange(item, exchange) {
     pendingTodo.value = {
         ...item,
-        exchanges: item.exchanges.filter(i => i.id !== exchange.id)
+        exchanges: item.exchanges.filter((i) => i.id !== exchange.id),
     };
     await updateTodo();
     resetPending();
@@ -170,7 +233,10 @@ function closeCheckListDialog() {
 function chooseChecklist(item) {
     pendingTodo.value = item;
 
-    if (pendingTodo.value.withComponentCheckList || pendingTodo.value.withCustomCheckList) {
+    if (
+        pendingTodo.value.withComponentCheckList ||
+        pendingTodo.value.withCustomCheckList
+    ) {
         pendingTodo.value.withComponentCheckList = false;
         pendingTodo.value.withCustomCheckList = false;
         pendingTodo.value.checkList = {};
@@ -201,10 +267,12 @@ async function toggleChecklist(item) {
     if (!item.withComponentCheckList) {
         item.checkList = {};
     } else {
-        item.checkList = components.toSorted((a, b) => a.name.localeCompare(b.name)).reduce((acc, { name }) => {
-            acc[name] = false;
-            return acc;
-        }, {});
+        item.checkList = components
+            .toSorted((a, b) => a.name.localeCompare(b.name))
+            .reduce((acc, { name }) => {
+                acc[name] = false;
+                return acc;
+            }, {});
     }
     await updateThisTodo(item);
 }
@@ -255,7 +323,7 @@ async function updateCustomCheckList(item) {
 async function updateTodo() {
     await updateOne(pendingTodo.value.id, {
         ...pendingTodo.value,
-        updatedAt: Date.now()
+        updatedAt: Date.now(),
     });
     closeTodoDialog();
     readAll();
@@ -300,104 +368,115 @@ function closeDialog() {
 }
 
 function donutHasDs(d) {
-    return d.flatMap(_ => _.values).reduce((a, b) => a + b, 0) > 0
+    return d.flatMap((_) => _.values).reduce((a, b) => a + b, 0) > 0;
 }
 
 function barHasDs(d) {
-    return d.map(_ => _.value).reduce((a, b) => a + b, 0) > 0
+    return d.map((_) => _.value).reduce((a, b) => a + b, 0) > 0;
 }
 
 function lineHasDs(d) {
-    return d.flatMap(_ => _.series).reduce((a, b) => a + b, 0) > 0
+    return d.flatMap((_) => _.series).reduce((a, b) => a + b, 0) > 0;
 }
 
 function formatLocalDateYYYYMMDD(date) {
-    const year = date.getFullYear()
-    const month = String(date.getMonth() + 1).padStart(2, '0')
-    const day = String(date.getDate()).padStart(2, '0')
-    return `${year}-${month}-${day}`
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
 }
 
 function getUniqueCreatedDays(items, created = false) {
     if (!items.length) {
-        return []
+        return [];
     }
 
-    const daysSet = new Set()
-    let minDate = null
-    let maxDate = null
+    const daysSet = new Set();
+    let minDate = null;
+    let maxDate = null;
 
     for (const item of items) {
-        const date = new Date(created ? item.createdAt : item.updatedAt)
-        const day = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+        const date = new Date(created ? item.createdAt : item.updatedAt);
+        const day = new Date(
+            date.getFullYear(),
+            date.getMonth(),
+            date.getDate(),
+        );
 
-        daysSet.add(day.getTime())
+        daysSet.add(day.getTime());
 
         if (!minDate || day < minDate) {
-            minDate = day
+            minDate = day;
         }
         if (!maxDate || day > maxDate) {
-            maxDate = day
+            maxDate = day;
         }
     }
 
-    const result = []
-    const cursor = new Date(minDate)
+    const result = [];
+    const cursor = new Date(minDate);
 
     while (cursor <= maxDate) {
-        result.push(formatLocalDateYYYYMMDD(cursor))
-        cursor.setDate(cursor.getDate() + 1)
+        result.push(formatLocalDateYYYYMMDD(cursor));
+        cursor.setDate(cursor.getDate() + 1);
     }
 
-    return result
+    return result;
 }
 
 function getItemCountPerDay(items, created = false) {
     if (!items.length) {
-        return []
+        return [];
     }
 
-    const countsByDay = new Map()
-    let minDate = null
-    let maxDate = null
+    const countsByDay = new Map();
+    let minDate = null;
+    let maxDate = null;
 
     for (const item of items) {
-        const date = new Date(created ? item.createdAt : item.updatedAt)
-        const day = new Date(date.getFullYear(), date.getMonth(), date.getDate())
-        const time = day.getTime()
+        const date = new Date(created ? item.createdAt : item.updatedAt);
+        const day = new Date(
+            date.getFullYear(),
+            date.getMonth(),
+            date.getDate(),
+        );
+        const time = day.getTime();
 
-        countsByDay.set(time, (countsByDay.get(time) || 0) + 1)
+        countsByDay.set(time, (countsByDay.get(time) || 0) + 1);
 
         if (!minDate || day < minDate) {
-            minDate = day
+            minDate = day;
         }
         if (!maxDate || day > maxDate) {
-            maxDate = day
+            maxDate = day;
         }
     }
 
-    const result = []
-    const cursor = new Date(minDate)
+    const result = [];
+    const cursor = new Date(minDate);
 
     while (cursor <= maxDate) {
-        const time = cursor.getTime()
-        result.push(countsByDay.has(time) ? countsByDay.get(time) : 0)
-        cursor.setDate(cursor.getDate() + 1)
+        const time = cursor.getTime();
+        result.push(countsByDay.has(time) ? countsByDay.get(time) : 0);
+        cursor.setDate(cursor.getDate() + 1);
     }
 
-    return result
+    return result;
 }
 
 const currentTab = ref(0);
 
 const stats = computed(() => {
     const _ = toBeDone.value;
-    const openPriority = Object.groupBy(toBeDone.value, item => item.priority);
-    const openAuthor = Object.groupBy(toBeDone.value, item => item.author);
-    const donePriority = Object.groupBy(done.value, item => item.priority);
-    const doneAuthor = Object.groupBy(done.value, item => item.author);
-    const openType = Object.groupBy(toBeDone.value, item => item.type);
-    const doneType = Object.groupBy(done.value, item => item.type);
+    const openPriority = Object.groupBy(
+        toBeDone.value,
+        (item) => item.priority,
+    );
+    const openAuthor = Object.groupBy(toBeDone.value, (item) => item.author);
+    const donePriority = Object.groupBy(done.value, (item) => item.priority);
+    const doneAuthor = Object.groupBy(done.value, (item) => item.author);
+    const openType = Object.groupBy(toBeDone.value, (item) => item.type);
+    const doneType = Object.groupBy(done.value, (item) => item.type);
     const commonConfigDonut = {
         theme: 'dark',
         userOptions: { show: false },
@@ -409,24 +488,24 @@ const stats = computed(() => {
                     curvedMarkers: true,
                     donut: {
                         radiusRatio: 0.3,
-                    }
+                    },
                 },
                 legend: {
                     backgroundColor: '#4A4A4A',
                     selectAllToggle: {
                         show: true,
                         backgroundColor: '#6A6A6A',
-                        color: '#CCCCCC'
-                    }
+                        color: '#CCCCCC',
+                    },
                 },
                 tooltip: {
                     teleportTo: '#mainDialog',
-                    backgroundOpacity: 0
+                    backgroundOpacity: 0,
                 },
                 useGradient: false,
-            }
-        }
-    }
+            },
+        },
+    };
 
     const commonConfigBar = {
         theme: 'dark',
@@ -449,21 +528,21 @@ const stats = computed(() => {
                         nameLabels: {
                             offsetX: -12,
                             fontSize: 18,
-                        }
-                    }
+                        },
+                    },
                 },
                 legend: {
                     show: false,
                     backgroundColor: '#4A4A4A',
-                    position: 'bottom'
+                    position: 'bottom',
                 },
                 tooltip: {
                     teleportTo: '#mainDialog',
-                    backgroundOpacity: 0
+                    backgroundOpacity: 0,
                 },
-            }
-        }
-    }
+            },
+        },
+    };
 
     return {
         evolution: {
@@ -476,7 +555,7 @@ const stats = computed(() => {
                         type: 'line',
                         smooth: true,
                         color: '#42d392',
-                        useArea: true
+                        useArea: true,
                     },
                 ],
                 config: {
@@ -488,7 +567,7 @@ const stats = computed(() => {
                         },
                         td: {
                             backgroundColor: '#4A4A4A',
-                        }
+                        },
                     },
                     chart: {
                         userOptions: {
@@ -497,119 +576,120 @@ const stats = computed(() => {
                                 labels: false,
                                 fullscreen: false,
                                 tooltip: false,
-                                table: false
-                            }
+                                table: false,
+                            },
                         },
                         backgroundColor: '#4A4A4A',
                         height: 350,
                         padding: {
-                            left: 24
+                            left: 24,
                         },
                         grid: {
                             labels: {
                                 axis: {
                                     yLabel: 'Item count',
-                                    fontSize: 20
+                                    fontSize: 20,
                                 },
                                 xAxisLabels: {
-                                    values: getUniqueCreatedDays(done.value, false),
+                                    values: getUniqueCreatedDays(
+                                        done.value,
+                                        false,
+                                    ),
                                     showOnlyAtModulo: 7,
                                 },
                                 yAxis: {
-                                    commonScaleSteps: 5
-                                }
-                            }
+                                    commonScaleSteps: 5,
+                                },
+                            },
                         },
                         legend: {
                             show: false,
                         },
                         tooltip: {
                             teleportTo: '#mainDialog',
-                            backgroundOpacity: 0
+                            backgroundOpacity: 0,
                         },
                         zoom: {
                             minimap: {
-                                show: true
-                            }
-                        }
-                    }
-                }
+                                show: true,
+                            },
+                        },
+                    },
+                },
             },
         },
         type: {
             open: {
-                dataset: ['bug', 'feature', 'dev', 'docs'].map(key => {
+                dataset: ['bug', 'feature', 'dev', 'docs'].map((key) => {
                     const items = openType[key] || [];
                     return {
                         name: key,
                         value: items.length,
-                        color: typeColors[key]
-                    }
+                        color: typeColors[key],
+                    };
                 }),
-                config: commonConfigBar
+                config: commonConfigBar,
             },
             done: {
-                dataset: ['bug', 'feature', 'dev', 'docs'].map(key => {
+                dataset: ['bug', 'feature', 'dev', 'docs'].map((key) => {
                     const items = doneType[key] || [];
                     return {
                         name: key,
                         value: items.length,
-                        color: typeColors[key]
-                    }
+                        color: typeColors[key],
+                    };
                 }),
-                config: commonConfigBar
-            }
+                config: commonConfigBar,
+            },
         },
         priority: {
             open: {
-                dataset: Object.keys(priority).map(key => {
+                dataset: Object.keys(priority).map((key) => {
                     const items = openPriority[key] || [];
                     return {
                         name: priority[key],
                         values: [items.length],
-                        color: priorityColors[key]
-                    }
+                        color: priorityColors[key],
+                    };
                 }),
-                config: commonConfigDonut
+                config: commonConfigDonut,
             },
             done: {
-                dataset: Object.keys(priority).map(key => {
+                dataset: Object.keys(priority).map((key) => {
                     const items = donePriority[key] || [];
                     return {
                         name: priority[key],
                         values: [items.length],
-                        color: priorityColors[key]
-                    }
+                        color: priorityColors[key],
+                    };
                 }),
-                config: commonConfigDonut
-            }
+                config: commonConfigDonut,
+            },
         },
         author: {
             open: {
-                dataset: Object.keys(openAuthor).map(key => {
+                dataset: Object.keys(openAuthor).map((key) => {
                     const items = openAuthor[key] || [];
                     return {
                         name: key,
                         values: [items.length],
-                    }
+                    };
                 }),
-                config: commonConfigDonut
+                config: commonConfigDonut,
             },
             done: {
-                dataset: (Object.keys(doneAuthor)).map(key => {
+                dataset: Object.keys(doneAuthor).map((key) => {
                     const items = doneAuthor[key] || [];
                     return {
                         name: key ?? '',
                         values: [items.length ?? 0],
-                    }
+                    };
                 }),
-                config: commonConfigDonut
-            }
-        }
-    }
-})
-
-
+                config: commonConfigDonut,
+            },
+        },
+    };
+});
 </script>
 
 <template>
@@ -632,7 +712,11 @@ const stats = computed(() => {
         </header>
         <button class="btn-close" @click="closeDialog()">
             <VueUiIcon name="blur" stroke="#42d392" />
-            <VueUiIcon name="close" stroke="#5f8aee" style="position: absolute;" />
+            <VueUiIcon
+                name="close"
+                stroke="#5f8aee"
+                style="position: absolute"
+            />
         </button>
         <div class="filters">
             <label>
@@ -649,7 +733,9 @@ const stats = computed(() => {
                 Priority
                 <select v-model="filters.priority">
                     <option :value="null">All</option>
-                    <option v-for="p in Object.keys(priority)" :value="p">{{ priority[p] }}</option>
+                    <option v-for="p in Object.keys(priority)" :value="p">
+                        {{ priority[p] }}
+                    </option>
                 </select>
             </label>
             <label>
@@ -661,22 +747,47 @@ const stats = computed(() => {
             </label>
             <label class="search-input-wrapper">
                 Component
-                <VueUiIcon name="magnify" class="search-icon" :size="15" stroke="#9A9A9A" />
-                <input v-model="filters.component" class="search-input" placeholder="...">
+                <VueUiIcon
+                    name="magnify"
+                    class="search-icon"
+                    :size="15"
+                    stroke="#9A9A9A"
+                />
+                <input
+                    v-model="filters.component"
+                    class="search-input"
+                    placeholder="..."
+                />
             </label>
             <label class="search-input-wrapper">
                 Description
-                <VueUiIcon name="magnify" class="search-icon" :size="15" stroke="#9A9A9A" />
-                <input v-model="filters.description" class="search-input" placeholder="...">
+                <VueUiIcon
+                    name="magnify"
+                    class="search-icon"
+                    :size="15"
+                    stroke="#9A9A9A"
+                />
+                <input
+                    v-model="filters.description"
+                    class="search-input"
+                    placeholder="..."
+                />
             </label>
-            <button class="reset" @click="resetFilter(null, true)" :disabled="noFilters">
+            <button
+                class="reset"
+                @click="resetFilter(null, true)"
+                :disabled="noFilters"
+            >
                 <VueUiIcon name="revert" stroke="#e76969" />
             </button>
         </div>
         <div class="tabs">
-            <div class="tab" :style="{
-                backgroundColor: currentTab === 0 ? '#3A3A3A' : '#212121'
-            }">
+            <div
+                class="tab"
+                :style="{
+                    backgroundColor: currentTab === 0 ? '#3A3A3A' : '#212121',
+                }"
+            >
                 <button @click="currentTab = 0" class="counter-button">
                     Open
                     <div class="counter">
@@ -684,9 +795,13 @@ const stats = computed(() => {
                     </div>
                 </button>
             </div>
-            <div class="tab" @click="currentTab = 1" :style="{
-                backgroundColor: currentTab === 1 ? '#3A3A3A' : '#212121'
-            }">
+            <div
+                class="tab"
+                @click="currentTab = 1"
+                :style="{
+                    backgroundColor: currentTab === 1 ? '#3A3A3A' : '#212121',
+                }"
+            >
                 <button class="counter-button">
                     Closed
                     <div class="counter">
@@ -694,65 +809,128 @@ const stats = computed(() => {
                     </div>
                 </button>
             </div>
-            <div class="tab" @click="currentTab = 2" :style="{
-                backgroundColor: currentTab === 2 ? '#3A3A3A' : '#212121'
-            }">
-                <button class="counter-button">
-                    Stats
-                </button>
+            <div
+                class="tab"
+                @click="currentTab = 2"
+                :style="{
+                    backgroundColor: currentTab === 2 ? '#3A3A3A' : '#212121',
+                }"
+            >
+                <button class="counter-button">Stats</button>
             </div>
         </div>
         <div class="dialog-content-wrapper">
             <!-- PENDING -->
-            <PendingTodoList v-if="currentTab === 0" :items="filtered._todo" :priority="priority"
-                :typeColors="typeColors" @openConfirmDialog="openConfirmDialog" @editTodo="editTodo"
-                @openExchangeDialog="openExchangeDialog" @markDone="markDone" @deleteExchange="deleteExchange"
-                @toggleChecklist="chooseChecklist" @updateTodo="updateThisTodo"
-                @updateCustomCheckList="updateCustomCheckList" />
+            <PendingTodoList
+                v-if="currentTab === 0"
+                :items="filtered._todo"
+                :priority="priority"
+                :typeColors="typeColors"
+                @openConfirmDialog="openConfirmDialog"
+                @editTodo="editTodo"
+                @openExchangeDialog="openExchangeDialog"
+                @markDone="markDone"
+                @deleteExchange="deleteExchange"
+                @toggleChecklist="chooseChecklist"
+                @updateTodo="updateThisTodo"
+                @updateCustomCheckList="updateCustomCheckList"
+            />
 
             <!-- DONE -->
-            <DoneTodoList v-if="currentTab === 1" :items="filtered._done" :typeColors="typeColors"
-                :priorityColors="priorityColors" @openConfirmDialog="openConfirmDialog" @reopenTodo="reopenTodo" />
+            <DoneTodoList
+                v-if="currentTab === 1"
+                :items="filtered._done"
+                :typeColors="typeColors"
+                :priorityColors="priorityColors"
+                @openConfirmDialog="openConfirmDialog"
+                @reopenTodo="reopenTodo"
+            />
 
             <!-- STATS -->
-            <div v-if="currentTab === 2" class="card-container stats" id="stats">
+            <div
+                v-if="currentTab === 2"
+                class="card-container stats"
+                id="stats"
+            >
                 <div v-if="toBeDone.length + done.length === 0" class="empty">
                     <VueUiIcon name="chartDonut" stroke="#7A7A7A" :size="36" />
                     <span>No data yet</span>
                 </div>
                 <template v-else>
-                    <div class="card stat-2" v-if="lineHasDs(stats.evolution.done.dataset)">
+                    <div
+                        class="card stat-2"
+                        v-if="lineHasDs(stats.evolution.done.dataset)"
+                    >
                         <div class="card-title">Evolution - Closed</div>
-                        <VueUiXy :dataset="stats.evolution.done.dataset" :config="stats.evolution.done.config" />
+                        <VueUiXy
+                            :dataset="stats.evolution.done.dataset"
+                            :config="stats.evolution.done.config"
+                        />
                     </div>
-                    <div class="card stat" v-if="donutHasDs(stats.priority.open.dataset)">
+                    <div
+                        class="card stat"
+                        v-if="donutHasDs(stats.priority.open.dataset)"
+                    >
                         <div class="card-title">Priority - Open</div>
-                        <VueUiDonut :dataset="stats.priority.open.dataset" :config="stats.priority.open.config" />
+                        <VueUiDonut
+                            :dataset="stats.priority.open.dataset"
+                            :config="stats.priority.open.config"
+                        />
                     </div>
-                    <div class="card stat" v-if="barHasDs(stats.type.open.dataset)">
+                    <div
+                        class="card stat"
+                        v-if="barHasDs(stats.type.open.dataset)"
+                    >
                         <div class="card-title">Type - Open</div>
                         <div class="card-flex">
-                            <VueUiHorizontalBar :dataset="stats.type.open.dataset" :config="stats.type.open.config" />
+                            <VueUiHorizontalBar
+                                :dataset="stats.type.open.dataset"
+                                :config="stats.type.open.config"
+                            />
                         </div>
                     </div>
-                    <div class="card stat" v-if="donutHasDs(stats.priority.done.dataset)">
+                    <div
+                        class="card stat"
+                        v-if="donutHasDs(stats.priority.done.dataset)"
+                    >
                         <div class="card-title">Priority - Closed</div>
-                        <VueUiDonut :dataset="stats.priority.done.dataset" :config="stats.priority.done.config" />
+                        <VueUiDonut
+                            :dataset="stats.priority.done.dataset"
+                            :config="stats.priority.done.config"
+                        />
                     </div>
 
-                    <div class="card stat" v-if="barHasDs(stats.type.done.dataset)">
+                    <div
+                        class="card stat"
+                        v-if="barHasDs(stats.type.done.dataset)"
+                    >
                         <div class="card-title">Type - Closed</div>
                         <div class="card-flex">
-                            <VueUiHorizontalBar :dataset="stats.type.done.dataset" :config="stats.type.done.config" />
+                            <VueUiHorizontalBar
+                                :dataset="stats.type.done.dataset"
+                                :config="stats.type.done.config"
+                            />
                         </div>
                     </div>
-                    <div class="card stat" v-if="donutHasDs(stats.author.open.dataset)">
+                    <div
+                        class="card stat"
+                        v-if="donutHasDs(stats.author.open.dataset)"
+                    >
                         <div class="card-title">Authors - Open</div>
-                        <VueUiDonut :dataset="stats.author.open.dataset" :config="stats.author.open.config" />
+                        <VueUiDonut
+                            :dataset="stats.author.open.dataset"
+                            :config="stats.author.open.config"
+                        />
                     </div>
-                    <div class="card stat" v-if="donutHasDs(stats.author.done.dataset)">
+                    <div
+                        class="card stat"
+                        v-if="donutHasDs(stats.author.done.dataset)"
+                    >
                         <div class="card-title">Authors - Closed</div>
-                        <VueUiDonut :dataset="stats.author.done.dataset" :config="stats.author.done.config" />
+                        <VueUiDonut
+                            :dataset="stats.author.done.dataset"
+                            :config="stats.author.done.config"
+                        />
                     </div>
                 </template>
             </div>
@@ -768,19 +946,39 @@ const stats = computed(() => {
                 Type
                 <div class="priority-fields" style="margin-bottom: 1rem">
                     <div class="radio-field">
-                        <input type="radio" v-model="pendingTodo.type" value="feature" id="feature">
+                        <input
+                            type="radio"
+                            v-model="pendingTodo.type"
+                            value="feature"
+                            id="feature"
+                        />
                         <label for="feature">Feature</label>
                     </div>
                     <div class="radio-field">
-                        <input type="radio" v-model="pendingTodo.type" value="bug" id="bug">
+                        <input
+                            type="radio"
+                            v-model="pendingTodo.type"
+                            value="bug"
+                            id="bug"
+                        />
                         <label for="bug">Bug</label>
                     </div>
                     <div class="radio-field">
-                        <input type="radio" v-model="pendingTodo.type" value="dev" id="dev">
+                        <input
+                            type="radio"
+                            v-model="pendingTodo.type"
+                            value="dev"
+                            id="dev"
+                        />
                         <label for="dev">Dev environment</label>
                     </div>
                     <div class="radio-field">
-                        <input type="radio" v-model="pendingTodo.type" value="docs" id="docs">
+                        <input
+                            type="radio"
+                            v-model="pendingTodo.type"
+                            value="docs"
+                            id="docs"
+                        />
                         <label for="docs">Docs</label>
                     </div>
                 </div>
@@ -788,19 +986,46 @@ const stats = computed(() => {
 
             <label class="todo-label-inline">
                 <div class="todo-label">
-                    <VueUiIcon name="person" :size="18" :stroke="!pendingTodo.author ? '#e76969' : '#42d392'" />
-                    Author <span v-if="!pendingTodo.author" class="required">*</span>
-                    <VueUiIcon v-else name="check" stroke="#42d392" :size="12" />
+                    <VueUiIcon
+                        name="person"
+                        :size="18"
+                        :stroke="!pendingTodo.author ? '#e76969' : '#42d392'"
+                    />
+                    Author
+                    <span v-if="!pendingTodo.author" class="required">*</span>
+                    <VueUiIcon
+                        v-else
+                        name="check"
+                        stroke="#42d392"
+                        :size="12"
+                    />
                 </div>
-                <input type="text" v-model="pendingTodo.author" :class="{ error: !pendingTodo.author }" />
+                <input
+                    type="text"
+                    v-model="pendingTodo.author"
+                    :class="{ error: !pendingTodo.author }"
+                />
             </label>
             <label>
                 <div class="todo-label">
-                    <VueUiIcon name="clipBoard" :size="18" :stroke="!pendingTodo.title ? '#e76969' : '#42d392'" />
-                    Title <span v-if="!pendingTodo.title" class="required">*</span>
-                    <VueUiIcon v-else name="check" stroke="#42d392" :size="12" />
+                    <VueUiIcon
+                        name="clipBoard"
+                        :size="18"
+                        :stroke="!pendingTodo.title ? '#e76969' : '#42d392'"
+                    />
+                    Title
+                    <span v-if="!pendingTodo.title" class="required">*</span>
+                    <VueUiIcon
+                        v-else
+                        name="check"
+                        stroke="#42d392"
+                        :size="12"
+                    />
                 </div>
-                <textarea v-model="pendingTodo.title" :class="{ error: !pendingTodo.title }" />
+                <textarea
+                    v-model="pendingTodo.title"
+                    :class="{ error: !pendingTodo.title }"
+                />
             </label>
             <label>
                 <div class="todo-label">
@@ -811,25 +1036,57 @@ const stats = computed(() => {
             </label>
             <label>
                 <div class="todo-label">
-                    <VueUiIcon name="annotator" :size="18" :stroke="!pendingTodo.description ? '#e76969' : '#42d392'" />
-                    Description <span v-if="!pendingTodo.description" class="required">*</span>
-                    <VueUiIcon v-else name="check" stroke="#42d392" :size="12" />
+                    <VueUiIcon
+                        name="annotator"
+                        :size="18"
+                        :stroke="
+                            !pendingTodo.description ? '#e76969' : '#42d392'
+                        "
+                    />
+                    Description
+                    <span v-if="!pendingTodo.description" class="required"
+                        >*</span
+                    >
+                    <VueUiIcon
+                        v-else
+                        name="check"
+                        stroke="#42d392"
+                        :size="12"
+                    />
                 </div>
-                <textarea v-model="pendingTodo.description" :class="{ error: !pendingTodo.description }" />
+                <textarea
+                    v-model="pendingTodo.description"
+                    :class="{ error: !pendingTodo.description }"
+                />
             </label>
             <label>
                 Priority
                 <div class="priority-fields">
                     <div class="radio-field">
-                        <input type="radio" v-model="pendingTodo.priority" :value="0" id="low">
+                        <input
+                            type="radio"
+                            v-model="pendingTodo.priority"
+                            :value="0"
+                            id="low"
+                        />
                         <label for="low">Low</label>
                     </div>
                     <div class="radio-field">
-                        <input type="radio" v-model="pendingTodo.priority" :value="1" id="medium">
+                        <input
+                            type="radio"
+                            v-model="pendingTodo.priority"
+                            :value="1"
+                            id="medium"
+                        />
                         <label for="medium">Medium</label>
                     </div>
                     <div class="radio-field">
-                        <input type="radio" v-model="pendingTodo.priority" :value="2" id="high">
+                        <input
+                            type="radio"
+                            v-model="pendingTodo.priority"
+                            :value="2"
+                            id="high"
+                        />
                         <label for="high">High</label>
                     </div>
                 </div>
@@ -839,12 +1096,20 @@ const stats = computed(() => {
             <button @click="cancelTodo()" class="todo-dialog-action-close">
                 CANCEL
             </button>
-            <button v-if="mode === 'Create'" :class="{ 'todo-dialog-action-add': true, error: hasErrors }"
-                @click="addTodo" :disabled="hasErrors">
+            <button
+                v-if="mode === 'Create'"
+                :class="{ 'todo-dialog-action-add': true, error: hasErrors }"
+                @click="addTodo"
+                :disabled="hasErrors"
+            >
                 ADD TODO
             </button>
-            <button v-if="mode === 'Edit'" :class="{ 'todo-dialog-action-add': true, error: hasErrors }"
-                @click="updateTodo" :disabled="hasErrors">
+            <button
+                v-if="mode === 'Edit'"
+                :class="{ 'todo-dialog-action-add': true, error: hasErrors }"
+                @click="updateTodo"
+                :disabled="hasErrors"
+            >
                 UPDATE TODO
             </button>
         </div>
@@ -855,35 +1120,65 @@ const stats = computed(() => {
 
         <label class="todo-label-inline">
             <div class="todo-label">
-                <VueUiIcon name="person" :size="18" :stroke="!pendingExchange.author ? '#e76969' : '#42d392'" />
-                Author <span v-if="!pendingExchange.author" class="required">*</span>
+                <VueUiIcon
+                    name="person"
+                    :size="18"
+                    :stroke="!pendingExchange.author ? '#e76969' : '#42d392'"
+                />
+                Author
+                <span v-if="!pendingExchange.author" class="required">*</span>
                 <VueUiIcon v-else name="check" stroke="#42d392" :size="12" />
             </div>
-            <input type="text" v-model="pendingExchange.author" :class="{ error: !pendingExchange.author }" />
+            <input
+                type="text"
+                v-model="pendingExchange.author"
+                :class="{ error: !pendingExchange.author }"
+            />
         </label>
 
         <label>
             <div class="todo-label">
-                <VueUiIcon name="tooltip" :size="18" :stroke="!pendingExchange.comment ? '#e76969' : '#42d392'" />
-                Comment <span v-if="!pendingExchange.comment" class="required">*</span>
+                <VueUiIcon
+                    name="tooltip"
+                    :size="18"
+                    :stroke="!pendingExchange.comment ? '#e76969' : '#42d392'"
+                />
+                Comment
+                <span v-if="!pendingExchange.comment" class="required">*</span>
                 <VueUiIcon v-else name="check" stroke="#42d392" :size="12" />
             </div>
-            <textarea v-model="pendingExchange.comment" :class="{ error: !pendingExchange.comment }" />
+            <textarea
+                v-model="pendingExchange.comment"
+                :class="{ error: !pendingExchange.comment }"
+            />
         </label>
 
         <div class="todo-dialog-actions">
-            <button @click="closeExchangeDialog()" class="todo-dialog-action-close">
+            <button
+                @click="closeExchangeDialog()"
+                class="todo-dialog-action-close"
+            >
                 CANCEL
             </button>
-            <button @click="addExchange()" :class="{ 'todo-dialog-action-add': true, error: hasExchangeErrors }"
-                :disabled="hasExchangeErrors">
+            <button
+                @click="addExchange()"
+                :class="{
+                    'todo-dialog-action-add': true,
+                    error: hasExchangeErrors,
+                }"
+                :disabled="hasExchangeErrors"
+            >
                 ADD COMMENT
             </button>
         </div>
     </dialog>
 
     <dialog ref="confirmDialog" class="confirm-dialog">
-        Delete <span style="color: #CCCCCC; font-weight: bold; color: #e76969;">{{ pendingTodo.title }}</span> ?
+        Delete
+        <span style="color: #cccccc; font-weight: bold; color: #e76969">{{
+            pendingTodo.title
+        }}</span>
+        ?
         <div class="cancel-wrapper">
             <button @click="closeConfirmDialog()" class="btn-red">
                 <VueUiIcon name="close" stroke="#e76969" :size="36" />
@@ -896,22 +1191,50 @@ const stats = computed(() => {
 
     <dialog ref="chooseChecklistDialog" class="checklist-dialog">
         <div
-            style="display:flex; align-items:center;justify-content:center;flex-direction:column; gap: 1rem; align-items:center;">
-            <span style="color: #CCCCCC; text-align:left; width: 100%; font-size:1.2rem">Add a checklist</span>
+            style="
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                flex-direction: column;
+                gap: 1rem;
+                align-items: center;
+            "
+        >
+            <span
+                style="
+                    color: #cccccc;
+                    text-align: left;
+                    width: 100%;
+                    font-size: 1.2rem;
+                "
+                >Add a checklist</span
+            >
             <div class="checklist-dialog-content">
-                <button class="action-cancel flex-row gap-1" @click="closeCheckListDialog">
+                <button
+                    class="action-cancel flex-row gap-1"
+                    @click="closeCheckListDialog"
+                >
                     <VueUiIcon name="close" :size="20" stroke="#CCCCCC" />
                     Cancel
                 </button>
-                <button class="action-green flex-row gap-1" @click="chooseChecklistType('components')">
-                    <VueUiIcon name="boxes" :size="20" stroke="#1A1A1A" />Components
+                <button
+                    class="action-green flex-row gap-1"
+                    @click="chooseChecklistType('components')"
+                >
+                    <VueUiIcon
+                        name="boxes"
+                        :size="20"
+                        stroke="#1A1A1A"
+                    />Components
                 </button>
-                <button class="action-blue flex-row gap-1" @click="chooseChecklistType('custom')">
+                <button
+                    class="action-blue flex-row gap-1"
+                    @click="chooseChecklistType('custom')"
+                >
                     <VueUiIcon name="checkList" :size="20" stroke="#FFFFFF" />
                     Custom
                 </button>
             </div>
-
         </div>
     </dialog>
 </template>

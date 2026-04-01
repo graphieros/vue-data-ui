@@ -1,19 +1,22 @@
 import { DefineComponent } from 'vue';
 
-export type { 
+export type {
     VueUiHistoryPlotDatasetItem,
     VueUiHistoryPlotConfig,
     VueUiHistoryPlotDatapoint,
     VueUiHistoryPlotDatapointEvent,
     VueUiHistoryPlotDatpointSeries,
     VueUiHistoryPlotExpose,
-    VueUiHistoryPlotEvent
-} from "./vue-data-ui";
+    VueUiHistoryPlotEvent,
+} from './vue-data-ui';
 
-declare const VueUiHistoryPlot: DefineComponent<{
-    config?: VueUiHistoryPlotConfig;
-    dataset: VueUiHistoryPlotDatasetItem[];
-}, VueUiHistoryPlotExpose>;
+declare const VueUiHistoryPlot: DefineComponent<
+    {
+        config?: VueUiHistoryPlotConfig;
+        dataset: VueUiHistoryPlotDatasetItem[];
+    },
+    VueUiHistoryPlotExpose
+>;
 
 export default VueUiHistoryPlot;
 export { VueUiHistoryPlot };

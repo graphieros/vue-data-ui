@@ -1,6 +1,13 @@
-import { ref } from "vue";
+import { ref } from 'vue';
 
-export function calcTooltipPosition({ tooltip, chart, clientPosition, positionPreference = 'center', defaultOffsetY = 24, blockShiftY = false}) {
+export function calcTooltipPosition({
+    tooltip,
+    chart,
+    clientPosition,
+    positionPreference = 'center',
+    defaultOffsetY = 24,
+    blockShiftY = false,
+}) {
     const offsetX = ref(0);
     const offsetY = ref(defaultOffsetY);
     if (tooltip && chart) {
@@ -9,9 +16,9 @@ export function calcTooltipPosition({ tooltip, chart, clientPosition, positionPr
 
         if (positionPreference === 'center') {
             if (clientPosition.x + width / 2 > right) {
-                offsetX.value = -width + (right - clientPosition.x)
+                offsetX.value = -width + (right - clientPosition.x);
             } else if (clientPosition.x - width / 2 < left) {
-                offsetX.value = -width + (width - (clientPosition.x - left))
+                offsetX.value = -width + (width - (clientPosition.x - left));
             } else {
                 offsetX.value = -width / 2;
             }
@@ -19,7 +26,7 @@ export function calcTooltipPosition({ tooltip, chart, clientPosition, positionPr
 
         if (positionPreference === 'right') {
             if (clientPosition.x + width > right) {
-                offsetX.value = -width + (right - clientPosition.x)
+                offsetX.value = -width + (right - clientPosition.x);
             } else {
                 offsetX.value = 0;
             }
@@ -27,7 +34,7 @@ export function calcTooltipPosition({ tooltip, chart, clientPosition, positionPr
 
         if (positionPreference === 'left') {
             if (clientPosition.x < left + width) {
-                offsetX.value = -width + (width - (clientPosition.x - left))
+                offsetX.value = -width + (width - (clientPosition.x - left));
             } else {
                 offsetX.value = -width;
             }
@@ -39,6 +46,6 @@ export function calcTooltipPosition({ tooltip, chart, clientPosition, positionPr
     }
     return {
         top: clientPosition.y + offsetY.value,
-        left: clientPosition.x + offsetX.value
-    }
+        left: clientPosition.x + offsetX.value,
+    };
 }

@@ -1,9 +1,9 @@
 import { DefineComponent } from 'vue';
 
-export type { 
+export type {
     VueUiTableSparklineDatasetItem,
-    VueUiTableSparklineConfig
-} from "./vue-data-ui";
+    VueUiTableSparklineConfig,
+} from './vue-data-ui';
 
 declare const VueUiTableSparkline: DefineComponent<{
     dataset: VueUiTableSparklineDatasetItem[];
@@ -11,4 +11,4 @@ declare const VueUiTableSparkline: DefineComponent<{
 }>;
 
 export default VueUiTableSparkline;
-export { VueUiTableSparkline }
+export { VueUiTableSparkline };

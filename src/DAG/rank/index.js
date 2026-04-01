@@ -1,6 +1,6 @@
-import * as rankUtil from "./util.js";
-import feasibleTree from "./feasible-tree.js";
-import networkSimplex from "./network-simplex.js";
+import * as rankUtil from './util.js';
+import feasibleTree from './feasible-tree.js';
+import networkSimplex from './network-simplex.js';
 
 /*
  * Assigns a rank to each node in the input graph that respects the "minlen"
@@ -32,16 +32,16 @@ export default function rank(g) {
     }
 
     switch (g.graph().ranker) {
-        case "network-simplex":
+        case 'network-simplex':
             networkSimplexRanker(g);
             break;
-        case "tight-tree":
+        case 'tight-tree':
             tightTreeRanker(g);
             break;
-        case "longest-path":
+        case 'longest-path':
             longestPathRanker(g);
             break;
-        case "none":
+        case 'none':
             break;
         default:
             networkSimplexRanker(g);

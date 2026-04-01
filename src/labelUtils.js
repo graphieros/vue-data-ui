@@ -1,4 +1,4 @@
-import { parens } from "./lib";
+import { parens } from './lib';
 
 /**
  * Builds a formatted label string composed of a value and | or a percentage.
@@ -45,7 +45,9 @@ export function buildValuePercentageLabel({
 
     const bits = {
         value: config.useValueParens ? parens(val) : val,
-        percentage: config.usePercentageParens ? parens(percentage) : percentage,
+        percentage: config.usePercentageParens
+            ? parens(percentage)
+            : percentage,
     };
 
     if (showVal && showPercentage) {
@@ -60,17 +62,17 @@ export function buildValuePercentageLabel({
     return '';
 }
 
-export function fillLabel({
-    rounding,
-    num,
-    filler = '-'
-}) {
-    return num.toFixed(rounding).split('').map(_ => filler).join('');
+export function fillLabel({ rounding, num, filler = '-' }) {
+    return num
+        .toFixed(rounding)
+        .split('')
+        .map((_) => filler)
+        .join('');
 }
 
 const labelUtils = {
     buildValuePercentageLabel,
-    fillLabel
-}
+    fillLabel,
+};
 
 export default labelUtils;

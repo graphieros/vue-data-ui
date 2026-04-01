@@ -4,13 +4,16 @@ export type {
     VueUiDagDataset,
     VueUiDagExpose,
     VueUiDagNode,
-    VueUiDagEdge
-} from "./vue-data-ui";
+    VueUiDagEdge,
+} from './vue-data-ui';
 
-declare const VueUiDag: DefineComponent<{
-    config?: VueUiDagConfig;
-    dataset: VueUiDagDataset;
-}, VueUiDagExpose>;
+declare const VueUiDag: DefineComponent<
+    {
+        config?: VueUiDagConfig;
+        dataset: VueUiDagDataset;
+    },
+    VueUiDagExpose
+>;
 
 export default VueUiDag;
-export { VueUiDag }
+export { VueUiDag };

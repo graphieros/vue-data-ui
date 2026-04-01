@@ -1,6 +1,6 @@
-import barycenter from "./barycenter.js";
-import resolveConflicts from "./resolve-conflicts.js";
-import sort from "./sort.js";
+import barycenter from './barycenter.js';
+import resolveConflicts from './resolve-conflicts.js';
+import sort from './sort.js';
 
 export default function sortSubgraph(g, v, cg, biasRight) {
     let movable = g.children(v);
@@ -10,17 +10,17 @@ export default function sortSubgraph(g, v, cg, biasRight) {
     const subgraphs = {};
 
     if (bl) {
-        movable = movable.filter(w => w !== bl && w !== br);
+        movable = movable.filter((w) => w !== bl && w !== br);
     }
 
     const barycenters = barycenter(g, movable);
 
-    barycenters.forEach(entry => {
+    barycenters.forEach((entry) => {
         if (g.children(entry.v).length) {
             const subgraphResult = sortSubgraph(g, entry.v, cg, biasRight);
             subgraphs[entry.v] = subgraphResult;
 
-            if (Object.hasOwn(subgraphResult, "barycenter")) {
+            if (Object.hasOwn(subgraphResult, 'barycenter')) {
                 mergeBarycenters(entry, subgraphResult);
             }
         }
@@ -39,14 +39,15 @@ export default function sortSubgraph(g, v, cg, biasRight) {
             const blPred = g.node(g.predecessors(bl)[0]);
             const brPred = g.node(g.predecessors(br)[0]);
 
-            if (!Object.hasOwn(result, "barycenter")) {
+            if (!Object.hasOwn(result, 'barycenter')) {
                 result.barycenter = 0;
                 result.weight = 0;
             }
 
             result.barycenter =
                 (result.barycenter * result.weight +
-                    blPred.order + brPred.order) /
+                    blPred.order +
+                    brPred.order) /
                 (result.weight + 2);
 
             result.weight += 2;
@@ -57,8 +58,8 @@ export default function sortSubgraph(g, v, cg, biasRight) {
 }
 
 function expandSubgraphs(entries, subgraphs) {
-    entries.forEach(entry => {
-        entry.vs = entry.vs.flatMap(v => {
+    entries.forEach((entry) => {
+        entry.vs = entry.vs.flatMap((v) => {
             if (subgraphs[v]) {
                 return subgraphs[v].vs;
             }

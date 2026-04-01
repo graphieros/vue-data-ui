@@ -1,4 +1,4 @@
-import { applyWithChunking } from "../util.js";
+import { applyWithChunking } from '../util.js';
 
 export default {
     longestPath,
@@ -30,7 +30,7 @@ export function longestPath(graph) {
     function dfs(nodeId) {
         const label = graph.node(nodeId);
 
-        if (label && Object.prototype.hasOwnProperty.call(label, "rank")) {
+        if (label && Object.prototype.hasOwnProperty.call(label, 'rank')) {
             return label.rank;
         }
 
@@ -44,7 +44,7 @@ export function longestPath(graph) {
             return rank;
         }
 
-        const outgoingEdgesMinimumLengths = outgoingEdges.map(edgeObject => {
+        const outgoingEdgesMinimumLengths = outgoingEdges.map((edgeObject) => {
             const headLabel = graph.node(edgeObject.w);
 
             if (!headLabel) {

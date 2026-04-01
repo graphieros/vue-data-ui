@@ -1,20 +1,20 @@
 <script setup>
-import { ref, computed } from "vue";
-import { VueUiGizmo, VueUiIcon } from "vue-data-ui";
+import { ref, computed } from 'vue';
+import { VueUiGizmo, VueUiIcon } from 'vue-data-ui';
 
 const props = defineProps({
     items: {
         type: Array,
         default() {
-            return []
-        }
+            return [];
+        },
     },
     priority: {
         type: Object,
     },
     typeColors: {
-        type: Object
-    }
+        type: Object,
+    },
 });
 
 const emit = defineEmits([
@@ -25,8 +25,8 @@ const emit = defineEmits([
     'deleteExchange',
     'toggleChecklist',
     'updateTodo',
-    'updateCustomCheckList'
-])
+    'updateCustomCheckList',
+]);
 
 const temporaryCustomChecklistItem = ref('');
 
@@ -72,83 +72,124 @@ function toggleCheckList(item) {
 }
 
 function getChecklistDone(item) {
-    const done = Object.values(item.checkList).filter(el => !!el).length;
-    return done / Object.keys(item.checkList).length * 100;
+    const done = Object.values(item.checkList).filter((el) => !!el).length;
+    return (done / Object.keys(item.checkList).length) * 100;
 }
 
 function getCustomChecklistDone(item) {
-    const done = Object.values(item.customCheckList).filter(el => !!el).length;
-    return done / Object.keys(item.customCheckList).length * 100;
+    const done = Object.values(item.customCheckList).filter(
+        (el) => !!el,
+    ).length;
+    return (done / Object.keys(item.customCheckList).length) * 100;
 }
 
 const iconMap = {
     dev: 'wrench',
     bug: 'bug',
     feature: 'lightBulbOn',
-    docs: 'document'
-}
-
+    docs: 'document',
+};
 </script>
 
 <template>
     <div class="card-container">
         <div v-if="items.length === 0" class="empty">
-            <VueUiIcon name="legend" stroke="#7A7A7A" :size="36"/> 
+            <VueUiIcon name="legend" stroke="#7A7A7A" :size="36" />
             <span>No items to display</span>
         </div>
         <div v-for="item in items" class="card">
             <div class="item-actions">
-                <button @click="emit('openConfirmDialog', item)" class="btn-red">
-                    <VueUiIcon name="trash"  :size="20" stroke="#ec9393"/>
+                <button
+                    @click="emit('openConfirmDialog', item)"
+                    class="btn-red"
+                >
+                    <VueUiIcon name="trash" :size="20" stroke="#ec9393" />
                 </button>
                 <button @click="emit('editTodo', item)">
-                    <VueUiIcon name="annotator" :size="20" stroke="#CCCCCC"/>
+                    <VueUiIcon name="annotator" :size="20" stroke="#CCCCCC" />
                 </button>
                 <button @click="emit('openExchangeDialog', item)">
-                    <VueUiIcon name="tooltip" :size="20" stroke="#CCCCCC"/>
+                    <VueUiIcon name="tooltip" :size="20" stroke="#CCCCCC" />
                 </button>
-                <button @click="toggleCheckList(item)" style="position: relative">
-                    <VueUiIcon name="legend" :size="20" stroke="#CCCCCC"/>
-                    <VueUiIcon name="close" v-if="(Object.keys(item.checkList).length > 0) || item.withCustomCheckList" stroke="#ff3700" :stroke-width="2" :style="{
-                        position: 'absolute',
-                        top: '50%',
-                        left: '50%',
-                        transform: 'translate(-50%, -50%)'
-                    }"/>
+                <button
+                    @click="toggleCheckList(item)"
+                    style="position: relative"
+                >
+                    <VueUiIcon name="legend" :size="20" stroke="#CCCCCC" />
+                    <VueUiIcon
+                        name="close"
+                        v-if="
+                            Object.keys(item.checkList).length > 0 ||
+                            item.withCustomCheckList
+                        "
+                        stroke="#ff3700"
+                        :stroke-width="2"
+                        :style="{
+                            position: 'absolute',
+                            top: '50%',
+                            left: '50%',
+                            transform: 'translate(-50%, -50%)',
+                        }"
+                    />
                 </button>
                 <button @click="emit('markDone', item)" class="btn-green">
-                    <VueUiIcon name="check" :size="20" stroke="#42d392"/>
+                    <VueUiIcon name="check" :size="20" stroke="#42d392" />
                 </button>
             </div>
 
-            <div class="type-badge" :style="{
-                backgroundColor: typeColors[item.type],
-                color: ['feature', 'docs'].includes(item.type) ? '#1A1A1A' : '#FFFFFF'
-            }">
-                <VueUiIcon :name="iconMap[item.type]" :size="16" :stroke="['dev', 'bug'].includes(item.type) ? '#FFFFFF' : '#1A1A1A'"/>
+            <div
+                class="type-badge"
+                :style="{
+                    backgroundColor: typeColors[item.type],
+                    color: ['feature', 'docs'].includes(item.type)
+                        ? '#1A1A1A'
+                        : '#FFFFFF',
+                }"
+            >
+                <VueUiIcon
+                    :name="iconMap[item.type]"
+                    :size="16"
+                    :stroke="
+                        ['dev', 'bug'].includes(item.type)
+                            ? '#FFFFFF'
+                            : '#1A1A1A'
+                    "
+                />
                 {{ item.type.toUpperCase() }}
             </div>
 
             <div class="item-title">{{ item.title }}</div>
             <div class="item-priority">
-                <div :class="`item-badge priority-${item.priority}`"/>
+                <div :class="`item-badge priority-${item.priority}`" />
                 <span>{{ priority[item.priority] }} priority</span>
                 <span>| By {{ item.author }}</span>
-                <span>| Created {{ new Date(item.createdAt).toLocaleDateString() }}</span>
-                <span v-if="item.createdAt !== item.updatedAt">| Updated {{ new Date(item.updatedAt).toLocaleDateString() }}</span>
+                <span
+                    >| Created
+                    {{ new Date(item.createdAt).toLocaleDateString() }}</span
+                >
+                <span v-if="item.createdAt !== item.updatedAt"
+                    >| Updated
+                    {{ new Date(item.updatedAt).toLocaleDateString() }}</span
+                >
             </div>
-            <div style="font-size: 0.8rem;">
-                <span style="color: #CCCCCC">
-                    Days since creation:
-                </span>
-                <span style="color: #CCCCCC; font-weight: bold">
+            <div style="font-size: 0.8rem">
+                <span style="color: #cccccc"> Days since creation: </span>
+                <span style="color: #cccccc; font-weight: bold">
                     {{ getElapsedDays(item.createdAt) }}
                 </span>
             </div>
-            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #5A5A5A">
+            <div
+                style="
+                    margin-top: 1rem;
+                    padding-top: 1rem;
+                    border-top: 1px solid #5a5a5a;
+                "
+            >
                 <div v-if="item.component" class="item-component">
                     <span class="item-label">Component:</span>
-                    <span class="item-content" style="color:#42d392">{{ item.component }}</span>
+                    <span class="item-content" style="color: #42d392">{{
+                        item.component
+                    }}</span>
                 </div>
                 <div v-if="item.description" class="item-description">
                     <span class="item-label">Description:</span>
@@ -157,63 +198,117 @@ const iconMap = {
             </div>
 
             <details v-if="Object.keys(item.checkList).length">
-                <summary style="display: flex; flex-direction: row; align-items:center; gap: 1rem;">
-                    <VueUiGizmo 
+                <summary
+                    style="
+                        display: flex;
+                        flex-direction: row;
+                        align-items: center;
+                        gap: 1rem;
+                    "
+                >
+                    <VueUiGizmo
                         :dataset="getChecklistDone(item)"
                         :config="{
                             type: 'gauge',
                             size: 36,
                             stroke: '#8A8A8A',
                             color: '#42d392',
-                            textColor: '#FFFFFF'
+                            textColor: '#FFFFFF',
                         }"
                     />
                     Components checklist
                 </summary>
                 <div class="components-checklist-wrapper">
-                    <div v-for="c in Object.keys(item.checkList)" class="components-checklist-item">
+                    <div
+                        v-for="c in Object.keys(item.checkList)"
+                        class="components-checklist-item"
+                    >
                         <label>
-                            <input type="checkbox" v-model="item.checkList[c]" @change="emit('updateTodo', item)">
-                            <span :style="{
-                                color: item.checkList[c] ? '#42d392' : '#CCCCCC',
-                                fontWeight: item.checkList[c] ? 'bold' : 'normal'
-                            }">{{ c }}</span>
+                            <input
+                                type="checkbox"
+                                v-model="item.checkList[c]"
+                                @change="emit('updateTodo', item)"
+                            />
+                            <span
+                                :style="{
+                                    color: item.checkList[c]
+                                        ? '#42d392'
+                                        : '#CCCCCC',
+                                    fontWeight: item.checkList[c]
+                                        ? 'bold'
+                                        : 'normal',
+                                }"
+                                >{{ c }}</span
+                            >
                         </label>
                     </div>
                 </div>
             </details>
 
             <details v-if="item.withCustomCheckList">
-                <summary style="display: flex; flex-direction: row; align-items:center; gap: 1rem;">
-                    <VueUiGizmo 
+                <summary
+                    style="
+                        display: flex;
+                        flex-direction: row;
+                        align-items: center;
+                        gap: 1rem;
+                    "
+                >
+                    <VueUiGizmo
                         :dataset="getCustomChecklistDone(item)"
                         :config="{
                             type: 'gauge',
                             size: 36,
                             stroke: '#8A8A8A',
                             color: '#42d392',
-                            textColor: '#FFFFFF'
+                            textColor: '#FFFFFF',
                         }"
                     />
                     Custom checklist
                 </summary>
                 <div class="components-checklist-wrapper">
-                    <div v-for="c in Object.keys(item.customCheckList)" class="components-checklist-item">
-                        <button @click="deleteChecklistItem(c, item)" class="btn-red btn-trash">
-                            <VueUiIcon name="trash" stroke="#ec9393"/>
+                    <div
+                        v-for="c in Object.keys(item.customCheckList)"
+                        class="components-checklist-item"
+                    >
+                        <button
+                            @click="deleteChecklistItem(c, item)"
+                            class="btn-red btn-trash"
+                        >
+                            <VueUiIcon name="trash" stroke="#ec9393" />
                         </button>
                         <label>
-                            <input type="checkbox" v-model="item.customCheckList[c]" @change="emit('updateTodo', item)">
-                            <span :style="{
-                                color: item.customCheckList[c] ? '#42d392' : '#CCCCCC',
-                                fontWeight: item.customCheckList[c] ? 'bold' : 'normal'
-                            }">{{ c }}</span>
+                            <input
+                                type="checkbox"
+                                v-model="item.customCheckList[c]"
+                                @change="emit('updateTodo', item)"
+                            />
+                            <span
+                                :style="{
+                                    color: item.customCheckList[c]
+                                        ? '#42d392'
+                                        : '#CCCCCC',
+                                    fontWeight: item.customCheckList[c]
+                                        ? 'bold'
+                                        : 'normal',
+                                }"
+                                >{{ c }}</span
+                            >
                         </label>
                     </div>
                     <div class="components-checklist-actions">
-                        <input ref="inputAddCustom" type="text" v-model="temporaryCustomChecklistItem" @keydown.enter="addCustomCheckListItem(item)">
-                        <button @click="addCustomCheckListItem(item)" class="action-green btn-plus" :disabled="!temporaryCustomChecklistItem">
-                            <VueUiIcon name="plus" stroke="#1A1A1A"/>
+                        <input
+                            ref="inputAddCustom"
+                            type="text"
+                            v-model="temporaryCustomChecklistItem"
+                            @keydown.enter="addCustomCheckListItem(item)"
+                        />
+                        <button
+                            @click="addCustomCheckListItem(item)"
+                            class="action-green btn-plus"
+                            :disabled="!temporaryCustomChecklistItem"
+                        >
+                            <VueUiIcon name="plus" stroke="#1A1A1A" />
                         </button>
                     </div>
                 </div>
@@ -223,11 +318,25 @@ const iconMap = {
                 <summary>Exchanges</summary>
                 <div class="exchanges-wrapper">
                     <div class="exchange" v-for="exchange in item.exchanges">
-                        <div class="exchange-header">                                    
-                            <button @click="emit('deleteExchange', item, exchange)" class="btn-red">
-                                <VueUiIcon name="trash" :size="20" stroke="#ec9393"/>
+                        <div class="exchange-header">
+                            <button
+                                @click="emit('deleteExchange', item, exchange)"
+                                class="btn-red"
+                            >
+                                <VueUiIcon
+                                    name="trash"
+                                    :size="20"
+                                    stroke="#ec9393"
+                                />
                             </button>
-                            <span>By {{ exchange.author }} | {{ new Date(exchange.createdAt).toLocaleDateString() }}</span>
+                            <span
+                                >By {{ exchange.author }} |
+                                {{
+                                    new Date(
+                                        exchange.createdAt,
+                                    ).toLocaleDateString()
+                                }}</span
+                            >
                         </div>
                         <article>
                             <i>

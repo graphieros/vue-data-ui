@@ -1,9 +1,9 @@
 import { DefineComponent } from 'vue';
 
-export type { 
+export type {
     VueUiSparkgaugeDataset,
-    VueUiSparkgaugeConfig
-} from "./vue-data-ui";
+    VueUiSparkgaugeConfig,
+} from './vue-data-ui';
 
 declare const VueUiSparkgauge: DefineComponent<{
     dataset: VueUiSparkgaugeDataset;
@@ -11,4 +11,4 @@ declare const VueUiSparkgauge: DefineComponent<{
 }>;
 
 export default VueUiSparkgauge;
-export { VueUiSparkgauge }
+export { VueUiSparkgauge };

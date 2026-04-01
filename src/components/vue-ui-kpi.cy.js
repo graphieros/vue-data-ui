@@ -1,4 +1,4 @@
-import VueUiKpi from "./vue-ui-kpi.vue";
+import VueUiKpi from './vue-ui-kpi.vue';
 
 describe('<VueUiKpi />', () => {
     beforeEach(() => {
@@ -8,14 +8,14 @@ describe('<VueUiKpi />', () => {
     it('renders with slots', () => {
         cy.mount(VueUiKpi, {
             props: {
-                dataset: 100
+                dataset: 100,
             },
             slots: {
-                title: () => "TITLE SLOT",
-                value: () => "VALUE SLOT",
-                ['comment-before']: () => "COMMENT BEFORE SLOT",
-                ['comment-after']: () => "COMMENT AFTER SLOT"
-            }
+                title: () => 'TITLE SLOT',
+                value: () => 'VALUE SLOT',
+                ['comment-before']: () => 'COMMENT BEFORE SLOT',
+                ['comment-after']: () => 'COMMENT AFTER SLOT',
+            },
         }).then(() => {
             cy.log('Animating');
             cy.get('@rafSpy').should('have.been.called');
@@ -37,9 +37,9 @@ describe('<VueUiKpi />', () => {
             props: {
                 dataset: 100,
                 config: {
-                    analogDigits: { show: true }
-                }
-            }
+                    analogDigits: { show: true },
+                },
+            },
         }).then(() => {
             cy.log('Animating');
             cy.get('@rafSpy').should('have.been.called');

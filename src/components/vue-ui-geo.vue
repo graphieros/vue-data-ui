@@ -8,7 +8,7 @@ import {
     ref,
     toRefs,
     watch,
-} from "vue";
+} from 'vue';
 import {
     convertColorToHex,
     createUid,
@@ -16,30 +16,36 @@ import {
     svgToClientCoords,
     treeShake,
     XMLNS,
-} from "../lib.js";
-import usePanZoom from "../usePanZoom.js";
-import { throttle } from "../canvas-lib.js";
-import { useConfig } from "../useConfig.js";
-import { useLoading } from "../useLoading.js";
-import { usePrinter } from "../usePrinter.js";
-import { useSvgExport } from "../useSvgExport.js";
-import { useResponsive } from "../useResponsive.js";
-import { useNestedProp } from "../useNestedProp.js";
-import { useThemeCheck } from "../useThemeCheck.js";
-import { useUserOptionState } from "../useUserOptionState.js";
-import { useChartAccessibility } from "../useChartAccessibility.js";
-import img from "../img.js";
-import geo from "../geoProjections.js";
-import Title from "../atoms/Title.vue";
-import themes from "../themes/vue_ui_geo.json";
-import BaseScanner from "../atoms/BaseScanner.vue";
-import A11yDataTable from "../atoms/A11yDataTable.vue";
-import BaseZoomControls from "../atoms/BaseZoomControls.vue";
+} from '../lib.js';
+import usePanZoom from '../usePanZoom.js';
+import { throttle } from '../canvas-lib.js';
+import { useConfig } from '../useConfig.js';
+import { useLoading } from '../useLoading.js';
+import { usePrinter } from '../usePrinter.js';
+import { useSvgExport } from '../useSvgExport.js';
+import { useResponsive } from '../useResponsive.js';
+import { useNestedProp } from '../useNestedProp.js';
+import { useThemeCheck } from '../useThemeCheck.js';
+import { useUserOptionState } from '../useUserOptionState.js';
+import { useChartAccessibility } from '../useChartAccessibility.js';
+import img from '../img.js';
+import geo from '../geoProjections.js';
+import Title from '../atoms/Title.vue';
+import themes from '../themes/vue_ui_geo.json';
+import BaseScanner from '../atoms/BaseScanner.vue';
+import A11yDataTable from '../atoms/A11yDataTable.vue';
+import BaseZoomControls from '../atoms/BaseZoomControls.vue';
 
-const Tooltip = defineAsyncComponent(() => import("../atoms/Tooltip.vue"));
-const UserOptions = defineAsyncComponent(() => import("../atoms/UserOptions.vue"));
-const PenAndPaper = defineAsyncComponent(() => import("../atoms/PenAndPaper.vue"));
-const PackageVersion = defineAsyncComponent(() => import("../atoms/PackageVersion.vue"));
+const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
+const UserOptions = defineAsyncComponent(
+    () => import('../atoms/UserOptions.vue'),
+);
+const PenAndPaper = defineAsyncComponent(
+    () => import('../atoms/PenAndPaper.vue'),
+);
+const PackageVersion = defineAsyncComponent(
+    () => import('../atoms/PackageVersion.vue'),
+);
 
 const props = defineProps({
     config: {
@@ -82,7 +88,7 @@ const zoomControlsBottom = ref(null);
 
 const activePointKeyboardIndex = ref(null); // a11y
 const tooltipA11yPosition = ref({ x: 0, y: 0 }); // a11y
-const tooltipTriggerMode = ref("pointer"); // a11y
+const tooltipTriggerMode = ref('pointer'); // a11y
 const isFocus = ref(false); // a11y
 
 const isFullscreen = ref(false);
@@ -121,7 +127,9 @@ function prepareConfig() {
 
 const FINAL_CONFIG = ref(prepareConfig());
 
-const isCursorPointer = computed(() => FINAL_CONFIG.value.userOptions.useCursorPointer);
+const isCursorPointer = computed(
+    () => FINAL_CONFIG.value.userOptions.useCursorPointer,
+);
 
 const { userOptionsVisible, keepUserOptionState } = useUserOptionState({
     config: FINAL_CONFIG.value,
@@ -135,13 +143,13 @@ const skeletonConfig = computed(() => {
         defaultConfig: {
             map: {
                 geoJson: {
-                    type: "FeatureCollection",
+                    type: 'FeatureCollection',
                     features: [
                         {
-                            type: "Feature",
-                            properties: { name: "Island A" },
+                            type: 'Feature',
+                            properties: { name: 'Island A' },
                             geometry: {
-                                type: "Polygon",
+                                type: 'Polygon',
                                 coordinates: [
                                     [
                                         [-6, 2],
@@ -154,10 +162,10 @@ const skeletonConfig = computed(() => {
                             },
                         },
                         {
-                            type: "Feature",
-                            properties: { name: "Island B" },
+                            type: 'Feature',
+                            properties: { name: 'Island B' },
                             geometry: {
-                                type: "Polygon",
+                                type: 'Polygon',
                                 coordinates: [
                                     [
                                         [-2, -1],
@@ -170,10 +178,10 @@ const skeletonConfig = computed(() => {
                             },
                         },
                         {
-                            type: "Feature",
-                            properties: { name: "Island C" },
+                            type: 'Feature',
+                            properties: { name: 'Island C' },
                             geometry: {
-                                type: "Polygon",
+                                type: 'Polygon',
                                 coordinates: [
                                     [
                                         [3, -3],
@@ -186,10 +194,10 @@ const skeletonConfig = computed(() => {
                             },
                         },
                         {
-                            type: "Feature",
-                            properties: { name: "Island D" },
+                            type: 'Feature',
+                            properties: { name: 'Island D' },
                             geometry: {
-                                type: "Polygon",
+                                type: 'Polygon',
                                 coordinates: [
                                     [
                                         [4, 3],
@@ -207,17 +215,17 @@ const skeletonConfig = computed(() => {
             userOptions: { show: false },
             style: {
                 chart: {
-                    backgroundColor: "#99999930",
+                    backgroundColor: '#99999930',
                     territory: {
-                        fill: "#99999950",
-                        stroke: "#8A8A8A",
+                        fill: '#99999950',
+                        stroke: '#8A8A8A',
                         strokeWidth: 0.5,
                     },
                 },
             },
         },
-        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {}
-    })
+        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {},
+    });
 });
 
 const { loading, FINAL_DATASET } = useLoading({
@@ -228,23 +236,23 @@ const { loading, FINAL_DATASET } = useLoading({
     skeletonDataset: props.config?.skeletonDataset ?? [],
     skeletonConfig: treeShake({
         defaultConfig: FINAL_CONFIG.value,
-        userConfig: skeletonConfig.value
+        userConfig: skeletonConfig.value,
     }),
 });
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `vue-ui-geo_${uid.value}`,
-    fileName: FINAL_CONFIG.value.style.chart.title.text || "vue-ui-geo",
+    fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-geo',
     options: FINAL_CONFIG.value.userOptions.print,
 });
 
 const activeZoomControlsElement = computed(() => {
     if (!FINAL_CONFIG.value.style.chart.controls.show) return null;
 
-    if (FINAL_CONFIG.value.style.chart.controls.position === "top") {
+    if (FINAL_CONFIG.value.style.chart.controls.position === 'top') {
         return zoomControlsTop.value?.$el ?? null;
     }
-    if (FINAL_CONFIG.value.style.chart.controls.position === "bottom") {
+    if (FINAL_CONFIG.value.style.chart.controls.position === 'bottom') {
         return zoomControlsBottom.value?.$el ?? null;
     }
     return null;
@@ -272,9 +280,11 @@ watch(
             teardownResponsive();
 
             WIDTH.value =
-                Number(FINAL_CONFIG.value.style.chart.dimensions.width) || WIDTH.value;
+                Number(FINAL_CONFIG.value.style.chart.dimensions.width) ||
+                WIDTH.value;
             HEIGHT.value =
-                Number(FINAL_CONFIG.value.style.chart.dimensions.height) || HEIGHT.value;
+                Number(FINAL_CONFIG.value.style.chart.dimensions.height) ||
+                HEIGHT.value;
 
             await nextTick();
             didInitialFit.value = false;
@@ -289,7 +299,7 @@ watch(
             await nextTick();
             prepareChart();
         }
-    }
+    },
 );
 
 function prepareChart() {
@@ -302,7 +312,9 @@ function prepareChart() {
         const { width, height } = useResponsive({
             chart: geoChart.value,
             noTitle: hasOptionsNoTitle.value ? noTitle.value : null,
-            title: FINAL_CONFIG.value.style.chart.title.text ? chartTitle.value : null,
+            title: FINAL_CONFIG.value.style.chart.title.text
+                ? chartTitle.value
+                : null,
             legend: activeZoomControlsElement.value,
             source: source.value,
         });
@@ -321,7 +333,10 @@ function prepareChart() {
 }
 
 const hasOptionsNoTitle = computed(() => {
-    return FINAL_CONFIG.value.userOptions.show && !FINAL_CONFIG.value.style.chart.title.text;
+    return (
+        FINAL_CONFIG.value.userOptions.show &&
+        !FINAL_CONFIG.value.style.chart.title.text
+    );
 });
 
 const mutableConfig = ref({
@@ -334,7 +349,8 @@ watch(
     () => props.config,
     () => {
         FINAL_CONFIG.value = prepareConfig();
-        mutableConfig.value.showTooltip = FINAL_CONFIG.value.style.chart.tooltip.show;
+        mutableConfig.value.showTooltip =
+            FINAL_CONFIG.value.style.chart.tooltip.show;
         panZoomActive.value = FINAL_CONFIG.value.style.chart.zoom.active;
         WIDTH.value = FINAL_CONFIG.value.style.chart.dimensions.width;
         HEIGHT.value = FINAL_CONFIG.value.style.chart.dimensions.height;
@@ -342,15 +358,17 @@ watch(
         titleStep.value += 1;
         step.value += 1;
     },
-    { deep: true }
+    { deep: true },
 );
 
 const { projections } = geo;
-const projectionName = computed(() => FINAL_CONFIG.value?.projection || "equirectangular");
+const projectionName = computed(
+    () => FINAL_CONFIG.value?.projection || 'equirectangular',
+);
 
 const projectionFunction = computed(() => {
     const projectionCandidate = projections?.[projectionName.value];
-    return typeof projectionCandidate === "function"
+    return typeof projectionCandidate === 'function'
         ? projectionCandidate
         : projections.equirectangular;
 });
@@ -378,7 +396,8 @@ const HEIGHT = ref(FINAL_CONFIG.value.style.chart.dimensions.height);
 
 const projectionPlaneSizes = computed(() => {
     const defaults =
-        DEFAULT_PROJECTIONS[projectionName.value] || DEFAULT_PROJECTIONS.equirectangular;
+        DEFAULT_PROJECTIONS[projectionName.value] ||
+        DEFAULT_PROJECTIONS.equirectangular;
     return { width: defaults.width, height: defaults.height };
 });
 
@@ -414,7 +433,8 @@ const projectionCenter = computed(() => {
 
     const longitude = Number(center[0]);
     const latitude = Number(center[1]);
-    if (!Number.isFinite(longitude) || !Number.isFinite(latitude)) return fallback;
+    if (!Number.isFinite(longitude) || !Number.isFinite(latitude))
+        return fallback;
 
     return [longitude, latitude];
 });
@@ -424,60 +444,62 @@ function projectGeoPoint([longitude, latitude]) {
         [longitude, latitude],
         projectionPlaneSizes.value.width,
         projectionPlaneSizes.value.height,
-        projectionCenter.value
+        projectionCenter.value,
     );
 }
 
 function normalizeGeoJsonToFeatureCollection(input, options = {}) {
     const {
-        defaultName = "",
+        defaultName = '',
         namePropertyCandidates = [
-            "name",
-            "nom",
-            "admin",
-            "NAME",
-            "label",
-            "title",
-            "description",
-            "DESCRIPTION",
-            "NAME_1",
-            "NAME_2",
-            "NAME_3",
-            "NAME_EN",
-            "name:en",
-            "name_en",
-            "localname",
-            "local_name",
+            'name',
+            'nom',
+            'admin',
+            'NAME',
+            'label',
+            'title',
+            'description',
+            'DESCRIPTION',
+            'NAME_1',
+            'NAME_2',
+            'NAME_3',
+            'NAME_EN',
+            'name:en',
+            'name_en',
+            'localname',
+            'local_name',
         ],
         includeNullGeometries = false,
     } = options;
 
-    const empty = { type: "FeatureCollection", features: [] };
+    const empty = { type: 'FeatureCollection', features: [] };
 
     function isObject(value) {
-        return value !== null && typeof value === "object" && !Array.isArray(value);
+        return (
+            value !== null && typeof value === 'object' && !Array.isArray(value)
+        );
     }
 
     function isGeoJsonGeometry(value) {
         if (!isObject(value)) return false;
-        if (typeof value.type !== "string") return false;
+        if (typeof value.type !== 'string') return false;
 
-        if (value.type === "GeometryCollection") {
+        if (value.type === 'GeometryCollection') {
             return Array.isArray(value.geometries);
         }
 
-        return Object.hasOwn(value, "coordinates");
+        return Object.hasOwn(value, 'coordinates');
     }
 
     function asNameFromProperties(properties) {
-        if (!isObject(properties)) return "";
+        if (!isObject(properties)) return '';
         for (const key of namePropertyCandidates) {
             const candidate = properties[key];
-            if (typeof candidate === "string" && candidate.trim()) {
+            if (typeof candidate === 'string' && candidate.trim()) {
                 return candidate.trim();
             }
         }
-        return "";
+        return '';
     }
 
     function makeFeature({ geometry, properties, fallbackName, featureIndex }) {
@@ -486,11 +508,11 @@ function normalizeGeoJsonToFeatureCollection(input, options = {}) {
 
         const numberedFallback = defaultName
             ? `${defaultName} ${featureIndex + 1}`
-            : "";
+            : '';
 
         const name =
             nameFromProperties ||
-            (typeof fallbackName === "string" ? fallbackName.trim() : "") ||
+            (typeof fallbackName === 'string' ? fallbackName.trim() : '') ||
             numberedFallback;
 
         if (!safeProperties.name && name) {
@@ -498,7 +520,7 @@ function normalizeGeoJsonToFeatureCollection(input, options = {}) {
         }
 
         return {
-            type: "Feature",
+            type: 'Feature',
             geometry,
             properties: safeProperties,
         };
@@ -509,31 +531,38 @@ function normalizeGeoJsonToFeatureCollection(input, options = {}) {
         properties,
         fallbackName,
         startIndex,
-        outputFeatures
+        outputFeatures,
     ) {
         const geometries = Array.isArray(geometryCollection?.geometries)
             ? geometryCollection.geometries
             : [];
         let featureIndex = startIndex;
 
-        for (let geometryIndex = 0; geometryIndex < geometries.length; geometryIndex += 1) {
+        for (
+            let geometryIndex = 0;
+            geometryIndex < geometries.length;
+            geometryIndex += 1
+        ) {
             const geometry = geometries[geometryIndex];
             if (!geometry) continue;
 
-            if (isObject(geometry) && geometry.type === "GeometryCollection") {
+            if (isObject(geometry) && geometry.type === 'GeometryCollection') {
                 featureIndex = flattenGeometryCollection(
                     geometry,
                     properties,
                     fallbackName,
                     featureIndex,
-                    outputFeatures
+                    outputFeatures,
                 );
                 continue;
             }
 
             if (!isGeoJsonGeometry(geometry)) continue;
 
-            if (geometry.coordinates == null && geometry.type !== "GeometryCollection") {
+            if (
+                geometry.coordinates == null &&
+                geometry.type !== 'GeometryCollection'
+            ) {
                 if (includeNullGeometries) {
                     outputFeatures.push(
                         makeFeature({
@@ -541,7 +570,7 @@ function normalizeGeoJsonToFeatureCollection(input, options = {}) {
                             properties,
                             fallbackName,
                             featureIndex,
-                        })
+                        }),
                     );
                     featureIndex += 1;
                 }
@@ -554,7 +583,7 @@ function normalizeGeoJsonToFeatureCollection(input, options = {}) {
                     properties,
                     fallbackName,
                     featureIndex,
-                })
+                }),
             );
             featureIndex += 1;
         }
@@ -574,20 +603,24 @@ function normalizeGeoJsonToFeatureCollection(input, options = {}) {
             return featureIndex;
         }
 
-        if (!isObject(value) || typeof value.type !== "string") {
+        if (!isObject(value) || typeof value.type !== 'string') {
             return featureIndex;
         }
 
-        if (value.type === "FeatureCollection") {
-            const features = Array.isArray(value.features) ? value.features : [];
+        if (value.type === 'FeatureCollection') {
+            const features = Array.isArray(value.features)
+                ? value.features
+                : [];
             for (const feature of features) {
                 featureIndex = pushAny(feature, outputFeatures, featureIndex);
             }
             return featureIndex;
         }
 
-        if (value.type === "Feature") {
-            const properties = isObject(value.properties) ? value.properties : {};
+        if (value.type === 'Feature') {
+            const properties = isObject(value.properties)
+                ? value.properties
+                : {};
             const featureName = asNameFromProperties(properties);
             const geometry = value.geometry ?? null;
 
@@ -599,20 +632,20 @@ function normalizeGeoJsonToFeatureCollection(input, options = {}) {
                             properties,
                             fallbackName: featureName,
                             featureIndex,
-                        })
+                        }),
                     );
                     featureIndex += 1;
                 }
                 return featureIndex;
             }
 
-            if (isObject(geometry) && geometry.type === "GeometryCollection") {
+            if (isObject(geometry) && geometry.type === 'GeometryCollection') {
                 return flattenGeometryCollection(
                     geometry,
                     properties,
                     featureName,
                     featureIndex,
-                    outputFeatures
+                    outputFeatures,
                 );
             }
 
@@ -623,7 +656,7 @@ function normalizeGeoJsonToFeatureCollection(input, options = {}) {
                         properties,
                         fallbackName: featureName,
                         featureIndex,
-                    })
+                    }),
                 );
                 featureIndex += 1;
             }
@@ -631,8 +664,14 @@ function normalizeGeoJsonToFeatureCollection(input, options = {}) {
             return featureIndex;
         }
 
-        if (value.type === "GeometryCollection") {
-            return flattenGeometryCollection(value, {}, "", featureIndex, outputFeatures);
+        if (value.type === 'GeometryCollection') {
+            return flattenGeometryCollection(
+                value,
+                {},
+                '',
+                featureIndex,
+                outputFeatures,
+            );
         }
 
         if (isGeoJsonGeometry(value)) {
@@ -640,9 +679,9 @@ function normalizeGeoJsonToFeatureCollection(input, options = {}) {
                 makeFeature({
                     geometry: value,
                     properties: {},
-                    fallbackName: "",
+                    fallbackName: '',
                     featureIndex,
-                })
+                }),
             );
             featureIndex += 1;
         }
@@ -662,7 +701,7 @@ function flattenFeatureCollectionToRenderableFeatures(featureCollection) {
         : [];
 
     function resolveName(properties) {
-        if (!properties || typeof properties !== "object") return "";
+        if (!properties || typeof properties !== 'object') return '';
 
         const candidates = [
             properties.name,
@@ -677,25 +716,29 @@ function flattenFeatureCollectionToRenderableFeatures(featureCollection) {
             properties.NAME_2,
             properties.NAME_3,
             properties.NAME_EN,
-            properties["name:en"],
+            properties['name:en'],
             properties.name_en,
             properties.localname,
             properties.local_name,
         ];
 
         for (const candidate of candidates) {
-            if (typeof candidate === "string" && candidate.trim()) return candidate.trim();
+            if (typeof candidate === 'string' && candidate.trim())
+                return candidate.trim();
         }
 
         for (const value of Object.values(properties)) {
-            if (typeof value === "string" && value.trim()) return value.trim();
+            if (typeof value === 'string' && value.trim()) return value.trim();
         }
 
-        return "";
+        return '';
     }
 
     return features
-        .filter((feature) => feature && feature.type === "Feature" && feature.geometry)
+        .filter(
+            (feature) =>
+                feature && feature.type === 'Feature' && feature.geometry,
+        )
         .map((feature, index) => {
             const properties = feature.properties || {};
             const name = resolveName(properties);
@@ -711,27 +754,30 @@ function flattenFeatureCollectionToRenderableFeatures(featureCollection) {
         });
 }
 
-
 const geoJsonFeatureCollection = computed(() =>
     normalizeGeoJsonToFeatureCollection(geoJsonInput.value, {
-        defaultName: "",
+        defaultName: '',
         includeNullGeometries: false,
-    })
+    }),
 );
 
 const renderableFeatures = computed(() =>
-    flattenFeatureCollectionToRenderableFeatures(geoJsonFeatureCollection.value)
+    flattenFeatureCollectionToRenderableFeatures(
+        geoJsonFeatureCollection.value,
+    ),
 );
 
 function geometryToSvgPath(geometry) {
-    if (!geometry || typeof geometry.type !== "string") return "";
+    if (!geometry || typeof geometry.type !== 'string') return '';
 
-    if (geometry.type === "GeometryCollection") {
-        const geometries = Array.isArray(geometry.geometries) ? geometry.geometries : [];
+    if (geometry.type === 'GeometryCollection') {
+        const geometries = Array.isArray(geometry.geometries)
+            ? geometry.geometries
+            : [];
         return geometries
             .map((child) => geometryToSvgPath(child))
             .filter(Boolean)
-            .join(" ");
+            .join(' ');
     }
 
     const projectPair = (pair) => {
@@ -739,7 +785,8 @@ function geometryToSvgPath(geometry) {
 
         const longitude = Number(pair[0]);
         const latitude = Number(pair[1]);
-        if (!Number.isFinite(longitude) || !Number.isFinite(latitude)) return null;
+        if (!Number.isFinite(longitude) || !Number.isFinite(latitude))
+            return null;
 
         const projected = projectGeoPoint([longitude, latitude]);
         if (!Array.isArray(projected) || projected.length < 2) return null;
@@ -752,50 +799,64 @@ function geometryToSvgPath(geometry) {
     };
 
     const drawLine = (coordinates) => {
-        const projectedPoints = (coordinates || []).map(projectPair).filter(Boolean);
-        if (projectedPoints.length < 2) return "";
-        return "M" + projectedPoints.map(([x, y]) => `${x},${y}`).join("L");
+        const projectedPoints = (coordinates || [])
+            .map(projectPair)
+            .filter(Boolean);
+        if (projectedPoints.length < 2) return '';
+        return 'M' + projectedPoints.map(([x, y]) => `${x},${y}`).join('L');
     };
 
     const drawPolygon = (polygonCoordinates) => {
         return (polygonCoordinates || [])
             .map((ring) => {
                 const ringPath = drawLine(ring);
-                if (!ringPath) return "";
-                return ringPath + "Z";
+                if (!ringPath) return '';
+                return ringPath + 'Z';
             })
             .filter(Boolean)
-            .join(" ");
+            .join(' ');
     };
 
-    if (geometry.type === "Polygon") return drawPolygon(geometry.coordinates);
+    if (geometry.type === 'Polygon') return drawPolygon(geometry.coordinates);
 
-    if (geometry.type === "MultiPolygon") {
-        return (geometry.coordinates || []).map(drawPolygon).filter(Boolean).join(" ");
+    if (geometry.type === 'MultiPolygon') {
+        return (geometry.coordinates || [])
+            .map(drawPolygon)
+            .filter(Boolean)
+            .join(' ');
     }
 
-    if (geometry.type === "LineString") return drawLine(geometry.coordinates);
+    if (geometry.type === 'LineString') return drawLine(geometry.coordinates);
 
-    if (geometry.type === "MultiLineString") {
-        return (geometry.coordinates || []).map(drawLine).filter(Boolean).join(" ");
+    if (geometry.type === 'MultiLineString') {
+        return (geometry.coordinates || [])
+            .map(drawLine)
+            .filter(Boolean)
+            .join(' ');
     }
 
-    return "";
+    return '';
 }
 
 function collectGeoJsonPointCoordinates(geometry) {
     if (!geometry) return [];
 
-    if (geometry.type === "GeometryCollection") {
-        const geometries = Array.isArray(geometry.geometries) ? geometry.geometries : [];
-        return geometries.flatMap((child) => collectGeoJsonPointCoordinates(child));
+    if (geometry.type === 'GeometryCollection') {
+        const geometries = Array.isArray(geometry.geometries)
+            ? geometry.geometries
+            : [];
+        return geometries.flatMap((child) =>
+            collectGeoJsonPointCoordinates(child),
+        );
     }
 
-    if (geometry.type === "Point") {
-        return Array.isArray(geometry.coordinates) ? [geometry.coordinates] : [];
+    if (geometry.type === 'Point') {
+        return Array.isArray(geometry.coordinates)
+            ? [geometry.coordinates]
+            : [];
     }
 
-    if (geometry.type === "MultiPoint") {
+    if (geometry.type === 'MultiPoint') {
         return Array.isArray(geometry.coordinates) ? geometry.coordinates : [];
     }
 
@@ -803,14 +864,16 @@ function collectGeoJsonPointCoordinates(geometry) {
 }
 
 function geometryHasAnyPoint(geometry) {
-    if (!geometry || typeof geometry.type !== "string") return false;
+    if (!geometry || typeof geometry.type !== 'string') return false;
 
-    if (geometry.type === "GeometryCollection") {
-        const geometries = Array.isArray(geometry.geometries) ? geometry.geometries : [];
+    if (geometry.type === 'GeometryCollection') {
+        const geometries = Array.isArray(geometry.geometries)
+            ? geometry.geometries
+            : [];
         return geometries.some((child) => geometryHasAnyPoint(child));
     }
 
-    return geometry.type === "Point" || geometry.type === "MultiPoint";
+    return geometry.type === 'Point' || geometry.type === 'MultiPoint';
 }
 
 const areaFeatures = computed(() =>
@@ -818,15 +881,18 @@ const areaFeatures = computed(() =>
         const geometry = item.geometry;
         if (!geometry) return false;
 
-        if (geometry.type === "GeometryCollection") {
-            const geometries = Array.isArray(geometry.geometries) ? geometry.geometries : [];
+        if (geometry.type === 'GeometryCollection') {
+            const geometries = Array.isArray(geometry.geometries)
+                ? geometry.geometries
+                : [];
             return geometries.some(
-                (child) => child?.type === "Polygon" || child?.type === "MultiPolygon"
+                (child) =>
+                    child?.type === 'Polygon' || child?.type === 'MultiPolygon',
             );
         }
 
-        return geometry.type === "Polygon" || geometry.type === "MultiPolygon";
-    })
+        return geometry.type === 'Polygon' || geometry.type === 'MultiPolygon';
+    }),
 );
 
 const lineFeatures = computed(() =>
@@ -834,15 +900,22 @@ const lineFeatures = computed(() =>
         const geometry = item.geometry;
         if (!geometry) return false;
 
-        if (geometry.type === "GeometryCollection") {
-            const geometries = Array.isArray(geometry.geometries) ? geometry.geometries : [];
+        if (geometry.type === 'GeometryCollection') {
+            const geometries = Array.isArray(geometry.geometries)
+                ? geometry.geometries
+                : [];
             return geometries.some(
-                (child) => child?.type === "LineString" || child?.type === "MultiLineString"
+                (child) =>
+                    child?.type === 'LineString' ||
+                    child?.type === 'MultiLineString',
             );
         }
 
-        return geometry.type === "LineString" || geometry.type === "MultiLineString";
-    })
+        return (
+            geometry.type === 'LineString' ||
+            geometry.type === 'MultiLineString'
+        );
+    }),
 );
 
 const pointFeatures = computed(() =>
@@ -851,7 +924,7 @@ const pointFeatures = computed(() =>
         if (!geometry) return false;
 
         return geometryHasAnyPoint(geometry);
-    })
+    }),
 );
 
 const areaPaths = computed(() => {
@@ -878,23 +951,18 @@ const geoJsonPoints = computed(() => {
     const list = [];
 
     function normalizeGeoJsonPointStyle(properties = {}) {
-        const style = properties?.style && typeof properties.style === "object" ? properties.style : {};
+        const style =
+            properties?.style && typeof properties.style === 'object'
+                ? properties.style
+                : {};
 
         const radiusRaw =
-            properties.radius ??
-            properties.r ??
-            style.radius ??
-            style.r;
+            properties.radius ?? properties.r ?? style.radius ?? style.r;
 
         const fillRaw =
-            properties.color ??
-            properties.fill ??
-            style.color ??
-            style.fill;
+            properties.color ?? properties.fill ?? style.color ?? style.fill;
 
-        const strokeRaw =
-            properties.stroke ??
-            style.stroke;
+        const strokeRaw = properties.stroke ?? style.stroke;
 
         const strokeWidthRaw =
             properties.strokeWidth ??
@@ -906,13 +974,15 @@ const geoJsonPoints = computed(() => {
             ? Number(radiusRaw)
             : Number(FINAL_CONFIG.value.style.chart.points.radius);
 
-        const fill = fillRaw != null && String(fillRaw).trim()
-            ? convertColorToHex(String(fillRaw).trim())
-            : FINAL_CONFIG.value.style.chart.points.fill;
+        const fill =
+            fillRaw != null && String(fillRaw).trim()
+                ? convertColorToHex(String(fillRaw).trim())
+                : FINAL_CONFIG.value.style.chart.points.fill;
 
-        const stroke = strokeRaw != null && String(strokeRaw).trim()
-            ? convertColorToHex(String(strokeRaw).trim())
-            : FINAL_CONFIG.value.style.chart.points.stroke;
+        const stroke =
+            strokeRaw != null && String(strokeRaw).trim()
+                ? convertColorToHex(String(strokeRaw).trim())
+                : FINAL_CONFIG.value.style.chart.points.stroke;
 
         const strokeWidth = Number.isFinite(Number(strokeWidthRaw))
             ? Number(strokeWidthRaw)
@@ -924,13 +994,18 @@ const geoJsonPoints = computed(() => {
     for (const item of pointFeatures.value) {
         const coordinatesList = collectGeoJsonPointCoordinates(item.geometry);
 
-        for (let pointIndex = 0; pointIndex < coordinatesList.length; pointIndex += 1) {
+        for (
+            let pointIndex = 0;
+            pointIndex < coordinatesList.length;
+            pointIndex += 1
+        ) {
             const pair = coordinatesList[pointIndex];
             if (!Array.isArray(pair) || pair.length < 2) continue;
 
             const longitude = Number(pair[0]);
             const latitude = Number(pair[1]);
-            if (!Number.isFinite(longitude) || !Number.isFinite(latitude)) continue;
+            if (!Number.isFinite(longitude) || !Number.isFinite(latitude))
+                continue;
 
             const projected = projectGeoPoint([longitude, latitude]);
             const x = projected?.[0];
@@ -938,7 +1013,8 @@ const geoJsonPoints = computed(() => {
             if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
 
             const properties =
-                item?.feature?.properties && typeof item.feature.properties === "object"
+                item?.feature?.properties &&
+                typeof item.feature.properties === 'object'
                     ? item.feature.properties
                     : {};
 
@@ -946,7 +1022,7 @@ const geoJsonPoints = computed(() => {
 
             list.push({
                 uid: `${item.uid}-geojson-point-${pointIndex}`,
-                name: item.name || "",
+                name: item.name || '',
                 x,
                 y,
                 ...style,
@@ -960,9 +1036,8 @@ const geoJsonPoints = computed(() => {
     return list;
 });
 
-
 function collectProjectedPointsFromGeometry(geometry) {
-    if (!geometry || typeof geometry.type !== "string") return [];
+    if (!geometry || typeof geometry.type !== 'string') return [];
 
     const points = [];
 
@@ -986,8 +1061,8 @@ function collectProjectedPointsFromGeometry(geometry) {
 
         if (
             value.length >= 2 &&
-            typeof value[0] === "number" &&
-            typeof value[1] === "number"
+            typeof value[0] === 'number' &&
+            typeof value[1] === 'number'
         ) {
             pushPair(value);
             return;
@@ -998,19 +1073,22 @@ function collectProjectedPointsFromGeometry(geometry) {
         }
     };
 
-    if (geometry.type === "GeometryCollection" && Array.isArray(geometry.geometries)) {
+    if (
+        geometry.type === 'GeometryCollection' &&
+        Array.isArray(geometry.geometries)
+    ) {
         for (const childGeometry of geometry.geometries) {
             points.push(...collectProjectedPointsFromGeometry(childGeometry));
         }
         return points;
     }
 
-    if (geometry.type === "Point") {
+    if (geometry.type === 'Point') {
         pushPair(geometry.coordinates);
         return points;
     }
 
-    if (geometry.type === "MultiPoint") {
+    if (geometry.type === 'MultiPoint') {
         (geometry.coordinates || []).forEach(pushPair);
         return points;
     }
@@ -1054,7 +1132,7 @@ const projectedBounds = computed(() => {
 
 function computeFitTransform({ bounds, targetWidth, targetHeight, padding }) {
     if (!bounds || !(bounds.width > 0) || !(bounds.height > 0)) {
-        return { scale: 1, translateX: 0, translateY: 0, transform: "" };
+        return { scale: 1, translateX: 0, translateY: 0, transform: '' };
     }
 
     const pad = Number.isFinite(Number(padding)) ? Number(padding) : 0;
@@ -1086,10 +1164,13 @@ function computeFitTransform({ bounds, targetWidth, targetHeight, padding }) {
 
 const mapFitTransform = computed(() => {
     const bounds = projectedBounds.value;
-    if (!bounds) return { scale: 1, translateX: 0, translateY: 0, transform: "" };
+    if (!bounds)
+        return { scale: 1, translateX: 0, translateY: 0, transform: '' };
 
     const fitPaddingRaw = FINAL_CONFIG.value?.map?.fitPadding;
-    const padding = Number.isFinite(Number(fitPaddingRaw)) ? Number(fitPaddingRaw) : 0;
+    const padding = Number.isFinite(Number(fitPaddingRaw))
+        ? Number(fitPaddingRaw)
+        : 0;
 
     return computeFitTransform({
         bounds,
@@ -1113,9 +1194,14 @@ const {
     zoomByFactor,
 } = usePanZoom(
     svgRef,
-    { x: 0, y: 0, width: viewportSizes.value.width, height: viewportSizes.value.height },
+    {
+        x: 0,
+        y: 0,
+        width: viewportSizes.value.width,
+        height: viewportSizes.value.height,
+    },
     1,
-    panZoomActive
+    panZoomActive,
 );
 
 function toggleZoom() {
@@ -1216,7 +1302,7 @@ watch(
             resetPanZoomToBaseViewBox();
         });
     },
-    { deep: false }
+    { deep: false },
 );
 
 watch(
@@ -1226,8 +1312,13 @@ watch(
 
         await nextTick();
         setInitialViewBox(
-            { x: 0, y: 0, width: viewportSizes.value.width, height: viewportSizes.value.height },
-            { overwriteCurrentIfNotZoomed: true }
+            {
+                x: 0,
+                y: 0,
+                width: viewportSizes.value.width,
+                height: viewportSizes.value.height,
+            },
+            { overwriteCurrentIfNotZoomed: true },
         );
 
         didInitialFit.value = false;
@@ -1236,15 +1327,22 @@ watch(
             resetPanZoomToBaseViewBox();
         });
     },
-    { flush: "post" }
+    { flush: 'post' },
 );
 
 function normalizePointsDataset(datasetValue) {
     if (!datasetValue) return [];
 
-    if (datasetValue.type === "FeatureCollection" && Array.isArray(datasetValue.features)) {
+    if (
+        datasetValue.type === 'FeatureCollection' &&
+        Array.isArray(datasetValue.features)
+    ) {
         return datasetValue.features
-            .filter((feature) => feature?.type === "Feature" && feature.geometry?.type === "Point")
+            .filter(
+                (feature) =>
+                    feature?.type === 'Feature' &&
+                    feature.geometry?.type === 'Point',
+            )
             .map((feature, index) => {
                 const properties = feature.properties || {};
                 const name =
@@ -1261,7 +1359,8 @@ function normalizePointsDataset(datasetValue) {
                     coordinates,
                     color: properties.color ?? null,
                     radius: properties.radius ?? null,
-                    hoverRadiusRatio: FINAL_CONFIG.value.style.chart.points.hoverRadiusRatio,
+                    hoverRadiusRatio:
+                        FINAL_CONFIG.value.style.chart.points.hoverRadiusRatio,
                     description: properties.description ?? null,
                     original: feature,
                     index,
@@ -1280,9 +1379,15 @@ function normalizePointsDataset(datasetValue) {
 
                 if (Array.isArray(row) && row.length >= 2) {
                     coordinates = [Number(row[0]), Number(row[1])];
-                } else if (row && typeof row === "object") {
-                    if (Array.isArray(row.coordinates) && row.coordinates.length >= 2) {
-                        coordinates = [Number(row.coordinates[0]), Number(row.coordinates[1])];
+                } else if (row && typeof row === 'object') {
+                    if (
+                        Array.isArray(row.coordinates) &&
+                        row.coordinates.length >= 2
+                    ) {
+                        coordinates = [
+                            Number(row.coordinates[0]),
+                            Number(row.coordinates[1]),
+                        ];
                     } else if (
                         Number.isFinite(Number(row.lon)) &&
                         Number.isFinite(Number(row.lat))
@@ -1290,7 +1395,8 @@ function normalizePointsDataset(datasetValue) {
                         coordinates = [Number(row.lon), Number(row.lat)];
                     }
 
-                    if (typeof row.name === "string" && row.name.trim()) name = row.name;
+                    if (typeof row.name === 'string' && row.name.trim())
+                        name = row.name;
                     if (row.description != null) description = row.description;
                     if (row.color != null) color = row.color;
                     if (row.radius != null) radius = row.radius;
@@ -1299,7 +1405,8 @@ function normalizePointsDataset(datasetValue) {
                 const longitude = coordinates ? coordinates[0] : NaN;
                 const latitude = coordinates ? coordinates[1] : NaN;
 
-                if (!Number.isFinite(longitude) || !Number.isFinite(latitude)) return null;
+                if (!Number.isFinite(longitude) || !Number.isFinite(latitude))
+                    return null;
 
                 return {
                     uid: `map-point-${uid.value}-${index}`,
@@ -1307,7 +1414,8 @@ function normalizePointsDataset(datasetValue) {
                     coordinates: [longitude, latitude],
                     color,
                     radius,
-                    hoverRadiusRatio: FINAL_CONFIG.value.style.chart.points.hoverRadiusRatio,
+                    hoverRadiusRatio:
+                        FINAL_CONFIG.value.style.chart.points.hoverRadiusRatio,
                     description,
                     original: row,
                     index,
@@ -1316,17 +1424,20 @@ function normalizePointsDataset(datasetValue) {
             .filter(Boolean);
     }
 
-    if (typeof datasetValue === "object") {
+    if (typeof datasetValue === 'object') {
         return Object.entries(datasetValue)
             .map(([key, value], index) => {
-                if (!value || typeof value !== "object") return null;
+                if (!value || typeof value !== 'object') return null;
 
-                const coordinates = Array.isArray(value.coordinates) ? value.coordinates : null;
+                const coordinates = Array.isArray(value.coordinates)
+                    ? value.coordinates
+                    : null;
                 if (!coordinates || coordinates.length < 2) return null;
 
                 const longitude = Number(coordinates[0]);
                 const latitude = Number(coordinates[1]);
-                if (!Number.isFinite(longitude) || !Number.isFinite(latitude)) return null;
+                if (!Number.isFinite(longitude) || !Number.isFinite(latitude))
+                    return null;
 
                 return {
                     uid: `map-point-${uid.value}-${index}-${key}`,
@@ -1334,7 +1445,8 @@ function normalizePointsDataset(datasetValue) {
                     coordinates: [longitude, latitude],
                     color: value.color ?? null,
                     radius: value.radius ?? null,
-                    hoverRadiusRatio: FINAL_CONFIG.value.style.chart.points.hoverRadiusRatio,
+                    hoverRadiusRatio:
+                        FINAL_CONFIG.value.style.chart.points.hoverRadiusRatio,
                     description: value.description ?? null,
                     original: value,
                     index,
@@ -1382,7 +1494,11 @@ const keyboardNavigablePoints = computed(() => {
 
 function setKeyboardTooltipPositionFromPoint(point) {
     const fittedPoint = applyFitToPoint(point);
-    const clientPosition = svgToClientCoords(fittedPoint.x, fittedPoint.y, svgRef.value);
+    const clientPosition = svgToClientCoords(
+        fittedPoint.x,
+        fittedPoint.y,
+        svgRef.value,
+    );
     if (!clientPosition) return;
     tooltipA11yPosition.value = {
         x: clientPosition.x,
@@ -1391,7 +1507,7 @@ function setKeyboardTooltipPositionFromPoint(point) {
 }
 
 const isTooltipVisible = ref(false);
-const tooltipContent = ref("");
+const tooltipContent = ref('');
 const useCustomFormat = ref(false);
 const highlightedPointKey = ref(null);
 const highlightedTerritoryKey = ref(null);
@@ -1403,16 +1519,16 @@ function showTooltipWithHtml(html) {
 
 function hideTooltip() {
     isTooltipVisible.value = false;
-    tooltipContent.value = "";
+    tooltipContent.value = '';
 }
 
 function escapeHtml(text) {
-    return String(text ?? "")
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
+    return String(text ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
 }
 
 function formatPointTooltip(point) {
@@ -1429,12 +1545,12 @@ function formatPointTooltip(point) {
     if (isFunction(customFormat)) {
         try {
             const customFormatString = customFormat(dataTooltipSlot.value);
-            if (typeof customFormatString === "string") {
+            if (typeof customFormatString === 'string') {
                 useCustomFormat.value = true;
                 return customFormatString;
             }
         } catch (error) {
-            console.warn("Custom format cannot be applied.");
+            console.warn('Custom format cannot be applied.');
             useCustomFormat.value = false;
         }
     }
@@ -1443,7 +1559,7 @@ function formatPointTooltip(point) {
     const extra =
         point.description != null
             ? `<div style="margin-top:6px">${escapeHtml(point.description)}</div>`
-            : "";
+            : '';
 
     return `<div><div style="font-weight:600">${title}</div>${extra}</div>`;
 }
@@ -1458,20 +1574,21 @@ function formatTerritoryTooltip(territory) {
                 datapoint: territory,
                 config: FINAL_CONFIG.value,
             });
-            if (typeof customFormatString === "string") {
+            if (typeof customFormatString === 'string') {
                 useCustomFormat.value = true;
                 return customFormatString;
             }
         } catch (error) {
-            console.warn("Custom format cannot be applied.");
+            console.warn('Custom format cannot be applied.');
             useCustomFormat.value = false;
         }
     }
 
-    const title = typeof territory?.name === "string" ? territory.name.trim() : "";
+    const title =
+        typeof territory?.name === 'string' ? territory.name.trim() : '';
     if (!title) {
         useCustomFormat.value = false;
-        return "";
+        return '';
     }
 
     return `<div><div style="font-weight:600">${escapeHtml(title)}</div></div>`;
@@ -1485,9 +1602,13 @@ function onTerritoryEnter(territory) {
         });
     }
 
-    const title = typeof territory?.name === "string" ? territory.name.trim() : "";
+    const title =
+        typeof territory?.name === 'string' ? territory.name.trim() : '';
 
-    if (!title && !FINAL_CONFIG.value.style.chart.territory.hover.enabledWhenEmpty) {
+    if (
+        !title &&
+        !FINAL_CONFIG.value.style.chart.territory.hover.enabledWhenEmpty
+    ) {
         highlightedTerritoryKey.value = null;
         hideTooltip();
         return;
@@ -1518,7 +1639,7 @@ function onTerritoryClick(territory) {
     }
 }
 
-function onPointEnter(point, keyboardIndex = null, triggerMode = "pointer") {
+function onPointEnter(point, keyboardIndex = null, triggerMode = 'pointer') {
     tooltipTriggerMode.value = triggerMode;
     highlightedPointKey.value = point.uid;
 
@@ -1526,7 +1647,7 @@ function onPointEnter(point, keyboardIndex = null, triggerMode = "pointer") {
         activePointKeyboardIndex.value = keyboardIndex;
     }
 
-    if (triggerMode === "keyboard") {
+    if (triggerMode === 'keyboard') {
         setKeyboardTooltipPositionFromPoint(point);
     }
 
@@ -1540,15 +1661,16 @@ function onPointEnter(point, keyboardIndex = null, triggerMode = "pointer") {
     }
 }
 
-function onPointLeave(point, triggerMode = "pointer") {
-    if (triggerMode === "pointer" && tooltipTriggerMode.value === "keyboard") return;
+function onPointLeave(point, triggerMode = 'pointer') {
+    if (triggerMode === 'pointer' && tooltipTriggerMode.value === 'keyboard')
+        return;
 
     highlightedPointKey.value = null;
     hideTooltip();
 
-    if (triggerMode !== "pointer") {
+    if (triggerMode !== 'pointer') {
         activePointKeyboardIndex.value = null;
-        tooltipTriggerMode.value = "pointer";
+        tooltipTriggerMode.value = 'pointer';
     }
 
     if (FINAL_CONFIG.value.events.datapointLeave) {
@@ -1562,7 +1684,7 @@ function onPointLeave(point, triggerMode = "pointer") {
 const hasPointClickEvent = computed(() => {
     return (
         !!FINAL_CONFIG.value.events.datapointClick &&
-        typeof FINAL_CONFIG.value.events.datapointClick === "function"
+        typeof FINAL_CONFIG.value.events.datapointClick === 'function'
     );
 });
 
@@ -1579,7 +1701,8 @@ const territoryStyle = computed(() => FINAL_CONFIG.value.style.chart.territory);
 const pointStyle = computed(() => FINAL_CONFIG.value.style.chart.points);
 
 function onGeoJsonPointEnter(geoJsonPoint) {
-    const title = typeof geoJsonPoint?.name === "string" ? geoJsonPoint.name.trim() : "";
+    const title =
+        typeof geoJsonPoint?.name === 'string' ? geoJsonPoint.name.trim() : '';
 
     if (!title) {
         highlightedTerritoryKey.value = null;
@@ -1613,7 +1736,7 @@ watch(
     () => isAnnotator.value,
     (isActive) => {
         panZoomActive.value = !isActive;
-    }
+    },
 );
 
 function toggleTooltip() {
@@ -1639,7 +1762,14 @@ async function generateSvg({ isCb }) {
     try {
         if (isCb) {
             const { blob, url, text, dataUrl } = await getSvg();
-            await Promise.resolve(FINAL_CONFIG.value.userOptions.callbacks.svg({ blob, url, text, dataUrl }));
+            await Promise.resolve(
+                FINAL_CONFIG.value.userOptions.callbacks.svg({
+                    blob,
+                    url,
+                    text,
+                    dataUrl,
+                }),
+            );
         } else {
             await Promise.resolve(exportSvg());
         }
@@ -1649,12 +1779,12 @@ async function generateSvg({ isCb }) {
 }
 
 function onGenerateImage(payload) {
-    if (payload?.stage === "start") {
+    if (payload?.stage === 'start') {
         isCallbackImaging.value = true;
         return;
     }
 
-    if (payload?.stage === "end") {
+    if (payload?.stage === 'end') {
         isCallbackImaging.value = false;
         return;
     }
@@ -1726,7 +1856,12 @@ async function focusLocation([longitude, latitude], { animated = true } = {}) {
 
     const current = panZoomViewBox.value
         ? { ...panZoomViewBox.value }
-        : { x: 0, y: 0, width: viewportSizes.value.width, height: viewportSizes.value.height };
+        : {
+              x: 0,
+              y: 0,
+              width: viewportSizes.value.width,
+              height: viewportSizes.value.height,
+          };
 
     const nextBox = {
         x: focusedViewportPoint.x - current.width / 2,
@@ -1770,7 +1905,10 @@ onMounted(async () => {
         if (didInitialFit.value) return;
         resetPanZoomToBaseViewBox();
 
-        if (FINAL_CONFIG.value.map.center?.[0] || FINAL_CONFIG.value.map.center?.[1]) {
+        if (
+            FINAL_CONFIG.value.map.center?.[0] ||
+            FINAL_CONFIG.value.map.center?.[1]
+        ) {
             focusLocation(FINAL_CONFIG.value.map.center, { animated: false });
         }
     });
@@ -1780,19 +1918,23 @@ onBeforeUnmount(() => {
     teardownResponsive();
 });
 
-async function copyAlt(){
+async function copyAlt() {
     emit('copyAlt', {
         config: FINAL_CONFIG.value,
-        dataset: FINAL_DATASET.value
-    })
+        dataset: FINAL_DATASET.value,
+    });
     if (!FINAL_CONFIG.value.userOptions.callbacks.altCopy) {
-        console.warn('Vue Data UI - A callback must be set for `altCopy` in userOptions.');
-        return
+        console.warn(
+            'Vue Data UI - A callback must be set for `altCopy` in userOptions.',
+        );
+        return;
     }
-    await Promise.resolve(FINAL_CONFIG.value.userOptions.callbacks.altCopy({ 
-        config: FINAL_CONFIG.value, 
-        dataset: FINAL_DATASET.value
-    }));
+    await Promise.resolve(
+        FINAL_CONFIG.value.userOptions.callbacks.altCopy({
+            config: FINAL_CONFIG.value,
+            dataset: FINAL_DATASET.value,
+        }),
+    );
 }
 
 /***************************************************************************************************
@@ -1820,25 +1962,25 @@ function findNearestPointInDirection(fromIndex, direction) {
         let primaryDistance = 0;
         let secondaryDistance = 0;
 
-        if (direction === "right" && deltaX > 0) {
+        if (direction === 'right' && deltaX > 0) {
             isEligible = true;
             primaryDistance = deltaX;
             secondaryDistance = Math.abs(deltaY);
         }
 
-        if (direction === "left" && deltaX < 0) {
+        if (direction === 'left' && deltaX < 0) {
             isEligible = true;
             primaryDistance = Math.abs(deltaX);
             secondaryDistance = Math.abs(deltaY);
         }
 
-        if (direction === "down" && deltaY > 0) {
+        if (direction === 'down' && deltaY > 0) {
             isEligible = true;
             primaryDistance = deltaY;
             secondaryDistance = Math.abs(deltaX);
         }
 
-        if (direction === "up" && deltaY < 0) {
+        if (direction === 'up' && deltaY < 0) {
             isEligible = true;
             primaryDistance = Math.abs(deltaY);
             secondaryDistance = Math.abs(deltaX);
@@ -1846,7 +1988,9 @@ function findNearestPointInDirection(fromIndex, direction) {
 
         if (!isEligible) continue;
 
-        const score = primaryDistance * primaryDistance + secondaryDistance * secondaryDistance * 4;
+        const score =
+            primaryDistance * primaryDistance +
+            secondaryDistance * secondaryDistance * 4;
 
         if (score < bestScore) {
             bestScore = score;
@@ -1861,25 +2005,25 @@ function getInitialKeyboardPointIndex(direction) {
     const list = keyboardNavigablePoints.value;
     if (!list.length) return null;
 
-    if (direction === "right") {
+    if (direction === 'right') {
         return list.reduce((bestIndex, point, index, array) => {
             return point.x < array[bestIndex].x ? index : bestIndex;
         }, 0);
     }
 
-    if (direction === "left") {
+    if (direction === 'left') {
         return list.reduce((bestIndex, point, index, array) => {
             return point.x > array[bestIndex].x ? index : bestIndex;
         }, 0);
     }
 
-    if (direction === "down") {
+    if (direction === 'down') {
         return list.reduce((bestIndex, point, index, array) => {
             return point.y < array[bestIndex].y ? index : bestIndex;
         }, 0);
     }
 
-    if (direction === "up") {
+    if (direction === 'up') {
         return list.reduce((bestIndex, point, index, array) => {
             return point.y > array[bestIndex].y ? index : bestIndex;
         }, 0);
@@ -1899,10 +2043,10 @@ function onSvgBlur() {
             : null;
 
     if (activePoint) {
-        onPointLeave(activePoint, "keyboard");
+        onPointLeave(activePoint, 'keyboard');
     } else {
         activePointKeyboardIndex.value = null;
-        tooltipTriggerMode.value = "pointer";
+        tooltipTriggerMode.value = 'pointer';
         hideTooltip();
         highlightedPointKey.value = null;
     }
@@ -1915,14 +2059,15 @@ function onSvgKeydown(event) {
     if (document.activeElement !== svgRef.value) return;
     if (!keyboardNavigablePoints.value.length) return;
 
-    const isRight = event.key === "ArrowRight";
-    const isLeft = event.key === "ArrowLeft";
-    const isDown = event.key === "ArrowDown";
-    const isUp = event.key === "ArrowUp";
-    const isActivate = event.key === "Enter" || event.key === " ";
-    const isEscape = event.key === "Escape";
+    const isRight = event.key === 'ArrowRight';
+    const isLeft = event.key === 'ArrowLeft';
+    const isDown = event.key === 'ArrowDown';
+    const isUp = event.key === 'ArrowUp';
+    const isActivate = event.key === 'Enter' || event.key === ' ';
+    const isEscape = event.key === 'Escape';
 
-    if (!isRight && !isLeft && !isDown && !isUp && !isActivate && !isEscape) return;
+    if (!isRight && !isLeft && !isDown && !isUp && !isActivate && !isEscape)
+        return;
 
     event.preventDefault();
     event.stopPropagation();
@@ -1934,10 +2079,10 @@ function onSvgKeydown(event) {
                 : null;
 
         if (activePoint) {
-            onPointLeave(activePoint, "keyboard");
+            onPointLeave(activePoint, 'keyboard');
         } else {
             activePointKeyboardIndex.value = null;
-            tooltipTriggerMode.value = "pointer";
+            tooltipTriggerMode.value = 'pointer';
             hideTooltip();
             highlightedPointKey.value = null;
         }
@@ -1958,19 +2103,22 @@ function onSvgKeydown(event) {
     }
 
     const direction = isRight
-        ? "right"
+        ? 'right'
         : isLeft
-          ? "left"
+          ? 'left'
           : isDown
-            ? "down"
-            : "up";
+            ? 'down'
+            : 'up';
 
     let nextIndex = null;
 
     if (activePointKeyboardIndex.value == null) {
         nextIndex = getInitialKeyboardPointIndex(direction);
     } else {
-        nextIndex = findNearestPointInDirection(activePointKeyboardIndex.value, direction);
+        nextIndex = findNearestPointInDirection(
+            activePointKeyboardIndex.value,
+            direction,
+        );
 
         if (nextIndex == null) {
             nextIndex = getInitialKeyboardPointIndex(direction);
@@ -1982,21 +2130,25 @@ function onSvgKeydown(event) {
     const nextPoint = keyboardNavigablePoints.value[nextIndex];
     if (!nextPoint) return;
 
-    onPointEnter(nextPoint, nextIndex, "keyboard");
+    onPointEnter(nextPoint, nextIndex, 'keyboard');
 }
 
 const a11yTable = computed(() => {
-    const headers = ["Name", "Latitude", "Longitude", "Description"];
+    const headers = ['Name', 'Latitude', 'Longitude', 'Description'];
 
     const rows = points.value.map((point) => {
-        const latitude = Array.isArray(point.coordinates) ? point.coordinates[1] : null;
-        const longitude = Array.isArray(point.coordinates) ? point.coordinates[0] : null;
+        const latitude = Array.isArray(point.coordinates)
+            ? point.coordinates[1]
+            : null;
+        const longitude = Array.isArray(point.coordinates)
+            ? point.coordinates[0]
+            : null;
 
         return [
-            point.name ?? "",
-            Number.isFinite(latitude) ? String(latitude) : "",
-            Number.isFinite(longitude) ? String(longitude) : "",
-            point.description ?? "",
+            point.name ?? '',
+            Number.isFinite(latitude) ? String(latitude) : '',
+            Number.isFinite(longitude) ? String(longitude) : '',
+            point.description ?? '',
         ];
     });
 
@@ -2018,7 +2170,7 @@ defineExpose({
     zoomOut,
     resetZoom,
     focusLocation,
-    copyAlt
+    copyAlt,
 });
 </script>
 
@@ -2107,7 +2259,10 @@ defineExpose({
         <UserOptions
             ref="userOptionsRef"
             :key="`user_options_${step}`"
-            v-if="FINAL_CONFIG.userOptions.show && (keepUserOptionState ? true : userOptionsVisible)"
+            v-if="
+                FINAL_CONFIG.userOptions.show &&
+                (keepUserOptionState ? true : userOptionsVisible)
+            "
             :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
             :color="FINAL_CONFIG.style.chart.color"
             :isPrinting="isPrinting"
@@ -2115,7 +2270,10 @@ defineExpose({
             :uid="uid"
             :hasXls="false"
             :hasTable="false"
-            :hasTooltip="FINAL_CONFIG.userOptions.buttons.tooltip && FINAL_CONFIG.style.chart.tooltip.show"
+            :hasTooltip="
+                FINAL_CONFIG.userOptions.buttons.tooltip &&
+                FINAL_CONFIG.style.chart.tooltip.show
+            "
             :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
             :hasImg="FINAL_CONFIG.userOptions.buttons.img"
             :hasSvg="FINAL_CONFIG.userOptions.buttons.svg"
@@ -2142,7 +2300,11 @@ defineExpose({
             @toggleZoom="toggleZoom"
             @copyAlt="copyAlt"
             :style="{
-                visibility: keepUserOptionState ? (userOptionsVisible ? 'visible' : 'hidden') : 'visible',
+                visibility: keepUserOptionState
+                    ? userOptionsVisible
+                        ? 'visible'
+                        : 'hidden'
+                    : 'visible',
             }"
         >
             <template #menuIcon="{ isOpen, color }" v-if="$slots.menuIcon">
@@ -2165,22 +2327,41 @@ defineExpose({
                 template
                 #optionFullscreen="{ toggleFullscreen, isFullscreen }"
             >
-                <slot name="optionFullscreen" v-bind="{ toggleFullscreen, isFullscreen }" />
+                <slot
+                    name="optionFullscreen"
+                    v-bind="{ toggleFullscreen, isFullscreen }"
+                />
             </template>
-            <template v-if="$slots.optionAnnotator" #optionAnnotator="{ toggleAnnotator, isAnnotator }">
-                <slot name="optionAnnotator" v-bind="{ toggleAnnotator, isAnnotator }" />
+            <template
+                v-if="$slots.optionAnnotator"
+                #optionAnnotator="{ toggleAnnotator, isAnnotator }"
+            >
+                <slot
+                    name="optionAnnotator"
+                    v-bind="{ toggleAnnotator, isAnnotator }"
+                />
             </template>
-            <template v-if="$slots.optionZoom" #optionZoom="{ toggleZoom, isZoomLocked }">
+            <template
+                v-if="$slots.optionZoom"
+                #optionZoom="{ toggleZoom, isZoomLocked }"
+            >
                 <slot name="optionZoom" v-bind="{ toggleZoom, isZoomLocked }" />
             </template>
-            <template v-if="$slots.optionAltCopy" #optionAltCopy="{ altCopy: c }">
-                <slot name="optionAltCopy" v-bind="{ altCopy: c }"/>
+            <template
+                v-if="$slots.optionAltCopy"
+                #optionAltCopy="{ altCopy: c }"
+            >
+                <slot name="optionAltCopy" v-bind="{ altCopy: c }" />
             </template>
         </UserOptions>
 
         <BaseZoomControls
             ref="zoomControlsTop"
-            v-if="FINAL_CONFIG.style.chart.controls.position === 'top' && FINAL_CONFIG.style.chart.controls.show && !loading"
+            v-if="
+                FINAL_CONFIG.style.chart.controls.position === 'top' &&
+                FINAL_CONFIG.style.chart.controls.show &&
+                !loading
+            "
             :config="FINAL_CONFIG"
             :scale="scale"
             :isFullscreen="isFullscreen"
@@ -2190,7 +2371,7 @@ defineExpose({
             @resetZoom="hardResetZoom"
         />
 
-        <div style="position: relative;">
+        <div style="position: relative">
             <svg
                 ref="svgRef"
                 :xmlns="XMLNS"
@@ -2204,7 +2385,11 @@ defineExpose({
                     height: isResponsiveActive ? `${HEIGHT}px` : 'auto',
                     background: FINAL_CONFIG.style.chart.backgroundColor,
                     touchAction: panZoomActive ? 'none' : 'auto',
-                    cursor: panZoomActive ? (isInteracting ? 'grabbing' : 'grab') : 'default',
+                    cursor: panZoomActive
+                        ? isInteracting
+                            ? 'grabbing'
+                            : 'grab'
+                        : 'default',
                 }"
                 :id="`vue-ui-geo_${uid}`"
                 @pointerdown="startInteraction"
@@ -2217,7 +2402,7 @@ defineExpose({
                 @keydown="onSvgKeydown"
             >
                 <PackageVersion />
-    
+
                 <g
                     :transform="mapFitTransform.transform"
                     :style="{ pointerEvents: isInteracting ? 'none' : 'auto' }"
@@ -2229,16 +2414,28 @@ defineExpose({
                             v-for="territory in areaPaths"
                             :key="territory.uid"
                             :d="territory.path"
-                            :fill="highlightedTerritoryKey === territory.uid ? territoryStyle.hover.fill : territoryStyle.fill"
-                            :stroke="highlightedTerritoryKey === territory.uid ? territoryStyle.hover.stroke : territoryStyle.stroke"
-                            :stroke-width="highlightedTerritoryKey === territory.uid ? territoryStyle.hover.strokeWidth : territoryStyle.strokeWidth"
+                            :fill="
+                                highlightedTerritoryKey === territory.uid
+                                    ? territoryStyle.hover.fill
+                                    : territoryStyle.fill
+                            "
+                            :stroke="
+                                highlightedTerritoryKey === territory.uid
+                                    ? territoryStyle.hover.stroke
+                                    : territoryStyle.stroke
+                            "
+                            :stroke-width="
+                                highlightedTerritoryKey === territory.uid
+                                    ? territoryStyle.hover.strokeWidth
+                                    : territoryStyle.strokeWidth
+                            "
                             vector-effect="non-scaling-stroke"
                             @mouseenter="onTerritoryEnter(territory)"
                             @mouseleave="onTerritoryLeave(territory)"
                             @click="onTerritoryClick(territory)"
                         />
                     </g>
-    
+
                     <g>
                         <path
                             class="vue-ui-geo-territory"
@@ -2246,15 +2443,23 @@ defineExpose({
                             :key="territory.uid"
                             :d="territory.path"
                             fill="none"
-                            :stroke="highlightedTerritoryKey === territory.uid ? territoryStyle.hover.stroke : territoryStyle.stroke"
-                            :stroke-width="highlightedTerritoryKey === territory.uid ? territoryStyle.hover.strokeWidth : territoryStyle.strokeWidth"
+                            :stroke="
+                                highlightedTerritoryKey === territory.uid
+                                    ? territoryStyle.hover.stroke
+                                    : territoryStyle.stroke
+                            "
+                            :stroke-width="
+                                highlightedTerritoryKey === territory.uid
+                                    ? territoryStyle.hover.strokeWidth
+                                    : territoryStyle.strokeWidth
+                            "
                             vector-effect="non-scaling-stroke"
                             @mouseenter="onTerritoryEnter(territory)"
                             @mouseleave="onTerritoryLeave(territory)"
                             @click="onTerritoryClick(territory)"
                         />
                     </g>
-    
+
                     <g>
                         <circle
                             v-for="geoJsonPoint in geoJsonPoints"
@@ -2270,8 +2475,11 @@ defineExpose({
                             @mouseleave="onGeoJsonPointLeave"
                         />
                     </g>
-    
-                    <g v-for="(point, pointKeyboardIndex) in projectedPoints" :key="point.uid">
+
+                    <g
+                        v-for="(point, pointKeyboardIndex) in projectedPoints"
+                        :key="point.uid"
+                    >
                         <slot
                             name="datapoint"
                             v-bind="{
@@ -2279,27 +2487,34 @@ defineExpose({
                                 onPointEnter,
                                 onPointLeave,
                                 onPointClick,
-                                highlighted: highlightedPointKey === point.uid
+                                highlighted: highlightedPointKey === point.uid,
                             }"
                         >
                             <circle
                                 :class="{
                                     'vue-ui-geo-point': true,
-                                    'vue-ui-geo-point-with-event': hasPointClickEvent && isCursorPointer,
+                                    'vue-ui-geo-point-with-event':
+                                        hasPointClickEvent && isCursorPointer,
                                 }"
                                 :cx="point.x"
                                 :cy="point.y"
-                                :r="highlightedPointKey === point.uid ? point.radius * point.hoverRadiusRatio : point.radius"
+                                :r="
+                                    highlightedPointKey === point.uid
+                                        ? point.radius * point.hoverRadiusRatio
+                                        : point.radius
+                                "
                                 :fill="point.fill"
                                 :stroke="pointStyle.stroke"
                                 :stroke-width="pointStyle.strokeWidth"
                                 vector-effect="non-scaling-stroke"
-                                @mouseenter="onPointEnter(point, pointKeyboardIndex)"
+                                @mouseenter="
+                                    onPointEnter(point, pointKeyboardIndex)
+                                "
                                 @mouseleave="onPointLeave(point)"
                                 @click="onPointClick(point)"
                             />
                         </slot>
-    
+
                         <text
                             class="vue-ui-geo-point-label"
                             v-if="FINAL_CONFIG.style.chart.points.labels.show"
@@ -2310,11 +2525,17 @@ defineExpose({
                                     ? point.radius * point.hoverRadiusRatio
                                     : point.radius) +
                                 FINAL_CONFIG.style.chart.points.labels.offsetY +
-                                (1 * FINAL_CONFIG.style.chart.points.labels.fontSizeRatio)
+                                1 *
+                                    FINAL_CONFIG.style.chart.points.labels
+                                        .fontSizeRatio
                             "
                             text-anchor="middle"
                             :fill="FINAL_CONFIG.style.chart.points.labels.color"
-                            :font-size="1 * FINAL_CONFIG.style.chart.points.labels.fontSizeRatio"
+                            :font-size="
+                                1 *
+                                FINAL_CONFIG.style.chart.points.labels
+                                    .fontSizeRatio
+                            "
                         >
                             {{ point.name }}
                         </text>
@@ -2323,30 +2544,55 @@ defineExpose({
                         name="svg"
                         :svg="{
                             drawingArea: viewBox,
-                            isPrintingImg: isPrinting | isImaging | isCallbackImaging,
+                            isPrintingImg:
+                                isPrinting | isImaging | isCallbackImaging,
                             isPrintingSvg: isCallbackSvg,
                             data: {
                                 areaPaths,
                                 linePaths,
                                 geoJsonPoints,
-                                projectedPoints
-                            }
+                                projectedPoints,
+                            },
                         }"
                     />
                 </g>
             </svg>
-            <div v-if="$slots.hint" style="position: absolute; top: 100%; left: 0; width: 100%;" data-dom-to-png-ignore aria-hidden="true">
-                <slot name="hint" v-bind="{ hint: FINAL_CONFIG.a11y.translations.keyboardNavigation, isVisible: isFocus }"/>
+            <div
+                v-if="$slots.hint"
+                style="position: absolute; top: 100%; left: 0; width: 100%"
+                data-dom-to-png-ignore
+                aria-hidden="true"
+            >
+                <slot
+                    name="hint"
+                    v-bind="{
+                        hint: FINAL_CONFIG.a11y.translations.keyboardNavigation,
+                        isVisible: isFocus,
+                    }"
+                />
             </div>
         </div>
 
         <div v-if="$slots.watermark" class="vue-data-ui-watermark">
-            <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging || isCallbackImaging || isCallbackSvg }" />
+            <slot
+                name="watermark"
+                v-bind="{
+                    isPrinting:
+                        isPrinting ||
+                        isImaging ||
+                        isCallbackImaging ||
+                        isCallbackSvg,
+                }"
+            />
         </div>
 
         <BaseZoomControls
             ref="zoomControlsBottom"
-            v-if="FINAL_CONFIG.style.chart.controls.position === 'bottom' && FINAL_CONFIG.style.chart.controls.show && !loading"
+            v-if="
+                FINAL_CONFIG.style.chart.controls.position === 'bottom' &&
+                FINAL_CONFIG.style.chart.controls.show &&
+                !loading
+            "
             :config="FINAL_CONFIG"
             :scale="scale"
             :isFullscreen="isFullscreen"
@@ -2365,7 +2611,9 @@ defineExpose({
             :borderRadius="FINAL_CONFIG.style.chart.tooltip.borderRadius"
             :borderColor="FINAL_CONFIG.style.chart.tooltip.borderColor"
             :borderWidth="FINAL_CONFIG.style.chart.tooltip.borderWidth"
-            :backgroundOpacity="FINAL_CONFIG.style.chart.tooltip.backgroundOpacity"
+            :backgroundOpacity="
+                FINAL_CONFIG.style.chart.tooltip.backgroundOpacity
+            "
             :position="FINAL_CONFIG.style.chart.tooltip.position"
             :offsetY="FINAL_CONFIG.style.chart.tooltip.offsetY"
             :parent="geoChart"
@@ -2375,18 +2623,26 @@ defineExpose({
             :smooth="FINAL_CONFIG.style.chart.tooltip.smooth"
             :backdropFilter="FINAL_CONFIG.style.chart.tooltip.backdropFilter"
             :smoothForce="FINAL_CONFIG.style.chart.tooltip.smoothForce"
-            :smoothSnapThreshold="FINAL_CONFIG.style.chart.tooltip.smoothSnapThreshold"
+            :smoothSnapThreshold="
+                FINAL_CONFIG.style.chart.tooltip.smoothSnapThreshold
+            "
             :isA11yMode="tooltipTriggerMode === 'keyboard'"
             :a11yPosition="tooltipA11yPosition"
         >
             <template #tooltip-before>
-                <slot name="tooltip-before" v-bind="{ ...dataTooltipSlot }"></slot>
+                <slot
+                    name="tooltip-before"
+                    v-bind="{ ...dataTooltipSlot }"
+                ></slot>
             </template>
             <template #tooltip>
-                <slot name="tooltip" v-bind="{ ...dataTooltipSlot }"/>
+                <slot name="tooltip" v-bind="{ ...dataTooltipSlot }" />
             </template>
             <template #tooltip-after>
-                <slot name="tooltip-after" v-bind="{ ...dataTooltipSlot }"></slot>
+                <slot
+                    name="tooltip-after"
+                    v-bind="{ ...dataTooltipSlot }"
+                ></slot>
             </template>
         </Tooltip>
 
@@ -2401,7 +2657,7 @@ defineExpose({
 </template>
 
 <style scoped>
-@import "../vue-data-ui.css";
+@import '../vue-data-ui.css';
 
 .vue-ui-geo * {
     transition: unset;

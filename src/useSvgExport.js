@@ -2,7 +2,8 @@ import { isRef, nextTick, onMounted, ref, unref, watch } from 'vue';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const XLINK_NS = 'http://www.w3.org/1999/xlink';
-const DEFAULT_SANS_STACK = 'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif';
+const DEFAULT_SANS_STACK =
+    'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif';
 let CSS_CACHE = new WeakMap();
 
 function CACHE_CSS(el) {
@@ -34,20 +35,45 @@ export function useSvgExport({
     legendItems, // computed
     backgroundColor, // computed
     stretchTitle = false, // bool (when rotateX is applied on the svg like in VueUiWheel, title transform style needs to be compensated)
-    titleEmbedded = false // when title is already part of the svg (VueUiChestnut)
+    titleEmbedded = false, // when title is already part of the svg (VueUiChestnut)
 }) {
-
     const svgRef = isRef(svg) ? svg : ref(svg);
     const ready = ref(false);
 
     const PRESENTATION_PROPS = [
-        'fill', 'fill-opacity', 'stroke', 'stroke-width', 'stroke-opacity', 'opacity', 'color',
-        'stroke-linecap', 'stroke-linejoin', 'stroke-miterlimit', 'stroke-dasharray', 'stroke-dashoffset',
-        'font-family', 'font-size', 'font-style', 'font-weight', 'font-variant', 'letter-spacing', 'word-spacing',
-        'text-anchor', 'dominant-baseline',
-        'shape-rendering', 'vector-effect', 'paint-order', 'mix-blend-mode', 'isolation',
-        'filter', 'clip-path', 'mask',
-        'transform', 'transform-origin', 'visibility', 'display',
+        'fill',
+        'fill-opacity',
+        'stroke',
+        'stroke-width',
+        'stroke-opacity',
+        'opacity',
+        'color',
+        'stroke-linecap',
+        'stroke-linejoin',
+        'stroke-miterlimit',
+        'stroke-dasharray',
+        'stroke-dashoffset',
+        'font-family',
+        'font-size',
+        'font-style',
+        'font-weight',
+        'font-variant',
+        'letter-spacing',
+        'word-spacing',
+        'text-anchor',
+        'dominant-baseline',
+        'shape-rendering',
+        'vector-effect',
+        'paint-order',
+        'mix-blend-mode',
+        'isolation',
+        'filter',
+        'clip-path',
+        'mask',
+        'transform',
+        'transform-origin',
+        'visibility',
+        'display',
     ];
 
     const ALWAYS_INLINE = new Set(['font-family']);
@@ -92,7 +118,10 @@ export function useSvgExport({
                         resolve(found);
                     }
                 });
-                observer.observe(document.documentElement, { childList: true, subtree: true });
+                observer.observe(document.documentElement, {
+                    childList: true,
+                    subtree: true,
+                });
             } catch {
                 resolve(null); // fallback to RAF loop only
             }
@@ -101,7 +130,7 @@ export function useSvgExport({
         while (performance.now() < deadline) {
             const maybe = await Promise.race([
                 seen,
-                new Promise(r => requestAnimationFrame(r))
+                new Promise((r) => requestAnimationFrame(r)),
             ]);
 
             await nextTick();
@@ -196,15 +225,22 @@ export function useSvgExport({
         if (sourceSvg.getAttribute('viewBox')) {
             cloneSvg.setAttribute('viewBox', sourceSvg.getAttribute('viewBox'));
         }
-        const srcNodes = [sourceSvg, ...Array.from(sourceSvg.querySelectorAll('*'))];
-        const dstNodes = [cloneSvg, ...Array.from(cloneSvg.querySelectorAll('*'))];
+        const srcNodes = [
+            sourceSvg,
+            ...Array.from(sourceSvg.querySelectorAll('*')),
+        ];
+        const dstNodes = [
+            cloneSvg,
+            ...Array.from(cloneSvg.querySelectorAll('*')),
+        ];
         for (let i = 0; i < srcNodes.length; i += 1) {
-            const src = srcNodes[i]; const dst = dstNodes[i];
+            const src = srcNodes[i];
+            const dst = dstNodes[i];
             const style = buildMinimalStyle(src);
             if (style) {
                 dst.setAttribute('style', style);
             }
-            ['fill', 'stroke', 'filter', 'clip-path', 'mask'].forEach(a => {
+            ['fill', 'stroke', 'filter', 'clip-path', 'mask'].forEach((a) => {
                 const v = src.getAttribute(a);
                 if (v) {
                     dst.setAttribute(a, v);
@@ -220,7 +256,7 @@ export function useSvgExport({
         }
 
         const [minX, minY, width, height] = vb.split(/\s+|,/).map(Number);
-        if ([minX, minY, width, height].some(n => Number.isNaN(n))) {
+        if ([minX, minY, width, height].some((n) => Number.isNaN(n))) {
             return null;
         }
         return { minX, minY, width, height };
@@ -243,7 +279,8 @@ export function useSvgExport({
         container.style.position = 'absolute';
         container.style.left = '-99999px';
         container.style.top = '-99999px';
-        container.style.width = '0'; container.style.height = '0';
+        container.style.width = '0';
+        container.style.height = '0';
         document.body.appendChild(container);
         container.appendChild(svgEl);
         return container;
@@ -272,13 +309,15 @@ export function useSvgExport({
         };
 
         const g = elNS('g');
-        g.setAttribute('id', '__vdu_export_title'); cloneSvg.appendChild(g);
+        g.setAttribute('id', '__vdu_export_title');
+        cloneSvg.appendChild(g);
 
         const xLeft = originX + cfg.paddingLeft;
         const xRight = originX + width - (cfg.paddingRight || 0);
         const xCenter = originX + width / 2;
 
-        let anchor = 'start'; let x = xLeft;
+        let anchor = 'start';
+        let x = xLeft;
         if (cfg.textAlign === 'center') {
             anchor = 'middle';
             x = xCenter;
@@ -295,7 +334,10 @@ export function useSvgExport({
         t.setAttribute('y', String(y + cfg.fontSize));
         t.setAttribute('text-anchor', anchor);
         t.setAttribute('dominant-baseline', 'ideographic');
-        t.setAttribute('style', `font-family:${fontFamily}; font-size:${cfg.fontSize}px; font-weight:${cfg.bold ? '700' : '400'}; fill:${cfg.color}; ${!stretchTitle ? '' : 'transform: scale(0.65, 1); transform-origin: center;'}`);
+        t.setAttribute(
+            'style',
+            `font-family:${fontFamily}; font-size:${cfg.fontSize}px; font-weight:${cfg.bold ? '700' : '400'}; fill:${cfg.color}; ${!stretchTitle ? '' : 'transform: scale(0.65, 1); transform-origin: center;'}`,
+        );
         t.textContent = cfg.text;
         g.appendChild(t);
 
@@ -304,7 +346,9 @@ export function useSvgExport({
             const sCfg = {
                 color: cfg.subtitle.color || '#666',
                 text: cfg.subtitle.text,
-                fontSize: cfg.subtitle.fontSize || Math.max(12, Math.round(cfg.fontSize * 0.8)),
+                fontSize:
+                    cfg.subtitle.fontSize ||
+                    Math.max(12, Math.round(cfg.fontSize * 0.8)),
                 bold: !!cfg.subtitle.bold,
             };
             const s = elNS('text');
@@ -312,15 +356,24 @@ export function useSvgExport({
             s.setAttribute('y', String(y + cfg.fontSize + gap + sCfg.fontSize));
             s.setAttribute('text-anchor', anchor);
             s.setAttribute('dominant-baseline', 'ideographic');
-            s.setAttribute('style', `font-family:${fontFamily}; font-size:${sCfg.fontSize}px; font-weight:${sCfg.bold ? '600' : '400'}; fill:${sCfg.color}; ${!stretchTitle ? '' : 'transform: scale(0.65, 1); transform-origin: center;'}`);
-            s.textContent = sCfg.text; g.appendChild(s);
+            s.setAttribute(
+                'style',
+                `font-family:${fontFamily}; font-size:${sCfg.fontSize}px; font-weight:${sCfg.bold ? '600' : '400'}; fill:${sCfg.color}; ${!stretchTitle ? '' : 'transform: scale(0.65, 1); transform-origin: center;'}`,
+            );
+            s.textContent = sCfg.text;
+            g.appendChild(s);
             tall += gap + sCfg.fontSize;
         }
         return tall + Math.round(cfg.fontSize * 0.4);
     }
 
     function drawLegend(cloneSvg, width, originX, yStart, fontFamily) {
-        if (!legend.value || !legend.value.show || !Array.isArray(legendItems.value) || !legendItems.value.length) {
+        if (
+            !legend.value ||
+            !legend.value.show ||
+            !Array.isArray(legendItems.value) ||
+            !legendItems.value.length
+        ) {
             return 0;
         }
 
@@ -333,7 +386,10 @@ export function useSvgExport({
             paddingY: 10,
             itemGapX: 18,
             itemGapY: 12,
-            markerSize: Math.max(8, Math.round((legend.value.fontSize || 14) * 0.9)),
+            markerSize: Math.max(
+                8,
+                Math.round((legend.value.fontSize || 14) * 0.9),
+            ),
             markerTextGap: 8,
             lineHeight: Math.round((legend.value.fontSize || 14) * 1.2),
             maxWidth: width,
@@ -345,7 +401,8 @@ export function useSvgExport({
         cloneSvg.appendChild(g);
 
         const bg = elNS('rect');
-        bg.setAttribute('rx', '6'); bg.setAttribute('ry', '6');
+        bg.setAttribute('rx', '6');
+        bg.setAttribute('ry', '6');
         bg.setAttribute('fill', cfg.backgroundColor);
         g.appendChild(bg);
 
@@ -353,8 +410,12 @@ export function useSvgExport({
         g.appendChild(itemsG);
 
         const ruler = elNS('text');
-        ruler.setAttribute('x', '0'); ruler.setAttribute('y', '0');
-        ruler.setAttribute('style', `font-family:${fontFamily}; font-size:${cfg.fontSize}px; font-weight:${cfg.bold ? '600' : '400'}; opacity:0;`);
+        ruler.setAttribute('x', '0');
+        ruler.setAttribute('y', '0');
+        ruler.setAttribute(
+            'style',
+            `font-family:${fontFamily}; font-size:${cfg.fontSize}px; font-weight:${cfg.bold ? '600' : '400'}; opacity:0;`,
+        );
         itemsG.appendChild(ruler);
 
         const measure = (text) => {
@@ -365,7 +426,9 @@ export function useSvgExport({
         const innerMaxW = Math.max(1, cfg.maxWidth - cfg.paddingX * 2);
 
         function wrapLabel(label, maxW) {
-            const words = String(label || '').split(/\s+/).filter(Boolean);
+            const words = String(label || '')
+                .split(/\s+/)
+                .filter(Boolean);
             const lines = [];
 
             if (!words.length) {
@@ -445,17 +508,23 @@ export function useSvgExport({
             return d + 'Z';
         }
 
-        const items = legendItems.value.map(it => {
-            const maxLabelW = Math.max(1, innerMaxW - (cfg.markerSize + cfg.markerTextGap));
+        const items = legendItems.value.map((it) => {
+            const maxLabelW = Math.max(
+                1,
+                innerMaxW - (cfg.markerSize + cfg.markerTextGap),
+            );
             const lines = wrapLabel(it.name || '', maxLabelW);
             const maxLineW = Math.max(...lines.map(measure), 0);
             const itemW = cfg.markerSize + cfg.markerTextGap + maxLineW;
-            const itemH = Math.max(cfg.markerSize, lines.length * cfg.lineHeight);
+            const itemH = Math.max(
+                cfg.markerSize,
+                lines.length * cfg.lineHeight,
+            );
             return {
                 ...it,
                 lines,
                 itemW,
-                itemH
+                itemH,
             };
         });
 
@@ -463,7 +532,7 @@ export function useSvgExport({
         let row = {
             items: [],
             width: 0,
-            height: 0
+            height: 0,
         };
 
         for (const it of items) {
@@ -473,7 +542,7 @@ export function useSvgExport({
                 row = {
                     items: [it],
                     width: it.itemW,
-                    height: it.itemH
+                    height: it.itemH,
                 };
             } else {
                 row.items.push(it);
@@ -506,40 +575,61 @@ export function useSvgExport({
                     itemsG.appendChild(c);
                 } else if (shape === 'rect' || shape === 'square') {
                     const p = elNS('path');
-                    p.setAttribute('d', pathPolygon(markerCX, markerCY, 4, radius, -45));
+                    p.setAttribute(
+                        'd',
+                        pathPolygon(markerCX, markerCY, 4, radius, -45),
+                    );
                     p.setAttribute('fill', it.color || '#000');
                     itemsG.appendChild(p);
                 } else if (shape === 'diamond') {
                     const p = elNS('path');
-                    p.setAttribute('d', pathPolygon(markerCX, markerCY, 4, radius, 45));
+                    p.setAttribute(
+                        'd',
+                        pathPolygon(markerCX, markerCY, 4, radius, 45),
+                    );
                     p.setAttribute('fill', it.color || '#000');
                     itemsG.appendChild(p);
                 } else if (shape === 'triangle') {
                     const p = elNS('path');
-                    p.setAttribute('d', pathPolygon(markerCX, markerCY, 3, radius, -90));
+                    p.setAttribute(
+                        'd',
+                        pathPolygon(markerCX, markerCY, 3, radius, -90),
+                    );
                     p.setAttribute('fill', it.color || '#000');
                     itemsG.appendChild(p);
                 } else if (shape === 'pentagon') {
                     const p = elNS('path');
-                    p.setAttribute('d', pathPolygon(markerCX, markerCY, 5, radius, -90));
+                    p.setAttribute(
+                        'd',
+                        pathPolygon(markerCX, markerCY, 5, radius, -90),
+                    );
                     p.setAttribute('fill', it.color || '#000');
                     itemsG.appendChild(p);
                 } else if (shape === 'hexagon') {
                     const p = elNS('path');
-                    p.setAttribute('d', pathPolygon(markerCX, markerCY, 6, radius, 0));
+                    p.setAttribute(
+                        'd',
+                        pathPolygon(markerCX, markerCY, 6, radius, 0),
+                    );
                     p.setAttribute('fill', it.color || '#000');
                     itemsG.appendChild(p);
                 } else if (shape === 'star') {
                     const p = elNS('path');
                     const outer = radius;
                     const inner = radius * 0.5;
-                    p.setAttribute('d', pathStar(markerCX, markerCY, 5, outer, inner));
+                    p.setAttribute(
+                        'd',
+                        pathStar(markerCX, markerCY, 5, outer, inner),
+                    );
                     p.setAttribute('fill', it.color || '#000');
                     itemsG.appendChild(p);
                 } else {
                     const rect = elNS('rect');
                     rect.setAttribute('x', String(x));
-                    rect.setAttribute('y', String(cursorY + (r.height - cfg.markerSize) / 2));
+                    rect.setAttribute(
+                        'y',
+                        String(cursorY + (r.height - cfg.markerSize) / 2),
+                    );
                     rect.setAttribute('width', String(cfg.markerSize));
                     rect.setAttribute('height', String(cfg.markerSize));
                     rect.setAttribute('fill', it.color || '#000');
@@ -547,11 +637,17 @@ export function useSvgExport({
                 }
 
                 const textX = x + cfg.markerSize + cfg.markerTextGap;
-                const textY = cursorY + (r.height - (it.lines.length * cfg.lineHeight)) / 2 + cfg.fontSize;
+                const textY =
+                    cursorY +
+                    (r.height - it.lines.length * cfg.lineHeight) / 2 +
+                    cfg.fontSize;
                 const text = elNS('text');
                 text.setAttribute('x', String(textX));
                 text.setAttribute('y', String(textY));
-                text.setAttribute('style', `font-family:${fontFamily}; font-size:${cfg.fontSize}px; font-weight:${cfg.bold ? '600' : '400'}; fill:${cfg.color};`);
+                text.setAttribute(
+                    'style',
+                    `font-family:${fontFamily}; font-size:${cfg.fontSize}px; font-weight:${cfg.bold ? '600' : '400'}; fill:${cfg.color};`,
+                );
                 text.setAttribute('dominant-baseline', 'ideographic');
 
                 let first = true;
@@ -583,15 +679,19 @@ export function useSvgExport({
 
     function makeClone(svgEl) {
         const clone = svgEl.cloneNode(true);
-        clone.querySelectorAll('script').forEach(n => n.remove());
+        clone.querySelectorAll('script').forEach((n) => n.remove());
         inlineComputedStyles(svgEl, clone);
         ensureXmlns(clone);
         return clone;
     }
 
     function wrapOriginalContent(cloneSvg) {
-        const defs = Array.from(cloneSvg.childNodes).filter(n => n.nodeType === 1 && n.nodeName.toLowerCase() === 'defs');
-        const others = Array.from(cloneSvg.childNodes).filter(n => !(n.nodeType === 1 && n.nodeName.toLowerCase() === 'defs'));
+        const defs = Array.from(cloneSvg.childNodes).filter(
+            (n) => n.nodeType === 1 && n.nodeName.toLowerCase() === 'defs',
+        );
+        const others = Array.from(cloneSvg.childNodes).filter(
+            (n) => !(n.nodeType === 1 && n.nodeName.toLowerCase() === 'defs'),
+        );
         const contentGroup = document.createElementNS(SVG_NS, 'g');
         contentGroup.setAttribute('id', '__vdu_export_content');
         for (const n of others) contentGroup.appendChild(n);
@@ -610,15 +710,24 @@ export function useSvgExport({
         const vb = parseViewBox(cloneSvg);
         const heightAttr = cloneSvg.getAttribute('height');
         if (vb) {
-            cloneSvg.setAttribute('viewBox', `${vb.minX} ${vb.minY} ${vb.width} ${vb.height + addY}`);
+            cloneSvg.setAttribute(
+                'viewBox',
+                `${vb.minX} ${vb.minY} ${vb.width} ${vb.height + addY}`,
+            );
             if (heightAttr) {
-                cloneSvg.setAttribute('height', String(Number(heightAttr) + addY));
+                cloneSvg.setAttribute(
+                    'height',
+                    String(Number(heightAttr) + addY),
+                );
             }
         } else if (heightAttr) {
             cloneSvg.setAttribute('height', String(Number(heightAttr) + addY));
         } else {
             const bbox = cloneSvg.getBBox();
-            cloneSvg.setAttribute('viewBox', `0 0 ${Math.max(1, bbox.width)} ${Math.max(1, bbox.height + addY)}`);
+            cloneSvg.setAttribute(
+                'viewBox',
+                `0 0 ${Math.max(1, bbox.width)} ${Math.max(1, bbox.height + addY)}`,
+            );
         }
     }
 
@@ -626,17 +735,19 @@ export function useSvgExport({
         const vb = parseViewBox(cloneSvg);
         if (vb) {
             return vb.width;
-        };
+        }
         const w = Number(cloneSvg.getAttribute('width'));
         if (!Number.isNaN(w) && w > 0) {
             return w;
-        };
+        }
         return cloneSvg.getBBox().width || 0;
     }
 
     function contentHeight(cloneSvg) {
-        const vb = parseViewBox(cloneSvg); if (vb) return vb.height;
-        const h = Number(cloneSvg.getAttribute('height')); if (!Number.isNaN(h) && h > 0) return h;
+        const vb = parseViewBox(cloneSvg);
+        if (vb) return vb.height;
+        const h = Number(cloneSvg.getAttribute('height'));
+        if (!Number.isNaN(h) && h > 0) return h;
         return cloneSvg.getBBox().height || 0;
     }
 
@@ -647,7 +758,10 @@ export function useSvgExport({
             // Ensure fonts are ready before any measuring
             if (document.fonts?.ready) {
                 try {
-                    await Promise.race([document.fonts.ready, new Promise(r => setTimeout(r, 4000))]);
+                    await Promise.race([
+                        document.fonts.ready,
+                        new Promise((r) => setTimeout(r, 4000)),
+                    ]);
                 } catch {
                     //
                 }
@@ -661,21 +775,50 @@ export function useSvgExport({
             const width = Math.max(1, contentWidth(cloneSvg));
             const height = Math.max(1, contentHeight(cloneSvg));
 
-            const baseFontFamily = completeFontFamily(CACHE_CSS(cloneSvg).getPropertyValue('font-family') || '');
+            const baseFontFamily = completeFontFamily(
+                CACHE_CSS(cloneSvg).getPropertyValue('font-family') || '',
+            );
 
-            const titleH = titleEmbedded ? null : drawTitle(cloneSvg, width, originX, originY, baseFontFamily);
+            const titleH = titleEmbedded
+                ? null
+                : drawTitle(cloneSvg, width, originX, originY, baseFontFamily);
             let topExtra = titleH ?? 0;
 
-            const legendPos = (legend && legend.value && legend.value.position) ? String(legend.value.position).toLowerCase() : 'top';
-            if (legend && legend.value && legend.value.show && legendPos === 'top') {
-                topExtra += drawLegend(cloneSvg, width, originX, originY + topExtra, baseFontFamily);
+            const legendPos =
+                legend && legend.value && legend.value.position
+                    ? String(legend.value.position).toLowerCase()
+                    : 'top';
+            if (
+                legend &&
+                legend.value &&
+                legend.value.show &&
+                legendPos === 'top'
+            ) {
+                topExtra += drawLegend(
+                    cloneSvg,
+                    width,
+                    originX,
+                    originY + topExtra,
+                    baseFontFamily,
+                );
             }
 
             shiftContent(contentGroup, topExtra);
 
             let bottomExtra = 0;
-            if (legend && legend.value && legend.value.show && legendPos === 'bottom') {
-                bottomExtra += drawLegend(cloneSvg, width, originX, originY + topExtra + height, baseFontFamily);
+            if (
+                legend &&
+                legend.value &&
+                legend.value.show &&
+                legendPos === 'bottom'
+            ) {
+                bottomExtra += drawLegend(
+                    cloneSvg,
+                    width,
+                    originX,
+                    originY + topExtra + height,
+                    baseFontFamily,
+                );
             }
 
             growCanvasHeight(cloneSvg, topExtra + bottomExtra);
@@ -727,7 +870,7 @@ function ensureExtraViewBoxY(svgEl, extraY = -50) {
         const hAttr = svgEl.getAttribute('height');
         if (!hAttr) return;
         const match = /^(\d+(\.\d+)?)(px)?$/.exec(hAttr.trim());
-        if (!match) return;  // ignore %, em, etc.
+        if (!match) return; // ignore %, em, etc.
         const current = parseFloat(match[1]) || 0;
         const next = Math.max(1, current + deltaPx);
         svgEl.setAttribute('height', String(next));
@@ -735,7 +878,8 @@ function ensureExtraViewBoxY(svgEl, extraY = -50) {
 
     if (vbAttr) {
         const parts = vbAttr.trim().split(/\s+|,/).map(Number);
-        if (parts.length !== 4 || parts.some(n => !Number.isFinite(n))) return;
+        if (parts.length !== 4 || parts.some((n) => !Number.isFinite(n)))
+            return;
         const [minX, minY, width, height] = parts;
         const newMinY = minY + extraY;
         const deltaH = -extraY;
@@ -772,19 +916,20 @@ function ensureExtraViewBoxY(svgEl, extraY = -50) {
     })();
 }
 
-
 // ------------------------------------- foreignObject utils ---------------------------------------
 
 async function processForeignObjects(svgRoot, { mode = 'raster' } = {}) {
     const list = Array.from(svgRoot.querySelectorAll('foreignObject'));
-    if (!list.length) return { converted: 0, rasterized: 0, skipped: 0, errors: 0 };
+    if (!list.length)
+        return { converted: 0, rasterized: 0, skipped: 0, errors: 0 };
 
     let converted = 0;
     let rasterized = 0;
     let skipped = 0;
     let errors = 0;
 
-    const isAllowedTextTag = (t) => ['div', 'p', 'span', 'strong', 'em', 'b', 'i', 'br'].includes(t);
+    const isAllowedTextTag = (t) =>
+        ['div', 'p', 'span', 'strong', 'em', 'b', 'i', 'br'].includes(t);
     const isTextOnlyForeignObject = (fo) => {
         try {
             const root = fo.firstElementChild;
@@ -835,11 +980,16 @@ async function processForeignObjects(svgRoot, { mode = 'raster' } = {}) {
                 if (!lhRaw) return Math.round(fs * 1.2);
                 const v = lhRaw.trim().toLowerCase();
                 if (v === 'normal') return Math.round(fs * 1.2);
-                if (v.endsWith('px')) return parseFloat(v) || Math.round(fs * 1.2);
-                if (v.endsWith('%')) return (parseFloat(v) / 100) * fs || Math.round(fs * 1.2);
+                if (v.endsWith('px'))
+                    return parseFloat(v) || Math.round(fs * 1.2);
+                if (v.endsWith('%'))
+                    return (parseFloat(v) / 100) * fs || Math.round(fs * 1.2);
                 if (v.endsWith('em')) return (parseFloat(v) || 1) * fs;
                 if (v.endsWith('rem')) {
-                    const rootFS = parseFloat(getComputedStyle(document.documentElement).fontSize) || fs;
+                    const rootFS =
+                        parseFloat(
+                            getComputedStyle(document.documentElement).fontSize,
+                        ) || fs;
                     return (parseFloat(v) || 1) * rootFS;
                 }
                 const num = Number(v);
@@ -851,67 +1001,146 @@ async function processForeignObjects(svgRoot, { mode = 'raster' } = {}) {
                     const v = (s || '').trim().toLowerCase();
                     if (v.endsWith('px')) return parseFloat(v) || 0;
                     if (v.endsWith('rem')) {
-                        const rootFS = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+                        const rootFS =
+                            parseFloat(
+                                getComputedStyle(document.documentElement)
+                                    .fontSize,
+                            ) || 16;
                         return (parseFloat(v) || 0) * rootFS;
                     }
                     if (v.endsWith('em')) {
-                        const bodyFS = parseFloat(getComputedStyle(document.body).fontSize) || 16;
+                        const bodyFS =
+                            parseFloat(
+                                getComputedStyle(document.body).fontSize,
+                            ) || 16;
                         return (parseFloat(v) || 0) * bodyFS;
                     }
                     const n = Number(v);
                     return Number.isFinite(n) ? n : 0;
                 };
-                const parts = (pad || '').split(/\s+/).map(toPxNum).filter(Number.isFinite);
+                const parts = (pad || '')
+                    .split(/\s+/)
+                    .map(toPxNum)
+                    .filter(Number.isFinite);
                 if (!parts.length) return [0, 0, 0, 0];
-                if (parts.length === 1) return [parts[0], parts[0], parts[0], parts[0]];
-                if (parts.length === 2) return [parts[0], parts[1], parts[0], parts[1]];
-                if (parts.length === 3) return [parts[0], parts[1], parts[2], parts[1]];
+                if (parts.length === 1)
+                    return [parts[0], parts[0], parts[0], parts[0]];
+                if (parts.length === 2)
+                    return [parts[0], parts[1], parts[0], parts[1]];
+                if (parts.length === 3)
+                    return [parts[0], parts[1], parts[2], parts[1]];
                 return [parts[0], parts[1], parts[2], parts[3]];
             };
 
             const readTextStyle = (el, parent) => {
                 const cs = CACHE_CSS(el);
-                let ff = cs.getPropertyValue('font-family') || parent?.ff || 'system-ui';
+                let ff =
+                    cs.getPropertyValue('font-family') ||
+                    parent?.ff ||
+                    'system-ui';
                 ff = completeFontFamily(ff);
 
                 let fs = parseFloat(cs.getPropertyValue('font-size'));
                 if (!Number.isFinite(fs)) fs = parent?.fs || 14;
 
-                const fw = cs.getPropertyValue('font-weight') || parent?.fw || '400';
-                const fsty = cs.getPropertyValue('font-style') || parent?.fsty || 'normal';
-                const fstc = cs.getPropertyValue('font-stretch') || parent?.fstc || 'normal';
-                const lsp = cs.getPropertyValue('letter-spacing') || parent?.lsp || 'normal';
-                const wsp = cs.getPropertyValue('word-spacing') || parent?.wsp || '0px';
-                const kern = cs.getPropertyValue('font-kerning') || parent?.kern || 'auto';
-                const liga = cs.getPropertyValue('font-variant-ligatures') || parent?.liga || 'normal';
-                const ttfm = cs.getPropertyValue('text-transform') || parent?.ttfm || 'none';
-                const fill = cs.getPropertyValue('color') || parent?.fill || '#000';
+                const fw =
+                    cs.getPropertyValue('font-weight') || parent?.fw || '400';
+                const fsty =
+                    cs.getPropertyValue('font-style') ||
+                    parent?.fsty ||
+                    'normal';
+                const fstc =
+                    cs.getPropertyValue('font-stretch') ||
+                    parent?.fstc ||
+                    'normal';
+                const lsp =
+                    cs.getPropertyValue('letter-spacing') ||
+                    parent?.lsp ||
+                    'normal';
+                const wsp =
+                    cs.getPropertyValue('word-spacing') || parent?.wsp || '0px';
+                const kern =
+                    cs.getPropertyValue('font-kerning') ||
+                    parent?.kern ||
+                    'auto';
+                const liga =
+                    cs.getPropertyValue('font-variant-ligatures') ||
+                    parent?.liga ||
+                    'normal';
+                const ttfm =
+                    cs.getPropertyValue('text-transform') ||
+                    parent?.ttfm ||
+                    'none';
+                const fill =
+                    cs.getPropertyValue('color') || parent?.fill || '#000';
 
                 const lhRaw = cs.getPropertyValue('line-height');
-                const lh = (!lhRaw || lhRaw.trim().toLowerCase() === 'normal')
-                    ? (parent?.lh ?? Math.round(fs * 1.2))
-                    : toLineHeightPx(lhRaw, fs);
+                const lh =
+                    !lhRaw || lhRaw.trim().toLowerCase() === 'normal'
+                        ? (parent?.lh ?? Math.round(fs * 1.2))
+                        : toLineHeightPx(lhRaw, fs);
 
-                const ta = (cs.getPropertyValue('text-align') || parent?.ta || 'start').trim().toLowerCase();
+                const ta = (
+                    cs.getPropertyValue('text-align') ||
+                    parent?.ta ||
+                    'start'
+                )
+                    .trim()
+                    .toLowerCase();
 
                 let padT = parseFloat(cs.getPropertyValue('padding-top')) || 0;
-                let padR = parseFloat(cs.getPropertyValue('padding-right')) || 0;
-                let padB = parseFloat(cs.getPropertyValue('padding-bottom')) || 0;
+                let padR =
+                    parseFloat(cs.getPropertyValue('padding-right')) || 0;
+                let padB =
+                    parseFloat(cs.getPropertyValue('padding-bottom')) || 0;
                 let padL = parseFloat(cs.getPropertyValue('padding-left')) || 0;
                 const shorthand = cs.getPropertyValue('padding');
-                if (shorthand && (padT === 0 && padR === 0 && padB === 0 && padL === 0)) {
+                if (
+                    shorthand &&
+                    padT === 0 &&
+                    padR === 0 &&
+                    padB === 0 &&
+                    padL === 0
+                ) {
                     const [t, r, b, l] = parsePaddingShorthand(shorthand);
-                    padT = t; padR = r; padB = b; padL = l;
+                    padT = t;
+                    padR = r;
+                    padB = b;
+                    padL = l;
                 }
 
-                const bL = parseFloat(cs.getPropertyValue('border-left-width')) || 0;
-                const bR = parseFloat(cs.getPropertyValue('border-right-width')) || 0;
+                const bL =
+                    parseFloat(cs.getPropertyValue('border-left-width')) || 0;
+                const bR =
+                    parseFloat(cs.getPropertyValue('border-right-width')) || 0;
                 const box = cs.getPropertyValue('box-sizing') || 'content-box';
 
-                return { ff, fs, fw, fsty, fstc, lsp, wsp, kern, liga, ttfm, fill, lh, ta, padL, padR, padT, padB, bL, bR, box };
+                return {
+                    ff,
+                    fs,
+                    fw,
+                    fsty,
+                    fstc,
+                    lsp,
+                    wsp,
+                    kern,
+                    liga,
+                    ttfm,
+                    fill,
+                    lh,
+                    ta,
+                    padL,
+                    padR,
+                    padT,
+                    padB,
+                    bL,
+                    bR,
+                    box,
+                };
             };
 
-            const isBlock = (t) => /^(div|p|section|article|ul|ol|li|h[1-6])$/.test(t);
+            const isBlock = (t) =>
+                /^(div|p|section|article|ul|ol|li|h[1-6])$/.test(t);
 
             const PARA_BREAK = { __para__: true };
             const LINE_BREAK = { __br__: true };
@@ -928,35 +1157,47 @@ async function processForeignObjects(svgRoot, { mode = 'raster' } = {}) {
                 if (node.nodeType !== 1) return;
 
                 const tag = node.tagName.toLowerCase();
-                if (tag === 'br') { runs.push({ ...LINE_BREAK, path: path.slice() }); return; }
+                if (tag === 'br') {
+                    runs.push({ ...LINE_BREAK, path: path.slice() });
+                    return;
+                }
 
                 const nextStyle = readTextStyle(node, style);
                 path.push(node);
-                for (const ch of Array.from(node.childNodes)) walk(ch, nextStyle, path);
+                for (const ch of Array.from(node.childNodes))
+                    walk(ch, nextStyle, path);
                 path.pop();
 
-                if (isBlock(tag)) runs.push({ ...PARA_BREAK, path: path.slice() });
+                if (isBlock(tag))
+                    runs.push({ ...PARA_BREAK, path: path.slice() });
             };
 
             walk(htmlRoot, rootStyle, [htmlRoot]);
 
-            while (runs.length && (runs.at(-1).__para__ || runs.at(-1).__br__)) runs.pop();
+            while (runs.length && (runs.at(-1).__para__ || runs.at(-1).__br__))
+                runs.pop();
             if (!runs.length) return null;
 
-            const textRuns = runs.filter(r => !r.__para__ && !r.__br__);
+            const textRuns = runs.filter((r) => !r.__para__ && !r.__br__);
             const lcaPath = (() => {
                 if (!textRuns.length) return [htmlRoot];
-                const paths = textRuns.map(r => r.path);
-                const minLen = Math.min(...paths.map(p => p.length));
+                const paths = textRuns.map((r) => r.path);
+                const minLen = Math.min(...paths.map((p) => p.length));
                 let i = 0;
-                while (i < minLen) { const n = paths[0][i]; if (paths.every(p => p[i] === n)) i += 1; else break; }
+                while (i < minLen) {
+                    const n = paths[0][i];
+                    if (paths.every((p) => p[i] === n)) i += 1;
+                    else break;
+                }
                 return paths[0].slice(0, Math.max(1, i));
             })();
 
             const lcaEl = lcaPath[lcaPath.length - 1] || htmlRoot;
             const lcaStyle = readTextStyle(lcaEl);
 
-            let padLsum = 0, padRsum = 0, padTsum = 0;
+            let padLsum = 0,
+                padRsum = 0,
+                padTsum = 0;
             for (const el of lcaPath) {
                 const st = readTextStyle(el);
                 padLsum += st.padL;
@@ -977,14 +1218,18 @@ async function processForeignObjects(svgRoot, { mode = 'raster' } = {}) {
                     const wStr = cs.width;
                     const wNum = parseFloat(wStr);
                     if (Number.isFinite(wNum) && wNum > 0) {
-                        const box = cs.boxSizing || cs.getPropertyValue('box-sizing') || 'content-box';
+                        const box =
+                            cs.boxSizing ||
+                            cs.getPropertyValue('box-sizing') ||
+                            'content-box';
                         const pL = parseFloat(cs.paddingLeft) || 0;
                         const pR = parseFloat(cs.paddingRight) || 0;
                         const bL = parseFloat(cs.borderLeftWidth) || 0;
                         const bR = parseFloat(cs.borderRightWidth) || 0;
-                        const cw = box === 'border-box'
-                            ? Math.max(1, wNum - pL - pR - bL - bR)
-                            : Math.max(1, wNum);
+                        const cw =
+                            box === 'border-box'
+                                ? Math.max(1, wNum - pL - pR - bL - bR)
+                                : Math.max(1, wNum);
                         widths.push(cw);
                     }
                 } catch {
@@ -992,7 +1237,8 @@ async function processForeignObjects(svgRoot, { mode = 'raster' } = {}) {
                 }
             }
 
-            let contentW = Math.floor(Math.min(...widths.filter(Number.isFinite))) - 1;
+            let contentW =
+                Math.floor(Math.min(...widths.filter(Number.isFinite))) - 1;
             if (!(contentW > 0)) contentW = 1;
 
             let anchor = 'start';
@@ -1038,7 +1284,8 @@ async function processForeignObjects(svgRoot, { mode = 'raster' } = {}) {
 
             const pushLine = () => {
                 if (line.length) lines.push({ segs: line.slice() });
-                line = []; lineW = 0;
+                line = [];
+                lineW = 0;
             };
 
             const pushSeg = (text, st, prependSpace) => {
@@ -1056,22 +1303,30 @@ async function processForeignObjects(svgRoot, { mode = 'raster' } = {}) {
                 let acc = '';
                 for (const ch of token) {
                     const t = acc + ch;
-                    if (measure(t, st) <= maxW) acc = t; else break;
+                    if (measure(t, st) <= maxW) acc = t;
+                    else break;
                 }
                 return acc || token[0] || '';
             };
 
             for (const run of runs) {
-                if (run.__para__ || run.__br__) { pushLine(); continue; }
+                if (run.__para__ || run.__br__) {
+                    pushLine();
+                    continue;
+                }
                 const st = run.style;
 
-                const rawTokens = run.text.split(/(\s+)/).filter(t => t.length > 0);
+                const rawTokens = run.text
+                    .split(/(\s+)/)
+                    .filter((t) => t.length > 0);
 
                 const flushWord = (word, needsLeadingSpace) => {
                     if (!word) return;
 
                     const maxW = Math.max(1, contentW);
-                    const tokenW = measure(word, st) + (needsLeadingSpace ? spaceWidth(st) : 0);
+                    const tokenW =
+                        measure(word, st) +
+                        (needsLeadingSpace ? spaceWidth(st) : 0);
 
                     if (line.length === 0) {
                         if (tokenW <= maxW) {
@@ -1107,7 +1362,10 @@ async function processForeignObjects(svgRoot, { mode = 'raster' } = {}) {
 
                 let sawSpace = false;
                 for (const tok of rawTokens) {
-                    if (/^\s+$/.test(tok)) { sawSpace = true; continue; }
+                    if (/^\s+$/.test(tok)) {
+                        sawSpace = true;
+                        continue;
+                    }
                     flushWord(tok, sawSpace);
                     sawSpace = false;
                 }
@@ -1116,7 +1374,10 @@ async function processForeignObjects(svgRoot, { mode = 'raster' } = {}) {
 
             for (let li = 0; li < lines.length; li += 1) {
                 const segs = lines[li].segs;
-                const fsAdvance = Math.max(...segs.map(s => s.fs || lcaStyle.fs), lcaStyle.fs);
+                const fsAdvance = Math.max(
+                    ...segs.map((s) => s.fs || lcaStyle.fs),
+                    lcaStyle.fs,
+                );
 
                 let firstSeg = true;
                 for (const seg of segs) {
@@ -1126,7 +1387,10 @@ async function processForeignObjects(svgRoot, { mode = 'raster' } = {}) {
                         if (li > 0) tspan.setAttribute('dy', String(fsAdvance));
                         firstSeg = false;
                     }
-                    tspan.setAttribute('style', `${styleString(seg)} fill:${seg.fill};`);
+                    tspan.setAttribute(
+                        'style',
+                        `${styleString(seg)} fill:${seg.fill};`,
+                    );
                     tspan.textContent = seg.text;
                     textEl.appendChild(tspan);
                 }
@@ -1140,7 +1404,9 @@ async function processForeignObjects(svgRoot, { mode = 'raster' } = {}) {
                 }
             }
 
-            try { measurer.remove(); } catch { }
+            try {
+                measurer.remove();
+            } catch {}
             return textEl;
         } catch {
             return null;
@@ -1215,7 +1481,7 @@ async function processForeignObjects(svgRoot, { mode = 'raster' } = {}) {
                     continue;
                 }
 
-                await new Promise(r => requestAnimationFrame(r));
+                await new Promise((r) => requestAnimationFrame(r));
                 const bb = fo.getBBox();
                 let w = Math.max(1, Math.ceil(bb.width));
                 let h = Math.max(1, Math.ceil(bb.height));
@@ -1224,8 +1490,10 @@ async function processForeignObjects(svgRoot, { mode = 'raster' } = {}) {
                 const contentRoot = fo.firstElementChild;
                 if (contentRoot) {
                     const natural = measureHtmlNaturalSize(contentRoot);
-                    const attrW = parseFloat(fo.getAttribute('width') || '0') || 0;
-                    const attrH = parseFloat(fo.getAttribute('height') || '0') || 0;
+                    const attrW =
+                        parseFloat(fo.getAttribute('width') || '0') || 0;
+                    const attrH =
+                        parseFloat(fo.getAttribute('height') || '0') || 0;
 
                     w = Math.max(w, attrW, natural.w);
                     h = Math.max(h, attrH, natural.h);
@@ -1251,7 +1519,9 @@ async function processForeignObjects(svgRoot, { mode = 'raster' } = {}) {
                 tempSvg.appendChild(foClone);
 
                 const xml = new XMLSerializer().serializeToString(tempSvg);
-                const svgUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(xml);
+                const svgUrl =
+                    'data:image/svg+xml;charset=utf-8,' +
+                    encodeURIComponent(xml);
 
                 const canvas = document.createElement('canvas');
                 const scale = 2;
@@ -1264,7 +1534,9 @@ async function processForeignObjects(svgRoot, { mode = 'raster' } = {}) {
                 img.crossOrigin = 'anonymous';
 
                 await new Promise((resolve, reject) => {
-                    img.onload = resolve; img.onerror = reject; img.src = svgUrl;
+                    img.onload = resolve;
+                    img.onerror = reject;
+                    img.src = svgUrl;
                 });
 
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
@@ -1289,4 +1561,3 @@ async function processForeignObjects(svgRoot, { mode = 'raster' } = {}) {
 
     return { converted, rasterized, skipped, errors };
 }
-

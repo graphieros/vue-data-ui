@@ -1,10 +1,10 @@
 import { DefineComponent } from 'vue';
 
-export type { 
+export type {
     VueUiSparkHistogramConfig,
     VueUiSparkHistogramDatasetItem,
-    VueUiSparkHistogramEvent
-} from "./vue-data-ui";
+    VueUiSparkHistogramEvent,
+} from './vue-data-ui';
 
 declare const VueUiSparkHistogram: DefineComponent<{
     config?: VueUiSparkHistogramConfig;
@@ -12,4 +12,4 @@ declare const VueUiSparkHistogram: DefineComponent<{
 }>;
 
 export default VueUiSparkHistogram;
-export { VueUiSparkHistogram }
+export { VueUiSparkHistogram };

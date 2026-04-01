@@ -1,291 +1,292 @@
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted } from 'vue';
 import LocalVueUiXy from '../src/components/vue-ui-xy.vue';
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
-import Box from "./Box.vue";
-import convertArrayToObject from "./convertModel";
-import { useArena } from "../src/useArena";
-import { VueUiXy } from "vue-data-ui";
-import { VueUiXy as VueUiXyTreeshaken } from "vue-data-ui/vue-ui-xy";
-import ConfigKnobs from "./ConfigKnobs.vue";
-import { useConfigurationControls } from "./createConfigModel";
-import { useConfig } from "../src/useConfig"
-import useThemeOptions from "./useThemeOptions";
-import { getVueDataUiConfig, mergeConfigs, useObjectBindings } from "../src";
-
-const { local, build, vduiLocal, vduiBuild, toggleTable, toggleLabels, toggleStack } = useArena();
-const { vue_ui_xy: DEFAULT_CONFIG } = useConfig();
+import Box from './Box.vue';
+import convertArrayToObject from './convertModel';
+import { useArena } from '../src/useArena';
+import { VueUiXy } from 'vue-data-ui';
+import { VueUiXy as VueUiXyTreeshaken } from 'vue-data-ui/vue-ui-xy';
+import ConfigKnobs from './ConfigKnobs.vue';
+import { useConfigurationControls } from './createConfigModel';
+import { useConfig } from '../src/useConfig';
+import useThemeOptions from './useThemeOptions';
+import { getVueDataUiConfig, mergeConfigs, useObjectBindings } from '../src';
 
 const {
-    CHECKBOX,
-    NUMBER,
-    RANGE,
-    TEXT,
-    COLOR,
-    SELECT,
-    createModel
-} = useConfigurationControls(DEFAULT_CONFIG);
+    local,
+    build,
+    vduiLocal,
+    vduiBuild,
+    toggleTable,
+    toggleLabels,
+    toggleStack,
+} = useArena();
+const { vue_ui_xy: DEFAULT_CONFIG } = useConfig();
+
+const { CHECKBOX, NUMBER, RANGE, TEXT, COLOR, SELECT, createModel } =
+    useConfigurationControls(DEFAULT_CONFIG);
 
 const dates = [
-    "2024-12-11T15:20:00.000+01:00",
-    "2024-12-13T00:00:00.000+01:00",
-    "2024-12-14T00:00:00.000+01:00",
-    "2024-12-15T00:00:00.000+01:00",
-    "2024-12-16T00:00:00.000+01:00",
-    "2024-12-17T00:00:00.000+01:00",
-    "2024-12-18T00:00:00.000+01:00",
-    "2024-12-19T00:00:00.000+01:00",
-    "2024-12-20T00:00:00.000+01:00",
-    "2024-12-21T00:00:00.000+01:00",
-    "2024-12-22T00:00:00.000+01:00",
-    "2024-12-23T00:00:00.000+01:00",
-    "2024-12-24T00:00:00.000+01:00",
-    "2024-12-25T00:00:00.000+01:00",
-    "2024-12-26T00:00:00.000+01:00",
-    "2024-12-27T00:00:00.000+01:00",
-    "2024-12-28T00:00:00.000+01:00",
-    "2024-12-29T00:00:00.000+01:00",
-    "2024-12-30T00:00:00.000+01:00",
-    "2024-12-31T00:00:00.000+01:00",
-    "2025-01-01T00:00:00.000+01:00",
-    "2025-01-02T00:00:00.000+01:00",
-    "2025-01-03T00:00:00.000+01:00",
-    "2025-01-04T00:00:00.000+01:00",
-    "2025-01-05T00:00:00.000+01:00",
-    "2025-01-06T00:00:00.000+01:00",
-    "2025-01-06T17:15:00.000+01:00",
-    "2025-01-08T00:00:00.000+01:00",
-    "2025-01-09T00:00:00.000+01:00",
-    "2025-01-10T00:00:00.000+01:00",
-    "2025-01-11T00:00:00.000+01:00",
-    "2025-01-12T00:00:00.000+01:00",
-    "2025-01-13T00:00:00.000+01:00",
-    "2025-01-14T00:00:00.000+01:00",
-    "2025-01-15T00:00:00.000+01:00",
-    "2025-01-16T00:00:00.000+01:00",
-    "2025-01-17T00:00:00.000+01:00",
-    "2025-01-18T00:00:00.000+01:00",
-    "2025-01-19T00:00:00.000+01:00",
-    "2025-01-20T00:00:00.000+01:00",
-    "2025-01-21T10:00:00.000+01:00",
-    "2025-01-22T00:00:00.000+01:00",
-    "2025-01-23T00:00:00.000+01:00",
-    "2025-01-24T00:00:00.000+01:00",
-    "2025-01-25T00:00:00.000+01:00",
-    "2025-01-26T00:00:00.000+01:00",
-    "2025-01-27T00:00:00.000+01:00",
-    "2025-01-28T00:00:00.000+01:00",
-    "2025-01-29T00:00:00.000+01:00",
-    "2025-01-30T00:00:00.000+01:00",
-    "2025-01-31T00:00:00.000+01:00",
-    "2025-02-01T00:00:00.000+01:00",
-    "2025-02-02T00:00:00.000+01:00",
-    "2025-02-03T00:00:00.000+01:00",
-    "2025-02-04T00:00:00.000+01:00",
-    "2025-02-05T00:00:00.000+01:00",
-    "2025-02-06T00:00:00.000+01:00",
-    "2025-02-07T00:00:00.000+01:00",
-    "2025-02-08T00:00:00.000+01:00",
-    "2025-02-09T00:00:00.000+01:00",
-    "2025-02-10T00:00:00.000+01:00",
-    "2025-02-11T00:00:00.000+01:00",
-    "2025-02-12T00:00:00.000+01:00",
-    "2025-02-13T00:00:00.000+01:00",
-    "2025-02-14T00:00:00.000+01:00",
-    "2025-02-15T00:00:00.000+01:00",
-    "2025-02-16T00:00:00.000+01:00",
-    "2025-02-17T00:00:00.000+01:00",
-    "2025-02-18T00:00:00.000+01:00",
-    "2025-02-19T00:00:00.000+01:00",
-    "2025-02-20T00:00:00.000+01:00",
-    "2025-02-21T00:00:00.000+01:00",
-    "2025-02-22T00:00:00.000+01:00",
-    "2025-02-23T00:00:00.000+01:00",
-    "2025-02-24T00:00:00.000+01:00",
-    "2025-02-25T00:00:00.000+01:00",
-    "2025-02-26T00:00:00.000+01:00",
-    "2025-02-27T00:00:00.000+01:00",
-    "2025-02-28T00:00:00.000+01:00",
-    "2025-03-01T00:00:00.000+01:00",
-    "2025-03-02T00:00:00.000+01:00",
-    "2025-03-03T00:00:00.000+01:00",
-    "2025-03-04T00:00:00.000+01:00",
-    "2025-03-05T00:00:00.000+01:00",
-    "2025-03-06T00:00:00.000+01:00",
-    "2025-03-07T00:00:00.000+01:00",
-    "2025-03-08T00:00:00.000+01:00",
-    "2025-03-09T00:00:00.000+01:00",
-    "2025-03-10T00:00:00.000+01:00",
-    "2025-03-11T00:00:00.000+01:00",
-    "2025-03-12T00:00:00.000+01:00",
-    "2025-03-13T00:00:00.000+01:00",
-    "2025-03-14T00:00:00.000+01:00",
-    "2025-03-15T00:00:00.000+01:00",
-    "2025-03-16T00:00:00.000+01:00",
-    "2025-03-17T00:00:00.000+01:00",
-    "2025-03-18T00:00:00.000+01:00",
-    "2025-03-19T00:00:00.000+01:00",
-    "2025-03-20T00:00:00.000+01:00",
-    "2025-03-21T00:00:00.000+01:00",
-    "2025-03-22T00:00:00.000+01:00",
-    "2025-03-23T00:00:00.000+01:00",
-    "2025-03-24T00:00:00.000+01:00",
-    "2025-03-25T00:00:00.000+01:00",
-    "2025-03-26T00:00:00.000+01:00",
-    "2025-03-27T00:00:00.000+01:00",
-    "2025-03-28T00:00:00.000+01:00",
-    "2025-03-29T00:00:00.000+01:00",
-    "2025-03-30T00:00:00.000+01:00",
-    "2025-03-31T00:00:00.000+02:00",
-    "2025-04-01T00:00:00.000+02:00",
-    "2025-04-02T00:00:00.000+02:00",
-    "2025-04-03T00:00:00.000+02:00",
-    "2025-04-04T00:00:00.000+02:00",
-    "2025-04-05T00:00:00.000+02:00",
-    "2025-04-06T00:00:00.000+02:00",
-    "2025-04-07T00:00:00.000+02:00",
-    "2025-04-08T00:00:00.000+02:00",
-    "2025-04-09T00:00:00.000+02:00",
-    "2025-04-10T00:00:00.000+02:00",
-    "2025-04-11T00:00:00.000+02:00",
-    "2025-04-12T00:00:00.000+02:00",
-    "2025-04-13T00:00:00.000+02:00",
-    "2025-04-14T00:00:00.000+02:00",
-    "2025-04-15T00:00:00.000+02:00",
-    "2025-04-16T00:00:00.000+02:00",
-    "2025-04-17T00:00:00.000+02:00",
-    "2025-04-18T00:00:00.000+02:00",
-    "2025-04-19T00:00:00.000+02:00",
-    "2025-04-20T00:00:00.000+02:00",
-    "2025-04-21T00:00:00.000+02:00",
-    "2025-04-22T00:00:00.000+02:00",
-    "2025-04-23T00:00:00.000+02:00",
-    "2025-04-24T00:00:00.000+02:00",
-    "2025-04-25T00:00:00.000+02:00",
-    "2025-04-26T00:00:00.000+02:00",
-    "2025-04-27T00:00:00.000+02:00",
-    "2025-04-28T00:00:00.000+02:00",
-    "2025-04-29T00:00:00.000+02:00",
-    "2025-04-30T00:00:00.000+02:00",
-    "2025-05-01T00:00:00.000+02:00",
-    "2025-05-02T00:00:00.000+02:00",
-    "2025-05-03T00:00:00.000+02:00",
-    "2025-05-04T00:00:00.000+02:00",
-    "2025-05-05T00:00:00.000+02:00",
-    "2025-05-06T00:00:00.000+02:00",
-    "2025-05-07T00:00:00.000+02:00",
-    "2025-05-08T00:00:00.000+02:00",
-    "2025-05-09T00:00:00.000+02:00",
-    "2025-05-10T00:00:00.000+02:00",
-    "2025-05-11T00:00:00.000+02:00",
-    "2025-05-12T00:00:00.000+02:00",
-    "2025-05-13T00:00:00.000+02:00",
-    "2025-05-14T00:00:00.000+02:00",
-    "2025-05-15T00:00:00.000+02:00",
-    "2025-05-16T00:00:00.000+02:00",
-    "2025-05-17T00:00:00.000+02:00",
-    "2025-05-18T00:00:00.000+02:00",
-    "2025-05-19T00:00:00.000+02:00",
-    "2025-05-20T00:00:00.000+02:00",
-    "2025-05-21T00:00:00.000+02:00",
-    "2025-05-22T00:00:00.000+02:00",
-    "2025-05-23T00:00:00.000+02:00",
-    "2025-05-24T00:00:00.000+02:00",
-    "2025-05-25T00:00:00.000+02:00",
-    "2025-05-26T00:00:00.000+02:00",
-    "2025-05-27T10:35:00.000+02:00",
-    "2025-05-28T00:00:00.000+02:00",
-    "2025-05-29T00:00:00.000+02:00",
-    "2025-05-30T00:00:00.000+02:00",
-    "2025-05-31T00:00:00.000+02:00",
-    "2025-06-01T00:00:00.000+02:00",
-    "2025-06-02T00:00:00.000+02:00",
-    "2025-06-03T00:00:00.000+02:00",
-    "2025-06-04T00:00:00.000+02:00",
-    "2025-06-05T00:00:00.000+02:00",
-    "2025-06-06T00:00:00.000+02:00",
-    "2025-06-07T00:00:00.000+02:00",
-    "2025-06-08T00:00:00.000+02:00",
-    "2025-06-09T00:00:00.000+02:00",
-    "2025-06-10T00:00:00.000+02:00",
-    "2025-06-11T00:00:00.000+02:00",
-    "2025-06-12T00:00:00.000+02:00",
-    "2025-06-13T00:00:00.000+02:00",
-    "2025-06-14T00:00:00.000+02:00",
-    "2025-06-15T00:00:00.000+02:00",
-    "2025-06-16T00:00:00.000+02:00",
-    "2025-06-17T00:00:00.000+02:00",
-    "2025-06-18T00:00:00.000+02:00",
-    "2025-06-19T00:00:00.000+02:00",
-    "2025-06-20T00:00:00.000+02:00",
-    "2025-06-21T00:00:00.000+02:00",
-    "2025-06-22T00:00:00.000+02:00",
-    "2025-06-23T00:00:00.000+02:00",
-    "2025-06-24T00:00:00.000+02:00",
-    "2025-06-25T00:00:00.000+02:00",
-    "2025-06-26T00:00:00.000+02:00",
-    "2025-06-27T00:00:00.000+02:00",
-    "2025-06-28T00:00:00.000+02:00",
-    "2025-06-29T00:00:00.000+02:00",
-    "2025-06-30T00:00:00.000+02:00",
-    "2025-07-01T00:00:00.000+02:00",
-    "2025-07-02T07:29:00.000+02:00",
-    "2025-07-03T00:00:00.000+02:00",
-    "2025-07-04T00:00:00.000+02:00",
-    "2025-07-05T00:00:00.000+02:00",
-    "2025-07-06T00:00:00.000+02:00",
-    "2025-07-07T00:00:00.000+02:00",
-    "2025-07-08T00:00:00.000+02:00",
-    "2025-07-09T00:00:00.000+02:00",
-    "2025-07-10T00:00:00.000+02:00",
-    "2025-07-11T00:00:00.000+02:00",
-    "2025-07-12T00:00:00.000+02:00",
-    "2025-07-13T00:00:00.000+02:00",
-    "2025-07-14T00:00:00.000+02:00",
-    "2025-07-15T00:00:00.000+02:00",
-    "2025-07-16T00:00:00.000+02:00",
-    "2025-07-17T00:00:00.000+02:00",
-    "2025-07-18T00:00:00.000+02:00",
-    "2025-07-19T00:00:00.000+02:00",
-    "2025-07-20T00:00:00.000+02:00",
-    "2025-07-21T00:00:00.000+02:00",
-    "2025-07-22T00:00:00.000+02:00",
-    "2025-07-23T00:00:00.000+02:00",
-    "2025-07-24T00:00:00.000+02:00",
-    "2025-07-25T00:00:00.000+02:00",
-    "2025-07-26T00:00:00.000+02:00",
-    "2025-07-27T00:00:00.000+02:00",
-    "2025-07-28T00:00:00.000+02:00",
-    "2025-07-29T00:00:00.000+02:00",
-    "2025-07-30T00:00:00.000+02:00",
-    "2025-07-31T00:00:00.000+02:00",
-    "2025-08-01T00:00:00.000+02:00",
-    "2025-08-02T00:00:00.000+02:00",
-    "2025-08-03T00:00:00.000+02:00",
-    "2025-08-04T00:00:00.000+02:00",
-    "2025-08-05T00:00:00.000+02:00",
-    "2025-08-06T00:00:00.000+02:00",
-    "2025-08-07T00:00:00.000+02:00",
-    "2025-08-08T00:00:00.000+02:00",
-    "2025-08-09T00:00:00.000+02:00",
-    "2025-08-10T00:00:00.000+02:00",
-    "2025-08-11T00:00:00.000+02:00",
-    "2025-08-12T00:00:00.000+02:00",
-    "2025-08-13T00:00:00.000+02:00",
-    "2025-08-14T00:00:00.000+02:00",
-    "2025-08-15T00:00:00.000+02:00",
-    "2025-08-16T00:00:00.000+02:00",
-    "2025-08-17T00:00:00.000+02:00",
-    "2025-08-18T00:00:00.000+02:00",
-    "2025-08-19T00:00:00.000+02:00",
-    "2025-08-20T00:00:00.000+02:00",
-    "2025-08-21T00:00:00.000+02:00",
-    "2025-08-22T00:00:00.000+02:00",
-    "2025-08-23T00:00:00.000+02:00",
-    "2025-08-24T00:00:00.000+02:00",
-    "2025-08-25T00:00:00.000+02:00",
-    "2025-08-26T00:00:00.000+02:00"
-].map(el => new Date(el).getTime())
+    '2024-12-11T15:20:00.000+01:00',
+    '2024-12-13T00:00:00.000+01:00',
+    '2024-12-14T00:00:00.000+01:00',
+    '2024-12-15T00:00:00.000+01:00',
+    '2024-12-16T00:00:00.000+01:00',
+    '2024-12-17T00:00:00.000+01:00',
+    '2024-12-18T00:00:00.000+01:00',
+    '2024-12-19T00:00:00.000+01:00',
+    '2024-12-20T00:00:00.000+01:00',
+    '2024-12-21T00:00:00.000+01:00',
+    '2024-12-22T00:00:00.000+01:00',
+    '2024-12-23T00:00:00.000+01:00',
+    '2024-12-24T00:00:00.000+01:00',
+    '2024-12-25T00:00:00.000+01:00',
+    '2024-12-26T00:00:00.000+01:00',
+    '2024-12-27T00:00:00.000+01:00',
+    '2024-12-28T00:00:00.000+01:00',
+    '2024-12-29T00:00:00.000+01:00',
+    '2024-12-30T00:00:00.000+01:00',
+    '2024-12-31T00:00:00.000+01:00',
+    '2025-01-01T00:00:00.000+01:00',
+    '2025-01-02T00:00:00.000+01:00',
+    '2025-01-03T00:00:00.000+01:00',
+    '2025-01-04T00:00:00.000+01:00',
+    '2025-01-05T00:00:00.000+01:00',
+    '2025-01-06T00:00:00.000+01:00',
+    '2025-01-06T17:15:00.000+01:00',
+    '2025-01-08T00:00:00.000+01:00',
+    '2025-01-09T00:00:00.000+01:00',
+    '2025-01-10T00:00:00.000+01:00',
+    '2025-01-11T00:00:00.000+01:00',
+    '2025-01-12T00:00:00.000+01:00',
+    '2025-01-13T00:00:00.000+01:00',
+    '2025-01-14T00:00:00.000+01:00',
+    '2025-01-15T00:00:00.000+01:00',
+    '2025-01-16T00:00:00.000+01:00',
+    '2025-01-17T00:00:00.000+01:00',
+    '2025-01-18T00:00:00.000+01:00',
+    '2025-01-19T00:00:00.000+01:00',
+    '2025-01-20T00:00:00.000+01:00',
+    '2025-01-21T10:00:00.000+01:00',
+    '2025-01-22T00:00:00.000+01:00',
+    '2025-01-23T00:00:00.000+01:00',
+    '2025-01-24T00:00:00.000+01:00',
+    '2025-01-25T00:00:00.000+01:00',
+    '2025-01-26T00:00:00.000+01:00',
+    '2025-01-27T00:00:00.000+01:00',
+    '2025-01-28T00:00:00.000+01:00',
+    '2025-01-29T00:00:00.000+01:00',
+    '2025-01-30T00:00:00.000+01:00',
+    '2025-01-31T00:00:00.000+01:00',
+    '2025-02-01T00:00:00.000+01:00',
+    '2025-02-02T00:00:00.000+01:00',
+    '2025-02-03T00:00:00.000+01:00',
+    '2025-02-04T00:00:00.000+01:00',
+    '2025-02-05T00:00:00.000+01:00',
+    '2025-02-06T00:00:00.000+01:00',
+    '2025-02-07T00:00:00.000+01:00',
+    '2025-02-08T00:00:00.000+01:00',
+    '2025-02-09T00:00:00.000+01:00',
+    '2025-02-10T00:00:00.000+01:00',
+    '2025-02-11T00:00:00.000+01:00',
+    '2025-02-12T00:00:00.000+01:00',
+    '2025-02-13T00:00:00.000+01:00',
+    '2025-02-14T00:00:00.000+01:00',
+    '2025-02-15T00:00:00.000+01:00',
+    '2025-02-16T00:00:00.000+01:00',
+    '2025-02-17T00:00:00.000+01:00',
+    '2025-02-18T00:00:00.000+01:00',
+    '2025-02-19T00:00:00.000+01:00',
+    '2025-02-20T00:00:00.000+01:00',
+    '2025-02-21T00:00:00.000+01:00',
+    '2025-02-22T00:00:00.000+01:00',
+    '2025-02-23T00:00:00.000+01:00',
+    '2025-02-24T00:00:00.000+01:00',
+    '2025-02-25T00:00:00.000+01:00',
+    '2025-02-26T00:00:00.000+01:00',
+    '2025-02-27T00:00:00.000+01:00',
+    '2025-02-28T00:00:00.000+01:00',
+    '2025-03-01T00:00:00.000+01:00',
+    '2025-03-02T00:00:00.000+01:00',
+    '2025-03-03T00:00:00.000+01:00',
+    '2025-03-04T00:00:00.000+01:00',
+    '2025-03-05T00:00:00.000+01:00',
+    '2025-03-06T00:00:00.000+01:00',
+    '2025-03-07T00:00:00.000+01:00',
+    '2025-03-08T00:00:00.000+01:00',
+    '2025-03-09T00:00:00.000+01:00',
+    '2025-03-10T00:00:00.000+01:00',
+    '2025-03-11T00:00:00.000+01:00',
+    '2025-03-12T00:00:00.000+01:00',
+    '2025-03-13T00:00:00.000+01:00',
+    '2025-03-14T00:00:00.000+01:00',
+    '2025-03-15T00:00:00.000+01:00',
+    '2025-03-16T00:00:00.000+01:00',
+    '2025-03-17T00:00:00.000+01:00',
+    '2025-03-18T00:00:00.000+01:00',
+    '2025-03-19T00:00:00.000+01:00',
+    '2025-03-20T00:00:00.000+01:00',
+    '2025-03-21T00:00:00.000+01:00',
+    '2025-03-22T00:00:00.000+01:00',
+    '2025-03-23T00:00:00.000+01:00',
+    '2025-03-24T00:00:00.000+01:00',
+    '2025-03-25T00:00:00.000+01:00',
+    '2025-03-26T00:00:00.000+01:00',
+    '2025-03-27T00:00:00.000+01:00',
+    '2025-03-28T00:00:00.000+01:00',
+    '2025-03-29T00:00:00.000+01:00',
+    '2025-03-30T00:00:00.000+01:00',
+    '2025-03-31T00:00:00.000+02:00',
+    '2025-04-01T00:00:00.000+02:00',
+    '2025-04-02T00:00:00.000+02:00',
+    '2025-04-03T00:00:00.000+02:00',
+    '2025-04-04T00:00:00.000+02:00',
+    '2025-04-05T00:00:00.000+02:00',
+    '2025-04-06T00:00:00.000+02:00',
+    '2025-04-07T00:00:00.000+02:00',
+    '2025-04-08T00:00:00.000+02:00',
+    '2025-04-09T00:00:00.000+02:00',
+    '2025-04-10T00:00:00.000+02:00',
+    '2025-04-11T00:00:00.000+02:00',
+    '2025-04-12T00:00:00.000+02:00',
+    '2025-04-13T00:00:00.000+02:00',
+    '2025-04-14T00:00:00.000+02:00',
+    '2025-04-15T00:00:00.000+02:00',
+    '2025-04-16T00:00:00.000+02:00',
+    '2025-04-17T00:00:00.000+02:00',
+    '2025-04-18T00:00:00.000+02:00',
+    '2025-04-19T00:00:00.000+02:00',
+    '2025-04-20T00:00:00.000+02:00',
+    '2025-04-21T00:00:00.000+02:00',
+    '2025-04-22T00:00:00.000+02:00',
+    '2025-04-23T00:00:00.000+02:00',
+    '2025-04-24T00:00:00.000+02:00',
+    '2025-04-25T00:00:00.000+02:00',
+    '2025-04-26T00:00:00.000+02:00',
+    '2025-04-27T00:00:00.000+02:00',
+    '2025-04-28T00:00:00.000+02:00',
+    '2025-04-29T00:00:00.000+02:00',
+    '2025-04-30T00:00:00.000+02:00',
+    '2025-05-01T00:00:00.000+02:00',
+    '2025-05-02T00:00:00.000+02:00',
+    '2025-05-03T00:00:00.000+02:00',
+    '2025-05-04T00:00:00.000+02:00',
+    '2025-05-05T00:00:00.000+02:00',
+    '2025-05-06T00:00:00.000+02:00',
+    '2025-05-07T00:00:00.000+02:00',
+    '2025-05-08T00:00:00.000+02:00',
+    '2025-05-09T00:00:00.000+02:00',
+    '2025-05-10T00:00:00.000+02:00',
+    '2025-05-11T00:00:00.000+02:00',
+    '2025-05-12T00:00:00.000+02:00',
+    '2025-05-13T00:00:00.000+02:00',
+    '2025-05-14T00:00:00.000+02:00',
+    '2025-05-15T00:00:00.000+02:00',
+    '2025-05-16T00:00:00.000+02:00',
+    '2025-05-17T00:00:00.000+02:00',
+    '2025-05-18T00:00:00.000+02:00',
+    '2025-05-19T00:00:00.000+02:00',
+    '2025-05-20T00:00:00.000+02:00',
+    '2025-05-21T00:00:00.000+02:00',
+    '2025-05-22T00:00:00.000+02:00',
+    '2025-05-23T00:00:00.000+02:00',
+    '2025-05-24T00:00:00.000+02:00',
+    '2025-05-25T00:00:00.000+02:00',
+    '2025-05-26T00:00:00.000+02:00',
+    '2025-05-27T10:35:00.000+02:00',
+    '2025-05-28T00:00:00.000+02:00',
+    '2025-05-29T00:00:00.000+02:00',
+    '2025-05-30T00:00:00.000+02:00',
+    '2025-05-31T00:00:00.000+02:00',
+    '2025-06-01T00:00:00.000+02:00',
+    '2025-06-02T00:00:00.000+02:00',
+    '2025-06-03T00:00:00.000+02:00',
+    '2025-06-04T00:00:00.000+02:00',
+    '2025-06-05T00:00:00.000+02:00',
+    '2025-06-06T00:00:00.000+02:00',
+    '2025-06-07T00:00:00.000+02:00',
+    '2025-06-08T00:00:00.000+02:00',
+    '2025-06-09T00:00:00.000+02:00',
+    '2025-06-10T00:00:00.000+02:00',
+    '2025-06-11T00:00:00.000+02:00',
+    '2025-06-12T00:00:00.000+02:00',
+    '2025-06-13T00:00:00.000+02:00',
+    '2025-06-14T00:00:00.000+02:00',
+    '2025-06-15T00:00:00.000+02:00',
+    '2025-06-16T00:00:00.000+02:00',
+    '2025-06-17T00:00:00.000+02:00',
+    '2025-06-18T00:00:00.000+02:00',
+    '2025-06-19T00:00:00.000+02:00',
+    '2025-06-20T00:00:00.000+02:00',
+    '2025-06-21T00:00:00.000+02:00',
+    '2025-06-22T00:00:00.000+02:00',
+    '2025-06-23T00:00:00.000+02:00',
+    '2025-06-24T00:00:00.000+02:00',
+    '2025-06-25T00:00:00.000+02:00',
+    '2025-06-26T00:00:00.000+02:00',
+    '2025-06-27T00:00:00.000+02:00',
+    '2025-06-28T00:00:00.000+02:00',
+    '2025-06-29T00:00:00.000+02:00',
+    '2025-06-30T00:00:00.000+02:00',
+    '2025-07-01T00:00:00.000+02:00',
+    '2025-07-02T07:29:00.000+02:00',
+    '2025-07-03T00:00:00.000+02:00',
+    '2025-07-04T00:00:00.000+02:00',
+    '2025-07-05T00:00:00.000+02:00',
+    '2025-07-06T00:00:00.000+02:00',
+    '2025-07-07T00:00:00.000+02:00',
+    '2025-07-08T00:00:00.000+02:00',
+    '2025-07-09T00:00:00.000+02:00',
+    '2025-07-10T00:00:00.000+02:00',
+    '2025-07-11T00:00:00.000+02:00',
+    '2025-07-12T00:00:00.000+02:00',
+    '2025-07-13T00:00:00.000+02:00',
+    '2025-07-14T00:00:00.000+02:00',
+    '2025-07-15T00:00:00.000+02:00',
+    '2025-07-16T00:00:00.000+02:00',
+    '2025-07-17T00:00:00.000+02:00',
+    '2025-07-18T00:00:00.000+02:00',
+    '2025-07-19T00:00:00.000+02:00',
+    '2025-07-20T00:00:00.000+02:00',
+    '2025-07-21T00:00:00.000+02:00',
+    '2025-07-22T00:00:00.000+02:00',
+    '2025-07-23T00:00:00.000+02:00',
+    '2025-07-24T00:00:00.000+02:00',
+    '2025-07-25T00:00:00.000+02:00',
+    '2025-07-26T00:00:00.000+02:00',
+    '2025-07-27T00:00:00.000+02:00',
+    '2025-07-28T00:00:00.000+02:00',
+    '2025-07-29T00:00:00.000+02:00',
+    '2025-07-30T00:00:00.000+02:00',
+    '2025-07-31T00:00:00.000+02:00',
+    '2025-08-01T00:00:00.000+02:00',
+    '2025-08-02T00:00:00.000+02:00',
+    '2025-08-03T00:00:00.000+02:00',
+    '2025-08-04T00:00:00.000+02:00',
+    '2025-08-05T00:00:00.000+02:00',
+    '2025-08-06T00:00:00.000+02:00',
+    '2025-08-07T00:00:00.000+02:00',
+    '2025-08-08T00:00:00.000+02:00',
+    '2025-08-09T00:00:00.000+02:00',
+    '2025-08-10T00:00:00.000+02:00',
+    '2025-08-11T00:00:00.000+02:00',
+    '2025-08-12T00:00:00.000+02:00',
+    '2025-08-13T00:00:00.000+02:00',
+    '2025-08-14T00:00:00.000+02:00',
+    '2025-08-15T00:00:00.000+02:00',
+    '2025-08-16T00:00:00.000+02:00',
+    '2025-08-17T00:00:00.000+02:00',
+    '2025-08-18T00:00:00.000+02:00',
+    '2025-08-19T00:00:00.000+02:00',
+    '2025-08-20T00:00:00.000+02:00',
+    '2025-08-21T00:00:00.000+02:00',
+    '2025-08-22T00:00:00.000+02:00',
+    '2025-08-23T00:00:00.000+02:00',
+    '2025-08-24T00:00:00.000+02:00',
+    '2025-08-25T00:00:00.000+02:00',
+    '2025-08-26T00:00:00.000+02:00',
+].map((el) => new Date(el).getTime());
 
 // function createDs(n,m=100) {
 //     const arr = [];
@@ -305,10 +306,10 @@ function createDs(n, m = 100) {
         if ([10, 11, 13, 14, 15, 20, 22, 23, 25].includes(i)) {
             arr.push(null);
         } else {
-            arr.push(Math.random() * m * (Math.random() > 0.3 ? 1 : -1))
+            arr.push(Math.random() * m * (Math.random() > 0.3 ? 1 : -1));
         }
     }
-    return arr
+    return arr;
 }
 
 function generateDayTimestamps(length) {
@@ -317,7 +318,9 @@ function generateDayTimestamps(length) {
     start.setHours(0, 0, 0, 0);
 
     for (let i = 0; i < length; i += 1) {
-        result.push(new Date(start.getTime() + i * 24 * 60 * 60 * 1000).getTime());
+        result.push(
+            new Date(start.getTime() + i * 24 * 60 * 60 * 1000).getTime(),
+        );
     }
 
     return result;
@@ -348,7 +351,6 @@ function generateDayTimestamps(length) {
 //         }
 //     ]
 // })
-
 
 // Negative dataset with positive display:
 // const config = ref({
@@ -404,72 +406,72 @@ function generateDayTimestamps(length) {
 //     },
 // ])
 
-const dataset = ref(undefined)
+const dataset = ref(undefined);
 
 onMounted(() => {
     dataset.value = undefined;
     setTimeout(() => {
         dataset.value = [
-    {
-        name: "Serie A",
-        series: createDs(35),
-        type: "line",
-        temperatureColors: ['#FF0000', '#00FF00', '#0000FF'],
-        dataLabels: false,
-        smooth: true,
-        useArea: false,
-        useProgression: true,
-        // freestyle:
-        marks: [10, 20],
-        annotated: true,
-        // dashIndices: [34]
-    },
-    {
-        name: "Serie B",
-        series: createDs(35),
-        type: "line",
-        dataLabels: false,
-        smooth: true,
-        useArea: true,
-        useProgression: true
-    },
-    // {
-    //     name: "Serie C",
-    //     series: createDs(35),
-    //     type: "bar",
-    //     dataLabels: true,
-    //     smooth: true,
-    //     useArea: true,
-    //     useProgression: true
-    // },
-    // {
-    //     name: "Serie B",
-    //     series: createDs(35),
-    //     type: "bar",
-    //     dataLabels: false,
-    //     smooth: true,
-    //     useArea: true,
-    //     useProgression: true
-    // },
-    // {
-    //     name: "Serie B",
-    //     series: [60, 75, 11, 20, 10, 8, null, 20, 22, 204, 146, 117, 55],
-    //     type: "line",
-    //     dataLabels: false,
-    //     shape: 'triangle',
-    //     // useArea: true,
-    //     smooth: false,
-    //     // useProgression: true
-    // },
-    // {
-    //     name: "Serie C with a long name",
-    //     series: [60, 75, 11, 20, 10, 8, null, 20, 22, 204, 146, 117, 55],
-    //     type: "plot",
-    //     dataLabels: false,
-    // },
-]
-    }, 0)
-})
+            {
+                name: 'Serie A',
+                series: createDs(35),
+                type: 'line',
+                temperatureColors: ['#FF0000', '#00FF00', '#0000FF'],
+                dataLabels: false,
+                smooth: true,
+                useArea: false,
+                useProgression: true,
+                // freestyle:
+                marks: [10, 20],
+                annotated: true,
+                // dashIndices: [34]
+            },
+            {
+                name: 'Serie B',
+                series: createDs(35),
+                type: 'line',
+                dataLabels: false,
+                smooth: true,
+                useArea: true,
+                useProgression: true,
+            },
+            // {
+            //     name: "Serie C",
+            //     series: createDs(35),
+            //     type: "bar",
+            //     dataLabels: true,
+            //     smooth: true,
+            //     useArea: true,
+            //     useProgression: true
+            // },
+            // {
+            //     name: "Serie B",
+            //     series: createDs(35),
+            //     type: "bar",
+            //     dataLabels: false,
+            //     smooth: true,
+            //     useArea: true,
+            //     useProgression: true
+            // },
+            // {
+            //     name: "Serie B",
+            //     series: [60, 75, 11, 20, 10, 8, null, 20, 22, 204, 146, 117, 55],
+            //     type: "line",
+            //     dataLabels: false,
+            //     shape: 'triangle',
+            //     // useArea: true,
+            //     smooth: false,
+            //     // useProgression: true
+            // },
+            // {
+            //     name: "Serie C with a long name",
+            //     series: [60, 75, 11, 20, 10, 8, null, 20, 22, 204, 146, 117, 55],
+            //     type: "plot",
+            //     dataLabels: false,
+            // },
+        ];
+    }, 0);
+});
 
 // const dataset = ref([
 //     { name: 'A', series: [3], type: 'bar' },
@@ -515,7 +517,6 @@ onMounted(() => {
 //   series: [8, 9, 100]
 // }
 // ])
-
 
 // const dataset = ref([
 //         {
@@ -573,32 +574,40 @@ onMounted(() => {
 
 const alternateDataset = ref([
     {
-        name: "Alternate datapoint",
+        name: 'Alternate datapoint',
         series: [12, 19, 16, 15, 9, 17, 44, 13, 40],
-        comments: ["", "", "", "", "This is a comment that can be long, or that can be short but it depends."],
-        type: "line",
+        comments: [
+            '',
+            '',
+            '',
+            '',
+            'This is a comment that can be long, or that can be short but it depends.',
+        ],
+        type: 'line',
         smooth: false,
         useArea: false,
         dataLabels: true,
     },
-])
+]);
 
 function alterDataset() {
-    dataset.value[0].series = [0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1]
+    dataset.value[0].series = [
+        0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1,
+    ];
 }
 
 const alternateConfig = ref({
     chart: {
         title: {
-            text: 'Alternate version'
-        }
-    }
-})
+            text: 'Alternate version',
+        },
+    },
+});
 
 const isPropsToggled = ref(false);
 
 function toggleProps() {
-    isPropsToggled.value = !isPropsToggled.value
+    isPropsToggled.value = !isPropsToggled.value;
 }
 
 // const dataset = ref([
@@ -658,281 +667,374 @@ function toggleProps() {
 // ]);
 
 const model = createModel([
-    CHECKBOX("debug", { def: true }),
-    CHECKBOX("autoSize", { def: false }),
+    CHECKBOX('debug', { def: true }),
+    CHECKBOX('autoSize', { def: false }),
     CHECKBOX('chart.userOptions.useCursorPointer', { def: false }),
 
-    CHECKBOX("responsive", { def: false }),
-    CHECKBOX("responsiveProportionalSizing", { def: false }),
-    CHECKBOX("loading", { def: false }),
+    CHECKBOX('responsive', { def: false }),
+    CHECKBOX('responsiveProportionalSizing', { def: false }),
+    CHECKBOX('loading', { def: false }),
 
-    CHECKBOX("chart.userOptions.show", { def: true }),
-    CHECKBOX("chart.userOptions.buttons.pdf", { def: true }),
-    CHECKBOX("chart.userOptions.buttons.csv", { def: true }),
-    CHECKBOX("chart.userOptions.buttons.img", { def: true }),
-    CHECKBOX("chart.userOptions.buttons.table", { def: true }),
-    CHECKBOX("chart.userOptions.buttons.labels", { def: true }),
-    CHECKBOX("chart.userOptions.buttons.fullscreen", { def: true }),
-    CHECKBOX("chart.userOptions.buttons.stack", { def: true }),
+    CHECKBOX('chart.userOptions.show', { def: true }),
+    CHECKBOX('chart.userOptions.buttons.pdf', { def: true }),
+    CHECKBOX('chart.userOptions.buttons.csv', { def: true }),
+    CHECKBOX('chart.userOptions.buttons.img', { def: true }),
+    CHECKBOX('chart.userOptions.buttons.table', { def: true }),
+    CHECKBOX('chart.userOptions.buttons.labels', { def: true }),
+    CHECKBOX('chart.userOptions.buttons.fullscreen', { def: true }),
+    CHECKBOX('chart.userOptions.buttons.stack', { def: true }),
     CHECKBOX('chart.userOptions.buttons.altCopy', { def: true }),
 
-    SELECT("chart.userOptions.position", ["left", "right"], { def: "right" }),
-    CHECKBOX("chart.userOptions.showOnChartHover", { def: true }),
-    CHECKBOX("chart.userOptions.keepStateOnChartLeave", { def: true }),
+    SELECT('chart.userOptions.position', ['left', 'right'], { def: 'right' }),
+    CHECKBOX('chart.userOptions.showOnChartHover', { def: true }),
+    CHECKBOX('chart.userOptions.keepStateOnChartLeave', { def: true }),
 
-    CHECKBOX("useCssAnimation", { def: true }),
-    TEXT("chart.fontFamily", { def: "inherit" }),
-    COLOR("chart.backgroundColor", { def: "#FFF" }),
-    COLOR("chart.color", { def: "#111" }),
-    RANGE("chart.height", { def: 600, min: 300, max: 1000 }),
-    RANGE("chart.width", { def: 1000, min: 300, max: 2000 }),
+    CHECKBOX('useCssAnimation', { def: true }),
+    TEXT('chart.fontFamily', { def: 'inherit' }),
+    COLOR('chart.backgroundColor', { def: '#FFF' }),
+    COLOR('chart.color', { def: '#111' }),
+    RANGE('chart.height', { def: 600, min: 300, max: 1000 }),
+    RANGE('chart.width', { def: 1000, min: 300, max: 2000 }),
 
-    CHECKBOX("chart.zoom.show", { def: true }),
+    CHECKBOX('chart.zoom.show', { def: true }),
     RANGE('chart.zoom.maxWidth', { def: null, min: 100, max: 800 }),
-    COLOR("chart.zoom.color", { def: "#CCCCCC" }),
-    COLOR("chart.zoom.highlightColor", { def: "#4A4A4A" }),
-    NUMBER("chart.zoom.fontSize", { def: 14, min: 8, max: 42 }),
-    CHECKBOX("chart.zoom.useResetSlot", { def: false }),
-    CHECKBOX("chart.zoom.enableRangeHandles", { def: true }),
-    CHECKBOX("chart.zoom.enableSelectionDrag", { def: true }),
-    CHECKBOX("chart.zoom.focusOnDrag", { def: true }),
-    NUMBER("chart.zoom.focusRangeRatio", { def: 0.2, min: 0.1, max: 0.9 }),
+    COLOR('chart.zoom.color', { def: '#CCCCCC' }),
+    COLOR('chart.zoom.highlightColor', { def: '#4A4A4A' }),
+    NUMBER('chart.zoom.fontSize', { def: 14, min: 8, max: 42 }),
+    CHECKBOX('chart.zoom.useResetSlot', { def: false }),
+    CHECKBOX('chart.zoom.enableRangeHandles', { def: true }),
+    CHECKBOX('chart.zoom.enableSelectionDrag', { def: true }),
+    CHECKBOX('chart.zoom.focusOnDrag', { def: true }),
+    NUMBER('chart.zoom.focusRangeRatio', { def: 0.2, min: 0.1, max: 0.9 }),
 
-    CHECKBOX("chart.zoom.minimap.show", { def: true }),
-    NUMBER('chart.zoom.minimap.additionalHeight', { def: 0, min: 0, max: 24}),
-    SELECT('chart.zoom.minimap.handleType', ['empty', 'chevron', 'grab', 'arrow'], { def: 'grab' }),
-    COLOR('chart.zoom.minimap.handleIconColor', { def: null}),
+    CHECKBOX('chart.zoom.minimap.show', { def: true }),
+    NUMBER('chart.zoom.minimap.additionalHeight', { def: 0, min: 0, max: 24 }),
+    SELECT(
+        'chart.zoom.minimap.handleType',
+        ['empty', 'chevron', 'grab', 'arrow'],
+        { def: 'grab' },
+    ),
+    COLOR('chart.zoom.minimap.handleIconColor', { def: null }),
     NUMBER('chart.zoom.minimap.handleBorderWidth', { def: 1, min: 0, max: 6 }),
     COLOR('chart.zoom.minimap.handleBorderColor', { def: null }),
     COLOR('chart.zoom.minimap.handleFill', { def: null }),
-    NUMBER('chart.zoom.minimap.handleWidth', { def: 20, min: 20, max: 40}),
+    NUMBER('chart.zoom.minimap.handleWidth', { def: 20, min: 20, max: 40 }),
 
-    CHECKBOX("chart.zoom.minimap.smooth", { def: false }),
-    COLOR("chart.zoom.minimap.selectedColor", { def: "#1f77b4" }),
-    RANGE("chart.zoom.minimap.selectedColorOpacity", { def: 0.2, min: 0, max: 1, step: 0.01 }),
-    COLOR("chart.zoom.minimap.lineColor", { def: "#1A1A1A" }),
-    NUMBER("chart.zoom.minimap.selectionRadius", { def: 2, min: 0, max: 24 }),
-    COLOR("chart.zoom.minimap.indicatorColor", { def: "#1A1A1A" }),
-    CHECKBOX("chart.zoom.minimap.verticalHandles", { def: false }),
-    CHECKBOX("chart.zoom.minimap.compact", { def: true }),
-    CHECKBOX("chart.zoom.minimap.merged", { def: false }),
+    CHECKBOX('chart.zoom.minimap.smooth', { def: false }),
+    COLOR('chart.zoom.minimap.selectedColor', { def: '#1f77b4' }),
+    RANGE('chart.zoom.minimap.selectedColorOpacity', {
+        def: 0.2,
+        min: 0,
+        max: 1,
+        step: 0.01,
+    }),
+    COLOR('chart.zoom.minimap.lineColor', { def: '#1A1A1A' }),
+    NUMBER('chart.zoom.minimap.selectionRadius', { def: 2, min: 0, max: 24 }),
+    COLOR('chart.zoom.minimap.indicatorColor', { def: '#1A1A1A' }),
+    CHECKBOX('chart.zoom.minimap.verticalHandles', { def: false }),
+    CHECKBOX('chart.zoom.minimap.compact', { def: true }),
+    CHECKBOX('chart.zoom.minimap.merged', { def: false }),
 
-    NUMBER("chart.zoom.startIndex", { def: null, min: 0, max: 100 }),
-    NUMBER("chart.zoom.endIndex", { def: null, min: 0, max: 100 }),
+    NUMBER('chart.zoom.startIndex', { def: null, min: 0, max: 100 }),
+    NUMBER('chart.zoom.endIndex', { def: null, min: 0, max: 100 }),
 
-    CHECKBOX("chart.zoom.preview.enable", { def: false }),
-    COLOR("chart.zoom.preview.stroke", { def: "#1f77b4" }),
-    COLOR("chart.zoom.preview.fill", { def: "#1f77b420" }),
-    NUMBER("chart.zoom.preview.strokeDasharray", { def: 0, min: 0, max: 12 }),
-    NUMBER("chart.zoom.preview.strokeWidth", { def: 2, min: 0, max: 12 }),
+    CHECKBOX('chart.zoom.preview.enable', { def: false }),
+    COLOR('chart.zoom.preview.stroke', { def: '#1f77b4' }),
+    COLOR('chart.zoom.preview.fill', { def: '#1f77b420' }),
+    NUMBER('chart.zoom.preview.strokeDasharray', { def: 0, min: 0, max: 12 }),
+    NUMBER('chart.zoom.preview.strokeWidth', { def: 2, min: 0, max: 12 }),
 
-    NUMBER("chart.padding.top", { def: 0, min: 0, max: 100 }),
-    NUMBER("chart.padding.right", { def: 0, min: 0, max: 100 }),
-    NUMBER("chart.padding.bottom", { def: 0, min: 0, max: 100 }),
-    NUMBER("chart.padding.left", { def: 0, min: 0, max: 100 }),
+    NUMBER('chart.padding.top', { def: 0, min: 0, max: 100 }),
+    NUMBER('chart.padding.right', { def: 0, min: 0, max: 100 }),
+    NUMBER('chart.padding.bottom', { def: 0, min: 0, max: 100 }),
+    NUMBER('chart.padding.left', { def: 0, min: 0, max: 100 }),
 
-    COLOR("chart.highlighter.color", { def: "#1A1A1A" }),
-    RANGE("chart.highlighter.opacity", { def: 5, min: 0, max: 100 }),
-    CHECKBOX("chart.highlighter.useLine", { def: true }),
+    COLOR('chart.highlighter.color', { def: '#1A1A1A' }),
+    RANGE('chart.highlighter.opacity', { def: 5, min: 0, max: 100 }),
+    CHECKBOX('chart.highlighter.useLine', { def: true }),
 
-    CHECKBOX("chart.timeTag.show", { def: true }),
+    CHECKBOX('chart.timeTag.show', { def: true }),
 
-    CHECKBOX("chart.highlightArea.show", { def: false }),
-    NUMBER("chart.highlightArea.from", { def: 2, min: 0, max: 999 }),
-    NUMBER("chart.highlightArea.to", { def: 5, min: 0, max: 999 }),
-    COLOR("chart.highlightArea.color", { def: "#1A1A1A" }),
-    RANGE("chart.highlightArea.opacity", { def: 20, min: 0, max: 100 }),
-    TEXT("chart.highlightArea.caption.text", { def: "Caption" }),
-    NUMBER("chart.highlightArea.caption.fontSize", { def: 20, min: 6, max: 28 }),
-    COLOR("chart.highlightArea.caption.color", { def: "#1A1A1A" }),
-    CHECKBOX("chart.highlightArea.caption.bold", { def: false }),
-    NUMBER("chart.highlightArea.caption.offsetY", { def: 0 }),
-    TEXT("chart.highlightArea.caption.width", { def: "auto" }),
-    NUMBER("chart.highlightArea.caption.padding", { def: 3, min: 0, max: 48 }),
-    SELECT("chart.highlightArea.caption.textAlign", ["left", "center", "right"], { def: "center" }),
+    CHECKBOX('chart.highlightArea.show', { def: false }),
+    NUMBER('chart.highlightArea.from', { def: 2, min: 0, max: 999 }),
+    NUMBER('chart.highlightArea.to', { def: 5, min: 0, max: 999 }),
+    COLOR('chart.highlightArea.color', { def: '#1A1A1A' }),
+    RANGE('chart.highlightArea.opacity', { def: 20, min: 0, max: 100 }),
+    TEXT('chart.highlightArea.caption.text', { def: 'Caption' }),
+    NUMBER('chart.highlightArea.caption.fontSize', {
+        def: 20,
+        min: 6,
+        max: 28,
+    }),
+    COLOR('chart.highlightArea.caption.color', { def: '#1A1A1A' }),
+    CHECKBOX('chart.highlightArea.caption.bold', { def: false }),
+    NUMBER('chart.highlightArea.caption.offsetY', { def: 0 }),
+    TEXT('chart.highlightArea.caption.width', { def: 'auto' }),
+    NUMBER('chart.highlightArea.caption.padding', { def: 3, min: 0, max: 48 }),
+    SELECT(
+        'chart.highlightArea.caption.textAlign',
+        ['left', 'center', 'right'],
+        {
+            def: 'center',
+        },
+    ),
 
-    COLOR("chart.grid.stroke", { def: "#CCCCCC" }),
-    CHECKBOX("chart.grid.showVerticalLines", { def: true }),
-    CHECKBOX("chart.grid.showHorizontalLines", { def: true }),
+    COLOR('chart.grid.stroke', { def: '#CCCCCC' }),
+    CHECKBOX('chart.grid.showVerticalLines', { def: true }),
+    CHECKBOX('chart.grid.showHorizontalLines', { def: true }),
 
-    SELECT("chart.grid.position", ["middle", "start"], { def: "middle" }),
-    CHECKBOX("chart.grid.frame.show", { def: false }),
-    COLOR("chart.grid.frame.stroke", { def: "#1A1A1A" }),
-    NUMBER("chart.grid.frame.strokeWidth", { def: 4, min: 0, max: 12 }),
-    SELECT("chart.grid.frame.strokeLinecap", ["round", "square", "butt"], { def: "round" }),
-    SELECT("chart.grid.frame.strokeLinejoin", ["round", "miter"], { def: "round" }),
-    RANGE("chart.grid.frame.strokeDasharray", { def: 0, min: 0, max: 100 }),
+    SELECT('chart.grid.position', ['middle', 'start'], { def: 'middle' }),
+    CHECKBOX('chart.grid.frame.show', { def: false }),
+    COLOR('chart.grid.frame.stroke', { def: '#1A1A1A' }),
+    NUMBER('chart.grid.frame.strokeWidth', { def: 4, min: 0, max: 12 }),
+    SELECT('chart.grid.frame.strokeLinecap', ['round', 'square', 'butt'], {
+        def: 'round',
+    }),
+    SELECT('chart.grid.frame.strokeLinejoin', ['round', 'miter'], {
+        def: 'round',
+    }),
+    RANGE('chart.grid.frame.strokeDasharray', { def: 0, min: 0, max: 100 }),
 
-    CHECKBOX("chart.grid.labels.show", { def: true }),
-    COLOR("chart.grid.labels.color", { def: "#1A1A1A" }),
-    NUMBER("chart.grid.labels.fontSize", { def: 26, min: 4, max: 30 }),
-    TEXT("chart.grid.labels.axis.yLabel", { def: "TEST" }),
-    TEXT("chart.grid.labels.axis.xLabel", { def: "TEST" }),
-    NUMBER("chart.grid.labels.axis.fontSize", { def: 14, min: 4, max: 30 }),
-    CHECKBOX("chart.grid.labels.xAxisLabels.show", { def: true }),
-    COLOR("chart.grid.labels.xAxisLabels.color", { def: "#1A1A1A" }),
-    NUMBER("chart.grid.labels.xAxisLabels.fontSize", { def: 16, min: 6, max: 30 }),
-    CHECKBOX("chart.grid.labels.xAxisLabels.showOnlyFirstAndLast", { def: false }),
-    NUMBER("chart.grid.labels.xAxisLabels.yOffset", { def: 24, min: -100, max: 100 }),
-    RANGE("chart.grid.labels.xAxisLabels.rotation", { def: 0, min: -360, max: 360 }),
-    CHECKBOX("chart.grid.labels.xAxisLabels.autoRotate.enable", { def: true }),
-    NUMBER("chart.grid.labels.xAxisLabels.autoRotate.angle", { def: -30, min: -90, max: 90 }),
+    CHECKBOX('chart.grid.labels.show', { def: true }),
+    COLOR('chart.grid.labels.color', { def: '#1A1A1A' }),
+    NUMBER('chart.grid.labels.fontSize', { def: 26, min: 4, max: 30 }),
+    TEXT('chart.grid.labels.axis.yLabel', { def: 'TEST' }),
+    TEXT('chart.grid.labels.axis.xLabel', { def: 'TEST' }),
+    NUMBER('chart.grid.labels.axis.fontSize', { def: 14, min: 4, max: 30 }),
+    CHECKBOX('chart.grid.labels.xAxisLabels.show', { def: true }),
+    COLOR('chart.grid.labels.xAxisLabels.color', { def: '#1A1A1A' }),
+    NUMBER('chart.grid.labels.xAxisLabels.fontSize', {
+        def: 16,
+        min: 6,
+        max: 30,
+    }),
+    CHECKBOX('chart.grid.labels.xAxisLabels.showOnlyFirstAndLast', {
+        def: false,
+    }),
+    NUMBER('chart.grid.labels.xAxisLabels.yOffset', {
+        def: 24,
+        min: -100,
+        max: 100,
+    }),
+    RANGE('chart.grid.labels.xAxisLabels.rotation', {
+        def: 0,
+        min: -360,
+        max: 360,
+    }),
+    CHECKBOX('chart.grid.labels.xAxisLabels.autoRotate.enable', { def: true }),
+    NUMBER('chart.grid.labels.xAxisLabels.autoRotate.angle', {
+        def: -30,
+        min: -90,
+        max: 90,
+    }),
 
-    NUMBER("chart.grid.labels.axis.xLabelOffsetY", { def: 0, min: -100, max: 100 }),
-    NUMBER("chart.grid.labels.axis.yLabelOffsetX", { def: 0, min: -100, max: 100 }),
+    NUMBER('chart.grid.labels.axis.xLabelOffsetY', {
+        def: 0,
+        min: -100,
+        max: 100,
+    }),
+    NUMBER('chart.grid.labels.axis.yLabelOffsetX', {
+        def: 0,
+        min: -100,
+        max: 100,
+    }),
 
-    CHECKBOX("chart.grid.labels.xAxisLabels.showOnlyAtModulo", { def: true }),
-    NUMBER("chart.grid.labels.xAxisLabels.modulo", { def: 12 }),
-    CHECKBOX("chart.grid.labels.xAxisLabels.autoRotate", { def: true }),
+    CHECKBOX('chart.grid.labels.xAxisLabels.showOnlyAtModulo', { def: true }),
+    NUMBER('chart.grid.labels.xAxisLabels.modulo', { def: 12 }),
+    CHECKBOX('chart.grid.labels.xAxisLabels.autoRotate', { def: true }),
 
-    SELECT("chart.grid.labels.yAxis.position", ["left", "right"], { def: "right" }),
-    NUMBER("chart.grid.labels.yAxis.commonScaleSteps", { def: 10, min: 0, max: 100 }),
-    CHECKBOX("chart.grid.labels.yAxis.useIndividualScale", { def: false }),
-    CHECKBOX("chart.grid.labels.yAxis.stacked", { def: false }),
-    NUMBER("chart.grid.labels.yAxis.gap", { def: 24, min: 0, max: 200 }),
-    NUMBER("chart.grid.labels.yAxis.labelWidth", { def: 64, min: 0, max: 100 }),
-    CHECKBOX("chart.grid.labels.yAxis.showBaseline", { def: true }),
-    NUMBER("chart.grid.labels.yAxis.scaleMin", { def: null, min: -1000, max: 1000 }),
-    NUMBER("chart.grid.labels.yAxis.scaleMax", { def: null, min: -1000, max: 1000 }),
-    COLOR("chart.grid.labels.yAxis.groupColor", { def: "#1A1A1A" }),
-    NUMBER("chart.grid.labels.yAxis.scaleLabelOffsetX", { def: 36, min: -100, max: 100 }),
-    NUMBER("chart.grid.labels.yAxis.scaleValueOffsetX", { def: 0, min: -100, max: 100 }),
-    CHECKBOX("chart.grid.labels.yAxis.useNiceScale", { def: false }),
+    SELECT('chart.grid.labels.yAxis.position', ['left', 'right'], {
+        def: 'right',
+    }),
+    NUMBER('chart.grid.labels.yAxis.commonScaleSteps', {
+        def: 10,
+        min: 0,
+        max: 100,
+    }),
+    CHECKBOX('chart.grid.labels.yAxis.useIndividualScale', { def: false }),
+    CHECKBOX('chart.grid.labels.yAxis.stacked', { def: false }),
+    NUMBER('chart.grid.labels.yAxis.gap', { def: 24, min: 0, max: 200 }),
+    NUMBER('chart.grid.labels.yAxis.labelWidth', { def: 64, min: 0, max: 100 }),
+    CHECKBOX('chart.grid.labels.yAxis.showBaseline', { def: true }),
+    NUMBER('chart.grid.labels.yAxis.scaleMin', {
+        def: null,
+        min: -1000,
+        max: 1000,
+    }),
+    NUMBER('chart.grid.labels.yAxis.scaleMax', {
+        def: null,
+        min: -1000,
+        max: 1000,
+    }),
+    COLOR('chart.grid.labels.yAxis.groupColor', { def: '#1A1A1A' }),
+    NUMBER('chart.grid.labels.yAxis.scaleLabelOffsetX', {
+        def: 36,
+        min: -100,
+        max: 100,
+    }),
+    NUMBER('chart.grid.labels.yAxis.scaleValueOffsetX', {
+        def: 0,
+        min: -100,
+        max: 100,
+    }),
+    CHECKBOX('chart.grid.labels.yAxis.useNiceScale', { def: false }),
 
-    CHECKBOX("chart.grid.labels.yAxis.showCrosshairs", { def: true }),
-    CHECKBOX("chart.grid.labels.xAxis.showCrosshairs", { def: true }),
-    NUMBER("chart.grid.labels.xAxis.crosshairSize", { def: 6, min: 0, max: 24 }),
-    CHECKBOX("chart.grid.labels.xAxis.crosshairsAlwaysAtZero", { def: false }),
+    CHECKBOX('chart.grid.labels.yAxis.showCrosshairs', { def: true }),
+    CHECKBOX('chart.grid.labels.xAxis.showCrosshairs', { def: true }),
+    NUMBER('chart.grid.labels.xAxis.crosshairSize', {
+        def: 6,
+        min: 0,
+        max: 24,
+    }),
+    CHECKBOX('chart.grid.labels.xAxis.crosshairsAlwaysAtZero', { def: false }),
 
-    CHECKBOX("chart.grid.labels.xAxis.showBaseline", { def: true }),
-    CHECKBOX("chart.grid.labels.zeroLine.show", { def: true }),
+    CHECKBOX('chart.grid.labels.xAxis.showBaseline', { def: true }),
+    CHECKBOX('chart.grid.labels.zeroLine.show', { def: true }),
 
-    NUMBER("chart.labels.fontSize", { def: 20, min: 6, max: 30 }),
-    TEXT("chart.labels.prefix", { def: "" }),
-    TEXT("chart.labels.suffix", { def: "" }),
+    NUMBER('chart.labels.fontSize', { def: 20, min: 6, max: 30 }),
+    TEXT('chart.labels.prefix', { def: '' }),
+    TEXT('chart.labels.suffix', { def: '' }),
 
-    CHECKBOX("chart.legend.show", { def: true }),
-    COLOR("chart.legend.color", { def: "#1A1A1A" }),
-    NUMBER("chart.legend.fontSize", { def: 16, min: 10, max: 36 }),
-    SELECT("chart.legend.position", ["top", "bottom"], { def: "bottom" }),
+    CHECKBOX('chart.legend.show', { def: true }),
+    COLOR('chart.legend.color', { def: '#1A1A1A' }),
+    NUMBER('chart.legend.fontSize', { def: 16, min: 10, max: 36 }),
+    SELECT('chart.legend.position', ['top', 'bottom'], { def: 'bottom' }),
     CHECKBOX('chart.legend.selectAllToggle.show', { def: true }),
-    COLOR('chart.legend.selectAllToggle.backgroundColor', {def: '#FF0000'}),
-    COLOR('chart.legend.selectAllToggle.color', {def: '#FFFFFF'}),
+    COLOR('chart.legend.selectAllToggle.backgroundColor', { def: '#FF0000' }),
+    COLOR('chart.legend.selectAllToggle.color', { def: '#FFFFFF' }),
 
-    CHECKBOX("chart.title.show", { def: true }),
-    TEXT("chart.title.text", { def: "Title" }),
-    COLOR("chart.title.color", { def: "#1A1A1A" }),
-    NUMBER("chart.title.fontSize", { def: 20, min: 10, max: 64 }),
-    CHECKBOX("chart.title.bold", { def: true }),
-    NUMBER("chart.title.offsetX", { def: 0 }),
-    NUMBER("chart.title.offsetY", { def: 0 }),
-    SELECT("chart.title.textAlign", ["left", "center", "right"], { def: "left" }),
-    NUMBER("chart.title.paddingLeft", { def: 12, min: 0, max: 24 }),
+    CHECKBOX('chart.title.show', { def: true }),
+    TEXT('chart.title.text', { def: 'Title' }),
+    COLOR('chart.title.color', { def: '#1A1A1A' }),
+    NUMBER('chart.title.fontSize', { def: 20, min: 10, max: 64 }),
+    CHECKBOX('chart.title.bold', { def: true }),
+    NUMBER('chart.title.offsetX', { def: 0 }),
+    NUMBER('chart.title.offsetY', { def: 0 }),
+    SELECT('chart.title.textAlign', ['left', 'center', 'right'], {
+        def: 'left',
+    }),
+    NUMBER('chart.title.paddingLeft', { def: 12, min: 0, max: 24 }),
 
-    TEXT("chart.title.subtitle.text", { def: "Subtitle" }),
-    COLOR("chart.title.subtitle.color", { def: "#CCCCCC" }),
-    NUMBER("chart.title.subtitle.fontSize", { def: 16, min: 6, max: 64 }),
+    TEXT('chart.title.subtitle.text', { def: 'Subtitle' }),
+    COLOR('chart.title.subtitle.color', { def: '#CCCCCC' }),
+    NUMBER('chart.title.subtitle.fontSize', { def: 16, min: 6, max: 64 }),
 
-    CHECKBOX("chart.tooltip.show", { def: true }),
-    CHECKBOX("chart.tooltip.showValue", { def: true }),
-    CHECKBOX("chart.tooltip.showPercentage", { def: false }),
-    COLOR("chart.tooltip.color", { def: "#1A1A1A" }),
-    COLOR("chart.tooltip.backgroundColor", { def: "#FFFFFF" }),
-    NUMBER("chart.tooltip.roundingValue", { def: 3, min: 0, max: 6 }),
-    NUMBER("chart.tooltip.roundingPercentage", { def: 0, min: 0, max: 6 }),
-    RANGE("chart.tooltip.fontSize", { def: 14, min: 8, max: 48 }),
-    RANGE("chart.tooltip.backgroundOpacity", { def: 90, min: 0, max: 100 }),
-    SELECT("chart.tooltip.position", ["left", "center", "right"], { def: "center" }),
-    NUMBER("chart.tooltip.offsetY", { def: 24, min: 0, max: 48 }),
-    CHECKBOX("chart.tooltip.showTimeLabel", { def: true }),
-    CHECKBOX("chart.tooltip.smooth", { def: true }),
-    CHECKBOX("chart.tooltip.backdropFilter", { def: false }),
-    NUMBER("chart.tooltip.smoothForce", { def: 0.18, min: 0.1, max: 1, step: 0.01 }),
-    NUMBER("chart.tooltip.smoothSnapThreshold", { def: 0.25, min: 0.1, max: 1, step: 0.01 }),
+    CHECKBOX('chart.tooltip.show', { def: true }),
+    CHECKBOX('chart.tooltip.showValue', { def: true }),
+    CHECKBOX('chart.tooltip.showPercentage', { def: false }),
+    COLOR('chart.tooltip.color', { def: '#1A1A1A' }),
+    COLOR('chart.tooltip.backgroundColor', { def: '#FFFFFF' }),
+    NUMBER('chart.tooltip.roundingValue', { def: 3, min: 0, max: 6 }),
+    NUMBER('chart.tooltip.roundingPercentage', { def: 0, min: 0, max: 6 }),
+    RANGE('chart.tooltip.fontSize', { def: 14, min: 8, max: 48 }),
+    RANGE('chart.tooltip.backgroundOpacity', { def: 90, min: 0, max: 100 }),
+    SELECT('chart.tooltip.position', ['left', 'center', 'right'], {
+        def: 'center',
+    }),
+    NUMBER('chart.tooltip.offsetY', { def: 24, min: 0, max: 48 }),
+    CHECKBOX('chart.tooltip.showTimeLabel', { def: true }),
+    CHECKBOX('chart.tooltip.smooth', { def: true }),
+    CHECKBOX('chart.tooltip.backdropFilter', { def: false }),
+    NUMBER('chart.tooltip.smoothForce', {
+        def: 0.18,
+        min: 0.1,
+        max: 1,
+        step: 0.01,
+    }),
+    NUMBER('chart.tooltip.smoothSnapThreshold', {
+        def: 0.25,
+        min: 0.1,
+        max: 1,
+        step: 0.01,
+    }),
 
-    NUMBER("bar.borderRadius", { def: 2, min: 0, max: 120 }),
-    CHECKBOX("bar.useGradient", { def: true }),
-    CHECKBOX("bar.labels.show", { def: true }),
-    NUMBER("bar.labels.offsetY", { def: -8, min: -100, max: 100 }),
-    NUMBER("bar.labels.rounding", { def: 0, min: 0, max: 6 }),
-    COLOR("bar.labels.color", { def: "#1A1A1A" }),
-    CHECKBOX("bar.serieName.show", { def: false }),
-    NUMBER("bar.serieName.offsetY", { def: -6, min: -100, max: 100 }),
-    CHECKBOX("bar.serieName.useAbbreviation", { def: true }),
-    NUMBER("bar.serieName.abbreviationSize", { def: 3, min: 0, max: 12 }),
-    CHECKBOX("bar.serieName.useSerieColor", { def: true }),
-    COLOR("bar.serieName.color", { def: "#1A1A1A" }),
-    NUMBER("bar.periodGap", { def: 0.01, min: 0, max: 24 }),
-    NUMBER("bar.innerGap", { def: 0.2, min: 0, max: 1 }),
-    CHECKBOX("bar.border.useSerieColor", { def: false }),
-    COLOR("bar.border.stroke", { def: "#FFFFFF" }),
-    NUMBER("bar.border.strokeWidth", { def: 1, min: 0, max: 12, step: 0.5 }),
+    NUMBER('bar.borderRadius', { def: 2, min: 0, max: 120 }),
+    CHECKBOX('bar.useGradient', { def: true }),
+    CHECKBOX('bar.labels.show', { def: true }),
+    NUMBER('bar.labels.offsetY', { def: -8, min: -100, max: 100 }),
+    NUMBER('bar.labels.rounding', { def: 0, min: 0, max: 6 }),
+    COLOR('bar.labels.color', { def: '#1A1A1A' }),
+    CHECKBOX('bar.serieName.show', { def: false }),
+    NUMBER('bar.serieName.offsetY', { def: -6, min: -100, max: 100 }),
+    CHECKBOX('bar.serieName.useAbbreviation', { def: true }),
+    NUMBER('bar.serieName.abbreviationSize', { def: 3, min: 0, max: 12 }),
+    CHECKBOX('bar.serieName.useSerieColor', { def: true }),
+    COLOR('bar.serieName.color', { def: '#1A1A1A' }),
+    NUMBER('bar.periodGap', { def: 0.01, min: 0, max: 24 }),
+    NUMBER('bar.innerGap', { def: 0.2, min: 0, max: 1 }),
+    CHECKBOX('bar.border.useSerieColor', { def: false }),
+    COLOR('bar.border.stroke', { def: '#FFFFFF' }),
+    NUMBER('bar.border.strokeWidth', { def: 1, min: 0, max: 12, step: 0.5 }),
 
-    CHECKBOX("line.showTransition", { def: true }),
-    NUMBER("line.radius", { def: 6, min: 0, max: 20 }),
-    CHECKBOX("line.useGradient", { def: false }),
-    NUMBER("line.strokeWidth", { def: 2, min: 1, max: 20 }),
-    CHECKBOX("line.cutNullValues", { def: true }),
+    CHECKBOX('line.showTransition', { def: true }),
+    NUMBER('line.radius', { def: 6, min: 0, max: 20 }),
+    CHECKBOX('line.useGradient', { def: false }),
+    NUMBER('line.strokeWidth', { def: 2, min: 1, max: 20 }),
+    CHECKBOX('line.cutNullValues', { def: true }),
 
-    CHECKBOX("line.labels.show", { def: true }),
-    NUMBER("line.labels.offsetY", { def: -8, min: -100, max: 100 }),
-    NUMBER("line.labels.rounding", { def: 0, min: 0, max: 6 }),
-    COLOR("line.labels.color", { def: "#1A1A1A" }),
-    CHECKBOX("line.area.useGradient", { def: true }),
-    RANGE("line.area.opacity", { def: 30, min: 0, max: 100 }),
+    CHECKBOX('line.labels.show', { def: true }),
+    NUMBER('line.labels.offsetY', { def: -8, min: -100, max: 100 }),
+    NUMBER('line.labels.rounding', { def: 0, min: 0, max: 6 }),
+    COLOR('line.labels.color', { def: '#1A1A1A' }),
+    CHECKBOX('line.area.useGradient', { def: true }),
+    RANGE('line.area.opacity', { def: 30, min: 0, max: 100 }),
 
-    CHECKBOX("line.dot.useSerieColor", { def: false }),
-    COLOR("line.dot.fill", { def: "#FFFFFF" }),
-    NUMBER("line.dot.strokeWidth", { def: 2, min: 0, max: 12, step: 0.1 }),
+    CHECKBOX('line.dot.useSerieColor', { def: false }),
+    COLOR('line.dot.fill', { def: '#FFFFFF' }),
+    NUMBER('line.dot.strokeWidth', { def: 2, min: 0, max: 12, step: 0.1 }),
 
-    CHECKBOX("line.tag.followValue", { def: true }),
-    NUMBER("line.tag.fontSize", { def: 14 }),
+    CHECKBOX('line.tag.followValue', { def: true }),
+    NUMBER('line.tag.fontSize', { def: 14 }),
 
-    RANGE("line.interLine.fillOpacity", { def: 0.25, min: 0, max: 1, step: 0.01 }),
+    RANGE('line.interLine.fillOpacity', {
+        def: 0.25,
+        min: 0,
+        max: 1,
+        step: 0.01,
+    }),
 
-    NUMBER("plot.radius", { def: 6, min: 0, max: 20 }),
-    CHECKBOX("plot.useGradient", { def: true }),
-    NUMBER("plot.strokeWidth", { def: 2, min: 1, max: 20 }),
-    CHECKBOX("plot.labels.show", { def: true }),
-    NUMBER("plot.labels.offsetY", { def: -8, min: -100, max: 100 }),
-    NUMBER("plot.labels.rounding", { def: 0, min: 0, max: 6 }),
-    COLOR("plot.labels.color", { def: "#1A1A1A" }),
+    NUMBER('plot.radius', { def: 6, min: 0, max: 20 }),
+    CHECKBOX('plot.useGradient', { def: true }),
+    NUMBER('plot.strokeWidth', { def: 2, min: 1, max: 20 }),
+    CHECKBOX('plot.labels.show', { def: true }),
+    NUMBER('plot.labels.offsetY', { def: -8, min: -100, max: 100 }),
+    NUMBER('plot.labels.rounding', { def: 0, min: 0, max: 6 }),
+    COLOR('plot.labels.color', { def: '#1A1A1A' }),
 
-    CHECKBOX("plot.dot.useSerieColor", { def: false }),
-    COLOR("plot.dot.fill", { def: "#FFFFFF" }),
-    NUMBER("plot.dot.strokeWidth", { def: 0.5, min: 0, max: 12, step: 0.1 }),
+    CHECKBOX('plot.dot.useSerieColor', { def: false }),
+    COLOR('plot.dot.fill', { def: '#FFFFFF' }),
+    NUMBER('plot.dot.strokeWidth', { def: 0.5, min: 0, max: 12, step: 0.1 }),
 
-    CHECKBOX("plot.tag.followValue", { def: true }),
-    NUMBER("plot.tag.fontSize", { def: 14 }),
+    CHECKBOX('plot.tag.followValue', { def: true }),
+    NUMBER('plot.tag.fontSize', { def: 14 }),
 
-    NUMBER("table.responsiveBreakpoint", { def: 400, min: 350, max: 800 }),
-    NUMBER("table.rounding", { def: 0, min: 0, max: 6 }),
-    CHECKBOX("table.sparkline", { def: true }),
-    TEXT("table.columnNames.period", { def: "Period" }),
-    TEXT("table.columnNames.total", { def: "Total" }),
-    COLOR("table.th.backgroundColor", { def: "#FAFAFA" }),
-    COLOR("table.th.color", { def: "#1A1A1A" }),
-    TEXT("table.th.outline", { def: "" }),
-    COLOR("table.td.backgroundColor", { def: "#FAFAFA" }),
-    COLOR("table.td.color", { def: "#1A1A1A" }),
-    TEXT("table.td.outline", { def: "" }),
-    CHECKBOX("table.showSum", { def: true }),
-    CHECKBOX("table.useDefaultTimeFormat", { def: true }),
+    NUMBER('table.responsiveBreakpoint', { def: 400, min: 350, max: 800 }),
+    NUMBER('table.rounding', { def: 0, min: 0, max: 6 }),
+    CHECKBOX('table.sparkline', { def: true }),
+    TEXT('table.columnNames.period', { def: 'Period' }),
+    TEXT('table.columnNames.total', { def: 'Total' }),
+    COLOR('table.th.backgroundColor', { def: '#FAFAFA' }),
+    COLOR('table.th.color', { def: '#1A1A1A' }),
+    TEXT('table.th.outline', { def: '' }),
+    COLOR('table.td.backgroundColor', { def: '#FAFAFA' }),
+    COLOR('table.td.color', { def: '#1A1A1A' }),
+    TEXT('table.td.outline', { def: '' }),
+    CHECKBOX('table.showSum', { def: true }),
+    CHECKBOX('table.useDefaultTimeFormat', { def: true }),
 
-    CHECKBOX("showTable", { def: false }),
-    CHECKBOX("table.useDialog", { def: true }),
+    CHECKBOX('showTable', { def: false }),
+    CHECKBOX('table.useDialog', { def: true }),
 
-    CHECKBOX("chart.comments.show", { def: true }),
-    CHECKBOX("chart.comments.showInTooltip", { def: true }),
-    NUMBER("chart.comments.width", { def: 200, min: 50, max: 400 }),
-    NUMBER("chart.comments.offsetY", { def: 0, min: -100, max: 100 }),
+    CHECKBOX('chart.comments.show', { def: true }),
+    CHECKBOX('chart.comments.showInTooltip', { def: true }),
+    NUMBER('chart.comments.width', { def: 200, min: 50, max: 400 }),
+    NUMBER('chart.comments.offsetY', { def: 0, min: -100, max: 100 }),
 
-    CHECKBOX("chart.userOptions.print.allowTaint", { def: true }),
-    COLOR("chart.userOptions.print.backgroundColor", { def: "#FFFFFF" }),
-    CHECKBOX("chart.userOptions.print.useCORS", { def: true }),
-    NUMBER("chart.userOptions.print.scale", { def: 4, min: 1, max: 5 })
+    CHECKBOX('chart.userOptions.print.allowTaint', { def: true }),
+    COLOR('chart.userOptions.print.backgroundColor', { def: '#FFFFFF' }),
+    CHECKBOX('chart.userOptions.print.useCORS', { def: true }),
+    NUMBER('chart.userOptions.print.scale', { def: 4, min: 1, max: 5 }),
 ]);
-
 
 const testCustomTooltip = ref(false);
 
@@ -940,26 +1042,26 @@ const { themeOptions, currentTheme } = useThemeOptions();
 
 const size = ref({
     height: 600,
-    width: 1000
-})
+    width: 1000,
+});
 
 const timeValues = computed(() => {
-  const arr = []
-  const year = 2026
+    const arr = [];
+    const year = 2026;
 
-  for (let month = 1; month <= 12; month++) {
-    const daysInMonth = new Date(year, month, 0).getDate()
-    for (let day = 1; day <= daysInMonth; day++) {
-      const dd = String(day).padStart(2, '0')
-      const mm = String(month).padStart(2, '0')
-      arr.push(`${year}-${mm}-${dd}`)  // ISO format
+    for (let month = 1; month <= 12; month++) {
+        const daysInMonth = new Date(year, month, 0).getDate();
+        for (let day = 1; day <= daysInMonth; day++) {
+            const dd = String(day).padStart(2, '0');
+            const mm = String(month).padStart(2, '0');
+            arr.push(`${year}-${mm}-${dd}`); // ISO format
+        }
     }
-  }
 
-  console.log(arr)
+    console.log(arr);
 
-  return arr
-})
+    return arr;
+});
 
 // const monthValues = computed(() => {
 //   const yearStart = 2026
@@ -979,16 +1081,16 @@ const timeValues = computed(() => {
 // })
 
 const monthValues = computed(() => {
-    const yearStart = 2026
-    const arr = []
+    const yearStart = 2026;
+    const arr = [];
 
     for (let i = 0; i < 13; i++) {
-        const d = new Date(yearStart, i, 1)
-        arr.push(d.getTime())
+        const d = new Date(yearStart, i, 1);
+        arr.push(d.getTime());
     }
 
-    return arr
-})
+    return arr;
+});
 
 const selectedIndex = ref(null);
 
@@ -1004,15 +1106,15 @@ const config = computed(() => {
                 tooltip: {
                     ...c.tooltip,
                     customFormat: ({ datapoint }) => {
-                        let html = "";
-                        datapoint.forEach(d => {
-                            html += `<li>${d.name} : ${d.value}</li>`
-                        })
-                        return `<ul>${html}</ul>`
-                    }
-                }
-            }
-        }
+                        let html = '';
+                        datapoint.forEach((d) => {
+                            html += `<li>${d.name} : ${d.value}</li>`;
+                        });
+                        return `<ul>${html}</ul>`;
+                    },
+                },
+            },
+        };
     } else {
         return {
             ...c,
@@ -1031,26 +1133,24 @@ const config = computed(() => {
             // },
             events: {
                 datapointEnter: ({ datapoint, seriesIndex }) => {
-                    console.log('enter event', { datapoint, seriesIndex })
-                    selectedIndex.value = seriesIndex
+                    console.log('enter event', { datapoint, seriesIndex });
+                    selectedIndex.value = seriesIndex;
                 },
                 datapointLeave: ({ datapoint, seriesIndex }) => {
-                    console.log('leave event', { datapoint, seriesIndex })
+                    console.log('leave event', { datapoint, seriesIndex });
                     selectedIndex.value = null;
                 },
                 datapointClick: ({ datapoint, seriesIndex }) => {
-                    console.log('click event', { datapoint, seriesIndex })
-                }
+                    console.log('click event', { datapoint, seriesIndex });
+                },
             },
-            customPalette: ['#6376DD', "#DD3322", "#66DDAA"],
+            customPalette: ['#6376DD', '#DD3322', '#66DDAA'],
             theme: currentTheme.value,
             line: {
                 ...c.line,
                 interLine: {
                     ...c.line.interLine,
-                    pairs: [
-                        ['Serie A', 'Serie B']
-                    ]
+                    pairs: [['Serie A', 'Serie B']],
                 },
                 labels: {
                     ...c.line.labels,
@@ -1062,9 +1162,9 @@ const config = computed(() => {
                     formatter: ({ value, config }) => {
                         const { datapoint, seriesIndex, serieName } = config;
                         // console.log(datapoint, seriesIndex, serieName)
-                        return `<div>${serieName}: <b>${value.toFixed(2)}</b></div>`
-                    }
-                }
+                        return `<div>${serieName}: <b>${value.toFixed(2)}</b></div>`;
+                    },
+                },
             },
             plot: {
                 ...c.plot,
@@ -1073,7 +1173,7 @@ const config = computed(() => {
                     // formatter: ({value, config}) => {
                     //     return `f - ${value}`
                     // }
-                }
+                },
             },
             bar: {
                 ...c.bar,
@@ -1082,7 +1182,7 @@ const config = computed(() => {
                     // formatter: ({value, config}) => {
                     //     return `f - ${value}`
                     // }
-                }
+                },
             },
             chart: {
                 ...c.chart,
@@ -1103,17 +1203,17 @@ const config = computed(() => {
                                     stroke: '#FF0000',
                                     strokeWidth: 1,
                                     rx: 0,
-                                    ry: 0
+                                    ry: 0,
                                 },
                                 padding: {
                                     top: 5,
                                     right: 10,
                                     bottom: 5,
-                                    left: 10
+                                    left: 10,
                                 },
                                 fontSize: 14,
                                 color: '#1A1A1A',
-                                backgroundColor: '#E1E5E8'
+                                backgroundColor: '#E1E5E8',
                             },
                             line: {
                                 stroke: '#1A1A1A',
@@ -1122,75 +1222,77 @@ const config = computed(() => {
                             },
                             area: {
                                 fill: '#E1E5E8',
-                                opacity: 50
-                            }
-                        }
-                    }
+                                opacity: 50,
+                            },
+                        },
+                    },
                 ],
                 scaleGroups: {
                     enabled: true,
                     groups: [
                         { name: 'percentage', scaleMin: 0, scaleMax: 100 },
-                        { name: 'total', scaleMin: null, scaleMax: null }
-                    ]
+                        { name: 'total', scaleMin: null, scaleMax: null },
+                    ],
                 },
                 userOptions: {
                     ...c.chart.userOptions,
                     callbacks: {
-                        img: ({ domElement, imageUri, base64}) => {
-                            console.log(imageUri)
+                        img: ({ domElement, imageUri, base64 }) => {
+                            console.log(imageUri);
                         },
                         csv: (xls) => {
-                            console.log(xls)
+                            console.log(xls);
                         },
-                        pdf: ({ domElement, imageUri, base64}) => {
-                            console.log(imageUri)
+                        pdf: ({ domElement, imageUri, base64 }) => {
+                            console.log(imageUri);
                         },
-                        altCopy: ({ dataset:dst, config: cfg }) => {
+                        altCopy: ({ dataset: dst, config: cfg }) => {
                             console.log({ dst, cfg });
-                        }
+                        },
                     },
                     print: {
                         ...c.chart.userOptions.print,
                         // onclone: (doc) => {
                         //     doc.body.style.backgroundColor = '#FF0000'
                         // }
-                    }
+                    },
                 },
-                highlightArea: [{
-                    show: true,
-                    from: 2,
-                    to: 2,
-                    color: '#00FF00',
-                    opacity: 20,
-                    caption: {
-                        text: 'AREA 1',
-                        fontSize: 12,
-                        color: '#1A1A1A',
-                        bold: false,
-                        offsetY: 0,
-                        width: 'auto',
-                        padding: 3,
-                        textAlign: 'center'
-                    }
-                },
-                {
-                    show: true,
-                    from: 4,
-                    to: 6,
-                    color: '#FF0000',
-                    opacity: 20,
-                    caption: {
-                        text: 'AREA 2',
-                        fontSize: 12,
-                        color: '#1A1A1A',
-                        bold: false,
-                        offsetY: 0,
-                        width: 'auto',
-                        padding: 3,
-                        textAlign: 'center'
-                    }
-                }],
+                highlightArea: [
+                    {
+                        show: true,
+                        from: 2,
+                        to: 2,
+                        color: '#00FF00',
+                        opacity: 20,
+                        caption: {
+                            text: 'AREA 1',
+                            fontSize: 12,
+                            color: '#1A1A1A',
+                            bold: false,
+                            offsetY: 0,
+                            width: 'auto',
+                            padding: 3,
+                            textAlign: 'center',
+                        },
+                    },
+                    {
+                        show: true,
+                        from: 4,
+                        to: 6,
+                        color: '#FF0000',
+                        opacity: 20,
+                        caption: {
+                            text: 'AREA 2',
+                            fontSize: 12,
+                            color: '#1A1A1A',
+                            bold: false,
+                            offsetY: 0,
+                            width: 'auto',
+                            padding: 3,
+                            textAlign: 'center',
+                        },
+                    },
+                ],
                 grid: {
                     ...c.chart.grid,
                     // position: 'start',
@@ -1199,8 +1301,8 @@ const config = computed(() => {
                         yAxis: {
                             ...c.chart.grid.labels.yAxis,
                             serieNameFormatter: ({ value, config }) => {
-                                return value + '-TEST'
-                            }
+                                return value + '-TEST';
+                            },
                             // formatter: ({value}) => {
                             //     return `f - ${value}`
                             // }
@@ -1217,17 +1319,17 @@ const config = computed(() => {
                                 locale: 'it',
                                 useUTC: false,
                                 januaryAsYear: true,
-                                options: { 
+                                options: {
                                     year: 'yyyy',
                                     month: `MMMM`,
                                     day: 'dd MMM',
                                     hour: 'HH:mm',
                                     minute: 'HH:mm:ss',
-                                    second: 'HH:mm:ss'
-                                }
-                            }
-                        }
-                    }
+                                    second: 'HH:mm:ss',
+                                },
+                            },
+                        },
+                    },
                 },
                 zoom: {
                     ...c.chart.zoom,
@@ -1242,22 +1344,22 @@ const config = computed(() => {
                     useDefaultFormat: false,
                     timeFormat: 'yyyy-MM-dd HH:mm:ss',
                     customFormat: ({ absoluteIndex }) => {
-                        return String(absoluteIndex) + 'TEST'
-                    }
-                }
-            }
-        }
+                        return String(absoluteIndex) + 'TEST';
+                    },
+                },
+            },
+        };
     }
 });
 
-const step = ref(0)
+const step = ref(0);
 
 function selectLegend(legend) {
-    console.log({ legend })
+    console.log({ legend });
 }
 
 function selectX(selectedX) {
-    console.log({ selectedX })
+    console.log({ selectedX });
 }
 
 const configTheme = computed(() => ({
@@ -1271,7 +1373,7 @@ const configTheme = computed(() => ({
     plot: {
         labels: { show: true },
     },
-}))
+}));
 
 // const resizable = ref(null);
 
@@ -1291,30 +1393,32 @@ const configTheme = computed(() => ({
 // })
 
 function selectTimeLabel(data) {
-    console.log(data)
+    console.log(data);
 }
 
 const resp = ref(null);
 
 onMounted(async () => {
-    if(vduiLocal.value) {
-        const data = await vduiLocal.value.getData()
-        console.log(data)
+    if (vduiLocal.value) {
+        const data = await vduiLocal.value.getData();
+        console.log(data);
         const img = await vduiLocal.value.getImage({ scale: 4 });
     }
     if (resp.value) {
-        resp.value.hideSeries('Serie A')
+        resp.value.hideSeries('Serie A');
         setTimeout(() => {
             resp.value.showSeries('Serie A');
             resp.value.hideSeries('Serie B');
-        }, 1000)
+        }, 1000);
     }
-})
+});
 
 // Basically any content can be jazzed onto the chart :)
 function freestyle({ data, drawingArea }) {
-    const annotated = data.filter(d => !!d.annotated);
-    const points = (annotated[0]?.plots || []).filter((_, i) => annotated[0].marks.includes(i));
+    const annotated = data.filter((d) => !!d.annotated);
+    const points = (annotated[0]?.plots || []).filter((_, i) =>
+        annotated[0].marks.includes(i),
+    );
 
     return `
         <g>
@@ -1335,7 +1439,7 @@ function freestyle({ data, drawingArea }) {
                 This is awesome
             </text>
         </g>
-    `
+    `;
 }
 
 const custom = getVueDataUiConfig('vue_ui_xy', {
@@ -1343,7 +1447,7 @@ const custom = getVueDataUiConfig('vue_ui_xy', {
     colorTextPrimary: '#CD9077',
     colorTextSecondary: '#825848',
     colorGrid: '#CD9077',
-    colorBorder: '#CD9077'
+    colorBorder: '#CD9077',
 });
 
 const customConfig = computed(() => {
@@ -1354,14 +1458,13 @@ const customConfig = computed(() => {
                 title: {
                     text: 'Title',
                     subtitle: {
-                        text: 'Subtitle'
-                    }
-                }
-            }
-        }
-    })
-})
-
+                        text: 'Subtitle',
+                    },
+                },
+            },
+        },
+    });
+});
 </script>
 
 <template>
@@ -1377,25 +1480,50 @@ const customConfig = computed(() => {
         </select>
     </div>
     <div style="margin: 12px 0">
-        <input type="checkbox" v-model="testCustomTooltip" id="custom-tooltip" />
-        <label for="custom-tooltip" style="color:#CCCCCC">Test custom tooltip</label>
+        <input
+            type="checkbox"
+            v-model="testCustomTooltip"
+            id="custom-tooltip"
+        />
+        <label for="custom-tooltip" style="color: #cccccc"
+            >Test custom tooltip</label
+        >
     </div>
 
-    <Box :dataset="isPropsToggled ? alternateDataset : dataset" comp="VueUiXy" :config="config">
+    <Box
+        :dataset="isPropsToggled ? alternateDataset : dataset"
+        comp="VueUiXy"
+        :config="config"
+    >
         <template #title>VueUiXy</template>
 
         <template #responsive>
-            <div style="width: 600px; height: 600px; resize: both; overflow: auto; background: white">
-                <LocalVueUiXy ref="resp" :dataset="isPropsToggled ? alternateDataset : dataset" :config="{
-                    ...config,
-                    responsive: true,
-                }" @selectTimeLabel="selectTimeLabel">
-
+            <div
+                style="
+                    width: 600px;
+                    height: 600px;
+                    resize: both;
+                    overflow: auto;
+                    background: white;
+                "
+            >
+                <LocalVueUiXy
+                    ref="resp"
+                    :dataset="isPropsToggled ? alternateDataset : dataset"
+                    :config="{
+                        ...config,
+                        responsive: true,
+                    }"
+                    @selectTimeLabel="selectTimeLabel"
+                >
                     <template #tooltip="{ ...tooltip }">
                         <div>
                             <span>{{ tooltip.timeLabel.text }}</span>
-                            <div v-for="serie in tooltip.datapoint" :key="serie.id">
-                                {{ serie.name }}: {{ serie.value }} 
+                            <div
+                                v-for="serie in tooltip.datapoint"
+                                :key="serie.id"
+                            >
+                                {{ serie.name }}: {{ serie.value }}
                             </div>
                         </div>
                     </template>
@@ -1427,25 +1555,51 @@ const customConfig = computed(() => {
                         <g>
                             <!-- <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                             <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text> -->
-                            <g v-html="freestyle(svg)"/>
+                            <g v-html="freestyle(svg)" />
                         </g>
                     </template>
 
                     <template #area-gradient="{ series, id }">
                         <linearGradient :id="id" x1="0" x2="0" y1="0" y2="1">
-                            <stop offset="0%" :stop-color="series.color"/>
-                            <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+                            <stop offset="0%" :stop-color="series.color" />
+                            <stop
+                                offset="100%"
+                                stop-color="#FFFFFF"
+                                stop-opacity="0"
+                            />
                         </linearGradient>
                     </template>
 
-                    <template #bar-gradient="{ series, positiveId, negativeId }">
-                        <linearGradient :id="positiveId" x1="0" x2="0" y1="0" y2="1">
-                            <stop offset="0%" :stop-color="series.color"/>
-                            <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+                    <template
+                        #bar-gradient="{ series, positiveId, negativeId }"
+                    >
+                        <linearGradient
+                            :id="positiveId"
+                            x1="0"
+                            x2="0"
+                            y1="0"
+                            y2="1"
+                        >
+                            <stop offset="0%" :stop-color="series.color" />
+                            <stop
+                                offset="100%"
+                                stop-color="#FFFFFF"
+                                stop-opacity="0"
+                            />
                         </linearGradient>
-                        <linearGradient :id="negativeId" x1="0" x2="0" y1="0" y2="1">
-                            <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0"/>
-                            <stop offset="100%" :stop-color="series.color"/>
+                        <linearGradient
+                            :id="negativeId"
+                            x1="0"
+                            x2="0"
+                            y1="0"
+                            y2="1"
+                        >
+                            <stop
+                                offset="0%"
+                                stop-color="#FFFFFF"
+                                stop-opacity="0"
+                            />
+                            <stop offset="100%" :stop-color="series.color" />
                         </linearGradient>
                     </template>
 
@@ -1490,21 +1644,38 @@ const customConfig = computed(() => {
                     </template> -->
 
                     <template #plot-comment="{ plot }">
-                        <div :style="`font-size: 12px; color:${plot.color}; text-align:center`">
+                        <div
+                            :style="`font-size: 12px; color:${plot.color}; text-align:center`"
+                        >
                             {{ plot.comment }}
                         </div>
                     </template>
 
                     <template #watermark="{ isPrinting }">
-                        <div v-if="isPrinting" style="font-size: 100px; opacity: 0.2; transform: rotate(-10deg)">
+                        <div
+                            v-if="isPrinting"
+                            style="
+                                font-size: 100px;
+                                opacity: 0.2;
+                                transform: rotate(-10deg);
+                            "
+                        >
                             WATERMARK
                         </div>
                     </template>
 
                     <template #source>
-                        <div style="width:100%;font-size:10px;text-align:left">
-                            SOURCE: Lorem ipsum dolor sit, amet consectetur adipisicing elit. Tenetur, molestiae perspiciatis
-                            nam quae libero, deserunt in aperiam unde officia sint saepe laboriosam ducimus aspernatur labore!
+                        <div
+                            style="
+                                width: 100%;
+                                font-size: 10px;
+                                text-align: left;
+                            "
+                        >
+                            SOURCE: Lorem ipsum dolor sit, amet consectetur
+                            adipisicing elit. Tenetur, molestiae perspiciatis
+                            nam quae libero, deserunt in aperiam unde officia
+                            sint saepe laboriosam ducimus aspernatur labore!
                             Sapiente aspernatur corrupti quis ad.
                         </div>
                     </template>
@@ -1522,18 +1693,19 @@ const customConfig = computed(() => {
         </template>
 
         <template #local>
-            <LocalVueUiXy 
+            <LocalVueUiXy
                 :dataset="isPropsToggled ? alternateDataset : dataset"
                 :config="isPropsToggled ? alternateConfig : config"
                 :selectedXIndex="selectedIndex"
-                :key="`local_${step}`" 
+                :key="`local_${step}`"
                 @selectLegend="selectLegend"
-                @selectX="selectX" ref="local">
-
+                @selectX="selectX"
+                ref="local"
+            >
                 <template #hint="{ hint, isVisible }">
-                    <div 
+                    <div
                         v-if="isVisible"
-                        style="font-size: 10px; margin-top: -3px;"
+                        style="font-size: 10px; margin-top: -3px"
                     >
                         {{ hint }}
                     </div>
@@ -1554,22 +1726,38 @@ const customConfig = computed(() => {
                         </text>
                     </g>
                 </template> -->
-                <template #optionPdf>
-                    PRINT PDF
-                </template>
-                <template #optionStack>
-                    STACK IT
-                </template>
+                <template #optionPdf> PRINT PDF </template>
+                <template #optionStack> STACK IT </template>
                 <template #legend="{ legend }">
                     #LEGEND
                     <div style="font-size: 8px">
                         {{ legend }}
                     </div>
                 </template>
-                <template #tooltip-before="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
+                <template
+                    #tooltip-before="{
+                        datapoint,
+                        seriesIndex,
+                        series,
+                        config,
+                        bars,
+                        lines,
+                        plots,
+                    }"
+                >
                     #BEFORE {{ series.name }}
                 </template>
-                <template #tooltip-after="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
+                <template
+                    #tooltip-after="{
+                        datapoint,
+                        seriesIndex,
+                        series,
+                        config,
+                        bars,
+                        lines,
+                        plots,
+                    }"
+                >
                     #AFTER {{ series.name }}
                 </template>
 
@@ -1578,7 +1766,14 @@ const customConfig = computed(() => {
                 </template> -->
 
                 <template #watermark="{ isPrinting }">
-                    <div v-if="isPrinting" style="font-size: 100px; opacity: 0.1; transform: rotate(-10deg)">
+                    <div
+                        v-if="isPrinting"
+                        style="
+                            font-size: 100px;
+                            opacity: 0.1;
+                            transform: rotate(-10deg);
+                        "
+                    >
                         WATERMARK
                     </div>
                 </template>
@@ -1586,10 +1781,16 @@ const customConfig = computed(() => {
         </template>
 
         <template #VDUI-local>
-            <LocalVueDataUi component="VueUiXy" :dataset="isPropsToggled ? alternateDataset : dataset"
-                :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-lodal_${step}`"
+            <LocalVueDataUi
+                component="VueUiXy"
+                :dataset="isPropsToggled ? alternateDataset : dataset"
+                :config="isPropsToggled ? alternateConfig : config"
+                :key="`VDUI-lodal_${step}`"
                 :selectedXIndex="selectedIndex"
-                @selectLegend="selectLegend" @selectX="selectX" ref="vduiLocal">
+                @selectLegend="selectLegend"
+                @selectX="selectX"
+                ref="vduiLocal"
+            >
                 <!-- <template #time-label="{ x, y, fontSize, fill, transform, absoluteIndex, content, textAnchor }">
                     <g @click="() => selectTimeLabel({ x, y, fontSize, absoluteIndex })">
                         <text :x="x" :y="y" :font-size="fontSize" :text-anchor="textAnchor" :fill="fill">
@@ -1603,8 +1804,18 @@ const customConfig = computed(() => {
                 </template> -->
 
                 <template #svg="{ svg }">
-                    <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
-                    <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
+                    <circle
+                        :cx="svg.width / 2"
+                        :cy="svg.height / 2"
+                        :r="30"
+                        fill="#42d392"
+                    />
+                    <text
+                        :x="svg.width / 2"
+                        :y="svg.height / 2"
+                        text-anchor="middle"
+                        >#SVG</text
+                    >
                 </template>
                 <template #legend="{ legend }">
                     #LEGEND
@@ -1612,17 +1823,44 @@ const customConfig = computed(() => {
                         {{ legend }}
                     </div>
                 </template>
-                <template #tooltip-before="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
+                <template
+                    #tooltip-before="{
+                        datapoint,
+                        seriesIndex,
+                        series,
+                        config,
+                        bars,
+                        lines,
+                        plots,
+                    }"
+                >
                     #BEFORE {{ series.name }}
                 </template>
-                <template #tooltip-after="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
+                <template
+                    #tooltip-after="{
+                        datapoint,
+                        seriesIndex,
+                        series,
+                        config,
+                        bars,
+                        lines,
+                        plots,
+                    }"
+                >
                     #AFTER {{ series.name }}
                 </template>
                 <template #reset-action="{ reset }">
                     <button @click="reset()">REFRESH</button>
                 </template>
                 <template #watermark="{ isPrinting }">
-                    <div v-if="isPrinting" style="font-size: 100px; opacity: 0.1; transform: rotate(-10deg)">
+                    <div
+                        v-if="isPrinting"
+                        style="
+                            font-size: 100px;
+                            opacity: 0.1;
+                            transform: rotate(-10deg);
+                        "
+                    >
                         WATERMARK
                     </div>
                 </template>
@@ -1630,10 +1868,38 @@ const customConfig = computed(() => {
         </template>
 
         <template #build>
-            <VueUiXy :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`build_${step}`" @selectLegend="selectLegend" :selectedXIndex="selectedIndex"
-                @selectX="selectX" ref="build">
-                <template #time-label="{x, y, fontSize, fill, transform, absoluteIndex, content, textAnchor }">
-                    <g @click="() => selectTimeLabel({x, y, fontSize, absoluteIndex })">                
+            <VueUiXy
+                :dataset="isPropsToggled ? alternateDataset : dataset"
+                :config="isPropsToggled ? alternateConfig : config"
+                :key="`build_${step}`"
+                @selectLegend="selectLegend"
+                :selectedXIndex="selectedIndex"
+                @selectX="selectX"
+                ref="build"
+            >
+                <template
+                    #time-label="{
+                        x,
+                        y,
+                        fontSize,
+                        fill,
+                        transform,
+                        absoluteIndex,
+                        content,
+                        textAnchor,
+                    }"
+                >
+                    <g
+                        @click="
+                            () =>
+                                selectTimeLabel({
+                                    x,
+                                    y,
+                                    fontSize,
+                                    absoluteIndex,
+                                })
+                        "
+                    >
                         <text
                             :x="x"
                             :y="y"
@@ -1655,8 +1921,18 @@ const customConfig = computed(() => {
                     </g>
                 </template>
                 <template #svg="{ svg }">
-                    <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
-                    <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
+                    <circle
+                        :cx="svg.width / 2"
+                        :cy="svg.height / 2"
+                        :r="30"
+                        fill="#42d392"
+                    />
+                    <text
+                        :x="svg.width / 2"
+                        :y="svg.height / 2"
+                        text-anchor="middle"
+                        >#SVG</text
+                    >
                 </template>
                 <template #legend="{ legend }">
                     #LEGEND
@@ -1664,26 +1940,53 @@ const customConfig = computed(() => {
                         {{ legend }}
                     </div>
                 </template>
-                <template #tooltip-before="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
+                <template
+                    #tooltip-before="{
+                        datapoint,
+                        seriesIndex,
+                        series,
+                        config,
+                        bars,
+                        lines,
+                        plots,
+                    }"
+                >
                     #BEFORE {{ series.name }}
                 </template>
-                <template #tooltip-after="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
+                <template
+                    #tooltip-after="{
+                        datapoint,
+                        seriesIndex,
+                        series,
+                        config,
+                        bars,
+                        lines,
+                        plots,
+                    }"
+                >
                     #AFTER {{ series.name }}
                 </template>
                 <template #reset-action="{ reset }">
                     <button @click="reset()">REFRESH</button>
                 </template>
                 <template #watermark="{ isPrinting }">
-                    <div v-if="isPrinting" style="font-size: 100px; opacity: 0.1; transform: rotate(-10deg)">
+                    <div
+                        v-if="isPrinting"
+                        style="
+                            font-size: 100px;
+                            opacity: 0.1;
+                            transform: rotate(-10deg);
+                        "
+                    >
                         WATERMARK
                     </div>
-                </template> 
+                </template>
             </VueUiXy>
         </template>
 
         <template #build-treesh>
-            <VueUiXyTreeshaken 
-                :dataset="isPropsToggled ? alternateDataset : dataset" 
+            <VueUiXyTreeshaken
+                :dataset="isPropsToggled ? alternateDataset : dataset"
                 :config="isPropsToggled ? alternateConfig : config"
                 :selectedXIndex="selectedIndex"
                 @selectX="selectX"
@@ -1692,10 +1995,39 @@ const customConfig = computed(() => {
         </template>
 
         <template #VDUI-build>
-            <VueDataUi component="VueUiXy" :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-build_${step}`" :selectedXIndex="selectedIndex"
-                @selectLegend="selectLegend" @selectX="selectX" ref="vduiBuild">
-                <template #time-label="{x, y, fontSize, fill, transform, absoluteIndex, content, textAnchor }">
-                    <g @click="() => selectTimeLabel({x, y, fontSize, absoluteIndex })">                
+            <VueDataUi
+                component="VueUiXy"
+                :dataset="isPropsToggled ? alternateDataset : dataset"
+                :config="isPropsToggled ? alternateConfig : config"
+                :key="`VDUI-build_${step}`"
+                :selectedXIndex="selectedIndex"
+                @selectLegend="selectLegend"
+                @selectX="selectX"
+                ref="vduiBuild"
+            >
+                <template
+                    #time-label="{
+                        x,
+                        y,
+                        fontSize,
+                        fill,
+                        transform,
+                        absoluteIndex,
+                        content,
+                        textAnchor,
+                    }"
+                >
+                    <g
+                        @click="
+                            () =>
+                                selectTimeLabel({
+                                    x,
+                                    y,
+                                    fontSize,
+                                    absoluteIndex,
+                                })
+                        "
+                    >
                         <text
                             :x="x"
                             :y="y"
@@ -1717,8 +2049,18 @@ const customConfig = computed(() => {
                     </g>
                 </template>
                 <template #svg="{ svg }">
-                    <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
-                    <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
+                    <circle
+                        :cx="svg.width / 2"
+                        :cy="svg.height / 2"
+                        :r="30"
+                        fill="#42d392"
+                    />
+                    <text
+                        :x="svg.width / 2"
+                        :y="svg.height / 2"
+                        text-anchor="middle"
+                        >#SVG</text
+                    >
                 </template>
                 <template #legend="{ legend }">
                     #LEGEND
@@ -1726,29 +2068,60 @@ const customConfig = computed(() => {
                         {{ legend }}
                     </div>
                 </template>
-                <template #tooltip-before="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
+                <template
+                    #tooltip-before="{
+                        datapoint,
+                        seriesIndex,
+                        series,
+                        config,
+                        bars,
+                        lines,
+                        plots,
+                    }"
+                >
                     #BEFORE {{ series.name }}
                 </template>
-                <template #tooltip-after="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
+                <template
+                    #tooltip-after="{
+                        datapoint,
+                        seriesIndex,
+                        series,
+                        config,
+                        bars,
+                        lines,
+                        plots,
+                    }"
+                >
                     #AFTER {{ series.name }}
                 </template>
                 <template #reset-action="{ reset }">
                     <button @click="reset()">REFRESH</button>
                 </template>
                 <template #watermark="{ isPrinting }">
-                    <div v-if="isPrinting" style="font-size: 100px; opacity: 0.1; transform: rotate(-10deg)">
+                    <div
+                        v-if="isPrinting"
+                        style="
+                            font-size: 100px;
+                            opacity: 0.1;
+                            transform: rotate(-10deg);
+                        "
+                    >
                         WATERMARK
                     </div>
-                </template> 
+                </template>
             </VueDataUi>
         </template>
 
         <template #custom-config>
-            <LocalVueUiXy :dataset="dataset" :config="customConfig"/>
+            <LocalVueUiXy :dataset="dataset" :config="customConfig" />
         </template>
 
         <template #knobs="{ summaryOpen }">
-            <ConfigKnobs :model="model" @change="step += 1" :open="summaryOpen"/>
+            <ConfigKnobs
+                :model="model"
+                @change="step += 1"
+                :open="summaryOpen"
+            />
         </template>
     </Box>
 
@@ -2012,5 +2385,4 @@ const customConfig = computed(() => {
             @selectX="selectX">
         </LocalVueUiXy>
     </div> -->
-
 </template>

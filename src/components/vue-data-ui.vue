@@ -7,75 +7,135 @@ import BaseIcon from '../atoms/BaseIcon.vue';
 const props = defineProps({
     component: { type: String },
     dataset: { type: [Object, Array, Number, String] },
-    config: { type: Object }
+    config: { type: Object },
 });
 
 const { component, dataset, config } = toRefs(props);
 
 const components = {
     VueUi3dBar: defineAsyncComponent(() => import('./vue-ui-3d-bar.vue')),
-    VueUiAgePyramid: defineAsyncComponent(() => import('./vue-ui-age-pyramid.vue')),
-    VueUiAnnotator: defineAsyncComponent(() => import('./vue-ui-annotator.vue')),
-    VueUiCandlestick: defineAsyncComponent(() => import('./vue-ui-candlestick.vue')),
+    VueUiAgePyramid: defineAsyncComponent(
+        () => import('./vue-ui-age-pyramid.vue'),
+    ),
+    VueUiAnnotator: defineAsyncComponent(
+        () => import('./vue-ui-annotator.vue'),
+    ),
+    VueUiCandlestick: defineAsyncComponent(
+        () => import('./vue-ui-candlestick.vue'),
+    ),
     VueUiChestnut: defineAsyncComponent(() => import('./vue-ui-chestnut.vue')),
-    VueUiDashboard: defineAsyncComponent(() => import('./vue-ui-dashboard.vue')),
+    VueUiDashboard: defineAsyncComponent(
+        () => import('./vue-ui-dashboard.vue'),
+    ),
     VueUiDigits: defineAsyncComponent(() => import('./vue-ui-digits.vue')),
     VueUiDonut: defineAsyncComponent(() => import('./vue-ui-donut.vue')),
-    VueUiDonutEvolution: defineAsyncComponent(() => import('./vue-ui-donut-evolution.vue')),
+    VueUiDonutEvolution: defineAsyncComponent(
+        () => import('./vue-ui-donut-evolution.vue'),
+    ),
     VueUiGalaxy: defineAsyncComponent(() => import('./vue-ui-galaxy.vue')),
     VueUiGauge: defineAsyncComponent(() => import('./vue-ui-gauge.vue')),
     VueUiHeatmap: defineAsyncComponent(() => import('./vue-ui-heatmap.vue')),
     VueUiKpi: defineAsyncComponent(() => import('./vue-ui-kpi.vue')),
-    VueUiMiniLoader: defineAsyncComponent(() => import('./vue-ui-mini-loader.vue')),
+    VueUiMiniLoader: defineAsyncComponent(
+        () => import('./vue-ui-mini-loader.vue'),
+    ),
     VueUiMolecule: defineAsyncComponent(() => import('./vue-ui-molecule.vue')),
-    VueUiMoodRadar: defineAsyncComponent(() => import('./vue-ui-mood-radar.vue')),
-    VueUiNestedDonuts: defineAsyncComponent(() => import('./vue-ui-nested-donuts.vue')),
+    VueUiMoodRadar: defineAsyncComponent(
+        () => import('./vue-ui-mood-radar.vue'),
+    ),
+    VueUiNestedDonuts: defineAsyncComponent(
+        () => import('./vue-ui-nested-donuts.vue'),
+    ),
     VueUiOnion: defineAsyncComponent(() => import('./vue-ui-onion.vue')),
     VueUiQuadrant: defineAsyncComponent(() => import('./vue-ui-quadrant.vue')),
     VueUiRadar: defineAsyncComponent(() => import('./vue-ui-radar.vue')),
     VueUiRating: defineAsyncComponent(() => import('./vue-ui-rating.vue')),
-    VueUiRelationCircle: defineAsyncComponent(() => import('./vue-ui-relation-circle.vue')),
+    VueUiRelationCircle: defineAsyncComponent(
+        () => import('./vue-ui-relation-circle.vue'),
+    ),
     VueUiRings: defineAsyncComponent(() => import('./vue-ui-rings.vue')),
     VueUiScatter: defineAsyncComponent(() => import('./vue-ui-scatter.vue')),
     VueUiSkeleton: defineAsyncComponent(() => import('./vue-ui-skeleton.vue')),
     VueUiSmiley: defineAsyncComponent(() => import('./vue-ui-smiley.vue')),
     VueUiSparkbar: defineAsyncComponent(() => import('./vue-ui-sparkbar.vue')),
-    VueUiSparkgauge: defineAsyncComponent(() => import('./vue-ui-sparkgauge.vue')),
-    VueUiSparkHistogram: defineAsyncComponent(() => import('./vue-ui-sparkhistogram.vue')),
-    VueUiSparkline: defineAsyncComponent(() => import('./vue-ui-sparkline.vue')),
-    VueUiSparkStackbar: defineAsyncComponent(() => import('./vue-ui-sparkstackbar.vue')),
+    VueUiSparkgauge: defineAsyncComponent(
+        () => import('./vue-ui-sparkgauge.vue'),
+    ),
+    VueUiSparkHistogram: defineAsyncComponent(
+        () => import('./vue-ui-sparkhistogram.vue'),
+    ),
+    VueUiSparkline: defineAsyncComponent(
+        () => import('./vue-ui-sparkline.vue'),
+    ),
+    VueUiSparkStackbar: defineAsyncComponent(
+        () => import('./vue-ui-sparkstackbar.vue'),
+    ),
     VueUiTable: defineAsyncComponent(() => import('./vue-ui-table.vue')),
-    VueUiTableSparkline: defineAsyncComponent(() => import('./vue-ui-table-sparkline.vue')),
-    VueUiThermometer: defineAsyncComponent(() => import('./vue-ui-thermometer.vue')),
-    VueUiTiremarks: defineAsyncComponent(() => import('./vue-ui-tiremarks.vue')),
+    VueUiTableSparkline: defineAsyncComponent(
+        () => import('./vue-ui-table-sparkline.vue'),
+    ),
+    VueUiThermometer: defineAsyncComponent(
+        () => import('./vue-ui-thermometer.vue'),
+    ),
+    VueUiTiremarks: defineAsyncComponent(
+        () => import('./vue-ui-tiremarks.vue'),
+    ),
     VueUiTreemap: defineAsyncComponent(() => import('./vue-ui-treemap.vue')),
-    VueUiVerticalBar: defineAsyncComponent(() => import('./vue-ui-horizontal-bar.vue')), // legacy support
-    VueUiHorizontalBar: defineAsyncComponent(() => import('./vue-ui-horizontal-bar.vue')), // v3 renaming
+    VueUiVerticalBar: defineAsyncComponent(
+        () => import('./vue-ui-horizontal-bar.vue'),
+    ), // legacy support
+    VueUiHorizontalBar: defineAsyncComponent(
+        () => import('./vue-ui-horizontal-bar.vue'),
+    ), // v3 renaming
     VueUiWaffle: defineAsyncComponent(() => import('./vue-ui-waffle.vue')),
     VueUiWheel: defineAsyncComponent(() => import('./vue-ui-wheel.vue')),
     VueUiXy: defineAsyncComponent(() => import('./vue-ui-xy.vue')),
-    VueUiTableHeatmap: defineAsyncComponent(() => import('./vue-ui-table-heatmap.vue')),
-    VueUiAccordion: defineAsyncComponent(() => import('./vue-ui-accordion.vue')),
-    VueUiQuickChart: defineAsyncComponent(() => import('./vue-ui-quick-chart.vue')),
+    VueUiTableHeatmap: defineAsyncComponent(
+        () => import('./vue-ui-table-heatmap.vue'),
+    ),
+    VueUiAccordion: defineAsyncComponent(
+        () => import('./vue-ui-accordion.vue'),
+    ),
+    VueUiQuickChart: defineAsyncComponent(
+        () => import('./vue-ui-quick-chart.vue'),
+    ),
     VueUiCursor: defineAsyncComponent(() => import('./vue-ui-cursor.vue')),
-    VueUiSparkTrend: defineAsyncComponent(() => import('./vue-ui-spark-trend.vue')),
-    VueUiStripPlot: defineAsyncComponent(() => import('./vue-ui-strip-plot.vue')),
+    VueUiSparkTrend: defineAsyncComponent(
+        () => import('./vue-ui-spark-trend.vue'),
+    ),
+    VueUiStripPlot: defineAsyncComponent(
+        () => import('./vue-ui-strip-plot.vue'),
+    ),
     VueUiDumbbell: defineAsyncComponent(() => import('./vue-ui-dumbbell.vue')),
-    VueUiWordCloud: defineAsyncComponent(() => import('./vue-ui-word-cloud.vue')),
+    VueUiWordCloud: defineAsyncComponent(
+        () => import('./vue-ui-word-cloud.vue'),
+    ),
     VueUiXyCanvas: defineAsyncComponent(() => import('./vue-ui-xy-canvas.vue')),
     VueUiFlow: defineAsyncComponent(() => import('./vue-ui-flow.vue')),
-    VueUiParallelCoordinatePlot: defineAsyncComponent(() => import('./vue-ui-parallel-coordinate-plot.vue')),
+    VueUiParallelCoordinatePlot: defineAsyncComponent(
+        () => import('./vue-ui-parallel-coordinate-plot.vue'),
+    ),
     VueUiTimer: defineAsyncComponent(() => import('./vue-ui-timer.vue')),
-    VueUiCarouselTable: defineAsyncComponent(() => import('./vue-ui-carousel-table.vue')),
+    VueUiCarouselTable: defineAsyncComponent(
+        () => import('./vue-ui-carousel-table.vue'),
+    ),
     VueUiGizmo: defineAsyncComponent(() => import('./vue-ui-gizmo.vue')),
     VueUiStackbar: defineAsyncComponent(() => import('./vue-ui-stackbar.vue')),
-    VueUiStackline: defineAsyncComponent(() => import('./vue-ui-stackline.vue')),
+    VueUiStackline: defineAsyncComponent(
+        () => import('./vue-ui-stackline.vue'),
+    ),
     VueUiBullet: defineAsyncComponent(() => import('./vue-ui-bullet.vue')),
     VueUiFunnel: defineAsyncComponent(() => import('./vue-ui-funnel.vue')),
-    VueUiHistoryPlot: defineAsyncComponent(() => import('./vue-ui-history-plot.vue')),
-    VueUiCirclePack: defineAsyncComponent(() => import('./vue-ui-circle-pack.vue')),
+    VueUiHistoryPlot: defineAsyncComponent(
+        () => import('./vue-ui-history-plot.vue'),
+    ),
+    VueUiCirclePack: defineAsyncComponent(
+        () => import('./vue-ui-circle-pack.vue'),
+    ),
     VueUiWorld: defineAsyncComponent(() => import('./vue-ui-world.vue')),
-    VueUiRidgeline: defineAsyncComponent(() => import('./vue-ui-ridgeline.vue')),
+    VueUiRidgeline: defineAsyncComponent(
+        () => import('./vue-ui-ridgeline.vue'),
+    ),
     VueUiChord: defineAsyncComponent(() => import('./vue-ui-chord.vue')),
     VueUiDag: defineAsyncComponent(() => import('./vue-ui-dag.vue')),
     VueUiGeo: defineAsyncComponent(() => import('./vue-ui-geo.vue')),
@@ -149,7 +209,7 @@ const componentProps = {
     VueUiChord: ['config', 'dataset'],
     VueUiDag: ['config', 'dataset'],
     VueUiGeo: ['config', 'dataset'],
-    VueUiBump: ['config', 'dataset']
+    VueUiBump: ['config', 'dataset'],
 };
 
 const emit = defineEmits([
@@ -190,7 +250,7 @@ const emit = defineEmits([
     'zoomStart',
     'zoomEnd',
     'zoomReset',
-    'copyAlt'
+    'copyAlt',
 ]);
 
 const isError = computed(() => !components[props.component]);
@@ -201,10 +261,10 @@ const relevantProps = computed(() => {
     const requiredProps = componentProps[props.component] || [];
     const relevantProps = {};
     if (requiredProps.includes('config')) relevantProps.config = config.value;
-    if (requiredProps.includes('dataset')) relevantProps.dataset = dataset.value;
+    if (requiredProps.includes('dataset'))
+        relevantProps.dataset = dataset.value;
     return relevantProps;
 });
-
 
 const generatePdf = ref(() => null);
 const generateCsv = ref(() => null);
@@ -250,7 +310,13 @@ const copyAlt = ref(() => null);
 
 onMounted(() => {
     if (isError.value) {
-        console.error(`\n\nVue Data UI exception:\nThe provided component "${props.component}" does not exist. Check the spelling.\n\nAvailable components:\n\n${Object.keys(components).map(key => `. ${key}\n`).join('')}`);
+        console.error(
+            `\n\nVue Data UI exception:\nThe provided component "${props.component}" does not exist. Check the spelling.\n\nAvailable components:\n\n${Object.keys(
+                components,
+            )
+                .map((key) => `. ${key}\n`)
+                .join('')}`,
+        );
     }
 });
 
@@ -343,7 +409,7 @@ watch(currentComponentRef, async (newRef) => {
         if (newRef.autoSize) {
             autoSize.value = newRef.autoSize;
         }
-        if (newRef.resetZoom) { 
+        if (newRef.resetZoom) {
             resetZoom.value = newRef.resetZoom;
         }
         if (newRef.showSeries) {
@@ -377,10 +443,10 @@ watch(currentComponentRef, async (newRef) => {
             focusLocation.value = newRef.focusLocation;
         }
         if (newRef.copyAlt) {
-            copyAlt.value = newRef.copyAlt
+            copyAlt.value = newRef.copyAlt;
         }
     }
-})
+});
 
 const getEventHandlers = () => {
     const eventNames = [
@@ -428,36 +494,37 @@ const getEventHandlers = () => {
         'zoomStart',
         'zoomEnd',
         'zoomReset',
-        'copyAlt'
+        'copyAlt',
     ];
     const handlers = {};
-    eventNames.forEach(event => {
+    eventNames.forEach((event) => {
         handlers[event] = (...args) => emit(event, ...args);
     });
     return handlers;
 };
 
-const QUEUE = shallowReactive([])
+const QUEUE = shallowReactive([]);
 
 function enqueue(method, args) {
     return new Promise((resolve, reject) => {
-        QUEUE.push({ method, args, resolve, reject })
+        QUEUE.push({ method, args, resolve, reject });
     });
 }
 
 watch(currentComponentRef, (comp) => {
-    if (!comp) return
+    if (!comp) return;
     while (QUEUE.length) {
-        const { method, args, resolve, reject } = QUEUE.shift()
-        const fn = comp[method]
+        const { method, args, resolve, reject } = QUEUE.shift();
+        const fn = comp[method];
         if (typeof fn === 'function') {
             Promise.resolve()
                 .then(() => fn(...args))
                 .then(resolve)
-                .catch(reject)
-        }
-        else {
-            reject(new Error(`Method ${method} not found on ${props.component}`));
+                .catch(reject);
+        } else {
+            reject(
+                new Error(`Method ${method} not found on ${props.component}`),
+            );
         }
     }
 });
@@ -470,7 +537,7 @@ defineExpose({
         return enqueue('getData', args);
     },
     getImage(options = {}) {
-        const { scale = 2 } = options
+        const { scale = 2 } = options;
         if (currentComponentRef.value?.getImage) {
             return currentComponentRef.value.getImage({ scale });
         }
@@ -513,7 +580,7 @@ defineExpose({
     zoomOut,
     switchOrientation,
     focusLocation,
-    copyAlt
+    copyAlt,
 });
 
 const notSupported = computed(() => {
@@ -523,35 +590,55 @@ const notSupported = computed(() => {
         console.warn(message);
         return {
             status: 'notSupported',
-            message
-        }
+            message,
+        };
     }
     console.warn(message);
     return {
         status: 'unknown',
-        message
-    }
-})
-
+        message,
+    };
+});
 </script>
 
 <template>
-    <div v-if="isError" :style="{
-        width: '100%',
-        display: 'flex',
-        gap: '6px',
-        alignItems: 'center',
-        color: notSupported.status === 'notSupported' ? '#FF9000' : '#FF0000'
-    }">
-        <div style="width:36px">
-            <BaseIcon name="moodFlat" v-if="notSupported.status === 'unknown'" stroke="#FF0000" />
-            <BaseIcon name="circleExclamation" v-if="notSupported.status === 'notSupported'" stroke="#FF9000" />
+    <div
+        v-if="isError"
+        :style="{
+            width: '100%',
+            display: 'flex',
+            gap: '6px',
+            alignItems: 'center',
+            color:
+                notSupported.status === 'notSupported' ? '#FF9000' : '#FF0000',
+        }"
+    >
+        <div style="width: 36px">
+            <BaseIcon
+                name="moodFlat"
+                v-if="notSupported.status === 'unknown'"
+                stroke="#FF0000"
+            />
+            <BaseIcon
+                name="circleExclamation"
+                v-if="notSupported.status === 'notSupported'"
+                stroke="#FF9000"
+            />
         </div>
         {{ notSupported.message }}
     </div>
 
-    <component :is="currentComponent" ref="currentComponentRef" v-else v-bind="relevantProps" v-on="getEventHandlers()">
-        <template v-for="(_slotContent, slotName) in $slots" v-slot:[slotName]="slotProps">
+    <component
+        :is="currentComponent"
+        ref="currentComponentRef"
+        v-else
+        v-bind="relevantProps"
+        v-on="getEventHandlers()"
+    >
+        <template
+            v-for="(_slotContent, slotName) in $slots"
+            v-slot:[slotName]="slotProps"
+        >
             <slot :name="slotName" v-bind="slotProps"></slot>
         </template>
     </component>

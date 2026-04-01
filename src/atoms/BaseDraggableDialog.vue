@@ -1,7 +1,7 @@
 <script setup>
-import { ref, reactive, computed, onUnmounted, nextTick, onMounted } from "vue";
-import BaseIcon from "./BaseIcon.vue";
-import { createUid, XMLNS } from "../lib";
+import { ref, reactive, computed, onUnmounted, nextTick, onMounted } from 'vue';
+import BaseIcon from './BaseIcon.vue';
+import { createUid, XMLNS } from '../lib';
 
 const props = defineProps({
     backgroundColor: { type: String },
@@ -16,10 +16,10 @@ const props = defineProps({
     isCursorPointer: { type: Boolean, default: false },
     forceAspectRatio: { type: Boolean, default: false },
     withFullWidth: { type: Boolean, default: false },
-    noLayerUpdate: { type: Boolean, default: false }
+    noLayerUpdate: { type: Boolean, default: false },
 });
 
-const emit = defineEmits(["close", "size"]);
+const emit = defineEmits(['close', 'size']);
 
 const isOpen = ref(false);
 const hasBeenOpened = ref(false);
@@ -53,7 +53,9 @@ const modal = reactive({
 
 function open() {
     previouslyFocusedElement.value =
-        document.activeElement instanceof HTMLElement ? document.activeElement : null;
+        document.activeElement instanceof HTMLElement
+            ? document.activeElement
+            : null;
 
     isOpen.value = true;
     nextTick(() => {
@@ -64,7 +66,7 @@ function open() {
         }
 
         const targetToFocus = closeButtonElement.value || draggableDialog.value;
-        if (targetToFocus && typeof targetToFocus.focus === "function") {
+        if (targetToFocus && typeof targetToFocus.focus === 'function') {
             targetToFocus.focus();
         }
     });
@@ -72,9 +74,12 @@ function open() {
 
 function close() {
     isOpen.value = false;
-    emit("close");
+    emit('close');
 
-    if (previouslyFocusedElement.value && typeof previouslyFocusedElement.value.focus === "function") {
+    if (
+        previouslyFocusedElement.value &&
+        typeof previouslyFocusedElement.value.focus === 'function'
+    ) {
         previouslyFocusedElement.value.focus();
     }
 }
@@ -82,19 +87,19 @@ function close() {
 defineExpose({ open, close });
 
 const modalStyle = computed(() => ({
-    position: "fixed",
+    position: 'fixed',
     left: `${modal.left}px`,
     top: `${modal.top}px`,
     width: `${modal.width}px`,
     height: `${modal.height}px`,
     padding: 0,
-    border: "none",
+    border: 'none',
     background: props.backgroundColor,
-    boxShadow: "0 4px 24px rgba(0,0,0,0.15)",
+    boxShadow: '0 4px 24px rgba(0,0,0,0.15)',
     zIndex: 9999,
-    overflow: "visible",
-    borderRadius: "2px",
-    "--dlg-color": props.color 
+    overflow: 'visible',
+    borderRadius: '2px',
+    '--dlg-color': props.color,
 }));
 
 function getPointer(e) {
@@ -111,10 +116,10 @@ function initDrag(e) {
     const pointer = getPointer(e);
     modal.dragOffsetX = pointer.x - modal.left;
     modal.dragOffsetY = pointer.y - modal.top;
-    document.addEventListener("mousemove", drag);
-    document.addEventListener("mouseup", endDrag);
-    document.addEventListener("touchmove", drag, { passive: false });
-    document.addEventListener("touchend", endDrag);
+    document.addEventListener('mousemove', drag);
+    document.addEventListener('mouseup', endDrag);
+    document.addEventListener('touchmove', drag, { passive: false });
+    document.addEventListener('touchend', endDrag);
 }
 
 function drag(e) {
@@ -131,10 +136,10 @@ function drag(e) {
 
 function endDrag() {
     modal.dragging = false;
-    document.removeEventListener("mousemove", drag);
-    document.removeEventListener("mouseup", endDrag);
-    document.removeEventListener("touchmove", drag);
-    document.removeEventListener("touchend", endDrag);
+    document.removeEventListener('mousemove', drag);
+    document.removeEventListener('mouseup', endDrag);
+    document.removeEventListener('touchmove', drag);
+    document.removeEventListener('touchend', endDrag);
 }
 
 function initResize(e) {
@@ -146,10 +151,10 @@ function initResize(e) {
     modal.pointerStartY = pointer.y;
     modal.resizeStartW = modal.width;
     modal.resizeStartH = modal.height;
-    document.addEventListener("mousemove", resize);
-    document.addEventListener("mouseup", endResize);
-    document.addEventListener("touchmove", resize, { passive: false });
-    document.addEventListener("touchend", endResize);
+    document.addEventListener('mousemove', resize);
+    document.addEventListener('mouseup', endResize);
+    document.addEventListener('touchmove', resize, { passive: false });
+    document.addEventListener('touchend', endResize);
 }
 
 function resize(e) {
@@ -165,16 +170,16 @@ function resize(e) {
 
 function endResize() {
     modal.resizing = false;
-    document.removeEventListener("mousemove", resize);
-    document.removeEventListener("mouseup", endResize);
-    document.removeEventListener("touchmove", resize);
-    document.removeEventListener("touchend", endResize);
+    document.removeEventListener('mousemove', resize);
+    document.removeEventListener('mouseup', endResize);
+    document.removeEventListener('touchmove', resize);
+    document.removeEventListener('touchend', endResize);
     emit('size', { width: modal.width, height: modal.height });
 }
 
 onMounted(() => {
     emit('size', { width: modal.width, height: modal.height });
-})
+});
 
 function initResizeLeft(e) {
     e.preventDefault?.();
@@ -187,10 +192,10 @@ function initResizeLeft(e) {
     modal.resizeStartH = modal.height;
     modal.resizeStartLeft = modal.left;
     modal.resizeStartTop = modal.top;
-    document.addEventListener("mousemove", resizeLeft);
-    document.addEventListener("mouseup", endResizeLeft);
-    document.addEventListener("touchmove", resizeLeft, { passive: false });
-    document.addEventListener("touchend", endResizeLeft);
+    document.addEventListener('mousemove', resizeLeft);
+    document.addEventListener('mouseup', endResizeLeft);
+    document.addEventListener('touchmove', resizeLeft, { passive: false });
+    document.addEventListener('touchend', endResizeLeft);
 }
 
 function resizeLeft(e) {
@@ -200,7 +205,7 @@ function resizeLeft(e) {
     let dx = pointer.x - modal.pointerStartX;
     let newLeft = Math.min(
         Math.max(0, modal.resizeStartLeft + dx),
-        modal.resizeStartLeft + modal.resizeStartW - 240
+        modal.resizeStartLeft + modal.resizeStartW - 240,
     );
     let newWidth = modal.resizeStartW - (newLeft - modal.resizeStartLeft);
     let dy = pointer.y - modal.pointerStartY;
@@ -212,18 +217,18 @@ function resizeLeft(e) {
 
 function endResizeLeft() {
     modal.resizing = false;
-    document.removeEventListener("mousemove", resizeLeft);
-    document.removeEventListener("mouseup", endResizeLeft);
-    document.removeEventListener("touchmove", resizeLeft);
-    document.removeEventListener("touchend", endResizeLeft);
+    document.removeEventListener('mousemove', resizeLeft);
+    document.removeEventListener('mouseup', endResizeLeft);
+    document.removeEventListener('touchmove', resizeLeft);
+    document.removeEventListener('touchend', endResizeLeft);
 }
 
 onMounted(() => {
-    document.addEventListener("keydown", onEscape);
+    document.addEventListener('keydown', onEscape);
 });
 
 function onEscape(e) {
-    if (e.key && e.key === "Escape") {
+    if (e.key && e.key === 'Escape') {
         close();
     }
 }
@@ -232,11 +237,11 @@ onUnmounted(() => {
     endDrag();
     endResize();
     endResizeLeft();
-    document.removeEventListener("keydown", onEscape);
+    document.removeEventListener('keydown', onEscape);
 });
 
 function handleDialogKeydown(event) {
-    if (event.key === "Tab") {
+    if (event.key === 'Tab') {
         trapFocus(event);
     }
 }
@@ -249,7 +254,8 @@ function trapFocus(event) {
         'textarea:not([disabled]), button:not([disabled]), iframe, object, embed, ' +
         '[tabindex]:not([tabindex="-1"]), [contenteditable="true"]';
 
-    const focusableElements = draggableDialog.value.querySelectorAll(focusableSelector);
+    const focusableElements =
+        draggableDialog.value.querySelectorAll(focusableSelector);
     if (!focusableElements.length) return;
 
     const firstElement = focusableElements[0];
@@ -289,7 +295,7 @@ function trapFocus(event) {
                 class="vue-ui-draggable-dialog-header"
                 :style="{
                     backgroundColor: headerBg,
-                    color: headerColor
+                    color: headerColor,
                 }"
             >
                 <span
@@ -317,10 +323,7 @@ function trapFocus(event) {
                         <path d="M19 15m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />
                     </svg>
                 </span>
-                <span
-                    class="vue-ui-draggable-dialog-title"
-                    :id="dialogTitleId"
-                >
+                <span class="vue-ui-draggable-dialog-title" :id="dialogTitleId">
                     <slot name="title" />
                 </span>
                 <div class="draggable-dialog-actions">
@@ -332,7 +335,9 @@ function trapFocus(event) {
                         type="button"
                         aria-label="Close dialog"
                         @click="close"
-                        :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }"
+                        :style="{
+                            cursor: isCursorPointer ? 'pointer' : 'default',
+                        }"
                     >
                         <BaseIcon name="close" :stroke="headerColor" />
                     </button>
@@ -344,7 +349,7 @@ function trapFocus(event) {
                 :class="{
                     'vue-ui-draggable-dialog-body': !withPadding,
                     'vue-ui-draggable-dialog-body-pad': withPadding,
-                    'vue-ui-draggable-dialog-body-full-width': withFullWidth
+                    'vue-ui-draggable-dialog-body-full-width': withFullWidth,
                 }"
             >
                 <slot name="before" />
@@ -480,15 +485,15 @@ function trapFocus(event) {
     border: 1px solid transparent;
     background: inherit;
     display: flex;
-    align-items:center;
+    align-items: center;
     justify-content: center;
     white-space: nowrap;
     position: relative;
 }
 .vue-ui-user-options-button:hover {
-    background: rgba(0,0,0,0.05) !important;
+    background: rgba(0, 0, 0, 0.05) !important;
 }
 .vue-ui-user-options-button:focus-visible {
-    outline: 1px solid #CCCCCC;
+    outline: 1px solid #cccccc;
 }
 </style>

@@ -44,7 +44,7 @@ class List {
             curr = curr._prev;
         }
 
-        return "[" + result.join(", ") + "]";
+        return '[' + result.join(', ') + ']';
     }
 }
 
@@ -57,7 +57,7 @@ function unlink(entry) {
 }
 
 function filterOutLinks(key, value) {
-    if (key !== "_next" && key !== "_prev") {
+    if (key !== '_next' && key !== '_prev') {
         return value;
     }
 }

@@ -1,31 +1,31 @@
 <script setup>
-import { 
-    computed, 
-    defineAsyncComponent, 
-    nextTick, 
-    onBeforeUnmount, 
-    onMounted, 
-    ref, 
-    shallowRef, 
+import {
+    computed,
+    defineAsyncComponent,
+    nextTick,
+    onBeforeUnmount,
+    onMounted,
+    ref,
+    shallowRef,
     toRefs,
-    watch, 
+    watch,
 } from 'vue';
 import { debounce } from '../canvas-lib';
 import {
-    checkNaN, 
+    checkNaN,
     createCsvContent,
-    createUid, 
-    createWordCloudDatasetFromPlainText, 
+    createUid,
+    createWordCloudDatasetFromPlainText,
     dataLabel,
     downloadCsv,
     error,
     getMissingDatasetAttributes,
-    isFunction, 
+    isFunction,
     objectIsEmpty,
     palette,
     themePalettes,
     treeShake,
-    XMLNS
+    XMLNS,
 } from '../lib';
 import { useConfig } from '../useConfig';
 import { useLoading } from '../useLoading';
@@ -39,20 +39,28 @@ import { positionWordsAsync } from '../wordcloud';
 import { useChartAccessibility } from '../useChartAccessibility';
 import img from '../img';
 import Title from '../atoms/Title.vue'; // Must be ready in responsive mode
-import themes from "../themes/vue_ui_word_cloud.json";
+import themes from '../themes/vue_ui_word_cloud.json';
 import usePanZoom from '../usePanZoom';
 import BaseScanner from '../atoms/BaseScanner.vue';
-import A11yDataTable from "../atoms/A11yDataTable.vue";
+import A11yDataTable from '../atoms/A11yDataTable.vue';
 import BaseZoomControls from '../atoms/BaseZoomControls.vue';
 
 const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
 const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
-const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
-const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
-const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
-const BaseDraggableDialog = defineAsyncComponent(() => import('../atoms/BaseDraggableDialog.vue'));
+const PenAndPaper = defineAsyncComponent(
+    () => import('../atoms/PenAndPaper.vue'),
+);
+const UserOptions = defineAsyncComponent(
+    () => import('../atoms/UserOptions.vue'),
+);
+const PackageVersion = defineAsyncComponent(
+    () => import('../atoms/PackageVersion.vue'),
+);
+const BaseDraggableDialog = defineAsyncComponent(
+    () => import('../atoms/BaseDraggableDialog.vue'),
+);
 
 const { vue_ui_word_cloud: DEFAULT_CONFIG } = useConfig();
 const { isThemeValid, warnInvalidTheme } = useThemeCheck();
@@ -61,14 +69,14 @@ const props = defineProps({
     config: {
         type: Object,
         default() {
-            return {}
-        }
+            return {};
+        },
     },
     dataset: {
         type: [Array, String],
         default() {
-            return []
-        }
+            return [];
+        },
     },
 });
 
@@ -76,11 +84,11 @@ const emit = defineEmits(['copyAlt']);
 
 const isDataset = computed({
     get() {
-        return !!props.dataset && props.dataset.length
+        return !!props.dataset && props.dataset.length;
     },
     set(bool) {
-        return bool
-    }
+        return bool;
+    },
 });
 
 const uid = ref(createUid());
@@ -105,7 +113,9 @@ const tooltipTriggerMode = ref('pointer'); // a11y
 const isFocus = ref(false); // a11y
 
 const FINAL_CONFIG = ref(prepareConfig());
-const isCursorPointer = computed(() => FINAL_CONFIG.value.userOptions.useCursorPointer);
+const isCursorPointer = computed(
+    () => FINAL_CONFIG.value.userOptions.useCursorPointer,
+);
 
 const skeletonConfig = computed(() => {
     return treeShake({
@@ -122,14 +132,14 @@ const skeletonConfig = computed(() => {
                     words: {
                         color: '#6A6A6A',
                         usePalette: false,
-                        selectedStroke: '#CCCCCC'
-                    }
-                }
-            }
+                        selectedStroke: '#CCCCCC',
+                    },
+                },
+            },
         },
-        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {}
-    })
-})
+        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {},
+    });
+});
 
 const { loading, FINAL_DATASET, manualLoading } = useLoading({
     ...toRefs(props),
@@ -138,84 +148,91 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
     callback: () => {
         Promise.resolve().then(() => {
             mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
-            mutableConfig.value.showTooltip = FINAL_CONFIG.value.style.chart.tooltip.show;
-            mutableConfig.value.showZoom = FINAL_CONFIG.value.style.chart.zoom.show;
-        })
+            mutableConfig.value.showTooltip =
+                FINAL_CONFIG.value.style.chart.tooltip.show;
+            mutableConfig.value.showZoom =
+                FINAL_CONFIG.value.style.chart.zoom.show;
+        });
     },
     skeletonDataset: props.config?.skeletonDataset ?? [
-        { name: "Lorem", value: 6 },
-        { name: "ipsum",value: 3 },
-        { name: "dolor",value: 1 },
-        { name: "sit",value: 3 },
-        { name: "amet",value: 3 },
-        { name: "consectetur",value: 2 },
-        { name: "adipiscing",value: 1 },
-        { name: "elit",value: 2 },
-        { name: "Vivamus",value: 2 },
-        { name: "pulvinar",value: 1 },
-        { name: "pretium",value: 1 },
-        { name: "venenatis",value: 2 },
-        { name: "Donec",value: 1},
-        { name: "imperdiet",value: 3 },
-        { name: "id",value: 1 },
-        { name: "porttitor",value: 2 },
-        { name: "tristique",value: 1 },
-        { name: "Aenean",value: 2 },
-        { name: "ac",value: 5 },
-        { name: "commodo",value: 2 },
-        { name: "justo",value: 2 },
-        { name: "Vestibulum",value: 2 },
-        { name: "placerat",value: 1 },
-        { name: "molestie",value: 1 },
-        { name: "nisl",value: 1 },
-        { name: "lacinia",value: 2 },
-        { name: "nulla",value: 1 },
-        { name: "posuere",value: 2 },
-        { name: "quis",value: 3 },
-        { name: "ullamcorper",value: 1 },
-        { name: "eu",value: 1 },
-        { name: "ex",value: 1 },
-        { name: "vitae",value: 3 },
-        { name: "facilisis",value: 1 },
-        { name: "Aliquam",value: 1 },
-        { name: "erat",value: 1 },
-        { name: "volutpat",value: 1 },
-        { name: "Proin",value: 1 },
-        { name: "nunc",value: 1 },
-        { name: "felis",value: 1 },
-        { name: "gravida",value: 3 },
-        { name: "sed",value: 1 },
-        { name: "orci",value: 1 },
-        { name: "Interdum",value: 1 },
-        { name: "et",value: 1 },
-        { name: "malesuada",value: 1 },
-        { name: "fames",value: 1 },
-        { name: "ante",value: 1 },
+        { name: 'Lorem', value: 6 },
+        { name: 'ipsum', value: 3 },
+        { name: 'dolor', value: 1 },
+        { name: 'sit', value: 3 },
+        { name: 'amet', value: 3 },
+        { name: 'consectetur', value: 2 },
+        { name: 'adipiscing', value: 1 },
+        { name: 'elit', value: 2 },
+        { name: 'Vivamus', value: 2 },
+        { name: 'pulvinar', value: 1 },
+        { name: 'pretium', value: 1 },
+        { name: 'venenatis', value: 2 },
+        { name: 'Donec', value: 1 },
+        { name: 'imperdiet', value: 3 },
+        { name: 'id', value: 1 },
+        { name: 'porttitor', value: 2 },
+        { name: 'tristique', value: 1 },
+        { name: 'Aenean', value: 2 },
+        { name: 'ac', value: 5 },
+        { name: 'commodo', value: 2 },
+        { name: 'justo', value: 2 },
+        { name: 'Vestibulum', value: 2 },
+        { name: 'placerat', value: 1 },
+        { name: 'molestie', value: 1 },
+        { name: 'nisl', value: 1 },
+        { name: 'lacinia', value: 2 },
+        { name: 'nulla', value: 1 },
+        { name: 'posuere', value: 2 },
+        { name: 'quis', value: 3 },
+        { name: 'ullamcorper', value: 1 },
+        { name: 'eu', value: 1 },
+        { name: 'ex', value: 1 },
+        { name: 'vitae', value: 3 },
+        { name: 'facilisis', value: 1 },
+        { name: 'Aliquam', value: 1 },
+        { name: 'erat', value: 1 },
+        { name: 'volutpat', value: 1 },
+        { name: 'Proin', value: 1 },
+        { name: 'nunc', value: 1 },
+        { name: 'felis', value: 1 },
+        { name: 'gravida', value: 3 },
+        { name: 'sed', value: 1 },
+        { name: 'orci', value: 1 },
+        { name: 'Interdum', value: 1 },
+        { name: 'et', value: 1 },
+        { name: 'malesuada', value: 1 },
+        { name: 'fames', value: 1 },
+        { name: 'ante', value: 1 },
     ],
     skeletonConfig: treeShake({
         defaultConfig: FINAL_CONFIG.value,
-        userConfig: skeletonConfig.value
-    })
+        userConfig: skeletonConfig.value,
+    }),
 });
 
 const drawableDataset = ref(setupWordCloud());
 
 function setupWordCloud() {
-    return typeof FINAL_DATASET.value === 'string' ? createWordCloudDatasetFromPlainText(FINAL_DATASET.value) : FINAL_DATASET.value.map((dp, i) => {
-        return {
-            ...dp,
-            value: checkNaN(dp.value)
-        }
-    })
+    return typeof FINAL_DATASET.value === 'string'
+        ? createWordCloudDatasetFromPlainText(FINAL_DATASET.value)
+        : FINAL_DATASET.value.map((dp, i) => {
+              return {
+                  ...dp,
+                  value: checkNaN(dp.value),
+              };
+          });
 }
 
-const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
-const { svgRef } = useChartAccessibility({ config: FINAL_CONFIG.value.style.chart.title });
+const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } =
+    useUserOptionState({ config: FINAL_CONFIG.value });
+const { svgRef } = useChartAccessibility({
+    config: FINAL_CONFIG.value.style.chart.title,
+});
 
 function prepareConfig() {
     const mergedConfig = useNestedProp({
         userConfig: props.config,
-        defaultConfig: DEFAULT_CONFIG
+        defaultConfig: DEFAULT_CONFIG,
     });
 
     const theme = mergedConfig.theme;
@@ -228,18 +245,20 @@ function prepareConfig() {
 
     const fused = useNestedProp({
         userConfig: themes[theme] || props.config,
-        defaultConfig: mergedConfig
+        defaultConfig: mergedConfig,
     });
 
     const finalConfig = useNestedProp({
         userConfig: props.config,
-        defaultConfig: fused
+        defaultConfig: fused,
     });
 
     return {
         ...finalConfig,
-        customPalette: finalConfig.customPalette.length ? finalConfig.customPalette : themePalettes[theme] || palette
-    }
+        customPalette: finalConfig.customPalette.length
+            ? finalConfig.customPalette
+            : themePalettes[theme] || palette,
+    };
 }
 
 const cloudOrigin = ref({ x: 0, y: 0 });
@@ -260,46 +279,59 @@ function applyInitialViewBox() {
 }
 
 const debounceUpdateCloud = debounce(() => {
-    generateWordCloud()
+    generateWordCloud();
 }, 100);
 
 const resizing = ref(false);
 
-watch(() => resizing.value, v => {
-    if (v === false) {
-        isRelayout.value = true;
-        debounceUpdateCloud();
-        applyInitialViewBox();
-    }
-});
+watch(
+    () => resizing.value,
+    (v) => {
+        if (v === false) {
+            isRelayout.value = true;
+            debounceUpdateCloud();
+            applyInitialViewBox();
+        }
+    },
+);
 
-watch(() => props.config, (_newCfg) => {
-    FINAL_CONFIG.value = prepareConfig();
-    userOptionsVisible.value = !FINAL_CONFIG.value.userOptions.showOnChartHover;
-    prepareChart();
-    titleStep.value += 1;
-    tableStep.value += 1;
-    
-    // Reset mutable config
-    mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
-    mutableConfig.value.showTooltip = FINAL_CONFIG.value.style.chart.tooltip.show;
-    mutableConfig.value.showZoom = FINAL_CONFIG.value.style.chart.zoom.show;
-}, { deep: true });
+watch(
+    () => props.config,
+    (_newCfg) => {
+        FINAL_CONFIG.value = prepareConfig();
+        userOptionsVisible.value =
+            !FINAL_CONFIG.value.userOptions.showOnChartHover;
+        prepareChart();
+        titleStep.value += 1;
+        tableStep.value += 1;
+
+        // Reset mutable config
+        mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
+        mutableConfig.value.showTooltip =
+            FINAL_CONFIG.value.style.chart.tooltip.show;
+        mutableConfig.value.showZoom = FINAL_CONFIG.value.style.chart.zoom.show;
+    },
+    { deep: true },
+);
 
 const svg = ref({
     width: FINAL_CONFIG.value.style.chart.width,
     height: FINAL_CONFIG.value.style.chart.height,
     maxFontSize: FINAL_CONFIG.value.style.chart.words.maxFontSize,
     minFontSize: FINAL_CONFIG.value.style.chart.words.minFontSize,
-    bold: FINAL_CONFIG.value.style.chart.words.bold
+    bold: FINAL_CONFIG.value.style.chart.words.bold,
 });
 
 const resizeJob = debounce(() => {
     const { width, height } = useResponsive({
         chart: wordCloudChart.value,
-        title: FINAL_CONFIG.value.style.chart.title.text ? chartTitle.value : null,
-        legend: FINAL_CONFIG.value.style.chart.controls.show ? zoomControls.value?.$el : null,
-        source: source.value
+        title: FINAL_CONFIG.value.style.chart.title.text
+            ? chartTitle.value
+            : null,
+        legend: FINAL_CONFIG.value.style.chart.controls.show
+            ? zoomControls.value?.$el
+            : null,
+        source: source.value,
     });
 
     requestAnimationFrame(async () => {
@@ -333,15 +365,15 @@ function prepareChart() {
         drawableDataset.value.forEach((w, i) => {
             getMissingDatasetAttributes({
                 datasetObject: w,
-                requiredAttributes: ['name', 'value']
-            }).forEach(attr => {
+                requiredAttributes: ['name', 'value'],
+            }).forEach((attr) => {
                 isDataset.value = false;
                 error({
                     componentName: 'VueUiWordCloud',
                     type: 'datasetSerieAttribute',
                     property: attr,
                     index: i,
-                    debug: debug.value
+                    debug: debug.value,
                 });
             });
         });
@@ -353,14 +385,13 @@ function prepareChart() {
     }
 
     if (FINAL_CONFIG.value.responsive) {
-
         if (resizeObserver.value) {
             if (observedEl.value) {
                 resizeObserver.value.unobserve(observedEl.value);
             }
             resizeObserver.value.disconnect();
         }
-        
+
         resizeObserver.value = new ResizeObserver(handleResize);
         observedEl.value = wordCloudChart.value.parentNode;
         resizeObserver.value.observe(observedEl.value);
@@ -380,23 +411,28 @@ onBeforeUnmount(() => {
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `wordCloud_${uid.value}`,
     fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-word-cloud',
-    options: FINAL_CONFIG.value.userOptions.print
+    options: FINAL_CONFIG.value.userOptions.print,
 });
 
 const mutableConfig = ref({
     showTable: FINAL_CONFIG.value.table.show,
     showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show,
-    showZoom: FINAL_CONFIG.value.style.chart.zoom.show
+    showZoom: FINAL_CONFIG.value.style.chart.zoom.show,
 });
 
 // v3 - Essential to make shifting between loading config and final config work
-watch(FINAL_CONFIG, () => {
-    mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
-    mutableConfig.value.showTooltip = FINAL_CONFIG.value.style.chart.tooltip.show;
-    mutableConfig.value.showZoom = FINAL_CONFIG.value.style.chart.zoom.show;
-}, { immediate: true });
+watch(
+    FINAL_CONFIG,
+    () => {
+        mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
+        mutableConfig.value.showTooltip =
+            FINAL_CONFIG.value.style.chart.tooltip.show;
+        mutableConfig.value.showZoom = FINAL_CONFIG.value.style.chart.zoom.show;
+    },
+    { immediate: true },
+);
 
-function measureTextSize(text, fontSize, fontFamily = "Arial") {
+function measureTextSize(text, fontSize, fontFamily = 'Arial') {
     // This invisible canvas is necessary to calculate the exact dimensions of words before painting them on the svg. Cool trick
     const canvas = document.createElement('canvas');
     const context = canvas.getContext('2d');
@@ -412,12 +448,15 @@ const positionedWords = ref([]);
 const wordIndexById = new Map();
 
 function generateWordCloud() {
-    const values = [...drawableDataset.value].map(d => d.value);
+    const values = [...drawableDataset.value].map((d) => d.value);
     const maxValue = Math.max(...values);
     const minValue = Math.min(...values);
 
     const scaledWords = [...drawableDataset.value].map((word, i) => {
-        let fontSize = ((word.value - minValue) / (maxValue - minValue)) * (svg.value.maxFontSize - svg.value.minFontSize) + svg.value.minFontSize;
+        let fontSize =
+            ((word.value - minValue) / (maxValue - minValue)) *
+                (svg.value.maxFontSize - svg.value.minFontSize) +
+            svg.value.minFontSize;
         fontSize = isNaN(fontSize) ? svg.value.minFontSize : fontSize;
         const size = measureTextSize(word.name, fontSize);
         return {
@@ -427,11 +466,13 @@ function generateWordCloud() {
             width: size.width,
             height: size.height,
             color: FINAL_CONFIG.value.style.chart.words.usePalette
-                ? (FINAL_CONFIG.value.customPalette[i]
-                    || FINAL_CONFIG.value.customPalette[i % FINAL_CONFIG.value.customPalette.length]
-                    || palette[i]
-                    || palette[i % palette.length])
-                : FINAL_CONFIG.value.style.chart.words.color
+                ? FINAL_CONFIG.value.customPalette[i] ||
+                  FINAL_CONFIG.value.customPalette[
+                      i % FINAL_CONFIG.value.customPalette.length
+                  ] ||
+                  palette[i] ||
+                  palette[i % palette.length]
+                : FINAL_CONFIG.value.style.chart.words.color,
         };
     });
 
@@ -467,7 +508,7 @@ function generateWordCloud() {
                     target.maxY = w.maxY;
                 }
             }
-        }
+        },
     });
 
     positionedWords.value.sort((a, b) => b.fontSize - a.fontSize);
@@ -480,29 +521,36 @@ function generateWordCloud() {
     isRelayout.value = false;
 }
 const table = computed(() => {
-    const head = positionedWords.value.map(w => {
+    const head = positionedWords.value.map((w) => {
         return {
             name: w.name,
-            color: w.color
-        }
-    })
-    const body = positionedWords.value.map(w => w.value);
+            color: w.color,
+        };
+    });
+    const body = positionedWords.value.map((w) => w.value);
     return { head, body };
-})
+});
 
-function generateCsv(callback=null) {
+function generateCsv(callback = null) {
     nextTick(() => {
         const labels = table.value.head.map((h, i) => {
-            return [[
-                h.name
-            ], [table.value.body[i]]]
+            return [[h.name], [table.value.body[i]]];
         });
-        const tableXls = [[FINAL_CONFIG.value.style.chart.title.text], [FINAL_CONFIG.value.style.chart.title.subtitle.text], [[""], [FINAL_CONFIG.value.table.columnNames.value],]].concat(labels);
+        const tableXls = [
+            [FINAL_CONFIG.value.style.chart.title.text],
+            [FINAL_CONFIG.value.style.chart.title.subtitle.text],
+            [[''], [FINAL_CONFIG.value.table.columnNames.value]],
+        ].concat(labels);
 
         const csvContent = createCsvContent(tableXls);
 
         if (!callback) {
-            downloadCsv({ csvContent, title: FINAL_CONFIG.value.style.chart.title.text || "vue-ui-word-cloud" })
+            downloadCsv({
+                csvContent,
+                title:
+                    FINAL_CONFIG.value.style.chart.title.text ||
+                    'vue-ui-word-cloud',
+            });
         } else {
             callback(csvContent);
         }
@@ -516,49 +564,54 @@ const dataTable = computed(() => {
     ];
 
     const body = table.value.head.map((h, i) => {
-        const label = dataLabel({ p: FINAL_CONFIG.value.table.td.prefix, v: table.value.body[i], s: FINAL_CONFIG.value.table.td.suffix, r: FINAL_CONFIG.value.table.td.roundingValue });
+        const label = dataLabel({
+            p: FINAL_CONFIG.value.table.td.prefix,
+            v: table.value.body[i],
+            s: FINAL_CONFIG.value.table.td.suffix,
+            r: FINAL_CONFIG.value.table.td.roundingValue,
+        });
         return [
             {
                 color: h.color,
-                name: h.name
+                name: h.name,
             },
-            label
-        ]
+            label,
+        ];
     });
 
-    const a11yBody = body.map(b => {
+    const a11yBody = body.map((b) => {
         return b.map((c, i) => {
             if (i === 0) return c.name;
             return c;
-        })
+        });
     });
 
     const config = {
         th: {
             backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
             color: FINAL_CONFIG.value.table.th.color,
-            outline: FINAL_CONFIG.value.table.th.outline
+            outline: FINAL_CONFIG.value.table.th.outline,
         },
         td: {
             backgroundColor: FINAL_CONFIG.value.table.td.backgroundColor,
             color: FINAL_CONFIG.value.table.td.color,
-            outline: FINAL_CONFIG.value.table.td.outline
+            outline: FINAL_CONFIG.value.table.td.outline,
         },
-        breakpoint: FINAL_CONFIG.value.table.responsiveBreakpoint
-    }
+        breakpoint: FINAL_CONFIG.value.table.responsiveBreakpoint,
+    };
 
     const colNames = [
         FINAL_CONFIG.value.table.columnNames.series,
         FINAL_CONFIG.value.table.columnNames.value,
-    ]
+    ];
 
     return {
         colNames,
         head,
         body,
         a11yBody,
-        config
-    }
+        config,
+    };
 });
 
 const isFullscreen = ref(false);
@@ -588,82 +641,107 @@ function toggleZoom() {
     mutableConfig.value.showZoom = !mutableConfig.value.showZoom;
 }
 
-const active = computed(() => !isAnnotator.value && mutableConfig.value.showZoom);
+const active = computed(
+    () => !isAnnotator.value && mutableConfig.value.showZoom,
+);
 
-const { viewBox, resetZoom, isZoom, setInitialViewBox, zoomByFactor, scale } = usePanZoom(svgRef, {
-    x: 0,
-    y: 0,
-    width: svg.value.width <= 0 ? 10 : svg.value.width,
-    height: svg.value.height <= 0 ? 10 : svg.value.height,
-}, 1, active)
+const { viewBox, resetZoom, isZoom, setInitialViewBox, zoomByFactor, scale } =
+    usePanZoom(
+        svgRef,
+        {
+            x: 0,
+            y: 0,
+            width: svg.value.width <= 0 ? 10 : svg.value.width,
+            height: svg.value.height <= 0 ? 10 : svg.value.height,
+        },
+        1,
+        active,
+    );
 
-watch(() => props.dataset, () => {
-    drawableDataset.value = setupWordCloud();
+watch(
+    () => props.dataset,
+    () => {
+        drawableDataset.value = setupWordCloud();
 
-    if (!FINAL_CONFIG.value.responsive) {
-        generateWordCloud();
-        applyInitialViewBox();
-    }
-}, { immediate: true });
+        if (!FINAL_CONFIG.value.responsive) {
+            generateWordCloud();
+            applyInitialViewBox();
+        }
+    },
+    { immediate: true },
+);
 
-async function getImage({ scale = 2} = {}) {
+async function getImage({ scale = 2 } = {}) {
     if (!wordCloudChart.value) return;
     const { width, height } = wordCloudChart.value.getBoundingClientRect();
-    const aspectRatio = width / height; 
-    const { imageUri, base64 } = await img({ domElement: wordCloudChart.value, base64: true, img: true, scale })
-    return { 
-        imageUri, 
-        base64, 
+    const aspectRatio = width / height;
+    const { imageUri, base64 } = await img({
+        domElement: wordCloudChart.value,
+        base64: true,
+        img: true,
+        scale,
+    });
+    return {
+        imageUri,
+        base64,
         title: FINAL_CONFIG.value.style.chart.title.text,
         width,
         height,
-        aspectRatio
-    }
+        aspectRatio,
+    };
 }
 
 const tableComponent = computed(() => {
-    const useDialog = FINAL_CONFIG.value.table.useDialog && !FINAL_CONFIG.value.table.show;
+    const useDialog =
+        FINAL_CONFIG.value.table.useDialog && !FINAL_CONFIG.value.table.show;
     const open = mutableConfig.value.showTable;
     return {
         component: useDialog ? BaseDraggableDialog : Accordion,
         title: `${FINAL_CONFIG.value.style.chart.title.text}${FINAL_CONFIG.value.style.chart.title.subtitle.text ? `: ${FINAL_CONFIG.value.style.chart.title.subtitle.text}` : ''}`,
-        props: useDialog ? {
-            backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
-            color: FINAL_CONFIG.value.table.th.color,
-            headerColor: FINAL_CONFIG.value.table.th.color,
-            headerBg: FINAL_CONFIG.value.table.th.backgroundColor,
-            isFullscreen: isFullscreen.value,
-            fullscreenParent: wordCloudChart.value,
-            forcedWidth: Math.min(500, window.innerWidth * 0.8),
-            isCursorPointer: isCursorPointer.value
-        } : {
-            hideDetails: true,
-            config: {
-                open,
-                maxHeight: 10000,
-                body: {
-                    backgroundColor: FINAL_CONFIG.value.style.chart.backgroundColor,
-                    color: FINAL_CONFIG.value.style.chart.color
-                },
-                head: {
-                    backgroundColor: FINAL_CONFIG.value.style.chart.backgroundColor,
-                    color: FINAL_CONFIG.value.style.chart.color
-                }
-            }
-        }
-    }
+        props: useDialog
+            ? {
+                  backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
+                  color: FINAL_CONFIG.value.table.th.color,
+                  headerColor: FINAL_CONFIG.value.table.th.color,
+                  headerBg: FINAL_CONFIG.value.table.th.backgroundColor,
+                  isFullscreen: isFullscreen.value,
+                  fullscreenParent: wordCloudChart.value,
+                  forcedWidth: Math.min(500, window.innerWidth * 0.8),
+                  isCursorPointer: isCursorPointer.value,
+              }
+            : {
+                  hideDetails: true,
+                  config: {
+                      open,
+                      maxHeight: 10000,
+                      body: {
+                          backgroundColor:
+                              FINAL_CONFIG.value.style.chart.backgroundColor,
+                          color: FINAL_CONFIG.value.style.chart.color,
+                      },
+                      head: {
+                          backgroundColor:
+                              FINAL_CONFIG.value.style.chart.backgroundColor,
+                          color: FINAL_CONFIG.value.style.chart.color,
+                      },
+                  },
+              },
+    };
 });
 
-watch(() => mutableConfig.value.showTable, v => {
-    if (FINAL_CONFIG.value.table.show) return;
-    if (v && FINAL_CONFIG.value.table.useDialog && tableUnit.value) {
-        tableUnit.value.open()
-    } else {
-        if ('close' in tableUnit.value) {
-            tableUnit.value.close()
+watch(
+    () => mutableConfig.value.showTable,
+    (v) => {
+        if (FINAL_CONFIG.value.table.show) return;
+        if (v && FINAL_CONFIG.value.table.useDialog && tableUnit.value) {
+            tableUnit.value.open();
+        } else {
+            if ('close' in tableUnit.value) {
+                tableUnit.value.close();
+            }
         }
-    }
-});
+    },
+);
 
 function closeTable() {
     mutableConfig.value.showTable = false;
@@ -678,7 +756,7 @@ const svgTitle = computed(() => FINAL_CONFIG.value.style.chart.title);
 const { exportSvg, getSvg } = useSvgExport({
     svg: svgRef,
     title: svgTitle,
-    backgroundColor: svgBg
+    backgroundColor: svgBg,
 });
 
 async function generateSvg({ isCb }) {
@@ -689,7 +767,14 @@ async function generateSvg({ isCb }) {
     try {
         if (isCb) {
             const { blob, url, text, dataUrl } = await getSvg();
-            await Promise.resolve(FINAL_CONFIG.value.userOptions.callbacks.svg({ blob, url, text, dataUrl }));
+            await Promise.resolve(
+                FINAL_CONFIG.value.userOptions.callbacks.svg({
+                    blob,
+                    url,
+                    text,
+                    dataUrl,
+                }),
+            );
         } else {
             await Promise.resolve(exportSvg());
         }
@@ -699,12 +784,12 @@ async function generateSvg({ isCb }) {
 }
 
 function onGenerateImage(payload) {
-    if (payload?.stage === "start") {
+    if (payload?.stage === 'start') {
         isCallbackImaging.value = true;
         return;
     }
 
-    if (payload?.stage === "end") {
+    if (payload?.stage === 'end') {
         isCallbackImaging.value = false;
         return;
     }
@@ -733,36 +818,51 @@ function clearWordSelection() {
 
 function onTrapLeave(word, index) {
     if (FINAL_CONFIG.value.events.datapointLeave) {
-        FINAL_CONFIG.value.events.datapointLeave({ datapoint: word, seriesIndex: index });
+        FINAL_CONFIG.value.events.datapointLeave({
+            datapoint: word,
+            seriesIndex: index,
+        });
     }
-    if (activeTooltipIndex.value === index && tooltipTriggerMode.value === 'keyboard') return;
+    if (
+        activeTooltipIndex.value === index &&
+        tooltipTriggerMode.value === 'keyboard'
+    )
+        return;
     selectedWord.value = null;
     isTooltip.value = false;
 }
 
 function onTrapClick(word, index) {
     if (FINAL_CONFIG.value.events.datapointClick) {
-        FINAL_CONFIG.value.events.datapointClick({ datapoint: word, seriesIndex: index });
+        FINAL_CONFIG.value.events.datapointClick({
+            datapoint: word,
+            seriesIndex: index,
+        });
     }
 }
 
 function updateTooltipA11yPosition(index) {
     if (!svgRef.value || index === null || index === undefined) return;
 
-    const rect = svgRef.value.querySelector(`[data-a11y-word-index="${index}-${uid.value}"]`);
+    const rect = svgRef.value.querySelector(
+        `[data-a11y-word-index="${index}-${uid.value}"]`,
+    );
     if (!rect) return;
 
     const box = rect.getBoundingClientRect();
 
     tooltipA11yPosition.value = {
-        x: box.left + (box.width / 2),
-        y: box.top + (box.height / 2)
+        x: box.left + box.width / 2,
+        y: box.top + box.height / 2,
     };
 }
 
 function useTooltip(word, index, triggerMode = 'pointer') {
     if (FINAL_CONFIG.value.events.datapointEnter) {
-        FINAL_CONFIG.value.events.datapointEnter({ datapoint: word, seriesIndex: index })
+        FINAL_CONFIG.value.events.datapointEnter({
+            datapoint: word,
+            seriesIndex: index,
+        });
     }
     if (!mutableConfig.value.showTooltip) return;
 
@@ -778,7 +878,7 @@ function useTooltip(word, index, triggerMode = 'pointer') {
         try {
             const customFormatString = customFormat({
                 datapoint: word,
-                config: FINAL_CONFIG.value
+                config: FINAL_CONFIG.value,
             });
             if (typeof customFormatString === 'string') {
                 tooltipContent.value = customFormatString;
@@ -805,24 +905,28 @@ function useTooltip(word, index, triggerMode = 'pointer') {
     isTooltip.value = true;
 }
 
-async function copyAlt(){
+async function copyAlt() {
     emit('copyAlt', {
         config: FINAL_CONFIG.value,
-        dataset: positionedWords.value
-    })
+        dataset: positionedWords.value,
+    });
     if (!FINAL_CONFIG.value.userOptions.callbacks.altCopy) {
-        console.warn('Vue Data UI - A callback must be set for `altCopy` in userOptions.');
-        return
+        console.warn(
+            'Vue Data UI - A callback must be set for `altCopy` in userOptions.',
+        );
+        return;
     }
-    await Promise.resolve(FINAL_CONFIG.value.userOptions.callbacks.altCopy({ 
-        config: FINAL_CONFIG.value, 
-        dataset: positionedWords.value
-    }));
+    await Promise.resolve(
+        FINAL_CONFIG.value.userOptions.callbacks.altCopy({
+            config: FINAL_CONFIG.value,
+            dataset: positionedWords.value,
+        }),
+    );
 }
 
 /***************************************************************************************************
  * a11y
-**************************************************************************************************/
+ **************************************************************************************************/
 
 function onSvgFocus() {
     activeTooltipIndex.value = null;
@@ -844,7 +948,8 @@ function onSvgKeydown(event) {
     const isActivationKey = event.key === 'Enter' || event.key === ' ';
     const isEscapeKey = event.key === 'Escape';
 
-    if (!isPreviousKey && !isNextKey && !isActivationKey && !isEscapeKey) return;
+    if (!isPreviousKey && !isNextKey && !isActivationKey && !isEscapeKey)
+        return;
 
     event.preventDefault();
     event.stopPropagation();
@@ -864,7 +969,11 @@ function onSvgKeydown(event) {
 
     let nextIndex = activeTooltipIndex.value;
 
-    if (nextIndex === null || nextIndex < 0 || nextIndex >= positionedWords.value.length) {
+    if (
+        nextIndex === null ||
+        nextIndex < 0 ||
+        nextIndex >= positionedWords.value.length
+    ) {
         nextIndex = isNextKey ? 0 : positionedWords.value.length - 1;
     } else {
         nextIndex += isNextKey ? 1 : -1;
@@ -903,26 +1012,27 @@ defineExpose({
     toggleAnnotator,
     toggleFullscreen,
     toggleZoom,
-    copyAlt
+    copyAlt,
 });
-
 </script>
 
 <template>
-    <div 
-        class="vue-data-ui-component vue-ui-word-cloud" 
-        ref="wordCloudChart" 
+    <div
+        class="vue-data-ui-component vue-ui-word-cloud"
+        ref="wordCloudChart"
         :id="`wordCloud_${uid}`"
         :data-resizing="resizing"
         :data-relayout="isRelayout"
-        :style="`width: 100%; font-family:${FINAL_CONFIG.style.fontFamily};background:${FINAL_CONFIG.style.chart.backgroundColor};${FINAL_CONFIG.responsive ? 'height:100%' : ''}`" 
-        @mouseenter="() => setUserOptionsVisibility(true)" 
-        @mouseleave="() => {
-            setUserOptionsVisibility(false);
-            if (!isFocus) {
-                clearWordSelection();
+        :style="`width: 100%; font-family:${FINAL_CONFIG.style.fontFamily};background:${FINAL_CONFIG.style.chart.backgroundColor};${FINAL_CONFIG.responsive ? 'height:100%' : ''}`"
+        @mouseenter="() => setUserOptionsVisibility(true)"
+        @mouseleave="
+            () => {
+                setUserOptionsVisibility(false);
+                if (!isFocus) {
+                    clearWordSelection();
+                }
             }
-        }"
+        "
     >
         <div :id="`chart-instructions-${uid}`" class="sr-only">
             <p>{{ FINAL_CONFIG.a11y.translations.keyboardNavigation }}</p>
@@ -947,59 +1057,71 @@ defineExpose({
             @close="toggleAnnotator"
         >
             <template #annotator-action-close>
-                <slot name="annotator-action-close"/>
+                <slot name="annotator-action-close" />
             </template>
             <template #annotator-action-color="{ color }">
-                <slot name="annotator-action-color" v-bind="{ color }"/>
+                <slot name="annotator-action-color" v-bind="{ color }" />
             </template>
             <template #annotator-action-draw="{ mode }">
-                <slot name="annotator-action-draw" v-bind="{ mode }"/>
+                <slot name="annotator-action-draw" v-bind="{ mode }" />
             </template>
             <template #annotator-action-undo="{ disabled }">
-                <slot name="annotator-action-undo" v-bind="{ disabled }"/>
+                <slot name="annotator-action-undo" v-bind="{ disabled }" />
             </template>
             <template #annotator-action-redo="{ disabled }">
-                <slot name="annotator-action-redo" v-bind="{ disabled }"/>
+                <slot name="annotator-action-redo" v-bind="{ disabled }" />
             </template>
             <template #annotator-action-delete="{ disabled }">
-                <slot name="annotator-action-delete" v-bind="{ disabled }"/>
+                <slot name="annotator-action-delete" v-bind="{ disabled }" />
             </template>
         </PenAndPaper>
 
-        <div ref="chartTitle" v-if="FINAL_CONFIG.style.chart.title.text" :style="`width:100%;background:transparent;padding-bottom:24px`">
+        <div
+            ref="chartTitle"
+            v-if="FINAL_CONFIG.style.chart.title.text"
+            :style="`width:100%;background:transparent;padding-bottom:24px`"
+        >
             <Title
-            :key="`title_${titleStep}`" 
-            :config="{
-                title: {
-                    ...FINAL_CONFIG.style.chart.title
-                },
-                subtitle: {
-                    ...FINAL_CONFIG.style.chart.title.subtitle
-                }
-            }" />
+                :key="`title_${titleStep}`"
+                :config="{
+                    title: {
+                        ...FINAL_CONFIG.style.chart.title,
+                    },
+                    subtitle: {
+                        ...FINAL_CONFIG.style.chart.title.subtitle,
+                    },
+                }"
+            />
         </div>
 
-        <UserOptions 
-            ref="userOptionsRef" 
-            :key="`user_option_${step}`" 
-            v-if="FINAL_CONFIG.userOptions.show && isDataset && (keepUserOptionState ? true : userOptionsVisible)"
-            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor" 
+        <UserOptions
+            ref="userOptionsRef"
+            :key="`user_option_${step}`"
+            v-if="
+                FINAL_CONFIG.userOptions.show &&
+                isDataset &&
+                (keepUserOptionState ? true : userOptionsVisible)
+            "
+            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
             :color="FINAL_CONFIG.style.chart.color"
-            :isPrinting="isPrinting" 
-            :isImaging="isImaging" 
+            :isPrinting="isPrinting"
+            :isImaging="isImaging"
             :uid="uid"
             :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
             :hasXls="FINAL_CONFIG.userOptions.buttons.csv"
             :hasImg="FINAL_CONFIG.userOptions.buttons.img"
             :hasSvg="FINAL_CONFIG.userOptions.buttons.svg"
-            :hasTable="FINAL_CONFIG.userOptions.buttons.table" 
+            :hasTable="FINAL_CONFIG.userOptions.buttons.table"
             :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
             :hasAltCopy="FINAL_CONFIG.userOptions.buttons.altCopy"
             :isFullscreen="isFullscreen"
             :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
-            :chartElement="wordCloudChart" 
+            :chartElement="wordCloudChart"
             :position="FINAL_CONFIG.userOptions.position"
-            :hasTooltip="FINAL_CONFIG.style.chart.tooltip.show && FINAL_CONFIG.userOptions.buttons.tooltip"
+            :hasTooltip="
+                FINAL_CONFIG.style.chart.tooltip.show &&
+                FINAL_CONFIG.userOptions.buttons.tooltip
+            "
             :isTooltip="mutableConfig.showTooltip"
             :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator"
             :isAnnotation="isAnnotator"
@@ -1010,8 +1132,8 @@ defineExpose({
             :isZoom="mutableConfig.showZoom"
             :isCursorPointer="isCursorPointer"
             @toggleFullscreen="toggleFullscreen"
-            @generatePdf="generatePdf" 
-            @generateCsv="generateCsv" 
+            @generatePdf="generatePdf"
+            @generateCsv="generateCsv"
             @generateImage="onGenerateImage"
             @generateSvg="generateSvg"
             @toggleTable="toggleTable"
@@ -1020,11 +1142,15 @@ defineExpose({
             @toggleZoom="toggleZoom"
             @copyAlt="copyAlt"
             :style="{
-                visibility: keepUserOptionState ? userOptionsVisible ? 'visible' : 'hidden' : 'visible'
+                visibility: keepUserOptionState
+                    ? userOptionsVisible
+                        ? 'visible'
+                        : 'hidden'
+                    : 'visible',
             }"
         >
             <template #menuIcon="{ isOpen, color }" v-if="$slots.menuIcon">
-                <slot name="menuIcon" v-bind="{ isOpen, color }"/>
+                <slot name="menuIcon" v-bind="{ isOpen, color }" />
             </template>
             <template #optionPdf v-if="$slots.optionPdf">
                 <slot name="optionPdf" />
@@ -1041,23 +1167,46 @@ defineExpose({
             <template #optionTable v-if="$slots.optionTable">
                 <slot name="optionTable" />
             </template>
-            <template v-if="$slots.optionFullscreen" template #optionFullscreen="{ toggleFullscreen, isFullscreen }">
-                <slot name="optionFullscreen" v-bind="{ toggleFullscreen, isFullscreen }"/>
+            <template
+                v-if="$slots.optionFullscreen"
+                template
+                #optionFullscreen="{ toggleFullscreen, isFullscreen }"
+            >
+                <slot
+                    name="optionFullscreen"
+                    v-bind="{ toggleFullscreen, isFullscreen }"
+                />
             </template>
-            <template v-if="$slots.optionAnnotator" #optionAnnotator="{ toggleAnnotator, isAnnotator }">
-                <slot name="optionAnnotator" v-bind="{ toggleAnnotator, isAnnotator }" />
+            <template
+                v-if="$slots.optionAnnotator"
+                #optionAnnotator="{ toggleAnnotator, isAnnotator }"
+            >
+                <slot
+                    name="optionAnnotator"
+                    v-bind="{ toggleAnnotator, isAnnotator }"
+                />
             </template>
-            <template v-if="$slots.optionZoom" #optionZoom="{ toggleZoom, isZoomLocked }">
-                <slot name="optionZoom" v-bind="{ toggleZoom , isZoomLocked }"/>
+            <template
+                v-if="$slots.optionZoom"
+                #optionZoom="{ toggleZoom, isZoomLocked }"
+            >
+                <slot name="optionZoom" v-bind="{ toggleZoom, isZoomLocked }" />
             </template>
-            <template v-if="$slots.optionAltCopy" #optionAltCopy="{ altCopy: c }">
-                <slot name="optionAltCopy" v-bind="{ altCopy: c }"/>
+            <template
+                v-if="$slots.optionAltCopy"
+                #optionAltCopy="{ altCopy: c }"
+            >
+                <slot name="optionAltCopy" v-bind="{ altCopy: c }" />
             </template>
         </UserOptions>
 
         <BaseZoomControls
             ref="zoomControls"
-            v-if="FINAL_CONFIG.style.chart.controls.position === 'top' && FINAL_CONFIG.style.chart.controls.show && !loading"
+            v-if="
+                FINAL_CONFIG.style.chart.controls.position === 'top' &&
+                FINAL_CONFIG.style.chart.controls.show &&
+                !loading
+            "
             :config="FINAL_CONFIG"
             :scale="scale"
             :isFullscreen="isFullscreen"
@@ -1067,10 +1216,13 @@ defineExpose({
             @resetZoom="resetZoom(true)"
         />
 
-        <div style="position: relative;">
+        <div style="position: relative">
             <svg
                 ref="svgRef"
-                :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen  }"
+                :class="{
+                    'vue-data-ui-fullscreen--on': isFullscreen,
+                    'vue-data-ui-fulscreen--off': !isFullscreen,
+                }"
                 :aria-describedby="`chart-instructions-${uid}`"
                 :xmlns="XMLNS"
                 :viewBox="`${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`"
@@ -1081,22 +1233,25 @@ defineExpose({
                 @keydown="onSvgKeydown"
             >
                 <PackageVersion />
-    
+
                 <!-- BACKGROUND SLOT -->
-                <foreignObject 
+                <foreignObject
                     v-if="$slots['chart-background']"
                     :x="0"
                     :y="0"
                     :width="svg.width <= 0 ? 10 : svg.width"
                     :height="svg.height <= 0 ? 10 : svg.height"
                     :style="{
-                        pointerEvents: 'none'
+                        pointerEvents: 'none',
                     }"
                 >
-                    <slot name="chart-background"/>
+                    <slot name="chart-background" />
                 </foreignObject>
-                
-                <g :transform="`translate(${cloudOrigin.x}, ${cloudOrigin.y})`" :class="{ 'wc-finalized': cloudFinalized }">
+
+                <g
+                    :transform="`translate(${cloudOrigin.x}, ${cloudOrigin.y})`"
+                    :class="{ 'wc-finalized': cloudFinalized }"
+                >
                     <!-- One persistent group per word -->
                     <g
                         v-for="(word, index) in positionedWords"
@@ -1121,7 +1276,11 @@ defineExpose({
                         />
                         <text
                             :fill="word.color"
-                            :font-weight="FINAL_CONFIG.style.chart.words.bold ? 'bold' : 'normal'"
+                            :font-weight="
+                                FINAL_CONFIG.style.chart.words.bold
+                                    ? 'bold'
+                                    : 'normal'
+                            "
                             :x="0"
                             :y="0"
                             :font-size="word.fontSize"
@@ -1129,42 +1288,74 @@ defineExpose({
                             text-anchor="middle"
                             dominant-baseline="central"
                             paint-order="stroke fill"
-                            :stroke="(!selectedWord || selectedWord === word.id) ? FINAL_CONFIG.style.chart.words.selectedStroke : undefined"
+                            :stroke="
+                                !selectedWord || selectedWord === word.id
+                                    ? FINAL_CONFIG.style.chart.words
+                                          .selectedStroke
+                                    : undefined
+                            "
                             :stroke-width="word.height * 0.05"
                             stroke-linecap="round"
                             stroke-linejoin="round"
                             :style="`
                                 pointer-events:none;
-                                fill-opacity:${(!selectedWord || selectedWord === word.id || !cloudFinalized) ? 1 : FINAL_CONFIG.style.chart.words.hoverOpacity} !important;
+                                fill-opacity:${!selectedWord || selectedWord === word.id || !cloudFinalized ? 1 : FINAL_CONFIG.style.chart.words.hoverOpacity} !important;
                             `"
                         >
                             {{ word.name }}
                         </text>
                     </g>
                 </g>
-                <slot name="svg" :svg="{
-                    ...svg,
-                    isPrintingImg: isPrinting | isImaging | isCallbackImaging,
-                    isPrintingSvg: isCallbackSvg,
-                }"/>
+                <slot
+                    name="svg"
+                    :svg="{
+                        ...svg,
+                        isPrintingImg:
+                            isPrinting | isImaging | isCallbackImaging,
+                        isPrintingSvg: isCallbackSvg,
+                    }"
+                />
             </svg>
-            <div v-if="$slots.hint" style="position: absolute; top: 100%; left: 0; width: 100%;" data-dom-to-png-ignore aria-hidden="true">
-                <slot name="hint" v-bind="{ hint: FINAL_CONFIG.a11y.translations.keyboardNavigation, isVisible: isFocus }"/>
+            <div
+                v-if="$slots.hint"
+                style="position: absolute; top: 100%; left: 0; width: 100%"
+                data-dom-to-png-ignore
+                aria-hidden="true"
+            >
+                <slot
+                    name="hint"
+                    v-bind="{
+                        hint: FINAL_CONFIG.a11y.translations.keyboardNavigation,
+                        isVisible: isFocus,
+                    }"
+                />
             </div>
         </div>
 
         <div v-if="$slots.watermark" class="vue-data-ui-watermark">
-            <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging || isCallbackImaging || isCallbackSvg }"/>
+            <slot
+                name="watermark"
+                v-bind="{
+                    isPrinting:
+                        isPrinting ||
+                        isImaging ||
+                        isCallbackImaging ||
+                        isCallbackSvg,
+                }"
+            />
         </div>
 
         <div v-if="isZoom" data-dom-to-png-ignore class="reset-wrapper">
-            <slot name="reset-action" :reset="resetZoom">
-            </slot>
+            <slot name="reset-action" :reset="resetZoom"> </slot>
         </div>
 
         <BaseZoomControls
             ref="zoomControls"
-            v-if="FINAL_CONFIG.style.chart.controls.position === 'bottom' && FINAL_CONFIG.style.chart.controls.show && !loading"
+            v-if="
+                FINAL_CONFIG.style.chart.controls.position === 'bottom' &&
+                FINAL_CONFIG.style.chart.controls.show &&
+                !loading
+            "
             :config="FINAL_CONFIG"
             :scale="scale"
             :isFullscreen="isFullscreen"
@@ -1183,7 +1374,9 @@ defineExpose({
             :borderRadius="FINAL_CONFIG.style.chart.tooltip.borderRadius"
             :borderColor="FINAL_CONFIG.style.chart.tooltip.borderColor"
             :borderWidth="FINAL_CONFIG.style.chart.tooltip.borderWidth"
-            :backgroundOpacity="FINAL_CONFIG.style.chart.tooltip.backgroundOpacity"
+            :backgroundOpacity="
+                FINAL_CONFIG.style.chart.tooltip.backgroundOpacity
+            "
             :position="FINAL_CONFIG.style.chart.tooltip.position"
             :offsetY="FINAL_CONFIG.style.chart.tooltip.offsetY"
             :parent="wordCloudChart"
@@ -1193,18 +1386,26 @@ defineExpose({
             :smooth="FINAL_CONFIG.style.chart.tooltip.smooth"
             :backdropFilter="FINAL_CONFIG.style.chart.tooltip.backdropFilter"
             :smoothForce="FINAL_CONFIG.style.chart.tooltip.smoothForce"
-            :smoothSnapThreshold="FINAL_CONFIG.style.chart.tooltip.smoothSnapThreshold"
+            :smoothSnapThreshold="
+                FINAL_CONFIG.style.chart.tooltip.smoothSnapThreshold
+            "
             :isA11yMode="tooltipTriggerMode === 'keyboard'"
             :a11yPosition="tooltipA11yPosition"
         >
             <template #tooltip-before>
-                <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>
+                <slot
+                    name="tooltip-before"
+                    v-bind="{ ...dataTooltipSlot }"
+                ></slot>
             </template>
             <template #tooltip>
-                <slot name="tooltip" v-bind="{ ...dataTooltipSlot }"/>
+                <slot name="tooltip" v-bind="{ ...dataTooltipSlot }" />
             </template>
             <template #tooltip-after>
-                <slot name="tooltip-after" v-bind="{...dataTooltipSlot}"></slot>
+                <slot
+                    name="tooltip-after"
+                    v-bind="{ ...dataTooltipSlot }"
+                ></slot>
             </template>
         </Tooltip>
 
@@ -1223,28 +1424,37 @@ defineExpose({
                 {{ tableComponent.title }}
             </template>
             <template #actions v-if="FINAL_CONFIG.table.useDialog">
-                <button 
-                    tabindex="0" 
-                    class="vue-ui-user-options-button" 
+                <button
+                    tabindex="0"
+                    class="vue-ui-user-options-button"
                     @click="generateCsv(FINAL_CONFIG.userOptions.callbacks.csv)"
                     :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }"
                 >
-                    <BaseIcon name="fileCsv" :stroke="tableComponent.props.color"/>
+                    <BaseIcon
+                        name="fileCsv"
+                        :stroke="tableComponent.props.color"
+                    />
                 </button>
             </template>
             <template #content>
-                <DataTable 
+                <DataTable
                     :key="`table_${tableStep}`"
-                    :colNames="dataTable.colNames" 
-                    :head="dataTable.head" 
+                    :colNames="dataTable.colNames"
+                    :head="dataTable.head"
                     :body="dataTable.body"
                     :config="dataTable.config"
-                    :title="FINAL_CONFIG.table.useDialog ? '' : tableComponent.title"
+                    :title="
+                        FINAL_CONFIG.table.useDialog ? '' : tableComponent.title
+                    "
                     :withCloseButton="!FINAL_CONFIG.table.useDialog"
                     :isCursorPointer="isCursorPointer"
-                    @close="closeTable">
+                    @close="closeTable"
+                >
                     <template #th="{ th }">
-                        <div v-html="th" style="display:flex;align-items:center"></div>
+                        <div
+                            v-html="th"
+                            style="display: flex; align-items: center"
+                        ></div>
                     </template>
                     <template #td="{ td }">
                         {{ td.name || td }}
@@ -1261,7 +1471,7 @@ defineExpose({
 </template>
 
 <style scoped lang="scss">
-@import "../vue-data-ui.css";
+@import '../vue-data-ui.css';
 
 .vue-ui-word-cloud {
     position: relative;
@@ -1320,8 +1530,8 @@ text.animated {
     transition: fill-opacity 0.25s ease-out;
 }
 
-.vue-ui-word-cloud[data-resizing="true"] .vue-ui-word-cloud-word,
-.vue-ui-word-cloud[data-relayout="true"] .vue-ui-word-cloud-word {
+.vue-ui-word-cloud[data-resizing='true'] .vue-ui-word-cloud-word,
+.vue-ui-word-cloud[data-relayout='true'] .vue-ui-word-cloud-word {
     transition: none;
 }
 

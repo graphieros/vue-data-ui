@@ -11,17 +11,17 @@ export function roundNumber(value, decimalPlaces) {
 }
 
 export function formatNumber(value) {
-    return Number.isFinite(value) ? value.toString() : "0";
+    return Number.isFinite(value) ? value.toString() : '0';
 }
 
 export function toTwoDigitHex(value) {
     const clamped = clampNumber(value, 0, 255);
     const hex = clamped.toString(16);
-    return hex.length === 1 ? "0" + hex : hex;
+    return hex.length === 1 ? '0' + hex : hex;
 }
 
 export function parseOptionalNumber(value) {
-    if (typeof value !== "string") return undefined;
+    if (typeof value !== 'string') return undefined;
     const parsed = Number.parseFloat(value);
     return Number.isFinite(parsed) ? parsed : undefined;
 }

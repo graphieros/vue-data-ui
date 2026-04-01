@@ -43,6 +43,7 @@ Work in Progress pull requests are also welcome to get feedback early on, or if 
 ### Troubleshooting
 
 - While working with either native Linux or Windows/WSL2, you may encounter an error of the following type after running `npm run prod`:
+
 ```
 It looks like this is your first time using Cypress: 15.12.0
 
@@ -55,11 +56,14 @@ It looks like this is your first time using Cypress: 15.12.0
   Platform: linux-x64 (Ubuntu - 24.04.3 LTS)
   Cypress Version: 15.12.0
 ```
+
 This can be resolved by running the following commands in your terminal:
+
 ```
 sudo apt-get update
 sudo apt-get install -y libnspr4 libnss3 libxss1 libasound2t64 libatk-bridge2.0-0 libgtk-3-0 libgbm1
 ```
+
 After which `npm run prod` should run correctly.
 
 ## Resources
@@ -110,8 +114,7 @@ The testing arena is pretty raw in terms of layout. Feel free to make it better 
 ### Tests
 
 1. Unit tests (Vitest)
-
-   - `npm run test` to run from the root directory, add `-w` flag to watch
+    - `npm run test` to run from the root directory, add `-w` flag to watch
 
 2. Component tests (Cypress, Component testing)
-   - `npm run test:e2e` from the root directory to open Cypress
+    - `npm run test:e2e` from the root directory to open Cypress

@@ -1,41 +1,43 @@
 <script setup>
-import { 
-    computed, 
-    defineAsyncComponent, 
-    onMounted, 
-    ref, 
+import {
+    computed,
+    defineAsyncComponent,
+    onMounted,
+    ref,
     toRefs,
-    useSlots, 
-    watch, 
-} from "vue";
+    useSlots,
+    watch,
+} from 'vue';
 import {
     applyDataLabel,
-    convertColorToHex, 
-    convertCustomPalette, 
+    convertColorToHex,
+    convertCustomPalette,
     createUid,
     dataLabel,
     error,
     getMissingDatasetAttributes,
     isFunction,
     objectIsEmpty,
-    palette, 
+    palette,
     setOpacity,
     shiftHue,
     themePalettes,
     treeShake,
-    XMLNS 
-} from "../lib";
-import { useConfig } from "../useConfig";
-import { useLoading } from "../useLoading";
-import { useNestedProp } from "../useNestedProp";
-import { useThemeCheck } from "../useThemeCheck";
-import { useChartAccessibility } from "../useChartAccessibility";
-import themes from "../themes/vue_ui_sparkstackbar.json";
-import BaseScanner from "../atoms/BaseScanner.vue";
-import BaseLegendToggle from "../atoms/BaseLegendToggle.vue";
-import A11yDataTable from "../atoms/A11yDataTable.vue";
+    XMLNS,
+} from '../lib';
+import { useConfig } from '../useConfig';
+import { useLoading } from '../useLoading';
+import { useNestedProp } from '../useNestedProp';
+import { useThemeCheck } from '../useThemeCheck';
+import { useChartAccessibility } from '../useChartAccessibility';
+import themes from '../themes/vue_ui_sparkstackbar.json';
+import BaseScanner from '../atoms/BaseScanner.vue';
+import BaseLegendToggle from '../atoms/BaseLegendToggle.vue';
+import A11yDataTable from '../atoms/A11yDataTable.vue';
 
-const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
+const PackageVersion = defineAsyncComponent(
+    () => import('../atoms/PackageVersion.vue'),
+);
 const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
 
 const { vue_ui_sparkstackbar: DEFAULT_CONFIG } = useConfig();
@@ -45,22 +47,24 @@ const props = defineProps({
     config: {
         type: Object,
         default() {
-            return {}
-        }
+            return {};
+        },
     },
     dataset: {
         type: Array,
         default() {
             return [];
-        }
-    }
+        },
+    },
 });
 
 const slots = useSlots();
 
 onMounted(() => {
     if (slots['chart-background']) {
-        console.warn('VueUiSparkStackbar does not support the #chart-background slot.')
+        console.warn(
+            'VueUiSparkStackbar does not support the #chart-background slot.',
+        );
     }
 });
 
@@ -88,14 +92,14 @@ const skeletonConfig = computed(() => {
             style: {
                 backgroundColor: '#99999930',
                 animation: { show: false },
-                bar: { gradient: { inderlayerColor: '#6A6A6A' }},
+                bar: { gradient: { inderlayerColor: '#6A6A6A' } },
                 title: {
-                    backgroundColor: 'transparent'
-                }
-            }
+                    backgroundColor: 'transparent',
+                },
+            },
         },
-        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {}
-    })
+        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {},
+    });
 });
 
 const { loading, FINAL_DATASET } = useLoading({
@@ -109,21 +113,23 @@ const { loading, FINAL_DATASET } = useLoading({
     ],
     skeletonConfig: treeShake({
         defaultConfig: FINAL_CONFIG.value,
-        userConfig: skeletonConfig.value
-    })
+        userConfig: skeletonConfig.value,
+    }),
 });
 
-const { svgRef } = useChartAccessibility({ config: FINAL_CONFIG.value.style.title });
+const { svgRef } = useChartAccessibility({
+    config: FINAL_CONFIG.value.style.title,
+});
 
 function prepareConfig() {
     const mergedConfig = useNestedProp({
         userConfig: props.config,
-        defaultConfig: DEFAULT_CONFIG
+        defaultConfig: DEFAULT_CONFIG,
     });
 
     const theme = mergedConfig.theme;
     if (!theme) return mergedConfig;
-    
+
     if (!isThemeValid.value(mergedConfig)) {
         warnInvalidTheme(mergedConfig);
         return mergedConfig;
@@ -131,46 +137,66 @@ function prepareConfig() {
 
     const fused = useNestedProp({
         userConfig: themes[theme] || props.config,
-        defaultConfig: mergedConfig
+        defaultConfig: mergedConfig,
     });
 
     const finalConfig = useNestedProp({
         userConfig: props.config,
-        defaultConfig: fused
+        defaultConfig: fused,
     });
 
     return {
         ...finalConfig,
-        customPalette: finalConfig.customPalette.length ? finalConfig.customPalette : themePalettes[theme] || palette
-    }
+        customPalette: finalConfig.customPalette.length
+            ? finalConfig.customPalette
+            : themePalettes[theme] || palette,
+    };
 }
 
-watch(() => props.config, (_newCfg) => {
-    FINAL_CONFIG.value = prepareConfig();
-    prepareChart();
-}, { deep: true });
+watch(
+    () => props.config,
+    (_newCfg) => {
+        FINAL_CONFIG.value = prepareConfig();
+        prepareChart();
+    },
+    { deep: true },
+);
 
-watch(() => FINAL_DATASET.value, (_) => {
-    safeDatasetCopy.value = FINAL_DATASET.value.map((d, i ) => {
-        return {
-            ...d,
-            color: d.color ? convertColorToHex(d.color) : customPalette.value[i] || palette[i] || palette[i % palette.length]
-        }
-    });
-    animateChart();
-}, { deep: true })
+watch(
+    () => FINAL_DATASET.value,
+    (_) => {
+        safeDatasetCopy.value = FINAL_DATASET.value.map((d, i) => {
+            return {
+                ...d,
+                color: d.color
+                    ? convertColorToHex(d.color)
+                    : customPalette.value[i] ||
+                      palette[i] ||
+                      palette[i % palette.length],
+            };
+        });
+        animateChart();
+    },
+    { deep: true },
+);
 
 const customPalette = computed(() => {
     return convertCustomPalette(FINAL_CONFIG.value.customPalette);
-})
+});
 
-const safeDatasetCopy = ref(FINAL_DATASET.value.map((d, i ) => {
-    return {
-        ...d,
-        value: FINAL_CONFIG.value.style.animation.show ? 0 : d.value || 0,
-        color: d.color ? convertColorToHex(d.color) : customPalette.value[i] || palette[i] || palette[i % palette.length]
-    }
-}));
+const safeDatasetCopy = ref(
+    FINAL_DATASET.value.map((d, i) => {
+        return {
+            ...d,
+            value: FINAL_CONFIG.value.style.animation.show ? 0 : d.value || 0,
+            color: d.color
+                ? convertColorToHex(d.color)
+                : customPalette.value[i] ||
+                  palette[i] ||
+                  palette[i % palette.length],
+        };
+    }),
+);
 
 const isAnimating = ref(true);
 
@@ -181,8 +207,8 @@ function animateChart() {
     }
 
     const chunks = FINAL_CONFIG.value.style.animation.animationFrames;
-    const targets = FINAL_DATASET.value.map(d => d.value || 0);
-    const step = targets.map(v => v / chunks);
+    const targets = FINAL_DATASET.value.map((d) => d.value || 0);
+    const step = targets.map((v) => v / chunks);
     const total = targets.reduce((a, b) => a + b, 0);
 
     let progressed = 0;
@@ -192,7 +218,11 @@ function animateChart() {
     safeDatasetCopy.value = FINAL_DATASET.value.map((d, i) => ({
         ...d,
         value: 0,
-        color: d.color ? convertColorToHex(d.color) : customPalette.value[i] || palette[i] || palette[i % palette.length]
+        color: d.color
+            ? convertColorToHex(d.color)
+            : customPalette.value[i] ||
+              palette[i] ||
+              palette[i % palette.length],
     }));
 
     function animate() {
@@ -202,7 +232,11 @@ function animateChart() {
             safeDatasetCopy.value = safeDatasetCopy.value.map((d, i) => ({
                 ...d,
                 value: Math.min(d.value + step[i], targets[i]),
-                color: d.color ? convertColorToHex(d.color) : customPalette.value[i] || palette[i] || palette[i % palette.length]
+                color: d.color
+                    ? convertColorToHex(d.color)
+                    : customPalette.value[i] ||
+                      palette[i] ||
+                      palette[i % palette.length],
             }));
             requestAnimationFrame(animate);
         } else {
@@ -210,7 +244,11 @@ function animateChart() {
             safeDatasetCopy.value = FINAL_DATASET.value.map((d, i) => ({
                 ...d,
                 value: targets[i],
-                color: d.color ? convertColorToHex(d.color) : customPalette.value[i] || palette[i] || palette[i % palette.length],
+                color: d.color
+                    ? convertColorToHex(d.color)
+                    : customPalette.value[i] ||
+                      palette[i] ||
+                      palette[i % palette.length],
                 id: createUid(),
             }));
         }
@@ -225,24 +263,24 @@ onMounted(() => {
 const debug = computed(() => FINAL_CONFIG.value.debug);
 
 function prepareChart() {
-    if(objectIsEmpty(props.dataset)) {
+    if (objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiSparkStackbar',
             type: 'dataset',
-            debug: debug.value
-        })
+            debug: debug.value,
+        });
     } else {
         props.dataset.forEach((ds, i) => {
             getMissingDatasetAttributes({
                 datasetObject: ds,
-                requiredAttributes: ['name', 'value']
-            }).forEach(attr => {
+                requiredAttributes: ['name', 'value'],
+            }).forEach((attr) => {
                 error({
                     componentName: 'VueUiSparkStackbar',
                     type: 'datasetSerieAttribute',
                     property: attr,
                     index: i,
-                    debug: debug.value
+                    debug: debug.value,
                 });
             });
         });
@@ -256,10 +294,13 @@ const svg = ref({
     height: 16,
 });
 
-const segregated = ref([])
+const segregated = ref([]);
 
 const total = computed(() => {
-    return FINAL_DATASET.value.map(d => d.value || 0).filter((ds, i) => !segregated.value.includes(i)).reduce((a, b) => a + b, 0);
+    return FINAL_DATASET.value
+        .map((d) => d.value || 0)
+        .filter((ds, i) => !segregated.value.includes(i))
+        .reduce((a, b) => a + b, 0);
 });
 
 const absoluteDataset = computed(() => {
@@ -271,7 +312,13 @@ const absoluteDataset = computed(() => {
 
         return {
             ...d,
-            color: convertColorToHex(FINAL_DATASET.value[i]?.color ? FINAL_DATASET.value[i]?.color : customPalette.value[i] || palette[i] || palette[i % palette.length]),
+            color: convertColorToHex(
+                FINAL_DATASET.value[i]?.color
+                    ? FINAL_DATASET.value[i]?.color
+                    : customPalette.value[i] ||
+                          palette[i] ||
+                          palette[i % palette.length],
+            ),
             value: dValue,
             proportion: dProportion,
             width: dWidth,
@@ -279,32 +326,34 @@ const absoluteDataset = computed(() => {
             proportionLabel: dataLabel({
                 v: dProportion * 100,
                 s: '%',
-                r: FINAL_CONFIG.value.style.legend.percentage.rounding
+                r: FINAL_CONFIG.value.style.legend.percentage.rounding,
             }),
-        }
-    })
+        };
+    });
 });
 
 const mutableDataset = computed(() => {
-    return absoluteDataset.value.filter((_ds, i) => !segregated.value.includes(i))
+    return absoluteDataset.value.filter(
+        (_ds, i) => !segregated.value.includes(i),
+    );
 });
 
 function toggleLegend() {
     if (segregated.value.length) {
         segregated.value = [];
     } else {
-        absoluteDataset.value.forEach((_,i) => {
+        absoluteDataset.value.forEach((_, i) => {
             segregated.value.push(i);
         });
     }
 }
 
 function segregate(index) {
-    if(segregated.value.includes(index)) {
-        segregated.value =segregated.value.filter(s => s !== index)
+    if (segregated.value.includes(index)) {
+        segregated.value = segregated.value.filter((s) => s !== index);
     } else {
-        if(segregated.value.length < safeDatasetCopy.value.length - 1) {
-            segregated.value.push(index)
+        if (segregated.value.length < safeDatasetCopy.value.length - 1) {
+            segregated.value.push(index);
         }
     }
 }
@@ -316,10 +365,12 @@ function validSeriesToToggle(name) {
         }
         return null;
     }
-    const dp = absoluteDataset.value.find(d => d.name === name);
+    const dp = absoluteDataset.value.find((d) => d.name === name);
     if (!dp) {
         if (FINAL_CONFIG.value.debug) {
-            console.warn(`VueUiSparkStackbar - Series name not found "${name}"`);
+            console.warn(
+                `VueUiSparkStackbar - Series name not found "${name}"`,
+            );
         }
         return null;
     }
@@ -335,9 +386,9 @@ function showSeries(name) {
 }
 
 function hideSeries(name) {
-    const dp  = validSeriesToToggle(name);
+    const dp = validSeriesToToggle(name);
     if (dp === null) return;
-    if (!segregated.value.includes(dp.id))  {
+    if (!segregated.value.includes(dp.id)) {
         segregate(dp.seriesIndex);
     }
 }
@@ -348,19 +399,22 @@ const drawableDataset = computed(() => {
     for (let i = 0; i < mutableDataset.value.length; i += 1) {
         datapoints.push({
             ...mutableDataset.value[i],
-            start
+            start,
         });
-        start += mutableDataset.value[i].width
+        start += mutableDataset.value[i].width;
     }
-    return datapoints
+    return datapoints;
 });
 
-const emits = defineEmits(['selectDatapoint'])
+const emits = defineEmits(['selectDatapoint']);
 
 function selectDatapoint(datapoint, index, fromLegend = false) {
     emits('selectDatapoint', { datapoint, index });
     if (FINAL_CONFIG.value.events.datapointClick && !fromLegend) {
-        FINAL_CONFIG.value.events.datapointClick({ datapoint, seriesIndex: datapoint.seriesIndex });
+        FINAL_CONFIG.value.events.datapointClick({
+            datapoint,
+            seriesIndex: datapoint.seriesIndex,
+        });
     }
 }
 
@@ -371,23 +425,33 @@ function onTrapLeave({ datapoint, seriesIndex }) {
     tooltipTriggerMode.value = 'pointer';
 
     if (FINAL_CONFIG.value.events.datapointLeave) {
-        FINAL_CONFIG.value.events.datapointLeave({ datapoint, seriesIndex: datapoint.seriesIndex });
+        FINAL_CONFIG.value.events.datapointLeave({
+            datapoint,
+            seriesIndex: datapoint.seriesIndex,
+        });
     }
 }
-
 
 function useTooltip({ datapoint, seriesIndex, triggerMode = 'pointer' }) {
     useCustomFormat.value = false;
     if (FINAL_CONFIG.value.events.datapointEnter) {
-        FINAL_CONFIG.value.events.datapointEnter({ datapoint, seriesIndex: datapoint.seriesIndex });
+        FINAL_CONFIG.value.events.datapointEnter({
+            datapoint,
+            seriesIndex: datapoint.seriesIndex,
+        });
     }
 
     if (!FINAL_CONFIG.value.style.tooltip.show) {
-        return
+        return;
     }
 
     tooltipTriggerMode.value = triggerMode;
-    dataTooltipSlot.value = { datapoint, seriesIndex, config: FINAL_CONFIG.value, series: absoluteDataset.value };
+    dataTooltipSlot.value = {
+        datapoint,
+        seriesIndex,
+        config: FINAL_CONFIG.value,
+        series: absoluteDataset.value,
+    };
     isTooltip.value = true;
     selectedIndex.value = seriesIndex;
     const customFormat = FINAL_CONFIG.value.style.tooltip.customFormat;
@@ -398,10 +462,10 @@ function useTooltip({ datapoint, seriesIndex, triggerMode = 'pointer' }) {
                 seriesIndex: datapoint.seriesIndex,
                 datapoint,
                 series: absoluteDataset.value,
-                config: FINAL_CONFIG.value
+                config: FINAL_CONFIG.value,
             });
             if (typeof customFormatString === 'string') {
-                tooltipContent.value = customFormatString
+                tooltipContent.value = customFormatString;
                 useCustomFormat.value = true;
             }
         } catch (err) {
@@ -417,19 +481,19 @@ function useTooltip({ datapoint, seriesIndex, triggerMode = 'pointer' }) {
 
         html += `<b>${datapoint.proportionLabel}</b>`;
 
-        html += `<span>(${ applyDataLabel(
-            FINAL_CONFIG.value.style.legend.value.formatter, 
+        html += `<span>(${applyDataLabel(
+            FINAL_CONFIG.value.style.legend.value.formatter,
             datapoint.value,
             dataLabel({
                 p: FINAL_CONFIG.value.style.legend.value.prefix,
-                v: datapoint.value, 
-                s: FINAL_CONFIG.value.style.legend.value.suffix, 
-                r: FINAL_CONFIG.value.style.legend.value.rounding
+                v: datapoint.value,
+                s: FINAL_CONFIG.value.style.legend.value.suffix,
+                r: FINAL_CONFIG.value.style.legend.value.rounding,
             }),
             {
                 datapoint,
                 seriesIndex,
-            }
+            },
         )})</span>`;
 
         tooltipContent.value = `<div>${html}</div>`;
@@ -466,7 +530,7 @@ function setKeyboardTooltipPositionFromIndex(index) {
 
     tooltipA11yPosition.value = {
         x: svgBox.left + (svgX / svg.value.width) * svgBox.width,
-        y: svgBox.top + (svgY / svg.value.height) * svgBox.height
+        y: svgBox.top + (svgY / svg.value.height) * svgBox.height,
     };
 }
 
@@ -531,7 +595,11 @@ function onSvgKeydown(event) {
         nextIndex = 0;
     } else if (isEndKey) {
         nextIndex = drawableDataset.value.length - 1;
-    } else if (nextIndex === null || nextIndex < 0 || nextIndex >= drawableDataset.value.length) {
+    } else if (
+        nextIndex === null ||
+        nextIndex < 0 ||
+        nextIndex >= drawableDataset.value.length
+    ) {
         nextIndex = isNextKey ? 0 : drawableDataset.value.length - 1;
     } else if (isNextKey) {
         nextIndex += 1;
@@ -554,7 +622,7 @@ function onSvgKeydown(event) {
     useTooltip({
         datapoint: rect,
         seriesIndex: rect.seriesIndex,
-        triggerMode: 'keyboard'
+        triggerMode: 'keyboard',
     });
 }
 
@@ -616,13 +684,15 @@ function onLegendItemKeydown(event, rect, index) {
     }
 
     if (isPreviousKey) {
-        const previousIndex = index <= 0 ? absoluteDataset.value.length - 1 : index - 1;
+        const previousIndex =
+            index <= 0 ? absoluteDataset.value.length - 1 : index - 1;
         focusLegendItem(previousIndex);
         return;
     }
 
     if (isNextKey) {
-        const nextIndex = index >= absoluteDataset.value.length - 1 ? 0 : index + 1;
+        const nextIndex =
+            index >= absoluteDataset.value.length - 1 ? 0 : index + 1;
         focusLegendItem(nextIndex);
     }
 }
@@ -632,12 +702,14 @@ const a11yTable = computed(() => {
         headers: [
             FINAL_CONFIG.value.a11y.translations.series,
             FINAL_CONFIG.value.a11y.translations.percentage,
-            FINAL_CONFIG.value.a11y.translations.value
+            FINAL_CONFIG.value.a11y.translations.value,
         ],
         rows: absoluteDataset.value.map((serie, index) => {
             return [
                 serie.name,
-                segregated.value.includes(index) ? ' - ' : serie.proportionLabel,
+                segregated.value.includes(index)
+                    ? ' - '
+                    : serie.proportionLabel,
                 applyDataLabel(
                     FINAL_CONFIG.value.style.legend.value.formatter,
                     serie.value,
@@ -645,26 +717,30 @@ const a11yTable = computed(() => {
                         p: FINAL_CONFIG.value.style.legend.value.prefix,
                         v: serie.value,
                         s: FINAL_CONFIG.value.style.legend.value.suffix,
-                        r: FINAL_CONFIG.value.style.legend.value.rounding
+                        r: FINAL_CONFIG.value.style.legend.value.rounding,
                     }),
                     {
                         datapoint: serie,
-                        seriesIndex: index
-                    }
-                )
+                        seriesIndex: index,
+                    },
+                ),
             ];
-        })
+        }),
     };
 });
 
 defineExpose({
     hideSeries,
-    showSeries
+    showSeries,
 });
 </script>
 
 <template>
-    <div class="vue-data-ui-component vue-ui-spark-stackbar" ref="sparkstackbarChart" :style="`width:100%; background:${FINAL_CONFIG.style.backgroundColor}`">
+    <div
+        class="vue-data-ui-component vue-ui-spark-stackbar"
+        ref="sparkstackbarChart"
+        :style="`width:100%; background:${FINAL_CONFIG.style.backgroundColor}`"
+    >
         <div :id="`chart-instructions-${uid}`" class="sr-only">
             <p>{{ FINAL_CONFIG.a11y.translations.keyboardNavigation }}</p>
         </div>
@@ -679,21 +755,30 @@ defineExpose({
         />
 
         <!-- TITLE -->
-        <div  v-if="FINAL_CONFIG.style.title.text" :style="`width:calc(100% - 12px);background:transparent;margin:0 auto;margin:${FINAL_CONFIG.style.title.margin};padding: 0 6px;text-align:${FINAL_CONFIG.style.title.textAlign}`">
-            <div class="atom-title" :style="`font-size:${FINAL_CONFIG.style.title.fontSize}px;color:${FINAL_CONFIG.style.title.color};font-weight:${FINAL_CONFIG.style.title.bold ? 'bold' : 'normal'}`">
+        <div
+            v-if="FINAL_CONFIG.style.title.text"
+            :style="`width:calc(100% - 12px);background:transparent;margin:0 auto;margin:${FINAL_CONFIG.style.title.margin};padding: 0 6px;text-align:${FINAL_CONFIG.style.title.textAlign}`"
+        >
+            <div
+                class="atom-title"
+                :style="`font-size:${FINAL_CONFIG.style.title.fontSize}px;color:${FINAL_CONFIG.style.title.color};font-weight:${FINAL_CONFIG.style.title.bold ? 'bold' : 'normal'}`"
+            >
                 {{ FINAL_CONFIG.style.title.text }}
             </div>
-            <div class="atom-subtitle" v-if="FINAL_CONFIG.style.title.subtitle.text" :style="`font-size:${FINAL_CONFIG.style.title.subtitle.fontSize}px;color:${FINAL_CONFIG.style.title.subtitle.color};font-weight:${FINAL_CONFIG.style.title.subtitle.bold ? 'bold' : 'normal'}`">
+            <div
+                class="atom-subtitle"
+                v-if="FINAL_CONFIG.style.title.subtitle.text"
+                :style="`font-size:${FINAL_CONFIG.style.title.subtitle.fontSize}px;color:${FINAL_CONFIG.style.title.subtitle.color};font-weight:${FINAL_CONFIG.style.title.subtitle.bold ? 'bold' : 'normal'}`"
+            >
                 {{ FINAL_CONFIG.style.title.subtitle.text }}
             </div>
-            
         </div>
         <!-- CHART -->
         <div style="position: relative">
-            <svg 
+            <svg
                 ref="svgRef"
-                :xmlns="XMLNS" 
-                width="100%" 
+                :xmlns="XMLNS"
+                width="100%"
                 :viewBox="`0 0 ${svg.width} ${svg.height}`"
                 :aria-describedby="`chart-instructions-${uid}`"
                 tabindex="0"
@@ -702,12 +787,27 @@ defineExpose({
                 @keydown="onSvgKeydown"
             >
                 <PackageVersion />
-                
+
                 <defs>
-                    <linearGradient v-for="(rect, i) in drawableDataset" :key="`stack_gradient_${i}`" gradientTransform="rotate(90)" :id="`stack_gradient_${i}_${uid}`">
-                        <stop offset="0%" :stop-color="rect.color"/>
-                        <stop offset="50%" :stop-color="setOpacity(shiftHue(rect.color, 0.05), 100 - FINAL_CONFIG.style.bar.gradient.intensity)"/>
-                        <stop offset="100%" :stop-color="rect.color"/>
+                    <linearGradient
+                        v-for="(rect, i) in drawableDataset"
+                        :key="`stack_gradient_${i}`"
+                        gradientTransform="rotate(90)"
+                        :id="`stack_gradient_${i}_${uid}`"
+                    >
+                        <stop offset="0%" :stop-color="rect.color" />
+                        <stop
+                            offset="50%"
+                            :stop-color="
+                                setOpacity(
+                                    shiftHue(rect.color, 0.05),
+                                    100 -
+                                        FINAL_CONFIG.style.bar.gradient
+                                            .intensity,
+                                )
+                            "
+                        />
+                        <stop offset="100%" :stop-color="rect.color" />
                     </linearGradient>
                     <clipPath id="stackPill" clipPathUnits="objectBoundingBox">
                         <rect
@@ -724,38 +824,54 @@ defineExpose({
                 <g clip-path="url(#stackPill)" v-if="total > 0">
                     <rect
                         data-cy="datapoint-underlayer"
-                        v-for="(rect, i) in drawableDataset" 
+                        v-for="(rect, i) in drawableDataset"
                         :key="`stack_underlayer_${i}`"
                         :x="rect.start"
                         :y="0"
                         :width="rect.width"
                         :height="svg.height"
                         :fill="FINAL_CONFIG.style.bar.gradient.underlayerColor"
-                        :class="{'animated': !isAnimating && !loading}"
+                        :class="{ animated: !isAnimating && !loading }"
                         :style="{
-                            opacity: (selectedIndex !== null && FINAL_CONFIG.style.tooltip.show) ? selectedIndex === i ? 1 : 0.5 : 1
+                            opacity:
+                                selectedIndex !== null &&
+                                FINAL_CONFIG.style.tooltip.show
+                                    ? selectedIndex === i
+                                        ? 1
+                                        : 0.5
+                                    : 1,
                         }"
                     />
-                    <rect 
+                    <rect
                         data-cy="datapoint"
-                        v-for="(rect, i) in drawableDataset" 
+                        v-for="(rect, i) in drawableDataset"
                         :key="`stack_${i}`"
                         :x="rect.start"
                         :y="0"
                         :width="rect.width"
                         :height="svg.height"
-                        :fill="FINAL_CONFIG.style.bar.gradient.show ? `url(#stack_gradient_${i}_${uid})` : rect.color"
+                        :fill="
+                            FINAL_CONFIG.style.bar.gradient.show
+                                ? `url(#stack_gradient_${i}_${uid})`
+                                : rect.color
+                        "
                         :stroke="FINAL_CONFIG.style.backgroundColor"
                         stroke-linecap="round"
-                        :class="{'animated': !isAnimating && !loading }"
+                        :class="{ animated: !isAnimating && !loading }"
                         :style="{
-                            opacity: (selectedIndex !== null && FINAL_CONFIG.style.tooltip.show) ? selectedIndex === i ? 1 : 0.5 : 1
+                            opacity:
+                                selectedIndex !== null &&
+                                FINAL_CONFIG.style.tooltip.show
+                                    ? selectedIndex === i
+                                        ? 1
+                                        : 0.5
+                                    : 1,
                         }"
                     />
                     <!-- TOOLTIP TRAPS -->
                     <rect
                         data-cy="tooltip-trap"
-                        v-for="(rect, i) in drawableDataset" 
+                        v-for="(rect, i) in drawableDataset"
                         :key="`stack_trap_${i}`"
                         :x="rect.start"
                         :y="0"
@@ -763,13 +879,19 @@ defineExpose({
                         :height="svg.height"
                         fill="transparent"
                         stroke="none"
-                        :class="{'animated': !isAnimating && !loading }"
+                        :class="{ animated: !isAnimating && !loading }"
                         @click="() => selectDatapoint(rect, i)"
-                        @mouseenter="() => useTooltip({ datapoint: rect, seriesIndex: i })"
-                        @mouseleave="onTrapLeave({ datapoint: rect, seriesIndex: i })"
+                        @mouseenter="
+                            () =>
+                                useTooltip({ datapoint: rect, seriesIndex: i })
+                        "
+                        @mouseleave="
+                            onTrapLeave({ datapoint: rect, seriesIndex: i })
+                        "
                     />
                 </g>
-                <rect v-else
+                <rect
+                    v-else
                     :x="2"
                     :y="1"
                     :width="svg.width - 4"
@@ -780,22 +902,39 @@ defineExpose({
                     :rx="(svg.height - 4) / 2"
                 />
             </svg>
-            <div v-if="$slots.hint" style="position: absolute; top: 100%; left: 0; width: 100%;" data-dom-to-png-ignore aria-hidden="true">
-                <slot name="hint" v-bind="{ hint: FINAL_CONFIG.a11y.translations.keyboardNavigation, isVisible: isFocus }"/>
+            <div
+                v-if="$slots.hint"
+                style="position: absolute; top: 100%; left: 0; width: 100%"
+                data-dom-to-png-ignore
+                aria-hidden="true"
+            >
+                <slot
+                    name="hint"
+                    v-bind="{
+                        hint: FINAL_CONFIG.a11y.translations.keyboardNavigation,
+                        isVisible: isFocus,
+                    }"
+                />
             </div>
         </div>
 
-        <div 
-            v-if="FINAL_CONFIG.style.legend.show" 
-            data-cy="sparkstackbar-legend" 
-            :style="`background:transparent;margin:0 auto;margin:${FINAL_CONFIG.style.legend.margin};justify-content:${FINAL_CONFIG.style.legend.textAlign === 'left' ? 'flex-start' : FINAL_CONFIG.style.legend.textAlign === 'right' ? 'flex-end' : 'center'}`" 
+        <div
+            v-if="FINAL_CONFIG.style.legend.show"
+            data-cy="sparkstackbar-legend"
+            :style="`background:transparent;margin:0 auto;margin:${FINAL_CONFIG.style.legend.margin};justify-content:${FINAL_CONFIG.style.legend.textAlign === 'left' ? 'flex-start' : FINAL_CONFIG.style.legend.textAlign === 'right' ? 'flex-end' : 'center'}`"
             class="vue-ui-sparkstackbar-legend"
             aria-label="legend"
             role="toolbar"
         >
             <BaseLegendToggle
-                v-if="FINAL_CONFIG.style.legend.selectAllToggle.show && absoluteDataset.length > 2 && !loading"
-                :backgroundColor="FINAL_CONFIG.style.legend.selectAllToggle.backgroundColor"
+                v-if="
+                    FINAL_CONFIG.style.legend.selectAllToggle.show &&
+                    absoluteDataset.length > 2 &&
+                    !loading
+                "
+                :backgroundColor="
+                    FINAL_CONFIG.style.legend.selectAllToggle.backgroundColor
+                "
                 :color="FINAL_CONFIG.style.legend.selectAllToggle.color"
                 :fontSize="FINAL_CONFIG.style.legend.fontSize"
                 :checked="segregated.length > 0"
@@ -806,59 +945,105 @@ defineExpose({
                 data-cy="legend-item"
                 role="button"
                 tabindex="0"
-                v-for=" (rect, i) in absoluteDataset" 
+                v-for="(rect, i) in absoluteDataset"
                 :aria-pressed="segregated.includes(i)"
                 :aria-label="`${rect.name}, ${segregated.includes(i) ? 'hidden' : 'visible'}, ${rect.proportionLabel}`"
-                :style="`font-size:${FINAL_CONFIG.style.legend.fontSize}px;cursor:${isCursorPointer ? 'pointer' : 'default'}`" 
-                :class="{'vue-ui-sparkstackbar-legend-item': true, 'vue-ui-sparkstackbar-legend-item-unselected': segregated.includes(i)}" 
-                @click="segregate(i); selectDatapoint(rect, i, true)"
+                :style="`font-size:${FINAL_CONFIG.style.legend.fontSize}px;cursor:${isCursorPointer ? 'pointer' : 'default'}`"
+                :class="{
+                    'vue-ui-sparkstackbar-legend-item': true,
+                    'vue-ui-sparkstackbar-legend-item-unselected':
+                        segregated.includes(i),
+                }"
+                @click="
+                    segregate(i);
+                    selectDatapoint(rect, i, true);
+                "
                 @focus="onLegendItemFocus(rect)"
                 @blur="onLegendItemBlur"
                 @keydown="onLegendItemKeydown($event, rect, i)"
-
             >
-                <div style="display:flex;flex-direction:row;align-items:center;gap:4px;justify-content:center" >
-                    <svg 
-                        :height="`${FINAL_CONFIG.style.legend.fontSize}px`" 
-                        :width="`${FINAL_CONFIG.style.legend.fontSize}px`" 
+                <div
+                    style="
+                        display: flex;
+                        flex-direction: row;
+                        align-items: center;
+                        gap: 4px;
+                        justify-content: center;
+                    "
+                >
+                    <svg
+                        :height="`${FINAL_CONFIG.style.legend.fontSize}px`"
+                        :width="`${FINAL_CONFIG.style.legend.fontSize}px`"
                         viewBox="0 0 10 10"
                     >
                         <defs>
                             <radialGradient :id="`legend_grad_${i}-${uid}`">
-                                <stop offset="0%" :stop-color="loading ? '#FFFFFF' : setOpacity(shiftHue(rect.color, 0.05), 100 - FINAL_CONFIG.style.bar.gradient.intensity)"/>
-                                <stop offset="100%" :stop-color="rect.color"/>
+                                <stop
+                                    offset="0%"
+                                    :stop-color="
+                                        loading
+                                            ? '#FFFFFF'
+                                            : setOpacity(
+                                                  shiftHue(rect.color, 0.05),
+                                                  100 -
+                                                      FINAL_CONFIG.style.bar
+                                                          .gradient.intensity,
+                                              )
+                                    "
+                                />
+                                <stop offset="100%" :stop-color="rect.color" />
                             </radialGradient>
                         </defs>
-                        <circle :cx="5" :cy="5" :r="5" :fill="FINAL_CONFIG.style.bar.gradient.show ? `url(#legend_grad_${i}-${uid})` : rect.color"/>
+                        <circle
+                            :cx="5"
+                            :cy="5"
+                            :r="5"
+                            :fill="
+                                FINAL_CONFIG.style.bar.gradient.show
+                                    ? `url(#legend_grad_${i}-${uid})`
+                                    : rect.color
+                            "
+                        />
                     </svg>
                     <template v-if="!loading">
-                        <span :style="`color:${FINAL_CONFIG.style.legend.name.color}; font-weight:${FINAL_CONFIG.style.legend.name.bold ? 'bold' : 'normal'}`">
+                        <span
+                            :style="`color:${FINAL_CONFIG.style.legend.name.color}; font-weight:${FINAL_CONFIG.style.legend.name.bold ? 'bold' : 'normal'}`"
+                        >
                             {{ rect.name }}
                         </span>
                         <template v-if="!isAnimating">
-                            <span 
-                                v-if="FINAL_CONFIG.style.legend.percentage.show" 
-                                :style="`font-weight:${FINAL_CONFIG.style.legend.percentage.bold ? 'bold': 'normal'};color:${FINAL_CONFIG.style.legend.percentage.color}`"
+                            <span
+                                v-if="FINAL_CONFIG.style.legend.percentage.show"
+                                :style="`font-weight:${FINAL_CONFIG.style.legend.percentage.bold ? 'bold' : 'normal'};color:${FINAL_CONFIG.style.legend.percentage.color}`"
                             >
-                                {{ segregated.includes(i) ? ' - ' : rect.proportionLabel }}
+                                {{
+                                    segregated.includes(i)
+                                        ? ' - '
+                                        : rect.proportionLabel
+                                }}
                             </span>
-                            <span 
-                                v-if="FINAL_CONFIG.style.legend.value.show" 
+                            <span
+                                v-if="FINAL_CONFIG.style.legend.value.show"
                                 :style="`font-weight:${FINAL_CONFIG.style.legend.value.bold ? 'bold' : 'normal'};color:${FINAL_CONFIG.style.legend.value.color}`"
                             >
-                                ({{ applyDataLabel(
-                                    FINAL_CONFIG.style.legend.value.formatter,
-                                    rect.value,
-                                    dataLabel({
-                                        p: FINAL_CONFIG.style.legend.value.prefix,
-                                        v: rect.value,
-                                        s: FINAL_CONFIG.style.legend.value.suffix,
-                                        r: FINAL_CONFIG.style.legend.value.rounding
-                                    }),
-                                    { datapoint: rect, seriesIndex: i}
-                                    )  
+                                ({{
+                                    applyDataLabel(
+                                        FINAL_CONFIG.style.legend.value
+                                            .formatter,
+                                        rect.value,
+                                        dataLabel({
+                                            p: FINAL_CONFIG.style.legend.value
+                                                .prefix,
+                                            v: rect.value,
+                                            s: FINAL_CONFIG.style.legend.value
+                                                .suffix,
+                                            r: FINAL_CONFIG.style.legend.value
+                                                .rounding,
+                                        }),
+                                        { datapoint: rect, seriesIndex: i },
+                                    )
                                 }})
-                            </span> 
+                            </span>
                         </template>
                     </template>
                 </div>
@@ -884,18 +1069,26 @@ defineExpose({
             :smooth="FINAL_CONFIG.style.tooltip.smooth"
             :backdropFilter="FINAL_CONFIG.style.tooltip.backdropFilter"
             :smoothForce="FINAL_CONFIG.style.tooltip.smoothForce"
-            :smoothSnapThreshold="FINAL_CONFIG.style.tooltip.smoothSnapThreshold"
+            :smoothSnapThreshold="
+                FINAL_CONFIG.style.tooltip.smoothSnapThreshold
+            "
             :isA11yMode="tooltipTriggerMode === 'keyboard'"
             :a11yPosition="tooltipA11yPosition"
         >
             <template #tooltip-before>
-                <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>
+                <slot
+                    name="tooltip-before"
+                    v-bind="{ ...dataTooltipSlot }"
+                ></slot>
             </template>
             <template #tooltip>
-                <slot name="tooltip" v-bind="{ ...dataTooltipSlot }"/>
+                <slot name="tooltip" v-bind="{ ...dataTooltipSlot }" />
             </template>
             <template #tooltip-after>
-                <slot name="tooltip-after" v-bind="{...dataTooltipSlot}"></slot>
+                <slot
+                    name="tooltip-after"
+                    v-bind="{ ...dataTooltipSlot }"
+                ></slot>
             </template>
         </Tooltip>
 
@@ -917,7 +1110,7 @@ defineExpose({
 
 .vue-ui-sparkstackbar-legend {
     display: flex;
-    align-items:center;
+    align-items: center;
     flex-wrap: wrap;
     column-gap: 12px;
     width: calc(100% - 12px);

@@ -1,5 +1,5 @@
-import Graph from "./graph.js";
-import List from "./data/list.js";
+import Graph from './graph.js';
+import List from './data/list.js';
 
 /*
  * A greedy heuristic for finding a feedback arc set for a graph. A feedback
@@ -17,10 +17,14 @@ export default function greedyFAS(graph, weightFunction) {
     }
 
     const state = buildState(graph, weightFunction || DEFAULT_WEIGHT_FUNCTION);
-    const results = performGreedyFAS(state.graph, state.buckets, state.zeroIndex);
+    const results = performGreedyFAS(
+        state.graph,
+        state.buckets,
+        state.zeroIndex,
+    );
 
     // Expand multi-edges back into the original edge objects.
-    return results.flatMap(edge => graph.outEdges(edge.v, edge.w));
+    return results.flatMap((edge) => graph.outEdges(edge.v, edge.w));
 }
 
 function performGreedyFAS(graph, buckets, zeroIndex) {
@@ -44,7 +48,9 @@ function performGreedyFAS(graph, buckets, zeroIndex) {
             for (let index = buckets.length - 2; index > 0; --index) {
                 entry = buckets[index].dequeue();
                 if (entry) {
-                    results = results.concat(removeNode(graph, buckets, zeroIndex, entry, true));
+                    results = results.concat(
+                        removeNode(graph, buckets, zeroIndex, entry, true),
+                    );
                     break;
                 }
             }
@@ -57,7 +63,7 @@ function performGreedyFAS(graph, buckets, zeroIndex) {
 function removeNode(graph, buckets, zeroIndex, entry, collectPredecessors) {
     const results = collectPredecessors ? [] : undefined;
 
-    graph.inEdges(entry.v).forEach(edgeObject => {
+    graph.inEdges(entry.v).forEach((edgeObject) => {
         const weight = graph.edge(edgeObject);
         const predecessorEntry = graph.node(edgeObject.v);
 
@@ -69,11 +75,11 @@ function removeNode(graph, buckets, zeroIndex, entry, collectPredecessors) {
         assignBucket(buckets, zeroIndex, predecessorEntry);
     });
 
-    graph.outEdges(entry.v).forEach(edgeObject => {
+    graph.outEdges(entry.v).forEach((edgeObject) => {
         const weight = graph.edge(edgeObject);
         const successorEntry = graph.node(edgeObject.w);
 
-        successorEntry["in"] -= weight;
+        successorEntry['in'] -= weight;
         assignBucket(buckets, zeroIndex, successorEntry);
     });
 
@@ -88,27 +94,36 @@ function buildState(graph, weightFunction) {
     let maximumIn = 0;
     let maximumOut = 0;
 
-    graph.nodes().forEach(nodeId => {
+    graph.nodes().forEach((nodeId) => {
         feedbackArcGraph.setNode(nodeId, { v: nodeId, in: 0, out: 0 });
     });
 
     // Aggregate weights on nodes and combine multi-edges into single edges
     // for the feedbackArcGraph.
-    graph.edges().forEach(edgeObject => {
-        const previousWeight = feedbackArcGraph.edge(edgeObject.v, edgeObject.w) || 0;
+    graph.edges().forEach((edgeObject) => {
+        const previousWeight =
+            feedbackArcGraph.edge(edgeObject.v, edgeObject.w) || 0;
         const weight = weightFunction(edgeObject);
         const edgeWeight = previousWeight + weight;
 
         feedbackArcGraph.setEdge(edgeObject.v, edgeObject.w, edgeWeight);
 
-        maximumOut = Math.max(maximumOut, (feedbackArcGraph.node(edgeObject.v).out += weight));
-        maximumIn = Math.max(maximumIn, (feedbackArcGraph.node(edgeObject.w).in += weight));
+        maximumOut = Math.max(
+            maximumOut,
+            (feedbackArcGraph.node(edgeObject.v).out += weight),
+        );
+        maximumIn = Math.max(
+            maximumIn,
+            (feedbackArcGraph.node(edgeObject.w).in += weight),
+        );
     });
 
-    const buckets = createRange(maximumOut + maximumIn + 3).map(() => new List());
+    const buckets = createRange(maximumOut + maximumIn + 3).map(
+        () => new List(),
+    );
     const zeroIndex = maximumIn + 1;
 
-    feedbackArcGraph.nodes().forEach(nodeId => {
+    feedbackArcGraph.nodes().forEach((nodeId) => {
         assignBucket(buckets, zeroIndex, feedbackArcGraph.node(nodeId));
     });
 

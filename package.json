@@ -1,125 +1,125 @@
 {
-  "name": "vue-data-ui",
-  "private": false,
-  "version": "3.17.3",
-  "type": "module",
-  "description": "A user-empowering data visualization Vue 3 components library for eloquent data storytelling",
-  "keywords": [
-    "3d bar",
-    "Vue",
-    "accelerometer",
-    "age pyramid",
-    "annotator",
-    "candlestick",
-    "chart",
-    "cluster",
-    "dashboard",
-    "data storytelling",
-    "data visualization",
-    "donut evolution",
-    "donut",
-    "dumbbell",
-    "funnel",
-    "galaxy",
-    "gauge",
-    "graph",
-    "heatmap",
-    "kpi",
-    "line",
-    "molecule",
-    "mood radar",
-    "quadrant",
-    "quick chart",
-    "radar",
-    "rating",
-    "relationship circle",
-    "rings",
-    "scatter",
-    "screenshot",
-    "skeleton",
-    "smiley",
-    "sparkbar",
-    "sparkline",
-    "stackbar",
-    "table heatmap",
-    "table",
-    "thermometer",
-    "tiremarks",
-    "tree",
-    "treemap",
-    "waffle",
-    "wheel",
-    "wordcloud",
-    "circle packing",
-    "dag"
-  ],
-  "author": "Alec Lloyd Probert",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/graphieros/vue-data-ui.git"
-  },
-  "homepage": "https://vue-data-ui.graphieros.com/",
-  "license": "MIT",
-  "files": [
-    "dist"
-  ],
-  "exports": {
-    ".": {
-      "types": "./dist/types/vue-data-ui.d.ts",
-      "import": "./dist/vue-data-ui.js",
-      "default": "./dist/vue-data-ui.js"
+    "name": "vue-data-ui",
+    "private": false,
+    "version": "3.17.3",
+    "type": "module",
+    "description": "A user-empowering data visualization Vue 3 components library for eloquent data storytelling",
+    "keywords": [
+        "3d bar",
+        "Vue",
+        "accelerometer",
+        "age pyramid",
+        "annotator",
+        "candlestick",
+        "chart",
+        "cluster",
+        "dashboard",
+        "data storytelling",
+        "data visualization",
+        "donut evolution",
+        "donut",
+        "dumbbell",
+        "funnel",
+        "galaxy",
+        "gauge",
+        "graph",
+        "heatmap",
+        "kpi",
+        "line",
+        "molecule",
+        "mood radar",
+        "quadrant",
+        "quick chart",
+        "radar",
+        "rating",
+        "relationship circle",
+        "rings",
+        "scatter",
+        "screenshot",
+        "skeleton",
+        "smiley",
+        "sparkbar",
+        "sparkline",
+        "stackbar",
+        "table heatmap",
+        "table",
+        "thermometer",
+        "tiremarks",
+        "tree",
+        "treemap",
+        "waffle",
+        "wheel",
+        "wordcloud",
+        "circle packing",
+        "dag"
+    ],
+    "author": "Alec Lloyd Probert",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/graphieros/vue-data-ui.git"
     },
-    "./utils": {
-      "types": "./dist/types/utils.d.ts",
-      "import": "./dist/utils.js"
+    "homepage": "https://vue-data-ui.graphieros.com/",
+    "license": "MIT",
+    "files": [
+        "dist"
+    ],
+    "exports": {
+        ".": {
+            "types": "./dist/types/vue-data-ui.d.ts",
+            "import": "./dist/vue-data-ui.js",
+            "default": "./dist/vue-data-ui.js"
+        },
+        "./utils": {
+            "types": "./dist/types/utils.d.ts",
+            "import": "./dist/utils.js"
+        },
+        "./*": {
+            "types": "./dist/types/*.d.ts",
+            "import": "./dist/components/*.js",
+            "default": "./dist/components/*.js"
+        },
+        "./style.css": "./dist/style.css"
     },
-    "./*": {
-      "types": "./dist/types/*.d.ts",
-      "import": "./dist/components/*.js",
-      "default": "./dist/components/*.js"
+    "sideEffects": [
+        "**/*.css"
+    ],
+    "module": "dist/vue-data-ui.js",
+    "types": "dist/types/vue-data-ui.d.ts",
+    "scripts": {
+        "dev": "node add-dev-dep.cjs && npm i && vite",
+        "clean": "node cleanup.cjs",
+        "build": "npm run clean && vite build --mode production && node copy-types.cjs && npm i",
+        "prod": "node pretty && node del-dev-dep.cjs && node check-types.cjs && npm run test && npx cypress run --component && npm run clean && vite build --mode production && node copy-types.cjs && node post-build.cjs",
+        "prod:publish": "npm run prod && node publish-build.cjs",
+        "test": "vitest --run",
+        "test:w": "vitest --watch",
+        "test:e2e": "npx cypress open",
+        "preprod": "npm run pretty && node del-dev-dep.cjs && npm run clean && vite build --mode production && node copy-types.cjs && node post-build.cjs",
+        "cy-all": "npx cypress run --component",
+        "cy": "node run-cy.cjs",
+        "types": "node check-types.cjs",
+        "pretty": "prettier . --check"
     },
-    "./style.css": "./dist/style.css"
-  },
-  "sideEffects": [
-    "**/*.css"
-  ],
-  "module": "dist/vue-data-ui.js",
-  "types": "dist/types/vue-data-ui.d.ts",
-  "scripts": {
-    "dev": "node add-dev-dep.cjs && npm i && vite",
-    "clean": "node cleanup.cjs",
-    "build": "npm run clean && vite build --mode production && node copy-types.cjs && npm i",
-    "prod": "node del-dev-dep.cjs && node check-types.cjs && npm run test && npx cypress run --component && npm run clean && vite build --mode production && node copy-types.cjs && node post-build.cjs",
-    "prod:publish": "npm run prod && node publish-build.cjs",
-    "build:dev": "npm run build && npm run dev",
-    "test": "vitest --run",
-    "test:w": "vitest --watch",
-    "test:e2e": "npx cypress open",
-    "simple-build": "npm run clean && vite build --mode production && node copy-types.cjs",
-    "preprod": "node del-dev-dep.cjs && npm run clean && vite build --mode production && node copy-types.cjs && node post-build.cjs",
-    "cy-all": "npx cypress run --component",
-    "cy": "node run-cy.cjs",
-    "types": "node check-types.cjs"
-  },
-  "peerDependencies": {
-    "jspdf": ">=3.0.1",
-    "vue": ">=3.3.0"
-  },
-  "peerDependenciesMeta": {
-    "jspdf": {
-      "optional": true
+    "peerDependencies": {
+        "jspdf": ">=3.0.1",
+        "vue": ">=3.3.0"
+    },
+    "peerDependenciesMeta": {
+        "jspdf": {
+            "optional": true
+        }
+    },
+    "devDependencies": {
+        "@vitejs/plugin-vue": "^6.0.5",
+        "cypress": "^15.13.0",
+        "jsdom": "^28.1.0",
+        "prettier": "3.8.1",
+        "remove-attr": "^0.0.13",
+        "sass": "^1.57.1",
+        "simple-git": "^3.24.0",
+        "typescript": "^6.0.2",
+        "vite": "^7.3.1",
+        "vitest": "^4.0.18",
+        "vue": "^3.5.31"
     }
-  },
-  "devDependencies": {
-    "@vitejs/plugin-vue": "^6.0.5",
-    "cypress": "^15.13.0",
-    "jsdom": "^28.1.0",
-    "remove-attr": "^0.0.13",
-    "sass": "^1.57.1",
-    "simple-git": "^3.24.0",
-    "typescript": "^6.0.2",
-    "vite": "^7.3.1",
-    "vitest": "^4.0.18",
-    "vue": "^3.5.31"
-  }
 }

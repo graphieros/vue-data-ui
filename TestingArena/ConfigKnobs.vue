@@ -1,37 +1,37 @@
 <script setup>
-import { ref, computed, nextTick, watch } from "vue";
-import BaseIcon from "../src/atoms/BaseIcon.vue";
-import { createUid } from "../src/lib";
+import { ref, computed, nextTick, watch } from 'vue';
+import BaseIcon from '../src/atoms/BaseIcon.vue';
+import { createUid } from '../src/lib';
 
 const props = defineProps({
     model: {
         type: Object,
     },
     step: {
-        type: Number
+        type: Number,
     },
     open: {
-        type: Boolean
-    }
+        type: Boolean,
+    },
 });
 
 defineEmits(['change']);
 
 function getKnobStyle(key) {
-    return `margin-left:${getDepth(key)}rem;`
+    return `margin-left:${getDepth(key)}rem;`;
 }
 
 function getDepth(key) {
-    return key.split('.').length -1;
+    return key.split('.').length - 1;
 }
 
 const search = ref('');
 
 const filteredModel = computed(() => {
-    if (!search.value) return props.model
-    return props.model.filter(knob =>
-        knob.key.toLowerCase().includes(search.value.toLowerCase())
-    )
+    if (!search.value) return props.model;
+    return props.model.filter((knob) =>
+        knob.key.toLowerCase().includes(search.value.toLowerCase()),
+    );
 });
 
 const configSearch = ref(null);
@@ -43,19 +43,20 @@ async function focusSearch() {
     configSearch.value?.focus();
 }
 
-watch(() => props.open, (state) => {
-    setTimeout(() => {
-        state && focusSearch();
-    }, 20)
-})
-
+watch(
+    () => props.open,
+    (state) => {
+        setTimeout(() => {
+            state && focusSearch();
+        }, 20);
+    },
+);
 
 const selectedItem = ref(null);
-
 </script>
 
 <template>
-    <div class="knobs" style="width: 100%; color: #CCCCCC;">
+    <div class="knobs" style="width: 100%; color: #cccccc">
         <div class="nav-search-wrapper">
             <input
                 v-model="search"
@@ -65,47 +66,72 @@ const selectedItem = ref(null);
                 placeholder="Filter config keys"
                 style="z-index: 1"
             />
-            <button @click="focusSearch" style="position:relative">
-                <BaseIcon name="blur" stroke="#42d392"/>
-                <BaseIcon name="close" stroke="#5f8aee" style="position: absolute;"/>
+            <button @click="focusSearch" style="position: relative">
+                <BaseIcon name="blur" stroke="#42d392" />
+                <BaseIcon
+                    name="close"
+                    stroke="#5f8aee"
+                    style="position: absolute"
+                />
             </button>
         </div>
 
-        <div
-            v-for="(knob, i) in filteredModel"
-            :key="knob.key"
-            class="knob"
-        >
-            <label :for="`${knob.key}_${i}`" @mouseenter="selectedItem = `${knob.key}_${i}`" @mouseout="selectedItem = null">
-                <code style="display:flex;flex-direction:row;flex-wrap:nowrap;cursor:pointer;">
-                    <div style="color:#6A6A6A">{{ getDepth(knob.key) }}</div>
-                    <span v-for="d in getDepth(knob.key)" :style="`margin-top:-7px; color: ${selectedItem === `${knob.key}_${i}` ? '#42d392' : '#5A5A5A'}; transition:color 0.1s`">_</span>
-                    <span v-if="getDepth(knob.key) > 0" :style="`color: ${selectedItem === `${knob.key}_${i}` ? '#42d392' : '#5A5A5A'}; transition: color 0.1s`">{</span>
-                    <span style="padding-left:0.5rem">{{ knob.key.split('.').slice(0,-1).join('.') }}</span><span v-if="getDepth(knob.key) > 0">.</span><span style="font-weight: bold; color: #42d392">{{ knob.key.split('.').at(-1) }}</span>
+        <div v-for="(knob, i) in filteredModel" :key="knob.key" class="knob">
+            <label
+                :for="`${knob.key}_${i}`"
+                @mouseenter="selectedItem = `${knob.key}_${i}`"
+                @mouseout="selectedItem = null"
+            >
+                <code
+                    style="
+                        display: flex;
+                        flex-direction: row;
+                        flex-wrap: nowrap;
+                        cursor: pointer;
+                    "
+                >
+                    <div style="color: #6a6a6a">{{ getDepth(knob.key) }}</div>
+                    <span
+                        v-for="d in getDepth(knob.key)"
+                        :style="`margin-top:-7px; color: ${selectedItem === `${knob.key}_${i}` ? '#42d392' : '#5A5A5A'}; transition:color 0.1s`"
+                        >_</span
+                    >
+                    <span
+                        v-if="getDepth(knob.key) > 0"
+                        :style="`color: ${selectedItem === `${knob.key}_${i}` ? '#42d392' : '#5A5A5A'}; transition: color 0.1s`"
+                        >{</span
+                    >
+                    <span style="padding-left: 0.5rem">{{
+                        knob.key.split('.').slice(0, -1).join('.')
+                    }}</span
+                    ><span v-if="getDepth(knob.key) > 0">.</span
+                    ><span style="font-weight: bold; color: #42d392">{{
+                        knob.key.split('.').at(-1)
+                    }}</span>
                 </code>
             </label>
             <div>
                 <input
                     :id="`${knob.key}_${i}`"
-                    type="color" 
-                    v-if="knob.type === 'color'" 
-                    v-model="knob.def" @change="$emit('change')"
+                    type="color"
+                    v-if="knob.type === 'color'"
+                    v-model="knob.def"
+                    @change="$emit('change')"
                     :list="`preset_${i}`"
-                >
-                    <datalist :id="`preset_${i}`">
-                        <option>#1A1A1A</option>
-                        <option>#8A8A8A</option>
-                        <option>#CCCCCC</option>
-                        <option>#FFFFFF</option>
-                        <option>#1f77b4</option>
-                        <option>#aec7e8</option>
-                        <option>#ff7f0e</option>
-                        <option>#ffbb78</option>
-                        <option>#2ca02c</option>
-                        <option>#d62728</option>
-                        <option>#ff9896</option>
-                    </datalist>
-                </input>
+                />
+                <datalist :id="`preset_${i}`">
+                    <option>#1A1A1A</option>
+                    <option>#8A8A8A</option>
+                    <option>#CCCCCC</option>
+                    <option>#FFFFFF</option>
+                    <option>#1f77b4</option>
+                    <option>#aec7e8</option>
+                    <option>#ff7f0e</option>
+                    <option>#ffbb78</option>
+                    <option>#2ca02c</option>
+                    <option>#d62728</option>
+                    <option>#ff9896</option>
+                </datalist>
 
                 <input
                     :id="`${knob.key}_${i}`"
@@ -137,7 +163,7 @@ const selectedItem = ref(null);
     flex-direction: column;
     max-height: 400px;
     overflow-y: auto;
-    background: #2A2A2A;
+    background: #2a2a2a;
 }
 
 .knob {
@@ -151,7 +177,7 @@ const selectedItem = ref(null);
 .nav-search-wrapper {
     position: sticky;
     width: 100%;
-    background: #2A2A2A;
+    background: #2a2a2a;
     top: 0;
     display: flex;
     flex-direction: row;
@@ -162,16 +188,16 @@ const selectedItem = ref(null);
 
 .nav-search-wrapper button {
     display: flex;
-    align-items:center;
-    justify-content:center;
-    background-color: #3A3A3A;
+    align-items: center;
+    justify-content: center;
+    background-color: #3a3a3a;
     border-radius: 0 0.3rem 0.3rem 0;
     border: none;
     padding: 0.2rem;
     cursor: pointer;
 }
 .nav-search-wrapper button:hover {
-    background-color: #4A4A4A;
+    background-color: #4a4a4a;
 }
 
 .nav-search {
@@ -181,7 +207,7 @@ const selectedItem = ref(null);
     border-radius: 0.3rem 0 0 0.3rem;
     border: 1px solid var(--color-border);
     font-size: 0.85rem;
-    background: #3A3A3A;
-    color: #CCCCCC;
+    background: #3a3a3a;
+    color: #cccccc;
 }
 </style>

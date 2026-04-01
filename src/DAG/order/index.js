@@ -1,10 +1,10 @@
-import initOrder from "./init-order.js";
-import crossCount from "./cross-count.js";
-import sortSubgraph from "./sort-subgraph.js";
-import buildLayerGraph from "./build-layer-graph.js";
-import addSubgraphConstraints from "./add-subgraph-constraints.js";
-import Graph from "../graph.js";
-import * as util from "../util.js";
+import initOrder from './init-order.js';
+import crossCount from './cross-count.js';
+import sortSubgraph from './sort-subgraph.js';
+import buildLayerGraph from './build-layer-graph.js';
+import addSubgraphConstraints from './add-subgraph-constraints.js';
+import Graph from '../graph.js';
+import * as util from '../util.js';
 
 /*
  * Applies heuristics to minimize edge crossings in the graph and sets the best
@@ -23,7 +23,7 @@ import * as util from "../util.js";
  */
 
 export default function order(g, opts = {}) {
-    if (typeof opts.customOrder === "function") {
+    if (typeof opts.customOrder === 'function') {
         opts.customOrder(g, order);
         return;
     }
@@ -33,13 +33,13 @@ export default function order(g, opts = {}) {
     const downLayerGraphs = buildLayerGraphs(
         g,
         util.range(1, maxRank + 1),
-        "inEdges"
+        'inEdges',
     );
 
     const upLayerGraphs = buildLayerGraphs(
         g,
         util.range(maxRank - 1, -1, -1),
-        "outEdges"
+        'outEdges',
     );
 
     let layering = initOrder(g);
@@ -88,11 +88,14 @@ function buildLayerGraphs(g, ranks, relationship) {
     for (const v of g.nodes()) {
         const node = g.node(v);
 
-        if (typeof node.rank === "number") {
+        if (typeof node.rank === 'number') {
             addNodeToRank(node.rank, v);
         }
 
-        if (typeof node.minRank === "number" && typeof node.maxRank === "number") {
+        if (
+            typeof node.minRank === 'number' &&
+            typeof node.maxRank === 'number'
+        ) {
             for (let r = node.minRank; r <= node.maxRank; r++) {
                 if (r !== node.rank) {
                     addNodeToRank(r, v);
@@ -101,21 +104,16 @@ function buildLayerGraphs(g, ranks, relationship) {
         }
     }
 
-    return ranks.map(rank =>
-        buildLayerGraph(
-            g,
-            rank,
-            relationship,
-            nodesByRank.get(rank) || []
-        )
+    return ranks.map((rank) =>
+        buildLayerGraph(g, rank, relationship, nodesByRank.get(rank) || []),
     );
 }
 
 function sweepLayerGraphs(layerGraphs, biasRight, constraints) {
     const cg = new Graph();
 
-    layerGraphs.forEach(lg => {
-        constraints.forEach(c => cg.setEdge(c.left, c.right));
+    layerGraphs.forEach((lg) => {
+        constraints.forEach((c) => cg.setEdge(c.left, c.right));
 
         const root = lg.graph().root;
         const sorted = sortSubgraph(lg, root, cg, biasRight);
@@ -129,7 +127,7 @@ function sweepLayerGraphs(layerGraphs, biasRight, constraints) {
 }
 
 function assignOrder(g, layering) {
-    Object.values(layering).forEach(layer => {
+    Object.values(layering).forEach((layer) => {
         layer.forEach((v, i) => {
             g.node(v).order = i;
         });

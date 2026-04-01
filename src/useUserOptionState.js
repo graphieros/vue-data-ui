@@ -1,10 +1,12 @@
-import { computed, ref } from "vue";
+import { computed, ref } from 'vue';
 
-export function useUserOptionState({
-    config
-}) {
-    const showUserOptionsOnChartHover = computed(() => config.userOptions.showOnChartHover);
-    const keepUserOptionState = computed(() => config.userOptions.keepStateOnChartLeave);
+export function useUserOptionState({ config }) {
+    const showUserOptionsOnChartHover = computed(
+        () => config.userOptions.showOnChartHover,
+    );
+    const keepUserOptionState = computed(
+        () => config.userOptions.keepStateOnChartLeave,
+    );
     const userOptionsVisible = ref(!config.userOptions.showOnChartHover);
 
     function setUserOptionsVisibility(state = false) {
@@ -15,6 +17,6 @@ export function useUserOptionState({
     return {
         userOptionsVisible,
         keepUserOptionState,
-        setUserOptionsVisibility
-    }
+        setUserOptionsVisibility,
+    };
 }

@@ -4,13 +4,16 @@ export type {
     VueUiBulletSegment,
     VueUiBulletDataset,
     VueUiBulletConfig,
-    VueUiBulletExpose
-} from "./vue-data-ui";
+    VueUiBulletExpose,
+} from './vue-data-ui';
 
-declare const VueUiBullet: DefineComponent<{
-    config?: VueUiBulletConfig;
-    dataset: VueUiBulletDataset;
-}, VueUiBulletExpose>;
+declare const VueUiBullet: DefineComponent<
+    {
+        config?: VueUiBulletConfig;
+        dataset: VueUiBulletDataset;
+    },
+    VueUiBulletExpose
+>;
 
 export default VueUiBullet;
 export { VueUiBullet };

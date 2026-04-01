@@ -1,4 +1,4 @@
-import * as util from "../util.js";
+import * as util from '../util.js';
 
 /*
  * This module provides coordinate assignment based on Brandes and Köpf, "Fast
@@ -15,7 +15,7 @@ export {
     horizontalCompaction,
     alignCoordinates,
     findSmallestWidthAlignment,
-    balance
+    balance,
 };
 
 export default {
@@ -28,7 +28,7 @@ export default {
     horizontalCompaction,
     alignCoordinates,
     findSmallestWidthAlignment,
-    balance
+    balance,
 };
 
 /*
@@ -62,8 +62,8 @@ function findType1Conflicts(g, layering) {
             const k1 = w ? g.node(w).order : prevLayerLength;
 
             if (w || v === lastNode) {
-                layer.slice(scanPos, i + 1).forEach(scanNode => {
-                    g.predecessors(scanNode).forEach(u => {
+                layer.slice(scanPos, i + 1).forEach((scanNode) => {
+                    g.predecessors(scanNode).forEach((u) => {
                         const uLabel = g.node(u);
                         const uPos = uLabel.order;
                         if (
@@ -94,14 +94,15 @@ function findType2Conflicts(g, layering) {
 
     function scan(south, southPos, southEnd, prevNorthBorder, nextNorthBorder) {
         let v;
-        util.range(southPos, southEnd).forEach(i => {
+        util.range(southPos, southEnd).forEach((i) => {
             v = south[i];
             if (g.node(v).dummy) {
-                g.predecessors(v).forEach(u => {
+                g.predecessors(v).forEach((u) => {
                     const uNode = g.node(u);
                     if (
                         uNode.dummy &&
-                        (uNode.order < prevNorthBorder || uNode.order > nextNorthBorder)
+                        (uNode.order < prevNorthBorder ||
+                            uNode.order > nextNorthBorder)
                     ) {
                         addConflict(conflicts, u, v);
                     }
@@ -116,11 +117,17 @@ function findType2Conflicts(g, layering) {
         let southPos = 0;
 
         south.forEach((v, southLookahead) => {
-            if (g.node(v).dummy === "border") {
+            if (g.node(v).dummy === 'border') {
                 const predecessors = g.predecessors(v);
                 if (predecessors.length) {
                     nextNorthPos = g.node(predecessors[0]).order;
-                    scan(south, southPos, southLookahead, prevNorthPos, nextNorthPos);
+                    scan(
+                        south,
+                        southPos,
+                        southLookahead,
+                        prevNorthPos,
+                        nextNorthPos,
+                    );
                     southPos = southLookahead;
                     prevNorthPos = nextNorthPos;
                 }
@@ -140,7 +147,7 @@ function findType2Conflicts(g, layering) {
 
 function findOtherInnerSegmentNode(g, v) {
     if (g.node(v).dummy) {
-        return g.predecessors(v).find(u => g.node(u).dummy);
+        return g.predecessors(v).find((u) => g.node(u).dummy);
     }
 }
 
@@ -181,7 +188,7 @@ function verticalAlignment(g, layering, conflicts, neighborFn) {
     const pos = {};
 
     // Cache positions based on layering
-    layering.forEach(layer => {
+    layering.forEach((layer) => {
         layer.forEach((v, order) => {
             root[v] = v;
             align[v] = v;
@@ -189,9 +196,9 @@ function verticalAlignment(g, layering, conflicts, neighborFn) {
         });
     });
 
-    layering.forEach(layer => {
+    layering.forEach((layer) => {
         let prevIdx = -1;
-        layer.forEach(v => {
+        layer.forEach((v) => {
             let ws = neighborFn(v);
             if (ws.length) {
                 ws = ws.sort((a, b) => pos[a] - pos[b]);
@@ -218,7 +225,7 @@ function verticalAlignment(g, layering, conflicts, neighborFn) {
 function horizontalCompaction(g, layering, root, align, reverseSep) {
     const xs = {};
     const blockG = buildBlockGraph(g, layering, root, reverseSep);
-    const borderType = reverseSep ? "borderLeft" : "borderRight";
+    const borderType = reverseSep ? 'borderLeft' : 'borderRight';
 
     function iterate(setXsFunc, nextNodesFunc) {
         const stack = blockG.nodes().slice();
@@ -254,7 +261,10 @@ function horizontalCompaction(g, layering, root, align, reverseSep) {
         }, Number.POSITIVE_INFINITY);
 
         const node = g.node(elem);
-        if (min !== Number.POSITIVE_INFINITY && node.borderType !== borderType) {
+        if (
+            min !== Number.POSITIVE_INFINITY &&
+            node.borderType !== borderType
+        ) {
             xs[elem] = Math.max(xs[elem], min);
         }
     }
@@ -263,7 +273,7 @@ function horizontalCompaction(g, layering, root, align, reverseSep) {
     iterate(pass2, blockG.successors.bind(blockG));
 
     // Assign x coordinates to all nodes
-    Object.keys(align).forEach(v => {
+    Object.keys(align).forEach((v) => {
         xs[v] = xs[root[v]];
     });
 
@@ -271,13 +281,13 @@ function horizontalCompaction(g, layering, root, align, reverseSep) {
 }
 
 function buildBlockGraph(g, layering, root, reverseSep) {
-    const blockGraph = new (g.constructor)();
+    const blockGraph = new g.constructor();
     const graphLabel = g.graph();
     const sepFn = sep(graphLabel.nodesep, graphLabel.edgesep, reverseSep);
 
-    layering.forEach(layer => {
+    layering.forEach((layer) => {
         let u;
-        layer.forEach(v => {
+        layer.forEach((v) => {
             const vRoot = root[v];
             blockGraph.setNode(vRoot);
             if (u) {
@@ -286,7 +296,7 @@ function buildBlockGraph(g, layering, root, reverseSep) {
                 blockGraph.setEdge(
                     uRoot,
                     vRoot,
-                    Math.max(sepFn(g, v, u), prevMax || 0)
+                    Math.max(sepFn(g, v, u), prevMax || 0),
                 );
             }
             u = v;
@@ -317,7 +327,7 @@ function findSmallestWidthAlignment(g, xss) {
             }
             return currentMinAndXs;
         },
-        [Number.POSITIVE_INFINITY, null]
+        [Number.POSITIVE_INFINITY, null],
     )[1];
 }
 
@@ -333,8 +343,8 @@ function alignCoordinates(xss, alignTo) {
     const alignToMin = util.applyWithChunking(Math.min, alignToVals);
     const alignToMax = util.applyWithChunking(Math.max, alignToVals);
 
-    ["u", "d"].forEach(vert => {
-        ["l", "r"].forEach(horiz => {
+    ['u', 'd'].forEach((vert) => {
+        ['l', 'r'].forEach((horiz) => {
             const alignment = vert + horiz;
             let xs = xss[alignment];
 
@@ -342,12 +352,12 @@ function alignCoordinates(xss, alignTo) {
 
             const xsVals = Object.values(xs);
             let delta = alignToMin - util.applyWithChunking(Math.min, xsVals);
-            if (horiz !== "l") {
+            if (horiz !== 'l') {
                 delta = alignToMax - util.applyWithChunking(Math.max, xsVals);
             }
 
             if (delta) {
-                xs = util.mapValues(xs, x => x + delta);
+                xs = util.mapValues(xs, (x) => x + delta);
                 xss[alignment] = xs;
             }
         });
@@ -361,7 +371,7 @@ function balance(xss, align) {
         }
 
         const xs = Object.values(xss)
-            .map(xsMap => xsMap[v])
+            .map((xsMap) => xsMap[v])
             .sort((a, b) => a - b);
 
         return (xs[1] + xs[2]) / 2;
@@ -372,35 +382,34 @@ function positionX(g) {
     const layering = util.buildLayerMatrix(g);
     const conflicts = Object.assign(
         findType1Conflicts(g, layering),
-        findType2Conflicts(g, layering)
+        findType2Conflicts(g, layering),
     );
 
     const xss = {};
     let adjustedLayering;
 
-    ["u", "d"].forEach(vert => {
+    ['u', 'd'].forEach((vert) => {
         adjustedLayering =
-            vert === "u" ? layering : Object.values(layering).reverse();
+            vert === 'u' ? layering : Object.values(layering).reverse();
 
-        ["l", "r"].forEach(horiz => {
+        ['l', 'r'].forEach((horiz) => {
             let localLayering = adjustedLayering;
 
-            if (horiz === "r") {
-                localLayering = localLayering.map(inner =>
-                    Object.values(inner).reverse()
+            if (horiz === 'r') {
+                localLayering = localLayering.map((inner) =>
+                    Object.values(inner).reverse(),
                 );
             }
 
-            const neighborFn = (vert === "u"
-                ? g.predecessors
-                : g.successors
+            const neighborFn = (
+                vert === 'u' ? g.predecessors : g.successors
             ).bind(g);
 
             const align = verticalAlignment(
                 g,
                 localLayering,
                 conflicts,
-                neighborFn
+                neighborFn,
             );
 
             let xs = horizontalCompaction(
@@ -408,11 +417,11 @@ function positionX(g) {
                 localLayering,
                 align.root,
                 align.align,
-                horiz === "r"
+                horiz === 'r',
             );
 
-            if (horiz === "r") {
-                xs = util.mapValues(xs, x => -x);
+            if (horiz === 'r') {
+                xs = util.mapValues(xs, (x) => -x);
             }
 
             xss[vert + horiz] = xs;
@@ -432,12 +441,12 @@ function sep(nodeSep, edgeSep, reverseSep) {
         let delta;
 
         sum += vLabel.width / 2;
-        if (Object.hasOwn(vLabel, "labelpos")) {
+        if (Object.hasOwn(vLabel, 'labelpos')) {
             switch (vLabel.labelpos.toLowerCase()) {
-                case "l":
+                case 'l':
                     delta = -vLabel.width / 2;
                     break;
-                case "r":
+                case 'r':
                     delta = vLabel.width / 2;
                     break;
             }
@@ -451,12 +460,12 @@ function sep(nodeSep, edgeSep, reverseSep) {
         sum += (wLabel.dummy ? edgeSep : nodeSep) / 2;
 
         sum += wLabel.width / 2;
-        if (Object.hasOwn(wLabel, "labelpos")) {
+        if (Object.hasOwn(wLabel, 'labelpos')) {
             switch (wLabel.labelpos.toLowerCase()) {
-                case "l":
+                case 'l':
                     delta = wLabel.width / 2;
                     break;
-                case "r":
+                case 'r':
                     delta = -wLabel.width / 2;
                     break;
             }

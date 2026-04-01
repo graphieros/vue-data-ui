@@ -1,6 +1,6 @@
 import { DefineComponent } from 'vue';
 
-export type { 
+export type {
     VueUiQuadrantDatasetSerieItem,
     VueUiQuadrantDatasetItem,
     VueUiQuadrantSideConfig,
@@ -8,13 +8,16 @@ export type {
     VueUiQuadrantDatapoint,
     VueUiQuadrantSerie,
     VueUiQuadrantExpose,
-    VueUiQuadrantEvent
-} from "./vue-data-ui";
+    VueUiQuadrantEvent,
+} from './vue-data-ui';
 
-declare const VueUiQuadrant: DefineComponent<{
-    dataset: VueUiQuadrantDatasetItem[];
-    config?: VueUiQuadrantConfig;
-}, VueUiQuadrantExpose>;
+declare const VueUiQuadrant: DefineComponent<
+    {
+        dataset: VueUiQuadrantDatasetItem[];
+        config?: VueUiQuadrantConfig;
+    },
+    VueUiQuadrantExpose
+>;
 
 export default VueUiQuadrant;
 export { VueUiQuadrant };

@@ -1,21 +1,33 @@
 <script setup>
-import { ref, computed, onMounted, watch, nextTick, onBeforeUnmount, useSlots, defineAsyncComponent, shallowRef } from "vue";
-import { useConfig } from "../useConfig";
-import { useNestedProp } from "../useNestedProp";
-import { 
-    createCsvContent, 
-    createUid, 
-    downloadCsv, 
-    error, 
+import {
+    ref,
+    computed,
+    onMounted,
+    watch,
+    nextTick,
+    onBeforeUnmount,
+    useSlots,
+    defineAsyncComponent,
+    shallowRef,
+} from 'vue';
+import { useConfig } from '../useConfig';
+import { useNestedProp } from '../useNestedProp';
+import {
+    createCsvContent,
+    createUid,
+    downloadCsv,
+    error,
     objectIsEmpty,
-    setOpacity
-} from "../lib";
-import { usePrinter } from "../usePrinter";
-import { useUserOptionState } from "../useUserOptionState";
-import { usePrefersReducedMotion } from "../usePrefersMotion";
+    setOpacity,
+} from '../lib';
+import { usePrinter } from '../usePrinter';
+import { useUserOptionState } from '../useUserOptionState';
+import { usePrefersReducedMotion } from '../usePrefersMotion';
 
 const Skeleton = defineAsyncComponent(() => import('./vue-ui-skeleton.vue'));
-const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
+const UserOptions = defineAsyncComponent(
+    () => import('../atoms/UserOptions.vue'),
+);
 
 const { vue_ui_carousel_table: DEFAULT_CONFIG } = useConfig();
 const prefersReducedMotion = usePrefersReducedMotion();
@@ -24,15 +36,15 @@ const props = defineProps({
     config: {
         type: Object,
         default() {
-            return {}
-        }
+            return {};
+        },
     },
     dataset: {
         type: Object,
         default() {
-            return {}
-        }
-    }
+            return {};
+        },
+    },
 });
 
 const emit = defineEmits(['copyAlt']);
@@ -48,7 +60,9 @@ onMounted(() => {
 
 onMounted(() => {
     if (slots['chart-background']) {
-        console.warn('VueUiCarouselTable does not support the #chart-background slot.')
+        console.warn(
+            'VueUiCarouselTable does not support the #chart-background slot.',
+        );
     }
 });
 
@@ -56,7 +70,7 @@ function prepareChart() {
     if (objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiCarouselTable',
-            type: 'dataset'
+            type: 'dataset',
         });
     } else {
         if (!props.dataset.head || objectIsEmpty(props.dataset.head)) {
@@ -71,7 +85,7 @@ function prepareChart() {
             error({
                 componentName: 'VueUiCarouselTable',
                 type: 'datasetAttribute',
-                property: 'body'
+                property: 'body',
             });
             isDataset.value = false;
         }
@@ -86,39 +100,56 @@ const FINAL_CONFIG = computed({
         return prepareConfig();
     },
     set: (newCfg) => {
-        return newCfg
-    }
+        return newCfg;
+    },
 });
 
-const isCursorPointer = computed(() => FINAL_CONFIG.value.userOptions.useCursorPointer);
+const isCursorPointer = computed(
+    () => FINAL_CONFIG.value.userOptions.useCursorPointer,
+);
 
-const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
+const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } =
+    useUserOptionState({ config: FINAL_CONFIG.value });
 
 function prepareConfig() {
     return useNestedProp({
         userConfig: props.config,
-        defaultConfig: DEFAULT_CONFIG
+        defaultConfig: DEFAULT_CONFIG,
     });
 }
 
-watch(() => props.config, (_newCfg) => {
-    FINAL_CONFIG.value = prepareConfig();
-    userOptionsVisible.value = !FINAL_CONFIG.value.userOptions.showOnChartHover;
-    prepareChart();
-}, { deep: true });
+watch(
+    () => props.config,
+    (_newCfg) => {
+        FINAL_CONFIG.value = prepareConfig();
+        userOptionsVisible.value =
+            !FINAL_CONFIG.value.userOptions.showOnChartHover;
+        prepareChart();
+    },
+    { deep: true },
+);
 
-watch(() => props.dataset, (_) => {
-    setTrElements();
-}, { deep: true })
+watch(
+    () => props.dataset,
+    (_) => {
+        setTrElements();
+    },
+    { deep: true },
+);
 
-const { isPrinting, isImaging, generatePdf: makePdf, generateImage } = usePrinter({
+const {
+    isPrinting,
+    isImaging,
+    generatePdf: makePdf,
+    generateImage,
+} = usePrinter({
     elementId: `carousel-table_${uid.value}`,
     fileName: FINAL_CONFIG.value.caption.text || 'vue-ui-carousel-table',
-    options: FINAL_CONFIG.value.userOptions.print
+    options: FINAL_CONFIG.value.userOptions.print,
 });
 
 const mutableConfig = ref({
-    showAnimation: FINAL_CONFIG.value.animation.use
+    showAnimation: FINAL_CONFIG.value.animation.use,
 });
 
 const tableContainer = ref(null);
@@ -138,25 +169,41 @@ function setTrElements() {
     if (tbody.value) {
         allTr.value = {
             elements: tbody.value.getElementsByTagName('tr'),
-            heights: Array.from(tbody.value.getElementsByTagName('tr')).map(el => el.getBoundingClientRect().height)
-        }
+            heights: Array.from(tbody.value.getElementsByTagName('tr')).map(
+                (el) => el.getBoundingClientRect().height,
+            ),
+        };
     }
 }
 
 onMounted(setTrElements);
 
 const maxTrHeight = computed(() => {
-    if(!allTr.value || !allTr.value.heights.length) return 0;
-    return Math.max(...allTr.value.heights) + captionHeight.value + tableRowHeight.value;
-})
+    if (!allTr.value || !allTr.value.heights.length) return 0;
+    return (
+        Math.max(...allTr.value.heights) +
+        captionHeight.value +
+        tableRowHeight.value
+    );
+});
 
 const visibleCells = computed(() => {
-    if(!props.dataset.body) return 0;
-    return FINAL_CONFIG.value.tbody.tr.visible <= props.dataset.body.length ? FINAL_CONFIG.value.tbody.tr.visible :props.dataset.body.length;
+    if (!props.dataset.body) return 0;
+    return FINAL_CONFIG.value.tbody.tr.visible <= props.dataset.body.length
+        ? FINAL_CONFIG.value.tbody.tr.visible
+        : props.dataset.body.length;
 });
 
 const rowHeight = computed(() => {
-    return ((FINAL_CONFIG.value.tbody.tr.height + FINAL_CONFIG.value.tbody.tr.td.padding.top + FINAL_CONFIG.value.tbody.tr.td.padding.bottom + FINAL_CONFIG.value.tbody.tr.border.size * 2) * visibleCells.value + captionHeight.value + tableRowHeight.value)
+    return (
+        (FINAL_CONFIG.value.tbody.tr.height +
+            FINAL_CONFIG.value.tbody.tr.td.padding.top +
+            FINAL_CONFIG.value.tbody.tr.td.padding.bottom +
+            FINAL_CONFIG.value.tbody.tr.border.size * 2) *
+            visibleCells.value +
+        captionHeight.value +
+        tableRowHeight.value
+    );
 });
 
 const init = ref(0);
@@ -166,7 +213,7 @@ const isPaused = ref(false);
 const step = ref(0);
 
 onMounted(() => {
-    if(caption.value) {
+    if (caption.value) {
         captionHeight.value = caption.value.getBoundingClientRect().height;
     }
 
@@ -179,7 +226,6 @@ onMounted(() => {
     }
 });
 
-
 onMounted(() => {
     if (tableContainer.value) {
         const thead = tableContainer.value.querySelector('thead');
@@ -187,7 +233,7 @@ onMounted(() => {
 
         function updateVisibility() {
             const theadBottom = thead.getBoundingClientRect().bottom;
-            trElements.forEach(tr => {
+            trElements.forEach((tr) => {
                 const trTop = tr.getBoundingClientRect().top;
                 if (trTop < theadBottom) {
                     tr.style.visibility = 'hidden';
@@ -199,9 +245,12 @@ onMounted(() => {
 
         tableContainer.value.addEventListener('scroll', updateVisibility);
         updateVisibility();
-    
+
         onBeforeUnmount(() => {
-            tableContainer.value.removeEventListener('scroll', updateVisibility);
+            tableContainer.value.removeEventListener(
+                'scroll',
+                updateVisibility,
+            );
         });
     }
 });
@@ -209,7 +258,7 @@ onMounted(() => {
 function toggleFullscreen(state) {
     isFullscreen.value = state;
     step.value += 1;
-} 
+}
 
 function startAnimation() {
     if (prefersReducedMotion.value) return;
@@ -223,7 +272,7 @@ function startAnimation() {
 }
 
 function hasReachedScrollBottom() {
-    if(!tableContainer.value) return false;
+    if (!tableContainer.value) return false;
     const { scrollTop, scrollHeight, clientHeight } = tableContainer.value;
     return scrollTop + clientHeight >= scrollHeight;
 }
@@ -236,16 +285,19 @@ function animate(timestamp) {
 
     if (deltaTime >= FINAL_CONFIG.value.animation.speedMs) {
         init.value += allTr.value.heights[scrollIndex.value];
-        if (hasReachedScrollBottom() || scrollIndex.value >= allTr.value.heights.length) {
+        if (
+            hasReachedScrollBottom() ||
+            scrollIndex.value >= allTr.value.heights.length
+        ) {
             init.value = 0;
             scrollIndex.value = -1;
-        } 
+        }
 
         scrollIndex.value += 1;
         if (tableContainer.value) {
             tableContainer.value.scrollTo({
                 top: init.value,
-                behavior: 'smooth'
+                behavior: 'smooth',
             });
         }
 
@@ -260,11 +312,15 @@ function animateMarquee(timestamp) {
     if (!lastTimestamp.value) lastTimestamp.value = timestamp;
 
     const deltaTime = timestamp - lastTimestamp.value;
-    const marqueeSpeed = (FINAL_CONFIG.value.animation.speedMs / 4) / 1000;
+    const marqueeSpeed = FINAL_CONFIG.value.animation.speedMs / 4 / 1000;
 
     if (deltaTime >= marqueeSpeed) {
         init.value += marqueeSpeed;
-        if (init.value >= (tableContainer.value.scrollHeight - tableContainer.value.clientHeight)) {
+        if (
+            init.value >=
+            tableContainer.value.scrollHeight -
+                tableContainer.value.clientHeight
+        ) {
             init.value = 0;
         }
         if (tableContainer.value) {
@@ -284,17 +340,17 @@ function pauseAnimation() {
     raf.value = null;
 }
 
-onBeforeUnmount(pauseAnimation)
+onBeforeUnmount(pauseAnimation);
 
 function resumeAnimation() {
     if (!isPaused.value || !mutableConfig.value.showAnimation) return;
     isPaused.value = false;
-    lastTimestamp.value = 0; 
+    lastTimestamp.value = 0;
     startAnimation();
 }
 
 function pauseOnHover() {
-    if(!FINAL_CONFIG.value.animation.pauseOnHover) return;
+    if (!FINAL_CONFIG.value.animation.pauseOnHover) return;
     pauseAnimation();
 }
 
@@ -320,7 +376,7 @@ watch(
             mutableConfig.value.showAnimation = false;
             pauseAnimation();
         }
-    }
+    },
 );
 
 watch(
@@ -334,7 +390,7 @@ watch(
             behavior: 'auto',
         });
         resumeAnimation();
-    }
+    },
 );
 
 const breakpoint = computed(() => FINAL_CONFIG.value.responsiveBreakpoint);
@@ -343,11 +399,15 @@ const tableObserver = shallowRef(null);
 
 onMounted(() => {
     tableObserver.value = new ResizeObserver((entries) => {
-        entries.forEach(entry => {
+        entries.forEach((entry) => {
             isResponsive.value = entry.contentRect.width < breakpoint.value;
-        })
-        captionHeight.value = caption.value ? caption.value.getBoundingClientRect().height : 0;
-        tableRowHeight.value = tableRow.value ? tableRow.value.getBoundingClientRect().height : 0;
+        });
+        captionHeight.value = caption.value
+            ? caption.value.getBoundingClientRect().height
+            : 0;
+        tableRowHeight.value = tableRow.value
+            ? tableRow.value.getBoundingClientRect().height
+            : 0;
         scrollIndex.value = 0;
         nextTick(() => {
             pauseAnimation();
@@ -356,17 +416,17 @@ onMounted(() => {
             setTrElements();
             resumeAnimation();
         });
-    })
-    if(tableContainer.value) {
+    });
+    if (tableContainer.value) {
         tableObserver.value.observe(tableContainer.value);
-    }     
+    }
 });
 
 onBeforeUnmount(() => {
     if (tableObserver.value) {
         tableObserver.value.disconnect();
     }
-})
+});
 
 function generatePdf() {
     makePdf();
@@ -381,17 +441,15 @@ function toggleAnimation() {
     }
 }
 
-function generateCsv(callback=null) {
+function generateCsv(callback = null) {
     nextTick(() => {
         const labels = props.dataset.head.map((_, i) => {
-            return [
-                [props.dataset.body[i]]
-            ]
+            return [[props.dataset.body[i]]];
         });
 
         const tableXls = [
             [FINAL_CONFIG.value.caption.text],
-            [props.dataset.head.map(h => [h])]
+            [props.dataset.head.map((h) => [h])],
         ].concat(labels);
 
         const csvContent = createCsvContent(tableXls);
@@ -399,28 +457,32 @@ function generateCsv(callback=null) {
         if (!callback) {
             downloadCsv({
                 csvContent,
-                title: FINAL_CONFIG.value.caption.text || 'vue-ui-carousel-table'
+                title:
+                    FINAL_CONFIG.value.caption.text || 'vue-ui-carousel-table',
             });
         } else {
             callback(csvContent);
         }
-
     });
 }
 
-async function copyAlt(){
+async function copyAlt() {
     emit('copyAlt', {
         config: FINAL_CONFIG.value,
-        dataset: props.dataset
-    })
+        dataset: props.dataset,
+    });
     if (!FINAL_CONFIG.value.userOptions.callbacks.altCopy) {
-        console.warn('Vue Data UI - A callback must be set for `altCopy` in userOptions.');
-        return
+        console.warn(
+            'Vue Data UI - A callback must be set for `altCopy` in userOptions.',
+        );
+        return;
     }
-    await Promise.resolve(FINAL_CONFIG.value.userOptions.callbacks.altCopy({ 
-        config: FINAL_CONFIG.value, 
-        dataset: props.dataset
-    }));
+    await Promise.resolve(
+        FINAL_CONFIG.value.userOptions.callbacks.altCopy({
+            config: FINAL_CONFIG.value,
+            dataset: props.dataset,
+        }),
+    );
 }
 
 defineExpose({
@@ -430,137 +492,204 @@ defineExpose({
     generateCsv,
     generatePdf,
     generateImage,
-    copyAlt
+    copyAlt,
 });
-
 </script>
 
 <template>
-    <div class="vue-data-ui-component vue-ui-carousel-table" style="position:relative; overflow:visible;" ref="chartContainer" @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)">
-        <div 
+    <div
+        class="vue-data-ui-component vue-ui-carousel-table"
+        style="position: relative; overflow: visible"
+        ref="chartContainer"
+        @mouseenter="() => setUserOptionsVisibility(true)"
+        @mouseleave="() => setUserOptionsVisibility(false)"
+    >
+        <div
             ref="tableContainer"
             :id="`carousel-table_${uid}`"
             :style="{
-                height: isPrinting || isImaging ? 'auto' : `${Math.max(rowHeight, maxTrHeight)}px`,
+                height:
+                    isPrinting || isImaging
+                        ? 'auto'
+                        : `${Math.max(rowHeight, maxTrHeight)}px`,
                 containerType: 'inline-size',
                 position: 'relative',
                 overflow: 'auto',
-                fontFamily: FINAL_CONFIG.fontFamily
+                fontFamily: FINAL_CONFIG.fontFamily,
             }"
-            :class="{ 'vue-ui-responsive' : isResponsive, 'is-playing': FINAL_CONFIG.scrollbar.hide || (!isPaused && FINAL_CONFIG.scrollbar.showOnlyOnHover) }"
+            :class="{
+                'vue-ui-responsive': isResponsive,
+                'is-playing':
+                    FINAL_CONFIG.scrollbar.hide ||
+                    (!isPaused && FINAL_CONFIG.scrollbar.showOnlyOnHover),
+            }"
             @mouseover="pauseOnHover()"
             @mouseleave="resumeAnimation()"
             @touchstart="pauseOnTouch()"
             @touchend="resumeAfterDelay()"
             @touchcancel="resumeAfterDelay()"
         >
-            <table 
+            <table
                 class="vue-data-ui-carousel-table"
                 :aria-labelledby="`carousel-caption-${uid}`"
                 v-if="isDataset"
-                :style="{ 
+                :style="{
                     ...FINAL_CONFIG.style,
                     border: `${FINAL_CONFIG.border.size}px solid ${FINAL_CONFIG.border.color}`,
                     width: '100%',
                     borderCollapse: 'collapse',
-                    backgroundColor: FINAL_CONFIG.tbody.backgroundColor
-                }">
+                    backgroundColor: FINAL_CONFIG.tbody.backgroundColor,
+                }"
+            >
                 <caption
                     data-cy="caption"
                     ref="caption"
                     class="vue-data-ui-carousel-table-caption"
                     :id="`carousel-caption-${uid}`"
                     :style="{
-                        ...FINAL_CONFIG.caption.style, 
+                        ...FINAL_CONFIG.caption.style,
                         fontFamily: 'inherit',
                         position: 'sticky',
                         top: 0,
                         zIndex: 2,
                         paddingTop: FINAL_CONFIG.caption.padding.top + 'px',
                         paddingRight: FINAL_CONFIG.caption.padding.right + 'px',
-                        paddingBottom: FINAL_CONFIG.caption.padding.bottom +'px',
+                        paddingBottom:
+                            FINAL_CONFIG.caption.padding.bottom + 'px',
                         paddingLeft: FINAL_CONFIG.caption.padding.left + 'px',
-                        boxShadow: isResponsive ? FINAL_CONFIG.thead.tr.style.boxShadow : 'none',
+                        boxShadow: isResponsive
+                            ? FINAL_CONFIG.thead.tr.style.boxShadow
+                            : 'none',
                         minHeight: '36px',
-                        display: $slots.caption || FINAL_CONFIG.caption.text || FINAL_CONFIG.userOptions.show ? '' : 'none'
-                    }">
-                    {{ FINAL_CONFIG.caption.text && !$slots.caption ? FINAL_CONFIG.caption.text : '' }}
-                    <slot name="caption"/>
+                        display:
+                            $slots.caption ||
+                            FINAL_CONFIG.caption.text ||
+                            FINAL_CONFIG.userOptions.show
+                                ? ''
+                                : 'none',
+                    }"
+                >
+                    {{
+                        FINAL_CONFIG.caption.text && !$slots.caption
+                            ? FINAL_CONFIG.caption.text
+                            : ''
+                    }}
+                    <slot name="caption" />
                 </caption>
-    
-                <thead role="rowgroup" :style="{ ...FINAL_CONFIG.thead.style, position: 'sticky', top: `${$slots.caption || FINAL_CONFIG.caption.text || FINAL_CONFIG.userOptions.show ? captionHeight : 0}px`, zIndex: 1 }">
+
+                <thead
+                    role="rowgroup"
+                    :style="{
+                        ...FINAL_CONFIG.thead.style,
+                        position: 'sticky',
+                        top: `${$slots.caption || FINAL_CONFIG.caption.text || FINAL_CONFIG.userOptions.show ? captionHeight : 0}px`,
+                        zIndex: 1,
+                    }"
+                >
                     <tr
                         ref="tableRow"
-                        role="row" 
-                        :style="{ 
+                        role="row"
+                        :style="{
                             ...FINAL_CONFIG.thead.tr.style,
-                            border: FINAL_CONFIG.thead.tr.border.size ? `${FINAL_CONFIG.thead.tr.border.size}px solid ${FINAL_CONFIG.thead.tr.border.color}` : 'none',
-                            boxShadow: isResponsive ? 'none' : FINAL_CONFIG.thead.tr.style.boxShadow,
-                        }" 
+                            border: FINAL_CONFIG.thead.tr.border.size
+                                ? `${FINAL_CONFIG.thead.tr.border.size}px solid ${FINAL_CONFIG.thead.tr.border.color}`
+                                : 'none',
+                            boxShadow: isResponsive
+                                ? 'none'
+                                : FINAL_CONFIG.thead.tr.style.boxShadow,
+                        }"
                         :height="`${FINAL_CONFIG.thead.tr.height}px`"
                     >
-                        <th 
-                            role="cell" 
-                            v-for="(th, i) in dataset.head" 
+                        <th
+                            role="cell"
+                            v-for="(th, i) in dataset.head"
                             :key="`th_${i}`"
                             :id="`col-${i}`"
                             scope="col"
                             :style="{
                                 ...FINAL_CONFIG.thead.tr.th.style,
-                                border: FINAL_CONFIG.thead.tr.th.border.size ? `${FINAL_CONFIG.thead.tr.th.border.size}px solid ${FINAL_CONFIG.thead.tr.th.border.color}` : 'none',
-                                paddingTop: FINAL_CONFIG.thead.tr.th.padding.top + 'px',
-                                paddingRight: FINAL_CONFIG.thead.tr.th.padding.right + 'px',
-                                paddingBottom: FINAL_CONFIG.thead.tr.th.padding.bottom + 'px',
-                                paddingLeft: FINAL_CONFIG.thead.tr.th.padding.left + 'px',
+                                border: FINAL_CONFIG.thead.tr.th.border.size
+                                    ? `${FINAL_CONFIG.thead.tr.th.border.size}px solid ${FINAL_CONFIG.thead.tr.th.border.color}`
+                                    : 'none',
+                                paddingTop:
+                                    FINAL_CONFIG.thead.tr.th.padding.top + 'px',
+                                paddingRight:
+                                    FINAL_CONFIG.thead.tr.th.padding.right +
+                                    'px',
+                                paddingBottom:
+                                    FINAL_CONFIG.thead.tr.th.padding.bottom +
+                                    'px',
+                                paddingLeft:
+                                    FINAL_CONFIG.thead.tr.th.padding.left +
+                                    'px',
                             }"
                         >
                             {{ $slots.th ? '' : th }}
-                            <slot name="th" v-bind="{ th, colIndex: i }"/>
+                            <slot name="th" v-bind="{ th, colIndex: i }" />
                         </th>
                     </tr>
                 </thead>
-    
-                <tbody 
-                    v-if="dataset.body && dataset.head" ref="tbody"
+
+                <tbody
+                    v-if="dataset.body && dataset.head"
+                    ref="tbody"
                     aria-live="polite"
                     :style="{
                         clipPath: 'inset(0,0,0,0)',
                     }"
                 >
-                    <tr 
+                    <tr
                         v-for="(tr, i) in dataset.body"
-                        :style="{ 
+                        :style="{
                             ...FINAL_CONFIG.tbody.tr.style,
                             border: `${FINAL_CONFIG.tbody.tr.border.size}px solid ${FINAL_CONFIG.tbody.tr.border.color}`,
                             verticalAlign: 'middle',
                         }"
                     >
-                        <td 
-                            role="cell" 
-                            v-for="(td, j) in tr" 
+                        <td
+                            role="cell"
+                            v-for="(td, j) in tr"
                             :data-cell="dataset.head[j] || ''"
                             :aria-label="`${dataset.head[j]}: ${td}`"
-                            :style="{ 
+                            :style="{
                                 ...FINAL_CONFIG.tbody.tr.td.style,
                                 border: `${FINAL_CONFIG.tbody.tr.td.border.size}px solid ${FINAL_CONFIG.tbody.tr.td.border.color}`,
-                                backgroundColor: setOpacity(FINAL_CONFIG.tbody.tr.td.style.backgroundColor, (i % 2 === 0 && FINAL_CONFIG.tbody.tr.td.alternateColor) ? FINAL_CONFIG.tbody.tr.td.alternateOpacity * 100 : 100),
-                                paddingTop: FINAL_CONFIG.tbody.tr.td.padding.top + 'px',
-                                paddingRight: FINAL_CONFIG.tbody.tr.td.padding.right + 'px',
-                                paddingBottom: FINAL_CONFIG.tbody.tr.td.padding.bottom + 'px',
-                                paddingLeft: FINAL_CONFIG.tbody.tr.td.padding.left + 'px',
-                                verticalAlign: 'middle'
-                            }" 
+                                backgroundColor: setOpacity(
+                                    FINAL_CONFIG.tbody.tr.td.style
+                                        .backgroundColor,
+                                    i % 2 === 0 &&
+                                        FINAL_CONFIG.tbody.tr.td.alternateColor
+                                        ? FINAL_CONFIG.tbody.tr.td
+                                              .alternateOpacity * 100
+                                        : 100,
+                                ),
+                                paddingTop:
+                                    FINAL_CONFIG.tbody.tr.td.padding.top + 'px',
+                                paddingRight:
+                                    FINAL_CONFIG.tbody.tr.td.padding.right +
+                                    'px',
+                                paddingBottom:
+                                    FINAL_CONFIG.tbody.tr.td.padding.bottom +
+                                    'px',
+                                paddingLeft:
+                                    FINAL_CONFIG.tbody.tr.td.padding.left +
+                                    'px',
+                                verticalAlign: 'middle',
+                            }"
                             :height="`${FINAL_CONFIG.tbody.tr.height}px`"
                         >
                             {{ $slots.td ? '' : td }}
-                            <slot name="td" v-bind="{ td, rowIndex: i, colIndex: j}"/>
+                            <slot
+                                name="td"
+                                v-bind="{ td, rowIndex: i, colIndex: j }"
+                            />
                         </td>
                     </tr>
                 </tbody>
             </table>
         </div>
 
-        <Skeleton 
+        <Skeleton
             v-if="!isDataset"
             :config="{
                 type: 'table',
@@ -570,7 +699,11 @@ defineExpose({
         <UserOptions
             ref="details"
             :key="`user_option_${step}`"
-            v-if="FINAL_CONFIG.userOptions.show && isDataset && (keepUserOptionState ? true : userOptionsVisible)"
+            v-if="
+                FINAL_CONFIG.userOptions.show &&
+                isDataset &&
+                (keepUserOptionState ? true : userOptionsVisible)
+            "
             :backgroundColor="FINAL_CONFIG.style.backgroundColor"
             :color="FINAL_CONFIG.style.color"
             :isPrinting="isPrinting"
@@ -602,11 +735,15 @@ defineExpose({
             @toggleFullscreen="toggleFullscreen"
             @copyAlt="copyAlt"
             :style="{
-                visibility: keepUserOptionState ? userOptionsVisible ? 'visible' : 'hidden' : 'visible'
+                visibility: keepUserOptionState
+                    ? userOptionsVisible
+                        ? 'visible'
+                        : 'hidden'
+                    : 'visible',
             }"
         >
             <template #menuIcon="{ isOpen, color }" v-if="$slots.menuIcon">
-                <slot name="menuIcon" v-bind="{ isOpen, color }"/>
+                <slot name="menuIcon" v-bind="{ isOpen, color }" />
             </template>
             <template #optionPdf v-if="$slots.optionPdf">
                 <slot name="optionPdf" />
@@ -623,11 +760,21 @@ defineExpose({
             <template #optionAnimation v-if="$slots.optionAnimation">
                 <slot name="optionAnimation" />
             </template>
-            <template v-if="$slots.optionFullscreen" template #optionFullscreen="{ toggleFullscreen, isFullscreen }">
-                <slot name="optionFullscreen" v-bind="{ toggleFullscreen, isFullscreen }"/>
+            <template
+                v-if="$slots.optionFullscreen"
+                template
+                #optionFullscreen="{ toggleFullscreen, isFullscreen }"
+            >
+                <slot
+                    name="optionFullscreen"
+                    v-bind="{ toggleFullscreen, isFullscreen }"
+                />
             </template>
-            <template v-if="$slots.optionAltCopy" #optionAltCopy="{ altCopy: c }">
-                <slot name="optionAltCopy" v-bind="{ altCopy: c }"/>
+            <template
+                v-if="$slots.optionAltCopy"
+                #optionAltCopy="{ altCopy: c }"
+            >
+                <slot name="optionAltCopy" v-bind="{ altCopy: c }" />
             </template>
         </UserOptions>
 
@@ -640,10 +787,11 @@ defineExpose({
 <style scoped lang="scss">
 .vue-ui-data-carousel-table thead {
     position: sticky;
-    top:0;
+    top: 0;
     user-select: none;
 }
-thead th, tbody td {
+thead th,
+tbody td {
     word-wrap: break-word;
 }
 
@@ -659,14 +807,14 @@ thead th, tbody td {
         padding: 0.5rem 1rem;
         outline: none !important;
         text-align: left;
-        height:max-content;
+        height: max-content;
     }
     tr {
         height: fit-content;
     }
 
     td::before {
-        content: attr(data-cell) ": ";
+        content: attr(data-cell) ': ';
         font-weight: 700;
         text-transform: capitalize;
         font-size: 10px;
@@ -680,7 +828,7 @@ thead th, tbody td {
 }
 
 .is-playing {
-    -ms-overflow-style: none;  /* Edge */
-    scrollbar-width: none;  /* Firefox */
+    -ms-overflow-style: none; /* Edge */
+    scrollbar-width: none; /* Firefox */
 }
 </style>

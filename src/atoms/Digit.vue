@@ -1,32 +1,32 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed } from 'vue';
 
 const props = defineProps({
     quanta: {
         type: String,
-        default: null
+        default: null,
     },
     backgroundColor: {
         type: String,
-        default: "#e1e5e8"
+        default: '#e1e5e8',
     },
     color: {
         type: String,
-        default: "#000000"
+        default: '#000000',
     },
     // coordinates from top left of a
     x: {
         type: Number,
-        default: 0
+        default: 0,
     },
     y: {
         type: Number,
-        default: 0
+        default: 0,
     },
     thickness: {
         type: Number,
-        default: 1
-    }
+        default: 1,
+    },
 });
 
 const segments = ref({
@@ -39,19 +39,19 @@ const segments = ref({
      * e | g  | c
      *    ----
      *     d
-    */
-    0: "1111110",
-    1: "0110000",
-    2: "1101101",
-    3: "1111001",
-    4: "0110011",
-    5: "1011011",
-    6: "1011111",
-    7: "1110000",
-    8: "1111111",
-    9: "1111011",
-    "-": "0000001",
-    X: "0000000"
+     */
+    0: '1111110',
+    1: '0110000',
+    2: '1101101',
+    3: '1111001',
+    4: '0110011',
+    5: '1011011',
+    6: '1011111',
+    7: '1110000',
+    8: '1111111',
+    9: '1111011',
+    '-': '0000001',
+    X: '0000000',
 });
 
 const segmentThickness = computed(() => 2 * (props.thickness || 1));
@@ -160,6 +160,12 @@ const digit = computed(() => {
         />
     </g>
     <g v-if="quanta == '.'">
-        <circle data-cy="digit-decimal" :cx="x - 8" :cy="y + 60" :r="2 + segmentThickness / 2" :fill="color" />
+        <circle
+            data-cy="digit-decimal"
+            :cx="x - 8"
+            :cy="y + 60"
+            :r="2 + segmentThickness / 2"
+            :fill="color"
+        />
     </g>
 </template>

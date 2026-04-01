@@ -1,35 +1,35 @@
 <script setup>
-import { computed, useSlots } from "vue";
-import { XMLNS } from "../lib";
+import { computed, useSlots } from 'vue';
+import { XMLNS } from '../lib';
 
 const props = defineProps({
     name: String,
     size: {
         type: [Number, String],
-        default: 24
+        default: 24,
     },
     stroke: {
         type: String,
-        default: "#CCCCCC"
+        default: '#CCCCCC',
     },
     strokeWidth: {
         type: Number,
-        default: 1.5
+        default: 1.5,
     },
     isSpin: {
         type: Boolean,
-        default: false
+        default: false,
     },
     spinDuration: {
         type: String,
-        default: '1s'
-    }
+        default: '1s',
+    },
 });
 
 const viewBox = computed(() => {
     // Exceptions
     if (props.name === 'numbers') {
-        return '0 0 20 21'
+        return '0 0 20 21';
     }
     return '0 0 20 20';
 });
@@ -339,7 +339,7 @@ function getIconPath(name, { stroke, strokeWidth }) {
         plotLine: `<path d="M 4 14 A 1 1 0 0 0 4 18 A 1 1 0 0 0 4 14 M 16 2 A 1 1 0 0 0 16 6 A 1 1 0 0 0 16 2 M 14.586 5.414 L 5.42 14.592" stroke-linecap="round" stroke-linejoin="round" stroke="${stroke}" stroke-width="${strokeWidth}" fill="none" style="opacity: 1"/>`,
         plotArrow: `<path d="M 4 14 A 1 1 0 0 0 4 18 A 1 1 0 0 0 4 14 M 17 3 L 5.42 14.592 M 13 3 L 17 3 L 17 7" stroke-linecap="round" stroke-linejoin="round" stroke="${stroke}" stroke-width="${strokeWidth}" fill="none" style="opacity: 1"/>`,
         accessibility: `<path d="M 10 1 A 1 1 0 0 0 10 5 A 1 1 0 0 0 10 1 M 10 7 L 4 4 A 1 1 0 0 0 3 6 L 8 9 L 8 11 L 4 17 A 1 1 0 0 0 6 18 L 10 13 L 14 18 A 1 1 0 0 0 16 17 L 12 11 L 12 9 L 17 6 A 1 1 0 0 0 16 4 L 10 7" stroke-linecap="round" stroke-linejoin="round" stroke="${stroke}" stroke-width="${strokeWidth}" fill="none" style="opacity: 1"/>`,
-        npmx: `<path d="M 17 2 L 11 18 L 9 18 L 15 2 L 17 2 M 3 13 L 3 16 L 6 16 L 6 13 L 3 13" stroke-linecap="round" stroke-linejoin="round" fill="${stroke}" style="opacity: 1"/>`
+        npmx: `<path d="M 17 2 L 11 18 L 9 18 L 15 2 L 17 2 M 3 13 L 3 16 L 6 16 L 6 13 L 3 13" stroke-linecap="round" stroke-linejoin="round" fill="${stroke}" style="opacity: 1"/>`,
     };
 
     return map[name] || '';
@@ -367,9 +367,9 @@ const expProps = computed(() => {
         name: p.name,
         stroke: p.stroke ?? props.stroke,
         strokeWidth: p['stroke-width'] ?? p.strokeWidth ?? props.strokeWidth,
-        size: typeof p.size === "number" ? p.size : null,
+        size: typeof p.size === 'number' ? p.size : null,
         isSpin: !!p.isSpin || !!p['is-spin'],
-        spinDuration: p.spinDuration || p['spin-duration'] || '1s'
+        spinDuration: p.spinDuration || p['spin-duration'] || '1s',
     };
 });
 
@@ -379,13 +379,13 @@ const subProps = computed(() => {
         name: p.name,
         stroke: p.stroke ?? props.stroke,
         strokeWidth: p['stroke-width'] ?? p.strokeWidth ?? props.strokeWidth,
-        size: typeof p.size === "number" ? p.size : null,
+        size: typeof p.size === 'number' ? p.size : null,
         isSpin: !!p.isSpin || !!p['is-spin'],
-        spinDuration: p.spinDuration || p['spin-duration'] || '1s'
+        spinDuration: p.spinDuration || p['spin-duration'] || '1s',
     };
 });
 
-function spinAnimate(cx, cy, duration = "0.5s") {
+function spinAnimate(cx, cy, duration = '0.5s') {
     return `
         <animateTransform
             attributeName="transform"
@@ -402,13 +402,14 @@ const nominalCenter = computed(() => {
     const vb = baseViewBox.value;
     return {
         cx: vb.minX + vb.width / 2,
-        cy: vb.minY + vb.height / 2
+        cy: vb.minY + vb.height / 2,
     };
 });
 
 const baseViewBox = computed(() => {
     const parts = String(props.viewBox).trim().split(/\s+/).map(Number);
-    const [minX, minY, width, height] = parts.length === 4 ? parts : [0, 0, 20, 20];
+    const [minX, minY, width, height] =
+        parts.length === 4 ? parts : [0, 0, 20, 20];
     return { minX, minY, width, height };
 });
 
@@ -436,7 +437,7 @@ const combinedViewBox = computed(() => {
     const width = vb.width + extendRight;
     const height = vb.height + extendTop + extendBottom;
     return `${minX} ${minY} ${width} ${height}`;
-})
+});
 
 const expTransform = computed(() => {
     const vb = baseViewBox.value;
@@ -463,31 +464,37 @@ const subTransform = computed(() => {
 });
 
 const singleIconHtml = computed(() => {
-    return getIconPath(props.name, { stroke: props.stroke, strokeWidth: props.strokeWidth });
-})
+    return getIconPath(props.name, {
+        stroke: props.stroke,
+        strokeWidth: props.strokeWidth,
+    });
+});
 
 function stripStrokeAttributes(svgString) {
     return String(svgString)
-        .replace(/\sstroke="[^"]*"/g, "")
-        .replace(/\sstroke-width="[^"]*"/g, "")
-        .replace(/\sstroke-linecap="[^"]*"/g, "")
-        .replace(/\sstroke-linejoin="[^"]*"/g, "");
+        .replace(/\sstroke="[^"]*"/g, '')
+        .replace(/\sstroke-width="[^"]*"/g, '')
+        .replace(/\sstroke-linecap="[^"]*"/g, '')
+        .replace(/\sstroke-linejoin="[^"]*"/g, '');
 }
 
 const polyIconHtml = computed(() => {
-    const base = getIconPath(props.name, { stroke: props.stroke, strokeWidth: props.strokeWidth });
-
-    let expBlock = "";
-    if (hasExp.value && expProps.value.name) {
-    const expRaw = getIconPath(expProps.value.name, {
-        stroke: expProps.value.stroke,
-        strokeWidth: expProps.value.strokeWidth
+    const base = getIconPath(props.name, {
+        stroke: props.stroke,
+        strokeWidth: props.strokeWidth,
     });
-    const expClean = stripStrokeAttributes(expRaw);
 
-    const { cx, cy } = nominalCenter.value;
+    let expBlock = '';
+    if (hasExp.value && expProps.value.name) {
+        const expRaw = getIconPath(expProps.value.name, {
+            stroke: expProps.value.stroke,
+            strokeWidth: expProps.value.strokeWidth,
+        });
+        const expClean = stripStrokeAttributes(expRaw);
 
-    expBlock = `
+        const { cx, cy } = nominalCenter.value;
+
+        expBlock = `
         <g transform="${expTransform.value}">
         <g
             stroke="${expProps.value.stroke}"
@@ -496,24 +503,24 @@ const polyIconHtml = computed(() => {
             stroke-linejoin="round"
             fill="none"
         >
-            ${expProps.value.isSpin ? spinAnimate(cx, cy, expProps.value.spinDuration) : ""}
+            ${expProps.value.isSpin ? spinAnimate(cx, cy, expProps.value.spinDuration) : ''}
             ${expClean}
         </g>
         </g>
     `;
     }
 
-    let subBlock = "";
+    let subBlock = '';
     if (hasSub.value && subProps.value.name) {
-    const subRaw = getIconPath(subProps.value.name, {
-        stroke: subProps.value.stroke,
-        strokeWidth: subProps.value.strokeWidth
-    });
-    const subClean = stripStrokeAttributes(subRaw);
+        const subRaw = getIconPath(subProps.value.name, {
+            stroke: subProps.value.stroke,
+            strokeWidth: subProps.value.strokeWidth,
+        });
+        const subClean = stripStrokeAttributes(subRaw);
 
-    const { cx, cy } = nominalCenter.value;
+        const { cx, cy } = nominalCenter.value;
 
-    subBlock = `
+        subBlock = `
         <g transform="${subTransform.value}">
             <g
                 stroke="${subProps.value.stroke}"
@@ -522,7 +529,7 @@ const polyIconHtml = computed(() => {
                 stroke-linejoin="round"
                 fill="none"
             >
-                ${subProps.value.isSpin ? spinAnimate(cx, cy, subProps.value.spinDuration) : ""}
+                ${subProps.value.isSpin ? spinAnimate(cx, cy, subProps.value.spinDuration) : ''}
                 ${subClean}
             </g>
         </g>
@@ -538,33 +545,32 @@ const svgSize = computed(() => {
         return props.size * 1.6;
     }
     return props.size * 2.2;
-})
-
+});
 </script>
 
 <template>
-    <svg 
-        v-if="hasBadge" 
-        data-cy="base-icon" 
-        :xmlns="XMLNS" 
-        :class="{ 'spin ': isSpin }" 
+    <svg
+        v-if="hasBadge"
+        data-cy="base-icon"
+        :xmlns="XMLNS"
+        :class="{ 'spin ': isSpin }"
         :viewBox="combinedViewBox"
-        :height="svgSize" 
-        :width="svgSize" 
-        style="background: transparent; display: block" 
-        v-html="polyIconHtml" 
+        :height="svgSize"
+        :width="svgSize"
+        style="background: transparent; display: block"
+        v-html="polyIconHtml"
     />
 
-    <svg 
-        v-else 
-        data-cy="base-icon" 
-        :xmlns="XMLNS" 
-        :class="{ 'spin ': isSpin }" 
-        :viewBox="viewBox" 
+    <svg
+        v-else
+        data-cy="base-icon"
+        :xmlns="XMLNS"
+        :class="{ 'spin ': isSpin }"
+        :viewBox="viewBox"
         :height="size"
-        :width="size" 
-        v-html="singleIconHtml" 
-        style="background:transparent" 
+        :width="size"
+        v-html="singleIconHtml"
+        style="background: transparent"
     />
 </template>
 

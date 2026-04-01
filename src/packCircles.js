@@ -1,15 +1,27 @@
 /**
- * 
+ *
  * A utility function to pack circles inside a rectangle.
  * This file uses ALL the algorithmic code from Mike Bostock’s Observable notebook
  * https://observablehq.com/@mbostock/packing-circles-inside-a-rectangle
  */
 
 export function bounds(circles, pad = 0) {
-    const x0 = circles.reduce((v, { x, r }) => Math.min(v, x - r - pad), +Infinity);
-    const x1 = circles.reduce((v, { x, r }) => Math.max(v, x + r + pad), -Infinity);
-    const y0 = circles.reduce((v, { y, r }) => Math.min(v, y - r - pad), +Infinity);
-    const y1 = circles.reduce((v, { y, r }) => Math.max(v, y + r + pad), -Infinity);
+    const x0 = circles.reduce(
+        (v, { x, r }) => Math.min(v, x - r - pad),
+        +Infinity,
+    );
+    const x1 = circles.reduce(
+        (v, { x, r }) => Math.max(v, x + r + pad),
+        -Infinity,
+    );
+    const y0 = circles.reduce(
+        (v, { y, r }) => Math.min(v, y - r - pad),
+        +Infinity,
+    );
+    const y1 = circles.reduce(
+        (v, { y, r }) => Math.max(v, y + r + pad),
+        -Infinity,
+    );
     return [x0, y0, x1 - x0, y1 - y0];
 }
 
@@ -32,61 +44,65 @@ export function scoreCircle(node) {
 }
 
 export function pack(circles, height, width) {
-    const score = scoreRectangle
+    const score = scoreRectangle;
     const n = circles.length;
     if (!n) return circles;
 
     let a, b, c;
 
     // Place the first circle.
-    a = circles[0], a.x = 0, a.y = 0;
+    ((a = circles[0]), (a.x = 0), (a.y = 0));
     if (!(n > 1)) return circles;
 
     // Place the second circle.
-    b = circles[1], a.x = -b.r, b.x = a.r, b.y = 0;
+    ((b = circles[1]), (a.x = -b.r), (b.x = a.r), (b.y = 0));
     if (!(n > 2)) return circles;
 
     // Place the third circle.
-    place(b, a, c = circles[2]);
+    place(b, a, (c = circles[2]));
 
     // Initialize the front-chain using the first three circles a, b and c.
-    a = new Node(a), b = new Node(b), c = new Node(c);
+    ((a = new Node(a)), (b = new Node(b)), (c = new Node(c)));
     a.next = c.previous = b;
     b.next = a.previous = c;
     c.next = b.previous = a;
 
     // Attempt to place each remaining circle…
     pack: for (let i = 3; i < n; ++i) {
-        place(a._, b._, c = circles[i]), c = new Node(c);
+        (place(a._, b._, (c = circles[i])), (c = new Node(c)));
 
         // Find the closest intersecting circle on the front-chain, if any.
         // “Closeness” is determined by linear distance along the front-chain.
         // “Ahead” or “behind” is likewise determined by linear distance.
-        let j = b.next, k = a.previous, sj = b._.r, sk = a._.r;
+        let j = b.next,
+            k = a.previous,
+            sj = b._.r,
+            sk = a._.r;
         do {
             if (sj <= sk) {
                 if (intersects(j._, c._)) {
-                    b = j, a.next = b, b.previous = a, --i;
+                    ((b = j), (a.next = b), (b.previous = a), --i);
                     continue pack;
                 }
-                sj += j._.r, j = j.next;
+                ((sj += j._.r), (j = j.next));
             } else {
                 if (intersects(k._, c._)) {
-                    a = k, a.next = b, b.previous = a, --i;
+                    ((a = k), (a.next = b), (b.previous = a), --i);
                     continue pack;
                 }
-                sk += k._.r, k = k.previous;
+                ((sk += k._.r), (k = k.previous));
             }
         } while (j !== k.next);
 
         // Success! Insert the new circle c between a and b.
-        c.previous = a, c.next = b, a.next = b.previous = b = c;
+        ((c.previous = a), (c.next = b), (a.next = b.previous = b = c));
 
         // Compute the new closest circle pair to the centroid.
-        let aa = score(a, width, height), ca;
+        let aa = score(a, width, height),
+            ca;
         while ((c = c.next) !== b) {
             if ((ca = score(c, width, height)) < aa) {
-                a = c, aa = ca;
+                ((a = c), (aa = ca));
             }
         }
         b = a.next;
@@ -136,7 +152,7 @@ export class Node {
 
 const packCircles = {
     pack,
-    bounds
-}
+    bounds,
+};
 
 export default packCircles;

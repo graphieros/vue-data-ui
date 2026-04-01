@@ -2,37 +2,39 @@
 import { computed, ref, watch, onMounted, onBeforeUnmount } from 'vue';
 
 const props = defineProps({
-    show: { 
-        type: Boolean, 
-        default: false 
+    show: {
+        type: Boolean,
+        default: false,
     },
-    x: { 
-        type: Number, 
-        required: true 
+    x: {
+        type: Number,
+        required: true,
     },
-    y: { 
-        type: Number, 
-        required: true 
+    y: {
+        type: Number,
+        required: true,
     },
-    placement: { 
-        type: String, 
-        default: 'top' 
+    placement: {
+        type: String,
+        default: 'top',
     },
     styleObject: {
         type: Object,
-        default() { return {}; }
+        default() {
+            return {};
+        },
     },
-    delay: { 
-        type: Number, 
-        default: 0 
+    delay: {
+        type: Number,
+        default: 0,
     },
-    delayIn: { 
-        type: Number, 
-        default: 300 
+    delayIn: {
+        type: Number,
+        default: 300,
     },
-    delayOut: { 
-        type: Number, 
-        default: 0 
+    delayOut: {
+        type: Number,
+        default: 0,
     },
 });
 
@@ -44,8 +46,14 @@ let showTimer = null;
 let hideTimer = null;
 
 function clearTimers() {
-    if (showTimer) { clearTimeout(showTimer); showTimer = null; }
-    if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
+    if (showTimer) {
+        clearTimeout(showTimer);
+        showTimer = null;
+    }
+    if (hideTimer) {
+        clearTimeout(hideTimer);
+        hideTimer = null;
+    }
 }
 
 function scheduleShow() {
@@ -54,7 +62,10 @@ function scheduleShow() {
     if (ms === 0) {
         visible.value = true;
     } else {
-        showTimer = setTimeout(() => { visible.value = true; showTimer = null; }, ms);
+        showTimer = setTimeout(() => {
+            visible.value = true;
+            showTimer = null;
+        }, ms);
     }
 }
 
@@ -64,13 +75,20 @@ function scheduleHide() {
     if (ms === 0) {
         visible.value = false;
     } else {
-        hideTimer = setTimeout(() => { visible.value = false; hideTimer = null; }, ms);
+        hideTimer = setTimeout(() => {
+            visible.value = false;
+            hideTimer = null;
+        }, ms);
     }
 }
 
-watch(() => props.show, (next) => {
-    next ? scheduleShow() : scheduleHide();
-}, { immediate: true });
+watch(
+    () => props.show,
+    (next) => {
+        next ? scheduleShow() : scheduleHide();
+    },
+    { immediate: true },
+);
 
 onMounted(() => {
     if (props.show) scheduleShow();
@@ -86,9 +104,10 @@ const mergedStyle = computed(() => {
         zIndex: 2147483647,
         top: `${props.y}px`,
         left: `${props.x}px`,
-        transform: props.placement === 'bottom'
-            ? 'translate(-50%, 8px)'
-            : 'translate(-50%, -100%)',
+        transform:
+            props.placement === 'bottom'
+                ? 'translate(-50%, 8px)'
+                : 'translate(-50%, -100%)',
         pointerEvents: 'none',
         ...props.styleObject,
     };
@@ -97,8 +116,13 @@ const mergedStyle = computed(() => {
 
 <template>
     <teleport to="body">
-        <div v-if="visible" :class="['teleport-tooltip', placement]" :style="mergedStyle" role="tooltip"
-            aria-hidden="false">
+        <div
+            v-if="visible"
+            :class="['teleport-tooltip', placement]"
+            :style="mergedStyle"
+            role="tooltip"
+            aria-hidden="false"
+        >
             <div class="teleport-tooltip__inner">
                 <slot />
             </div>
@@ -117,7 +141,7 @@ const mergedStyle = computed(() => {
 }
 
 .teleport-tooltip__inner::after {
-    content: "";
+    content: '';
     position: absolute;
     top: 100%;
     left: 50%;

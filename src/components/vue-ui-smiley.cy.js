@@ -1,93 +1,95 @@
-import VueUiSmiley from './vue-ui-smiley.vue'
+import VueUiSmiley from './vue-ui-smiley.vue';
 
 describe('<VueUiSmiley />', () => {
-  beforeEach(function () {
-    cy.fixture('smiley.json').as('fixture');
-    cy.viewport(800, 160);
-  });
-
-  function updateConfigInFixture(modifiedConfig) {
-    cy.get('@fixture').then((fixture) => {
-      const updatedFixture = { ...fixture, config: modifiedConfig };
-      cy.wrap(updatedFixture).as('fixture');
+    beforeEach(function () {
+        cy.fixture('smiley.json').as('fixture');
+        cy.viewport(800, 160);
     });
-  }
 
-  it('renders with different config attributes', function () {
-    cy.get('@fixture').then((fixture) => {
-      cy.mount(VueUiSmiley, {
-        props: {
-          dataset: fixture.dataset,
-          config: fixture.config
-        }
-      });
+    function updateConfigInFixture(modifiedConfig) {
+        cy.get('@fixture').then((fixture) => {
+            const updatedFixture = { ...fixture, config: modifiedConfig };
+            cy.wrap(updatedFixture).as('fixture');
+        });
+    }
 
-      function calculateAverageRating(source) {
-        if (source === null) return null;
-        let totalSum = 0;
-        let totalCount = 0;
+    it('renders with different config attributes', function () {
+        cy.get('@fixture').then((fixture) => {
+            cy.mount(VueUiSmiley, {
+                props: {
+                    dataset: fixture.dataset,
+                    config: fixture.config,
+                },
+            });
 
-        for (const key in source) {
-          const ratingValue = parseInt(key);
-          const ratingCount = source[key];
+            function calculateAverageRating(source) {
+                if (source === null) return null;
+                let totalSum = 0;
+                let totalCount = 0;
 
-          totalSum += ratingValue * ratingCount;
-          totalCount += ratingCount;
-        }
+                for (const key in source) {
+                    const ratingValue = parseInt(key);
+                    const ratingCount = source[key];
 
-        if (totalCount === 0) {
-          return 0;
-        }
+                    totalSum += ratingValue * ratingCount;
+                    totalCount += ratingCount;
+                }
 
-        const averageRating = totalSum / totalCount;
-        return averageRating;
-      }
+                if (totalCount === 0) {
+                    return 0;
+                }
 
-      const staticRating = Math.round(calculateAverageRating(fixture.dataset.rating))
+                const averageRating = totalSum / totalCount;
+                return averageRating;
+            }
 
-      cy.get(`[data-cy="smiley-title"]`)
-        .should('exist')
-        .contains('Title');
+            const staticRating = Math.round(
+                calculateAverageRating(fixture.dataset.rating),
+            );
 
-      cy.get(`[data-cy="smiley-subtitle"]`)
-        .should('exist')
-        .contains('Subtitle');
+            cy.get(`[data-cy="smiley-title"]`)
+                .should('exist')
+                .contains('Title');
 
-      cy.get(`[data-cy="smiley-position-bottom"]`)
-        .should('exist')
-        .contains(staticRating);
+            cy.get(`[data-cy="smiley-subtitle"]`)
+                .should('exist')
+                .contains('Subtitle');
 
-      for (let i = 0; i < 5; i += 1) {
-        cy.get(`[data-cy="smiley-item-${i}"]`)
-          .should('exist')
-          .click();
+            cy.get(`[data-cy="smiley-position-bottom"]`)
+                .should('exist')
+                .contains(staticRating);
 
-        cy.get(`[data-cy="smiley-position-bottom"]`)
-          .contains(`${i + 1}`)
-      }
+            for (let i = 0; i < 5; i += 1) {
+                cy.get(`[data-cy="smiley-item-${i}"]`).should('exist').click();
 
-      let modifiedConfig = {
-        ...fixture.config,
-        readonly: true
-      }
+                cy.get(`[data-cy="smiley-position-bottom"]`).contains(
+                    `${i + 1}`,
+                );
+            }
 
-      updateConfigInFixture(modifiedConfig);
+            let modifiedConfig = {
+                ...fixture.config,
+                readonly: true,
+            };
 
-      cy.mount(VueUiSmiley, {
-        props: {
-          dataset: fixture.dataset,
-          config: modifiedConfig
-        }
-      });
+            updateConfigInFixture(modifiedConfig);
 
-      for (let i = 0; i < 5; i += 1) {
-        cy.get(`[data-cy="smiley-item-${i}"]`)
-          .trigger('mouseenter')
+            cy.mount(VueUiSmiley, {
+                props: {
+                    dataset: fixture.dataset,
+                    config: modifiedConfig,
+                },
+            });
 
-        cy.get(`[data-cy="smiley-tooltip-${i}"]`)
-          .should('exist')
-          .contains(`${Object.keys(fixture.dataset.rating)[i]}:${fixture.dataset.rating[i + 1]}`)
-      }
+            for (let i = 0; i < 5; i += 1) {
+                cy.get(`[data-cy="smiley-item-${i}"]`).trigger('mouseenter');
+
+                cy.get(`[data-cy="smiley-tooltip-${i}"]`)
+                    .should('exist')
+                    .contains(
+                        `${Object.keys(fixture.dataset.rating)[i]}:${fixture.dataset.rating[i + 1]}`,
+                    );
+            }
+        });
     });
-  });
-})
+});

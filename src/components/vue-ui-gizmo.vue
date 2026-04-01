@@ -1,21 +1,31 @@
 <script setup>
-import { ref, computed, onMounted, watch, useSlots, defineAsyncComponent, toRefs } from "vue";
-import { useConfig } from "../useConfig";
-import { createUid, error, applyDataLabel, dataLabel, treeShake } from "../lib";
-import { useNestedProp } from "../useNestedProp";
-import { useLoading } from "../useLoading";
-import BaseScanner from "../atoms/BaseScanner.vue";
+import {
+    ref,
+    computed,
+    onMounted,
+    watch,
+    useSlots,
+    defineAsyncComponent,
+    toRefs,
+} from 'vue';
+import { useConfig } from '../useConfig';
+import { createUid, error, applyDataLabel, dataLabel, treeShake } from '../lib';
+import { useNestedProp } from '../useNestedProp';
+import { useLoading } from '../useLoading';
+import BaseScanner from '../atoms/BaseScanner.vue';
 
-const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
+const PackageVersion = defineAsyncComponent(
+    () => import('../atoms/PackageVersion.vue'),
+);
 
 const { vue_ui_gizmo: DEFAULT_CONFIG } = useConfig();
-    
+
 const props = defineProps({
     config: {
         type: Object,
         default() {
-            return {}
-        }
+            return {};
+        },
     },
     dataset: {
         type: Number,
@@ -31,7 +41,7 @@ onMounted(() => {
 
 onMounted(() => {
     if (slots['chart-background'] && debug.value) {
-        console.warn('VueUiGizmo does not support the #chart-background slot.')
+        console.warn('VueUiGizmo does not support the #chart-background slot.');
     }
 });
 
@@ -42,14 +52,16 @@ function prepareChart() {
         error({
             componentName: 'VueUiGizmo',
             type: 'dataset',
-            debug: debug.value
-        })
+            debug: debug.value,
+        });
     }
     if (props.dataset < 0 && debug.value) {
-        console.warn('VueUiGizmo: dataset cannot be negative.')
+        console.warn('VueUiGizmo: dataset cannot be negative.');
     }
     if (props.dataset > 100 && debug.value) {
-        console.warn(`VueUiGizmo: gauge is maxed out, as dataset exceeds 100% (props.dataset = ${props.dataset})`)
+        console.warn(
+            `VueUiGizmo: gauge is maxed out, as dataset exceeds 100% (props.dataset = ${props.dataset})`,
+        );
     }
 }
 
@@ -61,10 +73,10 @@ const skeletonConfig = computed(() => {
             stroke: '#6A6A6A80',
             color: '#6A6A6A',
             gradientColor: '#CACACA',
-            textColor: 'transparent'
+            textColor: 'transparent',
         },
-        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {}
-    })
+        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {},
+    });
 });
 
 const { loading, FINAL_DATASET, manualLoading } = useLoading({
@@ -75,48 +87,57 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
     skeletonDataset: props.config?.skeletonDataset ?? 50,
     skeletonConfig: treeShake({
         defaultConfig: FINAL_CONFIG.value,
-        userConfig: skeletonConfig.value
-    })
+        userConfig: skeletonConfig.value,
+    }),
 });
 
 function prepareConfig() {
     return useNestedProp({
         userConfig: props.config,
-        defaultConfig: DEFAULT_CONFIG
+        defaultConfig: DEFAULT_CONFIG,
     });
 }
 
-watch(() => props.config, (_newCfg) => {
-    FINAL_CONFIG.value = prepareConfig();
-    prepareChart();
-}, { deep: true });
+watch(
+    () => props.config,
+    (_newCfg) => {
+        FINAL_CONFIG.value = prepareConfig();
+        prepareChart();
+    },
+    { deep: true },
+);
 
 const svg = computed(() => {
     const options = {
-        battery: { width: FINAL_CONFIG.value.showPercentage ? 150 : 80, height: 50 },
+        battery: {
+            width: FINAL_CONFIG.value.showPercentage ? 150 : 80,
+            height: 50,
+        },
         gauge: { width: 80, height: 80 },
-    }
+    };
     return options[FINAL_CONFIG.value.type];
 });
 
-const displayDataset = computed(() => Math.min(Math.max(0, FINAL_DATASET.value), 100));
+const displayDataset = computed(() =>
+    Math.min(Math.max(0, FINAL_DATASET.value), 100),
+);
 const displayDatasetValue = computed(() => Math.max(0, FINAL_DATASET.value));
 
 const gaugeBody = computed(() => {
     const radius = 35;
     const circumference = 2 * Math.PI * radius;
-    const dashoffset = circumference - (displayDataset.value / 100) * circumference;
+    const dashoffset =
+        circumference - (displayDataset.value / 100) * circumference;
 
     return {
         dasharray: `${circumference} ${circumference}`,
-        dashoffset: dashoffset
+        dashoffset: dashoffset,
     };
 });
-
 </script>
 
 <template>
-    <div 
+    <div
         class="vue-data-ui-component vue-ui-gizmo-wrapper"
         role="progressbar"
         :aria-label="FINAL_CONFIG.a11y.translations.label"
@@ -132,18 +153,27 @@ const gaugeBody = computed(() => {
             :width="FINAL_CONFIG.size"
             :style="{
                 background: 'transparent',
-                fontFamily: FINAL_CONFIG.fontFamily
+                fontFamily: FINAL_CONFIG.fontFamily,
             }"
         >
             <PackageVersion />
-            
+
             <defs v-if="FINAL_CONFIG.useGradient">
-                <linearGradient :id="`gizmo_gradient_${uid}`" x1="0%" x2="100%" y1="0%" y2="0%">
-                    <stop offset="0%" :stop-color="FINAL_CONFIG.gradientColor" />
+                <linearGradient
+                    :id="`gizmo_gradient_${uid}`"
+                    x1="0%"
+                    x2="100%"
+                    y1="0%"
+                    y2="0%"
+                >
+                    <stop
+                        offset="0%"
+                        :stop-color="FINAL_CONFIG.gradientColor"
+                    />
                     <stop offset="100%" :stop-color="FINAL_CONFIG.color" />
                 </linearGradient>
-            </defs>     
-    
+            </defs>
+
             <!-- BATTERY -->
             <template v-if="FINAL_CONFIG.type === 'battery'">
                 <path
@@ -167,7 +197,11 @@ const gaugeBody = computed(() => {
                     :y="10"
                     :height="30"
                     :width="55 * (displayDataset / 100)"
-                    :fill="FINAL_CONFIG.useGradient ? `url(#gizmo_gradient_${uid})`: FINAL_CONFIG.color"
+                    :fill="
+                        FINAL_CONFIG.useGradient
+                            ? `url(#gizmo_gradient_${uid})`
+                            : FINAL_CONFIG.color
+                    "
                     :rx="2"
                 />
                 <text
@@ -179,21 +213,29 @@ const gaugeBody = computed(() => {
                     font-size="20"
                     :fill="FINAL_CONFIG.textColor"
                 >
-                    {{ applyDataLabel(
-                        FINAL_CONFIG.formatter,
-                        displayDatasetValue,
-                        dataLabel({
-                            v: displayDatasetValue,
-                            s: '%',
-                        })
-                    ) }}
+                    {{
+                        applyDataLabel(
+                            FINAL_CONFIG.formatter,
+                            displayDatasetValue,
+                            dataLabel({
+                                v: displayDatasetValue,
+                                s: '%',
+                            }),
+                        )
+                    }}
                 </text>
             </template>
-    
+
             <!-- GAUGE -->
             <template v-if="FINAL_CONFIG.type === 'gauge'">
                 <defs v-if="FINAL_CONFIG.useGradient">
-                    <filter :id="`blur_${uid}`" x="-50%" y="-50%" width="200%" height="200%">
+                    <filter
+                        :id="`blur_${uid}`"
+                        x="-50%"
+                        y="-50%"
+                        width="200%"
+                        height="200%"
+                    >
                         <feGaussianBlur in="SourceGraphic" :stdDeviation="1" />
                     </filter>
                 </defs>
@@ -217,9 +259,12 @@ const gaugeBody = computed(() => {
                     :stroke-dashoffset="gaugeBody.dashoffset"
                     stroke-linecap="round"
                     fill="none"
-                    style="transform:rotate(-90deg);transform-origin: 50% 50%"
+                    style="transform: rotate(-90deg); transform-origin: 50% 50%"
                 />
-                <g v-if="FINAL_CONFIG.useGradient" :filter="`url(#blur_${uid})`">
+                <g
+                    v-if="FINAL_CONFIG.useGradient"
+                    :filter="`url(#blur_${uid})`"
+                >
                     <circle
                         data-cy="gauge-gradient"
                         :cx="40"
@@ -230,7 +275,10 @@ const gaugeBody = computed(() => {
                         fill="none"
                         :stroke-dasharray="gaugeBody.dasharray"
                         :stroke-dashoffset="gaugeBody.dashoffset"
-                        style="transform:rotate(-90deg);transform-origin: 50% 50%"
+                        style="
+                            transform: rotate(-90deg);
+                            transform-origin: 50% 50%;
+                        "
                     />
                 </g>
                 <text
@@ -242,14 +290,16 @@ const gaugeBody = computed(() => {
                     font-size="20"
                     :fill="FINAL_CONFIG.textColor"
                 >
-                    {{ applyDataLabel(
-                        FINAL_CONFIG.formatter,
-                        displayDatasetValue,
-                        dataLabel({
-                            v: displayDatasetValue,
-                            s: '%',
-                        })
-                    )}}
+                    {{
+                        applyDataLabel(
+                            FINAL_CONFIG.formatter,
+                            displayDatasetValue,
+                            dataLabel({
+                                v: displayDatasetValue,
+                                s: '%',
+                            }),
+                        )
+                    }}
                 </text>
             </template>
         </svg>
@@ -267,7 +317,7 @@ const gaugeBody = computed(() => {
     height: fit-content;
     width: fit-content;
     display: flex;
-    align-items:center;
+    align-items: center;
     justify-content: center;
 }
 </style>

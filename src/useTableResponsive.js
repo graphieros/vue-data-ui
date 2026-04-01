@@ -1,4 +1,4 @@
-import { ref, watch, nextTick, onBeforeUnmount } from "vue";
+import { ref, watch, nextTick, onBeforeUnmount } from 'vue';
 
 export function useTableResponsive(elRef, breakpointRef) {
     const isResponsive = ref(false);
@@ -24,7 +24,13 @@ export function useTableResponsive(elRef, breakpointRef) {
         ro.observe(el);
     }
 
-    watch([elRef, breakpointRef], () => { start(); }, { immediate: true });
+    watch(
+        [elRef, breakpointRef],
+        () => {
+            start();
+        },
+        { immediate: true },
+    );
 
     onBeforeUnmount(stop);
 

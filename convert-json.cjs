@@ -33,17 +33,19 @@ function convertJSON(inputJSONPath, outputJSPath, variableName = 'data') {
         quoteStyle: 'single',
     });
 
-    const jsContent =
-        `const ${variableName} = ${jsLikeString};\n\nexport default ${variableName};\n`;
+    const jsContent = `const ${variableName} = ${jsLikeString};\n\nexport default ${variableName};\n`;
 
     fs.writeFileSync(outputJSPath, jsContent, 'utf-8');
 }
 
 if (require.main === module) {
-    const [, , inputJSONPath, outputJSPath, variableName = 'data'] = process.argv;
+    const [, , inputJSONPath, outputJSPath, variableName = 'data'] =
+        process.argv;
 
     if (!inputJSONPath || !outputJSPath) {
-        console.log('Usage: node convert-json.js <input.json> <output.js> [variableName]');
+        console.log(
+            'Usage: node convert-json.js <input.json> <output.js> [variableName]',
+        );
         process.exit(1);
     }
 
