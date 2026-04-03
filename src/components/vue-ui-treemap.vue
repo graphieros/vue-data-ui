@@ -1575,7 +1575,7 @@ function getLabelTextColor(rect) {
     );
 }
 
-function getLabelLines(rect) {
+function getLabelLines(rect, seriesIndex) {
     const { fontSize, lineHeight } = getLabelMetrics(rect);
     const availableWidth = getTreemapLabelAvailableWidth(rect);
     const availableHeight = getTreemapLabelAvailableHeight(rect);
@@ -1589,12 +1589,17 @@ function getLabelLines(rect) {
         1,
     );
 
-    const valuePrefix =
-        FINAL_CONFIG.value.style.chart.layout.labels.value.prefix ?? '';
-    const valueSuffix =
-        FINAL_CONFIG.value.style.chart.layout.labels.value.suffix ?? '';
-
-    const valueText = `${valuePrefix}${rect.value}${valueSuffix}`;
+    const formattedValue = applyDataLabel(
+        FINAL_CONFIG.value.style.chart.layout.labels.formatter,
+        rect.value,
+        dataLabel({
+            p: FINAL_CONFIG.value.style.chart.layout.labels.prefix,
+            v: rect.value,
+            s: FINAL_CONFIG.value.style.chart.layout.labels.suffix,
+            r: FINAL_CONFIG.value.style.chart.tooltip.roundingValue,
+        }),
+        { datapoint: rect, seriesIndex },
+    );
 
     const lineGapSafety = Math.ceil(fontSize * 0.2);
     const horizontalSafety = Math.ceil(fontSize * 1.4);
@@ -1609,7 +1614,7 @@ function getLabelLines(rect) {
 
     if (Array.isArray(rect.children) && rect.children.length) {
         const line = ellipsizeTreemapText(
-            `${rect.name} (${valueText})`,
+            `${rect.name} (${formattedValue})`,
             effectiveWidth,
             fontSize,
             500,
@@ -1633,7 +1638,7 @@ function getLabelLines(rect) {
 
     if (maxLines >= 2) {
         const valueLine = ellipsizeTreemapText(
-            valueText,
+            formattedValue,
             effectiveWidth,
             fontSize,
             400,
@@ -1645,6 +1650,71 @@ function getLabelLines(rect) {
     }
 
     return lines.slice(0, maxLines);
+}
+
+function buildTreemapText({ rect, seriesIndex, isTitle }) {
+    if (
+        !rect ||
+        !FINAL_CONFIG.value.style.chart.layout.labels.showDefaultLabels ||
+        !shouldShowNodeLabel(rect)
+    ) {
+        return '';
+    }
+
+    const { fontSize } = getLabelMetrics(rect);
+    const textColor = getLabelTextColor(rect);
+    const lines = getLabelLines(rect, seriesIndex);
+    const textBox = getTreemapTextBox(rect);
+
+    if (!lines.length || textBox.width <= 0 || textBox.height <= 0) {
+        return '';
+    }
+
+    const clipId = `treemap_clip_${uid.value}_${rect.id}_${rect.depth}_${seriesIndex}`;
+
+    const clipX = textBox.x;
+    const clipY = textBox.y;
+    const clipWidth = Math.max(textBox.width, 0);
+    const clipHeight = Math.max(textBox.height, 0);
+
+    const textNodes = lines
+        .map((line, index) => {
+            const y = textBox.y + textBox.lineHeight * index;
+
+            return `
+                <text
+                    x="${textBox.x}"
+                    y="${y}"
+                    fill="${textColor}"
+                    font-size="${fontSize}"
+                    font-family="${FINAL_CONFIG.value.style.fontFamily}"
+                    font-weight="${index === 0 ? 500 : 400}"
+                    text-anchor="start"
+                    dominant-baseline="text-before-edge"
+                >
+                    ${escapeHtml(line)}
+                </text>
+            `;
+        })
+        .join('');
+
+    return `
+        <g>
+            <defs>
+                <clipPath id="${clipId}" clipPathUnits="userSpaceOnUse">
+                    <rect
+                        x="${clipX}"
+                        y="${clipY}"
+                        width="${clipWidth}"
+                        height="${clipHeight}"
+                    />
+                </clipPath>
+            </defs>
+            <g clip-path="url(#${clipId})">
+                ${textNodes}
+            </g>
+        </g>
+    `;
 }
 
 let treemapMeasureCanvas;
@@ -1720,71 +1790,6 @@ function getTreemapLabelAvailableWidth(rect) {
 
 function getTreemapLabelAvailableHeight(rect) {
     return getTreemapTextBox(rect).height;
-}
-
-function buildTreemapText({ rect, seriesIndex, isTitle }) {
-    if (
-        !rect ||
-        !FINAL_CONFIG.value.style.chart.layout.labels.showDefaultLabels ||
-        !shouldShowNodeLabel(rect)
-    ) {
-        return '';
-    }
-
-    const { fontSize } = getLabelMetrics(rect);
-    const textColor = getLabelTextColor(rect);
-    const lines = getLabelLines(rect);
-    const textBox = getTreemapTextBox(rect);
-
-    if (!lines.length || textBox.width <= 0 || textBox.height <= 0) {
-        return '';
-    }
-
-    const clipId = `treemap_clip_${uid.value}_${rect.id}_${rect.depth}_${seriesIndex}`;
-
-    const clipX = textBox.x;
-    const clipY = textBox.y;
-    const clipWidth = Math.max(textBox.width, 0);
-    const clipHeight = Math.max(textBox.height, 0);
-
-    const textNodes = lines
-        .map((line, index) => {
-            const y = textBox.y + textBox.lineHeight * index;
-
-            return `
-                <text
-                    x="${textBox.x}"
-                    y="${y}"
-                    fill="${textColor}"
-                    font-size="${fontSize}"
-                    font-family="${FINAL_CONFIG.value.style.fontFamily}"
-                    font-weight="${index === 0 ? 500 : 400}"
-                    text-anchor="start"
-                    dominant-baseline="text-before-edge"
-                >
-                    ${escapeHtml(line)}
-                </text>
-            `;
-        })
-        .join('');
-
-    return `
-        <g>
-            <defs>
-                <clipPath id="${clipId}" clipPathUnits="userSpaceOnUse">
-                    <rect
-                        x="${clipX}"
-                        y="${clipY}"
-                        width="${clipWidth}"
-                        height="${clipHeight}"
-                    />
-                </clipPath>
-            </defs>
-            <g clip-path="url(#${clipId})">
-                ${textNodes}
-            </g>
-        </g>
-    `;
 }
 
 function getSafeRadius(rect) {
