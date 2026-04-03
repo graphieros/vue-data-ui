@@ -94,11 +94,12 @@
         "test": "vitest --run",
         "test:w": "vitest --watch",
         "test:e2e": "npx cypress open",
-        "preprod": "npm run pretty && node del-dev-dep.cjs && npm run clean && vite build --mode production && node copy-types.cjs && node post-build.cjs",
+        "preprod": "npm run pretty:fix && node del-dev-dep.cjs && npm run clean && vite build --mode production && node copy-types.cjs && node post-build.cjs",
         "cy-all": "npx cypress run --component",
         "cy": "node run-cy.cjs",
         "types": "node check-types.cjs",
-        "pretty": "prettier . --check"
+        "pretty": "prettier . --check",
+        "pretty:fix": "prettier . --write"
     },
     "peerDependencies": {
         "jspdf": ">=3.0.1",
