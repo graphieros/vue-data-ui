@@ -18,124 +18,74 @@ const { vue_ui_treemap: DEFAULT_CONFIG } = useConfig();
 const { CHECKBOX, NUMBER, RANGE, TEXT, COLOR, SELECT, createModel } =
     useConfigurationControls(DEFAULT_CONFIG);
 
-const dataset = ref(undefined);
-
-onMounted(() => {
-    setTimeout(() => {
-        dataset.value = [
+const dataset = ref([
+    {
+        name: 'A',
+        value: 120,
+        children: [
             {
-                name: 'P1',
-                value: 87.5,
+                name: 'A1',
+                value: 120,
                 children: [
                     {
-                        name: 'P1C1',
-                        value: 50,
-                    },
-                    {
-                        name: 'P1C2',
-                        value: 25,
-                    },
-                    {
-                        name: 'P1C3',
-                        value: 12.5,
+                        name: 'A2',
+                        value: 120,
+                        color: '#6376DD',
                         children: [
                             {
-                                name: 'P1C3G1',
-                                value: 6,
+                                name: 'A3 qlksdj qksdj skdj qlskdjq ksdj qskdjq ksdj',
+                                value: 120,
+                                color: 'red',
                             },
                             {
-                                name: 'P1C3G2',
-                                value: 6.5,
-                                children: [
-                                    {
-                                        name: 'P1C3G2L1',
-                                        value: 3,
-                                    },
-                                    {
-                                        name: 'P1C3G2L2',
-                                        value: 3.5,
-                                    },
-                                ],
+                                name: 'A3',
+                                value: 120,
                             },
                         ],
                     },
                 ],
             },
             {
-                name: 'P2',
-                value: 200,
+                name: 'A1',
+                value: 120,
                 children: [
                     {
-                        name: 'P2C1',
-                        value: 100,
-                    },
-                    {
-                        name: 'P2C2',
-                        value: 50,
-                    },
-                    {
-                        name: 'P2C3',
-                        value: 25,
+                        name: 'A2',
+                        value: 120,
+                        children: [
+                            {
+                                name: 'A3',
+                                value: 120,
+                            },
+                        ],
                     },
                 ],
             },
-            {
-                name: 'P3',
-                value: 100,
-                children: [
-                    {
-                        name: 'P3C1',
-                        value: 50,
-                    },
-                    {
-                        name: 'P3C2',
-                        value: 25,
-                    },
-                    {
-                        name: 'P3C3',
-                        value: 12.5,
-                    },
-                ],
-            },
-            {
-                name: 'P4',
-                value: 20,
-                children: [
-                    {
-                        name: 'P4C1',
-                        value: 10,
-                    },
-                    {
-                        name: 'P4C2',
-                        value: 5,
-                    },
-                    {
-                        name: 'P4C3',
-                        value: 2.5,
-                    },
-                ],
-            },
-            {
-                name: 'P5',
-                value: 10,
-                children: [
-                    {
-                        name: 'P5C1',
-                        value: 5,
-                    },
-                    {
-                        name: 'P5C2',
-                        value: 2.5,
-                    },
-                    {
-                        name: 'P5C3',
-                        value: 1.125,
-                    },
-                ],
-            },
-        ];
-    }, 1000);
-});
+        ],
+    },
+    // {
+    //     name: 'A',
+    //     value: 120,
+    //     children: [
+    //         {
+    //             name: 'A1',
+    //             value: 120,
+    //             children: [
+    //                 {
+    //                     name: 'A2',
+    //                     value: 120,
+    //                     children: [
+    //                         {
+    //                             name: 'A3',
+    //                             value: 120,
+    //                         },
+    //                     ],
+    //                 },
+    //             ],
+    //         },
+    //     ],
+    // },
+]);
 
 const isPropsToggled = ref(false);
 

@@ -4511,6 +4511,15 @@ export function escapeXmlAttr(str) {
         .replaceAll('>', '&gt;');
 }
 
+export function escapeHtml(val) {
+    return String(val)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+}
+
 export function getPathMidpoint(pathData) {
     if (!pathData || typeof pathData !== 'string') {
         return null;
@@ -4635,6 +4644,7 @@ const lib = {
     easeOutCubic,
     emptyObjectToNull,
     error,
+    escapeHtml,
     escapeXml,
     escapeXmlAttr,
     fib,

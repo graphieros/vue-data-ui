@@ -13,6 +13,8 @@ export function useLoading({
 }) {
     const manualLoading = ref(false);
 
+    console.log(dataset);
+
     const loading = computed(() => {
         const configLoading = unref(config)?.loading ?? false;
         const ds = unref(dataset);

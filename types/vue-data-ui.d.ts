@@ -716,7 +716,6 @@ declare module 'vue-data-ui' {
         id: string;
         name: string;
         normalizedValue: number;
-        parentName?: string;
         parentId?: string;
         proportion: number;
         value: number;
@@ -724,6 +723,10 @@ declare module 'vue-data-ui' {
         x1: number;
         y0: number;
         y1: number;
+        depth: number;
+        isVisibleNode: boolean;
+        showLabel: boolean;
+        sourceColor: string;
     };
 
     export type VueUiTreemapSeriesItem = {

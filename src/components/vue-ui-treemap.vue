@@ -19,10 +19,10 @@ import {
     createCsvContent,
     createUid,
     dataLabel,
+    deepClone,
     downloadCsv,
     error,
-    escapeXml,
-    escapeXmlAttr,
+    escapeHtml,
     functionReturnsString,
     isFunction,
     lightenHexColor,
@@ -338,7 +338,7 @@ const svg = computed(() => {
     };
 });
 
-const immutableDataset = ref(FINAL_DATASET.value);
+const immutableDataset = ref(deepClone(FINAL_DATASET.value));
 const currentSet = ref(immutableDataset.value);
 const rootColorMap = shallowRef(new Map());
 
@@ -356,6 +356,9 @@ watch(
     () => {
         rootLayout.value = null;
         rootTextCache.value = new Map();
+        syncToZoomLevel();
+        legendStep.value += 1;
+        tableStep.value += 1;
     },
     { deep: true },
 );
@@ -370,48 +373,83 @@ watch(
 function applyIdsAndTopLevelColors(tree) {
     if (!Array.isArray(tree)) return;
 
-    tree.forEach((node, i) => {
+    tree.forEach((node, index) => {
         if (!node.id) node.id = createUid();
 
-        let base =
-            convertColorToHex(node.color) ||
+        if (node.sourceColor === undefined) {
+            node.sourceColor = convertColorToHex(node.color) || null;
+        }
+
+        let baseColor =
+            node.sourceColor ||
             rootColorMap.value.get(node.id) ||
-            customPalette.value[i] ||
-            palette[i] ||
-            palette[i % palette.length];
+            customPalette.value[index] ||
+            palette[index] ||
+            palette[index % palette.length];
 
-        base = convertColorToHex(base);
-        rootColorMap.value.set(node.id, base);
-        node.color = base;
+        baseColor = convertColorToHex(baseColor);
+        rootColorMap.value.set(node.id, baseColor);
+        node.color = baseColor;
 
-        propagateColor(node, base);
+        propagateColor(node, baseColor);
     });
 }
 
-function propagateColor(node, base) {
+function propagateColor(node, baseColor) {
     if (!Array.isArray(node.children)) return;
     node.children.forEach((child) => {
         if (!child.id) child.id = createUid();
         child.parentId = node.id;
-        child.color = base;
-        propagateColor(child, base);
+        if (child.sourceColor === undefined) {
+            child.sourceColor = convertColorToHex(child.color) || null;
+        }
+        const childBaseColor = child.sourceColor || baseColor;
+        child.color = childBaseColor;
+        propagateColor(child, childBaseColor);
     });
 }
 
-function syncToZoomLevel() {
-    if (!drillStack.value.length) {
-        currentSet.value = immutableDataset.value.slice();
-    } else {
-        const topId = drillStack.value[drillStack.value.length - 1];
-        const n = findNodeById(topId);
-        currentSet.value = n?.children?.slice() || [];
+function getTopAncestorId(id) {
+    let node = findNodeById(id);
+    while (node?.parentId) {
+        node = findNodeById(node.parentId);
     }
+    return node?.id ?? null;
+}
+
+function syncToZoomLevel() {
+    const visibleRoots = immutableDataset.value.filter(
+        (node) => !segregated.value.includes(node.id),
+    );
+
+    if (!drillStack.value.length) {
+        currentSet.value = visibleRoots;
+        return;
+    }
+
+    const topId = drillStack.value[drillStack.value.length - 1];
+    const node = findNodeById(topId);
+
+    if (!node) {
+        drillStack.value = [];
+        currentSet.value = visibleRoots;
+        return;
+    }
+
+    const rootId = getTopAncestorId(node.id);
+    if (rootId && segregated.value.includes(rootId)) {
+        drillStack.value = [];
+        currentSet.value = visibleRoots;
+        return;
+    }
+
+    currentSet.value = [node];
 }
 
 watch(
     () => FINAL_DATASET.value,
     () => {
-        immutableDataset.value = FINAL_DATASET.value;
+        immutableDataset.value = deepClone(FINAL_DATASET.value);
         applyIdsAndTopLevelColors(immutableDataset.value);
         syncToZoomLevel();
         legendStep.value += 1;
@@ -558,25 +596,43 @@ function sortChildrenForTreemap(children) {
     });
 }
 
-function mapChildren(children, parentColor, parentName, totalValue, rootId) {
+function mapChildren(
+    children,
+    parentBaseColor,
+    parentName,
+    totalValue,
+    rootId,
+) {
     const sortedChildren = sortChildrenForTreemap(children);
 
-    return sortedChildren.map((item, j) => {
-        const color = calcRectOpacity(
-            convertColorToHex(parentColor) ||
-                customPalette.value[j] ||
-                palette[j] ||
-                palette[j % palette.length],
-            item,
-            totalValue,
-        );
-        const proportion = calcRectProportion(item, totalValue);
+    return sortedChildren.map((item, index) => {
+        const branchColor =
+            item.sourceColor ||
+            convertColorToHex(item.color) ||
+            convertColorToHex(parentBaseColor) ||
+            customPalette.value[index] ||
+            palette[index] ||
+            palette[index % palette.length];
 
+        const renderedColor = item.sourceColor
+            ? item.sourceColor
+            : calcRectOpacity(branchColor, item, totalValue);
+
+        const proportion = calcRectProportion(item, totalValue);
         const groupRootId = rootId ?? item.parentId ?? item.id;
+
+        const childrenTotal =
+            Array.isArray(item.children) && item.children.length
+                ? item.children.reduce(
+                      (accumulator, child) =>
+                          accumulator + (Number(child.value) || 0),
+                      0,
+                  ) || 1
+                : 1;
 
         return {
             ...item,
-            color,
+            color: renderedColor,
             proportion,
             parentName,
             rootId: groupRootId,
@@ -584,9 +640,9 @@ function mapChildren(children, parentColor, parentName, totalValue, rootId) {
                 Array.isArray(item.children) && item.children.length
                     ? mapChildren(
                           item.children,
-                          color,
+                          branchColor,
                           item.name,
-                          totalValue,
+                          childrenTotal,
                           groupRootId,
                       )
                     : undefined,
@@ -594,68 +650,151 @@ function mapChildren(children, parentColor, parentName, totalValue, rootId) {
     });
 }
 
+function getInnerTreemapBounds(rect) {
+    const fontSize = calcFontSize(rect);
+    const showLabel = shouldShowNodeLabel(rect);
+
+    const horizontalPadding = fontSize * 0.55;
+    const bottomPadding = fontSize * 0.55;
+
+    const titleLineHeight = fontSize * 1.05;
+    const valueLineHeight = fontSize * 1.05;
+    const headerGap = fontSize * 0.35;
+
+    const reservedHeaderHeight = showLabel
+        ? titleLineHeight + valueLineHeight + headerGap
+        : fontSize * 0.45;
+
+    const x0 = rect.x0 + horizontalPadding;
+    const x1 = rect.x1 - horizontalPadding;
+    const y0 = rect.y0 + reservedHeaderHeight;
+    const y1 = rect.y1 - bottomPadding;
+
+    if (x1 <= x0 || y1 <= y0) {
+        return null;
+    }
+
+    return { x0, y0, x1, y1 };
+}
+
+function shouldShowNodeLabel(rect) {
+    const { height, lineHeight, width } = getTreemapTextBox(rect);
+    return height >= lineHeight && width > 6;
+}
+
+function buildVisibleTreemapLayout(
+    nodes,
+    bounds,
+    depth = 0,
+    visibleParentId = null,
+) {
+    if (!Array.isArray(nodes) || !nodes.length) return [];
+
+    const levelNodes = nodes.map((node) => {
+        const { children, ...rest } = node;
+        return {
+            ...rest,
+        };
+    });
+
+    const childrenById = new Map(
+        nodes.map((node) => [
+            node.id,
+            Array.isArray(node.children) ? node.children : [],
+        ]),
+    );
+
+    const nodeById = new Map(nodes.map((node) => [node.id, node]));
+
+    const levelRects = generateTreemap(levelNodes, bounds);
+    const output = [];
+
+    for (const rect of levelRects) {
+        const originalChildren = childrenById.get(rect.id) || [];
+        const originalNode = nodeById.get(rect.id);
+
+        const nodeRect = {
+            ...rect,
+            depth,
+            parentId: visibleParentId ?? rect.parentId ?? null,
+            color: originalNode?.color ?? rect.color ?? null,
+            children: originalChildren,
+            isVisibleNode: true,
+            showLabel: shouldShowNodeLabel(rect),
+        };
+
+        output.push(nodeRect);
+
+        if (originalChildren.length) {
+            const innerBounds = getInnerTreemapBounds(nodeRect);
+
+            if (innerBounds) {
+                output.push(
+                    ...buildVisibleTreemapLayout(
+                        originalChildren,
+                        innerBounds,
+                        depth + 1,
+                        rect.id,
+                    ),
+                );
+            }
+        }
+    }
+
+    return output;
+}
+
 const squarifiedRaw = computed(() => {
+    const source = currentSet.value.length
+        ? currentSet.value
+        : orderedDataset.value;
+
     const levelTotal =
-        orderedDataset.value
-            .map((el) => Number(el.value) || 0)
-            .reduce((a, b) => a + b, 0) || 1;
+        source.map((el) => Number(el.value) || 0).reduce((a, b) => a + b, 0) ||
+        1;
 
-    const nodes = orderedDataset.value.map((el) => {
-        const parentChildrenTotal = el.children
-            ? el.children.reduce((acc, c) => acc + (Number(c.value) || 0), 0)
-            : el.value;
+    const nodes = source.map((element, index) => {
+        const parentChildrenTotal = element.children
+            ? element.children.reduce(
+                  (accumulator, child) =>
+                      accumulator + (Number(child.value) || 0),
+                  0,
+              )
+            : element.value;
 
-        // Keep extra attributes but avoid importing tree structure from el
-        // into the layout nodes (children/parentId would break zoom logic otherwise)
-        const { children, parentId, id, value, name, color, ...extra } = el;
+        const { children, ...extra } = element;
 
-        const stableId = el.id || createUid();
+        const branchColor =
+            element.sourceColor ||
+            convertColorToHex(element.color) ||
+            rootColorMap.value.get(element.id) ||
+            customPalette.value[index] ||
+            palette[index] ||
+            palette[index % palette.length];
+
+        const renderedColor = element.sourceColor
+            ? element.sourceColor
+            : calcRectOpacity(branchColor, element, levelTotal);
 
         return {
             ...extra,
-            id: stableId,
-            name: el.name,
-            value: el.value,
-            color: el.color,
-            proportion: (Number(el.value) || 0) / levelTotal,
+            id: element.id || createUid(),
+            parentId: element.parentId ?? null,
+            name: element.name,
+            value: element.value,
+            color: renderedColor,
+            proportion: (Number(element.value) || 0) / levelTotal,
             children:
-                Array.isArray(el.children) && el.children.length
+                Array.isArray(element.children) && element.children.length
                     ? mapChildren(
-                          el.children,
-                          el.color,
-                          el.name,
+                          element.children,
+                          branchColor,
+                          element.name,
                           parentChildrenTotal || 1,
                       )
                     : undefined,
         };
     });
-
-    const isRootView = drillStack.value.length === 0;
-
-    if (isRootView) {
-        if (!rootLayout.value) {
-            const normBounds = { x0: 0, y0: 0, x1: 1, y1: 1 };
-            rootLayout.value = generateTreemap(nodes, normBounds);
-        }
-
-        const bounds = {
-            x0: svg.value.left,
-            y0: svg.value.top,
-            x1: svg.value.left + svg.value.width,
-            y1: svg.value.top + svg.value.height,
-        };
-
-        const scaleX = bounds.x1 - bounds.x0;
-        const scaleY = bounds.y1 - bounds.y0;
-
-        return rootLayout.value.map((rect) => ({
-            ...rect,
-            x0: bounds.x0 + rect.x0 * scaleX,
-            x1: bounds.x0 + rect.x1 * scaleX,
-            y0: bounds.y0 + rect.y0 * scaleY,
-            y1: bounds.y0 + rect.y1 * scaleY,
-        }));
-    }
 
     const bounds = {
         x0: svg.value.left,
@@ -664,8 +803,10 @@ const squarifiedRaw = computed(() => {
         y1: svg.value.top + svg.value.height,
     };
 
-    return generateTreemap(nodes, bounds);
+    return buildVisibleTreemapLayout(nodes, bounds);
 });
+
+const squarified = computed(() => squarifiedRaw.value);
 
 function computeParentWrapping(rects) {
     const visibleRootId = drillStack.value.length
@@ -752,102 +893,6 @@ function computeParentWrapping(rects) {
     };
 }
 
-const parentWrapping = computed(() => {
-    return computeParentWrapping(squarifiedRaw.value);
-});
-
-const parentWrappers = computed(() => {
-    const wrappers = parentWrapping.value.wrappers;
-    if (!wrappers.length) return [];
-    return wrappers.filter((w) => shouldShowParentLabel(w));
-});
-
-function getTitleBandHeight(rect) {
-    return calcFontSize(rect) * 1.2;
-}
-
-function shouldShowParentLabel(parent) {
-    const bandHeight = getTitleBandHeight(parent);
-    if (getHeight(parent) < bandHeight * 1.1) return false;
-    parent.labelY0 = parent.y0;
-    return true;
-}
-
-const squarified = computed(() => {
-    return applyParentPadding({
-        rects: squarifiedRaw.value,
-        wrappers: parentWrapping.value.wrappers,
-        ancestorsByLeaf: parentWrapping.value.ancestorsByLeaf,
-    });
-});
-
-function applyParentPadding({ rects, wrappers, ancestorsByLeaf }) {
-    if (!wrappers.length || !ancestorsByLeaf) return rects;
-
-    const wrapperById = new Map(wrappers.map((w) => [w.id, w]));
-
-    return rects.map((rect) => {
-        const ancestorIds = ancestorsByLeaf.get(rect.id);
-        if (!ancestorIds || !ancestorIds.length) return rect;
-
-        // RECT shrinker
-        let r = { ...rect };
-
-        for (const ancestorId of ancestorIds) {
-            const parentRect = wrapperById.get(ancestorId);
-            if (!parentRect) continue;
-
-            const parentHeight = getHeight(parentRect);
-            const bandHeight = getTitleBandHeight(parentRect);
-
-            // If this parent is too small to have a band, ignore it
-            if (parentHeight < bandHeight * 1.1) continue;
-
-            const fontSize = calcFontSize(parentRect);
-            const lineHeight = fontSize * 1.2;
-
-            const paddingSide = fontSize * 0.5;
-            const paddingBottom = fontSize * 0.5;
-            const gapBelowTitle = lineHeight * 0.5;
-
-            const parentWidth = getWidth(parentRect);
-            const maxPadX = parentWidth / 3;
-            const px = Math.min(paddingSide, maxPadX);
-
-            const maxBottom = parentHeight * 0.25;
-            const pyBottom = Math.min(paddingBottom, maxBottom);
-
-            // Use the band top computed in shouldShowParentLabel
-            const labelTop =
-                typeof parentRect.labelY0 === 'number'
-                    ? parentRect.labelY0
-                    : parentRect.y0;
-
-            const titleBottom = labelTop + bandHeight;
-
-            const x0 = Math.max(r.x0, parentRect.x0 + px);
-            const x1 = Math.min(r.x1, parentRect.x1 - px);
-            const y0 = Math.max(r.y0, titleBottom + gapBelowTitle);
-            const y1 = Math.min(r.y1, parentRect.y1 - pyBottom);
-
-            // If this ancestor would collapse the rect, stop shrinking any further
-            if (x1 <= x0 || y1 <= y0) {
-                break;
-            }
-
-            r = {
-                ...r,
-                x0,
-                y0,
-                x1,
-                y1,
-            };
-        }
-
-        return r;
-    });
-}
-
 function getHeight({ y0, y1 }) {
     return y1 - y0 <= 0 ? 0.0001 : y1 - y0;
 }
@@ -859,31 +904,39 @@ function getWidth({ x0, x1 }) {
 function calcFontSize(rect) {
     const cfg = FINAL_CONFIG.value.style.chart.layout.labels;
     const base = cfg.fontSize;
-    const minFs = cfg.minFontSize;
-    const maxFs = cfg.fontSize * 2;
+    const minFontSize = cfg.minFontSize;
+    const maxFontSize = cfg.fontSize * 2;
 
     const scalePower = 0.5;
     const baseScaleLow = 0.6;
     const baseScaleHigh = 1;
     const maxOfMinDim = 0.9;
 
-    let p = rect.proportion;
-    if (!(typeof p === 'number' && isFinite(p))) {
+    let proportion = rect.proportion;
+    if (!(typeof proportion === 'number' && isFinite(proportion))) {
         const area = Math.max(1e-6, getWidth(rect) * getHeight(rect));
         const full = Math.max(1e-6, svg.value.width * svg.value.height);
-        p = area / full;
+        proportion = area / full;
     }
 
-    const areaScaled = Math.pow(Math.min(1, Math.max(0, p)), scalePower);
-    const mult = baseScaleLow + (baseScaleHigh - baseScaleLow) * areaScaled;
-    let fontSize = base * mult;
+    const areaScaled = Math.pow(
+        Math.min(1, Math.max(0, proportion)),
+        scalePower,
+    );
+    const areaMultiplier =
+        baseScaleLow + (baseScaleHigh - baseScaleLow) * areaScaled;
+
+    const depth = Math.max(0, Number(rect.depth) || 0);
+    const depthFactor = Math.pow(0.9, depth);
+    let fontSize = base * areaMultiplier * depthFactor;
+
     const minDim = Math.max(0.0001, Math.min(getWidth(rect), getHeight(rect)));
     fontSize = Math.min(fontSize, minDim * maxOfMinDim);
-    fontSize = Math.max(minFs, Math.min(maxFs, fontSize));
+    fontSize = Math.min(fontSize, maxFontSize);
+    fontSize = Math.max(minFontSize, fontSize);
 
     return fontSize;
 }
-
 function toggleFullscreen(state) {
     isFullscreen.value = state;
     step.value += 1;
@@ -927,14 +980,52 @@ function getAncestorIds(id) {
 
 const isZoom = computed(() => drillStack.value.length > 0);
 
-function zoom(rect, seriesIndex) {
-    if (!rect) {
-        currentSet.value = immutableDataset.value.slice();
-        emit('selectDatapoint', undefined);
-        drillStack.value = [];
+function resetZoom() {
+    currentSet.value = immutableDataset.value.slice();
+    drillStack.value = [];
+    emit('selectDatapoint', undefined);
+}
+
+function getCurrentZoomId() {
+    return drillStack.value[drillStack.value.length - 1] ?? null;
+}
+
+function setZoomTarget(node, rect, seriesIndex) {
+    drillStack.value = [...getAncestorIds(node.id), node.id];
+    currentSet.value = [node];
+    if (FINAL_CONFIG.value.events.datapointClick) {
+        FINAL_CONFIG.value.events.datapointClick({
+            datapoint: rect ?? node,
+            seriesIndex,
+        });
+    }
+    emit('selectDatapoint', rect ?? node);
+}
+
+function zoomOutOneLevel(rect, seriesIndex) {
+    const currentZoomId = getCurrentZoomId();
+    if (!currentZoomId) {
+        resetZoom();
         return;
     }
-
+    const currentNode = findNodeById(currentZoomId);
+    if (!currentNode?.parentId) {
+        if (FINAL_CONFIG.value.events.datapointClick) {
+            FINAL_CONFIG.value.events.datapointClick({
+                datapoint: rect,
+                seriesIndex,
+            });
+        }
+        resetZoom();
+        return;
+    }
+    const parentNode = findNodeById(currentNode.parentId);
+    if (!parentNode) {
+        resetZoom();
+        return;
+    }
+    drillStack.value = [...getAncestorIds(parentNode.id), parentNode.id];
+    currentSet.value = [parentNode];
     if (FINAL_CONFIG.value.events.datapointClick) {
         FINAL_CONFIG.value.events.datapointClick({
             datapoint: rect,
@@ -942,36 +1033,28 @@ function zoom(rect, seriesIndex) {
         });
     }
 
-    const node = findNodeById(rect.id);
-
-    if (node && node.children?.length) {
-        drillStack.value.push(node.id);
-        currentSet.value = node.children.slice();
-        emit('selectDatapoint', rect);
-    } else if (rect.parentId) {
-        drillStack.value.push(rect.parentId);
-        const parent = findNodeById(rect.parentId);
-        currentSet.value = parent.children.slice();
-        emit('selectDatapoint', rect);
-    } else if (drillStack.value.length > 0) {
-        drillStack.value.pop();
-        const topId = drillStack.value[drillStack.value.length - 1];
-        if (topId) {
-            const upNode = findNodeById(topId);
-            currentSet.value = upNode.children.slice();
-        } else {
-            currentSet.value = immutableDataset.value.slice();
-            drillStack.value = [];
-            emit('selectDatapoint', undefined);
-        }
-    }
+    emit('selectDatapoint', rect);
 }
 
-function canDrill(rect) {
+function zoom(rect, seriesIndex) {
+    if (!rect) {
+        resetZoom();
+        return;
+    }
     const node = findNodeById(rect.id);
-    if (node?.children?.length) return true;
-    if (rect.parentId) return true;
-    return false;
+    if (!node) return;
+    const currentZoomId = getCurrentZoomId();
+    if (currentZoomId === node.id) {
+        zoomOutOneLevel(rect, seriesIndex);
+        return;
+    }
+
+    setZoomTarget(node, rect, seriesIndex);
+}
+
+function isCurrentZoomTarget(rect) {
+    if (!rect) return false;
+    return getCurrentZoomId() === rect.id;
 }
 
 const breadcrumbs = computed(() => {
@@ -980,12 +1063,10 @@ const breadcrumbs = computed(() => {
     if (drillStack.value.length > 0) {
         let node = findNodeById(drillStack.value[drillStack.value.length - 1]);
         const path = [];
-
         while (node) {
             path.unshift(node);
             node = node.parentId ? findNodeById(node.parentId) : null;
         }
-
         for (const n of path) {
             crumbs.push({
                 id: n.id,
@@ -1457,352 +1538,253 @@ function onGenerateImage(payload) {
     generateImage();
 }
 
-function getParentLabelMaxWidth(rect) {
+function getLabelMetrics(rect) {
     const fontSize = calcFontSize(rect);
-    const paddingSide = fontSize * 0.6;
-    return Math.max(0, getWidth(rect) - 2 * paddingSide);
+    const paddingX = Math.max(fontSize * 0.5, 4);
+    const paddingTop = Math.max(fontSize * 0.5, 4);
+    const lineHeight = fontSize * 1.1;
+
+    return {
+        fontSize,
+        paddingX,
+        paddingTop,
+        lineHeight,
+    };
 }
 
-function buildTreemapText({ rect, seriesIndex, isTitle = false }) {
-    const showName = FINAL_CONFIG.value.style.chart.layout.labels.name.show;
-    const showValue = FINAL_CONFIG.value.style.chart.layout.labels.value.show;
+function getTreemapTextBox(rect) {
+    const { paddingX, paddingTop, lineHeight } = getLabelMetrics(rect);
 
-    if (!showName && !showValue) return '';
+    const x = rect.x0 + paddingX;
+    const y = rect.y0 + paddingTop;
+    const width = Math.max(getWidth(rect) - paddingX * 2, 0);
+    const height = Math.max(getHeight(rect) - paddingTop * 2, 0);
 
-    const isRootView = drillStack.value.length === 0;
-    const cacheKey = isRootView
-        ? `${rect.id}:${isTitle ? 'title' : 'rect'}`
-        : null;
+    return {
+        x,
+        y,
+        width,
+        height,
+        lineHeight,
+    };
+}
 
-    if (isRootView && rootTextCache.value.has(cacheKey)) {
-        return rootTextCache.value.get(cacheKey);
-    }
-
-    const padding = Math.max(2, calcFontSize(rect) / 3);
-    const fontSize = Math.max(8, calcFontSize(rect));
-    const lineHeight = fontSize * 1.2;
-    const rectW = Math.max(0, getWidth(rect) - padding * 2);
-    const rectH = Math.max(0, getHeight(rect) - padding * 2);
-
-    if (rectW <= 2 || rectH <= fontSize * 0.8) {
-        if (isRootView && cacheKey) rootTextCache.value.set(cacheKey, '');
-        return '';
-    }
-
-    const fontFamily = FINAL_CONFIG.value.style.fontFamily;
-    const fontWeightTitle = FINAL_CONFIG.value.style.chart.layout.labels.name
-        .bold
-        ? '600'
-        : '400';
-    const fontWeightValue = FINAL_CONFIG.value.style.chart.layout.labels.value
-        .bold
-        ? '600'
-        : '400';
-    const fill = isTitle
-        ? !FINAL_CONFIG.value.style.chart.layout.rects.group.label
-              .adaptColorToBackground
-            ? FINAL_CONFIG.value.style.chart.layout.rects.group.label.color
-            : FINAL_CONFIG.value.style.chart.layout.rects.group
-                    .useSeriesBackgroundColor
-              ? adaptColorToBackground(lightenHexColor(rect.color, 0.4))
-              : adaptColorToBackground(
-                    FINAL_CONFIG.value.style.chart.backgroundColor,
-                )
-        : adaptColorToBackground(rect.color);
-
-    const nameText = showName ? String(rect.name ?? '') : '';
-    const valueText = showValue
-        ? applyDataLabel(
-              FINAL_CONFIG.value.style.chart.layout.labels.formatter,
-              rect.value ?? 0,
-              dataLabel({
-                  p: FINAL_CONFIG.value.style.chart.layout.labels.prefix,
-                  v: rect.value ?? 0,
-                  s: FINAL_CONFIG.value.style.chart.layout.labels.suffix,
-                  r: FINAL_CONFIG.value.style.chart.layout.labels.rounding,
-              }),
-              { datapoint: rect, seriesIndex },
-          )
-        : '';
-
-    const availableWidth = isTitle ? getParentLabelMaxWidth(rect) : rectW;
-
-    function measure(text, size = fontSize, weight = '400') {
-        const svgEl = document.createElementNS(XMLNS, 'svg');
-        svgEl.setAttribute('width', '0');
-        svgEl.setAttribute('height', '0');
-        svgEl.style.position = 'absolute';
-        svgEl.style.visibility = 'hidden';
-        svgEl.style.pointerEvents = 'none';
-
-        const t = document.createElementNS(XMLNS, 'text');
-        t.setAttribute('font-size', String(size));
-        t.setAttribute('font-family', fontFamily);
-        t.setAttribute('font-weight', String(weight));
-        t.textContent = text || '';
-
-        svgEl.appendChild(t);
-        document.body.appendChild(svgEl);
-        const w = t.getComputedTextLength();
-        document.body.removeChild(svgEl);
-        return w;
-    }
-
-    // GROUP LABELS
-    if (isTitle) {
-        let titleText = '';
-        if (showName) titleText = nameText;
-        if (showValue)
-            titleText = titleText ? `${titleText} (${valueText})` : valueText;
-
-        if (!titleText) {
-            if (isRootView && cacheKey) rootTextCache.value.set(cacheKey, '');
-            return '';
-        }
-
-        let label = titleText;
-        if (measure(label, fontSize, fontWeightTitle) > availableWidth) {
-            let tmp = label;
-            while (
-                tmp.length &&
-                measure(tmp + '…', fontSize, fontWeightTitle) > availableWidth
-            ) {
-                tmp = tmp.slice(0, -1);
-            }
-            label = tmp ? tmp + '…' : '';
-        }
-        if (!label) {
-            if (isRootView && cacheKey) rootTextCache.value.set(cacheKey, '');
-            return '';
-        }
-
-        const bandHeight = getTitleBandHeight(rect);
-        const depth = typeof rect.depth === 'number' ? rect.depth : 0;
-        const levelSpacing = bandHeight * 1.4;
-
-        const labelTop =
-            typeof rect.labelY0 === 'number'
-                ? rect.labelY0
-                : rect.y0 + depth * levelSpacing;
-
-        const x = rect.x0 + padding + fontSize / 2;
-        const y = labelTop + padding + fontSize;
-
-        const result = `<text
-            x="${x}"
-            y="${y}"
-            font-size="${fontSize}"
-            font-family="${escapeXmlAttr(fontFamily)}"
-            font-weight="${fontWeightTitle}"
-            fill="${escapeXmlAttr(fill)}"
-            paint-order="stroke"
-            stroke="transparent"
-            stroke-width="0"
-            style="transition: all 0.2s ease-in-out;"
-        >
-            ${escapeXml(label)}
-        </text>`;
-
-        if (isRootView && cacheKey) rootTextCache.value.set(cacheKey, result);
-        return result;
-    }
-
-    // RECT LABELS
-    const reserveForValue = showValue ? 1 : 0;
-    const maxTitleLines = Math.max(
-        0,
-        Math.floor(rectH / lineHeight) - reserveForValue,
+function getLabelTextColor(rect) {
+    return adaptColorToBackground(
+        rect.color ?? FINAL_CONFIG.value.style.chart.backgroundColor,
     );
-    if (maxTitleLines <= 0 && !showValue) {
-        if (isRootView && cacheKey) rootTextCache.value.set(cacheKey, '');
+}
+
+function getLabelLines(rect) {
+    const { fontSize, lineHeight } = getLabelMetrics(rect);
+    const availableWidth = getTreemapLabelAvailableWidth(rect);
+    const availableHeight = getTreemapLabelAvailableHeight(rect);
+
+    if (availableWidth <= 0 || availableHeight <= 0) {
+        return [];
+    }
+
+    const maxLines = Math.max(
+        Math.floor(availableHeight / Math.max(lineHeight, 1)),
+        1,
+    );
+
+    const valuePrefix =
+        FINAL_CONFIG.value.style.chart.layout.labels.value.prefix ?? '';
+    const valueSuffix =
+        FINAL_CONFIG.value.style.chart.layout.labels.value.suffix ?? '';
+
+    const valueText = `${valuePrefix}${rect.value}${valueSuffix}`;
+
+    const lineGapSafety = Math.ceil(fontSize * 0.2);
+    const horizontalSafety = Math.ceil(fontSize * 1.4);
+    const effectiveWidth = Math.max(
+        availableWidth - horizontalSafety - lineGapSafety,
+        0,
+    );
+
+    if (effectiveWidth <= 0) {
+        return [];
+    }
+
+    if (Array.isArray(rect.children) && rect.children.length) {
+        const line = ellipsizeTreemapText(
+            `${rect.name} (${valueText})`,
+            effectiveWidth,
+            fontSize,
+            500,
+        );
+
+        return line ? [line] : [];
+    }
+
+    const lines = [];
+
+    const nameLine = ellipsizeTreemapText(
+        `${rect.name}`,
+        effectiveWidth,
+        fontSize,
+        500,
+    );
+
+    if (nameLine) {
+        lines.push(nameLine);
+    }
+
+    if (maxLines >= 2) {
+        const valueLine = ellipsizeTreemapText(
+            valueText,
+            effectiveWidth,
+            fontSize,
+            400,
+        );
+
+        if (valueLine) {
+            lines.push(valueLine);
+        }
+    }
+
+    return lines.slice(0, maxLines);
+}
+
+let treemapMeasureCanvas;
+
+function getTreemapMeasureContext() {
+    if (!treemapMeasureCanvas) {
+        treemapMeasureCanvas = document.createElement('canvas');
+    }
+
+    return treemapMeasureCanvas.getContext('2d');
+}
+
+function measureTreemapTextWidth(text, fontSize, fontWeight = 400) {
+    const context = getTreemapMeasureContext();
+
+    if (!context) {
+        return text.length * fontSize * 0.6;
+    }
+
+    context.font = `${fontWeight} ${fontSize}px ${FINAL_CONFIG.value.style.fontFamily}`;
+    return context.measureText(String(text)).width;
+}
+
+function ellipsizeTreemapText(text, maxWidth, fontSize, fontWeight = 400) {
+    const raw = String(text ?? '');
+
+    if (!raw.length || maxWidth <= 0) {
         return '';
     }
 
-    function wrapLines(text, maxWidth, size, weight, maxLines, addEllipsis) {
-        const words = String(text).split(/\s+/).filter(Boolean);
-        const lines = [];
-        let cur = '';
-
-        function fits(s) {
-            return measure(s, size, weight) <= maxWidth;
-        }
-
-        function breakLongWord(word) {
-            if (fits(word)) return [word];
-            const chunks = [];
-            let left = 0;
-            while (left < word.length) {
-                let lo = 1,
-                    hi = word.length - left,
-                    best = 1;
-                while (lo <= hi) {
-                    const mid = (lo + hi) >> 1;
-                    const slice = word.slice(left, left + mid);
-                    if (fits(slice)) {
-                        best = mid;
-                        lo = mid + 1;
-                    } else {
-                        hi = mid - 1;
-                    }
-                }
-                chunks.push(word.slice(left, left + best));
-                left += best;
-            }
-            return chunks;
-        }
-
-        const tokens = words.flatMap((w) => breakLongWord(w));
-        let truncated = false;
-
-        for (let idx = 0; idx < tokens.length; idx += 1) {
-            const tok = tokens[idx];
-            const test = cur ? cur + ' ' + tok : tok;
-
-            if (fits(test)) {
-                cur = test;
-            } else {
-                if (cur) {
-                    lines.push(cur);
-                } else {
-                    let s = tok;
-                    while (s.length && !fits(s)) s = s.slice(0, -1);
-                    if (s) lines.push(s);
-                }
-                cur = '';
-                if (lines.length === maxLines) {
-                    truncated = true;
-                    break;
-                }
-            }
-
-            if (idx === tokens.length - 1 && cur && lines.length < maxLines) {
-                lines.push(cur);
-            }
-        }
-
-        if (lines.length && lines.join(' ') !== tokens.join(' ')) {
-            truncated = true;
-        }
-
-        if (addEllipsis && truncated && lines.length > 0) {
-            let last = lines[lines.length - 1];
-            if (!fits(last)) {
-                let s = last;
-                while (s.length && !fits(s)) s = s.slice(0, -1);
-                last = s;
-            }
-            let withEllipsis = last + '…';
-            if (!fits(withEllipsis)) {
-                let base = last;
-                while (base.length && !fits(base + '…')) {
-                    base = base.slice(0, -1);
-                }
-                withEllipsis = base + '…';
-            }
-            lines[lines.length - 1] = withEllipsis;
-        }
-        return lines;
+    if (measureTreemapTextWidth(raw, fontSize, fontWeight) <= maxWidth) {
+        return raw;
     }
 
-    const titleLines = showName
-        ? wrapLines(
-              nameText,
-              rectW,
-              fontSize,
-              fontWeightTitle,
-              maxTitleLines,
-              true,
-          )
-        : [];
+    const ellipsis = '…';
+    const ellipsisWidth = measureTreemapTextWidth(
+        ellipsis,
+        fontSize,
+        fontWeight,
+    );
 
-    let valueSize = fontSize;
-    let valueStr = String(valueText);
+    if (ellipsisWidth > maxWidth) {
+        return '';
+    }
 
-    if (showValue) {
-        while (
-            measure(valueStr, valueSize, fontWeightValue) > rectW &&
-            valueSize > Math.max(8, fontSize * 0.75)
-        ) {
-            valueSize -= 1;
-        }
-        if (measure(valueStr, valueSize, fontWeightValue) > rectW) {
-            let tmp = valueStr;
-            while (
-                tmp.length &&
-                measure(tmp + '…', valueSize, fontWeightValue) > rectW
-            ) {
-                tmp = tmp.slice(0, -1);
-            }
-            valueStr = tmp ? tmp + '…' : '';
-            if (!valueStr.length) {
-                if (isRootView && cacheKey)
-                    rootTextCache.value.set(cacheKey, '');
-                return '';
-            }
+    let start = 0;
+    let end = raw.length;
+    let best = '';
+
+    while (start <= end) {
+        const middle = Math.floor((start + end) / 2);
+        const candidate = `${raw.slice(0, middle)}${ellipsis}`;
+        const candidateWidth = measureTreemapTextWidth(
+            candidate,
+            fontSize,
+            fontWeight,
+        );
+
+        if (candidateWidth <= maxWidth) {
+            best = candidate;
+            start = middle + 1;
+        } else {
+            end = middle - 1;
         }
     }
 
-    const usedH = titleLines.length * lineHeight + (showValue ? lineHeight : 0);
-    if (usedH > rectH) {
-        while (
-            titleLines.length &&
-            titleLines.length * lineHeight + (showValue ? lineHeight : 0) >
-                rectH
-        ) {
-            titleLines.pop();
-        }
-        if (!titleLines.length && (!showValue || lineHeight > rectH)) {
-            if (isRootView && cacheKey) rootTextCache.value.set(cacheKey, '');
-            return '';
-        }
+    return best || ellipsis;
+}
+
+function getTreemapLabelAvailableWidth(rect) {
+    return getTreemapTextBox(rect).width;
+}
+
+function getTreemapLabelAvailableHeight(rect) {
+    return getTreemapTextBox(rect).height;
+}
+
+function buildTreemapText({ rect, seriesIndex, isTitle }) {
+    if (
+        !rect ||
+        !FINAL_CONFIG.value.style.chart.layout.labels.showDefaultLabels ||
+        !shouldShowNodeLabel(rect)
+    ) {
+        return '';
     }
 
-    const x = rect.x0 + padding;
-    const y = rect.y0 + padding + fontSize;
+    const { fontSize } = getLabelMetrics(rect);
+    const textColor = getLabelTextColor(rect);
+    const lines = getLabelLines(rect);
+    const textBox = getTreemapTextBox(rect);
 
-    const tspans = [];
-
-    if (showName) {
-        titleLines.forEach((line, i) => {
-            tspans.push(`
-            <tspan 
-                x="${x}" 
-                dy="${i === 0 ? 0 : lineHeight}" 
-                font-weight="${fontWeightTitle}"
-            >
-                ${escapeXml(line)}
-            </tspan>`);
-        });
+    if (!lines.length || textBox.width <= 0 || textBox.height <= 0) {
+        return '';
     }
 
-    if (showValue) {
-        tspans.push(`
-        <tspan 
-            x="${x}" 
-            dy="${titleLines.length ? lineHeight : 0}"
-            font-weight="${fontWeightValue}" 
-            font-size="${valueSize}"
-        >
-            ${escapeXml(valueStr)}
-        </tspan>`);
-    }
+    const clipId = `treemap_clip_${uid.value}_${rect.id}_${rect.depth}_${seriesIndex}`;
 
-    const result = `<text 
-        x="${x}" 
-        y="${y}" 
-        font-size="${fontSize}" 
-        font-family="${escapeXmlAttr(fontFamily)}" 
-        fill="${escapeXmlAttr(fill)}" 
-        paint-order="stroke" 
-        stroke="transparent" 
-        stroke-width="0"
-        style="transition: all 0.2s ease-in-out;"
-    >
-        ${tspans.join('')}
-    </text>`;
+    const clipX = textBox.x;
+    const clipY = textBox.y;
+    const clipWidth = Math.max(textBox.width, 0);
+    const clipHeight = Math.max(textBox.height, 0);
 
-    if (isRootView && cacheKey) rootTextCache.value.set(cacheKey, result);
-    return result;
+    const textNodes = lines
+        .map((line, index) => {
+            const y = textBox.y + textBox.lineHeight * index;
+
+            return `
+                <text
+                    x="${textBox.x}"
+                    y="${y}"
+                    fill="${textColor}"
+                    font-size="${fontSize}"
+                    font-family="${FINAL_CONFIG.value.style.fontFamily}"
+                    font-weight="${index === 0 ? 500 : 400}"
+                    text-anchor="start"
+                    dominant-baseline="text-before-edge"
+                >
+                    ${escapeHtml(line)}
+                </text>
+            `;
+        })
+        .join('');
+
+    return `
+        <g>
+            <defs>
+                <clipPath id="${clipId}" clipPathUnits="userSpaceOnUse">
+                    <rect
+                        x="${clipX}"
+                        y="${clipY}"
+                        width="${clipWidth}"
+                        height="${clipHeight}"
+                    />
+                </clipPath>
+            </defs>
+            <g clip-path="url(#${clipId})">
+                ${textNodes}
+            </g>
+        </g>
+    `;
 }
 
 function getSafeRadius(rect) {
@@ -2293,177 +2275,141 @@ defineExpose({
                 </g>
 
                 <!-- PARENT WRAPPERS -->
-                <g
-                    v-for="(parent, i) in parentWrappers"
-                    :key="`parent_${parent.id}`"
-                    class="vue-ui-treemap-parent-wrapper"
-                >
-                    <rect
-                        :x="parent.x0"
-                        :y="parent.y0"
-                        :height="getHeight(parent)"
-                        :width="getWidth(parent)"
-                        :fill="
-                            FINAL_CONFIG.style.chart.layout.rects.group
-                                .useSeriesBackgroundColor
-                                ? lightenHexColor(
-                                      parent.color ??
-                                          FINAL_CONFIG.style.chart
-                                              .backgroundColor,
-                                      FINAL_CONFIG.style.chart.layout.rects
-                                          .group.backgroundLighterRatio,
-                                  )
-                                : FINAL_CONFIG.style.chart.backgroundColor
-                        "
-                        :rx="0"
-                        :stroke="
-                            FINAL_CONFIG.style.chart.layout.rects.group.stroke
-                        "
-                        :stroke-width="
-                            FINAL_CONFIG.style.chart.layout.rects.group
-                                .strokeWidth
-                        "
-                        class="vue-data-ui-cursor-default vue-ui-treemap-rect"
-                    />
-                    <foreignObject
-                        v-if="$slots['group-label'] && !allSegregated"
-                        :width="getWidth(parent)"
-                        :height="getHeight(parent)"
-                        :x="parent.x0"
-                        :y="parent.y0"
+                <g>
+                    <g
+                        v-for="(rect, i) in squarified"
+                        :key="`rect_${rect.id}_${rect.depth}`"
                     >
-                        <slot name="group-label" v-bind="{ group: parent }" />
-                    </foreignObject>
+                        <rect
+                            data-cy="datapoint-rect"
+                            :x="rect.x0"
+                            :y="rect.y0"
+                            :height="getHeight(rect)"
+                            :width="getWidth(rect)"
+                            :fill="
+                                isSafari
+                                    ? (rect.color ??
+                                      FINAL_CONFIG.style.chart.backgroundColor)
+                                    : FINAL_CONFIG.style.chart.layout.rects
+                                            .gradient.show
+                                      ? allSegregated
+                                          ? FINAL_CONFIG.style.chart
+                                                .backgroundColor
+                                          : `url(#tgrad_${rect.id})`
+                                      : (rect.color ??
+                                        FINAL_CONFIG.style.chart
+                                            .backgroundColor)
+                            "
+                            :rx="getSafeRadius(rect)"
+                            :stroke="
+                                selectedRect && selectedRect.id === rect.id
+                                    ? FINAL_CONFIG.style.chart.layout.rects
+                                          .selected.stroke
+                                    : FINAL_CONFIG.style.chart.layout.rects
+                                          .stroke
+                            "
+                            :stroke-width="
+                                selectedRect && selectedRect.id === rect.id
+                                    ? FINAL_CONFIG.style.chart.layout.rects
+                                          .selected.strokeWidth
+                                    : FINAL_CONFIG.style.chart.layout.rects
+                                          .strokeWidth
+                            "
+                            @click.stop="zoom(rect, i)"
+                            @mouseenter="
+                                () =>
+                                    useTooltip({
+                                        datapoint: rect,
+                                        seriesIndex: i,
+                                        triggerMode: 'pointer',
+                                    })
+                            "
+                            @mouseleave="
+                                onTrapLeave({ datapoint: rect, seriesIndex: i })
+                            "
+                            :style="`opacity:${selectedRect ? (selectedRect.id === rect.id ? 1 : FINAL_CONFIG.style.chart.layout.rects.selected.unselectedOpacity) : 1}`"
+                            :class="[
+                                'vue-ui-treemap-rect',
+                                isCurrentZoomTarget(rect)
+                                    ? 'vue-data-ui-zoom-minus'
+                                    : 'vue-data-ui-zoom-plus',
+                            ]"
+                        />
+                    </g>
 
                     <g
-                        v-else-if="
-                            !loading &&
-                            FINAL_CONFIG.style.chart.layout.labels
-                                .showDefaultLabels &&
-                            !allSegregated
-                        "
-                        style="pointer-events: none"
-                        v-html="
-                            buildTreemapText({
-                                rect: parent,
-                                seriesIndex: 0,
-                                isTitle: true,
-                            })
-                        "
-                        class="vue-data-ui-cursor-default"
-                    />
-                </g>
-
-                <g v-for="(rect, i) in squarified" :key="`k_${rect.id}`">
-                    <rect
-                        data-cy="datapoint-rect"
-                        :x="rect.x0"
-                        :y="rect.y0"
-                        :height="getHeight(rect)"
-                        :width="getWidth(rect)"
-                        :fill="
-                            isSafari
-                                ? (rect.color ??
-                                  FINAL_CONFIG.style.chart.backgroundColor)
-                                : FINAL_CONFIG.style.chart.layout.rects.gradient
-                                        .show
-                                  ? allSegregated
-                                      ? FINAL_CONFIG.style.chart.backgroundColor
-                                      : `url(#tgrad_${rect.id})`
-                                  : (rect.color ??
-                                    FINAL_CONFIG.style.chart.backgroundColor)
-                        "
-                        :rx="getSafeRadius(rect)"
-                        :stroke="
-                            selectedRect && selectedRect.id === rect.id
-                                ? FINAL_CONFIG.style.chart.layout.rects.selected
-                                      .stroke
-                                : FINAL_CONFIG.style.chart.layout.rects.stroke
-                        "
-                        :stroke-width="
-                            selectedRect && selectedRect.id === rect.id
-                                ? FINAL_CONFIG.style.chart.layout.rects.selected
-                                      .strokeWidth
-                                : FINAL_CONFIG.style.chart.layout.rects
-                                      .strokeWidth
-                        "
-                        @click.stop="zoom(rect, i)"
-                        @mouseenter="
-                            () =>
-                                useTooltip({
-                                    datapoint: rect,
+                        v-for="(rect, i) in squarified"
+                        :key="`label_${rect.id}_${rect.depth}`"
+                    >
+                        <g
+                            v-if="
+                                !$slots.rect &&
+                                !loading &&
+                                FINAL_CONFIG.style.chart.layout.labels
+                                    .showDefaultLabels &&
+                                !allSegregated &&
+                                rect.showLabel
+                            "
+                            style="pointer-events: none"
+                            v-html="
+                                buildTreemapText({
+                                    rect,
                                     seriesIndex: i,
-                                    triggerMode: 'pointer',
-                                })
-                        "
-                        @mouseleave="
-                            onTrapLeave({ datapoint: rect, seriesIndex: i })
-                        "
-                        :style="`opacity:${selectedRect ? (selectedRect.id === rect.id ? 1 : FINAL_CONFIG.style.chart.layout.rects.selected.unselectedOpacity) : 1}`"
-                        :class="[
-                            'vue-ui-treemap-rect',
-                            canDrill(rect)
-                                ? 'vue-data-ui-zoom-plus'
-                                : isZoom
-                                  ? 'vue-data-ui-zoom-minus'
-                                  : '',
-                        ]"
-                    />
-
-                    <!-- DEFAULT DATALABELS-->
-                    <g
-                        :style="`pointer-events:none; opacity:${selectedRect ? (selectedRect.id === rect.id ? 1 : FINAL_CONFIG.style.chart.layout.rects.selected.unselectedOpacity) : 1}`"
-                        v-if="
-                            !$slots.rect &&
-                            !loading &&
-                            FINAL_CONFIG.style.chart.layout.labels
-                                .showDefaultLabels &&
-                            !allSegregated
-                        "
-                        v-html="buildTreemapText({ rect, seriesIndex: i })"
-                    />
-
-                    <!-- SLOTTED CONTENT -->
-                    <foreignObject
-                        :x="rect.x0"
-                        :y="rect.y0"
-                        :height="getHeight(rect)"
-                        :width="getWidth(rect)"
-                        class="vue-ui-treemap-cell-foreignObject"
-                    >
-                        <div
-                            :style="{
-                                width: '100%',
-                                height: '100%',
-                            }"
-                            class="vue-ui-treemap-cell"
-                        >
-                            <slot
-                                v-if="!loading"
-                                name="rect"
-                                v-bind="{
-                                    rect: {
-                                        ...rect,
-                                        height: getHeight(rect),
-                                        width: getWidth(rect),
-                                        isSelected: !selectedRect
-                                            ? true
-                                            : selectedRect.id === rect.id,
-                                    },
-                                    shouldShow:
-                                        rect.proportion >
-                                            FINAL_CONFIG.style.chart.layout
-                                                .labels.hideUnderProportion ||
-                                        isZoom,
-                                    fontSize: calcFontSize(rect),
-                                    isZoom,
-                                    textColor: adaptColorToBackground(
-                                        rect.color,
+                                    isTitle: !!(
+                                        rect.children && rect.children.length
                                     ),
+                                })
+                            "
+                        />
+                    </g>
+
+                    <g
+                        v-for="(rect, i) in squarified"
+                        :key="`slot_${rect.id}_${rect.depth}`"
+                    >
+                        <foreignObject
+                            :x="rect.x0"
+                            :y="rect.y0"
+                            :height="getHeight(rect)"
+                            :width="getWidth(rect)"
+                            class="vue-ui-treemap-cell-foreignObject"
+                            style="pointer-events: none"
+                        >
+                            <div
+                                :style="{
+                                    width: '100%',
+                                    height: '100%',
                                 }"
-                            />
-                        </div>
-                    </foreignObject>
+                                class="vue-ui-treemap-cell"
+                            >
+                                <slot
+                                    v-if="!loading"
+                                    name="rect"
+                                    v-bind="{
+                                        rect: {
+                                            ...rect,
+                                            height: getHeight(rect),
+                                            width: getWidth(rect),
+                                            isSelected: !selectedRect
+                                                ? true
+                                                : selectedRect.id === rect.id,
+                                        },
+                                        shouldShow:
+                                            rect.proportion >
+                                                FINAL_CONFIG.style.chart.layout
+                                                    .labels
+                                                    .hideUnderProportion ||
+                                            isZoom,
+                                        fontSize: calcFontSize(rect),
+                                        isZoom,
+                                        textColor: adaptColorToBackground(
+                                            rect.color,
+                                        ),
+                                    }"
+                                />
+                            </div>
+                        </foreignObject>
+                    </g>
                 </g>
 
                 <slot

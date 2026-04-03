@@ -29,25 +29,25 @@ describe('<VueUiTreemap />', () => {
             cy.get('[data-cy="datapoint-rect"]')
                 .should('exist')
                 .and('be.visible')
-                .and('have.length', 16);
+                .and('have.length', 22);
 
             cy.log('datapoint foreignObject');
             cy.get('.vue-ui-treemap-cell-foreignObject')
                 .should('exist')
                 .and('be.visible')
-                .and('have.length', 16);
+                .and('have.length', 22);
 
             cy.log('zoom');
-            cy.get('[data-cy="datapoint-rect"]').first().click();
+            cy.get('[data-cy="datapoint-rect"]').first().click({ force: true });
             cy.get('[data-cy="datapoint-rect"]')
                 .should('exist')
                 .and('be.visible')
-                .and('have.length', 3);
-            cy.get('[data-cy="datapoint-rect"]').first().click();
+                .and('have.length', 6);
+            cy.get('[data-cy="datapoint-rect"]').first().click({ force: true });
             cy.get('[data-cy="datapoint-rect"]')
                 .should('exist')
                 .and('be.visible')
-                .and('have.length', 16);
+                .and('have.length', 22);
         });
     });
 
@@ -95,16 +95,18 @@ describe('<VueUiTreemap />', () => {
                         'color',
                         'id',
                         'name',
-                        'rootId',
                         'normalizedValue',
                         'parentId',
-                        'parentName',
                         'proportion',
                         'value',
                         'x0',
                         'x1',
                         'y0',
                         'y1',
+                        'depth',
+                        'isVisibleNode',
+                        'showLabel',
+                        'sourceColor',
                     );
                 });
         });
