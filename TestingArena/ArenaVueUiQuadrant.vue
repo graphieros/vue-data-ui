@@ -145,6 +145,7 @@ const model = createModel([
     CHECKBOX('userOptions.keepStateOnChartLeave', { def: true }),
 
     CHECKBOX('useCssAnimation', { def: true }),
+    CHECKBOX('zoomEnabled', { def: false }),
     RANGE('zoomAnimationFrames', { def: 20, min: 0, max: 100 }),
     TEXT('style.fontFamily', { def: 'inherit' }),
     NUMBER('style.chart.height', { def: 512, min: 100, max: 1000 }),

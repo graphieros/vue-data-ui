@@ -544,10 +544,11 @@ function zoomOnSide({ targetX, targetY, targetW, targetH, side }) {
     anim();
 }
 
+const zoomEnabled = computed(() => FINAL_CONFIG.value.zoomEnabled);
+
 function selectQuadrantSide(side) {
-    if (isAnimating.value) {
-        return;
-    }
+    if (!zoomEnabled.value) return;
+    if (isAnimating.value) return;
     if (isZoom.value && selectedSide.value === side) {
         zoomOnSide({
             targetX: 0,
@@ -706,12 +707,14 @@ const datasetReference = computed(() => {
             series: category.series.map((s) => {
                 return {
                     ...s,
+
                     x: calcX(s.x),
                     y: calcY(s.y),
                     xValue: s.x,
                     yValue: s.y,
                     quadrantSide: getQuadrantSide({ x: s.x, y: s.y }),
                     categoryName: category.name,
+                    category,
                     shape: category.shape,
                     color: category.color,
                 };
@@ -753,6 +756,7 @@ const drawableDataset = computed(() => {
             series: category.series.map((s) => {
                 return {
                     ...s,
+                    category,
                     x: calcX(s.x),
                     y: calcY(s.y),
                     xValue: s.x,
@@ -2134,6 +2138,7 @@ defineExpose({
                 >
                     <!-- Y MAX -->
                     <text
+                        v-if="FINAL_CONFIG.style.chart.layout.grid.yAxis.show"
                         data-cy="label-y-max"
                         :x="svg.centerX"
                         :y="svg.top - svg.padding / 6"
@@ -2179,6 +2184,7 @@ defineExpose({
 
                     <!-- Y MIN -->
                     <text
+                        v-if="FINAL_CONFIG.style.chart.layout.grid.yAxis.show"
                         data-cy="label-y-min"
                         :x="svg.centerX"
                         :y="svg.bottom + svg.padding * 0.35"
@@ -2208,6 +2214,7 @@ defineExpose({
 
                     <!-- X MIN -->
                     <text
+                        v-if="FINAL_CONFIG.style.chart.layout.grid.xAxis.show"
                         data-cy="label-x-min"
                         :id="`xLabelMin_${uid}`"
                         text-anchor="middle"
@@ -2237,6 +2244,7 @@ defineExpose({
 
                     <!-- X MAX -->
                     <text
+                        v-if="FINAL_CONFIG.style.chart.layout.grid.xAxis.show"
                         data-cy="label-x-max"
                         :id="`xLabelMax_${uid}`"
                         text-anchor="middle"
@@ -2322,8 +2330,8 @@ defineExpose({
                         "
                         fill="transparent"
                         :class="{
-                            'vue-data-ui-zoom-plus': !isZoom,
-                            'vue-data-ui-zoom-minus': isZoom,
+                            'vue-data-ui-zoom-plus': !isZoom && zoomEnabled,
+                            'vue-data-ui-zoom-minus': isZoom && zoomEnabled,
                         }"
                     />
                     <rect
@@ -2343,8 +2351,8 @@ defineExpose({
                         "
                         fill="transparent"
                         :class="{
-                            'vue-data-ui-zoom-plus': !isZoom,
-                            'vue-data-ui-zoom-minus': isZoom,
+                            'vue-data-ui-zoom-plus': !isZoom && zoomEnabled,
+                            'vue-data-ui-zoom-minus': isZoom && zoomEnabled,
                         }"
                     />
                     <rect
@@ -2364,8 +2372,8 @@ defineExpose({
                         "
                         fill="transparent"
                         :class="{
-                            'vue-data-ui-zoom-plus': !isZoom,
-                            'vue-data-ui-zoom-minus': isZoom,
+                            'vue-data-ui-zoom-plus': !isZoom && zoomEnabled,
+                            'vue-data-ui-zoom-minus': isZoom && zoomEnabled,
                         }"
                     />
                     <rect
@@ -2385,8 +2393,8 @@ defineExpose({
                         "
                         fill="transparent"
                         :class="{
-                            'vue-data-ui-zoom-plus': !isZoom,
-                            'vue-data-ui-zoom-minus': isZoom,
+                            'vue-data-ui-zoom-plus': !isZoom && zoomEnabled,
+                            'vue-data-ui-zoom-minus': isZoom && zoomEnabled,
                         }"
                     />
                 </g>

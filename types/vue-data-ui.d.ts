@@ -5164,6 +5164,7 @@ declare module 'vue-data-ui' {
         theme?: Theme;
         useCssAnimation?: boolean;
         zoomAnimationFrames?: number;
+        zoomEnabled?: boolean;
         customPalette?: string[];
         downsample?: {
             threshold?: number;
@@ -5225,12 +5226,14 @@ declare module 'vue-data-ui' {
                             max?: number;
                             auto?: boolean;
                             name?: string;
+                            show?: boolean;
                         };
                         yAxis?: {
                             min?: number;
                             max?: number;
                             auto?: boolean;
                             name?: string;
+                            show?: boolean;
                         };
                     };
                     plots?: {
@@ -5274,7 +5277,10 @@ declare module 'vue-data-ui' {
                 roundingValue?: number;
             };
         };
-        userOptions?: ChartUserOptions;
+        userOptions?: ChartUserOptions<
+            VueUiQuadrantDatapoint[],
+            VueUiQuadrantConfig
+        >;
         translations?: {
             category?: string;
             item?: string;
@@ -5283,6 +5289,7 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiQuadrantDatapoint = {
+        [key: string]: any;
         categoryName: string;
         color: string;
         name: string;
@@ -5293,6 +5300,7 @@ declare module 'vue-data-ui' {
         xValue: number;
         y: number;
         yValue: number;
+        category: VueUiQuadrantDatasetItem;
     };
 
     export type VueUiQuadrantSerie = {

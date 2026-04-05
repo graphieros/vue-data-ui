@@ -1131,6 +1131,25 @@
             "id": "d5c1dd67-f1bf-4538-88a9-c40d2e0355cd",
             "createdAt": 1774258724742,
             "updatedAt": 1774302956867
+        },
+        {
+            "title": "VueUiQuadrant",
+            "component": "VueUiQuadrant",
+            "description": "Improvements",
+            "priority": 2,
+            "author": "graphieros",
+            "done": true,
+            "exchanges": [],
+            "type": "feature",
+            "withComponentCheckList": false,
+            "checkList": {},
+            "withCustomCheckList": true,
+            "customCheckList": {
+                "optional zoom & style adjustments if not": true
+            },
+            "id": "2e9cefe1-1664-431e-a078-b2088ea2bbeb",
+            "createdAt": 1775300014073,
+            "updatedAt": 1775374798605
         }
     ]
 }

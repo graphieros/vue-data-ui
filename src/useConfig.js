@@ -1607,6 +1607,7 @@ export function useConfig(options = {}) {
         customPalette: [],
         useCssAnimation: false, // v2 = true
         zoomAnimationFrames: 20,
+        zoomEnabled: true,
         downsample: LTTB,
         style: {
             fontFamily: 'inherit',
@@ -1685,12 +1686,14 @@ export function useConfig(options = {}) {
                             max: 100,
                             auto: true,
                             name: '',
+                            show: true,
                         },
                         yAxis: {
                             min: -100,
                             max: 100,
                             auto: true,
                             name: '',
+                            show: true,
                         },
                     },
                     plots: {
