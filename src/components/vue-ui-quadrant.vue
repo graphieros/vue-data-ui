@@ -2441,7 +2441,6 @@ defineExpose({
                                         )
                                     "
                                     fill="transparent"
-                                    :aria-label="`${category.name} ${plot.name}: ${FINAL_CONFIG.style.chart.layout.grid.xAxis.name || 'x'} ${plot.xValue}, ${FINAL_CONFIG.style.chart.layout.grid.yAxis.name || 'y'} ${plot.yValue}`"
                                     style="pointer-events: none"
                                 />
                             </g>
@@ -2495,7 +2494,6 @@ defineExpose({
                                         )
                                     "
                                     fill="transparent"
-                                    :aria-label="`${category.name} ${plot.name}: ${FINAL_CONFIG.style.chart.layout.grid.xAxis.name || 'x'} ${plot.xValue}, ${FINAL_CONFIG.style.chart.layout.grid.yAxis.name || 'y'} ${plot.yValue}`"
                                     style="pointer-events: none"
                                 />
                             </g>
@@ -2774,7 +2772,7 @@ defineExpose({
 
         <!-- LEGEND -->
         <Teleport
-            v-if="readyTeleport"
+            v-if="readyTeleport && FINAL_CONFIG.style.chart.legend.show"
             :to="
                 FINAL_CONFIG.style.chart.legend.position === 'top'
                     ? `#legend-top-${uid}`
