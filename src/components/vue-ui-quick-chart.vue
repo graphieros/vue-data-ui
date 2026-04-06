@@ -3621,7 +3621,7 @@ defineExpose({
 
         <!-- LEGEND -->
         <Teleport
-            v-if="readyTeleport"
+            v-if="readyTeleport && FINAL_CONFIG.showLegend"
             :to="
                 FINAL_CONFIG.legendPosition === 'top'
                     ? `#legend-top-${uid}`

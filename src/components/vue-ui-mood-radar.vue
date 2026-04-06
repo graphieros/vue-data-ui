@@ -1517,7 +1517,7 @@ defineExpose({
 
         <!-- LEGEND -->
         <Teleport
-            v-if="readyTeleport"
+            v-if="readyTeleport && FINAL_CONFIG.style.chart.legend.show"
             :to="
                 FINAL_CONFIG.style.chart.legend.position === 'top'
                     ? `#legend-top-${uid}`
