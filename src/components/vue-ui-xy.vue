@@ -7801,161 +7801,168 @@ defineExpose({
 
         <!-- LEGEND -->
         <Teleport
-            v-if="readyTeleport && FINAL_CONFIG.chart.legend.show"
+            v-if="
+                readyTeleport &&
+                (FINAL_CONFIG.chart.legend.show || $slots.legend)
+            "
             :to="
                 FINAL_CONFIG.chart.legend.position === 'top'
                     ? `#legend-top-${uniqueId}`
                     : `#legend-bottom-${uniqueId}`
             "
         >
-            <div
-                ref="chartLegend"
-                data-cy="xy-div-legend"
-                v-if="FINAL_CONFIG.chart.legend.show"
-                class="vue-ui-xy-legend"
-                :style="{
-                    fontSize: `var(--legend-font-size, ${FINAL_CONFIG.chart.legend.fontSize ?? 14}px)`,
-                }"
-            >
-                <BaseLegendToggle
-                    v-if="
-                        FINAL_CONFIG.chart.legend.selectAllToggle.show &&
-                        absoluteDataset.length > 2 &&
-                        !loading
-                    "
-                    :backgroundColor="
-                        FINAL_CONFIG.chart.legend.selectAllToggle
-                            .backgroundColor
-                    "
-                    :color="FINAL_CONFIG.chart.legend.selectAllToggle.color"
-                    :fontSize="FINAL_CONFIG.chart.legend.fontSize"
-                    :checked="segregatedSeries.length > 0"
-                    @toggle="toggleLegend"
-                />
-
-                <div
-                    v-for="(legendItem, i) in absoluteDataset"
-                    :data-cy="`xy-div-legend-item-${i}`"
-                    :key="`div_legend_item_${i}`"
-                    @click="segregate(legendItem)"
-                    @keydown="handleLegendKeydown($event, legendItem)"
-                    role="button"
-                    tabindex="0"
-                    :class="{
-                        'vue-ui-xy-legend-item-alone':
-                            absoluteDataset.length === 1,
-                        'vue-ui-xy-legend-item': true,
-                        'vue-ui-xy-legend-item-segregated':
-                            segregatedSeries.includes(legendItem.id),
-                    }"
-                    :style="{
-                        cursor: isCursorPointer ? 'pointer' : 'default',
-                    }"
-                >
-                    <svg
-                        v-if="icons[legendItem.type] === 'line'"
-                        viewBox="0 0 20 12"
-                        height="1em"
-                        width="1.43em"
-                        aria-hidden="true"
+            <div ref="chartLegend">
+                <slot name="legend" v-bind:legend="absoluteDataset">
+                    <div
+                        data-cy="xy-div-legend"
+                        v-if="FINAL_CONFIG.chart.legend.show"
+                        class="vue-ui-xy-legend"
+                        :style="{
+                            fontSize: `var(--legend-font-size, ${FINAL_CONFIG.chart.legend.fontSize ?? 14}px)`,
+                        }"
                     >
-                        <rect
-                            x="0"
-                            y="7.5"
-                            rx="1.5"
-                            :stroke="FINAL_CONFIG.chart.backgroundColor"
-                            :stroke-width="0.5"
-                            height="3"
-                            width="20"
-                            :fill="legendItem.color"
-                        />
-                        <Shape
-                            :plot="{ x: 10, y: 9 }"
-                            :radius="4"
-                            :color="legendItem.color"
-                            :shape="
-                                [
-                                    'triangle',
-                                    'square',
-                                    'diamond',
-                                    'pentagon',
-                                    'hexagon',
-                                    'star',
-                                ].includes(legendItem.shape)
-                                    ? legendItem.shape
-                                    : 'circle'
-                            "
-                            :stroke="FINAL_CONFIG.chart.backgroundColor"
-                            :strokeWidth="0.5"
-                        />
-                    </svg>
-                    <svg
-                        v-else-if="icons[legendItem.type] === 'bar'"
-                        viewBox="0 0 40 40"
-                        height="1em"
-                        width="1em"
-                        aria-hidden="true"
-                    >
-                        <rect
+                        <BaseLegendToggle
                             v-if="
-                                icons[legendItem.type] === 'bar' &&
-                                $slots.pattern
+                                FINAL_CONFIG.chart.legend.selectAllToggle
+                                    .show &&
+                                absoluteDataset.length > 2 &&
+                                !loading
                             "
-                            x="4"
-                            y="4"
-                            rx="1"
-                            height="32"
-                            width="32"
-                            stroke="none"
-                            :fill="legendItem.color"
-                        />
-                        <rect
-                            v-if="icons[legendItem.type] === 'bar'"
-                            x="4"
-                            y="4"
-                            rx="1"
-                            height="32"
-                            width="32"
-                            stroke="none"
-                            :fill="
-                                $slots.pattern
-                                    ? `url(#pattern_${uniqueId}_${legendItem.slotAbsoluteIndex})`
-                                    : legendItem.color
+                            :backgroundColor="
+                                FINAL_CONFIG.chart.legend.selectAllToggle
+                                    .backgroundColor
                             "
-                        />
-                    </svg>
-                    <svg
-                        v-else
-                        viewBox="0 0 12 12"
-                        height="1em"
-                        width="1em"
-                        aria-hidden="true"
-                    >
-                        <Shape
-                            :plot="{ x: 6, y: 6 }"
-                            :radius="5"
-                            :color="legendItem.color"
-                            :shape="
-                                [
-                                    'triangle',
-                                    'square',
-                                    'diamond',
-                                    'pentagon',
-                                    'hexagon',
-                                    'star',
-                                ].includes(legendItem.shape)
-                                    ? legendItem.shape
-                                    : 'circle'
+                            :color="
+                                FINAL_CONFIG.chart.legend.selectAllToggle.color
                             "
+                            :fontSize="FINAL_CONFIG.chart.legend.fontSize"
+                            :checked="segregatedSeries.length > 0"
+                            @toggle="toggleLegend"
                         />
-                    </svg>
-                    <span :style="`color:${FINAL_CONFIG.chart.legend.color}`">{{
-                        legendItem.name
-                    }}</span>
-                </div>
-            </div>
-            <div v-else ref="chartLegend">
-                <slot name="legend" v-bind:legend="absoluteDataset" />
+
+                        <div
+                            v-for="(legendItem, i) in absoluteDataset"
+                            :data-cy="`xy-div-legend-item-${i}`"
+                            :key="`div_legend_item_${i}`"
+                            @click="segregate(legendItem)"
+                            @keydown="handleLegendKeydown($event, legendItem)"
+                            role="button"
+                            tabindex="0"
+                            :class="{
+                                'vue-ui-xy-legend-item-alone':
+                                    absoluteDataset.length === 1,
+                                'vue-ui-xy-legend-item': true,
+                                'vue-ui-xy-legend-item-segregated':
+                                    segregatedSeries.includes(legendItem.id),
+                            }"
+                            :style="{
+                                cursor: isCursorPointer ? 'pointer' : 'default',
+                            }"
+                        >
+                            <svg
+                                v-if="icons[legendItem.type] === 'line'"
+                                viewBox="0 0 20 12"
+                                height="1em"
+                                width="1.43em"
+                                aria-hidden="true"
+                            >
+                                <rect
+                                    x="0"
+                                    y="7.5"
+                                    rx="1.5"
+                                    :stroke="FINAL_CONFIG.chart.backgroundColor"
+                                    :stroke-width="0.5"
+                                    height="3"
+                                    width="20"
+                                    :fill="legendItem.color"
+                                />
+                                <Shape
+                                    :plot="{ x: 10, y: 9 }"
+                                    :radius="4"
+                                    :color="legendItem.color"
+                                    :shape="
+                                        [
+                                            'triangle',
+                                            'square',
+                                            'diamond',
+                                            'pentagon',
+                                            'hexagon',
+                                            'star',
+                                        ].includes(legendItem.shape)
+                                            ? legendItem.shape
+                                            : 'circle'
+                                    "
+                                    :stroke="FINAL_CONFIG.chart.backgroundColor"
+                                    :strokeWidth="0.5"
+                                />
+                            </svg>
+                            <svg
+                                v-else-if="icons[legendItem.type] === 'bar'"
+                                viewBox="0 0 40 40"
+                                height="1em"
+                                width="1em"
+                                aria-hidden="true"
+                            >
+                                <rect
+                                    v-if="
+                                        icons[legendItem.type] === 'bar' &&
+                                        $slots.pattern
+                                    "
+                                    x="4"
+                                    y="4"
+                                    rx="1"
+                                    height="32"
+                                    width="32"
+                                    stroke="none"
+                                    :fill="legendItem.color"
+                                />
+                                <rect
+                                    v-if="icons[legendItem.type] === 'bar'"
+                                    x="4"
+                                    y="4"
+                                    rx="1"
+                                    height="32"
+                                    width="32"
+                                    stroke="none"
+                                    :fill="
+                                        $slots.pattern
+                                            ? `url(#pattern_${uniqueId}_${legendItem.slotAbsoluteIndex})`
+                                            : legendItem.color
+                                    "
+                                />
+                            </svg>
+                            <svg
+                                v-else
+                                viewBox="0 0 12 12"
+                                height="1em"
+                                width="1em"
+                                aria-hidden="true"
+                            >
+                                <Shape
+                                    :plot="{ x: 6, y: 6 }"
+                                    :radius="5"
+                                    :color="legendItem.color"
+                                    :shape="
+                                        [
+                                            'triangle',
+                                            'square',
+                                            'diamond',
+                                            'pentagon',
+                                            'hexagon',
+                                            'star',
+                                        ].includes(legendItem.shape)
+                                            ? legendItem.shape
+                                            : 'circle'
+                                    "
+                                />
+                            </svg>
+                            <span
+                                :style="`color:${FINAL_CONFIG.chart.legend.color}`"
+                                >{{ legendItem.name }}</span
+                            >
+                        </div>
+                    </div>
+                </slot>
             </div>
         </Teleport>
 

@@ -2163,7 +2163,10 @@ defineExpose({
 
         <!-- LEGEND -->
         <Teleport
-            v-if="readyTeleport && FINAL_CONFIG.style.chart.legend.show"
+            v-if="
+                readyTeleport &&
+                (FINAL_CONFIG.style.chart.legend.show || $slots.legend)
+            "
             :to="
                 FINAL_CONFIG.style.chart.legend.position === 'top'
                     ? `#legend-top-${uid}`
@@ -2171,43 +2174,46 @@ defineExpose({
             "
         >
             <div ref="chartLegend">
-                <Legend
-                    v-if="FINAL_CONFIG.style.chart.legend.show"
-                    :key="`legend_${legendStep}`"
-                    :legendSet="legendSet"
-                    :config="legendConfig"
-                    :isCursorPointer="isCursorPointer"
-                    @clickMarker="({ legend }) => selectLegendItem(legend.id)"
-                >
-                    <template
-                        #legend-pattern="{ legend, index }"
-                        v-if="$slots.pattern"
+                <slot name="legend" v-bind:legend="legendSet">
+                    <Legend
+                        v-if="FINAL_CONFIG.style.chart.legend.show"
+                        :key="`legend_${legendStep}`"
+                        :legendSet="legendSet"
+                        :config="legendConfig"
+                        :isCursorPointer="isCursorPointer"
+                        @clickMarker="
+                            ({ legend }) => selectLegendItem(legend.id)
+                        "
                     >
-                        <Shape
-                            :shape="legend.shape"
-                            :radius="30"
-                            stroke="none"
-                            :plot="{ x: 30, y: 30 }"
-                            :fill="`url(#pattern_${uid}_${index})`"
-                        />
-                    </template>
-                    <template #item="{ legend }">
-                        <div
-                            data-cy="legend-item"
-                            :style="{
-                                opacity: selectedLegendId
-                                    ? selectedLegendId === legend.id
-                                        ? 1
-                                        : 0.3
-                                    : 1,
-                            }"
-                            @click="legend.select()"
+                        <template
+                            #legend-pattern="{ legend, index }"
+                            v-if="$slots.pattern"
                         >
-                            {{ legend.name }}
-                        </div>
-                    </template>
-                </Legend>
-                <slot name="legend" v-bind:legend="legendSet" />
+                            <Shape
+                                :shape="legend.shape"
+                                :radius="30"
+                                stroke="none"
+                                :plot="{ x: 30, y: 30 }"
+                                :fill="`url(#pattern_${uid}_${index})`"
+                            />
+                        </template>
+                        <template #item="{ legend }">
+                            <div
+                                data-cy="legend-item"
+                                :style="{
+                                    opacity: selectedLegendId
+                                        ? selectedLegendId === legend.id
+                                            ? 1
+                                            : 0.3
+                                        : 1,
+                                }"
+                                @click="legend.select()"
+                            >
+                                {{ legend.name }}
+                            </div>
+                        </template>
+                    </Legend>
+                </slot>
             </div>
         </Teleport>
 

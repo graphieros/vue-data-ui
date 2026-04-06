@@ -1895,7 +1895,10 @@ defineExpose({
 
         <!-- LEGEND -->
         <Teleport
-            v-if="readyTeleport && FINAL_CONFIG.style.chart.legend.show"
+            v-if="
+                readyTeleport &&
+                (FINAL_CONFIG.style.chart.legend.show || $slots.legend)
+            "
             :to="
                 FINAL_CONFIG.style.chart.legend.position === 'top'
                     ? `#legend-top-${uid}`
@@ -1903,27 +1906,28 @@ defineExpose({
             "
         >
             <div ref="chartLegend">
-                <Legend
-                    v-if="
-                        FINAL_CONFIG.style.chart.legend.show &&
-                        legendSetFiltered.length
-                    "
-                    :legendSet="legendSetFiltered"
-                    :config="legendConfig"
-                    :isCursorPointer="isCursorPointer"
-                    @clickMarker="(payload) => drillCategory(payload)"
-                >
-                    <template #item="{ legend, index }">
-                        <div
-                            @click="legend.segregate()"
-                            :style="`opacity:${segregated.length ? (segregated.includes(index) ? 1 : 0.5) : 1}`"
-                            v-if="!loading"
-                        >
-                            {{ legend.display }}
-                        </div>
-                    </template>
-                </Legend>
-                <slot name="legend" v-bind:legend="legendSet" />
+                <slot name="legend" v-bind:legend="legendSet">
+                    <Legend
+                        v-if="
+                            FINAL_CONFIG.style.chart.legend.show &&
+                            legendSetFiltered.length
+                        "
+                        :legendSet="legendSetFiltered"
+                        :config="legendConfig"
+                        :isCursorPointer="isCursorPointer"
+                        @clickMarker="(payload) => drillCategory(payload)"
+                    >
+                        <template #item="{ legend, index }">
+                            <div
+                                @click="legend.segregate()"
+                                :style="`opacity:${segregated.length ? (segregated.includes(index) ? 1 : 0.5) : 1}`"
+                                v-if="!loading"
+                            >
+                                {{ legend.display }}
+                            </div>
+                        </template>
+                    </Legend>
+                </slot>
             </div>
         </Teleport>
 

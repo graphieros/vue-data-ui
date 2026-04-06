@@ -1465,6 +1465,10 @@ const customConfig = computed(() => {
         },
     });
 });
+
+function logLegend(legend) {
+    console.log({ legend });
+}
 </script>
 
 <template>
@@ -1729,6 +1733,7 @@ const customConfig = computed(() => {
                 <template #optionPdf> PRINT PDF </template>
                 <template #optionStack> STACK IT </template>
                 <template #legend="{ legend }">
+                    {{ logLegend(legend) }}
                     #LEGEND
                     <div style="font-size: 8px">
                         {{ legend }}

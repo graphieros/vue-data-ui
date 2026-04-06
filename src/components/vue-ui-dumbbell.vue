@@ -2395,7 +2395,10 @@ defineExpose({
 
         <!-- LEGEND -->
         <Teleport
-            v-if="readyTeleport && FINAL_CONFIG.style.chart.legend.show"
+            v-if="
+                readyTeleport &&
+                (FINAL_CONFIG.style.chart.legend.show || $slots.legend)
+            "
             :to="
                 FINAL_CONFIG.style.chart.legend.position === 'top'
                     ? `#legend-top-${uid}`
@@ -2403,41 +2406,42 @@ defineExpose({
             "
         >
             <div ref="chartLegend">
-                <Legend
-                    v-if="FINAL_CONFIG.style.chart.legend.show && isDataset"
-                    :key="`legend_${legendStep}`"
-                    :legendSet="legendSet"
-                    :config="legendConfig"
-                    :clickable="false"
-                >
-                    <template #item="{ legend }">
-                        <div
-                            :style="`display:flex;align-items:center;gap:4px;font-size:${FINAL_CONFIG.style.chart.legend.fontSize}px`"
-                        >
-                            <svg
-                                :xmlns="XMLNS"
-                                viewBox="0 0 20 20"
-                                :height="
-                                    FINAL_CONFIG.style.chart.legend.fontSize
-                                "
-                                :width="
-                                    FINAL_CONFIG.style.chart.legend.fontSize
-                                "
+                <slot name="legend" v-bind:legend="legendSet">
+                    <Legend
+                        v-if="FINAL_CONFIG.style.chart.legend.show && isDataset"
+                        :key="`legend_${legendStep}`"
+                        :legendSet="legendSet"
+                        :config="legendConfig"
+                        :clickable="false"
+                    >
+                        <template #item="{ legend }">
+                            <div
+                                :style="`display:flex;align-items:center;gap:4px;font-size:${FINAL_CONFIG.style.chart.legend.fontSize}px`"
                             >
-                                <circle
-                                    :cx="10"
-                                    :cy="10"
-                                    :r="9"
-                                    :fill="legend.color"
-                                />
-                            </svg>
-                            <template v-if="!loading">
-                                {{ legend.name }}
-                            </template>
-                        </div>
-                    </template>
-                </Legend>
-                <slot v-else name="legend" v-bind:legend="legendSet" />
+                                <svg
+                                    :xmlns="XMLNS"
+                                    viewBox="0 0 20 20"
+                                    :height="
+                                        FINAL_CONFIG.style.chart.legend.fontSize
+                                    "
+                                    :width="
+                                        FINAL_CONFIG.style.chart.legend.fontSize
+                                    "
+                                >
+                                    <circle
+                                        :cx="10"
+                                        :cy="10"
+                                        :r="9"
+                                        :fill="legend.color"
+                                    />
+                                </svg>
+                                <template v-if="!loading">
+                                    {{ legend.name }}
+                                </template>
+                            </div>
+                        </template>
+                    </Legend>
+                </slot>
             </div>
         </Teleport>
 

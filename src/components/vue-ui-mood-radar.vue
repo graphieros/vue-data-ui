@@ -1517,7 +1517,10 @@ defineExpose({
 
         <!-- LEGEND -->
         <Teleport
-            v-if="readyTeleport && FINAL_CONFIG.style.chart.legend.show"
+            v-if="
+                readyTeleport &&
+                (FINAL_CONFIG.style.chart.legend.show || $slots.legend)
+            "
             :to="
                 FINAL_CONFIG.style.chart.legend.position === 'top'
                     ? `#legend-top-${uid}`
@@ -1525,88 +1528,90 @@ defineExpose({
             "
         >
             <div ref="chartLegend">
-                <Legend
-                    v-if="FINAL_CONFIG.style.chart.legend.show"
-                    :legendSet="legendSet"
-                    :config="legendConfig"
-                    :key="`legend_${legendStep}`"
-                    :isCursorPointer="isCursorPointer"
-                    style="display: flex; row-gap: 6px"
-                    @focusMarker="({ legend }) => selectKey(legend.key)"
-                >
-                    <template #item="{ legend, index }">
-                        <div
-                            role="button"
-                            @click="() => selectKey(legend.key)"
-                            style="
-                                display: flex;
-                                flex-direction: row;
-                                gap: 3px;
-                                align-items: center;
-                                margin: 3px 0;
-                            "
-                            @keydown="onTrapKeydown($event, String(legend.key))"
-                        >
-                            <BaseIcon
-                                :strokeWidth="1"
-                                v-if="legend.key == 1"
-                                name="moodSad"
-                                :stroke="
-                                    FINAL_CONFIG.style.chart.layout.smileys
-                                        .colors[legend.key]
+                <slot name="legend" v-bind:legend="convertedDataset">
+                    <Legend
+                        v-if="FINAL_CONFIG.style.chart.legend.show"
+                        :legendSet="legendSet"
+                        :config="legendConfig"
+                        :key="`legend_${legendStep}`"
+                        :isCursorPointer="isCursorPointer"
+                        style="display: flex; row-gap: 6px"
+                        @focusMarker="({ legend }) => selectKey(legend.key)"
+                    >
+                        <template #item="{ legend, index }">
+                            <div
+                                role="button"
+                                @click="() => selectKey(legend.key)"
+                                style="
+                                    display: flex;
+                                    flex-direction: row;
+                                    gap: 3px;
+                                    align-items: center;
+                                    margin: 3px 0;
                                 "
-                            />
-                            <BaseIcon
-                                :strokeWidth="1"
-                                v-if="legend.key == 2"
-                                name="moodFlat"
-                                :stroke="
-                                    FINAL_CONFIG.style.chart.layout.smileys
-                                        .colors[legend.key]
+                                @keydown="
+                                    onTrapKeydown($event, String(legend.key))
                                 "
-                            />
-                            <BaseIcon
-                                :strokeWidth="1"
-                                v-if="legend.key == 3"
-                                name="moodNeutral"
-                                :stroke="
-                                    FINAL_CONFIG.style.chart.layout.smileys
-                                        .colors[legend.key]
-                                "
-                            />
-                            <BaseIcon
-                                :strokeWidth="1"
-                                v-if="legend.key == 4"
-                                name="smiley"
-                                :stroke="
-                                    FINAL_CONFIG.style.chart.layout.smileys
-                                        .colors[legend.key]
-                                "
-                            />
-                            <BaseIcon
-                                :strokeWidth="1"
-                                v-if="legend.key == 5"
-                                name="moodHappy"
-                                :stroke="
-                                    FINAL_CONFIG.style.chart.layout.smileys
-                                        .colors[legend.key]
-                                "
-                            />
-                            <span
-                                v-if="!loading"
-                                :style="{
-                                    fontWeight: FINAL_CONFIG.style.chart.legend
-                                        .bold
-                                        ? 'bold'
-                                        : 'normal',
-                                }"
-                                >{{ legend.display }}</span
                             >
-                        </div>
-                    </template>
-                </Legend>
-
-                <slot name="legend" v-bind:legend="convertedDataset"></slot>
+                                <BaseIcon
+                                    :strokeWidth="1"
+                                    v-if="legend.key == 1"
+                                    name="moodSad"
+                                    :stroke="
+                                        FINAL_CONFIG.style.chart.layout.smileys
+                                            .colors[legend.key]
+                                    "
+                                />
+                                <BaseIcon
+                                    :strokeWidth="1"
+                                    v-if="legend.key == 2"
+                                    name="moodFlat"
+                                    :stroke="
+                                        FINAL_CONFIG.style.chart.layout.smileys
+                                            .colors[legend.key]
+                                    "
+                                />
+                                <BaseIcon
+                                    :strokeWidth="1"
+                                    v-if="legend.key == 3"
+                                    name="moodNeutral"
+                                    :stroke="
+                                        FINAL_CONFIG.style.chart.layout.smileys
+                                            .colors[legend.key]
+                                    "
+                                />
+                                <BaseIcon
+                                    :strokeWidth="1"
+                                    v-if="legend.key == 4"
+                                    name="smiley"
+                                    :stroke="
+                                        FINAL_CONFIG.style.chart.layout.smileys
+                                            .colors[legend.key]
+                                    "
+                                />
+                                <BaseIcon
+                                    :strokeWidth="1"
+                                    v-if="legend.key == 5"
+                                    name="moodHappy"
+                                    :stroke="
+                                        FINAL_CONFIG.style.chart.layout.smileys
+                                            .colors[legend.key]
+                                    "
+                                />
+                                <span
+                                    v-if="!loading"
+                                    :style="{
+                                        fontWeight: FINAL_CONFIG.style.chart
+                                            .legend.bold
+                                            ? 'bold'
+                                            : 'normal',
+                                    }"
+                                    >{{ legend.display }}</span
+                                >
+                            </div>
+                        </template>
+                    </Legend>
+                </slot>
             </div>
         </Teleport>
 

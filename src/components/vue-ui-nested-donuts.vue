@@ -2570,7 +2570,10 @@ defineExpose({
 
         <!-- LEGEND -->
         <Teleport
-            v-if="readyTeleport && FINAL_CONFIG.style.chart.legend.show"
+            v-if="
+                readyTeleport &&
+                (FINAL_CONFIG.style.chart.legend.show || $slots.legend)
+            "
             :to="
                 FINAL_CONFIG.style.chart.legend.position === 'top'
                     ? `#legend-top-${uid}`
@@ -2584,64 +2587,66 @@ defineExpose({
                     'vue-ui-nested-donuts-legend': legendSets.length > 1,
                 }"
             >
-                <Legend
-                    v-for="(legendSet, i) in legendSets"
-                    :key="`legend_${i}_${legendStep}`"
-                    :legendSet="legendSet"
-                    :config="legendConfig"
-                    :isCursorPointer="isCursorPointer"
-                    @clickMarker="({ legend }) => segregateDonut(legend)"
-                >
-                    <template #legendTitle="{ titleSet }">
-                        <div
-                            class="vue-ui-nested-donuts-legend-title"
-                            v-if="titleSet[0] && titleSet[0].arcOf"
-                        >
-                            {{ titleSet[0].arcOf }}
-                        </div>
-                    </template>
-                    <template #item="{ legend, index }">
-                        <div
-                            data-cy="legend-item"
-                            @click="segregateDonut(legend)"
-                            :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`"
-                        >
-                            {{ legend.display }}
-                        </div>
-                    </template>
+                <slot name="legend" v-bind:legend="legendSets">
+                    <Legend
+                        v-for="(legendSet, i) in legendSets"
+                        :key="`legend_${i}_${legendStep}`"
+                        :legendSet="legendSet"
+                        :config="legendConfig"
+                        :isCursorPointer="isCursorPointer"
+                        @clickMarker="({ legend }) => segregateDonut(legend)"
+                    >
+                        <template #legendTitle="{ titleSet }">
+                            <div
+                                class="vue-ui-nested-donuts-legend-title"
+                                v-if="titleSet[0] && titleSet[0].arcOf"
+                            >
+                                {{ titleSet[0].arcOf }}
+                            </div>
+                        </template>
+                        <template #item="{ legend, index }">
+                            <div
+                                data-cy="legend-item"
+                                @click="segregateDonut(legend)"
+                                :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`"
+                            >
+                                {{ legend.display }}
+                            </div>
+                        </template>
 
-                    <template #legendToggle>
-                        <BaseLegendToggle
-                            :key="`toggle-${i}`"
-                            v-if="
-                                legendSet.length > 2 &&
-                                FINAL_CONFIG.style.chart.legend.selectAllToggle
-                                    .show &&
-                                !loading
-                            "
-                            :backgroundColor="
-                                FINAL_CONFIG.style.chart.legend.selectAllToggle
-                                    .backgroundColor
-                            "
-                            :color="
-                                FINAL_CONFIG.style.chart.legend.selectAllToggle
-                                    .color
-                            "
-                            :fontSize="FINAL_CONFIG.style.chart.legend.fontSize"
-                            :checked="
-                                legendSet.some((l) => segregated.includes(l.id))
-                            "
-                            :isCursorPointer="isCursorPointer"
-                            @toggle="toggleLegend(legendSet)"
-                        />
-                    </template>
-                </Legend>
+                        <template #legendToggle>
+                            <BaseLegendToggle
+                                :key="`toggle-${i}`"
+                                v-if="
+                                    legendSet.length > 2 &&
+                                    FINAL_CONFIG.style.chart.legend
+                                        .selectAllToggle.show &&
+                                    !loading
+                                "
+                                :backgroundColor="
+                                    FINAL_CONFIG.style.chart.legend
+                                        .selectAllToggle.backgroundColor
+                                "
+                                :color="
+                                    FINAL_CONFIG.style.chart.legend
+                                        .selectAllToggle.color
+                                "
+                                :fontSize="
+                                    FINAL_CONFIG.style.chart.legend.fontSize
+                                "
+                                :checked="
+                                    legendSet.some((l) =>
+                                        segregated.includes(l.id),
+                                    )
+                                "
+                                :isCursorPointer="isCursorPointer"
+                                @toggle="toggleLegend(legendSet)"
+                            />
+                        </template>
+                    </Legend>
+                </slot>
             </div>
         </Teleport>
-
-        <div ref="chartLegend" v-if="!FINAL_CONFIG.style.chart.legend.show">
-            <slot name="legend" v-bind:legend="legendSets"></slot>
-        </div>
 
         <div v-if="$slots.source" ref="source" dir="auto">
             <slot name="source" />

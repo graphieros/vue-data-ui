@@ -1110,7 +1110,10 @@ defineExpose({
 
         <!-- LEGEND -->
         <Teleport
-            v-if="readyTeleport && FINAL_CONFIG.style.chart.legend.show"
+            v-if="
+                readyTeleport &&
+                (FINAL_CONFIG.style.chart.legend.show || $slots.legend)
+            "
             :to="
                 FINAL_CONFIG.style.chart.legend.position === 'top'
                     ? `#legend-top-${uid}`
@@ -1118,26 +1121,27 @@ defineExpose({
             "
         >
             <div ref="chartLegend">
-                <Legend
-                    v-if="FINAL_CONFIG.style.chart.legend.show"
-                    :clickable="false"
-                    :legendSet="legendSet"
-                    :config="legendConfig"
-                >
-                    <template #item="{ legend }">
-                        <div
-                            class="vue-ui-bullet-legend-item"
-                            dir="auto"
-                            v-if="!loading"
-                        >
-                            <span style="margin-right: 2px"
-                                >{{ legend.name }}:</span
+                <slot name="legend" v-bind:legend="legendSet">
+                    <Legend
+                        v-if="FINAL_CONFIG.style.chart.legend.show"
+                        :clickable="false"
+                        :legendSet="legendSet"
+                        :config="legendConfig"
+                    >
+                        <template #item="{ legend }">
+                            <div
+                                class="vue-ui-bullet-legend-item"
+                                dir="auto"
+                                v-if="!loading"
                             >
-                            <span>{{ legend.value }}</span>
-                        </div>
-                    </template>
-                </Legend>
-                <slot name="legend" v-bind:legend="legendSet" />
+                                <span style="margin-right: 2px"
+                                    >{{ legend.name }}:</span
+                                >
+                                <span>{{ legend.value }}</span>
+                            </div>
+                        </template>
+                    </Legend>
+                </slot>
             </div>
         </Teleport>
 

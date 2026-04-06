@@ -2772,7 +2772,10 @@ defineExpose({
 
         <!-- LEGEND -->
         <Teleport
-            v-if="readyTeleport && FINAL_CONFIG.style.chart.legend.show"
+            v-if="
+                readyTeleport &&
+                (FINAL_CONFIG.style.chart.legend.show || $slots.legend)
+            "
             :to="
                 FINAL_CONFIG.style.chart.legend.position === 'top'
                     ? `#legend-top-${uid}`
@@ -2780,49 +2783,52 @@ defineExpose({
             "
         >
             <div ref="chartLegend">
-                <Legend
-                    v-if="FINAL_CONFIG.style.chart.legend.show"
-                    :key="`legend_${legendStep}`"
-                    :legendSet="legendSet"
-                    :config="legendConfig"
-                    :isCursorPointer="isCursorPointer"
-                    @clickMarker="({ legend }) => segregate(legend.id)"
-                >
-                    <template #item="{ legend }">
-                        <div
-                            data-cy="legend-item"
-                            @click="segregate(legend.id)"
-                            :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`"
-                            v-if="!loading"
-                        >
-                            {{ legend.name }}
-                        </div>
-                    </template>
+                <slot name="legend" v-bind:legend="legendSet">
+                    <Legend
+                        v-if="FINAL_CONFIG.style.chart.legend.show"
+                        :key="`legend_${legendStep}`"
+                        :legendSet="legendSet"
+                        :config="legendConfig"
+                        :isCursorPointer="isCursorPointer"
+                        @clickMarker="({ legend }) => segregate(legend.id)"
+                    >
+                        <template #item="{ legend }">
+                            <div
+                                data-cy="legend-item"
+                                @click="segregate(legend.id)"
+                                :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`"
+                                v-if="!loading"
+                            >
+                                {{ legend.name }}
+                            </div>
+                        </template>
 
-                    <template #legendToggle>
-                        <BaseLegendToggle
-                            v-if="
-                                legendSet.length > 2 &&
-                                FINAL_CONFIG.style.chart.legend.selectAllToggle
-                                    .show &&
-                                !loading
-                            "
-                            :backgroundColor="
-                                FINAL_CONFIG.style.chart.legend.selectAllToggle
-                                    .backgroundColor
-                            "
-                            :color="
-                                FINAL_CONFIG.style.chart.legend.selectAllToggle
-                                    .color
-                            "
-                            :fontSize="FINAL_CONFIG.style.chart.legend.fontSize"
-                            :checked="segregated.length > 0"
-                            :isCursorPointer="isCursorPointer"
-                            @toggle="toggleLegend"
-                        />
-                    </template>
-                </Legend>
-                <slot v-else name="legend" v-bind:legend="legendSet"></slot>
+                        <template #legendToggle>
+                            <BaseLegendToggle
+                                v-if="
+                                    legendSet.length > 2 &&
+                                    FINAL_CONFIG.style.chart.legend
+                                        .selectAllToggle.show &&
+                                    !loading
+                                "
+                                :backgroundColor="
+                                    FINAL_CONFIG.style.chart.legend
+                                        .selectAllToggle.backgroundColor
+                                "
+                                :color="
+                                    FINAL_CONFIG.style.chart.legend
+                                        .selectAllToggle.color
+                                "
+                                :fontSize="
+                                    FINAL_CONFIG.style.chart.legend.fontSize
+                                "
+                                :checked="segregated.length > 0"
+                                :isCursorPointer="isCursorPointer"
+                                @toggle="toggleLegend"
+                            />
+                        </template>
+                    </Legend>
+                </slot>
             </div>
         </Teleport>
 
