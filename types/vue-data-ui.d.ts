@@ -1,5 +1,5 @@
 declare module 'vue-data-ui' {
-    import { Ref, DefineComponent } from 'vue';
+    import { Ref, DefineComponent, VNodeChild } from 'vue';
 
     export type VueUiUnknownObj = {
         [key: string]: unknown;
@@ -418,6 +418,7 @@ declare module 'vue-data-ui' {
             tooltip?: boolean;
             svg?: boolean;
             zoom?: boolean;
+            altCopy?: boolean;
         };
         buttonTitles?: {
             animation?: string;
@@ -435,6 +436,7 @@ declare module 'vue-data-ui' {
             tooltip?: string;
             svg?: string;
             zoom?: string;
+            altCopy?: string;
         };
         callbacks?: ChartCallbacks<TDataset, TConfig>;
         print?: {
@@ -4223,45 +4225,54 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiXyDatasetBarItem = {
+        [key: string]: unknown;
         absoluteValues: Array<number | null>;
         color: string;
         id: string;
         name: string;
-        plots: Array<{ x: number; y: number; value: number }>;
+        plots?: Array<{ x: number; y: number; value: number }>;
         series: Array<number | null>;
         type: 'bar';
+        isSegregated: boolean;
+        segregate: () => void;
     };
 
     export type VueUiXyDatasetLineItem = {
+        [key: string]: unknown;
         absoluteValues: Array<number | null>;
         area: string;
         color: string;
         curve: string;
-        dataLabels: boolean;
+        dataLabels?: boolean;
         id: string;
         name: string;
-        plots: Array<{ x: number; y: number; value: number }>;
+        plots?: Array<{ x: number; y: number; value: number }>;
         series: Array<number | null>;
-        shape: Shape | null;
+        shape?: Shape | null;
         type: 'line';
-        useArea: boolean;
-        useProgression: boolean;
+        useArea?: boolean;
+        useProgression?: boolean;
         smooth?: boolean;
         useTag?: boolean;
         dashIndices?: number[];
+        isSegregated: boolean;
+        segregate: () => void;
     };
 
     export type VueUiXyDatasetPlotItem = {
+        [key: string]: unknown;
         absoluteValues: Array<number | null>;
         color: string;
         id: string;
         name: string;
-        plots: Array<{ x: number; y: number; value: number }>;
+        plots?: Array<{ x: number; y: number; value: number }>;
         series: Array<number | null>;
         shape: Shape | null;
         type: 'plot';
         useTag?: boolean;
         useProgression?: boolean;
+        isSegregated: boolean;
+        segregate: () => void;
     };
 
     export type VueUiXySeries = Array<
@@ -4300,18 +4311,217 @@ declare module 'vue-data-ui' {
         hideSeries(name: string): void;
     };
 
-    export const VueUiXy: DefineComponent<
-        {
-            config?: VueUiXyConfig;
-            dataset: VueUiXyDatasetItem[];
-            selectedXIndex?: number | null; // v3
-        },
-        VueUiXyExpose
-    >;
+    export type VueUiXyProps = {
+        config?: VueUiXyConfig;
+        dataset: VueUiXyDatasetItem[];
+        selectedXIndex?: number | null;
+    };
+
+    declare const VueUiXyBase: DefineComponent<VueUiXyProps>;
+
+    export type VueUiXyLegendSlotProps = VueUiXySeries;
+    export type VueUiResetActionSlotProps = () => void;
+    export type VueUiXyTooltipSlotProps = {
+        [key: string]: unknown;
+        bars: VueUiXyDatasetBarItem[];
+        lines: VueUiXyDatasetLineItem[];
+        plots: VueUiXyDatasetPlotItem[];
+        config: VueUiXyConfig;
+        datapoint: Array<{
+            [key: string]: unknown;
+            color: string;
+            comments: string[];
+            name: string;
+            prefix: string;
+            shape: Shape;
+            slotAbsoluteIndex: number;
+            suffix: string;
+            type: 'line' | 'bar' | 'plot';
+            value: number | null;
+        }>;
+        series: Array<VueUiXySeries>;
+        seriesIndex: number;
+        timeLabel: {
+            absoluteIndex: number;
+            text: string;
+        };
+    };
+    export type VueUiAnnotatorActionColorSlotProps = { color: string };
+    export type VueUiAnnotatorActionDrawSlotProps = {
+        mode: 'arrow' | 'text' | 'line' | 'draw';
+    };
+    export type VueUiAnnotatorActionUndoSlotProps = { disabled: boolean };
+    export type VueUiAnnotatorActionRedoSlotProps = { disabled: boolean };
+    export type VueUiAnnotatorActionDeleteSlotProps = { disabled: boolean };
+    export type VueUiMenuIconSlotProps = { isOpen: boolean; color: string };
+    export type VueUiOptionStackSlotProps = { isStack: boolean };
+    export type VueUiOptionFullscreenSlotProps = {
+        toggleFullscreen: () => void;
+        isFullscreen: boolean;
+    };
+    export type VueUiOptionAnnotatorSlotProps = {
+        toggleAnnotator: () => void;
+        isAnnotator: boolean;
+    };
+    export type VueUiXyOptionCopyAltSlotProps = {
+        copyAlt: ({
+            config,
+            dataset,
+        }: {
+            config: VueUiXyConfig;
+            dataset: {
+                lines: VueUiXyDatasetLineItem[];
+                bars: VueUiXyDatasetBarItem[];
+                plots: VueUiXyDatasetPlotItem[];
+            };
+        }) => void;
+    };
+    export type VueUiXyBarGradientSlotProps = {
+        series: VueUiXyDatasetBarItem;
+        positiveId: string;
+        negativeId: string;
+    };
+    export type VueUiXyAreaGradientSlotProps = {
+        series: VueUiXyDatasetLineItem;
+        id: string;
+    };
+    export type VueUiXyPlot = {
+        comment: string;
+        individualHeight: number | null;
+        individualMax: number | null;
+        value: number | null;
+        x: number;
+        y: number;
+        yOffset: number;
+        zeroPosition: number;
+    };
+    export type VueUiXyPlotCommentSlotProps = {
+        plot: VueUiXyPlot;
+        color: string;
+        seriesIndex: number;
+        datapointIndex: number;
+    };
+    export type VueUiXyPatternSlotProps = {
+        [key: string]: unknown;
+        seriesIndex: number;
+        patternId: string;
+    };
+    export type VueUiXyTimeLabelSlotProps = {
+        x: number;
+        y: number;
+        fontSize: number;
+        fill: string;
+        transform: string;
+        absoluteIndex: number;
+        content: string;
+        textAnchor: 'start' | 'end' | 'middle';
+        show: boolean;
+    };
+    export type VueUiXySvgSlotProps = {
+        isPrintingImg?: boolean;
+        isPrintingSvg?: boolean;
+        data: Array<
+            | VueUiXyDatasetLineItem
+            | VueUiXyDatasetBarItem
+            | VueUiXyDatasetPlotItem
+        >;
+        drawingArea: {
+            top: number;
+            right: number;
+            bottom: number;
+            left: number;
+            height: number;
+            width: number;
+            scaleLabelX: number;
+            individualOffsetX: number;
+        };
+        height: number;
+        width: number;
+    };
+    export type VueUiKeyboardNavigationHintSlotProps = {
+        hint: string;
+        isVisible: boolean;
+    };
+    export type VueUiWatermarkSlotProps = {
+        isPrinting: boolean;
+    };
+
+    export const VueUiXy: typeof VueUiXyBase & {
+        new (): VueUiXyExpose & {
+            $slots: {
+                legend?: (props: VueUiXyLegendSlotProps) => VNodeChild;
+                ['resest-action']?: (
+                    props: VueUiResetActionSlotProps,
+                ) => VNodeChild;
+                ['tooltip-before']?: (
+                    props: VueUiXyTooltipSlotProps,
+                ) => VNodeChild;
+                tooltip?: (props: VueUiXyTooltipSlotProps) => VNodeChild;
+                ['tooltip-after']?: (
+                    props: VueUiXyTooltipSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-close']?: () => VNodeChild;
+                ['annotator-action-color']?: (
+                    props: VueUiAnnotatorActionColorSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-draw']?: (
+                    props: VueUiAnnotatorActionDrawSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-undo']?: (
+                    props: VueUiAnnotatorActionUndoSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-redo']?: (
+                    props: VueUiAnnotatorActionRedoSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-delete']?: (
+                    props: VueUiAnnotatorActionDeleteSlotProps,
+                ) => VNodeChild;
+                menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
+                optionTooltip?: () => VNodeChild;
+                optionPdf?: () => VNodeChild;
+                optionCsv?: () => VNodeChild;
+                optionImg?: () => VNodeChild;
+                optionSvg?: () => VNodeChild;
+                optionTable?: () => VNodeChild;
+                optionLabels?: () => VNodeChild;
+                optionStack?: (props: VueUiOptionStackSlotProps) => VNodeChild;
+                optionFullscreen?: (
+                    props: VueUiOptionFullscreenSlotProps,
+                ) => VNodeChild;
+                optionAnnotator?: (
+                    props: VueUiOptionAnnotatorSlotProps,
+                ) => VNodeChild;
+                optionAltCopy?: (
+                    props: VueUiXyOptionCopyAltSlotProps,
+                ) => VNodeChild;
+                ['chart-background']?: () => VNodeChild;
+                ['bar-gradient']?: (
+                    props: VueUiXyBarGradientSlotProps,
+                ) => VNodeChild;
+                ['area-gradient']?: (
+                    props: VueUiXyAreaGradientSlotProps,
+                ) => VNodeChild;
+                ['plot-comment']?: (
+                    props: VueUiXyPlotCommentSlotProps,
+                ) => VNodeChild;
+                pattern?: (props: VueUiXyPatternSlotProps) => VNodeChild;
+                ['time-label']?: (
+                    props: VueUiXyTimeLabelSlotProps,
+                ) => VNodeChild;
+                svg?: (props: VueUiXySvgSlotProps) => VNodeChild;
+                hint?: (
+                    props: VueUiKeyboardNavigationHintSlotProps,
+                ) => VNodeChild;
+                watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
+                source?: () => VNodeChild;
+                skeleton?: () => VNodeChild;
+            };
+        };
+    };
 
     export type VueUiDonutConfig = {
         skeletonDataset?: VueUiBuiltInSkeletonDataset<VueUiDonutDatasetItem[]>;
-        skeletonConffig?: VueUiBuiltInSkeletonConfig<VueUiDonutConfig>;
+        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiDonutConfig>;
         debug?: boolean;
         type?: 'classic' | 'polar';
         loading?: boolean;

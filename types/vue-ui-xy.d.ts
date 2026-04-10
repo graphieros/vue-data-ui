@@ -1,4 +1,4 @@
-import { DefineComponent } from 'vue';
+import { DefineComponent, VNodeChild } from 'vue';
 
 export type {
     VueUiXyHighlightArea,
@@ -12,16 +12,96 @@ export type {
     VueUiXyDatapointItem,
     VueUiXyExpose,
     VueUiXyEvent,
+    VueUiXyProps,
+    VueUiXyLegendSlotProps,
+    VueUiResetActionSlotProps,
+    VueUiXyTooltipSlotProps,
+    VueUiAnnotatorActionColorSlotProps,
+    VueUiAnnotatorActionDrawSlotProps,
+    VueUiAnnotatorActionUndoSlotProps,
+    VueUiAnnotatorActionRedoSlotProps,
+    VueUiAnnotatorActionDeleteSlotProps,
+    VueUiMenuIconSlotProps,
+    VueUiOptionStackSlotProps,
+    VueUiOptionFullscreenSlotProps,
+    VueUiOptionAnnotatorSlotProps,
+    VueUiOptionAltCopySlotProps,
+    VueUiXyBarGradientSlotProps,
+    VueUiXyAreaGradientSlotProps,
+    VueUiXyPlotCommentSlotProps,
+    VueUiXyPatternSlotProps,
+    VueUiXyTimeLabelSlotProps,
+    VueUiXySvgSlotProps,
+    VueUiKeyboardNavigationHintSlotProps,
+    VueUiWatermarkSlotProps,
 } from './vue-data-ui';
 
-declare const VueUiXy: DefineComponent<
-    {
-        config?: VueUiXyConfig;
-        dataset: VueUiXyDatasetItem[];
-        selectedXIndex?: number | null;
-    },
-    VueUiXyExpose
->;
+declare const VueUiXyBase: DefineComponent<VueUiXyProps>;
+
+export const VueUiXy: typeof VueUiXyBase & {
+    new (): VueUiXyExpose & {
+        $slots: {
+            legend?: (props: VueUiXyLegendSlotProps) => VNodeChild;
+            ['resest-action']?: (
+                props: VueUiResetActionSlotProps,
+            ) => VNodeChild;
+            ['tooltip-before']?: (props: VueUiXyTooltipSlotProps) => VNodeChild;
+            tooltip?: (props: VueUiXyTooltipSlotProps) => VNodeChild;
+            ['tooltip-after']?: (props: VueUiXyTooltipSlotProps) => VNodeChild;
+            ['annotator-action-close']?: () => VNodeChild;
+            ['annotator-action-color']?: (
+                props: VueUiAnnotatorActionColorSlotProps,
+            ) => VNodeChild;
+            ['annotator-action-draw']?: (
+                props: VueUiAnnotatorActionDrawSlotProps,
+            ) => VNodeChild;
+            ['annotator-action-undo']?: (
+                props: VueUiAnnotatorActionUndoSlotProps,
+            ) => VNodeChild;
+            ['annotator-action-redo']?: (
+                props: VueUiAnnotatorActionRedoSlotProps,
+            ) => VNodeChild;
+            ['annotator-action-delete']?: (
+                props: VueUiAnnotatorActionDeleteSlotProps,
+            ) => VNodeChild;
+            menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
+            optionTooltip?: () => VNodeChild;
+            optionPdf?: () => VNodeChild;
+            optionCsv?: () => VNodeChild;
+            optionImg?: () => VNodeChild;
+            optionSvg?: () => VNodeChild;
+            optionTable?: () => VNodeChild;
+            optionLabels?: () => VNodeChild;
+            optionStack?: (props: VueUiOptionStackSlotProps) => VNodeChild;
+            optionFullscreen?: (
+                props: VueUiOptionFullscreenSlotProps,
+            ) => VNodeChild;
+            optionAnnotator?: (
+                props: VueUiOptionAnnotatorSlotProps,
+            ) => VNodeChild;
+            optionAltCopy?: (
+                props: VueUiXyOptionCopyAltSlotProps,
+            ) => VNodeChild;
+            ['chart-background']?: () => VNodeChild;
+            ['bar-gradient']?: (
+                props: VueUiXyBarGradientSlotProps,
+            ) => VNodeChild;
+            ['area-gradient']?: (
+                props: VueUiXyAreaGradientSlotProps,
+            ) => VNodeChild;
+            ['plot-comment']?: (
+                props: VueUiXyPlotCommentSlotProps,
+            ) => VNodeChild;
+            pattern?: (props: VueUiXyPatternSlotProps) => VNodeChild;
+            ['time-label']?: (props: VueUiXyTimeLabelSlotProps) => VNodeChild;
+            svg?: (props: VueUiXySvgSlotProps) => VNodeChild;
+            hint?: (props: VueUiKeyboardNavigationHintSlotProps) => VNodeChild;
+            watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
+            source?: () => VNodeChild;
+            skeleton?: () => VNodeChild;
+        };
+    };
+};
 
 export default VueUiXy;
 export { VueUiXy };
