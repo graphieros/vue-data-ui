@@ -1,0 +1,31 @@
+{
+    "name": "ts-playground",
+    "version": "0.0.0",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "dev": "vite",
+        "build": "run-p type-check \"build-only {@}\" --",
+        "preview": "vite preview",
+        "build-only": "vite build",
+        "type-check": "vue-tsc --build"
+    },
+    "dependencies": {
+        "vue": "^3.5.31"
+    },
+    "devDependencies": {
+        "@tsconfig/node24": "^24.0.4",
+        "@types/node": "^24.12.0",
+        "@vitejs/plugin-vue": "^6.0.5",
+        "@vue/tsconfig": "^0.9.1",
+        "npm-run-all2": "^8.0.4",
+        "typescript": "~6.0.0",
+        "vite": "^8.0.3",
+        "vite-plugin-vue-devtools": "^8.1.1",
+        "vue-tsc": "^3.2.6",
+        "vue-data-ui": "file:../../vue-data-ui"
+    },
+    "engines": {
+        "node": "^20.19.0 || >=22.12.0"
+    }
+}

@@ -1150,6 +1150,23 @@
             "id": "2e9cefe1-1664-431e-a078-b2088ea2bbeb",
             "createdAt": 1775300014073,
             "updatedAt": 1775374798605
+        },
+        {
+            "title": "Make VueUiQuadrant more flexible",
+            "component": "VueUiQuadrant",
+            "description": "- Option to position axis labels on both sides or specific sides only",
+            "priority": 0,
+            "author": "graphieros",
+            "done": false,
+            "exchanges": [],
+            "type": "feature",
+            "withComponentCheckList": false,
+            "checkList": {},
+            "withCustomCheckList": false,
+            "customCheckList": {},
+            "id": "c1700cc2-dd89-4709-9877-9e48cfd72a09",
+            "createdAt": 1775660582373,
+            "updatedAt": 1775660603925
         }
     ]
 }
