@@ -317,7 +317,7 @@ const observedEl = shallowRef(null);
 
 onMounted(async () => {
     prepareChart();
-    await nextTick()
+    await nextTick();
     readyTeleport.value = true;
 });
 
@@ -2296,7 +2296,7 @@ defineExpose({
         </div>
 
         <A11yDataTable
-            v-if="a11yTable?.rows?.length"
+            v-if="a11yTable?.rows?.length && isDataset"
             :uid="uid"
             :head="a11yTable.headers"
             :body="a11yTable.rows"
