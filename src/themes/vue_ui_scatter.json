@@ -26,6 +26,9 @@
                 },
                 "plots": {
                     "stroke": "#1A1A1A",
+                    "name": {
+                        "color": "#CCCCCC"
+                    },
                     "selectors": {
                         "stroke": "#5A5A5A",
                         "labels": {
@@ -44,10 +47,26 @@
                 },
                 "dataLabels": {
                     "xAxis": {
-                        "color": "#CCCCCC"
+                        "color": "#CCCCCC",
+                        "scales": {
+                            "labels": {
+                                "color": "#CCCCCC"
+                            },
+                            "verticalLines": {
+                                "stroke": "#5A5A5A"
+                            }
+                        }
                     },
                     "yAxis": {
-                        "color": "#CCCCCC"
+                        "color": "#CCCCCC",
+                        "scales": {
+                            "labels": {
+                                "color": "#CCCCCC"
+                            }
+                        },
+                        "horizontalLines": {
+                            "stroke": "#5A5A5A"
+                        }
                     }
                 }
             },
@@ -97,6 +116,9 @@
                 },
                 "plots": {
                     "stroke": "#1A1A1A",
+                    "name": {
+                        "color": "#CCCCCC"
+                    },
                     "selectors": {
                         "stroke": "#5A5A5A",
                         "labels": {
@@ -115,10 +137,26 @@
                 },
                 "dataLabels": {
                     "xAxis": {
-                        "color": "#CCCCCC"
+                        "color": "#CCCCCC",
+                        "scales": {
+                            "labels": {
+                                "color": "#CCCCCC"
+                            },
+                            "verticalLines": {
+                                "stroke": "#5A5A5A"
+                            }
+                        }
                     },
                     "yAxis": {
-                        "color": "#CCCCCC"
+                        "color": "#CCCCCC",
+                        "scales": {
+                            "labels": {
+                                "color": "#CCCCCC"
+                            },
+                            "horizontalLines": {
+                                "stroke": "#5A5A5A"
+                            }
+                        }
                     }
                 }
             },
@@ -167,6 +205,9 @@
                 },
                 "plots": {
                     "stroke": "#FFF8E1",
+                    "name": {
+                        "color": "#424242"
+                    },
                     "selectors": {
                         "stroke": "#5D4037",
                         "labels": {
@@ -185,10 +226,26 @@
                 },
                 "dataLabels": {
                     "xAxis": {
-                        "color": "#424242"
+                        "color": "#424242",
+                        "scales": {
+                            "labels": {
+                                "color": "#424242"
+                            },
+                            "verticalLines": {
+                                "stroke": "#5D403790"
+                            }
+                        }
                     },
                     "yAxis": {
-                        "color": "#424242"
+                        "color": "#424242",
+                        "scales": {
+                            "labels": {
+                                "color": "#424242"
+                            },
+                            "horizontalLines": {
+                                "stroke": "#5D403790"
+                            }
+                        }
                     }
                 }
             },
@@ -237,6 +294,9 @@
                 },
                 "plots": {
                     "stroke": "#1E1E1E",
+                    "name": {
+                        "color": "#BDBDBD"
+                    },
                     "selectors": {
                         "stroke": "#BDBDBD",
                         "labels": {
@@ -255,10 +315,26 @@
                 },
                 "dataLabels": {
                     "xAxis": {
-                        "color": "#BDBDBD"
+                        "color": "#BDBDBD",
+                        "scales": {
+                            "labels": {
+                                "color": "#BDBDBD"
+                            },
+                            "verticalLines": {
+                                "stroke": "#5D403750"
+                            }
+                        }
                     },
                     "yAxis": {
-                        "color": "#BDBDBD"
+                        "color": "#BDBDBD",
+                        "scales": {
+                            "labels": {
+                                "color": "#BDBDBD"
+                            },
+                            "horizontalLines": {
+                                "stroke": "#5D403750"
+                            }
+                        }
                     }
                 }
             },
@@ -307,6 +383,9 @@
                 },
                 "plots": {
                     "stroke": "#1A1A1A",
+                    "name": {
+                        "color": "#AACCAA"
+                    },
                     "selectors": {
                         "stroke": "#66CC66",
                         "labels": {
@@ -325,10 +404,26 @@
                 },
                 "dataLabels": {
                     "xAxis": {
-                        "color": "#AACCAA"
+                        "color": "#AACCAA",
+                        "scales": {
+                            "labels": {
+                                "color": "#AACCAA"
+                            },
+                            "verticalLines": {
+                                "stroke": "#334C3350"
+                            }
+                        }
                     },
                     "yAxis": {
-                        "color": "#AACCAA"
+                        "color": "#AACCAA",
+                        "scales": {
+                            "labels": {
+                                "color": "#AACCAA"
+                            },
+                            "horizontalLines": {
+                                "stroke": "#334C3350"
+                            }
+                        }
                     }
                 }
             },
@@ -376,6 +471,9 @@
                 },
                 "plots": {
                     "stroke": "#fbfafa",
+                    "name": {
+                        "color": "#928A98"
+                    },
                     "selectors": {
                         "stroke": "#4F5B75",
                         "labels": {
@@ -394,10 +492,20 @@
                 },
                 "dataLabels": {
                     "xAxis": {
-                        "color": "#928A98"
+                        "color": "#928A98",
+                        "scales": {
+                            "labels": {
+                                "color": "#928A98"
+                            }
+                        }
                     },
                     "yAxis": {
-                        "color": "#928A98"
+                        "color": "#928A98",
+                        "scales": {
+                            "labels": {
+                                "color": "#928A98"
+                            }
+                        }
                     }
                 }
             },
@@ -444,6 +552,9 @@
                 },
                 "plots": {
                     "stroke": "#fbfafa",
+                    "name": {
+                        "color": "#404C4D"
+                    },
                     "selectors": {
                         "stroke": "#4F5B75",
                         "labels": {
@@ -462,10 +573,26 @@
                 },
                 "dataLabels": {
                     "xAxis": {
-                        "color": "#61747E"
+                        "color": "#61747E",
+                        "scales": {
+                            "labels": {
+                                "color": "#61747E"
+                            },
+                            "verticalLines": {
+                                "stroke": "#92B0B590"
+                            }
+                        }
                     },
                     "yAxis": {
-                        "color": "#61747E"
+                        "color": "#61747E",
+                        "scales": {
+                            "labels": {
+                                "color": "#61747E"
+                            },
+                            "horizontalLines": {
+                                "stroke": "#92B0B590"
+                            }
+                        }
                     }
                 }
             },
