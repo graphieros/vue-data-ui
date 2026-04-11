@@ -2597,6 +2597,10 @@ export function useConfig(options = {}) {
                     show: true,
                     stroke: COLOR_GRID,
                     strokeWidth: 1,
+                    xMin: null,
+                    xMax: null,
+                    yMin: null,
+                    yMax: null,
                 },
                 marginalBars: {
                     show: false,
@@ -2622,9 +2626,17 @@ export function useConfig(options = {}) {
                 },
                 plots: {
                     radius: 2,
+                    hoverRadiusRatio: 2,
                     stroke: COLOR_WHITE,
                     strokeWidth: 0.3,
                     opacity: 0.6,
+                    opacityNotSelected: 0.6,
+                    name: {
+                        show: false,
+                        fontSize: 12,
+                        offsetY: 0,
+                        color: COLOR_BLACK,
+                    },
                     significance: {
                         show: true,
                         useDistanceOpacity: false,
@@ -2683,6 +2695,7 @@ export function useConfig(options = {}) {
                     },
                 },
                 dataLabels: {
+                    reverseAxisLabels: false,
                     xAxis: {
                         name: '',
                         show: true,
@@ -2692,6 +2705,23 @@ export function useConfig(options = {}) {
                         offsetX: 0,
                         offsetY: 0,
                         roundingValue: 0,
+                        showValue: true,
+                        scales: {
+                            show: false,
+                            steps: 10,
+                            useNiceScale: true,
+                            labels: {
+                                formatter: null,
+                                color: COLOR_BLACK,
+                                fontSize: 12,
+                                offsetY: 0,
+                            },
+                            verticalLines: {
+                                show: false,
+                                stroke: COLOR_GREY_LIGHT,
+                                strokeWidth: 1,
+                            },
+                        },
                     },
                     yAxis: {
                         name: '',
@@ -2702,6 +2732,23 @@ export function useConfig(options = {}) {
                         offsetX: 0,
                         offsetY: 0,
                         roundingValue: 0,
+                        showValue: true,
+                        scales: {
+                            show: false,
+                            steps: 10,
+                            useNiceScale: true,
+                            labels: {
+                                formatter: null,
+                                color: COLOR_BLACK,
+                                fontSize: 12,
+                                offsetX: 0,
+                            },
+                            horizontalLines: {
+                                show: false,
+                                stroke: COLOR_GREY_LIGHT,
+                                strokeWidth: 1,
+                            },
+                        },
                     },
                 },
             },

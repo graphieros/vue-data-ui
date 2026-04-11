@@ -3399,6 +3399,7 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiScatterConfig = {
+        [key: string]: unknown;
         skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiScatterConfig>;
         skeletonDataset?: VueUiBuiltInSkeletonDataset<
             VueUiScatterDatasetItem[]
@@ -3431,12 +3432,24 @@ declare module 'vue-data-ui' {
                     show?: boolean;
                     stroke?: string;
                     strokeWidth?: number;
+                    xMin?: number | null;
+                    xMax?: number | null;
+                    yMin?: number | null;
+                    yMax?: number | null;
                 };
                 plots?: {
                     radius?: number;
+                    hoverRadiusRatio?: number;
                     stroke?: string;
                     strokeWidth?: number;
                     opacity?: number;
+                    opacityNotSelected?: number;
+                    name?: {
+                        show?: boolean;
+                        fontSize?: number;
+                        offsetY?: number;
+                        color?: string;
+                    };
                     significance?: {
                         show?: boolean;
                         useDistanceOpacity?: boolean;
@@ -3517,6 +3530,7 @@ declare module 'vue-data-ui' {
                     };
                 };
                 dataLabels?: {
+                    reverseAxisLabels?: boolean;
                     xAxis?: {
                         name?: string;
                         show?: boolean;
@@ -3526,6 +3540,23 @@ declare module 'vue-data-ui' {
                         offsetX?: number;
                         offsetY?: number;
                         roundingValue?: number;
+                        showValue?: boolean;
+                        scales?: {
+                            show?: boolean;
+                            steps?: number;
+                            useNiceScale?: boolean;
+                            labels?: {
+                                formatter?: Formatter;
+                                color?: string;
+                                fontSize?: number;
+                                offsetY?: number;
+                            };
+                            verticalLines?: {
+                                show?: boolean;
+                                stroke?: string;
+                                strokeWidth?: number;
+                            };
+                        };
                     };
                     yAxis?: {
                         name?: string;
@@ -3536,6 +3567,23 @@ declare module 'vue-data-ui' {
                         offsetY?: number;
                         offsetX?: number;
                         roundingValue?: number;
+                        showValue?: boolean;
+                        scales?: {
+                            show?: boolean;
+                            steps?: number;
+                            useNiceScale?: boolean;
+                            labels?: {
+                                formatter?: Formatter;
+                                color?: string;
+                                fontSize?: number;
+                                offsetX?: number;
+                            };
+                            horizontalLines?: {
+                                show?: boolean;
+                                stroke?: string;
+                                strokeWidth?: number;
+                            };
+                        };
                     };
                 };
             };
@@ -3561,7 +3609,10 @@ declare module 'vue-data-ui' {
                       ) => string);
             };
         };
-        userOptions?: ChartUserOptions;
+        userOptions?: ChartUserOptions<
+            Array<VueUiScatterSeries>,
+            VueUiScatterConfig
+        >;
         table?: {
             show?: boolean;
             useDialog?: boolean;
@@ -3599,6 +3650,7 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiScatterSeries = {
+        [key: string]: unknown;
         color: string;
         correlation: {
             x1: number;

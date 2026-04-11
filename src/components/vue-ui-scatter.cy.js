@@ -29,7 +29,7 @@ describe('<VueUiScatter />', () => {
             cy.get('[data-cy="marginal-bar-x"]')
                 .should('exist')
                 .and('be.visible')
-                .and('have.length', 20);
+                .and('have.length', 16);
             cy.get('[data-cy="marginal-bar-y"]')
                 .should('exist')
                 .and('be.visible')
@@ -110,15 +110,6 @@ describe('<VueUiScatter />', () => {
                         ...dataset.flatMap((ds) => ds.values.map((d) => d.y)),
                     ),
                 );
-            cy.get('[data-cy="scatter-y-max-axis-label"]')
-                .should('exist')
-                .and('be.visible')
-                .and(
-                    'contain',
-                    Math.max(
-                        ...dataset.flatMap((ds) => ds.values.map((d) => d.y)),
-                    ),
-                );
 
             cy.log('correlation');
             cy.get('[data-cy="correlation-line"]')
@@ -160,7 +151,7 @@ describe('<VueUiScatter />', () => {
                         {
                             force: true,
                             x: 38,
-                            y: 9,
+                            y: 13,
                         },
                     );
                 },

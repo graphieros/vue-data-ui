@@ -11,6 +11,7 @@ import ConfigKnobs from './ConfigKnobs.vue';
 import { useConfigurationControls } from './createConfigModel';
 import { useConfig } from '../src/useConfig';
 import useThemeOptions from './useThemeOptions';
+import { mergeConfigs } from '../src';
 
 const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena();
 const { vue_ui_scatter: DEFAULT_CONFIG } = useConfig();
@@ -20,7 +21,7 @@ const { CHECKBOX, NUMBER, RANGE, TEXT, COLOR, SELECT, createModel } =
 
 const scat1 = computed(() => {
     const arr = [];
-    for (let i = -5000; i < 5000; i += 1) {
+    for (let i = -1; i < 1; i += 1) {
         arr.push({
             x: Math.random() * (Math.random() > 0.5 ? i / 3 : -i / 3),
             y: Math.random() * (Math.random() > 0.5 ? i / 3 : -i / 3),
@@ -32,7 +33,7 @@ const scat1 = computed(() => {
 
 const scat2 = computed(() => {
     const arr = [];
-    for (let i = -20; i < 20; i += 1) {
+    for (let i = -2; i < 2; i += 1) {
         arr.push({
             x: Math.random() * (Math.random() > 0.5 ? i / 4 : -i / 4),
             y: Math.random() * (Math.random() > 0.5 ? i / 4 : -i / 4),
@@ -43,30 +44,39 @@ const scat2 = computed(() => {
     return arr;
 });
 
-const dataset = ref(undefined);
+const dataset = ref([
+    {
+        name: 'DATA',
+        values: [
+            { name: 'A', x: 100, y: 100 },
+            { name: 'B', x: -40, y: 5 },
+            { name: 'C', x: 3, y: 12 },
+        ],
+    },
+]);
 
-onMounted(() => {
-    setTimeout(() => {
-        dataset.value = [
-            {
-                name: 'Cluster 2',
-                values: scat2.value,
-                shape: 'circle',
-                marked: true,
-            },
-            {
-                name: 'Cluster 1',
-                values: scat1.value,
-                shape: 'star',
-            },
-            {
-                name: 'Cluster 3',
-                values: scat1.value,
-                shape: 'square',
-            },
-        ];
-    }, 0);
-});
+// onMounted(() => {
+//     setTimeout(() => {
+//         dataset.value = [
+//             {
+//                 name: 'Cluster 2',
+//                 values: scat2.value,
+//                 shape: 'circle',
+//                 marked: true,
+//             },
+//             {
+//                 name: 'Cluster 1',
+//                 values: scat1.value,
+//                 shape: 'star',
+//             },
+//             {
+//                 name: 'Cluster 3',
+//                 values: scat1.value,
+//                 shape: 'square',
+//             },
+//         ];
+//     }, 0);
+// });
 
 const alternateDataset = ref([
     {
@@ -119,7 +129,7 @@ function alterDataset() {
 const model = createModel([
     CHECKBOX('debug', { def: true }),
     CHECKBOX('loading', { def: false }),
-    CHECKBOX('usePerformanceMode', { def: true }),
+    CHECKBOX('usePerformanceMode', { def: false }),
     CHECKBOX('responsive', { def: false }),
 
     CHECKBOX('userOptions.useCursorPointer', { def: false }),
@@ -152,7 +162,7 @@ const model = createModel([
     COLOR('style.layout.axis.stroke', { def: '#e1e5e8' }),
     NUMBER('style.layout.axis.strokeWidth', { def: 1, min: 0, max: 12 }),
 
-    CHECKBOX('style.layout.marginalBars.show', { def: true }),
+    CHECKBOX('style.layout.marginalBars.show', { def: false }),
     NUMBER('style.layout.marginalBars.size', { def: 40, min: 12, max: 100 }),
     NUMBER('style.layout.marginalBars.tranches', { def: 20, min: 5, max: 100 }),
     RANGE('style.layout.marginalBars.opacity', {
@@ -206,7 +216,8 @@ const model = createModel([
         def: false,
     }),
 
-    NUMBER('style.layout.plots.radius', { def: 2, min: 0, max: 24 }),
+    NUMBER('style.layout.plots.opacityNotSelected', { def: 0 }),
+    NUMBER('style.layout.plots.radius', { def: 5, min: 0, max: 24 }),
     COLOR('style.layout.plots.stroke', { def: '#FFFFFF' }),
     RANGE('style.layout.plots.strokeWidth', {
         def: 0.3,
@@ -215,14 +226,14 @@ const model = createModel([
         step: 0.1,
     }),
     NUMBER('style.layout.plots.opacity', {
-        def: 0.6,
+        def: 1,
         min: 0,
         max: 1,
         step: 0.01,
     }),
     CHECKBOX('style.layout.plots.significance.show', { def: true }),
     CHECKBOX('style.layout.plots.significance.useDistanceOpacity', {
-        def: true,
+        def: false,
     }),
     NUMBER('style.layout.plots.significance.deviationThreshold', {
         def: 10,
@@ -350,6 +361,48 @@ const model = createModel([
         max: 12,
     }),
 
+    CHECKBOX('style.layout.dataLabels.xAxis.scales.show', { def: true }),
+    NUMBER('style.layout.dataLabels.xAxis.scales.steps', {
+        def: 5,
+        min: 2,
+        max: 20,
+    }),
+    CHECKBOX('style.layout.dataLabels.xAxis.scales.useNiceScale', {
+        def: true,
+    }),
+    COLOR('style.layout.dataLabels.xAxis.scales.labels.color', {
+        def: '#FF0000',
+    }),
+    NUMBER('style.layout.dataLabels.xAxis.scales.labels.fontSize', {
+        def: 14,
+        min: 10,
+        max: 20,
+    }),
+
+    CHECKBOX('style.layout.dataLabels.yAxis.scales.show', { def: true }),
+    NUMBER('style.layout.dataLabels.yAxis.scales.steps', {
+        def: 10,
+        min: 2,
+        max: 20,
+    }),
+    CHECKBOX('style.layout.dataLabels.yAxis.scales.useNiceScale', {
+        def: true,
+    }),
+    COLOR('style.layout.dataLabels.yAxis.scales.labels.color', {
+        def: '#FF0000',
+    }),
+    NUMBER('style.layout.dataLabels.yAxis.scales.labels.fontSize', {
+        def: 14,
+        min: 10,
+        max: 20,
+    }),
+    CHECKBOX('style.layout.dataLabels.yAxis.scales.horizontalLines.show', {
+        def: true,
+    }),
+    CHECKBOX('style.layout.dataLabels.xAxis.scales.verticalLines.show', {
+        def: true,
+    }),
+
     TEXT('style.layout.dataLabels.yAxis.name', { def: 'Lorem Ipsum Y' }),
     CHECKBOX('style.layout.dataLabels.yAxis.show', { def: true }),
     NUMBER('style.layout.dataLabels.yAxis.fontSize', {
@@ -439,81 +492,26 @@ const configTheme = computed(() => ({ theme: currentTheme.value }));
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value);
-    if (testCustomTooltip.value) {
-        return {
-            ...c,
+    return mergeConfigs({
+        defaultConfig: c,
+        userConfig: {
             style: {
-                ...c.style,
-                tooltip: {
-                    ...c.style.tooltip,
-                    customFormat: ({ datapoint }) => {
-                        let html = '';
-                        // console.log(datapoint);
-                        return 'test';
-                    },
-                },
-            },
-        };
-    } else {
-        return {
-            ...c,
-            userOptions: {
-                ...c.userOptions,
-                buttons: {
-                    ...c.userOptions.buttons,
-                    altCopy: true,
-                },
-                callbacks: {
-                    altCopy: console.log,
-                },
-            },
-            skeletonConfig: {
-                style: {
-                    backgroundColor: '#FF0000',
-                },
-            },
-            events: {
-                datapointEnter: ({ datapoint, seriesIndex }) => {
-                    console.log('enter event', { datapoint, seriesIndex });
-                },
-                datapointLeave: ({ datapoint, seriesIndex }) => {
-                    console.log('leave event', { datapoint, seriesIndex });
-                },
-                datapointClick: ({ datapoint, seriesIndex }) => {
-                    console.log('click event', { datapoint, seriesIndex });
-                },
-            },
-            style: {
-                ...c.style,
                 layout: {
-                    ...c.style.layout,
-                    plots: {
-                        ...c.style.layout.plots,
-                        selectors: {
-                            ...c.style.layout.plots.selectors,
-                            labels: {
-                                ...c.style.layout.plots.selectors.labels,
-                                // x: {
-                                //     formatter: ({value, config}) => {
-                                //         // console.log(config)
-                                //         return `X | ${value}`
-                                //     }
-                                // },
-                                // y: {
-                                //     formatter: ({value, config}) => {
-                                //         // console.log(config)
-                                //         return `Y | ${value}`
-                                //     }
-                                // }
+                    dataLabels: {
+                        xAxis: {
+                            scales: {
+                                labels: {
+                                    formatter: ({ value }) => {
+                                        return `TTT${value}`;
+                                    },
+                                },
                             },
                         },
                     },
                 },
             },
-            theme: currentTheme.value,
-            customPalette: ['#6376DD', '#DD3322', '#66DDAA'],
-        };
-    }
+        },
+    });
 });
 
 const step = ref(0);
