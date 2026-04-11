@@ -315,9 +315,10 @@ watch(
 const resizeObserver = shallowRef(null);
 const observedEl = shallowRef(null);
 
-onMounted(() => {
-    readyTeleport.value = true;
+onMounted(async () => {
     prepareChart();
+    await nextTick()
+    readyTeleport.value = true;
 });
 
 const debug = computed(() => !!FINAL_CONFIG.value.debug);
@@ -1504,7 +1505,7 @@ const dataTable = computed(() => {
         return [
             {
                 shape: ds.shape,
-                content: ds.name,
+                content: ds.name ?? '-',
                 color: ds.color,
             },
             Number(
@@ -3994,6 +3995,7 @@ defineExpose({
         <!-- LEGEND -->
         <Teleport
             v-if="
+                isDataset &&
                 readyTeleport &&
                 (FINAL_CONFIG.style.legend.show || $slots.legend)
             "
