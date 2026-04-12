@@ -4369,7 +4369,7 @@ declare module 'vue-data-ui' {
         selectedXIndex?: number | null;
     };
 
-    declare const VueUiXyBase: DefineComponent<VueUiXyProps>;
+    const VueUiXyBase: DefineComponent<VueUiXyProps>;
 
     export type VueUiXyLegendSlotProps = VueUiXySeries;
     export type VueUiResetActionSlotProps = () => void;
