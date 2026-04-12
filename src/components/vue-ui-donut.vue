@@ -3676,6 +3676,7 @@ defineExpose({
                         name="svg"
                         :svg="{
                             ...svg,
+                            datapoints: currentDonut,
                             isPrintingImg:
                                 isPrinting | isImaging | isCallbackImaging,
                             isPrintingSvg: isCallbackSvg,
@@ -3799,6 +3800,7 @@ defineExpose({
                     total,
                     average,
                     dataset: immutableSet,
+                    ...svg,
                 }"
             />
         </div>
