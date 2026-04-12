@@ -29,7 +29,7 @@ export type {
     VueUiXyBarGradientSlotProps,
     VueUiXyAreaGradientSlotProps,
     VueUiXyPlotCommentSlotProps,
-    VueUiXyPatternSlotProps,
+    VueUiPatternSlotProps,
     VueUiXyTimeLabelSlotProps,
     VueUiXySvgSlotProps,
     VueUiKeyboardNavigationHintSlotProps,
@@ -92,7 +92,7 @@ export const VueUiXy: typeof VueUiXyBase & {
             ['plot-comment']?: (
                 props: VueUiXyPlotCommentSlotProps,
             ) => VNodeChild;
-            pattern?: (props: VueUiXyPatternSlotProps) => VNodeChild;
+            pattern?: (props: VueUiPatternSlotProps) => VNodeChild;
             ['time-label']?: (props: VueUiXyTimeLabelSlotProps) => VNodeChild;
             svg?: (props: VueUiXySvgSlotProps) => VNodeChild;
             hint?: (props: VueUiKeyboardNavigationHintSlotProps) => VNodeChild;
