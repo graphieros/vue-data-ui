@@ -4453,7 +4453,7 @@ declare module 'vue-data-ui' {
         seriesIndex: number;
         datapointIndex: number;
     };
-    export type VueUiXyPatternSlotProps = {
+    export type VueUiPatternSlotProps = {
         [key: string]: unknown;
         seriesIndex: number;
         patternId: string;
@@ -4556,7 +4556,7 @@ declare module 'vue-data-ui' {
                 ['plot-comment']?: (
                     props: VueUiXyPlotCommentSlotProps,
                 ) => VNodeChild;
-                pattern?: (props: VueUiXyPatternSlotProps) => VNodeChild;
+                pattern?: (props: VueUiPatternSlotProps) => VNodeChild;
                 ['time-label']?: (
                     props: VueUiXyTimeLabelSlotProps,
                 ) => VNodeChild;
@@ -4731,7 +4731,10 @@ declare module 'vue-data-ui' {
                 };
             };
         };
-        userOptions?: ChartUserOptions;
+        userOptions?: ChartUserOptions<
+            VueUiDonutDatasetItem[] | null,
+            VueUiDonutConfig
+        >;
         translations?: {
             total?: string;
             average?: string;
@@ -4754,14 +4757,18 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiDonutDatasetItem = {
+        [key: string]: unknown;
         name: string;
         color?: string;
         values: number[];
+        comment?: string;
     };
 
     export type VueUiDonutDatapoint = {
+        [key: string]: unknown;
         absoluteValues: number[];
         arcSlice: string;
+        comment?: string;
         center: {
             startX: number;
             startY: number;
@@ -4782,6 +4789,15 @@ declare module 'vue-data-ui' {
         startX: number;
         startY: number;
         value: number;
+        patternIndex: number;
+        separator: {
+            x: number;
+            y: number;
+        };
+        firstSeparator: {
+            x: number;
+            y: number;
+        };
     };
 
     export type VueUiDonutSeriesItem = VueUiDonutDatasetItem & {
@@ -4807,13 +4823,140 @@ declare module 'vue-data-ui' {
         hideSeries(name: string): void;
     };
 
-    export const VueUiDonut: DefineComponent<
-        {
-            config?: VueUiDonutConfig;
-            dataset: VueUiDonutDatasetItem[];
-        },
-        VueUiDonutExpose
-    >;
+    export type VueUiDonutProps = {
+        config?: VueUiDonutConfig;
+        dataset: VueUiDonutDatasetItem[];
+    };
+
+    export type VueUiDonutLegendItem = {
+        [key: string]: unknown;
+        color: string;
+        display: string;
+        isSegregated: boolean;
+        name: string;
+        oapcity: number;
+        patternIndex: number;
+        proportion: number;
+        segregate: () => void;
+        shape: Shape;
+        value: number;
+    };
+
+    export type VueUiDonutLegendSlotProps = VueUiDonutLegendItem[];
+    export type VueUiDonutTooltipSlotProps = {
+        datapoint: VueUiDonutDatapoint;
+        seriesIndex: number;
+    };
+    export type VueUiDonutDataLabelSlotProps = {
+        datapoint: VueUiDonutDatapoint;
+        flexAlign: string;
+        isBlur: boolean;
+        isSafari: boolean;
+        isVisible: boolean;
+        percentage: string;
+        ref_for: boolean;
+        textAlign: 'left' | 'center' | 'right';
+    };
+    export type VueUiDonutPlotCommentSlotProps = VueUiDonutDatapoint;
+    export type VueUiDonutSvgSlotProps = {
+        height: number;
+        width: number;
+        datapoints: VueUiDonutDatapoint[];
+        isPrintingImg: boolean;
+        isPrintingSvg: boolean;
+    };
+    export type VueUiDonutFormattedDatasetItem = Omit<
+        VueUiDonutDatasetItem,
+        'values'
+    > & {
+        color: string;
+        value: number | null;
+        absoluteValues: Array<number | null>;
+        comment: string;
+        patternIndex: number;
+        seriesIndex: number;
+        pattern: string;
+    };
+    export type VueUiDonutHollowSlotProps = {
+        total: number;
+        average: number;
+        width: number;
+        height: number;
+        dataset: VueUiDonutFormattedDatasetItem[];
+    };
+
+    export type VueUiDonutOptionCopyAltSlotProps = {
+        copyAlt: ({
+            config,
+            dataset,
+        }: {
+            config: VueUiDonutConfig;
+            dataset: VueUiDonutFormattedDatasetItem[];
+        }) => void;
+    };
+
+    const VueUiDonutBase: DefineComponent<VueUiDonutProps>;
+
+    export const VueUiDonut: typeof VueUiDonutBase & {
+        new (): VueUiDonutExpose & {
+            $slots: {
+                legend?: (props: VueUiDonutLegendSlotProps) => VNodeChild;
+                ['tooltip-before']?: (
+                    props: VueUiDonutTooltipSlotProps,
+                ) => VNodeChild;
+                tooltip?: (props: VueUiDonutTooltipSlotProps) => VNodeChild;
+                ['tooltip-after']?: (
+                    props: VueUiDonutTooltipSlotProps,
+                ) => VNodeChild;
+                dataLabel?: (props: VueUiDonutDataLabelSlotProps) => VNodeChild;
+                ['plot-comment']?: (
+                    props: VueUiDonutPlotCommentSlotProps,
+                ) => VNodeChild;
+                svg?: (props: VueUiDonutSvgSlotProps) => VNodeChild;
+                hint?: (
+                    props: VueUiKeyboardNavigationHintSlotProps,
+                ) => VNodeChild;
+                watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
+                source?: () => VNodeChild;
+                skeleton?: () => VNodeChild;
+                pattern?: (props: VueUiPatternSlotProps) => VNodeChild;
+                hollow?: (props: VueUiDonutHollowSlotProps) => VNodeChild;
+                menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
+                optionTooltip?: () => VNodeChild;
+                optionPdf?: () => VNodeChild;
+                optionCsv?: () => VNodeChild;
+                optionImg?: () => VNodeChild;
+                optionSvg?: () => VNodeChild;
+                optionTable?: () => VNodeChild;
+                optionLabels?: () => VNodeChild;
+                optionFullscreen?: (
+                    props: VueUiOptionFullscreenSlotProps,
+                ) => VNodeChild;
+                optionAltCopy?: (
+                    props: VueUiDonutOptionCopyAltSlotProps,
+                ) => VNodeChild;
+                optionAnnotator?: (
+                    props: VueUiOptionAnnotatorSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-close']?: () => VNodeChild;
+                ['annotator-action-color']?: (
+                    props: VueUiAnnotatorActionColorSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-draw']?: (
+                    props: VueUiAnnotatorActionDrawSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-undo']?: (
+                    props: VueUiAnnotatorActionUndoSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-redo']?: (
+                    props: VueUiAnnotatorActionRedoSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-delete']?: (
+                    props: VueUiAnnotatorActionDeleteSlotProps,
+                ) => VNodeChild;
+            };
+        };
+    };
 
     export type VueUiNestedDonutsDatasetItem = {
         name: string;
