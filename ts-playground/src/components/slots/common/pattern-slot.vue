@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import type { VueUiXyPatternSlotProps } from 'vue-data-ui';
+import type { VueUiPatternSlotProps } from 'vue-data-ui';
 const props = withDefaults(
     defineProps<{
-        patternId: VueUiXyPatternSlotProps['patternId'];
-        seriesIndex: VueUiXyPatternSlotProps['seriesIndex'];
+        patternId: VueUiPatternSlotProps['patternId'];
+        seriesIndex: VueUiPatternSlotProps['seriesIndex'];
         color?: string;
     }>(),
     {

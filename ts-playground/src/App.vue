@@ -3,6 +3,9 @@ import { defineAsyncComponent, shallowRef } from 'vue';
 const TsVueUiXy = defineAsyncComponent(
     () => import('./components/charts/ts-vue-ui-xy.vue'),
 );
+const TsVueUiDonut = defineAsyncComponent(
+    () => import('./components/charts/ts-vue-ui-donut.vue'),
+);
 
 const components = shallowRef([{ name: 'VueUiXy' }, { name: 'VueUiDonut' }]);
 
@@ -16,6 +19,7 @@ const selectedComponent = shallowRef(components.value[0]);
 
     <div class="wrapper">
         <TsVueUiXy v-if="selectedComponent?.name === 'VueUiXy'" />
+        <TsVueUiDonut v-if="selectedComponent?.name === 'VueUiDonut'" />
     </div>
 </template>
 
