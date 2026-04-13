@@ -4,8 +4,9 @@
  */
 import { computed } from 'vue';
 import { VueUiDonut } from 'vue-data-ui/vue-ui-donut';
+import { mergeConfigs } from 'vue-data-ui/utils';
 import 'vue-data-ui/style.css';
-import type { VueUiDonutConfig, VueUiDonutDatasetItem } from 'vue-data-ui';
+import { type VueUiDonutConfig, type VueUiDonutDatasetItem } from 'vue-data-ui';
 import DonutLegend from '../slots/vue-ui-donut/donut-legend.vue';
 import DonutTooltip from '../slots/vue-ui-donut/donut-tooltip.vue';
 import DonutDataLabel from '../slots/vue-ui-donut/donut-data-label.vue';
@@ -24,7 +25,6 @@ import CommonAnnotatorActionDelete from '../slots/common/annotator-action-delete
 import CommonMenuIcon from '../slots/common/menu-icon.vue';
 import CommonOptionFullscreen from '../slots/common/option-fullscreen.vue';
 import CommonOptionAnnotator from '../slots/common/option-annotator.vue';
-import XyOptionAltCopy from '../slots/vue-ui-xy/xy-option-alt-copy.vue';
 import DonutOptionAltCopy from '../slots/vue-ui-donut/donut-option-alt-copy.vue';
 
 const dataset = computed<VueUiDonutDatasetItem[]>(() => [
@@ -43,31 +43,331 @@ const dataset = computed<VueUiDonutDatasetItem[]>(() => [
     },
 ]);
 
-const config = computed<VueUiDonutConfig>(() => {
+const testPreconfig = computed<VueUiDonutConfig>(() => {
     return {
-        theme: 'dark',
+        skeletonConfig: null,
+        skeletonDataset: null,
+        debug: false,
+        type: 'classic',
+        loading: false,
+        pie: false,
+        autoSize: true,
+        responsive: false,
+        theme: '',
+        customPalette: [],
+        useCssAnimation: false,
+        a11y: {
+            translations: {
+                keyboardNavigation:
+                    'Use the left and right, or up and down arrow keys to move between datapoints',
+                tableAvailable:
+                    'A data table for this chart is available below.',
+                tableCaption: 'Chart data table',
+            },
+        },
+        events: {
+            datapointEnter: null,
+            datapointLeave: null,
+            datapointClick: null,
+        },
+        serieToggleAnimation: {
+            show: true,
+            durationMs: 500,
+        },
+        startAnimation: {
+            show: false,
+            durationMs: 1000,
+            staggerMs: 50,
+        },
+        useBlurOnHover: true,
         userOptions: {
+            show: true,
+            showOnChartHover: false,
+            keepStateOnChartLeave: true,
+            position: 'right',
             buttons: {
-                altCopy: true,
+                tooltip: true,
+                pdf: true,
+                csv: true,
+                img: true,
+                table: true,
+                labels: true,
+                fullscreen: true,
+                sort: false,
+                stack: false,
+                animation: false,
+                annotator: true,
+                svg: true,
+                zoom: false,
+                altCopy: false,
             },
             callbacks: {
-                altCopy: (args) => {
-                    console.log(args);
-                },
+                animation: null,
+                annotator: null,
+                csv: null,
+                fullscreen: null,
+                img: null,
+                labels: null,
+                pdf: null,
+                sort: null,
+                stack: null,
+                table: null,
+                tooltip: null,
+                svg: null,
+                zoom: null,
+                altCopy: null,
+            },
+            buttonTitles: {
+                open: 'Open options',
+                close: 'Close options',
+                tooltip: 'Toggle tooltip',
+                pdf: 'Download PDF',
+                csv: 'Download CSV',
+                img: 'Download PNG',
+                table: 'Toggle table',
+                labels: 'Toggle labels',
+                fullscreen: 'Toggle fullscreen',
+                annotator: 'Toggle annotator',
+                svg: 'Download SVG',
+                altCopy: 'Copy alt text',
+            },
+            print: {
+                scale: 2,
+                orientation: 'auto',
+                overflowTolerance: 0.2,
+            },
+            useCursorPointer: false,
+        },
+        translations: {
+            total: 'Total',
+            average: 'Average',
+        },
+        table: {
+            show: false,
+            responsiveBreakpoint: 400,
+            useDialog: false,
+            th: {
+                backgroundColor: '#FFFFFF',
+                color: '#2D353C',
+                outline: 'none',
+            },
+            td: {
+                backgroundColor: '#FFFFFF',
+                color: '#2D353C',
+                outline: 'none',
+                roundingValue: 0,
+                roundingPercentage: 0,
+            },
+            columnNames: {
+                series: 'Series',
+                value: 'Value',
+                percentage: 'Percentage',
             },
         },
         style: {
+            fontFamily: 'inherit',
             chart: {
+                useGradient: true,
+                gradientIntensity: 40,
+                backgroundColor: '#FFFFFF',
+                color: '#2D353C',
+                padding: {
+                    top: 0,
+                    right: 0,
+                    bottom: 0,
+                    left: 0,
+                },
+                width: 512,
+                height: 360,
                 layout: {
+                    curvedMarkers: false,
                     labels: {
                         dataLabels: {
-                            useLabelSlots: true,
+                            showValueFirst: true,
+                            usePercentageParens: true,
+                            useValueParens: false,
+                            show: true,
+                            useLabelSlots: false,
+                            hideUnderValue: 3,
+                            smallArcClusterThreshold: 8,
+                            smallArcClusterFontSize: 12,
+                            oneLine: false,
+                            prefix: '',
+                            suffix: '',
+                        },
+                        value: {
+                            rounding: 0,
+                            show: true,
+                            formatter: null,
+                        },
+                        percentage: {
+                            show: true,
+                            color: '#2D353C',
+                            bold: true,
+                            fontSize: 18,
+                            minFontSize: 6,
+                            rounding: 0,
+                            formatter: null,
+                        },
+                        name: {
+                            show: true,
+                            color: '#2D353C',
+                            bold: false,
+                            fontSize: 14,
+                            minFontSize: 6,
+                        },
+                        hollow: {
+                            show: true,
+                            total: {
+                                show: true,
+                                bold: false,
+                                fontSize: 18,
+                                color: '#2D353C',
+                                text: 'Total',
+                                offsetY: 0,
+                                value: {
+                                    color: '#2D353C',
+                                    fontSize: 18,
+                                    bold: true,
+                                    suffix: '',
+                                    prefix: '',
+                                    offsetY: 0,
+                                    rounding: 0,
+                                    formatter: null,
+                                },
+                            },
+                            average: {
+                                show: true,
+                                bold: false,
+                                fontSize: 18,
+                                color: '#A1A1A1',
+                                text: 'Average',
+                                offsetY: 0,
+                                value: {
+                                    color: '#2D353C',
+                                    fontSize: 18,
+                                    bold: true,
+                                    suffix: '',
+                                    prefix: '',
+                                    offsetY: 0,
+                                    rounding: 0,
+                                    formatter: null,
+                                },
+                            },
+                        },
+                    },
+                    donut: {
+                        radiusRatio: 0.3,
+                        strokeWidth: 64,
+                        borderWidth: 1,
+                        useShadow: false,
+                        shadowColor: '#2D353C',
+                        emptyFill: '#e1e5e8',
+                        selectedColor: '#0000001A',
+                        borderColorAuto: true,
+                        borderColor: '#e1e5e8',
+                    },
+                },
+                comments: {
+                    show: true,
+                    showInTooltip: true,
+                    width: 100,
+                    offsetY: 0,
+                    offsetX: 0,
+                },
+                legend: {
+                    show: true,
+                    bold: false,
+                    backgroundColor: '#FFFFFF',
+                    color: '#2D353C',
+                    fontSize: 14,
+                    selectAllToggle: {
+                        show: false,
+                        backgroundColor: '#e1e5e8',
+                        color: '#2D353C',
+                    },
+                    showValueFirst: true,
+                    usePercentageParens: true,
+                    useValueParens: false,
+                    roundingValue: 0,
+                    roundingPercentage: 0,
+                    showPercentage: true,
+                    showValue: true,
+                    position: 'bottom',
+                },
+                tooltip: {
+                    show: true,
+                    color: '#2D353C',
+                    backgroundColor: '#FFFFFF',
+                    fontSize: 14,
+                    customFormat: null,
+                    borderRadius: 4,
+                    borderColor: '#e1e5e8',
+                    borderWidth: 1,
+                    backgroundOpacity: 100,
+                    position: 'center',
+                    offsetY: 24,
+                    smooth: true,
+                    backdropFilter: true,
+                    smoothForce: 0.18,
+                    smoothSnapThreshold: 0.25,
+                    teleportTo: 'body',
+                    showValueFirst: true,
+                    usePercentageParens: true,
+                    useValueParens: false,
+                    showValue: true,
+                    showPercentage: true,
+                    roundingValue: 0,
+                    roundingPercentage: 0,
+                },
+                title: {
+                    text: '',
+                    color: '#2D353C',
+                    fontSize: 20,
+                    bold: true,
+                    textAlign: 'center',
+                    paddingLeft: 0,
+                    paddingRight: 0,
+                    subtitle: {
+                        color: '#A1A1A1',
+                        text: '',
+                        fontSize: 16,
+                        bold: false,
+                    },
+                },
+            },
+        },
+    } satisfies VueUiDonutConfig;
+});
+
+const config = computed<VueUiDonutConfig>(() => {
+    return mergeConfigs({
+        defaultConfig: testPreconfig.value,
+        userConfig: {
+            theme: 'dark',
+            userOptions: {
+                buttons: {
+                    altCopy: true,
+                },
+                callbacks: {
+                    altCopy: (args) => {
+                        console.log(args);
+                    },
+                },
+            },
+            style: {
+                chart: {
+                    layout: {
+                        labels: {
+                            dataLabels: {
+                                useLabelSlots: true,
+                            },
                         },
                     },
                 },
             },
         },
-    };
+    });
 });
 
 function log(el: any) {
