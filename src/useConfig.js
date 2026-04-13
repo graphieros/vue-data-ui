@@ -864,7 +864,6 @@ export function useConfig(options = {}) {
                         crosshairSize: 6,
                     },
                     yAxis: {
-                        position: 'left',
                         showBaseline: true,
                         showCrosshairs: true,
                         crosshairSize: 6,
