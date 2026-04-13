@@ -709,7 +709,7 @@ const config = computed<VueUiXyConfig>(() => {
                         background: linear-gradient(
                             to bottom,
                             #cccccc00,
-                            #cccccc20
+                            #cccccc90
                         );
                     "
                 >

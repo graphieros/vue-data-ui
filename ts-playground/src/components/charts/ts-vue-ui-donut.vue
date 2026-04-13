@@ -369,10 +369,6 @@ const config = computed<VueUiDonutConfig>(() => {
         },
     });
 });
-
-function log(el: any) {
-    console.log(el);
-}
 </script>
 
 <template>
@@ -541,6 +537,22 @@ function log(el: any) {
 
             <template #optionAltCopy="{ copyAlt }">
                 <DonutOptionAltCopy :copy-alt />
+            </template>
+
+            <template #chart-background>
+                <div
+                    style="
+                        width: 100%;
+                        height: 100%;
+                        background: linear-gradient(
+                            to bottom,
+                            #cccccc00,
+                            #cccccc90
+                        );
+                    "
+                >
+                    <code style="color: chocolate"> #chart-background </code>
+                </div>
             </template>
         </VueUiDonut>
     </div>

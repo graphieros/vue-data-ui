@@ -1259,6 +1259,7 @@ declare module 'vue-data-ui' {
     export type VueUi3dBarDataset = {
         percentage?: number;
         series?: Array<{
+            [key: string]: unknown;
             name: string;
             value: number;
             color?: string;
@@ -1267,6 +1268,7 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUi3dBarDatapoint = {
+        [key: string]: unknown;
         breakdown: null | Array<{
             name: string;
             value: number;
@@ -1349,7 +1351,10 @@ declare module 'vue-data-ui' {
                 };
             };
         };
-        userOptions?: ChartUserOptions;
+        userOptions?: ChartUserOptions<
+            Pick<VueUi3dBarDataset, 'series'>,
+            VueUi3dBarConfig
+        >;
         table?: {
             show?: boolean;
             useDialog?: boolean;
@@ -1378,13 +1383,86 @@ declare module 'vue-data-ui' {
         toggleFullscreen(): void;
     };
 
-    export const VueUi3dBar: DefineComponent<
-        {
-            config?: VueUi3dBarConfig;
-            dataset: VueUi3dBarDataset;
-        },
-        VueUi3dBarExpose
-    >;
+    export type VueUi3dBarProps = {
+        config?: VueUi3dBarConfig;
+        dataset: VueUi3dBarDataset;
+    };
+
+    const VueUi3dBarBase: DefineComponent<VueUi3dBarProps>;
+
+    export type VueUi3dBarOptionCopyAltSlotProps = {
+        config: VueUi3dBarConfig;
+        dataset:
+            | Pick<VueUi3dBarDataset, 'series'>
+            | Pick<VueUi3dBarDataset, 'percentage'>;
+    };
+
+    export type VueUi3dBarLegendSlotProps = {
+        config: VueUi3dBarConfig;
+        datapoint: VueUi3dBarDatapoint;
+        dataset: Array<
+            VueUi3dBarDatapoint & {
+                id: string;
+                fill: Record<string, unknown>;
+            }
+        >;
+        ref_for: boolean;
+    };
+
+    export type VueUi3dBarSvgSlotProps = {
+        height: number;
+        width: number;
+        absoluteWidth: number;
+        top: number;
+        bottom: number;
+        left: number;
+        right: number;
+        perspective: number;
+    };
+
+    export const VueUi3dBar: typeof VueUi3dBarBase & {
+        new (): VueUi3dBarExpose & {
+            $slots: {
+                ['annotator-action-close']?: () => VNodeChild;
+                ['annotator-action-color']?: (
+                    props: VueUiAnnotatorActionColorSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-draw']?: (
+                    props: VueUiAnnotatorActionDrawSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-undo']?: (
+                    props: VueUiAnnotatorActionUndoSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-redo']?: (
+                    props: VueUiAnnotatorActionRedoSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-delete']?: (
+                    props: VueUiAnnotatorActionDeleteSlotProps,
+                ) => VNodeChild;
+                menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
+                optionPdf?: () => VNodeChild;
+                optionCsv?: () => VNodeChild;
+                optionImg?: () => VNodeChild;
+                optionSvg?: () => VNodeChild;
+                optionTable?: () => VNodeChild;
+                optionFullscreen?: (
+                    props: VueUiOptionFullscreenSlotProps,
+                ) => VNodeChild;
+                optionAnnotator?: (
+                    props: VueUiOptionAnnotatorSlotProps,
+                ) => VNodeChild;
+                optionAltCopy?: (
+                    props: VueUi3dBarOptionCopyAltSlotProps,
+                ) => VNodeChild;
+                ['chart-background']?: () => VNodeChild;
+                legend?: (props: VueUi3dBarLegendSlotProps) => VNodeChild;
+                svg?: (props: VueUi3dBarSvgSlotProps) => VNodeChild;
+                watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
+                source?: () => VNodeChild;
+                skeleton?: () => VNodeChild;
+            };
+        };
+    };
 
     export type VueUiMoodRadarDataset = {
         '1': number;

@@ -6,8 +6,15 @@ const TsVueUiXy = defineAsyncComponent(
 const TsVueUiDonut = defineAsyncComponent(
     () => import('./components/charts/ts-vue-ui-donut.vue'),
 );
+const TsVueUi3dBar = defineAsyncComponent(
+    () => import('./components/charts/ts-vue-ui-3d-bar.vue'),
+);
 
-const components = shallowRef([{ name: 'VueUiXy' }, { name: 'VueUiDonut' }]);
+const components = shallowRef([
+    { name: 'VueUiXy' },
+    { name: 'VueUiDonut' },
+    { name: 'VueUi3dBar' },
+]);
 
 const selectedComponent = shallowRef(components.value[0]);
 </script>
@@ -20,6 +27,7 @@ const selectedComponent = shallowRef(components.value[0]);
     <div class="wrapper">
         <TsVueUiXy v-if="selectedComponent?.name === 'VueUiXy'" />
         <TsVueUiDonut v-if="selectedComponent?.name === 'VueUiDonut'" />
+        <TsVueUi3dBar v-if="selectedComponent?.name === 'VueUi3dBar'" />
     </div>
 </template>
 
