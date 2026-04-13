@@ -601,10 +601,10 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiTreemapConfig = {
-        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiTreemapConfig>;
+        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiTreemapConfig> | null;
         skeletonDataset?: VueUiBuiltInSkeletonDataset<
             VueUiTreemapDatasetItem[]
-        >;
+        > | null;
         debug?: boolean; // v3
         loading?: boolean; // v3
         responsive?: boolean;
@@ -802,8 +802,10 @@ declare module 'vue-data-ui' {
     export type VueUiGalaxyDatasetItem = VueUiDonutDatasetItem;
 
     export type VueUiGalaxyConfig = {
-        skeletonDataset?: VueUiBuiltInSkeletonDataset<VueUiGalaxyDatasetItem[]>;
-        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiGalaxyConfig>;
+        skeletonDataset?: VueUiBuiltInSkeletonDataset<
+            VueUiGalaxyDatasetItem[]
+        > | null;
+        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiGalaxyConfig> | null;
         debug?: boolean; // v3
         loading?: boolean; // v3
         responsive?: boolean; // v3
@@ -949,8 +951,8 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiSparkgaugeConfig = {
-        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiSparkgaugeConfig>;
-        skeletonDataset?: VueUiBuiltInSkeletonDataset<VueUiSparkgaugeDataset>;
+        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiSparkgaugeConfig> | null;
+        skeletonDataset?: VueUiBuiltInSkeletonDataset<VueUiSparkgaugeDataset> | null;
         debug?: boolean; // v3
         loading?: boolean; // v3
         theme?: Theme;
@@ -1136,8 +1138,8 @@ declare module 'vue-data-ui' {
     export type VueUiMoleculeConfig = {
         skeletonDataset?: VueUiBuiltInSkeletonDataset<
             VueUiMoleculeDatasetNode[]
-        >;
-        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiMoleculeConfig>;
+        > | null;
+        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiMoleculeConfig> | null;
         debug?: boolean; // v3
         loading?: boolean; // v3
         events?: {
@@ -1279,8 +1281,8 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUi3dBarConfig = {
-        skeletonDataset?: VueUiBuiltInSkeletonDataset<VueUi3dBarDataset>;
-        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUi3dBarConfig>;
+        skeletonDataset?: VueUiBuiltInSkeletonDataset<VueUi3dBarDataset> | null;
+        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUi3dBarConfig> | null;
         debug?: boolean; // v3
         loading?: boolean; // v3
         responsive?: boolean; // v3
@@ -1401,8 +1403,8 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiMoodRadarConfig = {
-        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiMoodRadarConfig>;
-        skeletonDataset?: VueUiBuiltInSkeletonDataset<VueUiMoodRadarDataset>;
+        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiMoodRadarConfig> | null;
+        skeletonDataset?: VueUiBuiltInSkeletonDataset<VueUiMoodRadarDataset> | null;
         debug?: boolean; // v3
         loading?: boolean; // v3
         responsive?: boolean; // v3
@@ -1835,8 +1837,8 @@ declare module 'vue-data-ui' {
     export type VueUiDonutEvolutionConfig = {
         skeletonDataset?: VueUiBuiltInSkeletonDataset<
             VueUiDonutEvolutionDatasetItem[]
-        >;
-        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiDonutEvolutionConfig>;
+        > | null;
+        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiDonutEvolutionConfig> | null;
         debug?: boolean; // v3
         loading?: boolean; // v3
         responsive?: boolean; // v3
@@ -2011,8 +2013,8 @@ declare module 'vue-data-ui' {
     >;
 
     export type VueUiTiremarksConfig = {
-        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiTiremarksConfig>;
-        skeletonDataset?: VueUiBuiltInSkeletonDataset<VueUiTiremarksDataset>;
+        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiTiremarksConfig> | null;
+        skeletonDataset?: VueUiBuiltInSkeletonDataset<VueUiTiremarksDataset> | null;
         debug?: boolean; // v3
         loading?: boolean; // v3
         responsive?: boolean; // v3
@@ -2083,8 +2085,8 @@ declare module 'vue-data-ui' {
     >;
 
     export type VueUiWheelConfig = {
-        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiWheelConfig>;
-        skeletonDataset?: VueUiBuiltInSkeletonDataset<VueUiWheelDataset>;
+        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiWheelConfig> | null;
+        skeletonDataset?: VueUiBuiltInSkeletonDataset<VueUiWheelDataset> | null;
         debug?: boolean; // v3
         loading?: boolean; // v3
         responsive?: boolean;
@@ -2319,10 +2321,10 @@ declare module 'vue-data-ui' {
     >;
 
     export type VueUiSparkHistogramConfig = {
-        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiSparkHistogramConfig>;
+        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiSparkHistogramConfig> | null;
         skeletonDataset?: VueUiBuiltInSkeletonDataset<
             VueUiSparkHistogramDatasetItem[]
-        >;
+        > | null;
         debug?: boolean; // v3
         loading?: boolean; // v3
         responsive?: boolean; // v3
@@ -2453,10 +2455,10 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiSparkStackbarConfig = {
-        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiSparkStackbarConfig>;
+        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiSparkStackbarConfig> | null;
         skeletonDataset?: VueUiBuiltInSkeletonDataset<
             VueUiSparkStackbarDatasetItem[]
-        >;
+        > | null;
         debug?: boolean; // v3
         loading?: boolean; // v3
         useCursorPointer?: boolean;
@@ -2566,8 +2568,8 @@ declare module 'vue-data-ui' {
     >;
 
     export type VueUiThermometerConfig = {
-        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiThermometerConfig>;
-        skeletonDataset?: VueUiBuiltInSkeletonDataset<VueUiThermometerDataset>;
+        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiThermometerConfig> | null;
+        skeletonDataset?: VueUiBuiltInSkeletonDataset<VueUiThermometerDataset> | null;
         debug?: boolean; // v3
         loading?: boolean; // v3
         responsive?: boolean; // v3
@@ -2652,8 +2654,8 @@ declare module 'vue-data-ui' {
     export type VueUiRelationCircleConfig = {
         skeletonDataset?: VueUiBuiltInSkeletonDataset<
             VueUiRelationCircleDatasetItem[]
-        >;
-        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiRelationCircleConfig>;
+        > | null;
+        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiRelationCircleConfig> | null;
         debug?: boolean; // v3
         loading?: boolean; // v3
         responsive?: boolean;
@@ -2928,8 +2930,8 @@ declare module 'vue-data-ui' {
     export type VueUiSparkbarConfig = {
         skeletonDataset?: VueUiBuiltInSkeletonDataset<
             VueUiSparkbarDatasetItem[]
-        >;
-        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiSparkbarConfig>;
+        > | null;
+        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiSparkbarConfig> | null;
         debug?: boolean; // v3
         loading?: boolean; // v3
         theme?: Theme;
@@ -3018,8 +3020,8 @@ declare module 'vue-data-ui' {
     export type VueUiAgePyramidDataset = VueUiAgePyramidDatasetRow[];
 
     export type VueUiAgePyramidConfig = {
-        skeletonDataset?: VueUiBuiltInSkeletonDataset<VueUiAgePyramidDataset>;
-        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiAgePyramidConfig>;
+        skeletonDataset?: VueUiBuiltInSkeletonDataset<VueUiAgePyramidDataset> | null;
+        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiAgePyramidConfig> | null;
         debug?: boolean; // v3
         loading?: boolean; // v3
         responsive?: boolean;
@@ -3187,8 +3189,8 @@ declare module 'vue-data-ui' {
     ];
 
     export type VueUiCandlestickConfig = {
-        skeletonDataset?: VueUiBuiltInSkeletonDataset<OHLC[]>;
-        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiCandlestickConfig>;
+        skeletonDataset?: VueUiBuiltInSkeletonDataset<OHLC[]> | null;
+        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiCandlestickConfig> | null;
         type?: 'ohlc' | 'candlesctick';
         debug?: boolean;
         loading?: boolean;
@@ -3400,10 +3402,10 @@ declare module 'vue-data-ui' {
 
     export type VueUiScatterConfig = {
         [key: string]: unknown;
-        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiScatterConfig>;
+        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiScatterConfig> | null;
         skeletonDataset?: VueUiBuiltInSkeletonDataset<
             VueUiScatterDatasetItem[]
-        >;
+        > | null;
         debug?: boolean; // v3
         loading?: boolean; // v3
         responsive?: boolean;
@@ -3694,8 +3696,8 @@ declare module 'vue-data-ui' {
     export type VueUiHeatmapConfig = {
         skeletonDataset?: VueUiBuiltInSkeletonDataset<
             VueUiHeatmapDatasetItem[]
-        >;
-        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiHeatmapConfig>;
+        > | null;
+        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiHeatmapConfig> | null;
         debug?: boolean; // v3
         loading?: boolean; // v3
         responsive?: boolean; // v3
@@ -3943,8 +3945,10 @@ declare module 'vue-data-ui' {
     } & Record<string, any>;
 
     export type VueUiXyConfig = {
-        skeletonDataset?: VueUiBuiltInSkeletonDataset<VueUiXyDatasetItem[]>;
-        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiXyConfig>;
+        skeletonDataset?: VueUiBuiltInSkeletonDataset<
+            VueUiXyDatasetItem[]
+        > | null;
+        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiXyConfig> | null;
         debug?: boolean; // v3
         responsive?: boolean; // v3
         loading?: boolean; // v3
@@ -4572,8 +4576,10 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiDonutConfig = {
-        skeletonDataset?: VueUiBuiltInSkeletonDataset<VueUiDonutDatasetItem[]>;
-        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiDonutConfig>;
+        skeletonDataset?: VueUiBuiltInSkeletonDataset<
+            VueUiDonutDatasetItem[]
+        > | null;
+        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiDonutConfig> | null;
         debug?: boolean;
         type?: 'classic' | 'polar';
         loading?: boolean;
@@ -4964,10 +4970,10 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiNestedDonutsConfig = {
-        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiNestedDonutsConfig>;
+        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiNestedDonutsConfig> | null;
         skeletonDataset?: VueUiBuiltInSkeletonDataset<
             VueUiNestedDonutsDatasetItem[]
-        >;
+        > | null;
         debug?: boolean; // v3
         loading?: boolean; // v3
         responsive?: boolean;
@@ -5187,8 +5193,10 @@ declare module 'vue-data-ui' {
     >;
 
     export type VueUiWaffleConfig = {
-        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiWaffleConfig>;
-        skeletonDataset?: VueUiBuiltInSkeletonDataset<VueUiWaffleDatasetItem[]>;
+        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiWaffleConfig> | null;
+        skeletonDataset?: VueUiBuiltInSkeletonDataset<
+            VueUiWaffleDatasetItem[]
+        > | null;
         debug?: boolean;
         loading?: boolean;
         responsive?: boolean;
@@ -5356,8 +5364,8 @@ declare module 'vue-data-ui' {
     >;
 
     export type VueUiRadarConfig = {
-        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiRadarConfig>;
-        skeletonDataset?: VueUiBuiltInSkeletonDataset<VueUiRadarDataset>;
+        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiRadarConfig> | null;
+        skeletonDataset?: VueUiBuiltInSkeletonDataset<VueUiRadarDataset> | null;
         debug?: boolean; // v3
         loading?: boolean; // v3
         responsive?: boolean;
@@ -5554,8 +5562,8 @@ declare module 'vue-data-ui' {
     export type VueUiQuadrantConfig = {
         skeletonDataset?: VueUiBuiltInSkeletonDataset<
             VueUiQuadrantDatasetItem[]
-        >;
-        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiQuadrantConfig>;
+        > | null;
+        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiQuadrantConfig> | null;
         debug?: boolean; // v3
         loading?: boolean; // v3
         responsive?: boolean;
@@ -5769,8 +5777,8 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiGaugeConfig = {
-        skeletonDataset?: VueUiBuiltInSkeletonDataset<VueUiGaugeDataset>;
-        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiGaugeConfig>;
+        skeletonDataset?: VueUiBuiltInSkeletonDataset<VueUiGaugeDataset> | null;
+        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiGaugeConfig> | null;
         debug?: boolean; // v3
         loading?: boolean; // v3
         responsive?: boolean;
@@ -5900,8 +5908,8 @@ declare module 'vue-data-ui' {
     export type VueUiChestnutConfig = {
         skeletonDataset?: VueUiBuiltInSkeletonDataset<
             VueUiChestnutDatasetRoot[]
-        >;
-        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiChestnutConfig>;
+        > | null;
+        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiChestnutConfig> | null;
         debug?: boolean;
         loading?: boolean;
         theme?: Theme;
@@ -6120,8 +6128,10 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiOnionConfig = {
-        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiOnionConfig>;
-        skeletonDataset?: VueUiBuiltInSkeletonDataset<VueUiOnionDatasetItem[]>;
+        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiOnionConfig> | null;
+        skeletonDataset?: VueUiBuiltInSkeletonDataset<
+            VueUiOnionDatasetItem[]
+        > | null;
         debug?: boolean; // v3
         loading?: boolean; // v3
         responsive?: boolean;
@@ -6331,10 +6341,10 @@ declare module 'vue-data-ui' {
     export type VueUiVerticalBarConfig = {
         skeletonDataset?: VueUiBuiltInSkeletonDataset<
             VueUiVerticalBarDatasetItem[] | VueUiHorizontalBarDatasetItem[]
-        >;
+        > | null;
         skeletonConfig?: VueUiBuiltInSkeletonConfig<
             VueUiVerticalBarConfig | VueUiHorizontalBarConfig
-        >;
+        > | null;
         debug?: boolean;
         loading?: boolean;
         autoSize?: boolean; // Legacy - unused
@@ -6574,8 +6584,8 @@ declare module 'vue-data-ui' {
             value?: string;
         };
         responsive?: boolean;
-        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiSparklineConfig>;
-        skeletonDataset?: VueUiBuiltInSkeletonDataset<number[]>;
+        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiSparklineConfig> | null;
+        skeletonDataset?: VueUiBuiltInSkeletonDataset<number[]> | null;
         gradientPath?: {
             show?: boolean;
             segments?: number;
@@ -7372,8 +7382,8 @@ declare module 'vue-data-ui' {
     }>;
 
     export type VueUiQuickChartConfig = {
-        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiQuickChartConfig>;
-        skeletonDataset?: VueUiBuiltInSkeletonDataset<VueUiQuickChartDataset>;
+        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiQuickChartConfig> | null;
+        skeletonDataset?: VueUiBuiltInSkeletonDataset<VueUiQuickChartDataset> | null;
         debug?: boolean; // v3
         loading?: boolean; // v3
         a11y?: A11YConfig;
@@ -7600,8 +7610,10 @@ declare module 'vue-data-ui' {
     }>;
 
     export type VueUiSparkTrendConfig = {
-        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiSparkTrendConfig>;
-        skeletonDataset?: VueUiBuiltInSkeletonDataset<Array<number | null>>;
+        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiSparkTrendConfig> | null;
+        skeletonDataset?: VueUiBuiltInSkeletonDataset<
+            Array<number | null>
+        > | null;
         debug?: boolean; // v3
         loading?: boolean; // v3
         responsive?: boolean; // v3
@@ -7672,8 +7684,10 @@ declare module 'vue-data-ui' {
     }>;
 
     export type VueUiStripPlotConfig = {
-        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiStripPlotConfig>;
-        skeletonDataset?: VueUiBuiltInSkeletonDataset<VueUiStripPlotDataset[]>;
+        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiStripPlotConfig> | null;
+        skeletonDataset?: VueUiBuiltInSkeletonDataset<
+            VueUiStripPlotDataset[]
+        > | null;
         debug?: boolean; // v3
         loading?: boolean; // v3
         responsive?: boolean;
@@ -7889,8 +7903,10 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiDumbbellConfig = {
-        skeletonDataset?: VueUiBuiltInSkeletonDataset<VueUiDumbbellDataset[]>;
-        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiDumbbellConfig>;
+        skeletonDataset?: VueUiBuiltInSkeletonDataset<
+            VueUiDumbbellDataset[]
+        > | null;
+        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiDumbbellConfig> | null;
         debug?: boolean; // v3
         loading?: boolean; // v3
         responsive?: boolean;
@@ -8092,10 +8108,10 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiWordCloudConfig = {
-        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiWordCloudConfig>;
+        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiWordCloudConfig> | null;
         skeletonDataset?: VueUiBuiltInSkeletonDataset<
             VueUiWordCloudDatasetItem[] | string
-        >;
+        > | null;
         debug?: boolean; // v3
         loading?: boolean; // v3
         responsive?: boolean;
@@ -8221,10 +8237,10 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiXyCanvasConfig = {
-        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiXyCanvasConfig>;
+        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiXyCanvasConfig> | null;
         skeletonDataset?: VueUiBuiltInSkeletonDataset<
             VueUiXyCanvasDatasetItem[]
-        >;
+        > | null;
         debug?: boolean;
         loading?: boolean;
         a11y?: A11YConfig;
@@ -8480,8 +8496,10 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiFlowConfig = {
-        skeletonDataset?: VueUiBuiltInSkeletonDataset<VueUiFlowDatasetItem[]>;
-        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiFlowConfig>;
+        skeletonDataset?: VueUiBuiltInSkeletonDataset<
+            VueUiFlowDatasetItem[]
+        > | null;
+        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiFlowConfig> | null;
         debug?: boolean;
         loading?: boolean;
         responsive?: boolean;
@@ -8640,10 +8658,10 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiParallelCoordinatePlotConfig = {
-        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiParallelCoordinatePlotConfig>;
+        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiParallelCoordinatePlotConfig> | null;
         skeletonDataset?: VueUiBuiltInSkeletonDataset<
             VueUiParallelCoordinatePlotDatasetItem[]
-        >;
+        > | null;
         debug?: boolean; // v3
         loading?: boolean; // v3
         responsive?: boolean;
@@ -9005,8 +9023,8 @@ declare module 'vue-data-ui' {
                 label?: string;
             };
         };
-        skeletonDataset?: VueUiBuiltInSkeletonDataset<VueUiGizmoDataset>;
-        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiGizmoConfig>;
+        skeletonDataset?: VueUiBuiltInSkeletonDataset<VueUiGizmoDataset> | null;
+        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiGizmoConfig> | null;
         debug?: boolean; // v3
         loading?: boolean; // v3
         type?: 'battery' | 'gauge';
@@ -9055,10 +9073,10 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiStackbarConfig = {
-        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiStackbarConfig>;
+        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiStackbarConfig> | null;
         skeletonDataset?: VueUiBuiltInSkeletonDataset<
             VueUiStackbarDatasetItem[]
-        >;
+        > | null;
         theme?: Theme;
         responsive?: boolean;
         customPalette?: string[];
@@ -9307,10 +9325,10 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiStacklineConfig = {
-        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiStacklineConfig>;
+        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiStacklineConfig> | null;
         skeletonDataset?: VueUiBuiltInSkeletonDataset<
             VueUiStacklineDatasetItem[]
-        >;
+        > | null;
         loading?: boolean;
         debug?: boolean;
         theme?: Theme;
@@ -9565,8 +9583,8 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiBulletConfig = {
-        skeletonDataset?: VueUiBuiltInSkeletonConfig<VueUiBulletDataset>;
-        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiBulletConfig>;
+        skeletonDataset?: VueUiBuiltInSkeletonConfig<VueUiBulletDataset> | null;
+        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiBulletConfig> | null;
         debug?: boolean; // v3
         loading?: boolean; // v3
         responsive?: boolean; // v3
@@ -9791,8 +9809,8 @@ declare module 'vue-data-ui' {
     export type VueUiHistoryPlotConfig = {
         skeletonDataset?: VueUiBuiltInSkeletonDataset<
             VueUiHistoryPlotDatasetItem[]
-        >;
-        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiHistoryPlotConfig>;
+        > | null;
+        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiHistoryPlotConfig> | null;
         debug?: boolean; // v3
         loading?: boolean; // v3
         responsive?: boolean;
@@ -10046,8 +10064,8 @@ declare module 'vue-data-ui' {
     export type VueUiCirclePackConfig = {
         skeletonDataset?: VueUiBuiltInSkeletonDataset<
             VueUiCirclePackDatasetItem[]
-        >;
-        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiCirclePackConfig>;
+        > | null;
+        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiCirclePackConfig> | null;
         debug?: boolean; // v3
         responsive?: boolean;
         loading?: boolean; // v3
@@ -10172,8 +10190,8 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiWorldConfig = {
-        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiWorldConfig>;
-        skeletonDataset?: VueUiBuiltInSkeletonDataset<VueUiWorldDataset>;
+        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiWorldConfig> | null;
+        skeletonDataset?: VueUiBuiltInSkeletonDataset<VueUiWorldDataset> | null;
         debug?: boolean; // v3
         loading?: boolean; // v3
         events?: {
@@ -10318,10 +10336,10 @@ declare module 'vue-data-ui' {
         VueUiRidgelineDatapointEventEntry[][];
 
     export type VueUiRidgelineConfig = {
-        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiRidgelineConfig>;
+        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiRidgelineConfig> | null;
         skeletonDataset?: VueUiBuiltInSkeletonDataset<
             VueUiRidgelineDatasetItem[]
-        >;
+        > | null;
         debug?: boolean; // v3
         loading?: boolean; // v3
         responsive?: boolean;
@@ -10539,8 +10557,8 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiChordConfig = {
-        skeletonDataset?: VueUiBuiltInSkeletonDataset<VueUiChordDataset>;
-        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiChordConfig>;
+        skeletonDataset?: VueUiBuiltInSkeletonDataset<VueUiChordDataset> | null;
+        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiChordConfig> | null;
         debug?: boolean; // v3
         loading?: boolean; // v3
         responsive?: boolean;
@@ -10681,8 +10699,8 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiDagConfig = {
-        skeletonDataset?: VueUiBuiltInSkeletonDataset<VueUiDagDataset>;
-        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiDagConfig>;
+        skeletonDataset?: VueUiBuiltInSkeletonDataset<VueUiDagDataset> | null;
+        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiDagConfig> | null;
         loading?: boolean;
         debug?: boolean;
         theme?: Theme;
@@ -10923,8 +10941,10 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiGeoConfig = {
-        skeletonDataset?: VueUiBuiltInSkeletonDataset<VueUiGeoDatasetItem[]>;
-        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiGeoConfig>;
+        skeletonDataset?: VueUiBuiltInSkeletonDataset<
+            VueUiGeoDatasetItem[]
+        > | null;
+        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiGeoConfig> | null;
         loading?: boolean;
         debug?: boolean;
         responsive?: boolean;
@@ -11051,8 +11071,10 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiBumpConfig = {
-        skeletonDataset?: VueUiBuiltInSkeletonDataset<VueUiBumpDatasetItem[]>;
-        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiBumpConfig>;
+        skeletonDataset?: VueUiBuiltInSkeletonDataset<
+            VueUiBumpDatasetItem[]
+        > | null;
+        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiBumpConfig> | null;
         loading?: boolean;
         debug?: boolean;
         responsive?: boolean;
