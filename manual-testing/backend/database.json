@@ -1171,7 +1171,7 @@
     {
       "title": "slot types",
       "component": "",
-      "description": "Add types for component slots",
+      "description": "Add types for component slots, and test the validity of all TS types for configs and datasets.",
       "priority": 1,
       "author": "graphieros",
       "done": false,
@@ -1179,7 +1179,7 @@
       "type": "feature",
       "withComponentCheckList": true,
       "checkList": {
-        "VueUi3dBar": false,
+        "VueUi3dBar": true,
         "VueUiAgePyramid": false,
         "VueUiAnnotator": false,
         "VueUiBullet": false,
@@ -1247,7 +1247,7 @@
       "customCheckList": {},
       "id": "3846f04c-685f-4509-8042-87b9c0b7ec33",
       "createdAt": 1775989842046,
-      "updatedAt": 1776009414364
+      "updatedAt": 1776061997696
     }
   ]
 }
