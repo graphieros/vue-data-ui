@@ -1,4 +1,4 @@
-import { DefineComponent } from 'vue';
+import type { DefineComponent } from 'vue';
 
 export type {
     VueUiRidgelineDatapoint,
@@ -9,7 +9,7 @@ export type {
     VueUiRidgelineConfig,
     VueUiRidgelineExpose,
     VueUiRidgelineEvent,
-} from './vue-data-ui';
+} from 'vue-data-ui';
 
 declare const VueUiRidgeline: DefineComponent<
     {

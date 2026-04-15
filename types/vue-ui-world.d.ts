@@ -1,4 +1,4 @@
-import { DefineComponent } from 'vue';
+import type { DefineComponent } from 'vue';
 
 export type {
     VueUiWorldDatapoint,
@@ -6,7 +6,7 @@ export type {
     VueUiWorldDataset,
     VueUiWorldExpose,
     VueUiWorldEvent,
-} from './vue-data-ui';
+} from 'vue-data-ui';
 
 declare const VueUiWorld: DefineComponent<
     {

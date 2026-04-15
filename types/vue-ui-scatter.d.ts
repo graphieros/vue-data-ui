@@ -1,4 +1,4 @@
-import { DefineComponent } from 'vue';
+import type { DefineComponent } from 'vue';
 
 export type {
     VueUiScatterDatasetValueItem,
@@ -8,7 +8,7 @@ export type {
     VueUiScatterSeries,
     VueUiScatterExpose,
     VueUiScatterEvent,
-} from './vue-data-ui';
+} from 'vue-data-ui';
 
 declare const VueUiScatter: DefineComponent<
     {

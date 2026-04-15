@@ -1,4 +1,4 @@
-import { DefineComponent, VNodeChild } from 'vue';
+import type { DefineComponent, VNodeChild } from 'vue';
 
 export type {
     VueUiXyHighlightArea,
@@ -25,7 +25,7 @@ export type {
     VueUiOptionStackSlotProps,
     VueUiOptionFullscreenSlotProps,
     VueUiOptionAnnotatorSlotProps,
-    VueUiOptionAltCopySlotProps,
+    VueUiXyOptionCopyAltSlotProps,
     VueUiXyBarGradientSlotProps,
     VueUiXyAreaGradientSlotProps,
     VueUiXyPlotCommentSlotProps,
@@ -34,7 +34,7 @@ export type {
     VueUiXySvgSlotProps,
     VueUiKeyboardNavigationHintSlotProps,
     VueUiWatermarkSlotProps,
-} from './vue-data-ui';
+} from 'vue-data-ui';
 
 declare const VueUiXyBase: DefineComponent<VueUiXyProps>;
 

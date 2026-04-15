@@ -1,4 +1,4 @@
-import { DefineComponent } from 'vue';
+import type { DefineComponent } from 'vue';
 
 export type {
     VueUiStacklineDatasetItem,
@@ -7,7 +7,7 @@ export type {
     VueUiStacklineConfig,
     VueUiStacklineExpose,
     VueUiStacklineEvent,
-} from './vue-data-ui';
+} from 'vue-data-ui';
 
 declare const VueUiStackline: DefineComponent<
     {

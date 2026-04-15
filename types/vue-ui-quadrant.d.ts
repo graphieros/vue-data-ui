@@ -1,4 +1,4 @@
-import { DefineComponent } from 'vue';
+import type { DefineComponent } from 'vue';
 
 export type {
     VueUiQuadrantDatasetSerieItem,
@@ -9,7 +9,7 @@ export type {
     VueUiQuadrantSerie,
     VueUiQuadrantExpose,
     VueUiQuadrantEvent,
-} from './vue-data-ui';
+} from 'vue-data-ui';
 
 declare const VueUiQuadrant: DefineComponent<
     {

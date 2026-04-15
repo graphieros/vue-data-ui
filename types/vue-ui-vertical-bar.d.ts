@@ -1,4 +1,4 @@
-import { DefineComponent } from 'vue';
+import type { DefineComponent } from 'vue';
 
 export type {
     VueUiVerticalBarConfig,
@@ -8,7 +8,7 @@ export type {
     VueUiVerticalBarDatasetItem,
     VueUiVerticalBarExpose,
     VueUiVerticalBarEvent,
-} from './vue-data-ui';
+} from 'vue-data-ui';
 
 declare const VueUiVerticalBar: DefineComponent<
     {

@@ -1,4 +1,4 @@
-import { DefineComponent, VNodeChild } from 'vue';
+import type { DefineComponent, VNodeChild } from 'vue';
 
 export type {
     VueUiDonutConfig,
@@ -26,7 +26,7 @@ export type {
     VueUiAnnotatorActionUndoSlotProps,
     VueUiAnnotatorActionRedoSlotProps,
     VueUiAnnotatorActionDeleteSlotProps,
-} from './vue-data-ui';
+} from 'vue-data-ui';
 
 declare const VueUiDonutBase: DefineComponent<VueUiDonutProps>;
 

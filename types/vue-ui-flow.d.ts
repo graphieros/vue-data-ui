@@ -1,4 +1,4 @@
-import { DefineComponent } from 'vue';
+import type { DefineComponent } from 'vue';
 
 export type {
     VueUiFlowDatasetItem,
@@ -7,7 +7,7 @@ export type {
     VueUiFlowConfig,
     VueUiFlowExpose,
     VueUiFlowEvent,
-} from './vue-data-ui';
+} from 'vue-data-ui';
 
 declare const VueUiFlow: DefineComponent<
     {

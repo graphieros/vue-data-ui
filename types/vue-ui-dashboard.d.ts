@@ -1,9 +1,6 @@
-import { DefineComponent } from 'vue';
+import type { DefineComponent } from 'vue';
 
-export type {
-    VueUiDashboardConfig,
-    VueUiDashboardElement,
-} from './vue-data-ui';
+export type { VueUiDashboardConfig, VueUiDashboardElement } from 'vue-data-ui';
 
 declare const VueUiDashboard: DefineComponent<{
     config?: VueUiDashboardConfig;

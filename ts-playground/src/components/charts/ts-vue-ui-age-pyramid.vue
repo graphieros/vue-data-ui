@@ -3,14 +3,13 @@
  * This playground showcases all the slots and their implementations for <VueUiAgePyramid>
  */
 import { computed } from 'vue';
-import { VueUiAgePyramid } from 'vue-data-ui/vue-ui-age-pyramid';
-import { mergeConfigs } from 'vue-data-ui/utils';
 import {
+    VueUiAgePyramid,
     type VueUiAgePyramidConfig,
     type VueUiAgePyramidDataset,
     type VueUiAgePyramidDatasetRow,
-} from 'vue-data-ui';
-
+} from 'vue-data-ui/vue-ui-age-pyramid';
+import { mergeConfigs } from 'vue-data-ui/utils';
 import CommonAnnotatorActionColor from '../slots/common/annotator-action-color.vue';
 import CommonAnnotatorActionDraw from '../slots/common/annotator-action-draw.vue';
 import CommonAnnotatorActionUndo from '../slots/common/annotator-action-undo.vue';

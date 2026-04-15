@@ -1,11 +1,11 @@
-import { DefineComponent } from 'vue';
+import type { DefineComponent } from 'vue';
 
 export type {
     VueUiBulletSegment,
     VueUiBulletDataset,
     VueUiBulletConfig,
     VueUiBulletExpose,
-} from './vue-data-ui';
+} from 'vue-data-ui';
 
 declare const VueUiBullet: DefineComponent<
     {

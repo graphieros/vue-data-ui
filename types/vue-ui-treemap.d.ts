@@ -1,4 +1,4 @@
-import { DefineComponent } from 'vue';
+import type { DefineComponent } from 'vue';
 
 export type {
     VueUiTreemapDatasetItem,
@@ -7,7 +7,7 @@ export type {
     VueUiTreemapSeriesItem,
     VueUiTreemapExpose,
     VueUiTreemapEvent,
-} from './vue-data-ui';
+} from 'vue-data-ui';
 
 declare const VueUiTreemap: DefineComponent<
     {

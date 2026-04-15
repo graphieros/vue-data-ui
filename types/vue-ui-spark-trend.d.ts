@@ -1,6 +1,6 @@
-import { DefineComponent } from 'vue';
+import type { DefineComponent } from 'vue';
 
-export type { VueUiSparkTrendConfig } from './vue-data-ui';
+export type { VueUiSparkTrendConfig } from 'vue-data-ui';
 
 declare const VueUiSparkTrend: DefineComponent<{
     dataset: Array<number | null>;

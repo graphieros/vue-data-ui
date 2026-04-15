@@ -1,9 +1,6 @@
-import { DefineComponent } from 'vue';
+import type { DefineComponent } from 'vue';
 
-export type {
-    VueUiAnnotatorConfig,
-    VueUiAnnotatorDataset,
-} from './vue-data-ui';
+export type { VueUiAnnotatorConfig, VueUiAnnotatorDataset } from 'vue-data-ui';
 
 declare const VueUiAnnotator: DefineComponent<{
     config?: VueUiAnnotatorConfig;

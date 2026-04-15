@@ -1,4 +1,4 @@
-import { DefineComponent } from 'vue';
+import type { DefineComponent } from 'vue';
 
 export type {
     VueUiHorizontalBarConfig,
@@ -8,7 +8,7 @@ export type {
     VueUiHorizontalBarDatasetItem,
     VueUiHorizontalBarExpose,
     VueUiHorizontalBarEvent,
-} from './vue-data-ui';
+} from 'vue-data-ui';
 
 declare const VueUiHorizontalBar: DefineComponent<
     {

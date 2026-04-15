@@ -1,4 +1,4 @@
-import { DefineComponent } from 'vue';
+import type { DefineComponent } from 'vue';
 
 export type {
     VueUiMoodRadarDataset,
@@ -6,7 +6,7 @@ export type {
     VueUiMoodRadarConfig,
     VueUiMoodRadarExpose,
     VueUiMoodRadarEvent,
-} from './vue-data-ui';
+} from 'vue-data-ui';
 
 declare const VueUiMoodRadar: DefineComponent<
     {

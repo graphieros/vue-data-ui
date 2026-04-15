@@ -1,10 +1,10 @@
-import { DefineComponent } from 'vue';
+import type { DefineComponent } from 'vue';
 
 export type {
     VueUiThermometerConfig,
     VueUiThermometerDataset,
     VueUiThermometerExpose,
-} from './vue-data-ui';
+} from 'vue-data-ui';
 
 declare const VueUiThermometer: DefineComponent<
     {

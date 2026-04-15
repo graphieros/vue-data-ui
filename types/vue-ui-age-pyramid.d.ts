@@ -1,4 +1,4 @@
-import { DefineComponent, VNodeChild } from 'vue';
+import type { DefineComponent, VNodeChild } from 'vue';
 
 export type {
     VueUiAgePyramidDatasetRow,
@@ -24,7 +24,7 @@ export type {
     VueUiWatermarkSlotProps,
     VueUiAgePyramidLegendSlotProps,
     VueUiAgePyramidTooltipSlotProps,
-} from './vue-data-ui';
+} from 'vue-data-ui';
 
 const VueUiAgePyramidBase: DefineComponent<VueUiAgePyramidProps>;
 

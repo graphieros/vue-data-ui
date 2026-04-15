@@ -1,4 +1,4 @@
-import { DefineComponent } from 'vue';
+import type { DefineComponent } from 'vue';
 
 export type {
     VueUiParallelCoordinatePlotDatasetSerieItem,
@@ -9,7 +9,7 @@ export type {
     VueUiParallelCoordinatePlotScaleSelection,
     VueUiParallelCoordinatePlotExpose,
     VueUiParallelCoordinatePlotEvent,
-} from './vue-data-ui';
+} from 'vue-data-ui';
 
 declare const VueUiParallelCoordinatePlot: DefineComponent<
     {

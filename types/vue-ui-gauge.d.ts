@@ -1,11 +1,11 @@
-import { DefineComponent } from 'vue';
+import type { DefineComponent } from 'vue';
 
 export type {
     VueUiGaugeDatasetSerieItem,
     VueUiGaugeDataset,
     VueUiGaugeConfig,
     VueUiGaugeExpose,
-} from './vue-data-ui';
+} from 'vue-data-ui';
 
 declare const VueUiGauge: DefineComponent<
     {

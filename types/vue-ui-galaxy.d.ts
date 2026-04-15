@@ -1,4 +1,4 @@
-import { DefineComponent } from 'vue';
+import type { DefineComponent } from 'vue';
 
 export type {
     VueUiGalaxyDatasetItem,
@@ -7,7 +7,7 @@ export type {
     VueUiGalaxySeriesItem,
     VueUiGalaxyExpose,
     VueUiGalaxyEvent,
-} from './vue-data-ui';
+} from 'vue-data-ui';
 
 declare const VueUiGalaxy: DefineComponent<
     {

@@ -1,11 +1,12 @@
-import { DefineComponent } from 'vue';
+import type { DefineComponent } from 'vue';
+
 export type {
     VueUiDagConfig,
     VueUiDagDataset,
     VueUiDagExpose,
     VueUiDagNode,
     VueUiDagEdge,
-} from './vue-data-ui';
+} from 'vue-data-ui';
 
 declare const VueUiDag: DefineComponent<
     {

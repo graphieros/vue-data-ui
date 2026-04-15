@@ -1,4 +1,4 @@
-import { DefineComponent } from 'vue';
+import type { DefineComponent } from 'vue';
 
 export type {
     VueUiStripPlotConfig,
@@ -8,7 +8,7 @@ export type {
     VueUiStripPlotDataset,
     VueUiStripPlotExpose,
     VueUiStripPlotEvent,
-} from './vue-data-ui';
+} from 'vue-data-ui';
 
 declare const VueUiStripPlot: DefineComponent<
     {

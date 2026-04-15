@@ -3,10 +3,13 @@
  * This playground showcases all the slots and their implementations for <VueUiXy>
  */
 import { computed } from 'vue';
-import { VueUiXy } from 'vue-data-ui/vue-ui-xy';
+import {
+    VueUiXy,
+    type VueUiXyConfig,
+    type VueUiXyDatasetItem,
+} from 'vue-data-ui/vue-ui-xy';
 import { mergeConfigs } from 'vue-data-ui/utils';
 import 'vue-data-ui/style.css';
-import { type VueUiXyConfig, type VueUiXyDatasetItem } from 'vue-data-ui';
 import XyLegend from '../slots/vue-ui-xy/xy-legend.vue';
 import CommonResetAction from '../slots/common/reset-action.vue';
 import XyTooltip from '../slots/vue-ui-xy/xy-tooltip.vue';

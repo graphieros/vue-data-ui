@@ -1,5 +1,5 @@
 declare module 'vue-data-ui' {
-    import { Ref, DefineComponent, VNodeChild } from 'vue';
+    import type { Ref, DefineComponent, VNodeChild } from 'vue';
 
     export type VueUiUnknownObj = {
         [key: string]: unknown;
@@ -9212,11 +9212,20 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiGizmoDataset = number;
-
-    export const VueUiGizmo: DefineComponent<{
+    export type VueUiGizmoProps = {
         dataset: VueUiGizmoDataset;
         config?: VueUiGizmoConfig;
-    }>;
+    };
+
+    const VueUiGizmoBase: DefineComponent<VueUiGizmoProps>;
+
+    export const VueUiGizmo: typeof VueUiGizmoBase & {
+        new (): {
+            $slots: {
+                skeleton?: () => VNodeChild;
+            };
+        };
+    };
 
     export type VueUiStackbarDatasetItem = {
         [key: string]: any; // To be recovered through the #svg slot

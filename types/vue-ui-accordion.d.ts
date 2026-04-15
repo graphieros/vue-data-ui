@@ -1,6 +1,6 @@
-import { DefineComponent } from 'vue';
+import type { DefineComponent } from 'vue';
 
-export type { VueUiAccordionConfig } from './vue-data-ui';
+export type { VueUiAccordionConfig } from 'vue-data-ui';
 
 declare const VueUiAccordion: DefineComponent<{
     config?: VueUi3dBarConfig;

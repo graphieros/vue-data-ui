@@ -1,4 +1,4 @@
-import { DefineComponent } from 'vue';
+import type { DefineComponent } from 'vue';
 
 export type {
     VueUi3dBarConfig,
@@ -20,7 +20,7 @@ export type {
     VueUi3dBarLegendSlotProps,
     VueUi3dBarSvgSlotProps,
     VueUiWatermarkSlotProps,
-} from './vue-data-ui';
+} from 'vue-data-ui';
 
 declare const VueUi3dBarBase: DefineComponent<VueUi3dBarProps>;
 

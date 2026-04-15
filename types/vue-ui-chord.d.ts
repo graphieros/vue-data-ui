@@ -1,4 +1,4 @@
-import { DefineComponent } from 'vue';
+import type { DefineComponent } from 'vue';
 
 export type {
     VueUiChordDataset,
@@ -8,7 +8,7 @@ export type {
     VueUiChordConfig,
     VueUiChordExpose,
     VueUiChordEvent,
-} from './vue-data-ui';
+} from 'vue-data-ui';
 
 declare const VueUiChord: DefineComponent<
     {

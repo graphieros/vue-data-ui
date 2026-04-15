@@ -1,6 +1,6 @@
-import { DefineComponent } from 'vue';
+import type { DefineComponent } from 'vue';
 
-export type { VueUiTimerConfig } from './vue-data-ui';
+export type { VueUiTimerConfig } from 'vue-data-ui';
 
 declare const VueUiTimer: DefineComponent<{
     config?: VueUiTimerConfig;

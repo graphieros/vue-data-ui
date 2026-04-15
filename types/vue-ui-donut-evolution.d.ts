@@ -1,4 +1,4 @@
-import { DefineComponent } from 'vue';
+import type { DefineComponent } from 'vue';
 
 export type {
     VueUiDonutEvolutionDatapoint,
@@ -6,7 +6,7 @@ export type {
     VueUiDonutEvolutionDatasetItem,
     VueUiDonutEvolutionExpose,
     VueUiDonutEvolutionEvent,
-} from './vue-data-ui';
+} from 'vue-data-ui';
 
 declare const VueUiDonutEvolution: DefineComponent<
     {

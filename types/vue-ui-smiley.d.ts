@@ -1,6 +1,6 @@
-import { DefineComponent } from 'vue';
+import type { DefineComponent } from 'vue';
 
-export type { VueUiSmileyConfig, VueUiRatingDataset } from './vue-data-ui';
+export type { VueUiSmileyConfig, VueUiRatingDataset } from 'vue-data-ui';
 
 declare const VueUiSmiley: DefineComponent<{
     config?: VueUiSmileyConfig;

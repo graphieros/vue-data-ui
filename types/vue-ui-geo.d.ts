@@ -1,5 +1,6 @@
-import { DefineComponent } from 'vue';
-import {
+import type { DefineComponent } from 'vue';
+
+export type {
     VueUiGeoConfig,
     VueUiGeoDatasetItem,
     VueUiGeoExpose,

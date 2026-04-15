@@ -1,9 +1,9 @@
-import { DefineComponent } from 'vue';
+import type { DefineComponent } from 'vue';
 
 export type {
     VueUiCarouselTableDataset,
     VueUiCarouselTableConfig,
-} from './vue-data-ui';
+} from 'vue-data-ui';
 
 declare const VueUiCarouselTable: DefineComponent<{
     config?: VueUiCarouselTableConfig;

@@ -1,11 +1,11 @@
-import { DefineComponent } from 'vue';
+import type { DefineComponent } from 'vue';
 
 export type {
     VueUiBumpExpose,
     VueUiBumpConfig,
     VueUiBumpDatasetItem,
     VueUiBumpDatapoint,
-} from './vue-data-ui';
+} from 'vue-data-ui';
 
 declare const VueUiBump: DefineComponent<
     {

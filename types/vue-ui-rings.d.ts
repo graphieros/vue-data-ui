@@ -1,4 +1,4 @@
-import { DefineComponent } from 'vue';
+import type { DefineComponent } from 'vue';
 
 export type {
     VueUiRingsConfig,
@@ -6,7 +6,7 @@ export type {
     VueUiRingsDatasetItem,
     VueUiRingsExpose,
     VueUiRingsEvent,
-} from './vue-data-ui';
+} from 'vue-data-ui';
 
 declare const VueUiRings: DefineComponent<
     {

@@ -3,10 +3,13 @@
  * This playground showcases all the slots and their implementations for <VueUi3dBar>
  */
 import { computed } from 'vue';
-import { VueUi3dBar } from 'vue-data-ui/vue-ui-3d-bar';
+import {
+    VueUi3dBar,
+    type VueUi3dBarConfig,
+    type VueUi3dBarDataset,
+} from 'vue-data-ui/vue-ui-3d-bar';
 import { mergeConfigs } from 'vue-data-ui/utils';
 import 'vue-data-ui/style.css';
-import { type VueUi3dBarConfig, type VueUi3dBarDataset } from 'vue-data-ui';
 
 import CommonAnnotatorActionColor from '../slots/common/annotator-action-color.vue';
 import CommonAnnotatorActionDraw from '../slots/common/annotator-action-draw.vue';

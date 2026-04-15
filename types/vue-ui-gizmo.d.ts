@@ -1,11 +1,20 @@
-import { DefineComponent } from 'vue';
+import type { DefineComponent, VNodeChild } from 'vue';
 
-export type { VueUiGizmoConfig, VueUiGizmoDataset } from './vue-data-ui';
+export type {
+    VueUiGizmoConfig,
+    VueUiGizmoDataset,
+    VueUiGizmoProps,
+} from 'vue-data-ui';
 
-declare const VueUiGizmo: DefineComponent<{
-    dataset: VueUiGizmoDataset;
-    config?: VueUiGizmoConfig;
-}>;
+const VueUiGizmoBase: DefineComponent<VueUiGizmoProps>;
+
+export const VueUiGizmo: typeof VueUiGizmoBase & {
+    new (): {
+        $slots: {
+            skeleton?: () => VNodeChild;
+        };
+    };
+};
 
 export default VueUiGizmo;
 export { VueUiGizmo };

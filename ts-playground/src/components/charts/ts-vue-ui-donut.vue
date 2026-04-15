@@ -3,10 +3,13 @@
  * This playground showcases all the slots and their implementations for <VueUiDonut>
  */
 import { computed } from 'vue';
-import { VueUiDonut } from 'vue-data-ui/vue-ui-donut';
+import {
+    VueUiDonut,
+    type VueUiDonutConfig,
+    type VueUiDonutDatasetItem,
+} from 'vue-data-ui/vue-ui-donut';
 import { mergeConfigs } from 'vue-data-ui/utils';
 import 'vue-data-ui/style.css';
-import { type VueUiDonutConfig, type VueUiDonutDatasetItem } from 'vue-data-ui';
 
 import DonutLegend from '../slots/vue-ui-donut/donut-legend.vue';
 import DonutTooltip from '../slots/vue-ui-donut/donut-tooltip.vue';

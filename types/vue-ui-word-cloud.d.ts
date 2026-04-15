@@ -1,4 +1,4 @@
-import { DefineComponent } from 'vue';
+import type { DefineComponent } from 'vue';
 
 export type {
     VueUiWordCloudDatasetItem,
@@ -6,7 +6,7 @@ export type {
     VueUiWordCloudConfig,
     VueUiWordCloudExpose,
     VueUiWordCloudEvent,
-} from './vue-data-ui';
+} from 'vue-data-ui';
 
 declare const VueUiWordCloud: DefineComponent<
     {
