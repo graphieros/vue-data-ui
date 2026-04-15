@@ -45,6 +45,7 @@ export const VueUiDonut: typeof VueUiDonutBase & {
             ['plot-comment']?: (
                 props: VueUiDonutPlotCommentSlotProps,
             ) => VNodeChild;
+            ['chart-background']?: () => VNodeChild;
             svg?: (props: VueUiDonutSvgSlotProps) => VNodeChild;
             hint?: (props: VueUiKeyboardNavigationHintSlotProps) => VNodeChild;
             watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;

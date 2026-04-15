@@ -3249,13 +3249,106 @@ declare module 'vue-data-ui' {
         toggleFullscreen(): void;
     };
 
-    export const VueUiAgePyramid: DefineComponent<
-        {
-            config?: VueUiAgePyramidConfig;
-            dataset: VueUiAgePyramidDataset;
-        },
-        VueUiAgePyramidExpose
-    >;
+    export type VueUiAgePyramidOptionCopyAltSlotProps = {
+        config: VueUiAgePyramidConfig;
+        dataset: VueUiAgePyramidSeries[];
+    };
+
+    export type VueUiAgePyramidSvgSlotProps = {
+        isPrintingImg: boolean;
+        isPrintingSvg: boolean;
+        height: number;
+        width: number;
+        drawingArea: {
+            top: number;
+            left: number;
+            right: number;
+            bottom: number;
+            width: number;
+            height: number;
+            centerX: number;
+            leftChart: {
+                width: number;
+                right: number;
+            };
+            rightChart: {
+                width: number;
+                left: number;
+            };
+        };
+    };
+
+    export type VueUiAgePyramidLegendSlotProps = VueUiAgePyramidSeries[];
+    export type VueUiAgePyramidTooltipSlotProps = {
+        datapoint: VueUiAgePyramidDatasetRow;
+        series: VueUiAgePyramidSeries[];
+        config: VueUiAgePyramidConfig;
+        seriesIndex: number;
+    };
+
+    export type VueUiAgePyramidProps = {
+        config?: VueUiAgePyramidConfig;
+        dataset: VueUiAgePyramidDataset;
+    };
+
+    const VueUiAgePyramidBase: DefineComponent<VueUiAgePyramidProps>;
+
+    export const VueUiAgePyramid: typeof VueUiAgePyramidBase & {
+        new (): VueUiAgePyramidExpose & {
+            $slots: {
+                ['annotator-action-close']?: () => VNodeChild;
+                ['annotator-action-color']?: (
+                    props: VueUiAnnotatorActionColorSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-draw']?: (
+                    props: VueUiAnnotatorActionDrawSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-undo']?: (
+                    props: VueUiAnnotatorActionUndoSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-redo']?: (
+                    props: VueUiAnnotatorActionRedoSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-delete']?: (
+                    props: VueUiAnnotatorActionDeleteSlotProps,
+                ) => VNodeChild;
+                menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
+                optionTooltip?: () => VNodeChild;
+                optionPdf?: () => VNodeChild;
+                optionCsv?: () => VNodeChild;
+                optionImg?: () => VNodeChild;
+                optionSvg?: () => VNodeChild;
+                optionTable?: () => VNodeChild;
+                optionFullscreen?: (
+                    props: VueUiOptionFullscreenSlotProps,
+                ) => VNodeChild;
+                optionAnnotator?: (
+                    props: VueUiOptionAnnotatorSlotProps,
+                ) => VNodeChild;
+                optionAltCopy?: (
+                    props: VueUiAgePyramidOptionCopyAltSlotProps,
+                ) => VNodeChild;
+                ['chart-background']?: () => VNodeChild;
+                svg?: (props: VueUiAgePyramidSvgSlotProps) => VNodeChild;
+                hint?: (
+                    props: VueUiKeyboardNavigationHintSlotProps,
+                ) => VNodeChild;
+                watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
+                legend?: (props: VueUiAgePyramidLegendSlotProps) => VNodeChild;
+                source?: () => VNodeChild;
+                ['tooltip-before']?: (
+                    props: VueUiAgePyramidTooltipSlotProps,
+                ) => VNodeChild;
+                tooltip?: (
+                    props: VueUiAgePyramidTooltipSlotProps,
+                ) => VNodeChild;
+                ['tooltip-after']?: (
+                    props: VueUiAgePyramidTooltipSlotProps,
+                ) => VNodeChild;
+                skeleton?: () => VNodeChild;
+            };
+        };
+    };
 
     export type OHLC = [
         timestamp: string | number,
@@ -4996,6 +5089,7 @@ declare module 'vue-data-ui' {
                 ['plot-comment']?: (
                     props: VueUiDonutPlotCommentSlotProps,
                 ) => VNodeChild;
+                ['chart-background']?: () => VNodeChild;
                 svg?: (props: VueUiDonutSvgSlotProps) => VNodeChild;
                 hint?: (
                     props: VueUiKeyboardNavigationHintSlotProps,
