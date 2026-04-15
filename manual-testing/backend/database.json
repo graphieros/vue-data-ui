@@ -1180,7 +1180,7 @@
       "withComponentCheckList": true,
       "checkList": {
         "VueUi3dBar": true,
-        "VueUiAgePyramid": false,
+        "VueUiAgePyramid": true,
         "VueUiAnnotator": false,
         "VueUiBullet": false,
         "VueUiBump": false,
@@ -1247,7 +1247,24 @@
       "customCheckList": {},
       "id": "3846f04c-685f-4509-8042-87b9c0b7ec33",
       "createdAt": 1775989842046,
-      "updatedAt": 1776061997696
+      "updatedAt": 1776226605577
+    },
+    {
+      "title": "Expose more methods",
+      "component": "",
+      "description": "Expose more construction methods, like line/spline creation utilities from a dataset.",
+      "priority": 1,
+      "author": "graphieros",
+      "done": false,
+      "exchanges": [],
+      "type": "feature",
+      "withComponentCheckList": false,
+      "checkList": {},
+      "withCustomCheckList": false,
+      "customCheckList": {},
+      "id": "ef0d34dc-adc3-4826-b117-38c8d7d4199c",
+      "createdAt": 1776182479567,
+      "updatedAt": 1776182479567
     }
   ]
 }

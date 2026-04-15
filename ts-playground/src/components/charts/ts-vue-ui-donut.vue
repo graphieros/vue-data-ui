@@ -1,22 +1,25 @@
 <script setup lang="ts">
 /**
- * This playground showcases all the slots and their implementations through components
+ * This playground showcases all the slots and their implementations for <VueUiDonut>
  */
 import { computed } from 'vue';
 import { VueUiDonut } from 'vue-data-ui/vue-ui-donut';
 import { mergeConfigs } from 'vue-data-ui/utils';
 import 'vue-data-ui/style.css';
 import { type VueUiDonutConfig, type VueUiDonutDatasetItem } from 'vue-data-ui';
+
 import DonutLegend from '../slots/vue-ui-donut/donut-legend.vue';
 import DonutTooltip from '../slots/vue-ui-donut/donut-tooltip.vue';
 import DonutDataLabel from '../slots/vue-ui-donut/donut-data-label.vue';
 import DonutPlotComment from '../slots/vue-ui-donut/donut-plot-comment.vue';
 import DonutSvg from '../slots/vue-ui-donut/donut-svg.vue';
+import DonutHollow from '../slots/vue-ui-donut/donut-hollow.vue';
+import DonutOptionAltCopy from '../slots/vue-ui-donut/donut-option-alt-copy.vue';
+
 import KeyboardNavigationHint from '../slots/common/keyboard-navigation-hint.vue';
 import Watermark from '../slots/common/watermark.vue';
 import Skeleton from '../slots/common/skeleton.vue';
 import PatternSlot from '../slots/common/pattern-slot.vue';
-import DonutHollow from '../slots/vue-ui-donut/donut-hollow.vue';
 import CommonAnnotatorActionColor from '../slots/common/annotator-action-color.vue';
 import CommonAnnotatorActionDraw from '../slots/common/annotator-action-draw.vue';
 import CommonAnnotatorActionUndo from '../slots/common/annotator-action-undo.vue';
@@ -25,7 +28,6 @@ import CommonAnnotatorActionDelete from '../slots/common/annotator-action-delete
 import CommonMenuIcon from '../slots/common/menu-icon.vue';
 import CommonOptionFullscreen from '../slots/common/option-fullscreen.vue';
 import CommonOptionAnnotator from '../slots/common/option-annotator.vue';
-import DonutOptionAltCopy from '../slots/vue-ui-donut/donut-option-alt-copy.vue';
 
 const dataset = computed<VueUiDonutDatasetItem[]>(() => [
     {
@@ -344,7 +346,6 @@ const config = computed<VueUiDonutConfig>(() => {
     return mergeConfigs({
         defaultConfig: testPreconfig.value,
         userConfig: {
-            theme: 'dark',
             userOptions: {
                 buttons: {
                     altCopy: true,

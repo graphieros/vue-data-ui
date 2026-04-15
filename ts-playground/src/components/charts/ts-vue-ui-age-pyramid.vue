@@ -1,63 +1,51 @@
 <script setup lang="ts">
 /**
- * This playground showcases all the slots and their implementations for <VueUi3dBar>
+ * This playground showcases all the slots and their implementations for <VueUiAgePyramid>
  */
 import { computed } from 'vue';
-import { VueUi3dBar } from 'vue-data-ui/vue-ui-3d-bar';
+import { VueUiAgePyramid } from 'vue-data-ui/vue-ui-age-pyramid';
 import { mergeConfigs } from 'vue-data-ui/utils';
-import 'vue-data-ui/style.css';
-import { type VueUi3dBarConfig, type VueUi3dBarDataset } from 'vue-data-ui';
+import {
+    type VueUiAgePyramidConfig,
+    type VueUiAgePyramidDataset,
+    type VueUiAgePyramidDatasetRow,
+} from 'vue-data-ui';
 
 import CommonAnnotatorActionColor from '../slots/common/annotator-action-color.vue';
 import CommonAnnotatorActionDraw from '../slots/common/annotator-action-draw.vue';
 import CommonAnnotatorActionUndo from '../slots/common/annotator-action-undo.vue';
 import CommonAnnotatorActionRedo from '../slots/common/annotator-action-redo.vue';
 import CommonAnnotatorActionDelete from '../slots/common/annotator-action-delete.vue';
-
+import CommonMenuIcon from '../slots/common/menu-icon.vue';
 import CommonOptionFullscreen from '../slots/common/option-fullscreen.vue';
 import CommonOptionAnnotator from '../slots/common/option-annotator.vue';
-import Bar3dOptionAltCopy from '../slots/vue-ui-3d-bar/bar-3d-option-alt-copy.vue';
-import Bar3dLegend from '../slots/vue-ui-3d-bar/bar-3d-legend.vue';
-import Bar3dSvg from '../slots/vue-ui-3d-bar/bar-3d-svg.vue';
+import KeyboardNavigationHint from '../slots/common/keyboard-navigation-hint.vue';
 import Watermark from '../slots/common/watermark.vue';
+
+import PyramidOptionAltCopy from '../slots/vue-ui-age-pyramid/pyramid-option-alt-copy.vue';
+import PyramidSvg from '../slots/vue-ui-age-pyramid/pyramid-svg.vue';
+
+import 'vue-data-ui/style.css';
+import PyramidLegend from '../slots/vue-ui-age-pyramid/pyramid-legend.vue';
+import PyramidTooltip from '../slots/vue-ui-age-pyramid/pyramid-tooltip.vue';
 import Skeleton from '../slots/common/skeleton.vue';
 
-const dataset = computed<VueUi3dBarDataset>(() => {
-    return {
-        series: [
-            {
-                name: 'A',
-                value: 100,
-                breakdown: [
-                    {
-                        name: 'a',
-                        value: 50,
-                    },
-                    {
-                        name: 'b',
-                        value: 50,
-                    },
-                ],
-            },
-            {
-                name: 'B',
-                value: 50,
-                breakdown: [
-                    {
-                        name: 'a',
-                        value: 25,
-                    },
-                    {
-                        name: 'b',
-                        value: 25,
-                    },
-                ],
-            },
-        ],
-    };
-});
+function makeDs(n: number, exp: number): VueUiAgePyramidDataset {
+    const arr: VueUiAgePyramidDatasetRow[] = [];
+    for (let i = 0; i < n; i += 1) {
+        arr.push([
+            `T${i}`,
+            i,
+            i + Math.random() * exp,
+            i + Math.random() * exp,
+        ]);
+    }
+    return arr.reverse();
+}
 
-const testPreconfig = computed<VueUi3dBarConfig>(() => {
+const dataset = computed<VueUiAgePyramidDataset>(() => makeDs(51, 10));
+
+const testPreconfig = computed<VueUiAgePyramidConfig>(() => {
     return {
         skeletonConfig: null,
         skeletonDataset: null,
@@ -79,74 +67,122 @@ const testPreconfig = computed<VueUi3dBarConfig>(() => {
             datapointClick: null,
         },
         theme: '',
-        customPalette: [],
-        useCssAnimation: false,
         style: {
             fontFamily: 'inherit',
-            shape: 'bar',
-            chart: {
-                animation: {
-                    use: true,
-                    speed: 1,
-                    acceleration: 1,
+            backgroundColor: '#FFFFFF',
+            color: '#2D353C',
+            height: 500,
+            width: 500,
+            layout: {
+                padding: {
+                    top: 12,
+                    right: 12,
+                    bottom: 36,
+                    left: 12,
                 },
-                backgroundColor: '#FFFFFF',
-                color: '#2D353C',
-                bar: {
-                    color: '#1f77b4',
-                    stroke: '#1f77b4',
-                    strokeWidth: 0.7,
-                    shadeColor: '#2D353C',
-                },
-                box: {
-                    stroke: '#CCCCCC',
-                    strokeWidth: 0.7,
-                    strokeDasharray: 2,
-                    dimensions: {
-                        width: 128,
-                        height: 256,
-                        top: 27,
-                        bottom: 9,
-                        left: 24,
-                        right: 24,
-                        perspective: 18,
-                    },
-                },
-                title: {
-                    text: '',
-                    color: '#2D353C',
-                    fontSize: 20,
-                    bold: true,
-                    textAlign: 'center',
-                    paddingLeft: 0,
-                    paddingRight: 0,
-                    subtitle: {
-                        color: '#A1A1A1',
-                        text: '',
-                        fontSize: 16,
-                        bold: false,
-                    },
-                },
-                legend: {
-                    showDefault: true,
-                    fontSize: 10,
-                    color: '#2D353C',
-                    bold: false,
-                    roundingValue: 0,
-                    roundingPercentage: 0,
-                    prefix: '',
-                    suffix: '',
-                    hideUnderPercentage: 3,
-                },
-                dataLabel: {
+                grid: {
                     show: true,
-                    bold: true,
-                    color: '#1f77b4',
-                    fontSize: 12,
-                    rounding: 1,
-                    formatter: null,
+                    stroke: '#e1e5e8',
+                    strokeWidth: 1,
+                },
+                dataLabels: {
+                    sideTitles: {
+                        show: true,
+                        fontSize: 18,
+                        color: '#2D353C',
+                        useSideColor: true,
+                        bold: false,
+                        offsetY: 0,
+                    },
+                    xAxis: {
+                        show: true,
+                        fontSize: 12,
+                        color: '#2D353C',
+                        bold: false,
+                        scale: 1,
+                        translation: 'Something about the data',
+                        formatter: null,
+                        rotation: 0,
+                        autoRotate: {
+                            enable: true,
+                            angle: -30,
+                        },
+                    },
+                    yAxis: {
+                        show: true,
+                        display: 'age',
+                        fontSize: 12,
+                        color: '#2D353C',
+                        bold: false,
+                        showEvery: 5,
+                        formatter: null,
+                    },
+                },
+                centerSlit: {
+                    width: 20,
+                },
+                bars: {
+                    gap: 2,
+                    borderRadius: 2,
+                    left: {
+                        color: '#d62728',
+                    },
+                    right: {
+                        color: '#1f77b4',
+                    },
+                    gradient: {
+                        show: true,
+                        underlayer: '#FFFFFF',
+                        intensity: 60,
+                        shiftHue: 0.05,
+                    },
                 },
             },
+            highlighter: {
+                color: '#2D353C',
+                opacity: 5,
+            },
+            title: {
+                text: '',
+                color: '#2D353C',
+                fontSize: 20,
+                bold: true,
+                textAlign: 'center',
+                paddingLeft: 0,
+                paddingRight: 0,
+                subtitle: {
+                    color: '#A1A1A1',
+                    text: '',
+                    fontSize: 16,
+                    bold: false,
+                },
+            },
+            tooltip: {
+                show: true,
+                color: '#2D353C',
+                backgroundColor: '#FFFFFF',
+                fontSize: 14,
+                customFormat: null,
+                borderRadius: 4,
+                borderColor: '#e1e5e8',
+                borderWidth: 1,
+                backgroundOpacity: 100,
+                position: 'center',
+                offsetY: 24,
+                smooth: true,
+                backdropFilter: true,
+                smoothForce: 0.18,
+                smoothSnapThreshold: 0.25,
+                teleportTo: 'body',
+                roundingValue: 0,
+            },
+        },
+        translations: {
+            age: 'age',
+            male: 'male',
+            female: 'female',
+            total: 'total',
+            year: 'year',
         },
         userOptions: {
             show: true,
@@ -154,7 +190,7 @@ const testPreconfig = computed<VueUi3dBarConfig>(() => {
             keepStateOnChartLeave: true,
             position: 'right',
             buttons: {
-                tooltip: false,
+                tooltip: true,
                 pdf: true,
                 csv: true,
                 img: true,
@@ -188,6 +224,7 @@ const testPreconfig = computed<VueUi3dBarConfig>(() => {
             buttonTitles: {
                 open: 'Open options',
                 close: 'Close options',
+                tooltip: 'Toggle tooltip',
                 pdf: 'Download PDF',
                 csv: 'Download CSV',
                 img: 'Download PNG',
@@ -208,11 +245,6 @@ const testPreconfig = computed<VueUi3dBarConfig>(() => {
             show: false,
             responsiveBreakpoint: 400,
             useDialog: false,
-            columnNames: {
-                series: 'Series',
-                value: 'Value',
-                percentage: 'Percentage',
-            },
             th: {
                 backgroundColor: '#FFFFFF',
                 color: '#2D353C',
@@ -222,15 +254,13 @@ const testPreconfig = computed<VueUi3dBarConfig>(() => {
                 backgroundColor: '#FFFFFF',
                 color: '#2D353C',
                 outline: 'none',
-                roundingValue: 0,
-                roundingPercentage: 0,
             },
         },
     };
 });
 
-const config = computed<VueUi3dBarConfig>(() => {
-    return mergeConfigs({
+const config = computed<VueUiAgePyramidConfig>(() =>
+    mergeConfigs({
         defaultConfig: testPreconfig.value,
         userConfig: {
             userOptions: {
@@ -244,17 +274,17 @@ const config = computed<VueUi3dBarConfig>(() => {
                 },
             },
         },
-    }) satisfies VueUi3dBarConfig;
-});
+    }),
+);
 
-function log(el: any) {
-    console.log(el);
+function log(t: unknown) {
+    console.log(t);
 }
 </script>
 
 <template>
     <div>
-        <VueUi3dBar :dataset :config>
+        <VueUiAgePyramid :dataset :config>
             <template #annotator-action-close>
                 <span style="color: chocolate">X</span>
             </template>
@@ -278,6 +308,21 @@ function log(el: any) {
 
             <template #annotator-action-delete="{ disabled }">
                 <CommonAnnotatorActionDelete :disabled />
+            </template>
+
+            <template #menuIcon="{ isOpen, color }">
+                <CommonMenuIcon :isOpen :color />
+            </template>
+
+            <template #optionTooltip>
+                <code
+                    style="
+                        color: chocolate;
+                        font-size: 0.7rem;
+                        pointer-events: none;
+                    "
+                    >#optionTooltip</code
+                >
             </template>
 
             <template #optionPdf>
@@ -344,7 +389,7 @@ function log(el: any) {
             </template>
 
             <template #optionAltCopy="{ copyAlt }">
-                <Bar3dOptionAltCopy :copy-alt />
+                <PyramidOptionAltCopy :copyAlt />
             </template>
 
             <template #chart-background>
@@ -363,25 +408,48 @@ function log(el: any) {
                 </div>
             </template>
 
-            <template #legend="{ datapoint, config: cfg }">
-                <Bar3dLegend :datapoint :config="cfg" />
+            <template #svg="{ svg }">
+                <PyramidSvg :svg />
             </template>
 
-            <template #svg="{ svg }">
-                <Bar3dSvg :svg />
+            <template #hint="{ hint, isVisible }">
+                <KeyboardNavigationHint :hint :is-visible />
             </template>
 
             <template #watermark="{ isPrinting }">
                 <Watermark :is-printing />
             </template>
 
-            <template #source>
-                <code style="color: chocolate"> #source </code>
+            <template #legend="{ legend }">
+                <PyramidLegend :legend />
+            </template>
+
+            <template
+                #tooltip-before="{
+                    datapoint,
+                    series,
+                    config: cfg,
+                    seriesIndex,
+                }"
+            >
+                <code style="color: chocolate">#tooltip-before</code>
+            </template>
+
+            <template
+                #tooltip="{ datapoint, series, config: cfg, seriesIndex }"
+            >
+                <PyramidTooltip :datapoint :series :config="cfg" :seriesIndex />
+            </template>
+
+            <template
+                #tooltip-after="{ datapoint, series, config: cfg, seriesIndex }"
+            >
+                <code style="color: chocolate">#tooltip-after</code>
             </template>
 
             <template #skeleton>
                 <Skeleton />
             </template>
-        </VueUi3dBar>
+        </VueUiAgePyramid>
     </div>
 </template>

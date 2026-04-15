@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /**
- * This playground showcases all the slots and their implementations through components
+ * This playground showcases all the slots and their implementations for <VueUiXy>
  */
 import { computed } from 'vue';
 import { VueUiXy } from 'vue-data-ui/vue-ui-xy';

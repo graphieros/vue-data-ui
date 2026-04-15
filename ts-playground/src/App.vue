@@ -9,11 +9,15 @@ const TsVueUiDonut = defineAsyncComponent(
 const TsVueUi3dBar = defineAsyncComponent(
     () => import('./components/charts/ts-vue-ui-3d-bar.vue'),
 );
+const TsVueUiAgePyramid = defineAsyncComponent(
+    () => import('./components/charts/ts-vue-ui-age-pyramid.vue'),
+);
 
 const components = shallowRef([
     { name: 'VueUiXy' },
     { name: 'VueUiDonut' },
     { name: 'VueUi3dBar' },
+    { name: 'VueUiAgePyramid' },
 ]);
 
 const selectedComponent = shallowRef(components.value[0]);
@@ -28,6 +32,9 @@ const selectedComponent = shallowRef(components.value[0]);
         <TsVueUiXy v-if="selectedComponent?.name === 'VueUiXy'" />
         <TsVueUiDonut v-if="selectedComponent?.name === 'VueUiDonut'" />
         <TsVueUi3dBar v-if="selectedComponent?.name === 'VueUi3dBar'" />
+        <TsVueUiAgePyramid
+            v-if="selectedComponent?.name === 'VueUiAgePyramid'"
+        />
     </div>
 </template>
 
