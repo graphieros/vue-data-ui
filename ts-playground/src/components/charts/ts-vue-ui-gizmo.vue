@@ -37,7 +37,7 @@ const config = computed<VueUiGizmoConfig>(() => {
 </script>
 
 <template>
-    <div style="display: flex; justify-content: center;">
+    <div style="display: flex; justify-content: center">
         <VueUiGizmo :dataset :config />
     </div>
 </template>
