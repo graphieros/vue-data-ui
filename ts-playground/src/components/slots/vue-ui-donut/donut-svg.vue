@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { VueUiDonutSvgSlotProps } from 'vue-data-ui';
+import type { VueUiDonutSvgSlotProps } from 'vue-data-ui/vue-ui-donut';
 
 const props = defineProps<{
     svg: VueUiDonutSvgSlotProps;

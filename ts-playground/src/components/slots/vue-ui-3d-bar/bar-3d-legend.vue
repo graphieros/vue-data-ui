@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { VueUi3dBarLegendSlotProps } from 'vue-data-ui';
+import type { VueUi3dBarLegendSlotProps } from 'vue-data-ui/vue-ui-3d-bar';
 
 const props = defineProps<{
     config: VueUi3dBarLegendSlotProps['config'];

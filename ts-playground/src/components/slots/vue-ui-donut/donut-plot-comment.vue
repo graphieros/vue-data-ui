@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { VueUiDonutPlotCommentSlotProps } from 'vue-data-ui';
+import type { VueUiDonutPlotCommentSlotProps } from 'vue-data-ui/vue-ui-donut';
 const props = defineProps<{
     plot: VueUiDonutPlotCommentSlotProps;
 }>();

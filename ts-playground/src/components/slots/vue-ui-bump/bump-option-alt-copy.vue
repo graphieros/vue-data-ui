@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import type { VueUiXyOptionCopyAltSlotProps } from 'vue-data-ui/vue-ui-xy';
-
+import type { VueUiBumpOptionCopyAltSlotProps } from 'vue-data-ui/vue-ui-bump';
 const props = defineProps<{
-    copyAlt: VueUiXyOptionCopyAltSlotProps;
+    copyAlt: VueUiBumpOptionCopyAltSlotProps;
 }>();
 </script>
 

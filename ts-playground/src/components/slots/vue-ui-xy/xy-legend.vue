@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { VueUiXyLegendSlotProps } from 'vue-data-ui';
+import type { VueUiXyLegendSlotProps } from 'vue-data-ui/vue-ui-xy';
 
 const props = defineProps<{
     items: VueUiXyLegendSlotProps;

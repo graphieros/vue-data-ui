@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { VueUiXySvgSlotProps } from 'vue-data-ui';
+import type { VueUiXySvgSlotProps } from 'vue-data-ui/vue-ui-xy';
 
 const props = defineProps<{
     data: VueUiXySvgSlotProps['data'];

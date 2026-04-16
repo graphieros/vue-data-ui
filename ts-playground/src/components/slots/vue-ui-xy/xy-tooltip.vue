@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { VueUiXyTooltipSlotProps } from 'vue-data-ui';
+import type { VueUiXyTooltipSlotProps } from 'vue-data-ui/vue-ui-xy';
 
 const props = defineProps<{
     datapoint: VueUiXyTooltipSlotProps['datapoint'];

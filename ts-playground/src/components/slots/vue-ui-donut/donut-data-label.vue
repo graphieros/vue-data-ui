@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { VueUiDonutDataLabelSlotProps } from 'vue-data-ui';
+import type { VueUiDonutDataLabelSlotProps } from 'vue-data-ui/vue-ui-donut';
 
 const props = defineProps<{
     datapoint: VueUiDonutDataLabelSlotProps['datapoint'];

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { VueUiXyAreaGradientSlotProps } from 'vue-data-ui';
+import type { VueUiXyAreaGradientSlotProps } from 'vue-data-ui/vue-ui-xy';
 
 const props = defineProps<{
     series: VueUiXyAreaGradientSlotProps['series'];

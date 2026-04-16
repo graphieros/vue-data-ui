@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import type { VueUiAgePyramidLegendSlotProps } from 'vue-data-ui';
+import type { VueUiAgePyramidLegendSlotProps } from 'vue-data-ui/vue-ui-age-pyramid';
 
 const props = defineProps<{
     legend: VueUiAgePyramidLegendSlotProps;

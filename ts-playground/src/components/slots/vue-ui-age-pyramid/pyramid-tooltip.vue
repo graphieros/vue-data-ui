@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { VueUiAgePyramidTooltipSlotProps } from 'vue-data-ui';
+import type { VueUiAgePyramidTooltipSlotProps } from 'vue-data-ui/vue-ui-age-pyramid';
 
 const props = defineProps<{
     datapoint: VueUiAgePyramidTooltipSlotProps['datapoint'];

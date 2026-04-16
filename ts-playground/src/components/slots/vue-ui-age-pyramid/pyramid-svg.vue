@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { VueUiAgePyramidSvgSlotProps } from 'vue-data-ui';
+import type { VueUiAgePyramidSvgSlotProps } from 'vue-data-ui/vue-ui-age-pyramid';
 
 const props = defineProps<{
     svg: VueUiAgePyramidSvgSlotProps;

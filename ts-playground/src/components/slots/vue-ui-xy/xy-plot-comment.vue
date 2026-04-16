@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { VueUiXyPlotCommentSlotProps } from 'vue-data-ui';
+import type { VueUiXyPlotCommentSlotProps } from 'vue-data-ui/vue-ui-xy';
 
 const props = defineProps<{
     plot: VueUiXyPlotCommentSlotProps['plot'];

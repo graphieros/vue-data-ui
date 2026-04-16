@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { VueUiXyTimeLabelSlotProps } from 'vue-data-ui';
+import type { VueUiXyTimeLabelSlotProps } from 'vue-data-ui/vue-ui-xy';
 
 const props = withDefaults(
     defineProps<{

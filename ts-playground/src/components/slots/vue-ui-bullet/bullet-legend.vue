@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { VueUiBulletLegendSlotProps } from 'vue-data-ui';
+import type { VueUiBulletLegendSlotProps } from 'vue-data-ui/vue-ui-bullet';
 
 const props = defineProps<{
     items: VueUiBulletLegendSlotProps;

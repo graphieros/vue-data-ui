@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { VueUiDonutLegendSlotProps } from 'vue-data-ui';
+import type { VueUiDonutLegendSlotProps } from 'vue-data-ui/vue-ui-donut';
 
 const props = defineProps<{
     items: VueUiDonutLegendSlotProps;

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { VueUiDonutOptionCopyAltSlotProps } from 'vue-data-ui';
+import type { VueUiDonutOptionCopyAltSlotProps } from 'vue-data-ui/vue-ui-donut';
 const props = defineProps<{
     copyAlt: VueUiDonutOptionCopyAltSlotProps;
 }>();

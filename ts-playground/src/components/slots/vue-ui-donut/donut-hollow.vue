@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { VueUiDonutHollowSlotProps } from 'vue-data-ui';
+import type { VueUiDonutHollowSlotProps } from 'vue-data-ui/vue-ui-donut';
 
 const props = defineProps<{
     total: VueUiDonutHollowSlotProps['total'];

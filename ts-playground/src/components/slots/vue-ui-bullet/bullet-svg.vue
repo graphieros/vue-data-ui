@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { VueUiBulletSvgSlotProps } from 'vue-data-ui';
+import type { VueUiBulletSvgSlotProps } from 'vue-data-ui/vue-ui-bullet';
 
 const props = defineProps<{
     svg: VueUiBulletSvgSlotProps;
