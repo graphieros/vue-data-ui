@@ -9770,7 +9770,7 @@ declare module 'vue-data-ui' {
         loading?: boolean; // v3
         responsive?: boolean; // v3
         theme?: Theme;
-        userOptions?: ChartUserOptions;
+        userOptions?: ChartUserOptions<VueUiBulletDataset, VueUiBulletConfig>;
         style?: {
             fontFamily?: string;
             chart?: {
@@ -9858,13 +9858,85 @@ declare module 'vue-data-ui' {
         toggleFullscreen(): void;
     };
 
-    export const VueUiBullet: DefineComponent<
-        {
-            config?: VueUiBulletConfig;
-            dataset: VueUiBulletDataset;
-        },
-        VueUiBulletExpose
-    >;
+    export type VueUiBulletProps = {
+        config?: VueUiBulletConfig;
+        dataset: VueUiBulletDataset;
+    };
+
+    export type VueUiBulletCopyAltSlotProps = {
+        config: VueUiBulletConfig;
+        dataset: VueUiBulletDataset;
+    };
+
+    export type VueUiBulletSvgSlotProps = {
+        isPrintingImg: boolean;
+        isPrintingSvg: boolean;
+        height: number;
+        width: number;
+        left: number;
+        right: number;
+        top: number;
+        bottom: number;
+        chartWidth: number;
+        chartHeight: number;
+    };
+
+    export type VueUiBulletLegendItem = VueUiBulletSegment & {
+        color: string;
+        display: string;
+        height: number;
+        shape: Shape;
+        value: string;
+        width: number;
+        x: number;
+        y: number;
+    };
+
+    export type VueUiBulletLegendSlotProps = VueUiBulletLegendItem[];
+
+    const VueUiBulletBase: DefineComponent<VueUiBulletProps>;
+
+    export const VueUiBullet: typeof VueUiBulletBase & {
+        new (): VueUiBulletExpose & {
+            $slots: {
+                ['annotator-action-close']?: () => VNodeChild;
+                ['annotator-action-color']?: (
+                    props: VueUiAnnotatorActionColorSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-draw']?: (
+                    props: VueUiAnnotatorActionDrawSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-undo']?: (
+                    props: VueUiAnnotatorActionUndoSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-redo']?: (
+                    props: VueUiAnnotatorActionRedoSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-delete']?: (
+                    props: VueUiAnnotatorActionDeleteSlotProps,
+                ) => VNodeChild;
+                menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
+                optionPdf?: () => VNodeChild;
+                optionImg?: () => VNodeChild;
+                optionSvg?: () => VNodeChild;
+                optionFullscreen?: (
+                    props: VueUiOptionFullscreenSlotProps,
+                ) => VNodeChild;
+                optionAnnotator?: (
+                    props: VueUiOptionAnnotatorSlotProps,
+                ) => VNodeChild;
+                optionAltCopy?: (
+                    props: VueUiBulletCopyAltSlotProps,
+                ) => VNodeChild;
+                ['chart-background']?: () => VNodeChild;
+                svg?: (props: VueUiBulletSvgSlotProps) => VNodeChild;
+                watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
+                legend?: (props: VueUiBulletLegendSlotProps) => VNodeChild;
+                source?: () => VNodeChild;
+                skeleton?: () => VNodeChild;
+            };
+        };
+    };
 
     export type VueUiFunnelDatasetItem = {
         name: string;
