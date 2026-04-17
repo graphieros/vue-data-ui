@@ -1,19 +1,72 @@
-import type { DefineComponent } from 'vue';
+import type { DefineComponent, VNodeChild } from 'vue';
 
 export type {
     VueUiBumpExpose,
     VueUiBumpConfig,
     VueUiBumpDatasetItem,
     VueUiBumpDatapoint,
+    VueUiBumpProps,
+    VueUiAnnotatorActionColorSlotProps,
+    VueUiAnnotatorActionDrawSlotProps,
+    VueUiAnnotatorActionUndoSlotProps,
+    VueUiAnnotatorActionRedoSlotProps,
+    VueUiAnnotatorActionDeleteSlotProps,
+    VueUiMenuIconSlotProps,
+    VueUiOptionFullscreenSlotProps,
+    VueUiOptionAnnotatorSlotProps,
+    VueUiBumpOptionCopyAltSlotProps,
+    VueUiBumpTimeLabelSlotProps,
+    VueUiBumpSvgSlotProps,
+    VueUiKeyboardNavigationHintSlotProps,
+    VueUiWatermarkSlotProps,
 } from 'vue-data-ui';
 
-declare const VueUiBump: DefineComponent<
-    {
-        config?: VueUiBumpConfig;
-        dataset: VueUiBumpDatasetItem[];
-    },
-    VueUiBumpExpose
->;
+declare const VueUiBumpBase: DefineComponent<VueUiBumpProps>;
+
+export const VueUiBump: typeof VueUiBumpBase & {
+    new (): VueUiBumpExpose & {
+        $slots: {
+            ['annotator-action-close']?: () => VNodeChild;
+            ['annotator-action-color']?: (
+                props: VueUiAnnotatorActionColorSlotProps,
+            ) => VNodeChild;
+            ['annotator-action-draw']?: (
+                props: VueUiAnnotatorActionDrawSlotProps,
+            ) => VNodeChild;
+            ['annotator-action-undo']?: (
+                props: VueUiAnnotatorActionUndoSlotProps,
+            ) => VNodeChild;
+            ['annotator-action-redo']?: (
+                props: VueUiAnnotatorActionRedoSlotProps,
+            ) => VNodeChild;
+            ['annotator-action-delete']?: (
+                props: VueUiAnnotatorActionDeleteSlotProps,
+            ) => VNodeChild;
+            menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
+            optionPdf?: () => VNodeChild;
+            optionCsv?: () => VNodeChild;
+            optionImg?: () => VNodeChild;
+            optionSvg?: () => VNodeChild;
+            optionTable?: () => VNodeChild;
+            optionFullscreen?: (
+                props: VueUiOptionFullscreenSlotProps,
+            ) => VNodeChild;
+            optionAnnotator?: (
+                props: VueUiOptionAnnotatorSlotProps,
+            ) => VNodeChild;
+            optionAltCopy?: (
+                props: VueUiBumpOptionCopyAltSlotProps,
+            ) => VNodeChild;
+            ['chart-background']?: () => VNodeChild;
+            ['time-label']?: (props: VueUiBumpTimeLabelSlotProps) => VNodeChild;
+            svg?: (props: VueUiBumpSvgSlotProps) => VNodeChild;
+            hint?: (props: VueUiKeyboardNavigationHintSlotProps) => VNodeChild;
+            watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
+            source?: () => VNodeChild;
+            skeleton?: () => VNodeChild;
+        };
+    };
+};
 
 export default VueUiBump;
 export { VueUiBump };

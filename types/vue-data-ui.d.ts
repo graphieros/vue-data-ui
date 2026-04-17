@@ -11323,6 +11323,15 @@ declare module 'vue-data-ui' {
         y: number;
     };
 
+    export type VueUiBumpSeries = VueUiBumpDatasetItem & {
+        absoluteIndex: number;
+        coordinates: VueUiBumpDatapoint[];
+        id: string;
+        path: string;
+        positions: number[];
+        color: string;
+    };
+
     export type VueUiBumpConfig = {
         skeletonDataset?: VueUiBuiltInSkeletonDataset<
             VueUiBumpDatasetItem[]
@@ -11340,7 +11349,7 @@ declare module 'vue-data-ui' {
             datapointLeave?: VueUiBumpEvent;
             datapointClick?: VueUiBumpEvent;
         };
-        userOptions?: ChartUserOptions;
+        userOptions?: ChartUserOptions<VueUiBumpSeries[], VueUiBumpConfig>;
         table?: {
             show?: boolean;
             useDialog?: boolean;
@@ -11456,13 +11465,97 @@ declare module 'vue-data-ui' {
         toggleFullscreen(): void;
     };
 
-    export const VueUiBump: DefineComponent<
-        {
-            config?: VueUiBumpConfig;
-            dataset: VueUiBumpDatasetItem[];
-        },
-        VueUiBumpExpose
-    >;
+    export type VueUiBumpProps = {
+        config?: VueUiBumpConfig;
+        dataset: VueUiBumpDatasetItem[];
+    };
+
+    export type VueUiBumpOptionCopyAltSlotProps = {
+        dataset: VueUiBumpSeries[];
+        config: VueUiBumpConfig;
+    };
+
+    export type VueUiBumpTimeLabelSlotProps = {
+        absoluteIndex: number;
+        content: string;
+        fill: string;
+        fontSize: number;
+        show: boolean;
+        textAnchor: 'start' | 'middle' | 'end';
+        transform: string;
+        x: number;
+        y: number;
+    };
+
+    export type VueUiBumpSvgSlotProps = {
+        data: VueUiBumpSeries[];
+        drawingArea: {
+            bottom: number;
+            chartHeight: number;
+            chartWidth: number;
+            height: number;
+            left: number;
+            right: number;
+            svgHeight: number;
+            top: number;
+            unitH: number;
+            unitW: number;
+            width: number;
+        };
+        isPrintingImg: boolean;
+        isPrintingSvg: boolean;
+    };
+
+    const VueUiBumpBase: DefineComponent<VueUiBumpProps>;
+
+    export const VueUiBump: typeof VueUiBumpBase & {
+        new (): VueUiBumpExpose & {
+            $slots: {
+                ['annotator-action-close']?: () => VNodeChild;
+                ['annotator-action-color']?: (
+                    props: VueUiAnnotatorActionColorSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-draw']?: (
+                    props: VueUiAnnotatorActionDrawSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-undo']?: (
+                    props: VueUiAnnotatorActionUndoSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-redo']?: (
+                    props: VueUiAnnotatorActionRedoSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-delete']?: (
+                    props: VueUiAnnotatorActionDeleteSlotProps,
+                ) => VNodeChild;
+                menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
+                optionPdf?: () => VNodeChild;
+                optionCsv?: () => VNodeChild;
+                optionImg?: () => VNodeChild;
+                optionSvg?: () => VNodeChild;
+                optionTable?: () => VNodeChild;
+                optionFullscreen?: (
+                    props: VueUiOptionFullscreenSlotProps,
+                ) => VNodeChild;
+                optionAnnotator?: (
+                    props: VueUiOptionAnnotatorSlotProps,
+                ) => VNodeChild;
+                optionAltCopy?: (
+                    props: VueUiBumpOptionCopyAltSlotProps,
+                ) => VNodeChild;
+                ['chart-background']?: () => VNodeChild;
+                ['time-label']?: (
+                    props: VueUiBumpTimeLabelSlotProps,
+                ) => VNodeChild;
+                svg?: (props: VueUiBumpSvgSlotProps) => VNodeChild;
+                hint?: (
+                    props: VueUiKeyboardNavigationHintSlotProps,
+                ) => VNodeChild;
+                watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
+                source?: () => VNodeChild;
+                skeleton?: () => VNodeChild;
+            };
+        };
+    };
 
     export type VueDataUiConfig =
         | VueUi3dBarConfig

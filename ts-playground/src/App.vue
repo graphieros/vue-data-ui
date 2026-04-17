@@ -18,6 +18,9 @@ const TsVueUiGizmo = defineAsyncComponent(
 const TsVueUiBullet = defineAsyncComponent(
     () => import('./components/charts/ts-vue-ui-bullet.vue'),
 );
+const TsVueUiBump = defineAsyncComponent(
+    () => import('./components/charts/ts-vue-ui-bump.vue'),
+);
 
 const components = shallowRef([
     { name: 'VueUiXy' },
@@ -26,6 +29,7 @@ const components = shallowRef([
     { name: 'VueUiAgePyramid' },
     { name: 'VueUiGizmo' },
     { name: 'VueUiBullet' },
+    { name: 'VueUiBump' },
 ]);
 
 const selectedComponent = shallowRef(components.value[0]);
@@ -45,6 +49,7 @@ const selectedComponent = shallowRef(components.value[0]);
         />
         <TsVueUiGizmo v-if="selectedComponent?.name === 'VueUiGizmo'" />
         <TsVueUiBullet v-if="selectedComponent?.name === 'VueUiBullet'" />
+        <TsVueUiBump v-if="selectedComponent?.name === 'VueUiBump'" />
     </div>
 </template>
 
