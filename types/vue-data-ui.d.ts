@@ -3362,7 +3362,7 @@ declare module 'vue-data-ui' {
     export type VueUiCandlestickConfig = {
         skeletonDataset?: VueUiBuiltInSkeletonDataset<OHLC[]> | null;
         skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiCandlestickConfig> | null;
-        type?: 'ohlc' | 'candlesctick';
+        type?: 'ohlc' | 'candlestick';
         debug?: boolean;
         loading?: boolean;
         responsive?: boolean;
@@ -3509,7 +3509,10 @@ declare module 'vue-data-ui' {
             last?: string;
             volume?: string;
         };
-        userOptions?: ChartUserOptions;
+        userOptions?: ChartUserOptions<
+            VueUiCandlestickDatapoint[],
+            VueUiCandlestickConfig
+        >;
         table?: {
             show?: boolean;
             useDialog?: boolean;
@@ -3523,12 +3526,23 @@ declare module 'vue-data-ui' {
         };
     };
 
+    export type VueUiCandlestickDatapointSegment = {
+        isMax: boolean;
+        isMin: boolean;
+        value: number;
+        x: number;
+        y: number;
+    };
+
     export type VueUiCandlestickDatapoint = {
-        high: { x: number; y: number; value: number };
+        [key: string]: unknown;
+        high: VueUiCandlestickDatapointSegment;
         isBullish: boolean;
-        last: { x: number; y: number; value: number };
-        low: { x: number; y: number; value: number };
-        open: { x: number; y: number; value: number };
+        isMaxVolume: boolean;
+        isMinVolume: boolean;
+        close: VueUiCandlestickDatapointSegment;
+        low: VueUiCandlestickDatapointSegment;
+        open: VueUiCandlestickDatapointSegment;
         period: string | undefined;
         volume: number;
     };
@@ -3545,14 +3559,106 @@ declare module 'vue-data-ui' {
         toggleFullscreen(): void;
     };
 
-    export const VueUiCandlestick: DefineComponent<
-        {
-            config?: VueUiCandlestickConfig;
-            dataset: OHLC[];
-            selectedXIndex?: number | null;
-        },
-        VueUiCandlestickExpose
-    >;
+    export type VueUiCandlestickOptionCopyAltSlotProps = {
+        config: VueUiCandlestickConfig;
+        dataset: VueUiCandlestickDatapoint[];
+    };
+
+    export type VueUiCandlestickSvgSlotProps = {
+        data: VueUiCandlestickDatapoint[];
+        drawingArea: {
+            bottom: number;
+            height: number;
+            left: number;
+            right: number;
+            top: number;
+            width: number;
+        };
+        height: number;
+        isPrintingImg: boolean;
+        isPrintingSvg: boolean;
+        width: number;
+        xAxisFontSize: number;
+        yAxisFontSize: number;
+    };
+
+    export type VueUiCandlestickLegendSlotProps = VueUiCandlestickDatapoint[];
+
+    export type VueUiCandlestickTooltipSlotProps = {
+        datapoint: VueUiCandlestickDatapoint;
+        config: VueUiCandlestickConfig;
+        series: VueUiCandlestickDatapoint[];
+        seriesIndex: number;
+    };
+
+    export type VueUiCandlestickProps = {
+        config?: VueUiCandlestickConfig;
+        dataset: OHLC[];
+        selectedXIndex?: number | null;
+    };
+
+    const VueUiCandlestickBase: DefineComponent<VueUiCandlestickProps>;
+
+    export const VueUiCandlestick: typeof VueUiCandlestickBase & {
+        new (): VueUiCandlestickExpose & {
+            $props: {
+                ['annotator-action-close']?: () => VNodeChild;
+                ['annotator-action-color']?: (
+                    props: VueUiAnnotatorActionColorSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-draw']?: (
+                    props: VueUiAnnotatorActionDrawSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-undo']?: (
+                    props: VueUiAnnotatorActionUndoSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-redo']?: (
+                    props: VueUiAnnotatorActionRedoSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-delete']?: (
+                    props: VueUiAnnotatorActionDeleteSlotProps,
+                ) => VNodeChild;
+                menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
+                optionTooltip?: () => VNodeChild;
+                optionPdf?: () => VNodeChild;
+                optionCsv?: () => VNodeChild;
+                optionImg?: () => VNodeChild;
+                optionSvg?: () => VNodeChild;
+                optionTable?: () => VNodeChild;
+                optionFullscreen?: (
+                    props: VueUiOptionFullscreenSlotProps,
+                ) => VNodeChild;
+                optionAnnotator?: (
+                    props: VueUiOptionAnnotatorSlotProps,
+                ) => VNodeChild;
+                optionAltCopy?: (
+                    props: VueUiCandlestickOptionCopyAltSlotProps,
+                ) => VNodeChild;
+                ['chart-background']?: () => VNodeChild;
+                svg?: (props: VueUiCandlestickSvgSlotProps) => VNodeChild;
+                hint?: (
+                    props: VueUiKeyboardNavigationHintSlotProps,
+                ) => VNodeChild;
+                watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
+                ['resest-action']?: (
+                    props: VueUiResetActionSlotProps,
+                ) => VNodeChild;
+                legend?: (props: VueUiCandlestickLegendSlotProps) => VNodeChild;
+                source?: () => VNodeChild;
+                ['tooltip-before']?: (
+                    props: VueUiCandlestickTooltipSlotProps,
+                ) => VNodeChild;
+                tooltip?: (
+                    props: VueUiCandlestickTooltipSlotProps,
+                ) => VNodeChild;
+                ['tooltip-after']?: (
+                    props: VueUiCandlestickTooltipSlotProps,
+                ) => VNodeChild;
+                source?: () => VNodeChild;
+                skeleton?: () => VNodeChild;
+            };
+        };
+    };
 
     export type VueUiScatterDatasetValueItem = {
         [key: string]: any;
