@@ -6174,13 +6174,64 @@ declare module 'vue-data-ui' {
     export type VueUiChestnutDatasetBranch = {
         name: string;
         value: number;
-        breakdown: VueUiChestnutDatasetBranchBreakdown[];
+        breakdown?: VueUiChestnutDatasetBranchBreakdown[];
     };
 
     export type VueUiChestnutDatasetRoot = {
         name: string;
         color?: string;
         branches: VueUiChestnutDatasetBranch[];
+    };
+
+    export type VueUiChestnutDatapointNut = {
+        branchName: string;
+        branchTotal: number;
+        color: string;
+        id: string;
+        name: string;
+        proportionToBranch: number;
+        proportionToRoot: number;
+        proportionToTree: number;
+        rootIndex: number;
+        rootName: string;
+        table: {
+            branchName: string;
+            branchToRoot: number;
+            branchToTotal: number;
+            branchValue: number;
+            nutName: string;
+            nutToBranch: number;
+            nutToRoot: number;
+            nutToTotal: number;
+            nutValue: number;
+            rootName: string;
+            rootToTotal: number;
+            rootValue: number;
+        };
+        type: 'root' | 'branch' | 'nut';
+        value: number;
+    };
+
+    export type VueUiChestnutDatapointBranch = {
+        breakdown: VueUiChestnutDatapointNut[];
+        color: string;
+        id: string;
+        name: string;
+        proportionToRoot: number;
+        rootIndex: number;
+        rootName: string;
+        type: 'root' | 'branch' | 'nut';
+        value: number;
+    };
+
+    export type VueUiChestnutDatapointRoot = {
+        branches: VueUiChestnutDatapointBranch[];
+        name: string;
+        color: string;
+        id: string;
+        rootIndex: number;
+        total: number;
+        type: 'root' | 'branch' | 'nut';
     };
 
     export type VueUiChestnutConfig = {
@@ -6356,7 +6407,10 @@ declare module 'vue-data-ui' {
                 roundingPercentage?: number;
             };
         };
-        userOptions?: ChartUserOptions;
+        userOptions?: ChartUserOptions<
+            VueUiChestnutDatapointRoot[],
+            VueUiChestnutConfig
+        >;
         translations?: {
             total?: string;
             proportionToTree?: string;
@@ -6388,13 +6442,78 @@ declare module 'vue-data-ui' {
         toggleFullscreen(): void;
     };
 
-    export const VueUiChestnut: DefineComponent<
-        {
-            config?: VueUiChestnutConfig;
-            dataset: VueUiChestnutDatasetRoot[];
-        },
-        VueUiChestnutExpose
-    >;
+    export type VueUiChestnutOptionCopyAltSlotProps = {
+        config: VueUiChestnutConfig;
+        dataset: VueUiChestnutDatapointRoot[];
+    };
+
+    export type VueUiChestnutSvgSlotProps = {
+        branchSize: number;
+        branchStart: number;
+        gap: number;
+        height: number;
+        isPrintingImg: boolean;
+        isPrintingSvg: boolean;
+        padding: {
+            bottom: number;
+            left: number;
+            right: number;
+            top: number;
+        };
+        width: number;
+    };
+
+    export type VueUiChestnutLegendSlotProps = VueUiChestnutDatapointRoot[];
+
+    export type VueUiChestnutProps = {
+        config?: VueUiChestnutConfig;
+        dataset: VueUiChestnutDatasetRoot[];
+    };
+
+    const VueUiChestnutBase: DefineComponent<VueUiChestnutProps>;
+
+    export const VueUiChestnut: typeof VueUiChestnutBase & {
+        new (): VueUiChestnutExpose & {
+            $slots: {
+                ['annotator-action-close']?: () => VNodeChild;
+                ['annotator-action-color']?: (
+                    props: VueUiAnnotatorActionColorSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-draw']?: (
+                    props: VueUiAnnotatorActionDrawSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-undo']?: (
+                    props: VueUiAnnotatorActionUndoSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-redo']?: (
+                    props: VueUiAnnotatorActionRedoSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-delete']?: (
+                    props: VueUiAnnotatorActionDeleteSlotProps,
+                ) => VNodeChild;
+                menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
+                optionPdf?: () => VNodeChild;
+                optionCsv?: () => VNodeChild;
+                optionImg?: () => VNodeChild;
+                optionSvg?: () => VNodeChild;
+                optionTable?: () => VNodeChild;
+                optionFullscreen?: (
+                    props: VueUiOptionFullscreenSlotProps,
+                ) => VNodeChild;
+                optionAnnotator?: (
+                    props: VueUiOptionAnnotatorSlotProps,
+                ) => VNodeChild;
+                optionAltCopy?: (
+                    props: VueUiChestnutOptionCopyAltSlotProps,
+                ) => VNodeChild;
+                ['chart-background']?: () => VNodeChild;
+                svg?: (props: VueUiChestnutSvgSlotProps) => VNodeChild;
+                watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
+                legend?: (props: VueUiChestnutLegendSlotProps) => VNodeChild;
+                source?: () => VNodeChild;
+            };
+        };
+    };
 
     export type VueUiOnionDatasetItem = {
         name: string;
