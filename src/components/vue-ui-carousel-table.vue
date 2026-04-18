@@ -757,8 +757,14 @@ defineExpose({
             <template #optionSvg v-if="$slots.optionSvg">
                 <slot name="optionSvg" />
             </template>
-            <template #optionAnimation v-if="$slots.optionAnimation">
-                <slot name="optionAnimation" />
+            <template
+                #optionAnimation="{ toggleAnimation, isAnimated }"
+                v-if="$slots.optionAnimation"
+            >
+                <slot
+                    name="optionAnimation"
+                    v-bind="{ toggleAnimation, isAnimated }"
+                />
             </template>
             <template
                 v-if="$slots.optionFullscreen"

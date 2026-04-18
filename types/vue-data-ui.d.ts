@@ -9290,10 +9290,54 @@ declare module 'vue-data-ui' {
         userOptions?: ChartUserOptions;
     };
 
-    export const VueUiCarouselTable: DefineComponent<{
+    export type VueUiCarouselTableOptionAnimationSlotProps = {
+        toggleAnimation: () => void;
+        isAnimated: boolean;
+    };
+
+    export type VueUiCarouselTableOptionCopyAltSlotProps = {
+        config: VueUiCarouselTableConfig;
+        dataset: VueUiCarouselTableDataset;
+    };
+
+    export type VueUiCarouselTableThSlotProps = {
+        th: string;
+        colIndex: number;
+    };
+
+    export type VueUiCarouselTableTdSlotProps = {
+        colIndex: number;
+        rowIndex: number;
+        td: string | number;
+    };
+
+    export type VueUiCarouselTableProps = {
         config?: VueUiCarouselTableConfig;
         dataset: VueUiCarouselTableDataset;
-    }>;
+    };
+
+    const VueUiCarouselTableBase: DefineComponent<VueUiCarouselTableProps>;
+
+    export const VueUiCarouselTable: typeof VueUiCarouselTableBase & {
+        new (): {
+            $slots: {
+                menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
+                optionPdf?: () => VNodeChild;
+                optionCsv?: () => VNodeChild;
+                optionImg?: () => VNodeChild;
+                optionAnimation?: (
+                    props: VueUiCarouselTableOptionAnimationSlotProps,
+                ) => VNodeChild;
+                optionAltCopy?: (
+                    props: VueUiCarouselTableOptionCopyAltSlotProps,
+                ) => VNodeChild;
+                source?: () => VNodeChild;
+                caption?: () => VNodeChild;
+                th?: (props: VueUiCarouselTableThSlotProps) => VNodeChild;
+                td?: (props: VueUiCarouselTableTdSlotProps) => VNodeChild;
+            };
+        };
+    };
 
     export type VueUiGizmoConfig = {
         a11y?: {
