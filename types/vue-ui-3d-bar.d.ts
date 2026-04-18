@@ -1,4 +1,4 @@
-import type { DefineComponent } from 'vue';
+import type { DefineComponent, VNodeChild } from 'vue';
 
 export type {
     VueUi3dBarConfig,

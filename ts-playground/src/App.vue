@@ -30,6 +30,9 @@ const TsVueUiCarouselTable = defineAsyncComponent(
 const TsVueUiChestnut = defineAsyncComponent(
     () => import('./components/charts/ts-vue-ui-chestnut.vue'),
 );
+const TsVueUiChord = defineAsyncComponent(
+    () => import('./components/charts/ts-vue-ui-chord.vue'),
+);
 
 const components = shallowRef([
     { name: 'VueUiXy' },
@@ -42,6 +45,7 @@ const components = shallowRef([
     { name: 'VueUiCandlestick' },
     { name: 'VueUiCarouselTable' },
     { name: 'VueUiChestnut' },
+    { name: 'VueUiChord' },
 ]);
 
 const selectedComponent = shallowRef(components.value[0]);
@@ -69,6 +73,7 @@ const selectedComponent = shallowRef(components.value[0]);
             v-if="selectedComponent?.name === 'VueUiCarouselTable'"
         />
         <TsVueUiChestnut v-if="selectedComponent?.name === 'VueUiChestnut'" />
+        <TsVueUiChord v-if="selectedComponent?.name === 'VueUiChord'" />
     </div>
 </template>
 
