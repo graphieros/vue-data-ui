@@ -2051,7 +2051,10 @@ declare module 'vue-data-ui' {
                 roundingPercentage?: number;
             };
         };
-        userOptions?: ChartUserOptions;
+        userOptions?: ChartUserOptions<
+            VueUiDonutEvolutionDatapoint[],
+            VueUiDonutEvolutionConfig
+        >;
     };
 
     export type VueUiDonutEvolutionDatasetItem = {
@@ -2082,13 +2085,98 @@ declare module 'vue-data-ui' {
         hideSeries(name: string): void;
     };
 
-    export const VueUiDonutEvolution: DefineComponent<
-        {
-            config?: VueUiDonutEvolutionConfig;
-            dataset: VueUiDonutEvolutionDatasetItem[];
-        },
-        VueUiDonutEvolutionExpose
-    >;
+    export type VueUiDonutEvolutionOptionCopyAltSlotProps = {
+        dataset: VueUiDonutEvolutionDatapoint[];
+        config: VueUiDonutEvolutionConfig;
+    };
+
+    export type VueUiDonutEvolutionSvgSlotProps = {
+        absoluteHeight: number;
+        absoluteWidth: number;
+        bottom: number;
+        centerX: number;
+        centerY: number;
+        height: number;
+        isPrintingImg: boolean;
+        isPrintingSvg: boolean;
+        left: number;
+        right: number;
+        top: number;
+        width: number;
+    };
+
+    export type VueUiDonutEvolutionLegendItem = {
+        color: string;
+        display: string;
+        isSegregated: boolean;
+        name: string;
+        opacity: number;
+        segregate: () => void;
+        shape: Shape;
+        uid: string;
+        value: number;
+    };
+
+    export type VueUiDonutEvolutionLegendSlotProps =
+        VueUiDonutEvolutionLegendItem[];
+
+    export type VueUiDonutEvolutionProps = {
+        config?: VueUiDonutEvolutionConfig;
+        dataset: VueUiDonutEvolutionDatasetItem[];
+    };
+
+    const VueUiDonutEvolutionBase: DefineComponent<VueUiDonutEvolutionProps>;
+
+    export const VueUiDonutEvolution: typeof VueUiDonutEvolutionBase & {
+        new (): VueUiDonutEvolutionExpose & {
+            $slots: {
+                ['annotator-action-close']?: () => VNodeChild;
+                ['annotator-action-color']?: (
+                    props: VueUiAnnotatorActionColorSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-draw']?: (
+                    props: VueUiAnnotatorActionDrawSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-undo']?: (
+                    props: VueUiAnnotatorActionUndoSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-redo']?: (
+                    props: VueUiAnnotatorActionRedoSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-delete']?: (
+                    props: VueUiAnnotatorActionDeleteSlotProps,
+                ) => VNodeChild;
+                menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
+                optionPdf?: () => VNodeChild;
+                optionCsv?: () => VNodeChild;
+                optionImg?: () => VNodeChild;
+                optionSvg?: () => VNodeChild;
+                optionTable?: () => VNodeChild;
+                optionFullscreen?: (
+                    props: VueUiOptionFullscreenSlotProps,
+                ) => VNodeChild;
+                optionAnnotator?: (
+                    props: VueUiOptionAnnotatorSlotProps,
+                ) => VNodeChild;
+                optionAltCopy?: (
+                    props: VueUiDonutEvolutionOptionCopyAltSlotProps,
+                ) => VNodeChild;
+                ['chart-background']?: () => VNodeChild;
+                svg?: (props: VueUiDonutEvolutionSvgSlotProps) => VNodeChild;
+                hint?: (
+                    props: VueUiKeyboardNavigationHintSlotProps,
+                ) => VNodeChild;
+                watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
+                ['resest-action']?: (
+                    props: VueUiResetActionSlotProps,
+                ) => VNodeChild;
+                legend?: (
+                    props: VueUiDonutEvolutionLegendSlotProps,
+                ) => VNodeChild;
+                source?: () => VNodeChild;
+            };
+        };
+    };
 
     export type VueUiTiremarksConfig = {
         skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiTiremarksConfig> | null;
