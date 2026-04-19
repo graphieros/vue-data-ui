@@ -1051,6 +1051,9 @@ defineExpose({
             <template #menuIcon="{ isOpen, color }" v-if="$slots.menuIcon">
                 <slot name="menuIcon" v-bind="{ isOpen, color }" />
             </template>
+            <template #optionTooltip v-if="$slots.optionTooltip">
+                <slot name="optionTooltip" />
+            </template>
             <template #optionPdf v-if="$slots.optionPdf">
                 <slot name="optionPdf" />
             </template>
@@ -1122,8 +1125,8 @@ defineExpose({
                     v-if="$slots['chart-background']"
                     :x="viewBox.x"
                     :y="viewBox.y"
-                    :width="viewBox.width"
-                    :height="viewBox.height"
+                    :width="SIZE.w"
+                    :height="SIZE.h"
                     :style="{ pointerEvents: 'none' }"
                 >
                     <slot name="chart-background" />
@@ -1364,9 +1367,14 @@ defineExpose({
                 <slot
                     name="svg"
                     :svg="{
-                        ...viewBox,
+                        drawingArea: {
+                            width: SIZE.w,
+                            height: SIZE.h,
+                        },
+                        width: SIZE.w,
+                        height: SIZE.h,
                         isPrintingImg:
-                            isPrinting | isImaging | isCallbackImaging,
+                            isPrinting || isImaging || isCallbackImaging,
                         isPrintingSvg: isCallbackSvg,
                     }"
                 />

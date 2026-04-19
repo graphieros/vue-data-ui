@@ -10568,12 +10568,14 @@ declare module 'vue-data-ui' {
     >;
 
     export type VueUiCirclePackDatasetItem = {
+        [key: string]: unknown;
         name: string;
         value: number;
         color?: string;
     };
 
     export type VueUiCirclePackDatapoint = {
+        [key: string]: unknown;
         name: string;
         value: number;
         r: number;
@@ -10600,7 +10602,10 @@ declare module 'vue-data-ui' {
         };
         theme?: Theme;
         customPalette?: string[];
-        userOptions?: ChartUserOptions;
+        userOptions?: ChartUserOptions<
+            VueUiCirclePackDatapoint[],
+            VueUiCirclePackConfig
+        >;
         table?: {
             show?: boolean;
             useDialog?: boolean;
@@ -10676,13 +10681,104 @@ declare module 'vue-data-ui' {
         toggleFullscreen(): void;
     };
 
-    export const VueUiCirclePack: DefineComponent<
-        {
-            config?: VueUiCirclePackConfig;
-            dataset: VueUiCirclePackDatasetItem[];
-        },
-        VueUiCirclePackExpose
-    >;
+    export type VueUiCirclePackOptionCopyAltSlotProps = {
+        dataset: VueUiCirclePackDatapoint[];
+        config: VueUiCirclePackConfig;
+    };
+
+    export type VueUiCirclePackDataLabelSlotProps = VueUiCirclePackDatapoint & {
+        createTSpans: (args: CreateTSpansArgs) => string;
+        fontSize: { name: number; value: number };
+        key: number;
+    };
+
+    export type VueUiCirclePackCircleSlotProps = VueUiCirclePackDatapoint & {
+        isSelected: boolean;
+        uid: string;
+    };
+
+    export type VueUiCirclePackSvgSlotProps = {
+        drawingArea: { height: number; width: number };
+        height: number;
+        isPrintingImg: boolean;
+        isPrintingSvg: boolean;
+        width: number;
+    };
+
+    export type VueUiCircleDatapointTooltipSlotProps = {
+        datapoint: VueUiCirclePackDatapoint;
+        series: VueUiCirclePackDatapoint[];
+        seriesIndex: number;
+        config: VueUiCirclePackConfig;
+    };
+
+    export type VueUiCirclePackProps = {
+        config?: VueUiCirclePackConfig;
+        dataset: VueUiCirclePackDatasetItem[];
+    };
+
+    const VueUiCirclePackBase: DefineComponent<VueUiCirclePackProps>;
+
+    export const VueUiCirclePack: typeof VueUiCirclePackBase & {
+        new (): VueUiCirclePackExpose & {
+            $slots: {
+                ['annotator-action-close']?: () => VNodeChild;
+                ['annotator-action-color']?: (
+                    props: VueUiAnnotatorActionColorSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-draw']?: (
+                    props: VueUiAnnotatorActionDrawSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-undo']?: (
+                    props: VueUiAnnotatorActionUndoSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-redo']?: (
+                    props: VueUiAnnotatorActionRedoSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-delete']?: (
+                    props: VueUiAnnotatorActionDeleteSlotProps,
+                ) => VNodeChild;
+                menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
+                optionTooltip?: () => VNodeChild;
+                optionPdf?: () => VNodeChild;
+                optionCsv?: () => VNodeChild;
+                optionImg?: () => VNodeChild;
+                optionSvg?: () => VNodeChild;
+                optionTable?: () => VNodeChild;
+                optionFullscreen?: (
+                    props: VueUiOptionFullscreenSlotProps,
+                ) => VNodeChild;
+                optionAnnotator?: (
+                    props: VueUiOptionAnnotatorSlotProps,
+                ) => VNodeChild;
+                optionAltCopy?: (
+                    props: VueUiCirclePackOptionCopyAltSlotProps,
+                ) => VNodeChild;
+                ['chart-background']?: () => VNodeChild;
+                pattern?: (props: VueUiPatternSlotProps) => VNodeChild;
+                ['data-label']?: (
+                    props: VueUiCirclePackDataLabelSlotProps,
+                ) => VNodeChild;
+                circle?: (props: VueUiCirclePackCircleSlotProps) => VNodeChild;
+                svg?: (props: VueUiCirclePackSvgSlotProps) => VNodeChild;
+                hint?: (
+                    props: VueUiKeyboardNavigationHintSlotProps,
+                ) => VNodeChild;
+                watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
+                source?: () => VNodeChild;
+                ['tooltip-before']?: (
+                    props: VueUiCircleDatapointTooltipSlotProps,
+                ) => VNodeChild;
+                tooltip?: (
+                    props: VueUiCircleDatapointTooltipSlotProps,
+                ) => VNodeChild;
+                ['tooltip-after']?: (
+                    props: VueUiCircleDatapointTooltipSlotProps,
+                ) => VNodeChild;
+                skeleton?: () => VNodeChild;
+            };
+        };
+    };
 
     export type VueUiWorldDatapoint = {
         category: string | null;
@@ -11095,7 +11191,7 @@ declare module 'vue-data-ui' {
         enableRotation?: boolean;
         initialRotation?: number;
         useCssAnimation?: boolean;
-        userOptions?: ChartUserOptions;
+        userOptions?: ChartUserOptions<VueUiChordDataset, VueUiChordConfig>;
         table?: {
             show?: boolean;
             useDialog?: boolean;
