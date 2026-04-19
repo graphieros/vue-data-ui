@@ -11403,7 +11403,7 @@ declare module 'vue-data-ui' {
         debug?: boolean;
         theme?: Theme;
         responsive?: boolean;
-        userOptions?: ChartUserOptions;
+        userOptions?: ChartUserOptions<VueUiDagDataset, VueUiDagConfig>;
         a11y?: A11YConfig;
         style?: {
             fontFamily?: string;
@@ -11459,7 +11459,7 @@ declare module 'vue-data-ui' {
                         };
                         upstreamEdges?: {
                             stroke?: string | null;
-                            animated?: string | null;
+                            animated?: boolean | null;
                         };
                     };
                 };
@@ -11524,13 +11524,157 @@ declare module 'vue-data-ui' {
         switchDirection(): void;
     };
 
-    export const VueUiDag: DefineComponent<
-        {
-            config?: VueUiDagConfig;
-            dataset: VueUiDagDataset;
-        },
-        VueUiDagExpose
-    >;
+    export type VueUiDagOptionZoomSlotProps = {
+        toggleZoom: () => void;
+        isZoomLocked: boolean;
+    };
+
+    export type VueUiDagOptionCopyAltSlotProps = {
+        dataset: VueUiDagDataset;
+        config: VueUiDagConfig;
+    };
+
+    export type VueUiDagBackgroundPatternSlotProps = {
+        x: number;
+        y: number;
+        color: string;
+    };
+
+    export type VueUiDagPositionedNode = {
+        height: number;
+        id: string;
+        label: string;
+        original: VueUiDagNode;
+        width: number;
+        x: number;
+        y: number;
+    };
+
+    export type VueUiDagNodeSlotProps = {
+        node: VueUiDagPositionedNode;
+        orientation: 'TB' | 'RL' | 'BT' | 'LR';
+    };
+
+    export type VueUiDagPositionedEdge = {
+        animated: boolean;
+        from: string;
+        id: string;
+        markerEnd: string;
+        midpoint: { x: number; y: number };
+        original: {
+            arrowShape: 'undirected' | 'normal' | 'vee';
+            from: string;
+            minlen: number;
+            points: Array<{ x: number; y: number }>;
+            to: string;
+            weight: number;
+        };
+        pathData: string;
+        points: Array<{ x: number; y: number }>;
+        to: string;
+    };
+
+    export type VueUiDagLayoutData = {
+        arrowShape: 'undirected' | 'normal' | 'vee';
+        arrowSize: number;
+        edges: VueUiDagPositionedEdge[];
+        nodes: VueUiDagPositionedNode[];
+        viewBox: string;
+    };
+
+    export type VueUiDagFreeNodeLabelSlotProps = {
+        layoutData: VueUiDagLayoutData;
+        node: VueUiDagPositionedNode;
+        orientation: 'TB' | 'RL' | 'BT' | 'LR';
+    };
+
+    export type VueUiDagSvgSlotProps = {
+        data: VueUiDagLayoutData;
+        drawingArea: {
+            height: number;
+            width: number;
+            x: number;
+            y: number;
+        };
+        isPrintingImg: boolean;
+        isPrintingSvg: boolean;
+        orientation: 'TB' | 'RL' | 'BT' | 'LR';
+    };
+
+    export type VueUiDagTooltipMidpointSlotProps = {
+        edge: VueUiDagPositionedEdge;
+        layoutData: VueUiDagLayoutData;
+    };
+
+    export type VueUiDagTooltipNodeSlotProps = {
+        node: VueUiDagPositionedNode;
+        layoutData: VueUiDagLayoutData;
+    };
+
+    export type VueUiDagProps = {
+        config?: VueUiDagConfig;
+        dataset: VueUiDagDataset;
+    };
+
+    const VueUiDagBase: DefineComponent<VueUiDagProps>;
+
+    export const VueUiDag: typeof VueUiDagBase & {
+        new (): VueUiDagExpose & {
+            $slots: {
+                ['annotator-action-close']?: () => VNodeChild;
+                ['annotator-action-color']?: (
+                    props: VueUiAnnotatorActionColorSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-draw']?: (
+                    props: VueUiAnnotatorActionDrawSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-undo']?: (
+                    props: VueUiAnnotatorActionUndoSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-redo']?: (
+                    props: VueUiAnnotatorActionRedoSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-delete']?: (
+                    props: VueUiAnnotatorActionDeleteSlotProps,
+                ) => VNodeChild;
+                menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
+                optionPdf?: () => VNodeChild;
+                optionImg?: () => VNodeChild;
+                optionSvg?: () => VNodeChild;
+                optionFullscreen?: (
+                    props: VueUiOptionFullscreenSlotProps,
+                ) => VNodeChild;
+                optionAnnotator?: (
+                    props: VueUiOptionAnnotatorSlotProps,
+                ) => VNodeChild;
+                optionZoom?: (props: VueUiDagOptionZoomSlotProps) => VNodeChild;
+                optionAltCopy?: (
+                    props: VueUiDagOptionCopyAltSlotProps,
+                ) => VNodeChild;
+                ['background-pattern']?: (
+                    props: VueUiDagBackgroundPatternSlotProps,
+                ) => VNodeChild;
+                node?: (props: VueUiDagNodeSlotProps) => VNodeChild;
+                ['node-label']?: (props: VueUiDagNodeSlotProps) => VNodeChild;
+                ['free-node-label']?: (
+                    props: VueUiDagFreeNodeLabelSlotProps,
+                ) => VNodeChild;
+                svg?: (props: VueUiDagSvgSlotProps) => VNodeChild;
+                hint?: (
+                    props: VueUiKeyboardNavigationHintSlotProps,
+                ) => VNodeChild;
+                watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
+                ['tooltip-midpoint']?: (
+                    props: VueUiDagTooltipMidpointSlotProps,
+                ) => VNodeChild;
+                ['tooltip-node']?: (
+                    props: VueUiDagTooltipNodeSlotProps,
+                ) => VNodeChild;
+                source?: () => VNodeChild;
+                skeleton?: () => VNodeChild;
+            };
+        };
+    };
 
     export type GeoJsonPosition =
         | [longitude: number, latitude: number]

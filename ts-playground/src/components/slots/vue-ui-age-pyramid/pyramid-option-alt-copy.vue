@@ -6,5 +6,5 @@ const props = defineProps<{
 </script>
 
 <template>
-    <code style="color: chocolate; font-size: 10px">#copyAlt</code>
+    <code style="color: chocolate; font-size: 10px">#optionAltCopy</code>
 </template>

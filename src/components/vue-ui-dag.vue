@@ -2024,6 +2024,7 @@ defineExpose({
                             :y="node.y - node.height / 2"
                             :width="node.width"
                             :height="node.height"
+                            style="overflow: visible"
                         >
                             <slot
                                 name="node"

@@ -1189,7 +1189,7 @@
         "VueUiChestnut": true,
         "VueUiChord": true,
         "VueUiCirclePack": true,
-        "VueUiDag": false,
+        "VueUiDag": true,
         "VueUiDashboard": false,
         "VueUiDigits": true,
         "VueUiDonut": true,
@@ -1247,7 +1247,7 @@
       "customCheckList": {},
       "id": "3846f04c-685f-4509-8042-87b9c0b7ec33",
       "createdAt": 1775989842046,
-      "updatedAt": 1776577084131
+      "updatedAt": 1776586056555
     },
     {
       "title": "Expose more methods",

@@ -36,6 +36,9 @@ const TsVueUiChord = defineAsyncComponent(
 const TsVueUiCirclePack = defineAsyncComponent(
     () => import('./components/charts/ts-vue-ui-circle-pack.vue'),
 );
+const TsVueUiDag = defineAsyncComponent(
+    () => import('./components/charts/ts-vue-ui-dag.vue'),
+);
 
 const components = shallowRef([
     { name: 'VueUiXy' },
@@ -50,6 +53,7 @@ const components = shallowRef([
     { name: 'VueUiChestnut' },
     { name: 'VueUiChord' },
     { name: 'VueUiCirclePack' },
+    { name: 'VueUiDag' },
 ]);
 
 const selectedComponent = shallowRef(components.value[0]);
@@ -81,6 +85,7 @@ const selectedComponent = shallowRef(components.value[0]);
         <TsVueUiCirclePack
             v-if="selectedComponent?.name === 'VueUiCirclePack'"
         />
+        <TsVueUiDag v-if="selectedComponent?.name === 'VueUiDag'" />
     </div>
 </template>
 
