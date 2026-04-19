@@ -25,7 +25,7 @@ function makeDs({ name, qty, maxVal }) {
     for (let i = 0; i < qty; i += 1) {
         datapoints.push({
             name: `Datapoint ${i}`,
-            value: Math.random() * maxVal,
+            value: Math.random() * (1 + i),
             // color: '#FFFFFF',
             // breakdown: [
             //     { name: 'br 1', value: Math.random() * 10 },
@@ -37,7 +37,7 @@ function makeDs({ name, qty, maxVal }) {
     return datapoints;
 }
 
-const dataset = ref(makeDs({ name: 'Pack 1', qty: 5, maxVal: 12000 }));
+const dataset = ref(makeDs({ name: 'Pack 1', qty: 6, maxVal: 12000 }));
 
 onMounted(() => {
     // setTimeout(() => {

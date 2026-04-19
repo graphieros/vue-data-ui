@@ -1,5 +1,5 @@
 declare module 'vue-data-ui' {
-    import type { Ref, DefineComponent, VNodeChild } from 'vue';
+    import type { Ref, DefineComponent, VNodeChild, Component } from 'vue';
 
     export type VueUiUnknownObj = {
         [key: string]: unknown;
@@ -2938,6 +2938,7 @@ declare module 'vue-data-ui' {
                 pdf?: boolean;
                 img?: boolean;
                 annotator?: boolean;
+                altCopy?: boolean;
             };
             callbacks?: {
                 pdf?:
@@ -2963,11 +2964,20 @@ declare module 'vue-data-ui' {
                           base64?: string;
                       }) => void);
                 annotator?: null | (() => void);
+                altCopy?:
+                    | null
+                    | ((
+                          args: AltCopyArgs<
+                              VueUiDashboardPlacedElement[],
+                              VueUiDashboardConfig
+                          >,
+                      ) => void);
             };
             buttonTitles?: {
                 pdf?: string;
                 img?: string;
                 annotator?: string;
+                altCopy?: string;
             };
             print?: {
                 scale?: number;
@@ -2976,23 +2986,95 @@ declare module 'vue-data-ui' {
         };
     };
 
+    export type VueUiDashboardPlacedElement = {
+        component: string | Component;
+        height: number;
+        id: string;
+        index: number;
+        left: number;
+        resolvedComponent?: Component;
+        top: number;
+        width: number;
+    };
+
     export type VueUiDashboardElement = {
         id: number | string;
         width: number;
         height: number;
         left: number;
         top: number;
-        component: string;
-        props: {
-            config?: VueUiUnknownObj;
-            dataset: VueUiUnknownObj;
+        component: string | Component;
+        props?: {
+            config?: VueDataUiAnyConfig;
+            dataset: VueDataUiAnyDataset;
         };
     };
 
-    export const VueUiDashboard: DefineComponent<{
+    export type VueUiDashboardTopSlotProps = {
+        index: number;
+        item: VueUiDashboardElement & {
+            resolvedComponent: Component;
+            index: number;
+        };
+    };
+
+    export type VueUiDashboardBottomSlotProps = VueUiDashboardTopSlotProps;
+
+    export type VueUiDashboardContentSlotProps = {
+        height: number;
+        index: number;
+        item: VueUiDashboardElement & {
+            resolvedComponent: Component;
+            index: number;
+        };
+        key: number;
+        left: number;
+        top: number;
+        width: number;
+    };
+
+    export type VueUiDashboardOptionCopyAltSlotProps = {
+        dataset: VueUiDashboardPlacedElement[];
+        config: VueUiDashboardConfig;
+    };
+
+    export type VueUiDashboardProps = {
         config?: VueUiDashboardConfig;
         dataset: VueUiDashboardElement[];
-    }>;
+    };
+
+    const VueUiDashboardBase: DefineComponent<VueUiDashboardProps>;
+
+    export const VueUiDashboard: typeof VueUiDashboardBase & {
+        new (): {
+            $slots: {
+                top?: (props: VueUiDashboardTopSlotProps) => VNodeChild;
+                content?: (props: VueUiDashboardContentSlotProps) => VNodeChild;
+                bottom?: (props: VueUiDashboardBottomSlotProps) => VNodeChild;
+                ['annotator-action-close']?: () => VNodeChild;
+                ['annotator-action-color']?: (
+                    props: VueUiAnnotatorActionColorSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-draw']?: (
+                    props: VueUiAnnotatorActionDrawSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-undo']?: (
+                    props: VueUiAnnotatorActionUndoSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-redo']?: (
+                    props: VueUiAnnotatorActionRedoSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-delete']?: (
+                    props: VueUiAnnotatorActionDeleteSlotProps,
+                ) => VNodeChild;
+                optionPdf?: () => VNodeChild;
+                optionImg?: () => VNodeChild;
+                optionAltCopy?: (
+                    props: VueUiDashboardOptionCopyAltSlotProps,
+                ) => VNodeChild;
+            };
+        };
+    };
 
     export type VueUiSparkbarDatasetItem = {
         name: string;
