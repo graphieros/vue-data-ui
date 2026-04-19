@@ -2545,7 +2545,7 @@ defineExpose({
                         :svg="{
                             drawingArea: viewBox,
                             isPrintingImg:
-                                isPrinting | isImaging | isCallbackImaging,
+                                isPrinting || isImaging || isCallbackImaging,
                             isPrintingSvg: isCallbackSvg,
                             data: {
                                 areaPaths,

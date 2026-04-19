@@ -3678,7 +3678,7 @@ defineExpose({
                             ...svg,
                             datapoints: currentDonut,
                             isPrintingImg:
-                                isPrinting | isImaging | isCallbackImaging,
+                                isPrinting || isImaging || isCallbackImaging,
                             isPrintingSvg: isCallbackSvg,
                         }"
                     />

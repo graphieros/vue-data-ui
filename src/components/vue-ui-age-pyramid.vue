@@ -1764,7 +1764,7 @@ defineExpose({
                         ...svg,
                         drawingArea,
                         isPrintingImg:
-                            isPrinting | isImaging | isCallbackImaging,
+                            isPrinting || isImaging || isCallbackImaging,
                         isPrintingSvg: isCallbackSvg,
                     }"
                 />

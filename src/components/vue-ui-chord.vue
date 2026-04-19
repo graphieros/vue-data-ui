@@ -2126,7 +2126,7 @@ defineExpose({
                 :svg="{
                     height: 600,
                     width: 600,
-                    isPrintingImg: isPrinting | isImaging | isCallbackImaging,
+                    isPrintingImg: isPrinting || isImaging || isCallbackImaging,
                     isPrintingSvg: isCallbackSvg,
                 }"
             />

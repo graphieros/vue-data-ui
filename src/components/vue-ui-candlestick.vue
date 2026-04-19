@@ -2703,7 +2703,7 @@ defineExpose({
                         data: drawableDataset,
                         drawingArea,
                         isPrintingImg:
-                            isPrinting | isImaging | isCallbackImaging,
+                            isPrinting || isImaging || isCallbackImaging,
                         isPrintingSvg: isCallbackSvg,
                     }"
                 />

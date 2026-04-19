@@ -2239,7 +2239,7 @@ defineExpose({
                     :svg="{
                         ...svg,
                         isPrintingImg:
-                            isPrinting | isImaging | isCallbackImaging,
+                            isPrinting || isImaging || isCallbackImaging,
                         isPrintingSvg: isCallbackSvg,
                     }"
                 />

@@ -2195,7 +2195,7 @@ defineExpose({
                         data: layoutData,
                         orientation: direction,
                         isPrintingImg:
-                            isPrinting | isImaging | isCallbackImaging,
+                            isPrinting || isImaging || isCallbackImaging,
                         isPrintingSvg: isCallbackSvg,
                     }"
                 />

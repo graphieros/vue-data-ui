@@ -3771,7 +3771,7 @@ declare module 'vue-data-ui' {
 
     export const VueUiCandlestick: typeof VueUiCandlestickBase & {
         new (): VueUiCandlestickExpose & {
-            $props: {
+            $slots: {
                 ['annotator-action-close']?: () => VNodeChild;
                 ['annotator-action-color']?: (
                     props: VueUiAnnotatorActionColorSlotProps,
@@ -8452,20 +8452,21 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiDumbbellDatapoint = {
+        [key: string]: unknown;
         centerX: number;
         end: number | null;
         endVal: number;
         endX: number;
+        evaluationColor: string;
+        evaluationGrad: string;
         id: string;
+        isNegative: boolean;
+        isNeutral: boolean;
+        isPositive: boolean;
         name: string;
         start: number | null;
         startX: number;
         y: number;
-        evaluationColor: string;
-        evaluationGrad: string;
-        isPositive: boolean;
-        isNegative: boolean;
-        isNeutral: boolean;
     };
 
     export type VueUiDumbbellConfig = {
@@ -8486,7 +8487,10 @@ declare module 'vue-data-ui' {
         theme?: Theme;
         useAnimation?: boolean;
         animationSpeed?: number;
-        userOptions?: ChartUserOptions;
+        userOptions?: ChartUserOptions<
+            VueUiDumbbellDatapoint[],
+            VueUiDumbbellConfig
+        >;
         style?: {
             fontFamily?: string;
             chart?: {
@@ -8624,6 +8628,7 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiDumbbellDataset = {
+        [key: string]: unknown;
         name: string;
         start: number | null;
         end: number | null;
@@ -8648,13 +8653,70 @@ declare module 'vue-data-ui' {
         toggleFullscreen(): void;
     };
 
-    export const VueUiDumbbell: DefineComponent<
-        {
-            config?: VueUiDumbbellConfig;
-            dataset: VueUiDumbbellDataset[];
-        },
-        VueUiDumbbellExpose
-    >;
+    export type VueUiDumbbellOptionCopyAltSlotProps = {
+        dataset: VueUiDumbbellDatapoint[];
+        config: VueUiDumbbellConfig;
+    };
+
+    export type VueUiDumbbellSvgSlotProps = {
+        left: number;
+        right: number;
+        top: number;
+        bottom: number;
+        width: number;
+        height: number;
+        rowHeight: number;
+        absoluteHeight: number;
+        widthPlotReference: number;
+        isPrintingImg: boolean;
+        isPrintingSvg: boolean;
+    }
+
+    export type VueUiDumbbellProps = {
+        config?: VueUiDumbbellConfig;
+        dataset: VueUiDumbbellDataset[];
+    };
+
+    const VueUiDumbbellBase: DefineComponent<VueUiDumbbellProps>;
+
+    export const VueUiDumbbell: typeof VueUiDumbbellBase & {
+        new (): VueUiDumbbellExpose & {
+            $slots: {
+                ['annotator-action-close']?: () => VNodeChild;
+                ['annotator-action-color']?: (
+                    props: VueUiAnnotatorActionColorSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-draw']?: (
+                    props: VueUiAnnotatorActionDrawSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-undo']?: (
+                    props: VueUiAnnotatorActionUndoSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-redo']?: (
+                    props: VueUiAnnotatorActionRedoSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-delete']?: (
+                    props: VueUiAnnotatorActionDeleteSlotProps,
+                ) => VNodeChild;
+                menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
+                optionPdf?: () => VNodeChild;
+                optionCsv?: () => VNodeChild;
+                optionImg?: () => VNodeChild;
+                optionSvg?: () => VNodeChild;
+                optionTable?: () => VNodeChild;
+                optionFullscreen?: (
+                    props: VueUiOptionFullscreenSlotProps,
+                ) => VNodeChild;
+                optionAnnotator?: (
+                    props: VueUiOptionAnnotatorSlotProps,
+                ) => VNodeChild;
+                optionAltCopy?: (
+                    props: VueUiDumbbellOptionCopyAltSlotProps,
+                ) => VNodeChild;
+                ['chart-background']?: () => VNodeChild;
+            };
+        };
+    };
 
     export type VueUiWordCloudDatasetItem = {
         name: string;

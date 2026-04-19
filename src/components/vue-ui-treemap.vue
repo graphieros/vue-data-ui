@@ -2425,7 +2425,7 @@ defineExpose({
                         rect: selectedRect,
                         config: FINAL_CONFIG,
                         isPrintingImg:
-                            isPrinting | isImaging | isCallbackImaging,
+                            isPrinting || isImaging || isCallbackImaging,
                         isPrintingSvg: isCallbackSvg,
                     }"
                 />

@@ -28,7 +28,7 @@ declare const VueUiCandlestickBase: DefineComponent<VueUiCandlestickProps>;
 
 export const VueUiCandlestick: typeof VueUiCandlestickBase & {
     new (): VueUiCandlestickExpose & {
-        $props: {
+        $slots: {
             ['annotator-action-close']?: () => VNodeChild;
             ['annotator-action-color']?: (
                 props: VueUiAnnotatorActionColorSlotProps,
