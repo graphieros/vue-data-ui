@@ -3644,7 +3644,6 @@ declare module 'vue-data-ui' {
                     props: VueUiResetActionSlotProps,
                 ) => VNodeChild;
                 legend?: (props: VueUiCandlestickLegendSlotProps) => VNodeChild;
-                source?: () => VNodeChild;
                 ['tooltip-before']?: (
                     props: VueUiCandlestickTooltipSlotProps,
                 ) => VNodeChild;
