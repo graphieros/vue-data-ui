@@ -8670,7 +8670,14 @@ declare module 'vue-data-ui' {
         widthPlotReference: number;
         isPrintingImg: boolean;
         isPrintingSvg: boolean;
-    }
+    };
+
+    export type VueUiDumbbellLegendItem = {
+        color: string;
+        name: string;
+    };
+
+    export type VueUiDumbbellLegendSlotProps = VueUiDumbbellLegendItem[];
 
     export type VueUiDumbbellProps = {
         config?: VueUiDumbbellConfig;
@@ -8714,6 +8721,14 @@ declare module 'vue-data-ui' {
                     props: VueUiDumbbellOptionCopyAltSlotProps,
                 ) => VNodeChild;
                 ['chart-background']?: () => VNodeChild;
+                svg?: (props: VueUiDumbbellSvgSlotProps) => VNodeChild;
+                hint?: (
+                    props: VueUiKeyboardNavigationHintSlotProps,
+                ) => VNodeChild;
+                watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
+                legend?: (props: VueUiDumbbellLegendSlotProps) => VNodeChild;
+                source?: () => VNodeChild;
+                skeleton?: () => VNodeChild;
             };
         };
     };

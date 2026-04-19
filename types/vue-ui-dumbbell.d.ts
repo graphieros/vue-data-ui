@@ -1,4 +1,4 @@
-import type { DefineComponent } from 'vue';
+import type { DefineComponent, VNodeChild } from 'vue';
 
 export type {
     VueUiDumbbellConfigLabel,
@@ -17,6 +17,9 @@ export type {
     VueUiOptionFullscreenSlotProps,
     VueUiOptionAnnotatorSlotProps,
     VueUiDumbbellOptionCopyAltSlotProps,
+    VueUiDumbbellSvgSlotProps,
+    VueUiDumbbellLegendItem,
+    VueUiDumbbellLegendSlotProps,
 } from 'vue-data-ui';
 
 declare const VueUiDumbbellBase: DefineComponent<VueUiDumbbellProps>;
@@ -56,6 +59,12 @@ export const VueUiDumbbell: typeof VueUiDumbbellBase & {
                 props: VueUiDumbbellOptionCopyAltSlotProps,
             ) => VNodeChild;
             ['chart-background']?: () => VNodeChild;
+            svg?: (props: VueUiDumbbellSvgSlotProps) => VNodeChild;
+            hint?: (props: VueUiKeyboardNavigationHintSlotProps) => VNodeChild;
+            watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
+            legend?: (props: VueUiDumbbellLegendSlotProps) => VNodeChild;
+            source?: () => VNodeChild;
+            skeleton?: () => VNodeChild;
         };
     };
 };

@@ -21,6 +21,11 @@ import CommonOptionAnnotator from '../slots/common/option-annotator.vue';
 
 import 'vue-data-ui/style.css';
 import DumbbellOptionAltCopy from '../slots/vue-ui-dumbbell/dumbbell-option-alt-copy.vue';
+import DumbbellSvg from '../slots/vue-ui-dumbbell/dumbbell-svg.vue';
+import KeyboardNavigationHint from '../slots/common/keyboard-navigation-hint.vue';
+import Watermark from '../slots/common/watermark.vue';
+import DumbbellLegend from '../slots/vue-ui-dumbbell/dumbbell-legend.vue';
+import Skeleton from '../slots/common/skeleton.vue';
 
 const dataset = computed<VueUiDumbbellDataset[]>(() => {
     return [
@@ -434,7 +439,31 @@ function log(n: unknown) {
             </template>
 
             <template #svg="{ svg }">
-                {{ log(svg) }}
+                <DumbbellSvg :svg />
+            </template>
+
+            <template #hint="{ hint, isVisible }">
+                <KeyboardNavigationHint
+                    :hint
+                    :is-visible
+                    style="margin-top: -24px"
+                />
+            </template>
+
+            <template #watermark="{ isPrinting }">
+                <Watermark :is-printing />
+            </template>
+
+            <template #legend="{ legend }">
+                <DumbbellLegend :items="legend" />
+            </template>
+
+            <template #source>
+                <code style="color: chocolate"> #source </code>
+            </template>
+
+            <template #skeleton>
+                <Skeleton />
             </template>
         </VueUiDumbbell>
     </div>
