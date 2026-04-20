@@ -9116,26 +9116,31 @@ declare module 'vue-data-ui' {
         name?: string;
     };
 
+    export type VueUiFlowFormattedLink = {
+        id: string;
+        path: string;
+        source: string;
+        sourceColor: string;
+        target: string;
+        targetColor: string;
+        value: number;
+    };
+
+    export type VueUiFlowFormattedNode = {
+        absoluteY: number;
+        color: string;
+        height: number;
+        i: number;
+        id: string;
+        name: string;
+        value: number;
+        x: number;
+        y: number;
+    };
+
     export type VueUiFlowFormattedDataset = {
-        links: Array<{
-            id: string;
-            path: string;
-            source: string;
-            sourceColor: string;
-            target: string;
-            targetColor: string;
-            value: number;
-        }>;
-        nodes: Array<{
-            absoluteY: number;
-            color: string;
-            height: number;
-            i: number;
-            name: string;
-            value: number;
-            x: number;
-            y: number;
-        }>;
+        links: VueUiFlowFormattedLink[];
+        nodes: VueUiFlowFormattedNode[];
     };
 
     export type VueUiFlowConfig = {
@@ -9154,7 +9159,10 @@ declare module 'vue-data-ui' {
         };
         theme?: Theme;
         customPalette?: string[];
-        userOptions?: ChartUserOptions;
+        userOptions?: ChartUserOptions<
+            VueUiFlowFormattedDataset,
+            VueUiFlowConfig
+        >;
         nodeCategories?: Record<string, string>;
         nodeCategoryColors?: Record<string, string>;
         style?: {
@@ -9280,13 +9288,90 @@ declare module 'vue-data-ui' {
         toggleFullscreen(): void;
     };
 
-    export const VueUiFlow: DefineComponent<
-        {
-            dataset: VueUiFlowDatasetItem[];
-            config?: VueUiFlowConfig;
-        },
-        VueUiFlowExpose
-    >;
+    export type VueUiFlowOptionCopyAltSlotProps = VueUiFlowFormattedDataset;
+
+    export type VueUiFlowTooltipSlotProps = {
+        datapoint: VueUiFlowNode;
+        config: VueUiFlowConfig;
+        seriesIndex: number;
+        series: VueUiFlowFormattedDataset;
+    };
+
+    export type VueUiFlowSvgSlotProps = {
+        height: number;
+        isPrintingImg: boolean;
+        isPrintingSvg: boolean;
+        width: number;
+    };
+
+    export type VueUiFlowLegendItem = {
+        color: string;
+        count: number;
+        display: string;
+        isSegregated: boolean;
+        name: string;
+        opacity: number;
+        segregate: () => void;
+        shape: Shape;
+    };
+
+    export type VueUiFlowLegendSlotProps = VueUiFlowLegendItem[];
+
+    export type VueUiFlowProps = {
+        dataset: VueUiFlowDatasetItem[];
+        config?: VueUiFlowConfig;
+    };
+
+    const VueUiFlowBase: DefineComponent<VueUiFlowProps>;
+
+    export const VueUiFlow: typeof VueUiFlowBase & {
+        new (): VueUiFlowExpose & {
+            $slots: {
+                ['annotator-action-close']?: () => VNodeChild;
+                ['annotator-action-color']?: (
+                    props: VueUiAnnotatorActionColorSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-draw']?: (
+                    props: VueUiAnnotatorActionDrawSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-undo']?: (
+                    props: VueUiAnnotatorActionUndoSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-redo']?: (
+                    props: VueUiAnnotatorActionRedoSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-delete']?: (
+                    props: VueUiAnnotatorActionDeleteSlotProps,
+                ) => VNodeChild;
+                menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
+                optionTooltip?: () => VNodeChild;
+                optionPdf?: () => VNodeChild;
+                optionCsv?: () => VNodeChild;
+                optionImg?: () => VNodeChild;
+                optionSvg?: () => VNodeChild;
+                optionTable?: () => VNodeChild;
+                optionFullscreen?: (
+                    props: VueUiOptionFullscreenSlotProps,
+                ) => VNodeChild;
+                optionAnnotator?: (
+                    props: VueUiOptionAnnotatorSlotProps,
+                ) => VNodeChild;
+                optionAltCopy?: (
+                    props: VueUiFlowOptionCopyAltSlotProps,
+                ) => VNodeChild;
+                ['chart-background']?: () => VNodeChild;
+                svg?: (props: VueUiFlowSvgSlotProps) => VNodeChild;
+                hint?: (
+                    props: VueUiKeyboardNavigationHintSlotProps,
+                ) => VNodeChild;
+                watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
+                legend?: (props: VueUiFlowLegendSlotProps) => VNodeChild;
+                source?: () => VNodeChild;
+                skeleton?: () => VNodeChild;
+                tooltip?: (props: VueUiFlowTooltipSlotProps) => VNodeChild;
+            };
+        };
+    };
 
     export type VueUiParallelCoordinatePlotDatasetSerieItem = {
         name: string;
