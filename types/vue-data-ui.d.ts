@@ -893,7 +893,10 @@ declare module 'vue-data-ui' {
                 roundingPercentage?: number;
             };
         };
-        userOptions?: ChartUserOptions;
+        userOptions?: ChartUserOptions<
+            VueUiGalaxyFormattedDatapoint[],
+            VueUiGalaxyConfig
+        >;
     };
 
     export type VueUiGalaxyDatapoint = VueUiGalaxyDatasetItem & {
@@ -935,13 +938,115 @@ declare module 'vue-data-ui' {
         hideSeries(name: string): void;
     };
 
-    export const VueUiGalaxy: DefineComponent<
-        {
-            config?: VueUiGalaxyConfig;
-            dataset: VueUiGalaxyDatasetItem[];
-        },
-        VueUiGalaxyExpose
-    >;
+    export type VueUiGalaxyFormattedDatapoint = {
+        absoluteIndex: number;
+        absoluteValues: Array<number | null>;
+        color: string;
+        id: string;
+        name: string;
+        value: number;
+    };
+
+    export type VueUiGalaxyLegendItem = VueUiGalaxyFormattedDatapoint & {
+        display: string;
+        isSegregated: boolean;
+        opacity: number;
+        proportion: number;
+        segregate: () => void;
+        shape: Shape;
+    };
+
+    export type VueUiGalaxyDatapointTooltip = Omit<
+        VueUiGalaxyLegendItem,
+        'isSegregated' | 'segregate'
+    > & {
+        path: string;
+        points: number;
+    };
+
+    export type VueUiGalaxyTooltipSlotProps = {
+        datapoint: VueUiGalaxyDatapointTooltip;
+        series: VueUiGalaxyFormattedDatapoint[];
+        seriesIndex: number;
+        config: VueUiGalaxyConfig;
+    };
+
+    export type VueUiGalaxyLegendSlotProps = VueUiGalaxyLegendItem[];
+
+    export type VueUiGalaxyOptionCopyAltSlotProps = {
+        dataset: VueUiGalaxyFormattedDatapoint[];
+        config: VueUiGalaxyConfig;
+    };
+
+    export type VueUiGalaxySvgSlotProps = {
+        height: number;
+        isPrintingImg: boolean;
+        isPrintingSvg: boolean;
+        viewBox: string;
+        width: number;
+    };
+
+    export type VueUiGalaxyProps = {
+        config?: VueUiGalaxyConfig;
+        dataset: VueUiGalaxyDatasetItem[];
+    };
+
+    const VueUiGalaxyBase: DefineComponent<VueUiGalaxyProps>;
+
+    export const VueUiGalaxy: typeof VueUiGalaxyBase & {
+        new (): VueUiGalaxyExpose & {
+            $slots: {
+                ['annotator-action-close']?: () => VNodeChild;
+                ['annotator-action-color']?: (
+                    props: VueUiAnnotatorActionColorSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-draw']?: (
+                    props: VueUiAnnotatorActionDrawSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-undo']?: (
+                    props: VueUiAnnotatorActionUndoSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-redo']?: (
+                    props: VueUiAnnotatorActionRedoSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-delete']?: (
+                    props: VueUiAnnotatorActionDeleteSlotProps,
+                ) => VNodeChild;
+                menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
+                optionTooltip?: () => VNodeChild;
+                optionPdf?: () => VNodeChild;
+                optionCsv?: () => VNodeChild;
+                optionImg?: () => VNodeChild;
+                optionSvg?: () => VNodeChild;
+                optionTable?: () => VNodeChild;
+                optionFullscreen?: (
+                    props: VueUiOptionFullscreenSlotProps,
+                ) => VNodeChild;
+                optionAnnotator?: (
+                    props: VueUiOptionAnnotatorSlotProps,
+                ) => VNodeChild;
+                optionAltCopy?: (
+                    props: VueUiGalaxyOptionCopyAltSlotProps,
+                ) => VNodeChild;
+                ['chart-background']?: () => VNodeChild;
+                svg?: (props: VueUiGalaxySvgSlotProps) => VNodeChild;
+                hint?: (
+                    props: VueUiKeyboardNavigationHintSlotProps,
+                ) => VNodeChild;
+                watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
+                legend?: (props: VueUiGalaxyLegendSlotProps) => VNodeChild;
+                source?: () => VNodeChild;
+                ['tooltip-before']?: (
+                    props: VueUiGalaxyTooltipSlotProps,
+                ) => VNodeChild;
+                tooltip?: (props: VueUiGalaxyTooltipSlotProps) => VNodeChild;
+                ['tooltip-after']?: (
+                    props: VueUiGalaxyTooltipSlotProps,
+                ) => VNodeChild;
+                skeleton?: () => VNodeChild;
+            };
+        };
+    };
 
     export type VueUiSparkgaugeDataset = {
         value: number;

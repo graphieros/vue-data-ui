@@ -54,6 +54,9 @@ const TsVueUiFlow = defineAsyncComponent(
 const TsVueUiFunnel = defineAsyncComponent(
     () => import('./components/charts/ts-vue-ui-funnel.vue'),
 );
+const TsVueUiGalaxy = defineAsyncComponent(
+    () => import('./components/charts/ts-vue-ui-galaxy.vue'),
+);
 
 const components = shallowRef([
     { name: 'VueUiXy' },
@@ -74,6 +77,7 @@ const components = shallowRef([
     { name: 'VueUiDumbbell' },
     { name: 'VueUiFlow' },
     { name: 'VueUiFunnel' },
+    { name: 'VueUiGalaxy' },
 ]);
 
 const selectedComponent = shallowRef(components.value[0]);
@@ -113,6 +117,7 @@ const selectedComponent = shallowRef(components.value[0]);
         <TsVueUiDumbbell v-if="selectedComponent?.name === 'VueUiDumbbell'" />
         <TsVueUiFlow v-if="selectedComponent?.name === 'VueUiFlow'" />
         <TsVueUiFunnel v-if="selectedComponent?.name === 'VueUiFunnel'" />
+        <TsVueUiGalaxy v-if="selectedComponent?.name === 'VueUiGalaxy'" />
     </div>
 </template>
 

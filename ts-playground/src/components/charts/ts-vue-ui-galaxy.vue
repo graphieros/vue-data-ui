@@ -1,13 +1,13 @@
 <script setup lang="ts">
 /**
- * This playground showcases all the slots and their implementations for <VueUiFunnel>
+ * This playground showcases all the slots and their implementations for <VueUiGalaxy>
  */
 import { computed } from 'vue';
 import {
-    VueUiFunnel,
-    type VueUiFunnelConfig,
-    type VueUiFunnelDatasetItem,
-} from 'vue-data-ui/vue-ui-funnel';
+    VueUiGalaxy,
+    type VueUiGalaxyConfig,
+    type VueUiGalaxyDatasetItem,
+} from 'vue-data-ui/vue-ui-galaxy';
 import { mergeConfigs } from 'vue-data-ui/utils';
 
 import CommonAnnotatorActionColor from '../slots/common/annotator-action-color.vue';
@@ -18,63 +18,144 @@ import CommonAnnotatorActionDelete from '../slots/common/annotator-action-delete
 import CommonMenuIcon from '../slots/common/menu-icon.vue';
 import CommonOptionFullscreen from '../slots/common/option-fullscreen.vue';
 import CommonOptionAnnotator from '../slots/common/option-annotator.vue';
+import KeyboardNavigationHint from '../slots/common/keyboard-navigation-hint.vue';
+import Watermark from '../slots/common/watermark.vue';
+import Skeleton from '../slots/common/skeleton.vue';
 
 import 'vue-data-ui/style.css';
-import FunnelOptionAltCopy from '../slots/vue-ui-funnel/funnel-option-alt-copy.vue';
-import FunnelSvg from '../slots/vue-ui-funnel/funnel-svg.vue';
-import Watermark from '../slots/common/watermark.vue';
+import GalaxyOptionAltCopy from '../slots/vue-ui-galaxy/galaxy-option-alt-copy.vue';
+import GalaxySvg from '../slots/vue-ui-galaxy/galaxy-svg.vue';
+import GalaxyLegend from '../slots/vue-ui-galaxy/galaxy-legend.vue';
+import GalaxyTooltip from '../slots/vue-ui-galaxy/galaxy-tooltip.vue';
 
-const dataset = computed<VueUiFunnelDatasetItem[]>(() => {
+const dataset = computed<VueUiGalaxyDatasetItem[]>(() => {
     return [
         {
-            name: 'Lead',
-            value: 8249,
+            name: 'Series 1',
+            values: [100],
         },
         {
-            name: 'Opportunity',
-            value: 6322,
+            name: 'Series 2',
+            values: [200],
         },
         {
-            name: 'Qualified',
-            value: 4562,
-        },
-        {
-            name: 'Sold',
-            value: 3021,
-        },
-        {
-            name: 'Retained',
-            value: 1412,
+            name: 'Series 1',
+            values: [300, 1],
         },
     ];
 });
 
-const testPreconfig = computed<VueUiFunnelConfig>(() => {
+const testPreconfig = computed<VueUiGalaxyConfig>(() => {
     return {
-        theme: '',
+        skeletonConfig: null,
+        skeletonDataset: null,
+        debug: false,
+        loading: false,
         responsive: false,
-        responsiveProportionalSizing: true,
-        useCssAnimation: true,
-        table: {
-            show: false,
-            responsiveBreakpoint: 400,
-            useDialog: false,
-            th: {
+        a11y: {
+            translations: {
+                keyboardNavigation:
+                    'Use the left and right, or up and down arrow keys to move between datapoints',
+                tableAvailable:
+                    'A data table for this chart is available below.',
+                tableCaption: 'Chart data table',
+            },
+        },
+        events: {
+            datapointEnter: null,
+            datapointLeave: null,
+            datapointClick: null,
+        },
+        theme: '',
+        customPalette: [],
+        useCssAnimation: false,
+        useBlurOnHover: true,
+        style: {
+            fontFamily: 'inherit',
+            chart: {
                 backgroundColor: '#FFFFFF',
                 color: '#2D353C',
-                outline: 'none',
-            },
-            td: {
-                backgroundColor: '#FFFFFF',
-                color: '#2D353C',
-                outline: 'none',
-                roundingValue: 0,
-                roundingPercentage: 0,
-            },
-            columnNames: {
-                series: 'Step',
-                value: 'Value',
-                percentage: 'Percentage',
+                layout: {
+                    arcs: {
+                        strokeWidth: 24,
+                        borderWidth: 12,
+                        offsetX: 0,
+                        offsetY: 0,
+                        hoverEffect: {
+                            show: true,
+                            multiplicator: 1.1,
+                        },
+                        gradient: {
+                            show: true,
+                            intensity: 30,
+                            color: '#FFFFFF',
+                        },
+                    },
+                    labels: {
+                        dataLabels: {
+                            showValueFirst: true,
+                            usePercentageParens: true,
+                            useValueParens: false,
+                            prefix: '',
+                            suffix: '',
+                            formatter: null,
+                        },
+                    },
+                },
+                legend: {
+                    show: true,
+                    bold: false,
+                    backgroundColor: '#FFFFFF',
+                    color: '#2D353C',
+                    fontSize: 14,
+                    selectAllToggle: {
+                        show: false,
+                        backgroundColor: '#e1e5e8',
+                        color: '#2D353C',
+                    },
+                    roundingValue: 0,
+                    roundingPercentage: 0,
+                    showValue: true,
+                    showPercentage: true,
+                    position: 'bottom',
+                },
+                title: {
+                    text: '',
+                    color: '#2D353C',
+                    fontSize: 20,
+                    bold: true,
+                    textAlign: 'center',
+                    paddingLeft: 0,
+                    paddingRight: 0,
+                    subtitle: {
+                        color: '#A1A1A1',
+                        text: '',
+                        fontSize: 16,
+                        bold: false,
+                    },
+                },
+                tooltip: {
+                    show: true,
+                    color: '#2D353C',
+                    backgroundColor: '#FFFFFF',
+                    fontSize: 14,
+                    customFormat: null,
+                    borderRadius: 4,
+                    borderColor: '#e1e5e8',
+                    borderWidth: 1,
+                    backgroundOpacity: 100,
+                    position: 'center',
+                    offsetY: 24,
+                    smooth: true,
+                    backdropFilter: true,
+                    smoothForce: 0.18,
+                    smoothSnapThreshold: 0.25,
+                    teleportTo: 'body',
+                    showValue: true,
+                    showPercentage: true,
+                    roundingValue: 0,
+                    roundingPercentage: 0,
+                },
             },
         },
         userOptions: {
@@ -134,90 +215,32 @@ const testPreconfig = computed<VueUiFunnelConfig>(() => {
             },
             useCursorPointer: false,
         },
-        style: {
-            fontFamily: 'inherit',
-            chart: {
+        table: {
+            show: false,
+            responsiveBreakpoint: 400,
+            useDialog: false,
+            columnNames: {
+                series: 'Series',
+                value: 'Value',
+                percentage: 'Percentage',
+            },
+            th: {
                 backgroundColor: '#FFFFFF',
                 color: '#2D353C',
-                width: 600,
-                height: 500,
-                title: {
-                    text: '',
-                    color: '#2D353C',
-                    fontSize: 20,
-                    bold: true,
-                    textAlign: 'center',
-                    paddingLeft: 0,
-                    paddingRight: 0,
-                    subtitle: {
-                        color: '#A1A1A1',
-                        text: '',
-                        fontSize: 16,
-                        bold: false,
-                    },
-                },
-                padding: {
-                    top: 12,
-                    right: 128,
-                    bottom: 24,
-                    left: 24,
-                },
-                barCircleSpacingRatio: 0.05,
-                circles: {
-                    stroke: '#FFFFFF',
-                    strokeWidth: 1,
-                    dataLabels: {
-                        formatter: null,
-                        fontSize: 16,
-                        offsetY: 0,
-                        adaptColorToBackground: true,
-                        color: '#2D353C',
-                        rounding: 1,
-                        bold: true,
-                    },
-                },
-                circleLinks: {
-                    show: true,
-                    color: '#e1e5e8',
-                    widthRatio: 1,
-                },
-                area: {
-                    show: true,
-                    color: '#e1e5e8',
-                },
-                bars: {
-                    stroke: '#FFFFFF',
-                    defaultColor: '#1f77b4',
-                    strokeWidth: 1,
-                    gapRatio: 0.2,
-                    borderRadius: 3,
-                    dataLabels: {
-                        name: {
-                            fontSize: 16,
-                            color: '#2D353C',
-                            bold: true,
-                            offsetX: 0,
-                            offsetY: 0,
-                        },
-                        value: {
-                            formatter: null,
-                            fontSize: 16,
-                            rounding: 0,
-                            bold: false,
-                            color: '#2D353C',
-                            prefix: '',
-                            suffix: '',
-                            offsetX: 0,
-                            offsetY: 0,
-                        },
-                    },
-                },
+                outline: 'none',
+            },
+            td: {
+                backgroundColor: '#FFFFFF',
+                color: '#2D353C',
+                outline: 'none',
+                roundingValue: 0,
+                roundingPercentage: 0,
             },
         },
     };
 });
 
-const config = computed<VueUiFunnelConfig>(() => {
+const config = computed<VueUiGalaxyConfig>(() => {
     return mergeConfigs({
         defaultConfig: testPreconfig.value,
         userConfig: {
@@ -242,7 +265,7 @@ function log(n: unknown) {
 
 <template>
     <div>
-        <VueUiFunnel :dataset :config>
+        <VueUiGalaxy :dataset :config>
             <template #annotator-action-close>
                 <span style="color: chocolate">X</span>
             </template>
@@ -270,6 +293,17 @@ function log(n: unknown) {
 
             <template #menuIcon="{ isOpen, color }">
                 <CommonMenuIcon :isOpen :color />
+            </template>
+
+            <template #optionTooltip>
+                <code
+                    style="
+                        color: chocolate;
+                        font-size: 0.7rem;
+                        pointer-events: none;
+                    "
+                    >#optionTooltip</code
+                >
             </template>
 
             <template #optionPdf>
@@ -336,7 +370,7 @@ function log(n: unknown) {
             </template>
 
             <template #optionAltCopy="{ copyAlt }">
-                <FunnelOptionAltCopy :copy-alt />
+                <GalaxyOptionAltCopy :copy-alt />
             </template>
 
             <template #chart-background>
@@ -347,7 +381,7 @@ function log(n: unknown) {
                         background: linear-gradient(
                             to bottom,
                             #cccccc00,
-                            #cccccc
+                            #cccccc90
                         );
                     "
                 >
@@ -356,16 +390,42 @@ function log(n: unknown) {
             </template>
 
             <template #svg="{ svg }">
-                <FunnelSvg :svg />
+                <GalaxySvg :svg />
             </template>
 
             <template #watermark="{ isPrinting }">
                 <Watermark :is-printing />
             </template>
 
-            <template #source>
-                <code style="color: chocolate"> #source </code>
+            <template #hint="{ hint, isVisible }">
+                <KeyboardNavigationHint
+                    :hint
+                    :is-visible
+                    style="margin-top: -48px"
+                />
             </template>
-        </VueUiFunnel>
+
+            <template #legend="{ legend }">
+                <GalaxyLegend :items="legend" />
+            </template>
+
+            <template #tooltip-before>
+                <span style="color: chocolate"> #tooltip-before </span>
+                <br />
+            </template>
+
+            <template #tooltip="{ datapoint, seriesIndex }">
+                <GalaxyTooltip :datapoint :series-index />
+            </template>
+
+            <template #tooltip-after>
+                <br />
+                <span style="color: chocolate"> #tooltip-after </span>
+            </template>
+
+            <template #skeleton>
+                <Skeleton />
+            </template>
+        </VueUiGalaxy>
     </div>
 </template>
