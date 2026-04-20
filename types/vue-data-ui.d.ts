@@ -6314,6 +6314,7 @@ declare module 'vue-data-ui' {
     >;
 
     export type VueUiGaugeDatasetSerieItem = {
+        [key: string]: unknown;
         from: number;
         to: number;
         color?: string;
@@ -6416,7 +6417,7 @@ declare module 'vue-data-ui' {
                 title?: ChartTitle;
             };
         };
-        userOptions?: ChartUserOptions;
+        userOptions?: ChartUserOptions<VueUiGaugeDataset, VueUiGaugeConfig>;
         translations?: {
             base?: string;
         };
@@ -6431,13 +6432,82 @@ declare module 'vue-data-ui' {
         toggleFullscreen(): void;
     };
 
-    export const VueUiGauge: DefineComponent<
-        {
-            config?: VueUiGaugeConfig;
-            dataset: VueUiGaugeDataset;
-        },
-        VueUiGaugeExpose
-    >;
+    export type VueUiGaugeOptionCopyAltSlotProps = {
+        dataset: VueUiGaugeDataset;
+        config: VueUiGaugeConfig;
+    };
+
+    export type VueUiGaugeSvgSlotProps = {
+        height: number;
+        width: number;
+        top: number;
+        bottom: number;
+        centerX: number;
+        centerY: number;
+        labelFontSize: number;
+        legendFontSize: number;
+        pointerRadius: number;
+        trackSize: number;
+        pointerSize: number;
+        pointerStrokeWidth: number;
+        markerOffset: number;
+        segmentFontSize: number;
+        isPrintingImg: boolean;
+        isPrintingSvg: boolean;
+    };
+
+    export type VueUiGaugeLegendSlotProps = VueUiGaugeDataset;
+
+    export type VueUiGaugeProps = {
+        config?: VueUiGaugeConfig;
+        dataset: VueUiGaugeDataset;
+    };
+
+    const VueUiGaugeBase: DefineComponent<VueUiGaugeProps>;
+
+    export const VueUiGauge: typeof VueUiGaugeBase & {
+        new (): VueUiGaugeExpose & {
+            $slots: {
+                ['annotator-action-close']?: () => VNodeChild;
+                ['annotator-action-color']?: (
+                    props: VueUiAnnotatorActionColorSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-draw']?: (
+                    props: VueUiAnnotatorActionDrawSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-undo']?: (
+                    props: VueUiAnnotatorActionUndoSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-redo']?: (
+                    props: VueUiAnnotatorActionRedoSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-delete']?: (
+                    props: VueUiAnnotatorActionDeleteSlotProps,
+                ) => VNodeChild;
+                menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
+                optionPdf?: () => VNodeChild;
+                optionImg?: () => VNodeChild;
+                optionSvg?: () => VNodeChild;
+                optionFullscreen?: (
+                    props: VueUiOptionFullscreenSlotProps,
+                ) => VNodeChild;
+                optionAnnotator?: (
+                    props: VueUiOptionAnnotatorSlotProps,
+                ) => VNodeChild;
+                optionAltCopy?: (
+                    props: VueUiGaugeOptionCopyAltSlotProps,
+                ) => VNodeChild;
+                ['chart-background']?: () => VNodeChild;
+                pattern?: (props: VueUiPatternSlotProps) => VNodeChild;
+                svg?: (props: VueUiGaugeSvgSlotProps) => VNodeChild;
+                watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
+                source?: () => VNodeChild;
+                legend?: (props: VueUiGaugeLegendSlotProps) => VNodeChild;
+                source?: () => VNodeChild;
+                skeleton?: () => VNodeChild;
+            };
+        };
+    };
 
     export type VueUiChestnutDatasetBranchBreakdown = {
         name: string;
