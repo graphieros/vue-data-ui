@@ -2544,6 +2544,10 @@ defineExpose({
                         name="svg"
                         :svg="{
                             drawingArea: viewBox,
+                            x: projectedBounds?.minX ?? 0,
+                            y: projectedBounds?.minY ?? 0,
+                            width: projectedBounds?.width ?? 0,
+                            height: projectedBounds?.height ?? 0,
                             isPrintingImg:
                                 isPrinting || isImaging || isCallbackImaging,
                             isPrintingSvg: isCallbackSvg,

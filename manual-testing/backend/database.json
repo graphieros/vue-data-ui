@@ -1199,7 +1199,7 @@
         "VueUiFunnel": true,
         "VueUiGalaxy": true,
         "VueUiGauge": true,
-        "VueUiGeo": false,
+        "VueUiGeo": true,
         "VueUiGizmo": false,
         "VueUiHeatmap": false,
         "VueUiHistoryPlot": false,
@@ -1247,7 +1247,7 @@
       "customCheckList": {},
       "id": "3846f04c-685f-4509-8042-87b9c0b7ec33",
       "createdAt": 1775989842046,
-      "updatedAt": 1776709298715
+      "updatedAt": 1776782853522
     },
     {
       "title": "Expose more methods",

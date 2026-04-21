@@ -12322,7 +12322,7 @@ declare module 'vue-data-ui' {
         | Array<GeoJsonFeature>;
 
     export type VueUiGeoDatasetItem = {
-        [key: string]: any;
+        [key: string]: unknown;
         name: string;
         coordinates: [longitude: number, latitude: number];
         description?: string;
@@ -12331,6 +12331,7 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiGeoDatapoint = {
+        [key: string]: unknown;
         color: string;
         coordinates: [x: number, y: number];
         description: string;
@@ -12369,7 +12370,7 @@ declare module 'vue-data-ui' {
             | 'sinusoidal'
             | 'vanDerGrinten'
             | 'winkelTripel';
-        userOptions?: ChartUserOptions;
+        userOptions?: ChartUserOptions<VueUiGeoDatasetItem[], VueUiGeoConfig>;
         map?: {
             geoJson?: VueUiGeoMapGeoJson;
             center?: [x: number, y: number];
@@ -12383,7 +12384,7 @@ declare module 'vue-data-ui' {
             territoryLeave?: VueUiGeoTerritoryEvent;
             territoryClick?: VueUiGeoTerritoryEvent;
         };
-        style: {
+        style?: {
             fontFamily?: string;
             chart?: {
                 dimensions?: {
@@ -12407,7 +12408,7 @@ declare module 'vue-data-ui' {
                     radius?: number;
                     stroke?: string;
                     strokeWidth?: number;
-                    fill?: number;
+                    fill?: string;
                     hoverRadiusRatio?: number;
                     labels?: {
                         show?: boolean;
@@ -12446,13 +12447,106 @@ declare module 'vue-data-ui' {
         ): Promise<void>;
     };
 
-    export const VueUiGeo: DefineComponent<
-        {
-            config?: VueUiGeoConfig;
-            dataset?: VueUiGeoDatasetItem[];
-        },
-        VueUiGeoExpose
-    >;
+    export type VueUiGeoOptionCopyAltSlotProps = {
+        dataset: VueUiGeoDatasetItem[];
+        config: VueUiGeoConfig;
+    };
+
+    export type VueUiGeoOptionZoomSlotProps = {
+        toggleZoom: () => void;
+        isZoomLocked: boolean;
+    };
+
+    export type VueUiGeoDatapointSlotProps = {
+        highlighted: boolean;
+        onPointClick: (point: VueUiGeoDatapoint) => void;
+        onPointEnter: (point: VueUiGeoDatapoint) => void;
+        onPointLeave: () => void;
+        point: VueUiGeoDatapoint;
+    };
+
+    export type VueUiGeoSvgSlotProps = {
+        data: {
+            areaPaths: Array<Record<string, unknown>>;
+            geoJsonPoints: Array<any>;
+            linePaths: Array<any>;
+            projectedPoints: VueUiGeoDatapoint[];
+        };
+        width: number;
+        height: number;
+        drawingArea: string;
+        isPrintingImg: boolean;
+        isPrintingSvg: boolean;
+        x: number;
+        y: number;
+    };
+
+    export type VueUiGeoTooltipSlotProps = {
+        datapoint: VueUiGeoDatapoint;
+        config: VueUiGeoConfig;
+        series: VueUiGeoDatapoint[];
+        seriesIndex: number;
+    };
+
+    export type VueUiGeoProps = {
+        config?: VueUiGeoConfig;
+        dataset?: VueUiGeoDatasetItem[];
+    };
+
+    const VueUiGeoBase: DefineComponent<VueUiGeoProps>;
+
+    export const VueUiGeo: typeof VueUiGeoBase & {
+        new (): VueUiGeoBase & {
+            $slots: {
+                ['annotator-action-close']?: () => VNodeChild;
+                ['annotator-action-color']?: (
+                    props: VueUiAnnotatorActionColorSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-draw']?: (
+                    props: VueUiAnnotatorActionDrawSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-undo']?: (
+                    props: VueUiAnnotatorActionUndoSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-redo']?: (
+                    props: VueUiAnnotatorActionRedoSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-delete']?: (
+                    props: VueUiAnnotatorActionDeleteSlotProps,
+                ) => VNodeChild;
+                menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
+                optionTooltip?: () => VNodeChild;
+                optionPdf?: () => VNodeChild;
+                optionImg?: () => VNodeChild;
+                optionSvg?: () => VNodeChild;
+                optionFullscreen?: (
+                    props: VueUiOptionFullscreenSlotProps,
+                ) => VNodeChild;
+                optionAnnotator?: (
+                    props: VueUiOptionAnnotatorSlotProps,
+                ) => VNodeChild;
+                optionAltCopy?: (
+                    props: VueUiGeoOptionCopyAltSlotProps,
+                ) => VNodeChild;
+                optionZoom?: (props: VueUiGeoOptionZoomSlotProps) => VNodeChild;
+                datapoint?: (props: VueUiGeoDatapointSlotProps) => VNodeChild;
+                svg?: (props: VueUiGeoSvgSlotProps) => VNodeChild;
+                hint?: (
+                    props: VueUiKeyboardNavigationHintSlotProps,
+                ) => VNodeChild;
+                watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
+                ['tooltip-before']?: (
+                    props: VueUiGeoTooltipSlotProps,
+                ) => VNodeChild;
+                tooltip?: (props: VueUiGeoTooltipSlotProps) => VNodeChild;
+                ['tooltip-after']?: (
+                    props: VueUiGeoTooltipSlotProps,
+                ) => VNodeChild;
+                source?: () => VNodeChild;
+                skeleton?: () => VNodeChild;
+            };
+        };
+    };
 
     export type VueUiBumpDatasetItem = {
         [key: string]: any;
