@@ -396,6 +396,68 @@ describe('adaptColorToBackground', () => {
         const backgroundColor2 = '#BBBBBB';
         expect(adaptColorToBackground(backgroundColor2)).toBe('#000000');
     });
+    test('returns a custom dark color for a light background', () => {
+        const backgroundColor = '#FFFFFF';
+        expect(
+            adaptColorToBackground(backgroundColor, { dark: '#FF0000' }),
+        ).toBe('#FF0000');
+        expect(
+            adaptColorToBackground(backgroundColor, {
+                dark: '#FF0000',
+                light: '#00FF00',
+            }),
+        ).toBe('#FF0000');
+    });
+    test('returns a custom light color for a dark background', () => {
+        const backgroundColor = '#1A1A1A';
+        expect(
+            adaptColorToBackground(backgroundColor, { light: '#00FF00' }),
+        ).toBe('#00FF00');
+        expect(
+            adaptColorToBackground(backgroundColor, {
+                dark: '#FF0000',
+                light: '#00FF00',
+            }),
+        ).toBe('#00FF00');
+    });
+    test('works with rgb', () => {
+        const backgroundColor = 'rgb(0, 0, 0)';
+        expect(adaptColorToBackground(backgroundColor)).toBe('#FFFFFF');
+    });
+    test('works with rgba', () => {
+        const backgroundColor = 'rgba(0, 0, 0, 0.7)';
+        expect(adaptColorToBackground(backgroundColor)).toBe('#FFFFFF');
+    });
+    test('works with rgba', () => {
+        const backgroundColor = 'rgba(0 0 0 / 0.7)';
+        expect(adaptColorToBackground(backgroundColor)).toBe('#FFFFFF');
+    });
+    test('works with a bad formatted input color', () => {
+        const backgroundColor = 'rgba(0 0 0 / 0.7))';
+        expect(adaptColorToBackground(backgroundColor)).toBe('#000000');
+    });
+    test('works with hsl', () => {
+        const backgroundColor = 'hsl(79 100% 0%)';
+        expect(adaptColorToBackground(backgroundColor)).toBe('#FFFFFF');
+    });
+    test('works with oklch', () => {
+        const backgroundColor = 'oklch(0 0 0)';
+        expect(adaptColorToBackground(backgroundColor)).toBe('#FFFFFF');
+    });
+    test('works with named color', () => {
+        const backgroundColor = 'black';
+        expect(adaptColorToBackground(backgroundColor)).toBe('#FFFFFF');
+    });
+    test('works with apha hex', () => {
+        const backgroundColor1 = '#00000000';
+        const backgroundColor2 = '#000000ff';
+        expect(
+            adaptColorToBackground(backgroundColor1, { dark: '#FF0000' }),
+        ).toBe('#FF0000');
+        expect(
+            adaptColorToBackground(backgroundColor2, { light: '#00FF00' }),
+        ).toBe('#00FF00');
+    });
 });
 
 describe('convertColorToHex', () => {

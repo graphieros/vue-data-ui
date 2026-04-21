@@ -262,6 +262,29 @@ export const lightenColor: (color: string, strength: number) => string;
 /**
  * Vue Data UI utility
  * ---
+ * Returns a readable text color (dark or light) based on the provided background color.
+ * ___
+ * @example
+ * const color = adaptColorToBackground("#FFFFFF");
+ * const color = adaptColorToBackground("#000000");
+ * const color = adaptColorToBackground("rgba(255,0,0,0.5)");
+ * const color = adaptColorToBackground("oklch(62% 0.15 29)");
+ * const color = adaptColorToBackground("#FF0000", { dark: "#111111", light: "#EEEEEE" });
+ *
+ * @param backgroundColor - The input background color. Can be any supported format.
+ * @param options - Optional color overrides.
+ * @param options.dark - Color returned when the background is considered light.
+ * @param options.light - Color returned when the background is considered dark.
+ * @returns The chosen text color.
+ */
+export const adaptColorToBackground: (
+    backgroundColor: string | null | undefined,
+    options?: { dark?: string; light?: string },
+) => string;
+
+/**
+ * Vue Data UI utility
+ * ---
  * Darkens a color by a specified strength.
  * ___
  * @example

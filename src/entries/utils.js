@@ -5,6 +5,7 @@ import getVueDataUiConfig from '../getVueDataUiConfig';
 import getThemeConfig from '../getThemeConfig';
 import {
     abbreviate,
+    adaptColorToBackground,
     createSmoothPath,
     createStraightPath,
     createTSpans,
@@ -40,6 +41,7 @@ export {
     getCumulativeAverage,
     getCumulativeMedian,
     getPalette,
+    adaptColorToBackground,
 };
 
 export { lightenColor, darkenColor, shiftColorHue, mergeConfigs };
@@ -67,6 +69,7 @@ const vueDataUiUtilities = {
     shiftColorHue,
     mergeConfigs,
     useObjectBindings,
+    adaptColorToBackground,
 };
 
 export default vueDataUiUtilities;

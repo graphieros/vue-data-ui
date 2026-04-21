@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { VueUiGaugeLegendSlotProps } from 'vue-data-ui/vue-ui-gauge';
+import { adaptColorToBackground } from 'vue-data-ui/utils';
 
 const props = defineProps<{
     legend: VueUiGaugeLegendSlotProps;
@@ -13,7 +14,7 @@ const props = defineProps<{
             v-for="item in legend.series"
             :style="{
                 backgroundColor: item.color,
-                color: '#1A1A1A',
+                color: adaptColorToBackground(item.color),
             }"
         >
             {{ item }}
