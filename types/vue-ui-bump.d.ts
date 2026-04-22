@@ -1,5 +1,25 @@
 import type { DefineComponent, VNodeChild } from 'vue';
 
+import type {
+    VueUiBumpExpose,
+    VueUiBumpConfig,
+    VueUiBumpDatasetItem,
+    VueUiBumpDatapoint,
+    VueUiBumpProps,
+    VueUiAnnotatorActionColorSlotProps,
+    VueUiAnnotatorActionDrawSlotProps,
+    VueUiAnnotatorActionUndoSlotProps,
+    VueUiAnnotatorActionRedoSlotProps,
+    VueUiAnnotatorActionDeleteSlotProps,
+    VueUiMenuIconSlotProps,
+    VueUiOptionFullscreenSlotProps,
+    VueUiOptionAnnotatorSlotProps,
+    VueUiBumpTimeLabelSlotProps,
+    VueUiBumpSvgSlotProps,
+    VueUiKeyboardNavigationHintSlotProps,
+    VueUiWatermarkSlotProps,
+} from 'vue-data-ui';
+
 export type {
     VueUiBumpExpose,
     VueUiBumpConfig,
@@ -14,12 +34,11 @@ export type {
     VueUiMenuIconSlotProps,
     VueUiOptionFullscreenSlotProps,
     VueUiOptionAnnotatorSlotProps,
-    VueUiBumpOptionCopyAltSlotProps,
     VueUiBumpTimeLabelSlotProps,
     VueUiBumpSvgSlotProps,
     VueUiKeyboardNavigationHintSlotProps,
     VueUiWatermarkSlotProps,
-} from 'vue-data-ui';
+};
 
 declare const VueUiBumpBase: DefineComponent<VueUiBumpProps>;
 
@@ -54,9 +73,7 @@ export const VueUiBump: typeof VueUiBumpBase & {
             optionAnnotator?: (
                 props: VueUiOptionAnnotatorSlotProps,
             ) => VNodeChild;
-            optionAltCopy?: (
-                props: VueUiBumpOptionCopyAltSlotProps,
-            ) => VNodeChild;
+            optionAltCopy?: () => VNodeChild;
             ['chart-background']?: () => VNodeChild;
             ['time-label']?: (props: VueUiBumpTimeLabelSlotProps) => VNodeChild;
             svg?: (props: VueUiBumpSvgSlotProps) => VNodeChild;

@@ -2,7 +2,7 @@
 import type { VueUiXyLegendSlotProps } from 'vue-data-ui/vue-ui-xy';
 
 const props = defineProps<{
-    items: VueUiXyLegendSlotProps;
+    items: VueUiXyLegendSlotProps['legend'];
 }>();
 </script>
 

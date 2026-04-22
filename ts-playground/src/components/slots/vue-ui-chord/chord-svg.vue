@@ -2,7 +2,7 @@
 import type { VueUiChordSvgSlotProps } from 'vue-data-ui/vue-ui-chord';
 
 const props = defineProps<{
-    svg: VueUiChordSvgSlotProps;
+    svg: VueUiChordSvgSlotProps['svg'];
 }>();
 </script>
 

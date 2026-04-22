@@ -20,7 +20,6 @@ import CommonOptionFullscreen from '../slots/common/option-fullscreen.vue';
 import CommonOptionAnnotator from '../slots/common/option-annotator.vue';
 
 import 'vue-data-ui/style.css';
-import DagOptionAltCopy from '../slots/vue-ui-dag/dag-option-alt-copy.vue';
 import DagOptionZoom from '../slots/vue-ui-dag/dag-option-zoom.vue';
 import DagBackgroundPattern from '../slots/vue-ui-dag/dag-background-pattern.vue';
 import DagNode from '../slots/vue-ui-dag/dag-node.vue';
@@ -340,8 +339,10 @@ function log(n: unknown) {
                 <DagOptionZoom :toggle-zoom :is-zoom-locked />
             </template>
 
-            <template #optionAltCopy="{ copyAlt }">
-                <DagOptionAltCopy :copy-alt />
+            <template #optionAltCopy>
+                <code style="color: chocolate; font-size: 10px"
+                    >#optionAltCopy</code
+                >
             </template>
 
             <template #background-pattern="{ x, y, color }">

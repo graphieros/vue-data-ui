@@ -2,7 +2,7 @@
 import type { VueUiHorizontalBarLegendSlotProps } from 'vue-data-ui/vue-ui-horizontal-bar';
 
 const props = defineProps<{
-    items: VueUiHorizontalBarLegendSlotProps;
+    items: VueUiHorizontalBarLegendSlotProps['legend'];
 }>();
 </script>
 

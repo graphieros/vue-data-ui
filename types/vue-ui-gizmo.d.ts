@@ -1,10 +1,12 @@
 import type { DefineComponent, VNodeChild } from 'vue';
 
-export type {
+import type {
     VueUiGizmoConfig,
     VueUiGizmoDataset,
     VueUiGizmoProps,
 } from 'vue-data-ui';
+
+export type { VueUiGizmoConfig, VueUiGizmoDataset, VueUiGizmoProps };
 
 const VueUiGizmoBase: DefineComponent<VueUiGizmoProps>;
 

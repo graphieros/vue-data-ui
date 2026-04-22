@@ -3,7 +3,7 @@ import type { VueUiGaugeLegendSlotProps } from 'vue-data-ui/vue-ui-gauge';
 import { adaptColorToBackground } from 'vue-data-ui/utils';
 
 const props = defineProps<{
-    legend: VueUiGaugeLegendSlotProps;
+    legend: VueUiGaugeLegendSlotProps['legend'];
 }>();
 </script>
 

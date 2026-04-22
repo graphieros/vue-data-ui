@@ -1,5 +1,29 @@
 import type { DefineComponent, VNodeChild } from 'vue';
 
+import type {
+    VueUiCirclePackDatasetItem,
+    VueUiCirclePackDatapoint,
+    VueUiCirclePackConfig,
+    VueUiCirclePackExpose,
+    VueUiCirclePackEvent,
+    VueUiCirclePackProps,
+    VueUiAnnotatorActionColorSlotProps,
+    VueUiAnnotatorActionDrawSlotProps,
+    VueUiAnnotatorActionUndoSlotProps,
+    VueUiAnnotatorActionRedoSlotProps,
+    VueUiAnnotatorActionDeleteSlotProps,
+    VueUiMenuIconSlotProps,
+    VueUiOptionFullscreenSlotProps,
+    VueUiOptionAnnotatorSlotProps,
+    VueUiPatternSlotProps,
+    VueUiCirclePackDataLabelSlotProps,
+    VueUiCirclePackCircleSlotProps,
+    VueUiCirclePackSvgSlotProps,
+    VueUiKeyboardNavigationHintSlotProps,
+    VueUiWatermarkSlotProps,
+    VueUiCircleDatapointTooltipSlotProps,
+} from 'vue-data-ui';
+
 export type {
     VueUiCirclePackDatasetItem,
     VueUiCirclePackDatapoint,
@@ -15,7 +39,6 @@ export type {
     VueUiMenuIconSlotProps,
     VueUiOptionFullscreenSlotProps,
     VueUiOptionAnnotatorSlotProps,
-    VueUiCirclePackOptionCopyAltSlotProps,
     VueUiPatternSlotProps,
     VueUiCirclePackDataLabelSlotProps,
     VueUiCirclePackCircleSlotProps,
@@ -23,7 +46,7 @@ export type {
     VueUiKeyboardNavigationHintSlotProps,
     VueUiWatermarkSlotProps,
     VueUiCircleDatapointTooltipSlotProps,
-} from 'vue-data-ui';
+};
 
 declare const VueUiCirclePackBase: DefineComponent<VueUiCirclePackProps>;
 
@@ -59,9 +82,7 @@ export const VueUiCirclePack: typeof VueUiCirclePackBase & {
             optionAnnotator?: (
                 props: VueUiOptionAnnotatorSlotProps,
             ) => VNodeChild;
-            optionAltCopy?: (
-                props: VueUiCirclePackOptionCopyAltSlotProps,
-            ) => VNodeChild;
+            optionAltCopy?: () => VNodeChild;
             ['chart-background']?: () => VNodeChild;
             pattern?: (props: VueUiPatternSlotProps) => VNodeChild;
             ['data-label']?: (

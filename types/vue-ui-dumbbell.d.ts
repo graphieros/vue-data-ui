@@ -1,5 +1,26 @@
 import type { DefineComponent, VNodeChild } from 'vue';
 
+import type {
+    VueUiDumbbellConfigLabel,
+    VueUiDumbbellDatapoint,
+    VueUiDumbbellConfig,
+    VueUiDumbbellDataset,
+    VueUiDumbbellExpose,
+    VueUiDumbbellEvent,
+    VueUiDumbbellProps,
+    VueUiAnnotatorActionColorSlotProps,
+    VueUiAnnotatorActionDrawSlotProps,
+    VueUiAnnotatorActionUndoSlotProps,
+    VueUiAnnotatorActionRedoSlotProps,
+    VueUiAnnotatorActionDeleteSlotProps,
+    VueUiMenuIconSlotProps,
+    VueUiOptionFullscreenSlotProps,
+    VueUiOptionAnnotatorSlotProps,
+    VueUiDumbbellSvgSlotProps,
+    VueUiDumbbellLegendItem,
+    VueUiDumbbellLegendSlotProps,
+} from 'vue-data-ui';
+
 export type {
     VueUiDumbbellConfigLabel,
     VueUiDumbbellDatapoint,
@@ -16,11 +37,10 @@ export type {
     VueUiMenuIconSlotProps,
     VueUiOptionFullscreenSlotProps,
     VueUiOptionAnnotatorSlotProps,
-    VueUiDumbbellOptionCopyAltSlotProps,
     VueUiDumbbellSvgSlotProps,
     VueUiDumbbellLegendItem,
     VueUiDumbbellLegendSlotProps,
-} from 'vue-data-ui';
+};
 
 declare const VueUiDumbbellBase: DefineComponent<VueUiDumbbellProps>;
 
@@ -55,9 +75,7 @@ export const VueUiDumbbell: typeof VueUiDumbbellBase & {
             optionAnnotator?: (
                 props: VueUiOptionAnnotatorSlotProps,
             ) => VNodeChild;
-            optionAltCopy?: (
-                props: VueUiDumbbellOptionCopyAltSlotProps,
-            ) => VNodeChild;
+            optionAltCopy?: () => VNodeChild;
             ['chart-background']?: () => VNodeChild;
             svg?: (props: VueUiDumbbellSvgSlotProps) => VNodeChild;
             hint?: (props: VueUiKeyboardNavigationHintSlotProps) => VNodeChild;

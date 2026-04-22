@@ -2,7 +2,7 @@
 import type { VueUiGaugeSvgSlotProps } from 'vue-data-ui/vue-ui-gauge';
 
 const props = defineProps<{
-    svg: VueUiGaugeSvgSlotProps;
+    svg: VueUiGaugeSvgSlotProps['svg'];
 }>();
 </script>
 

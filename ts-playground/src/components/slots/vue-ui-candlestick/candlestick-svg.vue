@@ -2,7 +2,7 @@
 import type { VueUiCandlestickSvgSlotProps } from 'vue-data-ui/vue-ui-candlestick';
 
 const props = defineProps<{
-    svg: VueUiCandlestickSvgSlotProps;
+    svg: VueUiCandlestickSvgSlotProps['svg'];
 }>();
 </script>
 

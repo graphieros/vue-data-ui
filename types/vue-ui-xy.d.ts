@@ -1,5 +1,40 @@
 import type { DefineComponent, VNodeChild } from 'vue';
 
+import type {
+    VueUiXyHighlightArea,
+    VueUiXyAnnotation,
+    VueUiXyConfig,
+    VueUiXyDatasetItem,
+    VueUiXyDatasetBarItem,
+    VueUiXyDatasetLineItem,
+    VueUiXyDatasetPlotItem,
+    VueUiXySeries,
+    VueUiXyDatapointItem,
+    VueUiXyExpose,
+    VueUiXyEvent,
+    VueUiXyProps,
+    VueUiXyLegendSlotProps,
+    VueUiResetActionSlotProps,
+    VueUiXyTooltipSlotProps,
+    VueUiAnnotatorActionColorSlotProps,
+    VueUiAnnotatorActionDrawSlotProps,
+    VueUiAnnotatorActionUndoSlotProps,
+    VueUiAnnotatorActionRedoSlotProps,
+    VueUiAnnotatorActionDeleteSlotProps,
+    VueUiMenuIconSlotProps,
+    VueUiOptionStackSlotProps,
+    VueUiOptionFullscreenSlotProps,
+    VueUiOptionAnnotatorSlotProps,
+    VueUiXyBarGradientSlotProps,
+    VueUiXyAreaGradientSlotProps,
+    VueUiXyPlotCommentSlotProps,
+    VueUiPatternSlotProps,
+    VueUiXyTimeLabelSlotProps,
+    VueUiXySvgSlotProps,
+    VueUiKeyboardNavigationHintSlotProps,
+    VueUiWatermarkSlotProps,
+} from 'vue-data-ui';
+
 export type {
     VueUiXyHighlightArea,
     VueUiXyAnnotation,
@@ -25,7 +60,6 @@ export type {
     VueUiOptionStackSlotProps,
     VueUiOptionFullscreenSlotProps,
     VueUiOptionAnnotatorSlotProps,
-    VueUiXyOptionCopyAltSlotProps,
     VueUiXyBarGradientSlotProps,
     VueUiXyAreaGradientSlotProps,
     VueUiXyPlotCommentSlotProps,
@@ -34,7 +68,7 @@ export type {
     VueUiXySvgSlotProps,
     VueUiKeyboardNavigationHintSlotProps,
     VueUiWatermarkSlotProps,
-} from 'vue-data-ui';
+};
 
 declare const VueUiXyBase: DefineComponent<VueUiXyProps>;
 
@@ -79,9 +113,7 @@ export const VueUiXy: typeof VueUiXyBase & {
             optionAnnotator?: (
                 props: VueUiOptionAnnotatorSlotProps,
             ) => VNodeChild;
-            optionAltCopy?: (
-                props: VueUiXyOptionCopyAltSlotProps,
-            ) => VNodeChild;
+            optionAltCopy?: () => VNodeChild;
             ['chart-background']?: () => VNodeChild;
             ['bar-gradient']?: (
                 props: VueUiXyBarGradientSlotProps,

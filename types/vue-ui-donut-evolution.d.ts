@@ -1,5 +1,27 @@
 import type { DefineComponent, VNodeChild } from 'vue';
 
+import type {
+    VueUiDonutEvolutionDatapoint,
+    VueUiDonutEvolutionConfig,
+    VueUiDonutEvolutionDatasetItem,
+    VueUiDonutEvolutionExpose,
+    VueUiDonutEvolutionEvent,
+    VueUiDonutEvolutionProps,
+    VueUiAnnotatorActionColorSlotProps,
+    VueUiAnnotatorActionDrawSlotProps,
+    VueUiAnnotatorActionUndoSlotProps,
+    VueUiAnnotatorActionRedoSlotProps,
+    VueUiAnnotatorActionDeleteSlotProps,
+    VueUiMenuIconSlotProps,
+    VueUiOptionFullscreenSlotProps,
+    VueUiOptionAnnotatorSlotProps,
+    VueUiDonutEvolutionSvgSlotProps,
+    VueUiKeyboardNavigationHintSlotProps,
+    VueUiWatermarkSlotProps,
+    VueUiDonutEvolutionLegendItem,
+    VueUiDonutEvolutionLegendSlotProps,
+} from 'vue-data-ui';
+
 export type {
     VueUiDonutEvolutionDatapoint,
     VueUiDonutEvolutionConfig,
@@ -15,13 +37,12 @@ export type {
     VueUiMenuIconSlotProps,
     VueUiOptionFullscreenSlotProps,
     VueUiOptionAnnotatorSlotProps,
-    VueUiDonutEvolutionOptionCopyAltSlotProps,
     VueUiDonutEvolutionSvgSlotProps,
     VueUiKeyboardNavigationHintSlotProps,
     VueUiWatermarkSlotProps,
     VueUiDonutEvolutionLegendItem,
     VueUiDonutEvolutionLegendSlotProps,
-} from 'vue-data-ui';
+};
 
 declare const VueUiDonutEvolutionBase: DefineComponent<VueUiDonutEvolutionProps>;
 
@@ -56,9 +77,7 @@ export const VueUiDonutEvolution: typeof VueUiDonutEvolutionBase & {
             optionAnnotator?: (
                 props: VueUiOptionAnnotatorSlotProps,
             ) => VNodeChild;
-            optionAltCopy?: (
-                props: VueUiDonutEvolutionOptionCopyAltSlotProps,
-            ) => VNodeChild;
+            optionAltCopy?: () => VNodeChild;
             ['chart-background']?: () => VNodeChild;
             svg?: (props: VueUiDonutEvolutionSvgSlotProps) => VNodeChild;
             hint?: (props: VueUiKeyboardNavigationHintSlotProps) => VNodeChild;

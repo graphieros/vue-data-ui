@@ -2,7 +2,7 @@
 import type { VueUiChestnutLegendSlotProps } from 'vue-data-ui/vue-ui-chestnut';
 
 const props = defineProps<{
-    items: VueUiChestnutLegendSlotProps;
+    items: VueUiChestnutLegendSlotProps['legend'];
 }>();
 </script>
 

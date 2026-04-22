@@ -22,7 +22,6 @@ import CommonMenuIcon from '../slots/common/menu-icon.vue';
 import CommonOptionsStack from '../slots/common/options-stack.vue';
 import CommonOptionFullscreen from '../slots/common/option-fullscreen.vue';
 import CommonOptionAnnotator from '../slots/common/option-annotator.vue';
-import XyOptionAltCopy from '../slots/vue-ui-xy/xy-option-alt-copy.vue';
 import XyBarGradient from '../slots/vue-ui-xy/xy-bar-gradient.vue';
 import XyAreaGradient from '../slots/vue-ui-xy/xy-area-gradient.vue';
 import XyPlotComment from '../slots/vue-ui-xy/xy-plot-comment.vue';
@@ -700,8 +699,10 @@ const config = computed<VueUiXyConfig>(() => {
                 <CommonOptionAnnotator :toggle-annotator :is-annotator />
             </template>
 
-            <template #optionAltCopy="{ copyAlt }">
-                <XyOptionAltCopy :copy-alt />
+            <template #optionAltCopy>
+                <code style="color: chocolate; font-size: 10px"
+                    >#optionAltCopy</code
+                >
             </template>
 
             <template #chart-background>
@@ -743,7 +744,7 @@ const config = computed<VueUiXyConfig>(() => {
             </template>
 
             <template #svg="{ svg }">
-                <XySvg v-bind="svg" />
+                <XySvg :svg />
             </template>
 
             <template #hint="{ hint, isVisible }">

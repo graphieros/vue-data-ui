@@ -3,7 +3,7 @@ import { computed } from 'vue';
 import type { VueUiAgePyramidLegendSlotProps } from 'vue-data-ui/vue-ui-age-pyramid';
 
 const props = defineProps<{
-    legend: VueUiAgePyramidLegendSlotProps;
+    legend: VueUiAgePyramidLegendSlotProps['legend'];
 }>();
 
 const items = computed(() => {

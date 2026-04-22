@@ -1,5 +1,31 @@
 import type { DefineComponent, VNodeChild } from 'vue';
 
+import type {
+    VueUiHorizontalBarConfig,
+    VueUiHorizontalBarDatapoint,
+    VueUiHorizontalBarSerie,
+    VueUiHorizontalBarDatasetChild,
+    VueUiHorizontalBarDatasetItem,
+    VueUiHorizontalBarExpose,
+    VueUiHorizontalBarEvent,
+    VueUiHorizontalBarProps,
+    VueUiAnnotatorActionColorSlotProps,
+    VueUiAnnotatorActionDrawSlotProps,
+    VueUiAnnotatorActionUndoSlotProps,
+    VueUiAnnotatorActionRedoSlotProps,
+    VueUiAnnotatorActionDeleteSlotProps,
+    VueUiMenuIconSlotProps,
+    VueUiOptionFullscreenSlotProps,
+    VueUiOptionAnnotatorSlotProps,
+    VueUiPatternSlotProps,
+    VueUiHorizontalBarSvgSlotProps,
+    VueUiKeyboardNavigationHintSlotProps,
+    VueUiWatermarkSlotProps,
+    VueUiHorizontalBarLegendSlotProps,
+    VueUiVerticalBarTooltipDatapoint,
+    VueUiHorizontalBarTooltipSlotProps,
+} from 'vue-data-ui';
+
 export type {
     VueUiHorizontalBarConfig,
     VueUiHorizontalBarDatapoint,
@@ -17,7 +43,6 @@ export type {
     VueUiMenuIconSlotProps,
     VueUiOptionFullscreenSlotProps,
     VueUiOptionAnnotatorSlotProps,
-    VueUiHorizontalBarOptionCopyAltSlotProps,
     VueUiPatternSlotProps,
     VueUiHorizontalBarSvgSlotProps,
     VueUiKeyboardNavigationHintSlotProps,
@@ -25,7 +50,7 @@ export type {
     VueUiHorizontalBarLegendSlotProps,
     VueUiVerticalBarTooltipDatapoint,
     VueUiHorizontalBarTooltipSlotProps,
-} from 'vue-data-ui';
+};
 
 declare const VueUiHorizontalBarBase: DefineComponent<VueUiHorizontalBarProps>;
 
@@ -63,9 +88,7 @@ export const VueUiHorizontalBar: typeof VueUiHorizontalBarBase & {
             optionAnnotator?: (
                 props: VueUiOptionAnnotatorSlotProps,
             ) => VNodeChild;
-            optionAltCopy?: (
-                props: VueUiHorizontalBarOptionCopyAltSlotProps,
-            ) => VNodeChild;
+            optionAltCopy?: () => VNodeChild;
             ['chart-background']?: () => VNodeChild;
             pattern?: (props: VueUiPatternSlotProps) => VNodeChild;
             svg?: (props: VueUiHorizontalBarSvgSlotProps) => VNodeChild;

@@ -24,7 +24,7 @@ import CommonAnnotatorActionDelete from '../slots/common/annotator-action-delete
 import CommonMenuIcon from '../slots/common/menu-icon.vue';
 import CommonOptionFullscreen from '../slots/common/option-fullscreen.vue';
 import CommonOptionAnnotator from '../slots/common/option-annotator.vue';
-import HorizontalBarOptionAltCopy from '../slots/vue-ui-horizontal-bar/horizontal-bar-option-alt-copy.vue';
+
 import HorizontalBarSvg from '../slots/vue-ui-horizontal-bar/horizontal-bar-svg.vue';
 import HorizontalBarLegend from '../slots/vue-ui-horizontal-bar/horizontal-bar-legend.vue';
 import HorizontalBarTooltip from '../slots/vue-ui-horizontal-bar/horizontal-bar-tooltip.vue';
@@ -455,8 +455,10 @@ function log(n: unknown) {
                 <CommonOptionAnnotator :toggle-annotator :is-annotator />
             </template>
 
-            <template #optionAltCopy="{ copyAlt }">
-                <HorizontalBarOptionAltCopy :copy-alt />
+            <template #optionAltCopy>
+                <code style="color: chocolate; font-size: 10px"
+                    >#optionAltCopy</code
+                >
             </template>
 
             <template #chart-background>

@@ -1,15 +1,24 @@
 import type { DefineComponent, VNodeChild } from 'vue';
 
+import type {
+    VueUiCarouselTableDataset,
+    VueUiCarouselTableConfig,
+    VueUiCarouselTableProps,
+    VueUiMenuIconSlotProps,
+    VueUiCarouselTableOptionAnimationSlotProps,
+    VueUiCarouselTableThSlotProps,
+    VueUiCarouselTableTdSlotProps,
+} from 'vue-data-ui';
+
 export type {
     VueUiCarouselTableDataset,
     VueUiCarouselTableConfig,
     VueUiCarouselTableProps,
     VueUiMenuIconSlotProps,
     VueUiCarouselTableOptionAnimationSlotProps,
-    VueUiCarouselTableOptionCopyAltSlotProps,
     VueUiCarouselTableThSlotProps,
     VueUiCarouselTableTdSlotProps,
-} from 'vue-data-ui';
+};
 
 declare const VueUiCarouselTableBase: DefineComponent<VueUiCarouselTableProps>;
 
@@ -23,9 +32,7 @@ export const VueUiCarouselTable: typeof VueUiCarouselTableBase & {
             optionAnimation?: (
                 props: VueUiCarouselTableOptionAnimationSlotProps,
             ) => VNodeChild;
-            optionAltCopy?: (
-                props: VueUiCarouselTableOptionCopyAltSlotProps,
-            ) => VNodeChild;
+            optionAltCopy?: () => VNodeChild;
             source?: () => VNodeChild;
             th?: (props: VueUiCarouselTableThSlotProps) => VNodeChild;
             td?: (props: VueUiCarouselTableTdSlotProps) => VNodeChild;

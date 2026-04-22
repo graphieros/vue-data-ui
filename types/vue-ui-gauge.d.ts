@@ -1,5 +1,25 @@
 import type { DefineComponent, VNodeChild } from 'vue';
 
+import type {
+    VueUiGaugeDatasetSerieItem,
+    VueUiGaugeDataset,
+    VueUiGaugeConfig,
+    VueUiGaugeExpose,
+    VueUiGaugeProps,
+    VueUiAnnotatorActionColorSlotProps,
+    VueUiAnnotatorActionDrawSlotProps,
+    VueUiAnnotatorActionUndoSlotProps,
+    VueUiAnnotatorActionRedoSlotProps,
+    VueUiAnnotatorActionDeleteSlotProps,
+    VueUiMenuIconSlotProps,
+    VueUiOptionFullscreenSlotProps,
+    VueUiOptionAnnotatorSlotProps,
+    VueUiPatternSlotProps,
+    VueUiGaugeSvgSlotProps,
+    VueUiWatermarkSlotProps,
+    VueUiGaugeLegendSlotProps,
+} from 'vue-data-ui';
+
 export type {
     VueUiGaugeDatasetSerieItem,
     VueUiGaugeDataset,
@@ -14,12 +34,11 @@ export type {
     VueUiMenuIconSlotProps,
     VueUiOptionFullscreenSlotProps,
     VueUiOptionAnnotatorSlotProps,
-    VueUiGaugeOptionCopyAltSlotProps,
     VueUiPatternSlotProps,
     VueUiGaugeSvgSlotProps,
     VueUiWatermarkSlotProps,
     VueUiGaugeLegendSlotProps,
-} from 'vue-data-ui';
+};
 
 declare const VueUiGaugeBase: DefineComponent<VueUiGaugeProps>;
 
@@ -52,9 +71,7 @@ export const VueUiGauge: typeof VueUiGaugeBase & {
             optionAnnotator?: (
                 props: VueUiOptionAnnotatorSlotProps,
             ) => VNodeChild;
-            optionAltCopy?: (
-                props: VueUiGaugeOptionCopyAltSlotProps,
-            ) => VNodeChild;
+            optionAltCopy?: () => VNodeChild;
             ['chart-background']?: () => VNodeChild;
             pattern?: (props: VueUiPatternSlotProps) => VNodeChild;
             svg?: (props: VueUiGaugeSvgSlotProps) => VNodeChild;

@@ -2,7 +2,7 @@
 import type { VueUiDonutSvgSlotProps } from 'vue-data-ui/vue-ui-donut';
 
 const props = defineProps<{
-    svg: VueUiDonutSvgSlotProps;
+    svg: VueUiDonutSvgSlotProps['svg'];
 }>();
 </script>
 

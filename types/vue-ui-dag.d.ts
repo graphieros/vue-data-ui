@@ -1,5 +1,33 @@
 import type { DefineComponent, VNodeChild } from 'vue';
 
+import type {
+    VueUiDagConfig,
+    VueUiDagDataset,
+    VueUiDagExpose,
+    VueUiDagNode,
+    VueUiDagEdge,
+    VueUiDagProps,
+    VueUiAnnotatorActionColorSlotProps,
+    VueUiAnnotatorActionDrawSlotProps,
+    VueUiAnnotatorActionUndoSlotProps,
+    VueUiAnnotatorActionRedoSlotProps,
+    VueUiAnnotatorActionDeleteSlotProps,
+    VueUiMenuIconSlotProps,
+    VueUiOptionFullscreenSlotProps,
+    VueUiOptionAnnotatorSlotProps,
+    VueUiDagOptionZoomSlotProps,
+    VueUiDagBackgroundPatternSlotProps,
+    VueUiDagNodeSlotProps,
+    VueUiDagFreeNodeLabelSlotProps,
+    VueUiDagLayoutData,
+    VueUiDagPositionedEdge,
+    VueUiDagPositionedNode,
+    VueUiDagSvgSlotProps,
+    VueUiKeyboardNavigationHintSlotProps,
+    VueUiDagTooltipMidpointSlotProps,
+    VueUiDagTooltipNodeSlotProps,
+} from 'vue-data-ui';
+
 export type {
     VueUiDagConfig,
     VueUiDagDataset,
@@ -16,7 +44,6 @@ export type {
     VueUiOptionFullscreenSlotProps,
     VueUiOptionAnnotatorSlotProps,
     VueUiDagOptionZoomSlotProps,
-    VueUiDagOptionCopyAltSlotProps,
     VueUiDagBackgroundPatternSlotProps,
     VueUiDagNodeSlotProps,
     VueUiDagFreeNodeLabelSlotProps,
@@ -27,7 +54,7 @@ export type {
     VueUiKeyboardNavigationHintSlotProps,
     VueUiDagTooltipMidpointSlotProps,
     VueUiDagTooltipNodeSlotProps,
-} from 'vue-data-ui';
+};
 
 declare const VueUiDagBase: DefineComponent<VueUiDagProps>;
 
@@ -61,9 +88,7 @@ export const VueUiDag: typeof VueUiDagBase & {
                 props: VueUiOptionAnnotatorSlotProps,
             ) => VNodeChild;
             optionZoom?: (props: VueUiDagOptionZoomSlotProps) => VNodeChild;
-            optionAltCopy?: (
-                props: VueUiDagOptionCopyAltSlotProps,
-            ) => VNodeChild;
+            optionAltCopy?: () => VNodeChild;
             ['background-pattern']?: (
                 props: VueUiDagBackgroundPatternSlotProps,
             ) => VNodeChild;

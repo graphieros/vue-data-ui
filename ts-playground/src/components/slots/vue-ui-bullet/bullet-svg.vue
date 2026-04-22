@@ -2,7 +2,7 @@
 import type { VueUiBulletSvgSlotProps } from 'vue-data-ui/vue-ui-bullet';
 
 const props = defineProps<{
-    svg: VueUiBulletSvgSlotProps;
+    svg: VueUiBulletSvgSlotProps['svg'];
 }>();
 </script>
 

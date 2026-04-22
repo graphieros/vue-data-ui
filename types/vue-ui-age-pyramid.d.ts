@@ -1,5 +1,30 @@
 import type { DefineComponent, VNodeChild } from 'vue';
 
+import type {
+    VueUiAgePyramidDatasetRow,
+    VueUiAgePyramidDataset,
+    VueUiAgePyramidConfig,
+    VueUiAgePyramidDatapoint,
+    VueUiAgePyramidSideData,
+    VueUiAgePyramidSeries,
+    VueUiAgePyramidExpose,
+    VueUiAgePyramidEvent,
+    VueUiAgePyramidProps,
+    VueUiAnnotatorActionColorSlotProps,
+    VueUiAnnotatorActionDrawSlotProps,
+    VueUiAnnotatorActionUndoSlotProps,
+    VueUiAnnotatorActionRedoSlotProps,
+    VueUiAnnotatorActionDeleteSlotProps,
+    VueUiMenuIconSlotProps,
+    VueUiOptionFullscreenSlotProps,
+    VueUiOptionAnnotatorSlotProps,
+    VueUiAgePyramidSvgSlotProps,
+    VueUiKeyboardNavigationHintSlotProps,
+    VueUiWatermarkSlotProps,
+    VueUiAgePyramidLegendSlotProps,
+    VueUiAgePyramidTooltipSlotProps,
+} from 'vue-data-ui';
+
 export type {
     VueUiAgePyramidDatasetRow,
     VueUiAgePyramidDataset,
@@ -18,13 +43,12 @@ export type {
     VueUiMenuIconSlotProps,
     VueUiOptionFullscreenSlotProps,
     VueUiOptionAnnotatorSlotProps,
-    VueUiAgePyramidOptionCopyAltSlotProps,
     VueUiAgePyramidSvgSlotProps,
     VueUiKeyboardNavigationHintSlotProps,
     VueUiWatermarkSlotProps,
     VueUiAgePyramidLegendSlotProps,
     VueUiAgePyramidTooltipSlotProps,
-} from 'vue-data-ui';
+};
 
 const VueUiAgePyramidBase: DefineComponent<VueUiAgePyramidProps>;
 
@@ -60,9 +84,7 @@ export const VueUiAgePyramid: typeof VueUiAgePyramidBase & {
             optionAnnotator?: (
                 props: VueUiOptionAnnotatorSlotProps,
             ) => VNodeChild;
-            optionAltCopy?: (
-                props: VueUiAgePyramidOptionCopyAltSlotProps,
-            ) => VNodeChild;
+            optionAltCopy?: () => VNodeChild;
             ['chart-background']?: () => VNodeChild;
             svg?: (props: VueUiAgePyramidSvgSlotProps) => VNodeChild;
             hint?: (props: VueUiKeyboardNavigationHintSlotProps) => VNodeChild;

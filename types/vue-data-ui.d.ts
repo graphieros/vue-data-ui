@@ -794,10 +794,24 @@ declare module 'vue-data-ui' {
         };
     };
 
-    export const VueUiKpi: DefineComponent<{
+    export type VueUiKpiTitleSlotProps = {
+        comment: number;
+    };
+
+    export type VueUiKpiProps = {
         dataset: number;
         config?: VueUiKpiConfig;
-    }>;
+    };
+
+    const VueUiKpiBase: DefineComponent<VueUiKpiProps>;
+
+    export const VueUiKpi: typeof VueUiKpiBase & {
+        new (): {
+            $slots: {
+                title?: (props: VueUiKpiTitleSlotProps) => VNodeChild;
+            };
+        };
+    };
 
     export type VueUiGalaxyDatasetItem = VueUiDonutDatasetItem;
 
@@ -971,19 +985,18 @@ declare module 'vue-data-ui' {
         config: VueUiGalaxyConfig;
     };
 
-    export type VueUiGalaxyLegendSlotProps = VueUiGalaxyLegendItem[];
-
-    export type VueUiGalaxyOptionCopyAltSlotProps = {
-        dataset: VueUiGalaxyFormattedDatapoint[];
-        config: VueUiGalaxyConfig;
+    export type VueUiGalaxyLegendSlotProps = {
+        legend: VueUiGalaxyLegendItem[];
     };
 
     export type VueUiGalaxySvgSlotProps = {
-        height: number;
-        isPrintingImg: boolean;
-        isPrintingSvg: boolean;
-        viewBox: string;
-        width: number;
+        svg: {
+            height: number;
+            isPrintingImg: boolean;
+            isPrintingSvg: boolean;
+            viewBox: string;
+            width: number;
+        };
     };
 
     export type VueUiGalaxyProps = {
@@ -1025,9 +1038,7 @@ declare module 'vue-data-ui' {
                 optionAnnotator?: (
                     props: VueUiOptionAnnotatorSlotProps,
                 ) => VNodeChild;
-                optionAltCopy?: (
-                    props: VueUiGalaxyOptionCopyAltSlotProps,
-                ) => VNodeChild;
+                optionAltCopy?: () => VNodeChild;
                 ['chart-background']?: () => VNodeChild;
                 svg?: (props: VueUiGalaxySvgSlotProps) => VNodeChild;
                 hint?: (
@@ -1495,13 +1506,6 @@ declare module 'vue-data-ui' {
 
     const VueUi3dBarBase: DefineComponent<VueUi3dBarProps>;
 
-    export type VueUi3dBarOptionCopyAltSlotProps = {
-        config: VueUi3dBarConfig;
-        dataset:
-            | Pick<VueUi3dBarDataset, 'series'>
-            | Pick<VueUi3dBarDataset, 'percentage'>;
-    };
-
     export type VueUi3dBarLegendSlotProps = {
         config: VueUi3dBarConfig;
         datapoint: VueUi3dBarDatapoint;
@@ -1515,14 +1519,16 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUi3dBarSvgSlotProps = {
-        height: number;
-        width: number;
-        absoluteWidth: number;
-        top: number;
-        bottom: number;
-        left: number;
-        right: number;
-        perspective: number;
+        svg: {
+            height: number;
+            width: number;
+            absoluteWidth: number;
+            top: number;
+            bottom: number;
+            left: number;
+            right: number;
+            perspective: number;
+        };
     };
 
     export const VueUi3dBar: typeof VueUi3dBarBase & {
@@ -1556,9 +1562,7 @@ declare module 'vue-data-ui' {
                 optionAnnotator?: (
                     props: VueUiOptionAnnotatorSlotProps,
                 ) => VNodeChild;
-                optionAltCopy?: (
-                    props: VueUi3dBarOptionCopyAltSlotProps,
-                ) => VNodeChild;
+                optionAltCopy?: () => VNodeChild;
                 ['chart-background']?: () => VNodeChild;
                 legend?: (props: VueUi3dBarLegendSlotProps) => VNodeChild;
                 svg?: (props: VueUi3dBarSvgSlotProps) => VNodeChild;
@@ -2190,24 +2194,21 @@ declare module 'vue-data-ui' {
         hideSeries(name: string): void;
     };
 
-    export type VueUiDonutEvolutionOptionCopyAltSlotProps = {
-        dataset: VueUiDonutEvolutionDatapoint[];
-        config: VueUiDonutEvolutionConfig;
-    };
-
     export type VueUiDonutEvolutionSvgSlotProps = {
-        absoluteHeight: number;
-        absoluteWidth: number;
-        bottom: number;
-        centerX: number;
-        centerY: number;
-        height: number;
-        isPrintingImg: boolean;
-        isPrintingSvg: boolean;
-        left: number;
-        right: number;
-        top: number;
-        width: number;
+        svg: {
+            absoluteHeight: number;
+            absoluteWidth: number;
+            bottom: number;
+            centerX: number;
+            centerY: number;
+            height: number;
+            isPrintingImg: boolean;
+            isPrintingSvg: boolean;
+            left: number;
+            right: number;
+            top: number;
+            width: number;
+        };
     };
 
     export type VueUiDonutEvolutionLegendItem = {
@@ -2222,8 +2223,9 @@ declare module 'vue-data-ui' {
         value: number;
     };
 
-    export type VueUiDonutEvolutionLegendSlotProps =
-        VueUiDonutEvolutionLegendItem[];
+    export type VueUiDonutEvolutionLegendSlotProps = {
+        legend: VueUiDonutEvolutionLegendItem[];
+    };
 
     export type VueUiDonutEvolutionProps = {
         config?: VueUiDonutEvolutionConfig;
@@ -2263,9 +2265,7 @@ declare module 'vue-data-ui' {
                 optionAnnotator?: (
                     props: VueUiOptionAnnotatorSlotProps,
                 ) => VNodeChild;
-                optionAltCopy?: (
-                    props: VueUiDonutEvolutionOptionCopyAltSlotProps,
-                ) => VNodeChild;
+                optionAltCopy?: () => VNodeChild;
                 ['chart-background']?: () => VNodeChild;
                 svg?: (props: VueUiDonutEvolutionSvgSlotProps) => VNodeChild;
                 hint?: (
@@ -3226,11 +3226,6 @@ declare module 'vue-data-ui' {
         width: number;
     };
 
-    export type VueUiDashboardOptionCopyAltSlotProps = {
-        dataset: VueUiDashboardPlacedElement[];
-        config: VueUiDashboardConfig;
-    };
-
     export type VueUiDashboardProps = {
         config?: VueUiDashboardConfig;
         dataset: VueUiDashboardElement[];
@@ -3262,9 +3257,7 @@ declare module 'vue-data-ui' {
                 ) => VNodeChild;
                 optionPdf?: () => VNodeChild;
                 optionImg?: () => VNodeChild;
-                optionAltCopy?: (
-                    props: VueUiDashboardOptionCopyAltSlotProps,
-                ) => VNodeChild;
+                optionAltCopy?: () => VNodeChild;
             };
         };
     };
@@ -3524,36 +3517,35 @@ declare module 'vue-data-ui' {
         toggleFullscreen(): void;
     };
 
-    export type VueUiAgePyramidOptionCopyAltSlotProps = {
-        config: VueUiAgePyramidConfig;
-        dataset: VueUiAgePyramidSeries[];
-    };
-
     export type VueUiAgePyramidSvgSlotProps = {
-        isPrintingImg: boolean;
-        isPrintingSvg: boolean;
-        height: number;
-        width: number;
-        drawingArea: {
-            top: number;
-            left: number;
-            right: number;
-            bottom: number;
-            width: number;
+        svg: {
+            isPrintingImg: boolean;
+            isPrintingSvg: boolean;
             height: number;
-            centerX: number;
-            leftChart: {
-                width: number;
-                right: number;
-            };
-            rightChart: {
-                width: number;
+            width: number;
+            drawingArea: {
+                top: number;
                 left: number;
+                right: number;
+                bottom: number;
+                width: number;
+                height: number;
+                centerX: number;
+                leftChart: {
+                    width: number;
+                    right: number;
+                };
+                rightChart: {
+                    width: number;
+                    left: number;
+                };
             };
         };
     };
 
-    export type VueUiAgePyramidLegendSlotProps = VueUiAgePyramidSeries[];
+    export type VueUiAgePyramidLegendSlotProps = {
+        legend: VueUiAgePyramidSeries[];
+    };
     export type VueUiAgePyramidTooltipSlotProps = {
         datapoint: VueUiAgePyramidDatasetRow;
         series: VueUiAgePyramidSeries[];
@@ -3600,9 +3592,7 @@ declare module 'vue-data-ui' {
                 optionAnnotator?: (
                     props: VueUiOptionAnnotatorSlotProps,
                 ) => VNodeChild;
-                optionAltCopy?: (
-                    props: VueUiAgePyramidOptionCopyAltSlotProps,
-                ) => VNodeChild;
+                optionAltCopy?: () => VNodeChild;
                 ['chart-background']?: () => VNodeChild;
                 svg?: (props: VueUiAgePyramidSvgSlotProps) => VNodeChild;
                 hint?: (
@@ -3834,30 +3824,29 @@ declare module 'vue-data-ui' {
         toggleFullscreen(): void;
     };
 
-    export type VueUiCandlestickOptionCopyAltSlotProps = {
-        config: VueUiCandlestickConfig;
-        dataset: VueUiCandlestickDatapoint[];
-    };
-
     export type VueUiCandlestickSvgSlotProps = {
-        data: VueUiCandlestickDatapoint[];
-        drawingArea: {
-            bottom: number;
+        svg: {
+            data: VueUiCandlestickDatapoint[];
+            drawingArea: {
+                bottom: number;
+                height: number;
+                left: number;
+                right: number;
+                top: number;
+                width: number;
+            };
             height: number;
-            left: number;
-            right: number;
-            top: number;
+            isPrintingImg: boolean;
+            isPrintingSvg: boolean;
             width: number;
+            xAxisFontSize: number;
+            yAxisFontSize: number;
         };
-        height: number;
-        isPrintingImg: boolean;
-        isPrintingSvg: boolean;
-        width: number;
-        xAxisFontSize: number;
-        yAxisFontSize: number;
     };
 
-    export type VueUiCandlestickLegendSlotProps = VueUiCandlestickDatapoint[];
+    export type VueUiCandlestickLegendSlotProps = {
+        legend: VueUiCandlestickDatapoint[];
+    };
 
     export type VueUiCandlestickTooltipSlotProps = {
         datapoint: VueUiCandlestickDatapoint;
@@ -3906,9 +3895,7 @@ declare module 'vue-data-ui' {
                 optionAnnotator?: (
                     props: VueUiOptionAnnotatorSlotProps,
                 ) => VNodeChild;
-                optionAltCopy?: (
-                    props: VueUiCandlestickOptionCopyAltSlotProps,
-                ) => VNodeChild;
+                optionAltCopy?: () => VNodeChild;
                 ['chart-background']?: () => VNodeChild;
                 svg?: (props: VueUiCandlestickSvgSlotProps) => VNodeChild;
                 hint?: (
@@ -4429,27 +4416,24 @@ declare module 'vue-data-ui' {
         toggleFullscreen(): void;
     };
 
-    export type VueUiHeatmapOptionCopyAltSlotProps = {
-        dataset: VueUiHeatmapRow[];
-        config: VueUiHeatmapConfig;
-    };
-
     export type VueUiHeatmapSvgSlotProps = {
-        drawingArea: {
-            bottom: number;
-            cellSize: { height: number; width: number };
+        svg: {
+            drawingArea: {
+                bottom: number;
+                cellSize: { height: number; width: number };
+                height: number;
+                left: number;
+                right: number;
+                sumCellXHeight: number;
+                top: number;
+                topLabelsHeight: number;
+                width: number;
+            };
             height: number;
-            left: number;
-            right: number;
-            sumCellXHeight: number;
-            top: number;
-            topLabelsHeight: number;
+            isPrintingImg: boolean;
+            isPrintingSvg: boolean;
             width: number;
         };
-        height: number;
-        isPrintingImg: boolean;
-        isPrintingSvg: boolean;
-        width: number;
     };
 
     export type VueUiHeatmapTooltipSlotProps = {
@@ -4498,9 +4482,7 @@ declare module 'vue-data-ui' {
                 optionAnnotator?: (
                     props: VueUiOptionAnnotatorSlotProps,
                 ) => VNodeChild;
-                optionAltCopy?: (
-                    props: VueUiHeatmapOptionCopyAltSlotProps,
-                ) => VNodeChild;
+                optionAltCopy?: () => VNodeChild;
                 ['chart-background']?: () => VNodeChild;
                 svg?: (props: VueUiHeatmapSvgSlotProps) => VNodeChild;
                 hint?: (
@@ -5009,8 +4991,12 @@ declare module 'vue-data-ui' {
 
     const VueUiXyBase: DefineComponent<VueUiXyProps>;
 
-    export type VueUiXyLegendSlotProps = VueUiXySeries;
-    export type VueUiResetActionSlotProps = () => void;
+    export type VueUiXyLegendSlotProps = {
+        legend: VueUiXySeries;
+    };
+    export type VueUiResetActionSlotProps = {
+        reset: () => void;
+    };
     export type VueUiXyTooltipSlotProps = {
         [key: string]: unknown;
         bars: VueUiXyDatasetBarItem[];
@@ -5052,19 +5038,6 @@ declare module 'vue-data-ui' {
     export type VueUiOptionAnnotatorSlotProps = {
         toggleAnnotator: () => void;
         isAnnotator: boolean;
-    };
-    export type VueUiXyOptionCopyAltSlotProps = {
-        copyAlt: ({
-            config,
-            dataset,
-        }: {
-            config: VueUiXyConfig;
-            dataset: {
-                lines: VueUiXyDatasetLineItem[];
-                bars: VueUiXyDatasetBarItem[];
-                plots: VueUiXyDatasetPlotItem[];
-            };
-        }) => void;
     };
     export type VueUiXyBarGradientSlotProps = {
         series: VueUiXyDatasetBarItem;
@@ -5108,25 +5081,27 @@ declare module 'vue-data-ui' {
         show: boolean;
     };
     export type VueUiXySvgSlotProps = {
-        isPrintingImg?: boolean;
-        isPrintingSvg?: boolean;
-        data: Array<
-            | VueUiXyDatasetLineItem
-            | VueUiXyDatasetBarItem
-            | VueUiXyDatasetPlotItem
-        >;
-        drawingArea: {
-            top: number;
-            right: number;
-            bottom: number;
-            left: number;
+        svg: {
+            isPrintingImg?: boolean;
+            isPrintingSvg?: boolean;
+            data: Array<
+                | VueUiXyDatasetLineItem
+                | VueUiXyDatasetBarItem
+                | VueUiXyDatasetPlotItem
+            >;
+            drawingArea: {
+                top: number;
+                right: number;
+                bottom: number;
+                left: number;
+                height: number;
+                width: number;
+                scaleLabelX: number;
+                individualOffsetX: number;
+            };
             height: number;
             width: number;
-            scaleLabelX: number;
-            individualOffsetX: number;
         };
-        height: number;
-        width: number;
     };
     export type VueUiKeyboardNavigationHintSlotProps = {
         hint: string;
@@ -5181,9 +5156,7 @@ declare module 'vue-data-ui' {
                 optionAnnotator?: (
                     props: VueUiOptionAnnotatorSlotProps,
                 ) => VNodeChild;
-                optionAltCopy?: (
-                    props: VueUiXyOptionCopyAltSlotProps,
-                ) => VNodeChild;
+                optionAltCopy?: () => VNodeChild;
                 ['chart-background']?: () => VNodeChild;
                 ['bar-gradient']?: (
                     props: VueUiXyBarGradientSlotProps,
@@ -5482,7 +5455,9 @@ declare module 'vue-data-ui' {
         value: number;
     };
 
-    export type VueUiDonutLegendSlotProps = VueUiDonutLegendItem[];
+    export type VueUiDonutLegendSlotProps = {
+        legend: VueUiDonutLegendItem[];
+    };
     export type VueUiDonutTooltipSlotProps = {
         datapoint: VueUiDonutDatapoint;
         seriesIndex: number;
@@ -5497,13 +5472,17 @@ declare module 'vue-data-ui' {
         ref_for: boolean;
         textAlign: 'left' | 'center' | 'right';
     };
-    export type VueUiDonutPlotCommentSlotProps = VueUiDonutDatapoint;
+    export type VueUiDonutPlotCommentSlotProps = {
+        plot: VueUiDonutDatapoint;
+    };
     export type VueUiDonutSvgSlotProps = {
-        height: number;
-        width: number;
-        datapoints: VueUiDonutDatapoint[];
-        isPrintingImg: boolean;
-        isPrintingSvg: boolean;
+        svg: {
+            height: number;
+            width: number;
+            datapoints: VueUiDonutDatapoint[];
+            isPrintingImg: boolean;
+            isPrintingSvg: boolean;
+        };
     };
     export type VueUiDonutFormattedDatasetItem = Omit<
         VueUiDonutDatasetItem,
@@ -5523,16 +5502,6 @@ declare module 'vue-data-ui' {
         width: number;
         height: number;
         dataset: VueUiDonutFormattedDatasetItem[];
-    };
-
-    export type VueUiDonutOptionCopyAltSlotProps = {
-        copyAlt: ({
-            config,
-            dataset,
-        }: {
-            config: VueUiDonutConfig;
-            dataset: VueUiDonutFormattedDatasetItem[];
-        }) => void;
     };
 
     const VueUiDonutBase: DefineComponent<VueUiDonutProps>;
@@ -5573,9 +5542,7 @@ declare module 'vue-data-ui' {
                 optionFullscreen?: (
                     props: VueUiOptionFullscreenSlotProps,
                 ) => VNodeChild;
-                optionAltCopy?: (
-                    props: VueUiDonutOptionCopyAltSlotProps,
-                ) => VNodeChild;
+                optionAltCopy?: () => VNodeChild;
                 optionAnnotator?: (
                     props: VueUiOptionAnnotatorSlotProps,
                 ) => VNodeChild;
@@ -6515,31 +6482,30 @@ declare module 'vue-data-ui' {
         toggleFullscreen(): void;
     };
 
-    export type VueUiGaugeOptionCopyAltSlotProps = {
-        dataset: VueUiGaugeDataset;
-        config: VueUiGaugeConfig;
-    };
-
     export type VueUiGaugeSvgSlotProps = {
-        height: number;
-        width: number;
-        top: number;
-        bottom: number;
-        centerX: number;
-        centerY: number;
-        labelFontSize: number;
-        legendFontSize: number;
-        pointerRadius: number;
-        trackSize: number;
-        pointerSize: number;
-        pointerStrokeWidth: number;
-        markerOffset: number;
-        segmentFontSize: number;
-        isPrintingImg: boolean;
-        isPrintingSvg: boolean;
+        svg: {
+            height: number;
+            width: number;
+            top: number;
+            bottom: number;
+            centerX: number;
+            centerY: number;
+            labelFontSize: number;
+            legendFontSize: number;
+            pointerRadius: number;
+            trackSize: number;
+            pointerSize: number;
+            pointerStrokeWidth: number;
+            markerOffset: number;
+            segmentFontSize: number;
+            isPrintingImg: boolean;
+            isPrintingSvg: boolean;
+        };
     };
 
-    export type VueUiGaugeLegendSlotProps = VueUiGaugeDataset;
+    export type VueUiGaugeLegendSlotProps = {
+        legend: VueUiGaugeDataset;
+    };
 
     export type VueUiGaugeProps = {
         config?: VueUiGaugeConfig;
@@ -6577,9 +6543,7 @@ declare module 'vue-data-ui' {
                 optionAnnotator?: (
                     props: VueUiOptionAnnotatorSlotProps,
                 ) => VNodeChild;
-                optionAltCopy?: (
-                    props: VueUiGaugeOptionCopyAltSlotProps,
-                ) => VNodeChild;
+                optionAltCopy?: () => VNodeChild;
                 ['chart-background']?: () => VNodeChild;
                 pattern?: (props: VueUiPatternSlotProps) => VNodeChild;
                 svg?: (props: VueUiGaugeSvgSlotProps) => VNodeChild;
@@ -6868,28 +6832,27 @@ declare module 'vue-data-ui' {
         toggleFullscreen(): void;
     };
 
-    export type VueUiChestnutOptionCopyAltSlotProps = {
-        config: VueUiChestnutConfig;
-        dataset: VueUiChestnutDatapointRoot[];
-    };
-
     export type VueUiChestnutSvgSlotProps = {
-        branchSize: number;
-        branchStart: number;
-        gap: number;
-        height: number;
-        isPrintingImg: boolean;
-        isPrintingSvg: boolean;
-        padding: {
-            bottom: number;
-            left: number;
-            right: number;
-            top: number;
+        svg: {
+            branchSize: number;
+            branchStart: number;
+            gap: number;
+            height: number;
+            isPrintingImg: boolean;
+            isPrintingSvg: boolean;
+            padding: {
+                bottom: number;
+                left: number;
+                right: number;
+                top: number;
+            };
+            width: number;
         };
-        width: number;
     };
 
-    export type VueUiChestnutLegendSlotProps = VueUiChestnutDatapointRoot[];
+    export type VueUiChestnutLegendSlotProps = {
+        legend: VueUiChestnutDatapointRoot[];
+    };
 
     export type VueUiChestnutProps = {
         config?: VueUiChestnutConfig;
@@ -6929,9 +6892,7 @@ declare module 'vue-data-ui' {
                 optionAnnotator?: (
                     props: VueUiOptionAnnotatorSlotProps,
                 ) => VNodeChild;
-                optionAltCopy?: (
-                    props: VueUiChestnutOptionCopyAltSlotProps,
-                ) => VNodeChild;
+                optionAltCopy?: () => VNodeChild;
                 ['chart-background']?: () => VNodeChild;
                 svg?: (props: VueUiChestnutSvgSlotProps) => VNodeChild;
                 watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
@@ -7378,33 +7339,32 @@ declare module 'vue-data-ui' {
         VueUiVerticalBarExpose
     >;
 
-    export type VueUiHorizontalBarOptionCopyAltSlotProps = {
-        config: VueUiHorizontalBarConfig;
-        dataset: VueUiHorizontalBarSerie[];
-    };
-
     export type VueUiHorizontalBarSvgSlotProps = {
-        drawingArea: {
-            bottom: number;
-            fullHeight: number;
-            left: number;
-            right: number;
-            top: number;
+        svg: {
+            drawingArea: {
+                bottom: number;
+                fullHeight: number;
+                left: number;
+                right: number;
+                top: number;
+                width: number;
+            };
+            height: number;
+            isPrintingImg: boolean;
+            isPrintingSvg: boolean;
+            padding: {
+                top: number;
+                left: number;
+                right: number;
+                bottom: number;
+            };
             width: number;
         };
-        height: number;
-        isPrintingImg: boolean;
-        isPrintingSvg: boolean;
-        padding: {
-            top: number;
-            left: number;
-            right: number;
-            bottom: number;
-        };
-        width: number;
     };
 
-    export type VueUiHorizontalBarLegendSlotProps = VueUiHorizontalBarSerie[];
+    export type VueUiHorizontalBarLegendSlotProps = {
+        legend: VueUiHorizontalBarSerie[];
+    };
 
     export type VueUiVerticalBarTooltipDatapoint = {
         absoluteIndex: number;
@@ -7474,9 +7434,7 @@ declare module 'vue-data-ui' {
                 optionAnnotator?: (
                     props: VueUiOptionAnnotatorSlotProps,
                 ) => VNodeChild;
-                optionAltCopy?: (
-                    props: VueUiHorizontalBarOptionCopyAltSlotProps,
-                ) => VNodeChild;
+                optionAltCopy?: () => VNodeChild;
                 ['chart-background']?: () => VNodeChild;
                 pattern?: (props: VueUiPatternSlotProps) => VNodeChild;
                 svg?: (props: VueUiHorizontalBarSvgSlotProps) => VNodeChild;
@@ -9027,23 +8985,20 @@ declare module 'vue-data-ui' {
         toggleFullscreen(): void;
     };
 
-    export type VueUiDumbbellOptionCopyAltSlotProps = {
-        dataset: VueUiDumbbellDatapoint[];
-        config: VueUiDumbbellConfig;
-    };
-
     export type VueUiDumbbellSvgSlotProps = {
-        left: number;
-        right: number;
-        top: number;
-        bottom: number;
-        width: number;
-        height: number;
-        rowHeight: number;
-        absoluteHeight: number;
-        widthPlotReference: number;
-        isPrintingImg: boolean;
-        isPrintingSvg: boolean;
+        svg: {
+            left: number;
+            right: number;
+            top: number;
+            bottom: number;
+            width: number;
+            height: number;
+            rowHeight: number;
+            absoluteHeight: number;
+            widthPlotReference: number;
+            isPrintingImg: boolean;
+            isPrintingSvg: boolean;
+        };
     };
 
     export type VueUiDumbbellLegendItem = {
@@ -9051,7 +9006,9 @@ declare module 'vue-data-ui' {
         name: string;
     };
 
-    export type VueUiDumbbellLegendSlotProps = VueUiDumbbellLegendItem[];
+    export type VueUiDumbbellLegendSlotProps = {
+        legend: VueUiDumbbellLegendItem[];
+    };
 
     export type VueUiDumbbellProps = {
         config?: VueUiDumbbellConfig;
@@ -9091,9 +9048,7 @@ declare module 'vue-data-ui' {
                 optionAnnotator?: (
                     props: VueUiOptionAnnotatorSlotProps,
                 ) => VNodeChild;
-                optionAltCopy?: (
-                    props: VueUiDumbbellOptionCopyAltSlotProps,
-                ) => VNodeChild;
+                optionAltCopy?: () => VNodeChild;
                 ['chart-background']?: () => VNodeChild;
                 svg?: (props: VueUiDumbbellSvgSlotProps) => VNodeChild;
                 hint?: (
@@ -9662,8 +9617,6 @@ declare module 'vue-data-ui' {
         toggleFullscreen(): void;
     };
 
-    export type VueUiFlowOptionCopyAltSlotProps = VueUiFlowFormattedDataset;
-
     export type VueUiFlowTooltipSlotProps = {
         datapoint: VueUiFlowNode;
         config: VueUiFlowConfig;
@@ -9672,10 +9625,12 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiFlowSvgSlotProps = {
-        height: number;
-        isPrintingImg: boolean;
-        isPrintingSvg: boolean;
-        width: number;
+        svg: {
+            height: number;
+            isPrintingImg: boolean;
+            isPrintingSvg: boolean;
+            width: number;
+        };
     };
 
     export type VueUiFlowLegendItem = {
@@ -9689,7 +9644,9 @@ declare module 'vue-data-ui' {
         shape: Shape;
     };
 
-    export type VueUiFlowLegendSlotProps = VueUiFlowLegendItem[];
+    export type VueUiFlowLegendSlotProps = {
+        legend: VueUiFlowLegendItem[];
+    };
 
     export type VueUiFlowProps = {
         dataset: VueUiFlowDatasetItem[];
@@ -9730,9 +9687,7 @@ declare module 'vue-data-ui' {
                 optionAnnotator?: (
                     props: VueUiOptionAnnotatorSlotProps,
                 ) => VNodeChild;
-                optionAltCopy?: (
-                    props: VueUiFlowOptionCopyAltSlotProps,
-                ) => VNodeChild;
+                optionAltCopy?: () => VNodeChild;
                 ['chart-background']?: () => VNodeChild;
                 svg?: (props: VueUiFlowSvgSlotProps) => VNodeChild;
                 hint?: (
@@ -10119,11 +10074,6 @@ declare module 'vue-data-ui' {
         isAnimated: boolean;
     };
 
-    export type VueUiCarouselTableOptionCopyAltSlotProps = {
-        config: VueUiCarouselTableConfig;
-        dataset: VueUiCarouselTableDataset;
-    };
-
     export type VueUiCarouselTableThSlotProps = {
         th: string;
         colIndex: number;
@@ -10152,9 +10102,7 @@ declare module 'vue-data-ui' {
                 optionAnimation?: (
                     props: VueUiCarouselTableOptionAnimationSlotProps,
                 ) => VNodeChild;
-                optionAltCopy?: (
-                    props: VueUiCarouselTableOptionCopyAltSlotProps,
-                ) => VNodeChild;
+                optionAltCopy?: () => VNodeChild;
                 source?: () => VNodeChild;
                 caption?: () => VNodeChild;
                 th?: (props: VueUiCarouselTableThSlotProps) => VNodeChild;
@@ -10837,22 +10785,19 @@ declare module 'vue-data-ui' {
         dataset: VueUiBulletDataset;
     };
 
-    export type VueUiBulletCopyAltSlotProps = {
-        config: VueUiBulletConfig;
-        dataset: VueUiBulletDataset;
-    };
-
     export type VueUiBulletSvgSlotProps = {
-        isPrintingImg: boolean;
-        isPrintingSvg: boolean;
-        height: number;
-        width: number;
-        left: number;
-        right: number;
-        top: number;
-        bottom: number;
-        chartWidth: number;
-        chartHeight: number;
+        svg: {
+            isPrintingImg: boolean;
+            isPrintingSvg: boolean;
+            height: number;
+            width: number;
+            left: number;
+            right: number;
+            top: number;
+            bottom: number;
+            chartWidth: number;
+            chartHeight: number;
+        };
     };
 
     export type VueUiBulletLegendItem = VueUiBulletSegment & {
@@ -10866,7 +10811,9 @@ declare module 'vue-data-ui' {
         y: number;
     };
 
-    export type VueUiBulletLegendSlotProps = VueUiBulletLegendItem[];
+    export type VueUiBulletLegendSlotProps = {
+        legend: VueUiBulletLegendItem[];
+    };
 
     const VueUiBulletBase: DefineComponent<VueUiBulletProps>;
 
@@ -10899,9 +10846,7 @@ declare module 'vue-data-ui' {
                 optionAnnotator?: (
                     props: VueUiOptionAnnotatorSlotProps,
                 ) => VNodeChild;
-                optionAltCopy?: (
-                    props: VueUiBulletCopyAltSlotProps,
-                ) => VNodeChild;
+                optionAltCopy?: () => VNodeChild;
                 ['chart-background']?: () => VNodeChild;
                 svg?: (props: VueUiBulletSvgSlotProps) => VNodeChild;
                 watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
@@ -11023,16 +10968,13 @@ declare module 'vue-data-ui' {
         toggleFullscreen(): void;
     };
 
-    export type VueUiFunnelOptionCopyAltSlotProps = {
-        dataset: VueUiFunnelDatasetItem[];
-        config: VueUiFunnelConfig;
-    };
-
     export type VueUiFunnelSvgSlotProps = {
-        height: number;
-        isPrintingImg: boolean;
-        isPrintingSvg: boolean;
-        width: number;
+        svg: {
+            height: number;
+            isPrintingImg: boolean;
+            isPrintingSvg: boolean;
+            width: number;
+        };
     };
 
     export type VueUiFunnelProps = {
@@ -11073,9 +11015,7 @@ declare module 'vue-data-ui' {
                 optionAnnotator?: (
                     props: VueUiOptionAnnotatorSlotProps,
                 ) => VNodeChild;
-                optionAltCopy?: (
-                    props: VueUiFunnelOptionCopyAltSlotProps,
-                ) => VNodeChild;
+                optionAltCopy?: () => VNodeChild;
                 ['chart-background']?: () => VNodeChild;
                 svg?: (props: VueUiFunnelSvgSlotProps) => VNodeChild;
                 watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
@@ -11322,27 +11262,26 @@ declare module 'vue-data-ui' {
         hideSeries(name: string): void;
     };
 
-    export type VueUiHistoryPlotOptionCopyAltSlotProps = {
-        dataset: VueUiHistoryPlotFormattedDatapoint[];
-        config: VueUiHistoryPlotConfig;
-    };
-
     export type VueUiHistoryPlotSvgSlotProps = {
-        drawingArea: {
-            bottom: number;
+        svg: {
+            drawingArea: {
+                bottom: number;
+                height: number;
+                left: number;
+                right: number;
+                top: number;
+                width: number;
+            };
             height: number;
-            left: number;
-            right: number;
-            top: number;
+            isPrintingImg: boolean;
+            isPrintingSvg: boolean;
             width: number;
         };
-        height: number;
-        isPrintingImg: boolean;
-        isPrintingSvg: boolean;
-        width: number;
     };
 
-    export type VueUiHistoryPlotLegendSlotProps = VueUiHistoryPlotLegendItem[];
+    export type VueUiHistoryPlotLegendSlotProps = {
+        legend: VueUiHistoryPlotLegendItem[];
+    };
 
     export type VueUiHistoryPlotTooltipSlotProps = {
         config: VueUiHistoryPlotConfig;
@@ -11391,9 +11330,7 @@ declare module 'vue-data-ui' {
                 optionAnnotator?: (
                     props: VueUiOptionAnnotatorSlotProps,
                 ) => VNodeChild;
-                optionAltCopy?: (
-                    props: VueUiHistoryPlotOptionCopyAltSlotProps,
-                ) => VNodeChild;
+                optionAltCopy?: () => VNodeChild;
                 ['chart-background']?: () => VNodeChild;
                 svg?: (props: VueUiHistoryPlotSvgSlotProps) => VNodeChild;
                 hint?: (
@@ -11530,11 +11467,6 @@ declare module 'vue-data-ui' {
         toggleFullscreen(): void;
     };
 
-    export type VueUiCirclePackOptionCopyAltSlotProps = {
-        dataset: VueUiCirclePackDatapoint[];
-        config: VueUiCirclePackConfig;
-    };
-
     export type VueUiCirclePackDataLabelSlotProps = VueUiCirclePackDatapoint & {
         createTSpans: (args: CreateTSpansArgs) => string;
         fontSize: { name: number; value: number };
@@ -11547,11 +11479,13 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiCirclePackSvgSlotProps = {
-        drawingArea: { height: number; width: number };
-        height: number;
-        isPrintingImg: boolean;
-        isPrintingSvg: boolean;
-        width: number;
+        svg: {
+            drawingArea: { height: number; width: number };
+            height: number;
+            isPrintingImg: boolean;
+            isPrintingSvg: boolean;
+            width: number;
+        };
     };
 
     export type VueUiCircleDatapointTooltipSlotProps = {
@@ -11600,9 +11534,7 @@ declare module 'vue-data-ui' {
                 optionAnnotator?: (
                     props: VueUiOptionAnnotatorSlotProps,
                 ) => VNodeChild;
-                optionAltCopy?: (
-                    props: VueUiCirclePackOptionCopyAltSlotProps,
-                ) => VNodeChild;
+                optionAltCopy?: () => VNodeChild;
                 ['chart-background']?: () => VNodeChild;
                 pattern?: (props: VueUiPatternSlotProps) => VNodeChild;
                 ['data-label']?: (
@@ -12134,16 +12066,13 @@ declare module 'vue-data-ui' {
         toggleFullscreen(): void;
     };
 
-    export type VueUiChordOptionCopyAltSlotProps = {
-        dataset: VueUiChordDataset;
-        config: VueUiChordConfig;
-    };
-
     export type VueUiChordSvgSlotProps = {
-        height: number;
-        isPrintingImg: boolean;
-        isPrintingSvg: boolean;
-        width: number;
+        svg: {
+            height: number;
+            isPrintingImg: boolean;
+            isPrintingSvg: boolean;
+            width: number;
+        };
     };
 
     export type VueUiChordLegendItem = {
@@ -12157,7 +12086,9 @@ declare module 'vue-data-ui' {
         shape: Shape;
     };
 
-    export type VueUiChordLegendSlotProps = VueUiChordLegendItem[];
+    export type VueUiChordLegendSlotProps = {
+        legend: VueUiChordLegendItem[];
+    };
 
     export type VueUiChordPatternSlotProps = {
         seriesIndex: number;
@@ -12202,9 +12133,7 @@ declare module 'vue-data-ui' {
                 optionAnnotator?: (
                     props: VueUiOptionAnnotatorSlotProps,
                 ) => VNodeChild;
-                optionAltCopy?: (
-                    props: VueUiChordOptionCopyAltSlotProps,
-                ) => VNodeChild;
+                optionAltCopy?: () => VNodeChild;
                 ['chart-background']?: () => VNodeChild;
                 svg?: (props: VueUiChordSvgSlotProps) => VNodeChild;
                 watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
@@ -12378,11 +12307,6 @@ declare module 'vue-data-ui' {
         isZoomLocked: boolean;
     };
 
-    export type VueUiDagOptionCopyAltSlotProps = {
-        dataset: VueUiDagDataset;
-        config: VueUiDagConfig;
-    };
-
     export type VueUiDagBackgroundPatternSlotProps = {
         x: number;
         y: number;
@@ -12438,16 +12362,18 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiDagSvgSlotProps = {
-        data: VueUiDagLayoutData;
-        drawingArea: {
-            height: number;
-            width: number;
-            x: number;
-            y: number;
+        svg: {
+            data: VueUiDagLayoutData;
+            drawingArea: {
+                height: number;
+                width: number;
+                x: number;
+                y: number;
+            };
+            isPrintingImg: boolean;
+            isPrintingSvg: boolean;
+            orientation: 'TB' | 'RL' | 'BT' | 'LR';
         };
-        isPrintingImg: boolean;
-        isPrintingSvg: boolean;
-        orientation: 'TB' | 'RL' | 'BT' | 'LR';
     };
 
     export type VueUiDagTooltipMidpointSlotProps = {
@@ -12497,9 +12423,7 @@ declare module 'vue-data-ui' {
                     props: VueUiOptionAnnotatorSlotProps,
                 ) => VNodeChild;
                 optionZoom?: (props: VueUiDagOptionZoomSlotProps) => VNodeChild;
-                optionAltCopy?: (
-                    props: VueUiDagOptionCopyAltSlotProps,
-                ) => VNodeChild;
+                optionAltCopy?: () => VNodeChild;
                 ['background-pattern']?: (
                     props: VueUiDagBackgroundPatternSlotProps,
                 ) => VNodeChild;
@@ -12733,11 +12657,6 @@ declare module 'vue-data-ui' {
         ): Promise<void>;
     };
 
-    export type VueUiGeoOptionCopyAltSlotProps = {
-        dataset: VueUiGeoDatasetItem[];
-        config: VueUiGeoConfig;
-    };
-
     export type VueUiGeoOptionZoomSlotProps = {
         toggleZoom: () => void;
         isZoomLocked: boolean;
@@ -12752,19 +12671,21 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiGeoSvgSlotProps = {
-        data: {
-            areaPaths: Array<Record<string, unknown>>;
-            geoJsonPoints: Array<any>;
-            linePaths: Array<any>;
-            projectedPoints: VueUiGeoDatapoint[];
+        svg: {
+            data: {
+                areaPaths: Array<Record<string, unknown>>;
+                geoJsonPoints: Array<any>;
+                linePaths: Array<any>;
+                projectedPoints: VueUiGeoDatapoint[];
+            };
+            width: number;
+            height: number;
+            drawingArea: string;
+            isPrintingImg: boolean;
+            isPrintingSvg: boolean;
+            x: number;
+            y: number;
         };
-        width: number;
-        height: number;
-        drawingArea: string;
-        isPrintingImg: boolean;
-        isPrintingSvg: boolean;
-        x: number;
-        y: number;
     };
 
     export type VueUiGeoTooltipSlotProps = {
@@ -12811,9 +12732,7 @@ declare module 'vue-data-ui' {
                 optionAnnotator?: (
                     props: VueUiOptionAnnotatorSlotProps,
                 ) => VNodeChild;
-                optionAltCopy?: (
-                    props: VueUiGeoOptionCopyAltSlotProps,
-                ) => VNodeChild;
+                optionAltCopy?: () => VNodeChild;
                 optionZoom?: (props: VueUiGeoOptionZoomSlotProps) => VNodeChild;
                 datapoint?: (props: VueUiGeoDatapointSlotProps) => VNodeChild;
                 svg?: (props: VueUiGeoSvgSlotProps) => VNodeChild;
@@ -13002,11 +12921,6 @@ declare module 'vue-data-ui' {
         dataset: VueUiBumpDatasetItem[];
     };
 
-    export type VueUiBumpOptionCopyAltSlotProps = {
-        dataset: VueUiBumpSeries[];
-        config: VueUiBumpConfig;
-    };
-
     export type VueUiBumpTimeLabelSlotProps = {
         absoluteIndex: number;
         content: string;
@@ -13020,22 +12934,24 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiBumpSvgSlotProps = {
-        data: VueUiBumpSeries[];
-        drawingArea: {
-            bottom: number;
-            chartHeight: number;
-            chartWidth: number;
-            height: number;
-            left: number;
-            right: number;
-            svgHeight: number;
-            top: number;
-            unitH: number;
-            unitW: number;
-            width: number;
+        svg: {
+            data: VueUiBumpSeries[];
+            drawingArea: {
+                bottom: number;
+                chartHeight: number;
+                chartWidth: number;
+                height: number;
+                left: number;
+                right: number;
+                svgHeight: number;
+                top: number;
+                unitH: number;
+                unitW: number;
+                width: number;
+            };
+            isPrintingImg: boolean;
+            isPrintingSvg: boolean;
         };
-        isPrintingImg: boolean;
-        isPrintingSvg: boolean;
     };
 
     const VueUiBumpBase: DefineComponent<VueUiBumpProps>;
@@ -13071,9 +12987,7 @@ declare module 'vue-data-ui' {
                 optionAnnotator?: (
                     props: VueUiOptionAnnotatorSlotProps,
                 ) => VNodeChild;
-                optionAltCopy?: (
-                    props: VueUiBumpOptionCopyAltSlotProps,
-                ) => VNodeChild;
+                optionAltCopy?: () => VNodeChild;
                 ['chart-background']?: () => VNodeChild;
                 ['time-label']?: (
                     props: VueUiBumpTimeLabelSlotProps,

@@ -20,7 +20,7 @@ import CommonOptionFullscreen from '../slots/common/option-fullscreen.vue';
 import CommonOptionAnnotator from '../slots/common/option-annotator.vue';
 
 import 'vue-data-ui/style.css';
-import CirclePackOptionAltCopy from '../slots/vue-ui-circle-pack/circle-pack-option-alt-copy.vue';
+
 import PatternSlot from '../slots/common/pattern-slot.vue';
 import CirclePackDataLabel from '../slots/vue-ui-circle-pack/circle-pack-data-label.vue';
 import CirclePackCircle from '../slots/vue-ui-circle-pack/circle-pack-circle.vue';
@@ -355,8 +355,10 @@ function log(n: unknown) {
                 <CommonOptionAnnotator :toggle-annotator :is-annotator />
             </template>
 
-            <template #optionAltCopy="{ copyAlt }">
-                <CirclePackOptionAltCopy :copy-alt />
+            <template #optionAltCopy>
+                <code style="color: chocolate; font-size: 10px"
+                    >#optionAltCopy</code
+                >
             </template>
 
             <template #pattern="{ seriesIndex, patternId }">

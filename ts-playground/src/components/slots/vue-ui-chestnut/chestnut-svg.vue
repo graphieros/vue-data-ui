@@ -2,7 +2,7 @@
 import type { VueUiChestnutSvgSlotProps } from 'vue-data-ui/vue-ui-chestnut';
 
 const props = defineProps<{
-    svg: VueUiChestnutSvgSlotProps;
+    svg: VueUiChestnutSvgSlotProps['svg'];
 }>();
 </script>
 

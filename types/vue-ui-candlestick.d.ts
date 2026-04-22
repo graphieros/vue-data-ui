@@ -1,5 +1,28 @@
 import type { DefineComponent, VNodeChild } from 'vue';
 
+import type {
+    VueUiCandlestickConfig,
+    VueUiCandlestickDatapoint,
+    VueUiCandlestickExpose,
+    VueUiCandlestickEvent,
+    VueUiCandlestickProps,
+    VueUiCandlestickDatapointSegment,
+    VueUiCandlestickDatapoint,
+    VueUiAnnotatorActionColorSlotProps,
+    VueUiAnnotatorActionDrawSlotProps,
+    VueUiAnnotatorActionUndoSlotProps,
+    VueUiAnnotatorActionRedoSlotProps,
+    VueUiAnnotatorActionDeleteSlotProps,
+    VueUiOptionFullscreenSlotProps,
+    VueUiOptionAnnotatorSlotProps,
+    VueUiCandlestickSvgSlotProps,
+    VueUiKeyboardNavigationHintSlotProps,
+    VueUiWatermarkSlotProps,
+    VueUiCandlestickLegendSlotProps,
+    VueUiCandlestickTooltipSlotProps,
+    OHLC,
+} from 'vue-data-ui';
+
 export type {
     VueUiCandlestickConfig,
     VueUiCandlestickDatapoint,
@@ -15,14 +38,13 @@ export type {
     VueUiAnnotatorActionDeleteSlotProps,
     VueUiOptionFullscreenSlotProps,
     VueUiOptionAnnotatorSlotProps,
-    VueUiCandlestickOptionCopyAltSlotProps,
     VueUiCandlestickSvgSlotProps,
     VueUiKeyboardNavigationHintSlotProps,
     VueUiWatermarkSlotProps,
     VueUiCandlestickLegendSlotProps,
     VueUiCandlestickTooltipSlotProps,
     OHLC,
-} from 'vue-data-ui';
+};
 
 declare const VueUiCandlestickBase: DefineComponent<VueUiCandlestickProps>;
 
@@ -58,9 +80,7 @@ export const VueUiCandlestick: typeof VueUiCandlestickBase & {
             optionAnnotator?: (
                 props: VueUiOptionAnnotatorSlotProps,
             ) => VNodeChild;
-            optionAltCopy?: (
-                props: VueUiCandlestickOptionCopyAltSlotProps,
-            ) => VNodeChild;
+            optionAltCopy?: () => VNodeChild;
             ['chart-background']?: () => VNodeChild;
             svg?: (props: VueUiCandlestickSvgSlotProps) => VNodeChild;
             hint?: (props: VueUiKeyboardNavigationHintSlotProps) => VNodeChild;

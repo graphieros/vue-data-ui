@@ -1,5 +1,27 @@
 import type { DefineComponent, VNodeChild } from 'vue';
 
+import type {
+    VueUiChestnutDatasetBranchBreakdown,
+    VueUiChestnutDatasetBranch,
+    VueUiChestnutDatasetRoot,
+    VueUiChestnutConfig,
+    VueUiChestnutExpose,
+    VueUiChestnutDatapointNut,
+    VueUiChestnutDatapointBranch,
+    VueUiChestnutDatapointRoot,
+    VueUiChestnutProps,
+    VueUiAnnotatorActionColorSlotProps,
+    VueUiAnnotatorActionDrawSlotProps,
+    VueUiAnnotatorActionUndoSlotProps,
+    VueUiAnnotatorActionRedoSlotProps,
+    VueUiAnnotatorActionDeleteSlotProps,
+    VueUiMenuIconSlotProps,
+    VueUiOptionFullscreenSlotProps,
+    VueUiOptionAnnotatorSlotProps,
+    VueUiChestnutSvgSlotProps,
+    VueUiChestnutLegendSlotProps,
+} from 'vue-data-ui';
+
 export type {
     VueUiChestnutDatasetBranchBreakdown,
     VueUiChestnutDatasetBranch,
@@ -18,10 +40,9 @@ export type {
     VueUiMenuIconSlotProps,
     VueUiOptionFullscreenSlotProps,
     VueUiOptionAnnotatorSlotProps,
-    VueUiChestnutOptionCopyAltSlotProps,
     VueUiChestnutSvgSlotProps,
     VueUiChestnutLegendSlotProps,
-} from 'vue-data-ui';
+};
 
 declare const VueUiChestnutBase: DefineComponent<VueUiChestnutProps>;
 
@@ -56,9 +77,7 @@ export const VueUiChestnut: typeof VueUiChestnutBase & {
             optionAnnotator?: (
                 props: VueUiOptionAnnotatorSlotProps,
             ) => VNodeChild;
-            optionAltCopy?: (
-                props: VueUiChestnutOptionCopyAltSlotProps,
-            ) => VNodeChild;
+            optionAltCopy?: () => VNodeChild;
             ['chart-background']?: () => VNodeChild;
             svg?: (props: VueUiChestnutSvgSlotProps) => VNodeChild;
             watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;

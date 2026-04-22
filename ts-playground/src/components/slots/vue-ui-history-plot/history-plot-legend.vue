@@ -2,7 +2,7 @@
 import type { VueUiHistoryPlotLegendSlotProps } from 'vue-data-ui/vue-ui-history-plot';
 
 const props = defineProps<{
-    items: VueUiHistoryPlotLegendSlotProps;
+    items: VueUiHistoryPlotLegendSlotProps['legend'];
 }>();
 </script>
 

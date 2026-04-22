@@ -1,5 +1,32 @@
 import type { DefineComponent, VNodeChild } from 'vue';
 
+import type {
+    VueUiFlowDatasetItem,
+    VueUiFlowNode,
+    VueUiFlowFormattedDataset,
+    VueUiFlowConfig,
+    VueUiFlowExpose,
+    VueUiFlowEvent,
+    VueUiFlowProps,
+    VueUiAnnotatorActionColorSlotProps,
+    VueUiAnnotatorActionDrawSlotProps,
+    VueUiAnnotatorActionUndoSlotProps,
+    VueUiAnnotatorActionRedoSlotProps,
+    VueUiAnnotatorActionDeleteSlotProps,
+    VueUiFlowFormattedDataset,
+    VueUiFlowFormattedLink,
+    VueUiFlowFormattedNode,
+    VueUiMenuIconSlotProps,
+    VueUiOptionFullscreenSlotProps,
+    VueUiOptionAnnotatorSlotProps,
+    VueUiFlowSvgSlotProps,
+    VueUiKeyboardNavigationHintSlotProps,
+    VueUiWatermarkSlotProps,
+    VueUiFlowLegendItem,
+    VueUiFlowLegendSlotProps,
+    VueUiFlowTooltipSlotProps,
+} from 'vue-data-ui';
+
 export type {
     VueUiFlowDatasetItem,
     VueUiFlowNode,
@@ -19,14 +46,13 @@ export type {
     VueUiMenuIconSlotProps,
     VueUiOptionFullscreenSlotProps,
     VueUiOptionAnnotatorSlotProps,
-    VueUiFlowOptionCopyAltSlotProps,
     VueUiFlowSvgSlotProps,
     VueUiKeyboardNavigationHintSlotProps,
     VueUiWatermarkSlotProps,
     VueUiFlowLegendItem,
     VueUiFlowLegendSlotProps,
     VueUiFlowTooltipSlotProps,
-} from 'vue-data-ui';
+};
 
 declare const VueUiFlowBase: DefineComponent<VueUiFlowProps>;
 
@@ -62,9 +88,7 @@ export const VueUiFlow: typeof VueUiFlowBase & {
             optionAnnotator?: (
                 props: VueUiOptionAnnotatorSlotProps,
             ) => VNodeChild;
-            optionAltCopy?: (
-                props: VueUiFlowOptionCopyAltSlotProps,
-            ) => VNodeChild;
+            optionAltCopy?: () => VNodeChild;
             ['chart-background']?: () => VNodeChild;
             svg?: (props: VueUiFlowSvgSlotProps) => VNodeChild;
             hint?: (props: VueUiKeyboardNavigationHintSlotProps) => VNodeChild;

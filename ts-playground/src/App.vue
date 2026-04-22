@@ -72,6 +72,9 @@ const TsVueUiHistoryPlot = defineAsyncComponent(
 const TsVueUiHorizontalBar = defineAsyncComponent(
     () => import('./components/charts/ts-vue-ui-horizontal-bar.vue'),
 );
+const TsVueUiKpi = defineAsyncComponent(
+    () => import('./components/charts/ts-vue-ui-kpi.vue'),
+);
 
 const components = shallowRef([
     { name: 'VueUiXy' },
@@ -98,6 +101,7 @@ const components = shallowRef([
     { name: 'VueUiHeatmap' },
     { name: 'VueUiHistoryPlot' },
     { name: 'VueUiHorizontalBar' },
+    { name: 'VueUiKpi' },
 ]);
 
 const selectedComponent = shallowRef(components.value[0]);
@@ -147,6 +151,7 @@ const selectedComponent = shallowRef(components.value[0]);
         <TsVueUiHorizontalBar
             v-if="selectedComponent?.name === 'VueUiHorizontalBar'"
         />
+        <TsVueUiKpi v-if="selectedComponent?.name === 'VueUiKpi'" />
     </div>
 </template>
 

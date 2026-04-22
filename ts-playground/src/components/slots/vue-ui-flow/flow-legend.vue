@@ -2,7 +2,7 @@
 import type { VueUiFlowLegendSlotProps } from 'vue-data-ui/vue-ui-flow';
 
 const props = defineProps<{
-    items: VueUiFlowLegendSlotProps;
+    items: VueUiFlowLegendSlotProps['legend'];
 }>();
 </script>
 

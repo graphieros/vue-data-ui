@@ -19,7 +19,6 @@ import CommonMenuIcon from '../slots/common/menu-icon.vue';
 import CommonOptionFullscreen from '../slots/common/option-fullscreen.vue';
 import CommonOptionAnnotator from '../slots/common/option-annotator.vue';
 
-import BumpOptionAltCopy from '../slots/vue-ui-bump/bump-option-alt-copy.vue';
 import BumpTimeLabel from '../slots/vue-ui-bump/bump-time-label.vue';
 import BumpSvg from '../slots/vue-ui-bump/bump-svg.vue';
 import KeyboardNavigationHint from '../slots/common/keyboard-navigation-hint.vue';
@@ -404,8 +403,10 @@ function log(n: unknown) {
                 <CommonOptionAnnotator :toggle-annotator :is-annotator />
             </template>
 
-            <template #optionAltCopy="{ copyAlt }">
-                <BumpOptionAltCopy :copy-alt />
+            <template #optionAltCopy>
+                <code style="color: chocolate; font-size: 10px"
+                    >#optionAltCopy</code
+                >
             </template>
 
             <template #chart-background>
@@ -451,7 +452,7 @@ function log(n: unknown) {
             </template>
 
             <template #svg="{ svg }">
-                <BumpSvg v-bind="svg" />
+                <BumpSvg :svg />
             </template>
 
             <template #hint="{ hint, isVisible }">

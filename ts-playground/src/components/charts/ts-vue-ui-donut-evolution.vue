@@ -21,7 +21,7 @@ import CommonOptionAnnotator from '../slots/common/option-annotator.vue';
 import CommonResetAction from '../slots/common/reset-action.vue';
 
 import 'vue-data-ui/style.css';
-import DonutEvolutionOptionAltCopy from '../slots/vue-ui-donut-evolution/donut-evolution-option-alt-copy.vue';
+
 import DonutEvolutionSvg from '../slots/vue-ui-donut-evolution/donut-evolution-svg.vue';
 import KeyboardNavigationHint from '../slots/common/keyboard-navigation-hint.vue';
 import Watermark from '../slots/common/watermark.vue';
@@ -717,8 +717,10 @@ function log(n: unknown) {
                 <CommonOptionAnnotator :toggle-annotator :is-annotator />
             </template>
 
-            <template #optionAltCopy="{ copyAlt }">
-                <DonutEvolutionOptionAltCopy :copy-alt />
+            <template #optionAltCopy>
+                <code style="color: chocolate; font-size: 10px"
+                    >#optionAltCopy</code
+                >
             </template>
 
             <template #chart-background>

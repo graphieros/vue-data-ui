@@ -19,7 +19,6 @@ import CommonMenuIcon from '../slots/common/menu-icon.vue';
 import CommonOptionFullscreen from '../slots/common/option-fullscreen.vue';
 import CommonOptionAnnotator from '../slots/common/option-annotator.vue';
 
-import BulletOptionAltCopy from '../slots/vue-ui-bullet/bullet-option-alt-copy.vue';
 import BulletLegend from '../slots/vue-ui-bullet/bullet-legend.vue';
 import Watermark from '../slots/common/watermark.vue';
 import Skeleton from '../slots/common/skeleton.vue';
@@ -300,8 +299,10 @@ const config = computed<VueUiBulletConfig>(() => {
                 <CommonOptionAnnotator :toggle-annotator :is-annotator />
             </template>
 
-            <template #optionAltCopy="{ copyAlt }">
-                <BulletOptionAltCopy :copyAlt />
+            <template #optionAltCopy>
+                <code style="color: chocolate; font-size: 10px"
+                    >#optionAltCopy</code
+                >
             </template>
 
             <template #legend="{ legend }">

@@ -10,7 +10,6 @@ import { mergeConfigs } from 'vue-data-ui/utils';
 import CommonMenuIcon from '../slots/common/menu-icon.vue';
 import CommonOptionFullscreen from '../slots/common/option-fullscreen.vue';
 import CarouselTableOptionAnimation from '../slots/vue-ui-carousel-table/carousel-table-option-animation.vue';
-import CarouselTableOptionAltCopy from '../slots/vue-ui-carousel-table/carousel-table-option-alt-copy.vue';
 import CarouselTableTh from '../slots/vue-ui-carousel-table/carousel-table-th.vue';
 import CarouselTableTd from '../slots/vue-ui-carousel-table/carousel-table-td.vue';
 
@@ -264,8 +263,10 @@ function log(n: unknown) {
                 <CarouselTableOptionAnimation :toggle-animation :is-animated />
             </template>
 
-            <template #optionAltCopy="{ copyAlt }">
-                <CarouselTableOptionAltCopy :copyAlt />
+            <template #optionAltCopy>
+                <code style="color: chocolate; font-size: 10px"
+                    >#optionAltCopy</code
+                >
             </template>
 
             <template #source>

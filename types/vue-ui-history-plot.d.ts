@@ -1,5 +1,31 @@
 import type { DefineComponent, VNodeChild } from 'vue';
 
+import type {
+    VueUiHistoryPlotDatasetItem,
+    VueUiHistoryPlotConfig,
+    VueUiHistoryPlotDatapoint,
+    VueUiHistoryPlotDatapointEvent,
+    VueUiHistoryPlotDatpointSeries,
+    VueUiHistoryPlotExpose,
+    VueUiHistoryPlotEvent,
+    VueUiHistoryPlotProps,
+    VueUiAnnotatorActionColorSlotProps,
+    VueUiAnnotatorActionDrawSlotProps,
+    VueUiAnnotatorActionUndoSlotProps,
+    VueUiAnnotatorActionRedoSlotProps,
+    VueUiAnnotatorActionDeleteSlotProps,
+    VueUiMenuIconSlotProps,
+    VueUiOptionFullscreenSlotProps,
+    VueUiOptionAnnotatorSlotProps,
+    VueUiHistoryPlotFormattedDatapoint,
+    VueUiHistoryPlotSvgSlotProps,
+    VueUiKeyboardNavigationHintSlotProps,
+    VueUiWatermarkSlotProps,
+    VueUiHistoryPlotLegendItem,
+    VueUiHistoryPlotLegendSlotProps,
+    VueUiHistoryPlotTooltipSlotProps,
+} from 'vue-data-ui';
+
 export type {
     VueUiHistoryPlotDatasetItem,
     VueUiHistoryPlotConfig,
@@ -18,14 +44,13 @@ export type {
     VueUiOptionFullscreenSlotProps,
     VueUiOptionAnnotatorSlotProps,
     VueUiHistoryPlotFormattedDatapoint,
-    VueUiHistoryPlotOptionCopyAltSlotProps,
     VueUiHistoryPlotSvgSlotProps,
     VueUiKeyboardNavigationHintSlotProps,
     VueUiWatermarkSlotProps,
     VueUiHistoryPlotLegendItem,
     VueUiHistoryPlotLegendSlotProps,
     VueUiHistoryPlotTooltipSlotProps,
-} from 'vue-data-ui';
+};
 
 declare const VueUiHistoryPlotBase: DefineComponent<VueUiHistoryPlotProps>;
 
@@ -61,9 +86,7 @@ export const VueUiHistoryPlot: typeof VueUiHistoryPlotBase & {
             optionAnnotator?: (
                 props: VueUiOptionAnnotatorSlotProps,
             ) => VNodeChild;
-            optionAltCopy?: (
-                props: VueUiHistoryPlotOptionCopyAltSlotProps,
-            ) => VNodeChild;
+            optionAltCopy?: () => VNodeChild;
             ['chart-background']?: () => VNodeChild;
             svg?: (props: VueUiHistoryPlotSvgSlotProps) => VNodeChild;
             hint?: (props: VueUiKeyboardNavigationHintSlotProps) => VNodeChild;

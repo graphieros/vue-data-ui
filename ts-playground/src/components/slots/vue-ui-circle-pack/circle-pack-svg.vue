@@ -2,7 +2,7 @@
 import type { VueUiCirclePackSvgSlotProps } from 'vue-data-ui/vue-ui-circle-pack';
 
 const props = defineProps<{
-    svg: VueUiCirclePackSvgSlotProps;
+    svg: VueUiCirclePackSvgSlotProps['svg'];
 }>();
 </script>
 

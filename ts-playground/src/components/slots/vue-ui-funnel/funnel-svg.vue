@@ -2,7 +2,7 @@
 import type { VueUiFunnelSvgSlotProps } from 'vue-data-ui/vue-ui-funnel';
 
 const props = defineProps<{
-    svg: VueUiFunnelSvgSlotProps;
+    svg: VueUiFunnelSvgSlotProps['svg'];
 }>();
 </script>
 

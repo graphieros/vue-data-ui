@@ -19,7 +19,6 @@ import CommonAnnotatorActionDelete from '../slots/common/annotator-action-delete
 
 import CommonOptionFullscreen from '../slots/common/option-fullscreen.vue';
 import CommonOptionAnnotator from '../slots/common/option-annotator.vue';
-import Bar3dOptionAltCopy from '../slots/vue-ui-3d-bar/bar-3d-option-alt-copy.vue';
 import Bar3dLegend from '../slots/vue-ui-3d-bar/bar-3d-legend.vue';
 import Bar3dSvg from '../slots/vue-ui-3d-bar/bar-3d-svg.vue';
 import Watermark from '../slots/common/watermark.vue';
@@ -346,8 +345,10 @@ function log(el: any) {
                 <CommonOptionAnnotator :toggle-annotator :is-annotator />
             </template>
 
-            <template #optionAltCopy="{ copyAlt }">
-                <Bar3dOptionAltCopy :copy-alt />
+            <template #optionAltCopy>
+                <code style="color: chocolate; font-size: 10px"
+                    >#optionAltCopy</code
+                >
             </template>
 
             <template #chart-background>

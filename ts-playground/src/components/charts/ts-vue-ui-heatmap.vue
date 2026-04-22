@@ -24,7 +24,7 @@ import CommonAnnotatorActionDelete from '../slots/common/annotator-action-delete
 import CommonMenuIcon from '../slots/common/menu-icon.vue';
 import CommonOptionFullscreen from '../slots/common/option-fullscreen.vue';
 import CommonOptionAnnotator from '../slots/common/option-annotator.vue';
-import HeatmapOptionAltCopy from '../slots/vue-ui-heatmap/heatmap-option-alt-copy.vue';
+
 import HeatmapSvg from '../slots/vue-ui-heatmap/heatmap-svg.vue';
 import HeatmapTooltip from '../slots/vue-ui-heatmap/heatmap-tooltip.vue';
 
@@ -446,8 +446,10 @@ function log(n: unknown) {
                 <CommonOptionAnnotator :toggle-annotator :is-annotator />
             </template>
 
-            <template #optionAltCopy="{ copyAlt }">
-                <HeatmapOptionAltCopy :copy-alt />
+            <template #optionAltCopy>
+                <code style="color: chocolate; font-size: 10px"
+                    >#optionAltCopy</code
+                >
             </template>
 
             <template #chart-background>

@@ -2,7 +2,7 @@
 import type { VueUiGalaxySvgSlotProps } from 'vue-data-ui/vue-ui-galaxy';
 
 const props = defineProps<{
-    svg: VueUiGalaxySvgSlotProps;
+    svg: VueUiGalaxySvgSlotProps['svg'];
 }>();
 </script>
 

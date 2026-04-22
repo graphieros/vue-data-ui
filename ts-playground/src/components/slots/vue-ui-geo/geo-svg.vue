@@ -2,7 +2,7 @@
 import type { VueUiGeoSvgSlotProps } from 'vue-data-ui/vue-ui-geo';
 
 const props = defineProps<{
-    svg: VueUiGeoSvgSlotProps;
+    svg: VueUiGeoSvgSlotProps['svg'];
 }>();
 </script>
 

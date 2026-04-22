@@ -2,7 +2,7 @@
 import type { VueUiGalaxyLegendSlotProps } from 'vue-data-ui/vue-ui-galaxy';
 
 const props = defineProps<{
-    items: VueUiGalaxyLegendSlotProps;
+    items: VueUiGalaxyLegendSlotProps['legend'];
 }>();
 </script>
 

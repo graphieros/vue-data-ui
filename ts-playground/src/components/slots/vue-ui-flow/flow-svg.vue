@@ -2,7 +2,7 @@
 import type { VueUiFlowSvgSlotProps } from 'vue-data-ui/vue-ui-flow';
 
 const props = defineProps<{
-    svg: VueUiFlowSvgSlotProps;
+    svg: VueUiFlowSvgSlotProps['svg'];
 }>();
 </script>
 

@@ -2,7 +2,7 @@
 import type { VueUiBulletLegendSlotProps } from 'vue-data-ui/vue-ui-bullet';
 
 const props = defineProps<{
-    items: VueUiBulletLegendSlotProps;
+    items: VueUiBulletLegendSlotProps['legend'];
 }>();
 </script>
 

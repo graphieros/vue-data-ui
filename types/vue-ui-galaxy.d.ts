@@ -1,5 +1,31 @@
 import type { DefineComponent, VNodeChild } from 'vue';
 
+import type {
+    VueUiGalaxyDatasetItem,
+    VueUiGalaxyConfig,
+    VueUiGalaxyDatapoint,
+    VueUiGalaxySeriesItem,
+    VueUiGalaxyExpose,
+    VueUiGalaxyEvent,
+    VueUiGalaxyProps,
+    VueUiGalaxyFormattedDatapoint,
+    VueUiAnnotatorActionColorSlotProps,
+    VueUiAnnotatorActionDrawSlotProps,
+    VueUiAnnotatorActionUndoSlotProps,
+    VueUiAnnotatorActionRedoSlotProps,
+    VueUiAnnotatorActionDeleteSlotProps,
+    VueUiMenuIconSlotProps,
+    VueUiOptionFullscreenSlotProps,
+    VueUiOptionAnnotatorSlotProps,
+    VueUiGalaxySvgSlotProps,
+    VueUiKeyboardNavigationHintSlotProps,
+    VueUiWatermarkSlotProps,
+    VueUiGalaxyLegendItem,
+    VueUiGalaxyLegendSlotProps,
+    VueUiGalaxyDatapointTooltip,
+    VueUiGalaxyTooltipSlotProps,
+} from 'vue-data-ui';
+
 export type {
     VueUiGalaxyDatasetItem,
     VueUiGalaxyConfig,
@@ -17,7 +43,6 @@ export type {
     VueUiMenuIconSlotProps,
     VueUiOptionFullscreenSlotProps,
     VueUiOptionAnnotatorSlotProps,
-    VueUiGalaxyOptionCopyAltSlotProps,
     VueUiGalaxySvgSlotProps,
     VueUiKeyboardNavigationHintSlotProps,
     VueUiWatermarkSlotProps,
@@ -25,7 +50,7 @@ export type {
     VueUiGalaxyLegendSlotProps,
     VueUiGalaxyDatapointTooltip,
     VueUiGalaxyTooltipSlotProps,
-} from 'vue-data-ui';
+};
 
 declare const VueUiGalaxyBase: DefineComponent<VueUiGalaxyProps>;
 
@@ -61,9 +86,7 @@ export const VueUiGalaxy: typeof VueUiGalaxyBase & {
             optionAnnotator?: (
                 props: VueUiOptionAnnotatorSlotProps,
             ) => VNodeChild;
-            optionAltCopy?: (
-                props: VueUiGalaxyOptionCopyAltSlotProps,
-            ) => VNodeChild;
+            optionAltCopy?: () => VNodeChild;
             ['chart-background']?: () => VNodeChild;
             svg?: (props: VueUiGalaxySvgSlotProps) => VNodeChild;
             hint?: (props: VueUiKeyboardNavigationHintSlotProps) => VNodeChild;

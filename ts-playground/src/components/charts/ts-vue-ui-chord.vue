@@ -18,7 +18,6 @@ import CommonOptionAnnotator from '../slots/common/option-annotator.vue';
 import CommonResetAction from '../slots/common/reset-action.vue';
 import KeyboardNavigationHint from '../slots/common/keyboard-navigation-hint.vue';
 
-import ChordOptionAltCopy from '../slots/vue-ui-chord/chord-option-alt-copy.vue';
 import ChordSvg from '../slots/vue-ui-chord/chord-svg.vue';
 import Watermark from '../slots/common/watermark.vue';
 import ChordLegend from '../slots/vue-ui-chord/chord-legend.vue';
@@ -162,8 +161,10 @@ function log(n: unknown) {
                 <CommonOptionAnnotator :toggle-annotator :is-annotator />
             </template>
 
-            <template #optionAltCopy="{ copyAlt }">
-                <ChordOptionAltCopy :copy-alt />
+            <template #optionAltCopy>
+                <code style="color: chocolate; font-size: 10px"
+                    >#optionAltCopy</code
+                >
             </template>
 
             <template #chart-background>

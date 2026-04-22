@@ -1,5 +1,31 @@
 import type { DefineComponent, VNodeChild } from 'vue';
 
+import type {
+    VueUiChordDataset,
+    VueUiChordDatapointArc,
+    VueUiChordNode,
+    VueUiChordDatapointRibbon,
+    VueUiChordConfig,
+    VueUiChordExpose,
+    VueUiChordEvent,
+    VueUiChordProps,
+    VueUiAnnotatorActionColorSlotProps,
+    VueUiAnnotatorActionDrawSlotProps,
+    VueUiAnnotatorActionUndoSlotProps,
+    VueUiAnnotatorActionRedoSlotProps,
+    VueUiAnnotatorActionDeleteSlotProps,
+    VueUiMenuIconSlotProps,
+    VueUiOptionFullscreenSlotProps,
+    VueUiOptionAnnotatorSlotProps,
+    VueUiChordSvgSlotProps,
+    VueUiWatermarkSlotProps,
+    VueUiKeyboardNavigationHintSlotProps,
+    VueUiChordLegendItem,
+    VueUiChordLegendSlotProps,
+    VueUiChordPatternSlotProps,
+    VueUiResetActionSlotProps,
+} from 'vue-data-ui';
+
 export type {
     VueUiChordDataset,
     VueUiChordDatapointArc,
@@ -17,7 +43,6 @@ export type {
     VueUiMenuIconSlotProps,
     VueUiOptionFullscreenSlotProps,
     VueUiOptionAnnotatorSlotProps,
-    VueUiChordOptionCopyAltSlotProps,
     VueUiChordSvgSlotProps,
     VueUiWatermarkSlotProps,
     VueUiKeyboardNavigationHintSlotProps,
@@ -25,7 +50,7 @@ export type {
     VueUiChordLegendSlotProps,
     VueUiChordPatternSlotProps,
     VueUiResetActionSlotProps,
-} from 'vue-data-ui';
+};
 
 declare const VueUiChordBase: DefineComponent<VueUiChordProps>;
 
@@ -60,9 +85,7 @@ export const VueUiChord: typeof VueUiChordBase & {
             optionAnnotator?: (
                 props: VueUiOptionAnnotatorSlotProps,
             ) => VNodeChild;
-            optionAltCopy?: (
-                props: VueUiChordOptionCopyAltSlotProps,
-            ) => VNodeChild;
+            optionAltCopy?: () => VNodeChild;
             ['chart-background']?: () => VNodeChild;
             svg?: (props: VueUiChordSvgSlotProps) => VNodeChild;
             watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;

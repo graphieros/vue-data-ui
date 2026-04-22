@@ -21,7 +21,7 @@ import CommonAnnotatorActionDelete from '../slots/common/annotator-action-delete
 import CommonMenuIcon from '../slots/common/menu-icon.vue';
 import CommonOptionFullscreen from '../slots/common/option-fullscreen.vue';
 import CommonOptionAnnotator from '../slots/common/option-annotator.vue';
-import GeoOptionAltCopy from '../slots/vue-ui-geo/geo-option-alt-copy.vue';
+
 import GeoOptionZoom from '../slots/vue-ui-geo/geo-option-zoom.vue';
 import GeoDatapoint from '../slots/vue-ui-geo/geo-datapoint.vue';
 import GeoSvg from '../slots/vue-ui-geo/geo-svg.vue';
@@ -352,8 +352,10 @@ function log(n: unknown) {
                 <CommonOptionAnnotator :toggle-annotator :is-annotator />
             </template>
 
-            <template #optionAltCopy="{ copyAlt }">
-                <GeoOptionAltCopy :copy-alt />
+            <template #optionAltCopy>
+                <code style="color: chocolate; font-size: 10px"
+                    >#optionAltCopy</code
+                >
             </template>
 
             <template #optionZoom="{ toggleZoom, isZoomLocked }">

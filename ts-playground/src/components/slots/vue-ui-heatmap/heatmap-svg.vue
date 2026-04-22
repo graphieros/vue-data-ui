@@ -2,7 +2,7 @@
 import type { VueUiHeatmapSvgSlotProps } from 'vue-data-ui/vue-ui-heatmap';
 
 const props = defineProps<{
-    svg: VueUiHeatmapSvgSlotProps;
+    svg: VueUiHeatmapSvgSlotProps['svg'];
 }>();
 </script>
 

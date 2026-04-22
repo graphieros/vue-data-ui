@@ -20,7 +20,6 @@ import CommonOptionFullscreen from '../slots/common/option-fullscreen.vue';
 import CommonOptionAnnotator from '../slots/common/option-annotator.vue';
 
 import 'vue-data-ui/style.css';
-import ChestnutOptionAltCopy from '../slots/vue-ui-chestnut/chestnut-option-alt-copy.vue';
 import ChestnutSvg from '../slots/vue-ui-chestnut/chestnut-svg.vue';
 import Watermark from '../slots/common/watermark.vue';
 import ChestnutLegend from '../slots/vue-ui-chestnut/chestnut-legend.vue';
@@ -466,8 +465,10 @@ function log(n: unknown) {
                 <CommonOptionAnnotator :toggle-annotator :is-annotator />
             </template>
 
-            <template #optionAltCopy="{ copyAlt }">
-                <ChestnutOptionAltCopy :copy-alt />
+            <template #optionAltCopy>
+                <code style="color: chocolate; font-size: 10px"
+                    >#optionAltCopy</code
+                >
             </template>
 
             <template #chart-background>

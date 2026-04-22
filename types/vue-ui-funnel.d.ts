@@ -1,5 +1,21 @@
 import type { DefineComponent, VNodeChild } from 'vue';
 
+import type {
+    VueUiFunnelDatasetItem,
+    VueUiFunnelConfig,
+    VueUiFunnelExpose,
+    VueUiFunnelProps,
+    VueUiAnnotatorActionColorSlotProps,
+    VueUiAnnotatorActionDrawSlotProps,
+    VueUiAnnotatorActionUndoSlotProps,
+    VueUiAnnotatorActionRedoSlotProps,
+    VueUiAnnotatorActionDeleteSlotProps,
+    VueUiOptionFullscreenSlotProps,
+    VueUiOptionAnnotatorSlotProps,
+    VueUiFunnelSvgSlotProps,
+    VueUiWatermarkSlotProps,
+} from 'vue-data-ui';
+
 export type {
     VueUiFunnelDatasetItem,
     VueUiFunnelConfig,
@@ -12,10 +28,9 @@ export type {
     VueUiAnnotatorActionDeleteSlotProps,
     VueUiOptionFullscreenSlotProps,
     VueUiOptionAnnotatorSlotProps,
-    VueUiFunnelOptionCopyAltSlotProps,
     VueUiFunnelSvgSlotProps,
     VueUiWatermarkSlotProps,
-} from 'vue-data-ui';
+};
 
 declare const VueUiFunnelBase: DefineComponent<VueUiFunnelProps>;
 
@@ -50,9 +65,7 @@ export const VueUiFunnel: typeof VueUiFunnelBase & {
             optionAnnotator?: (
                 props: VueUiOptionAnnotatorSlotProps,
             ) => VNodeChild;
-            optionAltCopy?: (
-                props: VueUiFunnelOptionCopyAltSlotProps,
-            ) => VNodeChild;
+            optionAltCopy?: () => VNodeChild;
             ['chart-background']?: () => VNodeChild;
             svg?: (props: VueUiFunnelSvgSlotProps) => VNodeChild;
             watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;

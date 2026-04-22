@@ -2,7 +2,7 @@
 import type { VueUiAgePyramidSvgSlotProps } from 'vue-data-ui/vue-ui-age-pyramid';
 
 const props = defineProps<{
-    svg: VueUiAgePyramidSvgSlotProps;
+    svg: VueUiAgePyramidSvgSlotProps['svg'];
 }>();
 </script>
 

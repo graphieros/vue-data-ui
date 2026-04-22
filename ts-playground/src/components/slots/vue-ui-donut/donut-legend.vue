@@ -2,7 +2,7 @@
 import type { VueUiDonutLegendSlotProps } from 'vue-data-ui/vue-ui-donut';
 
 const props = defineProps<{
-    items: VueUiDonutLegendSlotProps;
+    items: VueUiDonutLegendSlotProps['legend'];
 }>();
 </script>
 

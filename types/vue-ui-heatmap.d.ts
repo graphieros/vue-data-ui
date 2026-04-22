@@ -1,5 +1,26 @@
 import type { DefineComponent, VNodeChild } from 'vue';
 
+import type {
+    VueUiHeatmapConfig,
+    VueUiHeatmapDatapoint,
+    VueUiHeatmapRow,
+    VueUiHeatmapDatasetItem,
+    VueUiHeatmapExpose,
+    VueUiHeatmapProps,
+    VueUiAnnotatorActionColorSlotProps,
+    VueUiAnnotatorActionDrawSlotProps,
+    VueUiAnnotatorActionUndoSlotProps,
+    VueUiAnnotatorActionRedoSlotProps,
+    VueUiAnnotatorActionDeleteSlotProps,
+    VueUiMenuIconSlotProps,
+    VueUiOptionFullscreenSlotProps,
+    VueUiOptionAnnotatorSlotProps,
+    VueUiHeatmapSvgSlotProps,
+    VueUiKeyboardNavigationHintSlotProps,
+    VueUiWatermarkSlotProps,
+    VueUiHeatmapTooltipSlotProps,
+} from 'vue-data-ui';
+
 export type {
     VueUiHeatmapConfig,
     VueUiHeatmapDatapoint,
@@ -15,12 +36,11 @@ export type {
     VueUiMenuIconSlotProps,
     VueUiOptionFullscreenSlotProps,
     VueUiOptionAnnotatorSlotProps,
-    VueUiHeatmapOptionCopyAltSlotProps,
     VueUiHeatmapSvgSlotProps,
     VueUiKeyboardNavigationHintSlotProps,
     VueUiWatermarkSlotProps,
     VueUiHeatmapTooltipSlotProps,
-} from 'vue-data-ui';
+};
 
 declare const VueUiHeatmapBase: DefineComponent<VueUiHeatmapProps>;
 
@@ -56,9 +76,7 @@ export const VueUiHeatmap: typeof VueUiHeatmapBase & {
             optionAnnotator?: (
                 props: VueUiOptionAnnotatorSlotProps,
             ) => VNodeChild;
-            optionAltCopy?: (
-                props: VueUiHeatmapOptionCopyAltSlotProps,
-            ) => VNodeChild;
+            optionAltCopy?: () => VNodeChild;
             ['chart-background']?: () => VNodeChild;
             svg?: (props: VueUiHeatmapSvgSlotProps) => VNodeChild;
             hint?: (props: VueUiKeyboardNavigationHintSlotProps) => VNodeChild;

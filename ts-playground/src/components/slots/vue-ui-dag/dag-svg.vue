@@ -2,7 +2,7 @@
 import type { VueUiDagSvgSlotProps } from 'vue-data-ui/vue-ui-dag';
 
 const props = defineProps<{
-    svg: VueUiDagSvgSlotProps;
+    svg: VueUiDagSvgSlotProps['svg'];
 }>();
 </script>
 

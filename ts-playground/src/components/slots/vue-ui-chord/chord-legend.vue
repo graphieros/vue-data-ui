@@ -2,7 +2,7 @@
 import type { VueUiChordLegendSlotProps } from 'vue-data-ui/vue-ui-chord';
 
 const props = defineProps<{
-    items: VueUiChordLegendSlotProps;
+    items: VueUiChordLegendSlotProps['legend'];
 }>();
 </script>
 

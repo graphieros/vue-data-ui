@@ -17,7 +17,6 @@ import DonutDataLabel from '../slots/vue-ui-donut/donut-data-label.vue';
 import DonutPlotComment from '../slots/vue-ui-donut/donut-plot-comment.vue';
 import DonutSvg from '../slots/vue-ui-donut/donut-svg.vue';
 import DonutHollow from '../slots/vue-ui-donut/donut-hollow.vue';
-import DonutOptionAltCopy from '../slots/vue-ui-donut/donut-option-alt-copy.vue';
 
 import KeyboardNavigationHint from '../slots/common/keyboard-navigation-hint.vue';
 import Watermark from '../slots/common/watermark.vue';
@@ -539,8 +538,10 @@ const config = computed<VueUiDonutConfig>(() => {
                 <CommonOptionAnnotator :toggle-annotator :is-annotator />
             </template>
 
-            <template #optionAltCopy="{ copyAlt }">
-                <DonutOptionAltCopy :copy-alt />
+            <template #optionAltCopy>
+                <code style="color: chocolate; font-size: 10px"
+                    >#optionAltCopy</code
+                >
             </template>
 
             <template #chart-background>

@@ -2,7 +2,7 @@
 import type { VueUiHistoryPlotSvgSlotProps } from 'vue-data-ui/vue-ui-history-plot';
 
 const props = defineProps<{
-    svg: VueUiHistoryPlotSvgSlotProps;
+    svg: VueUiHistoryPlotSvgSlotProps['svg'];
 }>();
 </script>
 

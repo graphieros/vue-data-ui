@@ -1,5 +1,20 @@
 import type { DefineComponent, VNodeChild } from 'vue';
 
+import type {
+    VueUiDashboardConfig,
+    VueUiDashboardElement,
+    VueUiDashboardProps,
+    VueUiDashboardTopSlotProps,
+    VueUiDashboardBottomSlotProps,
+    VueUiDashboardContentSlotProps,
+    VueUiDashboardPlacedElement,
+    VueUiAnnotatorActionColorSlotProps,
+    VueUiAnnotatorActionDrawSlotProps,
+    VueUiAnnotatorActionUndoSlotProps,
+    VueUiAnnotatorActionRedoSlotProps,
+    VueUiAnnotatorActionDeleteSlotProps,
+} from 'vue-data-ui';
+
 export type {
     VueUiDashboardConfig,
     VueUiDashboardElement,
@@ -13,8 +28,7 @@ export type {
     VueUiAnnotatorActionUndoSlotProps,
     VueUiAnnotatorActionRedoSlotProps,
     VueUiAnnotatorActionDeleteSlotProps,
-    VueUiDashboardOptionCopyAltSlotProps,
-} from 'vue-data-ui';
+};
 
 declare const VueUiDashboardBase: DefineComponent<VueUiDashboardProps>;
 
@@ -42,9 +56,7 @@ export const VueUiDashboard: typeof VueUiDashboardBase & {
             ) => VNodeChild;
             optionPdf?: () => VNodeChild;
             optionImg?: () => VNodeChild;
-            optionAltCopy?: (
-                props: VueUiDashboardOptionCopyAltSlotProps,
-            ) => VNodeChild;
+            optionAltCopy?: () => VNodeChild;
         };
     };
 };

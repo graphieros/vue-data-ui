@@ -23,7 +23,7 @@ import Watermark from '../slots/common/watermark.vue';
 import Skeleton from '../slots/common/skeleton.vue';
 
 import 'vue-data-ui/style.css';
-import GalaxyOptionAltCopy from '../slots/vue-ui-galaxy/galaxy-option-alt-copy.vue';
+
 import GalaxySvg from '../slots/vue-ui-galaxy/galaxy-svg.vue';
 import GalaxyLegend from '../slots/vue-ui-galaxy/galaxy-legend.vue';
 import GalaxyTooltip from '../slots/vue-ui-galaxy/galaxy-tooltip.vue';
@@ -369,8 +369,10 @@ function log(n: unknown) {
                 <CommonOptionAnnotator :toggle-annotator :is-annotator />
             </template>
 
-            <template #optionAltCopy="{ copyAlt }">
-                <GalaxyOptionAltCopy :copy-alt />
+            <template #optionAltCopy>
+                <code style="color: chocolate; font-size: 10px"
+                    >#optionAltCopy</code
+                >
             </template>
 
             <template #chart-background>

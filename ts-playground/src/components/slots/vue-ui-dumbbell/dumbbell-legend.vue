@@ -2,7 +2,7 @@
 import type { VueUiDumbbellLegendSlotProps } from 'vue-data-ui/vue-ui-dumbbell';
 
 const props = defineProps<{
-    items: VueUiDumbbellLegendSlotProps;
+    items: VueUiDumbbellLegendSlotProps['legend'];
 }>();
 </script>
 

@@ -19,7 +19,6 @@ import CommonAnnotatorActionRedo from '../slots/common/annotator-action-redo.vue
 import CommonAnnotatorActionDelete from '../slots/common/annotator-action-delete.vue';
 import CommonMenuIcon from '../slots/common/menu-icon.vue';
 import CommonOptionAnnotator from '../slots/common/option-annotator.vue';
-import DashboardOptionAltCopy from '../slots/vue-ui-dashboard/dashboard-option-alt-copy.vue';
 
 const dataset = computed<VueUiDashboardElement[]>(() => {
     return [
@@ -199,8 +198,10 @@ function log(n: unknown) {
                 <CommonOptionAnnotator :toggle-annotator :is-annotator />
             </template>
 
-            <template #optionAltCopy="{ copyAlt }">
-                <DashboardOptionAltCopy :copy-alt />
+            <template #optionAltCopy>
+                <code style="color: chocolate; font-size: 10px"
+                    >#optionAltCopy</code
+                >
             </template>
         </VueUiDashboard>
     </div>

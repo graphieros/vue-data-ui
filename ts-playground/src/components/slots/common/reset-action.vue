@@ -2,7 +2,7 @@
 import type { VueUiResetActionSlotProps } from 'vue-data-ui';
 
 const props = defineProps<{
-    reset: VueUiResetActionSlotProps;
+    reset: VueUiResetActionSlotProps['reset'];
 }>();
 </script>
 

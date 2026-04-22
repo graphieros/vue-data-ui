@@ -2,7 +2,7 @@
 import type { VueUiDumbbellSvgSlotProps } from 'vue-data-ui/vue-ui-dumbbell';
 
 const props = defineProps<{
-    svg: VueUiDumbbellSvgSlotProps;
+    svg: VueUiDumbbellSvgSlotProps['svg'];
 }>();
 </script>
 

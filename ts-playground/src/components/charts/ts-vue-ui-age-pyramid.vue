@@ -21,7 +21,6 @@ import CommonOptionAnnotator from '../slots/common/option-annotator.vue';
 import KeyboardNavigationHint from '../slots/common/keyboard-navigation-hint.vue';
 import Watermark from '../slots/common/watermark.vue';
 
-import PyramidOptionAltCopy from '../slots/vue-ui-age-pyramid/pyramid-option-alt-copy.vue';
 import PyramidSvg from '../slots/vue-ui-age-pyramid/pyramid-svg.vue';
 
 import 'vue-data-ui/style.css';
@@ -387,8 +386,10 @@ function log(t: unknown) {
                 <CommonOptionAnnotator :toggle-annotator :is-annotator />
             </template>
 
-            <template #optionAltCopy="{ copyAlt }">
-                <PyramidOptionAltCopy :copyAlt />
+            <template #optionAltCopy>
+                <code style="color: chocolate; font-size: 10px"
+                    >#optionAltCopy</code
+                >
             </template>
 
             <template #chart-background>

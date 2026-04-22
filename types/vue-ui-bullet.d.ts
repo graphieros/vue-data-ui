@@ -1,5 +1,24 @@
 import type { DefineComponent, VNodeChild } from 'vue';
 
+import type {
+    VueUiBulletSegment,
+    VueUiBulletDataset,
+    VueUiBulletConfig,
+    VueUiBulletExpose,
+    VueUiBulletProps,
+    VueUiAnnotatorActionColorSlotProps,
+    VueUiAnnotatorActionDrawSlotProps,
+    VueUiAnnotatorActionUndoSlotProps,
+    VueUiAnnotatorActionRedoSlotProps,
+    VueUiAnnotatorActionDeleteSlotProps,
+    VueUiMenuIconSlotProps,
+    VueUiOptionFullscreenSlotProps,
+    VueUiOptionAnnotatorSlotProps,
+    VueUiBulletSvgSlotProps,
+    VueUiWatermarkSlotProps,
+    VueUiBulletLegendSlotProps,
+} from 'vue-data-ui';
+
 export type {
     VueUiBulletSegment,
     VueUiBulletDataset,
@@ -14,11 +33,10 @@ export type {
     VueUiMenuIconSlotProps,
     VueUiOptionFullscreenSlotProps,
     VueUiOptionAnnotatorSlotProps,
-    VueUiBulletCopyAltSlotProps,
     VueUiBulletSvgSlotProps,
     VueUiWatermarkSlotProps,
     VueUiBulletLegendSlotProps,
-} from 'vue-data-ui';
+};
 
 declare const VueUiBulletBase: DefineComponent<VueUiBulletProps>;
 
@@ -51,7 +69,7 @@ export const VueUiBullet: typeof VueUiBulletBase & {
             optionAnnotator?: (
                 props: VueUiOptionAnnotatorSlotProps,
             ) => VNodeChild;
-            optionAltCopy?: (props: VueUiBulletCopyAltSlotProps) => VNodeChild;
+            optionAltCopy?: () => VNodeChild;
             ['chart-background']?: () => VNodeChild;
             svg?: (props: VueUiBulletSvgSlotProps) => VNodeChild;
             watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;

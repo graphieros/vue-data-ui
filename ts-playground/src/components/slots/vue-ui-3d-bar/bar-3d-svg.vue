@@ -2,7 +2,7 @@
 import type { VueUi3dBarSvgSlotProps } from 'vue-data-ui/vue-ui-3d-bar';
 
 const props = defineProps<{
-    svg: VueUi3dBarSvgSlotProps;
+    svg: VueUi3dBarSvgSlotProps['svg'];
 }>();
 </script>
 

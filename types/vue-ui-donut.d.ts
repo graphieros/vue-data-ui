@@ -1,5 +1,32 @@
 import type { DefineComponent, VNodeChild } from 'vue';
 
+import type {
+    VueUiDonutConfig,
+    VueUiDonutDatasetItem,
+    VueUiDonutDatapoint,
+    VueUiDonutSeriesItem,
+    VueUiDonutExpose,
+    VueUiDonutEvent,
+    VueUiDonutLegendSlotProps,
+    VueUiDonutProps,
+    VueUiDonutTooltipSlotProps,
+    VueUiDonutDataLabelSlotProps,
+    VueUiDonutPlotCommentSlotProps,
+    VueUiDonutSvgSlotProps,
+    VueUiKeyboardNavigationHintSlotProps,
+    VueUiWatermarkSlotProps,
+    VueUiPatternSlotProps,
+    VueUiDonutHollowSlotProps,
+    VueUiMenuIconSlotProps,
+    VueUiOptionFullscreenSlotProps,
+    VueUiOptionAnnotatorSlotProps,
+    VueUiAnnotatorActionColorSlotProps,
+    VueUiAnnotatorActionDrawSlotProps,
+    VueUiAnnotatorActionUndoSlotProps,
+    VueUiAnnotatorActionRedoSlotProps,
+    VueUiAnnotatorActionDeleteSlotProps,
+} from 'vue-data-ui';
+
 export type {
     VueUiDonutConfig,
     VueUiDonutDatasetItem,
@@ -19,14 +46,13 @@ export type {
     VueUiDonutHollowSlotProps,
     VueUiMenuIconSlotProps,
     VueUiOptionFullscreenSlotProps,
-    VueUiDonutOptionCopyAltSlotProps,
     VueUiOptionAnnotatorSlotProps,
     VueUiAnnotatorActionColorSlotProps,
     VueUiAnnotatorActionDrawSlotProps,
     VueUiAnnotatorActionUndoSlotProps,
     VueUiAnnotatorActionRedoSlotProps,
     VueUiAnnotatorActionDeleteSlotProps,
-} from 'vue-data-ui';
+};
 
 declare const VueUiDonutBase: DefineComponent<VueUiDonutProps>;
 
@@ -64,9 +90,7 @@ export const VueUiDonut: typeof VueUiDonutBase & {
             optionFullscreen?: (
                 props: VueUiOptionFullscreenSlotProps,
             ) => VNodeChild;
-            optionAltCopy?: (
-                props: VueUiDonutOptionCopyAltSlotProps,
-            ) => VNodeChild;
+            optionAltCopy?: () => VNodeChild;
             optionAnnotator?: (
                 props: VueUiOptionAnnotatorSlotProps,
             ) => VNodeChild;

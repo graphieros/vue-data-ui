@@ -2,7 +2,7 @@
 import type { VueUiHorizontalBarSvgSlotProps } from 'vue-data-ui/vue-ui-horizontal-bar';
 
 const props = defineProps<{
-    svg: VueUiHorizontalBarSvgSlotProps;
+    svg: VueUiHorizontalBarSvgSlotProps['svg'];
 }>();
 </script>
 
