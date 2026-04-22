@@ -15,7 +15,7 @@ const config = computed<VueUiKpiProps['config']>(() => {
         layoutCss: '',
         prefix: '',
         suffix: '',
-        title: 'Title',
+        title: '',
         titleBold: true,
         titleColor: '#2D353C',
         titleClass: '',
@@ -43,7 +43,19 @@ const config = computed<VueUiKpiProps['config']>(() => {
     <div>
         <VueUiKpi :dataset :config>
             <template #title="{ comment }">
-                {{ comment }}
+                <code style="color:chocolate">#title</code>
+                value: {{ comment }}
+            </template>
+            <template #comment-before="{ comment }">
+                <code style="color:chocolate">#comment-before</code>
+                value: {{ comment }}
+            </template>
+            <template #value="{ comment }">
+                <code style="color:chocolate">#value</code>
+            </template>
+            <template #comment-after="{ comment }">
+                <code style="color:chocolate">#comment-after</code>
+                value: {{ comment }}
             </template>
         </VueUiKpi>
     </div>

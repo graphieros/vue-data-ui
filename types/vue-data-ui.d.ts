@@ -794,7 +794,7 @@ declare module 'vue-data-ui' {
         };
     };
 
-    export type VueUiKpiTitleSlotProps = {
+    export type VueUiKpiCommentSlotProps = {
         comment: number;
     };
 
@@ -808,7 +808,11 @@ declare module 'vue-data-ui' {
     export const VueUiKpi: typeof VueUiKpiBase & {
         new (): {
             $slots: {
-                title?: (props: VueUiKpiTitleSlotProps) => VNodeChild;
+                title?: (props: VueUiKpiCommentSlotProps) => VNodeChild;
+                ['comment-before']?: (props: VueUiKpiCommentSlotProps) => VNodeChild;
+                ['value']?: (props: VueUiKpiCommentSlotProps) => VNodeChild;
+                ['comment-after']?: (props: VueUiKpiCommentSlotProps) => VNodeChild;
+
             };
         };
     };
