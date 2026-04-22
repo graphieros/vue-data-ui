@@ -10992,7 +10992,10 @@ declare module 'vue-data-ui' {
         theme?: Theme;
         customPalette?: string[];
         useCssAnimation?: boolean;
-        userOptions?: ChartUserOptions;
+        userOptions?: ChartUserOptions<
+            VueUiHistoryPlotFormattedDatapoint[],
+            VueUiHistoryPlotConfig
+        >;
         table?: {
             show?: boolean;
             useDialog?: boolean;
@@ -11167,30 +11170,28 @@ declare module 'vue-data-ui' {
         seriesIndex: number;
     };
 
+    export type VueUiHistoryPlotFormattedDatapoint = {
+        color: string;
+        name: string;
+        path: string;
+        plots: VueUiHistoryPlotDatapoint[];
+        seriesIndex: number;
+        values: Array<{
+            x: number;
+            y: number;
+            label: string;
+        }>;
+    };
+
+    export type VueUiHistoryPlotLegendItem = VueUiHistoryPlotDatpointSeries & {
+        isSegregated: boolean;
+        opacity: number;
+        segregate: () => void;
+        shape: Shape;
+    };
+
     export type VueUiHistoryPlotExpose = {
-        getData(): Promise<
-            Array<{
-                color: string;
-                name: string;
-                path: string;
-                plots: Array<{
-                    color: string;
-                    id: string;
-                    label: string;
-                    seriesName: string;
-                    valueX: number;
-                    valueY: number;
-                    x: number;
-                    y: number;
-                }>;
-                seriesIndex: number;
-                values: Array<{
-                    x: number;
-                    y: number;
-                    label: string;
-                }>;
-            }>
-        >;
+        getData(): Promise<VueUiHistoryPlotFormattedDatapoint[]>;
         getImage(options?: { scale?: number }): GetImagePromise;
         generateCsv(): void;
         generateImage(): void;
@@ -11204,13 +11205,99 @@ declare module 'vue-data-ui' {
         hideSeries(name: string): void;
     };
 
-    export const VueUiHistoryPlot: DefineComponent<
-        {
-            config?: VueUiHistoryPlotConfig;
-            dataset: VueUiHistoryPlotDatasetItem[];
-        },
-        VueUiHistoryPlotExpose
-    >;
+    export type VueUiHistoryPlotOptionCopyAltSlotProps = {
+        dataset: VueUiHistoryPlotFormattedDatapoint[];
+        config: VueUiHistoryPlotConfig;
+    };
+
+    export type VueUiHistoryPlotSvgSlotProps = {
+        drawingArea: {
+            bottom: number;
+            height: number;
+            left: number;
+            right: number;
+            top: number;
+            width: number;
+        };
+        height: number;
+        isPrintingImg: boolean;
+        isPrintingSvg: boolean;
+        width: number;
+    };
+
+    export type VueUiHistoryPlotLegendSlotProps = VueUiHistoryPlotLegendItem[];
+
+    export type VueUiHistoryPlotTooltipSlotProps = {
+        config: VueUiHistoryPlotConfig;
+        datapoint: VueUiHistoryPlotDatapoint;
+        plotIndex: number;
+        series: VueUiHistoryPlotFormattedDatapoint[];
+        seriesIndex: number;
+    };
+
+    export type VueUiHistoryPlotProps = {
+        config?: VueUiHistoryPlotConfig;
+        dataset: VueUiHistoryPlotDatasetItem[];
+    };
+
+    const VueUiHistoryPlotBase: DefineComponent<VueUiHistoryPlotProps>;
+
+    export const VueUiHistoryPlot: typeof VueUiHistoryPlotBase & {
+        new (): VueUiHistoryPlotExpose & {
+            $slots: {
+                ['annotator-action-close']?: () => VNodeChild;
+                ['annotator-action-color']?: (
+                    props: VueUiAnnotatorActionColorSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-draw']?: (
+                    props: VueUiAnnotatorActionDrawSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-undo']?: (
+                    props: VueUiAnnotatorActionUndoSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-redo']?: (
+                    props: VueUiAnnotatorActionRedoSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-delete']?: (
+                    props: VueUiAnnotatorActionDeleteSlotProps,
+                ) => VNodeChild;
+                menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
+                optionTooltip?: () => VNodeChild;
+                optionPdf?: () => VNodeChild;
+                optionCsv?: () => VNodeChild;
+                optionImg?: () => VNodeChild;
+                optionSvg?: () => VNodeChild;
+                optionTable?: () => VNodeChild;
+                optionFullscreen?: (
+                    props: VueUiOptionFullscreenSlotProps,
+                ) => VNodeChild;
+                optionAnnotator?: (
+                    props: VueUiOptionAnnotatorSlotProps,
+                ) => VNodeChild;
+                optionAltCopy?: (
+                    props: VueUiHistoryPlotOptionCopyAltSlotProps,
+                ) => VNodeChild;
+                ['chart-background']?: () => VNodeChild;
+                svg?: (props: VueUiHistoryPlotSvgSlotProps) => VNodeChild;
+                hint?: (
+                    props: VueUiKeyboardNavigationHintSlotProps,
+                ) => VNodeChild;
+                watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
+                legend?: (props: VueUiHistoryPlotLegendSlotProps) => VNodeChild;
+                source?: () => VNodeChild;
+                ['tooltip-before']?: (
+                    props: VueUiHistoryPlotTooltipSlotProps,
+                ) => VNodeChild;
+                tooltip?: (
+                    props: VueUiHistoryPlotTooltipSlotProps,
+                ) => VNodeChild;
+                ['tooltip-after']?: (
+                    props: VueUiHistoryPlotTooltipSlotProps,
+                ) => VNodeChild;
+                skeleton?: () => VNodeChild;
+            };
+        };
+    };
 
     export type VueUiCirclePackDatasetItem = {
         [key: string]: unknown;
