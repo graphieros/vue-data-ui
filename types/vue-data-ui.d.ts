@@ -4366,7 +4366,7 @@ declare module 'vue-data-ui' {
                       ) => string);
             };
         };
-        userOptions?: ChartUserOptions;
+        userOptions?: ChartUserOptions<VueUiHeatmapRow[], VueUiHeatmapConfig>;
         table?: {
             show?: boolean;
             useDialog?: boolean;
@@ -4429,13 +4429,96 @@ declare module 'vue-data-ui' {
         toggleFullscreen(): void;
     };
 
-    export const VueUiHeatmap: DefineComponent<
-        {
-            config?: VueUiHeatmapConfig;
-            dataset: VueUiHeatmapDatasetItem[];
-        },
-        VueUiHeatmapExpose
-    >;
+    export type VueUiHeatmapOptionCopyAltSlotProps = {
+        dataset: VueUiHeatmapRow[];
+        config: VueUiHeatmapConfig;
+    };
+
+    export type VueUiHeatmapSvgSlotProps = {
+        drawingArea: {
+            bottom: number;
+            cellSize: { height: number; width: number };
+            height: number;
+            left: number;
+            right: number;
+            sumCellXHeight: number;
+            top: number;
+            topLabelsHeight: number;
+            width: number;
+        };
+        height: number;
+        isPrintingImg: boolean;
+        isPrintingSvg: boolean;
+        width: number;
+    };
+
+    export type VueUiHeatmapTooltipSlotProps = {
+        config: VueUiHeatmapConfig;
+        datapoint: VueUiHeatmapDatapoint;
+        series: VueUiHeatmapRow[];
+        seriesIndex: number;
+    };
+
+    export type VueUiHeatmapProps = {
+        config?: VueUiHeatmapConfig;
+        dataset: VueUiHeatmapDatasetItem[];
+    };
+
+    const VueUiHeatmapBase: DefineComponent<VueUiHeatmapProps>;
+
+    export const VueUiHeatmap: typeof VueUiHeatmapBase & {
+        new (): VueUiHeatmapExpose & {
+            $slots: {
+                ['annotator-action-close']?: () => VNodeChild;
+                ['annotator-action-color']?: (
+                    props: VueUiAnnotatorActionColorSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-draw']?: (
+                    props: VueUiAnnotatorActionDrawSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-undo']?: (
+                    props: VueUiAnnotatorActionUndoSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-redo']?: (
+                    props: VueUiAnnotatorActionRedoSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-delete']?: (
+                    props: VueUiAnnotatorActionDeleteSlotProps,
+                ) => VNodeChild;
+                menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
+                optionTooltip?: () => VNodeChild;
+                optionPdf?: () => VNodeChild;
+                optionCsv?: () => VNodeChild;
+                optionImg?: () => VNodeChild;
+                optionSvg?: () => VNodeChild;
+                optionTable?: () => VNodeChild;
+                optionFullscreen?: (
+                    props: VueUiOptionFullscreenSlotProps,
+                ) => VNodeChild;
+                optionAnnotator?: (
+                    props: VueUiOptionAnnotatorSlotProps,
+                ) => VNodeChild;
+                optionAltCopy?: (
+                    props: VueUiHeatmapOptionCopyAltSlotProps,
+                ) => VNodeChild;
+                ['chart-background']?: () => VNodeChild;
+                svg?: (props: VueUiHeatmapSvgSlotProps) => VNodeChild;
+                hint?: (
+                    props: VueUiKeyboardNavigationHintSlotProps,
+                ) => VNodeChild;
+                watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
+                source?: () => VNodeChild;
+                ['tooltip-before']?: (
+                    props: VueUiHeatmapTooltipSlotProps,
+                ) => VNodeChild;
+                tooltip?: (props: VueUiHeatmapTooltipSlotProps) => VNodeChild;
+                ['tooltip-after']?: (
+                    props: VueUiHeatmapTooltipSlotProps,
+                ) => VNodeChild;
+                skeleton?: () => VNodeChild;
+            };
+        };
+    };
 
     export type VueUiXyHighlightArea = {
         show?: boolean;

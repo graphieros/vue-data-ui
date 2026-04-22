@@ -63,6 +63,9 @@ const TsVueUiGauge = defineAsyncComponent(
 const TsVueUiGeo = defineAsyncComponent(
     () => import('./components/charts/ts-vue-ui-geo.vue'),
 );
+const TsVueUiHeatmap = defineAsyncComponent(
+    () => import('./components/charts/ts-vue-ui-heatmap.vue'),
+);
 
 const components = shallowRef([
     { name: 'VueUiXy' },
@@ -86,6 +89,7 @@ const components = shallowRef([
     { name: 'VueUiGalaxy' },
     { name: 'VueUiGauge' },
     { name: 'VueUiGeo' },
+    { name: 'VueUiHeatmap' },
 ]);
 
 const selectedComponent = shallowRef(components.value[0]);
@@ -128,6 +132,7 @@ const selectedComponent = shallowRef(components.value[0]);
         <TsVueUiGalaxy v-if="selectedComponent?.name === 'VueUiGalaxy'" />
         <TsVueUiGauge v-if="selectedComponent?.name === 'VueUiGauge'" />
         <TsVueUiGeo v-if="selectedComponent?.name === 'VueUiGeo'" />
+        <TsVueUiHeatmap v-if="selectedComponent?.name === 'VueUiHeatmap'" />
     </div>
 </template>
 

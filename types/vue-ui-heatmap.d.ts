@@ -1,4 +1,4 @@
-import type { DefineComponent } from 'vue';
+import type { DefineComponent, VNodeChild } from 'vue';
 
 export type {
     VueUiHeatmapConfig,
@@ -6,15 +6,75 @@ export type {
     VueUiHeatmapRow,
     VueUiHeatmapDatasetItem,
     VueUiHeatmapExpose,
+    VueUiHeatmapProps,
+    VueUiAnnotatorActionColorSlotProps,
+    VueUiAnnotatorActionDrawSlotProps,
+    VueUiAnnotatorActionUndoSlotProps,
+    VueUiAnnotatorActionRedoSlotProps,
+    VueUiAnnotatorActionDeleteSlotProps,
+    VueUiMenuIconSlotProps,
+    VueUiOptionFullscreenSlotProps,
+    VueUiOptionAnnotatorSlotProps,
+    VueUiHeatmapOptionCopyAltSlotProps,
+    VueUiHeatmapSvgSlotProps,
+    VueUiKeyboardNavigationHintSlotProps,
+    VueUiWatermarkSlotProps,
+    VueUiHeatmapTooltipSlotProps,
 } from 'vue-data-ui';
 
-declare const VueUiHeatmap: DefineComponent<
-    {
-        config?: VueUiHeatmapConfig;
-        dataset: VueUiHeatmapDatasetItem[];
-    },
-    VueUiHeatmapExpose
->;
+declare const VueUiHeatmapBase: DefineComponent<VueUiHeatmapProps>;
+
+export const VueUiHeatmap: typeof VueUiHeatmapBase & {
+    new (): VueUiHeatmapExpose & {
+        $slots: {
+            ['annotator-action-close']?: () => VNodeChild;
+            ['annotator-action-color']?: (
+                props: VueUiAnnotatorActionColorSlotProps,
+            ) => VNodeChild;
+            ['annotator-action-draw']?: (
+                props: VueUiAnnotatorActionDrawSlotProps,
+            ) => VNodeChild;
+            ['annotator-action-undo']?: (
+                props: VueUiAnnotatorActionUndoSlotProps,
+            ) => VNodeChild;
+            ['annotator-action-redo']?: (
+                props: VueUiAnnotatorActionRedoSlotProps,
+            ) => VNodeChild;
+            ['annotator-action-delete']?: (
+                props: VueUiAnnotatorActionDeleteSlotProps,
+            ) => VNodeChild;
+            menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
+            optionTooltip?: () => VNodeChild;
+            optionPdf?: () => VNodeChild;
+            optionCsv?: () => VNodeChild;
+            optionImg?: () => VNodeChild;
+            optionSvg?: () => VNodeChild;
+            optionTable?: () => VNodeChild;
+            optionFullscreen?: (
+                props: VueUiOptionFullscreenSlotProps,
+            ) => VNodeChild;
+            optionAnnotator?: (
+                props: VueUiOptionAnnotatorSlotProps,
+            ) => VNodeChild;
+            optionAltCopy?: (
+                props: VueUiHeatmapOptionCopyAltSlotProps,
+            ) => VNodeChild;
+            ['chart-background']?: () => VNodeChild;
+            svg?: (props: VueUiHeatmapSvgSlotProps) => VNodeChild;
+            hint?: (props: VueUiKeyboardNavigationHintSlotProps) => VNodeChild;
+            watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
+            source?: () => VNodeChild;
+            ['tooltip-before']?: (
+                props: VueUiHeatmapTooltipSlotProps,
+            ) => VNodeChild;
+            tooltip?: (props: VueUiHeatmapTooltipSlotProps) => VNodeChild;
+            ['tooltip-after']?: (
+                props: VueUiHeatmapTooltipSlotProps,
+            ) => VNodeChild;
+            skeleton?: () => VNodeChild;
+        };
+    };
+};
 
 export default VueUiHeatmap;
 export { VueUiHeatmap };

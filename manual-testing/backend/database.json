@@ -1200,8 +1200,8 @@
         "VueUiGalaxy": true,
         "VueUiGauge": true,
         "VueUiGeo": true,
-        "VueUiGizmo": false,
-        "VueUiHeatmap": false,
+        "VueUiGizmo": true,
+        "VueUiHeatmap": true,
         "VueUiHistoryPlot": false,
         "VueUiHorizontalBar": false,
         "VueUiKpi": false,
@@ -1247,7 +1247,7 @@
       "customCheckList": {},
       "id": "3846f04c-685f-4509-8042-87b9c0b7ec33",
       "createdAt": 1775989842046,
-      "updatedAt": 1776782853522
+      "updatedAt": 1776832123361
     },
     {
       "title": "Expose more methods",
