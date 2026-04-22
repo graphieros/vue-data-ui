@@ -2540,6 +2540,7 @@ defineExpose({
                         name="svg"
                         :svg="{
                             ...svg,
+                            drawingArea,
                             isPrintingImg:
                                 isPrinting || isImaging || isCallbackImaging,
                             isPrintingSvg: isCallbackSvg,

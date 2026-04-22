@@ -1,4 +1,4 @@
-import type { DefineComponent } from 'vue';
+import type { DefineComponent, VNodeChild } from 'vue';
 
 export type {
     VueUiHorizontalBarConfig,
@@ -8,15 +8,81 @@ export type {
     VueUiHorizontalBarDatasetItem,
     VueUiHorizontalBarExpose,
     VueUiHorizontalBarEvent,
+    VueUiHorizontalBarProps,
+    VueUiAnnotatorActionColorSlotProps,
+    VueUiAnnotatorActionDrawSlotProps,
+    VueUiAnnotatorActionUndoSlotProps,
+    VueUiAnnotatorActionRedoSlotProps,
+    VueUiAnnotatorActionDeleteSlotProps,
+    VueUiMenuIconSlotProps,
+    VueUiOptionFullscreenSlotProps,
+    VueUiOptionAnnotatorSlotProps,
+    VueUiHorizontalBarOptionCopyAltSlotProps,
+    VueUiPatternSlotProps,
+    VueUiHorizontalBarSvgSlotProps,
+    VueUiKeyboardNavigationHintSlotProps,
+    VueUiWatermarkSlotProps,
+    VueUiHorizontalBarLegendSlotProps,
+    VueUiVerticalBarTooltipDatapoint,
+    VueUiHorizontalBarTooltipSlotProps,
 } from 'vue-data-ui';
 
-declare const VueUiHorizontalBar: DefineComponent<
-    {
-        config?: VueUiHorizontalBarConfig;
-        dataset: VueUiHorizontalBarDatasetItem[];
-    },
-    VueUiHorizontalBarExpose
->;
+declare const VueUiHorizontalBarBase: DefineComponent<VueUiHorizontalBarProps>;
+
+export const VueUiHorizontalBar: typeof VueUiHorizontalBarBase & {
+    new (): VueUiHorizontalBarExpose & {
+        $slots: {
+            ['annotator-action-close']?: () => VNodeChild;
+            ['annotator-action-color']?: (
+                props: VueUiAnnotatorActionColorSlotProps,
+            ) => VNodeChild;
+            ['annotator-action-draw']?: (
+                props: VueUiAnnotatorActionDrawSlotProps,
+            ) => VNodeChild;
+            ['annotator-action-undo']?: (
+                props: VueUiAnnotatorActionUndoSlotProps,
+            ) => VNodeChild;
+            ['annotator-action-redo']?: (
+                props: VueUiAnnotatorActionRedoSlotProps,
+            ) => VNodeChild;
+            ['annotator-action-delete']?: (
+                props: VueUiAnnotatorActionDeleteSlotProps,
+            ) => VNodeChild;
+            menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
+            optionTooltip?: () => VNodeChild;
+            optionPdf?: () => VNodeChild;
+            optionCsv?: () => VNodeChild;
+            optionImg?: () => VNodeChild;
+            optionSvg?: () => VNodeChild;
+            optionTable?: () => VNodeChild;
+            optionLabels?: () => VNodeChild;
+            optionSort?: () => VNodeChild;
+            optionFullscreen?: (
+                props: VueUiOptionFullscreenSlotProps,
+            ) => VNodeChild;
+            optionAnnotator?: (
+                props: VueUiOptionAnnotatorSlotProps,
+            ) => VNodeChild;
+            optionAltCopy?: (
+                props: VueUiHorizontalBarOptionCopyAltSlotProps,
+            ) => VNodeChild;
+            ['chart-background']?: () => VNodeChild;
+            pattern?: (props: VueUiPatternSlotProps) => VNodeChild;
+            svg?: (props: VueUiHorizontalBarSvgSlotProps) => VNodeChild;
+            hint?: (props: VueUiKeyboardNavigationHintSlotProps) => VNodeChild;
+            watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
+            source?: () => VNodeChild;
+            legend?: (props: VueUiHorizontalBarLegendSlotProps) => VNodeChild;
+            ['tooltip-before']?: (
+                props: VueUiHorizontalBarTooltipSlotProps,
+            ) => VNodeChild;
+            tooltip?: (props: VueUiHorizontalBarTooltipSlotProps) => VNodeChild;
+            ['tooltip-after']?: (
+                props: VueUiHorizontalBarTooltipSlotProps,
+            ) => VNodeChild;
+        };
+    };
+};
 
 export default VueUiHorizontalBar;
 export { VueUiHorizontalBar };

@@ -69,6 +69,9 @@ const TsVueUiHeatmap = defineAsyncComponent(
 const TsVueUiHistoryPlot = defineAsyncComponent(
     () => import('./components/charts/ts-vue-ui-history-plot.vue'),
 );
+const TsVueUiHorizontalBar = defineAsyncComponent(
+    () => import('./components/charts/ts-vue-ui-horizontal-bar.vue'),
+);
 
 const components = shallowRef([
     { name: 'VueUiXy' },
@@ -94,6 +97,7 @@ const components = shallowRef([
     { name: 'VueUiGeo' },
     { name: 'VueUiHeatmap' },
     { name: 'VueUiHistoryPlot' },
+    { name: 'VueUiHorizontalBar' },
 ]);
 
 const selectedComponent = shallowRef(components.value[0]);
@@ -139,6 +143,9 @@ const selectedComponent = shallowRef(components.value[0]);
         <TsVueUiHeatmap v-if="selectedComponent?.name === 'VueUiHeatmap'" />
         <TsVueUiHistoryPlot
             v-if="selectedComponent?.name === 'VueUiHistoryPlot'"
+        />
+        <TsVueUiHorizontalBar
+            v-if="selectedComponent?.name === 'VueUiHorizontalBar'"
         />
     </div>
 </template>
