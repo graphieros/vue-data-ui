@@ -24,7 +24,7 @@ export type {
 declare const VueUiGeoBase: DefineComponent<VueUiGeoProps>;
 
 export const VueUiGeo: typeof VueUiGeoBase & {
-    new (): VueUiGeoBase & {
+    new (): VueUiGeoExpose & {
         $slots: {
             ['annotator-action-close']?: () => VNodeChild;
             ['annotator-action-color']?: (

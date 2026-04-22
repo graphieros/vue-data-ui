@@ -6584,7 +6584,6 @@ declare module 'vue-data-ui' {
                 pattern?: (props: VueUiPatternSlotProps) => VNodeChild;
                 svg?: (props: VueUiGaugeSvgSlotProps) => VNodeChild;
                 watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
-                source?: () => VNodeChild;
                 legend?: (props: VueUiGaugeLegendSlotProps) => VNodeChild;
                 source?: () => VNodeChild;
                 skeleton?: () => VNodeChild;
@@ -12579,7 +12578,7 @@ declare module 'vue-data-ui' {
     const VueUiGeoBase: DefineComponent<VueUiGeoProps>;
 
     export const VueUiGeo: typeof VueUiGeoBase & {
-        new (): VueUiGeoBase & {
+        new (): VueUiGeoExpose & {
             $slots: {
                 ['annotator-action-close']?: () => VNodeChild;
                 ['annotator-action-color']?: (
