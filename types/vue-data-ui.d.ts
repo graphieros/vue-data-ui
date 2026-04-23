@@ -809,10 +809,13 @@ declare module 'vue-data-ui' {
         new (): {
             $slots: {
                 title?: (props: VueUiKpiCommentSlotProps) => VNodeChild;
-                ['comment-before']?: (props: VueUiKpiCommentSlotProps) => VNodeChild;
+                ['comment-before']?: (
+                    props: VueUiKpiCommentSlotProps,
+                ) => VNodeChild;
                 ['value']?: (props: VueUiKpiCommentSlotProps) => VNodeChild;
-                ['comment-after']?: (props: VueUiKpiCommentSlotProps) => VNodeChild;
-
+                ['comment-after']?: (
+                    props: VueUiKpiCommentSlotProps,
+                ) => VNodeChild;
             };
         };
     };
@@ -1313,7 +1316,10 @@ declare module 'vue-data-ui' {
                 ancestor?: string;
             };
         };
-        userOptions?: ChartUserOptions;
+        userOptions?: ChartUserOptions<
+            VueUiMoleculeDatapoint[],
+            VueUiMoleculeConfig
+        >;
     };
 
     export type VueUiMoleculeDatapoint = {
@@ -1329,6 +1335,7 @@ declare module 'vue-data-ui' {
                 y: number;
             }>;
         };
+        strokeWidth: number;
         uid: string;
     };
 
@@ -1347,13 +1354,117 @@ declare module 'vue-data-ui' {
         toggleZoom(): void;
     };
 
-    export const VueUiMolecule: DefineComponent<
-        {
-            dataset: VueUiMoleculeDatasetNode[];
-            config?: VueUiMoleculeConfig;
-        },
-        VueUiMoleculeExpose
-    >;
+    export type VueUiMoleculeOptionZoomSlotProps = {
+        toggleZoom: () => void;
+        isZoomLocked: boolean;
+    };
+
+    export type VueUiMoleculeNodeSlotProps = {
+        node: VueUiMoleculeDatapoint;
+    };
+
+    export type VueUiMoleculeNodeSvgSlotProps = {
+        nodeSvg: {
+            x: number;
+            y: number;
+            radius: number;
+            color: string;
+            stroke: string;
+            strokeWidth: number;
+            isSelected: boolean;
+            onClick: () => void;
+            onEnter: () => void;
+            onLeave: () => void;
+        };
+    };
+
+    export type VueUiMoleculeSvgSlotProps = {
+        svg: {
+            drawingArea: {
+                x: number;
+                y: number;
+                width: number;
+                height: number;
+            };
+            height: number;
+            isPrintingImg: boolean;
+            isPrintingSvg: boolean;
+            width: number;
+        };
+    };
+
+    export type VueUiMoleculeTooltipSlotProps = {
+        config: VueUiMoleculeConfig;
+        datapoint: VueUiMoleculeDatapoint;
+        series: VueUiMoleculeDatapoint[];
+        seriesIndex: number;
+    };
+
+    export type VueUiMoleculeProps = {
+        dataset: VueUiMoleculeDatasetNode[];
+        config?: VueUiMoleculeConfig;
+    };
+
+    const VueUiMoleculeBase: DefineComponent<VueUiMoleculeProps>;
+
+    export const VueUiMolecule: typeof VueUiMoleculeBase & {
+        new (): VueUiMoleculeExpose & {
+            $slots: {
+                ['annotator-action-close']?: () => VNodeChild;
+                ['annotator-action-color']?: (
+                    props: VueUiAnnotatorActionColorSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-draw']?: (
+                    props: VueUiAnnotatorActionDrawSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-undo']?: (
+                    props: VueUiAnnotatorActionUndoSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-redo']?: (
+                    props: VueUiAnnotatorActionRedoSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-delete']?: (
+                    props: VueUiAnnotatorActionDeleteSlotProps,
+                ) => VNodeChild;
+                menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
+                optionTooltip?: () => VNodeChild;
+                optionPdf?: () => VNodeChild;
+                optionCsv?: () => VNodeChild;
+                optionImg?: () => VNodeChild;
+                optionSvg?: () => VNodeChild;
+                optionTable?: () => VNodeChild;
+                optionLabels?: () => VNodeChild;
+                optionFullscreen?: (
+                    props: VueUiOptionFullscreenSlotProps,
+                ) => VNodeChild;
+                optionAltCopy?: () => VNodeChild;
+                optionAnnotator?: (
+                    props: VueUiOptionAnnotatorSlotProps,
+                ) => VNodeChild;
+                optionZoom?: (
+                    props: VueUiMoleculeOptionZoomSlotProps,
+                ) => VNodeChild;
+                ['chart-background']?: () => VNodeChild;
+                node?: (props: VueUiMoleculeNodeSlotProps) => VNodeChild;
+                ['node-svg']?: (
+                    props: VueUiMoleculeNodeSvgSlotProps,
+                ) => VNodeChild;
+                svg?: (props: VueUiMoleculeSvgSlotProps) => VNodeChild;
+                watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
+                ['resest-action']?: (
+                    props: VueUiResetActionSlotProps,
+                ) => VNodeChild;
+                source?: () => VNodeChild;
+                ['tooltip-before']?: (
+                    props: VueUiMoleculeTooltipSlotProps,
+                ) => VNodeChild;
+                tooltip?: (props: VueUiMoleculeTooltipSlotProps) => VNodeChild;
+                ['tooltip-after']?: (
+                    props: VueUiMoleculeTooltipSlotProps,
+                ) => VNodeChild;
+            };
+        };
+    };
 
     export type VueUiDigitsConfig = {
         backgroundColor?: string;

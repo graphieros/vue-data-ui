@@ -1205,8 +1205,8 @@
         "VueUiHistoryPlot": true,
         "VueUiHorizontalBar": true,
         "VueUiKpi": true,
-        "VueUiMiniLoader": false,
-        "VueUiMolecule": false,
+        "VueUiMiniLoader": true,
+        "VueUiMolecule": true,
         "VueUiMoodRadar": false,
         "VueUiNestedDonuts": false,
         "VueUiOnion": false,
@@ -1247,7 +1247,7 @@
       "customCheckList": {},
       "id": "3846f04c-685f-4509-8042-87b9c0b7ec33",
       "createdAt": 1775989842046,
-      "updatedAt": 1776889616679
+      "updatedAt": 1776919067354
     },
     {
       "title": "Expose more methods",

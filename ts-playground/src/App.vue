@@ -75,6 +75,9 @@ const TsVueUiHorizontalBar = defineAsyncComponent(
 const TsVueUiKpi = defineAsyncComponent(
     () => import('./components/charts/ts-vue-ui-kpi.vue'),
 );
+const TsVueUiMolecule = defineAsyncComponent(
+    () => import('./components/charts/ts-vue-ui-molecule.vue'),
+);
 
 const components = shallowRef([
     { name: 'VueUiXy' },
@@ -102,6 +105,7 @@ const components = shallowRef([
     { name: 'VueUiHistoryPlot' },
     { name: 'VueUiHorizontalBar' },
     { name: 'VueUiKpi' },
+    { name: 'VueUiMolecule' },
 ]);
 
 const selectedComponent = shallowRef(components.value[0]);
@@ -152,6 +156,7 @@ const selectedComponent = shallowRef(components.value[0]);
             v-if="selectedComponent?.name === 'VueUiHorizontalBar'"
         />
         <TsVueUiKpi v-if="selectedComponent?.name === 'VueUiKpi'" />
+        <TsVueUiMolecule v-if="selectedComponent?.name === 'VueUiMolecule'" />
     </div>
 </template>
 

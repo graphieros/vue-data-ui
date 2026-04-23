@@ -13,7 +13,9 @@ export const VueUiKpi: typeof VueUiKpiBase & {
     new (): {
         $slots: {
             title?: (props: VueUiKpiCommentSlotProps) => VNodeChild;
-            ['comment-before']?: (props: VueUiKpiCommentSlotProps) => VNodeChild;
+            ['comment-before']?: (
+                props: VueUiKpiCommentSlotProps,
+            ) => VNodeChild;
             ['value']?: (props: VueUiKpiCommentSlotProps) => VNodeChild;
             ['comment-after']?: (props: VueUiKpiCommentSlotProps) => VNodeChild;
         };

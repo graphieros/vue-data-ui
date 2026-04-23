@@ -43,18 +43,18 @@ const config = computed<VueUiKpiProps['config']>(() => {
     <div>
         <VueUiKpi :dataset :config>
             <template #title="{ comment }">
-                <code style="color:chocolate">#title</code>
+                <code style="color: chocolate">#title</code>
                 value: {{ comment }}
             </template>
             <template #comment-before="{ comment }">
-                <code style="color:chocolate">#comment-before</code>
+                <code style="color: chocolate">#comment-before</code>
                 value: {{ comment }}
             </template>
             <template #value="{ comment }">
-                <code style="color:chocolate">#value</code>
+                <code style="color: chocolate">#value</code>
             </template>
             <template #comment-after="{ comment }">
-                <code style="color:chocolate">#comment-after</code>
+                <code style="color: chocolate">#comment-after</code>
                 value: {{ comment }}
             </template>
         </VueUiKpi>

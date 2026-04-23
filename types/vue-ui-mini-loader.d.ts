@@ -1,9 +1,11 @@
 import type { DefineComponent } from 'vue';
 
-export type {
+import type {
     VueUiMiniLoaderConfigType,
     VueUiMiniLoaderConfig,
 } from 'vue-data-ui';
+
+export type { VueUiMiniLoaderConfigType, VueUiMiniLoaderConfig };
 
 declare const VueUiMiniLoader: DefineComponent<{
     config?: VueUiMiniLoaderConfig;
