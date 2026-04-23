@@ -1212,7 +1212,7 @@
         "VueUiOnion": true,
         "VueUiParallelCoordinatePlot": true,
         "VueUiQuadrant": true,
-        "VueUiQuickChart": false,
+        "VueUiQuickChart": true,
         "VueUiRadar": false,
         "VueUiRating": false,
         "VueUiRelationCircle": false,
@@ -1247,7 +1247,7 @@
       "customCheckList": {},
       "id": "3846f04c-685f-4509-8042-87b9c0b7ec33",
       "createdAt": 1775989842046,
-      "updatedAt": 1776965806821
+      "updatedAt": 1776980548373
     },
     {
       "title": "Expose more methods",

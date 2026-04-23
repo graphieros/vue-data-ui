@@ -8920,6 +8920,14 @@ declare module 'vue-data-ui' {
                       text: string;
                       dataUrl: string;
                   }) => void);
+            altCopy?:
+                | null
+                | ((
+                      args: AltCopyArgs<
+                          VueUiQuickChartFormattedDataset,
+                          VueUiQuickChartConfig
+                      >,
+                  ) => void);
         };
         showUserOptionsOnChartHover?: boolean;
         keepUserOptionsStateOnChartLeave?: boolean;
@@ -8944,13 +8952,261 @@ declare module 'vue-data-ui' {
         toggleTooltip(): void;
     };
 
-    export const VueUiQuickChart: DefineComponent<
-        {
-            config?: VueUiQuickChartConfig;
-            dataset: VueUiQuickChartDataset;
-        },
-        VueUiQuickChartExpose
-    >;
+    export type VueUiQuickChartFormattedDataset = {
+        bar: null | {
+            absoluteZero: number;
+            dataset: Array<{
+                values: number[];
+                absoluteValues: number[];
+                absoluteIndices: number[];
+                name: string;
+                color: string;
+                id: string;
+                coordinates: Array<{
+                    x: number;
+                    y: number;
+                    height: number;
+                    value: number;
+                    width: number;
+                }>;
+            }>;
+            absoluteDataset: Array<{
+                values: number[];
+                absoluteValues: number[];
+                absoluteIndices: number[];
+                name: string;
+                color: string;
+                id: string;
+                coordinates: Array<{
+                    x: number;
+                    y: number;
+                    height: number;
+                    value: number;
+                    width: number;
+                }>;
+            }>;
+            legend: Array<{
+                values: number[];
+                absoluteValues: number[];
+                absoluteIndices: number[];
+                name: string;
+                color: string;
+                id: string;
+                coordinates: Array<{
+                    x: number;
+                    y: number;
+                    height: number;
+                    value: number;
+                    width: number;
+                }>;
+            }>;
+            drawingArea: {
+                left: number;
+                top: number;
+                right: number;
+                bottom: number;
+                width: number;
+                height: number;
+            };
+            extremes: {
+                max: number;
+                min: number;
+                maxSeries: number;
+            };
+            slotSize: number;
+            yLabels: Array<{ x: number; y: number; value: number }>;
+        };
+        donut: null | {
+            dataset: Array<{
+                NAME: string;
+                VALUE: number;
+                value: number;
+                name: string;
+                id: string;
+                color: string;
+                immutableValue: number;
+                proportion: number;
+                absoluteValue: number;
+                shape: Shape;
+            }>;
+            legend: Array<{
+                NAME: string;
+                VALUE: number;
+                value: number;
+                name: string;
+                id: string;
+                color: string;
+                immutableValue: number;
+                proportion: number;
+                absoluteValue: number;
+                shape: Shape;
+            }>;
+            drawingArea: {
+                centerX: number;
+                centerY: number;
+            };
+            total: number;
+            cx: number;
+            cy: number;
+            radius: number;
+            chart: Array<{
+                arcSlice: string;
+                cx: number;
+                cy: number;
+                NAME: string;
+                VALUE: number;
+                value: number;
+                name: string;
+                id: string;
+                color: string;
+                immutableValue: number;
+                proportion: number;
+                ratio: number;
+                path: string;
+                startX: number;
+                startY: number;
+                endX: number;
+                endY: number;
+                separator: {
+                    x: number;
+                    y: number;
+                };
+                firstSeparator: {
+                    x: number;
+                    y: number;
+                };
+                center: {
+                    startX: number;
+                    startY: number;
+                    endX: number;
+                    endY: number;
+                    path: string;
+                };
+            }>;
+        };
+        line: null | {
+            absoluteZero: number;
+            dataset: Array<{
+                values: number[];
+                absoluteValues: number[];
+                absoluteIndices: number[];
+                name: string;
+                color: string;
+                shape: Shape;
+                coordinates: Array<{ x: number; y: number; value: number }>;
+                linePath: string;
+            }>;
+            legend: Array<{
+                values: number[];
+                absoluteValues: number[];
+                absoluteIndices: number[];
+                name: string;
+                color: string;
+                shape: Shape;
+                coordinates: Array<{ x: number; y: number; value: number }>;
+                linePath: string;
+            }>;
+            drawingArea: {
+                left: number;
+                top: number;
+                right: number;
+                bottom: number;
+                width: number;
+                height: number;
+            };
+            extremes: {
+                max: number;
+                min: number;
+                maxSeries: number;
+            };
+            slotSize: number;
+            yLabels: Array<{ x: number; y: number; value: number }>;
+        };
+    };
+
+    type NonNull<T> = T extends null ? never : T;
+
+    type VueUiQuickChartLegendSource = NonNull<
+        VueUiQuickChartFormattedDataset['bar' | 'donut' | 'line']
+    >['legend'][number];
+
+    export type VueUiQuickChartLegend = VueUiQuickChartLegendSource & {
+        segregate: () => void;
+        isSegregated: boolean;
+    };
+
+    export type VueUiQuickChartLegendSlotProps = {
+        legend: VueUiQuickChartLegend;
+    };
+
+    export type VueUiQuickChartTooltipSlotProps = {
+        config: VueUiQuickChartConfig;
+        datapoint: Array<Record<string, any>> | Record<string, any>; // It's 23:34 and I'm feeling lazy
+        dataset: Array<Record<string, any>> | Record<string, any>;
+        seriesIndex: number;
+    };
+
+    export type VueUiQuickChartProps = {
+        config?: VueUiQuickChartConfig;
+        dataset: VueUiQuickChartDataset;
+    };
+
+    const VueUiQuickChartBase: DefineComponent<VueUiQuickChartProps>;
+
+    export const VueUiQuickChart: typeof VueUiQuickChartBase & {
+        new (): VueUiQuickChartExpose & {
+            $slots: {
+                ['annotator-action-close']?: () => VNodeChild;
+                ['annotator-action-color']?: (
+                    props: VueUiAnnotatorActionColorSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-draw']?: (
+                    props: VueUiAnnotatorActionDrawSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-undo']?: (
+                    props: VueUiAnnotatorActionUndoSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-redo']?: (
+                    props: VueUiAnnotatorActionRedoSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-delete']?: (
+                    props: VueUiAnnotatorActionDeleteSlotProps,
+                ) => VNodeChild;
+                menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
+                optionTooltip?: () => VNodeChild;
+                optionPdf?: () => VNodeChild;
+                optionImg?: () => VNodeChild;
+                optionSvg?: () => VNodeChild;
+                optionFullscreen?: (
+                    props: VueUiOptionFullscreenSlotProps,
+                ) => VNodeChild;
+                optionAltCopy?: () => VNodeChild;
+                optionAnnotator?: (
+                    props: VueUiOptionAnnotatorSlotProps,
+                ) => VNodeChild;
+                ['chart-background']?: () => VNodeChild;
+                hint?: (
+                    props: VueUiKeyboardNavigationHintSlotProps,
+                ) => VNodeChild;
+                watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
+                ['resest-action']?: (
+                    props: VueUiResetActionSlotProps,
+                ) => VNodeChild;
+                source?: () => VNodeChild;
+                legend?: (props: VueUiQuickChartLegendSlotProps) => VNodeChild;
+                ['tooltip-before']?: (
+                    props: VueUiQuickChartTooltipSlotProps,
+                ) => VNodeChild;
+                tooltip?: (
+                    props: VueUiQuickChartTooltipSlotProps,
+                ) => VNodeChild;
+                ['tooltip-after']?: (
+                    props: VueUiQuickChartTooltipSlotProps,
+                ) => VNodeChild;
+                skeleton?: () => VNodeChild;
+            };
+        };
+    };
 
     export type VueUiCursorConfig = {
         bubbleEffect?: boolean;

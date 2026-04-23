@@ -93,6 +93,9 @@ const TsVueUiParallelCoordinatePlot = defineAsyncComponent(
 const TsVueUiQuadrant = defineAsyncComponent(
     () => import('./components/charts/ts-vue-ui-quadrant.vue'),
 );
+const TsVueUiQuickChart = defineAsyncComponent(
+    () => import('./components/charts/ts-vue-ui-quick-chart.vue'),
+);
 
 const components = shallowRef([
     { name: 'VueUiXy' },
@@ -126,6 +129,7 @@ const components = shallowRef([
     { name: 'VueUiOnion' },
     { name: 'VueUiParallelCoordinatePlot' },
     { name: 'VueUiQuadrant' },
+    { name: 'VueUiQuickChart' },
 ]);
 
 const selectedComponent = shallowRef(components.value[0]);
@@ -186,6 +190,9 @@ const selectedComponent = shallowRef(components.value[0]);
             v-if="selectedComponent?.name === 'VueUiParallelCoordinatePlot'"
         />
         <TsVueUiQuadrant v-if="selectedComponent?.name === 'VueUiQuadrant'" />
+        <TsVueUiQuickChart
+            v-if="selectedComponent?.name === 'VueUiQuickChart'"
+        />
     </div>
 </template>
 

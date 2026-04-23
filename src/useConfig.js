@@ -3542,6 +3542,7 @@ export function useConfig(options = {}) {
             fullscreen: null,
             annotator: null,
             svg: null,
+            altCopy: null,
         },
         title: '',
         titleBold: true,
