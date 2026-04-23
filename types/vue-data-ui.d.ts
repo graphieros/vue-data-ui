@@ -7275,7 +7275,7 @@ declare module 'vue-data-ui' {
                 };
             };
         };
-        userOptions?: ChartUserOptions;
+        userOptions?: ChartUserOptions<VueUiOnionDatapoint[], VueUiOnionConfig>;
         table?: {
             show?: boolean;
             useDialog?: boolean;
@@ -7297,6 +7297,7 @@ declare module 'vue-data-ui' {
         absoluteIndex: number;
         color: string;
         id: string;
+        isSegregated: boolean;
         labelY: number;
         name: string;
         opacity: number;
@@ -7309,8 +7310,10 @@ declare module 'vue-data-ui' {
             fullOffset: number;
         };
         percentage: number;
-        prefix: string;
         radius: number;
+        segregate: () => void;
+        targetPercentage: number;
+        prefix: string;
         shape: Shape;
         suffix: string;
         value: number;
@@ -7356,13 +7359,104 @@ declare module 'vue-data-ui' {
         hideSeries(name: string): void;
     };
 
-    export const VueUiOnion: DefineComponent<
-        {
-            config?: VueUiOnionConfig;
-            dataset: VueUiOnionDatasetItem[];
-        },
-        VueUiOnionExpose
-    >;
+    export type VueUiOnionSvgSlotProps = {
+        svg: {
+            height: number;
+            width: number;
+            padding: {
+                top: number;
+                left: number;
+                right: number;
+                bottom: number;
+            };
+            minRadius: number;
+            drawingArea: {
+                top: number;
+                left: number;
+                right: number;
+                bottom: number;
+                centerX: number;
+                centerY: number;
+                width: number;
+                height: number;
+                minRadius: number;
+                maxRadius: number;
+            };
+            isPrintingImg: boolean;
+            isPrintingSvg: boolean;
+        };
+    };
+
+    export type VueUiOnionLegendSlotProps = {
+        legend: VueUiOnionDatapoint[];
+    };
+
+    export type VueUiOnionTooltipSlotProps = {
+        config: VueUiOnionConfig;
+        datapoint: VueUiOnionDatapoint;
+        series: VueUiOnionDatapoint[];
+        seriesIndex: number;
+    };
+
+    export type VueUiOnionProps = {
+        config?: VueUiOnionConfig;
+        dataset: VueUiOnionDatasetItem[];
+    };
+
+    const VueUiOnionBase: DefineComponent<VueUiOnionProps>;
+
+    export const VueUiOnion: typeof VueUiOnionBase & {
+        new (): VueUiOnionExpose & {
+            $slots: {
+                ['annotator-action-close']?: () => VNodeChild;
+                ['annotator-action-color']?: (
+                    props: VueUiAnnotatorActionColorSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-draw']?: (
+                    props: VueUiAnnotatorActionDrawSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-undo']?: (
+                    props: VueUiAnnotatorActionUndoSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-redo']?: (
+                    props: VueUiAnnotatorActionRedoSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-delete']?: (
+                    props: VueUiAnnotatorActionDeleteSlotProps,
+                ) => VNodeChild;
+                menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
+                optionTooltip?: () => VNodeChild;
+                optionPdf?: () => VNodeChild;
+                optionCsv?: () => VNodeChild;
+                optionImg?: () => VNodeChild;
+                optionSvg?: () => VNodeChild;
+                optionTable?: () => VNodeChild;
+                optionFullscreen?: (
+                    props: VueUiOptionFullscreenSlotProps,
+                ) => VNodeChild;
+                optionAltCopy?: () => VNodeChild;
+                optionAnnotator?: (
+                    props: VueUiOptionAnnotatorSlotProps,
+                ) => VNodeChild;
+                ['chart-background']?: () => VNodeChild;
+                svg?: (props: VueUiOnionSvgSlotProps) => VNodeChild;
+                hint?: (
+                    props: VueUiKeyboardNavigationHintSlotProps,
+                ) => VNodeChild;
+                watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
+                source?: () => VNodeChild;
+                skeleton?: () => VNodeChild;
+                legend?: (props: VueUiOnionLegendSlotProps) => VNodeChild;
+                ['tooltip-before']?: (
+                    props: VueUiOnionTooltipSlotProps,
+                ) => VNodeChild;
+                tooltip?: (props: VueUiOnionTooltipSlotProps) => VNodeChild;
+                ['tooltip-after']?: (
+                    props: VueUiOnionTooltipSlotProps,
+                ) => VNodeChild;
+            };
+        };
+    };
 
     export type VueUiVerticalBarDatasetChild = {
         name: string;
