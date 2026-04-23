@@ -852,6 +852,7 @@ function useTooltip({
 
     tooltipTriggerMode.value = triggerMode;
     dataTooltipSlot.value = {
+        config: FINAL_CONFIG.value,
         datapoint: serie,
         serie,
         relativeIndex,
@@ -1482,6 +1483,9 @@ defineExpose({
             <template #menuIcon="{ isOpen, color }" v-if="$slots.menuIcon">
                 <slot name="menuIcon" v-bind="{ isOpen, color }" />
             </template>
+            <template #optionTooltip v-if="$slots.optionTooltip">
+                <slot name="optionTooltip" />
+            </template>
             <template #optionPdf v-if="$slots.optionPdf">
                 <slot name="optionPdf" />
             </template>
@@ -2050,7 +2054,7 @@ defineExpose({
             "
         >
             <div ref="chartLegend">
-                <slot name="legend" v-bind:legend="immutableDataset">
+                <slot name="legend" v-bind:legend="legendSet">
                     <Legend
                         v-if="FINAL_CONFIG.style.chart.legend.show && isDataset"
                         :key="`legend_${legendStep}`"

@@ -10102,7 +10102,10 @@ declare module 'vue-data-ui' {
         theme?: Theme;
         useCssAnimation?: boolean;
         customPalette?: string[];
-        userOptions?: ChartUserOptions;
+        userOptions?: ChartUserOptions<
+            VueUiParallelCoordinatePlotFormattedDatapoint[],
+            VueUiParallelCoordinatePlotConfig
+        >;
         style?: {
             fontFamily?: string;
             chart?: {
@@ -10211,6 +10214,7 @@ declare module 'vue-data-ui' {
             x: number;
             y: number;
         }>;
+        comments: string[];
         id: string;
         name: string;
         pathLength: number;
@@ -10223,7 +10227,7 @@ declare module 'vue-data-ui' {
     export type VueUiParallelCoordinatePlotDatapointSelection = {
         id: string;
         name: string;
-        smmothPath: string;
+        smoothPath: string;
         straightPath: string;
         values: number[];
         datapoints: Array<{
@@ -10247,6 +10251,15 @@ declare module 'vue-data-ui' {
         }>;
     };
 
+    export type VueUiParallelCoordinatePlotFormattedDatapoint = {
+        color: string;
+        id: string;
+        name: string;
+        series: VueUiParallelCoordinatePlotEventDatapoint[];
+        seriesIndex: number;
+        shape: Shape;
+    };
+
     export type VueUiParallelCoordinatePlotExpose = {
         getData(): Promise<
             Array<VueUiParallelCoordinatePlotDatasetItem & Record<string, any>>
@@ -10266,13 +10279,122 @@ declare module 'vue-data-ui' {
         hideSeries(name: string): void;
     };
 
-    export const VueUiParallelCoordinatePlot: DefineComponent<
-        {
-            config?: VueUiParallelCoordinatePlotConfig;
-            dataset: VueUiParallelCoordinatePlotDatasetItem[];
-        },
-        VueUiParallelCoordinatePlotExpose
-    >;
+    export type VueUiParallelCoordinatePlotCommentSlotProps = {
+        plot: {
+            axisIndex: number;
+            color: string;
+            comment: string;
+            datapointIndex: number;
+            name: string;
+            seriesIndex: number;
+            seriesName: string;
+            value: number;
+            x: number;
+            y: number;
+        };
+    };
+
+    export type VueUiParallelCoordinatePlotSvgSlotProps = {
+        svg: {
+            chartHeight: number;
+            chartWidth: number;
+            height: number;
+            width: number;
+            top: number;
+            left: number;
+            right: number;
+            bottom: number;
+            isPrintingImg: boolean;
+            isPrintingSvg: boolean;
+        };
+    };
+
+    export type VueUiParallelCoordinatePlotLegendSlotProps = {
+        legend: Array<
+            VueUiParallelCoordinatePlotFormattedDatapoint & {
+                opacity: number;
+                isSegregated: boolean;
+                segregate: () => void;
+            }
+        >;
+    };
+
+    export type VueUiParallelCoordinatePlotTooltipSlotProps = {
+        config: VueUiParallelCoordinatePlotConfig;
+        datapoint: VueUiParallelCoordinatePlotDatapointSelection;
+        scales: VueUiParallelCoordinatePlotScaleSelection[];
+        serie: VueUiParallelCoordinatePlotEventDatapoint;
+        series: VueUiParallelCoordinatePlotFormattedDatapoint[];
+    };
+
+    export type VueUiParallelCoordinatePlotProps = {
+        config?: VueUiParallelCoordinatePlotConfig;
+        dataset: VueUiParallelCoordinatePlotDatasetItem[];
+    };
+
+    const VueUiParallelCoordinatePlotBase: DefineComponent<VueUiParallelCoordinatePlotProps>;
+
+    export const VueUiParallelCoordinatePlot: typeof VueUiParallelCoordinatePlotBase & {
+        new (): VueUiParallelCoordinatePlotExpose & {
+            $slots: {
+                ['annotator-action-close']?: () => VNodeChild;
+                ['annotator-action-color']?: (
+                    props: VueUiAnnotatorActionColorSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-draw']?: (
+                    props: VueUiAnnotatorActionDrawSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-undo']?: (
+                    props: VueUiAnnotatorActionUndoSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-redo']?: (
+                    props: VueUiAnnotatorActionRedoSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-delete']?: (
+                    props: VueUiAnnotatorActionDeleteSlotProps,
+                ) => VNodeChild;
+                menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
+                optionTooltip?: () => VNodeChild;
+                optionPdf?: () => VNodeChild;
+                optionCsv?: () => VNodeChild;
+                optionImg?: () => VNodeChild;
+                optionSvg?: () => VNodeChild;
+                optionTable?: () => VNodeChild;
+                optionLabels?: () => VNodeChild;
+                optionFullscreen?: (
+                    props: VueUiOptionFullscreenSlotProps,
+                ) => VNodeChild;
+                optionAltCopy?: () => VNodeChild;
+                optionAnnotator?: (
+                    props: VueUiOptionAnnotatorSlotProps,
+                ) => VNodeChild;
+                ['plot-comment']?: (
+                    props: VueUiParallelCoordinatePlotCommentSlotProps,
+                ) => VNodeChild;
+                svg?: (
+                    props: VueUiParallelCoordinatePlotSvgSlotProps,
+                ) => VNodeChild;
+                hint?: (
+                    props: VueUiKeyboardNavigationHintSlotProps,
+                ) => VNodeChild;
+                watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
+                source?: () => VNodeChild;
+                skeleton?: () => VNodeChild;
+                legend?: (
+                    props: VueUiParallelCoordinatePlotLegendSlotProps,
+                ) => VNodeChild;
+                ['tooltip-before']?: (
+                    props: VueUiParallelCoordinatePlotTooltipSlotProps,
+                ) => VNodeChild;
+                tooltip?: (
+                    props: VueUiParallelCoordinatePlotTooltipSlotProps,
+                ) => VNodeChild;
+                ['tooltip-after']?: (
+                    props: VueUiParallelCoordinatePlotTooltipSlotProps,
+                ) => VNodeChild;
+            };
+        };
+    };
 
     export type VueUiTimerConfig = {
         type?: 'stopwatch';

@@ -1210,7 +1210,7 @@
         "VueUiMoodRadar": true,
         "VueUiNestedDonuts": true,
         "VueUiOnion": true,
-        "VueUiParallelCoordinatePlot": false,
+        "VueUiParallelCoordinatePlot": true,
         "VueUiQuadrant": false,
         "VueUiQuickChart": false,
         "VueUiRadar": false,
@@ -1247,7 +1247,7 @@
       "customCheckList": {},
       "id": "3846f04c-685f-4509-8042-87b9c0b7ec33",
       "createdAt": 1775989842046,
-      "updatedAt": 1776951810165
+      "updatedAt": 1776956644133
     },
     {
       "title": "Expose more methods",
