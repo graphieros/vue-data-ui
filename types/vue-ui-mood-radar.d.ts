@@ -1,4 +1,25 @@
-import type { DefineComponent } from 'vue';
+import type { DefineComponent, VNodeChild } from 'vue';
+
+import type {
+    VueUiMoodRadarDataset,
+    VueUiMoodRadarDatapoint,
+    VueUiMoodRadarConfig,
+    VueUiMoodRadarExpose,
+    VueUiMoodRadarEvent,
+    VueUiMoodRadarProps,
+    VueUiAnnotatorActionColorSlotProps,
+    VueUiAnnotatorActionDrawSlotProps,
+    VueUiAnnotatorActionUndoSlotProps,
+    VueUiAnnotatorActionRedoSlotProps,
+    VueUiAnnotatorActionDeleteSlotProps,
+    VueUiMenuIconSlotProps,
+    VueUiOptionFullscreenSlotProps,
+    VueUiOptionAnnotatorSlotProps,
+    VueUiMoodRadarSvgSlotProps,
+    VueUiKeyboardNavigationHintSlotProps,
+    VueUiWatermarkSlotProps,
+    VueUiMoodRadarLegendSlotProps,
+} from 'vue-data-ui';
 
 export type {
     VueUiMoodRadarDataset,
@@ -6,15 +27,65 @@ export type {
     VueUiMoodRadarConfig,
     VueUiMoodRadarExpose,
     VueUiMoodRadarEvent,
-} from 'vue-data-ui';
+    VueUiMoodRadarProps,
+    VueUiAnnotatorActionColorSlotProps,
+    VueUiAnnotatorActionDrawSlotProps,
+    VueUiAnnotatorActionUndoSlotProps,
+    VueUiAnnotatorActionRedoSlotProps,
+    VueUiAnnotatorActionDeleteSlotProps,
+    VueUiMenuIconSlotProps,
+    VueUiOptionFullscreenSlotProps,
+    VueUiOptionAnnotatorSlotProps,
+    VueUiMoodRadarSvgSlotProps,
+    VueUiKeyboardNavigationHintSlotProps,
+    VueUiWatermarkSlotProps,
+    VueUiMoodRadarLegendSlotProps,
+};
 
-declare const VueUiMoodRadar: DefineComponent<
-    {
-        dataset: VueUiMoodRadarDataset;
-        config?: VueUiMoodRadarConfig;
-    },
-    VueUiMoodRadarExpose
->;
+declare const VueUiMoodRadarBase: DefineComponent<VueUiMoodRadarProps>;
+
+export const VueUiMoodRadar: typeof VueUiMoodRadarBase & {
+    new (): VueUiMoodRadarExpose & {
+        $slots: {
+            ['annotator-action-close']?: () => VNodeChild;
+            ['annotator-action-color']?: (
+                props: VueUiAnnotatorActionColorSlotProps,
+            ) => VNodeChild;
+            ['annotator-action-draw']?: (
+                props: VueUiAnnotatorActionDrawSlotProps,
+            ) => VNodeChild;
+            ['annotator-action-undo']?: (
+                props: VueUiAnnotatorActionUndoSlotProps,
+            ) => VNodeChild;
+            ['annotator-action-redo']?: (
+                props: VueUiAnnotatorActionRedoSlotProps,
+            ) => VNodeChild;
+            ['annotator-action-delete']?: (
+                props: VueUiAnnotatorActionDeleteSlotProps,
+            ) => VNodeChild;
+            menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
+            optionPdf?: () => VNodeChild;
+            optionCsv?: () => VNodeChild;
+            optionImg?: () => VNodeChild;
+            optionSvg?: () => VNodeChild;
+            optionTable?: () => VNodeChild;
+            optionFullscreen?: (
+                props: VueUiOptionFullscreenSlotProps,
+            ) => VNodeChild;
+            optionAltCopy?: () => VNodeChild;
+            optionAnnotator?: (
+                props: VueUiOptionAnnotatorSlotProps,
+            ) => VNodeChild;
+            ['chart-background']?: () => VNodeChild;
+            svg?: (props: VueUiMoodRadarSvgSlotProps) => VNodeChild;
+            hint?: (props: VueUiKeyboardNavigationHintSlotProps) => VNodeChild;
+            watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
+            legend?: (props: VueUiMoodRadarLegendSlotProps) => VNodeChild;
+            source?: () => VNodeChild;
+            skeleton?: () => VNodeChild;
+        };
+    };
+};
 
 export default VueUiMoodRadar;
 export { VueUiMoodRadar };

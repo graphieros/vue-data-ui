@@ -1702,6 +1702,7 @@ declare module 'vue-data-ui' {
         value: number;
         proportion: number;
         color: string;
+        onSelect: () => void;
     };
 
     export type VueUiMoodRadarConfig = {
@@ -1786,7 +1787,10 @@ declare module 'vue-data-ui' {
                 roundingPercentage?: number;
             };
         };
-        userOptions?: ChartUserOptions;
+        userOptions?: ChartUserOptions<
+            VueUiMoodRadarDatapoint[],
+            VueUiMoodRadarConfig
+        >;
     };
 
     export type VueUiMoodRadarExpose = {
@@ -1809,13 +1813,70 @@ declare module 'vue-data-ui' {
         toggleFullscreen(): void;
     };
 
-    export const VueUiMoodRadar: DefineComponent<
-        {
-            dataset: VueUiMoodRadarDataset;
-            config?: VueUiMoodRadarConfig;
-        },
-        VueUiMoodRadarExpose
-    >;
+    export type VueUiMoodRadarSvgSlotProps = {
+        svg: {
+            height: number;
+            isPrintingImg: boolean;
+            isPrintingSvg: boolean;
+            width: number;
+        };
+    };
+
+    export type VueUiMoodRadarLegendSlotProps = {
+        legend: VueUiMoodRadarDatapoint[];
+    };
+
+    export type VueUiMoodRadarProps = {
+        dataset: VueUiMoodRadarDataset;
+        config?: VueUiMoodRadarConfig;
+    };
+
+    const VueUiMoodRadarBase: DefineComponent<VueUiMoodRadarProps>;
+
+    export const VueUiMoodRadar: typeof VueUiMoodRadarBase & {
+        new (): VueUiMoodRadarExpose & {
+            $slots: {
+                ['annotator-action-close']?: () => VNodeChild;
+                ['annotator-action-color']?: (
+                    props: VueUiAnnotatorActionColorSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-draw']?: (
+                    props: VueUiAnnotatorActionDrawSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-undo']?: (
+                    props: VueUiAnnotatorActionUndoSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-redo']?: (
+                    props: VueUiAnnotatorActionRedoSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-delete']?: (
+                    props: VueUiAnnotatorActionDeleteSlotProps,
+                ) => VNodeChild;
+                menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
+                optionPdf?: () => VNodeChild;
+                optionCsv?: () => VNodeChild;
+                optionImg?: () => VNodeChild;
+                optionSvg?: () => VNodeChild;
+                optionTable?: () => VNodeChild;
+                optionFullscreen?: (
+                    props: VueUiOptionFullscreenSlotProps,
+                ) => VNodeChild;
+                optionAltCopy?: () => VNodeChild;
+                optionAnnotator?: (
+                    props: VueUiOptionAnnotatorSlotProps,
+                ) => VNodeChild;
+                ['chart-background']?: () => VNodeChild;
+                svg?: (props: VueUiMoodRadarSvgSlotProps) => VNodeChild;
+                hint?: (
+                    props: VueUiKeyboardNavigationHintSlotProps,
+                ) => VNodeChild;
+                watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
+                legend?: (props: VueUiMoodRadarLegendSlotProps) => VNodeChild;
+                source?: () => VNodeChild;
+                skeleton?: () => VNodeChild;
+            };
+        };
+    };
 
     export type VueUiIconName =
         | 'accessibility'

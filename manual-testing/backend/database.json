@@ -1207,7 +1207,7 @@
         "VueUiKpi": true,
         "VueUiMiniLoader": true,
         "VueUiMolecule": true,
-        "VueUiMoodRadar": false,
+        "VueUiMoodRadar": true,
         "VueUiNestedDonuts": false,
         "VueUiOnion": false,
         "VueUiParallelCoordinatePlot": false,
@@ -1247,7 +1247,7 @@
       "customCheckList": {},
       "id": "3846f04c-685f-4509-8042-87b9c0b7ec33",
       "createdAt": 1775989842046,
-      "updatedAt": 1776919067354
+      "updatedAt": 1776920824951
     },
     {
       "title": "Expose more methods",
