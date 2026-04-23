@@ -81,6 +81,9 @@ const TsVueUiMolecule = defineAsyncComponent(
 const TsVueUiMoodRadar = defineAsyncComponent(
     () => import('./components/charts/ts-vue-ui-mood-radar.vue'),
 );
+const TsVueUiNestedDonuts = defineAsyncComponent(
+    () => import('./components/charts/ts-vue-ui-nested-donuts.vue'),
+);
 
 const components = shallowRef([
     { name: 'VueUiXy' },
@@ -110,6 +113,7 @@ const components = shallowRef([
     { name: 'VueUiKpi' },
     { name: 'VueUiMolecule' },
     { name: 'VueUiMoodRadar' },
+    { name: 'VueUiNestedDonuts' },
 ]);
 
 const selectedComponent = shallowRef(components.value[0]);
@@ -162,6 +166,9 @@ const selectedComponent = shallowRef(components.value[0]);
         <TsVueUiKpi v-if="selectedComponent?.name === 'VueUiKpi'" />
         <TsVueUiMolecule v-if="selectedComponent?.name === 'VueUiMolecule'" />
         <TsVueUiMoodRadar v-if="selectedComponent?.name === 'VueUiMoodRadar'" />
+        <TsVueUiNestedDonuts
+            v-if="selectedComponent?.name === 'VueUiNestedDonuts'"
+        />
     </div>
 </template>
 
