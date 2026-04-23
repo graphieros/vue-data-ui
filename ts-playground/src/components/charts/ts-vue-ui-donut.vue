@@ -2,7 +2,7 @@
 /**
  * This playground showcases all the slots and their implementations for <VueUiDonut>
  */
-import { computed } from 'vue';
+import { ref, computed, type ComponentInstance, onMounted } from 'vue';
 import {
     VueUiDonut,
     type VueUiDonutConfig,
@@ -372,11 +372,21 @@ const config = computed<VueUiDonutConfig>(() => {
         },
     });
 });
+
+const donut = ref<ComponentInstance<typeof VueUiDonut> | null>(null);
+
+onMounted(async () => {
+    if (donut.value) {
+        let data;
+        data = await donut.value.getData();
+        console.table(data);
+    }
+});
 </script>
 
 <template>
     <div>
-        <VueUiDonut :dataset :config>
+        <VueUiDonut :dataset :config ref="donut">
             <template #legend="{ legend }">
                 <DonutLegend :items="legend" />
             </template>

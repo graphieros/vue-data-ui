@@ -2424,7 +2424,28 @@ defineExpose({
                                 >
                                     <slot
                                         name="datapoint"
-                                        v-bind="{ datapoint: plot }"
+                                        v-bind="{
+                                            datapoint: {
+                                                ...plot,
+                                                onEnter: () =>
+                                                    useTooltip(
+                                                        category,
+                                                        plot,
+                                                        i,
+                                                    ),
+                                                onLeave: () =>
+                                                    onTrapLeave(plot, i),
+                                                onClick: () =>
+                                                    selectPlot(
+                                                        category,
+                                                        plot,
+                                                        i,
+                                                    ),
+                                                isSelected:
+                                                    hoveredPlotId &&
+                                                    plot.uid === hoveredPlotId,
+                                            },
+                                        }"
                                     />
                                 </foreignObject>
 
@@ -2442,6 +2463,27 @@ defineExpose({
                                     "
                                     fill="transparent"
                                     style="pointer-events: none"
+                                />
+                            </g>
+                        </template>
+
+                        <template v-else-if="$slots.datapointSvg && !loading">
+                            <g v-for="plot in category.series" :key="plot.uid">
+                                <slot
+                                    name="datapointSvg"
+                                    v-bind="{
+                                        datapoint: {
+                                            ...plot,
+                                            onEnter: () =>
+                                                useTooltip(category, plot, i),
+                                            onLeave: () => onTrapLeave(plot, i),
+                                            onClick: () =>
+                                                selectPlot(category, plot, i),
+                                            isSelected:
+                                                hoveredPlotId &&
+                                                plot.uid === hoveredPlotId,
+                                        },
+                                    }"
                                 />
                             </g>
                         </template>

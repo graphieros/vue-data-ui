@@ -6568,7 +6568,7 @@ declare module 'vue-data-ui' {
             };
         };
         userOptions?: ChartUserOptions<
-            VueUiQuadrantDatapoint[],
+            Array<VueUiQuadrantDatasetItem & { id: string }>,
             VueUiQuadrantConfig
         >;
         translations?: {
@@ -6630,13 +6630,120 @@ declare module 'vue-data-ui' {
         hideSeries(name: string): void;
     };
 
-    export const VueUiQuadrant: DefineComponent<
-        {
-            dataset: VueUiQuadrantDatasetItem[];
-            config?: VueUiQuadrantConfig;
-        },
-        VueUiQuadrantExpose
-    >;
+    export type VueUiQuadrantDatapointSlotProps = {
+        datapoint: VueUiQuadrantDatapoint & {
+            onEnter: () => void;
+            onLeave: () => void;
+            onClick: () => void;
+            isSelected: boolean;
+        };
+    };
+
+    export type VueUiQuadrantSvgSlotProps = {
+        svg: {
+            height: number;
+            usableHeight: number;
+            width: number;
+            usableWidth: number;
+            top: number;
+            left: number;
+            right: number;
+            bottom: number;
+            centerX: number;
+            centerY: number;
+            padding: number;
+            isPrintingImg: boolean;
+            isPrintingSvg: boolean;
+        };
+    };
+
+    export type VueUiQuadrantLegendItem = {
+        color: string;
+        id: string;
+        isSegregated: boolean;
+        name: string;
+        opacity: number;
+        segregate: () => void;
+        shape: Shape;
+    };
+
+    export type VueUiQuadrantLegendSlotProps = {
+        legend: VueUiQuadrantLegendItem[];
+    };
+
+    export type VueUiQuadrantTooltipSlotProps = {
+        config: VueUiQuadrantConfig;
+        datapoint: VueUiQuadrantDatapoint;
+        series: VueUiQuadrantSerie[];
+        seriesIndex: number;
+    };
+
+    export type VueUiQuadrantProps = {
+        dataset: VueUiQuadrantDatasetItem[];
+        config?: VueUiQuadrantConfig;
+    };
+
+    const VueUiQuadrantBase: DefineComponent<VueUiQuadrantProps>;
+
+    export const VueUiQuadrant: typeof VueUiQuadrantBase & {
+        new (): VueUiQuadrantExpose & {
+            $slots: {
+                ['annotator-action-close']?: () => VNodeChild;
+                ['annotator-action-color']?: (
+                    props: VueUiAnnotatorActionColorSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-draw']?: (
+                    props: VueUiAnnotatorActionDrawSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-undo']?: (
+                    props: VueUiAnnotatorActionUndoSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-redo']?: (
+                    props: VueUiAnnotatorActionRedoSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-delete']?: (
+                    props: VueUiAnnotatorActionDeleteSlotProps,
+                ) => VNodeChild;
+                menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
+                optionTooltip?: () => VNodeChild;
+                optionPdf?: () => VNodeChild;
+                optionCsv?: () => VNodeChild;
+                optionImg?: () => VNodeChild;
+                optionSvg?: () => VNodeChild;
+                optionTable?: () => VNodeChild;
+                optionLabels?: () => VNodeChild;
+                optionFullscreen?: (
+                    props: VueUiOptionFullscreenSlotProps,
+                ) => VNodeChild;
+                optionAltCopy?: () => VNodeChild;
+                optionAnnotator?: (
+                    props: VueUiOptionAnnotatorSlotProps,
+                ) => VNodeChild;
+                ['chart-background']?: () => VNodeChild;
+                datapoint?: (
+                    props: VueUiQuadrantDatapointSlotProps,
+                ) => VNodeChild;
+                datapointSvg?: (
+                    props: VueUiQuadrantDatapointSlotProps,
+                ) => VNodeChild;
+                svg?: (props: VueUiQuadrantSvgSlotProps) => VNodeChild;
+                hint?: (
+                    props: VueUiKeyboardNavigationHintSlotProps,
+                ) => VNodeChild;
+                watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
+                source?: () => VNodeChild;
+                skeleton?: () => VNodeChild;
+                legend?: (props: VueUiQuadrantLegendSlotProps) => VNodeChild;
+                ['tooltip-before']?: (
+                    props: VueUiQuadrantTooltipSlotProps,
+                ) => VNodeChild;
+                tooltip?: (props: VueUiQuadrantTooltipSlotProps) => VNodeChild;
+                ['tooltip-after']?: (
+                    props: VueUiQuadrantTooltipSlotProps,
+                ) => VNodeChild;
+            };
+        };
+    };
 
     export type VueUiGaugeDatasetSerieItem = {
         [key: string]: unknown;
