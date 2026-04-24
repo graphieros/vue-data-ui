@@ -8491,10 +8491,32 @@ declare module 'vue-data-ui' {
         };
     };
 
-    export const VueUiRating: DefineComponent<{
+    export type VueUiRatingLayerSlotProps = {
+        focusedValue: number | undefined;
+        hoveredValue: number | undefined;
+        size: number;
+        value: number;
+    };
+
+    export type VueUiRatingProps = {
         config?: VueUiRatingConfig;
         dataset: VueUiRatingDataset;
-    }>;
+    };
+
+    const VueUiRatingBase: DefineComponent<VueUiRatingProps>;
+
+    export const VueUiRating: typeof VueUiRatingBase & {
+        new (): {
+            $slots: {
+                ['layer-under']?: (
+                    props: VueUiRatingLayerSlotProps,
+                ) => VNodeChild;
+                ['layer-above']?: (
+                    props: VueUiRatingLayerSlotProps,
+                ) => VNodeChild;
+            };
+        };
+    };
 
     export type VueUiSmileyConfig = {
         readonly?: boolean;
