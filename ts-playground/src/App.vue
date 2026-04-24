@@ -102,6 +102,9 @@ const TsVueUiRadar = defineAsyncComponent(
 const TsVueUiRating = defineAsyncComponent(
     () => import('./components/charts/ts-vue-ui-rating.vue'),
 );
+const TsVueUiRelationCircle = defineAsyncComponent(
+    () => import('./components/charts/ts-vue-ui-relation-circle.vue'),
+);
 
 const components = shallowRef([
     { name: 'VueUiXy' },
@@ -138,6 +141,7 @@ const components = shallowRef([
     { name: 'VueUiQuickChart' },
     { name: 'VueUiRadar' },
     { name: 'VueUiRating' },
+    { name: 'VueUiRelationCircle' },
 ]);
 
 const selectedComponent = shallowRef(components.value[0]);
@@ -203,6 +207,9 @@ const selectedComponent = shallowRef(components.value[0]);
         />
         <TsVueUiRadar v-if="selectedComponent?.name === 'VueUiRadar'" />
         <TsVueUiRating v-if="selectedComponent?.name === 'VueUiRating'" />
+        <TsVueUiRelationCircle
+            v-if="selectedComponent?.name === 'VueUiRelationCircle'"
+        />
     </div>
 </template>
 

@@ -1215,7 +1215,7 @@
         "VueUiQuickChart": true,
         "VueUiRadar": true,
         "VueUiRating": true,
-        "VueUiRelationCircle": false,
+        "VueUiRelationCircle": true,
         "VueUiRidgeline": false,
         "VueUiRings": false,
         "VueUiScatter": false,
@@ -1247,7 +1247,7 @@
       "customCheckList": {},
       "id": "3846f04c-685f-4509-8042-87b9c0b7ec33",
       "createdAt": 1775989842046,
-      "updatedAt": 1777006988381
+      "updatedAt": 1777009425847
     },
     {
       "title": "Expose more methods",

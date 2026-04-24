@@ -3156,7 +3156,10 @@ declare module 'vue-data-ui' {
             };
             title?: ChartTitle;
         };
-        userOptions?: ChartUserOptions;
+        userOptions?: ChartUserOptions<
+            VueUiRelationCircleDatasetItem[],
+            VueUiRelationCircleConfig
+        >;
     };
 
     export type VueUiRelationCircleDatasetItem = {
@@ -3188,13 +3191,75 @@ declare module 'vue-data-ui' {
         toggleFullscreen(): void;
     };
 
-    export const VueUiRelationCircle: DefineComponent<
-        {
-            config?: VueUiRelationCircleConfig;
-            dataset: VueUiRelationCircleDatasetItem[];
-        },
-        VueUiRelationCircleExpose
-    >;
+    export type VueUiRelationCircleDataLabelSlotProps = {
+        color: string;
+        fontSize: number;
+        key: number;
+        weight: number;
+        x: number;
+        y: number;
+    };
+
+    export type VueUiRelationCircleSvgSlotProps = {
+        svg: {
+            height: number;
+            isPrintingImg: boolean;
+            isPrintingSvg: boolean;
+            width: number;
+        };
+    };
+
+    export type VueUiRelationCircleProps = {
+        config?: VueUiRelationCircleConfig;
+        dataset: VueUiRelationCircleDatasetItem[];
+    };
+
+    const VueUiRelationCircleBase: DefineComponent<VueUiRelationCircleProps>;
+
+    export const VueUiRelationCircle: typeof VueUiRelationCircleBase & {
+        new (): VueUiRelationCircleExpose & {
+            $slots: {
+                ['annotator-action-close']?: () => VNodeChild;
+                ['annotator-action-color']?: (
+                    props: VueUiAnnotatorActionColorSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-draw']?: (
+                    props: VueUiAnnotatorActionDrawSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-undo']?: (
+                    props: VueUiAnnotatorActionUndoSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-redo']?: (
+                    props: VueUiAnnotatorActionRedoSlotProps,
+                ) => VNodeChild;
+                ['annotator-action-delete']?: (
+                    props: VueUiAnnotatorActionDeleteSlotProps,
+                ) => VNodeChild;
+                menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
+                optionPdf?: () => VNodeChild;
+                optionImg?: () => VNodeChild;
+                optionSvg?: () => VNodeChild;
+                optionFullscreen?: (
+                    props: VueUiOptionFullscreenSlotProps,
+                ) => VNodeChild;
+                optionAltCopy?: () => VNodeChild;
+                optionAnnotator?: (
+                    props: VueUiOptionAnnotatorSlotProps,
+                ) => VNodeChild;
+                ['chart-background']?: () => VNodeChild;
+                dataLabel?: (
+                    props: VueUiRelationCircleDataLabelSlotProps,
+                ) => VNodeChild;
+                svg?: (props: VueUiRelationCircleSvgSlotProps) => VNodeChild;
+                hint?: (
+                    props: VueUiKeyboardNavigationHintSlotProps,
+                ) => VNodeChild;
+                watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
+                source?: () => VNodeChild;
+                skeleton?: () => VNodeChild;
+            };
+        };
+    };
 
     export type VueUiAnnotatorConfig = {
         alwaysVisible?: boolean;
