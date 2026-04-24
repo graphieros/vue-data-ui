@@ -105,6 +105,9 @@ const TsVueUiRating = defineAsyncComponent(
 const TsVueUiRelationCircle = defineAsyncComponent(
     () => import('./components/charts/ts-vue-ui-relation-circle.vue'),
 );
+const TsVueUiRidgeline = defineAsyncComponent(
+    () => import('./components/charts/ts-vue-ui-ridgeline.vue'),
+);
 
 const components = shallowRef([
     { name: 'VueUiXy' },
@@ -142,6 +145,7 @@ const components = shallowRef([
     { name: 'VueUiRadar' },
     { name: 'VueUiRating' },
     { name: 'VueUiRelationCircle' },
+    { name: 'VueUiRidgeline' },
 ]);
 
 const selectedComponent = shallowRef(components.value[0]);
@@ -210,6 +214,7 @@ const selectedComponent = shallowRef(components.value[0]);
         <TsVueUiRelationCircle
             v-if="selectedComponent?.name === 'VueUiRelationCircle'"
         />
+        <TsVueUiRidgeline v-if="selectedComponent?.name === 'VueUiRidgeline'" />
     </div>
 </template>
 
