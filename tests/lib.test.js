@@ -4814,9 +4814,7 @@ describe('createStepperPath', () => {
             { x: 2, y: 20, value: 20 },
             { x: 3, y: 5, value: 5 },
         ];
-        expect(createStepperPath(points)).toBe(
-            '1,10 L2,10 L2,20 L3,20 L3,5',
-        );
+        expect(createStepperPath(points)).toBe('1,10 L2,10 L2,20 L3,20 L3,5');
     });
 
     test('creates a closed stepper area path when zero is provided', () => {

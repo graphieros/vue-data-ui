@@ -111,6 +111,9 @@ const TsVueUiRidgeline = defineAsyncComponent(
 const TsVueUiRings = defineAsyncComponent(
     () => import('./components/charts/ts-vue-ui-rings.vue'),
 );
+const TsVueUiScatter = defineAsyncComponent(
+    () => import('./components/charts/ts-vue-ui-scatter.vue'),
+);
 
 const components = shallowRef([
     { name: 'VueUiXy' },
@@ -150,6 +153,7 @@ const components = shallowRef([
     { name: 'VueUiRelationCircle' },
     { name: 'VueUiRidgeline' },
     { name: 'VueUiRings' },
+    { name: 'VueUiScatter' },
 ]);
 
 const selectedComponent = shallowRef(components.value[0]);
@@ -220,6 +224,7 @@ const selectedComponent = shallowRef(components.value[0]);
         />
         <TsVueUiRidgeline v-if="selectedComponent?.name === 'VueUiRidgeline'" />
         <TsVueUiRings v-if="selectedComponent?.name === 'VueUiRings'" />
+        <TsVueUiScatter v-if="selectedComponent?.name === 'VueUiScatter'" />
     </div>
 </template>
 

@@ -4358,6 +4358,7 @@ declare module 'vue-data-ui' {
 
     export type VueUiScatterDatapoint = {
         [key: string]: any;
+        clusterId: string;
         clusterName: string | undefined;
         color: string;
         deviation: number;
@@ -4370,6 +4371,7 @@ declare module 'vue-data-ui' {
             name: string;
             weight?: number;
         };
+        weight: number;
         x: number;
         y: number;
     };
@@ -4385,10 +4387,12 @@ declare module 'vue-data-ui' {
             coefficient: number;
         };
         id: string;
-        label: { x: number; y: number };
+        isSegregated: boolean;
         name: string;
         opacity: number;
         plots: VueUiScatterDatapoint[];
+        segregate: () => void;
+        label: { x: number; y: number };
         shape: Shape | null;
         values: Array<{ x: number; y: number; name: string }>;
     };
@@ -4408,6 +4412,36 @@ declare module 'vue-data-ui' {
         hideSeries(name: string): void;
     };
 
+    export type VueUiScatterSvgSlotProps = {
+        svg: {
+            data: VueUiScatterSeries[];
+            drawingArea: {
+                bottom: number;
+                height: number;
+                left: number;
+                right: number;
+                top: number;
+                width: number;
+                zero: { x: number; y: number };
+            };
+            height: number;
+            isPrintingImg: boolean;
+            isPrintingSvg: boolean;
+            width: number;
+        };
+    };
+
+    export type VueUiLegendSlotProps = {
+        legend: VueUiScatterSeries[];
+    };
+
+    export type VueUiScatterTooltipSlotProps = {
+        config: VueUiScatterConfig;
+        datapoint: VueUiScatterDatapoint;
+        series: VueUiScatterSeries[];
+        seriesIndex: number;
+    };
+
     export type VueUiScatterProps = {
         config?: VueUiScatterConfig;
         dataset: VueUiScatterDatasetItem[];
@@ -4417,7 +4451,37 @@ declare module 'vue-data-ui' {
 
     export const VueUiScatter: typeof VueUiScatterBase & {
         new (): VueUiScatterExpose & {
-            $slots: CommonAnnotatorSlots & {};
+            $slots: CommonAnnotatorSlots & {
+                menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
+                optionTooltip?: () => VNodeChild;
+                optionPdf?: () => VNodeChild;
+                optionCsv?: () => VNodeChild;
+                optionImg?: () => VNodeChild;
+                optionSvg?: () => VNodeChild;
+                optionTable?: () => VNodeChild;
+                optionFullscreen?: (
+                    props: VueUiOptionFullscreenSlotProps,
+                ) => VNodeChild;
+                optionAltCopy?: () => VNodeChild;
+                optionAnnotator?: (
+                    props: VueUiOptionAnnotatorSlotProps,
+                ) => VNodeChild;
+                svg?: (props: VueUiScatterSvgSlotProps) => VNodeChild;
+                hint?: (
+                    props: VueUiKeyboardNavigationHintSlotProps,
+                ) => VNodeChild;
+                watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
+                source?: () => VNodeChild;
+                skeleton?: () => VNodeChild;
+                legend?: (props: VueUiLegendSlotProps) => VNodeChild;
+                ['tooltip-before']?: (
+                    props: VueUiScatterTooltipSlotProps,
+                ) => VNodeChild;
+                tooltip?: (props: VueUiScatterTooltipSlotProps) => VNodeChild;
+                ['tooltip-after']?: (
+                    props: VueUiScatterTooltipSlotProps,
+                ) => VNodeChild;
+            };
         };
     };
 
