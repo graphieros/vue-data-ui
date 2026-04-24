@@ -420,6 +420,7 @@ onMounted(() => {
                 dataLabels: false,
                 smooth: true,
                 useArea: false,
+                useStepper: true,
                 useProgression: true,
                 // freestyle:
                 marks: [10, 20],

@@ -1365,6 +1365,63 @@ export function createStraightPath(points) {
     return arr.join(' ').trim();
 }
 
+export function createStepperPath(points, zero = null) {
+    const isValidPoint = (point) =>
+        point &&
+        point.value !== null &&
+        point.value !== undefined &&
+        Number.isFinite(point.x) &&
+        Number.isFinite(point.y);
+
+    const segments = [];
+    let currentSegment = [];
+
+    for (const point of points) {
+        if (!isValidPoint(point)) {
+            if (currentSegment.length) {
+                segments.push(currentSegment);
+            }
+            currentSegment = [];
+        } else {
+            currentSegment.push(point);
+        }
+    }
+
+    if (currentSegment.length) {
+        segments.push(currentSegment);
+    }
+
+    return segments
+        .map((segment) => {
+            if (!segment.length) {
+                return '';
+            }
+
+            const path = [
+                `${checkNaN(segment[0].x)},${checkNaN(segment[0].y)}`,
+            ];
+
+            for (let i = 1; i < segment.length; i += 1) {
+                const previousPoint = segment[i - 1];
+                const currentPoint = segment[i];
+
+                path.push(
+                    `L${checkNaN(currentPoint.x)},${checkNaN(previousPoint.y)}`,
+                    `L${checkNaN(currentPoint.x)},${checkNaN(currentPoint.y)}`,
+                );
+            }
+
+            if (zero !== null && zero !== undefined) {
+                path.unshift(`${checkNaN(segment[0].x)},${checkNaN(zero)}`);
+                path.push(`${checkNaN(segment.at(-1).x)},${checkNaN(zero)}`);
+            }
+
+            return path.join(' ');
+        })
+        .filter(Boolean)
+        .join(';');
+}
+
 // Monotone cubic interpolation
 export function createSmoothPath(points) {
     if (points.length < 2) return '0,0';
@@ -4614,6 +4671,7 @@ const lib = {
     createPolarAreas,
     createPolygonPath,
     createShadesOfGrey,
+    createStepperPath,
     createSmoothAreaSegments,
     createSmoothPath,
     createSmoothPathVertical,

@@ -4408,13 +4408,18 @@ declare module 'vue-data-ui' {
         hideSeries(name: string): void;
     };
 
-    export const VueUiScatter: DefineComponent<
-        {
-            config?: VueUiScatterConfig;
-            dataset: VueUiScatterDatasetItem[];
-        },
-        VueUiScatterExpose
-    >;
+    export type VueUiScatterProps = {
+        config?: VueUiScatterConfig;
+        dataset: VueUiScatterDatasetItem[];
+    };
+
+    const VueUiScatterBase: DefineComponent<VueUiScatterProps>;
+
+    export const VueUiScatter: typeof VueUiScatterBase & {
+        new (): VueUiScatterExpose & {
+            $slots: CommonAnnotatorSlots & {};
+        };
+    };
 
     export type VueUiHeatmapConfig = {
         skeletonDataset?: VueUiBuiltInSkeletonDataset<
@@ -5048,6 +5053,7 @@ declare module 'vue-data-ui' {
         useTag?: 'start' | 'end' | 'none';
         showSerieName?: 'start' | 'end';
         useArea?: boolean;
+        useStepper?: boolean;
         dataLabels?: boolean;
         useProgression?: boolean;
         scaleSteps?: number;

@@ -1288,6 +1288,23 @@
       "id": "fa6454ad-e3e6-4d3c-8019-8ad0eedd296e",
       "createdAt": 1776606115056,
       "updatedAt": 1776606115056
+    },
+    {
+      "title": "Stepper",
+      "component": "VueUiXy",
+      "description": "Add stepper option for line types #329",
+      "priority": 2,
+      "author": "graphieros",
+      "done": true,
+      "exchanges": [],
+      "type": "feature",
+      "withComponentCheckList": false,
+      "checkList": {},
+      "withCustomCheckList": false,
+      "customCheckList": {},
+      "id": "f7f87666-103d-43e6-9902-c7cfeb2d3d59",
+      "createdAt": 1777064557806,
+      "updatedAt": 1777064563814
     }
   ]
 }

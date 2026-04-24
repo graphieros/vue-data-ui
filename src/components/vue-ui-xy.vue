@@ -30,6 +30,7 @@ import {
     createIndividualArea,
     createIndividualAreaWithCuts,
     createPolygonPath,
+    createStepperPath,
     createSmoothAreaSegments,
     createSmoothPath,
     createSmoothPathWithCuts,
@@ -2700,6 +2701,18 @@ const lineSet = computed(() => {
                       autoScalePlots.filter((p) => p.value !== null),
                   );
 
+            const stepper = createStepperPath(
+                FINAL_CONFIG.value.line.cutNullValues
+                    ? plots
+                    : plots.filter((p) => p.value !== null),
+            );
+
+            const autoScaleStepper = createStepperPath(
+                FINAL_CONFIG.value.line.cutNullValues
+                    ? autoScalePlots
+                    : autoScalePlots.filter((p) => p.value !== null),
+            );
+
             const dashedStraight = hasDashedSegments
                 ? createStraightPathWithCutsSegments(
                       FINAL_CONFIG.value.line.cutNullValues
@@ -2800,6 +2813,15 @@ const lineSet = computed(() => {
                 areaZeroPosition,
             );
 
+            const stepperAreaPlots = datapoint.autoScaling
+                ? autoScalePlots
+                : plots;
+
+            const stepperAreaPlotsWithNullPolicy = FINAL_CONFIG.value.line
+                .cutNullValues
+                ? stepperAreaPlots
+                : stepperAreaPlots.filter((p) => p.value !== null);
+
             return {
                 ...datapoint,
                 temperatureColors: datapoint.temperatureColors
@@ -2822,52 +2844,79 @@ const lineSet = computed(() => {
                 zeroPosition: datapoint.autoScaling
                     ? autoScaleZeroPosition
                     : zeroPosition,
-                curve: datapoint.autoScaling ? autoScaleCurve : curve,
+                curve: datapoint.useStepper
+                    ? datapoint.autoScaling
+                        ? autoScaleStepper
+                        : stepper
+                    : datapoint.autoScaling
+                      ? autoScaleCurve
+                      : curve,
                 plots: datapoint.autoScaling ? autoScalePlots : plots,
                 dashedStraight,
                 dashedSmooth,
                 hasDashedSegments,
                 area: !datapoint.useArea
                     ? ''
-                    : mutableConfig.value.useIndividualScale
-                      ? FINAL_CONFIG.value.line.cutNullValues
+                    : datapoint.useStepper
+                      ? createStepperPath(
+                            stepperAreaPlotsWithNullPolicy,
+                            adustedAreaZeroPosition,
+                        )
+                      : mutableConfig.value.useIndividualScale
+                        ? FINAL_CONFIG.value.line.cutNullValues
+                            ? createIndividualAreaWithCuts(
+                                  datapoint.autoScaling
+                                      ? autoScalePlots
+                                      : plots,
+                                  adustedAreaZeroPosition,
+                              )
+                            : createIndividualArea(
+                                  datapoint.autoScaling
+                                      ? autoScalePlots.filter(
+                                            (p) => p.value !== null,
+                                        )
+                                      : plots.filter((p) => p.value !== null),
+                                  adustedAreaZeroPosition,
+                              )
+                        : FINAL_CONFIG.value.line.cutNullValues
                           ? createIndividualAreaWithCuts(
-                                datapoint.autoScaling ? autoScalePlots : plots,
+                                plots,
                                 adustedAreaZeroPosition,
                             )
                           : createIndividualArea(
-                                datapoint.autoScaling
-                                    ? autoScalePlots.filter(
-                                          (p) => p.value !== null,
-                                      )
-                                    : plots.filter((p) => p.value !== null),
+                                plots.filter((p) => p.value !== null),
                                 adustedAreaZeroPosition,
-                            )
-                      : FINAL_CONFIG.value.line.cutNullValues
-                        ? createIndividualAreaWithCuts(
-                              plots,
-                              adustedAreaZeroPosition,
-                          )
-                        : createIndividualArea(
-                              plots.filter((p) => p.value !== null),
-                              adustedAreaZeroPosition,
-                          ),
+                            ),
                 curveAreas: !datapoint.useArea
                     ? []
-                    : createSmoothAreaSegments(
-                          datapoint.autoScaling
-                              ? FINAL_CONFIG.value.line.cutNullValues
-                                  ? autoScalePlots
-                                  : autoScalePlots.filter(
-                                        (p) => p.value !== null,
-                                    )
-                              : FINAL_CONFIG.value.line.cutNullValues
-                                ? plots
-                                : plots.filter((p) => p.value !== null),
-                          adustedAreaZeroPosition,
-                          FINAL_CONFIG.value.line.cutNullValues,
-                      ),
-                straight: datapoint.autoScaling ? autoScaleStraight : straight,
+                    : datapoint.useStepper
+                      ? createStepperPath(
+                            stepperAreaPlotsWithNullPolicy,
+                            adustedAreaZeroPosition,
+                        )
+                            .split(';')
+                            .filter(Boolean)
+                            .map((d) => `M${d}Z`)
+                      : createSmoothAreaSegments(
+                            datapoint.autoScaling
+                                ? FINAL_CONFIG.value.line.cutNullValues
+                                    ? autoScalePlots
+                                    : autoScalePlots.filter(
+                                          (p) => p.value !== null,
+                                      )
+                                : FINAL_CONFIG.value.line.cutNullValues
+                                  ? plots
+                                  : plots.filter((p) => p.value !== null),
+                            adustedAreaZeroPosition,
+                            FINAL_CONFIG.value.line.cutNullValues,
+                        ),
+                straight: datapoint.useStepper
+                    ? datapoint.autoScaling
+                        ? autoScaleStepper
+                        : stepper
+                    : datapoint.autoScaling
+                      ? autoScaleStraight
+                      : straight,
                 groupId: scaleGroups.value[datapoint.scaleLabel].groupId,
             };
         });

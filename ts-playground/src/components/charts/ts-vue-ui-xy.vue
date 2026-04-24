@@ -32,12 +32,22 @@ import KeyboardNavigationHint from '../slots/common/keyboard-navigation-hint.vue
 import Watermark from '../slots/common/watermark.vue';
 import Skeleton from '../slots/common/skeleton.vue';
 
+function makeDs(n: number) {
+    const arr = [];
+    for (let i = 0; i < n; i += 1) {
+        arr.push(Math.random() * 100);
+    }
+    return arr;
+}
+
 const dataset = computed<VueUiXyDatasetItem[]>(() => [
     {
         name: 'A',
         type: 'line',
+        useStepper: true,
+        smooth: false,
         useArea: true,
-        series: [20, 13, 8, 5, 3, 2, 1],
+        series: [21, 13, null, 5, 3, 2, 1],
         comments: ['', 'This is a comment'],
     },
     {
@@ -140,7 +150,7 @@ const testPreconfig = computed<VueUiXyConfig>(() => {
                 focusRangeRatio: 0.2,
                 maxWidth: null,
                 minimap: {
-                    show: false,
+                    show: true,
                     selectedColor: '#1f77b4',
                     selectedColorOpacity: 0.2,
                     indicatorColor: '#2D353C',
@@ -559,9 +569,9 @@ const config = computed<VueUiXyConfig>(() => {
 <template>
     <div>
         <VueUiXy :dataset :config>
-            <template #legend="{ legend }">
+            <!-- <template #legend="{ legend }">
                 <XyLegend :items="legend" />
-            </template>
+            </template> -->
 
             <template #reset-action="{ reset }">
                 <CommonResetAction :reset />

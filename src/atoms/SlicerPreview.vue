@@ -15,6 +15,7 @@ import {
     createSmoothPathWithCuts,
     createStraightPath,
     createStraightPathWithCuts,
+    createStepperPath,
     createUid,
     isFunction,
     triggerEvent,
@@ -619,7 +620,7 @@ function makeSmartMapY(min, max, H, lockToRange = false) {
     }
 }
 
-function makeMiniChart(ds, smooth = false) {
+function makeMiniChart(ds, smooth = false, useStepper = false) {
     if (!ds || !ds.length) {
         return {
             fullSet: '',
@@ -687,24 +688,36 @@ function makeMiniChart(ds, smooth = false) {
 
     const fullSet =
         points.length >= 2
-            ? props.smoothMinimap || smooth
-                ? props.cutNullValues
-                    ? createSmoothPathWithCuts(points)
-                    : createSmoothPath(points.filter((p) => p.value != null))
-                : props.cutNullValues
-                  ? createStraightPathWithCuts(points)
-                  : createStraightPath(points.filter((p) => p.value != null))
+            ? useStepper
+                ? createStepperPath(
+                      props.cutNullValues
+                          ? points
+                          : points.filter((p) => p.value != null),
+                  )
+                : props.smoothMinimap || smooth
+                  ? props.cutNullValues
+                      ? createSmoothPathWithCuts(points)
+                      : createSmoothPath(points.filter((p) => p.value != null))
+                  : props.cutNullValues
+                    ? createStraightPathWithCuts(points)
+                    : createStraightPath(points.filter((p) => p.value != null))
             : '';
 
     const selectionSet =
         sliced.length >= 2
-            ? props.smoothMinimap || smooth
-                ? props.cutNullValues
-                    ? createSmoothPathWithCuts(sliced)
-                    : createSmoothPath(sliced.filter((p) => p.value != null))
-                : props.cutNullValues
-                  ? createStraightPathWithCuts(sliced)
-                  : createStraightPath(sliced.filter((p) => p.value != null))
+            ? useStepper
+                ? createStepperPath(
+                      props.cutNullValues
+                          ? sliced
+                          : sliced.filter((p) => p.value != null),
+                  )
+                : props.smoothMinimap || smooth
+                  ? props.cutNullValues
+                      ? createSmoothPathWithCuts(sliced)
+                      : createSmoothPath(sliced.filter((p) => p.value != null))
+                  : props.cutNullValues
+                    ? createStraightPathWithCuts(sliced)
+                    : createStraightPath(sliced.filter((p) => p.value != null))
             : '';
 
     return {
@@ -729,7 +742,11 @@ const minimapLine = computed(() => {
 const allMinimapLines = computed(() => {
     if (!props.allMinimaps.length) return [];
     return props.allMinimaps.map((ds, idx) => {
-        const line = makeMiniChart(ds?.series || [], !!ds.smooth);
+        const line = makeMiniChart(
+            ds?.series || [],
+            !!ds.smooth,
+            !!ds.useStepper,
+        );
         const k = ds?.id ?? ds?.name ?? idx;
         return {
             key: typeof k === 'object' ? JSON.stringify(k) : String(k),
@@ -739,6 +756,7 @@ const allMinimapLines = computed(() => {
             isVisible: ds.isVisible,
             type: ds.type || undefined,
             dashed: ds.dashed ?? false,
+            useStepper: !!ds.useStepper,
         };
     });
 });

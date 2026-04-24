@@ -41,6 +41,7 @@ import {
     createIndividualAreaWithCuts,
     createPolarAreas,
     createPolygonPath,
+    createStepperPath,
     createSmoothAreaSegments,
     createSmoothPath,
     createSmoothPathWithCuts,
@@ -4697,7 +4698,6 @@ describe('OKLCH utilities', () => {
 
     test('convertOklabToSrgb returns byte RGB values in [0..255]', () => {
         const rgb = convertOklabToSrgb(0.7, 0.1, 0.05);
-
         expect(Array.isArray(rgb)).toBe(true);
         expect(rgb).toHaveLength(3);
 
@@ -4712,7 +4712,6 @@ describe('OKLCH utilities', () => {
         const rgbA = convertOklchToRgb(0.75, 0.12, 10);
         const rgbB = convertOklchToRgb(0.75, 0.12, 370);
         const rgbC = convertOklchToRgb(0.75, 0.12, -350);
-
         expect(rgbA).toEqual(rgbB);
         expect(rgbA).toEqual(rgbC);
     });
@@ -4722,10 +4721,8 @@ describe('OKLCH utilities', () => {
         const chroma = 0.18;
         const hueDegrees = 166.95;
         const hueRadians = (((hueDegrees % 360) + 360) % 360) * (Math.PI / 180);
-
         const labA = chroma * Math.cos(hueRadians);
         const labB = chroma * Math.sin(hueRadians);
-
         const rgbFromOklch = convertOklchToRgb(lightness, chroma, hueDegrees);
         const rgbFromOklab = convertOklabToSrgb(lightness, labA, labB);
 
@@ -4771,12 +4768,10 @@ describe('OKLCH utilities', () => {
         expect(normalizeOklchLightness(0)).toBe(0);
         expect(normalizeOklchLightness(0.75)).toBe(0.75);
         expect(normalizeOklchLightness(1)).toBe(1);
-
         expect(normalizeOklchLightness(50)).toBe(0.5);
         expect(normalizeOklchLightness(100)).toBe(1);
         expect(normalizeOklchLightness(120)).toBe(1.2 > 1 ? 1 : 1.2); // after /100 => 1.2 then clamped to 1
         expect(normalizeOklchLightness(120)).toBe(1);
-
         expect(normalizeOklchLightness(-10)).toBe(0);
     });
 
@@ -4790,10 +4785,8 @@ describe('OKLCH utilities', () => {
         expect(normalizeOklchChroma(0)).toBe(0);
         expect(normalizeOklchChroma(0.2)).toBe(0.2);
         expect(normalizeOklchChroma(-1)).toBe(0);
-
         expect(normalizeOklchChroma(10)).toBe(0.1);
         expect(normalizeOklchChroma(150)).toBe(1.5);
-
         expect(normalizeOklchChroma('0.42')).toBe(0.42);
     });
 
@@ -4808,9 +4801,63 @@ describe('OKLCH utilities', () => {
         expect(normalizeHueDegrees(180)).toBe(180);
         expect(normalizeHueDegrees(-45)).toBe(-45);
         expect(normalizeHueDegrees('270')).toBe(270);
-
         expect(normalizeHueDegrees('abc')).toBeNull();
         expect(normalizeHueDegrees(NaN)).toBeNull();
         expect(normalizeHueDegrees(Infinity)).toBeNull();
+    });
+});
+
+describe('createStepperPath', () => {
+    test('creates a stepper path from valid points', () => {
+        const points = [
+            { x: 1, y: 10, value: 10 },
+            { x: 2, y: 20, value: 20 },
+            { x: 3, y: 5, value: 5 },
+        ];
+        expect(createStepperPath(points)).toBe(
+            '1,10 L2,10 L2,20 L3,20 L3,5',
+        );
+    });
+
+    test('creates a closed stepper area path when zero is provided', () => {
+        const points = [
+            { x: 1, y: 10, value: 10 },
+            { x: 2, y: 20, value: 20 },
+            { x: 3, y: 5, value: 5 },
+        ];
+        expect(createStepperPath(points, 100)).toBe(
+            '1,100 1,10 L2,10 L2,20 L3,20 L3,5 3,100',
+        );
+    });
+
+    test('cuts the stepper path on null values', () => {
+        const points = [
+            { x: 1, y: 10, value: 10 },
+            { x: 2, y: 20, value: null },
+            { x: 3, y: 5, value: 5 },
+            { x: 4, y: 15, value: 15 },
+        ];
+        expect(createStepperPath(points)).toBe('1,10;3,5 L4,5 L4,15');
+    });
+
+    test('cuts the stepper area path on null values when zero is provided', () => {
+        const points = [
+            { x: 1, y: 10, value: 10 },
+            { x: 2, y: 20, value: null },
+            { x: 3, y: 5, value: 5 },
+            { x: 4, y: 15, value: 15 },
+        ];
+        expect(createStepperPath(points, 100)).toBe(
+            '1,100 1,10 1,100;3,100 3,5 L4,5 L4,15 4,100',
+        );
+    });
+
+    test('returns an empty string when all points are invalid', () => {
+        const points = [
+            { x: 1, y: 10, value: null },
+            { x: 2, y: 20, value: undefined },
+            { x: NaN, y: 30, value: 30 },
+        ];
+        expect(createStepperPath(points)).toBe('');
     });
 });
