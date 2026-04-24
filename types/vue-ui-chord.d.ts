@@ -24,6 +24,7 @@ import type {
     VueUiChordLegendSlotProps,
     VueUiChordPatternSlotProps,
     VueUiResetActionSlotProps,
+    CommonAnnotatorSlots,
 } from 'vue-data-ui';
 
 export type {
@@ -50,29 +51,14 @@ export type {
     VueUiChordLegendSlotProps,
     VueUiChordPatternSlotProps,
     VueUiResetActionSlotProps,
+    CommonAnnotatorSlots,
 };
 
 declare const VueUiChordBase: DefineComponent<VueUiChordProps>;
 
 export const VueUiChord: typeof VueUiChordBase & {
     new (): VueUiChordExpose & {
-        $slots: {
-            ['annotator-action-close']?: () => VNodeChild;
-            ['annotator-action-color']?: (
-                props: VueUiAnnotatorActionColorSlotProps,
-            ) => VNodeChild;
-            ['annotator-action-draw']?: (
-                props: VueUiAnnotatorActionDrawSlotProps,
-            ) => VNodeChild;
-            ['annotator-action-undo']?: (
-                props: VueUiAnnotatorActionUndoSlotProps,
-            ) => VNodeChild;
-            ['annotator-action-redo']?: (
-                props: VueUiAnnotatorActionRedoSlotProps,
-            ) => VNodeChild;
-            ['annotator-action-delete']?: (
-                props: VueUiAnnotatorActionDeleteSlotProps,
-            ) => VNodeChild;
+        $slots: CommonAnnotatorSlots & {
             menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
             optionPdf?: () => VNodeChild;
             optionCsv?: () => VNodeChild;

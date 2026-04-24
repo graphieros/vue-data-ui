@@ -18,6 +18,7 @@ import type {
     VueUiGaugeSvgSlotProps,
     VueUiWatermarkSlotProps,
     VueUiGaugeLegendSlotProps,
+    CommonAnnotatorSlots,
 } from 'vue-data-ui';
 
 export type {
@@ -38,29 +39,14 @@ export type {
     VueUiGaugeSvgSlotProps,
     VueUiWatermarkSlotProps,
     VueUiGaugeLegendSlotProps,
+    CommonAnnotatorSlots,
 };
 
 declare const VueUiGaugeBase: DefineComponent<VueUiGaugeProps>;
 
 export const VueUiGauge: typeof VueUiGaugeBase & {
     new (): VueUiGaugeExpose & {
-        $slots: {
-            ['annotator-action-close']?: () => VNodeChild;
-            ['annotator-action-color']?: (
-                props: VueUiAnnotatorActionColorSlotProps,
-            ) => VNodeChild;
-            ['annotator-action-draw']?: (
-                props: VueUiAnnotatorActionDrawSlotProps,
-            ) => VNodeChild;
-            ['annotator-action-undo']?: (
-                props: VueUiAnnotatorActionUndoSlotProps,
-            ) => VNodeChild;
-            ['annotator-action-redo']?: (
-                props: VueUiAnnotatorActionRedoSlotProps,
-            ) => VNodeChild;
-            ['annotator-action-delete']?: (
-                props: VueUiAnnotatorActionDeleteSlotProps,
-            ) => VNodeChild;
+        $slots: CommonAnnotatorSlots & {
             menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
             optionPdf?: () => VNodeChild;
             optionImg?: () => VNodeChild;

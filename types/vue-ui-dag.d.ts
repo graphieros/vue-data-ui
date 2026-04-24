@@ -26,6 +26,7 @@ import type {
     VueUiKeyboardNavigationHintSlotProps,
     VueUiDagTooltipMidpointSlotProps,
     VueUiDagTooltipNodeSlotProps,
+    CommonAnnotatorSlots,
 } from 'vue-data-ui';
 
 export type {
@@ -54,29 +55,14 @@ export type {
     VueUiKeyboardNavigationHintSlotProps,
     VueUiDagTooltipMidpointSlotProps,
     VueUiDagTooltipNodeSlotProps,
+    CommonAnnotatorSlots,
 };
 
 declare const VueUiDagBase: DefineComponent<VueUiDagProps>;
 
 export const VueUiDag: typeof VueUiDagBase & {
     new (): VueUiDagExpose & {
-        $slots: {
-            ['annotator-action-close']?: () => VNodeChild;
-            ['annotator-action-color']?: (
-                props: VueUiAnnotatorActionColorSlotProps,
-            ) => VNodeChild;
-            ['annotator-action-draw']?: (
-                props: VueUiAnnotatorActionDrawSlotProps,
-            ) => VNodeChild;
-            ['annotator-action-undo']?: (
-                props: VueUiAnnotatorActionUndoSlotProps,
-            ) => VNodeChild;
-            ['annotator-action-redo']?: (
-                props: VueUiAnnotatorActionRedoSlotProps,
-            ) => VNodeChild;
-            ['annotator-action-delete']?: (
-                props: VueUiAnnotatorActionDeleteSlotProps,
-            ) => VNodeChild;
+        $slots: CommonAnnotatorSlots & {
             menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
             optionPdf?: () => VNodeChild;
             optionImg?: () => VNodeChild;

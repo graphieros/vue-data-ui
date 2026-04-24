@@ -22,6 +22,7 @@ import type {
     VueUiWatermarkSlotProps,
     VueUiResetActionSlotProps,
     VueUiMoleculeTooltipSlotProps,
+    CommonAnnotatorSlots,
 } from 'vue-data-ui';
 
 export type {
@@ -46,29 +47,14 @@ export type {
     VueUiWatermarkSlotProps,
     VueUiResetActionSlotProps,
     VueUiMoleculeTooltipSlotProps,
+    CommonAnnotatorSlots,
 };
 
 declare const VueUiMoleculeBase: DefineComponent<VueUiMoleculeProps>;
 
 export const VueUiMolecule: typeof VueUiMoleculeBase & {
     new (): VueUiMoleculeExpose & {
-        $slots: {
-            ['annotator-action-close']?: () => VNodeChild;
-            ['annotator-action-color']?: (
-                props: VueUiAnnotatorActionColorSlotProps,
-            ) => VNodeChild;
-            ['annotator-action-draw']?: (
-                props: VueUiAnnotatorActionDrawSlotProps,
-            ) => VNodeChild;
-            ['annotator-action-undo']?: (
-                props: VueUiAnnotatorActionUndoSlotProps,
-            ) => VNodeChild;
-            ['annotator-action-redo']?: (
-                props: VueUiAnnotatorActionRedoSlotProps,
-            ) => VNodeChild;
-            ['annotator-action-delete']?: (
-                props: VueUiAnnotatorActionDeleteSlotProps,
-            ) => VNodeChild;
+        $slots: CommonAnnotatorSlots & {
             menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
             optionTooltip?: () => VNodeChild;
             optionPdf?: () => VNodeChild;

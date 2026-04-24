@@ -25,6 +25,7 @@ import type {
     VueUiWatermarkSlotProps,
     VueUiParallelCoordinatePlotLegendSlotProps,
     VueUiParallelCoordinatePlotTooltipSlotProps,
+    CommonAnnotatorSlots,
 } from 'vue-data-ui';
 
 export type {
@@ -52,29 +53,14 @@ export type {
     VueUiWatermarkSlotProps,
     VueUiParallelCoordinatePlotLegendSlotProps,
     VueUiParallelCoordinatePlotTooltipSlotProps,
+    CommonAnnotatorSlots,
 };
 
 declare const VueUiParallelCoordinatePlotBase: DefineComponent<VueUiParallelCoordinatePlotProps>;
 
 export const VueUiParallelCoordinatePlot: typeof VueUiParallelCoordinatePlotBase & {
     new (): VueUiParallelCoordinatePlotExpose & {
-        $slots: {
-            ['annotator-action-close']?: () => VNodeChild;
-            ['annotator-action-color']?: (
-                props: VueUiAnnotatorActionColorSlotProps,
-            ) => VNodeChild;
-            ['annotator-action-draw']?: (
-                props: VueUiAnnotatorActionDrawSlotProps,
-            ) => VNodeChild;
-            ['annotator-action-undo']?: (
-                props: VueUiAnnotatorActionUndoSlotProps,
-            ) => VNodeChild;
-            ['annotator-action-redo']?: (
-                props: VueUiAnnotatorActionRedoSlotProps,
-            ) => VNodeChild;
-            ['annotator-action-delete']?: (
-                props: VueUiAnnotatorActionDeleteSlotProps,
-            ) => VNodeChild;
+        $slots: CommonAnnotatorSlots & {
             menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
             optionTooltip?: () => VNodeChild;
             optionPdf?: () => VNodeChild;

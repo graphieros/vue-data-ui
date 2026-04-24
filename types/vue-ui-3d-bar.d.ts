@@ -19,6 +19,7 @@ import type {
     VueUi3dBarLegendSlotProps,
     VueUi3dBarSvgSlotProps,
     VueUiWatermarkSlotProps,
+    CommonAnnotatorSlots,
 } from 'vue-data-ui';
 
 export type {
@@ -40,29 +41,14 @@ export type {
     VueUi3dBarLegendSlotProps,
     VueUi3dBarSvgSlotProps,
     VueUiWatermarkSlotProps,
+    CommonAnnotatorSlots,
 };
 
 declare const VueUi3dBarBase: DefineComponent<VueUi3dBarProps>;
 
 export const VueUi3dBar: typeof VueUi3dBarBase & {
     new (): VueUi3dBarExpose & {
-        $slots: {
-            ['annotator-action-close']?: () => VNodeChild;
-            ['annotator-action-color']?: (
-                props: VueUiAnnotatorActionColorSlotProps,
-            ) => VNodeChild;
-            ['annotator-action-draw']?: (
-                props: VueUiAnnotatorActionDrawSlotProps,
-            ) => VNodeChild;
-            ['annotator-action-undo']?: (
-                props: VueUiAnnotatorActionUndoSlotProps,
-            ) => VNodeChild;
-            ['annotator-action-redo']?: (
-                props: VueUiAnnotatorActionRedoSlotProps,
-            ) => VNodeChild;
-            ['annotator-action-delete']?: (
-                props: VueUiAnnotatorActionDeleteSlotProps,
-            ) => VNodeChild;
+        $slots: CommonAnnotatorSlots & {
             menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
             optionPdf?: () => VNodeChild;
             optionCsv?: () => VNodeChild;

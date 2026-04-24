@@ -21,6 +21,7 @@ import type {
     VueUiWatermarkSlotProps,
     VueUiOnionLegendSlotProps,
     VueUiOnionTooltipSlotProps,
+    CommonAnnotatorSlots,
 } from 'vue-data-ui';
 
 export type {
@@ -44,29 +45,14 @@ export type {
     VueUiWatermarkSlotProps,
     VueUiOnionLegendSlotProps,
     VueUiOnionTooltipSlotProps,
+    CommonAnnotatorSlots,
 };
 
 declare const VueUiOnionBase: DefineComponent<VueUiOnionProps>;
 
 export const VueUiOnion: typeof VueUiOnionBase & {
     new (): VueUiOnionExpose & {
-        $slots: {
-            ['annotator-action-close']?: () => VNodeChild;
-            ['annotator-action-color']?: (
-                props: VueUiAnnotatorActionColorSlotProps,
-            ) => VNodeChild;
-            ['annotator-action-draw']?: (
-                props: VueUiAnnotatorActionDrawSlotProps,
-            ) => VNodeChild;
-            ['annotator-action-undo']?: (
-                props: VueUiAnnotatorActionUndoSlotProps,
-            ) => VNodeChild;
-            ['annotator-action-redo']?: (
-                props: VueUiAnnotatorActionRedoSlotProps,
-            ) => VNodeChild;
-            ['annotator-action-delete']?: (
-                props: VueUiAnnotatorActionDeleteSlotProps,
-            ) => VNodeChild;
+        $slots: CommonAnnotatorSlots & {
             menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
             optionTooltip?: () => VNodeChild;
             optionPdf?: () => VNodeChild;

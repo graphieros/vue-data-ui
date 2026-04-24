@@ -18,6 +18,7 @@ import type {
     VueUiGeoDatapointSlotProps,
     VueUiGeoSvgSlotProps,
     VueUiGeoTooltipSlotProps,
+    CommonAnnotatorSlots,
 } from 'vue-data-ui';
 
 export type {
@@ -38,29 +39,14 @@ export type {
     VueUiGeoDatapointSlotProps,
     VueUiGeoSvgSlotProps,
     VueUiGeoTooltipSlotProps,
+    CommonAnnotatorSlots,
 };
 
 declare const VueUiGeoBase: DefineComponent<VueUiGeoProps>;
 
 export const VueUiGeo: typeof VueUiGeoBase & {
     new (): VueUiGeoExpose & {
-        $slots: {
-            ['annotator-action-close']?: () => VNodeChild;
-            ['annotator-action-color']?: (
-                props: VueUiAnnotatorActionColorSlotProps,
-            ) => VNodeChild;
-            ['annotator-action-draw']?: (
-                props: VueUiAnnotatorActionDrawSlotProps,
-            ) => VNodeChild;
-            ['annotator-action-undo']?: (
-                props: VueUiAnnotatorActionUndoSlotProps,
-            ) => VNodeChild;
-            ['annotator-action-redo']?: (
-                props: VueUiAnnotatorActionRedoSlotProps,
-            ) => VNodeChild;
-            ['annotator-action-delete']?: (
-                props: VueUiAnnotatorActionDeleteSlotProps,
-            ) => VNodeChild;
+        $slots: CommonAnnotatorSlots & {
             menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
             optionTooltip?: () => VNodeChild;
             optionPdf?: () => VNodeChild;

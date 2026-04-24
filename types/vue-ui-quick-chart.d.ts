@@ -21,6 +21,7 @@ import type {
     VueUiQuickChartLegend,
     VueUiQuickChartLegendSlotProps,
     VueUiQuickChartTooltipSlotProps,
+    CommonAnnotatorSlots,
 } from 'vue-data-ui';
 
 export type {
@@ -44,29 +45,14 @@ export type {
     VueUiQuickChartLegend,
     VueUiQuickChartLegendSlotProps,
     VueUiQuickChartTooltipSlotProps,
+    CommonAnnotatorSlots,
 };
 
 declare const VueUiQuickChartBase: DefineComponent<VueUiQuickChartProps>;
 
 export const VueUiQuickChart: typeof VueUiQuickChartBase & {
     new (): VueUiQuickChartExpose & {
-        $slots: {
-            ['annotator-action-close']?: () => VNodeChild;
-            ['annotator-action-color']?: (
-                props: VueUiAnnotatorActionColorSlotProps,
-            ) => VNodeChild;
-            ['annotator-action-draw']?: (
-                props: VueUiAnnotatorActionDrawSlotProps,
-            ) => VNodeChild;
-            ['annotator-action-undo']?: (
-                props: VueUiAnnotatorActionUndoSlotProps,
-            ) => VNodeChild;
-            ['annotator-action-redo']?: (
-                props: VueUiAnnotatorActionRedoSlotProps,
-            ) => VNodeChild;
-            ['annotator-action-delete']?: (
-                props: VueUiAnnotatorActionDeleteSlotProps,
-            ) => VNodeChild;
+        $slots: CommonAnnotatorSlots & {
             menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
             optionTooltip?: () => VNodeChild;
             optionPdf?: () => VNodeChild;

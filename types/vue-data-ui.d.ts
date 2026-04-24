@@ -591,6 +591,25 @@ declare module 'vue-data-ui' {
         aspectRatio: number;
     }>;
 
+    export type CommonAnnotatorSlots = {
+        ['annotator-action-close']?: () => VNodeChild;
+        ['annotator-action-color']?: (
+            props: VueUiAnnotatorActionColorSlotProps,
+        ) => VNodeChild;
+        ['annotator-action-draw']?: (
+            props: VueUiAnnotatorActionDrawSlotProps,
+        ) => VNodeChild;
+        ['annotator-action-undo']?: (
+            props: VueUiAnnotatorActionUndoSlotProps,
+        ) => VNodeChild;
+        ['annotator-action-redo']?: (
+            props: VueUiAnnotatorActionRedoSlotProps,
+        ) => VNodeChild;
+        ['annotator-action-delete']?: (
+            props: VueUiAnnotatorActionDeleteSlotProps,
+        ) => VNodeChild;
+    };
+
     export type VueUiTreemapDatasetItem = {
         [key: string]: any;
         name: string;
@@ -1015,23 +1034,7 @@ declare module 'vue-data-ui' {
 
     export const VueUiGalaxy: typeof VueUiGalaxyBase & {
         new (): VueUiGalaxyExpose & {
-            $slots: {
-                ['annotator-action-close']?: () => VNodeChild;
-                ['annotator-action-color']?: (
-                    props: VueUiAnnotatorActionColorSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-draw']?: (
-                    props: VueUiAnnotatorActionDrawSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-undo']?: (
-                    props: VueUiAnnotatorActionUndoSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-redo']?: (
-                    props: VueUiAnnotatorActionRedoSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-delete']?: (
-                    props: VueUiAnnotatorActionDeleteSlotProps,
-                ) => VNodeChild;
+            $slots: CommonAnnotatorSlots & {
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionTooltip?: () => VNodeChild;
                 optionPdf?: () => VNodeChild;
@@ -1409,23 +1412,7 @@ declare module 'vue-data-ui' {
 
     export const VueUiMolecule: typeof VueUiMoleculeBase & {
         new (): VueUiMoleculeExpose & {
-            $slots: {
-                ['annotator-action-close']?: () => VNodeChild;
-                ['annotator-action-color']?: (
-                    props: VueUiAnnotatorActionColorSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-draw']?: (
-                    props: VueUiAnnotatorActionDrawSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-undo']?: (
-                    props: VueUiAnnotatorActionUndoSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-redo']?: (
-                    props: VueUiAnnotatorActionRedoSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-delete']?: (
-                    props: VueUiAnnotatorActionDeleteSlotProps,
-                ) => VNodeChild;
+            $slots: CommonAnnotatorSlots & {
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionTooltip?: () => VNodeChild;
                 optionPdf?: () => VNodeChild;
@@ -1648,23 +1635,7 @@ declare module 'vue-data-ui' {
 
     export const VueUi3dBar: typeof VueUi3dBarBase & {
         new (): VueUi3dBarExpose & {
-            $slots: {
-                ['annotator-action-close']?: () => VNodeChild;
-                ['annotator-action-color']?: (
-                    props: VueUiAnnotatorActionColorSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-draw']?: (
-                    props: VueUiAnnotatorActionDrawSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-undo']?: (
-                    props: VueUiAnnotatorActionUndoSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-redo']?: (
-                    props: VueUiAnnotatorActionRedoSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-delete']?: (
-                    props: VueUiAnnotatorActionDeleteSlotProps,
-                ) => VNodeChild;
+            $slots: CommonAnnotatorSlots & {
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionPdf?: () => VNodeChild;
                 optionCsv?: () => VNodeChild;
@@ -1835,23 +1806,7 @@ declare module 'vue-data-ui' {
 
     export const VueUiMoodRadar: typeof VueUiMoodRadarBase & {
         new (): VueUiMoodRadarExpose & {
-            $slots: {
-                ['annotator-action-close']?: () => VNodeChild;
-                ['annotator-action-color']?: (
-                    props: VueUiAnnotatorActionColorSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-draw']?: (
-                    props: VueUiAnnotatorActionDrawSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-undo']?: (
-                    props: VueUiAnnotatorActionUndoSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-redo']?: (
-                    props: VueUiAnnotatorActionRedoSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-delete']?: (
-                    props: VueUiAnnotatorActionDeleteSlotProps,
-                ) => VNodeChild;
+            $slots: CommonAnnotatorSlots & {
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionPdf?: () => VNodeChild;
                 optionCsv?: () => VNodeChild;
@@ -2412,23 +2367,7 @@ declare module 'vue-data-ui' {
 
     export const VueUiDonutEvolution: typeof VueUiDonutEvolutionBase & {
         new (): VueUiDonutEvolutionExpose & {
-            $slots: {
-                ['annotator-action-close']?: () => VNodeChild;
-                ['annotator-action-color']?: (
-                    props: VueUiAnnotatorActionColorSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-draw']?: (
-                    props: VueUiAnnotatorActionDrawSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-undo']?: (
-                    props: VueUiAnnotatorActionUndoSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-redo']?: (
-                    props: VueUiAnnotatorActionRedoSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-delete']?: (
-                    props: VueUiAnnotatorActionDeleteSlotProps,
-                ) => VNodeChild;
+            $slots: CommonAnnotatorSlots & {
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionPdf?: () => VNodeChild;
                 optionCsv?: () => VNodeChild;
@@ -3218,23 +3157,7 @@ declare module 'vue-data-ui' {
 
     export const VueUiRelationCircle: typeof VueUiRelationCircleBase & {
         new (): VueUiRelationCircleExpose & {
-            $slots: {
-                ['annotator-action-close']?: () => VNodeChild;
-                ['annotator-action-color']?: (
-                    props: VueUiAnnotatorActionColorSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-draw']?: (
-                    props: VueUiAnnotatorActionDrawSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-undo']?: (
-                    props: VueUiAnnotatorActionUndoSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-redo']?: (
-                    props: VueUiAnnotatorActionRedoSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-delete']?: (
-                    props: VueUiAnnotatorActionDeleteSlotProps,
-                ) => VNodeChild;
+            $slots: CommonAnnotatorSlots & {
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionPdf?: () => VNodeChild;
                 optionImg?: () => VNodeChild;
@@ -3476,26 +3399,10 @@ declare module 'vue-data-ui' {
 
     export const VueUiDashboard: typeof VueUiDashboardBase & {
         new (): {
-            $slots: {
+            $slots: CommonAnnotatorSlots & {
                 top?: (props: VueUiDashboardTopSlotProps) => VNodeChild;
                 content?: (props: VueUiDashboardContentSlotProps) => VNodeChild;
                 bottom?: (props: VueUiDashboardBottomSlotProps) => VNodeChild;
-                ['annotator-action-close']?: () => VNodeChild;
-                ['annotator-action-color']?: (
-                    props: VueUiAnnotatorActionColorSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-draw']?: (
-                    props: VueUiAnnotatorActionDrawSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-undo']?: (
-                    props: VueUiAnnotatorActionUndoSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-redo']?: (
-                    props: VueUiAnnotatorActionRedoSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-delete']?: (
-                    props: VueUiAnnotatorActionDeleteSlotProps,
-                ) => VNodeChild;
                 optionPdf?: () => VNodeChild;
                 optionImg?: () => VNodeChild;
                 optionAltCopy?: () => VNodeChild;
@@ -3803,23 +3710,7 @@ declare module 'vue-data-ui' {
 
     export const VueUiAgePyramid: typeof VueUiAgePyramidBase & {
         new (): VueUiAgePyramidExpose & {
-            $slots: {
-                ['annotator-action-close']?: () => VNodeChild;
-                ['annotator-action-color']?: (
-                    props: VueUiAnnotatorActionColorSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-draw']?: (
-                    props: VueUiAnnotatorActionDrawSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-undo']?: (
-                    props: VueUiAnnotatorActionUndoSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-redo']?: (
-                    props: VueUiAnnotatorActionRedoSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-delete']?: (
-                    props: VueUiAnnotatorActionDeleteSlotProps,
-                ) => VNodeChild;
+            $slots: CommonAnnotatorSlots & {
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionTooltip?: () => VNodeChild;
                 optionPdf?: () => VNodeChild;
@@ -4106,23 +3997,7 @@ declare module 'vue-data-ui' {
 
     export const VueUiCandlestick: typeof VueUiCandlestickBase & {
         new (): VueUiCandlestickExpose & {
-            $slots: {
-                ['annotator-action-close']?: () => VNodeChild;
-                ['annotator-action-color']?: (
-                    props: VueUiAnnotatorActionColorSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-draw']?: (
-                    props: VueUiAnnotatorActionDrawSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-undo']?: (
-                    props: VueUiAnnotatorActionUndoSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-redo']?: (
-                    props: VueUiAnnotatorActionRedoSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-delete']?: (
-                    props: VueUiAnnotatorActionDeleteSlotProps,
-                ) => VNodeChild;
+            $slots: CommonAnnotatorSlots & {
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionTooltip?: () => VNodeChild;
                 optionPdf?: () => VNodeChild;
@@ -4693,23 +4568,7 @@ declare module 'vue-data-ui' {
 
     export const VueUiHeatmap: typeof VueUiHeatmapBase & {
         new (): VueUiHeatmapExpose & {
-            $slots: {
-                ['annotator-action-close']?: () => VNodeChild;
-                ['annotator-action-color']?: (
-                    props: VueUiAnnotatorActionColorSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-draw']?: (
-                    props: VueUiAnnotatorActionDrawSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-undo']?: (
-                    props: VueUiAnnotatorActionUndoSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-redo']?: (
-                    props: VueUiAnnotatorActionRedoSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-delete']?: (
-                    props: VueUiAnnotatorActionDeleteSlotProps,
-                ) => VNodeChild;
+            $slots: CommonAnnotatorSlots & {
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionTooltip?: () => VNodeChild;
                 optionPdf?: () => VNodeChild;
@@ -5354,7 +5213,7 @@ declare module 'vue-data-ui' {
 
     export const VueUiXy: typeof VueUiXyBase & {
         new (): VueUiXyExpose & {
-            $slots: {
+            $slots: CommonAnnotatorSlots & {
                 legend?: (props: VueUiXyLegendSlotProps) => VNodeChild;
                 ['resest-action']?: (
                     props: VueUiResetActionSlotProps,
@@ -5365,22 +5224,6 @@ declare module 'vue-data-ui' {
                 tooltip?: (props: VueUiXyTooltipSlotProps) => VNodeChild;
                 ['tooltip-after']?: (
                     props: VueUiXyTooltipSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-close']?: () => VNodeChild;
-                ['annotator-action-color']?: (
-                    props: VueUiAnnotatorActionColorSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-draw']?: (
-                    props: VueUiAnnotatorActionDrawSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-undo']?: (
-                    props: VueUiAnnotatorActionUndoSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-redo']?: (
-                    props: VueUiAnnotatorActionRedoSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-delete']?: (
-                    props: VueUiAnnotatorActionDeleteSlotProps,
                 ) => VNodeChild;
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionTooltip?: () => VNodeChild;
@@ -5749,7 +5592,7 @@ declare module 'vue-data-ui' {
 
     export const VueUiDonut: typeof VueUiDonutBase & {
         new (): VueUiDonutExpose & {
-            $slots: {
+            $slots: CommonAnnotatorSlots & {
                 legend?: (props: VueUiDonutLegendSlotProps) => VNodeChild;
                 ['tooltip-before']?: (
                     props: VueUiDonutTooltipSlotProps,
@@ -5786,22 +5629,6 @@ declare module 'vue-data-ui' {
                 optionAltCopy?: () => VNodeChild;
                 optionAnnotator?: (
                     props: VueUiOptionAnnotatorSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-close']?: () => VNodeChild;
-                ['annotator-action-color']?: (
-                    props: VueUiAnnotatorActionColorSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-draw']?: (
-                    props: VueUiAnnotatorActionDrawSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-undo']?: (
-                    props: VueUiAnnotatorActionUndoSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-redo']?: (
-                    props: VueUiAnnotatorActionRedoSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-delete']?: (
-                    props: VueUiAnnotatorActionDeleteSlotProps,
                 ) => VNodeChild;
             };
         };
@@ -6078,23 +5905,7 @@ declare module 'vue-data-ui' {
 
     export const VueUiNestedDonuts: typeof VueUiNestedDonutsBase & {
         new (): VueUiNestedDonutsExpose & {
-            $slots: {
-                ['annotator-action-close']?: () => VNodeChild;
-                ['annotator-action-color']?: (
-                    props: VueUiAnnotatorActionColorSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-draw']?: (
-                    props: VueUiAnnotatorActionDrawSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-undo']?: (
-                    props: VueUiAnnotatorActionUndoSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-redo']?: (
-                    props: VueUiAnnotatorActionRedoSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-delete']?: (
-                    props: VueUiAnnotatorActionDeleteSlotProps,
-                ) => VNodeChild;
+            $slots: CommonAnnotatorSlots & {
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionTooltip?: () => VNodeChild;
                 optionPdf?: () => VNodeChild;
@@ -6524,23 +6335,7 @@ declare module 'vue-data-ui' {
 
     export const VueUiRadar: typeof VueUiRadarBase & {
         new (): VueUiRadarExpose & {
-            $slots: {
-                ['annotator-action-close']?: () => VNodeChild;
-                ['annotator-action-color']?: (
-                    props: VueUiAnnotatorActionColorSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-draw']?: (
-                    props: VueUiAnnotatorActionDrawSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-undo']?: (
-                    props: VueUiAnnotatorActionUndoSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-redo']?: (
-                    props: VueUiAnnotatorActionRedoSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-delete']?: (
-                    props: VueUiAnnotatorActionDeleteSlotProps,
-                ) => VNodeChild;
+            $slots: CommonAnnotatorSlots & {
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionTooltip?: () => VNodeChild;
                 optionPdf?: () => VNodeChild;
@@ -6847,23 +6642,7 @@ declare module 'vue-data-ui' {
 
     export const VueUiQuadrant: typeof VueUiQuadrantBase & {
         new (): VueUiQuadrantExpose & {
-            $slots: {
-                ['annotator-action-close']?: () => VNodeChild;
-                ['annotator-action-color']?: (
-                    props: VueUiAnnotatorActionColorSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-draw']?: (
-                    props: VueUiAnnotatorActionDrawSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-undo']?: (
-                    props: VueUiAnnotatorActionUndoSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-redo']?: (
-                    props: VueUiAnnotatorActionRedoSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-delete']?: (
-                    props: VueUiAnnotatorActionDeleteSlotProps,
-                ) => VNodeChild;
+            $slots: CommonAnnotatorSlots & {
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionTooltip?: () => VNodeChild;
                 optionPdf?: () => VNodeChild;
@@ -7058,23 +6837,7 @@ declare module 'vue-data-ui' {
 
     export const VueUiGauge: typeof VueUiGaugeBase & {
         new (): VueUiGaugeExpose & {
-            $slots: {
-                ['annotator-action-close']?: () => VNodeChild;
-                ['annotator-action-color']?: (
-                    props: VueUiAnnotatorActionColorSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-draw']?: (
-                    props: VueUiAnnotatorActionDrawSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-undo']?: (
-                    props: VueUiAnnotatorActionUndoSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-redo']?: (
-                    props: VueUiAnnotatorActionRedoSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-delete']?: (
-                    props: VueUiAnnotatorActionDeleteSlotProps,
-                ) => VNodeChild;
+            $slots: CommonAnnotatorSlots & {
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionPdf?: () => VNodeChild;
                 optionImg?: () => VNodeChild;
@@ -7405,23 +7168,7 @@ declare module 'vue-data-ui' {
 
     export const VueUiChestnut: typeof VueUiChestnutBase & {
         new (): VueUiChestnutExpose & {
-            $slots: {
-                ['annotator-action-close']?: () => VNodeChild;
-                ['annotator-action-color']?: (
-                    props: VueUiAnnotatorActionColorSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-draw']?: (
-                    props: VueUiAnnotatorActionDrawSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-undo']?: (
-                    props: VueUiAnnotatorActionUndoSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-redo']?: (
-                    props: VueUiAnnotatorActionRedoSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-delete']?: (
-                    props: VueUiAnnotatorActionDeleteSlotProps,
-                ) => VNodeChild;
+            $slots: CommonAnnotatorSlots & {
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionPdf?: () => VNodeChild;
                 optionCsv?: () => VNodeChild;
@@ -7674,23 +7421,7 @@ declare module 'vue-data-ui' {
 
     export const VueUiOnion: typeof VueUiOnionBase & {
         new (): VueUiOnionExpose & {
-            $slots: {
-                ['annotator-action-close']?: () => VNodeChild;
-                ['annotator-action-color']?: (
-                    props: VueUiAnnotatorActionColorSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-draw']?: (
-                    props: VueUiAnnotatorActionDrawSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-undo']?: (
-                    props: VueUiAnnotatorActionUndoSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-redo']?: (
-                    props: VueUiAnnotatorActionRedoSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-delete']?: (
-                    props: VueUiAnnotatorActionDeleteSlotProps,
-                ) => VNodeChild;
+            $slots: CommonAnnotatorSlots & {
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionTooltip?: () => VNodeChild;
                 optionPdf?: () => VNodeChild;
@@ -8038,23 +7769,7 @@ declare module 'vue-data-ui' {
      */
     export const VueUiHorizontalBar: typeof VueUiHorizontalBarBase & {
         new (): VueUiHorizontalBarExpose & {
-            $slots: {
-                ['annotator-action-close']?: () => VNodeChild;
-                ['annotator-action-color']?: (
-                    props: VueUiAnnotatorActionColorSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-draw']?: (
-                    props: VueUiAnnotatorActionDrawSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-undo']?: (
-                    props: VueUiAnnotatorActionUndoSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-redo']?: (
-                    props: VueUiAnnotatorActionRedoSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-delete']?: (
-                    props: VueUiAnnotatorActionDeleteSlotProps,
-                ) => VNodeChild;
+            $slots: CommonAnnotatorSlots & {
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionTooltip?: () => VNodeChild;
                 optionPdf?: () => VNodeChild;
@@ -9337,23 +9052,7 @@ declare module 'vue-data-ui' {
 
     export const VueUiQuickChart: typeof VueUiQuickChartBase & {
         new (): VueUiQuickChartExpose & {
-            $slots: {
-                ['annotator-action-close']?: () => VNodeChild;
-                ['annotator-action-color']?: (
-                    props: VueUiAnnotatorActionColorSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-draw']?: (
-                    props: VueUiAnnotatorActionDrawSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-undo']?: (
-                    props: VueUiAnnotatorActionUndoSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-redo']?: (
-                    props: VueUiAnnotatorActionRedoSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-delete']?: (
-                    props: VueUiAnnotatorActionDeleteSlotProps,
-                ) => VNodeChild;
+            $slots: CommonAnnotatorSlots & {
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionTooltip?: () => VNodeChild;
                 optionPdf?: () => VNodeChild;
@@ -9933,23 +9632,7 @@ declare module 'vue-data-ui' {
 
     export const VueUiDumbbell: typeof VueUiDumbbellBase & {
         new (): VueUiDumbbellExpose & {
-            $slots: {
-                ['annotator-action-close']?: () => VNodeChild;
-                ['annotator-action-color']?: (
-                    props: VueUiAnnotatorActionColorSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-draw']?: (
-                    props: VueUiAnnotatorActionDrawSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-undo']?: (
-                    props: VueUiAnnotatorActionUndoSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-redo']?: (
-                    props: VueUiAnnotatorActionRedoSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-delete']?: (
-                    props: VueUiAnnotatorActionDeleteSlotProps,
-                ) => VNodeChild;
+            $slots: CommonAnnotatorSlots & {
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionPdf?: () => VNodeChild;
                 optionCsv?: () => VNodeChild;
@@ -10571,23 +10254,7 @@ declare module 'vue-data-ui' {
 
     export const VueUiFlow: typeof VueUiFlowBase & {
         new (): VueUiFlowExpose & {
-            $slots: {
-                ['annotator-action-close']?: () => VNodeChild;
-                ['annotator-action-color']?: (
-                    props: VueUiAnnotatorActionColorSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-draw']?: (
-                    props: VueUiAnnotatorActionDrawSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-undo']?: (
-                    props: VueUiAnnotatorActionUndoSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-redo']?: (
-                    props: VueUiAnnotatorActionRedoSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-delete']?: (
-                    props: VueUiAnnotatorActionDeleteSlotProps,
-                ) => VNodeChild;
+            $slots: CommonAnnotatorSlots & {
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionTooltip?: () => VNodeChild;
                 optionPdf?: () => VNodeChild;
@@ -10881,23 +10548,7 @@ declare module 'vue-data-ui' {
 
     export const VueUiParallelCoordinatePlot: typeof VueUiParallelCoordinatePlotBase & {
         new (): VueUiParallelCoordinatePlotExpose & {
-            $slots: {
-                ['annotator-action-close']?: () => VNodeChild;
-                ['annotator-action-color']?: (
-                    props: VueUiAnnotatorActionColorSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-draw']?: (
-                    props: VueUiAnnotatorActionDrawSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-undo']?: (
-                    props: VueUiAnnotatorActionUndoSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-redo']?: (
-                    props: VueUiAnnotatorActionRedoSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-delete']?: (
-                    props: VueUiAnnotatorActionDeleteSlotProps,
-                ) => VNodeChild;
+            $slots: CommonAnnotatorSlots & {
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionTooltip?: () => VNodeChild;
                 optionPdf?: () => VNodeChild;
@@ -11855,23 +11506,7 @@ declare module 'vue-data-ui' {
 
     export const VueUiBullet: typeof VueUiBulletBase & {
         new (): VueUiBulletExpose & {
-            $slots: {
-                ['annotator-action-close']?: () => VNodeChild;
-                ['annotator-action-color']?: (
-                    props: VueUiAnnotatorActionColorSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-draw']?: (
-                    props: VueUiAnnotatorActionDrawSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-undo']?: (
-                    props: VueUiAnnotatorActionUndoSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-redo']?: (
-                    props: VueUiAnnotatorActionRedoSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-delete']?: (
-                    props: VueUiAnnotatorActionDeleteSlotProps,
-                ) => VNodeChild;
+            $slots: CommonAnnotatorSlots & {
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionPdf?: () => VNodeChild;
                 optionImg?: () => VNodeChild;
@@ -12022,23 +11657,7 @@ declare module 'vue-data-ui' {
 
     export const VueUiFunnel: typeof VueUiFunnelBase & {
         new (): VueUiFunnelExpose & {
-            $slots: {
-                ['annotator-action-close']?: () => VNodeChild;
-                ['annotator-action-color']?: (
-                    props: VueUiAnnotatorActionColorSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-draw']?: (
-                    props: VueUiAnnotatorActionDrawSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-undo']?: (
-                    props: VueUiAnnotatorActionUndoSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-redo']?: (
-                    props: VueUiAnnotatorActionRedoSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-delete']?: (
-                    props: VueUiAnnotatorActionDeleteSlotProps,
-                ) => VNodeChild;
+            $slots: CommonAnnotatorSlots & {
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionPdf?: () => VNodeChild;
                 optionCsv?: () => VNodeChild;
@@ -12336,23 +11955,7 @@ declare module 'vue-data-ui' {
 
     export const VueUiHistoryPlot: typeof VueUiHistoryPlotBase & {
         new (): VueUiHistoryPlotExpose & {
-            $slots: {
-                ['annotator-action-close']?: () => VNodeChild;
-                ['annotator-action-color']?: (
-                    props: VueUiAnnotatorActionColorSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-draw']?: (
-                    props: VueUiAnnotatorActionDrawSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-undo']?: (
-                    props: VueUiAnnotatorActionUndoSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-redo']?: (
-                    props: VueUiAnnotatorActionRedoSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-delete']?: (
-                    props: VueUiAnnotatorActionDeleteSlotProps,
-                ) => VNodeChild;
+            $slots: CommonAnnotatorSlots & {
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionTooltip?: () => VNodeChild;
                 optionPdf?: () => VNodeChild;
@@ -12540,23 +12143,7 @@ declare module 'vue-data-ui' {
 
     export const VueUiCirclePack: typeof VueUiCirclePackBase & {
         new (): VueUiCirclePackExpose & {
-            $slots: {
-                ['annotator-action-close']?: () => VNodeChild;
-                ['annotator-action-color']?: (
-                    props: VueUiAnnotatorActionColorSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-draw']?: (
-                    props: VueUiAnnotatorActionDrawSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-undo']?: (
-                    props: VueUiAnnotatorActionUndoSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-redo']?: (
-                    props: VueUiAnnotatorActionRedoSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-delete']?: (
-                    props: VueUiAnnotatorActionDeleteSlotProps,
-                ) => VNodeChild;
+            $slots: CommonAnnotatorSlots & {
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionTooltip?: () => VNodeChild;
                 optionPdf?: () => VNodeChild;
@@ -12944,13 +12531,95 @@ declare module 'vue-data-ui' {
         hideSeries(name: string): void;
     };
 
-    export const VueUiRidgeline: DefineComponent<
-        {
-            config?: VueUiRidgelineConfig;
-            dataset: VueUiRidgelineDatasetItem[];
-        },
-        VueUiRidgelineExpose
-    >;
+    export type VueUiRidgelineTimeLabelSlotProps = {
+        content: string;
+        fill: string;
+        fontSize: number;
+        show: boolean;
+        textAnchor: 'start' | 'middle' | 'end';
+        transform: string;
+        x: number;
+        y: number;
+    };
+
+    export type VueUiRidgelineSvgSlotProps = {
+        svg: {
+            drawingArea: {
+                bottom: number;
+                fullHeight: number;
+                left: number;
+                right: number;
+                top: number;
+                width: number;
+            };
+            height: number;
+            isPrintingImg: boolean;
+            isPrintingSvg: boolean;
+            padding: {
+                top: number;
+                right: number;
+                bottom: number;
+                left: number;
+            };
+            width: number;
+        };
+    };
+
+    export type VueUiRidgelineLegendItem = {
+        color: string;
+        id: string;
+        isSegregated: boolean;
+        name: string;
+        opacity: number;
+        segregate: () => void;
+        shape: Shape;
+    };
+
+    export type VueUiRidgelineLegendSlotProps = {
+        legend: VueUiRidgelineLegendItem[];
+    };
+
+    export type VueUiRidgelineProps = {
+        config?: VueUiRidgelineConfig;
+        dataset: VueUiRidgelineDatasetItem[];
+    };
+
+    const VueUiRidgelineBase: DefineComponent<VueUiRidgelineProps>;
+
+    export const VueUiRidgeline: typeof VueUiRidgelineBase & {
+        new (): VueUiRidgelineExpose & {
+            $slots: CommonAnnotatorSlots & {
+                menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
+                optionTooltip?: () => VNodeChild;
+                optionPdf?: () => VNodeChild;
+                optionCsv?: () => VNodeChild;
+                optionImg?: () => VNodeChild;
+                optionSvg?: () => VNodeChild;
+                optionTable?: () => VNodeChild;
+                optionFullscreen?: (
+                    props: VueUiOptionFullscreenSlotProps,
+                ) => VNodeChild;
+                optionAltCopy?: () => VNodeChild;
+                optionAnnotator?: (
+                    props: VueUiOptionAnnotatorSlotProps,
+                ) => VNodeChild;
+                pattern?: (
+                    props: VueUiPatternSlotProps & { datapointIndex: number },
+                ) => VNodeChild;
+                ['time-label']?: (
+                    props: VueUiRidgelineTimeLabelSlotProps,
+                ) => VNodeChild;
+                svg?: (props: VueUiRidgelineSvgSlotProps) => VNodeChild;
+                hint?: (
+                    props: VueUiKeyboardNavigationHintSlotProps,
+                ) => VNodeChild;
+                watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
+                source?: () => VNodeChild;
+                skeleton?: () => VNodeChild;
+                legend?: (props: VueUiRidgelineLegendSlotProps) => VNodeChild;
+            };
+        };
+    };
 
     export type VueUiChordDataset = {
         matrix: Array<Array<number | null>>;
@@ -13140,23 +12809,7 @@ declare module 'vue-data-ui' {
 
     export const VueUiChord: typeof VueUiChordBase & {
         new (): VueUiChordExpose & {
-            $slots: {
-                ['annotator-action-close']?: () => VNodeChild;
-                ['annotator-action-color']?: (
-                    props: VueUiAnnotatorActionColorSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-draw']?: (
-                    props: VueUiAnnotatorActionDrawSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-undo']?: (
-                    props: VueUiAnnotatorActionUndoSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-redo']?: (
-                    props: VueUiAnnotatorActionRedoSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-delete']?: (
-                    props: VueUiAnnotatorActionDeleteSlotProps,
-                ) => VNodeChild;
+            $slots: CommonAnnotatorSlots & {
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionPdf?: () => VNodeChild;
                 optionCsv?: () => VNodeChild;
@@ -13431,23 +13084,7 @@ declare module 'vue-data-ui' {
 
     export const VueUiDag: typeof VueUiDagBase & {
         new (): VueUiDagExpose & {
-            $slots: {
-                ['annotator-action-close']?: () => VNodeChild;
-                ['annotator-action-color']?: (
-                    props: VueUiAnnotatorActionColorSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-draw']?: (
-                    props: VueUiAnnotatorActionDrawSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-undo']?: (
-                    props: VueUiAnnotatorActionUndoSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-redo']?: (
-                    props: VueUiAnnotatorActionRedoSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-delete']?: (
-                    props: VueUiAnnotatorActionDeleteSlotProps,
-                ) => VNodeChild;
+            $slots: CommonAnnotatorSlots & {
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionPdf?: () => VNodeChild;
                 optionImg?: () => VNodeChild;
@@ -13740,23 +13377,7 @@ declare module 'vue-data-ui' {
 
     export const VueUiGeo: typeof VueUiGeoBase & {
         new (): VueUiGeoExpose & {
-            $slots: {
-                ['annotator-action-close']?: () => VNodeChild;
-                ['annotator-action-color']?: (
-                    props: VueUiAnnotatorActionColorSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-draw']?: (
-                    props: VueUiAnnotatorActionDrawSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-undo']?: (
-                    props: VueUiAnnotatorActionUndoSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-redo']?: (
-                    props: VueUiAnnotatorActionRedoSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-delete']?: (
-                    props: VueUiAnnotatorActionDeleteSlotProps,
-                ) => VNodeChild;
+            $slots: CommonAnnotatorSlots & {
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionTooltip?: () => VNodeChild;
                 optionPdf?: () => VNodeChild;
@@ -13994,23 +13615,7 @@ declare module 'vue-data-ui' {
 
     export const VueUiBump: typeof VueUiBumpBase & {
         new (): VueUiBumpExpose & {
-            $slots: {
-                ['annotator-action-close']?: () => VNodeChild;
-                ['annotator-action-color']?: (
-                    props: VueUiAnnotatorActionColorSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-draw']?: (
-                    props: VueUiAnnotatorActionDrawSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-undo']?: (
-                    props: VueUiAnnotatorActionUndoSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-redo']?: (
-                    props: VueUiAnnotatorActionRedoSlotProps,
-                ) => VNodeChild;
-                ['annotator-action-delete']?: (
-                    props: VueUiAnnotatorActionDeleteSlotProps,
-                ) => VNodeChild;
+            $slots: CommonAnnotatorSlots & {
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionPdf?: () => VNodeChild;
                 optionCsv?: () => VNodeChild;

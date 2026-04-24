@@ -25,6 +25,7 @@ import type {
     VueUiAnnotatorActionUndoSlotProps,
     VueUiAnnotatorActionRedoSlotProps,
     VueUiAnnotatorActionDeleteSlotProps,
+    CommonAnnotatorSlots,
 } from 'vue-data-ui';
 
 export type {
@@ -52,13 +53,14 @@ export type {
     VueUiAnnotatorActionUndoSlotProps,
     VueUiAnnotatorActionRedoSlotProps,
     VueUiAnnotatorActionDeleteSlotProps,
+    CommonAnnotatorSlots,
 };
 
 declare const VueUiDonutBase: DefineComponent<VueUiDonutProps>;
 
 export const VueUiDonut: typeof VueUiDonutBase & {
     new (): VueUiDonutExpose & {
-        $slots: {
+        $slots: CommonAnnotatorSlots & {
             legend?: (props: VueUiDonutLegendSlotProps) => VNodeChild;
             ['tooltip-before']?: (
                 props: VueUiDonutTooltipSlotProps,
@@ -93,22 +95,6 @@ export const VueUiDonut: typeof VueUiDonutBase & {
             optionAltCopy?: () => VNodeChild;
             optionAnnotator?: (
                 props: VueUiOptionAnnotatorSlotProps,
-            ) => VNodeChild;
-            ['annotator-action-close']?: () => VNodeChild;
-            ['annotator-action-color']?: (
-                props: VueUiAnnotatorActionColorSlotProps,
-            ) => VNodeChild;
-            ['annotator-action-draw']?: (
-                props: VueUiAnnotatorActionDrawSlotProps,
-            ) => VNodeChild;
-            ['annotator-action-undo']?: (
-                props: VueUiAnnotatorActionUndoSlotProps,
-            ) => VNodeChild;
-            ['annotator-action-redo']?: (
-                props: VueUiAnnotatorActionRedoSlotProps,
-            ) => VNodeChild;
-            ['annotator-action-delete']?: (
-                props: VueUiAnnotatorActionDeleteSlotProps,
             ) => VNodeChild;
         };
     };

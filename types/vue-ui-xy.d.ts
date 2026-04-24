@@ -33,6 +33,7 @@ import type {
     VueUiXySvgSlotProps,
     VueUiKeyboardNavigationHintSlotProps,
     VueUiWatermarkSlotProps,
+    CommonAnnotatorSlots,
 } from 'vue-data-ui';
 
 export type {
@@ -68,13 +69,14 @@ export type {
     VueUiXySvgSlotProps,
     VueUiKeyboardNavigationHintSlotProps,
     VueUiWatermarkSlotProps,
+    CommonAnnotatorSlots,
 };
 
 declare const VueUiXyBase: DefineComponent<VueUiXyProps>;
 
 export const VueUiXy: typeof VueUiXyBase & {
     new (): VueUiXyExpose & {
-        $slots: {
+        $slots: CommonAnnotatorSlots & {
             legend?: (props: VueUiXyLegendSlotProps) => VNodeChild;
             ['resest-action']?: (
                 props: VueUiResetActionSlotProps,
@@ -82,22 +84,6 @@ export const VueUiXy: typeof VueUiXyBase & {
             ['tooltip-before']?: (props: VueUiXyTooltipSlotProps) => VNodeChild;
             tooltip?: (props: VueUiXyTooltipSlotProps) => VNodeChild;
             ['tooltip-after']?: (props: VueUiXyTooltipSlotProps) => VNodeChild;
-            ['annotator-action-close']?: () => VNodeChild;
-            ['annotator-action-color']?: (
-                props: VueUiAnnotatorActionColorSlotProps,
-            ) => VNodeChild;
-            ['annotator-action-draw']?: (
-                props: VueUiAnnotatorActionDrawSlotProps,
-            ) => VNodeChild;
-            ['annotator-action-undo']?: (
-                props: VueUiAnnotatorActionUndoSlotProps,
-            ) => VNodeChild;
-            ['annotator-action-redo']?: (
-                props: VueUiAnnotatorActionRedoSlotProps,
-            ) => VNodeChild;
-            ['annotator-action-delete']?: (
-                props: VueUiAnnotatorActionDeleteSlotProps,
-            ) => VNodeChild;
             menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
             optionTooltip?: () => VNodeChild;
             optionPdf?: () => VNodeChild;
