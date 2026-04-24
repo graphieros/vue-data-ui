@@ -2556,8 +2556,10 @@ declare module 'vue-data-ui' {
     >;
 
     export type VueUiRingsConfig = {
-        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiRingsConfig>;
-        skeletonDatastet?: VueUiBuiltInSkeletonDataset<VueUiRingsDatasetItem[]>;
+        skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiRingsConfig> | null;
+        skeletonDataset?: VueUiBuiltInSkeletonDataset<
+            VueUiRingsDatasetItem[]
+        > | null;
         debug?: boolean; // v3
         loading?: boolean; // v3
         responsive?: boolean;
@@ -2589,8 +2591,8 @@ declare module 'vue-data-ui' {
                             show?: boolean;
                             offsetX?: number;
                             fontSize?: number;
-                            color?: number;
-                            bold?: number;
+                            color?: string;
+                            bold?: boolean;
                             showValue?: boolean;
                             showPercentage?: boolean;
                             roundingValue?: number;
