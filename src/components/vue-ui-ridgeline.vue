@@ -2349,62 +2349,63 @@ defineExpose({
         </div>
 
         <div ref="chartLegend">
-            <Legend
-                v-if="FINAL_CONFIG.style.chart.legend.show"
-                :key="`legend_${legendStep}`"
-                :legendSet="legendSet"
-                :config="legendConfig"
-                :isCursorPointer="isCursorPointer"
-                @clickMarker="({ legend }) => segregate(legend.id)"
-            >
-                <template
-                    #legend-pattern="{ legend, index }"
-                    v-if="$slots.pattern"
+            <slot name="legend" v-bind:legend="legendSet">
+                <Legend
+                    v-if="FINAL_CONFIG.style.chart.legend.show"
+                    :key="`legend_${legendStep}`"
+                    :legendSet="legendSet"
+                    :config="legendConfig"
+                    :isCursorPointer="isCursorPointer"
+                    @clickMarker="({ legend }) => segregate(legend.id)"
                 >
-                    <Shape
-                        :shape="legend.shape"
-                        :radius="30"
-                        stroke="none"
-                        :plot="{ x: 30, y: 30 }"
-                        :fill="`url(#pattern_${uid}_${index})`"
-                    />
-                </template>
-
-                <template #item="{ legend }">
-                    <div
-                        data-cy="legend-item"
-                        :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`"
-                        v-if="!loading"
-                        @click="legend.segregate()"
+                    <template
+                        #legend-pattern="{ legend, index }"
+                        v-if="$slots.pattern"
                     >
-                        {{ legend.name }}
-                    </div>
-                </template>
+                        <Shape
+                            :shape="legend.shape"
+                            :radius="30"
+                            stroke="none"
+                            :plot="{ x: 30, y: 30 }"
+                            :fill="`url(#pattern_${uid}_${index})`"
+                        />
+                    </template>
 
-                <template #legendToggle>
-                    <BaseLegendToggle
-                        v-if="
-                            legendSet.length > 2 &&
-                            FINAL_CONFIG.style.chart.legend.selectAllToggle
-                                .show &&
-                            !loading
-                        "
-                        :backgroundColor="
-                            FINAL_CONFIG.style.chart.legend.selectAllToggle
-                                .backgroundColor
-                        "
-                        :color="
-                            FINAL_CONFIG.style.chart.legend.selectAllToggle
-                                .color
-                        "
-                        :fontSize="FINAL_CONFIG.style.chart.legend.fontSize"
-                        :checked="segregated.length > 0"
-                        :isCursorPointer="isCursorPointer"
-                        @toggle="toggleLegend"
-                    />
-                </template>
-            </Legend>
-            <slot name="legend" v-bind:legend="legendSet" />
+                    <template #item="{ legend }">
+                        <div
+                            data-cy="legend-item"
+                            :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`"
+                            v-if="!loading"
+                            @click="legend.segregate()"
+                        >
+                            {{ legend.name }}
+                        </div>
+                    </template>
+
+                    <template #legendToggle>
+                        <BaseLegendToggle
+                            v-if="
+                                legendSet.length > 2 &&
+                                FINAL_CONFIG.style.chart.legend.selectAllToggle
+                                    .show &&
+                                !loading
+                            "
+                            :backgroundColor="
+                                FINAL_CONFIG.style.chart.legend.selectAllToggle
+                                    .backgroundColor
+                            "
+                            :color="
+                                FINAL_CONFIG.style.chart.legend.selectAllToggle
+                                    .color
+                            "
+                            :fontSize="FINAL_CONFIG.style.chart.legend.fontSize"
+                            :checked="segregated.length > 0"
+                            :isCursorPointer="isCursorPointer"
+                            @toggle="toggleLegend"
+                        />
+                    </template>
+                </Legend>
+            </slot>
         </div>
 
         <div v-if="$slots.source" ref="source" dir="auto">
