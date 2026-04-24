@@ -2642,7 +2642,7 @@ declare module 'vue-data-ui' {
                 };
             };
         };
-        userOptions?: ChartUserOptions;
+        userOptions?: ChartUserOptions<VueUiRingsDatapoint[], VueUiRingsConfig>;
         table?: {
             show?: boolean;
             useDialog?: boolean;
@@ -2661,6 +2661,8 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiRingsDatapoint = {
+        [key: string]: any;
+        absoluteIndex: number;
         color: string;
         name: string;
         percentage: number;
@@ -2668,7 +2670,6 @@ declare module 'vue-data-ui' {
         strokeWidth: number;
         uid: string;
         value: number;
-        absoluteIndex: number;
     };
 
     export type VueUiRingsDatasetItem = {
@@ -2700,13 +2701,79 @@ declare module 'vue-data-ui' {
         hideSeries(name: string): void;
     };
 
-    export const VueUiRings: DefineComponent<
-        {
-            config?: VueUiRingsConfig;
-            dataset: VueUiRingsDatasetItem[];
-        },
-        VueUiRingsExpose
-    >;
+    export type VueUiRingsSvgSlotProps = {
+        svg: {
+            height: number;
+            isPrintingImg: boolean;
+            isPrintingSvg: boolean;
+            width: number;
+        };
+    };
+
+    export type VueUiRingsLegendItem = VueUiRingsDatapoint & {
+        display: string;
+        isSegregated: boolean;
+        opacity: number;
+        segregate: () => void;
+        shape: Shape;
+    };
+
+    export type VueUiRingsLegendSlotProps = {
+        legend: VueUiRingsLegendItem[];
+    };
+
+    export type VueUiRingsTooltipSlotProps = {
+        config: VueUiRingsConfig;
+        datapoint: VueUiRingsDatapoint;
+        series: VueUiRingsDatapoint[];
+        seriesIndex: number;
+    };
+
+    export type VueUiRingsProps = {
+        config?: VueUiRingsConfig;
+        dataset: VueUiRingsDatasetItem[];
+    };
+
+    const VueUiRingsBase: DefineComponent<VueUiRingsProps>;
+
+    export const VueUiRings: typeof VueUiRingsBase & {
+        new (): VueUiRingsExpose & {
+            $slots: CommonAnnotatorSlots & {
+                menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
+                optionTooltip?: () => VNodeChild;
+                optionPdf?: () => VNodeChild;
+                optionCsv?: () => VNodeChild;
+                optionImg?: () => VNodeChild;
+                optionSvg?: () => VNodeChild;
+                optionTable?: () => VNodeChild;
+                optionLabels?: () => VNodeChild;
+                optionFullscreen?: (
+                    props: VueUiOptionFullscreenSlotProps,
+                ) => VNodeChild;
+                optionAltCopy?: () => VNodeChild;
+                optionAnnotator?: (
+                    props: VueUiOptionAnnotatorSlotProps,
+                ) => VNodeChild;
+                ['chart-background']?: () => VNodeChild;
+                pattern?: (props: VueUiPatternSlotProps) => VNodeChild;
+                svg?: (props: VueUiRingsSvgSlotProps) => VNodeChild;
+                hint?: (
+                    props: VueUiKeyboardNavigationHintSlotProps,
+                ) => VNodeChild;
+                watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
+                source?: () => VNodeChild;
+                skeleton?: () => VNodeChild;
+                legend?: (props: VueUiRingsLegendSlotProps) => VNodeChild;
+                ['tooltip-before']?: (
+                    props: VueUiRingsTooltipSlotProps,
+                ) => VNodeChild;
+                tooltip?: (props: VueUiRingsTooltipSlotProps) => VNodeChild;
+                ['tooltip-after']?: (
+                    props: VueUiRingsTooltipSlotProps,
+                ) => VNodeChild;
+            };
+        };
+    };
 
     export type VueUiSparkHistogramConfig = {
         skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiSparkHistogramConfig> | null;
