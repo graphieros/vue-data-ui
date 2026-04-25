@@ -3041,13 +3041,40 @@ declare module 'vue-data-ui' {
         hideSeries(name: string): void;
     };
 
-    export const VueUiSparkStackbar: DefineComponent<
-        {
-            config?: VueUiSparkStackbarConfig;
-            dataset: VueUiSparkStackbarDatasetItem[];
-        },
-        VueUiSparkStackbarExpose
-    >;
+    export type VueUiSparkStackbarTooltipSlotProps = {
+        config: VueUiSparkStackbarConfig;
+        datapoint: VueUiSparkStackbarDatapoint;
+        series: VueUiSparkStackbarDatapoint[];
+        seriesIndex: number;
+    };
+
+    export type VueUiSparkStackbarProps = {
+        config?: VueUiSparkStackbarConfig;
+        dataset: VueUiSparkStackbarDatasetItem[];
+    };
+
+    const VueUiSparkStackbarBase: DefineComponent<VueUiSparkStackbarProps>;
+
+    export const VueUiSparkStackbar: typeof VueUiSparkStackbarBase & {
+        new (): VueUiSparkStackbarExpose & {
+            $slots: {
+                hint?: (
+                    props: VueUiKeyboardNavigationHintSlotProps,
+                ) => VNodeChild;
+                ['tooltip-before']?: (
+                    props: VueUiSparkStackbarTooltipSlotProps,
+                ) => VNodeChild;
+                tooltip?: (
+                    props: VueUiSparkStackbarTooltipSlotProps,
+                ) => VNodeChild;
+                ['tooltip-after']?: (
+                    props: VueUiSparkStackbarTooltipSlotProps,
+                ) => VNodeChild;
+                source?: () => VNodeChild;
+                skeleton?: () => VNodeChild;
+            };
+        };
+    };
 
     export type VueUiThermometerConfig = {
         skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiThermometerConfig> | null;
