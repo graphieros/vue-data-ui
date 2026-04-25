@@ -9469,10 +9469,22 @@ declare module 'vue-data-ui' {
         };
     };
 
-    export const VueUiSparkTrend: DefineComponent<{
+    export type VueUiSparkTrendProps = {
         dataset: Array<number | null>;
         config?: VueUiSparkTrendConfig;
-    }>;
+    };
+
+    const VueUiSparkTrendBase: DefineComponent<VueUiSparkTrendProps>;
+
+    export const VueUiSparkTrend: typeof VueUiSparkTrendBase & {
+        new (): {
+            $slots: {
+                ['chart-background']?: () => VNodeChild;
+                source?: () => VNodeChild;
+                skeleton?: () => VNodeChild;
+            };
+        };
+    };
 
     export type VueUiStripPlotConfig = {
         skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiStripPlotConfig> | null;
