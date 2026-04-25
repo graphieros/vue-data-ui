@@ -209,10 +209,7 @@ function log(n: unknown) {
     <div>
         <VueUiSparkHistogram :dataset :config>
             <template #hint="{ hint, isVisible }">
-                <KeyboardNavigationHint
-                    :hint
-                    :is-visible
-                />
+                <KeyboardNavigationHint :hint :is-visible />
             </template>
 
             <template #chart-background>

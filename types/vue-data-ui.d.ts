@@ -8012,9 +8012,9 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiSparklineDatasetItem = {
+        absoluteValue?: number | null;
         period: string | number;
         value: number | null;
-        absoluteValue?: number | null;
         id?: string;
         plotValue?: number;
         toMax?: number;
@@ -8162,10 +8162,62 @@ declare module 'vue-data-ui' {
         };
     };
 
-    export const VueUiSparkline: DefineComponent<{
+    export type VueUiSparklineFormattedDatapoint = {
+        absoluteValue: number | null;
+        color: string;
+        id: string;
+        period: string;
+        plotValue: number;
+        toMax: number;
+        value: number | null;
+        width: number;
+        x: number;
+        y: number;
+    };
+
+    export type VueUiSparklineBeforeSlotProps = {
+        average: number;
+        latest: number;
+        median: number;
+        selected: undefined | VueUiSparklineFormattedDatapoint;
+        sum: number;
+        trend: number;
+    };
+
+    export type VueUiSparklineSvgSlotProps = {
+        svg: {
+            chartWidth: number;
+            height: number;
+            padding: number;
+            width: number;
+        };
+    };
+
+    export type VueUiSparklineTooltipSlotProps =
+        VueUiSparklineFormattedDatapoint;
+
+    export type VueUiSparklineProps = {
         config?: VueUiSparklineConfig;
         dataset: VueUiSparklineDatasetItem[];
-    }>;
+    };
+
+    const VueUiSparklineBase: DefineComponent<VueUiSparklineProps>;
+
+    export const VueUiSparkline: typeof VueUiSparklineBase & {
+        new (): {
+            $slots: {
+                before?: (props: VueUiSparklineBeforeSlotProps) => VNodeChild;
+                ['chart-background']?: () => VNodeChild;
+                svg?: (props: VueUiSparklineSvgSlotProps) => VNodeChild;
+                hint?: (
+                    props: VueUiKeyboardNavigationHintSlotProps,
+                ) => VNodeChild;
+                tooltip?: (props: VueUiSparklineTooltipSlotProps) => VNodeChild;
+                source?: () => VNodeChild;
+                skeleton?: () => VNodeChild;
+            };
+        };
+    };
 
     export type VueUiTableDatasetHeaderItem = {
         name: string;
