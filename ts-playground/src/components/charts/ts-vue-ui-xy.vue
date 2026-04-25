@@ -10,7 +10,6 @@ import {
 } from 'vue-data-ui/vue-ui-xy';
 import { mergeConfigs } from 'vue-data-ui/utils';
 import 'vue-data-ui/style.css';
-import XyLegend from '../slots/vue-ui-xy/xy-legend.vue';
 import CommonResetAction from '../slots/common/reset-action.vue';
 import XyTooltip from '../slots/vue-ui-xy/xy-tooltip.vue';
 import CommonAnnotatorActionColor from '../slots/common/annotator-action-color.vue';

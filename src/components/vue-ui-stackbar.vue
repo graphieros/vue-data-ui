@@ -1940,21 +1940,22 @@ const dataTable = computed(() => {
 
     let body = [];
 
-    for (let i = 0; i < maxSeries.value; i += 1) {
+    const visibleLength = slicer.value.end - slicer.value.start;
+
+    for (let i = 0; i < visibleLength; i += 1) {
+        const absoluteIndex = slicer.value.start + i;
+
         const sum = formattedDataset.value
-            .map((ds) => {
-                return ds.series[i] ?? 0;
-            })
+            .map((ds) => ds.series[i] ?? 0)
             .reduce((a, b) => a + b, 0);
 
         body.push(
             [
-                FINAL_CONFIG.value.style.chart.grid.x.timeLabels.values.slice(
-                    slicer.value.start,
-                    slicer.value.end,
-                )[i]
-                    ? timeLabels.value[i]?.text
-                    : i + 1,
+                FINAL_CONFIG.value.style.chart.grid.x.timeLabels.values[
+                    absoluteIndex
+                ]
+                    ? timeLabels.value[i]?.text || absoluteIndex + 1
+                    : absoluteIndex + 1,
             ]
                 .concat(
                     formattedDataset.value.map((ds) =>
