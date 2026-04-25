@@ -1258,13 +1258,44 @@ declare module 'vue-data-ui' {
                 fallback?: string;
             };
         };
-        userOptions?: ChartUserOptions;
+        userOptions?: ChartUserOptions<
+            VueUiTableSparklineFormattedDatasetItem[],
+            VueUiTableSparklineConfig
+        >;
     };
 
-    export const VueUiTableSparkline: DefineComponent<{
+    export type VueUiTableSparklineFormattedDatasetItem = {
+        average: number;
+        color: string;
+        median: number;
+        name: string;
+        sparklineDataset: Array<{ period: string; value: number | null }>;
+        sum: number;
+        values: Array<number | null>;
+    };
+
+    export type VueUiTableSparklineProps = {
         dataset: VueUiTableSparklineDatasetItem[];
         config: VueUiTableSparklineConfig;
-    }>;
+    };
+
+    const VueUiTableSparklineBase: DefineComponent<VueUiTableSparklineProps>;
+
+    export const VueUiTableSparkline: typeof VueUiTableSparklineBase & {
+        new (): {
+            $slots: {
+                menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
+                optionPdf?: () => VNodeChild;
+                optionCsv?: () => VNodeChild;
+                optionImg?: () => VNodeChild;
+                optionFullscreen?: (
+                    props: VueUiOptionFullscreenSlotProps,
+                ) => VNodeChild;
+                optionAltCopy?: () => VNodeChild;
+                source?: () => VNodeChild;
+            };
+        };
+    };
 
     export type VueUiMoleculeDatasetNode = {
         name: string;
