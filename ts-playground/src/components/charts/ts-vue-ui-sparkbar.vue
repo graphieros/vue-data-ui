@@ -1,7 +1,14 @@
 <script setup lang="ts">
+/**
+ * This playground showcases all the slots and their implementations for <VueUiSparkbar>
+ */
 import { computed } from 'vue';
-import { getVueDataUiConfig } from 'vue-data-ui';
-import { VueUiSparkbar, type VueUiSparkbarConfig, type VueUiSparkbarDatasetItem } from 'vue-data-ui/vue-ui-sparkbar';
+import {
+    VueUiSparkbar,
+    type VueUiSparkbarConfig,
+    type VueUiSparkbarDatasetItem,
+} from 'vue-data-ui/vue-ui-sparkbar';
+import 'vue-data-ui/style.css';
 
 const dataset = computed<VueUiSparkbarDatasetItem[]>(() => {
     return [

@@ -1,4 +1,7 @@
 <script setup lang="ts">
+/**
+ * This playground showcases all the slots and their implementations for <VueUiScatter>
+ */
 import { computed } from 'vue';
 import {
     VueUiScatter,

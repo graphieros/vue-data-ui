@@ -1127,10 +1127,22 @@ declare module 'vue-data-ui' {
         };
     };
 
-    export const VueUiSparkgauge: DefineComponent<{
+    export type VueUiSparkgaugeProps = {
         dataset: VueUiSparkgaugeDataset;
         config?: VueUiSparkgaugeConfig;
-    }>;
+    };
+
+    const VueUiSparkgaugeBase: DefineComponent<VueUiSparkgaugeProps>;
+
+    export const VueUiSparkgauge: typeof VueUiSparkgaugeBase & {
+        new (): {
+            $slots: {
+                ['chart-background']?: () => VNodeChild;
+                source?: () => VNodeChild;
+                skeleton?: () => VNodeChild;
+            };
+        };
+    };
 
     export type VueUiMiniLoaderConfigType = {
         gutterColor?: string;
@@ -13952,7 +13964,8 @@ declare module 'vue-data-ui' {
         | 'vue_ui_stackline'
         | 'vue_ui_dag'
         | 'vue_ui_geo'
-        | 'vue_ui_bump';
+        | 'vue_ui_bump'
+        | 'vue_ui_sparkgauge';
 
     export type VueDataUiWordCloudTransformCallback =
         | ((word: string) => string)

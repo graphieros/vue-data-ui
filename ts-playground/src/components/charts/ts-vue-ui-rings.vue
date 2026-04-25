@@ -1,4 +1,7 @@
 <script setup lang="ts">
+/**
+ * This playground showcases all the slots and their implementations for <VueUiRings>
+ */
 import { computed } from 'vue';
 import {
     VueUiRings,

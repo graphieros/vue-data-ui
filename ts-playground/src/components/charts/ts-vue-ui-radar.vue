@@ -1,4 +1,7 @@
 <script setup lang="ts">
+/**
+ * This playground showcases all the slots and their implementations for <VueUiRadar>
+ */
 import { computed } from 'vue';
 import {
     VueUiRadar,
