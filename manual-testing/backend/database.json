@@ -1234,7 +1234,7 @@
         "VueUiTableSparkline": true,
         "VueUiThermometer": true,
         "VueUiTimer": true,
-        "VueUiTiremarks": false,
+        "VueUiTiremarks": true,
         "VueUiTreemap": false,
         "VueUiWaffle": false,
         "VueUiWheel": false,
@@ -1247,7 +1247,7 @@
       "customCheckList": {},
       "id": "3846f04c-685f-4509-8042-87b9c0b7ec33",
       "createdAt": 1775989842046,
-      "updatedAt": 1777129688737
+      "updatedAt": 1777130862944
     },
     {
       "title": "Expose more methods",

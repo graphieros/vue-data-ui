@@ -2448,7 +2448,10 @@ declare module 'vue-data-ui' {
         loading?: boolean; // v3
         responsive?: boolean; // v3
         theme?: Theme;
-        userOptions?: ChartUserOptions;
+        userOptions?: ChartUserOptions<
+            VueUiTiremarksDataset,
+            VueUiTiremarksConfig
+        >;
         style?: {
             fontFamily?: string;
             chart?: {
@@ -2505,13 +2508,44 @@ declare module 'vue-data-ui' {
         toggleFullscreen(): void;
     };
 
-    export const VueUiTiremarks: DefineComponent<
-        {
-            config?: VueUiTiremarksConfig;
-            dataset: VueUiTiremarksDataset;
-        },
-        VueUiTiremarksExpose
-    >;
+    export type VueUiTiremarksSvgSlotProps = {
+        svg: {
+            height: number;
+            isPrintingImg: boolean;
+            isPrintingSvg: boolean;
+            width: number;
+        };
+    };
+
+    export type VueUiTiremarksProps = {
+        config?: VueUiTiremarksConfig;
+        dataset: VueUiTiremarksDataset;
+    };
+
+    const VueUiTiremarksBase: DefineComponent<VueUiTiremarksProps>;
+
+    export const VueUiTiremarks: typeof VueUiTiremarksBase & {
+        new (): VueUiTiremarksExpose & {
+            $slots: CommonAnnotatorSlots & {
+                menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
+                optionPdf?: () => VNodeChild;
+                optionImg?: () => VNodeChild;
+                optionSvg?: () => VNodeChild;
+                optionFullscreen?: (
+                    props: VueUiOptionFullscreenSlotProps,
+                ) => VNodeChild;
+                optionAltCopy?: () => VNodeChild;
+                optionAnnotator?: (
+                    props: VueUiOptionAnnotatorSlotProps,
+                ) => VNodeChild;
+                ['chart-background']?: () => VNodeChild;
+                svg?: (props: VueUiTiremarksSvgSlotProps) => VNodeChild;
+                watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
+                source?: () => VNodeChild;
+                skeleton?: () => VNodeChild;
+            };
+        };
+    };
 
     export type VueUiWheelConfig = {
         skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiWheelConfig> | null;

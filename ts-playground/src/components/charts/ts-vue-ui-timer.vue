@@ -90,7 +90,7 @@ const config = computed<VueUiTimerConfig>(() => {
                 },
             },
         },
-    }
+    };
 });
 
 function log(n: unknown) {
