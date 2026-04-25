@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import type { VueUiDonutSvgSlotProps } from 'vue-data-ui/vue-ui-donut';
+import type { VueUiTreemapSvgSlotProps } from 'vue-data-ui/vue-ui-treemap';
 
 const props = defineProps<{
-    svg: VueUiDonutSvgSlotProps['svg'];
+    svg: VueUiTreemapSvgSlotProps['svg'];
 }>();
 </script>
 
@@ -10,17 +10,18 @@ const props = defineProps<{
     <circle
         :cx="svg.width / 2"
         :cy="svg.height / 2"
-        :r="56"
+        :r="30"
         fill="chocolate"
-        opacity="0.3"
+        opacity="0.7"
     />
     <text
         :x="svg.width / 2"
-        :y="svg.height / 2 - 40"
-        fill="chocolate"
+        :y="svg.height / 2"
+        fill="white"
         font-size="12"
         text-anchor="middle"
+        dominant-baseline="middle"
     >
-        #svg: {{ svg.isPrintingImg }}
+        #svg
     </text>
 </template>

@@ -153,6 +153,9 @@ const TsVueUiTimer = defineAsyncComponent(
 const TsVueUiTiremarks = defineAsyncComponent(
     () => import('./components/charts/ts-vue-ui-tiremarks.vue'),
 );
+const TsVueUiTreemap = defineAsyncComponent(
+    () => import('./components/charts/ts-vue-ui-treemap.vue'),
+);
 
 const components = shallowRef([
     { name: 'VueUiXy' },
@@ -206,6 +209,7 @@ const components = shallowRef([
     { name: 'VueUiThermometer' },
     { name: 'VueUiTimer' },
     { name: 'VueUiTiremarks' },
+    { name: 'VueUiTreemap' },
 ]);
 
 const selectedComponent = shallowRef(components.value[0]);
@@ -302,6 +306,7 @@ const selectedComponent = shallowRef(components.value[0]);
         />
         <TsVueUiTimer v-if="selectedComponent?.name === 'VueUiTimer'" />
         <TsVueUiTiremarks v-if="selectedComponent?.name === 'VueUiTiremarks'" />
+        <TsVueUiTreemap v-if="selectedComponent?.name === 'VueUiTreemap'" />
     </div>
 </template>
 

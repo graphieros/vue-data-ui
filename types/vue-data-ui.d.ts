@@ -635,7 +635,10 @@ declare module 'vue-data-ui' {
         };
         theme?: Theme;
         customPalette?: string[];
-        userOptions?: ChartUserOptions;
+        userOptions?: ChartUserOptions<
+            VueUiTreemapDatapoint[],
+            VueUiTreemapConfig
+        >;
         style?: {
             fontFamily?: string;
             chart?: {
@@ -734,20 +737,20 @@ declare module 'vue-data-ui' {
         [key: string]: any;
         children?: VueUiTreemapDatapoint[];
         color: string;
+        depth: number;
         id: string;
+        isVisibleNode: boolean;
         name: string;
         normalizedValue: number;
-        parentId?: string;
+        parentId?: string | null;
         proportion: number;
+        showLabel: boolean;
+        sourceColor: string | null;
         value: number;
         x0: number;
         x1: number;
         y0: number;
         y1: number;
-        depth: number;
-        isVisibleNode: boolean;
-        showLabel: boolean;
-        sourceColor: string;
     };
 
     export type VueUiTreemapSeriesItem = {
@@ -773,13 +776,113 @@ declare module 'vue-data-ui' {
         hideSeries(name: string): void;
     };
 
-    export const VueUiTreemap: DefineComponent<
-        {
-            config?: VueUiTreemapConfig;
-            dataset: VueUiTreemapDatasetItem[];
-        },
-        VueUiTreemapExpose
-    >;
+    export type VueUiTreemapBreadcrumbLabelSlotProps = {
+        crumb: { id: null; label: string };
+        isFocus: boolean;
+        isRoot: boolean;
+    };
+
+    export type VueUiTreemapRectSlotProps = {
+        fontSize: number;
+        isZoom: boolean;
+        key: number;
+        rect: VueUiTreemapDatapoint;
+        shouldShow: boolean;
+        textColor: string;
+    };
+
+    export type VueUiTreemapSvgSlotProps = {
+        svg: {
+            left: number;
+            top: number;
+            right: number;
+            bottom: number;
+            width: number;
+            height: number;
+            vbWidth: number;
+            vbHeight: number;
+            offsetY: number;
+        };
+        isPrintingImg: boolean;
+        isPrintingSvg: boolean;
+        isZoom: boolean;
+        rect: VueUiTreemapDatapoint | null;
+        config: VueUiTreemapConfig;
+    };
+
+    export type VueUiTreemapLegendItem = {
+        children: VueUiTreemapSeriesItem[];
+        color: string;
+        display: string;
+        id: string;
+        isSegregated: boolean;
+        name: string;
+        opacity: number;
+        proportion: number;
+        segregate: () => void;
+        shape: Shape;
+        sourceColor: null;
+        value: number;
+    };
+
+    export type VueUiTreemapLegendSlotProps = {
+        legend: VueUiTreemapLegendItem[];
+    };
+
+    export type VueUiTooltipSlotProps = {
+        config: VueUiTreemapConfig;
+        datapoint: VueUiTreemapDatapoint;
+        series: VueUiTreemapSeriesItem[];
+        seriesIndex: number;
+    };
+
+    export type VueUiTreemapProps = {
+        config?: VueUiTreemapConfig;
+        dataset: VueUiTreemapDatasetItem[];
+    };
+
+    const VueUiTreemapBase: DefineComponent<VueUiTreemapProps>;
+
+    export const VueUiTreemap: typeof VueUiTreemapBase & {
+        new (): VueUiTreemapExpose & {
+            $slots: CommonAnnotatorSlots & {
+                menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
+                optionTooltip?: () => VNodeChild;
+                optionPdf?: () => VNodeChild;
+                optionCsv?: () => VNodeChild;
+                optionImg?: () => VNodeChild;
+                optionSvg?: () => VNodeChild;
+                optionTable?: () => VNodeChild;
+                optionFullscreen?: (
+                    props: VueUiOptionFullscreenSlotProps,
+                ) => VNodeChild;
+                optionAltCopy?: () => VNodeChild;
+                optionAnnotator?: (
+                    props: VueUiOptionAnnotatorSlotProps,
+                ) => VNodeChild;
+                ['breadcrumb-label']?: (
+                    props: VueUiTreemapBreadcrumbLabelSlotProps,
+                ) => VNodeChild;
+                ['breadcrumb-arrow']?: () => VNodeChild;
+                rect?: (props: VueUiTreemapRectSlotProps) => VNodeChild;
+                svg?: (props: VueUiTreemapSvgSlotProps) => VNodeChild;
+                hint?: (
+                    props: VueUiKeyboardNavigationHintSlotProps,
+                ) => VNodeChild;
+                watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
+                source?: () => VNodeChild;
+                skeleton?: () => VNodeChild;
+                legend?: (props: VueUiTreemapLegendSlotProps) => VNodeChild;
+                ['tooltip-before']?: (
+                    props: VueUiTooltipSlotProps,
+                ) => VNodeChild;
+                tooltip?: (props: VueUiTooltipSlotProps) => VNodeChild;
+                ['tooltip-after']?: (
+                    props: VueUiTooltipSlotProps,
+                ) => VNodeChild;
+            };
+        };
+    };
 
     export type VueUiKpiConfig = {
         debug?: boolean;

@@ -1103,6 +1103,8 @@ const legendSet = computed(() => {
             return {
                 ...el,
                 proportion,
+                isSegregated: segregated.value.includes(el.id),
+                segregate: () => segregate(el),
                 opacity: segregated.value.includes(el.id) ? 0.5 : 1,
                 display: `${el.name}${FINAL_CONFIG.value.style.chart.legend.showPercentage || FINAL_CONFIG.value.style.chart.legend.showValue ? ': ' : ''}${
                     !FINAL_CONFIG.value.style.chart.legend.showValue
