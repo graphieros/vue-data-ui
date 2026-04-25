@@ -3160,7 +3160,10 @@ declare module 'vue-data-ui' {
             };
             title?: ChartTitle;
         };
-        userOptions?: ChartUserOptions;
+        userOptions?: ChartUserOptions<
+            VueUiThermometerDataset,
+            VueUiThermometerConfig
+        >;
     };
 
     export type VueUiThermometerDataset = {
@@ -3183,13 +3186,50 @@ declare module 'vue-data-ui' {
         toggleFullscreen(): void;
     };
 
-    export const VueUiThermometer: DefineComponent<
-        {
-            config?: VueUiThermometerConfig;
-            dataset: VueUiThermometerDataset;
-        },
-        VueUiThermometerExpose
-    >;
+    export type VueUiThermometerSvgSlotProps = {
+        svg: {
+            width: number;
+            left: number;
+            right: number;
+            top: number;
+            bottom: number;
+            height: number;
+            thermoHeight: number;
+            thermoWidth: number;
+            isPrintingImg: boolean;
+            isPrintingSvg: boolean;
+        };
+    };
+
+    export type VueUiThermometerProps = {
+        config?: VueUiThermometerConfig;
+        dataset: VueUiThermometerDataset;
+    };
+
+    const VueUiThermometerBase: DefineComponent<VueUiThermometerProps>;
+
+    export const VueUiThermometer: typeof VueUiThermometerBase & {
+        new (): VueUiThermometerExpose & {
+            $slots: CommonAnnotatorSlots & {
+                menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
+                optionPdf?: () => VNodeChild;
+                optionImg?: () => VNodeChild;
+                optionSvg?: () => VNodeChild;
+                optionFullscreen?: (
+                    props: VueUiOptionFullscreenSlotProps,
+                ) => VNodeChild;
+                optionAltCopy?: () => VNodeChild;
+                optionAnnotator?: (
+                    props: VueUiOptionAnnotatorSlotProps,
+                ) => VNodeChild;
+                ['chart-background']?: () => VNodeChild;
+                svg?: (props: VueUiThermometerSvgSlotProps) => VNodeChild;
+                watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
+                source?: () => VNodeChild;
+                skeleton?: () => VNodeChild;
+            };
+        };
+    };
 
     export type VueUiRelationCircleConfig = {
         skeletonDataset?: VueUiBuiltInSkeletonDataset<
