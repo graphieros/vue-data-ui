@@ -11087,9 +11087,70 @@ declare module 'vue-data-ui' {
         };
     };
 
-    export const VueUiTimer: DefineComponent<{
+    export type VueUiTimerProps = {
         config?: VueUiTimerConfig;
-    }>;
+    };
+
+    export type VueUiTimerExpose = {
+        start(): void;
+        pause(): void;
+        reset(): void;
+        restart(): void;
+        lap(): void;
+    };
+
+    export type VueUiTimerTimeSlotProps = {
+        elapsed?: number;
+        timestamp?: number;
+        formatted?: string;
+        height: number;
+        label: number;
+        tracker: { core: number; aura: number };
+        width: number;
+    };
+
+    export type VueUiTimerControlsSlotProps = {
+        isPaused: boolean;
+        isRunning: boolean;
+        start: () => void;
+        pause: () => void;
+        reset: () => void;
+        restart: () => void;
+        lap: () => void;
+        laps: Array<{
+            timestamp: number;
+            elapsed: number;
+            formatted: string;
+        }>;
+        elapsed?: number;
+        timestamp?: number;
+        formatted?: string;
+    };
+
+    export type VueUiTimerLapsSlotProps = Pick<
+        VueUiTimerControlsSlotProps,
+        | 'laps'
+        | 'lap'
+        | 'isRunning'
+        | 'isPaused'
+        | 'elapsed'
+        | 'timestamp'
+        | 'formatted'
+    >;
+
+    const VueUiTimerBase: DefineComponent<VueUiTimerProps>;
+
+    export const VueUiTimer: typeof VueUiTimerBase & {
+        new (): VueUiTimerExpose & {
+            $slots: {
+                ['chart-background']?: () => VNodeChild;
+                time?: (props: VueUiTimerTimeSlotProps) => VNodeChild;
+                timeSvg?: (props: VueUiTimerTimeSlotProps) => VNodeChild;
+                controls?: (props: VueUiTimerControlsSlotProps) => VNodeChild;
+                laps?: (props: VueUiTimerLapsSlotProps) => VNodeChild;
+            };
+        };
+    };
 
     export type VueUiCarouselTableDataset = {
         head: string[];

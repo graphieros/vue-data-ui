@@ -147,6 +147,9 @@ const TsVueUiTableSparkline = defineAsyncComponent(
 const TsVueUiThermometer = defineAsyncComponent(
     () => import('./components/charts/ts-vue-ui-thermometer.vue'),
 );
+const TsVueUiTimer = defineAsyncComponent(
+    () => import('./components/charts/ts-vue-ui-timer.vue'),
+);
 
 const components = shallowRef([
     { name: 'VueUiXy' },
@@ -198,6 +201,7 @@ const components = shallowRef([
     { name: 'VueUiStripPlot' },
     { name: 'VueUiTableSparkline' },
     { name: 'VueUiThermometer' },
+    { name: 'VueUiTimer' },
 ]);
 
 const selectedComponent = shallowRef(components.value[0]);
@@ -292,6 +296,7 @@ const selectedComponent = shallowRef(components.value[0]);
         <TsVueUiThermometer
             v-if="selectedComponent?.name === 'VueUiThermometer'"
         />
+        <TsVueUiTimer v-if="selectedComponent?.name === 'VueUiTimer'" />
     </div>
 </template>
 
