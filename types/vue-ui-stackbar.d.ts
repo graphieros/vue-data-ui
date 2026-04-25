@@ -21,6 +21,7 @@ import type {
     VueUiStackbarTooltipSlotProps,
     VueUiStackbarLegendItem,
     VueUiStackbarLegendSlotProps,
+    VueUiResetActionSlotProps,
 } from 'vue-data-ui';
 
 export type {
@@ -44,6 +45,7 @@ export type {
     VueUiStackbarTooltipSlotProps,
     VueUiStackbarLegendItem,
     VueUiStackbarLegendSlotProps,
+    VueUiResetActionSlotProps,
 };
 
 declare const VueUiStackbarBase: DefineComponent<VueUiStackbarProps>;
@@ -84,6 +86,9 @@ export const VueUiStackbar: typeof VueUiStackbarBase & {
                 props: VueUiStackbarTooltipSlotProps,
             ) => VNodeChild;
             legend?: (props: VueUiStackbarLegendSlotProps) => VNodeChild;
+            ['resest-action']?: (
+                props: VueUiResetActionSlotProps,
+            ) => VNodeChild;
         };
     };
 };

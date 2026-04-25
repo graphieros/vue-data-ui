@@ -11570,7 +11570,10 @@ declare module 'vue-data-ui' {
                 roundingValue?: number;
             };
         };
-        userOptions?: ChartUserOptions;
+        userOptions?: ChartUserOptions<
+            VueUiStacklineFormattedDatasetItem[],
+            VueUiStacklineConfig
+        >;
         style?: {
             fontFamily?: string;
             chart?: {
@@ -11776,14 +11779,141 @@ declare module 'vue-data-ui' {
         toggleFullscreen(): void;
     };
 
-    export const VueUiStackline: DefineComponent<
-        {
-            config?: VueUiStacklineConfig;
-            dataset: VueUiStacklineDatasetItem[];
-            selectedXIndex?: number | null;
-        },
-        VueUiStacklineExpose
-    >;
+    export type VueUiStacklineFormattedDatasetItem = {
+        absoluteIndex: number;
+        baseY: number[];
+        color: string;
+        fullSeries: Array<number | null>;
+        id: string;
+        name: string;
+        points: Array<{ x: number; y: number }>;
+        proportions: Array<number | null>;
+        rel: number[];
+        series: Array<number | null>;
+        seriesSource: Array<number | null>;
+        shape: Shape;
+        signedSeries: Array<0 | 1>;
+        smoothArea: string;
+        smoothPath: string;
+        standalone: boolean;
+        straightArea: string;
+        straightPath: string;
+        topY: number[];
+        x: number[];
+        xMinimap: ({
+            left,
+            unitW,
+        }: {
+            left: number;
+            unitW: number;
+        }) => number[];
+        yMinimap: ({ minimapH }: { minimapH: number }) => number[];
+        yMinimapBase: ({ minimapH }: { minimapH: number }) => number[];
+    };
+
+    export type VueUiStacklineTimeLabelSlotProps =
+        VueUiStackbarTimeLabelSlotProps;
+
+    export type VueUiStacklineSvgSlotProps = {
+        svg: {
+            data: VueUiStacklineFormattedDatasetItem[];
+            drawingArea: {
+                chartHeight: number;
+                chartWidth: number;
+                top: number;
+                right: number;
+                bottom: number;
+                left: number;
+                width: number;
+                height: number;
+            };
+            isPrintingImg: boolean;
+            isPrintingSvg: boolean;
+        };
+    };
+
+    export type VueUiStacklineLegendItem = VueUiStackbarLegendItem & {
+        seriesSource: Array<null | number>;
+        standalone: boolean;
+    };
+
+    export type VueUiStacklineLegendSlotProps = {
+        legend: VueUiStacklineLegendItem[];
+    };
+
+    export type VueUiStacklineTooltipDatapoint = {
+        color: string;
+        comments: string[];
+        id: string;
+        name: string;
+        shape: Shape;
+        slotAbsoluteIndex: number;
+        sourceValue: number | undefined;
+        standalone: boolean;
+        value: number | null;
+    };
+
+    export type VueUiStacklineTooltipSlotProps = {
+        absoluteIndex: number;
+        config: VueUiStacklineConfig;
+        datapoint: VueUiStacklineTooltipDatapoint[];
+        series: VueUiStacklineFormattedDatasetItem[];
+        seriesIndex: number;
+        timeLabel: string;
+    };
+
+    export type VueUiStacklineProps = {
+        config?: VueUiStacklineConfig;
+        dataset: VueUiStacklineDatasetItem[];
+        selectedXIndex?: number | null;
+    };
+
+    const VueUiStacklineBase: DefineComponent<VueUiStacklineProps>;
+
+    export const VueUiStackline: typeof VueUiStacklineBase & {
+        new (): VueUiStacklineExpose & {
+            $slots: CommonAnnotatorSlots & {
+                menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
+                optionTooltip?: () => VNodeChild;
+                optionPdf?: () => VNodeChild;
+                optionCsv?: () => VNodeChild;
+                optionImg?: () => VNodeChild;
+                optionSvg?: () => VNodeChild;
+                optionTable?: () => VNodeChild;
+                optionLabels?: () => VNodeChild;
+                optionFullscreen?: (
+                    props: VueUiOptionFullscreenSlotProps,
+                ) => VNodeChild;
+                optionAltCopy?: () => VNodeChild;
+                optionAnnotator?: (
+                    props: VueUiOptionAnnotatorSlotProps,
+                ) => VNodeChild;
+                ['chart-background']?: () => VNodeChild;
+                pattern?: (props: VueUiPatternSlotProps) => VNodeChild;
+                ['time-label']?: (
+                    props: VueUiStacklineTimeLabelSlotProps,
+                ) => VNodeChild;
+                svg?: (props: VueUiStacklineSvgSlotProps) => VNodeChild;
+                hint?: (
+                    props: VueUiKeyboardNavigationHintSlotProps,
+                ) => VNodeChild;
+                watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
+                source?: () => VNodeChild;
+                skeleton?: () => VNodeChild;
+                legend?: (props: VueUiStacklineLegendSlotProps) => VNodeChild;
+                ['resest-action']?: (
+                    props: VueUiResetActionSlotProps,
+                ) => VNodeChild;
+                ['tooltip-before']?: (
+                    props: VueUiStacklineTooltipSlotProps,
+                ) => VNodeChild;
+                tooltip?: (props: VueUiStacklineTooltipSlotProps) => VNodeChild;
+                ['tooltip-after']?: (
+                    props: VueUiStacklineTooltipSlotProps,
+                ) => VNodeChild;
+            };
+        };
+    };
 
     export type VueUiBulletSegment = {
         name: string;

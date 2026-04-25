@@ -1228,7 +1228,7 @@
         "VueUiSparkStackbar": true,
         "VueUiSparkTrend": true,
         "VueUiStackbar": true,
-        "VueUiStackline": false,
+        "VueUiStackline": true,
         "VueUiStripPlot": false,
         "VueUiTable": false,
         "VueUiTableSparkline": false,
@@ -1247,7 +1247,7 @@
       "customCheckList": {},
       "id": "3846f04c-685f-4509-8042-87b9c0b7ec33",
       "createdAt": 1775989842046,
-      "updatedAt": 1777108221990
+      "updatedAt": 1777112653977
     },
     {
       "title": "Expose more methods",
