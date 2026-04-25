@@ -2904,10 +2904,25 @@ declare module 'vue-data-ui' {
         y?: number;
     };
 
-    export const VueUiSparkHistogram: DefineComponent<{
+    export type VueUiSparkHistogramProps = {
         config?: VueUiSparkHistogramConfig;
         dataset: VueUiSparkHistogramDatasetItem[];
-    }>;
+    };
+
+    const VueUiSparkHistogramBase: DefineComponent<VueUiSparkHistogramProps>;
+
+    export const VueUiSparkHistogram: typeof VueUiSparkHistogramBase & {
+        new (): {
+            $slots: {
+                ['chart-background']?: () => VNodeChild;
+                hint?: (
+                    props: VueUiKeyboardNavigationHintSlotProps,
+                ) => VNodeChild;
+                source?: () => VNodeChild;
+                skeleton?: () => VNodeChild;
+            };
+        };
+    };
 
     export type VueUiSparkStackbarDatapoint = {
         color: string;
