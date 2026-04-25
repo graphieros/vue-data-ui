@@ -2711,7 +2711,7 @@ declare module 'vue-data-ui' {
                 title?: ChartTitle;
             };
         };
-        userOptions?: ChartUserOptions;
+        userOptions?: ChartUserOptions<VueUiWheelDataset, VueUiWheelConfig>;
     };
 
     export type VueUiWheelDataset = {
@@ -2727,13 +2727,45 @@ declare module 'vue-data-ui' {
         toggleFullscreen(): void;
     };
 
-    export const VueUiWheel: DefineComponent<
-        {
-            dataset: VueUiWheelDataset;
-            config?: VueUiWheelConfig;
-        },
-        VueUiWheelExpose
-    >;
+    export type VueUiWheelSvgSlotProps = {
+        svg: {
+            height: number;
+            isPrintingImg: boolean;
+            isPrintingSvg: boolean;
+            size: number;
+            width: number;
+        };
+    };
+
+    export type VueUiWheelProps = {
+        dataset: VueUiWheelDataset;
+        config?: VueUiWheelConfig;
+    };
+
+    const VueUiWheelBase: DefineComponent<VueUiWheelProps>;
+
+    export const VueUiWheel: typeof VueUiWheelBase & {
+        new (): VueUiWheelExpose & {
+            $slots: CommonAnnotatorSlots & {
+                menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
+                optionPdf?: () => VNodeChild;
+                optionImg?: () => VNodeChild;
+                optionSvg?: () => VNodeChild;
+                optionFullscreen?: (
+                    props: VueUiOptionFullscreenSlotProps,
+                ) => VNodeChild;
+                optionAltCopy?: () => VNodeChild;
+                optionAnnotator?: (
+                    props: VueUiOptionAnnotatorSlotProps,
+                ) => VNodeChild;
+                ['chart-background']?: () => VNodeChild;
+                svg?: (props: VueUiWheelSvgSlotProps) => VNodeChild;
+                watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
+                source?: () => VNodeChild;
+                skeleton?: () => VNodeChild;
+            };
+        };
+    };
 
     export type VueUiRingsConfig = {
         skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiRingsConfig> | null;

@@ -1237,7 +1237,7 @@
         "VueUiTiremarks": true,
         "VueUiTreemap": true,
         "VueUiWaffle": true,
-        "VueUiWheel": false,
+        "VueUiWheel": true,
         "VueUiWordCloud": false,
         "VueUiWorld": false,
         "VueUiXy": true,
@@ -1247,7 +1247,7 @@
       "customCheckList": {},
       "id": "3846f04c-685f-4509-8042-87b9c0b7ec33",
       "createdAt": 1775989842046,
-      "updatedAt": 1777150122009
+      "updatedAt": 1777151605696
     },
     {
       "title": "Expose more methods",

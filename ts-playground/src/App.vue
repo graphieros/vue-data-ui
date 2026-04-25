@@ -159,6 +159,9 @@ const TsVueUiTreemap = defineAsyncComponent(
 const TsVueUiWaffle = defineAsyncComponent(
     () => import('./components/charts/ts-vue-ui-waffle.vue'),
 );
+const TsVueUiWheel = defineAsyncComponent(
+    () => import('./components/charts/ts-vue-ui-wheel.vue'),
+);
 
 const components = shallowRef([
     { name: 'VueUiXy' },
@@ -214,6 +217,7 @@ const components = shallowRef([
     { name: 'VueUiTiremarks' },
     { name: 'VueUiTreemap' },
     { name: 'VueUiWaffle' },
+    { name: 'VueUiWheel' },
 ]);
 
 const selectedComponent = shallowRef(components.value[0]);
@@ -312,6 +316,7 @@ const selectedComponent = shallowRef(components.value[0]);
         <TsVueUiTiremarks v-if="selectedComponent?.name === 'VueUiTiremarks'" />
         <TsVueUiTreemap v-if="selectedComponent?.name === 'VueUiTreemap'" />
         <TsVueUiWaffle v-if="selectedComponent?.name === 'VueUiWaffle'" />
+        <TsVueUiWheel v-if="selectedComponent?.name === 'VueUiWheel'" />
     </div>
 </template>
 
