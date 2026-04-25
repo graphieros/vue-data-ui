@@ -138,6 +138,9 @@ const TsVueUiStackbar = defineAsyncComponent(
 const TsVueUiStackline = defineAsyncComponent(
     () => import('./components/charts/ts-vue-ui-stackline.vue'),
 );
+const TsVueUiStripPlot = defineAsyncComponent(
+    () => import('./components/charts/ts-vue-ui-strip-plot.vue'),
+);
 
 const components = shallowRef([
     { name: 'VueUiXy' },
@@ -186,6 +189,7 @@ const components = shallowRef([
     { name: 'VueUiSparkTrend' },
     { name: 'VueUiStackbar' },
     { name: 'VueUiStackline' },
+    { name: 'VueUiStripPlot' },
 ]);
 
 const selectedComponent = shallowRef(components.value[0]);
@@ -273,6 +277,7 @@ const selectedComponent = shallowRef(components.value[0]);
         />
         <TsVueUiStackbar v-if="selectedComponent?.name === 'VueUiStackbar'" />
         <TsVueUiStackline v-if="selectedComponent?.name === 'VueUiStackline'" />
+        <TsVueUiStripPlot v-if="selectedComponent?.name === 'VueUiStripPlot'" />
     </div>
 </template>
 

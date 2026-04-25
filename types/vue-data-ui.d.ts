@@ -9505,7 +9505,10 @@ declare module 'vue-data-ui' {
         theme?: Theme;
         customPalette?: string[];
         useCssAnimation?: boolean;
-        userOptions?: ChartUserOptions;
+        userOptions?: ChartUserOptions<
+            VueUiStripPlotSeriesItem,
+            VueUiStripPlotConfig
+        >;
         table?: {
             show?: boolean;
             useDialog?: boolean;
@@ -9672,13 +9675,71 @@ declare module 'vue-data-ui' {
         toggleFullscreen(): void;
     };
 
-    export const VueUiStripPlot: DefineComponent<
-        {
-            config?: VueUiStripPlotConfig;
-            dataset: VueUiStripPlotDataset[];
-        },
-        VueUiStripPlotExpose
-    >;
+    export type VueUiStripPlotSvgSlotProps = {
+        svg: {
+            absoluteHeight: number;
+            bottom: number;
+            height: number;
+            isPrintingImg: boolean;
+            isPrintingSvg: boolean;
+            left: number;
+            right: number;
+            stripWidth: number;
+            top: number;
+            width: number;
+        };
+    };
+
+    export type VueUiStripPlotTooltipSlotProps = {
+        config: VueUiStripPlotConfig;
+        datapoint: VueUiStripPlotDatapoint;
+        series: VueUiStripPlotSeriesItem;
+        seriesIndex: number;
+    };
+
+    export type VueUiStripPlotProps = {
+        config?: VueUiStripPlotConfig;
+        dataset: VueUiStripPlotDataset[];
+    };
+
+    const VueUiStripPlotBase: DefineComponent<VueUiStripPlotProps>;
+
+    export const VueUiStripPlot: typeof VueUiStripPlotBase & {
+        new (): VueUiStripPlotExpose & {
+            $slots: CommonAnnotatorSlots & {
+                menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
+                optionTooltip?: () => VNodeChild;
+                optionPdf?: () => VNodeChild;
+                optionCsv?: () => VNodeChild;
+                optionImg?: () => VNodeChild;
+                optionSvg?: () => VNodeChild;
+                optionTable?: () => VNodeChild;
+                optionLabels?: () => VNodeChild;
+                optionFullscreen?: (
+                    props: VueUiOptionFullscreenSlotProps,
+                ) => VNodeChild;
+                optionAltCopy?: () => VNodeChild;
+                optionAnnotator?: (
+                    props: VueUiOptionAnnotatorSlotProps,
+                ) => VNodeChild;
+                ['chart-background']?: () => VNodeChild;
+                svg?: (props: VueUiStripPlotSvgSlotProps) => VNodeChild;
+                hint?: (
+                    props: VueUiKeyboardNavigationHintSlotProps,
+                ) => VNodeChild;
+                watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
+                source?: () => VNodeChild;
+                skeleton?: () => VNodeChild;
+                ['tooltip-before']?: (
+                    props: VueUiStripPlotTooltipSlotProps,
+                ) => VNodeChild;
+                tooltip?: (props: VueUiStripPlotTooltipSlotProps) => VNodeChild;
+                ['tooltip-after']?: (
+                    props: VueUiStripPlotTooltipSlotProps,
+                ) => VNodeChild;
+            };
+        };
+    };
 
     export type VueUiDumbbellConfigLabel = {
         color?: string;
