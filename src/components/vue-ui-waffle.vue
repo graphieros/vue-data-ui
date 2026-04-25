@@ -1493,7 +1493,7 @@ function onGenerateImage(payload) {
 async function copyAlt() {
     emit('copyAlt', {
         config: FINAL_CONFIG.value,
-        dataset: FINAL_DATASET.value,
+        dataset: immutableSet.value,
     });
     if (!FINAL_CONFIG.value.userOptions.callbacks.altCopy) {
         console.warn(
@@ -1504,7 +1504,7 @@ async function copyAlt() {
     await Promise.resolve(
         FINAL_CONFIG.value.userOptions.callbacks.altCopy({
             config: FINAL_CONFIG.value,
-            dataset: FINAL_DATASET.value,
+            dataset: immutableSet.value,
         }),
     );
 }
@@ -1910,7 +1910,13 @@ defineExpose({
                 </defs>
 
                 <!-- CUSTOM CELLS SLOTS -->
-                <template v-if="FINAL_CONFIG.useCustomCells && rects.length">
+                <template
+                    v-if="
+                        FINAL_CONFIG.useCustomCells &&
+                        rects.length &&
+                        $slots.cell
+                    "
+                >
                     <foreignObject
                         v-for="(position, i) in positions"
                         :x="position.x"
@@ -1925,6 +1931,8 @@ defineExpose({
                                 cell: {
                                     ...position,
                                     color: rects[i].color,
+                                    height: Math.max(0, rectDimensionY),
+                                    width: Math.max(0, rectDimension),
                                     ...rects[i],
                                 },
                                 isSelected: [null, undefined].includes(
@@ -2051,6 +2059,28 @@ defineExpose({
                             :fill="`url(#pattern_${uid}_${rects[i].absoluteIndex})`"
                             stroke="none"
                             :filter="getBlurFilter(rects[i].serieIndex)"
+                        />
+                    </g>
+                </template>
+
+                <template v-if="$slots.cellSvg">
+                    <g v-for="(position, i) in positions">
+                        <slot
+                            name="cellSvg"
+                            v-bind="{
+                                cell: {
+                                    ...position,
+                                    color: rects[i].color,
+                                    height: Math.max(0, rectDimensionY),
+                                    width: Math.max(0, rectDimension),
+                                    ...rects[i],
+                                },
+                                isSelected: [null, undefined].includes(
+                                    selectedSerie,
+                                )
+                                    ? true
+                                    : rects[i].serieIndex === selectedSerie,
+                            }"
                         />
                     </g>
                 </template>

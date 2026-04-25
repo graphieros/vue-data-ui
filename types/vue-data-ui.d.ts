@@ -6476,7 +6476,10 @@ declare module 'vue-data-ui' {
                 };
             };
         };
-        userOptions?: ChartUserOptions;
+        userOptions?: ChartUserOptions<
+            VueUiWaffleDatapoint[],
+            VueUiWaffleConfig
+        >;
         table?: {
             show?: boolean;
             useDialog?: boolean;
@@ -6544,13 +6547,110 @@ declare module 'vue-data-ui' {
         hideSeries(name: string): void;
     };
 
-    export const VueUiWaffle: DefineComponent<
-        {
-            config?: VueUiWaffleConfig;
-            dataset: VueUiWaffleDatasetItem[];
-        },
-        VueUiWaffleExpose
-    >;
+    export type VueUiWaffleCellSlotProps = {
+        cell: {
+            absoluteIndex: number;
+            absoluteStartIndex: number;
+            absoluteValues: number[];
+            color: string;
+            height: number;
+            isAbsoluteFirst: boolean;
+            isFirst: boolean;
+            isLongEnough: boolean;
+            isStartOfLine: boolean;
+            name: string;
+            position: number;
+            proportion: number;
+            rects: number[];
+            serieId: string;
+            serieIndex: number;
+            start: number;
+            uid: string;
+            value: number;
+            width: number;
+            x: number;
+            y: number;
+        };
+        isSelected: boolean;
+    };
+
+    export type VueUiWaffleSvgSlotProps = {
+        svg: {
+            height: number;
+            isPrintingImg: boolean;
+            isPrintingSvg: boolean;
+            width: number;
+        };
+    };
+
+    export type VueUiWaffleLegendItem = {
+        color: string;
+        display: string;
+        isSegregated: boolean;
+        name: string;
+        opacity: number;
+        proportion: number;
+        segregate: () => void;
+        shape: Shape;
+        uid: string;
+        value: number;
+    };
+
+    export type VueUiWaffleLegendSlotProps = {
+        legend: VueUiWaffleLegendItem[];
+    };
+
+    export type VueUiWaffleTooltipSlotProps = {
+        config: VueUiWaffleConfig;
+        datapoint: VueUiWaffleCellSlotProps['cell'];
+        series: VueUiWaffleSerieItem[];
+        seriesIndex: number;
+    };
+
+    export type VueUiWaffleProps = {
+        config?: VueUiWaffleConfig;
+        dataset: VueUiWaffleDatasetItem[];
+    };
+
+    const VueUiWaffleBase: DefineComponent<VueUiWaffleProps>;
+
+    export const VueUiWaffle: typeof VueUiWaffleBase & {
+        new (): VueUiWaffleExpose & {
+            $slots: CommonAnnotatorSlots & {
+                menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
+                optionTooltip?: () => VNodeChild;
+                optionPdf?: () => VNodeChild;
+                optionCsv?: () => VNodeChild;
+                optionImg?: () => VNodeChild;
+                optionSvg?: () => VNodeChild;
+                optionTable?: () => VNodeChild;
+                optionFullscreen?: (
+                    props: VueUiOptionFullscreenSlotProps,
+                ) => VNodeChild;
+                optionAltCopy?: () => VNodeChild;
+                optionAnnotator?: (
+                    props: VueUiOptionAnnotatorSlotProps,
+                ) => VNodeChild;
+                cell?: (props: VueUiWaffleCellSlotProps) => VNodeChild;
+                cellSvg?: (props: VueUiWaffleCellSlotProps) => VNodeChild;
+                svg?: (props: VueUiWaffleSvgSlotProps) => VNodeChild;
+                hint?: (
+                    props: VueUiKeyboardNavigationHintSlotProps,
+                ) => VNodeChild;
+                watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
+                source?: () => VNodeChild;
+                skeleton?: () => VNodeChild;
+                legend?: (props: VueUiWaffleLegendSlotProps) => VNodeChild;
+                ['tooltip-before']?: (
+                    props: VueUiWaffleTooltipSlotProps,
+                ) => VNodeChild;
+                tooltip?: (props: VueUiWaffleTooltipSlotProps) => VNodeChild;
+                ['tooltip-after']?: (
+                    props: VueUiWaffleTooltipSlotProps,
+                ) => VNodeChild;
+            };
+        };
+    };
 
     export type VueUiRadarConfig = {
         skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiRadarConfig> | null;

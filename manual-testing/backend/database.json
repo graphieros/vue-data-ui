@@ -1236,7 +1236,7 @@
         "VueUiTimer": true,
         "VueUiTiremarks": true,
         "VueUiTreemap": true,
-        "VueUiWaffle": false,
+        "VueUiWaffle": true,
         "VueUiWheel": false,
         "VueUiWordCloud": false,
         "VueUiWorld": false,
@@ -1247,13 +1247,13 @@
       "customCheckList": {},
       "id": "3846f04c-685f-4509-8042-87b9c0b7ec33",
       "createdAt": 1775989842046,
-      "updatedAt": 1777134022656
+      "updatedAt": 1777150122009
     },
     {
       "title": "Expose more methods",
       "component": "",
       "description": "Expose more construction methods. Combine all path generation in a single utility with options.",
-      "priority": 1,
+      "priority": 2,
       "author": "graphieros",
       "done": false,
       "exchanges": [],
@@ -1271,7 +1271,7 @@
       },
       "id": "ef0d34dc-adc3-4826-b117-38c8d7d4199c",
       "createdAt": 1776182479567,
-      "updatedAt": 1777067070045
+      "updatedAt": 1777141476333
     },
     {
       "title": "Nested circle packing",
