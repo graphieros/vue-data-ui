@@ -1219,9 +1219,9 @@
         "VueUiRidgeline": true,
         "VueUiRings": true,
         "VueUiScatter": true,
-        "VueUiSkeleton": false,
-        "VueUiSmiley": false,
-        "VueUiSparkbar": false,
+        "VueUiSkeleton": true,
+        "VueUiSmiley": true,
+        "VueUiSparkbar": true,
         "VueUiSparkgauge": false,
         "VueUiSparkHistogram": false,
         "VueUiSparkline": false,
@@ -1247,7 +1247,7 @@
       "customCheckList": {},
       "id": "3846f04c-685f-4509-8042-87b9c0b7ec33",
       "createdAt": 1775989842046,
-      "updatedAt": 1777066831402
+      "updatedAt": 1777093606437
     },
     {
       "title": "Expose more methods",
@@ -1266,11 +1266,12 @@
         "createSmoothPath": false,
         "createStraightPath": false,
         "createSmoothPathWithCuts": false,
-        "createStraightPathWithCuts": false
+        "createStraightPathWithCuts": false,
+        "createStepperPath": false
       },
       "id": "ef0d34dc-adc3-4826-b117-38c8d7d4199c",
       "createdAt": 1776182479567,
-      "updatedAt": 1776747061054
+      "updatedAt": 1777067070045
     },
     {
       "title": "Nested circle packing",

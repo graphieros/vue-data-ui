@@ -3568,10 +3568,45 @@ declare module 'vue-data-ui' {
         };
     };
 
-    export const VueUiSparkbar: DefineComponent<{
+    export type VueUiSparkbarTitleSlotProps = {
+        title: {
+            title: string;
+            subtitle: string;
+        };
+    };
+
+    export type VueUiSparkbarDataLabelSlotProps = {
+        bar: {
+            color: string;
+            formatter: Formatter;
+            name: string;
+            rounding: number;
+            suffix: string;
+            target: number;
+            targetLabel: string;
+            value: number;
+            valueLabel: string;
+        };
+    };
+
+    export type VueUiSparkbarProps = {
         config?: VueUiSparkbarConfig;
         dataset: VueUiSparkbarDatasetItem[];
-    }>;
+    };
+
+    const VueUiSparkbarBase: DefineComponent<VueUiSparkbarProps>;
+
+    export const VueUiSparkbar: typeof VueUiSparkbarBase & {
+        new (): {
+            $slots: {
+                title?: (props: VueUiSparkbarTitleSlotProps) => VNodeChild;
+                ['data-label']?: (
+                    props: VueUiSparkbarDataLabelSlotProps,
+                ) => VNodeChild;
+                source?: () => VNodeChild;
+            };
+        };
+    };
 
     export type VueUiAgePyramidDatasetRow = [
         year: string,
