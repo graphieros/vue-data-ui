@@ -1,6 +1,7 @@
 import type { DefineComponent } from 'vue';
 
-export type { VueUiCursorConfig } from 'vue-data-ui';
+import type { VueUiCursorConfig } from 'vue-data-ui';
+export type { VueUiCursorConfig };
 
 declare const VueUiCursor: DefineComponent<{ config?: VueUiCursorConfig }>;
 
