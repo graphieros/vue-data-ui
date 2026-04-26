@@ -41,6 +41,7 @@ import {
     createIndividualAreaWithCuts,
     createPolarAreas,
     createPolygonPath,
+    createStepperPath,
     createSmoothAreaSegments,
     createSmoothPath,
     createSmoothPathWithCuts,
@@ -395,6 +396,68 @@ describe('adaptColorToBackground', () => {
         expect(adaptColorToBackground(backgroundColor)).toBe('#000000');
         const backgroundColor2 = '#BBBBBB';
         expect(adaptColorToBackground(backgroundColor2)).toBe('#000000');
+    });
+    test('returns a custom dark color for a light background', () => {
+        const backgroundColor = '#FFFFFF';
+        expect(
+            adaptColorToBackground(backgroundColor, { dark: '#FF0000' }),
+        ).toBe('#FF0000');
+        expect(
+            adaptColorToBackground(backgroundColor, {
+                dark: '#FF0000',
+                light: '#00FF00',
+            }),
+        ).toBe('#FF0000');
+    });
+    test('returns a custom light color for a dark background', () => {
+        const backgroundColor = '#1A1A1A';
+        expect(
+            adaptColorToBackground(backgroundColor, { light: '#00FF00' }),
+        ).toBe('#00FF00');
+        expect(
+            adaptColorToBackground(backgroundColor, {
+                dark: '#FF0000',
+                light: '#00FF00',
+            }),
+        ).toBe('#00FF00');
+    });
+    test('works with rgb', () => {
+        const backgroundColor = 'rgb(0, 0, 0)';
+        expect(adaptColorToBackground(backgroundColor)).toBe('#FFFFFF');
+    });
+    test('works with rgba', () => {
+        const backgroundColor = 'rgba(0, 0, 0, 0.7)';
+        expect(adaptColorToBackground(backgroundColor)).toBe('#FFFFFF');
+    });
+    test('works with rgba', () => {
+        const backgroundColor = 'rgba(0 0 0 / 0.7)';
+        expect(adaptColorToBackground(backgroundColor)).toBe('#FFFFFF');
+    });
+    test('works with a bad formatted input color', () => {
+        const backgroundColor = 'rgba(0 0 0 / 0.7))';
+        expect(adaptColorToBackground(backgroundColor)).toBe('#000000');
+    });
+    test('works with hsl', () => {
+        const backgroundColor = 'hsl(79 100% 0%)';
+        expect(adaptColorToBackground(backgroundColor)).toBe('#FFFFFF');
+    });
+    test('works with oklch', () => {
+        const backgroundColor = 'oklch(0 0 0)';
+        expect(adaptColorToBackground(backgroundColor)).toBe('#FFFFFF');
+    });
+    test('works with named color', () => {
+        const backgroundColor = 'black';
+        expect(adaptColorToBackground(backgroundColor)).toBe('#FFFFFF');
+    });
+    test('works with apha hex', () => {
+        const backgroundColor1 = '#00000000';
+        const backgroundColor2 = '#000000ff';
+        expect(
+            adaptColorToBackground(backgroundColor1, { dark: '#FF0000' }),
+        ).toBe('#FF0000');
+        expect(
+            adaptColorToBackground(backgroundColor2, { light: '#00FF00' }),
+        ).toBe('#00FF00');
     });
 });
 
@@ -4635,7 +4698,6 @@ describe('OKLCH utilities', () => {
 
     test('convertOklabToSrgb returns byte RGB values in [0..255]', () => {
         const rgb = convertOklabToSrgb(0.7, 0.1, 0.05);
-
         expect(Array.isArray(rgb)).toBe(true);
         expect(rgb).toHaveLength(3);
 
@@ -4650,7 +4712,6 @@ describe('OKLCH utilities', () => {
         const rgbA = convertOklchToRgb(0.75, 0.12, 10);
         const rgbB = convertOklchToRgb(0.75, 0.12, 370);
         const rgbC = convertOklchToRgb(0.75, 0.12, -350);
-
         expect(rgbA).toEqual(rgbB);
         expect(rgbA).toEqual(rgbC);
     });
@@ -4660,10 +4721,8 @@ describe('OKLCH utilities', () => {
         const chroma = 0.18;
         const hueDegrees = 166.95;
         const hueRadians = (((hueDegrees % 360) + 360) % 360) * (Math.PI / 180);
-
         const labA = chroma * Math.cos(hueRadians);
         const labB = chroma * Math.sin(hueRadians);
-
         const rgbFromOklch = convertOklchToRgb(lightness, chroma, hueDegrees);
         const rgbFromOklab = convertOklabToSrgb(lightness, labA, labB);
 
@@ -4709,12 +4768,10 @@ describe('OKLCH utilities', () => {
         expect(normalizeOklchLightness(0)).toBe(0);
         expect(normalizeOklchLightness(0.75)).toBe(0.75);
         expect(normalizeOklchLightness(1)).toBe(1);
-
         expect(normalizeOklchLightness(50)).toBe(0.5);
         expect(normalizeOklchLightness(100)).toBe(1);
         expect(normalizeOklchLightness(120)).toBe(1.2 > 1 ? 1 : 1.2); // after /100 => 1.2 then clamped to 1
         expect(normalizeOklchLightness(120)).toBe(1);
-
         expect(normalizeOklchLightness(-10)).toBe(0);
     });
 
@@ -4728,10 +4785,8 @@ describe('OKLCH utilities', () => {
         expect(normalizeOklchChroma(0)).toBe(0);
         expect(normalizeOklchChroma(0.2)).toBe(0.2);
         expect(normalizeOklchChroma(-1)).toBe(0);
-
         expect(normalizeOklchChroma(10)).toBe(0.1);
         expect(normalizeOklchChroma(150)).toBe(1.5);
-
         expect(normalizeOklchChroma('0.42')).toBe(0.42);
     });
 
@@ -4746,9 +4801,61 @@ describe('OKLCH utilities', () => {
         expect(normalizeHueDegrees(180)).toBe(180);
         expect(normalizeHueDegrees(-45)).toBe(-45);
         expect(normalizeHueDegrees('270')).toBe(270);
-
         expect(normalizeHueDegrees('abc')).toBeNull();
         expect(normalizeHueDegrees(NaN)).toBeNull();
         expect(normalizeHueDegrees(Infinity)).toBeNull();
+    });
+});
+
+describe('createStepperPath', () => {
+    test('creates a stepper path from valid points', () => {
+        const points = [
+            { x: 1, y: 10, value: 10 },
+            { x: 2, y: 20, value: 20 },
+            { x: 3, y: 5, value: 5 },
+        ];
+        expect(createStepperPath(points)).toBe('1,10 L2,10 L2,20 L3,20 L3,5');
+    });
+
+    test('creates a closed stepper area path when zero is provided', () => {
+        const points = [
+            { x: 1, y: 10, value: 10 },
+            { x: 2, y: 20, value: 20 },
+            { x: 3, y: 5, value: 5 },
+        ];
+        expect(createStepperPath(points, 100)).toBe(
+            '1,100 1,10 L2,10 L2,20 L3,20 L3,5 3,100',
+        );
+    });
+
+    test('cuts the stepper path on null values', () => {
+        const points = [
+            { x: 1, y: 10, value: 10 },
+            { x: 2, y: 20, value: null },
+            { x: 3, y: 5, value: 5 },
+            { x: 4, y: 15, value: 15 },
+        ];
+        expect(createStepperPath(points)).toBe('1,10;3,5 L4,5 L4,15');
+    });
+
+    test('cuts the stepper area path on null values when zero is provided', () => {
+        const points = [
+            { x: 1, y: 10, value: 10 },
+            { x: 2, y: 20, value: null },
+            { x: 3, y: 5, value: 5 },
+            { x: 4, y: 15, value: 15 },
+        ];
+        expect(createStepperPath(points, 100)).toBe(
+            '1,100 1,10 1,100;3,100 3,5 L4,5 L4,15 4,100',
+        );
+    });
+
+    test('returns an empty string when all points are invalid', () => {
+        const points = [
+            { x: 1, y: 10, value: null },
+            { x: 2, y: 20, value: undefined },
+            { x: NaN, y: 30, value: 30 },
+        ];
+        expect(createStepperPath(points)).toBe('');
     });
 });

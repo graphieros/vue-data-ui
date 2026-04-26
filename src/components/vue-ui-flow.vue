@@ -770,7 +770,12 @@ function selectNode(node, index, triggerMode = 'pointer', flatIndex = null) {
         });
     }
 
-    dataTooltipSlot.value = { datapoint };
+    dataTooltipSlot.value = {
+        datapoint,
+        config: FINAL_CONFIG.value,
+        seriesIndex: index,
+        series: mutableDataset.value,
+    };
     isTooltip.value = true;
 
     let html = '';
@@ -1076,14 +1081,12 @@ const legendSet = computed(() => {
             };
         })
         .map((cat, i) => {
+            const isSegregated = segregated.value.includes(i);
             return {
                 ...cat,
                 segregate: () => drillCategory({ legend: cat, i }),
-                opacity: segregated.value.length
-                    ? segregated.value.includes(i)
-                        ? 1
-                        : 0.5
-                    : 1,
+                isSegregated,
+                opacity: segregated.value.length ? (isSegregated ? 1 : 0.5) : 1,
                 display: `${cat.name} (${cat.count})`,
             };
         });
@@ -1856,7 +1859,7 @@ defineExpose({
                     :svg="{
                         ...drawingArea,
                         isPrintingImg:
-                            isPrinting | isImaging | isCallbackImaging,
+                            isPrinting || isImaging || isCallbackImaging,
                         isPrintingSvg: isCallbackSvg,
                     }"
                 />

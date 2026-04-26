@@ -1,6 +1,6 @@
-import { DefineComponent } from 'vue';
+import type { DefineComponent } from 'vue';
 
-export type { VueUiSkeletonConfig } from './vue-data-ui';
+export type { VueUiSkeletonConfig } from 'vue-data-ui';
 
 declare const VueUiSkeleton: DefineComponent<{
     config?: VueUiSkeletonConfig;

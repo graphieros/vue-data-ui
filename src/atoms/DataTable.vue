@@ -101,7 +101,7 @@ const emit = defineEmits(['close']);
                                 <svg
                                     height="12"
                                     width="12"
-                                    v-if="th.color"
+                                    v-if="th?.color"
                                     viewBox="0 0 20 20"
                                     style="background: none"
                                 >
@@ -158,7 +158,7 @@ const emit = defineEmits(['close']);
                             <svg
                                 height="12"
                                 width="12"
-                                v-if="td.color"
+                                v-if="td?.color"
                                 viewBox="0 0 20 20"
                                 style="background: none; overflow: visible"
                             >

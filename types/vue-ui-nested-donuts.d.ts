@@ -1,4 +1,29 @@
-import { DefineComponent } from 'vue';
+import type { DefineComponent, VNodeChild } from 'vue';
+
+import type {
+    VueUiNestedDonutsDatasetItem,
+    VueUiNestedDonutsConfig,
+    VueUiNestedDonutsSeriesItem,
+    VueUiNestedDonutsDatapoint,
+    VueUiNestedDonutsExpose,
+    VueUiDonutEvent,
+    VueUiNestedDonutsProps,
+    VueUiAnnotatorActionColorSlotProps,
+    VueUiAnnotatorActionDrawSlotProps,
+    VueUiAnnotatorActionUndoSlotProps,
+    VueUiAnnotatorActionRedoSlotProps,
+    VueUiAnnotatorActionDeleteSlotProps,
+    VueUiMenuIconSlotProps,
+    VueUiOptionFullscreenSlotProps,
+    VueUiOptionAnnotatorSlotProps,
+    VueUiNestedDonutsSvgSlotProps,
+    VueUiKeyboardNavigationHintSlotProps,
+    VueUiWatermarkSlotProps,
+    VueUiNestedDonutsTooltipSlotProps,
+    VueUiNestedDonutsLegendItem,
+    VueUiNestedDonutsLegendSlotProps,
+    CommonAnnotatorSlots,
+} from 'vue-data-ui';
 
 export type {
     VueUiNestedDonutsDatasetItem,
@@ -7,15 +32,61 @@ export type {
     VueUiNestedDonutsDatapoint,
     VueUiNestedDonutsExpose,
     VueUiDonutEvent,
-} from './vue-data-ui';
+    VueUiNestedDonutsProps,
+    VueUiAnnotatorActionColorSlotProps,
+    VueUiAnnotatorActionDrawSlotProps,
+    VueUiAnnotatorActionUndoSlotProps,
+    VueUiAnnotatorActionRedoSlotProps,
+    VueUiAnnotatorActionDeleteSlotProps,
+    VueUiMenuIconSlotProps,
+    VueUiOptionFullscreenSlotProps,
+    VueUiOptionAnnotatorSlotProps,
+    VueUiNestedDonutsSvgSlotProps,
+    VueUiKeyboardNavigationHintSlotProps,
+    VueUiWatermarkSlotProps,
+    VueUiNestedDonutsTooltipSlotProps,
+    VueUiNestedDonutsLegendItem,
+    VueUiNestedDonutsLegendSlotProps,
+    CommonAnnotatorSlots,
+};
 
-declare const VueUiNestedDonuts: DefineComponent<
-    {
-        config?: VueUiNestedDonutsConfig;
-        dataset: VueUiNestedDonutsDatasetItem[];
-    },
-    VueUiNestedDonutsExpose
->;
+declare const VueUiNestedDonutsBase: DefineComponent<VueUiNestedDonutsProps>;
+
+export const VueUiNestedDonuts: typeof VueUiNestedDonutsBase & {
+    new (): VueUiNestedDonutsExpose & {
+        $slots: CommonAnnotatorSlots & {
+            menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
+            optionTooltip?: () => VNodeChild;
+            optionPdf?: () => VNodeChild;
+            optionCsv?: () => VNodeChild;
+            optionImg?: () => VNodeChild;
+            optionSvg?: () => VNodeChild;
+            optionTable?: () => VNodeChild;
+            optionLabels?: () => VNodeChild;
+            optionFullscreen?: (
+                props: VueUiOptionFullscreenSlotProps,
+            ) => VNodeChild;
+            optionAltCopy?: () => VNodeChild;
+            optionAnnotator?: (
+                props: VueUiOptionAnnotatorSlotProps,
+            ) => VNodeChild;
+            ['chart-background']?: () => VNodeChild;
+            svg?: (props: VueUiNestedDonutsSvgSlotProps) => VNodeChild;
+            hint?: (props: VueUiKeyboardNavigationHintSlotProps) => VNodeChild;
+            watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
+            ['tooltip-before']?: (
+                props: VueUiNestedDonutsTooltipSlotProps,
+            ) => VNodeChild;
+            tooltip?: (props: VueUiNestedDonutsTooltipSlotProps) => VNodeChild;
+            ['tooltip-after']?: (
+                props: VueUiNestedDonutsTooltipSlotProps,
+            ) => VNodeChild;
+            legend?: (props: VueUiNestedDonutsLegendSlotProps) => VNodeChild;
+            source?: () => VNodeChild;
+            skeleton?: () => VNodeChild;
+        };
+    };
+};
 
 export default VueUiNestedDonuts;
 export { VueUiNestedDonuts };

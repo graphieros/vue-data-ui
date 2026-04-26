@@ -864,7 +864,6 @@ export function useConfig(options = {}) {
                         crosshairSize: 6,
                     },
                     yAxis: {
-                        position: 'left',
                         showBaseline: true,
                         showCrosshairs: true,
                         crosshairSize: 6,
@@ -3543,6 +3542,7 @@ export function useConfig(options = {}) {
             fullscreen: null,
             annotator: null,
             svg: null,
+            altCopy: null,
         },
         title: '',
         titleBold: true,

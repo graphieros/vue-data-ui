@@ -1,6 +1,6 @@
-import { DefineComponent } from 'vue';
+import type { DefineComponent } from 'vue';
 
-export type { VueUiPatternName } from './vue-data-ui';
+export type { VueUiPatternName } from 'vue-data-ui';
 
 declare const VueUiPattern: DefineComponent<{
     name: VueUiPatternName;

@@ -365,6 +365,12 @@ const convertedDataset = computed(() => {
                 ],
             };
         })
+        .map((el) => {
+            return {
+                ...el,
+                onSelect: () => selectKey(el.key),
+            };
+        })
         .sort((a, b) => b.key - a.key);
 });
 
@@ -1478,7 +1484,7 @@ defineExpose({
                     :svg="{
                         ...svg,
                         isPrintingImg:
-                            isPrinting | isImaging | isCallbackImaging,
+                            isPrinting || isImaging || isCallbackImaging,
                         isPrintingSvg: isCallbackSvg,
                     }"
                 />

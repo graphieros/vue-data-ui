@@ -94,7 +94,7 @@
         "test": "vitest --run",
         "test:w": "vitest --watch",
         "test:e2e": "npx cypress open",
-        "preprod": "npm run pretty:fix && node del-dev-dep.cjs && npm run clean && vite build --mode production && node copy-types.cjs && node post-build.cjs",
+        "preprod": "node check-types.cjs && npm run pretty:fix && node del-dev-dep.cjs && npm run clean && vite build --mode production && node copy-types.cjs && node post-build.cjs",
         "cy-all": "npx cypress run --component",
         "cy": "node run-cy.cjs",
         "types": "node check-types.cjs",
@@ -111,16 +111,16 @@
         }
     },
     "devDependencies": {
-        "@vitejs/plugin-vue": "^6.0.5",
-        "cypress": "^15.13.0",
+        "@vitejs/plugin-vue": "^6.0.6",
+        "cypress": "^15.14.1",
         "jsdom": "^28.1.0",
         "prettier": "3.8.1",
         "remove-attr": "^0.0.13",
         "sass": "^1.57.1",
         "simple-git": "^3.24.0",
         "typescript": "^6.0.2",
-        "vite": "^7.3.2",
-        "vitest": "^4.1.2",
+        "vite": "^8.0.9",
+        "vitest": "^4.1.5",
         "vue": "^3.5.32"
     }
 }

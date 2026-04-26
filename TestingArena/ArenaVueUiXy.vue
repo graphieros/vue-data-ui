@@ -420,6 +420,7 @@ onMounted(() => {
                 dataLabels: false,
                 smooth: true,
                 useArea: false,
+                useStepper: true,
                 useProgression: true,
                 // freestyle:
                 marks: [10, 20],
@@ -429,7 +430,7 @@ onMounted(() => {
             {
                 name: 'Serie B',
                 series: createDs(35),
-                type: 'line',
+                type: 'bar',
                 dataLabels: false,
                 smooth: true,
                 useArea: true,
@@ -1469,6 +1470,10 @@ const customConfig = computed(() => {
 function logLegend(legend) {
     console.log({ legend });
 }
+
+function logTooltip(tooltip) {
+    console.log({ tooltip });
+}
 </script>
 
 <template>
@@ -1521,6 +1526,7 @@ function logLegend(legend) {
                     @selectTimeLabel="selectTimeLabel"
                 >
                     <template #tooltip="{ ...tooltip }">
+                        {{ logTooltip(tooltip) }}
                         <div>
                             <span>{{ tooltip.timeLabel.text }}</span>
                             <div
@@ -1823,6 +1829,7 @@ function logLegend(legend) {
                     >
                 </template>
                 <template #legend="{ legend }">
+                    {{ logLegend(legend) }}
                     #LEGEND
                     <div style="font-size: 8px">
                         {{ legend }}

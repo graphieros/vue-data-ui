@@ -1103,6 +1103,9 @@ defineExpose({
                 <template #node="{ node }">
                     <slot name="node" v-bind="{ node }" />
                 </template>
+                <template #node-svg="{ nodeSvg }">
+                    <slot name="node-svg" v-bind="{ nodeSvg }" />
+                </template>
             </RecursiveCircles>
             <RecursiveLabels
                 v-if="mutableConfig.showDataLabels && !loading"
@@ -1114,7 +1117,10 @@ defineExpose({
                 name="svg"
                 :svg="{
                     ...svg,
-                    isPrintingImg: isPrinting | isImaging | isCallbackImaging,
+                    drawingArea: {
+                        ...viewBox,
+                    },
+                    isPrintingImg: isPrinting || isImaging || isCallbackImaging,
                     isPrintingSvg: isCallbackSvg,
                 }"
             />

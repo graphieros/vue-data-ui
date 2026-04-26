@@ -869,7 +869,11 @@ function useTooltip(word, index, triggerMode = 'pointer') {
     tooltipTriggerMode.value = triggerMode;
     activeTooltipIndex.value = index;
     selectedWord.value = word.id;
-    dataTooltipSlot.value = { datapoint: word, config: FINAL_CONFIG.value };
+    dataTooltipSlot.value = {
+        datapoint: word,
+        config: FINAL_CONFIG.value,
+        seriesIndex: index,
+    };
 
     const customFormat = FINAL_CONFIG.value.style.chart.tooltip.customFormat;
     useCustomFormat.value = false;
@@ -1152,6 +1156,9 @@ defineExpose({
             <template #menuIcon="{ isOpen, color }" v-if="$slots.menuIcon">
                 <slot name="menuIcon" v-bind="{ isOpen, color }" />
             </template>
+            <template #optionTooltip v-if="$slots.optionTooltip">
+                <slot name="optionTooltip" />
+            </template>
             <template #optionPdf v-if="$slots.optionPdf">
                 <slot name="optionPdf" />
             </template>
@@ -1311,7 +1318,7 @@ defineExpose({
                     :svg="{
                         ...svg,
                         isPrintingImg:
-                            isPrinting | isImaging | isCallbackImaging,
+                            isPrinting || isImaging || isCallbackImaging,
                         isPrintingSvg: isCallbackSvg,
                     }"
                 />

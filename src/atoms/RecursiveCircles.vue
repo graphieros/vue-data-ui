@@ -5,27 +5,43 @@
                 v-for="(coordinate, index) in node.polygonPath.coordinates"
                 :key="`node_${i}_${index}`"
             >
-                <circle
-                    data-cy="recursive-circle"
-                    :cx="coordinate.x"
-                    :cy="coordinate.y"
-                    :r="node.circleRadius"
-                    :fill="`url(#gradient_${node.color})`"
-                    :stroke="
-                        hoveredUid && hoveredUid === node.uid
-                            ? strokeHovered
-                            : stroke
-                    "
-                    :stroke-width="
-                        hoveredUid && hoveredUid === node.uid
-                            ? node.circleRadius / 6
-                            : node.circleRadius / 12
-                    "
-                    style="cursor: pointer"
-                    @click="click(node)"
-                    @mouseover="hover(node)"
-                    @mouseleave="hover(null)"
-                />
+                <slot
+                    name="node-svg"
+                    :nodeSvg="{
+                        x: coordinate.x,
+                        y: coordinate.y,
+                        radius: node.circleRadius,
+                        color: node.color,
+                        stroke,
+                        strokeWidth: node.circleRadius / 12,
+                        isSelected: hoveredUid && hoveredUid === node.uid,
+                        onClick: () => click(node),
+                        onEnter: () => hover(node),
+                        onLeave: () => hover(null),
+                    }"
+                >
+                    <circle
+                        data-cy="recursive-circle"
+                        :cx="coordinate.x"
+                        :cy="coordinate.y"
+                        :r="node.circleRadius"
+                        :fill="`url(#gradient_${node.color})`"
+                        :stroke="
+                            hoveredUid && hoveredUid === node.uid
+                                ? strokeHovered
+                                : stroke
+                        "
+                        :stroke-width="
+                            hoveredUid && hoveredUid === node.uid
+                                ? node.circleRadius / 6
+                                : node.circleRadius / 12
+                        "
+                        style="cursor: pointer"
+                        @click="click(node)"
+                        @mouseover="hover(node)"
+                        @mouseleave="hover(null)"
+                    />
+                </slot>
                 <foreignObject
                     v-if="$slots.node"
                     :x="coordinate.x - node.circleRadius"
@@ -52,6 +68,9 @@
                 >
                     <template #node="{ node }">
                         <slot name="node" v-bind="{ node }" />
+                    </template>
+                    <template #node-svg="{ nodeSvg }">
+                        <slot name="node-svg" v-bind="{ nodeSvg }" />
                     </template>
                 </RecursiveCircles>
             </template>

@@ -1959,7 +1959,7 @@ defineExpose({
                         drawingArea,
                         data: formattedDataset,
                         isPrintingImg:
-                            isPrinting | isImaging | isCallbackImaging,
+                            isPrinting || isImaging || isCallbackImaging,
                         isPrintingSvg: isCallbackSvg,
                     }"
                 />

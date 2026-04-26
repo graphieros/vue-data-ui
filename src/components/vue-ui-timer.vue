@@ -430,8 +430,12 @@ defineExpose({
                 width="0.1"
                 style="overflow: visible"
             >
-                <slot name="time" v-bind="{ ...currentTime }" />
+                <slot name="time" v-bind="{ ...currentTime, ...svg }" />
             </foreignObject>
+
+            <g v-else-if="$slots.timeSvg">
+                <slot name="timeSvg" v-bind="{ ...currentTime, ...svg }" />
+            </g>
 
             <!-- TIME LABEL - DEFAULT -->
             <text

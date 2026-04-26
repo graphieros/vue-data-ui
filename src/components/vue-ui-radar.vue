@@ -1683,8 +1683,9 @@ defineExpose({
                     name="svg"
                     :svg="{
                         ...svg,
+                        outerPolygon,
                         isPrintingImg:
-                            isPrinting | isImaging | isCallbackImaging,
+                            isPrinting || isImaging || isCallbackImaging,
                         isPrintingSvg: isCallbackSvg,
                     }"
                 />

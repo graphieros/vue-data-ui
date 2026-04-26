@@ -1,4 +1,28 @@
-import { DefineComponent } from 'vue';
+import type { DefineComponent, VNodeChild } from 'vue';
+
+import type {
+    VueUiOnionDatasetItem,
+    VueUiOnionConfig,
+    VueUiOnionDatapoint,
+    VueUiOnionSeriesItem,
+    VueUiOnionExpose,
+    VueUiOnionEvent,
+    VueUiOnionProps,
+    VueUiAnnotatorActionColorSlotProps,
+    VueUiAnnotatorActionDrawSlotProps,
+    VueUiAnnotatorActionUndoSlotProps,
+    VueUiAnnotatorActionRedoSlotProps,
+    VueUiAnnotatorActionDeleteSlotProps,
+    VueUiMenuIconSlotProps,
+    VueUiOptionFullscreenSlotProps,
+    VueUiOptionAnnotatorSlotProps,
+    VueUiOnionSvgSlotProps,
+    VueUiKeyboardNavigationHintSlotProps,
+    VueUiWatermarkSlotProps,
+    VueUiOnionLegendSlotProps,
+    VueUiOnionTooltipSlotProps,
+    CommonAnnotatorSlots,
+} from 'vue-data-ui';
 
 export type {
     VueUiOnionDatasetItem,
@@ -7,15 +31,59 @@ export type {
     VueUiOnionSeriesItem,
     VueUiOnionExpose,
     VueUiOnionEvent,
-} from './vue-data-ui';
+    VueUiOnionProps,
+    VueUiAnnotatorActionColorSlotProps,
+    VueUiAnnotatorActionDrawSlotProps,
+    VueUiAnnotatorActionUndoSlotProps,
+    VueUiAnnotatorActionRedoSlotProps,
+    VueUiAnnotatorActionDeleteSlotProps,
+    VueUiMenuIconSlotProps,
+    VueUiOptionFullscreenSlotProps,
+    VueUiOptionAnnotatorSlotProps,
+    VueUiOnionSvgSlotProps,
+    VueUiKeyboardNavigationHintSlotProps,
+    VueUiWatermarkSlotProps,
+    VueUiOnionLegendSlotProps,
+    VueUiOnionTooltipSlotProps,
+    CommonAnnotatorSlots,
+};
 
-declare const VueUiOnion: DefineComponent<
-    {
-        config?: VueUiOnionConfig;
-        dataset: VueUiOnionDatasetItem[];
-    },
-    VueUiOnionExpose
->;
+declare const VueUiOnionBase: DefineComponent<VueUiOnionProps>;
+
+export const VueUiOnion: typeof VueUiOnionBase & {
+    new (): VueUiOnionExpose & {
+        $slots: CommonAnnotatorSlots & {
+            menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
+            optionTooltip?: () => VNodeChild;
+            optionPdf?: () => VNodeChild;
+            optionCsv?: () => VNodeChild;
+            optionImg?: () => VNodeChild;
+            optionSvg?: () => VNodeChild;
+            optionTable?: () => VNodeChild;
+            optionFullscreen?: (
+                props: VueUiOptionFullscreenSlotProps,
+            ) => VNodeChild;
+            optionAltCopy?: () => VNodeChild;
+            optionAnnotator?: (
+                props: VueUiOptionAnnotatorSlotProps,
+            ) => VNodeChild;
+            ['chart-background']?: () => VNodeChild;
+            svg?: (props: VueUiOnionSvgSlotProps) => VNodeChild;
+            hint?: (props: VueUiKeyboardNavigationHintSlotProps) => VNodeChild;
+            watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
+            source?: () => VNodeChild;
+            skeleton?: () => VNodeChild;
+            legend?: (props: VueUiOnionLegendSlotProps) => VNodeChild;
+            ['tooltip-before']?: (
+                props: VueUiOnionTooltipSlotProps,
+            ) => VNodeChild;
+            tooltip?: (props: VueUiOnionTooltipSlotProps) => VNodeChild;
+            ['tooltip-after']?: (
+                props: VueUiOnionTooltipSlotProps,
+            ) => VNodeChild;
+        };
+    };
+};
 
 export default VueUiOnion;
 export { VueUiOnion };

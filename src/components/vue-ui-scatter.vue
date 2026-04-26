@@ -3956,7 +3956,7 @@ defineExpose({
                         },
                         data: mutableDataset,
                         isPrintingImg:
-                            isPrinting | isImaging | isCallbackImaging,
+                            isPrinting || isImaging || isCallbackImaging,
                         isPrintingSvg: isCallbackSvg,
                     }"
                 />

@@ -3673,7 +3673,21 @@ defineExpose({
                         <template v-if="FINAL_CONFIG.useCustomLegend">
                             <slot
                                 name="legend"
-                                v-bind="{ legend: legendItem }"
+                                v-bind="{
+                                    legend: {
+                                        ...legendItem,
+                                        isSegregated: segregated.includes(
+                                            legendItem.id,
+                                        ),
+                                        segregate: () => {
+                                            segregateDonut(
+                                                legendItem,
+                                                donut.dataset,
+                                            );
+                                            emit('selectLegend', legendItem);
+                                        },
+                                    },
+                                }"
                             />
                         </template>
 
@@ -3764,7 +3778,21 @@ defineExpose({
                         <template v-if="FINAL_CONFIG.useCustomLegend">
                             <slot
                                 name="legend"
-                                v-bind="{ legend: legendItem }"
+                                v-bind="{
+                                    legend: {
+                                        ...legendItem,
+                                        isSegregated: segregated.includes(
+                                            legendItem.id,
+                                        ),
+                                        segregate: () => {
+                                            segregate(
+                                                legendItem.id,
+                                                line.legend.length - 1,
+                                            );
+                                            emit('selectLegend', legendItem);
+                                        },
+                                    },
+                                }"
                             />
                         </template>
                         <template v-else>
@@ -3803,7 +3831,21 @@ defineExpose({
                         <template v-if="FINAL_CONFIG.useCustomLegend">
                             <slot
                                 name="legend"
-                                v-bind="{ legend: legendItem }"
+                                v-bind="{
+                                    legend: {
+                                        ...legendItem,
+                                        isSegregated: segregated.includes(
+                                            legendItem.id,
+                                        ),
+                                        segregate: () => {
+                                            segregate(
+                                                legendItem.id,
+                                                bar.legend.length - 1,
+                                            );
+                                            emit('selectLegend', legendItem);
+                                        },
+                                    },
+                                }"
                             />
                         </template>
                         <template v-else>

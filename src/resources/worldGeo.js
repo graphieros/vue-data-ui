@@ -9503,7 +9503,7 @@ const worldGeo = {
                     ],
                 ],
             },
-            properties: { admin: 'France', iso_a3: '-99', name: 'France' },
+            properties: { admin: 'France', iso_a3: 'FRA', name: 'France' },
         },
         {
             type: 'Feature',
