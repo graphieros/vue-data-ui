@@ -10555,6 +10555,41 @@ declare module 'vue-data-ui' {
         showYMarker?: boolean;
     };
 
+    export type VueUiXyCanvasDatapoint = {
+        absoluteIndex: number;
+        color: string;
+        coordinatesLine: Array<{ x: number; y: number; value: number | null }>;
+        cumulatedStackRatio: number;
+        dataLabels: boolean;
+        individualHeight: number;
+        localMin: number;
+        localScale: {
+            max: number;
+            min: number;
+            tickSize: number;
+            ticks: number[];
+        };
+        localYLabels: Array<{ x: number; y: number; value: number | null }>;
+        localZero: number;
+        max: number;
+        min: number;
+        name: string;
+        scaleSteps: number;
+        series: Array<number | null>;
+        stackIndex: number;
+        stackRatio: number;
+        type: 'line' | 'bar' | 'plot';
+        yOffset: number;
+    };
+
+    export type VueUiXyCanvasTooltipDatapoint = {
+        color: string;
+        name: string;
+        shape: Shape | null;
+        type: 'line' | 'bar' | 'plot';
+        value: number | null;
+    };
+
     export type VueUiXyCanvasConfig = {
         skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiXyCanvasConfig> | null;
         skeletonDataset?: VueUiBuiltInSkeletonDataset<
@@ -10569,7 +10604,10 @@ declare module 'vue-data-ui' {
         responsive?: boolean;
         theme?: Theme;
         customPalette?: string[];
-        userOptions?: ChartUserOptions;
+        userOptions?: ChartUserOptions<
+            VueUiXyCanvasDatapoint[],
+            VueUiXyCanvasConfig
+        >;
         style?: {
             fontFamily?: string;
             chart?: {
@@ -10772,13 +10810,81 @@ declare module 'vue-data-ui' {
         hideSeries(name: string): void;
     };
 
-    export const VueUiXyCanvas: DefineComponent<
-        {
-            dataset: VueUiXyCanvasDatasetItem[];
-            config?: VueUiXyCanvasConfig;
-        },
-        VueUiXyCanvasExpose
-    >;
+    export type VueUiXyCanvasTooltipSlotProps = {
+        config: VueUiXyCanvasConfig;
+        datapoint: VueUiXyCanvasTooltipDatapoint[];
+        series: VueUiXyCanvasDatapoint[];
+        seriesIndex: number;
+        timeLabel: string;
+    };
+
+    export type VueUiXyCanvasLegendItem = {
+        absoluteIndex: number;
+        color: string;
+        dataLabels: boolean;
+        isSegregated: boolean;
+        name: string;
+        opacity: number;
+        prefix: string;
+        rounding: number;
+        scaleSteps: number;
+        segregate: () => void;
+        series: Array<number | null>;
+        shape: Shape;
+        suffix: string;
+        type: 'line' | 'bar' | 'plot';
+    };
+
+    export type VueUiXyCanvasLegendSlotProps = {
+        legend: VueUiXyCanvasLegendItem[];
+    };
+
+    export type VueUiXyCanvasProps = {
+        dataset: VueUiXyCanvasDatasetItem[];
+        config?: VueUiXyCanvasConfig;
+    };
+
+    const VueUiXyCanvasBase: DefineComponent<VueUiXyCanvasProps>;
+
+    export const VueUiXyCanvas: typeof VueUiXyCanvasBase & {
+        new (): VueUiXyCanvasExpose & {
+            $slots: CommonAnnotatorSlots & {
+                menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
+                optionTooltip?: () => VNodeChild;
+                optionPdf?: () => VNodeChild;
+                optionCsv?: () => VNodeChild;
+                optionImg?: () => VNodeChild;
+                optionSvg?: () => VNodeChild;
+                optionTable?: () => VNodeChild;
+                optionLabels?: () => VNodeChild;
+                optionStack?: (props: VueUiOptionStackSlotProps) => VNodeChild;
+                optionFullscreen?: (
+                    props: VueUiOptionFullscreenSlotProps,
+                ) => VNodeChild;
+                optionAnnotator?: (
+                    props: VueUiOptionAnnotatorSlotProps,
+                ) => VNodeChild;
+                optionAltCopy?: () => VNodeChild;
+                hint?: (
+                    props: VueUiKeyboardNavigationHintSlotProps,
+                ) => VNodeChild;
+                watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
+                source?: () => VNodeChild;
+                skeleton?: () => VNodeChild;
+                ['tooltip-before']?: (
+                    props: VueUiXyCanvasTooltipSlotProps,
+                ) => VNodeChild;
+                tooltip?: (props: VueUiXyCanvasTooltipSlotProps) => VNodeChild;
+                ['tooltip-after']?: (
+                    props: VueUiXyCanvasTooltipSlotProps,
+                ) => VNodeChild;
+                ['resest-action']?: (
+                    props: VueUiResetActionSlotProps,
+                ) => VNodeChild;
+                legend?: (props: VueUiXyCanvasLegendSlotProps) => VNodeChild;
+            };
+        };
+    };
 
     export type VueUiFlowDatasetItem = [string, string, number | null];
 

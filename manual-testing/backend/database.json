@@ -1174,7 +1174,7 @@
       "description": "Add types for component slots, and test the validity of all TS types for configs and datasets.",
       "priority": 1,
       "author": "graphieros",
-      "done": false,
+      "done": true,
       "exchanges": [],
       "type": "feature",
       "withComponentCheckList": true,
@@ -1241,13 +1241,13 @@
         "VueUiWordCloud": true,
         "VueUiWorld": true,
         "VueUiXy": true,
-        "VueUiXyCanvas": false
+        "VueUiXyCanvas": true
       },
       "withCustomCheckList": false,
       "customCheckList": {},
       "id": "3846f04c-685f-4509-8042-87b9c0b7ec33",
       "createdAt": 1775989842046,
-      "updatedAt": 1777185327392
+      "updatedAt": 1777188516661
     },
     {
       "title": "Expose more methods",

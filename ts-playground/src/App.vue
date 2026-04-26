@@ -168,6 +168,9 @@ const TsVueUiWordCloud = defineAsyncComponent(
 const TsVueUiWorld = defineAsyncComponent(
     () => import('./components/charts/ts-vue-ui-world.vue'),
 );
+const TsVueUiXyCanvas = defineAsyncComponent(
+    () => import('./components/charts/ts-vue-ui-xy-canvas.vue'),
+);
 
 const components = shallowRef([
     { name: 'VueUiXy' },
@@ -226,6 +229,7 @@ const components = shallowRef([
     { name: 'VueUiWheel' },
     { name: 'VueUiWordCloud' },
     { name: 'VueUiWorld' },
+    { name: 'VueUiXyCanvas' },
 ]);
 
 const selectedComponent = shallowRef(components.value[0]);
@@ -327,6 +331,7 @@ const selectedComponent = shallowRef(components.value[0]);
         <TsVueUiWheel v-if="selectedComponent?.name === 'VueUiWheel'" />
         <TsVueUiWordCloud v-if="selectedComponent?.name === 'VueUiWordCloud'" />
         <TsVueUiWorld v-if="selectedComponent?.name === 'VueUiWorld'" />
+        <TsVueUiXyCanvas v-if="selectedComponent?.name === 'VueUiXyCanvas'" />
     </div>
 </template>
 
