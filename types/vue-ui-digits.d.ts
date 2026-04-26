@@ -1,6 +1,7 @@
 import type { DefineComponent } from 'vue';
 
-export type { VueUiDigitsConfig } from 'vue-data-ui';
+import type { VueUiDigitsConfig } from 'vue-data-ui';
+export type { VueUiDigitsConfig };
 
 declare const VueUiDigits: DefineComponent<{
     dataset: number;
