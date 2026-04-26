@@ -240,15 +240,23 @@ describe('<SlicerPreview />', () => {
     it('emits trapMouse with the hovered trap index and null on mouseleave', () => {
         mountSlicerPreview().then((cmp) => {
             const ev = cmp.vm.events;
+            const targetIndex = 5;
+
+            cy.get('[data-cy="slicer-minimap-svg"]').then(($svg) => {
+                const rect = $svg[0].getBoundingClientRect();
+
+                const x = (rect.width / (ds.length - 1)) * targetIndex;
+                const y = rect.height / 2;
+
+                cy.get('[data-cy="minimap"] svg [style*="pointer-events: all"]')
+                    .last()
+                    .trigger('mousemove', x, y, { force: true });
+            });
+
+            cy.wrap(ev).its('trapMouse').should('eq', targetIndex);
 
             cy.get('[data-cy="minimap"] svg [style*="pointer-events: all"]')
-                .eq(5)
-                .trigger('mouseenter', { force: true });
-
-            cy.wrap(ev).its('trapMouse').should('eq', 5);
-
-            cy.get('[data-cy="minimap"] svg [style*="pointer-events: all"]')
-                .eq(5)
+                .last()
                 .trigger('mouseleave', { force: true });
 
             cy.wrap(ev).its('trapMouse').should('eq', null);
