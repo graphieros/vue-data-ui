@@ -739,7 +739,9 @@ const range = ref(null);
             }"
             @click="emit('close')"
         >
-            <BaseIcon name="close" :stroke="color" />
+            <slot name="annotator-action-close">
+                <BaseIcon name="close" :stroke="color" />
+            </slot>
         </button>
         <button
             data-cy="pen-and-paper-color-picker"
@@ -755,7 +757,11 @@ const range = ref(null);
                 v-model:value="currentColor"
                 :backgroundColor="backgroundColor"
                 :buttonBorderColor="buttonBorderColor"
-            />
+            >
+                <template #annotator-action-color="{ color }">
+                    <slot name="annotator-action-color" v-bind="{ color }" />
+                </template>
+            </ColorPicker>
         </button>
         <button
             data-cy="pen-and-paper-toggle-text"
@@ -768,7 +774,9 @@ const range = ref(null);
                 cursor: isCursorPointer ? 'pointer' : 'default',
             }"
         >
-            <BaseIcon :name="iconMap[mode]" :stroke="color" />
+            <slot name="annotator-action-draw" v-bind="{ mode }">
+                <BaseIcon :name="iconMap[mode]" :stroke="color" />
+            </slot>
             <div
                 :style="{
                     position: 'absolute',
@@ -804,8 +812,14 @@ const range = ref(null);
             }"
             @click="deleteLastDraw"
         >
-            <BaseIcon name="refresh" :stroke="color" />
+            <slot
+                name="annotator-action-undo"
+                v-bind="{ disabled: !stack.length }"
+            >
+                <BaseIcon name="refresh" :stroke="color" />
+            </slot>
         </button>
+
         <button
             data-cy="pen-and-paper-redo"
             :class="{
@@ -819,12 +833,18 @@ const range = ref(null);
             }"
             @click="redoLastDraw"
         >
-            <BaseIcon
-                name="refresh"
-                :stroke="color"
-                style="transform: scaleX(-1)"
-            />
+            <slot
+                name="annotator-action-redo"
+                v-bind="{ disabled: !redoStack.length }"
+            >
+                <BaseIcon
+                    name="refresh"
+                    :stroke="color"
+                    style="transform: scaleX(-1)"
+                />
+            </slot>
         </button>
+
         <button
             data-cy="pen-and-paper-reset"
             :class="{
@@ -839,7 +859,12 @@ const range = ref(null);
             }"
             @click="reset"
         >
-            <BaseIcon name="trash" :stroke="color" />
+            <slot
+                name="annotator-action-delete"
+                v-bind="{ disabled: !stack.length }"
+            >
+                <BaseIcon name="trash" :stroke="color" />
+            </slot>
         </button>
 
         <input
