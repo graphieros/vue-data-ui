@@ -434,7 +434,7 @@ defineExpose({
 }
 
 .vue-data-ui-tooltip-backdrop {
-    backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px) !important;
     -webkit-backdrop-filter: blur(10px);
 }
 
