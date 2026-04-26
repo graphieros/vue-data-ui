@@ -1239,7 +1239,7 @@
         "VueUiWaffle": true,
         "VueUiWheel": true,
         "VueUiWordCloud": true,
-        "VueUiWorld": false,
+        "VueUiWorld": true,
         "VueUiXy": true,
         "VueUiXyCanvas": false
       },
@@ -1247,7 +1247,7 @@
       "customCheckList": {},
       "id": "3846f04c-685f-4509-8042-87b9c0b7ec33",
       "createdAt": 1775989842046,
-      "updatedAt": 1777179147668
+      "updatedAt": 1777185327392
     },
     {
       "title": "Expose more methods",

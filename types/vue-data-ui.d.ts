@@ -13296,7 +13296,7 @@ declare module 'vue-data-ui' {
             datapointLeave?: VueUiWorldEvent; // v3
             datapointClick?: VueUiWorldEvent; // v3
         };
-        userOptions?: ChartUserOptions;
+        userOptions?: ChartUserOptions<VueUiWorldDatapoint[], VueUiWorldConfig>;
         customPalette?: string[];
         projection?:
             | 'aitoff'
@@ -13398,13 +13398,80 @@ declare module 'vue-data-ui' {
         toggleFullscreen(): void;
     };
 
-    export const VueUiWorld: DefineComponent<
-        {
-            config?: VueUiWorldConfig;
-            dataset?: VueUiWorldDataset;
-        },
-        VueUiWorldExpose
-    >;
+    export type VueUiWorldPatternSlotProps = VueUiWorldDatapoint & {
+        patternId: string;
+    };
+
+    export type VueUiWorldSvgSlotProps = {
+        svg: {
+            height: number;
+            isPrintingImg: boolean;
+            isPrintingSvg: boolean;
+            width: number;
+        };
+    };
+
+    export type VueUiWorldLegendItem = {
+        color: string;
+        isSegregated: boolean;
+        name: string;
+        opacity: number;
+        patternIndex: number;
+        segregate: () => void;
+        shape: Shape;
+    };
+
+    export type VueUiWorldLegendSlotProps = {
+        legend: VueUiWorldLegendItem[];
+    };
+
+    export type VueUiWorldTooltipSlotProps = {
+        config: VueUiWorldConfig;
+        datapoint: VueUiWorldDatapoint;
+        series: VueUiWordCloudDatapoint[];
+    };
+
+    export type VueUiWorldProps = {
+        config?: VueUiWorldConfig;
+        dataset?: VueUiWorldDataset;
+    };
+
+    const VueUiWorldBase: DefineComponent<VueUiWorldProps>;
+
+    export const VueUiWorld: typeof VueUiWorldBase & {
+        new (): VueUiWorldExpose & {
+            $slots: CommonAnnotatorSlots & {
+                menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
+                optionTooltip?: () => VNodeChild;
+                optionPdf?: () => VNodeChild;
+                optionCsv?: () => VNodeChild;
+                optionImg?: () => VNodeChild;
+                optionSvg?: () => VNodeChild;
+                optionTable?: () => VNodeChild;
+                optionFullscreen?: (
+                    props: VueUiOptionFullscreenSlotProps,
+                ) => VNodeChild;
+                optionAltCopy?: () => VNodeChild;
+                optionAnnotator?: (
+                    props: VueUiOptionAnnotatorSlotProps,
+                ) => VNodeChild;
+                ['chart-background']?: () => VNodeChild;
+                pattern?: (props: VueUiWorldPatternSlotProps) => VNodeChild;
+                svg?: (props: VueUiWorldSvgSlotProps) => VNodeChild;
+                watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
+                source?: () => VNodeChild;
+                skeleton?: () => VNodeChild;
+                legend?: (props: VueUiWorldLegendSlotProps) => VNodeChild;
+                ['tooltip-before']?: (
+                    props: VueUiWorldTooltipSlotProps,
+                ) => VNodeChild;
+                tooltip?: (props: VueUiWorldTooltipSlotProps) => VNodeChild;
+                ['tooltip-after']?: (
+                    props: VueUiWorldTooltipSlotProps,
+                ) => VNodeChild;
+            };
+        };
+    };
 
     export type VueUiRidgelineDatapoint = {
         name: string;

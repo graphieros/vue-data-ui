@@ -3,7 +3,7 @@ import type { VueUiPatternSlotProps } from 'vue-data-ui';
 const props = withDefaults(
     defineProps<{
         patternId: VueUiPatternSlotProps['patternId'];
-        seriesIndex: VueUiPatternSlotProps['seriesIndex'];
+        seriesIndex?: VueUiPatternSlotProps['seriesIndex'];
         color?: string;
     }>(),
     {
