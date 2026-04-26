@@ -1,12 +1,20 @@
 import type { DefineComponent } from 'vue';
 
-export type {
+import type {
     VueUiTableDatasetHeaderItem,
     VueUiTableDatasetBodyItem,
     VueUiTableDataset,
     VueUiTableConfig,
     VueUiTablePageChangeEvent,
 } from 'vue-data-ui';
+
+export type {
+    VueUiTableDatasetHeaderItem,
+    VueUiTableDatasetBodyItem,
+    VueUiTableDataset,
+    VueUiTableConfig,
+    VueUiTablePageChangeEvent,
+};
 
 declare const VueUiTable: DefineComponent<{
     config?: VueUiTableConfig;
