@@ -97,7 +97,7 @@ watch(
 <style scoped>
 .vue-data-ui-spark-tooltip {
     box-shadow: 0 6px 12px -6px rgba(0, 0, 0, 0.2);
-    backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px) !important;
     padding: 0 0.5rem;
     -webkit-backdrop-filter: blur(10px);
 }
