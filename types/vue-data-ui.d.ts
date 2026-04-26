@@ -10353,15 +10353,22 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiWordCloudDatasetItem = {
+        [key: string]: any;
         name: string;
         value: number;
     };
 
     export type VueUiWordCloudDatapoint = {
+        [key: string]: any;
+        angle: number;
         color: string;
         fontSize: number;
         height: number;
         id: string;
+        maxX: number;
+        maxY: number;
+        minX: number;
+        minY: number;
         name: string;
         value: number;
         width: number;
@@ -10386,7 +10393,10 @@ declare module 'vue-data-ui' {
         };
         theme?: string;
         customPalette?: string[];
-        userOptions?: ChartUserOptions;
+        userOptions?: ChartUserOptions<
+            VueUiWordCloudDatapoint[],
+            VueUiWordCloudConfig
+        >;
         useCssAnimation?: boolean;
         animationDelayMs?: number;
         strictPixelPadding?: boolean;
@@ -10443,24 +10453,7 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiWordCloudExpose = {
-        getData(): Promise<
-            Array<{
-                angle: number;
-                color: string;
-                fontSize: number;
-                height: number;
-                id: string;
-                maxX: number;
-                maxY: number;
-                minX: number;
-                minY: number;
-                name: string;
-                value: number;
-                width: number;
-                x: number;
-                y: number;
-            }>
-        >;
+        getData(): Promise<VueUiWordCloudDatapoint[]>;
         getImage(options?: { scale?: number }): GetImagePromise;
         generatePdf(): void;
         generateCsv(): void;
@@ -10473,13 +10466,77 @@ declare module 'vue-data-ui' {
         toggleZoom(): void;
     };
 
-    export const VueUiWordCloud: DefineComponent<
-        {
-            config?: VueUiWordCloudConfig;
-            dataset: VueUiWordCloudDatasetItem[] | string;
-        },
-        VueUiWordCloudExpose
-    >;
+    export type VueUiWordCloudOptionZoomSlotProps = {
+        toggleZoom: () => void;
+        isZoomLocked: boolean;
+    };
+
+    export type VueUiWordCloudSvgSlotProps = {
+        svg: {
+            width: number;
+            height: number;
+            maxFontSize: number;
+            minFontSize: number;
+            bold: boolean;
+            isPrintingImg: boolean;
+            isPrintingSvg: boolean;
+        };
+    };
+
+    export type VueUiWordCloudTooltipSlotProps = {
+        config: VueUiWordCloudConfig;
+        datapoint: VueUiWordCloudDatapoint;
+        seriesIndex: number;
+    };
+
+    export type VueUiWordCloudProps = {
+        config?: VueUiWordCloudConfig;
+        dataset: VueUiWordCloudDatasetItem[] | string;
+    };
+
+    const VueUiWordCloudBase: DefineComponent<VueUiWordCloudProps>;
+
+    export const VueUiWordCloud: typeof VueUiWordCloudBase & {
+        new (): VueUiWordCloudExpose & {
+            $slots: CommonAnnotatorSlots & {
+                menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
+                optionTooltip?: () => VNodeChild;
+                optionPdf?: () => VNodeChild;
+                optionCsv?: () => VNodeChild;
+                optionImg?: () => VNodeChild;
+                optionSvg?: () => VNodeChild;
+                optionTable?: () => VNodeChild;
+                optionFullscreen?: (
+                    props: VueUiOptionFullscreenSlotProps,
+                ) => VNodeChild;
+                optionAltCopy?: () => VNodeChild;
+                optionAnnotator?: (
+                    props: VueUiOptionAnnotatorSlotProps,
+                ) => VNodeChild;
+                optionZoom?: (
+                    props: VueUiWordCloudOptionZoomSlotProps,
+                ) => VNodeChild;
+                ['chart-background']?: () => VNodeChild;
+                svg?: (props: VueUiWordCloudSvgSlotProps) => VNodeChild;
+                hint?: (
+                    props: VueUiKeyboardNavigationHintSlotProps,
+                ) => VNodeChild;
+                watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
+                source?: () => VNodeChild;
+                skeleton?: () => VNodeChild;
+                ['resest-action']?: (
+                    props: VueUiResetActionSlotProps,
+                ) => VNodeChild;
+                ['tooltip-before']?: (
+                    props: VueUiWordCloudTooltipSlotProps,
+                ) => VNodeChild;
+                tooltip?: (props: VueUiWordCloudTooltipSlotProps) => VNodeChild;
+                ['tooltip-after']?: (
+                    props: VueUiWordCloudTooltipSlotProps,
+                ) => VNodeChild;
+            };
+        };
+    };
 
     export type VueUiXyCanvasDatasetItem = {
         name: string;
