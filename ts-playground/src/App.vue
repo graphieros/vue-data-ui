@@ -171,6 +171,9 @@ const TsVueUiWorld = defineAsyncComponent(
 const TsVueUiXyCanvas = defineAsyncComponent(
     () => import('./components/charts/ts-vue-ui-xy-canvas.vue'),
 );
+const TsVueUiTableHeatmap = defineAsyncComponent(
+    () => import('./components/charts/ts-vue-ui-table-heatmap.vue'),
+);
 
 const components = shallowRef([
     { name: 'VueUiXy' },
@@ -230,6 +233,7 @@ const components = shallowRef([
     { name: 'VueUiWordCloud' },
     { name: 'VueUiWorld' },
     { name: 'VueUiXyCanvas' },
+    { name: 'VueUiTableHeatmap' },
 ]);
 
 const selectedComponent = shallowRef(components.value[0]);
@@ -332,6 +336,9 @@ const selectedComponent = shallowRef(components.value[0]);
         <TsVueUiWordCloud v-if="selectedComponent?.name === 'VueUiWordCloud'" />
         <TsVueUiWorld v-if="selectedComponent?.name === 'VueUiWorld'" />
         <TsVueUiXyCanvas v-if="selectedComponent?.name === 'VueUiXyCanvas'" />
+        <TsVueUiTableHeatmap
+            v-if="selectedComponent?.name === 'VueUiTableHeatmap'"
+        />
     </div>
 </template>
 

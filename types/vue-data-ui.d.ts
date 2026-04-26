@@ -9238,16 +9238,95 @@ declare module 'vue-data-ui' {
             head?: {
                 backgroundColor?: string;
                 color?: string;
-                values?: string[];
+                values?: Array<number | string | Record<string, any>>;
             };
         };
         userOptions?: ChartUserOptions;
     };
 
-    export const VueUiTableHeatmap: DefineComponent<{
+    export type VueUiTableHeatmapHeadSlotProps = {
+        value: number | string | Record<string, any>;
+        isResponsive: boolean;
+        rowIndex: number;
+        type: 'number' | 'string' | 'object';
+    };
+
+    export type VueUiTableHeatmapRowTitleSlotProps = {
+        value: string;
+        isResponsive: boolean;
+        rowIndex: number;
+        colIndex: number;
+        type: 'string';
+    };
+
+    export type VueUiTableHeatmapSumSlotProps = {
+        value: number;
+        rowIndex: number;
+        isResponsive: boolean;
+    };
+
+    export type VueUiTableHeatmapAverageSlotProps = {
+        value: number;
+        rowIndex: number;
+        isResponsive: boolean;
+    };
+
+    export type VueUiTableHeatmapMedianSlotProps = {
+        value: number;
+        rowIndex: number;
+        isResponsive: boolean;
+    };
+
+    export type VueUiTableHeatmapCellSlotProps = {
+        value: number;
+        rowIndex: number;
+        colIndex: number;
+        type: 'number';
+        isResponsive: boolean;
+        color: string;
+        textColor: string;
+    };
+
+    export type VueUiTableHeatmapProps = {
         config?: VueUiTableHeatmapConfig;
         dataset: VueUiTableHeatmapDatasetItem[];
-    }>;
+    };
+
+    const VueUiTableHeatmapBase: DefineComponent<VueUiTableHeatmapProps>;
+
+    export type VueUiTableHeatmapExpose = {
+        generatePdf(): void;
+        generateCsv(): void;
+        generateImage(): void;
+    };
+
+    export const VueUiTableHeatmap: typeof VueUiTableHeatmapBase & {
+        new (): VueUiTableHeatmapExpose & {
+            $slots: {
+                menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
+                optionPdf?: () => VNodeChild;
+                optionCsv?: () => VNodeChild;
+                optionImg?: () => VNodeChild;
+                optionFullscreen?: (
+                    props: VueUiOptionFullscreenSlotProps,
+                ) => VNodeChild;
+                caption?: () => VNodeChild;
+                head?: (props: VueUiTableHeatmapHeadSlotProps) => VNodeChild;
+                rowTitle?: (
+                    props: VueUiTableHeatmapRowTitleSlotProps,
+                ) => VNodeChild;
+                sum?: (props: VueUiTableHeatmapSumSlotProps) => VNodeChild;
+                average?: (
+                    props: VueUiTableHeatmapAverageSlotProps,
+                ) => VNodeChild;
+                median?: (
+                    props: VueUiTableHeatmapMedianSlotProps,
+                ) => VNodeChild;
+                source?: () => VNodeChild;
+                cell?: (props: VueUiTableHeatmapCellSlotProps) => VNodeChild;
+            };
+        };
+    };
 
     export type VueUiAccordionConfig = {
         open?: boolean;
