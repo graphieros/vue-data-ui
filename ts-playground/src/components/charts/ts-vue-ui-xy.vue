@@ -447,6 +447,10 @@ const testPreconfig = computed<VueUiXyConfig>(() => {
                 rounding: 0,
                 color: '#2D353C',
                 formatter: null,
+                offsetX: 0,
+                rotation: 0,
+                textAnchor: null,
+                alwaysOnTop: false,
             },
             serieName: {
                 show: false,
@@ -482,6 +486,10 @@ const testPreconfig = computed<VueUiXyConfig>(() => {
                 rounding: 0,
                 color: '#2D353C',
                 formatter: null,
+                offsetX: 0,
+                rotation: 0,
+                textAnchor: null,
+                alwaysOnTop: false,
             },
             area: {
                 useGradient: true,
@@ -509,6 +517,10 @@ const testPreconfig = computed<VueUiXyConfig>(() => {
                 rounding: 0,
                 color: '#2D353C',
                 formatter: null,
+                offsetX: 0,
+                rotation: 0,
+                textAnchor: null,
+                alwaysOnTop: false,
             },
             tag: {
                 followValue: true,

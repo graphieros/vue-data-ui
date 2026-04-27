@@ -4143,8 +4143,86 @@ const timeTagContent = computed(() => {
     }
 });
 
-// Force reflow when component is mounted in a hidden div
+// Datapoint labels
+function getDataLabelContent({ serie, plot, type }) {
+    if (!canShowValue(plot.value)) return '';
+    const content = applyDataLabel(
+        FINAL_CONFIG.value[type].labels.formatter,
+        plot.value,
+        dataLabel({
+            p: serie.prefix || FINAL_CONFIG.value.chart.labels.prefix,
+            v: plot.value,
+            x: serie.suffix || FINAL_CONFIG.value.chart.labels.suffix,
+            r: FINAL_CONFIG.value[type].labels.rounding,
+        }),
+        {
+            datapoint: plot,
+            serie,
+        },
+    );
+    return createTSpansFromLineBreaksOnX({
+        content,
+        fontSize: fontSizes.value.plotLabels,
+        fill: FINAL_CONFIG.value[type].labels.color,
+        x: 0,
+        y: 0,
+    });
+}
 
+function getDataLabelTransformBar({ plot }) {
+    const offsetY = FINAL_CONFIG.value.bar.labels.offsetY;
+    const barHeight = Math.abs(calcIndividualHeight(plot));
+    const isNegative = plot.value < 0;
+    const coords = {
+        x:
+            (mutableConfig.value.useIndividualScale &&
+            mutableConfig.value.isStacked
+                ? plot.x + slot.value.line / 2
+                : calcRectX(plot) +
+                  calcRectWidth() / 2 -
+                  barPeriodGap.value / 2) +
+            FINAL_CONFIG.value.bar.labels.offsetX,
+        y:
+            checkNaN(plot.y) +
+            (FINAL_CONFIG.value.bar.labels.alwaysOnTop
+                ? offsetY - (isNegative ? barHeight : 0)
+                : plot.value >= 0
+                  ? offsetY
+                  : -offsetY * 3),
+    };
+    return `translate(${coords.x}, ${coords.y}) rotate(${FINAL_CONFIG.value.bar.labels.rotation})`;
+}
+
+function getDataLabelTransformLineOrPlot({ plot, type }) {
+    const offsetY = FINAL_CONFIG.value[type].labels.offsetY;
+    const coords = {
+        x: plot.x + FINAL_CONFIG.value[type].labels.offsetX,
+        y:
+            checkNaN(plot.y) +
+            (FINAL_CONFIG.value[type].labels.alwaysOnTop
+                ? offsetY
+                : plot.value >= 0
+                  ? offsetY
+                  : -offsetY * 3),
+    };
+    return `translate(${coords.x}, ${coords.y}) rotate(${FINAL_CONFIG.value[type].labels.rotation})`;
+}
+
+function getDataLabelTextAnchor({ plot, type }) {
+    if (FINAL_CONFIG.value[type].labels.textAnchor != null) {
+        return FINAL_CONFIG.value[type].labels.textAnchor;
+    }
+    const isPositive = plot.value >= 0;
+    const isRotated = FINAL_CONFIG.value[type].labels.rotation !== 0;
+    if (!isRotated) return 'middle';
+    return FINAL_CONFIG.value[type].labels.alwaysOnTop
+        ? 'start'
+        : isPositive
+          ? 'start'
+          : 'end';
+}
+
+// Force reflow when component is mounted in a hidden div
 watch(
     () => props.dataset,
     (_) => {
@@ -6228,56 +6306,30 @@ defineExpose({
                                                         j)) &&
                                             FINAL_CONFIG.bar.labels.show
                                         "
-                                        :x="
-                                            mutableConfig.useIndividualScale &&
-                                            mutableConfig.isStacked
-                                                ? plot.x + slot.line / 2
-                                                : calcRectX(plot) +
-                                                  calcRectWidth() / 2 -
-                                                  barPeriodGap / 2
+                                        :text-anchor="
+                                            getDataLabelTextAnchor({
+                                                plot,
+                                                type: 'bar',
+                                            })
                                         "
-                                        :y="
-                                            checkNaN(plot.y) +
-                                            (plot.value >= 0
-                                                ? FINAL_CONFIG.bar.labels
-                                                      .offsetY
-                                                : -FINAL_CONFIG.bar.labels
-                                                      .offsetY * 3)
-                                        "
-                                        text-anchor="middle"
                                         :font-size="fontSizes.plotLabels"
+                                        :transform="
+                                            getDataLabelTransformBar({ plot })
+                                        "
                                         :fill="FINAL_CONFIG.bar.labels.color"
+                                        :stroke="
+                                            FINAL_CONFIG.chart.backgroundColor
+                                        "
+                                        paint-order="stroke"
                                         :style="`opacity:${selectedScale ? (selectedScale === serie.groupId ? 1 : 0.2) : 1};transition:opacity 0.2s ease-in-out`"
-                                    >
-                                        {{
-                                            canShowValue(plot.value)
-                                                ? applyDataLabel(
-                                                      FINAL_CONFIG.bar.labels
-                                                          .formatter,
-                                                      plot.value,
-                                                      dataLabel({
-                                                          p:
-                                                              serie.prefix ||
-                                                              FINAL_CONFIG.chart
-                                                                  .labels
-                                                                  .prefix,
-                                                          v: plot.value,
-                                                          s:
-                                                              serie.suffix ||
-                                                              FINAL_CONFIG.chart
-                                                                  .labels
-                                                                  .suffix,
-                                                          r: FINAL_CONFIG.bar
-                                                              .labels.rounding,
-                                                      }),
-                                                      {
-                                                          datapoint: plot,
-                                                          serie,
-                                                      },
-                                                  )
-                                                : ''
-                                        }}
-                                    </text>
+                                        v-html="
+                                            getDataLabelContent({
+                                                serie,
+                                                plot,
+                                                type: 'bar',
+                                            })
+                                        "
+                                    />
                                     <text
                                         v-if="
                                             plot &&
@@ -6359,45 +6411,33 @@ defineExpose({
                                             (selectedMinimapIndex !== null &&
                                                 selectedMinimapIndex === j)
                                         "
-                                        :x="plot.x"
-                                        :y="
-                                            plot.y +
-                                            FINAL_CONFIG.plot.labels.offsetY
+                                        :transform="
+                                            getDataLabelTransformLineOrPlot({
+                                                plot,
+                                                type: 'plot',
+                                            })
                                         "
-                                        text-anchor="middle"
+                                        :text-anchor="
+                                            getDataLabelTextAnchor({
+                                                plot,
+                                                type: 'plot',
+                                            })
+                                        "
                                         :font-size="fontSizes.plotLabels"
                                         :fill="FINAL_CONFIG.plot.labels.color"
+                                        :stroke="
+                                            FINAL_CONFIG.chart.backgroundColor
+                                        "
+                                        paint-order="stroke"
                                         :style="`opacity:${selectedScale ? (selectedScale === serie.groupId ? 1 : 0.2) : 1};transition:opacity 0.2s ease-in-out`"
-                                    >
-                                        {{
-                                            canShowValue(plot.value)
-                                                ? applyDataLabel(
-                                                      FINAL_CONFIG.plot.labels
-                                                          .formatter,
-                                                      plot.value,
-                                                      dataLabel({
-                                                          p:
-                                                              serie.prefix ||
-                                                              FINAL_CONFIG.chart
-                                                                  .labels
-                                                                  .prefix,
-                                                          v: plot.value,
-                                                          s:
-                                                              serie.suffix ||
-                                                              FINAL_CONFIG.chart
-                                                                  .labels
-                                                                  .suffix,
-                                                          r: FINAL_CONFIG.plot
-                                                              .labels.rounding,
-                                                      }),
-                                                      {
-                                                          datapoint: plot,
-                                                          serie,
-                                                      },
-                                                  )
-                                                : ''
-                                        }}
-                                    </text>
+                                        v-html="
+                                            getDataLabelContent({
+                                                serie,
+                                                plot,
+                                                type: 'plot',
+                                            })
+                                        "
+                                    />
                                 </template>
                             </template>
                         </g>
@@ -6542,49 +6582,33 @@ defineExpose({
                                             (selectedMinimapIndex !== null &&
                                                 selectedMinimapIndex === j)
                                         "
-                                        :x="plot.x"
-                                        :y="
-                                            plot.y +
-                                            (plot.value >= 0
-                                                ? FINAL_CONFIG.line.labels
-                                                      .offsetY
-                                                : -FINAL_CONFIG.line.labels
-                                                      .offsetY * 3)
+                                        :transform="
+                                            getDataLabelTransformLineOrPlot({
+                                                plot,
+                                                type: 'line',
+                                            })
                                         "
-                                        text-anchor="middle"
+                                        :text-anchor="
+                                            getDataLabelTextAnchor({
+                                                plot,
+                                                type: 'line',
+                                            })
+                                        "
                                         :font-size="fontSizes.plotLabels"
                                         :fill="FINAL_CONFIG.line.labels.color"
+                                        :stroke="
+                                            FINAL_CONFIG.chart.backgroundColor
+                                        "
+                                        paint-order="stroke"
                                         :style="`opacity:${selectedScale ? (selectedScale === serie.groupId ? 1 : 0.2) : 1};transition:opacity 0.2s ease-in-out`"
-                                    >
-                                        {{
-                                            canShowValue(plot.value)
-                                                ? applyDataLabel(
-                                                      FINAL_CONFIG.line.labels
-                                                          .formatter,
-                                                      plot.value,
-                                                      dataLabel({
-                                                          p:
-                                                              serie.prefix ||
-                                                              FINAL_CONFIG.chart
-                                                                  .labels
-                                                                  .prefix,
-                                                          v: plot.value,
-                                                          s:
-                                                              serie.suffix ||
-                                                              FINAL_CONFIG.chart
-                                                                  .labels
-                                                                  .suffix,
-                                                          r: FINAL_CONFIG.line
-                                                              .labels.rounding,
-                                                      }),
-                                                      {
-                                                          datapoint: plot,
-                                                          serie,
-                                                      },
-                                                  )
-                                                : ''
-                                        }}
-                                    </text>
+                                        v-html="
+                                            getDataLabelContent({
+                                                serie,
+                                                plot,
+                                                type: 'line',
+                                            })
+                                        "
+                                    />
                                 </template>
                             </template>
                         </g>

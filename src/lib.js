@@ -2774,6 +2774,9 @@ export function checkFormatter(func, { value, config }) {
 
             if (['number', 'string'].includes(typeof formattedValue)) {
                 isValid = true;
+            } else if (Array.isArray(formattedValue)) {
+                formattedValue = formattedValue.map(String).join('\n');
+                isValid = true;
             } else {
                 formattedValue = value;
             }

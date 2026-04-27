@@ -2088,6 +2088,16 @@ describe('checkFormatter', () => {
             value: 'formatted 15',
         });
     });
+
+    test('handles value as an array and returns a string with line breaks', () => {
+        const configTestFunc = ({ value }) => ['formatted', value];
+        expect(
+            checkFormatter(configTestFunc, {
+                value: 15,
+                config: { key: 'unused' },
+            }),
+        ).toStrictEqual({ isValid: true, value: 'formatted\n15' });
+    });
 });
 
 describe('applyDataLabel', () => {

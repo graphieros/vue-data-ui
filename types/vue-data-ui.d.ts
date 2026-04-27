@@ -5346,6 +5346,10 @@ declare module 'vue-data-ui' {
             labels?: {
                 show?: boolean;
                 offsetY?: number;
+                offsetX?: number;
+                rotation?: number;
+                textAnchor?: null | 'start' | 'middle' | 'end';
+                alwaysOnTop?: boolean;
                 rounding?: number;
                 color?: string;
                 formatter?: Formatter;
@@ -5381,6 +5385,10 @@ declare module 'vue-data-ui' {
             labels?: {
                 show?: boolean;
                 offsetY?: number;
+                offsetX?: number;
+                rotation?: number;
+                textAnchor?: null | 'start' | 'middle' | 'end';
+                alwaysOnTop?: boolean;
                 rounding?: number;
                 color?: string;
                 formatter?: Formatter;
@@ -5408,6 +5416,10 @@ declare module 'vue-data-ui' {
             labels?: {
                 show?: boolean;
                 offsetY?: number;
+                offsetX?: number;
+                rotation?: number;
+                textAnchor?: null | 'start' | 'middle' | 'end';
+                alwaysOnTop?: boolean;
                 rounding?: number;
                 color?: string;
                 formatter?: Formatter;

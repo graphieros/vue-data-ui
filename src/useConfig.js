@@ -966,6 +966,10 @@ export function useConfig(options = {}) {
             labels: {
                 show: false,
                 offsetY: -6,
+                offsetX: 0,
+                rotation: 0,
+                textAnchor: null,
+                alwaysOnTop: false,
                 rounding: 0,
                 color: COLOR_TEXT_PRIMARY,
                 formatter: null,
@@ -1001,9 +1005,13 @@ export function useConfig(options = {}) {
             labels: {
                 show: false,
                 offsetY: -6,
+                offsetX: 0,
+                rotation: 0,
                 rounding: 0,
                 color: COLOR_TEXT_PRIMARY,
                 formatter: null,
+                textAnchor: null,
+                alwaysOnTop: false,
             },
             area: {
                 useGradient: true,
@@ -1028,9 +1036,13 @@ export function useConfig(options = {}) {
             labels: {
                 show: false,
                 offsetY: -6,
+                offsetX: 0,
+                rotation: 0,
                 rounding: 0,
                 color: COLOR_TEXT_PRIMARY,
                 formatter: null,
+                textAnchor: null,
+                alwaysOnTop: false,
             },
             tag: {
                 followValue: true,
