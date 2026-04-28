@@ -763,53 +763,15 @@ const yAxisScaleItems = computed(() => {
 
 const useXSelectorScaleLabel = computed(() => {
     return (
-        !!selectedPlot.value &&
+        selectorPlots.value.length > 0 &&
         FINAL_CONFIG.value.style.layout.dataLabels.xAxis.scales.show
     );
 });
 
 const useYSelectorScaleLabel = computed(() => {
     return (
-        !!selectedPlot.value &&
+        selectorPlots.value.length > 0 &&
         FINAL_CONFIG.value.style.layout.dataLabels.yAxis.scales.show
-    );
-});
-
-const selectedXAxisScaleLabel = computed(() => {
-    if (!selectedPlot.value) return '';
-
-    const xAxisConfig = FINAL_CONFIG.value.style.layout.dataLabels.xAxis;
-    const xAxisLabelsConfig = xAxisConfig.scales.labels;
-
-    return applyDataLabel(
-        xAxisLabelsConfig.formatter,
-        checkNaN(selectedPlot.value.v.x),
-        dataLabel({
-            p: FINAL_CONFIG.value.style.layout.plots.selectors.labels.prefix,
-            v: checkNaN(selectedPlot.value.v.x),
-            s: FINAL_CONFIG.value.style.layout.plots.selectors.labels.suffix,
-            r: getAxisRoundingValue(xAxisConfig),
-        }),
-        { datapoint: selectedPlot.value },
-    );
-});
-
-const selectedYAxisScaleLabel = computed(() => {
-    if (!selectedPlot.value) return '';
-
-    const yAxisConfig = FINAL_CONFIG.value.style.layout.dataLabels.yAxis;
-    const yAxisLabelsConfig = yAxisConfig.scales.labels;
-
-    return applyDataLabel(
-        yAxisLabelsConfig.formatter,
-        checkNaN(selectedPlot.value.v.y),
-        dataLabel({
-            p: FINAL_CONFIG.value.style.layout.plots.selectors.labels.prefix,
-            v: checkNaN(selectedPlot.value.v.y),
-            s: FINAL_CONFIG.value.style.layout.plots.selectors.labels.suffix,
-            r: getAxisRoundingValue(yAxisConfig),
-        }),
-        { datapoint: selectedPlot.value },
     );
 });
 
@@ -874,6 +836,10 @@ const datasetWithId = computed(() => {
             shape: ds.shape ?? 'circle',
             segregate: () => segregate(id),
             isSegregated: segregated.value.includes(id),
+            hasGroupSelection: !!selectedGroupId.value,
+            isGroupSelected: selectedGroupId.value === id,
+            onEnter: () => onSeriesEnter(id),
+            onLeave: () => onSeriesLeave(),
         };
     });
 });
@@ -894,7 +860,7 @@ const mutableDataset = computed(() => {
         .map((ds, i) => {
             return {
                 ...ds,
-                plots: ds.values.map((v) => {
+                plots: ds.values.map((v, j) => {
                     return {
                         x: normalizeX(v.x),
                         y: normalizeY(v.y),
@@ -909,7 +875,7 @@ const mutableDataset = computed(() => {
                             : customPalette.value[i] ||
                               palette[i] ||
                               palette[i % palette.length],
-                        id: `plot_${uid.value}_${Math.random()}`,
+                        id: `plot_${uid.value}_${i}_${j}`,
                         weight:
                             v.weight ??
                             FINAL_CONFIG.value.style.layout.plots.radius,
@@ -1245,14 +1211,35 @@ const marginalLines = computed(() => {
 
 const selectedPlotId = ref(undefined);
 const selectedPlot = ref(null);
+const selectedPlots = ref([]);
 const dataTooltipSlot = ref(null);
+const selectedGroupId = ref(undefined);
 
 function clearPlotSelection() {
     isTooltip.value = false;
     selectedPlotId.value = undefined;
+    selectedPlots.value = [];
     selectedPlot.value = null;
     activeTooltipIndex.value = null;
     activeTooltipPlotId.value = null;
+    selectedGroupId.value = undefined;
+}
+
+function onSeriesEnter(seriesId) {
+    const series = drawableDataset.value.find((ds) => ds.id === seriesId);
+
+    if (!series) {
+        selectedPlots.value = [];
+        return;
+    }
+
+    selectedPlots.value = series.plots.map((plot) => plot.id);
+    selectedGroupId.value = seriesId;
+}
+
+function onSeriesLeave() {
+    selectedPlots.value = [];
+    selectedGroupId.value = undefined;
 }
 
 function updateTooltipA11yPosition(plot) {
@@ -1260,6 +1247,54 @@ function updateTooltipA11yPosition(plot) {
     const coords = svgToClientCoords(plot.x, plot.y, svgRef.value);
     if (!coords) return;
     tooltipA11yPosition.value = coords;
+}
+
+const selectorPlots = computed(() => {
+    if (selectedPlot.value) {
+        return [selectedPlot.value];
+    }
+
+    if (!selectedPlots.value.length) {
+        return [];
+    }
+
+    return drawableDataset.value
+        .flatMap((series) => series.plots)
+        .filter((plot) => selectedPlots.value.includes(plot.id));
+});
+
+function getSelectorXAxisScaleLabel(selectorPlot) {
+    const xAxisConfig = FINAL_CONFIG.value.style.layout.dataLabels.xAxis;
+    const xAxisLabelsConfig = xAxisConfig.scales.labels;
+
+    return applyDataLabel(
+        xAxisLabelsConfig.formatter,
+        checkNaN(selectorPlot.v.x),
+        dataLabel({
+            p: FINAL_CONFIG.value.style.layout.plots.selectors.labels.prefix,
+            v: checkNaN(selectorPlot.v.x),
+            s: FINAL_CONFIG.value.style.layout.plots.selectors.labels.suffix,
+            r: getAxisRoundingValue(xAxisConfig),
+        }),
+        { datapoint: selectorPlot },
+    );
+}
+
+function getSelectorYAxisScaleLabel(selectorPlot) {
+    const yAxisConfig = FINAL_CONFIG.value.style.layout.dataLabels.yAxis;
+    const yAxisLabelsConfig = yAxisConfig.scales.labels;
+
+    return applyDataLabel(
+        yAxisLabelsConfig.formatter,
+        checkNaN(selectorPlot.v.y),
+        dataLabel({
+            p: FINAL_CONFIG.value.style.layout.plots.selectors.labels.prefix,
+            v: checkNaN(selectorPlot.v.y),
+            s: FINAL_CONFIG.value.style.layout.plots.selectors.labels.suffix,
+            r: getAxisRoundingValue(yAxisConfig),
+        }),
+        { datapoint: selectorPlot },
+    );
 }
 
 function onTrapEnter(
@@ -3166,15 +3201,21 @@ defineExpose({
 
                 <!-- PLOTS -->
                 <template v-if="!FINAL_CONFIG.usePerformanceMode">
-                    <g v-for="(ds, i) in drawableDataset">
-                        <g v-if="!ds.shape || ds.shape === 'circle'">
+                    <g v-for="(ds, i) in drawableDataset" :key="ds.id">
+                        <g
+                            v-if="!ds.shape || ds.shape === 'circle'"
+                            class="vue-ui-scatter-datapoint"
+                        >
                             <circle
                                 v-for="(plot, j) in ds.plots"
                                 data-cy="atom-shape"
+                                :key="plot.id"
                                 :cx="plot.x"
                                 :cy="plot.y"
                                 :r="
-                                    selectedPlotId && selectedPlotId === plot.id
+                                    (selectedPlotId &&
+                                        selectedPlotId === plot.id) ||
+                                    selectedPlots.includes(plot.id)
                                         ? plot.weight *
                                           FINAL_CONFIG.style.layout.plots
                                               .hoverRadiusRatio
@@ -3183,8 +3224,12 @@ defineExpose({
                                 :fill="
                                     setOpacity(
                                         ds.color,
-                                        selectedPlotId &&
-                                            selectedPlotId !== plot.id
+                                        (selectedPlotId &&
+                                            selectedPlotId !== plot.id) ||
+                                            (selectedPlots.length &&
+                                                !selectedPlots.includes(
+                                                    plot.id,
+                                                ))
                                             ? FINAL_CONFIG.style.layout.plots
                                                   .opacityNotSelected * 100
                                             : FINAL_CONFIG.style.layout.plots
@@ -3195,7 +3240,7 @@ defineExpose({
                                 :stroke-width="
                                     FINAL_CONFIG.style.layout.plots.strokeWidth
                                 "
-                                :style="`opacity:${selectedPlotId && selectedPlotId === plot.id ? 1 : FINAL_CONFIG.style.layout.plots.significance.useDistanceOpacity ? 1 - Math.abs(plot.deviation) / maxDeviation : FINAL_CONFIG.style.layout.plots.significance.show && Math.abs(plot.deviation) > FINAL_CONFIG.style.layout.plots.significance.deviationThreshold ? FINAL_CONFIG.style.layout.plots.significance.opacity : 1}`"
+                                :style="`opacity:${(selectedPlotId && selectedPlotId === plot.id) || selectedPlots.includes(plot.id) ? 1 : FINAL_CONFIG.style.layout.plots.significance.useDistanceOpacity ? 1 - Math.abs(plot.deviation) / maxDeviation : FINAL_CONFIG.style.layout.plots.significance.show && Math.abs(plot.deviation) > FINAL_CONFIG.style.layout.plots.significance.deviationThreshold ? FINAL_CONFIG.style.layout.plots.significance.opacity : 1}`"
                                 @mouseover="
                                     onTrapEnter(
                                         plot,
@@ -3210,10 +3255,13 @@ defineExpose({
                         </g>
                         <g v-else>
                             <Shape
+                                class="vue-ui-scatter-datapoint"
                                 v-for="(plot, j) in ds.plots"
                                 :plot="{ x: plot.x, y: plot.y }"
                                 :radius="
-                                    selectedPlotId && selectedPlotId === plot.id
+                                    (selectedPlotId &&
+                                        selectedPlotId === plot.id) ||
+                                    selectedPlots.includes(plot.id)
                                         ? plot.weight *
                                           FINAL_CONFIG.style.layout.plots
                                               .hoverRadiusRatio
@@ -3223,8 +3271,12 @@ defineExpose({
                                 :color="
                                     setOpacity(
                                         ds.color,
-                                        selectedPlotId &&
-                                            selectedPlotId !== plot.id
+                                        (selectedPlotId &&
+                                            selectedPlotId !== plot.id) ||
+                                            (selectedPlots.length &&
+                                                !selectedPlots.includes(
+                                                    plot.id,
+                                                ))
                                             ? FINAL_CONFIG.style.layout.plots
                                                   .opacityNotSelected * 100
                                             : FINAL_CONFIG.style.layout.plots
@@ -3235,7 +3287,7 @@ defineExpose({
                                 :strokeWidth="
                                     FINAL_CONFIG.style.layout.plots.strokeWidth
                                 "
-                                :style="`opacity:${selectedPlotId && selectedPlotId === plot.id ? 1 : FINAL_CONFIG.style.layout.plots.significance.useDistanceOpacity ? 1 - Math.abs(plot.deviation) / maxDeviation : FINAL_CONFIG.style.layout.plots.significance.show && Math.abs(plot.deviation) > FINAL_CONFIG.style.layout.plots.significance.deviationThreshold ? FINAL_CONFIG.style.layout.plots.significance.opacity : 1}`"
+                                :style="`opacity:${(selectedPlotId && selectedPlotId === plot.id) || selectedPlots.includes(plot.id) ? 1 : FINAL_CONFIG.style.layout.plots.significance.useDistanceOpacity ? 1 - Math.abs(plot.deviation) / maxDeviation : FINAL_CONFIG.style.layout.plots.significance.show && Math.abs(plot.deviation) > FINAL_CONFIG.style.layout.plots.significance.deviationThreshold ? FINAL_CONFIG.style.layout.plots.significance.opacity : 1}`"
                                 @mouseover="
                                     onTrapEnter(
                                         plot,
@@ -3252,15 +3304,10 @@ defineExpose({
                             v-if="FINAL_CONFIG.style.layout.plots.name.show"
                         >
                             <text
+                                class="vue-ui-scatter-datapoint-label"
                                 v-for="(plot, j) in ds.plots"
-                                :x="plot.x"
-                                :y="
-                                    plot.y -
-                                    plot.weight -
-                                    FINAL_CONFIG.style.layout.plots.name
-                                        .fontSize +
-                                    FINAL_CONFIG.style.layout.plots.name.offsetY
-                                "
+                                :key="`datalabel-${plot.id}`"
+                                :transform="`translate(${plot.x}, ${plot.y - plot.weight - FINAL_CONFIG.style.layout.plots.name.fontSize + FINAL_CONFIG.style.layout.plots.name.offsetY})`"
                                 text-anchor="middle"
                                 :font-size="
                                     FINAL_CONFIG.style.layout.plots.name
@@ -3270,8 +3317,12 @@ defineExpose({
                                     setOpacity(
                                         FINAL_CONFIG.style.layout.plots.name
                                             .color,
-                                        selectedPlotId &&
-                                            selectedPlotId !== plot.id
+                                        (selectedPlotId &&
+                                            selectedPlotId !== plot.id) ||
+                                            (selectedPlots.length &&
+                                                !selectedPlots.includes(
+                                                    plot.id,
+                                                ))
                                             ? FINAL_CONFIG.style.layout.plots
                                                   .opacityNotSelected * 100
                                             : 100,
@@ -3357,298 +3408,303 @@ defineExpose({
                 </template>
 
                 <!-- SELECTORS -->
-                <g
-                    v-if="
-                        selectedPlot &&
-                        FINAL_CONFIG.style.layout.plots.selectors.show
-                    "
-                    style="pointer-events: none !important"
+                <!-- SELECTORS -->
+                <template
+                    v-for="selectorPlot in selectorPlots"
+                    :key="`selector_${selectorPlot.id}`"
                 >
-                    <line
-                        data-cy="selector-line-x"
-                        :x1="zero.x"
-                        :x2="selectedPlot.x"
-                        :y1="selectedPlot.y"
-                        :y2="selectedPlot.y"
-                        :stroke="
-                            FINAL_CONFIG.style.layout.plots.selectors.stroke
-                        "
-                        :stroke-width="
-                            FINAL_CONFIG.style.layout.plots.selectors
-                                .strokeWidth
-                        "
-                        :stroke-dasharray="
-                            FINAL_CONFIG.style.layout.plots.selectors
-                                .strokeDasharray
-                        "
-                        stroke-linecap="round"
-                        class="line-pointer"
-                    />
-                    <line
-                        data-cy="selector-line-y"
-                        :x1="selectedPlot.x"
-                        :x2="selectedPlot.x"
-                        :y1="zero.y"
-                        :y2="selectedPlot.y"
-                        :stroke="
-                            FINAL_CONFIG.style.layout.plots.selectors.stroke
-                        "
-                        :stroke-width="
-                            FINAL_CONFIG.style.layout.plots.selectors
-                                .strokeWidth
-                        "
-                        :stroke-dasharray="
-                            FINAL_CONFIG.style.layout.plots.selectors
-                                .strokeDasharray
-                        "
-                        stroke-linecap="round"
-                        class="line-pointer"
-                    />
-                    <text
-                        v-if="
-                            !FINAL_CONFIG.style.layout.dataLabels.yAxis.scales
-                                .show
-                        "
-                        data-cy="selector-label-x"
-                        :x="zero.x + (selectedPlot.x > zero.x ? -6 : 6)"
-                        :y="
-                            selectedPlot.y +
-                            FINAL_CONFIG.style.layout.plots.selectors.labels
-                                .fontSize /
-                                3
-                        "
-                        :font-size="
-                            FINAL_CONFIG.style.layout.plots.selectors.labels
-                                .fontSize
-                        "
-                        :fill="
-                            FINAL_CONFIG.style.layout.plots.selectors.labels
-                                .color
-                        "
-                        :font-weight="
-                            FINAL_CONFIG.style.layout.plots.selectors.labels
-                                .bold
-                                ? 'bold'
-                                : 'normal'
-                        "
-                        :text-anchor="selectedPlot.x > zero.x ? 'end' : 'start'"
+                    <g
+                        v-if="FINAL_CONFIG.style.layout.plots.selectors.show"
+                        style="pointer-events: none !important"
                     >
-                        {{
-                            applyDataLabel(
+                        <line
+                            data-cy="selector-line-x"
+                            :x1="zero.x"
+                            :x2="selectorPlot.x"
+                            :y1="selectorPlot.y"
+                            :y2="selectorPlot.y"
+                            :stroke="
+                                FINAL_CONFIG.style.layout.plots.selectors.stroke
+                            "
+                            :stroke-width="
+                                FINAL_CONFIG.style.layout.plots.selectors
+                                    .strokeWidth
+                            "
+                            :stroke-dasharray="
+                                FINAL_CONFIG.style.layout.plots.selectors
+                                    .strokeDasharray
+                            "
+                            stroke-linecap="round"
+                            class="line-pointer"
+                        />
+                        <line
+                            data-cy="selector-line-y"
+                            :x1="selectorPlot.x"
+                            :x2="selectorPlot.x"
+                            :y1="zero.y"
+                            :y2="selectorPlot.y"
+                            :stroke="
+                                FINAL_CONFIG.style.layout.plots.selectors.stroke
+                            "
+                            :stroke-width="
+                                FINAL_CONFIG.style.layout.plots.selectors
+                                    .strokeWidth
+                            "
+                            :stroke-dasharray="
+                                FINAL_CONFIG.style.layout.plots.selectors
+                                    .strokeDasharray
+                            "
+                            stroke-linecap="round"
+                            class="line-pointer"
+                        />
+                        <text
+                            v-if="
+                                !FINAL_CONFIG.style.layout.dataLabels.yAxis
+                                    .scales.show
+                            "
+                            data-cy="selector-label-x"
+                            :x="zero.x + (selectorPlot.x > zero.x ? -6 : 6)"
+                            :y="
+                                selectorPlot.y +
                                 FINAL_CONFIG.style.layout.plots.selectors.labels
-                                    .y.formatter,
-                                checkNaN(selectedPlot.v.y),
-                                dataLabel({
-                                    p: FINAL_CONFIG.style.layout.plots.selectors
-                                        .labels.prefix,
-                                    v: checkNaN(selectedPlot.v.y),
-                                    s: FINAL_CONFIG.style.layout.plots.selectors
-                                        .labels.suffix,
-                                    r: FINAL_CONFIG.style.layout.plots.selectors
-                                        .labels.rounding,
-                                }),
-                                { datapoint: selectedPlot },
-                            )
-                        }}
-                    </text>
-                    <text
-                        v-if="
-                            !FINAL_CONFIG.style.layout.dataLabels.xAxis.scales
-                                .show
-                        "
-                        data-cy="selector-label-y"
-                        :x="selectedPlot.x"
-                        :y="
-                            zero.y +
-                            (selectedPlot.y > zero.y
-                                ? -6
-                                : FINAL_CONFIG.style.layout.plots.selectors
-                                      .labels.fontSize + 6)
-                        "
-                        :font-size="
-                            FINAL_CONFIG.style.layout.plots.selectors.labels
-                                .fontSize
-                        "
-                        :fill="
-                            FINAL_CONFIG.style.layout.plots.selectors.labels
-                                .color
-                        "
-                        :font-weight="
-                            FINAL_CONFIG.style.layout.plots.selectors.labels
-                                .bold
-                                ? 'bold'
-                                : 'normal'
-                        "
-                        :text-anchor="'middle'"
-                    >
-                        {{
-                            applyDataLabel(
+                                    .fontSize /
+                                    3
+                            "
+                            :font-size="
                                 FINAL_CONFIG.style.layout.plots.selectors.labels
-                                    .y.formatter,
-                                checkNaN(selectedPlot.v.x),
-                                dataLabel({
-                                    p: FINAL_CONFIG.style.layout.plots.selectors
-                                        .labels.prefix,
-                                    v: checkNaN(selectedPlot.v.x),
-                                    s: FINAL_CONFIG.style.layout.plots.selectors
-                                        .labels.suffix,
-                                    r: FINAL_CONFIG.style.layout.plots.selectors
-                                        .labels.rounding,
-                                }),
-                                { datapoint: selectedPlot },
-                            )
-                        }}
-                    </text>
+                                    .fontSize
+                            "
+                            :fill="
+                                FINAL_CONFIG.style.layout.plots.selectors.labels
+                                    .color
+                            "
+                            :font-weight="
+                                FINAL_CONFIG.style.layout.plots.selectors.labels
+                                    .bold
+                                    ? 'bold'
+                                    : 'normal'
+                            "
+                            :text-anchor="
+                                selectorPlot.x > zero.x ? 'end' : 'start'
+                            "
+                        >
+                            {{
+                                applyDataLabel(
+                                    FINAL_CONFIG.style.layout.plots.selectors
+                                        .labels.y.formatter,
+                                    checkNaN(selectorPlot.v.y),
+                                    dataLabel({
+                                        p: FINAL_CONFIG.style.layout.plots
+                                            .selectors.labels.prefix,
+                                        v: checkNaN(selectorPlot.v.y),
+                                        s: FINAL_CONFIG.style.layout.plots
+                                            .selectors.labels.suffix,
+                                        r: FINAL_CONFIG.style.layout.plots
+                                            .selectors.labels.rounding,
+                                    }),
+                                    { datapoint: selectorPlot },
+                                )
+                            }}
+                        </text>
+                        <text
+                            v-if="
+                                !FINAL_CONFIG.style.layout.dataLabels.xAxis
+                                    .scales.show
+                            "
+                            data-cy="selector-label-y"
+                            :x="selectorPlot.x"
+                            :y="
+                                zero.y +
+                                (selectorPlot.y > zero.y
+                                    ? -6
+                                    : FINAL_CONFIG.style.layout.plots.selectors
+                                          .labels.fontSize + 6)
+                            "
+                            :font-size="
+                                FINAL_CONFIG.style.layout.plots.selectors.labels
+                                    .fontSize
+                            "
+                            :fill="
+                                FINAL_CONFIG.style.layout.plots.selectors.labels
+                                    .color
+                            "
+                            :font-weight="
+                                FINAL_CONFIG.style.layout.plots.selectors.labels
+                                    .bold
+                                    ? 'bold'
+                                    : 'normal'
+                            "
+                            :text-anchor="'middle'"
+                        >
+                            {{
+                                applyDataLabel(
+                                    FINAL_CONFIG.style.layout.plots.selectors
+                                        .labels.y.formatter,
+                                    checkNaN(selectorPlot.v.x),
+                                    dataLabel({
+                                        p: FINAL_CONFIG.style.layout.plots
+                                            .selectors.labels.prefix,
+                                        v: checkNaN(selectorPlot.v.x),
+                                        s: FINAL_CONFIG.style.layout.plots
+                                            .selectors.labels.suffix,
+                                        r: FINAL_CONFIG.style.layout.plots
+                                            .selectors.labels.rounding,
+                                    }),
+                                    { datapoint: selectorPlot },
+                                )
+                            }}
+                        </text>
 
-                    <text
-                        v-if="
-                            FINAL_CONFIG.style.layout.dataLabels.xAxis.scales
-                                .show
-                        "
-                        data-cy="selector-scale-label-x"
-                        :x="selectedPlot.x"
-                        :y="
-                            zero.y +
-                            FINAL_CONFIG.style.layout.dataLabels.xAxis.scales
-                                .labels.fontSize +
-                            6 +
-                            FINAL_CONFIG.style.layout.dataLabels.xAxis.scales
-                                .labels.offsetY
-                        "
-                        text-anchor="middle"
-                        :font-size="
-                            FINAL_CONFIG.style.layout.dataLabels.xAxis.scales
-                                .labels.fontSize
-                        "
-                        :fill="
-                            FINAL_CONFIG.style.layout.dataLabels.xAxis.scales
-                                .labels.color
-                        "
-                    >
-                        {{ selectedXAxisScaleLabel }}
-                    </text>
+                        <text
+                            v-if="
+                                FINAL_CONFIG.style.layout.dataLabels.xAxis
+                                    .scales.show
+                            "
+                            data-cy="selector-scale-label-x"
+                            :x="selectorPlot.x"
+                            :y="
+                                zero.y +
+                                FINAL_CONFIG.style.layout.dataLabels.xAxis
+                                    .scales.labels.fontSize +
+                                6 +
+                                FINAL_CONFIG.style.layout.dataLabels.xAxis
+                                    .scales.labels.offsetY
+                            "
+                            text-anchor="middle"
+                            :font-size="
+                                FINAL_CONFIG.style.layout.dataLabels.xAxis
+                                    .scales.labels.fontSize
+                            "
+                            :fill="
+                                FINAL_CONFIG.style.layout.dataLabels.xAxis
+                                    .scales.labels.color
+                            "
+                        >
+                            {{ getSelectorXAxisScaleLabel(selectorPlot) }}
+                        </text>
 
-                    <text
-                        v-if="
-                            FINAL_CONFIG.style.layout.dataLabels.yAxis.scales
-                                .show
-                        "
-                        data-cy="selector-scale-label-y"
-                        :x="
-                            zero.x -
-                            FINAL_CONFIG.style.layout.dataLabels.yAxis.scales
-                                .labels.fontSize /
-                                2 -
-                            8 +
-                            FINAL_CONFIG.style.layout.dataLabels.yAxis.scales
-                                .labels.offsetX
-                        "
-                        :y="
-                            selectedPlot.y +
-                            FINAL_CONFIG.style.layout.dataLabels.yAxis.scales
-                                .labels.fontSize /
-                                3
-                        "
-                        text-anchor="end"
-                        :font-size="
-                            FINAL_CONFIG.style.layout.dataLabels.yAxis.scales
-                                .labels.fontSize
-                        "
-                        :fill="
-                            FINAL_CONFIG.style.layout.dataLabels.yAxis.scales
-                                .labels.color
-                        "
-                    >
-                        {{ selectedYAxisScaleLabel }}
-                    </text>
+                        <text
+                            v-if="
+                                FINAL_CONFIG.style.layout.dataLabels.yAxis
+                                    .scales.show
+                            "
+                            data-cy="selector-scale-label-y"
+                            :x="
+                                zero.x -
+                                FINAL_CONFIG.style.layout.dataLabels.yAxis
+                                    .scales.labels.fontSize /
+                                    2 -
+                                8 +
+                                FINAL_CONFIG.style.layout.dataLabels.yAxis
+                                    .scales.labels.offsetX
+                            "
+                            :y="
+                                selectorPlot.y +
+                                FINAL_CONFIG.style.layout.dataLabels.yAxis
+                                    .scales.labels.fontSize /
+                                    3
+                            "
+                            text-anchor="end"
+                            :font-size="
+                                FINAL_CONFIG.style.layout.dataLabels.yAxis
+                                    .scales.labels.fontSize
+                            "
+                            :fill="
+                                FINAL_CONFIG.style.layout.dataLabels.yAxis
+                                    .scales.labels.color
+                            "
+                        >
+                            {{ getSelectorYAxisScaleLabel(selectorPlot) }}
+                        </text>
 
-                    <circle
-                        data-cy="selector-circle-marker"
-                        :cx="zero.x"
-                        :cy="selectedPlot.y"
-                        :r="
-                            FINAL_CONFIG.style.layout.plots.selectors.markers
-                                .radius
-                        "
-                        :fill="
-                            FINAL_CONFIG.style.layout.plots.selectors.markers
-                                .fill
-                        "
-                        :stroke="
-                            FINAL_CONFIG.style.layout.plots.selectors.markers
-                                .stroke
-                        "
-                        :stroke-width="
-                            FINAL_CONFIG.style.layout.plots.selectors.markers
-                                .strokeWidth
-                        "
-                        class="line-pointer"
-                    />
-                    <circle
-                        data-cy="selector-circle-marker"
-                        :cx="selectedPlot.x"
-                        :cy="zero.y"
-                        :r="
-                            FINAL_CONFIG.style.layout.plots.selectors.markers
-                                .radius
-                        "
-                        :fill="
-                            FINAL_CONFIG.style.layout.plots.selectors.markers
-                                .fill
-                        "
-                        :stroke="
-                            FINAL_CONFIG.style.layout.plots.selectors.markers
-                                .stroke
-                        "
-                        :stroke-width="
-                            FINAL_CONFIG.style.layout.plots.selectors.markers
-                                .strokeWidth
-                        "
-                        class="line-pointer"
-                    />
-                    <text
-                        data-cy="selector-datapoint-name"
-                        v-if="
-                            FINAL_CONFIG.style.layout.plots.selectors.labels
-                                .showName &&
-                            !FINAL_CONFIG.style.layout.plots.name.show
-                        "
-                        :x="selectedPlot.x"
-                        :y="
-                            selectedPlot.y +
-                            (selectedPlot.y < zero.y
-                                ? -FINAL_CONFIG.style.layout.plots.selectors
-                                      .labels.fontSize / 2
-                                : FINAL_CONFIG.style.layout.plots.selectors
-                                      .labels.fontSize)
-                        "
-                        :font-size="
-                            FINAL_CONFIG.style.layout.plots.selectors.labels
-                                .fontSize
-                        "
-                        :fill="
-                            FINAL_CONFIG.style.layout.plots.selectors.labels
-                                .color
-                        "
-                        :font-weight="
-                            FINAL_CONFIG.style.layout.plots.selectors.labels
-                                .bold
-                                ? 'bold'
-                                : 'normal'
-                        "
-                        :text-anchor="
-                            selectedPlot.x < drawingArea.left + 100
-                                ? 'start'
-                                : selectedPlot.x > drawingArea.right - 100
-                                  ? 'end'
-                                  : selectedPlot.x > zero.x
+                        <circle
+                            data-cy="selector-circle-marker"
+                            :cx="zero.x"
+                            :cy="selectorPlot.y"
+                            :r="
+                                FINAL_CONFIG.style.layout.plots.selectors
+                                    .markers.radius
+                            "
+                            :fill="
+                                FINAL_CONFIG.style.layout.plots.selectors
+                                    .markers.fill
+                            "
+                            :stroke="
+                                FINAL_CONFIG.style.layout.plots.selectors
+                                    .markers.stroke
+                            "
+                            :stroke-width="
+                                FINAL_CONFIG.style.layout.plots.selectors
+                                    .markers.strokeWidth
+                            "
+                            class="line-pointer"
+                        />
+                        <circle
+                            data-cy="selector-circle-marker"
+                            :cx="selectorPlot.x"
+                            :cy="zero.y"
+                            :r="
+                                FINAL_CONFIG.style.layout.plots.selectors
+                                    .markers.radius
+                            "
+                            :fill="
+                                FINAL_CONFIG.style.layout.plots.selectors
+                                    .markers.fill
+                            "
+                            :stroke="
+                                FINAL_CONFIG.style.layout.plots.selectors
+                                    .markers.stroke
+                            "
+                            :stroke-width="
+                                FINAL_CONFIG.style.layout.plots.selectors
+                                    .markers.strokeWidth
+                            "
+                            class="line-pointer"
+                        />
+                        <text
+                            data-cy="selector-datapoint-name"
+                            v-if="
+                                FINAL_CONFIG.style.layout.plots.selectors.labels
+                                    .showName &&
+                                !FINAL_CONFIG.style.layout.plots.name.show
+                            "
+                            :x="selectorPlot.x"
+                            :y="
+                                selectorPlot.y +
+                                (selectorPlot.y < zero.y
+                                    ? -FINAL_CONFIG.style.layout.plots.selectors
+                                          .labels.fontSize / 2
+                                    : FINAL_CONFIG.style.layout.plots.selectors
+                                          .labels.fontSize)
+                            "
+                            :font-size="
+                                FINAL_CONFIG.style.layout.plots.selectors.labels
+                                    .fontSize
+                            "
+                            :fill="
+                                FINAL_CONFIG.style.layout.plots.selectors.labels
+                                    .color
+                            "
+                            :font-weight="
+                                FINAL_CONFIG.style.layout.plots.selectors.labels
+                                    .bold
+                                    ? 'bold'
+                                    : 'normal'
+                            "
+                            :text-anchor="
+                                selectorPlot.x < drawingArea.left + 100
                                     ? 'start'
-                                    : 'end'
-                        "
-                    >
-                        {{ selectedPlot.v.name }}
-                    </text>
-                </g>
+                                    : selectorPlot.x > drawingArea.right - 100
+                                      ? 'end'
+                                      : selectorPlot.x > zero.x
+                                        ? 'start'
+                                        : 'end'
+                            "
+                        >
+                            {{ selectorPlot.v.name }}
+                        </text>
+                    </g>
+                </template>
 
                 <!-- AXIS LABELS -->
                 <g

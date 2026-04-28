@@ -73,23 +73,23 @@ function toggleCheckList(item) {
 
 function getChecklistDone(item) {
     const done = Object.values(item.checkList).filter((el) => !!el).length;
-    const display = `${done} / ${Object.keys(item.checkList).length}`
+    const display = `${done} / ${Object.keys(item.checkList).length}`;
     return {
         percentage: (done / Object.keys(item.checkList).length) * 100,
-        display
-    }
+        display,
+    };
 }
 
 function getCustomChecklistDone(item) {
     const done = Object.values(item.customCheckList).filter(
         (el) => !!el,
     ).length;
-    const len = Object.keys(item.customCheckList).length || 1
-    const display = `${done} / ${Object.keys(item.customCheckList).length}`
+    const len = Object.keys(item.customCheckList).length || 1;
+    const display = `${done} / ${Object.keys(item.customCheckList).length}`;
     return {
         percentage: (done / len) * 100,
-        display
-    }
+        display,
+    };
 }
 
 const iconMap = {
@@ -226,7 +226,13 @@ const iconMap = {
                         }"
                     />
                     Components checklist
-                    <span style="font-weight: 700; font-variant-numeric: tabular-nums;">{{ getChecklistDone(item).display }}</span>
+                    <span
+                        style="
+                            font-weight: 700;
+                            font-variant-numeric: tabular-nums;
+                        "
+                        >{{ getChecklistDone(item).display }}</span
+                    >
                 </summary>
                 <div class="components-checklist-wrapper">
                     <div
@@ -275,7 +281,13 @@ const iconMap = {
                         }"
                     />
                     Custom checklist
-                    <span style="font-weight: 700; font-variant-numeric: tabular-nums;">{{ getCustomChecklistDone(item).display }}</span>
+                    <span
+                        style="
+                            font-weight: 700;
+                            font-variant-numeric: tabular-nums;
+                        "
+                        >{{ getCustomChecklistDone(item).display }}</span
+                    >
                 </summary>
                 <div class="components-checklist-wrapper">
                     <div

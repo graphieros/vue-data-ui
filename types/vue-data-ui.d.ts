@@ -4721,6 +4721,10 @@ declare module 'vue-data-ui' {
         opacity: number;
         plots: VueUiScatterDatapoint[];
         segregate: () => void;
+        onEnter: () => void;
+        onLeave: () => void;
+        hasGroupSelection: boolean;
+        isGroupSelected: boolean;
         label: { x: number; y: number };
         shape: Shape | null;
         values: Array<{ x: number; y: number; name: string }>;

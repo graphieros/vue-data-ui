@@ -1337,7 +1337,7 @@
         "VueUiRadar": false,
         "VueUiRidgeline": false,
         "VueUiRings": false,
-        "VueUiScatter": false,
+        "VueUiScatter": true,
         "VueUiStackbar": false,
         "VueUiStackline": false,
         "VueUiTreemap": false,
@@ -1348,7 +1348,7 @@
       },
       "id": "1f78128e-67cd-4d2a-98c5-d03a4793ce88",
       "createdAt": 1777351193418,
-      "updatedAt": 1777351822579
+      "updatedAt": 1777407735351
     }
   ]
 }

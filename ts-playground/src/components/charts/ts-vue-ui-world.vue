@@ -9,7 +9,6 @@ import {
     type VueUiWorldDataset,
 } from 'vue-data-ui/vue-ui-world';
 import { mergeConfigs } from 'vue-data-ui/utils';
-import { getVueDataUiConfig } from 'vue-data-ui';
 import 'vue-data-ui/style.css';
 
 import KeyboardNavigationHint from '../slots/common/keyboard-navigation-hint.vue';

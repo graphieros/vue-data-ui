@@ -176,7 +176,7 @@ const testPreconfig = computed<VueUiScatterConfig>(() => {
                         show: true,
                         stroke: '#2D353C',
                         strokeWidth: 0.7,
-                        strokeDasharray: 0,
+                        strokeDasharray: 4,
                         labels: {
                             fontSize: 12,
                             color: '#2D353C',

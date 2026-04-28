@@ -12,8 +12,17 @@ const props = defineProps<{
         v-for="item in items"
         :key="item.name"
         @click="item.segregate()"
+        @mouseenter="item.onEnter()"
+        @mouseleave="item.onLeave()"
         :class="{
             segregated: item.isSegregated,
+        }"
+        :style="{
+            fontWeight: !item.hasGroupSelection
+                ? 'normal'
+                : item.isGroupSelected
+                  ? 'bold'
+                  : 'normal',
         }"
     >
         {{ item }}

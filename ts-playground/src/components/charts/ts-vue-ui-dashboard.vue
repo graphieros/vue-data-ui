@@ -20,6 +20,7 @@ import CommonAnnotatorActionDelete from '../slots/common/annotator-action-delete
 import CommonMenuIcon from '../slots/common/menu-icon.vue';
 import CommonOptionAnnotator from '../slots/common/option-annotator.vue';
 
+//@ts-ignore
 const dataset = computed<VueUiDashboardElement[]>(() => {
     return [
         {
