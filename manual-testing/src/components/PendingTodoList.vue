@@ -73,14 +73,23 @@ function toggleCheckList(item) {
 
 function getChecklistDone(item) {
     const done = Object.values(item.checkList).filter((el) => !!el).length;
-    return (done / Object.keys(item.checkList).length) * 100;
+    const display = `${done} / ${Object.keys(item.checkList).length}`
+    return {
+        percentage: (done / Object.keys(item.checkList).length) * 100,
+        display
+    }
 }
 
 function getCustomChecklistDone(item) {
     const done = Object.values(item.customCheckList).filter(
         (el) => !!el,
     ).length;
-    return (done / Object.keys(item.customCheckList).length) * 100;
+    const len = Object.keys(item.customCheckList).length || 1
+    const display = `${done} / ${Object.keys(item.customCheckList).length}`
+    return {
+        percentage: (done / len) * 100,
+        display
+    }
 }
 
 const iconMap = {
@@ -207,7 +216,7 @@ const iconMap = {
                     "
                 >
                     <VueUiGizmo
-                        :dataset="getChecklistDone(item)"
+                        :dataset="getChecklistDone(item).percentage"
                         :config="{
                             type: 'gauge',
                             size: 36,
@@ -217,6 +226,7 @@ const iconMap = {
                         }"
                     />
                     Components checklist
+                    <span style="font-weight: 700; font-variant-numeric: tabular-nums;">{{ getChecklistDone(item).display }}</span>
                 </summary>
                 <div class="components-checklist-wrapper">
                     <div
@@ -255,7 +265,7 @@ const iconMap = {
                     "
                 >
                     <VueUiGizmo
-                        :dataset="getCustomChecklistDone(item)"
+                        :dataset="getCustomChecklistDone(item).percentage"
                         :config="{
                             type: 'gauge',
                             size: 36,
@@ -265,6 +275,7 @@ const iconMap = {
                         }"
                     />
                     Custom checklist
+                    <span style="font-weight: 700; font-variant-numeric: tabular-nums;">{{ getCustomChecklistDone(item).display }}</span>
                 </summary>
                 <div class="components-checklist-wrapper">
                     <div
