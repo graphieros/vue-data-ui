@@ -7394,6 +7394,7 @@ defineExpose({
                         name="svg"
                         :svg="{
                             ...svg,
+                            slicer,
                             isPrintingImg:
                                 isPrinting || isImaging || isCallbackImaging,
                             isPrintingSvg: isCallbackSvg,

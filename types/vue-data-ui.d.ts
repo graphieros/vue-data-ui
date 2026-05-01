@@ -5685,6 +5685,10 @@ declare module 'vue-data-ui' {
             };
             height: number;
             width: number;
+            slicer: {
+                start: number;
+                end: number;
+            };
         };
     };
     export type VueUiKeyboardNavigationHintSlotProps = {
