@@ -278,6 +278,7 @@ export function useConfig(options = {}) {
         focusOnDrag: false,
         focusRangeRatio: 0.2,
         maxWidth: null,
+        keepState: false,
     };
 
     const MINIMAP_BASE = {

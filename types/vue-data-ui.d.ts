@@ -5160,6 +5160,7 @@ declare module 'vue-data-ui' {
             height?: number;
             width?: number;
             zoom?: ChartZoom & {
+                keepState?: boolean;
                 preview?: {
                     enable?: boolean;
                     fill?: string;
@@ -5565,6 +5566,7 @@ declare module 'vue-data-ui' {
         toggleTooltip(): void;
         showSeries(name: string): void;
         hideSeries(name: string): void;
+        resetZoom(): void;
     };
 
     export type VueUiXyProps = {
