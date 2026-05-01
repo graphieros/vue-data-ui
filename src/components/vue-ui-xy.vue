@@ -2822,8 +2822,17 @@ const lineSet = computed(() => {
                 ? stepperAreaPlots
                 : stepperAreaPlots.filter((p) => p.value !== null);
 
+            const visibleValues = datapoint.absoluteValues.filter(
+                (value) => ![null, undefined, NaN].includes(value),
+            );
+
+            const isFlatTemperatureLine =
+                !!datapoint.temperatureColors &&
+                new Set(visibleValues).size <= 1;
+
             return {
                 ...datapoint,
+                isFlatTemperatureLine,
                 temperatureColors: datapoint.temperatureColors
                     ? datapoint.temperatureColors.map((c) =>
                           convertColorToHex(c),
@@ -5105,7 +5114,12 @@ defineExpose({
                                     />
                                 </linearGradient>
                             </defs>
-                            <defs v-if="serie.temperatureColors">
+                            <defs
+                                v-if="
+                                    serie.temperatureColors &&
+                                    !serie.isFlatTemperatureLine
+                                "
+                            >
                                 <linearGradient
                                     :id="`temperature_grad_line_${i}_${uniqueId}`"
                                     gradientTransform="rotate(90)"
@@ -6055,7 +6069,8 @@ defineExpose({
                                 "
                                 :d="`M${serie.curve}`"
                                 :stroke="
-                                    serie.temperatureColors
+                                    serie.temperatureColors &&
+                                    !serie.isFlatTemperatureLine
                                         ? `url(#temperature_grad_line_${i}_${uniqueId})`
                                         : serie.color
                                 "
@@ -6086,7 +6101,8 @@ defineExpose({
                                         stroke-linejoin="round"
                                         :d="`M ${seg.path}`"
                                         :stroke="
-                                            serie.temperatureColors
+                                            serie.temperatureColors &&
+                                            !serie.isFlatTemperatureLine
                                                 ? `url(#temperature_grad_line_${i}_${uniqueId})`
                                                 : serie.color
                                         "
@@ -6110,7 +6126,8 @@ defineExpose({
                                         stroke-linejoin="round"
                                         :d="`M ${seg.path}`"
                                         :stroke="
-                                            serie.temperatureColors
+                                            serie.temperatureColors &&
+                                            !serie.isFlatTemperatureLine
                                                 ? `url(#temperature_grad_line_${i}_${uniqueId})`
                                                 : serie.color
                                         "
@@ -6134,7 +6151,8 @@ defineExpose({
                                 "
                                 :d="`M${serie.straight}`"
                                 :stroke="
-                                    serie.temperatureColors
+                                    serie.temperatureColors &&
+                                    !serie.isFlatTemperatureLine
                                         ? `url(#temperature_grad_line_${i}_${uniqueId})`
                                         : serie.color
                                 "
