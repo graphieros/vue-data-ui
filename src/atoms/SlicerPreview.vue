@@ -2045,12 +2045,6 @@ defineExpose({
                                 :stroke="handleBorderColor || textColor"
                                 :stroke-width="handleBorderWidth"
                                 :rx="3"
-                                v-bind="handleLeftA11y"
-                                @keydown="onHandleKeydown('start', $event)"
-                                @mousedown.stop.prevent="
-                                    beginHandleDrag('start', $event)
-                                "
-                                @click.stop.prevent
                             />
 
                             <g
@@ -2106,12 +2100,6 @@ defineExpose({
                                 :stroke="handleBorderColor || textColor"
                                 :stroke-width="handleBorderWidth"
                                 :rx="3"
-                                v-bind="handleRightA11y"
-                                @keydown="onHandleKeydown('end', $event)"
-                                @mousedown.stop.prevent="
-                                    beginHandleDrag('end', $event)
-                                "
-                                @click.stop.prevent
                             />
 
                             <g
@@ -2412,6 +2400,48 @@ defineExpose({
                 @mouseenter="setLeftLabelZIndex('end')"
                 @pointerup="commitImmediately"
             />
+
+            <div
+                v-if="hasMinimap && minimapCompact"
+                class="minimap-handle-overlay"
+            >
+                <svg
+                    :xmlns="XMLNS"
+                    :viewBox="`0 0 ${Math.max(0, svgMinimap.width)} ${Math.max(0, svgMinimap.height + 1)}`"
+                >
+                    <rect
+                        class="vue-ui-zoom-compact-minimap-handle"
+                        data-cy="slicer-compact-handle-left"
+                        :x="compactHandleLeftX"
+                        :y="0"
+                        :width="compactHandleSize"
+                        :height="svgMinimap.height"
+                        fill="transparent"
+                        stroke="none"
+                        v-bind="handleLeftA11y"
+                        @keydown="onHandleKeydown('start', $event)"
+                        @mousedown.stop.prevent="
+                            beginHandleDrag('start', $event)
+                        "
+                        @click.stop.prevent
+                    />
+                    <rect
+                        class="vue-ui-zoom-compact-minimap-handle"
+                        data-cy="slicer-compact-handle-right"
+                        :x="compactHandleRightX"
+                        :y="0"
+                        :width="compactHandleSize"
+                        :height="svgMinimap.height"
+                        fill="transparent"
+                        stroke="none"
+                        :rx="3"
+                        v-bind="handleRightA11y"
+                        @keydown="onHandleKeydown('end', $event)"
+                        @mousedown.stop.prevent="beginHandleDrag('end', $event)"
+                        @click.stop.prevent
+                    />
+                </svg>
+            </div>
 
             <div
                 v-if="labels.left"

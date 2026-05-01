@@ -148,7 +148,7 @@ function generateDayTimestamps(length) {
 const dataset = ref([
     {
         name: 'SERIE',
-        type: 'bar',
+        type: 'line',
         series: [100, 200, 300, -200, 100, 120, 100, 200, 100, 250],
         dataLabels: true,
     },
