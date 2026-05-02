@@ -323,6 +323,16 @@ const downsampled = computed(() => {
     });
 });
 
+const isFlatTemperature = computed(() => {
+    if (!FINAL_CONFIG.value.temperatureColors.show) return false;
+
+    const visibleValues = FINAL_DATASET.value
+        .map(({ value }) => value)
+        .filter((value) => Number.isFinite(value));
+
+    return new Set(visibleValues).size <= 1;
+});
+
 watch(
     () => props.config,
     (_newCfg) => {
@@ -915,9 +925,11 @@ const gradientSvgPathData = computed(() => {
 
 const temperatureColors = computed(() => {
     if (!FINAL_CONFIG.value.temperatureColors.show) return null;
-    if (FINAL_CONFIG.value.temperatureColors.colors.length === 0) return null;
-    return FINAL_CONFIG.value.temperatureColors.colors.map((c) =>
-        convertColorToHex(c),
+    if (isFlatTemperature.value) return null;
+    if (!FINAL_CONFIG.value.temperatureColors.colors.length) return null;
+
+    return FINAL_CONFIG.value.temperatureColors.colors.map((color) =>
+        convertColorToHex(color),
     );
 });
 
@@ -1267,7 +1279,7 @@ const a11yTable = computed(() => {
                     <linearGradient
                         v-if="
                             FINAL_CONFIG.temperatureColors.show &&
-                            !!temperatureColors
+                            !!temperatureColors && !isFlatTemperature
                         "
                         :id="`temperature_grad_sparkline_${uid}`"
                         gradientTransform="rotate(90)"

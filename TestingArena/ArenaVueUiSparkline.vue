@@ -21,23 +21,12 @@ onMounted(() => {
     dataset.value = undefined;
     setTimeout(() => {
         dataset.value = [
-            { period: 1735689600000, value: 0 },
-            { period: 1738368000000, value: -1 },
-            { period: 1740787200000, value: 2 },
-            { period: 1743465600000, value: -3 },
-            { period: 1746057600000, value: 4 },
-            { period: 1748736000000, value: -5 },
-            { period: 1751328000000, value: 6 },
-            { period: 1754006400000, value: -7 },
-            { period: 1756684800000, value: 8 },
-            { period: 1759276800000, value: -9 },
-            { period: 1761955200000, value: 10 },
-            { period: 1764547200000, value: -11 },
-            { period: 1767225600000, value: 12 },
-            { period: 1769904000000, value: -13 },
-            { period: 1772323200000, value: 14 },
-            { period: 1775001600000, value: -15 },
-            { period: 1777593600000, value: 1 },
+            { period: 1735689600000, value: 1 },
+            { period: 1738368000000, value: 1.1 },
+            { period: 1740787200000, value: 1 },
+            { period: 1743465600000, value: 1 },
+            { period: 1746057600000, value: 1 },
+            { period: 1748736000000, value: 1 },
         ];
     }, 2000);
 });
