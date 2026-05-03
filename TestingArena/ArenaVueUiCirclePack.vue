@@ -37,7 +37,72 @@ function makeDs({ name, qty, maxVal }) {
     return datapoints;
 }
 
-const dataset = ref(makeDs({ name: 'Pack 1', qty: 6, maxVal: 12000 }));
+// const dataset = ref(makeDs({ name: 'Pack 1', qty: 6, maxVal: 12000 }));
+
+const dataset = ref([
+    {
+        name: 'Datapoint 4',
+        value: 4.052934104580613,
+        children: [
+            {
+                name: 'Datapoint 4',
+                value: 4.052934104580613,
+                color: 'green',
+                children: [
+                    {
+                        name: 'Datapoint 4',
+                        value: 4.052934104580613,
+                        color: 'red',
+                        children: [
+                            {
+                                name: 'Datapoint 4',
+                                value: 4.052934104580613,
+                            },
+                            {
+                                name: 'Datapoint 5',
+                                value: 3.0087145243250264,
+                            },
+                            {
+                                name: 'Datapoint 4',
+                                value: 4.052934104580613,
+                            },
+                            {
+                                name: 'Datapoint 5',
+                                value: 3.0087145243250264,
+                            },
+                        ],
+                    },
+                    {
+                        name: 'Datapoint 5',
+                        value: 3.0087145243250264,
+                    },
+                ],
+            },
+            {
+                name: 'Datapoint 5',
+                value: 3.0087145243250264,
+                children: [
+                    {
+                        name: 'Datapoint 4',
+                        value: 4.052934104580613,
+                    },
+                    {
+                        name: 'Datapoint 5',
+                        value: 2.0087145243250264,
+                    },
+                    {
+                        name: 'Datapoint 4',
+                        value: 4.052934104580613,
+                    },
+                ],
+            },
+        ],
+    },
+    {
+        name: 'Datapoint 5',
+        value: 3.0087145243250264,
+    },
+]);
 
 onMounted(() => {
     // setTimeout(() => {
@@ -94,7 +159,7 @@ const model = createModel([
     TEXT('style.chart.title.text', { def: 'Title' }),
     TEXT('style.chart.title.subtitle.text', { def: 'Subtitle' }),
     COLOR('style.chart.circles.stroke', { def: '#000000' }),
-    NUMBER('style.chart.circles.strokeWidth', { def: 1, min: 0, max: 12 }),
+    NUMBER('style.chart.circles.strokeWidth', { def: 0, min: 0, max: 12 }),
     CHECKBOX('style.chart.circles.gradient.show', { def: true }),
     RANGE('style.chart.circles.gradient.intensity', {
         def: 40,

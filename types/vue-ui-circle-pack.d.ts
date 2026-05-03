@@ -23,6 +23,9 @@ import type {
     VueUiWatermarkSlotProps,
     VueUiCircleDatapointTooltipSlotProps,
     CommonAnnotatorSlots,
+    VueUiCirclePackParentTooltipSlotProps,
+    VueUiCirclePackParentTooltip,
+    VueUiCirclePackOptionZoomSlotProps,
 } from 'vue-data-ui';
 
 export type {
@@ -48,6 +51,9 @@ export type {
     VueUiWatermarkSlotProps,
     VueUiCircleDatapointTooltipSlotProps,
     CommonAnnotatorSlots,
+    VueUiCirclePackParentTooltipSlotProps,
+    VueUiCirclePackParentTooltip,
+    VueUiCirclePackOptionZoomSlotProps,
 };
 
 declare const VueUiCirclePackBase: DefineComponent<VueUiCirclePackProps>;
@@ -62,6 +68,9 @@ export const VueUiCirclePack: typeof VueUiCirclePackBase & {
             optionImg?: () => VNodeChild;
             optionSvg?: () => VNodeChild;
             optionTable?: () => VNodeChild;
+            optionZoom?: (
+                props: VueUiCirclePackOptionZoomSlotProps,
+            ) => VNodeChild;
             optionFullscreen?: (
                 props: VueUiOptionFullscreenSlotProps,
             ) => VNodeChild;
@@ -89,6 +98,9 @@ export const VueUiCirclePack: typeof VueUiCirclePackBase & {
                 props: VueUiCircleDatapointTooltipSlotProps,
             ) => VNodeChild;
             skeleton?: () => VNodeChild;
+            ['parent-tooltip']?: (
+                props: VueUiCirclePackParentTooltipSlotProps,
+            ) => VNodeChild;
         };
     };
 };

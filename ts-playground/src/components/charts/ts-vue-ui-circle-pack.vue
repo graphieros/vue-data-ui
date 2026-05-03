@@ -35,6 +35,28 @@ const dataset = computed<VueUiCirclePackDatasetItem[]>(() => {
         {
             name: 'A',
             value: 384,
+            children: [
+                {
+                    name: 'A',
+                    value: 384,
+                },
+                {
+                    name: 'B',
+                    value: 192,
+                },
+                {
+                    name: 'C',
+                    value: 96,
+                },
+                {
+                    name: 'D',
+                    value: 48,
+                },
+                {
+                    name: 'E',
+                    value: 24,
+                },
+            ],
         },
         {
             name: 'B',

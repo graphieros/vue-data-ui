@@ -1279,7 +1279,7 @@
             "description": "Implement nested circle packing. Use scoreCircle for each parent",
             "priority": 0,
             "author": "graphieros",
-            "done": false,
+            "done": true,
             "exchanges": [],
             "type": "feature",
             "withComponentCheckList": false,
@@ -1288,7 +1288,7 @@
             "customCheckList": {},
             "id": "fa6454ad-e3e6-4d3c-8019-8ad0eedd296e",
             "createdAt": 1776606115056,
-            "updatedAt": 1776606115056
+            "updatedAt": 1777793416469
         },
         {
             "title": "Stepper",

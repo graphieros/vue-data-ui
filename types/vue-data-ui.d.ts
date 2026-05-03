@@ -13290,6 +13290,15 @@ declare module 'vue-data-ui' {
         color: string;
         x: number;
         y: number;
+        childCount: number;
+        children: VueUiCirclePackDatapoint[];
+        depth: number;
+        hasChildren: boolean;
+        hierarchyPath: number[];
+        leafCount: number;
+        parentId: string;
+        parentName: string;
+        rootId: string;
     };
 
     export type VueUiCirclePackConfig = {
@@ -13321,6 +13330,8 @@ declare module 'vue-data-ui' {
             td?: ChartTableCell;
             columnNames?: {
                 datapoint?: string;
+                parent?: string;
+                depth?: string;
                 value?: string;
             };
         };
@@ -13341,6 +13352,12 @@ declare module 'vue-data-ui' {
                         intensity?: number;
                     };
                     labels?: {
+                        parents?: {
+                            show?: boolean;
+                        };
+                        children?: {
+                            show?: boolean;
+                        };
                         name?: {
                             show?: boolean;
                             bold?: boolean;
@@ -13361,6 +13378,24 @@ declare module 'vue-data-ui' {
                         };
                     };
                 };
+                parentTooltips?: {
+                    show?: boolean;
+                    fontSizeRatio?: number;
+                    borderRadiusRatio?: number;
+                    color?: string;
+                    filter?: string;
+                    backgroundColor?: string;
+                    strokeWidth?: number;
+                    useSerieColor?: boolean;
+                    stroke?: string;
+                    link?: {
+                        strokeWidth?: number;
+                        strokeDasharray?: number;
+                        opacity?: number;
+                        useSerieColor?: boolean;
+                        stroke?: string;
+                    };
+                };
                 tooltip?: ChartTooltip & {
                     customFormat?:
                         | null
@@ -13371,6 +13406,10 @@ declare module 'vue-data-ui' {
                                   VueUiCirclePackConfig
                               >,
                           ) => string);
+                };
+                zoom?: {
+                    show?: boolean;
+                    speed?: number;
                 };
             };
         };
@@ -13386,7 +13425,32 @@ declare module 'vue-data-ui' {
         toggleTable(): void;
         toggleAnnotator(): void;
         toggleFullscreen(): void;
+        copyAlt(): void;
+        toggleZoom(): void;
+        resetZoom(): void;
     };
+
+    export type VueUiCirclePackParentTooltip = {
+        datapoint: VueUiCirclePackDatapoint;
+        anchorX: number;
+        anchorY: number;
+        height: number;
+        lineX: number;
+        lineY: number;
+        width: number;
+        x: number;
+        y: number;
+        id: string;
+        color: string;
+        lines: string[];
+        fontSize: number;
+        lineHeight: number;
+        paddingX: number;
+        paddingY: number;
+    };
+
+    export type VueUiCirclePackParentTooltipSlotProps =
+        VueUiCirclePackParentTooltip;
 
     export type VueUiCirclePackDataLabelSlotProps = VueUiCirclePackDatapoint & {
         createTSpans: (args: CreateTSpansArgs) => string;
@@ -13396,7 +13460,9 @@ declare module 'vue-data-ui' {
 
     export type VueUiCirclePackCircleSlotProps = VueUiCirclePackDatapoint & {
         isSelected: boolean;
+        isDescendantOfSelected: boolean;
         uid: string;
+        showLabel: boolean;
     };
 
     export type VueUiCirclePackSvgSlotProps = {
@@ -13416,6 +13482,11 @@ declare module 'vue-data-ui' {
         config: VueUiCirclePackConfig;
     };
 
+    export type VueUiCirclePackOptionZoomSlotProps = {
+        toggleZoom: () => void;
+        isZoomLocked: boolean;
+    };
+
     export type VueUiCirclePackProps = {
         config?: VueUiCirclePackConfig;
         dataset: VueUiCirclePackDatasetItem[];
@@ -13433,6 +13504,9 @@ declare module 'vue-data-ui' {
                 optionImg?: () => VNodeChild;
                 optionSvg?: () => VNodeChild;
                 optionTable?: () => VNodeChild;
+                optionZoom?: (
+                    props: VueUiCirclePackOptionZoomSlotProps,
+                ) => VNodeChild;
                 optionFullscreen?: (
                     props: VueUiOptionFullscreenSlotProps,
                 ) => VNodeChild;
@@ -13462,6 +13536,9 @@ declare module 'vue-data-ui' {
                     props: VueUiCircleDatapointTooltipSlotProps,
                 ) => VNodeChild;
                 skeleton?: () => VNodeChild;
+                ['parent-tooltip']?: (
+                    props: VueUiCirclePackParentTooltipSlotProps,
+                ) => VNodeChild;
             };
         };
     };

@@ -45,6 +45,7 @@ import img from '../img';
 import Title from '../atoms/Title.vue'; // Must be ready in responsive mode
 import themes from '../themes/vue_ui_circle_pack.json';
 import BaseScanner from '../atoms/BaseScanner.vue';
+import usePanZoom from '../usePanZoom';
 import A11yDataTable from '../atoms/A11yDataTable.vue';
 
 const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
@@ -206,6 +207,10 @@ watch(
 
         // Reset mutable config
         mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
+        mutableConfig.value.showTooltip =
+            FINAL_CONFIG.value.style.chart.tooltip.show;
+        mutableConfig.value.showZoom =
+            FINAL_CONFIG.value.style.chart.zoom?.show ?? false;
     },
     { deep: true },
 );
@@ -226,6 +231,7 @@ const hasOptionsNoTitle = computed(() => {
 const mutableConfig = ref({
     showTable: FINAL_CONFIG.value.table.show,
     showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show,
+    showZoom: FINAL_CONFIG.value.style.chart.zoom?.show ?? false,
 });
 
 // v3 - Essential to make shifting between loading config and final config work
@@ -235,6 +241,7 @@ watch(
         mutableConfig.value = {
             showTable: FINAL_CONFIG.value.table.show,
             showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show,
+            showZoom: FINAL_CONFIG.value.style.chart.zoom?.show ?? false,
         };
     },
     { immediate: true },
@@ -268,7 +275,7 @@ const packingHeight = computed(() => {
 });
 
 const circles = ref([]);
-const viewBox = ref('0 0 100 100');
+const flattenedDataset = ref([]);
 const resizeObserver = ref(null);
 const observedEl = ref(null);
 
@@ -278,33 +285,248 @@ function recomputePacking(targetWidth, targetHeight) {
         h: targetHeight,
     };
 
-    const freshDataset = formattedDataset.value.map((c) => ({ ...c }));
+    const freshDataset = formattedDataset.value.map(cloneDatapoint);
+
     if (!freshDataset.length) {
+        const baseViewBox = {
+            x: 0,
+            y: 0,
+            width: targetWidth,
+            height: targetHeight,
+        };
+
         circles.value = [];
-        boundValues.value = [0, 0, targetWidth, targetHeight];
-        viewBox.value = `0 0 ${targetWidth} ${targetHeight}`;
+        flattenedDataset.value = [];
+        boundValues.value = [
+            baseViewBox.x,
+            baseViewBox.y,
+            baseViewBox.width,
+            baseViewBox.height,
+        ];
+        setInitialViewBox(baseViewBox);
         return;
     }
 
-    const packed = pack(freshDataset, targetHeight, targetWidth);
-    const [x0, y0, bw, bh] = bounds(packed, 1);
+    const packedRoots = pack(freshDataset, targetHeight, targetWidth);
+    const [x0, y0, bw, bh] = bounds(packedRoots, 1);
 
-    // Uniform scale to fit raw bounds into targetWidth & targetHeight
     const scale = Math.min(
         bw ? targetWidth / bw : 1,
         bh ? targetHeight / bh : 1,
     );
+
     const offsetX = (targetWidth - bw * scale) / 2;
     const offsetY = (targetHeight - bh * scale) / 2;
-    circles.value = packed.map((c) => ({
-        ...c,
-        x: (c.x - x0) * scale + offsetX,
-        y: (c.y - y0) * scale + offsetY,
-        r: c.r * scale,
-    }));
 
-    boundValues.value = [0, 0, targetWidth, targetHeight];
-    viewBox.value = `0 0 ${targetWidth} ${targetHeight}`;
+    const roots = packedRoots.map((circle) => {
+        return {
+            ...circle,
+            x: (circle.x - x0) * scale + offsetX,
+            y: (circle.y - y0) * scale + offsetY,
+            r: circle.r * scale,
+        };
+    });
+
+    circles.value = flattenPackedCircles(roots);
+    flattenedDataset.value = circles.value;
+
+    const baseViewBox = {
+        x: 0,
+        y: 0,
+        width: targetWidth,
+        height: targetHeight,
+    };
+
+    const initialViewBox = getViewBoxIncludingParentTooltips(baseViewBox);
+
+    boundValues.value = [
+        initialViewBox.x,
+        initialViewBox.y,
+        initialViewBox.width,
+        initialViewBox.height,
+    ];
+
+    setInitialViewBox(initialViewBox);
+}
+
+function cloneDatapoint(datapoint) {
+    return {
+        ...datapoint,
+        children: Array.isArray(datapoint.children)
+            ? datapoint.children.map(cloneDatapoint)
+            : [],
+    };
+}
+
+function getDatapointValue(datapoint) {
+    const ownValue = Number(datapoint?.value);
+    if (Number.isFinite(ownValue) && ownValue > 0) {
+        return ownValue;
+    }
+
+    if (!Array.isArray(datapoint?.children)) {
+        return 0;
+    }
+
+    return datapoint.children.reduce((sum, child) => {
+        return sum + getDatapointValue(child);
+    }, 0);
+}
+
+function getDatapointColor(datapoint, colorIndex) {
+    const themePalette =
+        themePalettes[FINAL_CONFIG.value.theme || 'default'] || palette;
+    const resolvedPalette = customPalette.value.length
+        ? customPalette.value
+        : themePalette.length
+          ? themePalette
+          : palette;
+
+    return (
+        convertColorToHex(datapoint.color) ||
+        resolvedPalette[colorIndex % resolvedPalette.length] ||
+        palette[colorIndex % palette.length]
+    );
+}
+
+function getLeafCount(datapoint) {
+    if (!Array.isArray(datapoint.children) || !datapoint.children.length) {
+        return 1;
+    }
+
+    return datapoint.children.reduce((sum, child) => {
+        return sum + getLeafCount(child);
+    }, 0);
+}
+
+function normalizeDataset(source, parent = null, depth = 0, path = []) {
+    if (!Array.isArray(source)) {
+        return [];
+    }
+
+    return source
+        .map((datapoint, index) => {
+            const value = getDatapointValue(datapoint);
+
+            if (!Number.isFinite(value) || value <= 0) {
+                return null;
+            }
+
+            const id = createUid();
+            const hierarchyPath = [...path, index];
+            const colorIndex = hierarchyPath.reduce((sum, item, i) => {
+                return sum + item + i;
+            }, 0);
+
+            const color =
+                datapoint.color || parent?.color
+                    ? convertColorToHex(datapoint.color || parent?.color)
+                    : getDatapointColor(datapoint, colorIndex);
+
+            const children = normalizeDataset(
+                datapoint.children,
+                {
+                    id,
+                    name: datapoint.name,
+                    color,
+                    rootId: parent?.rootId ?? id,
+                },
+                depth + 1,
+                hierarchyPath,
+            );
+
+            return {
+                ...datapoint,
+                value,
+                r: value,
+                id,
+                color,
+                depth,
+                parentId: parent?.id ?? null,
+                parentName: parent?.name ?? null,
+                rootId: parent?.rootId ?? id,
+                hasChildren: children.length > 0,
+                childCount: children.length,
+                leafCount: children.length ? getLeafCount({ children }) : 1,
+                hierarchyPath,
+                children,
+            };
+        })
+        .filter(Boolean);
+}
+
+function packNestedChildren(parent) {
+    if (!Array.isArray(parent.children) || !parent.children.length) {
+        return [];
+    }
+
+    const innerPadding = 0.9;
+    const targetSize = parent.r * 2;
+
+    if (!targetSize) {
+        return [];
+    }
+
+    const packed = pack(
+        parent.children.map(cloneDatapoint),
+        targetSize,
+        targetSize,
+    );
+
+    const [x0, y0, width, height] = bounds(packed, 1);
+
+    const scale =
+        Math.min(
+            width ? targetSize / width : 1,
+            height ? targetSize / height : 1,
+        ) * innerPadding;
+
+    const fittedWidth = width * scale;
+    const fittedHeight = height * scale;
+
+    const offsetX = parent.x - fittedWidth / 2;
+    const offsetY = parent.y - fittedHeight / 2;
+
+    return packed.map((child) => ({
+        ...child,
+        x: (child.x - x0) * scale + offsetX,
+        y: (child.y - y0) * scale + offsetY,
+        r: child.r * scale,
+    }));
+}
+
+function flattenPackedCircles(source) {
+    const result = [];
+
+    source.forEach((circle) => {
+        const children = packNestedChildren(circle);
+        result.push({
+            ...circle,
+            children,
+        });
+        result.push(...flattenPackedCircles(children));
+    });
+
+    return result;
+}
+
+function isDescendantOf(circle, possibleParent) {
+    if (!circle || !possibleParent) return false;
+    if (!Array.isArray(circle.hierarchyPath)) return false;
+    if (!Array.isArray(possibleParent.hierarchyPath)) return false;
+    if (circle.hierarchyPath.length <= possibleParent.hierarchyPath.length)
+        return false;
+
+    return possibleParent.hierarchyPath.every((pathItem, index) => {
+        return circle.hierarchyPath[index] === pathItem;
+    });
+}
+
+function canShowCircleLabel(circle) {
+    if (circle.hasChildren) {
+        return FINAL_CONFIG.value.style.chart.circles.labels.parents.show;
+    }
+    return FINAL_CONFIG.value.style.chart.circles.labels.children.show;
 }
 
 function setupResponsiveObserver() {
@@ -398,31 +620,7 @@ const customPalette = computed(() => {
     return convertCustomPalette(FINAL_CONFIG.value.customPalette);
 });
 
-const formattedDataset = computed(() => {
-    return FINAL_DATASET.value
-        .map((ds, i) => {
-            const color =
-                convertColorToHex(ds.color) ||
-                customPalette.value[i] ||
-                themePalettes[FINAL_CONFIG.value.theme || 'default'][
-                    i %
-                        themePalettes[FINAL_CONFIG.value.theme || 'default']
-                            .length
-                ] ||
-                palette[i] ||
-                palette[i % palette.length];
-
-            return {
-                ...ds,
-                r: ds.value,
-                id: createUid(),
-                color,
-            };
-        })
-        .filter(
-            (ds) => ![null, undefined, Infinity, -Infinity].includes(ds.value),
-        );
-});
+const formattedDataset = computed(() => normalizeDataset(FINAL_DATASET.value));
 
 const maxRadius = computed(() => {
     return circles.value.length
@@ -473,7 +671,7 @@ function onTrapEnter(datapoint, seriesIndex, triggerMode = 'pointer') {
         datapoint,
         seriesIndex,
         config: FINAL_CONFIG.value,
-        series: formattedDataset.value,
+        series: flattenedDataset.value,
     };
     isTooltip.value = true;
     const customFormat = FINAL_CONFIG.value.style.chart.tooltip.customFormat;
@@ -484,7 +682,7 @@ function onTrapEnter(datapoint, seriesIndex, triggerMode = 'pointer') {
             const customFormatString = customFormat({
                 seriesIndex,
                 datapoint,
-                series: formattedDataset.value,
+                series: flattenedDataset.value,
                 config: FINAL_CONFIG.value,
             });
             if (typeof customFormatString === 'string') {
@@ -552,30 +750,469 @@ function toggleAnnotator() {
     isAnnotator.value = !isAnnotator.value;
 }
 
+const active = computed(
+    () => !isAnnotator.value && mutableConfig.value.showZoom,
+);
+
+const { viewBox, resetZoom, isZoom, setInitialViewBox } = usePanZoom(
+    svgRef,
+    {
+        x: 0,
+        y: 0,
+        width: Math.max(10, SIZE.value.w),
+        height: Math.max(10, SIZE.value.h),
+    },
+    FINAL_CONFIG.value.style.chart.zoom?.speed ?? 1,
+    active,
+);
+
+function rectanglesCollide(a, b, gap = 0) {
+    return !(
+        a.x + a.width + gap < b.x ||
+        b.x + b.width + gap < a.x ||
+        a.y + a.height + gap < b.y ||
+        b.y + b.height + gap < a.y
+    );
+}
+
+function rectangleCollidesWithCircle(rectangle, circle, gap = 0) {
+    const closestX = Math.min(
+        Math.max(circle.x, rectangle.x - gap),
+        rectangle.x + rectangle.width + gap,
+    );
+    const closestY = Math.min(
+        Math.max(circle.y, rectangle.y - gap),
+        rectangle.y + rectangle.height + gap,
+    );
+    const distanceX = circle.x - closestX;
+    const distanceY = circle.y - closestY;
+    return distanceX * distanceX + distanceY * distanceY <= circle.r * circle.r;
+}
+
+function clampRectangleToViewBox(rectangle, sourceViewBox) {
+    const margin = Math.max(
+        4,
+        Math.min(sourceViewBox.width, sourceViewBox.height) * 0.01,
+    );
+
+    return {
+        ...rectangle,
+        x: Math.min(
+            Math.max(rectangle.x, sourceViewBox.x + margin),
+            sourceViewBox.x + sourceViewBox.width - rectangle.width - margin,
+        ),
+        y: Math.min(
+            Math.max(rectangle.y, sourceViewBox.y + margin),
+            sourceViewBox.y + sourceViewBox.height - rectangle.height - margin,
+        ),
+    };
+}
+
+function getParentTooltipTextLines(circle) {
+    const lines = [circle.name];
+    if (FINAL_CONFIG.value.style.chart.circles.labels.value.show) {
+        lines.push(getCircleLabel(circle));
+    }
+    return lines.filter(Boolean);
+}
+
+function getParentTooltipCandidateRect(
+    circle,
+    width,
+    height,
+    placement,
+    distance,
+) {
+    const centerX = circle.x;
+    const centerY = circle.y;
+
+    const placements = {
+        right: {
+            x: centerX + circle.r + distance,
+            y: centerY - height / 2,
+            anchorX: centerX + circle.r,
+            anchorY: centerY,
+        },
+        left: {
+            x: centerX - circle.r - distance - width,
+            y: centerY - height / 2,
+            anchorX: centerX - circle.r,
+            anchorY: centerY,
+        },
+        top: {
+            x: centerX - width / 2,
+            y: centerY - circle.r - distance - height,
+            anchorX: centerX,
+            anchorY: centerY - circle.r,
+        },
+        bottom: {
+            x: centerX - width / 2,
+            y: centerY + circle.r + distance,
+            anchorX: centerX,
+            anchorY: centerY + circle.r,
+        },
+        topRight: {
+            x: centerX + circle.r * 0.7 + distance,
+            y: centerY - circle.r * 0.7 - distance - height,
+            anchorX: centerX + circle.r * 0.7,
+            anchorY: centerY - circle.r * 0.7,
+        },
+        topLeft: {
+            x: centerX - circle.r * 0.7 - distance - width,
+            y: centerY - circle.r * 0.7 - distance - height,
+            anchorX: centerX - circle.r * 0.7,
+            anchorY: centerY - circle.r * 0.7,
+        },
+        bottomRight: {
+            x: centerX + circle.r * 0.7 + distance,
+            y: centerY + circle.r * 0.7 + distance,
+            anchorX: centerX + circle.r * 0.7,
+            anchorY: centerY + circle.r * 0.7,
+        },
+        bottomLeft: {
+            x: centerX - circle.r * 0.7 - distance - width,
+            y: centerY + circle.r * 0.7 + distance,
+            anchorX: centerX - circle.r * 0.7,
+            anchorY: centerY + circle.r * 0.7,
+        },
+    };
+
+    return placements[placement];
+}
+
+function getCircleAncestors(circle, circleById) {
+    const ancestors = [];
+    let parent = circleById.get(circle.parentId);
+    while (parent) {
+        ancestors.push(parent);
+        parent = circleById.get(parent.parentId);
+    }
+    return ancestors;
+}
+
+function getParentTooltipExternalCandidateRect(
+    circle,
+    containerCircle,
+    width,
+    height,
+    placement,
+    distance,
+) {
+    const centerX = circle.x;
+    const centerY = circle.y;
+    const container = containerCircle || circle;
+    const diagonalOffset = distance * 0.6;
+
+    const placements = {
+        right: {
+            x: container.x + container.r + distance,
+            y: centerY - height / 2,
+        },
+        left: {
+            x: container.x - container.r - distance - width,
+            y: centerY - height / 2,
+        },
+        top: {
+            x: centerX - width / 2,
+            y: container.y - container.r - distance - height,
+        },
+        bottom: {
+            x: centerX - width / 2,
+            y: container.y + container.r + distance,
+        },
+        topRight: {
+            x: container.x + container.r + distance,
+            y: container.y - container.r - distance - height - diagonalOffset,
+        },
+        topLeft: {
+            x: container.x - container.r - distance - width,
+            y: container.y - container.r - distance - height - diagonalOffset,
+        },
+        bottomRight: {
+            x: container.x + container.r + distance,
+            y: container.y + container.r + distance + diagonalOffset,
+        },
+        bottomLeft: {
+            x: container.x - container.r - distance - width,
+            y: container.y + container.r + distance + diagonalOffset,
+        },
+    };
+
+    const rectangle = placements[placement];
+    const targetX = rectangle.x + width / 2;
+    const targetY = rectangle.y + height / 2;
+    const angle = Math.atan2(targetY - centerY, targetX - centerX);
+
+    return {
+        ...rectangle,
+        anchorX: centerX + Math.cos(angle) * circle.r,
+        anchorY: centerY + Math.sin(angle) * circle.r,
+    };
+}
+
+function createParentTooltipItems(sourceViewBox, options = {}) {
+    const { clamp = true } = options;
+
+    if (
+        !circles.value.length ||
+        !SIZE.value.w ||
+        !SIZE.value.h ||
+        !FINAL_CONFIG.value.style.chart.parentTooltips.show
+    ) {
+        return [];
+    }
+
+    const fontSize = Math.max(
+        8,
+        FINAL_CONFIG.value.style.chart.parentTooltips.fontSizeRatio * 10,
+    );
+    const lineHeight = fontSize * 1.25;
+    const paddingX = fontSize * 0.75;
+    const paddingY = fontSize * 0.55;
+    const distance = Math.max(
+        8,
+        Math.min(sourceViewBox.width, sourceViewBox.height) * 0.025,
+    );
+    const collisionGap = Math.max(
+        2,
+        Math.min(sourceViewBox.width, sourceViewBox.height) * 0.006,
+    );
+
+    const placements = [
+        'right',
+        'left',
+        'top',
+        'bottom',
+        'topRight',
+        'topLeft',
+        'bottomRight',
+        'bottomLeft',
+    ];
+
+    const tooltips = [];
+    const circleById = new Map(
+        circles.value.map((circle) => [circle.id, circle]),
+    );
+
+    const parentCircles = circles.value
+        .filter((circle) => circle.hasChildren && circle.name)
+        .sort((a, b) => b.r - a.r);
+
+    parentCircles.forEach((circle) => {
+        const ancestors = getCircleAncestors(circle, circleById);
+        const outermostAncestor = ancestors.at(-1);
+        const lines = getParentTooltipTextLines(circle);
+
+        const longestLine = lines.reduce((max, line) => {
+            return Math.max(max, String(line).length);
+        }, 0);
+
+        const width = Math.max(
+            fontSize * 5,
+            longestLine * fontSize * 0.62 + paddingX * 2,
+        );
+        const height = lines.length * lineHeight + paddingY * 2;
+
+        const externalCandidates = outermostAncestor
+            ? placements.map((placement) =>
+                  getParentTooltipExternalCandidateRect(
+                      circle,
+                      outermostAncestor,
+                      width,
+                      height,
+                      placement,
+                      distance,
+                  ),
+              )
+            : [];
+
+        const localCandidates = placements.map((placement) =>
+            getParentTooltipCandidateRect(
+                circle,
+                width,
+                height,
+                placement,
+                distance,
+            ),
+        );
+
+        const candidates = [...externalCandidates, ...localCandidates].map(
+            (raw) => {
+                const rectangle = clamp
+                    ? clampRectangleToViewBox(
+                          {
+                              x: raw.x,
+                              y: raw.y,
+                              width,
+                              height,
+                          },
+                          sourceViewBox,
+                      )
+                    : {
+                          x: raw.x,
+                          y: raw.y,
+                          width,
+                          height,
+                      };
+
+                return {
+                    ...rectangle,
+                    anchorX: raw.anchorX,
+                    anchorY: raw.anchorY,
+                    lineX: rectangle.x + rectangle.width / 2,
+                    lineY: rectangle.y + rectangle.height / 2,
+                };
+            },
+        );
+
+        const validCandidate = candidates.find((candidate) => {
+            const collidesWithPreviousTooltip = tooltips.some((tooltip) =>
+                rectanglesCollide(candidate, tooltip, collisionGap),
+            );
+
+            if (collidesWithPreviousTooltip) return false;
+
+            return !circles.value.some((otherCircle) =>
+                rectangleCollidesWithCircle(
+                    candidate,
+                    otherCircle,
+                    collisionGap,
+                ),
+            );
+        });
+
+        if (!validCandidate) return;
+
+        tooltips.push({
+            ...validCandidate,
+            datapoint: circle,
+            id: `parent_tooltip_${circle.id}`,
+            color: circle.color,
+            lines,
+            fontSize,
+            lineHeight,
+            paddingX,
+            paddingY,
+        });
+    });
+
+    return tooltips;
+}
+
+const parentTooltipItems = computed(() => {
+    return createParentTooltipItems(viewBox.value, {
+        clamp: true,
+    });
+});
+
+function getViewBoxIncludingParentTooltips(baseViewBox) {
+    const tooltips = createParentTooltipItems(baseViewBox, {
+        clamp: false,
+    });
+
+    if (!tooltips.length) {
+        return baseViewBox;
+    }
+
+    const minX = Math.min(
+        baseViewBox.x,
+        ...tooltips.map((tooltip) => tooltip.x),
+    );
+    const minY = Math.min(
+        baseViewBox.y,
+        ...tooltips.map((tooltip) => tooltip.y),
+    );
+    const maxX = Math.max(
+        baseViewBox.x + baseViewBox.width,
+        ...tooltips.map((tooltip) => tooltip.x + tooltip.width),
+    );
+    const maxY = Math.max(
+        baseViewBox.y + baseViewBox.height,
+        ...tooltips.map((tooltip) => tooltip.y + tooltip.height),
+    );
+
+    const margin = Math.max(
+        8,
+        Math.min(baseViewBox.width, baseViewBox.height) * 0.025,
+    );
+
+    return {
+        x: minX - margin,
+        y: minY - margin,
+        width: maxX - minX + margin * 2,
+        height: maxY - minY + margin * 2,
+    };
+}
+
+function buildHierarchyRows(datapoints) {
+    const rows = [];
+
+    function walk(items, depth = 0, parentName = '') {
+        items.forEach((datapoint) => {
+            rows.push({
+                name: datapoint.name,
+                value: datapoint.value,
+                color: datapoint.color,
+                parentName,
+                depth,
+            });
+
+            if (
+                Array.isArray(datapoint.children) &&
+                datapoint.children.length
+            ) {
+                walk(datapoint.children, depth + 1, datapoint.name);
+            }
+        });
+    }
+
+    walk(datapoints);
+    return rows;
+}
+
 const table = computed(() => {
-    const head = formattedDataset.value
-        .map((d) => {
-            return {
-                name: d.name,
-                value: d.value,
-                color: d.color,
-            };
-        })
+    const hierarchy = buildHierarchyRows(formattedDataset.value);
+
+    const head = flattenedDataset.value
+        .map((d) => ({
+            name: d.name,
+            value: d.value,
+            color: d.color,
+        }))
         .toSorted((a, b) => b.value - a.value);
 
-    const body = head.map((h) => h.value);
-    return { head, body };
+    const body = hierarchy.map((row) => row.value);
+
+    return { head, body, hierarchy };
+});
+
+const csvTable = computed(() => {
+    return buildHierarchyRows(formattedDataset.value).map((row) => ({
+        ...row,
+        name: `${'- '.repeat(row.depth)}${row.name}`,
+    }));
 });
 
 function generateCsv(callback = null) {
     nextTick(() => {
-        const labels = table.value.head.map((h, i) => {
-            return [[h.name], [table.value.body[i]]];
+        const labels = csvTable.value.map((row) => {
+            return [
+                [row.name],
+                [row.parentName || ''],
+                [row.depth],
+                [row.value],
+            ];
         });
+
         const tableXls = [
             [FINAL_CONFIG.value.style.chart.title.text],
             [FINAL_CONFIG.value.style.chart.title.subtitle.text],
-            [[''], [FINAL_CONFIG.value.table.columnNames.value]],
+            [
+                [FINAL_CONFIG.value.table.columnNames.datapoint],
+                ['Parent'],
+                ['Depth'],
+                [FINAL_CONFIG.value.table.columnNames.value],
+            ],
         ].concat(labels);
 
         const csvContent = createCsvContent(tableXls);
@@ -596,21 +1233,26 @@ function generateCsv(callback = null) {
 const dataTable = computed(() => {
     const head = [
         FINAL_CONFIG.value.table.columnNames.datapoint,
+        FINAL_CONFIG.value.table.columnNames.parent,
+        FINAL_CONFIG.value.table.columnNames.depth,
         FINAL_CONFIG.value.table.columnNames.value,
     ];
 
-    const body = table.value.head.map((h, i) => {
+    const body = table.value.hierarchy.map((row) => {
         const label = dataLabel({
             p: FINAL_CONFIG.value.style.chart.circles.labels.value.prefix,
-            v: table.value.body[i],
+            v: row.value,
             s: FINAL_CONFIG.value.style.chart.circles.labels.value.suffix,
             r: FINAL_CONFIG.value.style.chart.circles.labels.value.rounding,
         });
+
         return [
             {
-                color: h.color,
-                name: h.name,
+                color: row.color,
+                name: `${'  '.repeat(row.depth)}${row.name}`,
             },
+            row.parentName ?? '',
+            row.depth ?? 0,
             label,
         ];
     });
@@ -631,6 +1273,8 @@ const dataTable = computed(() => {
 
     const colNames = [
         FINAL_CONFIG.value.table.columnNames.datapoint,
+        FINAL_CONFIG.value.table.columnNames.parent,
+        FINAL_CONFIG.value.table.columnNames.depth,
         FINAL_CONFIG.value.table.columnNames.value,
     ];
 
@@ -648,6 +1292,10 @@ function toggleTable() {
 
 function toggleTooltip() {
     mutableConfig.value.showTooltip = !mutableConfig.value.showTooltip;
+}
+
+function toggleZoom() {
+    mutableConfig.value.showZoom = !mutableConfig.value.showZoom;
 }
 
 function getData() {
@@ -784,6 +1432,7 @@ async function copyAlt() {
     emit('copyAlt', {
         config: FINAL_CONFIG.value,
         dataset: formattedDataset.value,
+        flattenedDataset: flattenedDataset.value,
     });
     if (!FINAL_CONFIG.value.userOptions.callbacks.altCopy) {
         console.warn(
@@ -795,6 +1444,7 @@ async function copyAlt() {
         FINAL_CONFIG.value.userOptions.callbacks.altCopy({
             config: FINAL_CONFIG.value,
             dataset: formattedDataset.value,
+            flattenedDataset: flattenedDataset.value,
         }),
     );
 }
@@ -903,6 +1553,8 @@ const a11yTable = computed(() => {
     return { headers, rows };
 });
 
+const textColor = computed(() => FINAL_CONFIG.value.style.chart.color);
+
 defineExpose({
     getData,
     getImage,
@@ -914,6 +1566,8 @@ defineExpose({
     toggleAnnotator,
     toggleFullscreen,
     copyAlt,
+    toggleZoom,
+    resetZoom,
 });
 </script>
 
@@ -1031,6 +1685,8 @@ defineExpose({
             :isAnnotation="isAnnotator"
             :tableDialog="FINAL_CONFIG.table.useDialog"
             :isCursorPointer="isCursorPointer"
+            :hasZoom="FINAL_CONFIG.userOptions.buttons.zoom"
+            :isZoom="mutableConfig.showZoom"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
@@ -1039,6 +1695,7 @@ defineExpose({
             @toggleTable="toggleTable"
             @toggleTooltip="toggleTooltip"
             @toggleAnnotator="toggleAnnotator"
+            @toggleZoom="toggleZoom"
             @copyAlt="copyAlt"
             :style="{
                 visibility: keepUserOptionState
@@ -1088,6 +1745,12 @@ defineExpose({
                 />
             </template>
             <template
+                v-if="$slots.optionZoom"
+                #optionZoom="{ toggleZoom, isZoomLocked }"
+            >
+                <slot name="optionZoom" v-bind="{ toggleZoom, isZoomLocked }" />
+            </template>
+            <template
                 v-if="$slots.optionAltCopy"
                 #optionAltCopy="{ altCopy: c }"
             >
@@ -1105,14 +1768,14 @@ defineExpose({
                 ref="svgRef"
                 :xmlns="XMLNS"
                 :aria-describedby="`chart-instructions-${uid}`"
-                :viewBox="viewBox"
+                :viewBox="`${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`"
                 preserveAspectRatio="xMidYMid meet"
                 :class="{
                     'vue-data-ui-fullscreen--on': isFullscreen,
                     'vue-data-ui-fulscreen--off': !isFullscreen,
                     'not-responsive': !FINAL_CONFIG.responsive,
                 }"
-                :style="`display:block;${FINAL_CONFIG.responsive ? 'width:100%;height:auto' : 'height:100%;'};overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color};background:${FINAL_CONFIG.style.chart.backgroundColor};`"
+                :style="`display:block;${FINAL_CONFIG.responsive ? 'width:100%;height:auto' : 'height:100%;'};overflow:${mutableConfig.showZoom ? 'hidden' : 'visible'};background:transparent;color:${FINAL_CONFIG.style.chart.color};background:${FINAL_CONFIG.style.chart.backgroundColor};`"
                 tabindex="0"
                 @focus="onSvgFocus"
                 @blur="onSvgBlur"
@@ -1210,6 +1873,7 @@ defineExpose({
                 <!-- OVERLAYS -->
                 <template v-for="(circle, i) in circles" :key="circle.id">
                     <rect
+                        v-if="!circle.hasChildren"
                         data-cy="datapoint-circle-overlay"
                         :x="circle.x - circle.r"
                         :y="circle.y - circle.r"
@@ -1242,7 +1906,9 @@ defineExpose({
                 <template v-for="(circle, i) in circles" :key="circle.id">
                     <slot
                         name="data-label"
-                        v-if="$slots['data-label']"
+                        v-if="
+                            $slots['data-label'] && canShowCircleLabel(circle)
+                        "
                         v-bind="{
                             ...circle,
                             createTSpans,
@@ -1270,7 +1936,9 @@ defineExpose({
                             data-cy="label-name"
                             v-if="
                                 FINAL_CONFIG.style.chart.circles.labels.name
-                                    .show && circle.name
+                                    .show &&
+                                circle.name &&
+                                canShowCircleLabel(circle)
                             "
                             :style="{
                                 pointerEvents: 'none',
@@ -1314,7 +1982,7 @@ defineExpose({
                             data-cy="label-value"
                             v-if="
                                 FINAL_CONFIG.style.chart.circles.labels.value
-                                    .show
+                                    .show && canShowCircleLabel(circle)
                             "
                             :style="{
                                 pointerEvents: 'none',
@@ -1358,18 +2026,141 @@ defineExpose({
                         name="circle"
                         v-bind="{
                             ...circle,
+                            showLabel: canShowCircleLabel(circle),
                             isSelected: selectedDatapoint?.id === circle.id,
+                            isDescendantOfSelected: isDescendantOf(
+                                circle,
+                                selectedDatapoint,
+                            ),
                             uid: `${i}_${uid}`,
                         }"
                     />
                 </template>
 
+                <!-- PARENT SVG TOOLTIPS -->
+                <g
+                    v-if="
+                        parentTooltipItems.length &&
+                        FINAL_CONFIG.style.chart.parentTooltips.show
+                    "
+                    data-cy="parent-svg-tooltips"
+                    :style="{ pointerEvents: 'none' }"
+                >
+                    <g
+                        v-for="tooltip in parentTooltipItems"
+                        :key="tooltip.id"
+                        data-cy="parent-svg-tooltip"
+                    >
+                        <line
+                            :x1="tooltip.anchorX"
+                            :y1="tooltip.anchorY"
+                            :x2="tooltip.lineX"
+                            :y2="tooltip.lineY"
+                            :stroke="
+                                FINAL_CONFIG.style.chart.parentTooltips.link
+                                    .useSerieColor
+                                    ? tooltip.color
+                                    : FINAL_CONFIG.style.chart.parentTooltips
+                                          .link.stroke
+                            "
+                            :stroke-width="
+                                FINAL_CONFIG.style.chart.parentTooltips.link
+                                    .strokeWidth
+                            "
+                            stroke-linecap="round"
+                            :stroke-dasharray="
+                                FINAL_CONFIG.style.chart.parentTooltips.link
+                                    .strokeDasharray
+                            "
+                            :opacity="
+                                FINAL_CONFIG.style.chart.parentTooltips.link
+                                    .opacity
+                            "
+                        />
+                        <rect
+                            :x="tooltip.x"
+                            :y="tooltip.y"
+                            :width="tooltip.width"
+                            :height="tooltip.height"
+                            :rx="
+                                Math.max(3, tooltip.fontSize / 2.5) *
+                                FINAL_CONFIG.style.chart.parentTooltips
+                                    .borderRadiusRatio
+                            "
+                            :fill="
+                                FINAL_CONFIG.style.chart.parentTooltips
+                                    .backgroundColor
+                            "
+                            :stroke="
+                                FINAL_CONFIG.style.chart.parentTooltips
+                                    .useSerieColor
+                                    ? tooltip.color
+                                    : FINAL_CONFIG.style.chart.parentTooltips
+                                          .stroke
+                            "
+                            :stroke-width="
+                                FINAL_CONFIG.style.chart.parentTooltips
+                                    .strokeWidth
+                            "
+                            :filter="
+                                FINAL_CONFIG.style.chart.parentTooltips.filter
+                            "
+                        />
+
+                        <slot name="parent-tooltip" v-bind="{ ...tooltip }">
+                            <circle
+                                :cx="tooltip.x + tooltip.paddingX * 1.3"
+                                :cy="
+                                    tooltip.y +
+                                    tooltip.paddingY +
+                                    tooltip.lineHeight / 2
+                                "
+                                :r="tooltip.fontSize * 0.35"
+                                :fill="tooltip.color"
+                            />
+                            <text
+                                :x="
+                                    tooltip.x +
+                                    tooltip.paddingX +
+                                    tooltip.fontSize
+                                "
+                                :y="
+                                    tooltip.y +
+                                    tooltip.paddingY +
+                                    tooltip.fontSize
+                                "
+                                :font-size="tooltip.fontSize"
+                                :fill="
+                                    FINAL_CONFIG.style.chart.parentTooltips
+                                        .color
+                                "
+                                :font-family="FINAL_CONFIG.style.fontFamily"
+                                text-anchor="start"
+                            >
+                                <tspan
+                                    v-for="(line, lineIndex) in tooltip.lines"
+                                    :key="`${tooltip.id}_${lineIndex}`"
+                                    :x="
+                                        tooltip.x +
+                                        tooltip.paddingX +
+                                        tooltip.fontSize
+                                    "
+                                    :dy="
+                                        lineIndex === 0 ? 0 : tooltip.lineHeight
+                                    "
+                                >
+                                    {{ line }}
+                                </tspan>
+                            </text>
+                        </slot>
+                    </g>
+                </g>
+
                 <slot
                     name="svg"
                     :svg="{
                         drawingArea: {
-                            width: SIZE.w,
-                            height: SIZE.h,
+                            ...viewBox,
                         },
                         width: SIZE.w,
                         height: SIZE.h,
@@ -1406,6 +2197,27 @@ defineExpose({
                         isCallbackSvg,
                 }"
             />
+        </div>
+
+        <div v-if="isZoom" data-dom-to-png-ignore class="reset-wrapper">
+            <slot name="reset-action" :reset="resetZoom">
+                <button
+                    data-cy-reset
+                    tabindex="0"
+                    role="button"
+                    class="vue-data-ui-refresh-button"
+                    :style="{
+                        background: FINAL_CONFIG.style.chart.backgroundColor,
+                        cursor: isCursorPointer ? 'pointer' : 'default',
+                    }"
+                    @click="resetZoom(true)"
+                >
+                    <BaseIcon
+                        name="refresh"
+                        :stroke="FINAL_CONFIG.style.chart.color"
+                    />
+                </button>
+            </slot>
         </div>
 
         <div v-if="$slots.source" ref="source" dir="auto">
@@ -1562,5 +2374,37 @@ svg:focus-visible {
     clip: rect(0 0 0 0);
     white-space: normal;
     border: 0;
+}
+
+.reset-wrapper {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    padding: 0 24px;
+    height: 40px;
+    position: absolute;
+    bottom: 12px;
+    right: 0;
+}
+
+.vue-data-ui-refresh-button {
+    outline: none;
+    border: none;
+    background: transparent;
+    height: 36px;
+    width: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: transform 0.2s ease-in-out;
+    transform-origin: center;
+    &:focus {
+        outline: 1px solid v-bind(textColor);
+    }
+    &:hover {
+        transform: rotate(-90deg);
+    }
 }
 </style>

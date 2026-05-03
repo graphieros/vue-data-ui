@@ -6949,6 +6949,7 @@ export function useConfig(options = {}) {
             stack: false,
             annotator: true,
             svg: true,
+            zoom: true,
         }),
         table: {
             ...TABLE,
@@ -6957,6 +6958,8 @@ export function useConfig(options = {}) {
             td: TABLE_TD,
             columnNames: {
                 datapoint: 'Datapoint',
+                parent: 'Parent',
+                depth: 'Depth',
                 value: 'Value',
             },
         },
@@ -6977,6 +6980,8 @@ export function useConfig(options = {}) {
                         intensity: 40,
                     },
                     labels: {
+                        parents: { show: false },
+                        children: { show: true },
                         name: {
                             fontSizeRatio: 1,
                             show: true,
@@ -6997,7 +7002,29 @@ export function useConfig(options = {}) {
                         },
                     },
                 },
+                parentTooltips: {
+                    show: true,
+                    fontSizeRatio: 1,
+                    borderRadiusRatio: 1,
+                    color: COLOR_BLACK,
+                    filter: 'drop-shadow(0 2px 4px #2D353C30)',
+                    backgroundColor: COLOR_WHITE,
+                    strokeWidth: 1,
+                    useSerieColor: true,
+                    stroke: COLOR_BLACK,
+                    link: {
+                        strokeWidth: 1,
+                        strokeDasharray: 0,
+                        opacity: 0.6,
+                        useSerieColor: false,
+                        stroke: COLOR_BLACK,
+                    },
+                },
                 tooltip: TOOLTIP,
+                zoom: {
+                    show: true,
+                    speed: 1,
+                },
             },
         },
     };

@@ -1279,7 +1279,8 @@ const a11yTable = computed(() => {
                     <linearGradient
                         v-if="
                             FINAL_CONFIG.temperatureColors.show &&
-                            !!temperatureColors && !isFlatTemperature
+                            !!temperatureColors &&
+                            !isFlatTemperature
                         "
                         :id="`temperature_grad_sparkline_${uid}`"
                         gradientTransform="rotate(90)"

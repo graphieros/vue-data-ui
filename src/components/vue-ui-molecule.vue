@@ -841,6 +841,8 @@ async function copyAlt() {
     );
 }
 
+const textColor = computed(() => FINAL_CONFIG.value.style.chart.color);
+
 defineExpose({
     getData,
     getImage,
@@ -1303,7 +1305,7 @@ defineExpose({
     transition: transform 0.2s ease-in-out;
     transform-origin: center;
     &:focus {
-        outline: 1px solid v-bind(slicerColor);
+        outline: 1px solid v-bind(textColor);
     }
     &:hover {
         transform: rotate(-90deg);
