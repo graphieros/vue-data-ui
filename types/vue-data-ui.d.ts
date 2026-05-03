@@ -13279,6 +13279,7 @@ declare module 'vue-data-ui' {
         name: string;
         value: number;
         color?: string;
+        children?: VueUiCirclePackDatasetItem[];
     };
 
     export type VueUiCirclePackDatapoint = {
