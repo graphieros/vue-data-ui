@@ -116,7 +116,7 @@ const testPreconfig = computed<VueUiCirclePackConfig>(() => {
                 animation: false,
                 annotator: true,
                 svg: true,
-                zoom: false,
+                zoom: true,
                 altCopy: false,
             },
             callbacks: {
@@ -146,6 +146,7 @@ const testPreconfig = computed<VueUiCirclePackConfig>(() => {
                 fullscreen: 'Toggle fullscreen',
                 annotator: 'Toggle annotator',
                 svg: 'Download SVG',
+                zoom: 'Toggle zoom lock',
                 altCopy: 'Copy alt text',
             },
             print: {
@@ -171,6 +172,8 @@ const testPreconfig = computed<VueUiCirclePackConfig>(() => {
             },
             columnNames: {
                 datapoint: 'Datapoint',
+                parent: 'Parent',
+                depth: 'Depth',
                 value: 'Value',
             },
         },
@@ -205,6 +208,12 @@ const testPreconfig = computed<VueUiCirclePackConfig>(() => {
                         intensity: 40,
                     },
                     labels: {
+                        parents: {
+                            show: false,
+                        },
+                        children: {
+                            show: true,
+                        },
                         name: {
                             fontSizeRatio: 1,
                             show: true,
@@ -225,6 +234,24 @@ const testPreconfig = computed<VueUiCirclePackConfig>(() => {
                         },
                     },
                 },
+                parentTooltips: {
+                    show: true,
+                    fontSizeRatio: 1,
+                    borderRadiusRatio: 1,
+                    color: '#2D353C',
+                    filter: 'drop-shadow(0 2px 4px #2D353C30)',
+                    backgroundColor: '#FFFFFF',
+                    strokeWidth: 1,
+                    useSerieColor: true,
+                    stroke: '#2D353C',
+                    link: {
+                        strokeWidth: 1,
+                        strokeDasharray: 0,
+                        opacity: 0.6,
+                        useSerieColor: false,
+                        stroke: '#2D353C',
+                    },
+                },
                 tooltip: {
                     show: true,
                     color: '#2D353C',
@@ -242,6 +269,10 @@ const testPreconfig = computed<VueUiCirclePackConfig>(() => {
                     smoothForce: 0.18,
                     smoothSnapThreshold: 0.25,
                     teleportTo: 'body',
+                },
+                zoom: {
+                    show: true,
+                    speed: 1,
                 },
             },
         },
