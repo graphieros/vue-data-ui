@@ -12373,10 +12373,15 @@ declare module 'vue-data-ui' {
                         show?: boolean;
                         intensity?: number;
                     };
+                    path?: {
+                        useSerieColor?: boolean;
+                        stroke?: string;
+                    };
                     dot?: {
                         hideAboveMaxSerieLength?: number;
                         useSerieColor?: boolean;
                         fill?: string;
+                        stroke?: string;
                         strokeWidth?: number;
                         radius?: number;
                     };

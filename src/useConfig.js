@@ -476,10 +476,15 @@ export function useConfig(options = {}) {
                         show: true,
                         intensity: 40,
                     },
+                    path: {
+                        useSerieColor: true,
+                        stroke: COLOR_WHITE,
+                    },
                     dot: {
                         hideAboveMaxSerieLength: 62,
                         useSerieColor: true,
                         fill: COLOR_WHITE,
+                        stroke: COLOR_WHITE,
                         strokeWidth: 0.5,
                         radius: 4,
                     },

@@ -258,7 +258,7 @@ const model = createModel([
 
     CHECKBOX('style.chart.lines.useArea', { def: true }),
     CHECKBOX('style.chart.lines.smooth', { def: true }),
-    RANGE('style.chart.line.areaOpacity', {
+    RANGE('style.chart.lines.areaOpacity', {
         def: 0.5,
         min: 0,
         max: 1,
@@ -274,6 +274,16 @@ const model = createModel([
         min: 0,
         max: 100,
     }),
+
+    CHECKBOX('style.chart.lines.path.useSerieColor', { def: false }),
+    COLOR('style.chart.lines.path.stroke', { def: '#FFFFFF'}),
+
+    NUMBER('style.chart.lines.dot.hideAboveMaxSerieLength', { def: 62, min: 0, max: 100 }),
+    CHECKBOX('style.chart.lines.dot.useSerieColor', { def: true }),
+    COLOR('style.chart.lines.dot.fill', { def: '#FFFFFF'}),
+    COLOR('style.chart.lines.dot.stroke', { def: '#FF0000'}),
+    NUMBER('style.chart.lines.dot.strokeWidth', { def: 0.5, min: 0, max: 2, step: 0.1}),
+    NUMBER('style.chart.lines.dot.radius', { def: 4, min: 0, max: 12 }),
 
     CHECKBOX('style.chart.lines.totalValues.show', { def: true }),
     NUMBER('style.chart.lines.totalValues.offsetY', {
@@ -501,6 +511,7 @@ const config = computed(() => {
             ...c.style,
             chart: {
                 ...c.style.chart,
+                // backgroundColor: 'transparent',
                 zoom: {
                     ...c.style.chart.zoom,
                     useDefaultFormat: false,

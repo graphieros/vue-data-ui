@@ -2059,22 +2059,22 @@ const tooltipContent = computed(() => {
             return `<svg viewBox="0 0 12 12" height="14" width="14"><circle cx="6" cy="6" r="6" stroke="${FINAL_CONFIG.value.style.chart.tooltip.backgroundColor}" stroke-width="1" fill="${ds.color}" /></svg>`;
         }
         if (ds.shape === 'star') {
-            return `<svg viewBox="0 0 12 12" height="14" width="14"><polygon stroke="${FINAL_CONFIG.value.style.chart.tooltip.backgroundColor}" stroke-width="1" fill="${ds.color}" points="${createStar({ plot: { x: 6, y: 6 }, radius: 5 })}" /></svg>`;
+            return `<svg viewBox="0 0 12 12" height="14" width="14" style="overflow:visible"><polygon stroke="${FINAL_CONFIG.value.style.chart.tooltip.backgroundColor}" stroke-width="1" fill="${ds.color}" points="${createStar({ plot: { x: 6, y: 6 }, radius: 5 })}" /></svg>`;
         }
         if (ds.shape === 'triangle') {
-            return `<svg viewBox="0 0 12 12" height="14" width="14"><path d="${createPolygonPath({ plot: { x: 6, y: 6 }, radius: 6, sides: 3, rotation: 0.52 }).path}" fill="${ds.color}" stroke="${FINAL_CONFIG.value.style.chart.tooltip.backgroundColor}" stroke-width="1" /></svg>`;
+            return `<svg viewBox="0 0 12 12" height="14" width="14" style="overflow:visible"><path d="${createPolygonPath({ plot: { x: 6, y: 6 }, radius: 6, sides: 3, rotation: 0.52 }).path}" fill="${ds.color}" stroke="${FINAL_CONFIG.value.style.chart.tooltip.backgroundColor}" stroke-width="1" /></svg>`;
         }
         if (ds.shape === 'square') {
             return `<svg viewBox="0 0 12 12" height="14" width="14"><path d="${createPolygonPath({ plot: { x: 6, y: 6 }, radius: 6, sides: 4, rotation: 0.8 }).path}" fill="${ds.color}" stroke="${FINAL_CONFIG.value.style.chart.tooltip.backgroundColor}" stroke-width="1" /></svg>`;
         }
         if (ds.shape === 'diamond') {
-            return `<svg viewBox="0 0 12 12" height="14" width="14"><path d="${createPolygonPath({ plot: { x: 6, y: 6 }, radius: 5, sides: 4, rotation: 0 }).path}" fill="${ds.color}" stroke="${FINAL_CONFIG.value.style.chart.tooltip.backgroundColor}" stroke-width="1" /></svg>`;
+            return `<svg viewBox="0 0 12 12" height="14" width="14" style="overflow:visible"><path d="${createPolygonPath({ plot: { x: 6, y: 6 }, radius: 5, sides: 4, rotation: 0 }).path}" fill="${ds.color}" stroke="${FINAL_CONFIG.value.style.chart.tooltip.backgroundColor}" stroke-width="1" /></svg>`;
         }
         if (ds.shape === 'pentagon') {
-            return `<svg viewBox="0 0 12 12" height="14" width="14"><path d="${createPolygonPath({ plot: { x: 6, y: 6 }, radius: 5, sides: 5, rotation: 0.95 }).path}" fill="${ds.color}" stroke="${FINAL_CONFIG.value.style.chart.tooltip.backgroundColor}" stroke-width="1" /></svg>`;
+            return `<svg viewBox="0 0 12 12" height="14" width="14" style="overflow:visible"><path d="${createPolygonPath({ plot: { x: 6, y: 6 }, radius: 5, sides: 5, rotation: 0.95 }).path}" fill="${ds.color}" stroke="${FINAL_CONFIG.value.style.chart.tooltip.backgroundColor}" stroke-width="1" /></svg>`;
         }
         // hexagon
-        return `<svg viewBox="0 0 12 12" height="14" width="14"><path d="${createPolygonPath({ plot: { x: 6, y: 6 }, radius: 5, sides: 6, rotation: 0 }).path}" fill="${ds.color}" stroke="${FINAL_CONFIG.value.style.chart.tooltip.backgroundColor}" stroke-width="1" /></svg>`;
+        return `<svg viewBox="0 0 12 12" height="14" width="14" style="overflow:visible"><path d="${createPolygonPath({ plot: { x: 6, y: 6 }, radius: 5, sides: 6, rotation: 0 }).path}" fill="${ds.color}" stroke="${FINAL_CONFIG.value.style.chart.tooltip.backgroundColor}" stroke-width="1" /></svg>`;
     };
 
     const rowHtml = (ds, withPct) => {
@@ -3619,7 +3619,7 @@ defineExpose({
                                 ? ds.smoothPath
                                 : ds.straightPath
                         "
-                        :stroke="ds.color"
+                        :stroke="FINAL_CONFIG.style.chart.lines.path.useSerieColor ? ds.color : FINAL_CONFIG.style.chart.lines.path.stroke"
                         :stroke-width="
                             FINAL_CONFIG.style.chart.lines.strokeWidth
                         "
@@ -3991,7 +3991,7 @@ defineExpose({
                                         FINAL_CONFIG.style.chart.lines.dot
                                             .useSerieColor
                                             ? FINAL_CONFIG.style.chart
-                                                  .backgroundColor
+                                                  .lines.dot.stroke
                                             : ds.color
                                     "
                                     :strokeWidth="
@@ -4059,8 +4059,7 @@ defineExpose({
                                 :stroke="
                                     FINAL_CONFIG.style.chart.lines.dot
                                         .useSerieColor
-                                        ? FINAL_CONFIG.style.chart
-                                              .backgroundColor
+                                        ? FINAL_CONFIG.style.chart.lines.dot.stroke
                                         : ds.color
                                 "
                                 :strokeWidth="

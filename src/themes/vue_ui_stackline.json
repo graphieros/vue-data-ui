@@ -75,6 +75,9 @@
                     "borderColor": "#3A3A3A"
                 },
                 "lines": {
+                    "path": {
+                        "stroke": "#1A1A1A"
+                    },
                     "gradient": {
                         "show": false
                     },
@@ -83,6 +86,10 @@
                     },
                     "dataLabels": {
                         "color": "#CCCCCC"
+                    },
+                    "dot": {
+                        "fill": "#1A1A1A",
+                        "stroke": "#1A1A1A"
                     }
                 },
                 "grid": {
@@ -158,11 +165,18 @@
                     "borderColor": "#5A5A5A"
                 },
                 "lines": {
+                    "path": {
+                        "stroke": "#1A1A1A"
+                    },
                     "totalValues": {
                         "color": "#CCCCCC"
                     },
                     "dataLabels": {
                         "color": "#CCCCCC"
+                    },
+                    "dot": {
+                        "fill": "#1A1A1A",
+                        "stroke": "#1A1A1A"
                     }
                 },
                 "grid": {
@@ -233,11 +247,18 @@
                     "borderColor": "#FF8A65"
                 },
                 "lines": {
+                    "path": {
+                        "stroke": "#FFF8E1"
+                    },
                     "totalValues": {
                         "color": "#424242"
                     },
                     "dataLabels": {
                         "color": "#424242"
+                    },
+                    "dot": {
+                        "fill": "#FFF8E1",
+                        "stroke": "#FFF8E1"
                     }
                 },
                 "grid": {
@@ -306,11 +327,18 @@
                     "borderColor": "#FF8A65"
                 },
                 "lines": {
+                    "path": {
+                        "stroke": "#1E1E1E"
+                    },
                     "totalValues": {
                         "color": "#BDBDBD"
                     },
                     "dataLabels": {
                         "color": "#BDBDBD"
+                    },
+                    "dot": {
+                        "fill": "#1E1E1E",
+                        "stroke": "#1E1E1E"
                     }
                 },
                 "grid": {
@@ -378,11 +406,18 @@
                     "borderColor": "#66CC66"
                 },
                 "lines": {
+                    "path": {
+                        "stroke": "#1A1A1A"
+                    },
                     "totalValues": {
                         "color": "#99AA99"
                     },
                     "dataLabels": {
                         "color": "#99AA99"
+                    },
+                    "dot": {
+                        "fill": "#1A1A1A",
+                        "stroke": "#1A1A1A"
                     }
                 },
                 "grid": {
@@ -449,12 +484,18 @@
                     "color": "#8A9892"
                 },
                 "lines": {
-                    "borderRadius": 4,
+                    "path": {
+                        "stroke": "#FBFAFA"
+                    },
                     "totalValues": {
                         "show": false
                     },
                     "dataLabels": {
                         "show": false
+                    },
+                    "dot": {
+                        "fill": "#FBFAFA",
+                        "stroke": "#FBFAFA"
                     }
                 },
                 "grid": {
@@ -521,11 +562,18 @@
                     "color": "#50606C"
                 },
                 "lines": {
+                    "path": {
+                        "stroke": "#F6F6FB"
+                    },
                     "totalValues": {
                         "color": "#50606C"
                     },
                     "dataLabels": {
                         "color": "#50606C"
+                    },
+                    "dot": {
+                        "fill": "#F6F6FB",
+                        "stroke": "#F6F6FB"
                     }
                 },
                 "grid": {
