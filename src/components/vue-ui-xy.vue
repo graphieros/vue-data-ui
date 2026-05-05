@@ -1488,6 +1488,33 @@ const zero = computed(() => {
     }
 });
 
+function valueToDrawingAreaY(value) {
+    const minimum = niceScale.value.min;
+    const maximum = niceScale.value.max;
+    const range = maximum - minimum;
+
+    if (!Number.isFinite(value) || !Number.isFinite(range) || range === 0) {
+        return drawingArea.value?.bottom;
+    }
+
+    return (
+        drawingArea.value?.bottom -
+        drawingArea.value.height * ((value - minimum) / range)
+    );
+}
+
+const visibleZeroOrBaseline = computed(() => {
+    if (niceScale.value.min <= 0 && niceScale.value.max >= 0) {
+        return valueToDrawingAreaY(0);
+    }
+
+    if (niceScale.value.min > 0) {
+        return valueToDrawingAreaY(niceScale.value.min);
+    }
+
+    return valueToDrawingAreaY(niceScale.value.max);
+});
+
 function calcRectHeight(plot) {
     const zeroForPositiveValuesOnly =
         ![null, undefined].includes(
@@ -5516,8 +5543,8 @@ defineExpose({
                                 stroke-width="1"
                                 :x1="drawingArea?.left + xPadding"
                                 :x2="drawingArea?.right"
-                                :y1="forceValidValue(zero)"
-                                :y2="forceValidValue(zero)"
+                                :y1="forceValidValue(visibleZeroOrBaseline)"
+                                :y2="forceValidValue(visibleZeroOrBaseline)"
                                 stroke-linecap="round"
                                 :style="{ animation: 'none !important' }"
                             />
@@ -5721,16 +5748,7 @@ defineExpose({
                                     </template>
                                     <text
                                         v-for="(yLabel, j) in el.yLabels"
-                                        :x="
-                                            el.x -
-                                            5 +
-                                            xPadding -
-                                            drawingArea.individualOffsetX
-                                        "
-                                        :y="
-                                            forceValidValue(yLabel.y) +
-                                            fontSizes.dataLabels / 3
-                                        "
+                                        :transform="`translate(${el.x - 5 + xPadding - drawingArea.individualOffsetX}, ${forceValidValue(yLabel.y) + fontSizes.dataLabels / 3})`"
                                         :font-size="fontSizes.dataLabels"
                                         text-anchor="end"
                                         :fill="el.color"
@@ -5792,17 +5810,7 @@ defineExpose({
                                             yLabel.value >= niceScale.min &&
                                             yLabel.value <= niceScale.max
                                         "
-                                        :x="
-                                            drawingArea.scaleLabelX -
-                                            FINAL_CONFIG.chart.grid.labels.yAxis
-                                                .crosshairSize
-                                        "
-                                        :y="
-                                            checkNaN(
-                                                yLabel.y +
-                                                    fontSizes.dataLabels / 3,
-                                            )
-                                        "
+                                        :transform="`translate(${drawingArea.scaleLabelX - FINAL_CONFIG.chart.grid.labels.yAxis.crosshairSize}, ${checkNaN(yLabel.y + fontSizes.dataLabels / 3)})`"
                                         :font-size="fontSizes.dataLabels"
                                         text-anchor="end"
                                         :fill="
