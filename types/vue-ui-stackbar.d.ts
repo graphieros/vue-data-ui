@@ -86,7 +86,7 @@ export const VueUiStackbar: typeof VueUiStackbarBase & {
                 props: VueUiStackbarTooltipSlotProps,
             ) => VNodeChild;
             legend?: (props: VueUiStackbarLegendSlotProps) => VNodeChild;
-            ['resest-action']?: (
+            ['reset-action']?: (
                 props: VueUiResetActionSlotProps,
             ) => VNodeChild;
         };

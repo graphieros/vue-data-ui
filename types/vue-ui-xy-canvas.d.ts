@@ -72,7 +72,7 @@ export const VueUiXyCanvas: typeof VueUiXyCanvasBase & {
             ['tooltip-after']?: (
                 props: VueUiXyCanvasTooltipSlotProps,
             ) => VNodeChild;
-            ['resest-action']?: (
+            ['reset-action']?: (
                 props: VueUiResetActionSlotProps,
             ) => VNodeChild;
             legend?: (props: VueUiXyCanvasLegendSlotProps) => VNodeChild;

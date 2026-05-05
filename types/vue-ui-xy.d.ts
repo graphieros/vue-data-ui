@@ -78,7 +78,7 @@ export const VueUiXy: typeof VueUiXyBase & {
     new (): VueUiXyExpose & {
         $slots: CommonAnnotatorSlots & {
             legend?: (props: VueUiXyLegendSlotProps) => VNodeChild;
-            ['resest-action']?: (
+            ['reset-action']?: (
                 props: VueUiResetActionSlotProps,
             ) => VNodeChild;
             ['tooltip-before']?: (props: VueUiXyTooltipSlotProps) => VNodeChild;

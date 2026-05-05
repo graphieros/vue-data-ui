@@ -71,7 +71,7 @@ export const VueUiCandlestick: typeof VueUiCandlestickBase & {
             svg?: (props: VueUiCandlestickSvgSlotProps) => VNodeChild;
             hint?: (props: VueUiKeyboardNavigationHintSlotProps) => VNodeChild;
             watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
-            ['resest-action']?: (
+            ['reset-action']?: (
                 props: VueUiResetActionSlotProps,
             ) => VNodeChild;
             legend?: (props: VueUiCandlestickLegendSlotProps) => VNodeChild;

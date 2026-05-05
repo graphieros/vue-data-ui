@@ -68,7 +68,7 @@ export const VueUiDonutEvolution: typeof VueUiDonutEvolutionBase & {
             svg?: (props: VueUiDonutEvolutionSvgSlotProps) => VNodeChild;
             hint?: (props: VueUiKeyboardNavigationHintSlotProps) => VNodeChild;
             watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
-            ['resest-action']?: (
+            ['reset-action']?: (
                 props: VueUiResetActionSlotProps,
             ) => VNodeChild;
             legend?: (props: VueUiDonutEvolutionLegendSlotProps) => VNodeChild;

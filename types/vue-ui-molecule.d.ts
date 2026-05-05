@@ -78,7 +78,7 @@ export const VueUiMolecule: typeof VueUiMoleculeBase & {
             ['node-svg']?: (props: VueUiMoleculeNodeSvgSlotProps) => VNodeChild;
             svg?: (props: VueUiMoleculeSvgSlotProps) => VNodeChild;
             watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
-            ['resest-action']?: (
+            ['reset-action']?: (
                 props: VueUiResetActionSlotProps,
             ) => VNodeChild;
             source?: () => VNodeChild;
