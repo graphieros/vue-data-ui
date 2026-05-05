@@ -370,10 +370,15 @@ const testPreconfig = computed<VueUiStacklineConfig>(() => {
                         show: true,
                         intensity: 40,
                     },
+                    path: {
+                        useSerieColor: true,
+                        stroke: '#FFFFFF',
+                    },
                     dot: {
                         hideAboveMaxSerieLength: 62,
                         useSerieColor: true,
                         fill: '#FFFFFF',
+                        stroke: '#FFFFFF',
                         strokeWidth: 0.5,
                         radius: 4,
                     },

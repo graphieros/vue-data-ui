@@ -3619,7 +3619,11 @@ defineExpose({
                                 ? ds.smoothPath
                                 : ds.straightPath
                         "
-                        :stroke="FINAL_CONFIG.style.chart.lines.path.useSerieColor ? ds.color : FINAL_CONFIG.style.chart.lines.path.stroke"
+                        :stroke="
+                            FINAL_CONFIG.style.chart.lines.path.useSerieColor
+                                ? ds.color
+                                : FINAL_CONFIG.style.chart.lines.path.stroke
+                        "
                         :stroke-width="
                             FINAL_CONFIG.style.chart.lines.strokeWidth
                         "
@@ -3990,8 +3994,8 @@ defineExpose({
                                     :stroke="
                                         FINAL_CONFIG.style.chart.lines.dot
                                             .useSerieColor
-                                            ? FINAL_CONFIG.style.chart
-                                                  .lines.dot.stroke
+                                            ? FINAL_CONFIG.style.chart.lines.dot
+                                                  .stroke
                                             : ds.color
                                     "
                                     :strokeWidth="
@@ -4059,7 +4063,8 @@ defineExpose({
                                 :stroke="
                                     FINAL_CONFIG.style.chart.lines.dot
                                         .useSerieColor
-                                        ? FINAL_CONFIG.style.chart.lines.dot.stroke
+                                        ? FINAL_CONFIG.style.chart.lines.dot
+                                              .stroke
                                         : ds.color
                                 "
                                 :strokeWidth="
