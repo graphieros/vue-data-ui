@@ -79,9 +79,7 @@ export const VueUiChord: typeof VueUiChordBase & {
             legend?: (props: VueUiChordLegendSlotProps) => VNodeChild;
             pattern?: (props: VueUiChordPatternSlotProps) => VNodeChild;
             source?: () => VNodeChild;
-            ['reset-action']?: (
-                props: VueUiResetActionSlotProps,
-            ) => VNodeChild;
+            ['reset-action']?: (props: VueUiResetActionSlotProps) => VNodeChild;
             skeleton?: () => VNodeChild;
         };
     };

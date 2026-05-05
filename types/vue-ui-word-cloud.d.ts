@@ -66,9 +66,7 @@ export const VueUiWordCloud: typeof VueUiWordCloudBase & {
             watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
             source?: () => VNodeChild;
             skeleton?: () => VNodeChild;
-            ['reset-action']?: (
-                props: VueUiResetActionSlotProps,
-            ) => VNodeChild;
+            ['reset-action']?: (props: VueUiResetActionSlotProps) => VNodeChild;
             ['tooltip-before']?: (
                 props: VueUiWordCloudTooltipSlotProps,
             ) => VNodeChild;

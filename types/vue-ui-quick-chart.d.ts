@@ -68,9 +68,7 @@ export const VueUiQuickChart: typeof VueUiQuickChartBase & {
             ['chart-background']?: () => VNodeChild;
             hint?: (props: VueUiKeyboardNavigationHintSlotProps) => VNodeChild;
             watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
-            ['reset-action']?: (
-                props: VueUiResetActionSlotProps,
-            ) => VNodeChild;
+            ['reset-action']?: (props: VueUiResetActionSlotProps) => VNodeChild;
             source?: () => VNodeChild;
             legend?: (props: VueUiQuickChartLegendSlotProps) => VNodeChild;
             ['tooltip-before']?: (

@@ -75,9 +75,7 @@ export const VueUiStackline: typeof VueUiStacklineBase & {
             source?: () => VNodeChild;
             skeleton?: () => VNodeChild;
             legend?: (props: VueUiStacklineLegendSlotProps) => VNodeChild;
-            ['reset-action']?: (
-                props: VueUiResetActionSlotProps,
-            ) => VNodeChild;
+            ['reset-action']?: (props: VueUiResetActionSlotProps) => VNodeChild;
             ['tooltip-before']?: (
                 props: VueUiStacklineTooltipSlotProps,
             ) => VNodeChild;
