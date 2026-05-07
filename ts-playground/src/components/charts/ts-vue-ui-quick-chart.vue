@@ -160,6 +160,7 @@ const testPreconfig = computed<VueUiQuickChartConfig>(() => {
         tooltipFontSize: 14,
         tooltipPosition: 'center',
         tooltipOffsetY: 24,
+        tooltipOffsetX: 0,
         tooltipSmooth: true,
         tooltipSmoothForce: 0.18,
         tooltipSmoothSnapThreshold: 0.25,

@@ -62,6 +62,10 @@ const props = defineProps({
         type: Number,
         default: 24,
     },
+    offsetX: {
+        type: Number,
+        default: 0,
+    },
     blockShiftY: {
         type: Boolean,
         default: false,
@@ -357,6 +361,7 @@ const pixelPosition = computed(() => {
         chart: chartProxyForCalc.value,
         clientPosition: normalizedClientPosition.value,
         positionPreference: props.position,
+        defaultOffsetX: props.offsetX,
         defaultOffsetY: props.offsetY,
         blockShiftY: props.blockShiftY,
     });

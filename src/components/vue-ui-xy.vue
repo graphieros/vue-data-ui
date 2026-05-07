@@ -8164,6 +8164,7 @@ defineExpose({
             :borderWidth="FINAL_CONFIG.chart.tooltip.borderWidth"
             :backgroundOpacity="FINAL_CONFIG.chart.tooltip.backgroundOpacity"
             :position="FINAL_CONFIG.chart.tooltip.position"
+            :offsetX="FINAL_CONFIG.chart.tooltip.offsetX"
             :offsetY="FINAL_CONFIG.chart.tooltip.offsetY"
             :parent="$refs.chart"
             :content="tooltipContent"

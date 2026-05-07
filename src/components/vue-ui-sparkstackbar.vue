@@ -1064,6 +1064,7 @@ defineExpose({
             :position="FINAL_CONFIG.style.tooltip.position"
             :content="tooltipContent"
             :isCustom="useCustomFormat"
+            :offsetX="FINAL_CONFIG.style.tooltip.offsetX"
             :offsetY="-124 + FINAL_CONFIG.style.tooltip.offsetY"
             :blockShiftY="true"
             :smooth="FINAL_CONFIG.style.tooltip.smooth"

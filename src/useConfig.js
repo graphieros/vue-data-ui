@@ -117,6 +117,7 @@ export function useConfig(options = {}) {
         borderWidth: 1,
         backgroundOpacity: 100,
         position: POSITION.CENTER,
+        offsetX: 0,
         offsetY: 24,
         smooth: true, // v3
         backdropFilter: true, // v3
@@ -3574,6 +3575,7 @@ export function useConfig(options = {}) {
         tooltipBorderWidth: 1,
         tooltipFontSize: FONT._14,
         tooltipPosition: POSITION.CENTER,
+        tooltipOffsetX: 0,
         tooltipOffsetY: 24,
         tooltipSmooth: true,
         tooltipSmoothForce: 0.18,

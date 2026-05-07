@@ -247,6 +247,7 @@ const testPreconfig = computed<VueUiStackbarConfig>(() => {
                     backgroundOpacity: 100,
                     position: 'center',
                     offsetY: 24,
+                    offsetX: 0,
                     smooth: true,
                     backdropFilter: true,
                     smoothForce: 0.18,

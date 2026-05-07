@@ -1801,6 +1801,7 @@ defineExpose({
             "
             :fontSize="FINAL_CONFIG.style.chart.tooltip.fontSize"
             :position="FINAL_CONFIG.style.chart.tooltip.position"
+            :offsetX="FINAL_CONFIG.style.chart.tooltip.offsetX"
             :offsetY="FINAL_CONFIG.style.chart.tooltip.offsetY"
             :parent="radarChart"
             :content="tooltipContent"

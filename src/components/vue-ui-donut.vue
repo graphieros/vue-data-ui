@@ -3819,6 +3819,7 @@ defineExpose({
                 FINAL_CONFIG.style.chart.tooltip.backgroundOpacity
             "
             :position="FINAL_CONFIG.style.chart.tooltip.position"
+            :offsetX="FINAL_CONFIG.style.chart.tooltip.offsetX"
             :offsetY="FINAL_CONFIG.style.chart.tooltip.offsetY"
             :parent="donutChart"
             :content="tooltipContent"

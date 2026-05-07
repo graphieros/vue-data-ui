@@ -147,7 +147,7 @@ function generateDayTimestamps(length) {
 
 const dataset = ref([
     {
-        name: 'SERIE',
+        name: 'SERIE WITH A LONG NAME',
         type: 'line',
         series: [100, 200, 300, -200, 100, 120, 100, 200, 100, 250],
         dataLabels: true,
@@ -685,6 +685,7 @@ const model = createModel([
         def: 'center',
     }),
     NUMBER('chart.tooltip.offsetY', { def: 24, min: 0, max: 48 }),
+    NUMBER('chart.tooltip.offsetX', { def: 0, min: 0, max: 48 }),
     CHECKBOX('chart.tooltip.showTimeLabel', { def: true }),
     CHECKBOX('chart.tooltip.smooth', { def: true }),
     CHECKBOX('chart.tooltip.backdropFilter', { def: false }),

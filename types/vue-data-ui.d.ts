@@ -462,6 +462,7 @@ declare module 'vue-data-ui' {
         borderWidth?: number;
         backgroundOpacity?: number;
         position?: TooltipPosition;
+        offsetX?: number;
         offsetY?: number;
         smooth?: boolean;
         backdropFilter?: boolean;
@@ -9441,6 +9442,7 @@ declare module 'vue-data-ui' {
         tooltipBorderWidth?: number;
         tooltipFontSize?: number;
         tooltipPosition?: TooltipPosition;
+        tooltipOffsetX?: number;
         tooltipOffsetY?: number;
         tooltipSmooth?: boolean;
         tooltipSmoothForce?: number;

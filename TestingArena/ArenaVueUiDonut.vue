@@ -726,6 +726,7 @@ const model = createModel([
         def: 'center',
     }),
     NUMBER('style.chart.tooltip.offsetY', { def: 24, min: 0, max: 48 }),
+    NUMBER('style.chart.tooltip.offsetX', { def: 0, min: 0, max: 48 }),
     CHECKBOX('style.chart.comments.show', { def: true }),
     CHECKBOX('style.chart.comments.showInTooltip', { def: true }),
     NUMBER('style.chart.comments.width', { def: 100, min: 50, max: 400 }),

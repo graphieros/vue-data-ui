@@ -2361,6 +2361,7 @@ defineExpose({
             :fontSize="FINAL_CONFIG.style.tooltip.fontSize"
             :backgroundOpacity="FINAL_CONFIG.style.tooltip.backgroundOpacity"
             :position="FINAL_CONFIG.style.tooltip.position"
+            :offsetX="FINAL_CONFIG.style.tooltip.offsetX"
             :offsetY="FINAL_CONFIG.style.tooltip.offsetY"
             :parent="heatmapChart"
             :content="tooltipContent"

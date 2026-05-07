@@ -3880,6 +3880,7 @@ defineExpose({
             :fontSize="FINAL_CONFIG.tooltipFontSize"
             :backgroundOpacity="FINAL_CONFIG.tooltipBackgroundOpacity"
             :position="FINAL_CONFIG.tooltipPosition"
+            :offsetX="FINAL_CONFIG.tooltipOffsetX"
             :offsetY="FINAL_CONFIG.tooltipOffsetY"
             :parent="quickChart"
             :content="tooltipContent"
