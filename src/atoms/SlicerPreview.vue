@@ -2014,6 +2014,7 @@ defineExpose({
 
                         <!-- TOOLTIP TRAP -->
                         <rect
+                            data-cy="slicer-minimap-trap"
                             :x="0"
                             :y="0"
                             :width="Math.max(0, svgMinimap.width)"

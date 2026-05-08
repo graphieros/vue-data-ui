@@ -242,22 +242,40 @@ describe('<SlicerPreview />', () => {
             const ev = cmp.vm.events;
             const targetIndex = 5;
 
-            cy.get('[data-cy="slicer-minimap-svg"]').then(($svg) => {
-                const rect = $svg[0].getBoundingClientRect();
+            cy.get('[data-cy="slicer-minimap-svg"]')
+                .should(($svg) => {
+                    const rect = $svg[0].getBoundingClientRect();
+                    const viewBox = $svg[0].getAttribute('viewBox');
 
-                const x = (rect.width / (ds.length - 1)) * targetIndex;
-                const y = rect.height / 2;
+                    expect(rect.width).to.be.greaterThan(10);
+                    expect(rect.height).to.be.greaterThan(10);
+                    expect(viewBox).to.not.equal('0 0 1 1');
+                })
+                .then(($svg) => {
+                    const rect = $svg[0].getBoundingClientRect();
+                    const step = rect.width / (ds.length - 1);
 
-                cy.get('[data-cy="minimap"] svg [style*="pointer-events: all"]')
-                    .last()
-                    .trigger('mousemove', x, y, { force: true });
-            });
+                    const clientX = rect.left + step * targetIndex + step * 0.1;
+                    const clientY = rect.top + rect.height / 2;
+
+                    cy.get('[data-cy="slicer-minimap-trap"]')
+                        .should('exist')
+                        .trigger('mousemove', {
+                            eventConstructor: 'MouseEvent',
+                            clientX,
+                            clientY,
+                            bubbles: true,
+                            force: true,
+                        });
+                });
 
             cy.wrap(ev).its('trapMouse').should('eq', targetIndex);
 
-            cy.get('[data-cy="minimap"] svg [style*="pointer-events: all"]')
-                .last()
-                .trigger('mouseleave', { force: true });
+            cy.get('[data-cy="slicer-minimap-trap"]').trigger('mouseleave', {
+                eventConstructor: 'MouseEvent',
+                bubbles: true,
+                force: true,
+            });
 
             cy.wrap(ev).its('trapMouse').should('eq', null);
         });
