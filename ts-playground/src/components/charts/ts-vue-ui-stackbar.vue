@@ -197,6 +197,7 @@ const testPreconfig = computed<VueUiStackbarConfig>(() => {
                 },
                 zoom: {
                     show: true,
+                    keepState: false,
                     color: '#CCCCCC',
                     highlightColor: '#4A4A4A',
                     fontSize: 14,

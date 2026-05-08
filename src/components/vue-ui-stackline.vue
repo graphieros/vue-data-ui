@@ -273,6 +273,7 @@ const skeletonConfig = computed(() => {
                         show: false,
                         startIndex: null,
                         endIndex: null,
+                        keepState: false,
                     },
                 },
             },
@@ -287,7 +288,13 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
     prepareConfig,
     callback: () => {
         Promise.resolve().then(async () => {
-            await setupSlicer();
+            if (
+                !FINAL_CONFIG.value.style.chart.zoom.keepState ||
+                !slicerReady.value ||
+                (slicer.value.start === 0 && slicer.value.end === 0)
+            ) {
+                await setupSlicer();
+            }
         });
     },
     skeletonDataset: props.config?.skeletonDataset ?? [
@@ -386,7 +393,9 @@ watch(
         }
         userOptionsVisible.value =
             !FINAL_CONFIG.value.userOptions.showOnChartHover;
-        prepareChart();
+        prepareChart({
+            resetSlicer: !FINAL_CONFIG.value.style.chart.zoom.keepState,
+        });
         titleStep.value += 1;
         tableStep.value += 1;
         legendStep.value += 1;
@@ -417,7 +426,15 @@ watch(
         setParentElementReference();
         runParentStableLayoutPass();
 
-        normalizeSlicerWindow();
+        if (
+            !FINAL_CONFIG.value.style.chart.zoom.keepState ||
+            !slicerReady.value ||
+            (slicer.value.start === 0 && slicer.value.end === 0)
+        ) {
+            setupSlicer();
+        } else {
+            normalizeSlicerWindow();
+        }
     },
     { deep: true },
 );
@@ -428,7 +445,11 @@ watch(
         if (Array.isArray(_) && _.length > 0) {
             manualLoading.value = false;
         }
-        refreshSlicer();
+        if (FINAL_CONFIG.value.style.chart.zoom.keepState) {
+            normalizeSlicerWindow();
+        } else {
+            refreshSlicer();
+        }
         setParentElementReference();
         runParentStableLayoutPass();
     },
@@ -498,7 +519,7 @@ const observedEl = shallowRef(null);
 const to = ref(null);
 const debug = computed(() => !!FINAL_CONFIG.value.debug);
 
-function prepareChart() {
+function prepareChart({ resetSlicer = true } = {}) {
     if (objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiStackline',
@@ -574,7 +595,10 @@ function prepareChart() {
         observedEl.value = stacklineChart.value.parentNode;
         resizeObserver.value.observe(observedEl.value);
     }
-    setupSlicer();
+
+    if (resetSlicer) {
+        setupSlicer();
+    }
 }
 
 onBeforeUnmount(() => {
@@ -769,6 +793,7 @@ const precogRect = computed(() => {
 
 const unmutableDataset = computed(() => {
     return FINAL_DATASET.value.map((ds, i) => {
+        const id = `stackline_serie_${i}`;
         const color =
             convertColorToHex(ds.color) ||
             customPalette.value[i] ||
@@ -788,7 +813,7 @@ const unmutableDataset = computed(() => {
             // Store signs to manage display of neg values in distributed mode
             signedSeries: ds.series.map((v) => (v >= 0 ? 1 : -1)),
             absoluteIndex: i,
-            id: createUid(),
+            id,
             color,
         };
     });
@@ -884,12 +909,25 @@ onBeforeUnmount(() => {
     if (refreshRAF.value) cancelAnimationFrame(refreshRAF.value);
 });
 
-async function refreshSlicer() {
+async function refreshSlicer({ force = false } = {}) {
+    if (
+        FINAL_CONFIG.value.style.chart.zoom.keepState &&
+        !force &&
+        slicerReady.value &&
+        !(slicer.value.start === 0 && slicer.value.end === 0)
+    ) {
+        normalizeSlicerWindow();
+        return;
+    }
+
     setupSlicer();
 
-    // Now this is basically sweeping shit under the rug so it works:
     await nextTick();
-    if (refreshRAF.value) cancelAnimationFrame(refreshRAF.value);
+
+    if (refreshRAF.value) {
+        cancelAnimationFrame(refreshRAF.value);
+    }
+
     refreshRAF.value = requestAnimationFrame(async () => {
         await nextPaint();
         setupSlicer();
@@ -1701,28 +1739,41 @@ function validSlicerEnd(v) {
 
 function setupSlicer() {
     if (isSettingUp.value) return;
+
     isSettingUp.value = true;
+
     try {
-        const { startIndex, endIndex } = FINAL_CONFIG.value.style.chart.zoom;
-        const max = maxSeries.value;
+        const { startIndex, endIndex, keepState } =
+            FINAL_CONFIG.value.style.chart.zoom;
+
+        const max = keepState ? Math.max(0, maxSeries.value) : maxSeries.value;
+
+        if (keepState && max <= 0) {
+            return;
+        }
 
         const start = startIndex != null ? startIndex : 0;
+
         const end =
             endIndex != null
                 ? Math.min(validSlicerEnd(endIndex + 1), max)
                 : max;
 
         suppressChild.value = true;
+
         slicer.value.start = start;
         slicer.value.end = end;
         slicerPrecog.value.start = start;
         slicerPrecog.value.end = end;
+
         normalizeSlicerWindow();
+
         slicerReady.value = true;
     } finally {
         queueMicrotask(() => {
             suppressChild.value = false;
         });
+
         isSettingUp.value = false;
     }
 }
@@ -4488,7 +4539,7 @@ defineExpose({
             @update:end="onSlicerEnd"
             @update:start="onSlicerStart"
             @trapMouse="selectMinimapIndex"
-            @reset="refreshSlicer"
+            @reset="() => refreshSlicer({ force: true })"
             @futureEnd="(v) => setPrecog('end', v)"
             @futureStart="(v) => setPrecog('start', v)"
         >

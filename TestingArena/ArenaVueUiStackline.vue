@@ -172,6 +172,7 @@ const model = createModel([
     CHECKBOX('style.chart.legend.selectAllToggle.show', { def: true }),
 
     CHECKBOX('style.chart.zoom.show', { def: true }),
+    CHECKBOX('style.chart.zoom.keepState', { def: true }),
     RANGE('style.chart.zoom.maxWidth', { def: null, min: 100, max: 1000 }),
     COLOR('style.chart.zoom.color', { def: '#CCCCCC' }),
     COLOR('style.chart.zoom.highlightColor', { def: '#5A5A5A' }),
