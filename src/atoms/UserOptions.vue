@@ -797,6 +797,7 @@ onBeforeUnmount(() => {
         >
             <!-- Action buttons are duplicated in both branches, but we can live with that -->
             <!-- PDF -->
+            <slot name="custom-menu-before" />
             <button
                 tabindex="0"
                 v-if="hasPdf"
@@ -1423,6 +1424,7 @@ onBeforeUnmount(() => {
                     {{ titles.altCopy }}
                 </div>
             </button>
+            <slot name="custom-menu-after" />
         </div>
     </div>
 
@@ -1463,6 +1465,7 @@ onBeforeUnmount(() => {
             :style="`background:${backgroundColor}; ${position === 'right' ? `right: ${offsetX ? offsetX : noOffset ? 0 : 4}px` : `left: ${noOffset ? 0 : 4}px`}`"
         >
             <!-- Action buttons are duplicated in both branches, but we can live with that -->
+            <slot name="custom-menu-before" />
             <button
                 tabindex="0"
                 v-if="hasPdf"
@@ -2062,6 +2065,7 @@ onBeforeUnmount(() => {
                     {{ titles.altCopy }}
                 </div>
             </button>
+            <slot name="custom-menu-actions" />
         </div>
     </div>
 </template>

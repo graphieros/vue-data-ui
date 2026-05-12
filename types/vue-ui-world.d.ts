@@ -43,6 +43,8 @@ declare const VueUiWorldBase: DefineComponent<VueUiWorldProps>;
 export const VueUiWorld: typeof VueUiWorldBase & {
     new (): VueUiWorldExpose & {
         $slots: CommonAnnotatorSlots & {
+            ['custom-menu-before']?: () => VNodeChild;
+            ['custom-menu-after']?: () => VNodeChild;
             menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
             optionTooltip?: () => VNodeChild;
             optionPdf?: () => VNodeChild;

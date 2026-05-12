@@ -601,6 +601,8 @@ function log(n: unknown) {
             <template #legend="{ legend }">
                 <StackbarLegend :items="legend" />
             </template>
+            <template #custom-menu-before> BEFORE </template>
+            <template #custom-menu-after> AFTER </template>
         </VueUiStackbar>
     </div>
 </template>

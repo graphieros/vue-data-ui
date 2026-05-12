@@ -35,6 +35,8 @@ declare const VueUiTableHeatmapBase: DefineComponent<VueUiTableHeatmapProps>;
 export const VueUiTableHeatmap: typeof VueUiTableHeatmapBase & {
     new (): VueUiTableHeatmapExpose & {
         $slots: {
+            ['custom-menu-before']?: () => VNodeChild;
+            ['custom-menu-after']?: () => VNodeChild;
             menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
             optionPdf?: () => VNodeChild;
             optionCsv?: () => VNodeChild;

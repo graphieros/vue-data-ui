@@ -570,6 +570,8 @@ onMounted(async () => {
                     <code style="color: chocolate"> #chart-background </code>
                 </div>
             </template>
+            <template #custom-menu-before> BEFORE </template>
+            <template #custom-menu-after> AFTER </template>
         </VueUiDonut>
     </div>
 </template>

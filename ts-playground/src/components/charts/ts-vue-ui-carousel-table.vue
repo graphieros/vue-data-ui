@@ -284,6 +284,8 @@ function log(n: unknown) {
             <template #td="{ td, colIndex, rowIndex }">
                 <CarouselTableTd :td :col-index :row-index />
             </template>
+            <template #custom-menu-before> BEFORE </template>
+            <template #custom-menu-after> AFTER </template>
         </VueUiCarouselTable>
     </div>
 </template>

@@ -47,6 +47,8 @@ declare const VueUiGeoBase: DefineComponent<VueUiGeoProps>;
 export const VueUiGeo: typeof VueUiGeoBase & {
     new (): VueUiGeoExpose & {
         $slots: CommonAnnotatorSlots & {
+            ['custom-menu-before']?: () => VNodeChild;
+            ['custom-menu-after']?: () => VNodeChild;
             menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
             optionTooltip?: () => VNodeChild;
             optionPdf?: () => VNodeChild;

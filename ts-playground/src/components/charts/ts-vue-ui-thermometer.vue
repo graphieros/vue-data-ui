@@ -281,6 +281,9 @@ function log(n: unknown) {
             <template #svg="{ svg }">
                 <ThermometerSvg :svg />
             </template>
+
+            <template #custom-menu-before> BEFORE </template>
+            <template #custom-menu-after> AFTER </template>
         </VueUiThermometer>
     </div>
 </template>

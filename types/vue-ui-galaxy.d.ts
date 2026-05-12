@@ -59,6 +59,8 @@ declare const VueUiGalaxyBase: DefineComponent<VueUiGalaxyProps>;
 export const VueUiGalaxy: typeof VueUiGalaxyBase & {
     new (): VueUiGalaxyExpose & {
         $slots: CommonAnnotatorSlots & {
+            ['custom-menu-before']?: () => VNodeChild;
+            ['custom-menu-after']?: () => VNodeChild;
             menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
             optionTooltip?: () => VNodeChild;
             optionPdf?: () => VNodeChild;

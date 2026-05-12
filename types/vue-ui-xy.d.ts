@@ -77,6 +77,8 @@ declare const VueUiXyBase: DefineComponent<VueUiXyProps>;
 export const VueUiXy: typeof VueUiXyBase & {
     new (): VueUiXyExpose & {
         $slots: CommonAnnotatorSlots & {
+            ['custom-menu-before']?: () => VNodeChild;
+            ['custom-menu-after']?: () => VNodeChild;
             legend?: (props: VueUiXyLegendSlotProps) => VNodeChild;
             ['reset-action']?: (props: VueUiResetActionSlotProps) => VNodeChild;
             ['tooltip-before']?: (props: VueUiXyTooltipSlotProps) => VNodeChild;

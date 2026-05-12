@@ -59,6 +59,8 @@ declare const VueUiHistoryPlotBase: DefineComponent<VueUiHistoryPlotProps>;
 export const VueUiHistoryPlot: typeof VueUiHistoryPlotBase & {
     new (): VueUiHistoryPlotExpose & {
         $slots: CommonAnnotatorSlots & {
+            ['custom-menu-before']?: () => VNodeChild;
+            ['custom-menu-after']?: () => VNodeChild;
             menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
             optionTooltip?: () => VNodeChild;
             optionPdf?: () => VNodeChild;

@@ -31,6 +31,8 @@ declare const VueUiWheelBase: DefineComponent<VueUiWheelProps>;
 export const VueUiWheel: typeof VueUiWheelBase & {
     new (): VueUiWheelExpose & {
         $slots: CommonAnnotatorSlots & {
+            ['custom-menu-before']?: () => VNodeChild;
+            ['custom-menu-after']?: () => VNodeChild;
             menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
             optionPdf?: () => VNodeChild;
             optionImg?: () => VNodeChild;

@@ -256,6 +256,9 @@ function log(n: unknown) {
             <template #source>
                 <code style="color: chocolate"> #source </code>
             </template>
+
+            <template #custom-menu-before> BEFORE </template>
+            <template #custom-menu-after> AFTER </template>
         </VueUiTableSparkline>
     </div>
 </template>

@@ -49,6 +49,8 @@ declare const VueUiTreemapBase: DefineComponent<VueUiTreemapProps>;
 export const VueUiTreemap: typeof VueUiTreemapBase & {
     new (): VueUiTreemapExpose & {
         $slots: CommonAnnotatorSlots & {
+            ['custom-menu-before']?: () => VNodeChild;
+            ['custom-menu-after']?: () => VNodeChild;
             menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
             optionTooltip?: () => VNodeChild;
             optionPdf?: () => VNodeChild;

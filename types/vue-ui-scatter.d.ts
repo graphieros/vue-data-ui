@@ -45,6 +45,8 @@ declare const VueUiScatterBase: DefineComponent<VueUiScatterProps>;
 export const VueUiScatter: typeof VueUiScatterBase & {
     new (): VueUiScatterExpose & {
         $slots: CommonAnnotatorSlots & {
+            ['custom-menu-before']?: () => VNodeChild;
+            ['custom-menu-after']?: () => VNodeChild;
             menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
             optionTooltip?: () => VNodeChild;
             optionPdf?: () => VNodeChild;

@@ -49,6 +49,8 @@ declare const VueUiRidgelineBase: DefineComponent<VueUiRidgelineProps>;
 export const VueUiRidgeline: typeof VueUiRidgelineBase & {
     new (): VueUiRidgelineExpose & {
         $slots: CommonAnnotatorSlots & {
+            ['custom-menu-before']?: () => VNodeChild;
+            ['custom-menu-after']?: () => VNodeChild;
             menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
             optionTooltip?: () => VNodeChild;
             optionPdf?: () => VNodeChild;

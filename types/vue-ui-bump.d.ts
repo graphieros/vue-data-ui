@@ -47,6 +47,8 @@ declare const VueUiBumpBase: DefineComponent<VueUiBumpProps>;
 export const VueUiBump: typeof VueUiBumpBase & {
     new (): VueUiBumpExpose & {
         $slots: CommonAnnotatorSlots & {
+            ['custom-menu-before']?: () => VNodeChild;
+            ['custom-menu-after']?: () => VNodeChild;
             menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
             optionPdf?: () => VNodeChild;
             optionCsv?: () => VNodeChild;

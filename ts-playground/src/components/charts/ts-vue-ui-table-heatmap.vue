@@ -274,6 +274,9 @@ function log(n: unknown) {
             <template #optionFullscreen="{ toggleFullscreen, isFullscreen }">
                 <CommonOptionFullscreen :toggle-fullscreen :is-fullscreen />
             </template>
+
+            <template #custom-menu-before> BEFORE </template>
+            <template #custom-menu-after> AFTER </template>
         </VueUiTableHeatmap>
     </div>
 </template>

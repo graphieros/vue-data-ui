@@ -45,6 +45,8 @@ declare const VueUiBulletBase: DefineComponent<VueUiBulletProps>;
 export const VueUiBullet: typeof VueUiBulletBase & {
     new (): VueUiBulletExpose & {
         $slots: CommonAnnotatorSlots & {
+            ['custom-menu-before']?: () => VNodeChild;
+            ['custom-menu-after']?: () => VNodeChild;
             menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
             optionPdf?: () => VNodeChild;
             optionImg?: () => VNodeChild;

@@ -965,6 +965,8 @@ onMounted(async () => {
                         responsive: true,
                     }"
                 >
+                    <template #custom-menu-before> BEFORE </template>
+                    <template #custom-menu-after> AFTER </template>
                     <!-- <template #pattern="{ patternId, seriesIndex }">
                         <VueUiPatternSeed
                             v-if="seriesIndex != 0"

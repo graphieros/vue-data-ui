@@ -47,6 +47,8 @@ declare const VueUiWaffleBase: DefineComponent<VueUiWaffleProps>;
 export const VueUiWaffle: typeof VueUiWaffleBase & {
     new (): VueUiWaffleExpose & {
         $slots: CommonAnnotatorSlots & {
+            ['custom-menu-before']?: () => VNodeChild;
+            ['custom-menu-after']?: () => VNodeChild;
             menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
             optionTooltip?: () => VNodeChild;
             optionPdf?: () => VNodeChild;

@@ -47,6 +47,8 @@ declare const VueUiGaugeBase: DefineComponent<VueUiGaugeProps>;
 export const VueUiGauge: typeof VueUiGaugeBase & {
     new (): VueUiGaugeExpose & {
         $slots: CommonAnnotatorSlots & {
+            ['custom-menu-before']?: () => VNodeChild;
+            ['custom-menu-after']?: () => VNodeChild;
             menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
             optionPdf?: () => VNodeChild;
             optionImg?: () => VNodeChild;

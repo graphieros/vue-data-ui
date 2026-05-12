@@ -63,6 +63,8 @@ declare const VueUiDagBase: DefineComponent<VueUiDagProps>;
 export const VueUiDag: typeof VueUiDagBase & {
     new (): VueUiDagExpose & {
         $slots: CommonAnnotatorSlots & {
+            ['custom-menu-before']?: () => VNodeChild;
+            ['custom-menu-after']?: () => VNodeChild;
             menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
             optionPdf?: () => VNodeChild;
             optionImg?: () => VNodeChild;

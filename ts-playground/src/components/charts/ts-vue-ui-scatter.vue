@@ -599,6 +599,8 @@ function log(n: unknown) {
                 <br />
                 <span style="color: chocolate"> #tooltip-after </span>
             </template>
+            <template #custom-menu-before> BEFORE </template>
+            <template #custom-menu-after> AFTER </template>
         </VueUiScatter>
     </div>
 </template>

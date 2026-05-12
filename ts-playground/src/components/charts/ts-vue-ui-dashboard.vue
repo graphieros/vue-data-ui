@@ -204,6 +204,8 @@ function log(n: unknown) {
                     >#optionAltCopy</code
                 >
             </template>
+            <template #custom-menu-before> BEFORE </template>
+            <template #custom-menu-after> AFTER </template>
         </VueUiDashboard>
     </div>
 </template>

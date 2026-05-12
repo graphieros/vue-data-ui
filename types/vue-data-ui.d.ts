@@ -847,6 +847,8 @@ declare module 'vue-data-ui' {
     export const VueUiTreemap: typeof VueUiTreemapBase & {
         new (): VueUiTreemapExpose & {
             $slots: CommonAnnotatorSlots & {
+                ['custom-menu-before']?: () => VNodeChild;
+                ['custom-menu-after']?: () => VNodeChild;
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionTooltip?: () => VNodeChild;
                 optionPdf?: () => VNodeChild;
@@ -1139,6 +1141,8 @@ declare module 'vue-data-ui' {
     export const VueUiGalaxy: typeof VueUiGalaxyBase & {
         new (): VueUiGalaxyExpose & {
             $slots: CommonAnnotatorSlots & {
+                ['custom-menu-before']?: () => VNodeChild;
+                ['custom-menu-after']?: () => VNodeChild;
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionTooltip?: () => VNodeChild;
                 optionPdf?: () => VNodeChild;
@@ -1388,6 +1392,8 @@ declare module 'vue-data-ui' {
     export const VueUiTableSparkline: typeof VueUiTableSparklineBase & {
         new (): {
             $slots: {
+                ['custom-menu-before']?: () => VNodeChild;
+                ['custom-menu-after']?: () => VNodeChild;
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionPdf?: () => VNodeChild;
                 optionCsv?: () => VNodeChild;
@@ -1560,6 +1566,8 @@ declare module 'vue-data-ui' {
     export const VueUiMolecule: typeof VueUiMoleculeBase & {
         new (): VueUiMoleculeExpose & {
             $slots: CommonAnnotatorSlots & {
+                ['custom-menu-before']?: () => VNodeChild;
+                ['custom-menu-after']?: () => VNodeChild;
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionTooltip?: () => VNodeChild;
                 optionPdf?: () => VNodeChild;
@@ -1783,6 +1791,8 @@ declare module 'vue-data-ui' {
     export const VueUi3dBar: typeof VueUi3dBarBase & {
         new (): VueUi3dBarExpose & {
             $slots: CommonAnnotatorSlots & {
+                ['custom-menu-before']?: () => VNodeChild;
+                ['custom-menu-after']?: () => VNodeChild;
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionPdf?: () => VNodeChild;
                 optionCsv?: () => VNodeChild;
@@ -1954,6 +1964,8 @@ declare module 'vue-data-ui' {
     export const VueUiMoodRadar: typeof VueUiMoodRadarBase & {
         new (): VueUiMoodRadarExpose & {
             $slots: CommonAnnotatorSlots & {
+                ['custom-menu-before']?: () => VNodeChild;
+                ['custom-menu-after']?: () => VNodeChild;
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionPdf?: () => VNodeChild;
                 optionCsv?: () => VNodeChild;
@@ -2515,6 +2527,8 @@ declare module 'vue-data-ui' {
     export const VueUiDonutEvolution: typeof VueUiDonutEvolutionBase & {
         new (): VueUiDonutEvolutionExpose & {
             $slots: CommonAnnotatorSlots & {
+                ['custom-menu-before']?: () => VNodeChild;
+                ['custom-menu-after']?: () => VNodeChild;
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionPdf?: () => VNodeChild;
                 optionCsv?: () => VNodeChild;
@@ -2631,6 +2645,8 @@ declare module 'vue-data-ui' {
     export const VueUiTiremarks: typeof VueUiTiremarksBase & {
         new (): VueUiTiremarksExpose & {
             $slots: CommonAnnotatorSlots & {
+                ['custom-menu-before']?: () => VNodeChild;
+                ['custom-menu-after']?: () => VNodeChild;
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionPdf?: () => VNodeChild;
                 optionImg?: () => VNodeChild;
@@ -2748,6 +2764,8 @@ declare module 'vue-data-ui' {
     export const VueUiWheel: typeof VueUiWheelBase & {
         new (): VueUiWheelExpose & {
             $slots: CommonAnnotatorSlots & {
+                ['custom-menu-before']?: () => VNodeChild;
+                ['custom-menu-after']?: () => VNodeChild;
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionPdf?: () => VNodeChild;
                 optionImg?: () => VNodeChild;
@@ -2952,6 +2970,8 @@ declare module 'vue-data-ui' {
     export const VueUiRings: typeof VueUiRingsBase & {
         new (): VueUiRingsExpose & {
             $slots: CommonAnnotatorSlots & {
+                ['custom-menu-before']?: () => VNodeChild;
+                ['custom-menu-after']?: () => VNodeChild;
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionTooltip?: () => VNodeChild;
                 optionPdf?: () => VNodeChild;
@@ -3381,6 +3401,8 @@ declare module 'vue-data-ui' {
     export const VueUiThermometer: typeof VueUiThermometerBase & {
         new (): VueUiThermometerExpose & {
             $slots: CommonAnnotatorSlots & {
+                ['custom-menu-before']?: () => VNodeChild;
+                ['custom-menu-after']?: () => VNodeChild;
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionPdf?: () => VNodeChild;
                 optionImg?: () => VNodeChild;
@@ -3522,6 +3544,8 @@ declare module 'vue-data-ui' {
     export const VueUiRelationCircle: typeof VueUiRelationCircleBase & {
         new (): VueUiRelationCircleExpose & {
             $slots: CommonAnnotatorSlots & {
+                ['custom-menu-before']?: () => VNodeChild;
+                ['custom-menu-after']?: () => VNodeChild;
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionPdf?: () => VNodeChild;
                 optionImg?: () => VNodeChild;
@@ -3764,6 +3788,8 @@ declare module 'vue-data-ui' {
     export const VueUiDashboard: typeof VueUiDashboardBase & {
         new (): {
             $slots: CommonAnnotatorSlots & {
+                ['custom-menu-before']?: () => VNodeChild;
+                ['custom-menu-after']?: () => VNodeChild;
                 top?: (props: VueUiDashboardTopSlotProps) => VNodeChild;
                 content?: (props: VueUiDashboardContentSlotProps) => VNodeChild;
                 bottom?: (props: VueUiDashboardBottomSlotProps) => VNodeChild;
@@ -4110,6 +4136,8 @@ declare module 'vue-data-ui' {
     export const VueUiAgePyramid: typeof VueUiAgePyramidBase & {
         new (): VueUiAgePyramidExpose & {
             $slots: CommonAnnotatorSlots & {
+                ['custom-menu-before']?: () => VNodeChild;
+                ['custom-menu-after']?: () => VNodeChild;
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionTooltip?: () => VNodeChild;
                 optionPdf?: () => VNodeChild;
@@ -4397,6 +4425,8 @@ declare module 'vue-data-ui' {
     export const VueUiCandlestick: typeof VueUiCandlestickBase & {
         new (): VueUiCandlestickExpose & {
             $slots: CommonAnnotatorSlots & {
+                ['custom-menu-before']?: () => VNodeChild;
+                ['custom-menu-after']?: () => VNodeChild;
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionTooltip?: () => VNodeChild;
                 optionPdf?: () => VNodeChild;
@@ -4786,6 +4816,8 @@ declare module 'vue-data-ui' {
     export const VueUiScatter: typeof VueUiScatterBase & {
         new (): VueUiScatterExpose & {
             $slots: CommonAnnotatorSlots & {
+                ['custom-menu-before']?: () => VNodeChild;
+                ['custom-menu-after']?: () => VNodeChild;
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionTooltip?: () => VNodeChild;
                 optionPdf?: () => VNodeChild;
@@ -5041,6 +5073,8 @@ declare module 'vue-data-ui' {
     export const VueUiHeatmap: typeof VueUiHeatmapBase & {
         new (): VueUiHeatmapExpose & {
             $slots: CommonAnnotatorSlots & {
+                ['custom-menu-before']?: () => VNodeChild;
+                ['custom-menu-after']?: () => VNodeChild;
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionTooltip?: () => VNodeChild;
                 optionPdf?: () => VNodeChild;
@@ -5705,6 +5739,8 @@ declare module 'vue-data-ui' {
     export const VueUiXy: typeof VueUiXyBase & {
         new (): VueUiXyExpose & {
             $slots: CommonAnnotatorSlots & {
+                ['custom-menu-before']?: () => VNodeChild;
+                ['custom-menu-after']?: () => VNodeChild;
                 legend?: (props: VueUiXyLegendSlotProps) => VNodeChild;
                 ['reset-action']?: (
                     props: VueUiResetActionSlotProps,
@@ -6084,6 +6120,8 @@ declare module 'vue-data-ui' {
     export const VueUiDonut: typeof VueUiDonutBase & {
         new (): VueUiDonutExpose & {
             $slots: CommonAnnotatorSlots & {
+                ['custom-menu-before']?: () => VNodeChild;
+                ['custom-menu-after']?: () => VNodeChild;
                 legend?: (props: VueUiDonutLegendSlotProps) => VNodeChild;
                 ['tooltip-before']?: (
                     props: VueUiDonutTooltipSlotProps,
@@ -6397,6 +6435,8 @@ declare module 'vue-data-ui' {
     export const VueUiNestedDonuts: typeof VueUiNestedDonutsBase & {
         new (): VueUiNestedDonutsExpose & {
             $slots: CommonAnnotatorSlots & {
+                ['custom-menu-before']?: () => VNodeChild;
+                ['custom-menu-after']?: () => VNodeChild;
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionTooltip?: () => VNodeChild;
                 optionPdf?: () => VNodeChild;
@@ -6672,6 +6712,8 @@ declare module 'vue-data-ui' {
     export const VueUiWaffle: typeof VueUiWaffleBase & {
         new (): VueUiWaffleExpose & {
             $slots: CommonAnnotatorSlots & {
+                ['custom-menu-before']?: () => VNodeChild;
+                ['custom-menu-after']?: () => VNodeChild;
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionTooltip?: () => VNodeChild;
                 optionPdf?: () => VNodeChild;
@@ -6927,6 +6969,8 @@ declare module 'vue-data-ui' {
     export const VueUiRadar: typeof VueUiRadarBase & {
         new (): VueUiRadarExpose & {
             $slots: CommonAnnotatorSlots & {
+                ['custom-menu-before']?: () => VNodeChild;
+                ['custom-menu-after']?: () => VNodeChild;
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionTooltip?: () => VNodeChild;
                 optionPdf?: () => VNodeChild;
@@ -7234,6 +7278,8 @@ declare module 'vue-data-ui' {
     export const VueUiQuadrant: typeof VueUiQuadrantBase & {
         new (): VueUiQuadrantExpose & {
             $slots: CommonAnnotatorSlots & {
+                ['custom-menu-before']?: () => VNodeChild;
+                ['custom-menu-after']?: () => VNodeChild;
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionTooltip?: () => VNodeChild;
                 optionPdf?: () => VNodeChild;
@@ -7429,6 +7475,8 @@ declare module 'vue-data-ui' {
     export const VueUiGauge: typeof VueUiGaugeBase & {
         new (): VueUiGaugeExpose & {
             $slots: CommonAnnotatorSlots & {
+                ['custom-menu-before']?: () => VNodeChild;
+                ['custom-menu-after']?: () => VNodeChild;
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionPdf?: () => VNodeChild;
                 optionImg?: () => VNodeChild;
@@ -7760,6 +7808,8 @@ declare module 'vue-data-ui' {
     export const VueUiChestnut: typeof VueUiChestnutBase & {
         new (): VueUiChestnutExpose & {
             $slots: CommonAnnotatorSlots & {
+                ['custom-menu-before']?: () => VNodeChild;
+                ['custom-menu-after']?: () => VNodeChild;
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionPdf?: () => VNodeChild;
                 optionCsv?: () => VNodeChild;
@@ -8013,6 +8063,8 @@ declare module 'vue-data-ui' {
     export const VueUiOnion: typeof VueUiOnionBase & {
         new (): VueUiOnionExpose & {
             $slots: CommonAnnotatorSlots & {
+                ['custom-menu-before']?: () => VNodeChild;
+                ['custom-menu-after']?: () => VNodeChild;
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionTooltip?: () => VNodeChild;
                 optionPdf?: () => VNodeChild;
@@ -8361,6 +8413,8 @@ declare module 'vue-data-ui' {
     export const VueUiHorizontalBar: typeof VueUiHorizontalBarBase & {
         new (): VueUiHorizontalBarExpose & {
             $slots: CommonAnnotatorSlots & {
+                ['custom-menu-before']?: () => VNodeChild;
+                ['custom-menu-after']?: () => VNodeChild;
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionTooltip?: () => VNodeChild;
                 optionPdf?: () => VNodeChild;
@@ -9326,6 +9380,8 @@ declare module 'vue-data-ui' {
     export const VueUiTableHeatmap: typeof VueUiTableHeatmapBase & {
         new (): VueUiTableHeatmapExpose & {
             $slots: {
+                ['custom-menu-before']?: () => VNodeChild;
+                ['custom-menu-after']?: () => VNodeChild;
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionPdf?: () => VNodeChild;
                 optionCsv?: () => VNodeChild;
@@ -9776,6 +9832,8 @@ declare module 'vue-data-ui' {
     export const VueUiQuickChart: typeof VueUiQuickChartBase & {
         new (): VueUiQuickChartExpose & {
             $slots: CommonAnnotatorSlots & {
+                ['custom-menu-before']?: () => VNodeChild;
+                ['custom-menu-after']?: () => VNodeChild;
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionTooltip?: () => VNodeChild;
                 optionPdf?: () => VNodeChild;
@@ -10150,6 +10208,8 @@ declare module 'vue-data-ui' {
     export const VueUiStripPlot: typeof VueUiStripPlotBase & {
         new (): VueUiStripPlotExpose & {
             $slots: CommonAnnotatorSlots & {
+                ['custom-menu-before']?: () => VNodeChild;
+                ['custom-menu-after']?: () => VNodeChild;
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionTooltip?: () => VNodeChild;
                 optionPdf?: () => VNodeChild;
@@ -10429,6 +10489,8 @@ declare module 'vue-data-ui' {
     export const VueUiDumbbell: typeof VueUiDumbbellBase & {
         new (): VueUiDumbbellExpose & {
             $slots: CommonAnnotatorSlots & {
+                ['custom-menu-before']?: () => VNodeChild;
+                ['custom-menu-after']?: () => VNodeChild;
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionPdf?: () => VNodeChild;
                 optionCsv?: () => VNodeChild;
@@ -10602,6 +10664,8 @@ declare module 'vue-data-ui' {
     export const VueUiWordCloud: typeof VueUiWordCloudBase & {
         new (): VueUiWordCloudExpose & {
             $slots: CommonAnnotatorSlots & {
+                ['custom-menu-before']?: () => VNodeChild;
+                ['custom-menu-after']?: () => VNodeChild;
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionTooltip?: () => VNodeChild;
                 optionPdf?: () => VNodeChild;
@@ -10952,6 +11016,8 @@ declare module 'vue-data-ui' {
     export const VueUiXyCanvas: typeof VueUiXyCanvasBase & {
         new (): VueUiXyCanvasExpose & {
             $slots: CommonAnnotatorSlots & {
+                ['custom-menu-before']?: () => VNodeChild;
+                ['custom-menu-after']?: () => VNodeChild;
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionTooltip?: () => VNodeChild;
                 optionPdf?: () => VNodeChild;
@@ -11214,6 +11280,8 @@ declare module 'vue-data-ui' {
     export const VueUiFlow: typeof VueUiFlowBase & {
         new (): VueUiFlowExpose & {
             $slots: CommonAnnotatorSlots & {
+                ['custom-menu-before']?: () => VNodeChild;
+                ['custom-menu-after']?: () => VNodeChild;
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionTooltip?: () => VNodeChild;
                 optionPdf?: () => VNodeChild;
@@ -11508,6 +11576,8 @@ declare module 'vue-data-ui' {
     export const VueUiParallelCoordinatePlot: typeof VueUiParallelCoordinatePlotBase & {
         new (): VueUiParallelCoordinatePlotExpose & {
             $slots: CommonAnnotatorSlots & {
+                ['custom-menu-before']?: () => VNodeChild;
+                ['custom-menu-after']?: () => VNodeChild;
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionTooltip?: () => VNodeChild;
                 optionPdf?: () => VNodeChild;
@@ -11802,6 +11872,8 @@ declare module 'vue-data-ui' {
     export const VueUiCarouselTable: typeof VueUiCarouselTableBase & {
         new (): {
             $slots: {
+                ['custom-menu-before']?: () => VNodeChild;
+                ['custom-menu-after']?: () => VNodeChild;
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionPdf?: () => VNodeChild;
                 optionCsv?: () => VNodeChild;
@@ -12214,6 +12286,8 @@ declare module 'vue-data-ui' {
     export const VueUiStackbar: typeof VueUiStackbarBase & {
         new (): VueUiStackbarExpose & {
             $slots: CommonAnnotatorSlots & {
+                ['custom-menu-before']?: () => VNodeChild;
+                ['custom-menu-after']?: () => VNodeChild;
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionTooltip?: () => VNodeChild;
                 optionPdf?: () => VNodeChild;
@@ -12606,6 +12680,8 @@ declare module 'vue-data-ui' {
     export const VueUiStackline: typeof VueUiStacklineBase & {
         new (): VueUiStacklineExpose & {
             $slots: CommonAnnotatorSlots & {
+                ['custom-menu-before']?: () => VNodeChild;
+                ['custom-menu-after']?: () => VNodeChild;
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionTooltip?: () => VNodeChild;
                 optionPdf?: () => VNodeChild;
@@ -12796,6 +12872,8 @@ declare module 'vue-data-ui' {
     export const VueUiBullet: typeof VueUiBulletBase & {
         new (): VueUiBulletExpose & {
             $slots: CommonAnnotatorSlots & {
+                ['custom-menu-before']?: () => VNodeChild;
+                ['custom-menu-after']?: () => VNodeChild;
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionPdf?: () => VNodeChild;
                 optionImg?: () => VNodeChild;
@@ -12947,6 +13025,8 @@ declare module 'vue-data-ui' {
     export const VueUiFunnel: typeof VueUiFunnelBase & {
         new (): VueUiFunnelExpose & {
             $slots: CommonAnnotatorSlots & {
+                ['custom-menu-before']?: () => VNodeChild;
+                ['custom-menu-after']?: () => VNodeChild;
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionPdf?: () => VNodeChild;
                 optionCsv?: () => VNodeChild;
@@ -13245,6 +13325,8 @@ declare module 'vue-data-ui' {
     export const VueUiHistoryPlot: typeof VueUiHistoryPlotBase & {
         new (): VueUiHistoryPlotExpose & {
             $slots: CommonAnnotatorSlots & {
+                ['custom-menu-before']?: () => VNodeChild;
+                ['custom-menu-after']?: () => VNodeChild;
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionTooltip?: () => VNodeChild;
                 optionPdf?: () => VNodeChild;
@@ -13505,6 +13587,8 @@ declare module 'vue-data-ui' {
     export const VueUiCirclePack: typeof VueUiCirclePackBase & {
         new (): VueUiCirclePackExpose & {
             $slots: CommonAnnotatorSlots & {
+                ['custom-menu-before']?: () => VNodeChild;
+                ['custom-menu-after']?: () => VNodeChild;
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionTooltip?: () => VNodeChild;
                 optionPdf?: () => VNodeChild;
@@ -13733,6 +13817,8 @@ declare module 'vue-data-ui' {
     export const VueUiWorld: typeof VueUiWorldBase & {
         new (): VueUiWorldExpose & {
             $slots: CommonAnnotatorSlots & {
+                ['custom-menu-before']?: () => VNodeChild;
+                ['custom-menu-after']?: () => VNodeChild;
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionTooltip?: () => VNodeChild;
                 optionPdf?: () => VNodeChild;
@@ -14023,6 +14109,8 @@ declare module 'vue-data-ui' {
     export const VueUiRidgeline: typeof VueUiRidgelineBase & {
         new (): VueUiRidgelineExpose & {
             $slots: CommonAnnotatorSlots & {
+                ['custom-menu-before']?: () => VNodeChild;
+                ['custom-menu-after']?: () => VNodeChild;
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionTooltip?: () => VNodeChild;
                 optionPdf?: () => VNodeChild;
@@ -14244,6 +14332,8 @@ declare module 'vue-data-ui' {
     export const VueUiChord: typeof VueUiChordBase & {
         new (): VueUiChordExpose & {
             $slots: CommonAnnotatorSlots & {
+                ['custom-menu-before']?: () => VNodeChild;
+                ['custom-menu-after']?: () => VNodeChild;
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionPdf?: () => VNodeChild;
                 optionCsv?: () => VNodeChild;
@@ -14519,6 +14609,8 @@ declare module 'vue-data-ui' {
     export const VueUiDag: typeof VueUiDagBase & {
         new (): VueUiDagExpose & {
             $slots: CommonAnnotatorSlots & {
+                ['custom-menu-before']?: () => VNodeChild;
+                ['custom-menu-after']?: () => VNodeChild;
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionPdf?: () => VNodeChild;
                 optionImg?: () => VNodeChild;
@@ -14812,6 +14904,8 @@ declare module 'vue-data-ui' {
     export const VueUiGeo: typeof VueUiGeoBase & {
         new (): VueUiGeoExpose & {
             $slots: CommonAnnotatorSlots & {
+                ['custom-menu-before']?: () => VNodeChild;
+                ['custom-menu-after']?: () => VNodeChild;
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionTooltip?: () => VNodeChild;
                 optionPdf?: () => VNodeChild;
@@ -15050,6 +15144,8 @@ declare module 'vue-data-ui' {
     export const VueUiBump: typeof VueUiBumpBase & {
         new (): VueUiBumpExpose & {
             $slots: CommonAnnotatorSlots & {
+                ['custom-menu-before']?: () => VNodeChild;
+                ['custom-menu-after']?: () => VNodeChild;
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionPdf?: () => VNodeChild;
                 optionCsv?: () => VNodeChild;

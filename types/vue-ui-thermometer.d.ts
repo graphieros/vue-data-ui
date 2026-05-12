@@ -31,6 +31,8 @@ declare const VueUiThermometerBase: DefineComponent<VueUiThermometerProps>;
 export const VueUiThermometer: typeof VueUiThermometerBase & {
     new (): VueUiThermometerExpose & {
         $slots: CommonAnnotatorSlots & {
+            ['custom-menu-before']?: () => VNodeChild;
+            ['custom-menu-after']?: () => VNodeChild;
             menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
             optionPdf?: () => VNodeChild;
             optionImg?: () => VNodeChild;

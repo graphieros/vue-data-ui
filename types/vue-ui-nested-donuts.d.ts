@@ -55,6 +55,8 @@ declare const VueUiNestedDonutsBase: DefineComponent<VueUiNestedDonutsProps>;
 export const VueUiNestedDonuts: typeof VueUiNestedDonutsBase & {
     new (): VueUiNestedDonutsExpose & {
         $slots: CommonAnnotatorSlots & {
+            ['custom-menu-before']?: () => VNodeChild;
+            ['custom-menu-after']?: () => VNodeChild;
             menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
             optionTooltip?: () => VNodeChild;
             optionPdf?: () => VNodeChild;

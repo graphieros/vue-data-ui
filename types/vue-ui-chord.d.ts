@@ -59,6 +59,8 @@ declare const VueUiChordBase: DefineComponent<VueUiChordProps>;
 export const VueUiChord: typeof VueUiChordBase & {
     new (): VueUiChordExpose & {
         $slots: CommonAnnotatorSlots & {
+            ['custom-menu-before']?: () => VNodeChild;
+            ['custom-menu-after']?: () => VNodeChild;
             menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
             optionPdf?: () => VNodeChild;
             optionCsv?: () => VNodeChild;

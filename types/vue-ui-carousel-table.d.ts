@@ -25,6 +25,8 @@ declare const VueUiCarouselTableBase: DefineComponent<VueUiCarouselTableProps>;
 export const VueUiCarouselTable: typeof VueUiCarouselTableBase & {
     new (): {
         $slots: {
+            ['custom-menu-before']?: () => VNodeChild;
+            ['custom-menu-after']?: () => VNodeChild;
             menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
             optionPdf?: () => VNodeChild;
             optionCsv?: () => VNodeChild;

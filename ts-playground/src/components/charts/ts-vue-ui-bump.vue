@@ -466,6 +466,8 @@ function log(n: unknown) {
             <template #watermark="{ isPrinting }">
                 <Watermark :is-printing />
             </template>
+            <template #custom-menu-before> BEFORE </template>
+            <template #custom-menu-after> AFTER </template>
         </VueUiBump>
     </div>
 </template>

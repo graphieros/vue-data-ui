@@ -53,6 +53,8 @@ declare const VueUiQuickChartBase: DefineComponent<VueUiQuickChartProps>;
 export const VueUiQuickChart: typeof VueUiQuickChartBase & {
     new (): VueUiQuickChartExpose & {
         $slots: CommonAnnotatorSlots & {
+            ['custom-menu-before']?: () => VNodeChild;
+            ['custom-menu-after']?: () => VNodeChild;
             menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
             optionTooltip?: () => VNodeChild;
             optionPdf?: () => VNodeChild;

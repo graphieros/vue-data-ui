@@ -975,6 +975,18 @@ defineExpose({
                                         v-bind="{ altCopy: c }"
                                     />
                                 </template>
+                                <template
+                                    #custom-menu-before
+                                    v-if="$slots['custom-menu-before']"
+                                >
+                                    <slot name="custom-menu-before" />
+                                </template>
+                                <template
+                                    #custom-menu-after
+                                    v-if="$slots['custom-menu-after']"
+                                >
+                                    <slot name="custom-menu-after" />
+                                </template>
                             </UserOptions>
                         </th>
                     </tr>

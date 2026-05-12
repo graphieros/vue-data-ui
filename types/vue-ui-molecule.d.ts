@@ -55,6 +55,8 @@ declare const VueUiMoleculeBase: DefineComponent<VueUiMoleculeProps>;
 export const VueUiMolecule: typeof VueUiMoleculeBase & {
     new (): VueUiMoleculeExpose & {
         $slots: CommonAnnotatorSlots & {
+            ['custom-menu-before']?: () => VNodeChild;
+            ['custom-menu-after']?: () => VNodeChild;
             menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
             optionTooltip?: () => VNodeChild;
             optionPdf?: () => VNodeChild;

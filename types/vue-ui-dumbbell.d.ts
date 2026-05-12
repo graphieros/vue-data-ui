@@ -49,6 +49,8 @@ declare const VueUiDumbbellBase: DefineComponent<VueUiDumbbellProps>;
 export const VueUiDumbbell: typeof VueUiDumbbellBase & {
     new (): VueUiDumbbellExpose & {
         $slots: CommonAnnotatorSlots & {
+            ['custom-menu-before']?: () => VNodeChild;
+            ['custom-menu-after']?: () => VNodeChild;
             menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
             optionPdf?: () => VNodeChild;
             optionCsv?: () => VNodeChild;

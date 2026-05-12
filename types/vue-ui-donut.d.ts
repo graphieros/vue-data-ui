@@ -61,6 +61,8 @@ declare const VueUiDonutBase: DefineComponent<VueUiDonutProps>;
 export const VueUiDonut: typeof VueUiDonutBase & {
     new (): VueUiDonutExpose & {
         $slots: CommonAnnotatorSlots & {
+            ['custom-menu-before']?: () => VNodeChild;
+            ['custom-menu-after']?: () => VNodeChild;
             legend?: (props: VueUiDonutLegendSlotProps) => VNodeChild;
             ['tooltip-before']?: (
                 props: VueUiDonutTooltipSlotProps,

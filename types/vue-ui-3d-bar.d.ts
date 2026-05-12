@@ -49,6 +49,8 @@ declare const VueUi3dBarBase: DefineComponent<VueUi3dBarProps>;
 export const VueUi3dBar: typeof VueUi3dBarBase & {
     new (): VueUi3dBarExpose & {
         $slots: CommonAnnotatorSlots & {
+            ['custom-menu-before']?: () => VNodeChild;
+            ['custom-menu-after']?: () => VNodeChild;
             menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
             optionPdf?: () => VNodeChild;
             optionCsv?: () => VNodeChild;

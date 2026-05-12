@@ -557,6 +557,9 @@ function log(n: unknown) {
             <template #legend="{ legend }">
                 <XyCanvasLegend :items="legend" />
             </template>
+
+            <template #custom-menu-before> BEFORE </template>
+            <template #custom-menu-after> AFTER </template>
         </VueUiXyCanvas>
     </div>
 </template>

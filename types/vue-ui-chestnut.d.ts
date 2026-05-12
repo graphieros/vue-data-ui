@@ -51,6 +51,8 @@ declare const VueUiChestnutBase: DefineComponent<VueUiChestnutProps>;
 export const VueUiChestnut: typeof VueUiChestnutBase & {
     new (): VueUiChestnutExpose & {
         $slots: CommonAnnotatorSlots & {
+            ['custom-menu-before']?: () => VNodeChild;
+            ['custom-menu-after']?: () => VNodeChild;
             menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
             optionPdf?: () => VNodeChild;
             optionCsv?: () => VNodeChild;

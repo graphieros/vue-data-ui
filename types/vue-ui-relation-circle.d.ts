@@ -49,6 +49,8 @@ declare const VueUiRelationCircleBase: DefineComponent<VueUiRelationCircleProps>
 export const VueUiRelationCircle: typeof VueUiRelationCircleBase & {
     new (): VueUiRelationCircleExpose & {
         $slots: CommonAnnotatorSlots & {
+            ['custom-menu-before']?: () => VNodeChild;
+            ['custom-menu-after']?: () => VNodeChild;
             menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
             optionPdf?: () => VNodeChild;
             optionImg?: () => VNodeChild;

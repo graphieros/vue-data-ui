@@ -53,6 +53,8 @@ declare const VueUiStackbarBase: DefineComponent<VueUiStackbarProps>;
 export const VueUiStackbar: typeof VueUiStackbarBase & {
     new (): VueUiStackbarExpose & {
         $slots: CommonAnnotatorSlots & {
+            ['custom-menu-before']?: () => VNodeChild;
+            ['custom-menu-after']?: () => VNodeChild;
             menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
             optionTooltip?: () => VNodeChild;
             optionPdf?: () => VNodeChild;

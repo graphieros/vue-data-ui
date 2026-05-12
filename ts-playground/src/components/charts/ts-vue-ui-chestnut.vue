@@ -506,6 +506,8 @@ function log(n: unknown) {
             <template #skeleton>
                 <Skeleton />
             </template>
+            <template #custom-menu-before> BEFORE </template>
+            <template #custom-menu-after> AFTER </template>
         </VueUiChestnut>
     </div>
 </template>

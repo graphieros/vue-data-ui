@@ -49,6 +49,8 @@ declare const VueUiMoodRadarBase: DefineComponent<VueUiMoodRadarProps>;
 export const VueUiMoodRadar: typeof VueUiMoodRadarBase & {
     new (): VueUiMoodRadarExpose & {
         $slots: CommonAnnotatorSlots & {
+            ['custom-menu-before']?: () => VNodeChild;
+            ['custom-menu-after']?: () => VNodeChild;
             menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
             optionPdf?: () => VNodeChild;
             optionCsv?: () => VNodeChild;

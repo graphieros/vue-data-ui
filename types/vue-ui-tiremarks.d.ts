@@ -31,6 +31,8 @@ declare const VueUiTiremarksBase: DefineComponent<VueUiTiremarksProps>;
 export const VueUiTiremarks: typeof VueUiTiremarksBase & {
     new (): VueUiTiremarksExpose & {
         $slots: CommonAnnotatorSlots & {
+            ['custom-menu-before']?: () => VNodeChild;
+            ['custom-menu-after']?: () => VNodeChild;
             menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
             optionPdf?: () => VNodeChild;
             optionImg?: () => VNodeChild;

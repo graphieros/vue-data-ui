@@ -969,6 +969,8 @@ function log(n: unknown) {
             <template #legend="{ legend }">
                 <RidgelineLegend :items="legend" />
             </template>
+            <template #custom-menu-before> BEFORE </template>
+            <template #custom-menu-after> AFTER </template>
         </VueUiRidgeline>
     </div>
 </template>
