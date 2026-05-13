@@ -38,6 +38,7 @@ const spinD = computed(() => props.spinDuration);
 
 function getIconPath(name, { stroke, strokeWidth }) {
     const map = {
+        annotation: `<path d="M 1 18 M 10 17 A 1 1 0 0 0 10 19 A 1 1 0 0 0 10 17 M 1 18 L 7 18 M 13 18 L 19 18 M 4 1 L 16 1 L 16 10 L 12 10 L 10 14 M 7 4 L 10 4 M 7 7 L 13 7 M 4 1 L 4 10 L 8 10 L 10 14" stroke-linecap="round" stroke-linejoin="round" stroke="${stroke}" stroke-width="${strokeWidth}" fill="none" style="opacity: 1"/>`,
         annotator: `<path fill="none" stroke="${stroke}" stroke-width="${strokeWidth}" stroke-linecap="round" stroke-linejoin="round" d="M 1 19 L 3 12 C 3 14 3 15 5 15 C 5 17 7 17 8 17 L 1 19 M 3 12 L 14 1 C 15 0 16 1 16 1 L 19 4 C 20 5 19 6 19 6 L 8 17 M 5 15 L 15 5 M 1.667 16.667 L 3.333 18.333 M 12.501 2.501 L 17.5 7.5" /><path d="M 15 5 L 5 15 C 5 17 7 17 8 17 L 17.5 7.5 L 15 5" stroke="none" fill="${stroke}" style="opacity: 0.3"/>`,
         annotatorDisabled: `<path fill="none" stroke="${stroke}" stroke-width="${strokeWidth}" stroke-linecap="round" stroke-linejoin="round" d="M 1 19 L 3 12 C 3 14 3 15 5 15 C 5 17 7 17 8 17 L 1 19 M 3 12 L 14 1 C 15 0 16 1 16 1 L 19 4 C 20 5 19 6 19 6 L 8 17 M 5 15 L 15 5 M 1.667 16.667 L 3.333 18.333 M 12.501 2.501 L 17.5 7.5 M 2 2 L 18 18" /><path d="M 15 5 L 5 15 C 5 17 7 17 8 17 L 17.5 7.5 L 15 5" stroke="none" fill="${stroke}" style="opacity: 0.3"/>`,
         chart3dBar: `<path fill="none" stroke="${stroke}" stroke-width="${strokeWidth}" d="M10 1 6 3 6 17 10 19 14 17 14 3 10 1M6 3 10 5 14 3M10 5 10 19" stroke-linecap="round" stroke-linejoin="round"/><path fill="${stroke}" stroke="none" style="opacity:0.3" d="M 6 10 L 10 12 L 14 10 L 14 17 L 10 19 L 6 17 L 6 10"/>`,
@@ -340,6 +341,8 @@ function getIconPath(name, { stroke, strokeWidth }) {
         plotArrow: `<path d="M 4 14 A 1 1 0 0 0 4 18 A 1 1 0 0 0 4 14 M 17 3 L 5.42 14.592 M 13 3 L 17 3 L 17 7" stroke-linecap="round" stroke-linejoin="round" stroke="${stroke}" stroke-width="${strokeWidth}" fill="none" style="opacity: 1"/>`,
         accessibility: `<path d="M 10 1 A 1 1 0 0 0 10 5 A 1 1 0 0 0 10 1 M 10 7 L 4 4 A 1 1 0 0 0 3 6 L 8 9 L 8 11 L 4 17 A 1 1 0 0 0 6 18 L 10 13 L 14 18 A 1 1 0 0 0 16 17 L 12 11 L 12 9 L 17 6 A 1 1 0 0 0 16 4 L 10 7" stroke-linecap="round" stroke-linejoin="round" stroke="${stroke}" stroke-width="${strokeWidth}" fill="none" style="opacity: 1"/>`,
         npmx: `<path d="M 17 2 L 11 18 L 9 18 L 15 2 L 17 2 M 3 13 L 3 16 L 6 16 L 6 13 L 3 13" stroke-linecap="round" stroke-linejoin="round" fill="${stroke}" style="opacity: 1"/>`,
+        clankerCrazy: `<path d="M 2 2 L 18 2 L 18 19 L 2 19 L 2 2 M 2 12 L 10 13 L 18 12 M 10 13 L 10 19 M 6 12.5 L 6 19 M 14 12.5 L 14 19 M 6 5 A 1 1 0 0 0 6 9 A 1 1 0 0 0 6 5 M 13 5 A 1 1 0 0 0 13 10 A 1 1 0 0 0 13 5 M 1 5 L 1 10 M 19 5 L 19 10 M 7 1 L 13 1" stroke-linecap="round" stroke-linejoin="round" stroke="${stroke}" stroke-width="${strokeWidth}" fill="none" style="opacity: 1"/>`,
+        clankerNasty: `<path d="M 2 2 L 18 2 L 18 19 L 2 19 L 2 2 M 2 13 L 10 11 L 18 13 M 10 11 L 10 19 M 6 12 L 6 19 M 14 12 L 14 19 M 1 5 L 1 10 M 19 5 L 19 10 M 4 5 L 8 7 M 12 7 L 16 5 M 7 1 L 13 1" stroke-linecap="round" stroke-linejoin="round" stroke="${stroke}" stroke-width="${strokeWidth}" fill="none" style="opacity: 1"/>`,
     };
 
     return map[name] || '';

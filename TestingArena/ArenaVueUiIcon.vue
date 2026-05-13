@@ -296,6 +296,9 @@ const icons = ref([
     'plotArrow',
     'accessibility',
     'npmx',
+    'annotation',
+    'clankerCrazy',
+    'clankerNasty'
 ]);
 
 const inputValue = ref('');
