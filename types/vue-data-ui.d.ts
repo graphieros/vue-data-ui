@@ -2376,6 +2376,7 @@ declare module 'vue-data-ui' {
                             color?: string; // v3
                         };
                         yAxis?: {
+                            position?: 'left' | 'right';
                             scaleMin?: number | null;
                             scaleMax?: number | null;
                             autoScale?: boolean;
@@ -2501,6 +2502,9 @@ declare module 'vue-data-ui' {
             right: number;
             top: number;
             width: number;
+            scaleLabelsWidth: number;
+            yAxisLabelWidth: number;
+            crosshair: number;
         };
     };
 
@@ -4254,6 +4258,7 @@ declare module 'vue-data-ui' {
                         };
                     };
                     yAxis?: {
+                        position?: 'left' | 'right';
                         scale?: {
                             min?: number | null;
                             max?: number | null;
@@ -5266,6 +5271,7 @@ declare module 'vue-data-ui' {
                         show?: boolean;
                     };
                     yAxis?: {
+                        position?: 'left' | 'right';
                         commonScaleSteps?: number;
                         useIndividualScale?: boolean;
                         useNiceScale?: boolean;
@@ -12127,6 +12133,7 @@ declare module 'vue-data-ui' {
                         };
                     };
                     y?: {
+                        position?: 'left' | 'right';
                         showAxis?: boolean;
                         showVerticalLines?: boolean;
                         linesColor?: string;
@@ -12529,6 +12536,7 @@ declare module 'vue-data-ui' {
                         };
                     };
                     y?: {
+                        position?: 'left' | 'right';
                         showAxis?: boolean;
                         showVerticalLines?: boolean;
                         linesColor?: string;

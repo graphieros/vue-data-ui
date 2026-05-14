@@ -612,21 +612,40 @@ onBeforeUnmount(() => {
     }
 });
 
+const yAxisLabelsAreRight = computed(() => {
+    return FINAL_CONFIG.value.style.chart.grid.y.position === 'right';
+});
+
 function getOffsetX() {
-    let base = 0;
+    let scaleLabelsWidth = 0;
+
     if (scaleLabels.value) {
         const texts = Array.from(scaleLabels.value.querySelectorAll('text'));
-        base = texts.reduce((max, t) => {
-            const w = t.getComputedTextLength();
-            return w > max ? w : max;
+
+        scaleLabelsWidth = texts.reduce((max, textElement) => {
+            const width = textElement.getComputedTextLength();
+            return width > max ? width : max;
         }, 0);
     }
 
-    const yAxisLabelW = yAxisLabel.value
-        ? yAxisLabel.value.getBoundingClientRect().width
+    const yAxisLabelWidth = yAxisLabel.value
+        ? yAxisLabel.value.getBoundingClientRect().width +
+          FINAL_CONFIG.value.style.chart.grid.y.axisName.fontSize +
+          FINAL_CONFIG.value.style.chart.grid.y.axisName.offsetX
         : 0;
 
-    return base + yAxisLabelW + (yAxisLabelW ? 24 : 0);
+    return {
+        left: yAxisLabelsAreRight.value
+            ? 0
+            : scaleLabelsWidth + yAxisLabelWidth,
+
+        right: yAxisLabelsAreRight.value
+            ? scaleLabelsWidth + yAxisLabelWidth
+            : 0,
+
+        scaleLabelsWidth,
+        yAxisLabelWidth,
+    };
 }
 
 const offsetRight = ref(0);
@@ -703,22 +722,35 @@ const drawingArea = computed(() => {
         props.dataset.length > 1
             ? FINAL_CONFIG.value.style.chart.lines.totalValues.fontSize * 1.3
             : 0;
-    let offsetX = 0;
+
+    let offsetLeftAxis = 0;
+    let offsetRightAxis = 0;
+    let scaleLabelsWidth = 0;
+    let yAxisLabelWidth = 0;
 
     if (FINAL_CONFIG.value.style.chart.grid.y.axisLabels.show) {
-        offsetX = getOffsetX();
+        const offsetX = getOffsetX();
+
+        offsetLeftAxis = offsetX.left;
+        offsetRightAxis = offsetX.right;
+        scaleLabelsWidth = offsetX.scaleLabelsWidth;
+        yAxisLabelWidth = offsetX.yAxisLabelWidth;
     }
 
     const top = FINAL_CONFIG.value.style.chart.padding.top + topOffset;
-    const right = W - W * PR - offsetRight.value;
+
+    const right = W - W * PR - offsetRight.value - offsetRightAxis;
+
     const bottom =
         H -
         FINAL_CONFIG.value.style.chart.padding.bottom -
         offsetY.value -
         topOffset;
-    const left = FINAL_CONFIG.value.style.chart.padding.left + offsetX;
 
-    const width = W - left - W * PR - offsetRight.value;
+    const left = FINAL_CONFIG.value.style.chart.padding.left + offsetLeftAxis;
+
+    const width = W - left - W * PR - offsetRight.value - offsetRightAxis;
+
     const height =
         H -
         top -
@@ -735,6 +767,10 @@ const drawingArea = computed(() => {
         left: Math.max(0, left),
         width: Math.max(0, width),
         height: Math.max(0, height),
+        offsetLeftAxis,
+        offsetRightAxis,
+        scaleLabelsWidth,
+        yAxisLabelWidth,
     };
 });
 
@@ -1215,7 +1251,9 @@ const yLabels = computed(() => {
         return {
             zero: zeroY,
             y,
-            x: boundsX.value.left - 8,
+            x: yAxisLabelsAreRight.value
+                ? boundsX.value.right + 8
+                : boundsX.value.left - 8,
             value: tv,
         };
     });
@@ -3553,8 +3591,8 @@ defineExpose({
                         FINAL_CONFIG.style.chart.grid.y.showAxis &&
                         !FINAL_CONFIG.style.chart.lines.distributed
                     "
-                    :x1="boundsX.left"
-                    :x2="boundsX.left"
+                    :x1="yAxisLabelsAreRight ? boundsX.right : boundsX.left"
+                    :x2="yAxisLabelsAreRight ? boundsX.right : boundsX.left"
                     :y1="drawingArea.top"
                     :y2="drawingArea.bottom"
                     :stroke="FINAL_CONFIG.style.chart.grid.y.axisColor"
@@ -3597,7 +3635,17 @@ defineExpose({
                         FINAL_CONFIG.style.chart.grid.y.axisName.show &&
                         FINAL_CONFIG.style.chart.grid.y.axisName.text
                     "
-                    :transform="`translate(${FINAL_CONFIG.style.chart.grid.y.axisName.fontSize}, ${drawingArea.top + drawingArea.height / 2}) rotate(-90)`"
+                    :transform="`translate(${
+                        yAxisLabelsAreRight
+                            ? drawingArea.chartWidth -
+                              FINAL_CONFIG.style.chart.grid.y.axisName
+                                  .fontSize /
+                                  2 -
+                              FINAL_CONFIG.style.chart.grid.y.axisName.offsetX
+                            : FINAL_CONFIG.style.chart.grid.y.axisName
+                                  .fontSize +
+                              FINAL_CONFIG.style.chart.grid.y.axisName.offsetX
+                    }, ${drawingArea.top + drawingArea.height / 2}) rotate(-90)`"
                     :font-size="
                         FINAL_CONFIG.style.chart.grid.y.axisName.fontSize
                     "
@@ -3706,8 +3754,16 @@ defineExpose({
                         <line
                             data-cy="scale-line-y"
                             v-for="(yLabel, i) in yLabels"
-                            :x1="boundsX.left"
-                            :x2="boundsX.left - 6"
+                            :x1="
+                                yAxisLabelsAreRight
+                                    ? boundsX.right
+                                    : boundsX.left
+                            "
+                            :x2="
+                                yAxisLabelsAreRight
+                                    ? boundsX.right + 6
+                                    : boundsX.left - 6
+                            "
                             :y1="yLabel.y"
                             :y2="yLabel.y"
                             :stroke="FINAL_CONFIG.style.chart.grid.x.axisColor"
@@ -3735,7 +3791,7 @@ defineExpose({
                             :fill="
                                 FINAL_CONFIG.style.chart.grid.y.axisLabels.color
                             "
-                            text-anchor="end"
+                            :text-anchor="yAxisLabelsAreRight ? 'start' : 'end'"
                         >
                             {{
                                 applyDataLabel(

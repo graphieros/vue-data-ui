@@ -453,18 +453,40 @@ const timeLabelsY = computed(() => {
     return tlH;
 });
 
+const yAxisLabelsAreRight = computed(() => {
+    return FINAL_CONFIG.value.style.layout.grid.yAxis.position === 'right';
+});
+
 function getScaleLabelX() {
-    let base = FINAL_CONFIG.value.style.layout.grid.yAxis.dataLabels.offsetX;
+    let scaleLabelsWidth =
+        FINAL_CONFIG.value.style.layout.grid.yAxis.dataLabels.offsetX;
+
     if (scaleLabels.value) {
         const texts = Array.from(scaleLabels.value.querySelectorAll('text'));
-        base = texts.reduce((max, t) => {
-            const w = t.getComputedTextLength();
-            return w > max ? w : max;
+
+        scaleLabelsWidth = texts.reduce((max, textElement) => {
+            const width = textElement.getComputedTextLength();
+            return width > max ? width : max;
         }, 0);
     }
 
     const crosshair = 13;
-    return base + crosshair;
+
+    const yAxisNameWidth = FINAL_CONFIG.value.style.layout.grid.yAxis.axisName
+        ?.show
+        ? FINAL_CONFIG.value.style.layout.grid.yAxis.axisName.fontSize +
+          FINAL_CONFIG.value.style.layout.grid.yAxis.axisName.offsetX
+        : 0;
+
+    const total = scaleLabelsWidth + crosshair + yAxisNameWidth;
+
+    return {
+        left: yAxisLabelsAreRight.value ? 0 : total,
+        right: yAxisLabelsAreRight.value ? total : 0,
+        scaleLabelsWidth,
+        yAxisNameWidth,
+        crosshair,
+    };
 }
 
 const drawingArea = computed(() => {
@@ -474,16 +496,20 @@ const drawingArea = computed(() => {
         bottom: pb,
         left: pl,
     } = FINAL_CONFIG.value.style.layout.padding;
-    const _scaleLabelsX = getScaleLabelX();
+
+    const scaleLabelX = getScaleLabelX();
     const topOffset = 12;
 
     return {
         top: pt + topOffset,
-        right: svg.value.width - pr,
-        left: pl + _scaleLabelsX,
+        right: svg.value.width - pr - scaleLabelX.right,
+        left: pl + scaleLabelX.left,
         bottom: svg.value.height - pb - timeLabelsY.value,
-        width: svg.value.width - pl - pr - _scaleLabelsX,
+        width: svg.value.width - pl - pr - scaleLabelX.left - scaleLabelX.right,
         height: svg.value.height - pt - pb - timeLabelsY.value - topOffset,
+        scaleLabelsWidth: scaleLabelX.scaleLabelsWidth,
+        yAxisNameWidth: scaleLabelX.yAxisNameWidth,
+        crosshair: scaleLabelX.crosshair,
     };
 });
 
@@ -2057,8 +2083,16 @@ defineExpose({
                     <g v-if="FINAL_CONFIG.style.layout.grid.show">
                         <line
                             data-cy="candlestick-grid-y-axis"
-                            :x1="drawingArea.left"
-                            :x2="drawingArea.left"
+                            :x1="
+                                yAxisLabelsAreRight
+                                    ? drawingArea.right
+                                    : drawingArea.left
+                            "
+                            :x2="
+                                yAxisLabelsAreRight
+                                    ? drawingArea.right
+                                    : drawingArea.left
+                            "
                             :y1="drawingArea.top"
                             :y2="drawingArea.bottom"
                             :stroke="FINAL_CONFIG.style.layout.grid.stroke"
@@ -2180,8 +2214,16 @@ defineExpose({
                                     yLabel.value >= niceScale.min &&
                                     yLabel.value <= niceScale.max
                                 "
-                                :x1="drawingArea.left"
-                                :x2="drawingArea.left - 5"
+                                :x1="
+                                    yAxisLabelsAreRight
+                                        ? drawingArea.right
+                                        : drawingArea.left
+                                "
+                                :x2="
+                                    yAxisLabelsAreRight
+                                        ? drawingArea.right + 5
+                                        : drawingArea.left - 5
+                                "
                                 :y1="yLabel.y"
                                 :y2="yLabel.y"
                                 :stroke="FINAL_CONFIG.style.layout.grid.stroke"
@@ -2197,14 +2239,21 @@ defineExpose({
                                     yLabel.value <= niceScale.max
                                 "
                                 :x="
-                                    drawingArea.left -
-                                    8 +
-                                    FINAL_CONFIG.style.layout.grid.yAxis
-                                        .dataLabels.offsetX
+                                    yAxisLabelsAreRight
+                                        ? drawingArea.right +
+                                          8 +
+                                          FINAL_CONFIG.style.layout.grid.yAxis
+                                              .dataLabels.offsetX
+                                        : drawingArea.left -
+                                          8 +
+                                          FINAL_CONFIG.style.layout.grid.yAxis
+                                              .dataLabels.offsetX
                                 "
                                 :y="yLabel.y + svg.yAxisFontSize / 3"
+                                :text-anchor="
+                                    yAxisLabelsAreRight ? 'start' : 'end'
+                                "
                                 :font-size="svg.yAxisFontSize"
-                                text-anchor="end"
                                 :fill="
                                     FINAL_CONFIG.style.layout.grid.yAxis
                                         .dataLabels.color

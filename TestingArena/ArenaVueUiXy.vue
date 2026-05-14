@@ -597,7 +597,7 @@ const model = createModel([
     CHECKBOX('chart.grid.labels.xAxisLabels.autoRotate', { def: true }),
 
     SELECT('chart.grid.labels.yAxis.position', ['left', 'right'], {
-        def: 'right',
+        def: 'left',
     }),
     NUMBER('chart.grid.labels.yAxis.commonScaleSteps', {
         def: 10,

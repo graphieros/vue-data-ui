@@ -312,6 +312,9 @@ function safeDiv(a, b, fallback = 0) {
 
 const mutableInitialized = ref(false);
 
+const lastConfigStacked = ref(null);
+const lastConfigUseIndividualScale = ref(null);
+
 const fontSizes = ref({
     xAxis: 18,
     yAxis: 12,
@@ -472,25 +475,40 @@ const mutableConfig = ref({
 });
 
 function seedMutableFromConfig() {
+    const configStacked = FINAL_CONFIG.value.chart.grid.labels.yAxis.stacked;
+    const configUseIndividualScale =
+        FINAL_CONFIG.value.chart.grid.labels.yAxis.useIndividualScale;
+
     if (!mutableInitialized.value) {
         mutableConfig.value = {
             dataLabels: { show: true },
             showTooltip: FINAL_CONFIG.value.chart.tooltip.show === true,
             showTable: FINAL_CONFIG.value.showTable === true,
-            isStacked: FINAL_CONFIG.value.chart.grid.labels.yAxis.stacked,
-            useIndividualScale:
-                FINAL_CONFIG.value.chart.grid.labels.yAxis.useIndividualScale,
+            isStacked: configStacked,
+            useIndividualScale: configUseIndividualScale,
         };
+
+        lastConfigStacked.value = configStacked;
+        lastConfigUseIndividualScale.value = configUseIndividualScale;
         mutableInitialized.value = true;
-    } else {
-        mutableConfig.value.showTooltip =
-            FINAL_CONFIG.value.chart.tooltip.show === true;
-        mutableConfig.value.isStacked =
-            FINAL_CONFIG.value.chart.grid.labels.yAxis.stacked;
-        if (mutableConfig.value.useIndividualScale == null) {
-            mutableConfig.value.useIndividualScale =
-                FINAL_CONFIG.value.chart.grid.labels.yAxis.useIndividualScale;
-        }
+        return;
+    }
+
+    mutableConfig.value.showTooltip =
+        FINAL_CONFIG.value.chart.tooltip.show === true;
+
+    if (configStacked !== lastConfigStacked.value) {
+        mutableConfig.value.isStacked = configStacked;
+        lastConfigStacked.value = configStacked;
+    }
+
+    if (configUseIndividualScale !== lastConfigUseIndividualScale.value) {
+        mutableConfig.value.useIndividualScale = configUseIndividualScale;
+        lastConfigUseIndividualScale.value = configUseIndividualScale;
+    }
+
+    if (mutableConfig.value.isStacked) {
+        mutableConfig.value.useIndividualScale = true;
     }
 }
 
@@ -917,27 +935,45 @@ const allSegregated = computed(
     () => segregatedSeries.value.length === absoluteDataset.value.length,
 );
 
+const yAxisLabelsAreRight = computed(() => {
+    return FINAL_CONFIG.value.chart.grid.labels.yAxis.position === 'right';
+});
+
 function getScaleLabelX() {
-    let base = 0;
+    let scaleLabelsWidth = 0;
+
     if (scaleLabels.value) {
         const texts = Array.from(scaleLabels.value.querySelectorAll('text'));
-        base = texts.reduce((max, t) => {
-            const w = t.getComputedTextLength();
-            return (
-                (w > max ? w : max) +
-                FINAL_CONFIG.value.chart.grid.labels.yAxis.scaleValueOffsetX
-            );
+
+        scaleLabelsWidth = texts.reduce((max, textElement) => {
+            const width = textElement.getComputedTextLength();
+            return width > max ? width : max;
         }, 0);
     }
 
-    const yAxisLabelW = yAxisLabel.value
+    const yAxisLabelWidth = yAxisLabel.value
         ? yAxisLabel.value.getBoundingClientRect().width +
           FINAL_CONFIG.value.chart.grid.labels.axis.yLabelOffsetX +
           fontSizes.value.yAxis
         : 0;
 
-    const crosshair = FINAL_CONFIG.value.chart.grid.labels.yAxis.crosshairSize;
-    return base + yAxisLabelW + crosshair;
+    const scaleLabelsOffset =
+        scaleLabelsWidth +
+        FINAL_CONFIG.value.chart.grid.labels.yAxis.scaleValueOffsetX +
+        FINAL_CONFIG.value.chart.grid.labels.yAxis.crosshairSize;
+
+    return {
+        left: yAxisLabelsAreRight.value
+            ? 0
+            : scaleLabelsOffset + yAxisLabelWidth,
+
+        right: yAxisLabelsAreRight.value
+            ? scaleLabelsOffset + yAxisLabelWidth
+            : 0,
+
+        scaleLabelsOffset,
+        yAxisLabelWidth,
+    };
 }
 
 const timeLabelsHeight = ref(0);
@@ -980,10 +1016,24 @@ const useProgression = computed(() => {
     return FINAL_DATASET.value.some((el) => el.useProgression);
 });
 
+function getIndividualScaleSlotWidth() {
+    return (
+        FINAL_CONFIG.value.chart.grid.labels.yAxis.crosshairSize +
+        FINAL_CONFIG.value.chart.grid.labels.yAxis.scaleValueOffsetX +
+        5 +
+        FINAL_CONFIG.value.chart.grid.labels.yAxis.labelWidth +
+        FINAL_CONFIG.value.chart.grid.labels.axis.yLabelOffsetX +
+        fontSizes.value.dataLabels * 0.8
+    );
+}
+
 const drawingArea = computed(() => {
     void parentLayoutStableRunSequence.value;
 
-    let _scaleLabelX = 0;
+    let leftScaleLabelX = 0;
+    let rightScaleLabelX = 0;
+    let scaleLabelsOffset = 0;
+    let yAxisLabelWidth = 0;
     const individualOffsetX = 36;
 
     if (FINAL_CONFIG.value.chart.grid.labels.show) {
@@ -991,36 +1041,52 @@ const drawingArea = computed(() => {
             mutableConfig.value.useIndividualScale &&
             !mutableConfig.value.isStacked
         ) {
-            _scaleLabelX =
-                (FINAL_DATASET.value.length - segregatedSeries.value.length) *
-                (FINAL_CONFIG.value.chart.grid.labels.yAxis.labelWidth +
-                    individualOffsetX);
+            if (yAxisLabelsAreRight.value) {
+                rightScaleLabelX =
+                    (FINAL_DATASET.value.length -
+                        segregatedSeries.value.length) *
+                    getIndividualScaleSlotWidth();
+            } else {
+                leftScaleLabelX =
+                    (FINAL_DATASET.value.length -
+                        segregatedSeries.value.length) *
+                    (FINAL_CONFIG.value.chart.grid.labels.yAxis.labelWidth +
+                        individualOffsetX);
+            }
         } else if (
             mutableConfig.value.useIndividualScale &&
             mutableConfig.value.isStacked
         ) {
-            _scaleLabelX =
+            const individualScaleWidth =
                 FINAL_CONFIG.value.chart.grid.labels.yAxis.labelWidth +
                 individualOffsetX;
+
+            if (yAxisLabelsAreRight.value) {
+                rightScaleLabelX = individualScaleWidth;
+            } else {
+                leftScaleLabelX = individualScaleWidth;
+            }
         } else {
-            _scaleLabelX = getScaleLabelX();
+            const scaleLabelX = getScaleLabelX();
+
+            leftScaleLabelX = scaleLabelX.left;
+            rightScaleLabelX = scaleLabelX.right;
+            scaleLabelsOffset = scaleLabelX.scaleLabelsOffset;
+            yAxisLabelWidth = scaleLabelX.yAxisLabelWidth;
         }
     }
 
     const topOffset = FINAL_CONFIG.value.chart.labels.fontSize * 1.1;
-
     const progressionLabelOffsetX = useProgression.value ? 24 : 6;
 
-    if (timeLabelsEls.value) {
-        if (timeLabelsBBoxX.value < 0) {
-            _scaleLabelX += Math.abs(timeLabelsBBoxX.value);
-        }
+    if (timeLabelsEls.value && timeLabelsBBoxX.value < 0) {
+        leftScaleLabelX += Math.abs(timeLabelsBBoxX.value);
     }
 
     const _width =
         width.value -
-        _scaleLabelX -
-        FINAL_CONFIG.value.chart.grid.labels.yAxis.crosshairSize -
+        leftScaleLabelX -
+        rightScaleLabelX -
         progressionLabelOffsetX -
         FINAL_CONFIG.value.chart.padding?.left -
         FINAL_CONFIG.value.chart.padding?.right;
@@ -1034,6 +1100,7 @@ const drawingArea = computed(() => {
         top: FINAL_CONFIG.value.chart.padding?.top + topOffset,
         right:
             width.value -
+            rightScaleLabelX -
             progressionLabelOffsetX -
             FINAL_CONFIG.value.chart.padding?.right,
         bottom:
@@ -1042,8 +1109,10 @@ const drawingArea = computed(() => {
             FINAL_CONFIG.value.chart.padding?.bottom -
             FINAL_CONFIG.value.chart.grid.labels.axis.xLabelOffsetY,
         left:
-            _scaleLabelX +
-            FINAL_CONFIG.value.chart.grid.labels.yAxis.crosshairSize -
+            leftScaleLabelX +
+            (yAxisLabelsAreRight.value
+                ? 0
+                : FINAL_CONFIG.value.chart.grid.labels.yAxis.crosshairSize) -
             xPadding +
             FINAL_CONFIG.value.chart.padding?.left,
         height:
@@ -1054,7 +1123,10 @@ const drawingArea = computed(() => {
             topOffset -
             FINAL_CONFIG.value.chart.grid.labels.axis.xLabelOffsetY,
         width: _width,
-        scaleLabelX: _scaleLabelX,
+        scaleLabelX: leftScaleLabelX,
+        rightScaleLabelX,
+        scaleLabelsOffset,
+        yAxisLabelWidth,
         individualOffsetX,
     };
 });
@@ -3242,8 +3314,12 @@ const allScales = computed(() => {
     return _source.flatMap((el, i) => {
         let x = 0;
         x = mutableConfig.value.isStacked
-            ? drawingArea.value?.left
-            : (drawingArea.value?.left / len) * (i + 1);
+            ? yAxisLabelsAreRight.value
+                ? drawingArea.value?.right
+                : drawingArea.value?.left
+            : yAxisLabelsAreRight.value
+              ? drawingArea.value?.right + getIndividualScaleSlotWidth() * i
+              : (drawingArea.value?.left / len) * (i + 1);
 
         const name =
             mutableConfig.value.useIndividualScale &&
@@ -4989,6 +5065,7 @@ defineExpose({
                             />
                             <template v-if="!mutableConfig.useIndividualScale">
                                 <line
+                                    class="vue-ui-xy-y-axis"
                                     v-if="
                                         FINAL_CONFIG.chart.grid.labels.yAxis
                                             .showBaseline
@@ -4996,8 +5073,16 @@ defineExpose({
                                     data-cy="xy-grid-line-y"
                                     :stroke="FINAL_CONFIG.chart.grid.stroke"
                                     stroke-width="1"
-                                    :x1="drawingArea?.left + xPadding"
-                                    :x2="drawingArea?.left + xPadding"
+                                    :x1="
+                                        yAxisLabelsAreRight
+                                            ? drawingArea?.right - xPadding
+                                            : drawingArea?.left + xPadding
+                                    "
+                                    :x2="
+                                        yAxisLabelsAreRight
+                                            ? drawingArea?.right - xPadding
+                                            : drawingArea?.left + xPadding
+                                    "
                                     :y1="forceValidValue(drawingArea?.top)"
                                     :y2="forceValidValue(drawingArea?.bottom)"
                                     stroke-linecap="round"
@@ -5665,14 +5750,26 @@ defineExpose({
                                 <g v-for="el in allScales">
                                     <line
                                         :x1="
-                                            el.x +
-                                            xPadding -
-                                            drawingArea.individualOffsetX
+                                            mutableConfig.isStacked
+                                                ? yAxisLabelsAreRight
+                                                    ? drawingArea.right
+                                                    : drawingArea.left
+                                                : yAxisLabelsAreRight
+                                                  ? el.x + xPadding
+                                                  : el.x +
+                                                    xPadding -
+                                                    drawingArea.individualOffsetX
                                         "
                                         :x2="
-                                            el.x +
-                                            xPadding -
-                                            drawingArea.individualOffsetX
+                                            mutableConfig.isStacked
+                                                ? yAxisLabelsAreRight
+                                                    ? drawingArea.right
+                                                    : drawingArea.left
+                                                : yAxisLabelsAreRight
+                                                  ? el.x + xPadding
+                                                  : el.x +
+                                                    xPadding -
+                                                    drawingArea.individualOffsetX
                                         "
                                         :y1="
                                             mutableConfig.isStacked
@@ -5703,6 +5800,7 @@ defineExpose({
                                         :style="`opacity:${selectedScale ? (selectedScale === el.groupId ? 1 : 0.3) : 1};transition:opacity 0.2s ease-in-out; animation: none !important`"
                                     />
                                 </g>
+
                                 <g
                                     v-for="el in allScales"
                                     :style="`opacity:${selectedScale ? (selectedScale === el.groupId ? 1 : 0.3) : 1};transition:opacity 0.2s ease-in-out`"
@@ -5711,18 +5809,77 @@ defineExpose({
                                         :fill="el.color"
                                         :font-size="fontSizes.dataLabels * 0.8"
                                         text-anchor="middle"
-                                        :transform="`translate(${el.x - (fontSizes.dataLabels * 0.8) / 2 + xPadding}, ${mutableConfig.isStacked ? drawingArea?.bottom - el.yOffset - el.individualHeight / 2 : drawingArea?.top + drawingArea.height / 2}) rotate(-90)`"
+                                        :transform="`translate(${
+                                            mutableConfig.isStacked
+                                                ? yAxisLabelsAreRight
+                                                    ? drawingArea.right +
+                                                      FINAL_CONFIG.chart.grid
+                                                          .labels.yAxis
+                                                          .crosshairSize +
+                                                      FINAL_CONFIG.chart.grid
+                                                          .labels.yAxis
+                                                          .scaleValueOffsetX +
+                                                      5 +
+                                                      FINAL_CONFIG.chart.grid
+                                                          .labels.yAxis
+                                                          .labelWidth +
+                                                      drawingArea.individualOffsetX +
+                                                      FINAL_CONFIG.chart.grid
+                                                          .labels.axis
+                                                          .yLabelOffsetX
+                                                    : drawingArea.left -
+                                                      FINAL_CONFIG.chart.grid
+                                                          .labels.yAxis
+                                                          .crosshairSize -
+                                                      FINAL_CONFIG.chart.grid
+                                                          .labels.yAxis
+                                                          .scaleValueOffsetX -
+                                                      FINAL_CONFIG.chart.grid
+                                                          .labels.yAxis
+                                                          .labelWidth -
+                                                      FINAL_CONFIG.chart.grid
+                                                          .labels.axis
+                                                          .yLabelOffsetX
+                                                : yAxisLabelsAreRight
+                                                  ? el.x +
+                                                    xPadding +
+                                                    FINAL_CONFIG.chart.grid
+                                                        .labels.yAxis
+                                                        .crosshairSize +
+                                                    FINAL_CONFIG.chart.grid
+                                                        .labels.yAxis
+                                                        .scaleValueOffsetX +
+                                                    5 +
+                                                    FINAL_CONFIG.chart.grid
+                                                        .labels.yAxis
+                                                        .labelWidth +
+                                                    FINAL_CONFIG.chart.grid
+                                                        .labels.axis
+                                                        .yLabelOffsetX
+                                                  : el.x -
+                                                    (fontSizes.dataLabels *
+                                                        0.8) /
+                                                        2 +
+                                                    xPadding
+                                        }, ${
+                                            mutableConfig.isStacked
+                                                ? drawingArea?.bottom -
+                                                  el.yOffset -
+                                                  el.individualHeight / 2
+                                                : drawingArea?.top +
+                                                  drawingArea.height / 2
+                                        }) rotate(-90)`"
                                     >
                                         {{ el.name }}
                                         {{
                                             el.scaleLabel &&
                                             el.unique &&
                                             el.scaleLabel !== el.id
-                                                ? `-
-                                        ${el.scaleLabel}`
+                                                ? `- ${el.scaleLabel}`
                                                 : ''
                                         }}
                                     </text>
+
                                     <template v-for="(yLabel, j) in el.yLabels">
                                         <line
                                             v-if="
@@ -5730,17 +5887,40 @@ defineExpose({
                                                     .yAxis.showCrosshairs
                                             "
                                             :x1="
-                                                el.x +
-                                                3 +
-                                                xPadding -
-                                                FINAL_CONFIG.chart.grid.labels
-                                                    .yAxis.crosshairSize -
-                                                drawingArea.individualOffsetX
+                                                mutableConfig.isStacked
+                                                    ? yAxisLabelsAreRight
+                                                        ? drawingArea.right
+                                                        : drawingArea.left
+                                                    : yAxisLabelsAreRight
+                                                      ? el.x + xPadding
+                                                      : el.x +
+                                                        3 +
+                                                        xPadding -
+                                                        FINAL_CONFIG.chart.grid
+                                                            .labels.yAxis
+                                                            .crosshairSize -
+                                                        drawingArea.individualOffsetX
                                             "
                                             :x2="
-                                                el.x +
-                                                xPadding -
-                                                drawingArea.individualOffsetX
+                                                mutableConfig.isStacked
+                                                    ? yAxisLabelsAreRight
+                                                        ? drawingArea.right +
+                                                          FINAL_CONFIG.chart
+                                                              .grid.labels.yAxis
+                                                              .crosshairSize
+                                                        : drawingArea.left -
+                                                          FINAL_CONFIG.chart
+                                                              .grid.labels.yAxis
+                                                              .crosshairSize
+                                                    : yAxisLabelsAreRight
+                                                      ? el.x +
+                                                        xPadding +
+                                                        FINAL_CONFIG.chart.grid
+                                                            .labels.yAxis
+                                                            .crosshairSize
+                                                      : el.x +
+                                                        xPadding -
+                                                        drawingArea.individualOffsetX
                                             "
                                             :y1="forceValidValue(yLabel.y)"
                                             :y2="forceValidValue(yLabel.y)"
@@ -5752,11 +5932,49 @@ defineExpose({
                                             }"
                                         />
                                     </template>
+
                                     <text
                                         v-for="(yLabel, j) in el.yLabels"
-                                        :transform="`translate(${el.x - 5 + xPadding - drawingArea.individualOffsetX}, ${forceValidValue(yLabel.y) + fontSizes.dataLabels / 3})`"
+                                        :transform="`translate(${
+                                            mutableConfig.isStacked
+                                                ? yAxisLabelsAreRight
+                                                    ? drawingArea.right +
+                                                      FINAL_CONFIG.chart.grid
+                                                          .labels.yAxis
+                                                          .crosshairSize +
+                                                      FINAL_CONFIG.chart.grid
+                                                          .labels.yAxis
+                                                          .scaleValueOffsetX +
+                                                      5
+                                                    : drawingArea.left -
+                                                      FINAL_CONFIG.chart.grid
+                                                          .labels.yAxis
+                                                          .crosshairSize -
+                                                      FINAL_CONFIG.chart.grid
+                                                          .labels.yAxis
+                                                          .scaleValueOffsetX -
+                                                      5
+                                                : yAxisLabelsAreRight
+                                                  ? el.x +
+                                                    xPadding +
+                                                    FINAL_CONFIG.chart.grid
+                                                        .labels.yAxis
+                                                        .crosshairSize +
+                                                    FINAL_CONFIG.chart.grid
+                                                        .labels.yAxis
+                                                        .scaleValueOffsetX +
+                                                    5
+                                                  : el.x -
+                                                    5 +
+                                                    xPadding -
+                                                    drawingArea.individualOffsetX
+                                        }, ${forceValidValue(yLabel.y) + fontSizes.dataLabels / 3})`"
+                                        :text-anchor="
+                                            yAxisLabelsAreRight
+                                                ? 'start'
+                                                : 'end'
+                                        "
                                         :font-size="fontSizes.dataLabels"
-                                        text-anchor="end"
                                         :fill="el.color"
                                     >
                                         {{
@@ -5794,12 +6012,21 @@ defineExpose({
                                             FINAL_CONFIG.chart.grid.labels.yAxis
                                                 .showCrosshairs
                                         "
-                                        :x1="drawingArea?.left + xPadding"
+                                        :x1="
+                                            yAxisLabelsAreRight
+                                                ? drawingArea?.right - xPadding
+                                                : drawingArea?.left + xPadding
+                                        "
                                         :x2="
-                                            drawingArea?.left +
-                                            xPadding -
-                                            FINAL_CONFIG.chart.grid.labels.yAxis
-                                                .crosshairSize
+                                            yAxisLabelsAreRight
+                                                ? drawingArea?.right -
+                                                  xPadding +
+                                                  FINAL_CONFIG.chart.grid.labels
+                                                      .yAxis.crosshairSize
+                                                : drawingArea?.left +
+                                                  xPadding -
+                                                  FINAL_CONFIG.chart.grid.labels
+                                                      .yAxis.crosshairSize
                                         "
                                         :y1="forceValidValue(yLabel.y)"
                                         :y2="forceValidValue(yLabel.y)"
@@ -5816,9 +6043,25 @@ defineExpose({
                                             yLabel.value >= niceScale.min &&
                                             yLabel.value <= niceScale.max
                                         "
-                                        :transform="`translate(${drawingArea.scaleLabelX - FINAL_CONFIG.chart.grid.labels.yAxis.crosshairSize}, ${checkNaN(yLabel.y + fontSizes.dataLabels / 3)})`"
+                                        :transform="`translate(${
+                                            yAxisLabelsAreRight
+                                                ? drawingArea.right -
+                                                  xPadding +
+                                                  FINAL_CONFIG.chart.grid.labels
+                                                      .yAxis.crosshairSize +
+                                                  FINAL_CONFIG.chart.grid.labels
+                                                      .yAxis.scaleValueOffsetX +
+                                                  5
+                                                : drawingArea.scaleLabelX -
+                                                  FINAL_CONFIG.chart.grid.labels
+                                                      .yAxis.crosshairSize
+                                        }, ${checkNaN(yLabel.y + fontSizes.dataLabels / 3)})`"
                                         :font-size="fontSizes.dataLabels"
-                                        text-anchor="end"
+                                        :text-anchor="
+                                            yAxisLabelsAreRight
+                                                ? 'start'
+                                                : 'end'
+                                        "
                                         :fill="
                                             FINAL_CONFIG.chart.grid.labels.color
                                         "
@@ -7112,8 +7355,8 @@ defineExpose({
                                 <linearGradient
                                     v-for="(trap, i) in allScales"
                                     :id="`individual_scale_gradient_${uniqueId}_${i}`"
-                                    x1="0%"
-                                    x2="100%"
+                                    :x1="yAxisLabelsAreRight ? '100%' : '0%'"
+                                    :x2="yAxisLabelsAreRight ? '0%' : '100%'"
                                     y1="0%"
                                     y2="0%"
                                 >
@@ -7134,17 +7377,23 @@ defineExpose({
                             <rect
                                 v-for="(trap, i) in allScales"
                                 :x="
-                                    trap.x -
-                                    FINAL_CONFIG.chart.grid.labels.yAxis
-                                        .labelWidth +
-                                    xPadding -
-                                    drawingArea.individualOffsetX
+                                    yAxisLabelsAreRight
+                                        ? trap.x + xPadding
+                                        : trap.x -
+                                          FINAL_CONFIG.chart.grid.labels.yAxis
+                                              .labelWidth +
+                                          xPadding -
+                                          drawingArea.individualOffsetX
                                 "
                                 :y="drawingArea?.top"
                                 :width="
-                                    FINAL_CONFIG.chart.grid.labels.yAxis
-                                        .labelWidth +
-                                    drawingArea.individualOffsetX
+                                    yAxisLabelsAreRight
+                                        ? FINAL_CONFIG.chart.grid.labels.yAxis
+                                              .labelWidth +
+                                          drawingArea.individualOffsetX
+                                        : FINAL_CONFIG.chart.grid.labels.yAxis
+                                              .labelWidth +
+                                          drawingArea.individualOffsetX
                                 "
                                 :height="
                                     drawingArea.height < 0
@@ -7173,7 +7422,18 @@ defineExpose({
                                 "
                                 :font-size="fontSizes.yAxis"
                                 :fill="FINAL_CONFIG.chart.grid.labels.color"
-                                :transform="`translate(${FINAL_CONFIG.chart.grid.labels.axis.fontSize}, ${drawingArea?.top + drawingArea.height / 2}) rotate(-90)`"
+                                :transform="`translate(${
+                                    yAxisLabelsAreRight
+                                        ? drawingArea.right +
+                                          drawingArea.scaleLabelsOffset +
+                                          FINAL_CONFIG.chart.grid.labels.axis
+                                              .yLabelOffsetX +
+                                          fontSizes.yAxis
+                                        : FINAL_CONFIG.chart.grid.labels.axis
+                                              .fontSize +
+                                          FINAL_CONFIG.chart.grid.labels.axis
+                                              .yLabelOffsetX
+                                }, ${drawingArea?.top + drawingArea.height / 2}) rotate(-90)`"
                                 text-anchor="middle"
                                 style="transition: none"
                             >

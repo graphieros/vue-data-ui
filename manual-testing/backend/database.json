@@ -1366,6 +1366,29 @@
             "id": "5882f257-2c9c-4d9c-b9c4-9f9b084adcd9",
             "createdAt": 1777908631920,
             "updatedAt": 1777908631920
+        },
+        {
+            "title": "y axis position",
+            "component": "",
+            "description": "Add config option to position y axis scales to the right",
+            "priority": 0,
+            "author": "graphieros",
+            "done": true,
+            "exchanges": [],
+            "type": "feature",
+            "withComponentCheckList": false,
+            "checkList": {},
+            "withCustomCheckList": true,
+            "customCheckList": {
+                "vue-ui-xy": true,
+                "vue-ui-stackbar": true,
+                "vue-ui-stackline": true,
+                "vue-ui-candlestick": true,
+                "vue-ui-donut-evolution": true
+            },
+            "id": "676d3ed1-3734-41e0-87ec-bbfb4e32b2cf",
+            "createdAt": 1778739184067,
+            "updatedAt": 1778767022317
         }
     ]
 }

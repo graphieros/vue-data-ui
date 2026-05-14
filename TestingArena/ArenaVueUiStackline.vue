@@ -421,6 +421,7 @@ const model = createModel([
     COLOR('style.chart.grid.x.timeLabels.color', { def: '#1A1A1A' }),
     CHECKBOX('style.chart.grid.x.timeLabels.bold', { def: false }),
 
+    SELECT('style.chart.grid.y.position', ['left', 'right'], { def: 'right' }),
     CHECKBOX('style.chart.grid.y.showAxis', { def: true }),
     CHECKBOX('style.chart.grid.y.showVerticalLines', { def: true }),
     COLOR('style.chart.grid.y.linesColor', { def: '#FF00FF' }),

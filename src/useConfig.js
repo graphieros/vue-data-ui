@@ -441,6 +441,7 @@ export function useConfig(options = {}) {
                         },
                     },
                     y: {
+                        position: 'left', // or 'right
                         showAxis: true,
                         showVerticalLines: false,
                         linesColor: COLOR_GRID,
@@ -692,6 +693,7 @@ export function useConfig(options = {}) {
                         },
                     },
                     y: {
+                        position: 'left', // or 'right'
                         showAxis: true,
                         showVerticalLines: false,
                         linesColor: COLOR_GRID,
@@ -871,6 +873,7 @@ export function useConfig(options = {}) {
                         crosshairSize: 6,
                     },
                     yAxis: {
+                        position: 'left', // or 'right'
                         showBaseline: true,
                         showCrosshairs: true,
                         crosshairSize: 6,
@@ -2880,6 +2883,7 @@ export function useConfig(options = {}) {
                         },
                     },
                     yAxis: {
+                        position: 'left',
                         scale: {
                             min: null,
                             max: null,
@@ -4098,6 +4102,7 @@ export function useConfig(options = {}) {
                             color: COLOR_TEXT_PRIMARY,
                         },
                         yAxis: {
+                            position: 'left',
                             scaleMin: null,
                             scaleMax: null,
                             autoScale: false,

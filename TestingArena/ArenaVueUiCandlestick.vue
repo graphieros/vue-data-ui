@@ -227,6 +227,9 @@ const model = createModel([
     TEXT('style.layout.grid.yAxis.dataLabels.prefix', { def: 'P' }),
     TEXT('style.layout.grid.yAxis.dataLabels.suffix', { def: 'S' }),
 
+    SELECT('style.layout.grid.yAxis.position', ['left', 'right'], {
+        def: 'right',
+    }),
     NUMBER('style.layout.grid.yAxis.scale.min', {
         def: null,
         min: 0,

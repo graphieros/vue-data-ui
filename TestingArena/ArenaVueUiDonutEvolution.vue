@@ -118,6 +118,10 @@ const model = createModel([
         min: 2,
         max: 20,
     }),
+
+    SELECT('style.chart.layout.grid.yAxis.position', ['left', 'right'], {
+        def: 'right',
+    }),
     CHECKBOX('style.chart.layout.grid.yAxis.autoScale', { def: false }),
     NUMBER('style.chart.layout.grid.yAxis.scaleMin', { def: null }),
     NUMBER('style.chart.layout.grid.yAxis.scaleMax', { def: null }),

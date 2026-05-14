@@ -495,10 +495,18 @@ const padding = computed(() => {
     };
 });
 
+const yAxisLabelsAreRight = computed(() => {
+    return (
+        FINAL_CONFIG.value.style.chart.layout.grid.yAxis.position === 'right'
+    );
+});
+
 function getScaleLabelX() {
     let base = 0;
+
     if (scaleLabels.value) {
         const texts = Array.from(scaleLabels.value.querySelectorAll('text'));
+
         base = texts.reduce((max, t) => {
             const w = t.getComputedTextLength();
             return w > max ? w : max;
@@ -512,7 +520,15 @@ function getScaleLabelX() {
         : 0;
 
     const crosshair = 5;
-    return base + yAxisLabelW + crosshair;
+    const total = base + yAxisLabelW + crosshair;
+
+    return {
+        left: yAxisLabelsAreRight.value ? 0 : total,
+        right: yAxisLabelsAreRight.value ? total : 0,
+        scaleLabelsWidth: base,
+        yAxisLabelWidth: yAxisLabelW,
+        crosshair,
+    };
 }
 
 const timeLabelsHeight = ref(0);
@@ -555,22 +571,28 @@ const timeLabelsY = computed(() => {
 });
 
 const svg = computed(() => {
-    const _scaleLabelX = getScaleLabelX();
+    const scaleLabelX = getScaleLabelX();
 
     const topOffset =
         FINAL_CONFIG.value.style.chart.layout.dataLabels.fontSize * 3;
 
     const absoluteWidth = defaultSizes.value.width;
     const absoluteHeight = defaultSizes.value.height;
-    const left = padding.value.left + _scaleLabelX;
-    const right = absoluteWidth - padding.value.right;
-    const width = absoluteWidth - left - padding.value.right;
+
+    const left = padding.value.left + scaleLabelX.left;
+
+    const right = absoluteWidth - padding.value.right - scaleLabelX.right;
+
+    const width =
+        absoluteWidth - left - padding.value.right - scaleLabelX.right;
+
     const height =
         absoluteHeight -
         padding.value.top -
         padding.value.bottom -
         topOffset -
         timeLabelsY.value;
+
     const top = padding.value.top + topOffset;
     const bottom = absoluteHeight - padding.value.bottom - timeLabelsY.value;
 
@@ -585,6 +607,9 @@ const svg = computed(() => {
         centerY: top + Math.max(10, height) / 2,
         width: Math.max(10, width),
         height: Math.max(10, height),
+        scaleLabelsWidth: scaleLabelX.scaleLabelsWidth,
+        yAxisLabelWidth: scaleLabelX.yAxisLabelWidth,
+        crosshair: scaleLabelX.crosshair,
     };
 });
 
@@ -1795,8 +1820,8 @@ defineExpose({
                 <g v-if="FINAL_CONFIG.style.chart.layout.grid.show">
                     <line
                         data-cy="axis-y"
-                        :x1="svg.left"
-                        :x2="svg.left"
+                        :x1="yAxisLabelsAreRight ? svg.right : svg.left"
+                        :x2="yAxisLabelsAreRight ? svg.right : svg.left"
                         :y1="svg.top"
                         :y2="svg.top + svg.height"
                         :stroke="FINAL_CONFIG.style.chart.layout.grid.stroke"
@@ -1853,7 +1878,17 @@ defineExpose({
                             FINAL_CONFIG.style.chart.layout.grid.axis.fontSize
                         "
                         :fill="FINAL_CONFIG.style.chart.layout.grid.axis.color"
-                        :transform="`translate(${FINAL_CONFIG.style.chart.layout.grid.axis.fontSize}, ${svg.top + svg.height / 2}) rotate(-90)`"
+                        :transform="`translate(${
+                            yAxisLabelsAreRight
+                                ? svg.absoluteWidth -
+                                  FINAL_CONFIG.style.chart.layout.grid.axis
+                                      .fontSize /
+                                      2 -
+                                  FINAL_CONFIG.style.chart.layout.grid.axis
+                                      .yLabelOffsetX
+                                : FINAL_CONFIG.style.chart.layout.grid.axis
+                                      .fontSize
+                        }, ${svg.top + svg.height / 2}) rotate(-90)`"
                         text-anchor="middle"
                         style="transition: none"
                     >
@@ -1894,8 +1929,12 @@ defineExpose({
                                 yLabel.value >= niceScale.min &&
                                 yLabel.value <= niceScale.max
                             "
-                            :x1="svg.left"
-                            :x2="svg.left - 5"
+                            :x1="yAxisLabelsAreRight ? svg.right : svg.left"
+                            :x2="
+                                yAxisLabelsAreRight
+                                    ? svg.right + 5
+                                    : svg.left - 5
+                            "
                             :y1="yLabel.y"
                             :y2="yLabel.y"
                             :stroke="
@@ -1912,10 +1951,15 @@ defineExpose({
                                 yLabel.value <= niceScale.max
                             "
                             :x="
-                                svg.left +
-                                FINAL_CONFIG.style.chart.layout.grid.yAxis
-                                    .dataLabels.offsetX -
-                                7
+                                yAxisLabelsAreRight
+                                    ? svg.right -
+                                      FINAL_CONFIG.style.chart.layout.grid.yAxis
+                                          .dataLabels.offsetX +
+                                      7
+                                    : svg.left +
+                                      FINAL_CONFIG.style.chart.layout.grid.yAxis
+                                          .dataLabels.offsetX -
+                                      7
                             "
                             :y="
                                 yLabel.y +
@@ -1927,7 +1971,7 @@ defineExpose({
                                 FINAL_CONFIG.style.chart.layout.grid.yAxis
                                     .dataLabels.fontSize
                             "
-                            text-anchor="end"
+                            :text-anchor="yAxisLabelsAreRight ? 'start' : 'end'"
                             :fill="
                                 FINAL_CONFIG.style.chart.layout.grid.yAxis
                                     .dataLabels.color

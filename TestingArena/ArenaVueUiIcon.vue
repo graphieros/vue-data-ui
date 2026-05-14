@@ -298,7 +298,7 @@ const icons = ref([
     'npmx',
     'annotation',
     'clankerCrazy',
-    'clankerNasty'
+    'clankerNasty',
 ]);
 
 const inputValue = ref('');
