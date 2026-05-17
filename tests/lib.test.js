@@ -462,6 +462,20 @@ describe('adaptColorToBackground', () => {
 });
 
 describe('convertColorToHex', () => {
+    test('returns HEX with alpha from a shorthand HEX', () => {
+        expect(convertColorToHex('#f00')).toBe('#ff0000ff');
+        expect(convertColorToHex('#0f0')).toBe('#00ff00ff');
+        expect(convertColorToHex('#00f')).toBe('#0000ffff');
+        expect(convertColorToHex('#000')).toBe('#000000ff');
+        expect(convertColorToHex('#fff')).toBe('#ffffffff');
+    });
+    test('returns HEX with alpha from a named color', () => {
+        expect(convertColorToHex('red')).toBe('#FF0000ff');
+        expect(convertColorToHex('green')).toBe('#008000ff');
+        expect(convertColorToHex('blue')).toBe('#0000FFff');
+        expect(convertColorToHex('black')).toBe('#000000ff');
+        expect(convertColorToHex('white')).toBe('#FFFFFFff');
+    });
     test('returns HEX color format from OKLCH', () => {
         expect(convertColorToHex('oklch(0.628 0.2577 29.23)')).toBe(
             '#ff0000ff',
