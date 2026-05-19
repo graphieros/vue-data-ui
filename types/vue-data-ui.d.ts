@@ -4168,7 +4168,30 @@ declare module 'vue-data-ui' {
         dataset: VueUiAgePyramidDataset;
     };
 
-    const VueUiAgePyramidBase: DefineComponent<VueUiAgePyramidProps>;
+    export type VueUiAgePyramidEmitCopyAlt = {
+        config: VueUiAgePyramidConfig;
+        dataset: Array<{
+            age: number;
+            left: VueUiAgePyramidSideData;
+            right: VueUiAgePyramidSideData;
+            segment: string;
+        }>;
+    };
+
+    export type VueUiAgePyramidEmits = {
+        copyAlt: (payload: VueUiAgePyramidEmitCopyAlt) => void;
+    };
+
+    const VueUiAgePyramidBase: DefineComponent<
+        VueUiAgePyramidProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiAgePyramidEmits
+    >;
 
     export const VueUiAgePyramid: typeof VueUiAgePyramidBase & {
         new (): VueUiAgePyramidExpose & {
