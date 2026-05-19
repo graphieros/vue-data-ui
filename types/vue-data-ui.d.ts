@@ -12057,7 +12057,25 @@ declare module 'vue-data-ui' {
         dataset: VueUiCarouselTableDataset;
     };
 
-    const VueUiCarouselTableBase: DefineComponent<VueUiCarouselTableProps>;
+    export type VueUiCarouselTableEmitCopyAlt = {
+        dataset: VueUiCarouselTableDataset;
+        config: VueUiCarouselTableConfig;
+    };
+
+    export type VueUiCarouselTableEmits = {
+        copyAlt: (payload: VueUiCarouselTableEmitCopyAlt) => void;
+    };
+
+    const VueUiCarouselTableBase: DefineComponent<
+        VueUiCarouselTableProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiCarouselTableEmits
+    >;
 
     export const VueUiCarouselTable: typeof VueUiCarouselTableBase & {
         new (): {
