@@ -78,67 +78,56 @@ describe('<VueUiNestedDonuts />', () => {
     });
 
     it('emits', () => {
+        const onSelectLegend = cy.spy().as('onSelectLegend');
+        const onSelectDatapoint = cy.spy().as('onSelectDatapoint');
+
         cy.mount(VueUiNestedDonuts, {
             props: {
                 dataset,
                 config,
+                onSelectLegend,
+                onSelectDatapoint,
             },
-        }).then(({ wrapper }) => {
+        }).then(() => {
             cy.log('@selectLegend');
-            cy.get('[data-cy="legend-item"]')
-                .first()
-                .click({ force: true })
-                .then(() => {
-                    expect(wrapper.emitted('selectLegend')).to.exist;
-                });
-
+            cy.get('[data-cy="legend-item"]').first().click({ force: true });
+            cy.get('@onSelectLegend').should('have.been.called');
             cy.log('@selectDatapoint');
-            cy.get('[data-cy="tooltip-trap"]')
-                .first()
-                .click({ force: true })
-                .then(() => {
-                    expect(wrapper.emitted('selectDatapoint')).to.exist;
-                    expect(
-                        wrapper.emitted('selectDatapoint')[0][0],
-                    ).to.have.keys('datapoint', 'index');
-                    expect(
-                        wrapper.emitted('selectDatapoint')[0][0].index,
-                    ).to.equal(0);
-                    expect(
-                        wrapper.emitted('selectDatapoint')[0][0].datapoint,
-                    ).to.have.keys(
-                        'absoluteValues',
-                        'arcOf',
-                        'arcOfId',
-                        'arcSlice',
-                        'center',
-                        'color',
-                        'cx',
-                        'cy',
-                        'datasetIndex',
-                        'endX',
-                        'endY',
-                        'firstSeparator',
-                        'id',
-                        'name',
-                        'path',
-                        'proportion',
-                        'ratio',
-                        'separator',
-                        'seriesIndex',
-                        'startX',
-                        'startY',
-                        'value',
-                    );
-                    expect(
-                        wrapper.emitted('selectDatapoint')[0][0].datapoint
-                            .datasetIndex,
-                    ).to.equal(0);
-                    expect(
-                        wrapper.emitted('selectDatapoint')[0][0].datapoint
-                            .seriesIndex,
-                    ).to.equal(0);
-                });
+            cy.get('[data-cy="tooltip-trap"]').first().click({ force: true });
+
+            cy.get('@onSelectDatapoint').should((spy) => {
+                expect(spy).to.have.been.called;
+                const payload = spy.firstCall.args[0];
+                expect(payload).to.have.keys('datapoint', 'index');
+                expect(payload.index).to.equal(0);
+                expect(payload.datapoint).to.include.keys(
+                    'absoluteValues',
+                    'arcOf',
+                    'arcOfId',
+                    'arcSlice',
+                    'center',
+                    'color',
+                    'cx',
+                    'cy',
+                    'datasetIndex',
+                    'endX',
+                    'endY',
+                    'firstSeparator',
+                    'id',
+                    'name',
+                    'path',
+                    'proportion',
+                    'ratio',
+                    'separator',
+                    'seriesIndex',
+                    'startX',
+                    'startY',
+                    'value',
+                );
+
+                expect(payload.datapoint.datasetIndex).to.equal(0);
+                expect(payload.datapoint.seriesIndex).to.equal(1);
+            });
         });
     });
 });

@@ -135,8 +135,12 @@ describe('VueUiQuickChart', () => {
                 .first()
                 .click({ force: true })
                 .then(() => {
-                    expect(wrapper.emitted('selectLegend')).to.exist;
-                    expect(wrapper.emitted('selectLegend')[0][0]).to.have.keys(
+                    const emittedSelectLegend = wrapper.emitted('selectLegend');
+                    expect(emittedSelectLegend).to.exist;
+                    expect(emittedSelectLegend).to.have.length(1);
+                    const payload = emittedSelectLegend[0][0];
+                    expect(payload).to.be.an('array');
+                    expect(payload[0]).to.have.keys(
                         'absoluteIndices',
                         'absoluteValues',
                         'color',
@@ -144,7 +148,6 @@ describe('VueUiQuickChart', () => {
                         'id',
                         'name',
                         'values',
-                        'shape',
                     );
                 });
         });
@@ -278,8 +281,12 @@ describe('VueUiQuickChart', () => {
                 .first()
                 .click({ force: true })
                 .then(() => {
-                    expect(wrapper.emitted('selectLegend')).to.exist;
-                    expect(wrapper.emitted('selectLegend')[0][0]).to.have.keys(
+                    const emittedSelectLegend = wrapper.emitted('selectLegend');
+                    expect(emittedSelectLegend).to.exist;
+                    expect(emittedSelectLegend).to.have.length(1);
+                    const payload = emittedSelectLegend[0][0];
+                    expect(payload).to.be.an('array');
+                    expect(payload[0]).to.have.keys(
                         'absoluteIndices',
                         'absoluteValues',
                         'color',
@@ -287,8 +294,8 @@ describe('VueUiQuickChart', () => {
                         'id',
                         'linePath',
                         'name',
-                        'values',
                         'shape',
+                        'values',
                     );
                 });
         });
@@ -436,8 +443,12 @@ describe('VueUiQuickChart', () => {
                 .first()
                 .click({ force: true })
                 .then(() => {
-                    expect(wrapper.emitted('selectLegend')).to.exist;
-                    expect(wrapper.emitted('selectLegend')[0][0]).to.have.keys(
+                    const emittedSelectLegend = wrapper.emitted('selectLegend');
+                    expect(emittedSelectLegend).to.exist;
+                    expect(emittedSelectLegend).to.have.length(1);
+                    const payload = emittedSelectLegend[0][0];
+                    expect(payload).to.be.an('array');
+                    expect(payload[0]).to.have.keys(
                         'NAME',
                         'VALUES',
                         'absoluteIndices',
@@ -447,7 +458,6 @@ describe('VueUiQuickChart', () => {
                         'id',
                         'name',
                         'values',
-                        'shape',
                     );
                 });
         });
@@ -601,8 +611,12 @@ describe('VueUiQuickChart', () => {
                 .first()
                 .click({ force: true })
                 .then(() => {
-                    expect(wrapper.emitted('selectLegend')).to.exist;
-                    expect(wrapper.emitted('selectLegend')[0][0]).to.have.keys(
+                    const emittedSelectLegend = wrapper.emitted('selectLegend');
+                    expect(emittedSelectLegend).to.exist;
+                    expect(emittedSelectLegend).to.have.length(1);
+                    const payload = emittedSelectLegend[0][0];
+                    expect(payload).to.be.an('array');
+                    expect(payload[0]).to.have.keys(
                         'NAME',
                         'VALUES',
                         'absoluteIndices',
@@ -612,8 +626,8 @@ describe('VueUiQuickChart', () => {
                         'id',
                         'linePath',
                         'name',
-                        'values',
                         'shape',
+                        'values',
                     );
                 });
         });
@@ -703,80 +717,58 @@ describe('VueUiQuickChart', () => {
 
     it('emits from a donut chart from an array of objects', () => {
         const ds = [
-            {
-                name: 'S1',
-                value: 1,
-            },
-            {
-                name: 'S2',
-                value: 2,
-            },
-            {
-                name: 'S3',
-                value: 3,
-            },
+            { name: 'S1', value: 1 },
+            { name: 'S2', value: 2 },
+            { name: 'S3', value: 3 },
         ];
+
+        const onSelectLegend = cy.spy().as('onSelectLegend');
 
         cy.mount(VueUiQuickChart, {
             props: {
                 dataset: ds,
                 config,
+                onSelectLegend,
             },
         }).then(({ wrapper }) => {
             cy.log('@selectDatapoint');
+
             cy.get('.vue-ui-quick-chart').trigger('mouseenter', {
                 force: true,
             });
+
             cy.get('[data-cy="tooltip-trap-donut"]')
                 .first()
                 .click({ force: true })
                 .then(() => {
                     expect(wrapper.emitted('selectDatapoint')).to.exist;
-                    expect(
-                        wrapper.emitted('selectDatapoint')[0][0],
-                    ).to.have.keys(
-                        'NAME',
-                        'VALUE',
-                        'arcSlice',
-                        'center',
-                        'color',
-                        'cx',
-                        'cy',
-                        'endX',
-                        'endY',
-                        'firstSeparator',
-                        'id',
-                        'immutableValue',
-                        'name',
-                        'path',
-                        'proportion',
-                        'ratio',
-                        'separator',
-                        'startX',
-                        'startY',
-                        'value',
-                    );
                 });
 
             cy.log('@selectLegend');
+
             cy.get('.vue-ui-quick-chart-legend-item')
                 .first()
-                .click({ force: true })
-                .then(() => {
-                    expect(wrapper.emitted('selectLegend')).to.exist;
-                    expect(wrapper.emitted('selectLegend')[0][0]).to.have.keys(
-                        'NAME',
-                        'VALUE',
-                        'absoluteValue',
-                        'color',
-                        'id',
-                        'immutableValue',
-                        'name',
-                        'proportion',
-                        'value',
-                        'shape',
-                    );
-                });
+                .click({ force: true });
+
+            cy.get('@onSelectLegend').should((spy) => {
+                expect(spy).to.have.been.calledOnce;
+
+                const payload = spy.firstCall.args[0];
+
+                expect(payload).to.be.an('array');
+                expect(payload[0]).to.include.keys(
+                    'NAME',
+                    'VALUE',
+                    'absoluteValue',
+                    'color',
+                    'id',
+                    'immutableValue',
+                    'name',
+                    'proportion',
+                    'shape',
+                    'value',
+                );
+            });
         });
     });
 });

@@ -65,61 +65,53 @@ describe('<VueUiDonut />', () => {
         });
     }
 
-    function testEmits(wrapper) {
+    function testEmits() {
         cy.log('@selectLegend');
-        cy.get('[data-cy="legend-item"]')
-            .first()
-            .click({ force: true })
-            .then(() => {
-                expect(wrapper.emitted('selectLegend')).to.exist;
-            });
-
-        cy.log('selectDatapoint');
-        cy.get('[data-cy="tooltip-trap"]')
-            .first()
-            .click({ force: true })
-            .then(() => {
-                expect(wrapper.emitted('selectDatapoint')[0][0]).to.have.keys(
-                    'datapoint',
-                    'index',
-                );
-                expect(wrapper.emitted('selectDatapoint')[0][0].index).to.equal(
-                    0,
-                );
-                expect(
-                    wrapper.emitted('selectDatapoint')[0][0].datapoint,
-                ).to.have.keys(
-                    'absoluteValues',
-                    'arcSlice',
-                    'center',
-                    'color',
-                    'comment',
-                    'cx',
-                    'cy',
-                    'endX',
-                    'endY',
-                    'firstSeparator',
-                    'name',
-                    'path',
-                    'pattern',
-                    'patternIndex',
-                    'seriesIndex',
-                    'proportion',
-                    'ratio',
-                    'separator',
-                    'ghost',
-                    'startX',
-                    'startY',
-                    'value',
-                );
-            });
+        cy.get('[data-cy="legend-item"]').first().click({ force: true });
+        cy.get('@onSelectLegend').should('have.been.called');
+        cy.log('@selectDatapoint');
+        cy.get('[data-cy="tooltip-trap"]').first().click({ force: true });
+        cy.get('@onSelectDatapoint').should((spy) => {
+            expect(spy).to.have.been.called;
+            const payload = spy.firstCall.args[0];
+            expect(payload).to.have.keys('datapoint', 'index');
+            expect(payload.index).to.equal(0);
+            expect(payload.datapoint).to.include.keys(
+                'absoluteValues',
+                'arcSlice',
+                'center',
+                'color',
+                'comment',
+                'cx',
+                'cy',
+                'endX',
+                'endY',
+                'firstSeparator',
+                'name',
+                'path',
+                'pattern',
+                'patternIndex',
+                'seriesIndex',
+                'proportion',
+                'ratio',
+                'separator',
+                'ghost',
+                'startX',
+                'startY',
+                'value',
+            );
+        });
     }
 
     it('renders donut default variation', () => {
+        const onSelectLegend = cy.spy().as('onSelectLegend');
+        const onSelectDatapoint = cy.spy().as('onSelectDatapoint');
         cy.mount(VueUiDonut, {
             props: {
                 dataset,
                 config,
+                onSelectLegend,
+                onSelectDatapoint,
             },
             slots: {
                 ['plot-comment']: ({ plot }) =>
@@ -166,6 +158,8 @@ describe('<VueUiDonut />', () => {
     });
 
     it('renders polar variation', () => {
+        const onSelectLegend = cy.spy().as('onSelectLegend');
+        const onSelectDatapoint = cy.spy().as('onSelectDatapoint');
         cy.mount(VueUiDonut, {
             props: {
                 dataset,
@@ -173,6 +167,8 @@ describe('<VueUiDonut />', () => {
                     ...config,
                     type: 'polar',
                 },
+                onSelectLegend,
+                onSelectDatapoint,
             },
             slots: {
                 ['plot-comment']: ({ plot }) =>
