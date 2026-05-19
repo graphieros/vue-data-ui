@@ -7,6 +7,11 @@ import {
     VueUiXy,
     type VueUiXyConfig,
     type VueUiXyDatasetItem,
+    type VueUiXyEmitCopyAlt,
+    type VueUiXyEmitSelectLegend,
+    type VueUiXyEmitSelectTimeLabel,
+    type VueUiXyEmitSelectX,
+    type VueUiXyEmitZoom,
 } from 'vue-data-ui/vue-ui-xy';
 import { mergeConfigs } from 'vue-data-ui/utils';
 import 'vue-data-ui/style.css';
@@ -576,11 +581,44 @@ const config = computed<VueUiXyConfig>(() => {
         },
     });
 });
+
+function selectTimeLabel(payload: VueUiXyEmitSelectTimeLabel) {
+    console.log('@selectTimeLabel', payload.datapoint);
+}
+
+function selectX(payload: VueUiXyEmitSelectX) {
+    console.log('@selectX', payload);
+}
+
+function selectLegend(payload: VueUiXyEmitSelectLegend) {
+    console.log('@selectLegend', payload);
+}
+
+function zoomStart(payload: VueUiXyEmitZoom) {
+    console.log('@zoomStart', payload);
+}
+
+function zoomEnd(payload: VueUiXyEmitZoom) {
+    console.log('@zoomEnd', payload);
+}
+
+function copyAlt(payload: VueUiXyEmitCopyAlt) {
+    console.log('@copyAlt', payload);
+}
 </script>
 
 <template>
     <div>
-        <VueUiXy :dataset :config>
+        <VueUiXy
+            :dataset
+            :config
+            @selectTimeLabel="selectTimeLabel"
+            @selectX="selectX"
+            @selectLegend="selectLegend"
+            @zoomStart="zoomStart"
+            @zoomEnd="zoomEnd"
+            @copyAlt="copyAlt"
+        >
             <!-- <template #legend="{ legend }">
                 <XyLegend :items="legend" />
             </template> -->

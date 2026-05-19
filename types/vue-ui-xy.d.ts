@@ -34,6 +34,12 @@ import type {
     VueUiKeyboardNavigationHintSlotProps,
     VueUiWatermarkSlotProps,
     CommonAnnotatorSlots,
+    VueUiXyEmits,
+    VueUiXyEmitSelectTimeLabel,
+    VueUiXyEmitSelectX,
+    VueUiXyEmitSelectLegend,
+    VueUiXyEmitZoom,
+    VueUiXyEmitCopyAlt,
 } from 'vue-data-ui';
 
 export type {
@@ -70,9 +76,24 @@ export type {
     VueUiKeyboardNavigationHintSlotProps,
     VueUiWatermarkSlotProps,
     CommonAnnotatorSlots,
+    VueUiXyEmits,
+    VueUiXyEmitSelectTimeLabel,
+    VueUiXyEmitSelectX,
+    VueUiXyEmitSelectLegend,
+    VueUiXyEmitZoom,
+    VueUiXyEmitCopyAlt,
 };
 
-declare const VueUiXyBase: DefineComponent<VueUiXyProps>;
+declare const VueUiXyBase: DefineComponent<
+    VueUiXyProps,
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    VueUiXyEmits
+>;
 
 export const VueUiXy: typeof VueUiXyBase & {
     new (): VueUiXyExpose & {

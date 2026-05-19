@@ -5619,7 +5619,16 @@ declare module 'vue-data-ui' {
         selectedXIndex?: number | null;
     };
 
-    const VueUiXyBase: DefineComponent<VueUiXyProps>;
+    const VueUiXyBase: DefineComponent<
+        VueUiXyProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiXyEmits
+    >;
 
     export type VueUiXyLegendSlotProps = {
         legend: VueUiXySeries;
@@ -5743,6 +5752,68 @@ declare module 'vue-data-ui' {
     };
     export type VueUiWatermarkSlotProps = {
         isPrinting: boolean;
+    };
+
+    export type VueUiXyEmitSelectTimeLabel = {
+        datapoint: Array<{
+            shape: Shape;
+            name: string;
+            color: string;
+            type: 'line' | 'bar' | 'plot';
+            value: number | null;
+            comments: string[];
+            prefix: string;
+            suffix: string;
+        }>;
+        absoluteIndex: number;
+        label: string;
+    };
+
+    export type VueUiXyEmitSelectX = {
+        datapoint: {
+            name: string;
+            value: number | null;
+            color: string;
+            type: 'line' | 'bar' | 'plot';
+        };
+        index: number;
+        indexLabel: string;
+    };
+
+    export type VueUiXyEmitSelectLegend = Array<{
+        name: string;
+        values: Array<number | null>;
+        color: string;
+        type: 'line' | 'bar' | 'plot';
+    }>;
+
+    export type VueUiXyEmitZoom = {
+        index: number;
+        isZoom: boolean;
+    };
+
+    export type VueUiXyEmitCopyAlt = {
+        config: VueUiXyConfig & {
+            formattedDates: Array<{
+                text: string;
+                absoluteIndex: number;
+            }>;
+        };
+        dataset: {
+            bars: VueUiXyDatasetBarItem[];
+            lines: VueUiXyDatasetLineItem[];
+            plots: VueUiXyDatasetPlotItem[];
+        };
+    };
+
+    export type VueUiXyEmits = {
+        selectTimeLabel: (payload: VueUiXyEmitSelectTimeLabel) => void;
+        selectX: (payload: VueUiXyEmitSelectX) => void;
+        selectLegend: (payload: VueUiXyEmitSelectLegend) => void;
+        zoomStart: (payload: VueUiXyEmitZoom) => void;
+        zoomEnd: (payload: VueUiXyEmitZoom) => void;
+        zoomReset: () => void;
+        copyAlt: (payload: VueUiXyEmitCopyAlt) => void;
     };
 
     export const VueUiXy: typeof VueUiXyBase & {
