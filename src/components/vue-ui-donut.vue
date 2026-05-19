@@ -693,6 +693,17 @@ const segregated = ref([]);
 const isAnimating = ref(false);
 const animatingIndex = ref(null);
 
+function emitSelectLegend() {
+    emit(
+        'selectLegend',
+        donutSet.value.map((ds) => ({
+            name: ds.name,
+            color: ds.color,
+            value: ds.value,
+        })),
+    );
+}
+
 function animateValue({
     from,
     to,
@@ -725,6 +736,7 @@ function toggleLegend() {
             segregated.value.push(i);
         });
     }
+    emitSelectLegend();
 }
 
 function segregate(index) {
@@ -741,6 +753,7 @@ function segregate(index) {
             mutableSet.value = mutableSet.value.map((ds, i) =>
                 index === i ? { ...ds, value: targetVal } : ds,
             );
+            emitSelectLegend();
         }
 
         function doAnimUp() {
@@ -781,6 +794,7 @@ function segregate(index) {
             mutableSet.value = mutableSet.value.map((ds, i) =>
                 index === i ? { ...ds, value: 0 } : ds,
             );
+            emitSelectLegend();
         }
 
         function doAnimDown() {
@@ -815,15 +829,6 @@ function segregate(index) {
             setFinalDownState();
         }
     }
-
-    emit(
-        'selectLegend',
-        donutSet.value.map((ds) => ({
-            name: ds.name,
-            color: ds.color,
-            value: ds.value,
-        })),
-    );
 }
 
 function validSeriesToToggle(name) {

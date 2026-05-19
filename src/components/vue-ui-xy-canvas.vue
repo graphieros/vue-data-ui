@@ -2876,13 +2876,10 @@ function toggleLegend() {
     }
     datasetHasChanged.value = true;
     debounceCanvasResize();
+    emit('selectLegend', formattedDataset.value);
 }
 
 function segregate(index) {
-    emit(
-        'selectLegend',
-        formattedDataset.value.find((el) => el.absoluteIndex === index),
-    );
     if (segregated.value.includes(index)) {
         segregated.value = segregated.value.filter((i) => i !== index);
     } else {
@@ -2890,6 +2887,7 @@ function segregate(index) {
     }
     datasetHasChanged.value = true;
     debounceCanvasResize();
+    emit('selectLegend', formattedDataset.value);
 }
 
 function validSeriesToToggle(name) {

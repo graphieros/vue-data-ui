@@ -346,6 +346,7 @@ function toggleLegend() {
             segregated.value.push(i);
         });
     }
+    emits('selectLegend', mutableDataset.value);
 }
 
 function segregate(index) {
@@ -356,6 +357,7 @@ function segregate(index) {
             segregated.value.push(index);
         }
     }
+    emits('selectLegend', mutableDataset.value);
 }
 
 function validSeriesToToggle(name) {
@@ -406,7 +408,7 @@ const drawableDataset = computed(() => {
     return datapoints;
 });
 
-const emits = defineEmits(['selectDatapoint']);
+const emits = defineEmits(['selectDatapoint', 'selectLegend']);
 
 function selectDatapoint(datapoint, index, fromLegend = false) {
     emits('selectDatapoint', { datapoint, index });

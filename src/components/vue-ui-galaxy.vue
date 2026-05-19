@@ -322,22 +322,7 @@ const emit = defineEmits(['selectLegend', 'selectDatapoint', 'copyAlt']);
 
 const segregated = ref([]);
 
-function toggleLegend() {
-    if (segregated.value.length) {
-        segregated.value = [];
-    } else {
-        legendSet.value.forEach((l) => {
-            segregated.value.push(l.id);
-        });
-    }
-}
-
-function segregate(datapoint) {
-    if (segregated.value.includes(datapoint.id)) {
-        segregated.value = segregated.value.filter((s) => s !== datapoint.id);
-    } else {
-        segregated.value.push(datapoint.id);
-    }
+function emitSelectLegend() {
     emit(
         'selectLegend',
         galaxySet.value.map((ds) => {
@@ -348,6 +333,26 @@ function segregate(datapoint) {
             };
         }),
     );
+}
+
+function toggleLegend() {
+    if (segregated.value.length) {
+        segregated.value = [];
+    } else {
+        legendSet.value.forEach((l) => {
+            segregated.value.push(l.id);
+        });
+    }
+    emitSelectLegend();
+}
+
+function segregate(datapoint) {
+    if (segregated.value.includes(datapoint.id)) {
+        segregated.value = segregated.value.filter((s) => s !== datapoint.id);
+    } else {
+        segregated.value.push(datapoint.id);
+    }
+    emitSelectLegend();
 }
 
 function validSeriesToToggle(name) {

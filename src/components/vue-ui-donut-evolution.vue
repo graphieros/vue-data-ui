@@ -1023,6 +1023,7 @@ function toggleLegend() {
             segregated.value.push(l.uid);
         });
     }
+    emit('selectLegend', mutableDataset.value);
 }
 
 function segregate(id) {

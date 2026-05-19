@@ -561,6 +561,7 @@ function toggleLegend() {
             segregated.value.push(l.id);
         });
     }
+    emit('selectLegend', drawableDataset.value);
 }
 
 function segregate(slug) {
@@ -569,7 +570,6 @@ function segregate(slug) {
     } else {
         segregated.value.push(slug);
     }
-
     emit('selectLegend', drawableDataset.value);
 }
 

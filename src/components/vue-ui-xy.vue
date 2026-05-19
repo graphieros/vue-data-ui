@@ -1857,6 +1857,7 @@ function toggleLegend() {
             segregatedSeries.value.push(s.id);
         });
     }
+    emitSelectLegend();
 }
 
 function handleLegendKeydown(event, legendItem) {
@@ -1864,6 +1865,20 @@ function handleLegendKeydown(event, legendItem) {
         event.preventDefault();
         segregate(legendItem);
     }
+}
+
+function emitSelectLegend() {
+    emit(
+        'selectLegend',
+        relativeDataset.value.map((s) => {
+            return {
+                name: s.name,
+                values: s.absoluteValues,
+                color: s.color,
+                type: s.type,
+            };
+        }),
+    );
 }
 
 function segregate(legendItem) {
@@ -1876,17 +1891,7 @@ function segregate(legendItem) {
             return;
         segregatedSeries.value.push(legendItem.id);
     }
-    emit(
-        'selectLegend',
-        relativeDataset.value.map((s) => {
-            return {
-                name: s.name,
-                values: s.absoluteValues,
-                color: s.color,
-                type: s.type,
-            };
-        }),
-    );
+    emitSelectLegend();
     segregateStep.value += 1;
 }
 

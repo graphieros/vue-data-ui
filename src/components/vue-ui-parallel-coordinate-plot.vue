@@ -529,6 +529,7 @@ function toggleLegend() {
             segregated.value.push(l.id);
         });
     }
+    emit('selectLegend', filteredDs.value);
 }
 
 function segregate(id) {
@@ -1017,12 +1018,8 @@ function selectDatapoint({ serie, shape, S }) {
     emit('selectDatapoint', serie);
 }
 
-function selectLegend(legend) {
-    emit('selectLegend', {
-        ...legend,
-        isSegregated: !legend.isSegregated,
-        opacity: legend.isSegregated ? 1 : 0.5,
-    });
+function selectLegend(_legend) {
+    emit('selectLegend', filteredDs.value);
 }
 
 function toggleTable() {

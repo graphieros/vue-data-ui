@@ -721,10 +721,10 @@ function toggleLegend(legendSet) {
     } else {
         segregated.value.push(...ids);
     }
+    emit('selectLegend', md.value);
 }
 
 function segregateDonut(item) {
-    emit('selectLegend', item);
     const target = props.dataset
         .flatMap((d, i) =>
             d.series.map((s, j) => ({
@@ -778,6 +778,9 @@ function segregateDonut(item) {
                         ),
                     }));
                 },
+                onDone: () => {
+                    emit('selectLegend', md.value);
+                },
             });
         } else {
             mutableDataset.value = mutableDataset.value.map((ds) => ({
@@ -786,6 +789,7 @@ function segregateDonut(item) {
                     s.id === item.id ? { ...s, value: targetValue } : s,
                 ),
             }));
+            emit('selectLegend', md.value);
         }
     } else if (canSegregate) {
         if (FINAL_CONFIG.value.serieToggleAnimation.show) {
@@ -803,6 +807,7 @@ function segregateDonut(item) {
                 },
                 onDone: () => {
                     segregated.value.push(item.id);
+                    emit('selectLegend', md.value);
                 },
             });
         } else {
@@ -813,6 +818,7 @@ function segregateDonut(item) {
                 ),
             }));
             segregated.value.push(item.id);
+            emit('selectLegend', md.value);
         }
     }
 }

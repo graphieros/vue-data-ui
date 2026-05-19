@@ -1152,6 +1152,12 @@ function toggleLegend() {
             segregated.value.push(l.id);
         });
     }
+    emit(
+        'selectLegend',
+        immutableDataset.value.filter(
+            (ds) => !segregated.value.includes(ds.id),
+        ),
+    );
 }
 
 function segregate(rect) {
@@ -1163,7 +1169,12 @@ function segregate(rect) {
             segregated.value.push(rect.id);
         }
     }
-    emit('selectLegend', orderedDataset.value);
+    emit(
+        'selectLegend',
+        immutableDataset.value.filter(
+            (ds) => !segregated.value.includes(ds.id),
+        ),
+    );
 }
 
 function validSeriesToToggle(name) {

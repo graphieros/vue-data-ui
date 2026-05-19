@@ -749,6 +749,7 @@ function toggleLegend() {
             segregated.value.push(l.seriesIndex);
         });
     }
+    emit('selectLegend', drawableDataset.value);
 }
 
 function segregate(index) {
@@ -825,12 +826,8 @@ function selectDatapoint({ datapoint, plotIndex, seriesIndex }) {
     emit('selectDatapoint', datapoint);
 }
 
-function selectLegend(legend) {
-    emit('selectLegend', {
-        ...legend,
-        isSegregated: !legend.isSegregated,
-        opacity: legend.isSegregated ? 1 : 0.5,
-    });
+function selectLegend(_legend) {
+    emit('selectLegend', drawableDataset.value);
 }
 
 function toggleFullscreen(state) {

@@ -908,6 +908,7 @@ function toggleLegend() {
             segregated.value.push(l.id);
         });
     }
+    emit('selectLegend', getData());
 }
 
 function segregate(id) {
@@ -916,8 +917,7 @@ function segregate(id) {
     } else {
         segregated.value.push(id);
     }
-    const currentData = getData();
-    emit('selectLegend', currentData);
+    emit('selectLegend', getData());
 }
 
 const legendSet = computed(() => {

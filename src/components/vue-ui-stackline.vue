@@ -2330,6 +2330,7 @@ function toggleLegend() {
             segregated.value.push(l.id);
         });
     }
+    emit('selectLegend', formattedDataset.value);
 }
 
 function segregate(item) {

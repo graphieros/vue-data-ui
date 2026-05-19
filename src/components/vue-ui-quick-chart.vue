@@ -459,6 +459,14 @@ function toggleLegend() {
             });
         }
     }
+
+    if (chartType.value === detector.chartType.DONUT) {
+        emit('selectLegend', donut.value.dataset);
+    } else if (chartType.value === detector.chartType.LINE) {
+        emit('selectLegend', line.value.dataset);
+    } else if (chartType.value === detector.chartType.BAR) {
+        emit('selectLegend', bar.value.dataset);
+    }
 }
 
 function segregate(id, len) {
@@ -501,6 +509,7 @@ function segregateDonut(arc, ds) {
                         }
                     }),
                 };
+                emit('selectLegend', donut.value.dataset);
             } else {
                 initVal += targetVal * 0.025;
                 formattedDataset.value = {
@@ -541,6 +550,7 @@ function segregateDonut(arc, ds) {
                         }
                     }),
                 };
+                emit('selectLegend', donut.value.dataset);
             } else {
                 initVal /= 1.1;
                 formattedDataset.value = {
@@ -561,6 +571,8 @@ function segregateDonut(arc, ds) {
             }
         }
         anim();
+    } else {
+        emit('selectLegend', donut.value.dataset);
     }
 }
 
@@ -3662,17 +3674,13 @@ defineExpose({
                     <div
                         class="vue-ui-quick-chart-legend-item"
                         v-for="(legendItem, i) in donut.legend"
-                        @click="
-                            segregateDonut(legendItem, donut.dataset);
-                            emit('selectLegend', legendItem);
-                        "
+                        @click="segregateDonut(legendItem, donut.dataset)"
                         :style="`cursor: ${donut.legend.length > 1 && isCursorPointer ? 'pointer' : 'default'}; opacity:${segregated.includes(legendItem.id) ? '0.5' : '1'}`"
                         role="button"
                         tabindex="0"
                         @keydown="
                             handleLegendKeydown($event, () => {
                                 segregateDonut(legendItem, donut.dataset);
-                                emit('selectLegend', legendItem);
                             })
                         "
                     >
@@ -3690,7 +3698,6 @@ defineExpose({
                                                 legendItem,
                                                 donut.dataset,
                                             );
-                                            emit('selectLegend', legendItem);
                                         },
                                     },
                                 }"
@@ -3766,7 +3773,7 @@ defineExpose({
                         v-for="(legendItem, i) in line.legend"
                         @click="
                             segregate(legendItem.id, line.legend.length - 1);
-                            emit('selectLegend', legendItem);
+                            emit('selectLegend', line.dataset);
                         "
                         :style="`cursor: ${line.legend.length > 1 && isCursorPointer ? 'pointer' : 'default'}; opacity:${segregated.includes(legendItem.id) ? '0.5' : '1'}`"
                         role="button"
@@ -3777,7 +3784,7 @@ defineExpose({
                                     legendItem.id,
                                     line.legend.length - 1,
                                 );
-                                emit('selectLegend', legendItem);
+                                emit('selectLegend', line.dataset);
                             })
                         "
                     >
@@ -3795,7 +3802,7 @@ defineExpose({
                                                 legendItem.id,
                                                 line.legend.length - 1,
                                             );
-                                            emit('selectLegend', legendItem);
+                                            emit('selectLegend', line.dataset);
                                         },
                                     },
                                 }"
@@ -3822,7 +3829,7 @@ defineExpose({
                         v-for="(legendItem, i) in bar.legend"
                         @click="
                             segregate(legendItem.id, bar.legend.length - 1);
-                            emit('selectLegend', legendItem);
+                            emit('selectLegend', bar.dataset);
                         "
                         :style="`cursor: ${bar.legend.length > 1 && isCursorPointer ? 'pointer' : 'default'}; opacity:${segregated.includes(legendItem.id) ? '0.5' : '1'}`"
                         role="button"
@@ -3830,7 +3837,7 @@ defineExpose({
                         @keydown="
                             handleLegendKeydown($event, () => {
                                 segregate(legendItem.id, bar.legend.length - 1);
-                                emit('selectLegend', legendItem);
+                                emit('selectLegend', bar.dataset);
                             })
                         "
                     >
@@ -3848,7 +3855,7 @@ defineExpose({
                                                 legendItem.id,
                                                 bar.legend.length - 1,
                                             );
-                                            emit('selectLegend', legendItem);
+                                            emit('selectLegend', bar.dataset);
                                         },
                                     },
                                 }"

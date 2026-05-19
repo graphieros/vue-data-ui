@@ -611,6 +611,7 @@ function toggleLegend() {
             segregated.value.push(l.id);
         });
     }
+    emit('selectLegend', mutableDataset.value);
 }
 
 function segregate(id) {

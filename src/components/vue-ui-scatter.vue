@@ -91,7 +91,7 @@ const props = defineProps({
     },
 });
 
-const emit = defineEmits(['copyAlt']);
+const emit = defineEmits(['copyAlt', 'selectLegend']);
 
 const isDataset = computed(() => {
     return !!props.dataset && props.dataset.length;
@@ -1440,6 +1440,7 @@ function toggleLegend() {
             segregated.value.push(l.id);
         });
     }
+    emit('selectLegend', mutableDataset.value);
 }
 
 function segregate(id) {
@@ -1450,6 +1451,7 @@ function segregate(id) {
             segregated.value.push(id);
         }
     }
+    emit('selectLegend', mutableDataset.value);
 }
 
 function validSeriesToToggle(name) {

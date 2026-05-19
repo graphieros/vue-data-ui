@@ -369,6 +369,22 @@ function toggleLegend() {
             segregated.value.push(i);
         });
     }
+    emitSelectLegend();
+}
+
+function emitSelectLegend() {
+    emit(
+        'selectLegend',
+        legendSet.value
+            .filter((_, i) => !segregated.value.includes(i))
+            .map((l) => {
+                return {
+                    name: l.name,
+                    color: l.color,
+                    proportion: l.totalProportion,
+                };
+            }),
+    );
 }
 
 function segregate(index) {
@@ -386,18 +402,7 @@ function segregate(index) {
             isAnimating.value = false;
         }, 500);
     }
-    emit(
-        'selectLegend',
-        legendSet.value
-            .filter((_, i) => !segregated.value.includes(i))
-            .map((l) => {
-                return {
-                    name: l.name,
-                    color: l.color,
-                    proportion: l.totalProportion,
-                };
-            }),
-    );
+    emitSelectLegend();
 }
 
 function getData() {

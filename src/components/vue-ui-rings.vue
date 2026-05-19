@@ -433,15 +433,10 @@ function toggleLegend() {
             segregated.value.push(l.uid);
         });
     }
+    emitSelectLegend();
 }
 
-function segregate(uid) {
-    if (segregated.value.includes(uid)) {
-        segregated.value = segregated.value.filter((s) => s !== uid);
-    } else {
-        if (segregated.value.length === datasetCopy.value.length - 1) return;
-        segregated.value.push(uid);
-    }
+function emitSelectLegend() {
     emit(
         'selectLegend',
         convertedDataset.value.map((ds) => {
@@ -452,6 +447,16 @@ function segregate(uid) {
             };
         }),
     );
+}
+
+function segregate(uid) {
+    if (segregated.value.includes(uid)) {
+        segregated.value = segregated.value.filter((s) => s !== uid);
+    } else {
+        if (segregated.value.length === datasetCopy.value.length - 1) return;
+        segregated.value.push(uid);
+    }
+    emitSelectLegend();
 }
 
 function validSeriesToToggle(name) {

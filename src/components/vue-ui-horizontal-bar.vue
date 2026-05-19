@@ -748,6 +748,7 @@ function toggleLegend() {
         });
     }
     updateDataLabelOverflow();
+    emit('selectLegend', mutableDataset.value);
 }
 
 async function segregate(id) {
