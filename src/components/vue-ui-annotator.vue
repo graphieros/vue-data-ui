@@ -744,8 +744,7 @@
                         <!-- SAVE -->
                         <button
                             v-if="
-                                FINAL_CONFIG.style.showSave &&
-                                $attrs.onSaveAnnotations
+                                FINAL_CONFIG.style.showSave
                             "
                             :style="{
                                 background:

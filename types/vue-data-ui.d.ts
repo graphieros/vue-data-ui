@@ -3688,10 +3688,43 @@ declare module 'vue-data-ui' {
 
     export type VueUiAnnotatorDataset = VueUiUnknownObj;
 
-    export const VueUiAnnotator: DefineComponent<{
+    export type VueUiAnnotatorProps = {
         config?: VueUiAnnotatorConfig;
         dataset?: VueUiAnnotatorDataset;
-    }>;
+    };
+
+    export type VueUiAnnotatorEmitToggleOpenState = {
+        isOpen: boolean;
+    }
+
+    export type VueUiAnnotatorShape = {
+        [key: string]: any;
+        id: string;
+        type: 'arrow' | 'text' | 'rect' | 'line' | 'circle';
+        x: number;
+        y: number;
+    }
+
+    export type VueUiAnnotatorEmitSaveAnnotations = {
+        shapes: VueUiAnnotatorShape[];
+        lastSelectedShape: VueUiAnnotatorShape;
+    }
+
+    export type VueUiAnnotatorEmits = {
+        toggleOpenState: (payload: VueUiAnnotatorEmitToggleOpenState) => void;
+        saveAnnotations: (payload: VueUiAnnotatorEmitSaveAnnotations) => void;
+    };
+
+    export const VueUiAnnotator: DefineComponent<
+        VueUiAnnotatorProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiAnnotatorEmits
+    >;
 
     export type VueUiDashboardConfig = {
         locked?: boolean;
