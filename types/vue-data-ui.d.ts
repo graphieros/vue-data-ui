@@ -3695,7 +3695,7 @@ declare module 'vue-data-ui' {
 
     export type VueUiAnnotatorEmitToggleOpenState = {
         isOpen: boolean;
-    }
+    };
 
     export type VueUiAnnotatorShape = {
         [key: string]: any;
@@ -3703,12 +3703,12 @@ declare module 'vue-data-ui' {
         type: 'arrow' | 'text' | 'rect' | 'line' | 'circle';
         x: number;
         y: number;
-    }
+    };
 
     export type VueUiAnnotatorEmitSaveAnnotations = {
         shapes: VueUiAnnotatorShape[];
         lastSelectedShape: VueUiAnnotatorShape;
-    }
+    };
 
     export type VueUiAnnotatorEmits = {
         toggleOpenState: (payload: VueUiAnnotatorEmitToggleOpenState) => void;
@@ -13035,7 +13035,25 @@ declare module 'vue-data-ui' {
         legend: VueUiBulletLegendItem[];
     };
 
-    const VueUiBulletBase: DefineComponent<VueUiBulletProps>;
+    export type VueUiBulletEmitCopyAlt = {
+        config: VueUiBulletConfig;
+        dataset: VueUiBulletDataset;
+    };
+
+    export type VueUiBulletEmits = {
+        copyAlt: (payload: VueUiBulletEmitCopyAlt) => void;
+    };
+
+    const VueUiBulletBase: DefineComponent<
+        VueUiBulletProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiBulletEmits
+    >;
 
     export const VueUiBullet: typeof VueUiBulletBase & {
         new (): VueUiBulletExpose & {

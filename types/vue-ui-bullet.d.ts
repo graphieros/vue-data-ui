@@ -18,6 +18,8 @@ import type {
     VueUiWatermarkSlotProps,
     VueUiBulletLegendSlotProps,
     CommonAnnotatorSlots,
+    VueUiBulletEmits,
+    VueUiBulletEmitCopyAlt,
 } from 'vue-data-ui';
 
 export type {
@@ -38,9 +40,20 @@ export type {
     VueUiWatermarkSlotProps,
     VueUiBulletLegendSlotProps,
     CommonAnnotatorSlots,
+    VueUiBulletEmits,
+    VueUiBulletEmitCopyAlt,
 };
 
-declare const VueUiBulletBase: DefineComponent<VueUiBulletProps>;
+declare const VueUiBulletBase: DefineComponent<
+    VueUiBulletProps,
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    VueUiBulletEmits
+>;
 
 export const VueUiBullet: typeof VueUiBulletBase & {
     new (): VueUiBulletExpose & {
