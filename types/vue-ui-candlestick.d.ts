@@ -7,7 +7,6 @@ import type {
     VueUiCandlestickEvent,
     VueUiCandlestickProps,
     VueUiCandlestickDatapointSegment,
-    VueUiCandlestickDatapoint,
     VueUiAnnotatorActionColorSlotProps,
     VueUiAnnotatorActionDrawSlotProps,
     VueUiAnnotatorActionUndoSlotProps,
@@ -22,6 +21,9 @@ import type {
     VueUiCandlestickTooltipSlotProps,
     OHLC,
     CommonAnnotatorSlots,
+    VueUiCandlestickEmits,
+    VueUiCandlestickEmitSelectX,
+    VueUiCandlestickEmitCopyAlt,
 } from 'vue-data-ui';
 
 export type {
@@ -31,7 +33,6 @@ export type {
     VueUiCandlestickEvent,
     VueUiCandlestickProps,
     VueUiCandlestickDatapointSegment,
-    VueUiCandlestickDatapoint,
     VueUiAnnotatorActionColorSlotProps,
     VueUiAnnotatorActionDrawSlotProps,
     VueUiAnnotatorActionUndoSlotProps,
@@ -46,9 +47,21 @@ export type {
     VueUiCandlestickTooltipSlotProps,
     OHLC,
     CommonAnnotatorSlots,
+    VueUiCandlestickEmits,
+    VueUiCandlestickEmitSelectX,
+    VueUiCandlestickEmitCopyAlt,
 };
 
-declare const VueUiCandlestickBase: DefineComponent<VueUiCandlestickProps>;
+declare const VueUiCandlestickBase: DefineComponent<
+    VueUiCandlestickProps,
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    VueUiCandlestickEmits
+>;
 
 export const VueUiCandlestick: typeof VueUiCandlestickBase & {
     new (): VueUiCandlestickExpose & {

@@ -4514,7 +4514,31 @@ declare module 'vue-data-ui' {
         selectedXIndex?: number | null;
     };
 
-    const VueUiCandlestickBase: DefineComponent<VueUiCandlestickProps>;
+    export type VueUiCandlestickEmitSelectX = {
+        dataset: VueUiCandlestickDatapoint[];
+        config: VueUiCandlestickConfig;
+    };
+
+    export type VueUiCandlestickEmitCopyAlt = {
+        dataset: VueUiCandlestickDatapoint[];
+        config: VueUiCandlestickConfig;
+    };
+
+    export type VueUiCandlestickEmits = {
+        selectX: (payload: VueUiCandlestickEmitSelectX) => void;
+        copyAlt: (payload: VueUiCandlestickEmitCopyAlt) => void;
+    };
+
+    const VueUiCandlestickBase: DefineComponent<
+        VueUiCandlestickProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiCandlestickEmits
+    >;
 
     export const VueUiCandlestick: typeof VueUiCandlestickBase & {
         new (): VueUiCandlestickExpose & {
