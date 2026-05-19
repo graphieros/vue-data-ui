@@ -1441,7 +1441,7 @@
       "type": "feature",
       "withComponentCheckList": true,
       "checkList": {
-        "VueUi3dBar": false,
+        "VueUi3dBar": true,
         "VueUiAgePyramid": false,
         "VueUiAnnotator": false,
         "VueUiBullet": false,
@@ -1509,7 +1509,7 @@
       "customCheckList": {},
       "id": "4b423dba-9fc5-45b8-9dca-20e1f2678b9e",
       "createdAt": 1779169675598,
-      "updatedAt": 1779169685163
+      "updatedAt": 1779170970225
     }
   ]
 }

@@ -1761,7 +1761,37 @@ declare module 'vue-data-ui' {
         dataset: VueUi3dBarDataset;
     };
 
-    const VueUi3dBarBase: DefineComponent<VueUi3dBarProps>;
+    export type VueUi3dBarEmitSelectDatapoint = {
+        breakdown: Array<{ name: string; value: number }>;
+        color: string;
+        fill: Record<string, any>;
+        id: string;
+        name: string;
+        proportion: number;
+        seriesIndex: number;
+        value: number;
+    };
+
+    export type VueUi3dBarEmitCopyAlt = {
+        config: VueUi3dBarConfig;
+        dataset: VueUi3dBarDataset;
+    };
+
+    export type VueUi3dBarEmits = {
+        selectDatapoint: (payload: VueUi3dBarEmitSelectDatapoint) => void;
+        copyAlt: (payload: VueUi3dBarEmitCopyAlt) => void;
+    };
+
+    const VueUi3dBarBase: DefineComponent<
+        VueUi3dBarProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUi3dBarEmits
+    >;
 
     export type VueUi3dBarLegendSlotProps = {
         config: VueUi3dBarConfig;
