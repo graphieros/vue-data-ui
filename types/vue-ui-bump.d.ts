@@ -19,6 +19,9 @@ import type {
     VueUiKeyboardNavigationHintSlotProps,
     VueUiWatermarkSlotProps,
     CommonAnnotatorSlots,
+    VueUiBumpEmits,
+    VueUiBumpEmitCopyAlt,
+    VueUiBumpFormattedDataset,
 } from 'vue-data-ui';
 
 export type {
@@ -40,9 +43,21 @@ export type {
     VueUiKeyboardNavigationHintSlotProps,
     VueUiWatermarkSlotProps,
     CommonAnnotatorSlots,
+    VueUiBumpEmits,
+    VueUiBumpEmitCopyAlt,
+    VueUiBumpFormattedDataset,
 };
 
-declare const VueUiBumpBase: DefineComponent<VueUiBumpProps>;
+declare const VueUiBumpBase: DefineComponent<
+    VueUiBumpProps,
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    VueUiBumpEmits
+>;
 
 export const VueUiBump: typeof VueUiBumpBase & {
     new (): VueUiBumpExpose & {

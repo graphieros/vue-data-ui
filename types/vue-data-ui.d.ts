@@ -15253,30 +15253,30 @@ declare module 'vue-data-ui' {
         };
     };
 
+    export type VueUiBumpFormattedDataset = {
+        [key: string]: any;
+        absoluteIndex: number;
+        color: string;
+        coordinates: Array<{
+            color: string;
+            displayValue: string;
+            id: string;
+            labelColor: string;
+            name: string;
+            rank: number;
+            value: number | null;
+            x: number;
+            y: number;
+        }>;
+        id: string;
+        name: string;
+        path: string;
+        positions: Array<number | null>;
+        values: Array<number | null>;
+    };
+
     export type VueUiBumpExpose = {
-        getData(): Promise<
-            Array<{
-                [key: string]: any;
-                absoluteIndex: number;
-                color: string;
-                coordinates: Array<{
-                    color: string;
-                    displayValue: string;
-                    id: string;
-                    labelColor: string;
-                    name: string;
-                    rank: number;
-                    value: number | null;
-                    x: number;
-                    y: number;
-                }>;
-                id: string;
-                name: string;
-                path: string;
-                positions: Array<number | null>;
-                values: Array<number | null>;
-            }>
-        >;
+        getData(): Promise<Array<VueUiBumpFormattedDataset>>;
         getImage(options?: { scale?: number }): GetImagePromise;
         generateCsv(): void;
         generateSvg(): void;
@@ -15325,7 +15325,25 @@ declare module 'vue-data-ui' {
         };
     };
 
-    const VueUiBumpBase: DefineComponent<VueUiBumpProps>;
+    export type VueUiBumpEmitCopyAlt = {
+        dataset: VueUiBumpFormattedDataset[];
+        config: VueUiBumpConfig;
+    };
+
+    export type VueUiBumpEmits = {
+        copyAlt: (payload: VueUiBumpEmitCopyAlt) => void;
+    };
+
+    const VueUiBumpBase: DefineComponent<
+        VueUiBumpProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiBumpEmits
+    >;
 
     export const VueUiBump: typeof VueUiBumpBase & {
         new (): VueUiBumpExpose & {

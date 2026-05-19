@@ -7,6 +7,7 @@ import {
     VueUiBump,
     type VueUiBumpConfig,
     type VueUiBumpDatasetItem,
+    type VueUiBumpEmitCopyAlt,
 } from 'vue-data-ui/vue-ui-bump';
 import { mergeConfigs } from 'vue-data-ui/utils';
 
@@ -306,11 +307,15 @@ const config = computed(() => {
 function log(n: unknown) {
     console.log(n);
 }
+
+function copyAlt(payload: VueUiBumpEmitCopyAlt) {
+    console.log(payload);
+}
 </script>
 
 <template>
     <div>
-        <VueUiBump :dataset :config>
+        <VueUiBump :dataset :config @copyAlt="copyAlt">
             <template #annotator-action-close>
                 <span style="color: chocolate">X</span>
             </template>
