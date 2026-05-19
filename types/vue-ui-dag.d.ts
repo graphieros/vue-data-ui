@@ -27,6 +27,7 @@ import type {
     VueUiDagTooltipMidpointSlotProps,
     VueUiDagTooltipNodeSlotProps,
     CommonAnnotatorSlots,
+    VueUiWatermarkSlotProps,
 } from 'vue-data-ui';
 
 export type {
@@ -56,6 +57,7 @@ export type {
     VueUiDagTooltipMidpointSlotProps,
     VueUiDagTooltipNodeSlotProps,
     CommonAnnotatorSlots,
+    VueUiWatermarkSlotProps,
 };
 
 declare const VueUiDagBase: DefineComponent<VueUiDagProps>;
