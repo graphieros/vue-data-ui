@@ -26,6 +26,9 @@ import type {
     VueUiCirclePackParentTooltipSlotProps,
     VueUiCirclePackParentTooltip,
     VueUiCirclePackOptionZoomSlotProps,
+    VueUiCirclePackEmits,
+    VueUiCirclePackEmitSelectDatapoint,
+    VueUiCirclePackEmitCopyAlt,
 } from 'vue-data-ui';
 
 export type {
@@ -54,9 +57,21 @@ export type {
     VueUiCirclePackParentTooltipSlotProps,
     VueUiCirclePackParentTooltip,
     VueUiCirclePackOptionZoomSlotProps,
+    VueUiCirclePackEmits,
+    VueUiCirclePackEmitSelectDatapoint,
+    VueUiCirclePackEmitCopyAlt,
 };
 
-declare const VueUiCirclePackBase: DefineComponent<VueUiCirclePackProps>;
+declare const VueUiCirclePackBase: DefineComponent<
+    VueUiCirclePackProps,
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    VueUiCirclePackEmits
+>;
 
 export const VueUiCirclePack: typeof VueUiCirclePackBase & {
     new (): VueUiCirclePackExpose & {

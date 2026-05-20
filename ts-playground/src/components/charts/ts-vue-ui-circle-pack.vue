@@ -7,6 +7,8 @@ import {
     VueUiCirclePack,
     type VueUiCirclePackConfig,
     type VueUiCirclePackDatasetItem,
+    type VueUiCirclePackEmitCopyAlt,
+    type VueUiCirclePackEmitSelectDatapoint,
 } from 'vue-data-ui/vue-ui-circle-pack';
 import { mergeConfigs } from 'vue-data-ui/utils';
 
@@ -301,11 +303,24 @@ const config = computed<VueUiCirclePackConfig>(() => {
 function log(n: unknown) {
     console.log(n);
 }
+
+function selectDatapoint(payload: VueUiCirclePackEmitSelectDatapoint) {
+    console.log('@selectDatapoint', payload);
+}
+
+function copyAlt(payload: VueUiCirclePackEmitCopyAlt) {
+    console.log('@copyAlt', payload);
+}
 </script>
 
 <template>
     <div>
-        <VueUiCirclePack :dataset :config>
+        <VueUiCirclePack
+            :dataset
+            :config
+            @selectDatapoint="selectDatapoint"
+            @copyAlt="copyAlt"
+        >
             <template #annotator-action-close>
                 <span style="color: chocolate">X</span>
             </template>

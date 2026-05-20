@@ -13834,7 +13834,28 @@ declare module 'vue-data-ui' {
         dataset: VueUiCirclePackDatasetItem[];
     };
 
-    const VueUiCirclePackBase: DefineComponent<VueUiCirclePackProps>;
+    export type VueUiCirclePackEmitSelectDatapoint = VueUiCirclePackDatapoint;
+    export type VueUiCirclePackEmitCopyAlt = {
+        config: VueUiCirclePackConfig;
+        dataset: VueUiCirclePackDatapoint[];
+        flattenedDataset: VueUiCirclePackDatapoint[];
+    };
+
+    export type VueUiCirclePackEmits = {
+        selectDatapoint: (payload: VueUiCirclePackEmitSelectDatapoint) => void;
+        copyAlt: (payload: VueUiCirclePackEmitCopyAlt) => void;
+    };
+
+    const VueUiCirclePackBase: DefineComponent<
+        VueUiCirclePackProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiCirclePackEmits
+    >;
 
     export const VueUiCirclePack: typeof VueUiCirclePackBase & {
         new (): VueUiCirclePackExpose & {
