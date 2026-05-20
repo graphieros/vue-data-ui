@@ -7993,7 +7993,31 @@ declare module 'vue-data-ui' {
         dataset: VueUiChestnutDatasetRoot[];
     };
 
-    const VueUiChestnutBase: DefineComponent<VueUiChestnutProps>;
+    export type VueUiChestnutEmitSelectRoot = VueUiChestnutDatapointRoot;
+    export type VueUiChestnutEmitSelectBranch = VueUiChestnutDatapointBranch;
+    export type VueUiChestnutEmitSelectNut = VueUiChestnutDatapointNut[];
+    export type VueUiChestnutEmitCopyAlt = {
+        config: VueUiChestnutConfig;
+        dataset: VueUiChestnutDatapointRoot[];
+    };
+
+    export type VueUiChestnutEmits = {
+        selectRoot: (event: VueUiChestnutEmitSelectRoot) => void;
+        selectBranch: (event: VueUiChestnutEmitSelectBranch) => void;
+        selectNut: (event: VueUiChestnutEmitSelectNut) => void;
+        copyAlt: (event: VueUiChestnutEmitCopyAlt) => void;
+    };
+
+    const VueUiChestnutBase: DefineComponent<
+        VueUiChestnutProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiChestnutEmits
+    >;
 
     export const VueUiChestnut: typeof VueUiChestnutBase & {
         new (): VueUiChestnutExpose & {

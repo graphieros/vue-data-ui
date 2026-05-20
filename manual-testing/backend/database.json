@@ -1448,7 +1448,7 @@
         "VueUiBump": true,
         "VueUiCandlestick": true,
         "VueUiCarouselTable": true,
-        "VueUiChestnut": false,
+        "VueUiChestnut": true,
         "VueUiChord": false,
         "VueUiCirclePack": false,
         "VueUiDag": false,
@@ -1509,7 +1509,7 @@
       "customCheckList": {},
       "id": "4b423dba-9fc5-45b8-9dca-20e1f2678b9e",
       "createdAt": 1779169675598,
-      "updatedAt": 1779204006890
+      "updatedAt": 1779253142892
     }
   ]
 }
