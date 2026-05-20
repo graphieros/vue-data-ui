@@ -14901,7 +14901,34 @@ declare module 'vue-data-ui' {
         dataset: VueUiDagDataset;
     };
 
-    const VueUiDagBase: DefineComponent<VueUiDagProps>;
+    export type VueUiDagEmitOnNodeClick = VueUiDagPositionedNode;
+    export type VueUiDagEmitOnMidpointEnter = VueUiDagPositionedEdge;
+    export type VueUiDagEmitCopyAlt = {
+        config: VueUiDagConfig;
+        dataset: {
+            edges: Array<{ from: string; to: string }>;
+            nodes: Array<{ id: string; label: string }>;
+        };
+    };
+    export type VueUiDagEmitRotate = 'TB' | 'RL' | 'BT' | 'LR';
+
+    export type VueUiDagEmits = {
+        onMidpointEnter: (payload: VueUiDagEmitOnMidpointEnter) => void;
+        onMidpointLeave: () => void;
+        copyAlt: (payload: VueUiDagEmitCopyAlt) => void;
+        rotate: (payload: VueUiDagEmitRotate) => void;
+    };
+
+    const VueUiDagBase: DefineComponent<
+        VueUiDagProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiDagEmits
+    >;
 
     export const VueUiDag: typeof VueUiDagBase & {
         new (): VueUiDagExpose & {

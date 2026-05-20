@@ -1451,7 +1451,7 @@
         "VueUiChestnut": true,
         "VueUiChord": true,
         "VueUiCirclePack": true,
-        "VueUiDag": false,
+        "VueUiDag": true,
         "VueUiDashboard": false,
         "VueUiDigits": false,
         "VueUiDonut": false,
@@ -1509,7 +1509,7 @@
       "customCheckList": {},
       "id": "4b423dba-9fc5-45b8-9dca-20e1f2678b9e",
       "createdAt": 1779169675598,
-      "updatedAt": 1779254630454
+      "updatedAt": 1779258178286
     }
   ]
 }
