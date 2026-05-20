@@ -14579,7 +14579,31 @@ declare module 'vue-data-ui' {
         dataset: VueUiChordDataset;
     };
 
-    const VueUiChordBase: DefineComponent<VueUiChordProps>;
+    export type VueUiChordEmitSelectLegend = VueUiChordDatapointArc;
+    export type VueUiChordEmitSelectGroup = VueUiChordDatapointArc;
+    export type VueUiChordEmitSelectRibbon = VueUiChordDatapointRibbon;
+    export type VueUiChordEmitCopyAlt = {
+        config: VueUiChordConfig;
+        dataset: VueUiChordDataset;
+    };
+
+    export type VueUiChordEmits = {
+        selectLegend: (payload: VueUiChordEmitSelectLegend) => void;
+        selectGroup: (payload: VueUiChordEmitSelectGroup) => void;
+        selectRibbon: (payload: VueUiChordEmitSelectRibbon) => void;
+        copyAlt: (payload: VueUiChordEmitCopyAlt) => void;
+    };
+
+    const VueUiChordBase: DefineComponent<
+        VueUiChordProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiChordEmits
+    >;
 
     export const VueUiChord: typeof VueUiChordBase & {
         new (): VueUiChordExpose & {
