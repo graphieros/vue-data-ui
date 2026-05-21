@@ -3853,7 +3853,27 @@ declare module 'vue-data-ui' {
         dataset: VueUiDashboardElement[];
     };
 
-    const VueUiDashboardBase: DefineComponent<VueUiDashboardProps>;
+    export type VueUiDashboardEmitChange = VueUiDashboardPlacedElement[];
+    export type VueUiDashboardEmitCopyAlt = {
+        config: VueUiDashboardConfig;
+        dataset: VueUiDashboardPlacedElement[];
+    };
+
+    export type VueUiDashboardEmits = {
+        change: (payload: VueUiDashboardEmitChange) => void;
+        copyAlt: (payload: VueUiDashboardEmitCopyAlt) => void;
+    };
+
+    const VueUiDashboardBase: DefineComponent<
+        VueUiDashboardProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiDashboardEmits
+    >;
 
     export const VueUiDashboard: typeof VueUiDashboardBase & {
         new (): {

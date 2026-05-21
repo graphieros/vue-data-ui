@@ -13,7 +13,10 @@ import type {
     VueUiAnnotatorActionUndoSlotProps,
     VueUiAnnotatorActionRedoSlotProps,
     VueUiAnnotatorActionDeleteSlotProps,
+    VueUiDashboardEmits,
     CommonAnnotatorSlots,
+    VueUiDashboardEmitChange,
+    VueUiDashboardEmitCopyAlt,
 } from 'vue-data-ui';
 
 export type {
@@ -30,9 +33,21 @@ export type {
     VueUiAnnotatorActionRedoSlotProps,
     VueUiAnnotatorActionDeleteSlotProps,
     CommonAnnotatorSlots,
+    VueUiDashboardEmits,
+    VueUiDashboardEmitChange,
+    VueUiDashboardEmitCopyAlt,
 };
 
-declare const VueUiDashboardBase: DefineComponent<VueUiDashboardProps>;
+declare const VueUiDashboardBase: DefineComponent<
+    VueUiDashboardProps,
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    VueUiDashboardEmits
+>;
 
 export const VueUiDashboard: typeof VueUiDashboardBase & {
     new (): {

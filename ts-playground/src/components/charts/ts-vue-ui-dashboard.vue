@@ -6,6 +6,8 @@ import {
     VueUiDashboard,
     type VueUiDashboardConfig,
     type VueUiDashboardElement,
+    type VueUiDashboardEmitChange,
+    type VueUiDashboardEmitCopyAlt,
 } from 'vue-data-ui/vue-ui-dashboard';
 
 import DashboardTop from '../slots/vue-ui-dashboard/dashboard-top.vue';
@@ -127,11 +129,19 @@ const config = computed<VueUiDashboardConfig>(() => {
 function log(n: unknown) {
     console.log(n);
 }
+
+function change(payload: VueUiDashboardEmitChange) {
+    console.log('@change', payload);
+}
+
+function copyAlt(payload: VueUiDashboardEmitCopyAlt) {
+    console.log('@copyAlt', payload);
+}
 </script>
 
 <template>
     <div>
-        <VueUiDashboard :dataset :config>
+        <VueUiDashboard :dataset :config @change="change" @copyAlt="copyAlt">
             <template #top="{ index, item }">
                 <DashboardTop :index :item />
             </template>
