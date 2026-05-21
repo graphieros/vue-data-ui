@@ -147,17 +147,39 @@ function generateDayTimestamps(length) {
 
 const dataset = ref([
     {
-        name: 'SERIE WITH A LONG NAME',
+        name: 'Serie A with name',
         type: 'line',
-        series: [100, 200, 300, -200, 100, 120, 100, 200, 100, 250],
+        // series: [100, 200, 300, -200, 100, 120, 100, 200, 100, 250],
+        series: [
+            { x: 25.4, y: 10 },
+            { x: 23.1, y: 15 }, // Closer to the first point
+            { x: 15.2, y: 120 }, // Further down the axis
+            { x: 6.8, y: 500 }, // Much further down the axis
+        ],
         dataLabels: true,
+        // useArea: true,
+        // smooth: true
     },
-    {
-        name: 'SERIE',
-        type: 'bar',
-        series: [100, 200, 300, -200, 100, 120, 100, 200, 100, 250],
-        dataLabels: true,
-    },
+    // {
+    //     name: 'PLOTS',
+    //     type: 'line',
+    //     // series: [100, 200, 300, -200, 100, 120, 100, 200, 100, 250],
+    //     series: [
+    //         { x: 1.5, y: 1 },
+    //         { x: 3, y: 2 },
+    //         { x: 5, y: 1 },
+    //         { x: 7, y: 1 },
+    //         { x: 8, y: 3 },
+    //         { x: 8.2, y: 1 },
+    //     ],
+    //     dataLabels: true,
+    // },
+    // {
+    //     name: 'SERIE',
+    //     type: 'bar',
+    //     series: [100, 200, 300, -200, 100, 120, 100, 200, 100, 250],
+    //     dataLabels: true,
+    // },
 ]);
 
 // onMounted(() => {
@@ -536,7 +558,7 @@ const model = createModel([
     CHECKBOX('chart.grid.showVerticalLines', { def: true }),
     CHECKBOX('chart.grid.showHorizontalLines', { def: true }),
 
-    SELECT('chart.grid.position', ['middle', 'start'], { def: 'middle' }),
+    SELECT('chart.grid.position', ['middle', 'start'], { def: 'start' }),
     CHECKBOX('chart.grid.frame.show', { def: false }),
     COLOR('chart.grid.frame.stroke', { def: '#1A1A1A' }),
     NUMBER('chart.grid.frame.strokeWidth', { def: 4, min: 0, max: 12 }),
@@ -551,8 +573,8 @@ const model = createModel([
     CHECKBOX('chart.grid.labels.show', { def: true }),
     COLOR('chart.grid.labels.color', { def: '#1A1A1A' }),
     NUMBER('chart.grid.labels.fontSize', { def: 26, min: 4, max: 30 }),
-    TEXT('chart.grid.labels.axis.yLabel', { def: 'TEST' }),
-    TEXT('chart.grid.labels.axis.xLabel', { def: 'TEST' }),
+    TEXT('chart.grid.labels.axis.yLabel', { def: 'Y-AXIS' }),
+    TEXT('chart.grid.labels.axis.xLabel', { def: 'X-AXIS' }),
     NUMBER('chart.grid.labels.axis.fontSize', { def: 14, min: 4, max: 30 }),
     CHECKBOX('chart.grid.labels.xAxisLabels.show', { def: true }),
     COLOR('chart.grid.labels.xAxisLabels.color', { def: '#1A1A1A' }),
@@ -642,6 +664,7 @@ const model = createModel([
     CHECKBOX('chart.grid.labels.xAxis.crosshairsAlwaysAtZero', { def: false }),
 
     CHECKBOX('chart.grid.labels.xAxis.showBaseline', { def: true }),
+
     CHECKBOX('chart.grid.labels.zeroLine.show', { def: true }),
 
     NUMBER('chart.labels.fontSize', { def: 12, min: 6, max: 30 }),
@@ -908,11 +931,12 @@ const config = computed(() => {
                 },
                 labels: {
                     ...c.line.labels,
-                    rotation: -90,
+                    // rotation: -90,
                     alwaysOnTop: true,
                     offsetX: 0,
                     formatter: ({ value }) => {
-                        return ['Something', value];
+                        return value.toString();
+                        // return ['Something', value];
                         // return `Something\n${value}`
                     },
                 },
@@ -1069,6 +1093,11 @@ const config = computed(() => {
                     // position: 'start',
                     labels: {
                         ...c.chart.grid.labels,
+                        // xAxis: {
+                        //     formatter: ({ value }) => {
+                        //         return 'TEST' + value
+                        //     }
+                        // },
                         yAxis: {
                             ...c.chart.grid.labels.yAxis,
                             serieNameFormatter: ({ value, config }) => {
@@ -1191,6 +1220,8 @@ function freestyle({ data, drawingArea }) {
         annotated[0].marks.includes(i),
     );
 
+    return '';
+
     return `
         <g>
             <line
@@ -1295,18 +1326,18 @@ function logTooltip(tooltip) {
                     }"
                     @selectTimeLabel="selectTimeLabel"
                 >
-                    <template #tooltip="{ ...tooltip }">
+                    <!-- <template #tooltip="{ ...tooltip }">
                         {{ logTooltip(tooltip) }}
                         <div>
-                            <span>{{ tooltip.timeLabel.text }}</span>
+                            <span>{{ tooltip.timeLabel?.text }}</span>
                             <div
                                 v-for="serie in tooltip.datapoint"
                                 :key="serie.id"
                             >
-                                {{ serie.name }}: {{ serie.value }}
+                                {{ serie.name }}: X:{{ serie?.x }}, Y:{{ serie.value }}
                             </div>
                         </div>
-                    </template>
+                    </template> -->
 
                     <!-- <template #reset-action="{reset}">
                         <button style="position: absolute; top: 40px; z-index: 10000" @click="reset()">RESET</button>

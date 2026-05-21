@@ -871,8 +871,21 @@ export function useConfig(options = {}) {
                         showCrosshairs: true,
                         crosshairsAlwaysAtZero: false,
                         crosshairSize: 6,
+                        /**
+                         * For continuous mode:
+                         * . line and plot types
+                         * . series with Array<{x, y}> instead of number[]
+                         */
+                        commonScaleSteps: 10, // continuous mode only
+                        useNiceScale: true, // continuous mode only
+                        scaleMin: null, // continuous mode only
+                        scaleMax: null, // continuous mode only
+                        rounding: 1, // continuous mode only
+                        formatter: null, // continuous mode only
+                        reverse: false, // continuous mode only
                     },
                     yAxis: {
+                        reverse: false,
                         position: 'left', // or 'right'
                         showBaseline: true,
                         showCrosshairs: true,

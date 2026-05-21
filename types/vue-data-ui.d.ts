@@ -5289,12 +5289,22 @@ declare module 'vue-data-ui' {
                         scaleValueOffsetX?: number;
                         rounding?: number;
                         serieNameFormatter?: Formatter;
+                        reverse?: boolean;
                     };
                     xAxis?: {
                         showBaseline?: boolean;
                         showCrosshairs?: boolean;
                         crosshairSize?: number;
                         crosshairsAlwaysAtZero?: boolean;
+
+                        // continuous mode:
+                        commonScaleSteps?: number;
+                        useNiceScale?: boolean;
+                        scaleMin?: number | null;
+                        scaleMax?: number | null;
+                        rounding?: number;
+                        formatter?: Formatter;
+                        reverse?: boolean;
                     };
                     xAxisLabels?: {
                         color?: string;
@@ -5500,7 +5510,9 @@ declare module 'vue-data-ui' {
     export type VueUiXyDatasetItem = {
         [key: string]: any; // which can be recovered through the #svg slot
         name: string;
-        series: Array<number | null>;
+        series:
+            | Array<number | null>
+            | Array<{ x: number | null; y: number | null }>; // series with coordinates: for line and plot types only
         type: 'bar' | 'line' | 'plot';
         color?: string;
         dashed?: boolean;

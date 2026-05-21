@@ -240,7 +240,21 @@ const props = defineProps({
         type: String,
         default: null,
     },
+    precision: {
+        type: Number,
+        default: 0,
+    },
+    useValueRange: {
+        type: Boolean,
+        default: false,
+    },
 });
+
+function sanitizeRangeValue(value) {
+    const number = Number(value) || 0;
+    if (props.precision <= 0) return Math.round(number);
+    return Number(number.toFixed(props.precision));
+}
 
 const zoomWrapper = ref(null);
 const startValue = ref(props.min);
@@ -255,6 +269,57 @@ const dragStartClientX = ref(0);
 const dragPointerOffsetX = ref(0);
 const minimapSvg = ref(null);
 
+const rightValue = computed(() => {
+    return props.useValueRange ? endValue.value : endValue.value - 1;
+});
+
+const valueRange = computed(() => {
+    return Math.max(1, Number(props.max) - Number(props.min));
+});
+
+function valueToPercent(value) {
+    return ((Number(value) - Number(props.min)) / valueRange.value) * 100;
+}
+
+function valueToMiniX(value) {
+    return svgMinimap.value.width * (valueToPercent(value) / 100);
+}
+
+function miniXToValue(x) {
+    const ratio = Math.min(
+        1,
+        Math.max(0, x / Math.max(1, svgMinimap.value.width)),
+    );
+    return sanitizeRangeValue(Number(props.min) + valueRange.value * ratio);
+}
+
+function getMiniValue(point) {
+    if (props.useValueRange) {
+        return Number(point?.y);
+    }
+
+    return Number(point);
+}
+
+function getMiniXValue(point, index) {
+    if (props.useValueRange) {
+        return Number(point?.x);
+    }
+
+    return index + Number(props.min);
+}
+
+function getMiniX(point, index) {
+    if (props.useValueRange) {
+        return valueToMiniX(getMiniXValue(point, index));
+    }
+
+    return (
+        unitWidthX.value * index +
+        (props.minimapCompact ? 0 : unitWidthX.value / 2)
+    );
+}
+
 const compactHandleWidth = computed(() => {
     return Math.min(40, Math.max(20, props.handleWidth));
 });
@@ -264,10 +329,17 @@ const wrapperWidth = ref(0);
 const emitFutureStart = throttle((v) => emit('futureStart', v), 0);
 const emitFutureEnd = throttle((v) => emit('futureEnd', v), 0);
 
+const minimumGap = computed(() => {
+    return props.precision > 0 ? 1 / 10 ** props.precision : 1;
+});
+
 const start = computed({
     get: () => startValue.value,
     set(raw) {
-        const v = Math.min(raw, endValue.value - 1);
+        const v = Math.min(
+            Number(raw),
+            Number(endValue.value) - minimumGap.value,
+        );
         if (v === startValue.value) return;
         startValue.value = v;
         if (rangeStart.value) rangeStart.value.value = String(v);
@@ -283,7 +355,10 @@ const start = computed({
 const end = computed({
     get: () => endValue.value,
     set(raw) {
-        const v = Math.max(raw, startValue.value + 1);
+        const v = Math.max(
+            Number(raw),
+            Number(startValue.value) + minimumGap.value,
+        );
         if (v === endValue.value) return;
         endValue.value = v;
         if (rangeEnd.value) rangeEnd.value.value = String(v);
@@ -316,22 +391,33 @@ const emit = defineEmits([
     'update:end',
     'reset',
     'trapMouse',
+    'trapMouseValue',
 ]);
 
 const startPercent = computed(() => {
+    if (props.useValueRange) {
+        return valueToPercent(startValue.value);
+    }
+
     if (useMini.value) {
         const denom = Math.max(1, absLen.value - 1);
         return (startForInput.value / denom) * 100;
     }
+
     const range = Math.max(1, props.max - props.min);
     return ((startValue.value - props.min) / range) * 100;
 });
 
 const endPercent = computed(() => {
+    if (props.useValueRange) {
+        return valueToPercent(endValue.value);
+    }
+
     if (useMini.value) {
         const denom = Math.max(1, absLen.value - 1);
         return (endForInput.value / denom) * 100;
     }
+
     const range = Math.max(1, props.max - props.min);
     return ((endValue.value - props.min) / range) * 100;
 });
@@ -512,13 +598,16 @@ const globalRange = computed(() => {
         props.minimap.length &&
         props.minimapMerged
     ) {
-        vals.push(...props.minimap.filter(Number.isFinite));
+        vals.push(...props.minimap.map(getMiniValue).filter(Number.isFinite));
     }
     if (Array.isArray(props.allMinimaps) && props.allMinimaps.length) {
         for (const ds of props.allMinimaps) {
             if (!ds?.isVisible) continue;
-            if (Array.isArray(ds?.series))
-                vals.push(...ds.series.filter(Number.isFinite));
+            if (Array.isArray(ds?.series)) {
+                vals.push(
+                    ...ds.series.map(getMiniValue).filter(Number.isFinite),
+                );
+            }
         }
     }
     if (!vals.length) return { min: 0, max: 1 };
@@ -650,11 +739,11 @@ function makeMiniChart(ds, smooth = false, useStepper = false) {
     const e = Math.min(len, Math.max(s + 1, endMini.value));
 
     const points = ds.map((dp, i) => {
-        const val = dp;
+        const val = getMiniValue(dp);
         const valid = Number.isFinite(val);
-        const x =
-            unitWidthX.value * i +
-            (props.minimapCompact ? 0 : unitWidthX.value / 2);
+
+        const x = getMiniX(dp, i);
+
         const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 
         // Bar baseline
@@ -663,15 +752,17 @@ function makeMiniChart(ds, smooth = false, useStepper = false) {
         const baseValue = hasFixedScale.value
             ? clamp(0, allMin.value, allMax.value)
             : 0;
+
         const y0 = mapYSeries(baseValue);
 
         return {
             x,
             y: valid ? mapYSeries(val) : NaN,
             v: val,
-            value: val == null ? null : valid ? val : null,
+            value: valid ? val : null,
             y0,
             i,
+            xValue: getMiniXValue(dp, i),
         };
     });
 
@@ -682,9 +773,24 @@ function makeMiniChart(ds, smooth = false, useStepper = false) {
         (p) =>
             Number.isFinite(p.value) && !isValid(p.i - 1) && !isValid(p.i + 1),
     );
-    const selectionMarkers = fullMarkers.filter((p) => p.i >= s && p.i < e);
 
-    const sliced = points.slice(s, e);
+    const selectionMarkers = props.useValueRange
+        ? fullMarkers.filter((point) => {
+              return (
+                  point.xValue >= Number(startValue.value) &&
+                  point.xValue <= Number(endValue.value)
+              );
+          })
+        : fullMarkers.filter((p) => p.i >= s && p.i < e);
+
+    const sliced = props.useValueRange
+        ? points.filter((point) => {
+              return (
+                  point.xValue >= Number(startValue.value) &&
+                  point.xValue <= Number(endValue.value)
+              );
+          })
+        : points.slice(s, e);
 
     const fullSet =
         points.length >= 2
@@ -725,8 +831,11 @@ function makeMiniChart(ds, smooth = false, useStepper = false) {
         points,
         selectionSet,
         sliced,
-        firstPlot: points[s] || null,
-        lastPlot: points[Math.max(0, e - 1)] || null,
+        firstPlot: props.useValueRange ? sliced[0] || null : points[s] || null,
+
+        lastPlot: props.useValueRange
+            ? sliced[sliced.length - 1] || null
+            : points[Math.max(0, e - 1)] || null,
         hasFull: points.length >= 2,
         hasSelection: sliced.length >= 2,
         fullMarkers,
@@ -762,6 +871,16 @@ const allMinimapLines = computed(() => {
 });
 
 const selectionRectCoordinates = computed(() => {
+    if (props.useValueRange) {
+        const x1 = valueToMiniX(startValue.value);
+        const x2 = valueToMiniX(endValue.value);
+
+        return {
+            x: x1,
+            width: Math.max(0, x2 - x1),
+        };
+    }
+
     const s = startMini.value;
     const e = Math.max(s + 1, endMini.value);
 
@@ -783,11 +902,21 @@ const startForInput = computed({
     },
     set(v) {
         if (useMini.value) {
+            if (props.useValueRange) {
+                const proposed = sanitizeRangeValue(v);
+                const clamped = Math.min(
+                    Math.max(Number(props.min), proposed),
+                    Number(endValue.value) - minimumGap.value,
+                );
+                setStartValue(clamped);
+                return;
+            }
+
             const n = Math.round(+v || 0);
             setStartValue(miniToAbs(n));
         } else {
-            let proposed = Math.round(+v || 0);
-            const maxAllowed = Number(endValue.value) - 1;
+            let proposed = sanitizeRangeValue(v);
+            const maxAllowed = Number(endValue.value) - minimumGap.value;
             const clamped = Math.min(Math.max(props.min, proposed), maxAllowed);
             if (rangeStart.value) {
                 rangeStart.value.valueAsNumber = clamped;
@@ -805,11 +934,21 @@ const endForInput = computed({
     },
     set(v) {
         if (useMini.value) {
+            if (props.useValueRange) {
+                const proposed = sanitizeRangeValue(v);
+                const clamped = Math.max(
+                    Number(startValue.value) + minimumGap.value,
+                    Math.min(proposed, Number(props.max)),
+                );
+                setEndValue(clamped);
+                return;
+            }
+
             const n = Math.round(+v || 0);
             setEndValue(miniToAbs(n + 1));
         } else {
-            let proposed = Math.round(+v || 0);
-            const minAllowed = Number(startValue.value) + 1;
+            let proposed = sanitizeRangeValue(v);
+            const minAllowed = Number(startValue.value) + minimumGap.value;
             const clamped = Math.max(minAllowed, Math.min(proposed, props.max));
             if (rangeEnd.value) {
                 rangeEnd.value.valueAsNumber = clamped;
@@ -820,6 +959,12 @@ const endForInput = computed({
 });
 
 function setSelectedTrap(v) {
+    if (props.useValueRange) {
+        selectedTrap.value = Number.isFinite(Number(v))
+            ? valueToMiniX(Number(v))
+            : null;
+        return;
+    }
     selectedTrap.value = absToMiniStart(props.valueStart) + v;
 }
 
@@ -849,18 +994,58 @@ function trapMouse(trap) {
     }
 }
 
+function getClosestContinuousTrap(localX) {
+    const xValue = miniXToValue(localX);
+
+    const points = props.allMinimaps
+        .flatMap((datapoint) => {
+            return (datapoint.series || []).map((point, index) => {
+                return {
+                    point,
+                    index,
+                    x: Number(point?.x),
+                    distance: Math.abs(Number(point?.x) - xValue),
+                };
+            });
+        })
+        .filter((item) => Number.isFinite(item.x));
+
+    if (!points.length) {
+        return null;
+    }
+
+    return points.reduce((closest, item) => {
+        return item.distance < closest.distance ? item : closest;
+    }, points[0]);
+}
+
 function onTrapMouseMove(event) {
     if (!hasAvailableTraps.value) return;
 
     const localX = clientXToMinimapX(event.clientX);
-    const trap = localXToMiniPointIndex(localX);
 
+    if (props.useValueRange) {
+        const closest = getClosestContinuousTrap(localX);
+
+        if (!closest) {
+            clearTrapMouse();
+            return;
+        }
+
+        selectedTrap.value = valueToMiniX(closest.x);
+        emit('trapMouse', closest.index);
+        emit('trapMouseValue', closest.x);
+        return;
+    }
+
+    const trap = localXToMiniPointIndex(localX);
     trapMouse(trap);
 }
 
 function clearTrapMouse() {
     selectedTrap.value = null;
     emit('trapMouse', null);
+    emit('trapMouseValue', null);
 }
 
 const rangeStart = ref(null);
@@ -1199,10 +1384,12 @@ const labels = computed(() => {
             });
 
             const customRight = props.customFormat({
-                absoluteIndex: endValue.value - 1,
+                absoluteIndex: rightValue.value,
                 seriesIndex: -1,
                 datapoint: props.selectedSeries,
-                timeLabel: props.preciseLabels[endValue.value - 1],
+                timeLabel: props.useValueRange
+                    ? null
+                    : props.preciseLabels[rightValue.value],
                 side: 'right',
             });
 
@@ -1220,21 +1407,25 @@ const labels = computed(() => {
     }
 
     if (!useCustomFormat) {
-        const left = props.usePreciseLabels
-            ? props.preciseLabels.find(
-                  (t) => t.absoluteIndex === startValue.value,
-              )
-            : props.timeLabels.find(
-                  (t) => t.absoluteIndex === startValue.value,
-              );
+        const left = props.useValueRange
+            ? { text: String(Math.round(startValue.value * 1000) / 1000) }
+            : props.usePreciseLabels
+              ? props.preciseLabels.find(
+                    (t) => t.absoluteIndex === startValue.value,
+                )
+              : props.timeLabels.find(
+                    (t) => t.absoluteIndex === startValue.value,
+                );
 
-        const right = props.usePreciseLabels
-            ? props.preciseLabels.find(
-                  (t) => t.absoluteIndex === endValue.value - 1,
-              )
-            : props.timeLabels.find(
-                  (t) => t.absoluteIndex === endValue.value - 1,
-              );
+        const right = props.useValueRange
+            ? { text: String(Math.round(endValue.value * 1000) / 1000) }
+            : props.usePreciseLabels
+              ? props.preciseLabels.find(
+                    (t) => t.absoluteIndex === rightValue.value,
+                )
+              : props.timeLabels.find(
+                    (t) => t.absoluteIndex === rightValue.value,
+                );
 
         leftText = left ? left.text : '';
         rightText = right ? right.text : '';
@@ -1259,7 +1450,31 @@ onBeforeUnmount(() => {
 });
 
 const selectionIndicator = computed(() => {
-    if (!hasAvailableTraps.value) return null;
+    if (!hasAvailableTraps.value || selectedTrap.value === null) return null;
+
+    if (props.useValueRange) {
+        const x = selectedTrap.value;
+
+        if (
+            x < selectionRectCoordinates.value.x ||
+            x >
+                selectionRectCoordinates.value.x +
+                    selectionRectCoordinates.value.width
+        ) {
+            return null;
+        }
+
+        return {
+            x1: x,
+            x2: x,
+            y1: 0,
+            y2: Math.max(svgMinimap.value.height, 0),
+            stroke: props.minimapIndicatorColor,
+            ['stroke-linecap']: 'round',
+            ['stroke-dasharray']: 2,
+            ['stroke-width']: 1,
+        };
+    }
 
     if (
         selectedTrap.value >= startMini.value &&
@@ -1459,6 +1674,34 @@ function localXToMiniPointIndex(localX) {
 }
 
 function updateHandleDragFromLocalX(localX) {
+    if (props.useValueRange) {
+        const value = miniXToValue(localX);
+
+        if (activeHandle.value === 'start') {
+            const nextStart = Math.min(
+                value,
+                Number(endValue.value) - minimumGap.value,
+            );
+
+            start.value = nextStart;
+            emitFutureStart(nextStart);
+            return;
+        }
+
+        if (activeHandle.value === 'end') {
+            const nextEnd = Math.max(
+                Number(startValue.value) + minimumGap.value,
+                value,
+            );
+
+            const clampedEnd = Math.min(Number(props.max), nextEnd);
+
+            end.value = clampedEnd;
+            emitFutureEnd(clampedEnd);
+            return;
+        }
+    }
+
     const pointIndex = localXToMiniPointIndex(localX);
 
     if (activeHandle.value === 'start') {
@@ -1695,6 +1938,20 @@ defineExpose({
                                 />
                                 <stop offset="100%" stop-color="transparent" />
                             </linearGradient>
+
+                            <clipPath :id="`selection_clip_${uid}`">
+                                <rect
+                                    :x="selectionRectCoordinates.x"
+                                    y="0"
+                                    :width="
+                                        Math.max(
+                                            0,
+                                            selectionRectCoordinates.width,
+                                        )
+                                    "
+                                    :height="Math.max(svgMinimap.height, 0)"
+                                />
+                            </clipPath>
                         </defs>
 
                         <rect
@@ -1880,13 +2137,6 @@ defineExpose({
                                 >
                                     <path
                                         v-if="minimapLine.selectionSet"
-                                        :d="`M${minimapLine.sliced[0].x},${Math.max(svgMinimap.height, 0)} ${minimapLine.selectionSet} L${minimapLine.sliced[minimapLine.sliced.length - 1].x},${Math.max(svgMinimap.height, 0)}Z`"
-                                        :fill="`url(#${uid})`"
-                                        stroke="none"
-                                        style="opacity: 1"
-                                    />
-                                    <path
-                                        v-if="minimapLine.selectionSet"
                                         :d="`M ${minimapLine.selectionSet}`"
                                         :stroke="`${minimapLineColor}`"
                                         fill="transparent"
@@ -1978,7 +2228,7 @@ defineExpose({
                                     )"
                                     :key="String(dp.key)"
                                 >
-                                    <g v-for="m in dp.points">
+                                    <g v-for="m in dp.sliced">
                                         <circle
                                             v-if="
                                                 dp.isVisible && m.value !== null
@@ -2354,6 +2604,7 @@ defineExpose({
                 data-cy="slicer-handle-left"
                 ref="rangeStart"
                 type="range"
+                :step="precision > 0 ? 1 / 10 ** precision : 1"
                 :class="{
                     'range-left': true,
                     'range-handle': true,
@@ -2362,7 +2613,9 @@ defineExpose({
                 }"
                 :min="min"
                 :max="
-                    minimapCompact && hasMinimap ? Math.max(0, absLen - 1) : max
+                    minimapCompact && hasMinimap && !useValueRange
+                        ? Math.max(0, absLen - 1)
+                        : max
                 "
                 :tabindex="hasMinimap ? -1 : 0"
                 v-model.number="startForInput"
@@ -2381,6 +2634,7 @@ defineExpose({
                 data-cy="slicer-handle-right"
                 ref="rangeEnd"
                 type="range"
+                :step="precision > 0 ? 1 / 10 ** precision : 1"
                 :class="{
                     'range-right': true,
                     'range-handle': true,
@@ -2389,7 +2643,9 @@ defineExpose({
                 }"
                 :min="min"
                 :max="
-                    minimapCompact && hasMinimap ? Math.max(0, absLen - 1) : max
+                    minimapCompact && hasMinimap && !useValueRange
+                        ? Math.max(0, absLen - 1)
+                        : max
                 "
                 :tabindex="hasMinimap ? -1 : 0"
                 @focus="hasMinimap && $event.target.blur()"

@@ -46,6 +46,13 @@ const dataset = computed<VueUiXyDatasetItem[]>(() => [
         useStepper: true,
         smooth: false,
         useArea: true,
+        // series: [
+        //     { x: 1, y: 1},
+        //     { x: 1.2, y: 2},
+        //     { x: 3, y: 1},
+        //     { x: 4, y: 2},
+        //     { x: 5, y: 1},
+        // ],
         series: [21, 13, null, 5, 3, 2, 1],
         comments: ['', 'This is a comment'],
     },
@@ -254,8 +261,16 @@ const testPreconfig = computed<VueUiXyConfig>(() => {
                         showCrosshairs: true,
                         crosshairsAlwaysAtZero: false,
                         crosshairSize: 6,
+                        commonScaleSteps: 10, // continuous mode only
+                        useNiceScale: true, // continuous mode only
+                        scaleMin: null, // continuous mode only
+                        scaleMax: null, // continuous mode only
+                        rounding: 1, // continuous mode only
+                        formatter: null, // continuous mode only
+                        reverse: false, // continuous mode only
                     },
                     yAxis: {
+                        reverse: false,
                         showBaseline: true,
                         showCrosshairs: true,
                         crosshairSize: 6,
