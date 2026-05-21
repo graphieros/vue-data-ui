@@ -61,6 +61,7 @@ import {
     themePalettes,
     translateSize,
     treeShake,
+    isValidNumber,
 } from '../lib';
 import { useLocale } from '../useLocale.js';
 import { useConfig } from '../useConfig';
@@ -181,6 +182,7 @@ const readyTeleport = ref(false);
 const tableUnit = ref(null);
 const isCallbackImaging = ref(false);
 const isCallbackSvg = ref(false);
+const selectedMinimapXValue = ref(null);
 
 const selectedSerieIndex = ref(null);
 const activeTooltipIndex = ref(null); // a11y
@@ -668,6 +670,36 @@ function setPrecog(side, val) {
 }
 
 function normalizeSlicerWindow() {
+    if (isContinuousScale.value) {
+        const min = continuousFullXRange.value.min;
+        const max = continuousFullXRange.value.max;
+
+        let start = Number(slicer.value.start);
+        let end = Number(slicer.value.end);
+
+        if (!Number.isFinite(start)) start = min;
+        if (!Number.isFinite(end)) end = max;
+
+        start = Math.max(min, Math.min(start, max));
+        end = Math.max(start, Math.min(end, max));
+
+        if (end <= start) {
+            start = min;
+            end = max;
+        }
+
+        slicer.value = { start, end };
+        slicerPrecog.value.start = start;
+        slicerPrecog.value.end = end;
+
+        if (chartSlicer.value) {
+            chartSlicer.value.setStartValue(start);
+            chartSlicer.value.setEndValue(end);
+        }
+
+        return;
+    }
+
     const maxLen = Math.max(
         1,
         ...FINAL_DATASET.value.map((dp) => lttb(dp.series).length),
@@ -784,6 +816,7 @@ const dataRange = computed(() => {
     const series = safeDataset.value
         .filter((s) => !segregatedSeries.value.includes(s.id))
         .flatMap((d) => (Array.isArray(d.series) ? d.series : []))
+        .map(getValueFromPoint)
         .filter(Number.isFinite);
 
     if (!series.length) return { min: 0, max: 1 };
@@ -879,18 +912,96 @@ const relativeZero = computed(() => {
     return Math.abs(niceScale.value.min);
 });
 
+function isCoordinatePoint(point) {
+    return (
+        point &&
+        typeof point === 'object' &&
+        Number.isFinite(Number(point.x)) &&
+        Number.isFinite(Number(point.y))
+    );
+}
+
+const isContinuousScale = computed(() => {
+    return FINAL_DATASET.value.some((datapoint) => {
+        return (
+            Array.isArray(datapoint.series) &&
+            datapoint.series.some(isCoordinatePoint)
+        );
+    });
+});
+
+onMounted(() => {
+    if (
+        isContinuousScale.value &&
+        props.dataset.some((el) => el.type === 'bar')
+    ) {
+        console.warn(
+            `Vue Data UI - VueUiXy: series of type 'bar' are not supported in continuous mode.\n\nContinuous mode requires 'line' and 'plot' series to use coordinate-based datasets:\n[{ x: number, y: number }]\n\nIf you need to mix 'bar', 'line', and 'plot' series in the same chart, all series must use the standard\n[number, number, number...]`,
+        );
+    }
+});
+
+function normalizeCoordinatePoint(point, index) {
+    const hasNullBreak =
+        point &&
+        typeof point === 'object' &&
+        point.x === null &&
+        point.y === null;
+
+    if (hasNullBreak) {
+        return {
+            x: null,
+            y: null,
+            index,
+            raw: point,
+            isNull: true,
+        };
+    }
+
+    return {
+        x: Number(point.x),
+        y: isSafeValue(point.y) ? Number(point.y) : null,
+        index,
+        raw: point,
+        isNull: false,
+    };
+}
+
+function getValueFromPoint(point) {
+    return isContinuousScale.value ? point.y : point;
+}
+
 const safeDataset = computed(() => {
-    if (!useSafeValues.value) return FINAL_DATASET.value;
+    if (!useSafeValues.value && !isContinuousScale.value) {
+        return FINAL_DATASET.value;
+    }
 
     return FINAL_DATASET.value.map((datapoint, i) => {
-        const LTTB = lttb(datapoint.series);
+        const sourceSeries = isContinuousScale.value
+            ? datapoint.series
+            : lttb(datapoint.series);
+
         const id = `uniqueId_${i}`;
+
         return {
             ...datapoint,
             slotAbsoluteIndex: i,
-            series: LTTB.map((d) => {
-                return isSafeValue(d) ? d : null;
-            }).slice(slicer.value.start, slicer.value.end),
+            series: isContinuousScale.value
+                ? sourceSeries
+                      .map((point, index) =>
+                          normalizeCoordinatePoint(point, index),
+                      )
+                      .filter((point) => {
+                          return (
+                              point.x >= slicer.value.start &&
+                              point.x <= slicer.value.end
+                          );
+                      })
+                : sourceSeries
+                      .map((d) => {
+                          return isSafeValue(d) ? d : null;
+                      })
+                      .slice(slicer.value.start, slicer.value.end),
             color: convertColorToHex(
                 datapoint.color
                     ? datapoint.color
@@ -909,8 +1020,15 @@ const absoluteDataset = computed(() => {
         return {
             absoluteIndex: i,
             ...datapoint,
-            series: datapoint.series.map((plot) => plot + relativeZero.value),
-            absoluteValues: datapoint.series,
+            series: isContinuousScale.value
+                ? datapoint.series.map((point) => ({
+                      ...point,
+                      y: point.y === null ? null : point.y + relativeZero.value,
+                  }))
+                : datapoint.series.map((plot) => plot + relativeZero.value),
+            absoluteValues: isContinuousScale.value
+                ? datapoint.series.map((point) => point.y)
+                : datapoint.series,
             segregate: () => segregate(datapoint),
             isSegregated: segregatedSeries.value.includes(datapoint.id),
         };
@@ -919,13 +1037,21 @@ const absoluteDataset = computed(() => {
 
 const relativeDataset = computed(() => {
     return safeDataset.value
-        .map((datapoint, i) => {
+        .map((datapoint) => {
             return {
                 ...datapoint,
-                series: datapoint.series.map(
-                    (plot) => plot + relativeZero.value,
-                ),
-                absoluteValues: datapoint.series,
+                series: isContinuousScale.value
+                    ? datapoint.series.map((point) => ({
+                          ...point,
+                          y:
+                              point.y === null
+                                  ? null
+                                  : point.y + relativeZero.value,
+                      }))
+                    : datapoint.series.map((plot) => plot + relativeZero.value),
+                absoluteValues: isContinuousScale.value
+                    ? datapoint.series.map((point) => point.y)
+                    : datapoint.series,
             };
         })
         .filter((s) => !segregatedSeries.value.includes(s.id));
@@ -974,6 +1100,85 @@ function getScaleLabelX() {
         scaleLabelsOffset,
         yAxisLabelWidth,
     };
+}
+
+function updateContinuousTooltip(svgX) {
+    const closestGlobal = relativeDataset.value
+        .filter((datapoint) => ['line', 'plot'].includes(datapoint.type))
+        .flatMap((datapoint) => {
+            return datapoint.series.map((point, index) => {
+                const x = getContinuousX(point);
+
+                return {
+                    datapoint,
+                    point,
+                    index,
+                    x,
+                    y: point.y,
+                    distance: Math.abs(x - svgX),
+                };
+            });
+        })
+        .filter(
+            (item) =>
+                isValidNumber(item.point?.x) && isValidNumber(item.point?.y),
+        )
+        .reduce((closest, item) => {
+            if (!closest || item.distance < closest.distance) {
+                return item;
+            }
+
+            return closest;
+        }, null);
+
+    if (!closestGlobal) {
+        continuousTooltipSet.value = [];
+        continuousTooltipX.value = null;
+        selectedMinimapXValue.value = null;
+        return;
+    }
+
+    const selectedX = Number(closestGlobal.point.x);
+
+    const matchingPoints = relativeDataset.value
+        .filter((datapoint) => ['line', 'plot'].includes(datapoint.type))
+        .map((datapoint) => {
+            const index = datapoint.series.findIndex((point) => {
+                return Number(point.x) === selectedX && isValidNumber(point.y);
+            });
+
+            if (index === -1) {
+                return null;
+            }
+
+            const point = datapoint.series[index];
+
+            return {
+                datapoint,
+                point,
+                index,
+                x: getContinuousX(point),
+                y: point.y,
+                distance: 0,
+            };
+        })
+        .filter(Boolean);
+
+    continuousTooltipSet.value = matchingPoints;
+    continuousTooltipX.value = getContinuousX({ x: selectedX });
+    selectedMinimapXValue.value = selectedX;
+}
+
+function updateContinuousTooltipFromXValue(xValue) {
+    if (!Number.isFinite(Number(xValue))) {
+        continuousTooltipSet.value = [];
+        continuousTooltipX.value = null;
+        return;
+    }
+
+    const svgX = getContinuousX({ x: Number(xValue) });
+    updateContinuousTooltip(svgX);
+    continuousTooltipX.value = svgX;
 }
 
 const timeLabelsHeight = ref(0);
@@ -1134,6 +1339,30 @@ const gridVerticalLines = computed(() => {
     const topY = forceValidValue(drawingArea.value?.top);
     const bottomY = forceValidValue(drawingArea.value?.bottom);
 
+    if (isContinuousScale.value) {
+        if (FINAL_CONFIG.value.chart.grid.position === 'middle') {
+            return continuousXLabels.value
+                .map((label, index, arr) => {
+                    if (index === 0) {
+                        return null;
+                    }
+
+                    const previous = arr[index - 1];
+                    const x = previous.x + (label.x - previous.x) / 2;
+
+                    return `M${x},${topY} L${x},${bottomY}`;
+                })
+                .filter(Boolean)
+                .join(' ');
+        }
+
+        return continuousXLabels.value
+            .map((label) => {
+                return `M${label.x},${topY} L${label.x},${bottomY}`;
+            })
+            .join(' ');
+    }
+
     return Array.from({ length: count })
         .map((_, i) => {
             const x =
@@ -1149,20 +1378,25 @@ const gridVerticalLines = computed(() => {
 const crosshairsX = computed(() => {
     if (!FINAL_CONFIG.value.chart.grid.labels.xAxis.showCrosshairs) return '';
 
-    const segmentWidth = horizontalBandWidth.value;
     const size = FINAL_CONFIG.value.chart.grid.labels.xAxis.crosshairSize;
     const alwaysAtZero =
         FINAL_CONFIG.value.chart.grid.labels.xAxis.crosshairsAlwaysAtZero;
 
-    return displayedTimeLabels.value
+    const labels = isContinuousScale.value
+        ? continuousXLabels.value
+        : displayedTimeLabels.value;
+
+    return labels
         .map((label, i) => {
             if (!label || !label.text) return null;
 
-            const x = getDatapointX(i);
+            const x = isContinuousScale.value ? label.x : getDatapointX(i);
+
             const y1 = alwaysAtZero
                 ? zero.value -
                   (zero.value === drawingArea.value?.bottom ? 0 : size / 2)
                 : drawingArea.value?.bottom;
+
             const y2 = alwaysAtZero
                 ? zero.value +
                   size / (zero.value === drawingArea.value?.bottom ? 1 : 2)
@@ -1374,9 +1608,36 @@ const maxSeries = computed(() => {
     return Math.max(1, len);
 });
 
-function selectMinimapIndex(i) {
-    selectedMinimapIndex.value = i;
+function selectMinimapIndex(payload) {
+    if (isContinuousScale.value) return;
+    selectedMinimapIndex.value = payload;
 }
+
+function selectMinimapXValue(value) {
+    if (!isContinuousScale.value || !isValidNumber(value)) {
+        selectedMinimapXValue.value = null;
+        continuousTooltipSet.value = [];
+        continuousTooltipX.value = null;
+        return;
+    }
+
+    selectedMinimapXValue.value = Number(value);
+    updateContinuousTooltipFromXValue(Number(value));
+}
+
+const hasHighlighterSelection = computed(() => {
+    if (isContinuousScale.value) {
+        return (
+            isValidNumber(selectedMinimapXValue.value) ||
+            isValidNumber(continuousTooltipX.value)
+        );
+    }
+
+    return (
+        ![null, undefined].includes(selectedSerieIndex.value) ||
+        ![null, undefined].includes(selectedMinimapIndex.value)
+    );
+});
 
 function toggleStack() {
     mutableConfig.value.isStacked = !mutableConfig.value.isStacked;
@@ -1451,6 +1712,28 @@ function setupSlicer() {
     if (isSettingUp.value) return;
     isSettingUp.value = true;
     try {
+        if (isContinuousScale.value) {
+            const start = continuousFullXRange.value.min;
+            const end = continuousFullXRange.value.max;
+
+            absoluteSlicerStartIndex.value = start;
+            absoluteSlicerEndIndex.value = end;
+
+            slicer.value.start = start;
+            slicer.value.end = end;
+            slicerPrecog.value.start = start;
+            slicerPrecog.value.end = end;
+
+            slicerReady.value = true;
+
+            if (chartSlicer.value) {
+                chartSlicer.value.setStartValue(start);
+                chartSlicer.value.setEndValue(end);
+            }
+
+            return;
+        }
+
         const { startIndex, endIndex } = FINAL_CONFIG.value.chart.zoom;
         const max = FINAL_CONFIG.value.chart.zoom.keepState
             ? Math.max(
@@ -1516,6 +1799,34 @@ function onSlicerStart(v) {
 function onSlicerEnd(v) {
     if (isSettingUp.value || suppressChild.value) return;
 
+    if (isContinuousScale.value) {
+        const rawEnd = Number(v);
+
+        if (!Number.isFinite(rawEnd)) return;
+
+        const end = Math.max(
+            Number(slicer.value.start) +
+                1 / 10 ** FINAL_CONFIG.value.chart.grid.labels.xAxis.rounding,
+            Math.min(rawEnd, continuousFullXRange.value.max),
+        );
+
+        emit('zoomEnd', {
+            index: end,
+            isZoom: isObjectivelyDifferentIndex(
+                end,
+                absoluteSlicerEndIndex.value,
+            ),
+        });
+
+        if (end === slicer.value.end) return;
+
+        slicer.value.end = end;
+        slicerPrecog.value.end = end;
+        normalizeSlicerWindow();
+
+        return;
+    }
+
     const end = validSlicerEnd(v);
 
     emit('zoomEnd', {
@@ -1543,6 +1854,56 @@ const absoluteMax = computed(() => niceScale.value.max + relativeZero.value);
 
 function ratioToMax(v) {
     return v / (canShowValue(absoluteMax.value) ? absoluteMax.value : 1);
+}
+
+const isYAxisReversed = computed(() => {
+    return FINAL_CONFIG.value.chart.grid.labels.yAxis.reverse;
+});
+
+function applyYAxisReverseRatio(ratio) {
+    return isYAxisReversed.value ? 1 - ratio : ratio;
+}
+
+function getYFromRatio({ ratio, yOffset = 0, individualHeight }) {
+    const finalRatio = applyYAxisReverseRatio(ratio);
+
+    return drawingArea.value?.bottom - yOffset - individualHeight * finalRatio;
+}
+
+function getIndividualScaleYFromRatio({
+    ratio,
+    zeroPosition,
+    individualHeight,
+}) {
+    if (!isYAxisReversed.value) {
+        return zeroPosition - individualHeight * ratio;
+    }
+
+    return zeroPosition + individualHeight * ratio;
+}
+
+function getYFromScaleValue({
+    value,
+    scaleMin,
+    scaleMax,
+    yOffset = 0,
+    individualHeight,
+}) {
+    const ratio = (value - scaleMin) / (scaleMax - scaleMin || 1);
+
+    return getYFromRatio({
+        ratio,
+        yOffset,
+        individualHeight,
+    });
+}
+
+const isXAxisReversed = computed(() => {
+    return FINAL_CONFIG.value.chart.grid.labels.xAxis.reverse;
+});
+
+function applyXAxisReverseRatio(ratio) {
+    return isXAxisReversed.value ? 1 - ratio : ratio;
 }
 
 const zero = computed(() => {
@@ -1677,6 +2038,8 @@ function calcIndividualRectY(plot) {
 }
 
 const hoveredIndex = ref(null);
+const continuousTooltipSet = ref([]);
+const continuousTooltipX = ref(null);
 
 function clientToSvgCoords(evt) {
     const svgEl = svgRef.value;
@@ -1743,6 +2106,12 @@ function onSvgMouseMove(e) {
             return;
         }
 
+        if (isContinuousScale.value) {
+            updateContinuousTooltip(svgPt.x);
+            toggleTooltipVisibility(true, selectedSerieIndex.value ?? 0);
+            return;
+        }
+
         const idx = getHoveredIndexFromSvgX(svgPt.x);
 
         if (idx != null) {
@@ -1763,6 +2132,9 @@ function onSvgMouseLeave() {
     }
     hoveredIndex.value = null;
     toggleTooltipVisibility(false, null);
+    continuousTooltipSet.value = [];
+    continuousTooltipX.value = null;
+    selectedMinimapXValue.value = null;
 }
 
 function onSvgClick(e) {
@@ -2239,6 +2611,30 @@ const allMinimaps = computed(() => {
 });
 
 const selectedSeries = computed(() => {
+    if (isContinuousScale.value) {
+        return continuousTooltipSet.value.map((item) => {
+            return {
+                slotAbsoluteIndex: item.datapoint.slotAbsoluteIndex,
+                shape:
+                    item.datapoint.shape || item.datapoint.type === 'bar'
+                        ? 'square'
+                        : 'circle',
+                name: item.datapoint.name,
+                color: item.datapoint.color,
+                type: item.datapoint.type,
+                value: item.point.raw?.y ?? item.point.y,
+                x: item.point.raw?.x ?? item.point.x,
+                comments: item.datapoint.comments || [],
+                prefix:
+                    item.datapoint.prefix ||
+                    FINAL_CONFIG.value.chart.labels.prefix,
+                suffix:
+                    item.datapoint.suffix ||
+                    FINAL_CONFIG.value.chart.labels.suffix,
+            };
+        });
+    }
+
     return relativeDataset.value.map((datapoint) => {
         return {
             slotAbsoluteIndex: datapoint.slotAbsoluteIndex,
@@ -2261,12 +2657,16 @@ const selectedSeries = computed(() => {
 
 const yLabels = computed(() => {
     return niceScale.value.ticks.map((t) => {
+        const y =
+            t >= 0
+                ? zero.value - drawingArea.value.height * ratioToMax(t)
+                : zero.value +
+                  drawingArea.value.height * ratioToMax(Math.abs(t));
+
         return {
-            y:
-                t >= 0
-                    ? zero.value - drawingArea.value.height * ratioToMax(t)
-                    : zero.value +
-                      drawingArea.value.height * ratioToMax(Math.abs(t)),
+            y: isYAxisReversed.value
+                ? drawingArea.value.top + drawingArea.value.bottom - y
+                : y,
             value: t,
             prefix: FINAL_CONFIG.value.chart.labels.prefix,
             suffix: FINAL_CONFIG.value.chart.labels.suffix,
@@ -2383,6 +2783,143 @@ function isPlotAlone(plotSeries, index) {
 /******************************************************************************************/
 /                                 DATAPOINTS COMPUTING                                     /;
 /******************************************************************************************/
+
+const continuousXRange = computed(() => {
+    const values = safeDataset.value
+        .flatMap((datapoint) => datapoint.series.map((point) => point.x))
+        .filter(Number.isFinite);
+
+    if (!values.length) {
+        return { min: 0, max: 1 };
+    }
+
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+
+    return {
+        min,
+        max: min === max ? max + 1 : max,
+    };
+});
+
+const continuousXNiceScale = computed(() => {
+    const steps = FINAL_CONFIG.value.chart.grid.labels.xAxis.commonScaleSteps;
+
+    const customScaleMin = FINAL_CONFIG.value.chart.grid.labels.xAxis.scaleMin;
+    const customScaleMax = FINAL_CONFIG.value.chart.grid.labels.xAxis.scaleMax;
+
+    const min =
+        customScaleMin !== null && Number.isFinite(Number(customScaleMin))
+            ? Number(customScaleMin)
+            : continuousXRange.value.min;
+
+    const max =
+        customScaleMax !== null && Number.isFinite(Number(customScaleMax))
+            ? Number(customScaleMax)
+            : continuousXRange.value.max;
+
+    const scale = FINAL_CONFIG.value.chart.grid.labels.xAxis.useNiceScale
+        ? calculateNiceScale(min, max, steps)
+        : calculateNiceScaleWithExactExtremes(min, max, steps);
+
+    if (FINAL_CONFIG.value.chart.grid.position !== 'start') {
+        return scale;
+    }
+
+    const spacing =
+        scale.ticks.length > 1 ? scale.ticks[1] - scale.ticks[0] : 1;
+
+    return {
+        ...scale,
+        max: scale.max + spacing,
+    };
+});
+
+const continuousXLabels = computed(() => {
+    if (!isContinuousScale.value) {
+        return displayedTimeLabels.value;
+    }
+
+    const ticks = isXAxisReversed.value
+        ? [...continuousXNiceScale.value.ticks].reverse()
+        : [...continuousXNiceScale.value.ticks];
+
+    return ticks.map((tick, index) => {
+        return {
+            id: `continuous_x_label_${index}`,
+            text: applyDataLabel(
+                FINAL_CONFIG.value.chart.grid.labels.xAxis.formatter,
+                tick,
+                dataLabel({
+                    v: tick,
+                    s: FINAL_CONFIG.value.chart.labels.prefix,
+                    p: FINAL_CONFIG.value.chart.labels.suffix,
+                    r: FINAL_CONFIG.value.chart.grid.labels.xAxis.rounding,
+                }),
+                {
+                    datapoint: tick,
+                    seriesIndex: index,
+                },
+            ),
+            value: tick,
+            x: getContinuousX({ x: tick }),
+            index,
+        };
+    });
+});
+
+function getXAxisLabelX(label, index) {
+    return isContinuousScale.value ? label.x : getDatapointX(index);
+}
+
+function getContinuousX({ x }) {
+    const range =
+        continuousXNiceScale.value.max - continuousXNiceScale.value.min || 1;
+
+    const ratio = (x - continuousXNiceScale.value.min) / range;
+
+    const finalRatio = applyXAxisReverseRatio(ratio);
+
+    return drawingArea.value.left + drawingArea.value.width * finalRatio;
+}
+
+const continuousFullXRange = computed(() => {
+    const values = FINAL_DATASET.value
+        .flatMap((datapoint) => datapoint.series || [])
+        .filter(isCoordinatePoint)
+        .map((point) => Number(point.x))
+        .filter(Number.isFinite);
+
+    if (!values.length) {
+        return { min: 0, max: 1 };
+    }
+
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+
+    return {
+        min,
+        max: min === max ? max + 1 : max,
+    };
+});
+
+const slicerMin = computed(() => {
+    return isContinuousScale.value ? continuousFullXRange.value.min : 0;
+});
+
+const slicerMax = computed(() => {
+    return isContinuousScale.value
+        ? continuousFullXRange.value.max
+        : maxX.value;
+});
+
+function getPointX(point, index) {
+    if (isContinuousScale.value) {
+        if (point.x == null || point.y == null) return null;
+        return getContinuousX(point);
+    }
+    return getDatapointX(index);
+}
 
 function getSerieVerticalGeometry({
     datapoint,
@@ -2562,10 +3099,11 @@ const barSet = computed(() => {
                     yOffset: checkNaN(yOffset),
                     individualHeight: checkNaN(individualHeight),
                     x: checkNaN(x),
-                    y:
-                        drawingArea.value?.bottom -
-                        yOffset -
-                        individualHeight * yRatio,
+                    y: getYFromRatio({
+                        ratio: yRatio,
+                        yOffset,
+                        individualHeight,
+                    }),
                     value: datapoint.absoluteValues[j],
                     zeroPosition: checkNaN(zeroPosition),
                     individualMax: checkNaN(individualMax),
@@ -2618,10 +3156,11 @@ const barSet = computed(() => {
                     individualHeight: checkNaN(individualHeight),
                     x: checkNaN(x),
                     y: checkNaN(
-                        drawingArea.value?.bottom -
-                            checkNaN(yOffset) -
-                            (checkNaN(individualHeight) *
-                                autoScaleRatiosToNiceScale[j] || 0),
+                        getYFromRatio({
+                            ratio: autoScaleRatiosToNiceScale[j] || 0,
+                            yOffset: checkNaN(yOffset),
+                            individualHeight: checkNaN(individualHeight),
+                        }),
                     ),
                     value: datapoint.absoluteValues[j],
                     zeroPosition: checkNaN(zeroPosition),
@@ -2637,12 +3176,13 @@ const barSet = computed(() => {
 
             const scaleYLabels = individualScale.ticks.map((t) => {
                 return {
-                    y:
-                        t >= 0
-                            ? zeroPosition -
-                              individualHeight * (t / individualMax)
-                            : zeroPosition +
-                              (individualHeight * Math.abs(t)) / individualMax,
+                    y: getYFromScaleValue({
+                        value: t,
+                        scaleMin: individualScale.min,
+                        scaleMax: individualScale.max,
+                        yOffset,
+                        individualHeight,
+                    }),
                     value: t,
                     prefix:
                         datapoint.prefix ||
@@ -2655,14 +3195,16 @@ const barSet = computed(() => {
             });
 
             const autoScaleYLabels = autoScaleSteps.ticks.map((t) => {
-                const v =
+                const ratio =
                     (t - autoScaleSteps.min) /
-                    (autoScaleSteps.max - autoScaleSteps.min);
+                    (autoScaleSteps.max - autoScaleSteps.min || 1);
+
                 return {
-                    y:
-                        t >= 0
-                            ? autoScaleZeroPosition - individualHeight * v
-                            : autoScaleZeroPosition + individualHeight * v,
+                    y: getYFromRatio({
+                        ratio,
+                        yOffset,
+                        individualHeight,
+                    }),
                     value: t,
                     prefix:
                         datapoint.prefix ||
@@ -2785,17 +3327,37 @@ const lineSet = computed(() => {
             });
 
             const plots = datapoint.series.map((plot, j) => {
+                if (
+                    isContinuousScale.value &&
+                    (plot.x == null || plot.y == null)
+                ) {
+                    return {
+                        index: j,
+                        x: null,
+                        y: null,
+                        value: null,
+                        comment: datapoint.comments
+                            ? datapoint.comments.slice(
+                                  slicer.value.start,
+                                  slicer.value.end,
+                              )[j] || ''
+                            : '',
+                    };
+                }
                 const yRatio = mutableConfig.value.useIndividualScale
                     ? (datapoint.absoluteValues[j] + Math.abs(individualZero)) /
                       individualMax
-                    : ratioToMax(plot);
+                    : ratioToMax(getValueFromPoint(plot));
 
                 return {
-                    x: checkNaN(getDatapointX(j)),
+                    index: j,
+                    x: checkNaN(getPointX(plot, j)),
                     y: checkNaN(
-                        drawingArea.value?.bottom -
-                            yOffset -
-                            individualHeight * yRatio,
+                        getYFromRatio({
+                            ratio: yRatio,
+                            yOffset,
+                            individualHeight,
+                        }),
                     ),
                     value: datapoint.absoluteValues[j],
                     comment: datapoint.comments
@@ -2823,15 +3385,35 @@ const lineSet = computed(() => {
                 },
             );
 
-            const autoScalePlots = datapoint.series.map((_, j) => {
+            const autoScalePlots = datapoint.series.map((plot, j) => {
+                if (
+                    isContinuousScale.value &&
+                    (plot.x === null || plot.y === null)
+                ) {
+                    return {
+                        index: j,
+                        x: null,
+                        y: null,
+                        value: null,
+                        comment: datapoint.comments
+                            ? datapoint.comments.slice(
+                                  slicer.value.start,
+                                  slicer.value.end,
+                              )[j] || ''
+                            : '',
+                    };
+                }
+
                 if (![undefined, null].includes(datapoint.absoluteValues[j])) {
                     return {
-                        x: checkNaN(getDatapointX(j)),
+                        index: j,
+                        x: checkNaN(getPointX(plot, j)),
                         y: checkNaN(
-                            drawingArea.value?.bottom -
-                                yOffset -
-                                (individualHeight *
-                                    autoScaleRatiosToNiceScale[j] || 0),
+                            getYFromRatio({
+                                ratio: autoScaleRatiosToNiceScale[j] || 0,
+                                yOffset,
+                                individualHeight,
+                            }),
                         ),
                         value: datapoint.absoluteValues[j],
                         comment: datapoint.comments
@@ -2843,7 +3425,8 @@ const lineSet = computed(() => {
                     };
                 } else {
                     return {
-                        x: checkNaN(getDatapointX(j)),
+                        index: j,
+                        x: checkNaN(getPointX(plot, j)),
                         y: zeroPosition,
                         value: datapoint.absoluteValues[j],
                         comment: datapoint.comments
@@ -2912,12 +3495,13 @@ const lineSet = computed(() => {
 
             const scaleYLabels = individualScale.ticks.map((t) => {
                 return {
-                    y:
-                        t >= 0
-                            ? zeroPosition -
-                              individualHeight * (t / individualMax)
-                            : zeroPosition +
-                              (individualHeight * Math.abs(t)) / individualMax,
+                    y: getYFromScaleValue({
+                        value: t,
+                        scaleMin: individualScale.min,
+                        scaleMax: individualScale.max,
+                        yOffset,
+                        individualHeight,
+                    }),
                     value: t,
                     prefix:
                         datapoint.prefix ||
@@ -2930,14 +3514,16 @@ const lineSet = computed(() => {
             });
 
             const autoScaleYLabels = autoScaleSteps.ticks.map((t) => {
-                const v =
+                const ratio =
                     (t - autoScaleSteps.min) /
-                    (autoScaleSteps.max - autoScaleSteps.min);
+                    (autoScaleSteps.max - autoScaleSteps.min || 1);
+
                 return {
-                    y:
-                        t >= 0
-                            ? autoScaleZeroPosition - individualHeight * v
-                            : autoScaleZeroPosition + individualHeight * v,
+                    y: getYFromRatio({
+                        ratio,
+                        yOffset,
+                        individualHeight,
+                    }),
                     value: t,
                     prefix:
                         datapoint.prefix ||
@@ -3173,16 +3759,37 @@ const plotSet = computed(() => {
             });
 
             const plots = datapoint.series.map((plot, j) => {
+                if (
+                    isContinuousScale.value &&
+                    (plot.x == null || plot.y == null)
+                ) {
+                    return {
+                        index: j,
+                        x: null,
+                        y: null,
+                        value: null,
+                        comment: datapoint.comments
+                            ? datapoint.comments.slice(
+                                  slicer.value.start,
+                                  slicer.value.end,
+                              )[j] || ''
+                            : '',
+                    };
+                }
+
                 const yRatio = mutableConfig.value.useIndividualScale
                     ? (datapoint.absoluteValues[j] + Math.abs(individualZero)) /
                       individualMax
-                    : ratioToMax(plot);
+                    : ratioToMax(getValueFromPoint(plot));
                 return {
-                    x: checkNaN(getDatapointX(j)),
+                    index: j,
+                    x: checkNaN(getPointX(plot, j)),
                     y: checkNaN(
-                        drawingArea.value?.bottom -
-                            yOffset -
-                            individualHeight * yRatio,
+                        getYFromRatio({
+                            ratio: yRatio,
+                            yOffset,
+                            individualHeight,
+                        }),
                     ),
                     value: datapoint.absoluteValues[j],
                     comment: datapoint.comments
@@ -3210,14 +3817,34 @@ const plotSet = computed(() => {
                 },
             );
 
-            const autoScalePlots = datapoint.series.map((_, j) => {
+            const autoScalePlots = datapoint.series.map((plot, j) => {
+                if (
+                    isContinuousScale.value &&
+                    (plot.x === null || plot.y === null)
+                ) {
+                    return {
+                        index: j,
+                        x: null,
+                        y: null,
+                        value: null,
+                        comment: datapoint.comments
+                            ? datapoint.comments.slice(
+                                  slicer.value.start,
+                                  slicer.value.end,
+                              )[j] || ''
+                            : '',
+                    };
+                }
+
                 return {
-                    x: checkNaN(getDatapointX(j)),
+                    index: j,
+                    x: checkNaN(getPointX(plot, j)),
                     y: checkNaN(
-                        drawingArea.value?.bottom -
-                            yOffset -
-                            (individualHeight * autoScaleRatiosToNiceScale[j] ||
-                                0),
+                        getYFromRatio({
+                            ratio: autoScaleRatiosToNiceScale[j] || 0,
+                            yOffset,
+                            individualHeight,
+                        }),
                     ),
                     value: datapoint.absoluteValues[j],
                     comment: datapoint.comments
@@ -3231,12 +3858,13 @@ const plotSet = computed(() => {
 
             const scaleYLabels = individualScale.ticks.map((t) => {
                 return {
-                    y:
-                        t >= 0
-                            ? zeroPosition -
-                              individualHeight * (t / individualMax)
-                            : zeroPosition +
-                              (individualHeight * Math.abs(t)) / individualMax,
+                    y: getYFromScaleValue({
+                        value: t,
+                        scaleMin: individualScale.min,
+                        scaleMax: individualScale.max,
+                        yOffset,
+                        individualHeight,
+                    }),
                     value: t,
                     prefix:
                         datapoint.prefix ||
@@ -3249,14 +3877,16 @@ const plotSet = computed(() => {
             });
 
             const autoScaleYLabels = autoScaleSteps.ticks.map((t) => {
-                const v =
+                const ratio =
                     (t - autoScaleSteps.min) /
-                    (autoScaleSteps.max - autoScaleSteps.min);
+                    (autoScaleSteps.max - autoScaleSteps.min || 1);
+
                 return {
-                    y:
-                        t >= 0
-                            ? autoScaleZeroPosition - individualHeight * v
-                            : autoScaleZeroPosition + individualHeight * v,
+                    y: getYFromRatio({
+                        ratio,
+                        yOffset,
+                        individualHeight,
+                    }),
                     value: t,
                     prefix:
                         datapoint.prefix ||
@@ -3413,11 +4043,13 @@ const allScales = computed(() => {
                 el.scaleYLabels ||
                 el.scale.ticks.map((t) => {
                     return {
-                        y:
-                            t >= 0
-                                ? el.zero - el.individualHeight * (t / el.max)
-                                : el.zero +
-                                  (el.individualHeight * Math.abs(t)) / el.max,
+                        y: getYFromScaleValue({
+                            value: t,
+                            scaleMin: el.scale.min,
+                            scaleMax: el.scale.max,
+                            yOffset: el.yOffset || 0,
+                            individualHeight: el.individualHeight,
+                        }),
                         value: t,
                     };
                 }),
@@ -3539,7 +4171,26 @@ const tooltipContent = computed(() => {
         .filter((s) => isSafeValue(s) && s !== null)
         .reduce((a, b) => Math.abs(a) + Math.abs(b), 0);
 
-    const time = timeLabels.value[selectedSerieIndex.value];
+    const time = isContinuousScale.value
+        ? {
+              text: applyDataLabel(
+                  FINAL_CONFIG.value.chart.grid.labels.xAxis.formatter,
+                  continuousTooltipSet.value[0]?.point.raw?.x ??
+                      continuousTooltipSet.value[0]?.point.x,
+                  dataLabel({
+                      v:
+                          continuousTooltipSet.value[0]?.point.raw?.x ??
+                          continuousTooltipSet.value[0]?.point.x,
+                      r: FINAL_CONFIG.value.chart.tooltip.roundingValue,
+                  }),
+                  {
+                      datapoint: null,
+                      serriesIndex: null,
+                  },
+              ),
+          }
+        : timeLabels.value[selectedSerieIndex.value];
+
     const customFormat = FINAL_CONFIG.value.chart.tooltip.customFormat;
 
     if (
@@ -3579,7 +4230,9 @@ const tooltipContent = computed(() => {
                 selectedSerieIndex.value + slicer.value.start,
                 FINAL_CONFIG.value.chart.tooltip.timeFormat,
             );
-            html += `<div style="padding-bottom: 6px; margin-bottom: 4px; border-bottom: 1px solid ${FINAL_CONFIG.value.chart.tooltip.borderColor}; width:100%">${FINAL_CONFIG.value.chart.grid.labels.xAxisLabels.datetimeFormatter.enable && !FINAL_CONFIG.value.chart.tooltip.useDefaultTimeFormat ? precise : time.text}</div>`;
+            if (!isContinuousScale.value) {
+                html += `<div style="padding-bottom: 6px; margin-bottom: 4px; border-bottom: 1px solid ${FINAL_CONFIG.value.chart.tooltip.borderColor}; width:100%">${FINAL_CONFIG.value.chart.grid.labels.xAxisLabels.datetimeFormatter.enable && !FINAL_CONFIG.value.chart.tooltip.useDefaultTimeFormat ? precise : time.text}</div>`;
+            }
         }
         selectedSeries.value.forEach((s) => {
             if (isSafeValue(s.value)) {
@@ -3661,35 +4314,61 @@ const tooltipContent = computed(() => {
                     default:
                         break;
                 }
-                html += `<div style="display:flex;flex-direction:row; align-items:center;gap:3px;"><div style="width:20px">${shape}</div> ${s.name}: <b>${
-                    FINAL_CONFIG.value.chart.tooltip.showValue
-                        ? applyDataLabel(
-                              s.type === 'line'
-                                  ? FINAL_CONFIG.value.line.labels.formatter
-                                  : s.type === 'bar'
-                                    ? FINAL_CONFIG.value.bar.labels.formatter
-                                    : FINAL_CONFIG.value.plot.labels.formatter,
-                              s.value,
-                              dataLabel({
-                                  p: s.prefix,
-                                  v: s.value,
-                                  s: s.suffix,
+
+                const label_y = FINAL_CONFIG.value.chart.tooltip.showValue
+                    ? applyDataLabel(
+                          s.type === 'line'
+                              ? FINAL_CONFIG.value.line.labels.formatter
+                              : s.type === 'bar'
+                                ? FINAL_CONFIG.value.bar.labels.formatter
+                                : FINAL_CONFIG.value.plot.labels.formatter,
+                          s.value,
+                          dataLabel({
+                              p: s.prefix,
+                              v: s.value,
+                              s: s.suffix,
+                              r: FINAL_CONFIG.value.chart.tooltip.roundingValue,
+                          }),
+                          { datapoint: s },
+                      )
+                    : '';
+
+                const label_x = FINAL_CONFIG.value.chart.tooltip.showValue
+                    ? time.text
+                    : '';
+                const valueLabel = isContinuousScale.value
+                    ? `
+                    <span>${FINAL_CONFIG.value.chart.grid.labels.axis.xLabel ?? 'X'}: </span>
+                    <span>${label_x}</span>, 
+                    <span>${FINAL_CONFIG.value.chart.grid.labels.axis.yLabel ?? 'Y'}: </span>
+                    <span>${label_y}</span>
+                `
+                    : label_y;
+
+                if (isContinuousScale.value) {
+                    html += `
+                        <div style="display:flex;flex-direction:column;">
+                            <div style="display:flex; flex-direction:row; gap:3px;">
+                                <div style="width:20px">${shape}</div>
+                                <div style="display:flex;flex-direction:column;">
+                                    <div>${s.name}</div>
+                                    <div>${valueLabel}</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    html += `<div style="display:flex;flex-direction:row; align-items:center;gap:3px;white-space:nowrap;"><div style="width:20px">${shape}</div> ${s.name}: <b>${valueLabel}</b> ${
+                        FINAL_CONFIG.value.chart.tooltip.showPercentage
+                            ? `(${dataLabel({
+                                  v: checkNaN((Math.abs(s.value) / sum) * 100),
+                                  s: '%',
                                   r: FINAL_CONFIG.value.chart.tooltip
-                                      .roundingValue,
-                              }),
-                              { datapoint: s },
-                          )
-                        : ''
-                }</b> ${
-                    FINAL_CONFIG.value.chart.tooltip.showPercentage
-                        ? `(${dataLabel({
-                              v: checkNaN((Math.abs(s.value) / sum) * 100),
-                              s: '%',
-                              r: FINAL_CONFIG.value.chart.tooltip
-                                  .roundingPercentage,
-                          })})`
-                        : ''
-                }</div>`;
+                                      .roundingPercentage,
+                              })})`
+                            : ''
+                    }</div>`;
+                }
 
                 if (
                     FINAL_CONFIG.value.chart.comments.showInTooltip &&
@@ -4201,6 +4880,22 @@ const activeIndex = computed(
     () => selectedSerieIndex.value ?? selectedMinimapIndex.value ?? 0,
 );
 
+const activeContinuousXValue = computed(() => {
+    if (!isContinuousScale.value) return null;
+
+    if (isValidNumber(selectedMinimapXValue.value)) {
+        return Number(selectedMinimapXValue.value);
+    }
+
+    const closest = continuousTooltipSet.value[0];
+
+    if (isValidNumber(closest?.point?.x)) {
+        return Number(closest.point.x);
+    }
+
+    return null;
+});
+
 function timeTagMeasuredW() {
     const w = Math.ceil(timeTagInnerW.value || 200);
     return Math.min(Math.max(w, 1), 200);
@@ -4209,7 +4904,10 @@ function timeTagMeasuredW() {
 function timeTagX() {
     const w = timeTagMeasuredW();
     const W_FO = 200;
-    const centerX = getDatapointX(activeIndex.value);
+    const centerX =
+        isContinuousScale.value && isValidNumber(activeContinuousXValue.value)
+            ? getContinuousX({ x: activeContinuousXValue.value })
+            : getDatapointX(activeIndex.value);
     const desiredX = centerX - w / 2 - (W_FO - w) / 2;
     const minX = drawingArea.value?.left - (W_FO - w) / 2;
     const _maxX = drawingArea.value?.right - (W_FO + w) / 2;
@@ -4271,11 +4969,16 @@ onMounted(() => {
 });
 
 const timeTagContent = computed(() => {
-    if (
+    if (isContinuousScale.value) {
+        if (!Number.isFinite(Number(activeContinuousXValue.value))) {
+            return '';
+        }
+    } else if (
         [null, undefined].includes(selectedSerieIndex.value) &&
         [null, undefined].includes(selectedMinimapIndex.value)
-    )
+    ) {
         return '';
+    }
 
     const index =
         (selectedSerieIndex.value != null ? selectedSerieIndex.value : 0) ||
@@ -4283,6 +4986,37 @@ const timeTagContent = computed(() => {
 
     const customFormat = FINAL_CONFIG.value.chart.timeTag.customFormat;
     useCustomFormatTimeTag.value = false;
+
+    if (isContinuousScale.value) {
+        const value = activeContinuousXValue.value;
+
+        if (isFunction(customFormat)) {
+            try {
+                const customFormatString = customFormat({
+                    absoluteIndex: value,
+                    seriesIndex: value,
+                    datapoint: selectedSeries.value,
+                    bars: barSet.value,
+                    lines: lineSet.value,
+                    plots: plotSet.value,
+                    config: FINAL_CONFIG.value,
+                });
+
+                if (typeof customFormatString === 'string') {
+                    useCustomFormatTimeTag.value = true;
+                    return customFormatString;
+                }
+            } catch (err) {
+                console.warn('Custom format cannot be applied on timeTag.');
+                useCustomFormatTimeTag.value = false;
+            }
+        }
+
+        return dataLabel({
+            v: value,
+            r: FINAL_CONFIG.value.chart.grid.labels.xAxis.rounding,
+        });
+    }
 
     if (isFunction(customFormat)) {
         try {
@@ -4402,6 +5136,39 @@ function getDataLabelTextAnchor({ plot, type }) {
         : isPositive
           ? 'start'
           : 'end';
+}
+
+const highlighterX = computed(() => {
+    if (isContinuousScale.value) {
+        if (isValidNumber(selectedMinimapXValue.value)) {
+            return getContinuousX({ x: Number(selectedMinimapXValue.value) });
+        }
+        if (isValidNumber(continuousTooltipX.value)) {
+            return continuousTooltipX.value;
+        }
+        return null;
+    }
+    return getDatapointX(
+        (selectedSerieIndex.value !== null ? selectedSerieIndex.value : 0) ||
+            (selectedMinimapIndex.value !== null
+                ? selectedMinimapIndex.value
+                : 0),
+    );
+});
+
+function isSelectedDatapoint(serie, plot, index) {
+    if (isContinuousScale.value) {
+        return continuousTooltipSet.value.some((item) => {
+            return item.datapoint.id === serie.id && item.index === plot.index;
+        });
+    }
+
+    return (
+        (selectedSerieIndex.value !== null &&
+            selectedSerieIndex.value === index) ||
+        (selectedMinimapIndex.value !== null &&
+            selectedMinimapIndex.value === index)
+    );
 }
 
 // Force reflow when component is mounted in a hidden div
@@ -5469,7 +6236,7 @@ defineExpose({
                         </g>
 
                         <!-- HIGHLIGHTERS -->
-                        <g v-if="userHovers">
+                        <g v-if="userHovers && !isContinuousScale">
                             <g
                                 v-for="(_, i) in maxSeries"
                                 :key="`tooltip_trap_highlighter_${i}`"
@@ -5672,36 +6439,14 @@ defineExpose({
 
                         <g
                             v-if="
-                                FINAL_CONFIG.chart.highlighter.useLine &&
-                                (![null, undefined].includes(
-                                    selectedSerieIndex,
-                                ) ||
-                                    ![null, undefined].includes(
-                                        selectedMinimapIndex,
-                                    ))
+                                (FINAL_CONFIG.chart.highlighter.useLine ||
+                                    isContinuousScale) &&
+                                hasHighlighterSelection
                             "
                         >
                             <line
-                                :x1="
-                                    getDatapointX(
-                                        (selectedSerieIndex !== null
-                                            ? selectedSerieIndex
-                                            : 0) ||
-                                            (selectedMinimapIndex !== null
-                                                ? selectedMinimapIndex
-                                                : 0),
-                                    )
-                                "
-                                :x2="
-                                    getDatapointX(
-                                        (selectedSerieIndex !== null
-                                            ? selectedSerieIndex
-                                            : 0) ||
-                                            (selectedMinimapIndex !== null
-                                                ? selectedMinimapIndex
-                                                : 0),
-                                    )
-                                "
+                                :x1="highlighterX"
+                                :x2="highlighterX"
                                 :y1="forceValidValue(drawingArea?.top)"
                                 :y2="forceValidValue(drawingArea?.bottom)"
                                 :stroke="FINAL_CONFIG.chart.highlighter.color"
@@ -6127,12 +6872,11 @@ defineExpose({
                                         y: checkNaN(plot.y),
                                     }"
                                     :radius="
-                                        (selectedSerieIndex !== null &&
-                                            selectedSerieIndex === j) ||
-                                        (selectedMinimapIndex !== null &&
-                                            selectedMinimapIndex === j)
-                                            ? (plotRadii.plot || 6) * 1.5
-                                            : plotRadii.plot || 6
+                                        isSelectedDatapoint(serie, plot, j)
+                                            ? (plotRadii.line || 6) * 1.5
+                                            : isPlotAlone(serie.plots, j)
+                                              ? plotRadii.line || 6
+                                              : plotRadii.line || 6
                                     "
                                     :stroke="
                                         FINAL_CONFIG.plot.dot.useSerieColor
@@ -6145,10 +6889,7 @@ defineExpose({
                                     :transition="
                                         loading ||
                                         !FINAL_CONFIG.plot.showTransition ||
-                                        (selectedSerieIndex !== null &&
-                                            selectedSerieIndex === j) ||
-                                        (selectedMinimapIndex !== null &&
-                                            selectedMinimapIndex === j)
+                                        isSelectedDatapoint(serie, plot, j)
                                             ? undefined
                                             : `all ${FINAL_CONFIG.plot.transitionDurationMs}ms ease-in-out`
                                     "
@@ -6557,10 +7298,7 @@ defineExpose({
                                         y: checkNaN(plot.y),
                                     }"
                                     :radius="
-                                        (selectedSerieIndex !== null &&
-                                            selectedSerieIndex === j) ||
-                                        (selectedMinimapIndex !== null &&
-                                            selectedMinimapIndex === j)
+                                        isSelectedDatapoint(serie, plot, j)
                                             ? (plotRadii.line || 6) * 1.5
                                             : isPlotAlone(serie.plots, j)
                                               ? plotRadii.line || 6
@@ -6577,10 +7315,7 @@ defineExpose({
                                     :transition="
                                         loading ||
                                         !FINAL_CONFIG.line.showTransition ||
-                                        (selectedSerieIndex !== null &&
-                                            selectedSerieIndex === j) ||
-                                        (selectedMinimapIndex !== null &&
-                                            selectedMinimapIndex === j)
+                                        isSelectedDatapoint(serie, plot, j)
                                             ? undefined
                                             : `all ${FINAL_CONFIG.line.transitionDurationMs}ms ease-in-out`
                                     "
@@ -7461,18 +8196,18 @@ defineExpose({
                         >
                             <template v-if="$slots['time-label']">
                                 <template
-                                    v-for="(label, i) in displayedTimeLabels"
+                                    v-for="(label, i) in continuousXLabels"
                                     :key="`time_label_${label.id}`"
                                 >
                                     <slot
                                         name="time-label"
                                         v-bind="{
-                                            x: getDatapointX(i),
+                                            x: getXAxisLabelX(label, i),
                                             y: drawingArea?.bottom,
                                             fontSize: fontSizes.xAxis,
                                             fill: FINAL_CONFIG.chart.grid.labels
                                                 .xAxisLabels.color,
-                                            transform: `translate(${getDatapointX(i)}, ${drawingArea?.bottom + fontSizes.xAxis * 1.3 + FINAL_CONFIG.chart.grid.labels.xAxisLabels.yOffset}), rotate(${FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation})`,
+                                            transform: `translate(${getXAxisLabelX(label, i)}, ${drawingArea?.bottom + fontSizes.xAxis * 1.3 + FINAL_CONFIG.chart.grid.labels.xAxisLabels.yOffset}), rotate(${FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation})`,
                                             absoluteIndex: label.absoluteIndex,
                                             content: label.text,
                                             textAnchor:
@@ -7491,7 +8226,7 @@ defineExpose({
                             </template>
                             <template v-else>
                                 <g
-                                    v-for="(label, i) in displayedTimeLabels"
+                                    v-for="(label, i) in continuousXLabels"
                                     :key="`time_label_${i}`"
                                 >
                                     <template v-if="label && label.text">
@@ -7519,7 +8254,7 @@ defineExpose({
                                                 FINAL_CONFIG.chart.grid.labels
                                                     .xAxisLabels.color
                                             "
-                                            :transform="`translate(${getDatapointX(i)}, ${drawingArea?.bottom + fontSizes.xAxis * 1.5}), rotate(${FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation})`"
+                                            :transform="`translate(${getXAxisLabelX(label, i)}, ${drawingArea?.bottom + fontSizes.xAxis * 1.5}), rotate(${FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation})`"
                                             :style="{
                                                 cursor:
                                                     usesSelectTimeLabelEvent() &&
@@ -7554,7 +8289,7 @@ defineExpose({
                                                 FINAL_CONFIG.chart.grid.labels
                                                     .xAxisLabels.color
                                             "
-                                            :transform="`translate(${getDatapointX(i)}, ${drawingArea?.bottom + fontSizes.xAxis * 1.5}), rotate(${FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation})`"
+                                            :transform="`translate(${getXAxisLabelX(label, i)}, ${drawingArea?.bottom + fontSizes.xAxis * 1.5}), rotate(${FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation})`"
                                             :style="{
                                                 cursor:
                                                     usesSelectTimeLabelEvent() &&
@@ -7697,12 +8432,14 @@ defineExpose({
                         <g
                             v-if="
                                 FINAL_CONFIG.chart.timeTag.show &&
-                                (![null, undefined].includes(
-                                    selectedSerieIndex,
-                                ) ||
-                                    ![null, undefined].includes(
-                                        selectedMinimapIndex,
-                                    ))
+                                (isContinuousScale
+                                    ? isValidNumber(activeContinuousXValue)
+                                    : ![null, undefined].includes(
+                                          selectedSerieIndex,
+                                      ) ||
+                                      ![null, undefined].includes(
+                                          selectedMinimapIndex,
+                                      ))
                             "
                             style="pointer-events: none"
                         >
@@ -7723,14 +8460,19 @@ defineExpose({
                             </foreignObject>
                             <circle
                                 :cx="
-                                    getDatapointX(
-                                        (selectedSerieIndex !== null
-                                            ? selectedSerieIndex
-                                            : 0) ||
-                                            (selectedMinimapIndex !== null
-                                                ? selectedMinimapIndex
-                                                : 0),
-                                    )
+                                    isContinuousScale &&
+                                    isValidNumber(activeContinuousXValue)
+                                        ? getContinuousX({
+                                              x: activeContinuousXValue,
+                                          })
+                                        : getDatapointX(
+                                              (selectedSerieIndex !== null
+                                                  ? selectedSerieIndex
+                                                  : 0) ||
+                                                  (selectedMinimapIndex !== null
+                                                      ? selectedMinimapIndex
+                                                      : 0),
+                                          )
                                 "
                                 :cy="drawingArea?.bottom"
                                 :r="
@@ -8153,8 +8895,14 @@ defineExpose({
             :isPreview="isPrecog"
             :labelLeft="timeLabels[0] ? timeLabels[0].text : ''"
             :labelRight="timeLabels.at(-1) ? timeLabels.at(-1).text : ''"
-            :max="maxX"
-            :min="0"
+            :max="slicerMax"
+            :min="slicerMin"
+            :precision="
+                isContinuousScale
+                    ? FINAL_CONFIG.chart.grid.labels.xAxis.rounding
+                    : 0
+            "
+            :useValueRange="isContinuousScale"
             :minimap="minimap"
             :minimapCompact="FINAL_CONFIG.chart.zoom.minimap.compact"
             :minimapFrameColor="FINAL_CONFIG.chart.zoom.minimap.frameColor"
@@ -8169,7 +8917,9 @@ defineExpose({
             :minimapSelectedColorOpacity="
                 FINAL_CONFIG.chart.zoom.minimap.selectedColorOpacity
             "
-            :minimapSelectedIndex="selectedSerieIndex"
+            :minimapSelectedIndex="
+                isContinuousScale ? selectedMinimapXValue : selectedMinimapIndex
+            "
             :minimapSelectionRadius="
                 FINAL_CONFIG.chart.zoom.minimap.selectionRadius
             "
@@ -8178,19 +8928,23 @@ defineExpose({
                     ? preciseAllTimeLabels
                     : allTimeLabels
             "
-            :refreshEndPoint="
-                FINAL_CONFIG.chart.zoom.endIndex !== null
-                    ? FINAL_CONFIG.chart.zoom.endIndex + 1
-                    : Math.max(
-                          ...dataset.map(
-                              (datapoint) => lttb(datapoint.series).length,
-                          ),
-                      )
-            "
             :refreshStartPoint="
-                FINAL_CONFIG.chart.zoom.startIndex !== null
-                    ? FINAL_CONFIG.chart.zoom.startIndex
-                    : 0
+                isContinuousScale
+                    ? slicerMin
+                    : FINAL_CONFIG.chart.zoom.startIndex !== null
+                      ? FINAL_CONFIG.chart.zoom.startIndex
+                      : 0
+            "
+            :refreshEndPoint="
+                isContinuousScale
+                    ? slicerMax
+                    : FINAL_CONFIG.chart.zoom.endIndex !== null
+                      ? FINAL_CONFIG.chart.zoom.endIndex + 1
+                      : Math.max(
+                            ...dataset.map(
+                                (datapoint) => lttb(datapoint.series).length,
+                            ),
+                        )
             "
             :selectColor="FINAL_CONFIG.chart.zoom.highlightColor"
             :selectedSeries="selectedSeries"
@@ -8226,6 +8980,7 @@ defineExpose({
             @futureStart="(v) => setPrecog('start', v)"
             @reset="refreshSlicer"
             @trapMouse="selectMinimapIndex"
+            @trapMouseValue="selectMinimapXValue"
             @update:end="onSlicerEnd"
             @update:start="onSlicerStart"
         >

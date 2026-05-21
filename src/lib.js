@@ -4634,6 +4634,12 @@ export function svgToClientCoords(x, y, svgEl) {
     };
 }
 
+export function isValidNumber(value) {
+    return (
+        value !== null && value !== undefined && Number.isFinite(Number(value))
+    );
+}
+
 const lib = {
     XMLNS,
     abbreviate,
@@ -4757,5 +4763,6 @@ const lib = {
     createStraightPathWithCutsSegments,
     createSmoothPathWithCutsSegments,
     svgToClientCoords,
+    isValidNumber,
 };
 export default lib;
