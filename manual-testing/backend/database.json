@@ -1453,8 +1453,8 @@
         "VueUiCirclePack": true,
         "VueUiDag": true,
         "VueUiDashboard": true,
-        "VueUiDigits": false,
-        "VueUiDonut": false,
+        "VueUiDigits": true,
+        "VueUiDonut": true,
         "VueUiDonutEvolution": false,
         "VueUiDumbbell": false,
         "VueUiFlow": false,
@@ -1509,7 +1509,7 @@
       "customCheckList": {},
       "id": "4b423dba-9fc5-45b8-9dca-20e1f2678b9e",
       "createdAt": 1779169675598,
-      "updatedAt": 1779379245256
+      "updatedAt": 1779385451421
     }
   ]
 }

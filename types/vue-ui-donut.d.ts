@@ -26,6 +26,10 @@ import type {
     VueUiAnnotatorActionRedoSlotProps,
     VueUiAnnotatorActionDeleteSlotProps,
     CommonAnnotatorSlots,
+    VueUiDonutEmits,
+    VueUiDonutEmitSelectLegend,
+    VueUiDonutEmitSelectDatapoint,
+    VueUiDonutEmitCopyAlt,
 } from 'vue-data-ui';
 
 export type {
@@ -54,9 +58,22 @@ export type {
     VueUiAnnotatorActionRedoSlotProps,
     VueUiAnnotatorActionDeleteSlotProps,
     CommonAnnotatorSlots,
+    VueUiDonutEmits,
+    VueUiDonutEmitSelectLegend,
+    VueUiDonutEmitSelectDatapoint,
+    VueUiDonutEmitCopyAlt,
 };
 
-declare const VueUiDonutBase: DefineComponent<VueUiDonutProps>;
+declare const VueUiDonutBase: DefineComponent<
+    VueUiDonutProps,
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    VueUiDonutEmits
+>;
 
 export const VueUiDonut: typeof VueUiDonutBase & {
     new (): VueUiDonutExpose & {
