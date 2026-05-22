@@ -9618,10 +9618,25 @@ declare module 'vue-data-ui' {
         };
     };
 
-    export const VueUiSmiley: DefineComponent<{
+    export type VueUiSmileyProps = {
         config?: VueUiSmileyConfig;
         dataset: VueUiRatingDataset;
-    }>;
+    };
+
+    export type VueUiSmileyEmits = {
+        rate: (payload: number) => void;
+    };
+
+    export const VueUiSmiley: DefineComponent<
+        VueUiSmileyProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiSmileyEmits
+    >;
 
     export type VueUiSkeletonConfig = {
         type?:
