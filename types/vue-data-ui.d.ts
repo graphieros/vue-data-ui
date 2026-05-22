@@ -4148,7 +4148,25 @@ declare module 'vue-data-ui' {
         dataset: VueUiSparkbarDatasetItem[];
     };
 
-    const VueUiSparkbarBase: DefineComponent<VueUiSparkbarProps>;
+    export type VueUiSparkbarEmitSelectDatapoint = {
+        datapoint: VueUiSparkbarDatasetItem;
+        index: number;
+    };
+
+    export type VueUiSparkbarEmits = {
+        selectDatapoint: (payload: VueUiSparkbarEmitSelectDatapoint) => void;
+    };
+
+    const VueUiSparkbarBase: DefineComponent<
+        VueUiSparkbarProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiSparkbarEmits
+    >;
 
     export const VueUiSparkbar: typeof VueUiSparkbarBase & {
         new (): {

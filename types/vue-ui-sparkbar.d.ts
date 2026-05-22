@@ -7,6 +7,8 @@ import type {
     VueUiSparkbarProps,
     VueUiSparkbarTitleSlotProps,
     VueUiSparkbarDataLabelSlotProps,
+    VueUiSparkbarEmits,
+    VueUiSparkbarEmitSelectDatapoint,
 } from 'vue-data-ui';
 
 export type {
@@ -16,9 +18,20 @@ export type {
     VueUiSparkbarProps,
     VueUiSparkbarTitleSlotProps,
     VueUiSparkbarDataLabelSlotProps,
+    VueUiSparkbarEmits,
+    VueUiSparkbarEmitSelectDatapoint,
 };
 
-declare const VueUiSparkbarBase: DefineComponent<VueUiSparkbarProps>;
+declare const VueUiSparkbarBase: DefineComponent<
+    VueUiSparkbarProps,
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    VueUiSparkbarEmits
+>;
 
 export const VueUiSparkbar: typeof VueUiSparkbarBase & {
     new (): {
