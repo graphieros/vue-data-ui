@@ -1456,7 +1456,7 @@
         "VueUiDigits": true,
         "VueUiDonut": true,
         "VueUiDonutEvolution": true,
-        "VueUiDumbbell": false,
+        "VueUiDumbbell": true,
         "VueUiFlow": false,
         "VueUiFunnel": false,
         "VueUiGalaxy": false,
@@ -1509,7 +1509,7 @@
       "customCheckList": {},
       "id": "4b423dba-9fc5-45b8-9dca-20e1f2678b9e",
       "createdAt": 1779169675598,
-      "updatedAt": 1779420920082
+      "updatedAt": 1779421587482
     }
   ]
 }

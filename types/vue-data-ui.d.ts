@@ -10781,7 +10781,30 @@ declare module 'vue-data-ui' {
         dataset: VueUiDumbbellDataset[];
     };
 
-    const VueUiDumbbellBase: DefineComponent<VueUiDumbbellProps>;
+    export type VueUiDumbbellEmitSelectDatapoint = VueUiDumbbellDatapoint & {
+        seriesIndex: number;
+    };
+
+    export type VueUiDumbbellEmitCopyAlt = {
+        config: VueUiDumbbellConfig;
+        dataset: VueUiDumbbellDatapoint[];
+    };
+
+    export type VueUiDumbbellEmits = {
+        selectDatapoint: (payload: VueUiDumbbellEmitSelectDatapoint) => void;
+        copyAlt: (payload: VueUiDumbbellEmitCopyAlt) => void;
+    };
+
+    const VueUiDumbbellBase: DefineComponent<
+        VueUiDumbbellProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiDumbbellEmits
+    >;
 
     export const VueUiDumbbell: typeof VueUiDumbbellBase & {
         new (): VueUiDumbbellExpose & {

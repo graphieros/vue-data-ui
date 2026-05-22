@@ -7,6 +7,8 @@ import {
     VueUiDumbbell,
     type VueUiDumbbellConfig,
     type VueUiDumbbellDataset,
+    type VueUiDumbbellEmitCopyAlt,
+    type VueUiDumbbellEmitSelectDatapoint,
 } from 'vue-data-ui/vue-ui-dumbbell';
 import { mergeConfigs } from 'vue-data-ui/utils';
 
@@ -321,11 +323,24 @@ const config = computed<VueUiDumbbellConfig>(() => {
 function log(n: unknown) {
     console.log(n);
 }
+
+function selectDatapoint(payload: VueUiDumbbellEmitSelectDatapoint) {
+    console.log('@selectDatapoint', payload);
+}
+
+function copyAlt(payload: VueUiDumbbellEmitCopyAlt) {
+    console.log('@copyAlt', payload);
+}
 </script>
 
 <template>
     <div>
-        <VueUiDumbbell :dataset :config>
+        <VueUiDumbbell
+            :dataset
+            :config
+            @selectDatapoint="selectDatapoint"
+            @copyAlt="copyAlt"
+        >
             <template #annotator-action-close>
                 <span style="color: chocolate">X</span>
             </template>
