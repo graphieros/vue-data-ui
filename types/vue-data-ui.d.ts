@@ -8775,7 +8775,33 @@ declare module 'vue-data-ui' {
         dataset: VueUiHorizontalBarDatasetItem[];
     };
 
-    const VueUiHorizontalBarBase: DefineComponent<VueUiHorizontalBarProps>;
+    export type VueUiHorizontalBarEmitSelectLegend = VueUiHorizontalBarSerie[];
+
+    export type VueUiHorizontalBarEmitSelectDatapoint = VueUiHorizontalBarSerie;
+
+    export type VueUiHorizontalBarEmitCopyAlt = {
+        config: VueUiHorizontalBarConfig;
+        dataset: VueUiHorizontalBarSerie[];
+    };
+
+    export type VueUiHorizontalBarEmits = {
+        selectLegend: (payload: VueUiHorizontalBarEmitSelectLegend) => void;
+        selectDatapoint: (
+            payload: VueUiHorizontalBarEmitSelectDatapoint,
+        ) => void;
+        copyAlt: (payload: VueUiHorizontalBarEmitCopyAlt) => void;
+    };
+
+    const VueUiHorizontalBarBase: DefineComponent<
+        VueUiHorizontalBarProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiHorizontalBarEmits
+    >;
 
     /**
      * Renamed from the v2 VueUiVerticalBar
