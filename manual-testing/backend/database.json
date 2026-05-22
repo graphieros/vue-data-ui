@@ -1476,7 +1476,7 @@
         "VueUiQuadrant": true,
         "VueUiQuickChart": true,
         "VueUiRadar": true,
-        "VueUiRating": false,
+        "VueUiRating": true,
         "VueUiRelationCircle": false,
         "VueUiRidgeline": false,
         "VueUiRings": false,
@@ -1509,7 +1509,7 @@
       "customCheckList": {},
       "id": "4b423dba-9fc5-45b8-9dca-20e1f2678b9e",
       "createdAt": 1779169675598,
-      "updatedAt": 1779464978546
+      "updatedAt": 1779465346540
     }
   ]
 }

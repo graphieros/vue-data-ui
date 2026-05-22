@@ -9537,7 +9537,20 @@ declare module 'vue-data-ui' {
         dataset: VueUiRatingDataset;
     };
 
-    const VueUiRatingBase: DefineComponent<VueUiRatingProps>;
+    export type VueUiRatingEmits = {
+        rate: (payload: number) => void;
+    };
+
+    const VueUiRatingBase: DefineComponent<
+        VueUiRatingProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiRatingEmits
+    >;
 
     export const VueUiRating: typeof VueUiRatingBase & {
         new (): {
