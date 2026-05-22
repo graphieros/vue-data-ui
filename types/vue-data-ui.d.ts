@@ -5092,7 +5092,28 @@ declare module 'vue-data-ui' {
         dataset: VueUiScatterDatasetItem[];
     };
 
-    const VueUiScatterBase: DefineComponent<VueUiScatterProps>;
+    export type VueUiScatterEmitSelectLegend = VueUiScatterSeries[];
+
+    export type VueUiScatterEmitCopyAlt = {
+        config: VueUiScatterConfig;
+        dataset: VueUiScatterSeries[];
+    };
+
+    export type VueUiScatterEmits = {
+        selectLegend: (payload: VueUiScatterEmitSelectLegend) => void;
+        copyAlt: (payload: VueUiScatterEmitCopyAlt) => void;
+    };
+
+    const VueUiScatterBase: DefineComponent<
+        VueUiScatterProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiScatterEmits
+    >;
 
     export const VueUiScatter: typeof VueUiScatterBase & {
         new (): VueUiScatterExpose & {
