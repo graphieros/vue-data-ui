@@ -1462,8 +1462,8 @@
         "VueUiGalaxy": true,
         "VueUiGauge": true,
         "VueUiGeo": true,
-        "VueUiGizmo": false,
-        "VueUiHeatmap": false,
+        "VueUiGizmo": true,
+        "VueUiHeatmap": true,
         "VueUiHistoryPlot": false,
         "VueUiHorizontalBar": false,
         "VueUiKpi": false,
@@ -1509,7 +1509,7 @@
       "customCheckList": {},
       "id": "4b423dba-9fc5-45b8-9dca-20e1f2678b9e",
       "createdAt": 1779169675598,
-      "updatedAt": 1779424435971
+      "updatedAt": 1779425029778
     }
   ]
 }

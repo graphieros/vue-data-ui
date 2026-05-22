@@ -5262,7 +5262,28 @@ declare module 'vue-data-ui' {
         dataset: VueUiHeatmapDatasetItem[];
     };
 
-    const VueUiHeatmapBase: DefineComponent<VueUiHeatmapProps>;
+    export type VueUiHeatmapEmitSelectDatapoint = VueUiHeatmapDatapoint;
+
+    export type VueUiHeatmapEmitCopyAlt = {
+        config: VueUiHeatmapConfig;
+        dataset: VueUiHeatmapRow[];
+    };
+
+    export type VueUiHeatmapEmits = {
+        selectDatapoint: (payload: VueUiHeatmapEmitSelectDatapoint) => void;
+        copyAlt: (payload: VueUiHeatmapEmitCopyAlt) => void;
+    };
+
+    const VueUiHeatmapBase: DefineComponent<
+        VueUiHeatmapProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiHeatmapEmits
+    >;
 
     export const VueUiHeatmap: typeof VueUiHeatmapBase & {
         new (): VueUiHeatmapExpose & {
