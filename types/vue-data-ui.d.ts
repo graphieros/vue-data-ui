@@ -2496,16 +2496,16 @@ declare module 'vue-data-ui' {
         color?: string;
     };
 
+    export type VueUiDonutEvolutionSeries = {
+        color: string;
+        length: number;
+        name: string;
+        uid: string;
+        values: Array<number | null>;
+    };
+
     export type VueUiDonutEvolutionExpose = {
-        getData(): Promise<
-            Array<{
-                color: string;
-                length: number;
-                name: string;
-                uid: string;
-                values: Array<number | null>;
-            }>
-        >;
+        getData(): Promise<Array<VueUiDonutEvolutionSeries>>;
         getImage(options?: { scale?: number }): GetImagePromise;
         generateCsv(): void;
         generateImage(): void;
@@ -2559,7 +2559,29 @@ declare module 'vue-data-ui' {
         dataset: VueUiDonutEvolutionDatasetItem[];
     };
 
-    const VueUiDonutEvolutionBase: DefineComponent<VueUiDonutEvolutionProps>;
+    export type VueUiDonutEvolutionEmitSelectLegend =
+        VueUiDonutEvolutionSeries[];
+
+    export type VueUiDonutEvolutionEmitCopyAlt = {
+        config: VueUiDonutEvolutionConfig;
+        dataset: VueUiDonutEvolutionDatapoint[];
+    };
+
+    export type VueUiDonutEvolutionEmits = {
+        selectLegend: (payload: VueUiDonutEvolutionEmitSelectLegend) => void;
+        copyAlt: (payload: VueUiDonutEvolutionEmitCopyAlt) => void;
+    };
+
+    const VueUiDonutEvolutionBase: DefineComponent<
+        VueUiDonutEvolutionProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiDonutEvolutionEmits
+    >;
 
     export const VueUiDonutEvolution: typeof VueUiDonutEvolutionBase & {
         new (): VueUiDonutEvolutionExpose & {
