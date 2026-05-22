@@ -6719,26 +6719,26 @@ declare module 'vue-data-ui' {
         value: number;
     };
 
+    export type VueUiNestedDonutsFormattedSeries = {
+        datasetIndex: number;
+        id: string;
+        name: string;
+        series: Array<{
+            absoluteValues: number[];
+            arcOf: string;
+            arcOfId: string;
+            color: string;
+            datasetIndex: number;
+            id: string;
+            name: string;
+            seriesIndex: number;
+            value: 0;
+        }>;
+        total: number;
+    };
+
     export type VueUiNestedDonutsExpose = {
-        getData(): Promise<
-            Array<{
-                datasetIndex: number;
-                id: string;
-                name: string;
-                series: Array<{
-                    absoluteValues: number[];
-                    arcOf: string;
-                    arcOfId: string;
-                    color: string;
-                    datasetIndex: number;
-                    id: string;
-                    name: string;
-                    seriesIndex: number;
-                    value: 0;
-                }>;
-                total: number;
-            }>
-        >;
+        getData(): Promise<VueUiNestedDonutsFormattedSeries[]>;
         getImage(options?: { scale?: number }): GetImagePromise;
         generateCsv(): void;
         generateImage(): void;
@@ -6797,7 +6797,35 @@ declare module 'vue-data-ui' {
         dataset: VueUiNestedDonutsDatasetItem[];
     };
 
-    const VueUiNestedDonutsBase: DefineComponent<VueUiNestedDonutsProps>;
+    export type VueUiNestedDonutsEmitSelectLegend =
+        VueUiNestedDonutsFormattedSeries[];
+
+    export type VueUiNestedDonutsEmitSelectDatapoint = {
+        datapoint: VueUiNestedDonutsDatapoint;
+        index: number;
+    };
+
+    export type VueUiNestedDonutsEmitCopyAlt =
+        VueUiNestedDonutsFormattedSeries[];
+
+    export type VueUiNestedDonutsEmits = {
+        selectLegend: (payload: VueUiNestedDonutsEmitSelectLegend) => void;
+        selectDatapoint: (
+            payload: VueUiNestedDonutsEmitSelectDatapoint,
+        ) => void;
+        copyAlt: (payload: VueUiNestedDonutsEmitCopyAlt) => void;
+    };
+
+    const VueUiNestedDonutsBase: DefineComponent<
+        VueUiNestedDonutsProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiNestedDonutsEmits
+    >;
 
     export const VueUiNestedDonuts: typeof VueUiNestedDonutsBase & {
         new (): VueUiNestedDonutsExpose & {
