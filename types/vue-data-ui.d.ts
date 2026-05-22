@@ -14786,38 +14786,38 @@ declare module 'vue-data-ui' {
         };
     };
 
+    export type VueUiRidgelineFormattedDatasetItem = {
+        datapoints: Array<{
+            color: string;
+            id: string;
+            name: string;
+            pathLength: number;
+            plots: Array<{
+                isMaxPoint: boolean;
+                value: number;
+                x: number;
+                y: number;
+                zero: number;
+            }>;
+            smoothPath: string;
+            smoothPathRidge: string;
+            straightPath: string;
+            straightPathRidge: string;
+            uid: string;
+            values: Array<number | null>;
+            zeroPath: string;
+        }>;
+        label: {
+            x: number;
+            y: number;
+        };
+        labelLen: number;
+        name: string;
+        uid: string;
+    };
+
     export type VueUiRidgelineExpose = {
-        getData(): Promise<
-            Array<{
-                datapoints: Array<{
-                    color: string;
-                    id: string;
-                    name: string;
-                    pathLength: number;
-                    plots: Array<{
-                        isMaxPoint: boolean;
-                        value: number;
-                        x: number;
-                        y: number;
-                        zero: number;
-                    }>;
-                    smoothPath: string;
-                    smoothPathRidge: string;
-                    straightPath: string;
-                    straightPathRidge: string;
-                    uid: string;
-                    values: Array<number | null>;
-                    zeroPath: string;
-                }>;
-                label: {
-                    x: number;
-                    y: number;
-                };
-                labelLen: number;
-                name: string;
-                uid: string;
-            }>
-        >;
+        getData(): Promise<VueUiRidgelineFormattedDatasetItem[]>;
         getImage(options?: { scale?: number }): GetImagePromise;
         generateCsv(): void;
         generateImage(): void;
@@ -14883,7 +14883,45 @@ declare module 'vue-data-ui' {
         dataset: VueUiRidgelineDatasetItem[];
     };
 
-    const VueUiRidgelineBase: DefineComponent<VueUiRidgelineProps>;
+    export type VueUiRidgelineEmitSelectLegend =
+        VueUiRidgelineFormattedDatasetItem[];
+
+    export type VueUiRidgelineEmitSelectDatapoint =
+        VueUiRidgelineFormattedDatasetItem;
+
+    export type VueUiRidgelineEmitSelectX = Array<{
+        dp: {
+            color: string;
+            id: string;
+            name: string;
+            values: Array<number | null>;
+        };
+        selected: number;
+    }>;
+
+    export type VueUiRidgelineEmitCopyAlt = {
+        source: string;
+        config: VueUiRidgelineConfig;
+        dataset: VueUiRidgelineFormattedDatasetItem[];
+    };
+
+    export type VueUiRidgelineEmits = {
+        selectLegend: (payload: VueUiRidgelineEmitSelectLegend) => void;
+        selectDatapoint: (payload: VueUiRidgelineEmitSelectDatapoint) => void;
+        selectX: (payload: VueUiRidgelineEmitSelectX) => void;
+        copyAlt: (payload: VueUiRidgelineEmitCopyAlt) => void;
+    };
+
+    const VueUiRidgelineBase: DefineComponent<
+        VueUiRidgelineProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiRidgelineEmits
+    >;
 
     export const VueUiRidgeline: typeof VueUiRidgelineBase & {
         new (): VueUiRidgelineExpose & {
