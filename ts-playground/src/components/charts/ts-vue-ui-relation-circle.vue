@@ -7,6 +7,7 @@ import {
     VueUiRelationCircle,
     type VueUiRelationCircleConfig,
     type VueUiRelationCircleDatasetItem,
+    type VueUiRelationCircleEmitCopyAlt,
 } from 'vue-data-ui/vue-ui-relation-circle';
 import { mergeConfigs } from 'vue-data-ui/utils';
 import 'vue-data-ui/style.css';
@@ -282,11 +283,15 @@ const config = computed<VueUiRelationCircleConfig>(() => {
 function log(n: unknown) {
     console.log(n);
 }
+
+function copyAlt(payload: VueUiRelationCircleEmitCopyAlt) {
+    console.log('@copyAlt', payload);
+}
 </script>
 
 <template>
     <div>
-        <VueUiRelationCircle :dataset :config>
+        <VueUiRelationCircle :dataset :config @copyAlt="copyAlt">
             <template #annotator-action-close>
                 <span style="color: chocolate">X</span>
             </template>

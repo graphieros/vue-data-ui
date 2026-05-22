@@ -3671,7 +3671,30 @@ declare module 'vue-data-ui' {
         dataset: VueUiRelationCircleDatasetItem[];
     };
 
-    const VueUiRelationCircleBase: DefineComponent<VueUiRelationCircleProps>;
+    export type VueUiRelationCircleEmitCopyAlt = {
+        config: VueUiRelationCircleConfig;
+        dataset: Array<
+            Omit<
+                VueUiRelationCircleDatapoint,
+                'regAngle' | 'totalWeight' | 'x' | 'y'
+            >
+        >;
+    };
+
+    export type VueUiRelationCircleEmits = {
+        copyAlt: (payload: VueUiRelationCircleEmitCopyAlt) => void;
+    };
+
+    const VueUiRelationCircleBase: DefineComponent<
+        VueUiRelationCircleProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiRelationCircleEmits
+    >;
 
     export const VueUiRelationCircle: typeof VueUiRelationCircleBase & {
         new (): VueUiRelationCircleExpose & {
