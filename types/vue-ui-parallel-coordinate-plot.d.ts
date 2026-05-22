@@ -26,6 +26,10 @@ import type {
     VueUiParallelCoordinatePlotLegendSlotProps,
     VueUiParallelCoordinatePlotTooltipSlotProps,
     CommonAnnotatorSlots,
+    VueUiParallelCoordinatePlotEmits,
+    VueUiParallelCoordinatePlotEmitSelectLegend,
+    VueUiParallelCoordinatePlotEmitSelectDatapoint,
+    VueUiParallelCoordinatePlotEmitCopyAlt,
 } from 'vue-data-ui';
 
 export type {
@@ -54,9 +58,22 @@ export type {
     VueUiParallelCoordinatePlotLegendSlotProps,
     VueUiParallelCoordinatePlotTooltipSlotProps,
     CommonAnnotatorSlots,
+    VueUiParallelCoordinatePlotEmits,
+    VueUiParallelCoordinatePlotEmitSelectLegend,
+    VueUiParallelCoordinatePlotEmitSelectDatapoint,
+    VueUiParallelCoordinatePlotEmitCopyAlt,
 };
 
-declare const VueUiParallelCoordinatePlotBase: DefineComponent<VueUiParallelCoordinatePlotProps>;
+declare const VueUiParallelCoordinatePlotBase: DefineComponent<
+    VueUiParallelCoordinatePlotProps,
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    VueUiParallelCoordinatePlotEmits
+>;
 
 export const VueUiParallelCoordinatePlot: typeof VueUiParallelCoordinatePlotBase & {
     new (): VueUiParallelCoordinatePlotExpose & {

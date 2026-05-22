@@ -538,6 +538,7 @@ function segregate(id) {
     } else {
         segregated.value.push(id);
     }
+    emit('selectLegend', filteredDs.value);
 }
 
 const immutableDataset = computed(() => {
@@ -1016,10 +1017,6 @@ function selectDatapoint({ serie, shape, S }) {
         });
     }
     emit('selectDatapoint', serie);
-}
-
-function selectLegend(_legend) {
-    emit('selectLegend', filteredDs.value);
 }
 
 function toggleTable() {
@@ -2067,17 +2064,13 @@ defineExpose({
                         @clickMarker="
                             ({ legend }) => {
                                 segregate(legend.id);
-                                selectLegend(legend);
                             }
                         "
                     >
                         <template #item="{ legend, index }">
                             <div
                                 data-cy="legend-item"
-                                @click="
-                                    legend.segregate();
-                                    selectLegend(legend);
-                                "
+                                @click="legend.segregate()"
                                 :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`"
                             >
                                 {{ legend.name }}

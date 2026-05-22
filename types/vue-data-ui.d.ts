@@ -12076,7 +12076,37 @@ declare module 'vue-data-ui' {
         dataset: VueUiParallelCoordinatePlotDatasetItem[];
     };
 
-    const VueUiParallelCoordinatePlotBase: DefineComponent<VueUiParallelCoordinatePlotProps>;
+    export type VueUiParallelCoordinatePlotEmitSelectLegend =
+        VueUiParallelCoordinatePlotFormattedDatapoint[];
+
+    export type VueUiParallelCoordinatePlotEmitSelectDatapoint =
+        VueUiParallelCoordinatePlotEventDatapoint;
+
+    export type VueUiParallelCoordinatePlotEmitCopyAlt = {
+        config: VueUiParallelCoordinatePlotConfig;
+        dataset: VueUiParallelCoordinatePlotFormattedDatapoint[];
+    };
+
+    export type VueUiParallelCoordinatePlotEmits = {
+        selectLegend: (
+            payload: VueUiParallelCoordinatePlotEmitSelectLegend,
+        ) => void;
+        selectDatapoint: (
+            payload: VueUiParallelCoordinatePlotEmitSelectDatapoint,
+        ) => void;
+        copyAlt: (payload: VueUiParallelCoordinatePlotEmitCopyAlt) => void;
+    };
+
+    const VueUiParallelCoordinatePlotBase: DefineComponent<
+        VueUiParallelCoordinatePlotProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiParallelCoordinatePlotEmits
+    >;
 
     export const VueUiParallelCoordinatePlot: typeof VueUiParallelCoordinatePlotBase & {
         new (): VueUiParallelCoordinatePlotExpose & {
