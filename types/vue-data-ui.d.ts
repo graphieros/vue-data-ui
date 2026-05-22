@@ -7777,7 +7777,25 @@ declare module 'vue-data-ui' {
         dataset: VueUiGaugeDataset;
     };
 
-    const VueUiGaugeBase: DefineComponent<VueUiGaugeProps>;
+    export type VueUiGaugeEmitCopyAlt = {
+        config: VueUiGaugeConfig;
+        dataset: VueUiGaugeDataset;
+    };
+
+    export type VueUiGaugeEmits = {
+        copyAlt: (payload: VueUiGaugeEmitCopyAlt) => void;
+    };
+
+    const VueUiGaugeBase: DefineComponent<
+        VueUiGaugeProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiGaugeEmits
+    >;
 
     export const VueUiGauge: typeof VueUiGaugeBase & {
         new (): VueUiGaugeExpose & {
