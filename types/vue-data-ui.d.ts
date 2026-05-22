@@ -1596,6 +1596,7 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiMoleculeEmitSelectNode = VueUiMoleculeDatapoint;
+
     export type VueUiMoleculeEmitCopyAlt = {
         config: VueUiMoleculeConfig;
         dataset: VueUiMoleculeDatapoint[];
@@ -2043,7 +2044,25 @@ declare module 'vue-data-ui' {
         config?: VueUiMoodRadarConfig;
     };
 
-    const VueUiMoodRadarBase: DefineComponent<VueUiMoodRadarProps>;
+    export type VueUiMoodRadarEmitCopyAlt = {
+        config: VueUiMoodRadarConfig;
+        dataset: VueUiMoodRadarDatapoint[];
+    };
+
+    export type VueUiMoodRadarEmits = {
+        copyAlt: (payload: VueUiMoodRadarEmitCopyAlt) => void;
+    };
+
+    const VueUiMoodRadarBase: DefineComponent<
+        VueUiMoodRadarProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiMoodRadarEmits
+    >;
 
     export const VueUiMoodRadar: typeof VueUiMoodRadarBase & {
         new (): VueUiMoodRadarExpose & {
