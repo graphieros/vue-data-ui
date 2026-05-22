@@ -318,7 +318,9 @@ function selectLegend(payload: VueUiParallelCoordinatePlotEmitSelectLegend) {
     console.log('@selectLegend', payload);
 }
 
-function selectDatapoint(payload: VueUiParallelCoordinatePlotEmitSelectDatapoint) {
+function selectDatapoint(
+    payload: VueUiParallelCoordinatePlotEmitSelectDatapoint,
+) {
     console.log('@selectDatapoint', payload);
 }
 

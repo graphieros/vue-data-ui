@@ -7,6 +7,10 @@ import {
     VueUiQuadrant,
     type VueUiQuadrantConfig,
     type VueUiQuadrantDatasetItem,
+    type VueUiQuadrantEmitCopyAlt,
+    type VueUiQuadrantEmitSelectLegend,
+    type VueUiQuadrantEmitSelectPlot,
+    type VueUiQuadrantEmitSelectSide,
 } from 'vue-data-ui/vue-ui-quadrant';
 import { mergeConfigs } from 'vue-data-ui/utils';
 import 'vue-data-ui/style.css';
@@ -391,11 +395,34 @@ const config = computed<VueUiQuadrantConfig>(() => {
 function log(n: unknown) {
     console.log(n);
 }
+
+function selectPlot(payload: VueUiQuadrantEmitSelectPlot) {
+    console.log('@selectPlot', payload);
+}
+
+function selectSide(payload: VueUiQuadrantEmitSelectSide) {
+    console.log('@selectSide', payload);
+}
+
+function selectLegend(payload: VueUiQuadrantEmitSelectLegend) {
+    console.log('@selectLegend', payload);
+}
+
+function copyAlt(payload: VueUiQuadrantEmitCopyAlt) {
+    console.log('@copyAlt', payload);
+}
 </script>
 
 <template>
     <div>
-        <VueUiQuadrant :dataset :config>
+        <VueUiQuadrant
+            :dataset
+            :config
+            @selectPlot="selectPlot"
+            @selectSide="selectSide"
+            @selectLegend="selectLegend"
+            @copyAlt="copyAlt"
+        >
             <template #annotator-action-close>
                 <span style="color: chocolate">X</span>
             </template>

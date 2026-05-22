@@ -7406,12 +7406,33 @@ declare module 'vue-data-ui' {
         y: number;
     };
 
+    export type VueUiQuadrantSide = {
+        items: Array<{
+            category: string;
+            itemName: string;
+            x: number;
+            y: number;
+        }>;
+        quadrantSide: string;
+        sideName: string;
+    };
+
     export type VueUiQuadrantDatasetItem = {
         [key: string]: any;
         name: string;
         shape?: Shape;
         color?: string;
         series: VueUiQuadrantDatasetSerieItem[];
+    };
+
+    export type VueUiQuadrantPlot = {
+        category: string;
+        itemName: string;
+        quadrantSide: string;
+        shape: Shape;
+        sideName: string;
+        x: number;
+        y: number;
     };
 
     export type VueUiQuadrantSideConfig = {
@@ -7586,21 +7607,21 @@ declare module 'vue-data-ui' {
         shape: Shape;
     };
 
+    export type VueUiQuadrantFormattedSeries = {
+        color: string;
+        name: string;
+        shape: string;
+        series: Array<{
+            name: string;
+            x: number;
+            y: number;
+            quadrantSide: string;
+            sideName: string;
+        }>;
+    };
+
     export type VueUiQuadrantExpose = {
-        getData(): Promise<
-            Array<{
-                color: string;
-                name: string;
-                shape: string;
-                series: Array<{
-                    name: string;
-                    x: number;
-                    y: number;
-                    quadrantSide: string;
-                    sideName: string;
-                }>;
-            }>
-        >;
+        getData(): Promise<Array<VueUiQuadrantFormattedSeries>>;
         getImage(options?: { scale?: number }): GetImagePromise;
         generatePdf(): void;
         generateCsv(): void;
@@ -7668,7 +7689,34 @@ declare module 'vue-data-ui' {
         config?: VueUiQuadrantConfig;
     };
 
-    const VueUiQuadrantBase: DefineComponent<VueUiQuadrantProps>;
+    export type VueUiQuadrantEmitSelectPlot = VueUiQuadrantPlot;
+
+    export type VueUiQuadrantEmitSelectSide = VueUiQuadrantSide;
+
+    export type VueUiQuadrantEmitSelectLegend = VueUiQuadrantFormattedSeries[];
+
+    export type VueUiQuadrantEmitCopyAlt = {
+        config: VueUiQuadrantConfig;
+        dataset: VueUiQuadrantFormattedSeries[];
+    };
+
+    export type VueUiQuadrantEmits = {
+        selectPlot: (payload: VueUiQuadrantEmitSelectPlot) => void;
+        selectSide: (payload: VueUiQuadrantEmitSelectSide) => void;
+        selectLegend: (payload: VueUiQuadrantEmitSelectLegend) => void;
+        copyAlt: (payload: VueUiQuadrantEmitCopyAlt) => void;
+    };
+
+    const VueUiQuadrantBase: DefineComponent<
+        VueUiQuadrantProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiQuadrantEmits
+    >;
 
     export const VueUiQuadrant: typeof VueUiQuadrantBase & {
         new (): VueUiQuadrantExpose & {
