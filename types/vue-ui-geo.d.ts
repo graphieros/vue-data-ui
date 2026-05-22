@@ -19,6 +19,8 @@ import type {
     VueUiGeoSvgSlotProps,
     VueUiGeoTooltipSlotProps,
     CommonAnnotatorSlots,
+    VueUiGeoEmits,
+    VueUiGeoEmitCopyAlt,
 } from 'vue-data-ui';
 
 export type {
@@ -40,9 +42,20 @@ export type {
     VueUiGeoSvgSlotProps,
     VueUiGeoTooltipSlotProps,
     CommonAnnotatorSlots,
+    VueUiGeoEmits,
+    VueUiGeoEmitCopyAlt,
 };
 
-declare const VueUiGeoBase: DefineComponent<VueUiGeoProps>;
+declare const VueUiGeoBase: DefineComponent<
+    VueUiGeoProps,
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    VueUiGeoEmits
+>;
 
 export const VueUiGeo: typeof VueUiGeoBase & {
     new (): VueUiGeoExpose & {

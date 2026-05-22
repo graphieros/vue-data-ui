@@ -15391,7 +15391,25 @@ declare module 'vue-data-ui' {
         dataset?: VueUiGeoDatasetItem[];
     };
 
-    const VueUiGeoBase: DefineComponent<VueUiGeoProps>;
+    export type VueUiGeoEmitCopyAlt = {
+        config: VueUiGeoConfig;
+        dataset: VueUiGeoDatasetItem[];
+    };
+
+    export type VueUiGeoEmits = {
+        copyAlt: (payload: VueUiGeoEmitCopyAlt) => void;
+    };
+
+    const VueUiGeoBase: DefineComponent<
+        VueUiGeoProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiGeoEmits
+    >;
 
     export const VueUiGeo: typeof VueUiGeoBase & {
         new (): VueUiGeoExpose & {
