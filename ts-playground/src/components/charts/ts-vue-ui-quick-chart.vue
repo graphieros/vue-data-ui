@@ -7,6 +7,9 @@ import {
     VueUiQuickChart,
     type VueUiQuickChartConfig,
     type VueUiQuickChartDataset,
+    type VueUiQuickChartEmitCopyAlt,
+    type VueUiQuickChartEmitSelectDatapoint,
+    type VueUiQuickChartEmitSelectLegend,
 } from 'vue-data-ui/vue-ui-quick-chart';
 import { mergeConfigs } from 'vue-data-ui/utils';
 import 'vue-data-ui/style.css';
@@ -263,11 +266,29 @@ const config = computed<VueUiQuickChartConfig>(() => {
 function log(n: unknown) {
     console.log(n);
 }
+
+function selectLegend(payload: VueUiQuickChartEmitSelectLegend) {
+    console.log('@selectLegend', payload);
+}
+
+function selectDatapoint(payload: VueUiQuickChartEmitSelectDatapoint) {
+    console.log('@selectDatapoint', payload);
+}
+
+function copyAlt(payload: VueUiQuickChartEmitCopyAlt) {
+    console.log('@copyAlt', payload);
+}
 </script>
 
 <template>
     <div>
-        <VueUiQuickChart :dataset :config>
+        <VueUiQuickChart
+            :dataset
+            :config
+            @selectLegend="selectLegend"
+            @selectDatapoint="selectDatapoint"
+            @copyAlt="copyAlt"
+        >
             <template #annotator-action-close>
                 <span style="color: chocolate">X</span>
             </template>

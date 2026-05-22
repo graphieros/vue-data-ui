@@ -10359,7 +10359,31 @@ declare module 'vue-data-ui' {
         dataset: VueUiQuickChartDataset;
     };
 
-    const VueUiQuickChartBase: DefineComponent<VueUiQuickChartProps>;
+    export type VueUiQuickChartEmitSelectLegend = VueUiQuickChartLegendSource[];
+
+    export type VueUiQuickChartEmitSelectDatapoint = VueUiQuickChartDataset;
+
+    export type VueUiQuickChartEmitCopyAlt = {
+        config: VueUiQuickChartConfig;
+        dataset: VueUiQuickChartFormattedDataset;
+    };
+
+    export type VueUiQuickChartEmits = {
+        selectLegend: (payload: VueUiQuickChartEmitSelectLegend) => void;
+        selectDatapoint: (payload: VueUiQuickChartEmitSelectDatapoint) => void;
+        copyAlt: (payload: VueUiQuickChartEmitCopyAlt) => void;
+    };
+
+    const VueUiQuickChartBase: DefineComponent<
+        VueUiQuickChartProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiQuickChartEmits
+    >;
 
     export const VueUiQuickChart: typeof VueUiQuickChartBase & {
         new (): VueUiQuickChartExpose & {

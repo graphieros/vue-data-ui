@@ -22,6 +22,11 @@ import type {
     VueUiQuickChartLegendSlotProps,
     VueUiQuickChartTooltipSlotProps,
     CommonAnnotatorSlots,
+    VueUiQuickChartEmits,
+    VueUiQuickChartEmitSelectLegend,
+    VueUiQuickChartEmitSelectDatapoint,
+    VueUiQuickChartEmitCopyAlt,
+    VueUiQuickChartLegendSource,
 } from 'vue-data-ui';
 
 export type {
@@ -46,9 +51,23 @@ export type {
     VueUiQuickChartLegendSlotProps,
     VueUiQuickChartTooltipSlotProps,
     CommonAnnotatorSlots,
+    VueUiQuickChartEmits,
+    VueUiQuickChartEmitSelectLegend,
+    VueUiQuickChartEmitSelectDatapoint,
+    VueUiQuickChartEmitCopyAlt,
+    VueUiQuickChartLegendSource,
 };
 
-declare const VueUiQuickChartBase: DefineComponent<VueUiQuickChartProps>;
+declare const VueUiQuickChartBase: DefineComponent<
+    VueUiQuickChartProps,
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    VueUiQuickChartEmits
+>;
 
 export const VueUiQuickChart: typeof VueUiQuickChartBase & {
     new (): VueUiQuickChartExpose & {
