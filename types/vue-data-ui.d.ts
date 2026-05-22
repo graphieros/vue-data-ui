@@ -1136,7 +1136,41 @@ declare module 'vue-data-ui' {
         dataset: VueUiGalaxyDatasetItem[];
     };
 
-    const VueUiGalaxyBase: DefineComponent<VueUiGalaxyProps>;
+    export type VueUiGalaxyEmitSelectLegend = Array<{
+        name: string;
+        color: string;
+        value: number;
+    }>;
+
+    export type VueUiGalaxyEmitSelectDatapoint =
+        VueUiGalaxyFormattedDatapoint & {
+            path: string;
+            points: number;
+            proportion: number;
+            seriesIndex: number;
+        };
+
+    export type VueUiGalaxyEmitCopyAlt = {
+        config: VueUiGalaxyConfig;
+        dataset: VueUiGalaxyFormattedDatapoint[];
+    };
+
+    export type VueUiGalaxyEmits = {
+        selectLegend: (payload: VueUiGalaxyEmitSelectLegend) => void;
+        selectDatapoint: (payload: VueUiGalaxyEmitSelectDatapoint) => void;
+        copyAlt: (payload: VueUiGalaxyEmitCopyAlt) => void;
+    };
+
+    const VueUiGalaxyBase: DefineComponent<
+        VueUiGalaxyProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiGalaxyEmits
+    >;
 
     export const VueUiGalaxy: typeof VueUiGalaxyBase & {
         new (): VueUiGalaxyExpose & {
@@ -13345,13 +13379,7 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiFunnelExpose = {
-        getData(): Promise<
-            Array<{
-                color: string;
-                name: string;
-                value: string;
-            }>
-        >;
+        getData(): Promise<VueUiFunnelDatasetItem[]>;
         getImage(options?: { scale?: number }): GetImagePromise;
         generateCsv(): void;
         generateImage(): void;
@@ -13376,7 +13404,25 @@ declare module 'vue-data-ui' {
         config?: VueUiFunnelConfig;
     };
 
-    const VueUiFunnelBase: DefineComponent<VueUiFunnelProps>;
+    export type VueUiFunnelEmitCopyAlt = {
+        config: VueUiFunnelConfig;
+        dataset: VueUiFunnelDatasetItem[];
+    };
+
+    export type VueUiFunnelEmits = {
+        copyAlt: (payload: VueUiFunnelEmitCopyAlt) => void;
+    };
+
+    const VueUiFunnelBase: DefineComponent<
+        VueUiFunnelProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiFunnelEmits
+    >;
 
     export const VueUiFunnel: typeof VueUiFunnelBase & {
         new (): VueUiFunnelExpose & {

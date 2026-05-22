@@ -7,6 +7,9 @@ import {
     VueUiGalaxy,
     type VueUiGalaxyConfig,
     type VueUiGalaxyDatasetItem,
+    type VueUiGalaxyEmitCopyAlt,
+    type VueUiGalaxyEmitSelectDatapoint,
+    type VueUiGalaxyEmitSelectLegend,
 } from 'vue-data-ui/vue-ui-galaxy';
 import { mergeConfigs } from 'vue-data-ui/utils';
 
@@ -262,11 +265,29 @@ const config = computed<VueUiGalaxyConfig>(() => {
 function log(n: unknown) {
     console.log(n);
 }
+
+function selectLegend(payload: VueUiGalaxyEmitSelectLegend) {
+    console.log('@selectLegend', payload);
+}
+
+function selectDatapoint(payload: VueUiGalaxyEmitSelectDatapoint) {
+    console.log('@selectDatapoint', payload);
+}
+
+function copyAlt(payload: VueUiGalaxyEmitCopyAlt) {
+    console.log('@copyAlt', payload);
+}
 </script>
 
 <template>
     <div>
-        <VueUiGalaxy :dataset :config>
+        <VueUiGalaxy
+            :dataset
+            :config
+            @selectLegend="selectLegend"
+            @selectDatapoint="selectDatapoint"
+            @copyAlt="copyAlt"
+        >
             <template #annotator-action-close>
                 <span style="color: chocolate">X</span>
             </template>
