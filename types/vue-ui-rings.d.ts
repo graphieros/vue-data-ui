@@ -17,6 +17,9 @@ import type {
     VueUiRingsLegendItem,
     VueUiRingsLegendSlotProps,
     VueUiRingsTooltipSlotProps,
+    VueUiRingsEmits,
+    VueUiRingsEmitSelectLegend,
+    VueUiRingsEmitCopyAlt,
 } from 'vue-data-ui';
 
 export type {
@@ -36,9 +39,21 @@ export type {
     VueUiRingsLegendItem,
     VueUiRingsLegendSlotProps,
     VueUiRingsTooltipSlotProps,
+    VueUiRingsEmits,
+    VueUiRingsEmitSelectLegend,
+    VueUiRingsEmitCopyAlt,
 };
 
-declare const VueUiRingsBase: DefineComponent<VueUiRingsProps>;
+declare const VueUiRingsBase: DefineComponent<
+    VueUiRingsProps,
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    VueUiRingsEmits
+>;
 
 export const VueUiRings: typeof VueUiRingsBase & {
     new (): VueUiRingsExpose & {

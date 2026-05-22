@@ -1479,7 +1479,7 @@
         "VueUiRating": true,
         "VueUiRelationCircle": true,
         "VueUiRidgeline": true,
-        "VueUiRings": false,
+        "VueUiRings": true,
         "VueUiScatter": false,
         "VueUiSkeleton": false,
         "VueUiSmiley": true,
@@ -1509,7 +1509,7 @@
       "customCheckList": {},
       "id": "4b423dba-9fc5-45b8-9dca-20e1f2678b9e",
       "createdAt": 1779169675598,
-      "updatedAt": 1779467504476
+      "updatedAt": 1779482284921
     }
   ]
 }

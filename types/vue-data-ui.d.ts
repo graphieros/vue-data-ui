@@ -3097,7 +3097,32 @@ declare module 'vue-data-ui' {
         dataset: VueUiRingsDatasetItem[];
     };
 
-    const VueUiRingsBase: DefineComponent<VueUiRingsProps>;
+    export type VueUiRingsEmitSelectLegend = Array<{
+        color: string;
+        name: string;
+        value: number;
+    }>;
+
+    export type VueUiRingsEmitCopyAlt = {
+        config: VueUiRingsConfig;
+        dataset: VueUiRingsDatapoint[];
+    };
+
+    export type VueUiRingsEmits = {
+        selectLegend: (payload: VueUiRingsEmitSelectLegend) => void;
+        copyAlt: (payload: VueUiRingsEmitCopyAlt) => void;
+    };
+
+    const VueUiRingsBase: DefineComponent<
+        VueUiRingsProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiRingsEmits
+    >;
 
     export const VueUiRings: typeof VueUiRingsBase & {
         new (): VueUiRingsExpose & {
