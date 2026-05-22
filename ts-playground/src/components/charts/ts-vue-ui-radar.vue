@@ -7,6 +7,8 @@ import {
     VueUiRadar,
     type VueUiRadarConfig,
     type VueUiRadarDataset,
+    type VueUiRadarEmitCopyAlt,
+    type VueUiRadarEmitSelectLegend,
 } from 'vue-data-ui/vue-ui-radar';
 import { mergeConfigs } from 'vue-data-ui/utils';
 import 'vue-data-ui/style.css';
@@ -304,11 +306,24 @@ const config = computed<VueUiRadarConfig>(() => {
 function log(n: unknown) {
     console.log(n);
 }
+
+function selectLegend(payload: VueUiRadarEmitSelectLegend) {
+    console.log('@selectLegend', payload);
+}
+
+function copyAlt(payload: VueUiRadarEmitCopyAlt) {
+    console.log('@copyAlt', payload);
+}
 </script>
 
 <template>
     <div>
-        <VueUiRadar :dataset :config>
+        <VueUiRadar
+            :dataset
+            :config
+            @selectLegend="selectLegend"
+            @copyAlt="copyAlt"
+        >
             <template #annotator-action-close>
                 <span style="color: chocolate">X</span>
             </template>

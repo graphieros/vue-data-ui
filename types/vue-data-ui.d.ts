@@ -7359,7 +7359,32 @@ declare module 'vue-data-ui' {
         dataset: VueUiRadarDataset;
     };
 
-    const VueUiRadarBase: DefineComponent<VueUiRadarProps>;
+    export type VueUiRadarEmitSelectLegend = Array<{
+        color: string;
+        name: string;
+        proportion: number;
+    }>;
+
+    export type VueUiRadarEmitCopyAlt = {
+        config: VueUiRadarConfig;
+        dataset: VueUiRadarDatapoint[];
+    };
+
+    export type VueUiRadarEmits = {
+        selectLegend: (payload: VueUiRadarEmitSelectLegend) => void;
+        copyAlt: (payload: VueUiRadarEmitCopyAlt) => void;
+    };
+
+    const VueUiRadarBase: DefineComponent<
+        VueUiRadarProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiRadarEmits
+    >;
 
     export const VueUiRadar: typeof VueUiRadarBase & {
         new (): VueUiRadarExpose & {
