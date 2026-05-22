@@ -11525,27 +11525,7 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiFlowExpose = {
-        getData(): Promise<{
-            nodes: Array<{
-                name: string;
-                absoluteY: number;
-                color: string;
-                height: number;
-                i: number;
-                value: number;
-                x: number;
-                y: number;
-            }>;
-            links: Array<{
-                id: string;
-                path: string;
-                source: string;
-                sourceColor: string;
-                target: string;
-                targetColor: string;
-                value: number;
-            }>;
-        }>;
+        getData(): Promise<VueUiFlowFormattedDataset>;
         getImage(options?: { scale?: number }): GetImagePromise;
         generateCsv(): void;
         generatePdf(): void;
@@ -11595,7 +11575,25 @@ declare module 'vue-data-ui' {
         config?: VueUiFlowConfig;
     };
 
-    const VueUiFlowBase: DefineComponent<VueUiFlowProps>;
+    export type VueUiFlowEmitCopyAlt = {
+        config: VueUiFlowConfig;
+        dataset: VueUiFlowFormattedDataset;
+    };
+
+    export type VueUiFlowEmits = {
+        copyAlt: (payload: VueUiFlowEmitCopyAlt) => void;
+    };
+
+    const VueUiFlowBase: DefineComponent<
+        VueUiFlowProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiFlowEmits
+    >;
 
     export const VueUiFlow: typeof VueUiFlowBase & {
         new (): VueUiFlowExpose & {

@@ -26,6 +26,8 @@ import type {
     VueUiFlowLegendSlotProps,
     VueUiFlowTooltipSlotProps,
     CommonAnnotatorSlots,
+    VueUiFlowEmits,
+    VueUiFlowEmitCopyAlt,
 } from 'vue-data-ui';
 
 export type {
@@ -54,9 +56,20 @@ export type {
     VueUiFlowLegendSlotProps,
     VueUiFlowTooltipSlotProps,
     CommonAnnotatorSlots,
+    VueUiFlowEmits,
+    VueUiFlowEmitCopyAlt,
 };
 
-declare const VueUiFlowBase: DefineComponent<VueUiFlowProps>;
+declare const VueUiFlowBase: DefineComponent<
+    VueUiFlowProps,
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    VueUiFlowEmits
+>;
 
 export const VueUiFlow: typeof VueUiFlowBase & {
     new (): VueUiFlowExpose & {
