@@ -758,6 +758,7 @@ function segregate(index) {
     } else {
         segregated.value.push(index);
     }
+    emit('selectLegend', drawableDataset.value);
 }
 
 function validSeriesToToggle(name) {
@@ -824,10 +825,6 @@ function selectDatapoint({ datapoint, plotIndex, seriesIndex }) {
         });
     }
     emit('selectDatapoint', datapoint);
-}
-
-function selectLegend(_legend) {
-    emit('selectLegend', drawableDataset.value);
 }
 
 function toggleFullscreen(state) {
@@ -2302,17 +2299,13 @@ defineExpose({
                         @clickMarker="
                             ({ legend }) => {
                                 segregate(legend.seriesIndex);
-                                selectLegend(legend);
                             }
                         "
                     >
                         <template #item="{ legend, index }">
                             <div
                                 :data-cy="`legend-item-${index}`"
-                                @click="
-                                    legend.segregate();
-                                    selectLegend(legend);
-                                "
+                                @click="legend.segregate()"
                                 :style="`opacity:${segregated.includes(legend.seriesIndex) ? 0.5 : 1}`"
                             >
                                 {{ legend.name }}

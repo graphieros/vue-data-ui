@@ -13761,7 +13761,32 @@ declare module 'vue-data-ui' {
         dataset: VueUiHistoryPlotDatasetItem[];
     };
 
-    const VueUiHistoryPlotBase: DefineComponent<VueUiHistoryPlotProps>;
+    export type VueUiHistoryPlotEmitSelectLegend =
+        VueUiHistoryPlotFormattedDatapoint[];
+
+    export type VueUiHistoryPlotEmitSelectDatapoint = VueUiHistoryPlotDatapoint;
+
+    export type VueUiHistoryPlotEmitCopyAlt = {
+        config: VueUiHistoryPlotConfig;
+        dataset: VueUiHistoryPlotFormattedDatapoint[];
+    };
+
+    export type VueUiHistoryPlotEmits = {
+        selectLegend: (payload: VueUiHistoryPlotEmitSelectLegend) => void;
+        selectDatapoint: (payload: VueUiHistoryPlotEmitSelectDatapoint) => void;
+        copyAlt: (payload: VueUiHistoryPlotEmitCopyAlt) => void;
+    };
+
+    const VueUiHistoryPlotBase: DefineComponent<
+        VueUiHistoryPlotProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiHistoryPlotEmits
+    >;
 
     export const VueUiHistoryPlot: typeof VueUiHistoryPlotBase & {
         new (): VueUiHistoryPlotExpose & {

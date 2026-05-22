@@ -25,6 +25,10 @@ import type {
     VueUiHistoryPlotLegendSlotProps,
     VueUiHistoryPlotTooltipSlotProps,
     CommonAnnotatorSlots,
+    VueUiHistoryPlotEmits,
+    VueUiHistoryPlotEmitSelectLegend,
+    VueUiHistoryPlotEmitSelectDatapoint,
+    VueUiHistoryPlotEmitCopyAlt,
 } from 'vue-data-ui';
 
 export type {
@@ -52,9 +56,22 @@ export type {
     VueUiHistoryPlotLegendSlotProps,
     VueUiHistoryPlotTooltipSlotProps,
     CommonAnnotatorSlots,
+    VueUiHistoryPlotEmits,
+    VueUiHistoryPlotEmitSelectLegend,
+    VueUiHistoryPlotEmitSelectDatapoint,
+    VueUiHistoryPlotEmitCopyAlt,
 };
 
-declare const VueUiHistoryPlotBase: DefineComponent<VueUiHistoryPlotProps>;
+declare const VueUiHistoryPlotBase: DefineComponent<
+    VueUiHistoryPlotProps,
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    VueUiHistoryPlotEmits
+>;
 
 export const VueUiHistoryPlot: typeof VueUiHistoryPlotBase & {
     new (): VueUiHistoryPlotExpose & {

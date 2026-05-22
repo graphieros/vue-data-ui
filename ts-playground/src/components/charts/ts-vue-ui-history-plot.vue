@@ -7,6 +7,9 @@ import {
     VueUiHistoryPlot,
     type VueUiHistoryPlotConfig,
     type VueUiHistoryPlotDatasetItem,
+    type VueUiHistoryPlotEmitCopyAlt,
+    type VueUiHistoryPlotEmitSelectDatapoint,
+    type VueUiHistoryPlotEmitSelectLegend,
 } from 'vue-data-ui/vue-ui-history-plot';
 import { mergeConfigs } from 'vue-data-ui/utils';
 
@@ -352,11 +355,29 @@ const config = computed<VueUiHistoryPlotConfig>(() => {
 function log(n: unknown) {
     console.log(n);
 }
+
+function selectLegend(payload: VueUiHistoryPlotEmitSelectLegend) {
+    console.log('@selectLegend', payload);
+}
+
+function selectDatapoint(payload: VueUiHistoryPlotEmitSelectDatapoint) {
+    console.log('@selectDatapoint', payload);
+}
+
+function copyAlt(payload: VueUiHistoryPlotEmitCopyAlt) {
+    console.log('@copyAlt', payload);
+}
 </script>
 
 <template>
     <div>
-        <VueUiHistoryPlot :dataset :config>
+        <VueUiHistoryPlot
+            :dataset
+            :config
+            @selectLegend="selectLegend"
+            @selectDatapoint="selectDatapoint"
+            @copyAlt="copyAlt"
+        >
             <template #annotator-action-close>
                 <span style="color: chocolate">X</span>
             </template>
