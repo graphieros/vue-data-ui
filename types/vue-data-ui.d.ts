@@ -1517,7 +1517,7 @@ declare module 'vue-data-ui' {
         color: string;
         name: string;
         details?: string;
-        nodes?: VueUiMoleculeDatapoint;
+        nodes?: VueUiMoleculeDatapoint[];
         ancestor?: VueUiMoleculeDatapoint;
         polygonPath: {
             coordinates: Array<{
@@ -1595,7 +1595,27 @@ declare module 'vue-data-ui' {
         config?: VueUiMoleculeConfig;
     };
 
-    const VueUiMoleculeBase: DefineComponent<VueUiMoleculeProps>;
+    export type VueUiMoleculeEmitSelectNode = VueUiMoleculeDatapoint;
+    export type VueUiMoleculeEmitCopyAlt = {
+        config: VueUiMoleculeConfig;
+        dataset: VueUiMoleculeDatapoint[];
+    };
+
+    export type VueUiMoleculeEmits = {
+        selectNode: (payload: VueUiMoleculeEmitSelectNode) => void;
+        copyAlt: (payload: VueUiMoleculeEmitCopyAlt) => void;
+    };
+
+    const VueUiMoleculeBase: DefineComponent<
+        VueUiMoleculeProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiMoleculeEmits
+    >;
 
     export const VueUiMolecule: typeof VueUiMoleculeBase & {
         new (): VueUiMoleculeExpose & {

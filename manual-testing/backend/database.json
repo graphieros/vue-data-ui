@@ -1466,9 +1466,9 @@
         "VueUiHeatmap": true,
         "VueUiHistoryPlot": true,
         "VueUiHorizontalBar": true,
-        "VueUiKpi": false,
-        "VueUiMiniLoader": false,
-        "VueUiMolecule": false,
+        "VueUiKpi": true,
+        "VueUiMiniLoader": true,
+        "VueUiMolecule": true,
         "VueUiMoodRadar": false,
         "VueUiNestedDonuts": false,
         "VueUiOnion": false,
@@ -1509,7 +1509,7 @@
       "customCheckList": {},
       "id": "4b423dba-9fc5-45b8-9dca-20e1f2678b9e",
       "createdAt": 1779169675598,
-      "updatedAt": 1779427794654
+      "updatedAt": 1779451807424
     }
   ]
 }
