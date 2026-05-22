@@ -1471,7 +1471,7 @@
         "VueUiMolecule": true,
         "VueUiMoodRadar": true,
         "VueUiNestedDonuts": true,
-        "VueUiOnion": false,
+        "VueUiOnion": true,
         "VueUiParallelCoordinatePlot": false,
         "VueUiQuadrant": false,
         "VueUiQuickChart": false,
@@ -1509,7 +1509,7 @@
       "customCheckList": {},
       "id": "4b423dba-9fc5-45b8-9dca-20e1f2678b9e",
       "createdAt": 1779169675598,
-      "updatedAt": 1779453176804
+      "updatedAt": 1779454343320
     }
   ]
 }

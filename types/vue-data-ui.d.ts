@@ -8495,7 +8495,28 @@ declare module 'vue-data-ui' {
         dataset: VueUiOnionDatasetItem[];
     };
 
-    const VueUiOnionBase: DefineComponent<VueUiOnionProps>;
+    export type VueUiOnionEmitSelectLegend = VueUiOnionDatapoint[];
+
+    export type VueUiOnionEmitCopyAlt = {
+        config: VueUiOnionConfig;
+        dataset: VueUiOnionDatapoint[];
+    };
+
+    export type VueUiOnionEmits = {
+        selectLegend: (payload: VueUiOnionEmitSelectLegend) => void;
+        copyAlt: (payload: VueUiOnionEmitCopyAlt) => void;
+    };
+
+    const VueUiOnionBase: DefineComponent<
+        VueUiOnionProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiOnionEmits
+    >;
 
     export const VueUiOnion: typeof VueUiOnionBase & {
         new (): VueUiOnionExpose & {

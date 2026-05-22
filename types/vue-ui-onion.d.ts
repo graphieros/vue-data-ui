@@ -22,6 +22,9 @@ import type {
     VueUiOnionLegendSlotProps,
     VueUiOnionTooltipSlotProps,
     CommonAnnotatorSlots,
+    VueUiOnionEmits,
+    VueUiOnionEmitSelectLegend,
+    VueUiOnionEmitCopyAlt,
 } from 'vue-data-ui';
 
 export type {
@@ -46,9 +49,21 @@ export type {
     VueUiOnionLegendSlotProps,
     VueUiOnionTooltipSlotProps,
     CommonAnnotatorSlots,
+    VueUiOnionEmits,
+    VueUiOnionEmitSelectLegend,
+    VueUiOnionEmitCopyAlt,
 };
 
-declare const VueUiOnionBase: DefineComponent<VueUiOnionProps>;
+declare const VueUiOnionBase: DefineComponent<
+    VueUiOnionProps,
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    VueUiOnionEmits
+>;
 
 export const VueUiOnion: typeof VueUiOnionBase & {
     new (): VueUiOnionExpose & {
