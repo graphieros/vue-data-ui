@@ -26,4 +26,4 @@ jobs:
 
             - run: npm run preprod
 
-            - run: npm stage publish
+            - run: npm publish
