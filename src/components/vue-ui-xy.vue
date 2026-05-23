@@ -4384,9 +4384,9 @@ const tooltipContent = computed(() => {
                     : '';
                 const valueLabel = isContinuousScale.value
                     ? `
-                    <span>${FINAL_CONFIG.value.chart.grid.labels.axis.xLabel ?? 'X'}: </span>
+                    <span>${FINAL_CONFIG.value.chart.grid.labels.axis.xLabel || 'X'}: </span>
                     <span>${label_x}</span>, 
-                    <span>${FINAL_CONFIG.value.chart.grid.labels.axis.yLabel ?? 'Y'}: </span>
+                    <span>${FINAL_CONFIG.value.chart.grid.labels.axis.yLabel || 'Y'}: </span>
                     <span>${label_y}</span>
                 `
                     : label_y;
