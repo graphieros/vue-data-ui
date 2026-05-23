@@ -12600,6 +12600,12 @@ declare module 'vue-data-ui' {
         width: number;
     };
 
+    export type VueUiTimerLap = {
+        timestamp: number;
+        elapsed: number;
+        formatted: string;
+    };
+
     export type VueUiTimerControlsSlotProps = {
         isPaused: boolean;
         isRunning: boolean;
@@ -12608,11 +12614,7 @@ declare module 'vue-data-ui' {
         reset: () => void;
         restart: () => void;
         lap: () => void;
-        laps: Array<{
-            timestamp: number;
-            elapsed: number;
-            formatted: string;
-        }>;
+        laps: VueUiTimerLap[];
         elapsed?: number;
         timestamp?: number;
         formatted?: string;
@@ -12629,7 +12631,24 @@ declare module 'vue-data-ui' {
         | 'formatted'
     >;
 
-    const VueUiTimerBase: DefineComponent<VueUiTimerProps>;
+    export type VueUiTimerEmits = {
+        start: () => void;
+        reset: () => void;
+        pause: (payload: number) => void;
+        restart: () => void;
+        lap: (payload: VueUiTimerLap[]) => void;
+    };
+
+    const VueUiTimerBase: DefineComponent<
+        VueUiTimerProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiTimerEmits
+    >;
 
     export const VueUiTimer: typeof VueUiTimerBase & {
         new (): VueUiTimerExpose & {

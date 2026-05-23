@@ -7,6 +7,8 @@ import type {
     VueUiTimerTimeSlotProps,
     VueUiTimerControlsSlotProps,
     VueUiTimerLapsSlotProps,
+    VueUiTimerEmits,
+    VueUiTimerLap,
 } from 'vue-data-ui';
 
 export type {
@@ -16,9 +18,20 @@ export type {
     VueUiTimerTimeSlotProps,
     VueUiTimerControlsSlotProps,
     VueUiTimerLapsSlotProps,
+    VueUiTimerEmits,
+    VueUiTimerLap,
 };
 
-declare const VueUiTimerBase: DefineComponent<VueUiTimerProps>;
+declare const VueUiTimerBase: DefineComponent<
+    VueUiTimerProps,
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    VueUiTimerEmits
+>;
 
 export const VueUiTimer: typeof VueUiTimerBase & {
     new (): VueUiTimerExpose & {
