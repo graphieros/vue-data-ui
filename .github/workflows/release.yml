@@ -67,6 +67,35 @@ jobs:
 
             - run: npm run preprod
 
-            - run: npm pack --dry-run
+            - name: Inspect package content
+              run: |
+                  npm pack
+                  PACKAGE_FILE=$(ls *.tgz)
+
+                  echo "Created package: $PACKAGE_FILE"
+                  echo "Package content:"
+                  tar -tf "$PACKAGE_FILE"
+
+                  echo "Checking required package files..."
+
+                  tar -tf "$PACKAGE_FILE" | grep '^package/dist/' || {
+                    echo "ERROR: dist is missing from the package"
+                    exit 1
+                  }
+
+                  tar -tf "$PACKAGE_FILE" | grep '^package/dist/vue-data-ui.js' || {
+                    echo "ERROR: dist/vue-data-ui.js is missing from the package"
+                    exit 1
+                  }
+
+                  tar -tf "$PACKAGE_FILE" | grep '^package/dist/style.css' || {
+                    echo "ERROR: dist/style.css is missing from the package"
+                    exit 1
+                  }
+
+                  tar -tf "$PACKAGE_FILE" | grep '^package/dist/types/vue-data-ui.d.ts' || {
+                    echo "ERROR: dist/types/vue-data-ui.d.ts is missing from the package"
+                    exit 1
+                  }
 
             - uses: danielroe/uppt/publish@8da0597c0c549fdfd95a9868df95feb6d04dab26 # v0.4.0
