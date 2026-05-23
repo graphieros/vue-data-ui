@@ -3,7 +3,11 @@
  * This playground showcases all the slots and their implementations for <VueUiTimer>
  */
 import { computed } from 'vue';
-import { VueUiTimer, type VueUiTimerConfig, type VueUiTimerLap } from 'vue-data-ui/vue-ui-timer';
+import {
+    VueUiTimer,
+    type VueUiTimerConfig,
+    type VueUiTimerLap,
+} from 'vue-data-ui/vue-ui-timer';
 import 'vue-data-ui/style.css';
 
 const config = computed<VueUiTimerConfig>(() => {

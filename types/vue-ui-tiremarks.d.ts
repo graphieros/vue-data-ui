@@ -11,6 +11,8 @@ import type {
     VueUiOptionAnnotatorSlotProps,
     VueUiTiremarksSvgSlotProps,
     VueUiWatermarkSlotProps,
+    VueUiTiremarksEmits,
+    VueUiTiremarksEmitCopyAlt,
 } from 'vue-data-ui';
 
 export type {
@@ -24,9 +26,20 @@ export type {
     VueUiOptionAnnotatorSlotProps,
     VueUiTiremarksSvgSlotProps,
     VueUiWatermarkSlotProps,
+    VueUiTiremarksEmits,
+    VueUiTiremarksEmitCopyAlt,
 };
 
-declare const VueUiTiremarksBase: DefineComponent<VueUiTiremarksProps>;
+declare const VueUiTiremarksBase: DefineComponent<
+    VueUiTiremarksProps,
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    VueUiTiremarksEmits
+>;
 
 export const VueUiTiremarks: typeof VueUiTiremarksBase & {
     new (): VueUiTiremarksExpose & {

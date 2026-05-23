@@ -2790,7 +2790,25 @@ declare module 'vue-data-ui' {
         dataset: VueUiTiremarksDataset;
     };
 
-    const VueUiTiremarksBase: DefineComponent<VueUiTiremarksProps>;
+    export type VueUiTiremarksEmitCopyAlt = {
+        config: VueUiTiremarksConfig;
+        dataset: VueUiTiremarksDataset;
+    };
+
+    export type VueUiTiremarksEmits = {
+        copyAlt: (payload: VueUiTiremarksEmitCopyAlt) => void;
+    };
+
+    const VueUiTiremarksBase: DefineComponent<
+        VueUiTiremarksProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiTiremarksEmits
+    >;
 
     export const VueUiTiremarks: typeof VueUiTiremarksBase & {
         new (): VueUiTiremarksExpose & {
