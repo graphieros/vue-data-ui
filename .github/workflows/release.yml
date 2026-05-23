@@ -24,7 +24,7 @@ jobs:
         steps:
             - uses: danielroe/uppt/pr@8da0597c0c549fdfd95a9868df95feb6d04dab26 # v0.4.0
               with:
-                  token: ${{ secrets.GITHUB_TOKEN }}
+                  token: ${{ github.token }}
 
     # The release PR was merged: tag the squash commit, cut a GitHub release
     # from the PR body, and dispatch the publish workflow. The `release/v`
