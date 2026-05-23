@@ -20,6 +20,12 @@ import type {
     VueUiStacklineLegendSlotProps,
     VueUiResetActionSlotProps,
     VueUiStacklineTooltipSlotProps,
+    VueUiStacklineEmits,
+    VueUiStacklineEmitSelectLegend,
+    VueUiStacklineEmitSelectDatapoint,
+    VueUiStacklineEmitSelectTimeLabel,
+    VueUiStacklineEmitSelectX,
+    VueUiStacklineEmitCopyAlt,
 } from 'vue-data-ui';
 
 export type {
@@ -42,9 +48,24 @@ export type {
     VueUiStacklineLegendSlotProps,
     VueUiResetActionSlotProps,
     VueUiStacklineTooltipSlotProps,
+    VueUiStacklineEmits,
+    VueUiStacklineEmitSelectLegend,
+    VueUiStacklineEmitSelectDatapoint,
+    VueUiStacklineEmitSelectTimeLabel,
+    VueUiStacklineEmitSelectX,
+    VueUiStacklineEmitCopyAlt,
 };
 
-declare const VueUiStacklineBase: DefineComponent<VueUiStacklineProps>;
+declare const VueUiStacklineBase: DefineComponent<
+    VueUiStacklineProps,
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    VueUiStacklineEmits
+>;
 
 export const VueUiStackline: typeof VueUiStacklineBase & {
     new (): VueUiStacklineExpose & {

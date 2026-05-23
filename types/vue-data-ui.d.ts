@@ -13554,7 +13554,52 @@ declare module 'vue-data-ui' {
         selectedXIndex?: number | null;
     };
 
-    const VueUiStacklineBase: DefineComponent<VueUiStacklineProps>;
+    export type VueUiStacklineEmitSelectLegend =
+        VueUiStacklineFormattedDatasetItem[];
+
+    export type VueUiStacklineEmitSelectDatapoint = {
+        datapoint: VueUiStacklineDatasetItem[];
+        period: {
+            absoluteIndex: number;
+            text: string;
+        };
+    };
+
+    export type VueUiStacklineEmitSelectTimeLabel = {
+        datapoint: VueUiStacklineDatapointItem[];
+        absoluteIndex: number;
+        label: string;
+    };
+
+    export type VueUiStacklineEmitSelectX = {
+        dataset: VueUiStacklineTooltipDatapoint[] | null;
+        index: number | null;
+        indexLabel: number | null | undefined;
+    };
+
+    export type VueUiStacklineEmitCopyAlt = {
+        config: VueUiStacklineConfig;
+        dataset: VueUiStacklineFormattedDatasetItem[];
+    };
+
+    export type VueUiStacklineEmits = {
+        selectLegend: (payload: VueUiStacklineEmitSelectLegend) => void;
+        selectDatapoint: (payload: VueUiStacklineEmitSelectDatapoint) => void;
+        selectTimeLabel: (payload: VueUiStacklineEmitSelectTimeLabel) => void;
+        selectX: (payload: VueUiStacklineEmitSelectX) => void;
+        copyAlt: (payload: VueUiStacklineEmitCopyAlt) => void;
+    };
+
+    const VueUiStacklineBase: DefineComponent<
+        VueUiStacklineProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiStacklineEmits
+    >;
 
     export const VueUiStackline: typeof VueUiStacklineBase & {
         new (): VueUiStacklineExpose & {
