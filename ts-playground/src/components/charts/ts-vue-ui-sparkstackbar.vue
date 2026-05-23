@@ -7,6 +7,8 @@ import {
     VueUiSparkStackbar,
     type VueUiSparkStackbarConfig,
     type VueUiSparkStackbarDatasetItem,
+    type VueUiSparkStackbarEmitSelectDatapoint,
+    type VueUiSparkStackbarEmitSelectLegend,
 } from 'vue-data-ui/vue-ui-sparkstackbar';
 import 'vue-data-ui/style.css';
 import KeyboardNavigationHint from '../slots/common/keyboard-navigation-hint.vue';
@@ -145,11 +147,24 @@ const config = computed<VueUiSparkStackbarConfig>(() => {
 function log(n: unknown) {
     console.log(n);
 }
+
+function selectLegend(payload: VueUiSparkStackbarEmitSelectLegend) {
+    console.log('@selectLegend', payload);
+}
+
+function selectDatapoint(payload: VueUiSparkStackbarEmitSelectDatapoint) {
+    console.log('@selectDatapoint', payload);
+}
 </script>
 
 <template>
     <div style="margin-top: 200px">
-        <VueUiSparkStackbar :dataset :config>
+        <VueUiSparkStackbar
+            :dataset
+            :config
+            @selectLegend="selectLegend"
+            @selectDatapoint="selectDatapoint"
+        >
             <template #hint="{ hint, isVisible }">
                 <KeyboardNavigationHint
                     :hint

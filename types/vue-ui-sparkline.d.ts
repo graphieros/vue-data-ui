@@ -10,6 +10,9 @@ import type {
     VueUiKeyboardNavigationHintSlotProps,
     VueUiSparklineFormattedDatapoint,
     VueUiSparklineTooltipSlotProps,
+    VueUiSparklineEmits,
+    VueUiSparklineEmitHoverIndex,
+    VueUiSparklineEmitSelectDatapoint,
 } from 'vue-data-ui';
 
 export type {
@@ -22,9 +25,21 @@ export type {
     VueUiKeyboardNavigationHintSlotProps,
     VueUiSparklineFormattedDatapoint,
     VueUiSparklineTooltipSlotProps,
+    VueUiSparklineEmits,
+    VueUiSparklineEmitHoverIndex,
+    VueUiSparklineEmitSelectDatapoint,
 };
 
-declare const VueUiSparklineBase: DefineComponent<VueUiSparklineProps>;
+declare const VueUiSparklineBase: DefineComponent<
+    VueUiSparklineProps,
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    VueUiSparklineEmits
+>;
 
 export const VueUiSparkline: typeof VueUiSparklineBase & {
     new (): {

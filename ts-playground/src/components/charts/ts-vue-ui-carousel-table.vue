@@ -4,6 +4,7 @@ import {
     VueUiCarouselTable,
     type VueUiCarouselTableConfig,
     type VueUiCarouselTableDataset,
+    type VueUiCarouselTableEmitCopyAlt,
 } from 'vue-data-ui/vue-ui-carousel-table';
 import { mergeConfigs } from 'vue-data-ui/utils';
 
@@ -213,11 +214,15 @@ const config = computed(() => {
 function log(n: unknown) {
     console.log(n);
 }
+
+function copyAlt(payload: VueUiCarouselTableEmitCopyAlt) {
+    console.log('@copyAlt', payload);
+}
 </script>
 
 <template>
     <div>
-        <VueUiCarouselTable :dataset :config>
+        <VueUiCarouselTable :dataset :config @copyAlt="copyAlt">
             <template #menuIcon="{ isOpen, color }">
                 <CommonMenuIcon :isOpen :color />
             </template>

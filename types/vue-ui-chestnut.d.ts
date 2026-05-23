@@ -21,6 +21,11 @@ import type {
     VueUiChestnutSvgSlotProps,
     VueUiChestnutLegendSlotProps,
     CommonAnnotatorSlots,
+    VueUiChestnutEmits,
+    VueUiChestnutEmitSelectRoot,
+    VueUiChestnutEmitSelectBranch,
+    VueUiChestnutEmitSelectNut,
+    VueUiChestnutEmitCopyAlt,
 } from 'vue-data-ui';
 
 export type {
@@ -44,9 +49,23 @@ export type {
     VueUiChestnutSvgSlotProps,
     VueUiChestnutLegendSlotProps,
     CommonAnnotatorSlots,
+    VueUiChestnutEmits,
+    VueUiChestnutEmitSelectRoot,
+    VueUiChestnutEmitSelectBranch,
+    VueUiChestnutEmitSelectNut,
+    VueUiChestnutEmitCopyAlt,
 };
 
-declare const VueUiChestnutBase: DefineComponent<VueUiChestnutProps>;
+declare const VueUiChestnutBase: DefineComponent<
+    VueUiChestnutProps,
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    VueUiChestnutEmits
+>;
 
 export const VueUiChestnut: typeof VueUiChestnutBase & {
     new (): VueUiChestnutExpose & {

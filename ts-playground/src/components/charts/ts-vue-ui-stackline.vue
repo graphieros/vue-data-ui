@@ -7,6 +7,11 @@ import {
     VueUiStackline,
     type VueUiStacklineConfig,
     type VueUiStacklineDatasetItem,
+    type VueUiStacklineEmitCopyAlt,
+    type VueUiStacklineEmitSelectDatapoint,
+    type VueUiStacklineEmitSelectLegend,
+    type VueUiStacklineEmitSelectTimeLabel,
+    type VueUiStacklineEmitSelectX,
 } from 'vue-data-ui/vue-ui-stackline';
 import { mergeConfigs } from 'vue-data-ui/utils';
 import 'vue-data-ui/style.css';
@@ -434,11 +439,39 @@ const config = computed<VueUiStacklineConfig>(() => {
 function log(n: unknown) {
     console.log(n);
 }
+
+function selectLegend(payload: VueUiStacklineEmitSelectLegend) {
+    console.log('@selectLegend', payload);
+}
+
+function selectDatapoint(payload: VueUiStacklineEmitSelectDatapoint) {
+    console.log('@selectDatapoint', payload);
+}
+
+function selectTimeLabel(payload: VueUiStacklineEmitSelectTimeLabel) {
+    console.log('@selectTimeLabel', payload);
+}
+
+function selectX(payload: VueUiStacklineEmitSelectX) {
+    console.log('@selectX', payload);
+}
+
+function copyAlt(payload: VueUiStacklineEmitCopyAlt) {
+    console.log('@copyAlt', payload);
+}
 </script>
 
 <template>
     <div>
-        <VueUiStackline :dataset :config>
+        <VueUiStackline
+            :dataset
+            :config
+            @selectLegend="selectLegend"
+            @selectDatapoint="selectDatapoint"
+            @selectTimeLabel="selectTimeLabel"
+            @selectX="selectX"
+            @copyAlt="copyAlt"
+        >
             <template #annotator-action-close>
                 <span style="color: chocolate">X</span>
             </template>

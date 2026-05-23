@@ -28,6 +28,11 @@ import type {
     VueUiDagTooltipNodeSlotProps,
     CommonAnnotatorSlots,
     VueUiWatermarkSlotProps,
+    VueUiDagEmits,
+    VueUiDagEmitOnNodeClick,
+    VueUiDagEmitOnMidpointEnter,
+    VueUiDagEmitCopyAlt,
+    VueUiDagEmitRotate,
 } from 'vue-data-ui';
 
 export type {
@@ -58,9 +63,23 @@ export type {
     VueUiDagTooltipNodeSlotProps,
     CommonAnnotatorSlots,
     VueUiWatermarkSlotProps,
+    VueUiDagEmits,
+    VueUiDagEmitOnNodeClick,
+    VueUiDagEmitOnMidpointEnter,
+    VueUiDagEmitCopyAlt,
+    VueUiDagEmitRotate,
 };
 
-declare const VueUiDagBase: DefineComponent<VueUiDagProps>;
+declare const VueUiDagBase: DefineComponent<
+    VueUiDagProps,
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    VueUiDagEmits
+>;
 
 export const VueUiDag: typeof VueUiDagBase & {
     new (): VueUiDagExpose & {

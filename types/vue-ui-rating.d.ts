@@ -6,6 +6,7 @@ import type {
     VueUiRatingConfig,
     VueUiRatingProps,
     VueUiRatingLayerSlotProps,
+    VueUiRatingEmits,
 } from 'vue-data-ui';
 
 export type {
@@ -14,9 +15,19 @@ export type {
     VueUiRatingConfig,
     VueUiRatingProps,
     VueUiRatingLayerSlotProps,
+    VueUiRatingEmits,
 };
 
-declare const VueUiRatingBase: DefineComponent<VueUiRatingProps>;
+declare const VueUiRatingBase: DefineComponent<
+    VueUiRatingProps,
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    VueUiRatingEmits
+>;
 
 export const VueUiRating: typeof VueUiRatingBase & {
     new (): {

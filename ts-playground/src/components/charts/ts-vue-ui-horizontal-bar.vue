@@ -7,6 +7,9 @@ import {
     VueUiHorizontalBar,
     type VueUiHorizontalBarConfig,
     type VueUiHorizontalBarDatasetItem,
+    type VueUiHorizontalBarEmitCopyAlt,
+    type VueUiHorizontalBarEmitSelectDatapoint,
+    type VueUiHorizontalBarEmitSelectLegend,
 } from 'vue-data-ui/vue-ui-horizontal-bar';
 import { mergeConfigs } from 'vue-data-ui/utils';
 
@@ -337,11 +340,29 @@ const config = computed<VueUiHorizontalBarConfig>(() => {
 function log(n: unknown) {
     console.log(n);
 }
+
+function selectLegend(payload: VueUiHorizontalBarEmitSelectLegend) {
+    console.log('@selectLegend', payload);
+}
+
+function selectDatapoint(payload: VueUiHorizontalBarEmitSelectDatapoint) {
+    console.log('@selectDatapoint', payload);
+}
+
+function copyAlt(payload: VueUiHorizontalBarEmitCopyAlt) {
+    console.log('@copyAlt', payload);
+}
 </script>
 
 <template>
     <div>
-        <VueUiHorizontalBar :dataset :config>
+        <VueUiHorizontalBar
+            :dataset
+            :config
+            @selectLegend="selectLegend"
+            @selectDatapoint="selectDatapoint"
+            @copyAlt="copyAlt"
+        >
             <template #annotator-action-close>
                 <span style="color: chocolate">X</span>
             </template>

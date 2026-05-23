@@ -20,6 +20,8 @@ import type {
     VueUiWatermarkSlotProps,
     VueUiMoodRadarLegendSlotProps,
     CommonAnnotatorSlots,
+    VueUiMoodRadarEmits,
+    VueUiMoodRadarEmitCopyAlt,
 } from 'vue-data-ui';
 
 export type {
@@ -42,9 +44,20 @@ export type {
     VueUiWatermarkSlotProps,
     VueUiMoodRadarLegendSlotProps,
     CommonAnnotatorSlots,
+    VueUiMoodRadarEmits,
+    VueUiMoodRadarEmitCopyAlt,
 };
 
-declare const VueUiMoodRadarBase: DefineComponent<VueUiMoodRadarProps>;
+declare const VueUiMoodRadarBase: DefineComponent<
+    VueUiMoodRadarProps,
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    VueUiMoodRadarEmits
+>;
 
 export const VueUiMoodRadar: typeof VueUiMoodRadarBase & {
     new (): VueUiMoodRadarExpose & {

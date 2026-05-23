@@ -20,6 +20,9 @@ import type {
     VueUiDumbbellLegendItem,
     VueUiDumbbellLegendSlotProps,
     CommonAnnotatorSlots,
+    VueUiDumbbellEmits,
+    VueUiDumbbellEmitSelectDatapoint,
+    VueUiDumbbellEmitCopyAlt,
 } from 'vue-data-ui';
 
 export type {
@@ -42,9 +45,21 @@ export type {
     VueUiDumbbellLegendItem,
     VueUiDumbbellLegendSlotProps,
     CommonAnnotatorSlots,
+    VueUiDumbbellEmits,
+    VueUiDumbbellEmitSelectDatapoint,
+    VueUiDumbbellEmitCopyAlt,
 };
 
-declare const VueUiDumbbellBase: DefineComponent<VueUiDumbbellProps>;
+declare const VueUiDumbbellBase: DefineComponent<
+    VueUiDumbbellProps,
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    VueUiDumbbellEmits
+>;
 
 export const VueUiDumbbell: typeof VueUiDumbbellBase & {
     new (): VueUiDumbbellExpose & {

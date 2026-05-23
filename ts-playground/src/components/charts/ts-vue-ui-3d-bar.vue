@@ -7,6 +7,8 @@ import {
     VueUi3dBar,
     type VueUi3dBarConfig,
     type VueUi3dBarDataset,
+    type VueUi3dBarEmitCopyAlt,
+    type VueUi3dBarEmitSelectDatapoint,
 } from 'vue-data-ui/vue-ui-3d-bar';
 import { mergeConfigs } from 'vue-data-ui/utils';
 import 'vue-data-ui/style.css';
@@ -252,11 +254,24 @@ const config = computed<VueUi3dBarConfig>(() => {
 function log(el: any) {
     console.log(el);
 }
+
+function selectDatapoint(payload: VueUi3dBarEmitSelectDatapoint) {
+    console.log('@selectDatapoint', payload);
+}
+
+function copyAlt(payload: VueUi3dBarEmitCopyAlt) {
+    console.log('@copyAlt', payload);
+}
 </script>
 
 <template>
     <div>
-        <VueUi3dBar :dataset :config>
+        <VueUi3dBar
+            :dataset
+            :config
+            @selectDatapoint="selectDatapoint"
+            @copyAlt="copyAlt"
+        >
             <template #annotator-action-close>
                 <span style="color: chocolate">X</span>
             </template>

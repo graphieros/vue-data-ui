@@ -2,11 +2,20 @@
 /**
  * This playground showcases all the slots and their implementations for <VueUiDonut>
  */
-import { ref, computed, type ComponentInstance, onMounted } from 'vue';
+import {
+    ref,
+    computed,
+    type ComponentInstance,
+    onMounted,
+    useTemplateRef,
+} from 'vue';
 import {
     VueUiDonut,
     type VueUiDonutConfig,
     type VueUiDonutDatasetItem,
+    type VueUiDonutEmitCopyAlt,
+    type VueUiDonutEmitSelectDatapoint,
+    type VueUiDonutEmitSelectLegend,
 } from 'vue-data-ui/vue-ui-donut';
 import { mergeConfigs } from 'vue-data-ui/utils';
 import 'vue-data-ui/style.css';
@@ -374,20 +383,39 @@ const config = computed<VueUiDonutConfig>(() => {
     });
 });
 
-const donut = ref<ComponentInstance<typeof VueUiDonut> | null>(null);
+const donut = useTemplateRef('donut');
 
 onMounted(async () => {
     if (donut.value) {
         let data;
-        data = await donut.value.getData();
+        data = await donut.value?.getData();
         console.table(data);
     }
 });
+
+function selectLegend(payload: VueUiDonutEmitSelectLegend) {
+    console.log('@selectLegend', payload);
+}
+
+function selectDatapoint(payload: VueUiDonutEmitSelectDatapoint) {
+    console.log('@selectDatapoint', payload);
+}
+
+function copyAlt(payload: VueUiDonutEmitCopyAlt) {
+    console.log('@copyAlt', payload);
+}
 </script>
 
 <template>
     <div>
-        <VueUiDonut :dataset :config ref="donut">
+        <VueUiDonut
+            :dataset
+            :config
+            ref="donut"
+            @selectLegend="selectLegend"
+            @selectDatapoint="selectDatapoint"
+            @copyAlt="copyAlt"
+        >
             <template #legend="{ legend }">
                 <DonutLegend :items="legend" />
             </template>

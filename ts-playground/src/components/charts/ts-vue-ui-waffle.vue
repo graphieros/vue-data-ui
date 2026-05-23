@@ -7,6 +7,8 @@ import {
     VueUiWaffle,
     type VueUiWaffleConfig,
     type VueUiWaffleDatasetItem,
+    type VueUiWaffleEmitCopyAlt,
+    type VueUiWaffleEmitSelectLegend,
 } from 'vue-data-ui/vue-ui-waffle';
 import { mergeConfigs } from 'vue-data-ui/utils';
 import 'vue-data-ui/style.css';
@@ -279,11 +281,24 @@ const config = computed<VueUiWaffleConfig>(() => {
 function log(n: unknown) {
     console.log(n);
 }
+
+function selectLegend(payload: VueUiWaffleEmitSelectLegend) {
+    console.log('@selectLegend', payload);
+}
+
+function copyAlt(payload: VueUiWaffleEmitCopyAlt) {
+    console.log('@copyAlt', payload);
+}
 </script>
 
 <template>
     <div style="max-width: 500px">
-        <VueUiWaffle :dataset :config>
+        <VueUiWaffle
+            :dataset
+            :config
+            @selectLegend="selectLegend"
+            @copyAlt="copyAlt"
+        >
             <template #annotator-action-close>
                 <span style="color: chocolate">X</span>
             </template>

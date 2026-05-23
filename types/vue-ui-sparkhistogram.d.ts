@@ -6,6 +6,8 @@ import type {
     VueUiSparkHistogramEvent,
     VueUiSparkHistogramProps,
     VueUiKeyboardNavigationHintSlotProps,
+    VueUiSparkHistogramEmits,
+    VueUiSparkHistogramEmitSelectDatapoint,
 } from 'vue-data-ui';
 
 export type {
@@ -14,9 +16,20 @@ export type {
     VueUiSparkHistogramEvent,
     VueUiSparkHistogramProps,
     VueUiKeyboardNavigationHintSlotProps,
+    VueUiSparkHistogramEmits,
+    VueUiSparkHistogramEmitSelectDatapoint,
 };
 
-declare const VueUiSparkHistogramBase: DefineComponent<VueUiSparkHistogramProps>;
+declare const VueUiSparkHistogramBase: DefineComponent<
+    VueUiSparkHistogramProps,
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    VueUiSparkHistogramEmits
+>;
 
 export const VueUiSparkHistogram: typeof VueUiSparkHistogramBase & {
     new (): {

@@ -7,6 +7,9 @@ import {
     VueUiParallelCoordinatePlot,
     type VueUiParallelCoordinatePlotConfig,
     type VueUiParallelCoordinatePlotDatasetItem,
+    type VueUiParallelCoordinatePlotEmitCopyAlt,
+    type VueUiParallelCoordinatePlotEmitSelectDatapoint,
+    type VueUiParallelCoordinatePlotEmitSelectLegend,
 } from 'vue-data-ui/vue-ui-parallel-coordinate-plot';
 import { mergeConfigs } from 'vue-data-ui/utils';
 import 'vue-data-ui/style.css';
@@ -310,11 +313,31 @@ const config = computed<VueUiParallelCoordinatePlotConfig>(() => {
 function log(n: unknown) {
     console.log(n);
 }
+
+function selectLegend(payload: VueUiParallelCoordinatePlotEmitSelectLegend) {
+    console.log('@selectLegend', payload);
+}
+
+function selectDatapoint(
+    payload: VueUiParallelCoordinatePlotEmitSelectDatapoint,
+) {
+    console.log('@selectDatapoint', payload);
+}
+
+function copyAlt(payload: VueUiParallelCoordinatePlotEmitCopyAlt) {
+    console.log('@copyAlt', payload);
+}
 </script>
 
 <template>
     <div>
-        <VueUiParallelCoordinatePlot :dataset :config>
+        <VueUiParallelCoordinatePlot
+            :dataset
+            :config
+            @selectLegend="selectLegend"
+            @selectDatapoint="selectDatapoint"
+            @copyAlt="copyAlt"
+        >
             <template #annotator-action-close>
                 <span style="color: chocolate">X</span>
             </template>

@@ -7,6 +7,7 @@ import {
     VueUiTiremarks,
     type VueUiTiremarksConfig,
     type VueUiTiremarksDataset,
+    type VueUiTiremarksEmitCopyAlt,
 } from 'vue-data-ui/vue-ui-tiremarks';
 import { mergeConfigs } from 'vue-data-ui/utils';
 
@@ -167,11 +168,15 @@ const config = computed<VueUiTiremarksConfig>(() => {
 function log(n: unknown) {
     console.log(n);
 }
+
+function copyAlt(payload: VueUiTiremarksEmitCopyAlt) {
+    console.log('@copyAlt', payload);
+}
 </script>
 
 <template>
     <div>
-        <VueUiTiremarks :dataset :config>
+        <VueUiTiremarks :dataset :config @copyAlt="copyAlt">
             <template #annotator-action-close>
                 <span style="color: chocolate">X</span>
             </template>

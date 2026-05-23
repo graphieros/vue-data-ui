@@ -89,11 +89,15 @@ const config = computed<VueUiRatingConfig>(() => {
 function log(n: unknown) {
     console.log(n);
 }
+
+function rate(payload: number) {
+    console.log('@rate', payload);
+}
 </script>
 
 <template>
     <div>
-        <VueUiRating :dataset :config>
+        <VueUiRating :dataset :config @rate="rate">
             <template
                 #layer-under="{ focusedValue, hoveredValue, size, value }"
             >

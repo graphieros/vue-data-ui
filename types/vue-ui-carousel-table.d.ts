@@ -8,6 +8,8 @@ import type {
     VueUiCarouselTableOptionAnimationSlotProps,
     VueUiCarouselTableThSlotProps,
     VueUiCarouselTableTdSlotProps,
+    VueUiCarouselTableEmits,
+    VueUiCarouselTableEmitCopyAlt,
 } from 'vue-data-ui';
 
 export type {
@@ -18,9 +20,20 @@ export type {
     VueUiCarouselTableOptionAnimationSlotProps,
     VueUiCarouselTableThSlotProps,
     VueUiCarouselTableTdSlotProps,
+    VueUiCarouselTableEmits,
+    VueUiCarouselTableEmitCopyAlt,
 };
 
-declare const VueUiCarouselTableBase: DefineComponent<VueUiCarouselTableProps>;
+declare const VueUiCarouselTableBase: DefineComponent<
+    VueUiCarouselTableProps,
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    VueUiCarouselTableEmits
+>;
 
 export const VueUiCarouselTable: typeof VueUiCarouselTableBase & {
     new (): {

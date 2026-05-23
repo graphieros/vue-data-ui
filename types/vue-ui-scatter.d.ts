@@ -18,6 +18,9 @@ import type {
     VueUiWatermarkSlotProps,
     VueUiLegendSlotProps,
     VueUiScatterTooltipSlotProps,
+    VueUiScatterEmits,
+    VueUiScatterEmitSelectLegend,
+    VueUiScatterEmitCopyAlt,
 } from 'vue-data-ui';
 
 export type {
@@ -38,9 +41,21 @@ export type {
     VueUiWatermarkSlotProps,
     VueUiLegendSlotProps,
     VueUiScatterTooltipSlotProps,
+    VueUiScatterEmits,
+    VueUiScatterEmitSelectLegend,
+    VueUiScatterEmitCopyAlt,
 };
 
-declare const VueUiScatterBase: DefineComponent<VueUiScatterProps>;
+declare const VueUiScatterBase: DefineComponent<
+    VueUiScatterProps,
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    VueUiScatterEmits
+>;
 
 export const VueUiScatter: typeof VueUiScatterBase & {
     new (): VueUiScatterExpose & {

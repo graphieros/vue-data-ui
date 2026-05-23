@@ -7,6 +7,8 @@ import {
     VueUiStripPlot,
     type VueUiStripPlotConfig,
     type VueUiStripPlotDataset,
+    type VueUiStripPlotEmitCopyAlt,
+    type VueUiStripPlotEmitSelectDatapoint,
 } from 'vue-data-ui/vue-ui-strip-plot';
 import { mergeConfigs } from 'vue-data-ui/utils';
 import 'vue-data-ui/style.css';
@@ -351,11 +353,24 @@ const config = computed<VueUiStripPlotConfig>(() => {
 function log(n: unknown) {
     console.log(n);
 }
+
+function selectDatapoint(payload: VueUiStripPlotEmitSelectDatapoint) {
+    console.log('@selectDatapoint', payload);
+}
+
+function copyAlt(payload: VueUiStripPlotEmitCopyAlt) {
+    console.log('@copyAlt', payload);
+}
 </script>
 
 <template>
     <div>
-        <VueUiStripPlot :dataset :config>
+        <VueUiStripPlot
+            :dataset
+            :config
+            @selectDatapoint="selectDatapoint"
+            @copyAlt="copyAlt"
+        >
             <template #annotator-action-close>
                 <span style="color: chocolate">X</span>
             </template>

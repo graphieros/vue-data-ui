@@ -4,6 +4,9 @@ import {
     VueUiNestedDonuts,
     type VueUiNestedDonutsConfig,
     type VueUiNestedDonutsDatasetItem,
+    type VueUiNestedDonutsEmitCopyAlt,
+    type VueUiNestedDonutsEmitSelectDatapoint,
+    type VueUiNestedDonutsEmitSelectLegend,
 } from 'vue-data-ui/vue-ui-nested-donuts';
 import { mergeConfigs } from 'vue-data-ui/utils';
 
@@ -323,11 +326,29 @@ const config = computed<VueUiNestedDonutsConfig>(() => {
 function log(n: unknown) {
     console.log(n);
 }
+
+function selectLegend(payload: VueUiNestedDonutsEmitSelectLegend) {
+    console.log('@selectLegend', payload);
+}
+
+function selectDatapoint(payload: VueUiNestedDonutsEmitSelectDatapoint) {
+    console.log('@selectDatapoint', payload);
+}
+
+function copyAlt(payload: VueUiNestedDonutsEmitCopyAlt) {
+    console.log('@copyAlt', payload);
+}
 </script>
 
 <template>
     <div>
-        <VueUiNestedDonuts :dataset :config>
+        <VueUiNestedDonuts
+            :dataset
+            :config
+            @selectLegend="selectLegend"
+            @selectDatapoint="selectDatapoint"
+            @copyAlt="copyAlt"
+        >
             <template #annotator-action-close>
                 <span style="color: chocolate">X</span>
             </template>

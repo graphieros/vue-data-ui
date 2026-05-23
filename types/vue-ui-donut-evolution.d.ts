@@ -21,6 +21,9 @@ import type {
     VueUiDonutEvolutionLegendItem,
     VueUiDonutEvolutionLegendSlotProps,
     CommonAnnotatorSlots,
+    VueUiDonutEvolutionEmits,
+    VueUiDonutEvolutionEmitSelectLegend,
+    VueUiDonutEvolutionEmitCopyAlt,
 } from 'vue-data-ui';
 
 export type {
@@ -44,9 +47,21 @@ export type {
     VueUiDonutEvolutionLegendItem,
     VueUiDonutEvolutionLegendSlotProps,
     CommonAnnotatorSlots,
+    VueUiDonutEvolutionEmits,
+    VueUiDonutEvolutionEmitSelectLegend,
+    VueUiDonutEvolutionEmitCopyAlt,
 };
 
-declare const VueUiDonutEvolutionBase: DefineComponent<VueUiDonutEvolutionProps>;
+declare const VueUiDonutEvolutionBase: DefineComponent<
+    VueUiDonutEvolutionProps,
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    VueUiDonutEvolutionEmits
+>;
 
 export const VueUiDonutEvolution: typeof VueUiDonutEvolutionBase & {
     new (): VueUiDonutEvolutionExpose & {

@@ -24,6 +24,8 @@ import type {
     VueUiAgePyramidLegendSlotProps,
     VueUiAgePyramidTooltipSlotProps,
     CommonAnnotatorSlots,
+    VueUiAgePyramidEmits,
+    VueUiAgePyramidEmitCopyAlt,
 } from 'vue-data-ui';
 
 export type {
@@ -50,9 +52,20 @@ export type {
     VueUiAgePyramidLegendSlotProps,
     VueUiAgePyramidTooltipSlotProps,
     CommonAnnotatorSlots,
+    VueUiAgePyramidEmits,
+    VueUiAgePyramidEmitCopyAlt,
 };
 
-const VueUiAgePyramidBase: DefineComponent<VueUiAgePyramidProps>;
+const VueUiAgePyramidBase: DefineComponent<
+    VueUiAgePyramidProps,
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    VueUiAgePyramidEmits
+>;
 
 export const VueUiAgePyramid: typeof VueUiAgePyramidBase & {
     new (): VueUiAgePyramidExpose & {

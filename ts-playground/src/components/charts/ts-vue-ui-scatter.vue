@@ -7,6 +7,8 @@ import {
     VueUiScatter,
     type VueUiScatterConfig,
     type VueUiScatterDatasetItem,
+    type VueUiScatterEmitCopyAlt,
+    type VueUiScatterEmitSelectLegend,
 } from 'vue-data-ui/vue-ui-scatter';
 import { mergeConfigs } from 'vue-data-ui/utils';
 import 'vue-data-ui/style.css';
@@ -428,11 +430,24 @@ const config = computed<VueUiScatterConfig>(() => {
 function log(n: unknown) {
     console.log(n);
 }
+
+function selectLegend(payload: VueUiScatterEmitSelectLegend) {
+    console.log('@selectLegend', payload);
+}
+
+function copyAlt(payload: VueUiScatterEmitCopyAlt) {
+    console.log('@copyAlt', payload);
+}
 </script>
 
 <template>
     <div>
-        <VueUiScatter :dataset :config>
+        <VueUiScatter
+            :dataset
+            :config
+            @selectLegend="selectLegend"
+            @copyAlt="copyAlt"
+        >
             <template #annotator-action-close>
                 <span style="color: chocolate">X</span>
             </template>

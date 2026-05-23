@@ -4,6 +4,10 @@ import {
     VueUiChord,
     type VueUiChordConfig,
     type VueUiChordDataset,
+    type VueUiChordEmitCopyAlt,
+    type VueUiChordEmitSelectGroup,
+    type VueUiChordEmitSelectLegend,
+    type VueUiChordEmitSelectRibbon,
 } from 'vue-data-ui/vue-ui-chord';
 import { mergeConfigs } from 'vue-data-ui/utils';
 
@@ -64,11 +68,34 @@ const config = computed<VueUiChordConfig>(() => {
 function log(n: unknown) {
     console.log(n);
 }
+
+function selectLegend(payload: VueUiChordEmitSelectLegend) {
+    console.log('@selectLegend', payload);
+}
+
+function selectGroup(payload: VueUiChordEmitSelectGroup) {
+    console.log('@selectGroup', payload);
+}
+
+function selectRibbon(payload: VueUiChordEmitSelectRibbon) {
+    console.log('@selectRibbon', payload);
+}
+
+function copyAlt(payload: VueUiChordEmitCopyAlt) {
+    console.log('@copyAlt', payload);
+}
 </script>
 
 <template>
     <div>
-        <VueUiChord :dataset :config>
+        <VueUiChord
+            :dataset
+            :config
+            @selectLegend="selectLegend"
+            @selectGroup="selectGroup"
+            @selectRibbon="selectRibbon"
+            @copyAlt="copyAlt"
+        >
             <template #annotator-action-close>
                 <span style="color: chocolate">X</span>
             </template>

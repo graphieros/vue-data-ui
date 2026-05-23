@@ -7,6 +7,7 @@ import {
     VueUiSparkbar,
     type VueUiSparkbarConfig,
     type VueUiSparkbarDatasetItem,
+    type VueUiSparkbarEmitSelectDatapoint,
 } from 'vue-data-ui/vue-ui-sparkbar';
 import 'vue-data-ui/style.css';
 
@@ -106,11 +107,15 @@ const config = computed<VueUiSparkbarConfig>(() => {
 function log(n: unknown) {
     console.log(n);
 }
+
+function selectDatapoint(payload: VueUiSparkbarEmitSelectDatapoint) {
+    console.log('@selectDatapoint', payload);
+}
 </script>
 
 <template>
     <div>
-        <VueUiSparkbar :dataset :config>
+        <VueUiSparkbar :dataset :config @selectDatapoint="selectDatapoint">
             <template #title="{ title: t }">
                 <code style="color: chocolate">#title</code>
                 <h2>{{ t.title }}</h2>

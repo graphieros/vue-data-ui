@@ -27,6 +27,9 @@ import type {
     VueUiRadarLegendSlotProps,
     VueUiRadarTooltipSlotProps,
     CommonAnnotatorSlots,
+    VueUiRadarEmits,
+    VueUiRadarEmitSelectLegend,
+    VueUiRadarEmitCopyAlt,
 } from 'vue-data-ui';
 
 export type {
@@ -56,9 +59,21 @@ export type {
     VueUiRadarLegendSlotProps,
     VueUiRadarTooltipSlotProps,
     CommonAnnotatorSlots,
+    VueUiRadarEmits,
+    VueUiRadarEmitSelectLegend,
+    VueUiRadarEmitCopyAlt,
 };
 
-declare const VueUiRadarBase: DefineComponent<VueUiRadarProps>;
+declare const VueUiRadarBase: DefineComponent<
+    VueUiRadarProps,
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    VueUiRadarEmits
+>;
 
 export const VueUiRadar: typeof VueUiRadarBase & {
     new (): VueUiRadarExpose & {

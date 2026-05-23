@@ -20,6 +20,9 @@ import type {
     VueUiWatermarkSlotProps,
     VueUiHeatmapTooltipSlotProps,
     CommonAnnotatorSlots,
+    VueUiHeatmapEmits,
+    VueUiHeatmapEmitSelectDatapoint,
+    VueUiHeatmapEmitCopyAlt,
 } from 'vue-data-ui';
 
 export type {
@@ -42,9 +45,21 @@ export type {
     VueUiWatermarkSlotProps,
     VueUiHeatmapTooltipSlotProps,
     CommonAnnotatorSlots,
+    VueUiHeatmapEmits,
+    VueUiHeatmapEmitSelectDatapoint,
+    VueUiHeatmapEmitCopyAlt,
 };
 
-declare const VueUiHeatmapBase: DefineComponent<VueUiHeatmapProps>;
+declare const VueUiHeatmapBase: DefineComponent<
+    VueUiHeatmapProps,
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    VueUiHeatmapEmits
+>;
 
 export const VueUiHeatmap: typeof VueUiHeatmapBase & {
     new (): VueUiHeatmapExpose & {

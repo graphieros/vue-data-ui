@@ -15,6 +15,8 @@ import type {
     VueUiFunnelSvgSlotProps,
     VueUiWatermarkSlotProps,
     CommonAnnotatorSlots,
+    VueUiFunnelEmits,
+    VueUiFunnelEmitCopyAlt,
 } from 'vue-data-ui';
 
 export type {
@@ -32,9 +34,20 @@ export type {
     VueUiFunnelSvgSlotProps,
     VueUiWatermarkSlotProps,
     CommonAnnotatorSlots,
+    VueUiFunnelEmits,
+    VueUiFunnelEmitCopyAlt,
 };
 
-declare const VueUiFunnelBase: DefineComponent<VueUiFunnelProps>;
+declare const VueUiFunnelBase: DefineComponent<
+    VueUiFunnelProps,
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    VueUiFunnelEmits
+>;
 
 export const VueUiFunnel: typeof VueUiFunnelBase & {
     new (): VueUiFunnelExpose & {

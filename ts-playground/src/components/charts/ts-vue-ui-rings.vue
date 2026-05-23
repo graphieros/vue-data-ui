@@ -7,6 +7,8 @@ import {
     VueUiRings,
     type VueUiRingsConfig,
     type VueUiRingsDatasetItem,
+    type VueUiRingsEmitCopyAlt,
+    type VueUiRingsEmitSelectLegend,
 } from 'vue-data-ui/vue-ui-rings';
 import { mergeConfigs } from 'vue-data-ui/utils';
 
@@ -282,11 +284,24 @@ const config = computed<VueUiRingsConfig>(() => {
 function log(n: unknown) {
     console.log(n);
 }
+
+function selectLegend(payload: VueUiRingsEmitSelectLegend) {
+    console.log('@selectLegend', payload);
+}
+
+function copyAlt(payload: VueUiRingsEmitCopyAlt) {
+    console.log('@copyAlt', payload);
+}
 </script>
 
 <template>
     <div style="max-width: 500px">
-        <VueUiRings :dataset :config>
+        <VueUiRings
+            :dataset
+            :config
+            @selectLegend="selectLegend"
+            @copyAlt="copyAlt"
+        >
             <template #annotator-action-close>
                 <span style="color: chocolate">X</span>
             </template>

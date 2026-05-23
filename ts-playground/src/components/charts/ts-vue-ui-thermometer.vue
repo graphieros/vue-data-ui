@@ -7,6 +7,7 @@ import {
     VueUiThermometer,
     type VueUiThermometerConfig,
     type VueUiThermometerDataset,
+    type VueUiThermometerEmitCopyAlt,
 } from 'vue-data-ui/vue-ui-thermometer';
 import { mergeConfigs } from 'vue-data-ui/utils';
 import 'vue-data-ui/style.css';
@@ -181,11 +182,15 @@ const config = computed<VueUiThermometerConfig>(() => {
 function log(n: unknown) {
     console.log(n);
 }
+
+function copyAlt(payload: VueUiThermometerEmitCopyAlt) {
+    console.log('@copyAlt', payload);
+}
 </script>
 
 <template>
     <div style="max-width: 400px">
-        <VueUiThermometer :dataset :config>
+        <VueUiThermometer :dataset :config @copyAlt="copyAlt">
             <template #annotator-action-close>
                 <span style="color: chocolate">X</span>
             </template>

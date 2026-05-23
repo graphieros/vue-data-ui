@@ -22,6 +22,12 @@ import type {
     VueUiStackbarLegendItem,
     VueUiStackbarLegendSlotProps,
     VueUiResetActionSlotProps,
+    VueUiStackbarEmits,
+    VueUiStackbarEmitSelectDatapoint,
+    VueUiStackbarEmitSelectLegend,
+    VueUiStackbarEmitSelectTimeLabel,
+    VueUiStackbarEmitSelectX,
+    VueUiStackbarEmitCopyAlt,
 } from 'vue-data-ui';
 
 export type {
@@ -46,9 +52,24 @@ export type {
     VueUiStackbarLegendItem,
     VueUiStackbarLegendSlotProps,
     VueUiResetActionSlotProps,
+    VueUiStackbarEmits,
+    VueUiStackbarEmitSelectDatapoint,
+    VueUiStackbarEmitSelectLegend,
+    VueUiStackbarEmitSelectTimeLabel,
+    VueUiStackbarEmitSelectX,
+    VueUiStackbarEmitCopyAlt,
 };
 
-declare const VueUiStackbarBase: DefineComponent<VueUiStackbarProps>;
+declare const VueUiStackbarBase: DefineComponent<
+    VueUiStackbarProps,
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    VueUiStackbarEmits
+>;
 
 export const VueUiStackbar: typeof VueUiStackbarBase & {
     new (): VueUiStackbarExpose & {

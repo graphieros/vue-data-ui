@@ -333,7 +333,7 @@ function onChartLeave() {
     tooltipTriggerMode.value = 'pointer';
     isTooltip.value = false;
     selectedSerieIndex.value = null;
-    emit('selectX', { seriesIndex: null, datapoint: null });
+    emit('selectX', { index: null, indexLabel: null, dataset: null });
 }
 
 function prepareConfig() {
@@ -2285,7 +2285,7 @@ function toggleTooltipVisibility(
     } else {
         activeTooltipIndex.value = null;
         selectedSerieIndex.value = null;
-        emit('selectX', { seriesIndex: null, dataset: null, indexLabel: null });
+        emit('selectX', { index: null, indexLabel: null, dataset: null });
         if (FINAL_CONFIG.value.events.datapointLeave) {
             FINAL_CONFIG.value.events.datapointLeave({
                 datapoint,
@@ -3132,7 +3132,7 @@ function onSvgBlur() {
     tooltipTriggerMode.value = 'pointer';
     isTooltip.value = false;
     selectedSerieIndex.value = null;
-    emit('selectX', { seriesIndex: null, datapoint: null });
+    emit('selectX', { index: null, indexLabel: null, dataset: null });
     isFocus.value = false;
 }
 
@@ -3158,7 +3158,7 @@ function onSvgKeydown(event) {
         tooltipTriggerMode.value = 'pointer';
         isTooltip.value = false;
         selectedSerieIndex.value = null;
-        emit('selectX', { seriesIndex: null, datapoint: null });
+        emit('selectX', { index: null, indexLabel: null, dataset: null });
         return;
     }
 

@@ -25,6 +25,11 @@ import type {
     VueUiChordPatternSlotProps,
     VueUiResetActionSlotProps,
     CommonAnnotatorSlots,
+    VueUiChordEmits,
+    VueUiChordEmitSelectLegend,
+    VueUiChordEmitSelectGroup,
+    VueUiChordEmitSelectRibbon,
+    VueUiChordEmitCopyAlt,
 } from 'vue-data-ui';
 
 export type {
@@ -52,9 +57,23 @@ export type {
     VueUiChordPatternSlotProps,
     VueUiResetActionSlotProps,
     CommonAnnotatorSlots,
+    VueUiChordEmits,
+    VueUiChordEmitSelectLegend,
+    VueUiChordEmitSelectGroup,
+    VueUiChordEmitSelectRibbon,
+    VueUiChordEmitCopyAlt,
 };
 
-declare const VueUiChordBase: DefineComponent<VueUiChordProps>;
+declare const VueUiChordBase: DefineComponent<
+    VueUiChordProps,
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    VueUiChordEmits
+>;
 
 export const VueUiChord: typeof VueUiChordBase & {
     new (): VueUiChordExpose & {

@@ -20,6 +20,9 @@ import type {
     VueUi3dBarSvgSlotProps,
     VueUiWatermarkSlotProps,
     CommonAnnotatorSlots,
+    VueUi3dBarEmits,
+    VueUi3dBarEmitSelectDatapoint,
+    VueUi3dBarEmitCopyAlt,
 } from 'vue-data-ui';
 
 export type {
@@ -42,9 +45,21 @@ export type {
     VueUi3dBarSvgSlotProps,
     VueUiWatermarkSlotProps,
     CommonAnnotatorSlots,
+    VueUi3dBarEmits,
+    VueUi3dBarEmitSelectDatapoint,
+    VueUi3dBarEmitCopyAlt,
 };
 
-declare const VueUi3dBarBase: DefineComponent<VueUi3dBarProps>;
+declare const VueUi3dBarBase: DefineComponent<
+    VueUi3dBarProps,
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    VueUi3dBarEmits
+>;
 
 export const VueUi3dBar: typeof VueUi3dBarBase & {
     new (): VueUi3dBarExpose & {

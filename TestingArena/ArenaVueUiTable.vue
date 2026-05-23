@@ -319,7 +319,7 @@ onMounted(() => {
             ref="table"
             :dataset="dataset"
             :config="config"
-            @page-change="pageChange"
+            @pageChange="pageChange"
         />
         <LocalVueDataUi
             component="VueUiTable"

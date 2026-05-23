@@ -7,6 +7,8 @@ import {
     VueUiHeatmap,
     type VueUiHeatmapDatasetItem,
     type VueUiHeatmapConfig,
+    type VueUiHeatmapEmitSelectDatapoint,
+    type VueUiHeatmapEmitCopyAlt,
 } from 'vue-data-ui/vue-ui-heatmap';
 import { mergeConfigs } from 'vue-data-ui/utils';
 
@@ -339,11 +341,24 @@ const config = computed<VueUiHeatmapConfig>(() => {
 function log(n: unknown) {
     console.log(n);
 }
+
+function selectDatapoint(payload: VueUiHeatmapEmitSelectDatapoint) {
+    console.log('@selectDatapoint', payload);
+}
+
+function copyAlt(payload: VueUiHeatmapEmitCopyAlt) {
+    console.log('@copyAlt', payload);
+}
 </script>
 
 <template>
     <div>
-        <VueUiHeatmap :dataset :config>
+        <VueUiHeatmap
+            :dataset
+            :config
+            @selectDatapoint="selectDatapoint"
+            @copyAlt="copyAlt"
+        >
             <template #annotator-action-close>
                 <span style="color: chocolate">X</span>
             </template>

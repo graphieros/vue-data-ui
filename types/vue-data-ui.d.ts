@@ -760,6 +760,7 @@ declare module 'vue-data-ui' {
         id?: string;
         name?: string;
         value?: string;
+        sourceColor?: string;
     };
 
     export type VueUiTreemapExpose = {
@@ -842,7 +843,31 @@ declare module 'vue-data-ui' {
         dataset: VueUiTreemapDatasetItem[];
     };
 
-    const VueUiTreemapBase: DefineComponent<VueUiTreemapProps>;
+    export type VueUiTreemapEmitSelectLegend = VueUiTreemapSeriesItem[];
+
+    export type VueUiTreemapEmitSelectDatapoint = VueUiTreemapDatapoint;
+
+    export type VueUiTreemapEmitCopyAlt = {
+        config: VueUiTreemapConfig;
+        dataset: VueUiTreemapDatapoint[];
+    };
+
+    export type VueUiTreemapEmits = {
+        selectLegend: (payload: VueUiTreemapEmitSelectLegend) => void;
+        selectDatapoint: (payload: VueUiTreemapEmitSelectDatapoint) => void;
+        copyAlt: (payload: VueUiTreemapEmitCopyAlt) => void;
+    };
+
+    const VueUiTreemapBase: DefineComponent<
+        VueUiTreemapProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiTreemapEmits
+    >;
 
     export const VueUiTreemap: typeof VueUiTreemapBase & {
         new (): VueUiTreemapExpose & {
@@ -1136,7 +1161,41 @@ declare module 'vue-data-ui' {
         dataset: VueUiGalaxyDatasetItem[];
     };
 
-    const VueUiGalaxyBase: DefineComponent<VueUiGalaxyProps>;
+    export type VueUiGalaxyEmitSelectLegend = Array<{
+        name: string;
+        color: string;
+        value: number;
+    }>;
+
+    export type VueUiGalaxyEmitSelectDatapoint =
+        VueUiGalaxyFormattedDatapoint & {
+            path: string;
+            points: number;
+            proportion: number;
+            seriesIndex: number;
+        };
+
+    export type VueUiGalaxyEmitCopyAlt = {
+        config: VueUiGalaxyConfig;
+        dataset: VueUiGalaxyFormattedDatapoint[];
+    };
+
+    export type VueUiGalaxyEmits = {
+        selectLegend: (payload: VueUiGalaxyEmitSelectLegend) => void;
+        selectDatapoint: (payload: VueUiGalaxyEmitSelectDatapoint) => void;
+        copyAlt: (payload: VueUiGalaxyEmitCopyAlt) => void;
+    };
+
+    const VueUiGalaxyBase: DefineComponent<
+        VueUiGalaxyProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiGalaxyEmits
+    >;
 
     export const VueUiGalaxy: typeof VueUiGalaxyBase & {
         new (): VueUiGalaxyExpose & {
@@ -1387,7 +1446,25 @@ declare module 'vue-data-ui' {
         config: VueUiTableSparklineConfig;
     };
 
-    const VueUiTableSparklineBase: DefineComponent<VueUiTableSparklineProps>;
+    export type VueUiTableSparklineEmitCopyAlt = {
+        config: VueUiTableSparklineConfig;
+        dataset: VueUiTableSparklineFormattedDatasetItem[];
+    };
+
+    export type VueUiTableSparklineEmits = {
+        copyAlt: (payload: VueUiTableSparklineEmitCopyAlt) => void;
+    };
+
+    const VueUiTableSparklineBase: DefineComponent<
+        VueUiTableSparklineProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiTableSparklineEmits
+    >;
 
     export const VueUiTableSparkline: typeof VueUiTableSparklineBase & {
         new (): {
@@ -1483,7 +1560,7 @@ declare module 'vue-data-ui' {
         color: string;
         name: string;
         details?: string;
-        nodes?: VueUiMoleculeDatapoint;
+        nodes?: VueUiMoleculeDatapoint[];
         ancestor?: VueUiMoleculeDatapoint;
         polygonPath: {
             coordinates: Array<{
@@ -1561,7 +1638,28 @@ declare module 'vue-data-ui' {
         config?: VueUiMoleculeConfig;
     };
 
-    const VueUiMoleculeBase: DefineComponent<VueUiMoleculeProps>;
+    export type VueUiMoleculeEmitSelectNode = VueUiMoleculeDatapoint;
+
+    export type VueUiMoleculeEmitCopyAlt = {
+        config: VueUiMoleculeConfig;
+        dataset: VueUiMoleculeDatapoint[];
+    };
+
+    export type VueUiMoleculeEmits = {
+        selectNode: (payload: VueUiMoleculeEmitSelectNode) => void;
+        copyAlt: (payload: VueUiMoleculeEmitCopyAlt) => void;
+    };
+
+    const VueUiMoleculeBase: DefineComponent<
+        VueUiMoleculeProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiMoleculeEmits
+    >;
 
     export const VueUiMolecule: typeof VueUiMoleculeBase & {
         new (): VueUiMoleculeExpose & {
@@ -1761,7 +1859,37 @@ declare module 'vue-data-ui' {
         dataset: VueUi3dBarDataset;
     };
 
-    const VueUi3dBarBase: DefineComponent<VueUi3dBarProps>;
+    export type VueUi3dBarEmitSelectDatapoint = {
+        breakdown: Array<{ name: string; value: number }>;
+        color: string;
+        fill: Record<string, any>;
+        id: string;
+        name: string;
+        proportion: number;
+        seriesIndex: number;
+        value: number;
+    };
+
+    export type VueUi3dBarEmitCopyAlt = {
+        config: VueUi3dBarConfig;
+        dataset: VueUi3dBarDataset;
+    };
+
+    export type VueUi3dBarEmits = {
+        selectDatapoint: (payload: VueUi3dBarEmitSelectDatapoint) => void;
+        copyAlt: (payload: VueUi3dBarEmitCopyAlt) => void;
+    };
+
+    const VueUi3dBarBase: DefineComponent<
+        VueUi3dBarProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUi3dBarEmits
+    >;
 
     export type VueUi3dBarLegendSlotProps = {
         config: VueUi3dBarConfig;
@@ -1959,7 +2087,25 @@ declare module 'vue-data-ui' {
         config?: VueUiMoodRadarConfig;
     };
 
-    const VueUiMoodRadarBase: DefineComponent<VueUiMoodRadarProps>;
+    export type VueUiMoodRadarEmitCopyAlt = {
+        config: VueUiMoodRadarConfig;
+        dataset: VueUiMoodRadarDatapoint[];
+    };
+
+    export type VueUiMoodRadarEmits = {
+        copyAlt: (payload: VueUiMoodRadarEmitCopyAlt) => void;
+    };
+
+    const VueUiMoodRadarBase: DefineComponent<
+        VueUiMoodRadarProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiMoodRadarEmits
+    >;
 
     export const VueUiMoodRadar: typeof VueUiMoodRadarBase & {
         new (): VueUiMoodRadarExpose & {
@@ -2466,16 +2612,16 @@ declare module 'vue-data-ui' {
         color?: string;
     };
 
+    export type VueUiDonutEvolutionSeries = {
+        color: string;
+        length: number;
+        name: string;
+        uid: string;
+        values: Array<number | null>;
+    };
+
     export type VueUiDonutEvolutionExpose = {
-        getData(): Promise<
-            Array<{
-                color: string;
-                length: number;
-                name: string;
-                uid: string;
-                values: Array<number | null>;
-            }>
-        >;
+        getData(): Promise<Array<VueUiDonutEvolutionSeries>>;
         getImage(options?: { scale?: number }): GetImagePromise;
         generateCsv(): void;
         generateImage(): void;
@@ -2529,7 +2675,29 @@ declare module 'vue-data-ui' {
         dataset: VueUiDonutEvolutionDatasetItem[];
     };
 
-    const VueUiDonutEvolutionBase: DefineComponent<VueUiDonutEvolutionProps>;
+    export type VueUiDonutEvolutionEmitSelectLegend =
+        VueUiDonutEvolutionSeries[];
+
+    export type VueUiDonutEvolutionEmitCopyAlt = {
+        config: VueUiDonutEvolutionConfig;
+        dataset: VueUiDonutEvolutionDatapoint[];
+    };
+
+    export type VueUiDonutEvolutionEmits = {
+        selectLegend: (payload: VueUiDonutEvolutionEmitSelectLegend) => void;
+        copyAlt: (payload: VueUiDonutEvolutionEmitCopyAlt) => void;
+    };
+
+    const VueUiDonutEvolutionBase: DefineComponent<
+        VueUiDonutEvolutionProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiDonutEvolutionEmits
+    >;
 
     export const VueUiDonutEvolution: typeof VueUiDonutEvolutionBase & {
         new (): VueUiDonutEvolutionExpose & {
@@ -2647,7 +2815,25 @@ declare module 'vue-data-ui' {
         dataset: VueUiTiremarksDataset;
     };
 
-    const VueUiTiremarksBase: DefineComponent<VueUiTiremarksProps>;
+    export type VueUiTiremarksEmitCopyAlt = {
+        config: VueUiTiremarksConfig;
+        dataset: VueUiTiremarksDataset;
+    };
+
+    export type VueUiTiremarksEmits = {
+        copyAlt: (payload: VueUiTiremarksEmitCopyAlt) => void;
+    };
+
+    const VueUiTiremarksBase: DefineComponent<
+        VueUiTiremarksProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiTiremarksEmits
+    >;
 
     export const VueUiTiremarks: typeof VueUiTiremarksBase & {
         new (): VueUiTiremarksExpose & {
@@ -2766,7 +2952,25 @@ declare module 'vue-data-ui' {
         config?: VueUiWheelConfig;
     };
 
-    const VueUiWheelBase: DefineComponent<VueUiWheelProps>;
+    export type VueUiWheelEmitCopyAlt = {
+        config: VueUiWheelConfig;
+        dataset: VueUiWheelDataset;
+    };
+
+    export type VueUiWheelEmits = {
+        copyAlt: (payload: VueUiWheelEmitCopyAlt) => void;
+    };
+
+    const VueUiWheelBase: DefineComponent<
+        VueUiWheelProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiWheelEmits
+    >;
 
     export const VueUiWheel: typeof VueUiWheelBase & {
         new (): VueUiWheelExpose & {
@@ -2972,7 +3176,32 @@ declare module 'vue-data-ui' {
         dataset: VueUiRingsDatasetItem[];
     };
 
-    const VueUiRingsBase: DefineComponent<VueUiRingsProps>;
+    export type VueUiRingsEmitSelectLegend = Array<{
+        color: string;
+        name: string;
+        value: number;
+    }>;
+
+    export type VueUiRingsEmitCopyAlt = {
+        config: VueUiRingsConfig;
+        dataset: VueUiRingsDatapoint[];
+    };
+
+    export type VueUiRingsEmits = {
+        selectLegend: (payload: VueUiRingsEmitSelectLegend) => void;
+        copyAlt: (payload: VueUiRingsEmitCopyAlt) => void;
+    };
+
+    const VueUiRingsBase: DefineComponent<
+        VueUiRingsProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiRingsEmits
+    >;
 
     export const VueUiRings: typeof VueUiRingsBase & {
         new (): VueUiRingsExpose & {
@@ -3137,7 +3366,27 @@ declare module 'vue-data-ui' {
         dataset: VueUiSparkHistogramDatasetItem[];
     };
 
-    const VueUiSparkHistogramBase: DefineComponent<VueUiSparkHistogramProps>;
+    export type VueUiSparkHistogramEmitSelectDatapoint = {
+        datapoint: VueUiSparkHistogramDatasetItem;
+        index: number;
+    };
+
+    export type VueUiSparkHistogramEmits = {
+        selectDatapoint: (
+            payload: VueUiSparkHistogramEmitSelectDatapoint,
+        ) => void;
+    };
+
+    const VueUiSparkHistogramBase: DefineComponent<
+        VueUiSparkHistogramProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiSparkHistogramEmits
+    >;
 
     export const VueUiSparkHistogram: typeof VueUiSparkHistogramBase & {
         new (): {
@@ -3281,7 +3530,31 @@ declare module 'vue-data-ui' {
         dataset: VueUiSparkStackbarDatasetItem[];
     };
 
-    const VueUiSparkStackbarBase: DefineComponent<VueUiSparkStackbarProps>;
+    export type VueUiSparkStackbarEmitSelectDatapoint = {
+        datapoint: VueUiSparkStackbarDatapoint;
+        index: number;
+    };
+
+    export type VueUiSparkStackbarEmitSelectLegend =
+        VueUiSparkStackbarDatapoint[];
+
+    export type VueUiSparkStackbarEmits = {
+        selectDatapoint: (
+            payload: VueUiSparkStackbarEmitSelectDatapoint,
+        ) => void;
+        selectLegend: (payload: VueUiSparkStackbarEmitSelectLegend) => void;
+    };
+
+    const VueUiSparkStackbarBase: DefineComponent<
+        VueUiSparkStackbarProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiSparkStackbarEmits
+    >;
 
     export const VueUiSparkStackbar: typeof VueUiSparkStackbarBase & {
         new (): VueUiSparkStackbarExpose & {
@@ -3403,7 +3676,25 @@ declare module 'vue-data-ui' {
         dataset: VueUiThermometerDataset;
     };
 
-    const VueUiThermometerBase: DefineComponent<VueUiThermometerProps>;
+    export type VueUiThermometerEmitCopyAlt = {
+        config: VueUiThermometerConfig;
+        dataset: VueUiThermometerDataset;
+    };
+
+    export type VueUiThermometerEmits = {
+        copyAlt: (payload: VueUiThermometerEmitCopyAlt) => void;
+    };
+
+    const VueUiThermometerBase: DefineComponent<
+        VueUiThermometerProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiThermometerEmits
+    >;
 
     export const VueUiThermometer: typeof VueUiThermometerBase & {
         new (): VueUiThermometerExpose & {
@@ -3546,7 +3837,30 @@ declare module 'vue-data-ui' {
         dataset: VueUiRelationCircleDatasetItem[];
     };
 
-    const VueUiRelationCircleBase: DefineComponent<VueUiRelationCircleProps>;
+    export type VueUiRelationCircleEmitCopyAlt = {
+        config: VueUiRelationCircleConfig;
+        dataset: Array<
+            Omit<
+                VueUiRelationCircleDatapoint,
+                'regAngle' | 'totalWeight' | 'x' | 'y'
+            >
+        >;
+    };
+
+    export type VueUiRelationCircleEmits = {
+        copyAlt: (payload: VueUiRelationCircleEmitCopyAlt) => void;
+    };
+
+    const VueUiRelationCircleBase: DefineComponent<
+        VueUiRelationCircleProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiRelationCircleEmits
+    >;
 
     export const VueUiRelationCircle: typeof VueUiRelationCircleBase & {
         new (): VueUiRelationCircleExpose & {
@@ -3658,10 +3972,43 @@ declare module 'vue-data-ui' {
 
     export type VueUiAnnotatorDataset = VueUiUnknownObj;
 
-    export const VueUiAnnotator: DefineComponent<{
+    export type VueUiAnnotatorProps = {
         config?: VueUiAnnotatorConfig;
         dataset?: VueUiAnnotatorDataset;
-    }>;
+    };
+
+    export type VueUiAnnotatorEmitToggleOpenState = {
+        isOpen: boolean;
+    };
+
+    export type VueUiAnnotatorShape = {
+        [key: string]: any;
+        id: string;
+        type: 'arrow' | 'text' | 'rect' | 'line' | 'circle';
+        x: number;
+        y: number;
+    };
+
+    export type VueUiAnnotatorEmitSaveAnnotations = {
+        shapes: VueUiAnnotatorShape[];
+        lastSelectedShape: VueUiAnnotatorShape;
+    };
+
+    export type VueUiAnnotatorEmits = {
+        toggleOpenState: (payload: VueUiAnnotatorEmitToggleOpenState) => void;
+        saveAnnotations: (payload: VueUiAnnotatorEmitSaveAnnotations) => void;
+    };
+
+    export const VueUiAnnotator: DefineComponent<
+        VueUiAnnotatorProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiAnnotatorEmits
+    >;
 
     export type VueUiDashboardConfig = {
         locked?: boolean;
@@ -3790,7 +4137,27 @@ declare module 'vue-data-ui' {
         dataset: VueUiDashboardElement[];
     };
 
-    const VueUiDashboardBase: DefineComponent<VueUiDashboardProps>;
+    export type VueUiDashboardEmitChange = VueUiDashboardPlacedElement[];
+    export type VueUiDashboardEmitCopyAlt = {
+        config: VueUiDashboardConfig;
+        dataset: VueUiDashboardPlacedElement[];
+    };
+
+    export type VueUiDashboardEmits = {
+        change: (payload: VueUiDashboardEmitChange) => void;
+        copyAlt: (payload: VueUiDashboardEmitCopyAlt) => void;
+    };
+
+    const VueUiDashboardBase: DefineComponent<
+        VueUiDashboardProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiDashboardEmits
+    >;
 
     export const VueUiDashboard: typeof VueUiDashboardBase & {
         new (): {
@@ -3922,7 +4289,25 @@ declare module 'vue-data-ui' {
         dataset: VueUiSparkbarDatasetItem[];
     };
 
-    const VueUiSparkbarBase: DefineComponent<VueUiSparkbarProps>;
+    export type VueUiSparkbarEmitSelectDatapoint = {
+        datapoint: VueUiSparkbarDatasetItem;
+        index: number;
+    };
+
+    export type VueUiSparkbarEmits = {
+        selectDatapoint: (payload: VueUiSparkbarEmitSelectDatapoint) => void;
+    };
+
+    const VueUiSparkbarBase: DefineComponent<
+        VueUiSparkbarProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiSparkbarEmits
+    >;
 
     export const VueUiSparkbar: typeof VueUiSparkbarBase & {
         new (): {
@@ -4138,7 +4523,30 @@ declare module 'vue-data-ui' {
         dataset: VueUiAgePyramidDataset;
     };
 
-    const VueUiAgePyramidBase: DefineComponent<VueUiAgePyramidProps>;
+    export type VueUiAgePyramidEmitCopyAlt = {
+        config: VueUiAgePyramidConfig;
+        dataset: Array<{
+            age: number;
+            left: VueUiAgePyramidSideData;
+            right: VueUiAgePyramidSideData;
+            segment: string;
+        }>;
+    };
+
+    export type VueUiAgePyramidEmits = {
+        copyAlt: (payload: VueUiAgePyramidEmitCopyAlt) => void;
+    };
+
+    const VueUiAgePyramidBase: DefineComponent<
+        VueUiAgePyramidProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiAgePyramidEmits
+    >;
 
     export const VueUiAgePyramid: typeof VueUiAgePyramidBase & {
         new (): VueUiAgePyramidExpose & {
@@ -4428,7 +4836,31 @@ declare module 'vue-data-ui' {
         selectedXIndex?: number | null;
     };
 
-    const VueUiCandlestickBase: DefineComponent<VueUiCandlestickProps>;
+    export type VueUiCandlestickEmitSelectX = {
+        dataset: VueUiCandlestickDatapoint[];
+        config: VueUiCandlestickConfig;
+    };
+
+    export type VueUiCandlestickEmitCopyAlt = {
+        dataset: VueUiCandlestickDatapoint[];
+        config: VueUiCandlestickConfig;
+    };
+
+    export type VueUiCandlestickEmits = {
+        selectX: (payload: VueUiCandlestickEmitSelectX) => void;
+        copyAlt: (payload: VueUiCandlestickEmitCopyAlt) => void;
+    };
+
+    const VueUiCandlestickBase: DefineComponent<
+        VueUiCandlestickProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiCandlestickEmits
+    >;
 
     export const VueUiCandlestick: typeof VueUiCandlestickBase & {
         new (): VueUiCandlestickExpose & {
@@ -4819,7 +5251,28 @@ declare module 'vue-data-ui' {
         dataset: VueUiScatterDatasetItem[];
     };
 
-    const VueUiScatterBase: DefineComponent<VueUiScatterProps>;
+    export type VueUiScatterEmitSelectLegend = VueUiScatterSeries[];
+
+    export type VueUiScatterEmitCopyAlt = {
+        config: VueUiScatterConfig;
+        dataset: VueUiScatterSeries[];
+    };
+
+    export type VueUiScatterEmits = {
+        selectLegend: (payload: VueUiScatterEmitSelectLegend) => void;
+        copyAlt: (payload: VueUiScatterEmitCopyAlt) => void;
+    };
+
+    const VueUiScatterBase: DefineComponent<
+        VueUiScatterProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiScatterEmits
+    >;
 
     export const VueUiScatter: typeof VueUiScatterBase & {
         new (): VueUiScatterExpose & {
@@ -5076,7 +5529,28 @@ declare module 'vue-data-ui' {
         dataset: VueUiHeatmapDatasetItem[];
     };
 
-    const VueUiHeatmapBase: DefineComponent<VueUiHeatmapProps>;
+    export type VueUiHeatmapEmitSelectDatapoint = VueUiHeatmapDatapoint;
+
+    export type VueUiHeatmapEmitCopyAlt = {
+        config: VueUiHeatmapConfig;
+        dataset: VueUiHeatmapRow[];
+    };
+
+    export type VueUiHeatmapEmits = {
+        selectDatapoint: (payload: VueUiHeatmapEmitSelectDatapoint) => void;
+        copyAlt: (payload: VueUiHeatmapEmitCopyAlt) => void;
+    };
+
+    const VueUiHeatmapBase: DefineComponent<
+        VueUiHeatmapProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiHeatmapEmits
+    >;
 
     export const VueUiHeatmap: typeof VueUiHeatmapBase & {
         new (): VueUiHeatmapExpose & {
@@ -5631,7 +6105,16 @@ declare module 'vue-data-ui' {
         selectedXIndex?: number | null;
     };
 
-    const VueUiXyBase: DefineComponent<VueUiXyProps>;
+    const VueUiXyBase: DefineComponent<
+        VueUiXyProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiXyEmits
+    >;
 
     export type VueUiXyLegendSlotProps = {
         legend: VueUiXySeries;
@@ -5755,6 +6238,68 @@ declare module 'vue-data-ui' {
     };
     export type VueUiWatermarkSlotProps = {
         isPrinting: boolean;
+    };
+
+    export type VueUiXyEmitSelectTimeLabel = {
+        datapoint: Array<{
+            shape: Shape;
+            name: string;
+            color: string;
+            type: 'line' | 'bar' | 'plot';
+            value: number | null;
+            comments: string[];
+            prefix: string;
+            suffix: string;
+        }>;
+        absoluteIndex: number;
+        label: string;
+    };
+
+    export type VueUiXyEmitSelectX = {
+        datapoint: {
+            name: string;
+            value: number | null;
+            color: string;
+            type: 'line' | 'bar' | 'plot';
+        };
+        index: number;
+        indexLabel: string;
+    };
+
+    export type VueUiXyEmitSelectLegend = Array<{
+        name: string;
+        values: Array<number | null>;
+        color: string;
+        type: 'line' | 'bar' | 'plot';
+    }>;
+
+    export type VueUiXyEmitZoom = {
+        index: number;
+        isZoom: boolean;
+    };
+
+    export type VueUiXyEmitCopyAlt = {
+        config: VueUiXyConfig & {
+            formattedDates: Array<{
+                text: string;
+                absoluteIndex: number;
+            }>;
+        };
+        dataset: {
+            bars: VueUiXyDatasetBarItem[];
+            lines: VueUiXyDatasetLineItem[];
+            plots: VueUiXyDatasetPlotItem[];
+        };
+    };
+
+    export type VueUiXyEmits = {
+        selectTimeLabel: (payload: VueUiXyEmitSelectTimeLabel) => void;
+        selectX: (payload: VueUiXyEmitSelectX) => void;
+        selectLegend: (payload: VueUiXyEmitSelectLegend) => void;
+        zoomStart: (payload: VueUiXyEmitZoom) => void;
+        zoomEnd: (payload: VueUiXyEmitZoom) => void;
+        zoomReset: () => void;
+        copyAlt: (payload: VueUiXyEmitCopyAlt) => void;
     };
 
     export const VueUiXy: typeof VueUiXyBase & {
@@ -6136,7 +6681,36 @@ declare module 'vue-data-ui' {
         dataset: VueUiDonutFormattedDatasetItem[];
     };
 
-    const VueUiDonutBase: DefineComponent<VueUiDonutProps>;
+    export type VueUiDonutEmitSelectLegend = Array<{
+        color: string;
+        name: string;
+        value: number;
+    }>;
+    export type VueUiDonutEmitSelectDatapoint = {
+        index: number;
+        datapoint: VueUiDonutDatapoint;
+    };
+    export type VueUiDonutEmitCopyAlt = {
+        config: VueUiDonutConfig;
+        dataset: VueUiDonutFormattedDatasetItem[];
+    };
+
+    export type VueUiDonutEmits = {
+        selectLegend: (payload: VueUiDonutEmitSelectLegend) => void;
+        selectDatapoint: (payload: VueUiDonutEmitSelectDatapoint) => void;
+        copyAlt: (payload: VueUiDonutEmitCopyAlt) => void;
+    };
+
+    const VueUiDonutBase: DefineComponent<
+        VueUiDonutProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiDonutEmits
+    >;
 
     export const VueUiDonut: typeof VueUiDonutBase & {
         new (): VueUiDonutExpose & {
@@ -6373,26 +6947,26 @@ declare module 'vue-data-ui' {
         value: number;
     };
 
+    export type VueUiNestedDonutsFormattedSeries = {
+        datasetIndex: number;
+        id: string;
+        name: string;
+        series: Array<{
+            absoluteValues: number[];
+            arcOf: string;
+            arcOfId: string;
+            color: string;
+            datasetIndex: number;
+            id: string;
+            name: string;
+            seriesIndex: number;
+            value: 0;
+        }>;
+        total: number;
+    };
+
     export type VueUiNestedDonutsExpose = {
-        getData(): Promise<
-            Array<{
-                datasetIndex: number;
-                id: string;
-                name: string;
-                series: Array<{
-                    absoluteValues: number[];
-                    arcOf: string;
-                    arcOfId: string;
-                    color: string;
-                    datasetIndex: number;
-                    id: string;
-                    name: string;
-                    seriesIndex: number;
-                    value: 0;
-                }>;
-                total: number;
-            }>
-        >;
+        getData(): Promise<VueUiNestedDonutsFormattedSeries[]>;
         getImage(options?: { scale?: number }): GetImagePromise;
         generateCsv(): void;
         generateImage(): void;
@@ -6451,7 +7025,35 @@ declare module 'vue-data-ui' {
         dataset: VueUiNestedDonutsDatasetItem[];
     };
 
-    const VueUiNestedDonutsBase: DefineComponent<VueUiNestedDonutsProps>;
+    export type VueUiNestedDonutsEmitSelectLegend =
+        VueUiNestedDonutsFormattedSeries[];
+
+    export type VueUiNestedDonutsEmitSelectDatapoint = {
+        datapoint: VueUiNestedDonutsDatapoint;
+        index: number;
+    };
+
+    export type VueUiNestedDonutsEmitCopyAlt =
+        VueUiNestedDonutsFormattedSeries[];
+
+    export type VueUiNestedDonutsEmits = {
+        selectLegend: (payload: VueUiNestedDonutsEmitSelectLegend) => void;
+        selectDatapoint: (
+            payload: VueUiNestedDonutsEmitSelectDatapoint,
+        ) => void;
+        copyAlt: (payload: VueUiNestedDonutsEmitCopyAlt) => void;
+    };
+
+    const VueUiNestedDonutsBase: DefineComponent<
+        VueUiNestedDonutsProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiNestedDonutsEmits
+    >;
 
     export const VueUiNestedDonuts: typeof VueUiNestedDonutsBase & {
         new (): VueUiNestedDonutsExpose & {
@@ -6728,7 +7330,33 @@ declare module 'vue-data-ui' {
         dataset: VueUiWaffleDatasetItem[];
     };
 
-    const VueUiWaffleBase: DefineComponent<VueUiWaffleProps>;
+    export type VueUiWaffleEmitSelectLegend = Array<{
+        color: string;
+        name: string;
+        proportion: number;
+        value: number;
+    }>;
+
+    export type VueUiWaffleEmitCopyAlt = {
+        config: VueUiWaffleConfig;
+        dataset: VueUiWaffleDatapoint[];
+    };
+
+    export type VueUiWaffleEmits = {
+        selectLegend: (payload: VueUiWaffleEmitSelectLegend) => void;
+        copyAlt: (payload: VueUiWaffleEmitCopyAlt) => void;
+    };
+
+    const VueUiWaffleBase: DefineComponent<
+        VueUiWaffleProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiWaffleEmits
+    >;
 
     export const VueUiWaffle: typeof VueUiWaffleBase & {
         new (): VueUiWaffleExpose & {
@@ -6985,7 +7613,32 @@ declare module 'vue-data-ui' {
         dataset: VueUiRadarDataset;
     };
 
-    const VueUiRadarBase: DefineComponent<VueUiRadarProps>;
+    export type VueUiRadarEmitSelectLegend = Array<{
+        color: string;
+        name: string;
+        proportion: number;
+    }>;
+
+    export type VueUiRadarEmitCopyAlt = {
+        config: VueUiRadarConfig;
+        dataset: VueUiRadarDatapoint[];
+    };
+
+    export type VueUiRadarEmits = {
+        selectLegend: (payload: VueUiRadarEmitSelectLegend) => void;
+        copyAlt: (payload: VueUiRadarEmitCopyAlt) => void;
+    };
+
+    const VueUiRadarBase: DefineComponent<
+        VueUiRadarProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiRadarEmits
+    >;
 
     export const VueUiRadar: typeof VueUiRadarBase & {
         new (): VueUiRadarExpose & {
@@ -7032,12 +7685,33 @@ declare module 'vue-data-ui' {
         y: number;
     };
 
+    export type VueUiQuadrantSide = {
+        items: Array<{
+            category: string;
+            itemName: string;
+            x: number;
+            y: number;
+        }>;
+        quadrantSide: string;
+        sideName: string;
+    };
+
     export type VueUiQuadrantDatasetItem = {
         [key: string]: any;
         name: string;
         shape?: Shape;
         color?: string;
         series: VueUiQuadrantDatasetSerieItem[];
+    };
+
+    export type VueUiQuadrantPlot = {
+        category: string;
+        itemName: string;
+        quadrantSide: string;
+        shape: Shape;
+        sideName: string;
+        x: number;
+        y: number;
     };
 
     export type VueUiQuadrantSideConfig = {
@@ -7212,21 +7886,21 @@ declare module 'vue-data-ui' {
         shape: Shape;
     };
 
+    export type VueUiQuadrantFormattedSeries = {
+        color: string;
+        name: string;
+        shape: string;
+        series: Array<{
+            name: string;
+            x: number;
+            y: number;
+            quadrantSide: string;
+            sideName: string;
+        }>;
+    };
+
     export type VueUiQuadrantExpose = {
-        getData(): Promise<
-            Array<{
-                color: string;
-                name: string;
-                shape: string;
-                series: Array<{
-                    name: string;
-                    x: number;
-                    y: number;
-                    quadrantSide: string;
-                    sideName: string;
-                }>;
-            }>
-        >;
+        getData(): Promise<Array<VueUiQuadrantFormattedSeries>>;
         getImage(options?: { scale?: number }): GetImagePromise;
         generatePdf(): void;
         generateCsv(): void;
@@ -7294,7 +7968,34 @@ declare module 'vue-data-ui' {
         config?: VueUiQuadrantConfig;
     };
 
-    const VueUiQuadrantBase: DefineComponent<VueUiQuadrantProps>;
+    export type VueUiQuadrantEmitSelectPlot = VueUiQuadrantPlot;
+
+    export type VueUiQuadrantEmitSelectSide = VueUiQuadrantSide;
+
+    export type VueUiQuadrantEmitSelectLegend = VueUiQuadrantFormattedSeries[];
+
+    export type VueUiQuadrantEmitCopyAlt = {
+        config: VueUiQuadrantConfig;
+        dataset: VueUiQuadrantFormattedSeries[];
+    };
+
+    export type VueUiQuadrantEmits = {
+        selectPlot: (payload: VueUiQuadrantEmitSelectPlot) => void;
+        selectSide: (payload: VueUiQuadrantEmitSelectSide) => void;
+        selectLegend: (payload: VueUiQuadrantEmitSelectLegend) => void;
+        copyAlt: (payload: VueUiQuadrantEmitCopyAlt) => void;
+    };
+
+    const VueUiQuadrantBase: DefineComponent<
+        VueUiQuadrantProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiQuadrantEmits
+    >;
 
     export const VueUiQuadrant: typeof VueUiQuadrantBase & {
         new (): VueUiQuadrantExpose & {
@@ -7491,7 +8192,25 @@ declare module 'vue-data-ui' {
         dataset: VueUiGaugeDataset;
     };
 
-    const VueUiGaugeBase: DefineComponent<VueUiGaugeProps>;
+    export type VueUiGaugeEmitCopyAlt = {
+        config: VueUiGaugeConfig;
+        dataset: VueUiGaugeDataset;
+    };
+
+    export type VueUiGaugeEmits = {
+        copyAlt: (payload: VueUiGaugeEmitCopyAlt) => void;
+    };
+
+    const VueUiGaugeBase: DefineComponent<
+        VueUiGaugeProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiGaugeEmits
+    >;
 
     export const VueUiGauge: typeof VueUiGaugeBase & {
         new (): VueUiGaugeExpose & {
@@ -7824,7 +8543,31 @@ declare module 'vue-data-ui' {
         dataset: VueUiChestnutDatasetRoot[];
     };
 
-    const VueUiChestnutBase: DefineComponent<VueUiChestnutProps>;
+    export type VueUiChestnutEmitSelectRoot = VueUiChestnutDatapointRoot;
+    export type VueUiChestnutEmitSelectBranch = VueUiChestnutDatapointBranch;
+    export type VueUiChestnutEmitSelectNut = VueUiChestnutDatapointNut[];
+    export type VueUiChestnutEmitCopyAlt = {
+        config: VueUiChestnutConfig;
+        dataset: VueUiChestnutDatapointRoot[];
+    };
+
+    export type VueUiChestnutEmits = {
+        selectRoot: (event: VueUiChestnutEmitSelectRoot) => void;
+        selectBranch: (event: VueUiChestnutEmitSelectBranch) => void;
+        selectNut: (event: VueUiChestnutEmitSelectNut) => void;
+        copyAlt: (event: VueUiChestnutEmitCopyAlt) => void;
+    };
+
+    const VueUiChestnutBase: DefineComponent<
+        VueUiChestnutProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiChestnutEmits
+    >;
 
     export const VueUiChestnut: typeof VueUiChestnutBase & {
         new (): VueUiChestnutExpose & {
@@ -8079,7 +8822,28 @@ declare module 'vue-data-ui' {
         dataset: VueUiOnionDatasetItem[];
     };
 
-    const VueUiOnionBase: DefineComponent<VueUiOnionProps>;
+    export type VueUiOnionEmitSelectLegend = VueUiOnionDatapoint[];
+
+    export type VueUiOnionEmitCopyAlt = {
+        config: VueUiOnionConfig;
+        dataset: VueUiOnionDatapoint[];
+    };
+
+    export type VueUiOnionEmits = {
+        selectLegend: (payload: VueUiOnionEmitSelectLegend) => void;
+        copyAlt: (payload: VueUiOnionEmitCopyAlt) => void;
+    };
+
+    const VueUiOnionBase: DefineComponent<
+        VueUiOnionProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiOnionEmits
+    >;
 
     export const VueUiOnion: typeof VueUiOnionBase & {
         new (): VueUiOnionExpose & {
@@ -8426,7 +9190,33 @@ declare module 'vue-data-ui' {
         dataset: VueUiHorizontalBarDatasetItem[];
     };
 
-    const VueUiHorizontalBarBase: DefineComponent<VueUiHorizontalBarProps>;
+    export type VueUiHorizontalBarEmitSelectLegend = VueUiHorizontalBarSerie[];
+
+    export type VueUiHorizontalBarEmitSelectDatapoint = VueUiHorizontalBarSerie;
+
+    export type VueUiHorizontalBarEmitCopyAlt = {
+        config: VueUiHorizontalBarConfig;
+        dataset: VueUiHorizontalBarSerie[];
+    };
+
+    export type VueUiHorizontalBarEmits = {
+        selectLegend: (payload: VueUiHorizontalBarEmitSelectLegend) => void;
+        selectDatapoint: (
+            payload: VueUiHorizontalBarEmitSelectDatapoint,
+        ) => void;
+        copyAlt: (payload: VueUiHorizontalBarEmitCopyAlt) => void;
+    };
+
+    const VueUiHorizontalBarBase: DefineComponent<
+        VueUiHorizontalBarProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiHorizontalBarEmits
+    >;
 
     /**
      * Renamed from the v2 VueUiVerticalBar
@@ -8666,7 +9456,30 @@ declare module 'vue-data-ui' {
         dataset: VueUiSparklineDatasetItem[];
     };
 
-    const VueUiSparklineBase: DefineComponent<VueUiSparklineProps>;
+    export type VueUiSparklineEmitHoverIndex = {
+        index: number | undefined;
+    };
+
+    export type VueUiSparklineEmitSelectDatapoint = {
+        datapoint: VueUiSparklineFormattedDatapoint;
+        index: number;
+    };
+
+    export type VueUiSparklineEmits = {
+        hoverIndex: (payload: VueUiSparklineEmitHoverIndex) => void;
+        selectDatapoint: (payload: VueUiSparklineEmitSelectDatapoint) => void;
+    };
+
+    const VueUiSparklineBase: DefineComponent<
+        VueUiSparklineProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiSparklineEmits
+    >;
 
     export const VueUiSparkline: typeof VueUiSparklineBase & {
         new (): {
@@ -8917,10 +9730,25 @@ declare module 'vue-data-ui' {
         currentPageData: Array<Array<string | number>>;
     };
 
-    export const VueUiTable: DefineComponent<{
-        config?: VueUiTableConfig;
-        dataset: VueUiTableDataset;
-    }>;
+    export type VueUiTableEmitPageChange = VueUiTablePageChangeEvent;
+
+    export type VueUiTableEmits = {
+        pageChange: (payload: VueUiTableEmitPageChange) => void;
+    };
+
+    export const VueUiTable: DefineComponent<
+        {
+            config?: VueUiTableConfig;
+            dataset: VueUiTableDataset;
+        },
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiTableEmits
+    >;
 
     export type VueUiRatingDatasetDetailed = {
         [key: string]: number;
@@ -9001,7 +9829,20 @@ declare module 'vue-data-ui' {
         dataset: VueUiRatingDataset;
     };
 
-    const VueUiRatingBase: DefineComponent<VueUiRatingProps>;
+    export type VueUiRatingEmits = {
+        rate: (payload: number) => void;
+    };
+
+    const VueUiRatingBase: DefineComponent<
+        VueUiRatingProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiRatingEmits
+    >;
 
     export const VueUiRating: typeof VueUiRatingBase & {
         new (): {
@@ -9069,10 +9910,25 @@ declare module 'vue-data-ui' {
         };
     };
 
-    export const VueUiSmiley: DefineComponent<{
+    export type VueUiSmileyProps = {
         config?: VueUiSmileyConfig;
         dataset: VueUiRatingDataset;
-    }>;
+    };
+
+    export type VueUiSmileyEmits = {
+        rate: (payload: number) => void;
+    };
+
+    export const VueUiSmiley: DefineComponent<
+        VueUiSmileyProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiSmileyEmits
+    >;
 
     export type VueUiSkeletonConfig = {
         type?:
@@ -9848,7 +10704,31 @@ declare module 'vue-data-ui' {
         dataset: VueUiQuickChartDataset;
     };
 
-    const VueUiQuickChartBase: DefineComponent<VueUiQuickChartProps>;
+    export type VueUiQuickChartEmitSelectLegend = VueUiQuickChartLegendSource[];
+
+    export type VueUiQuickChartEmitSelectDatapoint = VueUiQuickChartDataset;
+
+    export type VueUiQuickChartEmitCopyAlt = {
+        config: VueUiQuickChartConfig;
+        dataset: VueUiQuickChartFormattedDataset;
+    };
+
+    export type VueUiQuickChartEmits = {
+        selectLegend: (payload: VueUiQuickChartEmitSelectLegend) => void;
+        selectDatapoint: (payload: VueUiQuickChartEmitSelectDatapoint) => void;
+        copyAlt: (payload: VueUiQuickChartEmitCopyAlt) => void;
+    };
+
+    const VueUiQuickChartBase: DefineComponent<
+        VueUiQuickChartProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiQuickChartEmits
+    >;
 
     export const VueUiQuickChart: typeof VueUiQuickChartBase & {
         new (): VueUiQuickChartExpose & {
@@ -10224,7 +11104,28 @@ declare module 'vue-data-ui' {
         dataset: VueUiStripPlotDataset[];
     };
 
-    const VueUiStripPlotBase: DefineComponent<VueUiStripPlotProps>;
+    export type VueUiStripPlotEmitSelectDatapoint = VueUiStripPlotDatapoint;
+
+    export type VueUiStripPlotEmitCopyAlt = {
+        config: VueUiStripPlotConfig;
+        dataset: VueUiStripPlotSeriesItem;
+    };
+
+    export type VueUiStripPlotEmits = {
+        selectDatapoint: (payload: VueUiStripPlotEmitSelectDatapoint) => void;
+        copyAlt: (payload: VueUiStripPlotEmitCopyAlt) => void;
+    };
+
+    const VueUiStripPlotBase: DefineComponent<
+        VueUiStripPlotProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiStripPlotEmits
+    >;
 
     export const VueUiStripPlot: typeof VueUiStripPlotBase & {
         new (): VueUiStripPlotExpose & {
@@ -10505,7 +11406,30 @@ declare module 'vue-data-ui' {
         dataset: VueUiDumbbellDataset[];
     };
 
-    const VueUiDumbbellBase: DefineComponent<VueUiDumbbellProps>;
+    export type VueUiDumbbellEmitSelectDatapoint = VueUiDumbbellDatapoint & {
+        seriesIndex: number;
+    };
+
+    export type VueUiDumbbellEmitCopyAlt = {
+        config: VueUiDumbbellConfig;
+        dataset: VueUiDumbbellDatapoint[];
+    };
+
+    export type VueUiDumbbellEmits = {
+        selectDatapoint: (payload: VueUiDumbbellEmitSelectDatapoint) => void;
+        copyAlt: (payload: VueUiDumbbellEmitCopyAlt) => void;
+    };
+
+    const VueUiDumbbellBase: DefineComponent<
+        VueUiDumbbellProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiDumbbellEmits
+    >;
 
     export const VueUiDumbbell: typeof VueUiDumbbellBase & {
         new (): VueUiDumbbellExpose & {
@@ -10680,7 +11604,25 @@ declare module 'vue-data-ui' {
         dataset: VueUiWordCloudDatasetItem[] | string;
     };
 
-    const VueUiWordCloudBase: DefineComponent<VueUiWordCloudProps>;
+    export type VueUiWordCloudEmitCopyAlt = {
+        config: VueUiWordCloudConfig;
+        dataset: VueUiWordCloudDatapoint[];
+    };
+
+    export type VueUiWordCloudEmits = {
+        copyAlt: (payload: VueUiWordCloudEmitCopyAlt) => void;
+    };
+
+    const VueUiWordCloudBase: DefineComponent<
+        VueUiWordCloudProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiWordCloudEmits
+    >;
 
     export const VueUiWordCloud: typeof VueUiWordCloudBase & {
         new (): VueUiWordCloudExpose & {
@@ -11032,7 +11974,35 @@ declare module 'vue-data-ui' {
         config?: VueUiXyCanvasConfig;
     };
 
-    const VueUiXyCanvasBase: DefineComponent<VueUiXyCanvasProps>;
+    export type VueUiXyCanvasEmitSelectLegend = VueUiXyCanvasDatapoint[];
+
+    export type VueUiXyCanvasEmitSelectX = {
+        dataset: VueUiXyCanvasTooltipDatapoint[] | null;
+        index: number | null;
+        indexLabel: string | null;
+    };
+
+    export type VueUiXyCanvasEmitCopyAlt = {
+        config: VueUiXyCanvasConfig;
+        dataset: VueUiXyCanvasDatapoint[];
+    };
+
+    export type VueUiXyCanvasEmits = {
+        selectLegend: (payload: VueUiXyCanvasEmitSelectLegend) => void;
+        selectX: (payload: VueUiXyCanvasEmitSelectX) => void;
+        copyAlt: (payload: VueUiXyCanvasEmitCopyAlt) => void;
+    };
+
+    const VueUiXyCanvasBase: DefineComponent<
+        VueUiXyCanvasProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiXyCanvasEmits
+    >;
 
     export const VueUiXyCanvas: typeof VueUiXyCanvasBase & {
         new (): VueUiXyCanvasExpose & {
@@ -11226,27 +12196,7 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiFlowExpose = {
-        getData(): Promise<{
-            nodes: Array<{
-                name: string;
-                absoluteY: number;
-                color: string;
-                height: number;
-                i: number;
-                value: number;
-                x: number;
-                y: number;
-            }>;
-            links: Array<{
-                id: string;
-                path: string;
-                source: string;
-                sourceColor: string;
-                target: string;
-                targetColor: string;
-                value: number;
-            }>;
-        }>;
+        getData(): Promise<VueUiFlowFormattedDataset>;
         getImage(options?: { scale?: number }): GetImagePromise;
         generateCsv(): void;
         generatePdf(): void;
@@ -11296,7 +12246,25 @@ declare module 'vue-data-ui' {
         config?: VueUiFlowConfig;
     };
 
-    const VueUiFlowBase: DefineComponent<VueUiFlowProps>;
+    export type VueUiFlowEmitCopyAlt = {
+        config: VueUiFlowConfig;
+        dataset: VueUiFlowFormattedDataset;
+    };
+
+    export type VueUiFlowEmits = {
+        copyAlt: (payload: VueUiFlowEmitCopyAlt) => void;
+    };
+
+    const VueUiFlowBase: DefineComponent<
+        VueUiFlowProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiFlowEmits
+    >;
 
     export const VueUiFlow: typeof VueUiFlowBase & {
         new (): VueUiFlowExpose & {
@@ -11592,7 +12560,37 @@ declare module 'vue-data-ui' {
         dataset: VueUiParallelCoordinatePlotDatasetItem[];
     };
 
-    const VueUiParallelCoordinatePlotBase: DefineComponent<VueUiParallelCoordinatePlotProps>;
+    export type VueUiParallelCoordinatePlotEmitSelectLegend =
+        VueUiParallelCoordinatePlotFormattedDatapoint[];
+
+    export type VueUiParallelCoordinatePlotEmitSelectDatapoint =
+        VueUiParallelCoordinatePlotEventDatapoint;
+
+    export type VueUiParallelCoordinatePlotEmitCopyAlt = {
+        config: VueUiParallelCoordinatePlotConfig;
+        dataset: VueUiParallelCoordinatePlotFormattedDatapoint[];
+    };
+
+    export type VueUiParallelCoordinatePlotEmits = {
+        selectLegend: (
+            payload: VueUiParallelCoordinatePlotEmitSelectLegend,
+        ) => void;
+        selectDatapoint: (
+            payload: VueUiParallelCoordinatePlotEmitSelectDatapoint,
+        ) => void;
+        copyAlt: (payload: VueUiParallelCoordinatePlotEmitCopyAlt) => void;
+    };
+
+    const VueUiParallelCoordinatePlotBase: DefineComponent<
+        VueUiParallelCoordinatePlotProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiParallelCoordinatePlotEmits
+    >;
 
     export const VueUiParallelCoordinatePlot: typeof VueUiParallelCoordinatePlotBase & {
         new (): VueUiParallelCoordinatePlotExpose & {
@@ -11735,6 +12733,12 @@ declare module 'vue-data-ui' {
         width: number;
     };
 
+    export type VueUiTimerLap = {
+        timestamp: number;
+        elapsed: number;
+        formatted: string;
+    };
+
     export type VueUiTimerControlsSlotProps = {
         isPaused: boolean;
         isRunning: boolean;
@@ -11743,11 +12747,7 @@ declare module 'vue-data-ui' {
         reset: () => void;
         restart: () => void;
         lap: () => void;
-        laps: Array<{
-            timestamp: number;
-            elapsed: number;
-            formatted: string;
-        }>;
+        laps: VueUiTimerLap[];
         elapsed?: number;
         timestamp?: number;
         formatted?: string;
@@ -11764,7 +12764,24 @@ declare module 'vue-data-ui' {
         | 'formatted'
     >;
 
-    const VueUiTimerBase: DefineComponent<VueUiTimerProps>;
+    export type VueUiTimerEmits = {
+        start: () => void;
+        reset: () => void;
+        pause: (payload: number) => void;
+        restart: () => void;
+        lap: (payload: VueUiTimerLap[]) => void;
+    };
+
+    const VueUiTimerBase: DefineComponent<
+        VueUiTimerProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiTimerEmits
+    >;
 
     export const VueUiTimer: typeof VueUiTimerBase & {
         new (): VueUiTimerExpose & {
@@ -11888,7 +12905,25 @@ declare module 'vue-data-ui' {
         dataset: VueUiCarouselTableDataset;
     };
 
-    const VueUiCarouselTableBase: DefineComponent<VueUiCarouselTableProps>;
+    export type VueUiCarouselTableEmitCopyAlt = {
+        dataset: VueUiCarouselTableDataset;
+        config: VueUiCarouselTableConfig;
+    };
+
+    export type VueUiCarouselTableEmits = {
+        copyAlt: (payload: VueUiCarouselTableEmitCopyAlt) => void;
+    };
+
+    const VueUiCarouselTableBase: DefineComponent<
+        VueUiCarouselTableProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiCarouselTableEmits
+    >;
 
     export const VueUiCarouselTable: typeof VueUiCarouselTableBase & {
         new (): {
@@ -12268,7 +13303,7 @@ declare module 'vue-data-ui' {
         id: string;
         name: string;
         proportion: number | null;
-        timeLabel: { text: string; absoluteIndex: number };
+        timeLabel: { text: string; absoluteIndex: number } | undefined;
         value: number | null;
     };
 
@@ -12303,7 +13338,52 @@ declare module 'vue-data-ui' {
         selectedXIndex?: number | null;
     };
 
-    const VueUiStackbarBase: DefineComponent<VueUiStackbarProps>;
+    export type VueUiStackbarEmitSelectLegend =
+        VueUiStackbarFormattedDatasetItem[];
+
+    export type VueUiStackbarEmitSelectDatapoint = {
+        datapoint: VueUiStackbarDatapointItem[];
+        period: {
+            absoluteIndex: number;
+            text: string;
+        };
+    };
+
+    export type VueUiStackbarEmitSelectTimeLabel = {
+        datapoint: VueUiStackbarDatapointItem[];
+        absoluteIndex: number;
+        label: string;
+    };
+
+    export type VueUiStackbarEmitSelectX = {
+        dataset: VueUiStackbarTooltipDatapoint[] | null;
+        index: number | null;
+        indexLabel: number | null | undefined;
+    };
+
+    export type VueUiStackbarEmitCopyAlt = {
+        config: VueUiStackbarConfig;
+        dataset: VueUiStackbarFormattedDatasetItem[];
+    };
+
+    export type VueUiStackbarEmits = {
+        selectLegend: (payload: VueUiStackbarEmitSelectLegend) => void;
+        selectDatapoint: (payload: VueUiStackbarEmitSelectDatapoint) => void;
+        selectTimeLabel: (payload: VueUiStackbarEmitSelectTimeLabel) => void;
+        selectX: (payload: VueUiStackbarEmitSelectX) => void;
+        copyAlt: (payload: VueUiStackbarEmitCopyAlt) => void;
+    };
+
+    const VueUiStackbarBase: DefineComponent<
+        VueUiStackbarProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiStackbarEmits
+    >;
 
     export const VueUiStackbar: typeof VueUiStackbarBase & {
         new (): VueUiStackbarExpose & {
@@ -12698,7 +13778,52 @@ declare module 'vue-data-ui' {
         selectedXIndex?: number | null;
     };
 
-    const VueUiStacklineBase: DefineComponent<VueUiStacklineProps>;
+    export type VueUiStacklineEmitSelectLegend =
+        VueUiStacklineFormattedDatasetItem[];
+
+    export type VueUiStacklineEmitSelectDatapoint = {
+        datapoint: VueUiStacklineDatasetItem[];
+        period: {
+            absoluteIndex: number;
+            text: string;
+        };
+    };
+
+    export type VueUiStacklineEmitSelectTimeLabel = {
+        datapoint: VueUiStacklineDatapointItem[];
+        absoluteIndex: number;
+        label: string;
+    };
+
+    export type VueUiStacklineEmitSelectX = {
+        dataset: VueUiStacklineTooltipDatapoint[] | null;
+        index: number | null;
+        indexLabel: number | null | undefined;
+    };
+
+    export type VueUiStacklineEmitCopyAlt = {
+        config: VueUiStacklineConfig;
+        dataset: VueUiStacklineFormattedDatasetItem[];
+    };
+
+    export type VueUiStacklineEmits = {
+        selectLegend: (payload: VueUiStacklineEmitSelectLegend) => void;
+        selectDatapoint: (payload: VueUiStacklineEmitSelectDatapoint) => void;
+        selectTimeLabel: (payload: VueUiStacklineEmitSelectTimeLabel) => void;
+        selectX: (payload: VueUiStacklineEmitSelectX) => void;
+        copyAlt: (payload: VueUiStacklineEmitCopyAlt) => void;
+    };
+
+    const VueUiStacklineBase: DefineComponent<
+        VueUiStacklineProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiStacklineEmits
+    >;
 
     export const VueUiStackline: typeof VueUiStacklineBase & {
         new (): VueUiStacklineExpose & {
@@ -12890,7 +14015,25 @@ declare module 'vue-data-ui' {
         legend: VueUiBulletLegendItem[];
     };
 
-    const VueUiBulletBase: DefineComponent<VueUiBulletProps>;
+    export type VueUiBulletEmitCopyAlt = {
+        config: VueUiBulletConfig;
+        dataset: VueUiBulletDataset;
+    };
+
+    export type VueUiBulletEmits = {
+        copyAlt: (payload: VueUiBulletEmitCopyAlt) => void;
+    };
+
+    const VueUiBulletBase: DefineComponent<
+        VueUiBulletProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiBulletEmits
+    >;
 
     export const VueUiBullet: typeof VueUiBulletBase & {
         new (): VueUiBulletExpose & {
@@ -13012,13 +14155,7 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiFunnelExpose = {
-        getData(): Promise<
-            Array<{
-                color: string;
-                name: string;
-                value: string;
-            }>
-        >;
+        getData(): Promise<VueUiFunnelDatasetItem[]>;
         getImage(options?: { scale?: number }): GetImagePromise;
         generateCsv(): void;
         generateImage(): void;
@@ -13043,7 +14180,25 @@ declare module 'vue-data-ui' {
         config?: VueUiFunnelConfig;
     };
 
-    const VueUiFunnelBase: DefineComponent<VueUiFunnelProps>;
+    export type VueUiFunnelEmitCopyAlt = {
+        config: VueUiFunnelConfig;
+        dataset: VueUiFunnelDatasetItem[];
+    };
+
+    export type VueUiFunnelEmits = {
+        copyAlt: (payload: VueUiFunnelEmitCopyAlt) => void;
+    };
+
+    const VueUiFunnelBase: DefineComponent<
+        VueUiFunnelProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiFunnelEmits
+    >;
 
     export const VueUiFunnel: typeof VueUiFunnelBase & {
         new (): VueUiFunnelExpose & {
@@ -13343,7 +14498,32 @@ declare module 'vue-data-ui' {
         dataset: VueUiHistoryPlotDatasetItem[];
     };
 
-    const VueUiHistoryPlotBase: DefineComponent<VueUiHistoryPlotProps>;
+    export type VueUiHistoryPlotEmitSelectLegend =
+        VueUiHistoryPlotFormattedDatapoint[];
+
+    export type VueUiHistoryPlotEmitSelectDatapoint = VueUiHistoryPlotDatapoint;
+
+    export type VueUiHistoryPlotEmitCopyAlt = {
+        config: VueUiHistoryPlotConfig;
+        dataset: VueUiHistoryPlotFormattedDatapoint[];
+    };
+
+    export type VueUiHistoryPlotEmits = {
+        selectLegend: (payload: VueUiHistoryPlotEmitSelectLegend) => void;
+        selectDatapoint: (payload: VueUiHistoryPlotEmitSelectDatapoint) => void;
+        copyAlt: (payload: VueUiHistoryPlotEmitCopyAlt) => void;
+    };
+
+    const VueUiHistoryPlotBase: DefineComponent<
+        VueUiHistoryPlotProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiHistoryPlotEmits
+    >;
 
     export const VueUiHistoryPlot: typeof VueUiHistoryPlotBase & {
         new (): VueUiHistoryPlotExpose & {
@@ -13605,7 +14785,28 @@ declare module 'vue-data-ui' {
         dataset: VueUiCirclePackDatasetItem[];
     };
 
-    const VueUiCirclePackBase: DefineComponent<VueUiCirclePackProps>;
+    export type VueUiCirclePackEmitSelectDatapoint = VueUiCirclePackDatapoint;
+    export type VueUiCirclePackEmitCopyAlt = {
+        config: VueUiCirclePackConfig;
+        dataset: VueUiCirclePackDatapoint[];
+        flattenedDataset: VueUiCirclePackDatapoint[];
+    };
+
+    export type VueUiCirclePackEmits = {
+        selectDatapoint: (payload: VueUiCirclePackEmitSelectDatapoint) => void;
+        copyAlt: (payload: VueUiCirclePackEmitCopyAlt) => void;
+    };
+
+    const VueUiCirclePackBase: DefineComponent<
+        VueUiCirclePackProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiCirclePackEmits
+    >;
 
     export const VueUiCirclePack: typeof VueUiCirclePackBase & {
         new (): VueUiCirclePackExpose & {
@@ -13835,7 +15036,33 @@ declare module 'vue-data-ui' {
         dataset?: VueUiWorldDataset;
     };
 
-    const VueUiWorldBase: DefineComponent<VueUiWorldProps>;
+    export type VueUiWorldEmitSelectLegend = {
+        name: string;
+    };
+
+    export type VueUiWorldEmitSelectDatapoint = VueUiWorldDatapoint;
+
+    export type VueUiWorldEmitCopyAlt = {
+        config: VueUiWorldConfig;
+        dataset: VueUiWorldDatapoint[];
+    };
+
+    export type VueUiWorldEmits = {
+        selectLegend: (payload: VueUiWorldEmitSelectLegend) => void;
+        selectDatapoint: (payload: VueUiWorldEmitSelectDatapoint) => void;
+        copyAlt: (payload: VueUiWorldEmitCopyAlt) => void;
+    };
+
+    const VueUiWorldBase: DefineComponent<
+        VueUiWorldProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiWorldEmits
+    >;
 
     export const VueUiWorld: typeof VueUiWorldBase & {
         new (): VueUiWorldExpose & {
@@ -14030,38 +15257,38 @@ declare module 'vue-data-ui' {
         };
     };
 
+    export type VueUiRidgelineFormattedDatasetItem = {
+        datapoints: Array<{
+            color: string;
+            id: string;
+            name: string;
+            pathLength: number;
+            plots: Array<{
+                isMaxPoint: boolean;
+                value: number;
+                x: number;
+                y: number;
+                zero: number;
+            }>;
+            smoothPath: string;
+            smoothPathRidge: string;
+            straightPath: string;
+            straightPathRidge: string;
+            uid: string;
+            values: Array<number | null>;
+            zeroPath: string;
+        }>;
+        label: {
+            x: number;
+            y: number;
+        };
+        labelLen: number;
+        name: string;
+        uid: string;
+    };
+
     export type VueUiRidgelineExpose = {
-        getData(): Promise<
-            Array<{
-                datapoints: Array<{
-                    color: string;
-                    id: string;
-                    name: string;
-                    pathLength: number;
-                    plots: Array<{
-                        isMaxPoint: boolean;
-                        value: number;
-                        x: number;
-                        y: number;
-                        zero: number;
-                    }>;
-                    smoothPath: string;
-                    smoothPathRidge: string;
-                    straightPath: string;
-                    straightPathRidge: string;
-                    uid: string;
-                    values: Array<number | null>;
-                    zeroPath: string;
-                }>;
-                label: {
-                    x: number;
-                    y: number;
-                };
-                labelLen: number;
-                name: string;
-                uid: string;
-            }>
-        >;
+        getData(): Promise<VueUiRidgelineFormattedDatasetItem[]>;
         getImage(options?: { scale?: number }): GetImagePromise;
         generateCsv(): void;
         generateImage(): void;
@@ -14127,7 +15354,45 @@ declare module 'vue-data-ui' {
         dataset: VueUiRidgelineDatasetItem[];
     };
 
-    const VueUiRidgelineBase: DefineComponent<VueUiRidgelineProps>;
+    export type VueUiRidgelineEmitSelectLegend =
+        VueUiRidgelineFormattedDatasetItem[];
+
+    export type VueUiRidgelineEmitSelectDatapoint =
+        VueUiRidgelineFormattedDatasetItem;
+
+    export type VueUiRidgelineEmitSelectX = Array<{
+        dp: {
+            color: string;
+            id: string;
+            name: string;
+            values: Array<number | null>;
+        };
+        selected: number;
+    }>;
+
+    export type VueUiRidgelineEmitCopyAlt = {
+        source: string;
+        config: VueUiRidgelineConfig;
+        dataset: VueUiRidgelineFormattedDatasetItem[];
+    };
+
+    export type VueUiRidgelineEmits = {
+        selectLegend: (payload: VueUiRidgelineEmitSelectLegend) => void;
+        selectDatapoint: (payload: VueUiRidgelineEmitSelectDatapoint) => void;
+        selectX: (payload: VueUiRidgelineEmitSelectX) => void;
+        copyAlt: (payload: VueUiRidgelineEmitCopyAlt) => void;
+    };
+
+    const VueUiRidgelineBase: DefineComponent<
+        VueUiRidgelineProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiRidgelineEmits
+    >;
 
     export const VueUiRidgeline: typeof VueUiRidgelineBase & {
         new (): VueUiRidgelineExpose & {
@@ -14350,7 +15615,31 @@ declare module 'vue-data-ui' {
         dataset: VueUiChordDataset;
     };
 
-    const VueUiChordBase: DefineComponent<VueUiChordProps>;
+    export type VueUiChordEmitSelectLegend = VueUiChordDatapointArc;
+    export type VueUiChordEmitSelectGroup = VueUiChordDatapointArc;
+    export type VueUiChordEmitSelectRibbon = VueUiChordDatapointRibbon;
+    export type VueUiChordEmitCopyAlt = {
+        config: VueUiChordConfig;
+        dataset: VueUiChordDataset;
+    };
+
+    export type VueUiChordEmits = {
+        selectLegend: (payload: VueUiChordEmitSelectLegend) => void;
+        selectGroup: (payload: VueUiChordEmitSelectGroup) => void;
+        selectRibbon: (payload: VueUiChordEmitSelectRibbon) => void;
+        copyAlt: (payload: VueUiChordEmitCopyAlt) => void;
+    };
+
+    const VueUiChordBase: DefineComponent<
+        VueUiChordProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiChordEmits
+    >;
 
     export const VueUiChord: typeof VueUiChordBase & {
         new (): VueUiChordExpose & {
@@ -14627,7 +15916,34 @@ declare module 'vue-data-ui' {
         dataset: VueUiDagDataset;
     };
 
-    const VueUiDagBase: DefineComponent<VueUiDagProps>;
+    export type VueUiDagEmitOnNodeClick = VueUiDagPositionedNode;
+    export type VueUiDagEmitOnMidpointEnter = VueUiDagPositionedEdge;
+    export type VueUiDagEmitCopyAlt = {
+        config: VueUiDagConfig;
+        dataset: {
+            edges: Array<{ from: string; to: string }>;
+            nodes: Array<{ id: string; label: string }>;
+        };
+    };
+    export type VueUiDagEmitRotate = 'TB' | 'RL' | 'BT' | 'LR';
+
+    export type VueUiDagEmits = {
+        onMidpointEnter: (payload: VueUiDagEmitOnMidpointEnter) => void;
+        onMidpointLeave: () => void;
+        copyAlt: (payload: VueUiDagEmitCopyAlt) => void;
+        rotate: (payload: VueUiDagEmitRotate) => void;
+    };
+
+    const VueUiDagBase: DefineComponent<
+        VueUiDagProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiDagEmits
+    >;
 
     export const VueUiDag: typeof VueUiDagBase & {
         new (): VueUiDagExpose & {
@@ -14922,7 +16238,25 @@ declare module 'vue-data-ui' {
         dataset?: VueUiGeoDatasetItem[];
     };
 
-    const VueUiGeoBase: DefineComponent<VueUiGeoProps>;
+    export type VueUiGeoEmitCopyAlt = {
+        config: VueUiGeoConfig;
+        dataset: VueUiGeoDatasetItem[];
+    };
+
+    export type VueUiGeoEmits = {
+        copyAlt: (payload: VueUiGeoEmitCopyAlt) => void;
+    };
+
+    const VueUiGeoBase: DefineComponent<
+        VueUiGeoProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiGeoEmits
+    >;
 
     export const VueUiGeo: typeof VueUiGeoBase & {
         new (): VueUiGeoExpose & {
@@ -15090,30 +16424,30 @@ declare module 'vue-data-ui' {
         };
     };
 
+    export type VueUiBumpFormattedDataset = {
+        [key: string]: any;
+        absoluteIndex: number;
+        color: string;
+        coordinates: Array<{
+            color: string;
+            displayValue: string;
+            id: string;
+            labelColor: string;
+            name: string;
+            rank: number;
+            value: number | null;
+            x: number;
+            y: number;
+        }>;
+        id: string;
+        name: string;
+        path: string;
+        positions: Array<number | null>;
+        values: Array<number | null>;
+    };
+
     export type VueUiBumpExpose = {
-        getData(): Promise<
-            Array<{
-                [key: string]: any;
-                absoluteIndex: number;
-                color: string;
-                coordinates: Array<{
-                    color: string;
-                    displayValue: string;
-                    id: string;
-                    labelColor: string;
-                    name: string;
-                    rank: number;
-                    value: number | null;
-                    x: number;
-                    y: number;
-                }>;
-                id: string;
-                name: string;
-                path: string;
-                positions: Array<number | null>;
-                values: Array<number | null>;
-            }>
-        >;
+        getData(): Promise<Array<VueUiBumpFormattedDataset>>;
         getImage(options?: { scale?: number }): GetImagePromise;
         generateCsv(): void;
         generateSvg(): void;
@@ -15162,7 +16496,25 @@ declare module 'vue-data-ui' {
         };
     };
 
-    const VueUiBumpBase: DefineComponent<VueUiBumpProps>;
+    export type VueUiBumpEmitCopyAlt = {
+        dataset: VueUiBumpFormattedDataset[];
+        config: VueUiBumpConfig;
+    };
+
+    export type VueUiBumpEmits = {
+        copyAlt: (payload: VueUiBumpEmitCopyAlt) => void;
+    };
+
+    const VueUiBumpBase: DefineComponent<
+        VueUiBumpProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiBumpEmits
+    >;
 
     export const VueUiBump: typeof VueUiBumpBase & {
         new (): VueUiBumpExpose & {

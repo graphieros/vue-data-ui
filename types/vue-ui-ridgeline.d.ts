@@ -20,6 +20,12 @@ import type {
     VueUiKeyboardNavigationHintSlotProps,
     VueUiWatermarkSlotProps,
     VueUiRidgelineLegendSlotProps,
+    VueUiRidgelineEmits,
+    VueUiRidgelineEmitSelectLegend,
+    VueUiRidgelineEmitSelectDatapoint,
+    VueUiRidgelineEmitSelectX,
+    VueUiRidgelineEmitCopyAlt,
+    VueUiRidgelineFormattedDatasetItem,
 } from 'vue-data-ui';
 
 export type {
@@ -42,9 +48,24 @@ export type {
     VueUiKeyboardNavigationHintSlotProps,
     VueUiWatermarkSlotProps,
     VueUiRidgelineLegendSlotProps,
+    VueUiRidgelineEmits,
+    VueUiRidgelineEmitSelectLegend,
+    VueUiRidgelineEmitSelectDatapoint,
+    VueUiRidgelineEmitSelectX,
+    VueUiRidgelineEmitCopyAlt,
+    VueUiRidgelineFormattedDatasetItem,
 };
 
-declare const VueUiRidgelineBase: DefineComponent<VueUiRidgelineProps>;
+declare const VueUiRidgelineBase: DefineComponent<
+    VueUiRidgelineProps,
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    VueUiRidgelineEmits
+>;
 
 export const VueUiRidgeline: typeof VueUiRidgelineBase & {
     new (): VueUiRidgelineExpose & {

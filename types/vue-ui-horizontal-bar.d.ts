@@ -25,6 +25,10 @@ import type {
     VueUiVerticalBarTooltipDatapoint,
     VueUiHorizontalBarTooltipSlotProps,
     CommonAnnotatorSlots,
+    VueUiHorizontalBarEmits,
+    VueUiHorizontalBarEmitSelectLegend,
+    VueUiHorizontalBarEmitSelectDatapoint,
+    VueUiHorizontalBarEmitCopyAlt,
 } from 'vue-data-ui';
 
 export type {
@@ -52,9 +56,22 @@ export type {
     VueUiVerticalBarTooltipDatapoint,
     VueUiHorizontalBarTooltipSlotProps,
     CommonAnnotatorSlots,
+    VueUiHorizontalBarEmits,
+    VueUiHorizontalBarEmitSelectLegend,
+    VueUiHorizontalBarEmitSelectDatapoint,
+    VueUiHorizontalBarEmitCopyAlt,
 };
 
-declare const VueUiHorizontalBarBase: DefineComponent<VueUiHorizontalBarProps>;
+declare const VueUiHorizontalBarBase: DefineComponent<
+    VueUiHorizontalBarProps,
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    VueUiHorizontalBarEmits
+>;
 
 export const VueUiHorizontalBar: typeof VueUiHorizontalBarBase & {
     new (): VueUiHorizontalBarExpose & {

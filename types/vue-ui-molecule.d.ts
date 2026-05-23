@@ -23,6 +23,9 @@ import type {
     VueUiResetActionSlotProps,
     VueUiMoleculeTooltipSlotProps,
     CommonAnnotatorSlots,
+    VueUiMoleculeEmits,
+    VueUiMoleculeEmitSelectNode,
+    VueUiMoleculeEmitCopyAlt,
 } from 'vue-data-ui';
 
 export type {
@@ -48,9 +51,21 @@ export type {
     VueUiResetActionSlotProps,
     VueUiMoleculeTooltipSlotProps,
     CommonAnnotatorSlots,
+    VueUiMoleculeEmits,
+    VueUiMoleculeEmitSelectNode,
+    VueUiMoleculeEmitCopyAlt,
 };
 
-declare const VueUiMoleculeBase: DefineComponent<VueUiMoleculeProps>;
+declare const VueUiMoleculeBase: DefineComponent<
+    VueUiMoleculeProps,
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    VueUiMoleculeEmits
+>;
 
 export const VueUiMolecule: typeof VueUiMoleculeBase & {
     new (): VueUiMoleculeExpose & {

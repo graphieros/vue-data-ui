@@ -8,6 +8,7 @@ import {
     type VueUiAgePyramidConfig,
     type VueUiAgePyramidDataset,
     type VueUiAgePyramidDatasetRow,
+    type VueUiAgePyramidEmitCopyAlt,
 } from 'vue-data-ui/vue-ui-age-pyramid';
 import { mergeConfigs } from 'vue-data-ui/utils';
 import CommonAnnotatorActionColor from '../slots/common/annotator-action-color.vue';
@@ -279,11 +280,15 @@ const config = computed<VueUiAgePyramidConfig>(() =>
 function log(t: unknown) {
     console.log(t);
 }
+
+function copyAlt(payload: VueUiAgePyramidEmitCopyAlt) {
+    console.log('@copyAlt', payload);
+}
 </script>
 
 <template>
     <div>
-        <VueUiAgePyramid :dataset :config>
+        <VueUiAgePyramid :dataset :config @copyAlt="copyAlt">
             <template #annotator-action-close>
                 <span style="color: chocolate">X</span>
             </template>

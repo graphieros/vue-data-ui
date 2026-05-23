@@ -7,6 +7,7 @@ import {
     VueUiFunnel,
     type VueUiFunnelConfig,
     type VueUiFunnelDatasetItem,
+    type VueUiFunnelEmitCopyAlt,
 } from 'vue-data-ui/vue-ui-funnel';
 import { mergeConfigs } from 'vue-data-ui/utils';
 
@@ -238,11 +239,15 @@ const config = computed<VueUiFunnelConfig>(() => {
 function log(n: unknown) {
     console.log(n);
 }
+
+function copyAlt(payload: VueUiFunnelEmitCopyAlt) {
+    console.log('@copyAlt', payload);
+}
 </script>
 
 <template>
     <div>
-        <VueUiFunnel :dataset :config>
+        <VueUiFunnel :dataset :config @copyAlt="copyAlt">
             <template #annotator-action-close>
                 <span style="color: chocolate">X</span>
             </template>

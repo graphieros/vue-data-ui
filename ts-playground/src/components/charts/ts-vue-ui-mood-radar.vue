@@ -4,6 +4,7 @@ import {
     VueUiMoodRadar,
     type VueUiMoodRadarConfig,
     type VueUiMoodRadarDataset,
+    type VueUiMoodRadarEmitCopyAlt,
 } from 'vue-data-ui/vue-ui-mood-radar';
 import { mergeConfigs } from 'vue-data-ui/utils';
 
@@ -234,11 +235,15 @@ const config = computed<VueUiMoodRadarConfig>(() => {
 function log(n: unknown) {
     console.log(n);
 }
+
+function copyAlt(payload: VueUiMoodRadarEmitCopyAlt) {
+    console.log('@copyAlt', payload);
+}
 </script>
 
 <template>
     <div>
-        <VueUiMoodRadar :dataset :config>
+        <VueUiMoodRadar :dataset :config @copyAlt="copyAlt">
             <template #annotator-action-close>
                 <span style="color: chocolate">X</span>
             </template>

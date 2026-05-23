@@ -3,7 +3,11 @@
  * This playground showcases all the slots and their implementations for <VueUiTimer>
  */
 import { computed } from 'vue';
-import { VueUiTimer, type VueUiTimerConfig } from 'vue-data-ui/vue-ui-timer';
+import {
+    VueUiTimer,
+    type VueUiTimerConfig,
+    type VueUiTimerLap,
+} from 'vue-data-ui/vue-ui-timer';
 import 'vue-data-ui/style.css';
 
 const config = computed<VueUiTimerConfig>(() => {
@@ -96,11 +100,38 @@ const config = computed<VueUiTimerConfig>(() => {
 function log(n: unknown) {
     console.log(n);
 }
+
+function start() {
+    console.log('@start');
+}
+
+function pause(payload: number) {
+    console.log('@pause', payload);
+}
+
+function reset() {
+    console.log('@reset');
+}
+
+function restart() {
+    console.log('@restart');
+}
+
+function lap(payload: VueUiTimerLap[]) {
+    console.log('@lap', payload);
+}
 </script>
 
 <template>
     <div style="max-width: 500px">
-        <VueUiTimer :config>
+        <VueUiTimer
+            :config
+            @start="start"
+            @pause="pause"
+            @reset="reset"
+            @restart="restart"
+            @lap="lap"
+        >
             <template #chart-background>
                 <div
                     style="

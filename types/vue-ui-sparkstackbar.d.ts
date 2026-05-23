@@ -9,6 +9,9 @@ import type {
     VueUiSparkStackbarExpose,
     VueUiKeyboardNavigationHintSlotProps,
     VueUiSparkStackbarTooltipSlotProps,
+    VueUiSparkStackbarEmits,
+    VueUiSparkStackbarEmitSelectDatapoint,
+    VueUiSparkStackbarEmitSelectLegend,
 } from 'vue-data-ui';
 
 export type {
@@ -20,9 +23,21 @@ export type {
     VueUiSparkStackbarExpose,
     VueUiKeyboardNavigationHintSlotProps,
     VueUiSparkStackbarTooltipSlotProps,
+    VueUiSparkStackbarEmits,
+    VueUiSparkStackbarEmitSelectDatapoint,
+    VueUiSparkStackbarEmitSelectLegend,
 };
 
-declare const VueUiSparkStackbarBase: DefineComponent<VueUiSparkStackbarProps>;
+declare const VueUiSparkStackbarBase: DefineComponent<
+    VueUiSparkStackbarProps,
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    VueUiSparkStackbarEmits
+>;
 
 export const VueUiSparkStackbar: typeof VueUiSparkStackbarBase & {
     new (): VueUiSparkStackbarExpose & {

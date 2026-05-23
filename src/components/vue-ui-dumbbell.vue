@@ -955,6 +955,7 @@ function onTrapClick({ datapoint, seriesIndex }) {
     if (FINAL_CONFIG.value.events.datapointClick) {
         FINAL_CONFIG.value.events.datapointClick({ datapoint, seriesIndex });
     }
+    emit('selectDatapoint', { ...datapoint, seriesIndex });
 }
 
 const comparisonLabelX = computed(() => {

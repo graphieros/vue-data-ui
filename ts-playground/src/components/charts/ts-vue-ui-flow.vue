@@ -7,6 +7,7 @@ import {
     VueUiFlow,
     type VueUiFlowConfig,
     type VueUiFlowDatasetItem,
+    type VueUiFlowEmitCopyAlt,
 } from 'vue-data-ui/vue-ui-flow';
 import { mergeConfigs } from 'vue-data-ui/utils';
 
@@ -335,11 +336,15 @@ const config = computed<VueUiFlowConfig>(() => {
 function log(n: unknown) {
     console.log(n);
 }
+
+function copyAlt(payload: VueUiFlowEmitCopyAlt) {
+    console.log('@copyAlt', payload);
+}
 </script>
 
 <template>
     <div>
-        <VueUiFlow :dataset :config>
+        <VueUiFlow :dataset :config @copyAlt="copyAlt">
             <template #annotator-action-close>
                 <span style="color: chocolate">X</span>
             </template>

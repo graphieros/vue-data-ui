@@ -8,6 +8,8 @@ import {
     VueUiCandlestick,
     type OHLC,
     type VueUiCandlestickConfig,
+    type VueUiCandlestickEmitCopyAlt,
+    type VueUiCandlestickEmitSelectX,
 } from 'vue-data-ui/vue-ui-candlestick';
 
 import CommonAnnotatorActionColor from '../slots/common/annotator-action-color.vue';
@@ -388,11 +390,24 @@ const config = computed(() => {
 function log(n: unknown) {
     console.log(n);
 }
+
+function selectX(payload: VueUiCandlestickEmitSelectX) {
+    console.log('@selectX', payload);
+}
+
+function copyAlt(payload: VueUiCandlestickEmitCopyAlt) {
+    console.log('@copyAlt', payload);
+}
 </script>
 
 <template>
     <div>
-        <VueUiCandlestick :dataset :config>
+        <VueUiCandlestick
+            :dataset
+            :config
+            @selectX="selectX"
+            @copyAlt="copyAlt"
+        >
             <template #annotator-action-close>
                 <span style="color: chocolate">X</span>
             </template>

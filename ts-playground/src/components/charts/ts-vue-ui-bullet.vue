@@ -7,6 +7,7 @@ import {
     VueUiBullet,
     type VueUiBulletDataset,
     type VueUiBulletConfig,
+    type VueUiBulletEmitCopyAlt,
 } from 'vue-data-ui/vue-ui-bullet';
 import { mergeConfigs } from 'vue-data-ui/utils';
 
@@ -220,11 +221,15 @@ const config = computed<VueUiBulletConfig>(() => {
         },
     });
 });
+
+function copyAlt(payload: VueUiBulletEmitCopyAlt) {
+    console.log(payload);
+}
 </script>
 
 <template>
     <div>
-        <VueUiBullet :dataset :config>
+        <VueUiBullet :dataset :config @copyAlt="copyAlt">
             <template #svg="{ svg }">
                 <BulletSvg :svg />
             </template>

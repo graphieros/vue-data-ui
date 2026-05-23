@@ -7,6 +7,8 @@ import {
     VueUiMolecule,
     type VueUiMoleculeConfig,
     type VueUiMoleculeDatasetNode,
+    type VueUiMoleculeEmitCopyAlt,
+    type VueUiMoleculeEmitSelectNode,
 } from 'vue-data-ui/vue-ui-molecule';
 import { mergeConfigs } from 'vue-data-ui/utils';
 import 'vue-data-ui/style.css';
@@ -383,11 +385,24 @@ const config = computed<VueUiMoleculeConfig>(() => {
 function log(n: unknown) {
     console.log(n);
 }
+
+function selectNode(payload: VueUiMoleculeEmitSelectNode) {
+    console.log('@selectNode', payload);
+}
+
+function copyAlt(payload: VueUiMoleculeEmitCopyAlt) {
+    console.log('@copyAlt', payload);
+}
 </script>
 
 <template>
     <div>
-        <VueUiMolecule :dataset :config>
+        <VueUiMolecule
+            :dataset
+            :config
+            @selectNode="selectNode"
+            @copyAlt="copyAlt"
+        >
             <template #annotator-action-close>
                 <span style="color: chocolate">X</span>
             </template>

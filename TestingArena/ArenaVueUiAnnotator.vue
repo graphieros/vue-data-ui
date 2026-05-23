@@ -8,6 +8,7 @@ import Donut from '../src/components/vue-ui-donut.vue';
 const model = ref([
     { key: 'useCursorPointer', def: false, type: 'checkbox' },
     { key: 'alwaysVisible', def: true, type: 'checkbox' },
+    { key: 'style.showSave', def: true, type: 'checkbox' },
 ]);
 
 const config = computed(() => {
@@ -102,7 +103,7 @@ const initLastSelectedShape = ref({
     <Box comp="VueUiAnnotator" :dataset="dataset" :config="config">
         <template #local>
             <LocalVueUiAnnotator
-                @saveAnnotations="save"
+                @save-annotations="save"
                 :config="config"
                 :dataset="{ shapes }"
             >

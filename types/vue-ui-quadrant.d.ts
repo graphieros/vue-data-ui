@@ -25,6 +25,13 @@ import type {
     VueUiQuadrantLegendSlotProps,
     VueUiQuadrantTooltipSlotProps,
     CommonAnnotatorSlots,
+    VueUiQuadrantEmits,
+    VueUiQuadrantEmitSelectPlot,
+    VueUiQuadrantEmitSelectSide,
+    VueUiQuadrantEmitSelectLegend,
+    VueUiQuadrantEmitCopyAlt,
+    VueUiQuadrantPlot,
+    VueUiQuadrantSide,
 } from 'vue-data-ui';
 
 export type {
@@ -52,9 +59,25 @@ export type {
     VueUiQuadrantLegendSlotProps,
     VueUiQuadrantTooltipSlotProps,
     CommonAnnotatorSlots,
+    VueUiQuadrantEmits,
+    VueUiQuadrantEmitSelectPlot,
+    VueUiQuadrantEmitSelectSide,
+    VueUiQuadrantEmitSelectLegend,
+    VueUiQuadrantEmitCopyAlt,
+    VueUiQuadrantPlot,
+    VueUiQuadrantSide,
 };
 
-declare const VueUiQuadrantBase: DefineComponent<VueUiQuadrantProps>;
+declare const VueUiQuadrantBase: DefineComponent<
+    VueUiQuadrantProps,
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    VueUiQuadrantEmits
+>;
 
 export const VueUiQuadrant: typeof VueUiQuadrantBase & {
     new (): VueUiQuadrantExpose & {

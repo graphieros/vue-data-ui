@@ -6,6 +6,8 @@ import type {
     VueUiTableSparklineProps,
     VueUiMenuIconSlotProps,
     VueUiOptionFullscreenSlotProps,
+    VueUiTableSparklineEmits,
+    VueUiTableSparklineEmitCopyAlt,
 } from 'vue-data-ui';
 
 export type {
@@ -14,9 +16,20 @@ export type {
     VueUiTableSparklineProps,
     VueUiMenuIconSlotProps,
     VueUiOptionFullscreenSlotProps,
+    VueUiTableSparklineEmits,
+    VueUiTableSparklineEmitCopyAlt,
 };
 
-declare const VueUiTableSparklineBase: DefineComponent<VueUiTableSparklineProps>;
+declare const VueUiTableSparklineBase: DefineComponent<
+    VueUiTableSparklineProps,
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    VueUiTableSparklineEmits
+>;
 
 export const VueUiTableSparkline: typeof VueUiTableSparklineBase & {
     new (): {

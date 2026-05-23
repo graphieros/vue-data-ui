@@ -6,7 +6,12 @@ import { computed } from 'vue';
 import {
     VueUiChestnut,
     type VueUiChestnutConfig,
+    type VueUiChestnutDatapointRoot,
     type VueUiChestnutDatasetRoot,
+    type VueUiChestnutEmitCopyAlt,
+    type VueUiChestnutEmitSelectBranch,
+    type VueUiChestnutEmitSelectNut,
+    type VueUiChestnutEmitSelectRoot,
 } from 'vue-data-ui/vue-ui-chestnut';
 import { mergeConfigs } from 'vue-data-ui/utils';
 
@@ -368,11 +373,34 @@ const config = computed<VueUiChestnutConfig>(() => {
 function log(n: unknown) {
     console.log(n);
 }
+
+function selectRoot(payload: VueUiChestnutEmitSelectRoot) {
+    console.log('@selectRoot', payload);
+}
+
+function selectBranch(payload: VueUiChestnutEmitSelectBranch) {
+    console.log('@selectBranch', payload);
+}
+
+function selectNut(payload: VueUiChestnutEmitSelectNut) {
+    console.log('@selectNut', payload);
+}
+
+function copyAlt(payload: VueUiChestnutEmitCopyAlt) {
+    console.log('@copyAlt', payload);
+}
 </script>
 
 <template>
     <div>
-        <VueUiChestnut :dataset :config>
+        <VueUiChestnut
+            :dataset
+            :config
+            @selectRoot="selectRoot"
+            @selectBranch="selectBranch"
+            @selectNut="selectNut"
+            @copyAlt="copyAlt"
+        >
             <template #annotator-action-close>
                 <span style="color: chocolate">X</span>
             </template>

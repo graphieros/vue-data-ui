@@ -19,6 +19,8 @@ import type {
     VueUiWatermarkSlotProps,
     VueUiGaugeLegendSlotProps,
     CommonAnnotatorSlots,
+    VueUiGaugeEmits,
+    VueUiGaugeEmitCopyAlt,
 } from 'vue-data-ui';
 
 export type {
@@ -40,9 +42,20 @@ export type {
     VueUiWatermarkSlotProps,
     VueUiGaugeLegendSlotProps,
     CommonAnnotatorSlots,
+    VueUiGaugeEmits,
+    VueUiGaugeEmitCopyAlt,
 };
 
-declare const VueUiGaugeBase: DefineComponent<VueUiGaugeProps>;
+declare const VueUiGaugeBase: DefineComponent<
+    VueUiGaugeProps,
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    VueUiGaugeEmits
+>;
 
 export const VueUiGauge: typeof VueUiGaugeBase & {
     new (): VueUiGaugeExpose & {

@@ -8,6 +8,10 @@ import {
     VueUiDag,
     type VueUiDagConfig,
     type VueUiDagDataset,
+    type VueUiDagEmitCopyAlt,
+    type VueUiDagEmitOnMidpointEnter,
+    type VueUiDagEmitOnNodeClick,
+    type VueUiDagEmitRotate,
 } from 'vue-data-ui/vue-ui-dag';
 
 import CommonAnnotatorActionColor from '../slots/common/annotator-action-color.vue';
@@ -260,11 +264,39 @@ const config = computed<VueUiDagConfig>(() => {
 function log(n: unknown) {
     console.log(n);
 }
+
+function onNodeClick(payload: VueUiDagEmitOnNodeClick) {
+    console.log('@onNodeClick', payload);
+}
+
+function onMidpointEnter(payload: VueUiDagEmitOnMidpointEnter) {
+    console.log('@onMidpointEnter', payload);
+}
+
+function onMidpointLeave() {
+    console.log('@onMidpointLeave');
+}
+
+function copyAlt(payload: VueUiDagEmitCopyAlt) {
+    console.log('@copyAlt', payload);
+}
+
+function rotate(payload: VueUiDagEmitRotate) {
+    console.log('@rotate', payload);
+}
 </script>
 
 <template>
     <div style="max-width: 400px">
-        <VueUiDag :dataset :config>
+        <VueUiDag
+            :dataset
+            :config
+            @onNodeClick="onNodeClick"
+            @onMidpointEnter="onMidpointEnter"
+            @onMidpointLeave="onMidpointLeave"
+            @copyAlt="copyAlt"
+            @rotate="rotate"
+        >
             <template #annotator-action-close>
                 <span style="color: chocolate">X</span>
             </template>

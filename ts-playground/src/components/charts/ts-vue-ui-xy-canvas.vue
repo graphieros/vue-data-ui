@@ -7,6 +7,9 @@ import {
     VueUiXyCanvas,
     type VueUiXyCanvasConfig,
     type VueUiXyCanvasDatasetItem,
+    type VueUiXyCanvasEmitCopyAlt,
+    type VueUiXyCanvasEmitSelectLegend,
+    type VueUiXyCanvasEmitSelectX,
 } from 'vue-data-ui/vue-ui-xy-canvas';
 import { mergeConfigs } from 'vue-data-ui/utils';
 import 'vue-data-ui/style.css';
@@ -387,11 +390,29 @@ const config = computed<VueUiXyCanvasConfig>(() => {
 function log(n: unknown) {
     console.log(n);
 }
+
+function selectLegend(payload: VueUiXyCanvasEmitSelectLegend) {
+    console.log('@selectLegend', payload);
+}
+
+function selectX(payload: VueUiXyCanvasEmitSelectX) {
+    console.log('@selectX', payload);
+}
+
+function copyAlt(payload: VueUiXyCanvasEmitCopyAlt) {
+    console.log('@copyAlt', payload);
+}
 </script>
 
 <template>
     <div>
-        <VueUiXyCanvas :dataset :config>
+        <VueUiXyCanvas
+            :dataset
+            :config
+            @selectLegend="selectLegend"
+            @selectX="selectX"
+            @copyAlt="copyAlt"
+        >
             <template #annotator-action-close>
                 <span style="color: chocolate">X</span>
             </template>

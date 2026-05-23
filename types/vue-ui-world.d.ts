@@ -17,6 +17,10 @@ import type {
     VueUiWorldLegendItem,
     VueUiWorldLegendSlotProps,
     VueUiWorldTooltipSlotProps,
+    VueUiWorldEmits,
+    VueUiWorldEmitSelectLegend,
+    VueUiWorldEmitSelectDatapoint,
+    VueUiWorldEmitCopyAlt,
 } from 'vue-data-ui';
 
 export type {
@@ -36,9 +40,22 @@ export type {
     VueUiWorldLegendItem,
     VueUiWorldLegendSlotProps,
     VueUiWorldTooltipSlotProps,
+    VueUiWorldEmits,
+    VueUiWorldEmitSelectLegend,
+    VueUiWorldEmitSelectDatapoint,
+    VueUiWorldEmitCopyAlt,
 };
 
-declare const VueUiWorldBase: DefineComponent<VueUiWorldProps>;
+declare const VueUiWorldBase: DefineComponent<
+    VueUiWorldProps,
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    VueUiWorldEmits
+>;
 
 export const VueUiWorld: typeof VueUiWorldBase & {
     new (): VueUiWorldExpose & {

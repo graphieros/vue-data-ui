@@ -7,6 +7,9 @@ import {
     VueUiTreemap,
     type VueUiTreemapConfig,
     type VueUiTreemapDatasetItem,
+    type VueUiTreemapEmitCopyAlt,
+    type VueUiTreemapEmitSelectDatapoint,
+    type VueUiTreemapEmitSelectLegend,
 } from 'vue-data-ui/vue-ui-treemap';
 import { mergeConfigs } from 'vue-data-ui/utils';
 import 'vue-data-ui/style.css';
@@ -321,11 +324,29 @@ const config = computed<VueUiTreemapConfig>(() => {
 function log(n: unknown) {
     console.log(n);
 }
+
+function selectLegend(payload: VueUiTreemapEmitSelectLegend) {
+    console.log('@selectLegend', payload);
+}
+
+function selectDatapoint(payload: VueUiTreemapEmitSelectDatapoint) {
+    console.log('@selectDatapoint', payload);
+}
+
+function copyAlt(payload: VueUiTreemapEmitCopyAlt) {
+    console.log('@copyAlt', payload);
+}
 </script>
 
 <template>
     <div>
-        <VueUiTreemap :dataset :config>
+        <VueUiTreemap
+            :dataset
+            :config
+            @selectLegend="selectLegend"
+            @selectDatapoint="selectDatapoint"
+            @copyAlt="copyAlt"
+        >
             <template #annotator-action-close>
                 <span style="color: chocolate">X</span>
             </template>

@@ -7,6 +7,8 @@ import {
     VueUiDonutEvolution,
     type VueUiDonutEvolutionConfig,
     type VueUiDonutEvolutionDatasetItem,
+    type VueUiDonutEvolutionEmitCopyAlt,
+    type VueUiDonutEvolutionEmitSelectLegend,
 } from 'vue-data-ui/vue-ui-donut-evolution';
 import { mergeConfigs } from 'vue-data-ui/utils';
 
@@ -620,11 +622,24 @@ const config = computed<VueUiDonutEvolutionConfig>(() => {
 function log(n: unknown) {
     console.log(n);
 }
+
+function selectLegend(payload: VueUiDonutEvolutionEmitSelectLegend) {
+    console.log('@selectLegend', payload);
+}
+
+function copyAlt(payload: VueUiDonutEvolutionEmitCopyAlt) {
+    console.log('@copyAlt', payload);
+}
 </script>
 
 <template>
     <div>
-        <VueUiDonutEvolution :dataset :config>
+        <VueUiDonutEvolution
+            :dataset
+            :config
+            @selectLegend="selectLegend"
+            @copyAlt="copyAlt"
+        >
             <template #annotator-action-close>
                 <span style="color: chocolate">X</span>
             </template>

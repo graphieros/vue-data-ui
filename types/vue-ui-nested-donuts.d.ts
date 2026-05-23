@@ -23,6 +23,10 @@ import type {
     VueUiNestedDonutsLegendItem,
     VueUiNestedDonutsLegendSlotProps,
     CommonAnnotatorSlots,
+    VueUiNestedDonutsEmits,
+    VueUiNestedDonutsEmitSelectLegend,
+    VueUiNestedDonutsEmitSelectDatapoint,
+    VueUiNestedDonutsEmitCopyAlt,
 } from 'vue-data-ui';
 
 export type {
@@ -48,9 +52,22 @@ export type {
     VueUiNestedDonutsLegendItem,
     VueUiNestedDonutsLegendSlotProps,
     CommonAnnotatorSlots,
+    VueUiNestedDonutsEmits,
+    VueUiNestedDonutsEmitSelectLegend,
+    VueUiNestedDonutsEmitSelectDatapoint,
+    VueUiNestedDonutsEmitCopyAlt,
 };
 
-declare const VueUiNestedDonutsBase: DefineComponent<VueUiNestedDonutsProps>;
+declare const VueUiNestedDonutsBase: DefineComponent<
+    VueUiNestedDonutsProps,
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    VueUiNestedDonutsEmits
+>;
 
 export const VueUiNestedDonuts: typeof VueUiNestedDonutsBase & {
     new (): VueUiNestedDonutsExpose & {

@@ -7,6 +7,10 @@ import {
     VueUiRidgeline,
     type VueUiRidgelineConfig,
     type VueUiRidgelineDatasetItem,
+    type VueUiRidgelineEmitCopyAlt,
+    type VueUiRidgelineEmitSelectLegend,
+    type VueUiRidgelineEmitSelectX,
+    type VueUiRidgelineFormattedDatasetItem,
 } from 'vue-data-ui/vue-ui-ridgeline';
 import { mergeConfigs } from 'vue-data-ui/utils';
 import 'vue-data-ui/style.css';
@@ -778,18 +782,52 @@ const testPreconfig = computed<VueUiRidgelineConfig>(() => {
 const config = computed<VueUiRidgelineConfig>(() => {
     return mergeConfigs({
         defaultConfig: testPreconfig.value,
-        userConfig: {},
+        userConfig: {
+            userOptions: {
+                buttons: {
+                    altCopy: true,
+                },
+                callbacks: {
+                    altCopy: (args) => {
+                        console.log(args);
+                    },
+                },
+            },
+        },
     });
 });
 
 function log(n: unknown) {
     console.log(n);
 }
+
+function selectLegend(payload: VueUiRidgelineEmitSelectLegend) {
+    console.log('@selectLegend', payload);
+}
+
+function selectDatapoint(payload: VueUiRidgelineFormattedDatasetItem) {
+    console.log('@selectDatapoint', payload);
+}
+
+function selectX(payload: VueUiRidgelineEmitSelectX) {
+    console.log('@selectX', payload);
+}
+
+function copyAlt(payload: VueUiRidgelineEmitCopyAlt) {
+    console.log('@copyAlt', payload);
+}
 </script>
 
 <template>
     <div>
-        <VueUiRidgeline :dataset :config>
+        <VueUiRidgeline
+            :dataset
+            :config
+            @selectLegend="selectLegend"
+            @selectDatapoint="selectDatapoint"
+            @selectX="selectX"
+            @copyAlt="copyAlt"
+        >
             <template #annotator-action-close>
                 <span style="color: chocolate">X</span>
             </template>

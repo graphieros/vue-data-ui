@@ -11,6 +11,8 @@ import type {
     VueUiOptionAnnotatorSlotProps,
     VueUiWheelSvgSlotProps,
     VueUiWatermarkSlotProps,
+    VueUiWheelEmits,
+    VueUiWheelEmitCopyAlt,
 } from 'vue-data-ui';
 
 export type {
@@ -24,9 +26,20 @@ export type {
     VueUiOptionAnnotatorSlotProps,
     VueUiWheelSvgSlotProps,
     VueUiWatermarkSlotProps,
+    VueUiWheelEmits,
+    VueUiWheelEmitCopyAlt,
 };
 
-declare const VueUiWheelBase: DefineComponent<VueUiWheelProps>;
+declare const VueUiWheelBase: DefineComponent<
+    VueUiWheelProps,
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    VueUiWheelEmits
+>;
 
 export const VueUiWheel: typeof VueUiWheelBase & {
     new (): VueUiWheelExpose & {

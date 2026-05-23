@@ -25,6 +25,10 @@ import type {
     VueUiGalaxyDatapointTooltip,
     VueUiGalaxyTooltipSlotProps,
     CommonAnnotatorSlots,
+    VueUiGalaxyEmits,
+    VueUiGalaxyEmitSelectLegend,
+    VueUiGalaxyEmitSelectDatapoint,
+    VueUiGalaxyEmitCopyAlt,
 } from 'vue-data-ui';
 
 export type {
@@ -52,9 +56,22 @@ export type {
     VueUiGalaxyDatapointTooltip,
     VueUiGalaxyTooltipSlotProps,
     CommonAnnotatorSlots,
+    VueUiGalaxyEmits,
+    VueUiGalaxyEmitSelectLegend,
+    VueUiGalaxyEmitSelectDatapoint,
+    VueUiGalaxyEmitCopyAlt,
 };
 
-declare const VueUiGalaxyBase: DefineComponent<VueUiGalaxyProps>;
+declare const VueUiGalaxyBase: DefineComponent<
+    VueUiGalaxyProps,
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    VueUiGalaxyEmits
+>;
 
 export const VueUiGalaxy: typeof VueUiGalaxyBase & {
     new (): VueUiGalaxyExpose & {

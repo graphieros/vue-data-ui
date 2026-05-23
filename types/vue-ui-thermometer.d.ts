@@ -11,6 +11,8 @@ import type {
     VueUiOptionAnnotatorSlotProps,
     VueUiThermometerSvgSlotProps,
     VueUiWatermarkSlotProps,
+    VueUiThermometerEmits,
+    VueUiThermometerEmitCopyAlt,
 } from 'vue-data-ui';
 
 export type {
@@ -24,9 +26,20 @@ export type {
     VueUiOptionAnnotatorSlotProps,
     VueUiThermometerSvgSlotProps,
     VueUiWatermarkSlotProps,
+    VueUiThermometerEmits,
+    VueUiThermometerEmitCopyAlt,
 };
 
-declare const VueUiThermometerBase: DefineComponent<VueUiThermometerProps>;
+declare const VueUiThermometerBase: DefineComponent<
+    VueUiThermometerProps,
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    VueUiThermometerEmits
+>;
 
 export const VueUiThermometer: typeof VueUiThermometerBase & {
     new (): VueUiThermometerExpose & {

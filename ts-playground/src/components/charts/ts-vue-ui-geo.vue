@@ -7,6 +7,7 @@ import {
     VueUiGeo,
     type VueUiGeoConfig,
     type VueUiGeoDatasetItem,
+    type VueUiGeoEmitCopyAlt,
     type VueUiGeoMapGeoJson,
 } from 'vue-data-ui/vue-ui-geo';
 import { mergeConfigs } from 'vue-data-ui/utils';
@@ -267,11 +268,15 @@ const config = computed<VueUiGeoConfig>(() => {
 function log(n: unknown) {
     console.log(n);
 }
+
+function copyAlt(payload: VueUiGeoEmitCopyAlt) {
+    console.log('@copyAlt', payload);
+}
 </script>
 
 <template>
     <div>
-        <VueUiGeo :dataset :config>
+        <VueUiGeo :dataset :config @copyAlt="copyAlt">
             <template #annotator-action-close>
                 <span style="color: chocolate">X</span>
             </template>

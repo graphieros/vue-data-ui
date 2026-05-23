@@ -7,6 +7,7 @@ import {
     VueUiSparkHistogram,
     type VueUiSparkHistogramConfig,
     type VueUiSparkHistogramDatasetItem,
+    type VueUiSparkHistogramEmitSelectDatapoint,
 } from 'vue-data-ui/vue-ui-sparkhistogram';
 
 import 'vue-data-ui/style.css';
@@ -203,11 +204,19 @@ const config = computed<VueUiSparkHistogramConfig>(() => {
 function log(n: unknown) {
     console.log(n);
 }
+
+function selectDatapoint(payload: VueUiSparkHistogramEmitSelectDatapoint) {
+    console.log('@selectDatapoint', payload);
+}
 </script>
 
 <template>
     <div>
-        <VueUiSparkHistogram :dataset :config>
+        <VueUiSparkHistogram
+            :dataset
+            :config
+            @selectDatapoint="selectDatapoint"
+        >
             <template #hint="{ hint, isVisible }">
                 <KeyboardNavigationHint :hint :is-visible />
             </template>

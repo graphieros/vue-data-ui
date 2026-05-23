@@ -7,6 +7,8 @@ import {
     VueUiOnion,
     type VueUiOnionConfig,
     type VueUiOnionDatasetItem,
+    type VueUiOnionEmitCopyAlt,
+    type VueUiOnionEmitSelectLegend,
 } from 'vue-data-ui/vue-ui-onion';
 import { mergeConfigs } from 'vue-data-ui/utils';
 import 'vue-data-ui/style.css';
@@ -282,11 +284,24 @@ const config = computed<VueUiOnionConfig>(() => {
 function log(n: unknown) {
     console.log(n);
 }
+
+function selectLegend(payload: VueUiOnionEmitSelectLegend) {
+    console.log('@selectLegend', payload);
+}
+
+function copyAlt(payload: VueUiOnionEmitCopyAlt) {
+    console.log('@copyAlt', payload);
+}
 </script>
 
 <template>
     <div>
-        <VueUiOnion :dataset :config>
+        <VueUiOnion
+            :dataset
+            :config
+            @selectLegend="selectLegend"
+            @copyAlt="copyAlt"
+        >
             <template #annotator-action-close>
                 <span style="color: chocolate">X</span>
             </template>

@@ -17,6 +17,8 @@ import type {
     VueUiWatermarkSlotProps,
     VueUiResetActionSlotProps,
     VueUiWordCloudTooltipSlotProps,
+    VueUiWordCloudEmits,
+    VueUiWordCloudEmitCopyAlt,
 } from 'vue-data-ui';
 
 export type {
@@ -36,9 +38,20 @@ export type {
     VueUiWatermarkSlotProps,
     VueUiResetActionSlotProps,
     VueUiWordCloudTooltipSlotProps,
+    VueUiWordCloudEmits,
+    VueUiWordCloudEmitCopyAlt,
 };
 
-declare const VueUiWordCloudBase: DefineComponent<VueUiWordCloudProps>;
+declare const VueUiWordCloudBase: DefineComponent<
+    VueUiWordCloudProps,
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    VueUiWordCloudEmits
+>;
 
 export const VueUiWordCloud: typeof VueUiWordCloudBase & {
     new (): VueUiWordCloudExpose & {

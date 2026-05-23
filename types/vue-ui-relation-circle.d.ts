@@ -20,6 +20,8 @@ import type {
     VueUiKeyboardNavigationHintSlotProps,
     VueUiWatermarkSlotProps,
     CommonAnnotatorSlots,
+    VueUiRelationCircleEmits,
+    VueUiRelationCircleEmitCopyAlt,
 } from 'vue-data-ui';
 
 export type {
@@ -42,9 +44,20 @@ export type {
     VueUiKeyboardNavigationHintSlotProps,
     VueUiWatermarkSlotProps,
     CommonAnnotatorSlots,
+    VueUiRelationCircleEmits,
+    VueUiRelationCircleEmitCopyAlt,
 };
 
-declare const VueUiRelationCircleBase: DefineComponent<VueUiRelationCircleProps>;
+declare const VueUiRelationCircleBase: DefineComponent<
+    VueUiRelationCircleProps,
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    VueUiRelationCircleEmits
+>;
 
 export const VueUiRelationCircle: typeof VueUiRelationCircleBase & {
     new (): VueUiRelationCircleExpose & {
