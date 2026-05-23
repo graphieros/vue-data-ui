@@ -3615,7 +3615,25 @@ declare module 'vue-data-ui' {
         dataset: VueUiThermometerDataset;
     };
 
-    const VueUiThermometerBase: DefineComponent<VueUiThermometerProps>;
+    export type VueUiThermometerEmitCopyAlt = {
+        config: VueUiThermometerConfig;
+        dataset: VueUiThermometerDataset;
+    };
+
+    export type VueUiThermometerEmits = {
+        copyAlt: (payload: VueUiThermometerEmitCopyAlt) => void;
+    };
+
+    const VueUiThermometerBase: DefineComponent<
+        VueUiThermometerProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiThermometerEmits
+    >;
 
     export const VueUiThermometer: typeof VueUiThermometerBase & {
         new (): VueUiThermometerExpose & {
