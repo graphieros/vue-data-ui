@@ -3287,7 +3287,27 @@ declare module 'vue-data-ui' {
         dataset: VueUiSparkHistogramDatasetItem[];
     };
 
-    const VueUiSparkHistogramBase: DefineComponent<VueUiSparkHistogramProps>;
+    export type VueUiSparkHistogramEmitSelectDatapoint = {
+        datapoint: VueUiSparkHistogramDatasetItem;
+        index: number;
+    };
+
+    export type VueUiSparkHistogramEmits = {
+        selectDatapoint: (
+            payload: VueUiSparkHistogramEmitSelectDatapoint,
+        ) => void;
+    };
+
+    const VueUiSparkHistogramBase: DefineComponent<
+        VueUiSparkHistogramProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiSparkHistogramEmits
+    >;
 
     export const VueUiSparkHistogram: typeof VueUiSparkHistogramBase & {
         new (): {
