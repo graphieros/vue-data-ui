@@ -20,6 +20,10 @@ import type {
     VueUiTreemapLegendItem,
     VueUiTreemapLegendSlotProps,
     VueUiTooltipSlotProps,
+    VueUiTreemapEmits,
+    VueUiTreemapEmitSelectLegend,
+    VueUiTreemapEmitSelectDatapoint,
+    VueUiTreemapEmitCopyAlt,
 } from 'vue-data-ui';
 
 export type {
@@ -42,9 +46,22 @@ export type {
     VueUiTreemapLegendItem,
     VueUiTreemapLegendSlotProps,
     VueUiTooltipSlotProps,
+    VueUiTreemapEmits,
+    VueUiTreemapEmitSelectLegend,
+    VueUiTreemapEmitSelectDatapoint,
+    VueUiTreemapEmitCopyAlt,
 };
 
-declare const VueUiTreemapBase: DefineComponent<VueUiTreemapProps>;
+declare const VueUiTreemapBase: DefineComponent<
+    VueUiTreemapProps,
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    VueUiTreemapEmits
+>;
 
 export const VueUiTreemap: typeof VueUiTreemapBase & {
     new (): VueUiTreemapExpose & {

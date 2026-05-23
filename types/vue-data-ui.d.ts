@@ -760,6 +760,7 @@ declare module 'vue-data-ui' {
         id?: string;
         name?: string;
         value?: string;
+        sourceColor?: string;
     };
 
     export type VueUiTreemapExpose = {
@@ -842,7 +843,31 @@ declare module 'vue-data-ui' {
         dataset: VueUiTreemapDatasetItem[];
     };
 
-    const VueUiTreemapBase: DefineComponent<VueUiTreemapProps>;
+    export type VueUiTreemapEmitSelectLegend = VueUiTreemapSeriesItem[];
+
+    export type VueUiTreemapEmitSelectDatapoint = VueUiTreemapDatapoint;
+
+    export type VueUiTreemapEmitCopyAlt = {
+        config: VueUiTreemapConfig;
+        dataset: VueUiTreemapDatapoint[];
+    };
+
+    export type VueUiTreemapEmits = {
+        selectLegend: (payload: VueUiTreemapEmitSelectLegend) => void;
+        selectDatapoint: (payload: VueUiTreemapEmitSelectDatapoint) => void;
+        copyAlt: (payload: VueUiTreemapEmitCopyAlt) => void;
+    };
+
+    const VueUiTreemapBase: DefineComponent<
+        VueUiTreemapProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiTreemapEmits
+    >;
 
     export const VueUiTreemap: typeof VueUiTreemapBase & {
         new (): VueUiTreemapExpose & {
