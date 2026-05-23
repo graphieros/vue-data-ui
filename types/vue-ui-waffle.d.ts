@@ -19,6 +19,9 @@ import type {
     VueUiWaffleLegendItem,
     VueUiWaffleLegendSlotProps,
     VueUiWaffleTooltipSlotProps,
+    VueUiWaffleEmits,
+    VueUiWaffleEmitSelectLegend,
+    VueUiWaffleEmitCopyAlt,
 } from 'vue-data-ui';
 
 export type {
@@ -40,9 +43,21 @@ export type {
     VueUiWaffleLegendItem,
     VueUiWaffleLegendSlotProps,
     VueUiWaffleTooltipSlotProps,
+    VueUiWaffleEmits,
+    VueUiWaffleEmitSelectLegend,
+    VueUiWaffleEmitCopyAlt,
 };
 
-declare const VueUiWaffleBase: DefineComponent<VueUiWaffleProps>;
+declare const VueUiWaffleBase: DefineComponent<
+    VueUiWaffleProps,
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    VueUiWaffleEmits
+>;
 
 export const VueUiWaffle: typeof VueUiWaffleBase & {
     new (): VueUiWaffleExpose & {

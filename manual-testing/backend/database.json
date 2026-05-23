@@ -1498,7 +1498,7 @@
         "VueUiTimer": true,
         "VueUiTiremarks": true,
         "VueUiTreemap": true,
-        "VueUiWaffle": false,
+        "VueUiWaffle": true,
         "VueUiWheel": false,
         "VueUiWordCloud": false,
         "VueUiWorld": false,
@@ -1509,7 +1509,7 @@
       "customCheckList": {},
       "id": "4b423dba-9fc5-45b8-9dca-20e1f2678b9e",
       "createdAt": 1779169675598,
-      "updatedAt": 1779520434397
+      "updatedAt": 1779520807214
     }
   ]
 }

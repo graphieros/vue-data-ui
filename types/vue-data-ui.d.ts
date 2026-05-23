@@ -7312,7 +7312,33 @@ declare module 'vue-data-ui' {
         dataset: VueUiWaffleDatasetItem[];
     };
 
-    const VueUiWaffleBase: DefineComponent<VueUiWaffleProps>;
+    export type VueUiWaffleEmitSelectLegend = Array<{
+        color: string;
+        name: string;
+        proportion: number;
+        value: number;
+    }>;
+
+    export type VueUiWaffleEmitCopyAlt = {
+        config: VueUiWaffleConfig;
+        dataset: VueUiWaffleDatapoint[];
+    };
+
+    export type VueUiWaffleEmits = {
+        selectLegend: (payload: VueUiWaffleEmitSelectLegend) => void;
+        copyAlt: (payload: VueUiWaffleEmitCopyAlt) => void;
+    };
+
+    const VueUiWaffleBase: DefineComponent<
+        VueUiWaffleProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiWaffleEmits
+    >;
 
     export const VueUiWaffle: typeof VueUiWaffleBase & {
         new (): VueUiWaffleExpose & {
