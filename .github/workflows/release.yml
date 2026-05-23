@@ -65,8 +65,6 @@ jobs:
 
             - run: npm ci
 
-            - run: npx cypress install
-
             - run: npm run preprod
 
             - run: npm pack --dry-run
