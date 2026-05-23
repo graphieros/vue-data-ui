@@ -1,0 +1,29 @@
+name: Publish Package
+
+on:
+    push:
+        tags:
+            - 'v*'
+
+permissions:
+    contents: read
+    id-token: write
+
+jobs:
+    publish:
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/checkout@v6
+
+            - uses: actions/setup-node@v6
+              with:
+                  node-version: '24'
+                  registry-url: 'https://registry.npmjs.org'
+                  package-manager-cache: false
+
+            - run: npm ci
+
+            - run: npm run preprod
+
+            - run: npm stage publish
