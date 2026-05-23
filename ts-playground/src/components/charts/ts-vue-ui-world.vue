@@ -6,7 +6,10 @@ import { computed } from 'vue';
 import {
     VueUiWorld,
     type VueUiWorldConfig,
+    type VueUiWorldDatapoint,
     type VueUiWorldDataset,
+    type VueUiWorldEmitCopyAlt,
+    type VueUiWorldEmitSelectLegend,
 } from 'vue-data-ui/vue-ui-world';
 import { mergeConfigs } from 'vue-data-ui/utils';
 import 'vue-data-ui/style.css';
@@ -238,11 +241,29 @@ const config = computed<VueUiWorldConfig>(() => {
 function log(n: unknown) {
     console.log(n);
 }
+
+function selectLegend(payload: VueUiWorldEmitSelectLegend) {
+    console.log('@selectLegend', payload);
+}
+
+function selectDatapoint(payload: VueUiWorldDatapoint) {
+    console.log('@selectDatapoint', payload);
+}
+
+function copyAlt(payload: VueUiWorldEmitCopyAlt) {
+    console.log('@copyAlt', payload);
+}
 </script>
 
 <template>
     <div>
-        <VueUiWorld :dataset :config>
+        <VueUiWorld
+            :dataset
+            :config
+            @selectLegend="selectLegend"
+            @selectDatapoint="selectDatapoint"
+            @copyAlt="copyAlt"
+        >
             <template #annotator-action-close>
                 <span style="color: chocolate">X</span>
             </template>

@@ -18,6 +18,10 @@ import type {
     VueUiResetActionSlotProps,
     VueUiXyCanvasLegendItem,
     VueUiXyCanvasLegendSlotProps,
+    VueUiXyCanvasEmits,
+    VueUiXyCanvasEmitSelectLegend,
+    VueUiXyCanvasEmitSelectX,
+    VueUiXyCanvasEmitCopyAlt,
 } from 'vue-data-ui';
 
 export type {
@@ -38,9 +42,22 @@ export type {
     VueUiResetActionSlotProps,
     VueUiXyCanvasLegendItem,
     VueUiXyCanvasLegendSlotProps,
+    VueUiXyCanvasEmits,
+    VueUiXyCanvasEmitSelectLegend,
+    VueUiXyCanvasEmitSelectX,
+    VueUiXyCanvasEmitCopyAlt,
 };
 
-declare const VueUiXyCanvasBase: DefineComponent<VueUiXyCanvasProps>;
+declare const VueUiXyCanvasBase: DefineComponent<
+    VueUiXyCanvasProps,
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    VueUiXyCanvasEmits
+>;
 
 export const VueUiXyCanvas: typeof VueUiXyCanvasBase & {
     new (): VueUiXyCanvasExpose & {

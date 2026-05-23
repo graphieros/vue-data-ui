@@ -11974,7 +11974,35 @@ declare module 'vue-data-ui' {
         config?: VueUiXyCanvasConfig;
     };
 
-    const VueUiXyCanvasBase: DefineComponent<VueUiXyCanvasProps>;
+    export type VueUiXyCanvasEmitSelectLegend = VueUiXyCanvasDatapoint[];
+
+    export type VueUiXyCanvasEmitSelectX = {
+        dataset: VueUiXyCanvasTooltipDatapoint[] | null;
+        index: number | null;
+        indexLabel: string | null;
+    };
+
+    export type VueUiXyCanvasEmitCopyAlt = {
+        config: VueUiXyCanvasConfig;
+        dataset: VueUiXyCanvasDatapoint[];
+    };
+
+    export type VueUiXyCanvasEmits = {
+        selectLegend: (payload: VueUiXyCanvasEmitSelectLegend) => void;
+        selectX: (payload: VueUiXyCanvasEmitSelectX) => void;
+        copyAlt: (payload: VueUiXyCanvasEmitCopyAlt) => void;
+    };
+
+    const VueUiXyCanvasBase: DefineComponent<
+        VueUiXyCanvasProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiXyCanvasEmits
+    >;
 
     export const VueUiXyCanvas: typeof VueUiXyCanvasBase & {
         new (): VueUiXyCanvasExpose & {
@@ -15008,7 +15036,33 @@ declare module 'vue-data-ui' {
         dataset?: VueUiWorldDataset;
     };
 
-    const VueUiWorldBase: DefineComponent<VueUiWorldProps>;
+    export type VueUiWorldEmitSelectLegend = {
+        name: string;
+    };
+
+    export type VueUiWorldEmitSelectDatapoint = VueUiWorldDatapoint;
+
+    export type VueUiWorldEmitCopyAlt = {
+        config: VueUiWorldConfig;
+        dataset: VueUiWorldDatapoint[];
+    };
+
+    export type VueUiWorldEmits = {
+        selectLegend: (payload: VueUiWorldEmitSelectLegend) => void;
+        selectDatapoint: (payload: VueUiWorldEmitSelectDatapoint) => void;
+        copyAlt: (payload: VueUiWorldEmitCopyAlt) => void;
+    };
+
+    const VueUiWorldBase: DefineComponent<
+        VueUiWorldProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiWorldEmits
+    >;
 
     export const VueUiWorld: typeof VueUiWorldBase & {
         new (): VueUiWorldExpose & {

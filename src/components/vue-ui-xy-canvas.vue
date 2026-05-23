@@ -289,7 +289,7 @@ function onChartEnter() {
 
 function onChartLeave() {
     setUserOptionsVisibility(false);
-    emit('selectX', { seriesIndex: null, datapoint: null });
+    emit('selectX', { dataset: null, index: null, indexLabel: null });
     tooltipIndex.value = null;
 }
 

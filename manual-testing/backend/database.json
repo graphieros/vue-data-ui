@@ -1356,7 +1356,7 @@
       "description": "Add config to control the stroke color for paths. useSerieColor usual thing",
       "priority": 1,
       "author": "graphieros",
-      "done": false,
+      "done": true,
       "exchanges": [],
       "type": "feature",
       "withComponentCheckList": false,
@@ -1365,7 +1365,7 @@
       "customCheckList": {},
       "id": "5882f257-2c9c-4d9c-b9c4-9f9b084adcd9",
       "createdAt": 1777908631920,
-      "updatedAt": 1777908631920
+      "updatedAt": 1779522491379
     },
     {
       "title": "y axis position",
@@ -1428,7 +1428,7 @@
       },
       "id": "123cf2a9-6a76-42a2-a129-f071db272721",
       "createdAt": 1779116028546,
-      "updatedAt": 1779163926858
+      "updatedAt": 1779522512724
     },
     {
       "title": "emit TS types",
@@ -1436,7 +1436,7 @@
       "description": "Add type definitions for component emits",
       "priority": 1,
       "author": "graphieros",
-      "done": false,
+      "done": true,
       "exchanges": [],
       "type": "feature",
       "withComponentCheckList": true,
@@ -1501,15 +1501,15 @@
         "VueUiWaffle": true,
         "VueUiWheel": true,
         "VueUiWordCloud": true,
-        "VueUiWorld": false,
+        "VueUiWorld": true,
         "VueUiXy": true,
-        "VueUiXyCanvas": false
+        "VueUiXyCanvas": true
       },
       "withCustomCheckList": false,
       "customCheckList": {},
       "id": "4b423dba-9fc5-45b8-9dca-20e1f2678b9e",
       "createdAt": 1779169675598,
-      "updatedAt": 1779521515903
+      "updatedAt": 1779522497320
     }
   ]
 }
