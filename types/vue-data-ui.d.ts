@@ -2952,7 +2952,25 @@ declare module 'vue-data-ui' {
         config?: VueUiWheelConfig;
     };
 
-    const VueUiWheelBase: DefineComponent<VueUiWheelProps>;
+    export type VueUiWheelEmitCopyAlt = {
+        config: VueUiWheelConfig;
+        dataset: VueUiWheelDataset;
+    };
+
+    export type VueUiWheelEmits = {
+        copyAlt: (payload: VueUiWheelEmitCopyAlt) => void;
+    };
+
+    const VueUiWheelBase: DefineComponent<
+        VueUiWheelProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiWheelEmits
+    >;
 
     export const VueUiWheel: typeof VueUiWheelBase & {
         new (): VueUiWheelExpose & {

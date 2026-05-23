@@ -7,6 +7,7 @@ import {
     VueUiWheel,
     type VueUiWheelConfig,
     type VueUiWheelDataset,
+    type VueUiWheelEmitCopyAlt,
 } from 'vue-data-ui/vue-ui-wheel';
 import { mergeConfigs } from 'vue-data-ui/utils';
 import 'vue-data-ui/style.css';
@@ -179,11 +180,15 @@ const config = computed(() => {
 function log(n: unknown) {
     console.log(n);
 }
+
+function copyAlt(payload: VueUiWheelEmitCopyAlt) {
+    console.log('@copyAlt', payload);
+}
 </script>
 
 <template>
     <div>
-        <VueUiWheel :dataset :config>
+        <VueUiWheel :dataset :config @copyAlt="copyAlt">
             <template #annotator-action-close>
                 <span style="color: chocolate">X</span>
             </template>
