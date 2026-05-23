@@ -7,6 +7,8 @@ import {
     VueUiSparkline,
     type VueUiSparklineConfig,
     type VueUiSparklineDatasetItem,
+    type VueUiSparklineEmitHoverIndex,
+    type VueUiSparklineEmitSelectDatapoint,
 } from 'vue-data-ui/vue-ui-sparkline';
 
 import 'vue-data-ui/style.css';
@@ -242,6 +244,14 @@ const config = computed<VueUiSparklineConfig>(() => {
     };
 });
 
+function hoverIndex(payload: VueUiSparklineEmitHoverIndex) {
+    console.log('@hoverIndex', payload);
+}
+
+function selectDatapoint(payload: VueUiSparklineEmitSelectDatapoint) {
+    console.log('@selectDatapoint', payload);
+}
+
 function log(n: unknown) {
     console.log(n);
 }
@@ -249,7 +259,12 @@ function log(n: unknown) {
 
 <template>
     <div>
-        <VueUiSparkline :dataset :config>
+        <VueUiSparkline
+            :dataset
+            :config
+            @hoverIndex="hoverIndex"
+            @selectDatapoint="selectDatapoint"
+        >
             <template
                 #before="{ average, median, latest, selected, sum, trend }"
             >

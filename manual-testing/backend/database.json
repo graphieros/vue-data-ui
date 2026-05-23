@@ -1486,7 +1486,7 @@
         "VueUiSparkbar": true,
         "VueUiSparkgauge": true,
         "VueUiSparkHistogram": true,
-        "VueUiSparkline": false,
+        "VueUiSparkline": true,
         "VueUiSparkStackbar": false,
         "VueUiSparkTrend": false,
         "VueUiStackbar": false,
@@ -1509,7 +1509,7 @@
       "customCheckList": {},
       "id": "4b423dba-9fc5-45b8-9dca-20e1f2678b9e",
       "createdAt": 1779169675598,
-      "updatedAt": 1779512794653
+      "updatedAt": 1779513310883
     }
   ]
 }

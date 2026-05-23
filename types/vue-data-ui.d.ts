@@ -9309,7 +9309,30 @@ declare module 'vue-data-ui' {
         dataset: VueUiSparklineDatasetItem[];
     };
 
-    const VueUiSparklineBase: DefineComponent<VueUiSparklineProps>;
+    export type VueUiSparklineEmitHoverIndex = {
+        index: number | undefined;
+    };
+
+    export type VueUiSparklineEmitSelectDatapoint = {
+        datapoint: VueUiSparklineFormattedDatapoint;
+        index: number;
+    };
+
+    export type VueUiSparklineEmits = {
+        hoverIndex: (payload: VueUiSparklineEmitHoverIndex) => void;
+        selectDatapoint: (payload: VueUiSparklineEmitSelectDatapoint) => void;
+    };
+
+    const VueUiSparklineBase: DefineComponent<
+        VueUiSparklineProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiSparklineEmits
+    >;
 
     export const VueUiSparkline: typeof VueUiSparklineBase & {
         new (): {
