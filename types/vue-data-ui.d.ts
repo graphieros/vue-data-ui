@@ -9607,10 +9607,25 @@ declare module 'vue-data-ui' {
         currentPageData: Array<Array<string | number>>;
     };
 
-    export const VueUiTable: DefineComponent<{
-        config?: VueUiTableConfig;
-        dataset: VueUiTableDataset;
-    }>;
+    export type VueUiTableEmitPageChange = VueUiTablePageChangeEvent;
+
+    export type VueUiTableEmits = {
+        pageChange: (payload: VueUiTableEmitPageChange) => void;
+    };
+
+    export const VueUiTable: DefineComponent<
+        {
+            config?: VueUiTableConfig;
+            dataset: VueUiTableDataset;
+        },
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiTableEmits
+    >;
 
     export type VueUiRatingDatasetDetailed = {
         [key: string]: number;
