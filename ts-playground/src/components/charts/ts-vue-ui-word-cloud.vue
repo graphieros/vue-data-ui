@@ -7,6 +7,7 @@ import {
     VueUiWordCloud,
     type VueUiWordCloudConfig,
     type VueUiWordCloudDatasetItem,
+    type VueUiWordCloudEmitCopyAlt,
 } from 'vue-data-ui/vue-ui-word-cloud';
 import { mergeConfigs } from 'vue-data-ui/utils';
 import 'vue-data-ui/style.css';
@@ -238,11 +239,15 @@ const config = computed<VueUiWordCloudConfig>(() => {
 function log(n: unknown) {
     console.log(n);
 }
+
+function copyAlt(payload: VueUiWordCloudEmitCopyAlt) {
+    console.log('@copyAlt', payload);
+}
 </script>
 
 <template>
     <div style="max-width: 500px">
-        <VueUiWordCloud :dataset :config>
+        <VueUiWordCloud :dataset :config @copyAlt="copyAlt">
             <template #annotator-action-close>
                 <span style="color: chocolate">X</span>
             </template>

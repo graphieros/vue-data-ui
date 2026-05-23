@@ -1500,7 +1500,7 @@
         "VueUiTreemap": true,
         "VueUiWaffle": true,
         "VueUiWheel": true,
-        "VueUiWordCloud": false,
+        "VueUiWordCloud": true,
         "VueUiWorld": false,
         "VueUiXy": true,
         "VueUiXyCanvas": false
@@ -1509,7 +1509,7 @@
       "customCheckList": {},
       "id": "4b423dba-9fc5-45b8-9dca-20e1f2678b9e",
       "createdAt": 1779169675598,
-      "updatedAt": 1779521100832
+      "updatedAt": 1779521515903
     }
   ]
 }

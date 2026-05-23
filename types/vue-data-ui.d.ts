@@ -11604,7 +11604,25 @@ declare module 'vue-data-ui' {
         dataset: VueUiWordCloudDatasetItem[] | string;
     };
 
-    const VueUiWordCloudBase: DefineComponent<VueUiWordCloudProps>;
+    export type VueUiWordCloudEmitCopyAlt = {
+        config: VueUiWordCloudConfig;
+        dataset: VueUiWordCloudDatapoint[];
+    };
+
+    export type VueUiWordCloudEmits = {
+        copyAlt: (payload: VueUiWordCloudEmitCopyAlt) => void;
+    };
+
+    const VueUiWordCloudBase: DefineComponent<
+        VueUiWordCloudProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiWordCloudEmits
+    >;
 
     export const VueUiWordCloud: typeof VueUiWordCloudBase & {
         new (): VueUiWordCloudExpose & {
