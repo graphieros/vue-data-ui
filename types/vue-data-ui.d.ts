@@ -10966,7 +10966,28 @@ declare module 'vue-data-ui' {
         dataset: VueUiStripPlotDataset[];
     };
 
-    const VueUiStripPlotBase: DefineComponent<VueUiStripPlotProps>;
+    export type VueUiStripPlotEmitSelectDatapoint = VueUiStripPlotDatapoint;
+
+    export type VueUiStripPlotEmitCopyAlt = {
+        config: VueUiStripPlotConfig;
+        dataset: VueUiStripPlotSeriesItem;
+    };
+
+    export type VueUiStripPlotEmits = {
+        selectDatapoint: (payload: VueUiStripPlotEmitSelectDatapoint) => void;
+        copyAlt: (payload: VueUiStripPlotEmitCopyAlt) => void;
+    };
+
+    const VueUiStripPlotBase: DefineComponent<
+        VueUiStripPlotProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiStripPlotEmits
+    >;
 
     export const VueUiStripPlot: typeof VueUiStripPlotBase & {
         new (): VueUiStripPlotExpose & {

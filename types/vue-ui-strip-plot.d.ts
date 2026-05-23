@@ -17,6 +17,9 @@ import type {
     VueUiKeyboardNavigationHintSlotProps,
     VueUiWatermarkSlotProps,
     VueUiStripPlotTooltipSlotProps,
+    VueUiStripPlotEmits,
+    VueUiStripPlotEmitSelectDatapoint,
+    VueUiStripPlotEmitCopyAlt,
 } from 'vue-data-ui';
 
 export type {
@@ -36,9 +39,21 @@ export type {
     VueUiKeyboardNavigationHintSlotProps,
     VueUiWatermarkSlotProps,
     VueUiStripPlotTooltipSlotProps,
+    VueUiStripPlotEmits,
+    VueUiStripPlotEmitSelectDatapoint,
+    VueUiStripPlotEmitCopyAlt,
 };
 
-declare const VueUiStripPlotBase: DefineComponent<VueUiStripPlotProps>;
+declare const VueUiStripPlotBase: DefineComponent<
+    VueUiStripPlotProps,
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    VueUiStripPlotEmits
+>;
 
 export const VueUiStripPlot: typeof VueUiStripPlotBase & {
     new (): VueUiStripPlotExpose & {
