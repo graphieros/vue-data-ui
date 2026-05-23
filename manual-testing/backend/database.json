@@ -1488,8 +1488,8 @@
         "VueUiSparkHistogram": true,
         "VueUiSparkline": true,
         "VueUiSparkStackbar": true,
-        "VueUiSparkTrend": false,
-        "VueUiStackbar": false,
+        "VueUiSparkTrend": true,
+        "VueUiStackbar": true,
         "VueUiStackline": false,
         "VueUiStripPlot": false,
         "VueUiTable": false,
@@ -1509,7 +1509,7 @@
       "customCheckList": {},
       "id": "4b423dba-9fc5-45b8-9dca-20e1f2678b9e",
       "createdAt": 1779169675598,
-      "updatedAt": 1779513807484
+      "updatedAt": 1779516091826
     }
   ]
 }

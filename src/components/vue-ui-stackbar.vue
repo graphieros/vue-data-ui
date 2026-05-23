@@ -315,7 +315,7 @@ function onChartEnter() {
 
 function onChartLeave() {
     setUserOptionsVisibility(false);
-    emit('selectX', { seriesIndex: null, datapoint: null });
+    emit('selectX', { index: null, indexLabel: null, dataset: null });
     trapIndex.value = null;
     activeTooltipIndex.value = null;
     isTooltip.value = false;
@@ -2550,7 +2550,7 @@ function onSvgBlur() {
     activeTooltipIndex.value = null;
     isTooltip.value = false;
     trapIndex.value = null;
-    emit('selectX', { seriesIndex: null, datapoint: null });
+    emit('selectX', { index: null, indexLabel: null, dataset: null });
     isFocus.value = false;
 }
 
@@ -2589,7 +2589,7 @@ function onSvgKeydown(event) {
         activeTooltipIndex.value = null;
         isTooltip.value = false;
         trapIndex.value = null;
-        emit('selectX', { seriesIndex: null, datapoint: null });
+        emit('selectX', { index: null, indexLabel: null, dataset: null });
         return;
     }
 

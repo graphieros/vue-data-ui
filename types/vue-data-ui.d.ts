@@ -13079,7 +13079,7 @@ declare module 'vue-data-ui' {
         id: string;
         name: string;
         proportion: number | null;
-        timeLabel: { text: string; absoluteIndex: number };
+        timeLabel: { text: string; absoluteIndex: number } | undefined;
         value: number | null;
     };
 
@@ -13114,7 +13114,52 @@ declare module 'vue-data-ui' {
         selectedXIndex?: number | null;
     };
 
-    const VueUiStackbarBase: DefineComponent<VueUiStackbarProps>;
+    export type VueUiStackbarEmitSelectLegend =
+        VueUiStackbarFormattedDatasetItem[];
+
+    export type VueUiStackbarEmitSelectDatapoint = {
+        datapoint: VueUiStackbarDatapointItem[];
+        period: {
+            absoluteIndex: number;
+            text: string;
+        };
+    };
+
+    export type VueUiStackbarEmitSelectTimeLabel = {
+        datapoint: VueUiStackbarDatapointItem[];
+        absoluteIndex: number;
+        label: string;
+    };
+
+    export type VueUiStackbarEmitSelectX = {
+        dataset: VueUiStackbarTooltipDatapoint[] | null;
+        index: number | null;
+        indexLabel: number | null | undefined;
+    };
+
+    export type VueUiStackbarEmitCopyAlt = {
+        config: VueUiStackbarConfig;
+        dataset: VueUiStackbarFormattedDatasetItem[];
+    };
+
+    export type VueUiStackbarEmits = {
+        selectLegend: (payload: VueUiStackbarEmitSelectLegend) => void;
+        selectDatapoint: (payload: VueUiStackbarEmitSelectDatapoint) => void;
+        selectTimeLabel: (payload: VueUiStackbarEmitSelectTimeLabel) => void;
+        selectX: (payload: VueUiStackbarEmitSelectX) => void;
+        copyAlt: (payload: VueUiStackbarEmitCopyAlt) => void;
+    };
+
+    const VueUiStackbarBase: DefineComponent<
+        VueUiStackbarProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiStackbarEmits
+    >;
 
     export const VueUiStackbar: typeof VueUiStackbarBase & {
         new (): VueUiStackbarExpose & {
