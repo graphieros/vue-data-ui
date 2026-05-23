@@ -2041,6 +2041,52 @@ const hoveredIndex = ref(null);
 const continuousTooltipSet = ref([]);
 const continuousTooltipX = ref(null);
 
+const continuousKeyboardXValues = computed(() => {
+    if (!isContinuousScale.value) {
+        return [];
+    }
+
+    return [
+        ...new Set(
+            relativeDataset.value
+                .flatMap((datapoint) => datapoint.series || [])
+                .filter(
+                    (point) =>
+                        isValidNumber(point?.x) && isValidNumber(point?.y),
+                )
+                .map((point) => Number(point.x)),
+        ),
+    ].sort((a, b) => {
+        return getContinuousX({ x: a }) - getContinuousX({ x: b });
+    });
+});
+
+function showContinuousTooltipFromKeyboard(index) {
+    const xValue = continuousKeyboardXValues.value[index];
+
+    if (!isValidNumber(xValue)) {
+        continuousTooltipSet.value = [];
+        continuousTooltipX.value = null;
+        selectedMinimapXValue.value = null;
+        isTooltip.value = false;
+        return;
+    }
+
+    updateContinuousTooltipFromXValue(Number(xValue));
+
+    const svgX = getContinuousX({ x: Number(xValue) });
+    const svgY = drawingArea.value.top + drawingArea.value.height / 2;
+    const coords = svgToClientCoords(svgX, svgY, svgRef.value);
+
+    if (coords) {
+        tooltipA11yPosition.value = coords;
+    }
+
+    selectedSerieIndex.value = index;
+    activeTooltipIndex.value = index;
+    isTooltip.value = true;
+}
+
 function clientToSvgCoords(evt) {
     const svgEl = svgRef.value;
     if (!svgEl) return null;
@@ -5062,20 +5108,29 @@ const timeTagContent = computed(() => {
 // Datapoint labels
 function getDataLabelContent({ serie, plot, type }) {
     if (!canShowValue(plot.value)) return '';
-    const content = applyDataLabel(
-        FINAL_CONFIG.value[type].labels.formatter,
-        plot.value,
-        dataLabel({
-            p: serie.prefix || FINAL_CONFIG.value.chart.labels.prefix,
-            v: plot.value,
-            x: serie.suffix || FINAL_CONFIG.value.chart.labels.suffix,
-            r: FINAL_CONFIG.value[type].labels.rounding,
-        }),
-        {
-            datapoint: plot,
-            serie,
-        },
-    );
+    const yValue = dataLabel({
+        p: serie.prefix || FINAL_CONFIG.value.chart.labels.prefix,
+        v: plot.value,
+        s: serie.suffix || FINAL_CONFIG.value.chart.labels.suffix,
+        r: FINAL_CONFIG.value[type].labels.rounding,
+    });
+
+    const content =
+        isContinuousScale.value && isValidNumber(plot.x)
+            ? `x: ${dataLabel({
+                  v: plot.x,
+                  r: FINAL_CONFIG.value.chart.grid.labels.xAxis.rounding,
+              })}\ny: ${yValue}`
+            : applyDataLabel(
+                  FINAL_CONFIG.value[type].labels.formatter,
+                  plot.value,
+                  yValue,
+                  {
+                      datapoint: plot,
+                      serie,
+                  },
+              );
+
     return createTSpansFromLineBreaksOnX({
         content,
         fontSize: fontSizes.value.plotLabels,
@@ -5504,6 +5559,38 @@ function onSvgKeydown(event) {
 
     event.preventDefault();
     event.stopPropagation();
+
+    if (isContinuousScale.value) {
+        const count = continuousKeyboardXValues.value.length;
+
+        if (!count) {
+            return;
+        }
+
+        let nextIndex = activeTooltipIndex.value;
+
+        const hasValidActiveIndex =
+            nextIndex !== null && nextIndex >= 0 && nextIndex < count;
+
+        if (!hasValidActiveIndex) {
+            nextIndex = isRightArrow ? 0 : count - 1;
+        } else if (isRightArrow) {
+            nextIndex += 1;
+
+            if (nextIndex >= count) {
+                nextIndex = 0;
+            }
+        } else if (isLeftArrow) {
+            nextIndex -= 1;
+
+            if (nextIndex < 0) {
+                nextIndex = count - 1;
+            }
+        }
+
+        showContinuousTooltipFromKeyboard(nextIndex);
+        return;
+    }
 
     let nextIndex = activeTooltipIndex.value;
     const hoveredVisibleIndex = hoveredIndex.value;
@@ -6873,10 +6960,10 @@ defineExpose({
                                     }"
                                     :radius="
                                         isSelectedDatapoint(serie, plot, j)
-                                            ? (plotRadii.line || 6) * 1.5
+                                            ? (plotRadii.plot || 6) * 1.5
                                             : isPlotAlone(serie.plots, j)
-                                              ? plotRadii.line || 6
-                                              : plotRadii.line || 6
+                                              ? plotRadii.plot || 6
+                                              : plotRadii.plot || 6
                                     "
                                     :stroke="
                                         FINAL_CONFIG.plot.dot.useSerieColor
@@ -7496,10 +7583,7 @@ defineExpose({
                                                     'dataLabels',
                                                 )) ||
                                             serie.dataLabels === true ||
-                                            (selectedSerieIndex !== null &&
-                                                selectedSerieIndex === j) ||
-                                            (selectedMinimapIndex !== null &&
-                                                selectedMinimapIndex === j)
+                                            isSelectedDatapoint(serie, plot, j)
                                         "
                                         :transform="
                                             getDataLabelTransformLineOrPlot({
@@ -7667,10 +7751,7 @@ defineExpose({
                                                     'dataLabels',
                                                 )) ||
                                             serie.dataLabels === true ||
-                                            (selectedSerieIndex !== null &&
-                                                selectedSerieIndex === j) ||
-                                            (selectedMinimapIndex !== null &&
-                                                selectedMinimapIndex === j)
+                                            isSelectedDatapoint(serie, plot, j)
                                         "
                                         :transform="
                                             getDataLabelTransformLineOrPlot({
