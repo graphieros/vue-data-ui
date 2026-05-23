@@ -3451,7 +3451,31 @@ declare module 'vue-data-ui' {
         dataset: VueUiSparkStackbarDatasetItem[];
     };
 
-    const VueUiSparkStackbarBase: DefineComponent<VueUiSparkStackbarProps>;
+    export type VueUiSparkStackbarEmitSelectDatapoint = {
+        datapoint: VueUiSparkStackbarDatapoint;
+        index: number;
+    };
+
+    export type VueUiSparkStackbarEmitSelectLegend =
+        VueUiSparkStackbarDatapoint[];
+
+    export type VueUiSparkStackbarEmits = {
+        selectDatapoint: (
+            payload: VueUiSparkStackbarEmitSelectDatapoint,
+        ) => void;
+        selectLegend: (payload: VueUiSparkStackbarEmitSelectLegend) => void;
+    };
+
+    const VueUiSparkStackbarBase: DefineComponent<
+        VueUiSparkStackbarProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiSparkStackbarEmits
+    >;
 
     export const VueUiSparkStackbar: typeof VueUiSparkStackbarBase & {
         new (): VueUiSparkStackbarExpose & {
