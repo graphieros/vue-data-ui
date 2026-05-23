@@ -1421,7 +1421,25 @@ declare module 'vue-data-ui' {
         config: VueUiTableSparklineConfig;
     };
 
-    const VueUiTableSparklineBase: DefineComponent<VueUiTableSparklineProps>;
+    export type VueUiTableSparklineEmitCopyAlt = {
+        config: VueUiTableSparklineConfig;
+        dataset: VueUiTableSparklineFormattedDatasetItem[];
+    };
+
+    export type VueUiTableSparklineEmits = {
+        copyAlt: (payload: VueUiTableSparklineEmitCopyAlt) => void;
+    };
+
+    const VueUiTableSparklineBase: DefineComponent<
+        VueUiTableSparklineProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiTableSparklineEmits
+    >;
 
     export const VueUiTableSparkline: typeof VueUiTableSparklineBase & {
         new (): {

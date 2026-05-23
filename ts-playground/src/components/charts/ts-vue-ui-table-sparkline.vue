@@ -7,6 +7,7 @@ import {
     VueUiTableSparkline,
     type VueUiTableSparklineConfig,
     type VueUiTableSparklineDatasetItem,
+    type VueUiTableSparklineEmitCopyAlt,
 } from 'vue-data-ui/vue-ui-table-sparkline';
 import { mergeConfigs } from 'vue-data-ui/utils';
 import 'vue-data-ui/style.css';
@@ -201,11 +202,15 @@ const config = computed<VueUiTableSparklineConfig>(() => {
 function log(n: unknown) {
     console.log(n);
 }
+
+function copyAlt(payload: VueUiTableSparklineEmitCopyAlt) {
+    console.log('@copyAlt', payload);
+}
 </script>
 
 <template>
     <div>
-        <VueUiTableSparkline :dataset :config>
+        <VueUiTableSparkline :dataset :config @copyAlt="copyAlt">
             <template #menuIcon="{ isOpen, color }">
                 <CommonMenuIcon :isOpen :color />
             </template>
