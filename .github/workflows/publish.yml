@@ -25,7 +25,7 @@ jobs:
 
             - run: npm ci
 
-            - run: npm run preprod
+            - run: npm run pubprod
 
             - name: Publish
               run: |
