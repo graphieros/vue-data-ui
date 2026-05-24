@@ -149,13 +149,13 @@ const dataset = ref([
     {
         name: 'Serie A with name',
         type: 'line',
-        // series: [100, 200, 300, -200, 100, 120, 100, 200, 100, 250],
-        series: [
-            { x: 25.4, y: 10 },
-            { x: 23.1, y: 15 }, // Closer to the first point
-            { x: 15.2, y: 120 }, // Further down the axis
-            { x: 6.8, y: 500 }, // Much further down the axis
-        ],
+        series: [100, 200, 300, -200, 100, 120, 100, 200, 100, 250],
+        // series: [
+        //     { x: 25.4, y: 10 },
+        //     { x: 23.1, y: 15 }, // Closer to the first point
+        //     { x: 15.2, y: 120 }, // Further down the axis
+        //     { x: 6.8, y: 500 }, // Much further down the axis
+        // ],
         dataLabels: true,
         // useArea: true,
         // smooth: true
@@ -528,6 +528,33 @@ const model = createModel([
     RANGE('chart.highlighter.opacity', { def: 5, min: 0, max: 100 }),
     CHECKBOX('chart.highlighter.useLine', { def: true }),
 
+    CHECKBOX('chart.highlighter.crosshairs.show', { def: false }),
+    CHECKBOX('chart.highlighter.crosshairs.stopOnPoint', { def: true }),
+    COLOR('chart.highlighter.crosshairs.stroke', { def: '#1A1A1A' }),
+    NUMBER('chart.highlighter.crosshairs.strokeWidth', {
+        def: 1,
+        min: 0,
+        max: 10,
+        step: 0.5,
+    }),
+    NUMBER('chart.highlighter.crosshairs.strokeDasharray', {
+        def: 3,
+        min: 0,
+        max: 12,
+    }),
+    NUMBER('chart.highlighter.crosshairs.dot.radius', {
+        def: 2,
+        min: 0,
+        max: 10,
+    }),
+    COLOR('chart.highlighter.crosshairs.dot.fill', { def: '#FFFFFF' }),
+    COLOR('chart.highlighter.crosshairs.dot.stroke', { def: '#FF0000' }),
+    NUMBER('chart.highlighter.crosshairs.dot.strokeWidth', {
+        def: 2,
+        min: 0,
+        max: 4,
+    }),
+
     CHECKBOX('chart.timeTag.show', { def: true }),
 
     CHECKBOX('chart.highlightArea.show', { def: false }),
@@ -558,7 +585,7 @@ const model = createModel([
     CHECKBOX('chart.grid.showVerticalLines', { def: true }),
     CHECKBOX('chart.grid.showHorizontalLines', { def: true }),
 
-    SELECT('chart.grid.position', ['middle', 'start'], { def: 'start' }),
+    SELECT('chart.grid.position', ['middle', 'start'], { def: 'middle' }),
     CHECKBOX('chart.grid.frame.show', { def: false }),
     COLOR('chart.grid.frame.stroke', { def: '#1A1A1A' }),
     NUMBER('chart.grid.frame.strokeWidth', { def: 4, min: 0, max: 12 }),

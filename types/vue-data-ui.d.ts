@@ -5703,6 +5703,19 @@ declare module 'vue-data-ui' {
                 useLine?: boolean;
                 lineDasharray?: number;
                 lineWidth?: number;
+                crosshairs?: {
+                    show?: boolean;
+                    stroke?: string;
+                    strokeWidth?: number;
+                    strokeDasharray?: number;
+                    stopOnPoint?: boolean;
+                    dot?: {
+                        radius?: number;
+                        fill?: string;
+                        stroke?: string;
+                        strokeWidth?: number;
+                    };
+                };
             };
             timeTag?: {
                 show?: boolean;

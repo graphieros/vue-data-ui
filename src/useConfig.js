@@ -806,6 +806,19 @@ export function useConfig(options = {}) {
                 useLine: false,
                 lineDasharray: 2,
                 lineWidth: 1,
+                crosshairs: {
+                    show: false,
+                    stroke: COLOR_BLACK,
+                    strokeWidth: 1,
+                    strokeDasharray: 3,
+                    stopOnPoint: false,
+                    dot: {
+                        radius: 2,
+                        fill: COLOR_BLACK,
+                        stroke: COLOR_WHITE,
+                        strokeWidth: 1,
+                    },
+                },
             },
             // Highlight area was initially a single object of type VueUiXyHighlightArea.
             // It now also works with a type VueUiXyHighlightArea[]

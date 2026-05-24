@@ -203,6 +203,19 @@ const testPreconfig = computed<VueUiXyConfig>(() => {
                 useLine: false,
                 lineDasharray: 2,
                 lineWidth: 1,
+                crosshairs: {
+                    show: false,
+                    stroke: '#1A1A1A',
+                    strokeWidth: 1,
+                    strokeDasharray: 3,
+                    stopOnPoint: false,
+                    dot: {
+                        radius: 2,
+                        fill: '#1A1A1A',
+                        stroke: '#FFFFFF',
+                        strokeWidth: 1,
+                    },
+                },
             },
             highlightArea: {
                 show: false,

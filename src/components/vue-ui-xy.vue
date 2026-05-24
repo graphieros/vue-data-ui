@@ -5211,6 +5211,70 @@ const highlighterX = computed(() => {
     );
 });
 
+const crosshairsAreActive = computed(() => {
+    return (
+        FINAL_CONFIG.value.chart.highlighter.crosshairs.show &&
+        hasHighlighterSelection.value
+    );
+});
+
+const crosshairSelectedPlots = computed(() => {
+    const sets = [...lineSet.value, ...plotSet.value, ...barSet.value];
+
+    return sets.flatMap((serie) => {
+        return (serie.plots || [])
+            .filter((plot, index) => isSelectedDatapoint(serie, plot, index))
+            .filter((plot) => canShowValue(plot.value))
+            .map((plot) => ({
+                ...plot,
+                serie,
+                x: checkNaN(plot.x),
+                y: checkNaN(plot.y),
+            }));
+    });
+});
+
+const crosshairXAxisLabel = computed(() => {
+    if (!crosshairsAreActive.value) return null;
+
+    if (isContinuousScale.value) {
+        const item = continuousTooltipSet.value[0];
+        const value = item?.point?.raw?.x ?? item?.point?.x;
+
+        if (!isValidNumber(value)) return null;
+
+        return {
+            x: highlighterX.value,
+            text: applyDataLabel(
+                FINAL_CONFIG.value.chart.grid.labels.xAxis.formatter,
+                value,
+                dataLabel({
+                    v: value,
+                    r: FINAL_CONFIG.value.chart.tooltip.roundingValue,
+                }),
+            ),
+        };
+    }
+
+    const index =
+        selectedSerieIndex.value !== null
+            ? selectedSerieIndex.value
+            : selectedMinimapIndex.value;
+
+    if (index === null || index === undefined) return null;
+
+    return {
+        x: getDatapointX(index),
+        text: timeLabels.value[index]?.text ?? '',
+    };
+});
+
+function getCrosshairXEdge(plotX) {
+    return FINAL_CONFIG.value.chart.grid.labels.yAxis.position === 'right'
+        ? drawingArea.value.right
+        : drawingArea.value.left;
+}
+
 function isSelectedDatapoint(serie, plot, index) {
     if (isContinuousScale.value) {
         return continuousTooltipSet.value.some((item) => {
@@ -6350,7 +6414,11 @@ defineExpose({
                                                   FINAL_CONFIG.chart.highlighter
                                                       .color,
                                                   FINAL_CONFIG.chart.highlighter
-                                                      .opacity,
+                                                      .crosshairs.show
+                                                      ? 0
+                                                      : FINAL_CONFIG.chart
+                                                            .highlighter
+                                                            .opacity,
                                               )
                                             : 'transparent'
                                     "
@@ -6524,8 +6592,11 @@ defineExpose({
                             />
                         </template>
 
+                        <!-- HIGHLIGHTER (useLine) -->
                         <g
                             v-if="
+                                !FINAL_CONFIG.chart.highlighter.crosshairs
+                                    .show &&
                                 (FINAL_CONFIG.chart.highlighter.useLine ||
                                     isContinuousScale) &&
                                 hasHighlighterSelection
@@ -6550,6 +6621,109 @@ defineExpose({
                                     pointer-events: none;
                                 "
                             />
+                        </g>
+
+                        <!-- CROSSHAIR SELECTION (x & y lines, dot on y) -->
+                        <g
+                            v-if="crosshairsAreActive"
+                            class="vue-ui-xy-crosshair-selection"
+                        >
+                            <g
+                                v-for="plot in crosshairSelectedPlots"
+                                :key="`crosshair_${plot.serie.id}_${plot.index}`"
+                            >
+                                <line
+                                    :x1="
+                                        FINAL_CONFIG.chart.highlighter
+                                            .crosshairs.stopOnPoint
+                                            ? forceValidValue(plot.x)
+                                            : drawingArea.left
+                                    "
+                                    :x2="
+                                        FINAL_CONFIG.chart.highlighter
+                                            .crosshairs.stopOnPoint
+                                            ? forceValidValue(
+                                                  getCrosshairXEdge(plot.x),
+                                              )
+                                            : drawingArea.right
+                                    "
+                                    :y1="forceValidValue(plot.y)"
+                                    :y2="forceValidValue(plot.y)"
+                                    :stroke="
+                                        FINAL_CONFIG.chart.highlighter
+                                            .crosshairs.stroke
+                                    "
+                                    :stroke-width="
+                                        FINAL_CONFIG.chart.highlighter
+                                            .crosshairs.strokeWidth
+                                    "
+                                    :stroke-dasharray="
+                                        FINAL_CONFIG.chart.highlighter
+                                            .crosshairs.strokeDasharray
+                                    "
+                                    stroke-linecap="round"
+                                    style="pointer-events: none"
+                                />
+
+                                <line
+                                    :x1="forceValidValue(plot.x)"
+                                    :x2="forceValidValue(plot.x)"
+                                    :y1="
+                                        FINAL_CONFIG.chart.highlighter
+                                            .crosshairs.stopOnPoint
+                                            ? forceValidValue(plot.y)
+                                            : drawingArea.top
+                                    "
+                                    :y2="
+                                        FINAL_CONFIG.chart.highlighter
+                                            .crosshairs.stopOnPoint
+                                            ? forceValidValue(
+                                                  drawingArea.bottom,
+                                              )
+                                            : drawingArea.bottom
+                                    "
+                                    :stroke="
+                                        FINAL_CONFIG.chart.highlighter
+                                            .crosshairs.stroke
+                                    "
+                                    :stroke-width="
+                                        FINAL_CONFIG.chart.highlighter
+                                            .crosshairs.strokeWidth
+                                    "
+                                    :stroke-dasharray="
+                                        FINAL_CONFIG.chart.highlighter
+                                            .crosshairs.strokeDasharray
+                                    "
+                                    stroke-linecap="round"
+                                    style="pointer-events: none"
+                                />
+
+                                <circle
+                                    :cx="
+                                        forceValidValue(
+                                            getCrosshairXEdge(plot.x),
+                                        )
+                                    "
+                                    :cy="forceValidValue(plot.y)"
+                                    :r="
+                                        FINAL_CONFIG.chart.highlighter
+                                            .crosshairs.dot.radius
+                                    "
+                                    :fill="
+                                        FINAL_CONFIG.chart.highlighter
+                                            .crosshairs.dot.fill
+                                    "
+                                    :stroke="
+                                        FINAL_CONFIG.chart.highlighter
+                                            .crosshairs.dot.stroke
+                                    "
+                                    :stroke-width="
+                                        FINAL_CONFIG.chart.highlighter
+                                            .crosshairs.dot.strokeWidth
+                                    "
+                                    style="pointer-events: none"
+                                />
+                            </g>
                         </g>
 
                         <!-- FRAME -->
@@ -6587,6 +6761,8 @@ defineExpose({
                         <g
                             v-if="FINAL_CONFIG.chart.grid.labels.show"
                             ref="scaleLabels"
+                            :opacity="crosshairsAreActive ? 0.2 : 1"
+                            style="transition: opacity 0.2s"
                         >
                             <template v-if="mutableConfig.useIndividualScale">
                                 <g v-for="el in allScales">
@@ -6917,6 +7093,96 @@ defineExpose({
                                     </text>
                                 </g>
                             </template>
+                        </g>
+
+                        <!-- CROSSHAIR SELECTION (label on y) -->
+                        <g
+                            v-if="crosshairsAreActive"
+                            class="vue-ui-xy-crosshair-selection"
+                        >
+                            <text
+                                v-for="plot in crosshairSelectedPlots"
+                                :key="`crosshair_y_label_${plot.serie.id}_${plot.index}`"
+                                :transform="`translate(${
+                                    yAxisLabelsAreRight
+                                        ? drawingArea.right +
+                                          FINAL_CONFIG.chart.grid.labels.yAxis
+                                              .crosshairSize +
+                                          FINAL_CONFIG.chart.grid.labels.yAxis
+                                              .scaleValueOffsetX +
+                                          5
+                                        : drawingArea.scaleLabelX -
+                                          FINAL_CONFIG.chart.grid.labels.yAxis
+                                              .crosshairSize
+                                }, ${forceValidValue(plot.y) + fontSizes.dataLabels / 3})`"
+                                :font-size="fontSizes.dataLabels"
+                                :text-anchor="
+                                    yAxisLabelsAreRight ? 'start' : 'end'
+                                "
+                                :fill="FINAL_CONFIG.chart.grid.labels.color"
+                                style="
+                                    transition: none !important;
+                                    animation: none !important;
+                                    pointer-events: none;
+                                "
+                            >
+                                {{
+                                    applyDataLabel(
+                                        FINAL_CONFIG.chart.grid.labels.yAxis
+                                            .formatter,
+                                        plot.value,
+                                        dataLabel({
+                                            p:
+                                                plot.serie.prefix ||
+                                                FINAL_CONFIG.chart.labels
+                                                    .prefix,
+                                            v: plot.value,
+                                            s:
+                                                plot.serie.suffix ||
+                                                FINAL_CONFIG.chart.labels
+                                                    .suffix,
+                                            r: FINAL_CONFIG.chart.grid.labels
+                                                .yAxis.rounding,
+                                        }),
+                                        {
+                                            datapoint: plot.serie,
+                                            seriesIndex: plot.index,
+                                        },
+                                    )
+                                }}
+                            </text>
+                        </g>
+
+                        <!-- CROSSHAIR SELECTION (dot on x, before line & plot series) -->
+                        <g
+                            v-if="crosshairXAxisLabel"
+                            class="vue-ui-xy-crosshair-selection"
+                        >
+                            <circle
+                                :cx="highlighterX"
+                                :cy="forceValidValue(drawingArea?.bottom)"
+                                :r="
+                                    FINAL_CONFIG.chart.highlighter.crosshairs
+                                        .dot.radius
+                                "
+                                :fill="
+                                    FINAL_CONFIG.chart.highlighter.crosshairs
+                                        .dot.fill
+                                "
+                                :stroke="
+                                    FINAL_CONFIG.chart.highlighter.crosshairs
+                                        .dot.stroke
+                                "
+                                :stroke-width="
+                                    FINAL_CONFIG.chart.highlighter.crosshairs
+                                        .dot.strokeWidth
+                                "
+                                style="
+                                    transition: none !important;
+                                    animation: none !important;
+                                    pointer-events: none;
+                                "
+                            />
                         </g>
 
                         <!-- PLOTS -->
@@ -8274,6 +8540,8 @@ defineExpose({
                                 FINAL_CONFIG.chart.grid.labels.xAxisLabels.show
                             "
                             ref="timeLabelsEls"
+                            :opacity="crosshairsAreActive ? 0.1 : 1"
+                            style="transition: opacity 0.2s"
                         >
                             <template v-if="$slots['time-label']">
                                 <template
@@ -8398,6 +8666,46 @@ defineExpose({
                             </template>
                         </g>
 
+                        <g v-if="crosshairXAxisLabel">
+                            <text
+                                class="vue-data-ui-time-label"
+                                data-cy="time-label"
+                                :text-anchor="
+                                    FINAL_CONFIG.chart.grid.labels.xAxisLabels
+                                        .rotation > 0
+                                        ? 'start'
+                                        : FINAL_CONFIG.chart.grid.labels
+                                                .xAxisLabels.rotation < 0
+                                          ? 'end'
+                                          : 'middle'
+                                "
+                                :font-size="fontSizes.xAxis"
+                                :fill="
+                                    FINAL_CONFIG.chart.grid.labels.xAxisLabels
+                                        .color
+                                "
+                                :transform="`translate(${crosshairXAxisLabel.x}, ${drawingArea?.bottom + fontSizes.xAxis * 1.5}), rotate(${FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation})`"
+                                font-weight="bold"
+                                style="
+                                    transition: none !important;
+                                    animation: none !important;
+                                    pointer-events: none;
+                                "
+                                v-html="
+                                    createTSpansFromLineBreaksOnX({
+                                        content: String(
+                                            crosshairXAxisLabel.text,
+                                        ),
+                                        fontSize: fontSizes.xAxis,
+                                        fill: FINAL_CONFIG.chart.grid.labels
+                                            .xAxisLabels.color,
+                                        x: 0,
+                                        y: 0,
+                                    })
+                                "
+                            />
+                        </g>
+
                         <!-- ANNOTATIONS -->
                         <!-- YAXIS ANNOTATIONS -->
                         <g
@@ -8512,6 +8820,7 @@ defineExpose({
                         <!-- TIME TAG -->
                         <g
                             v-if="
+                                !crosshairsAreActive &&
                                 FINAL_CONFIG.chart.timeTag.show &&
                                 (isContinuousScale
                                     ? isValidNumber(activeContinuousXValue)
@@ -9516,5 +9825,9 @@ svg:focus-visible {
     clip: rect(0 0 0 0);
     white-space: normal;
     border: 0;
+}
+
+.vue-ui-xy-crosshair-selection line {
+    animation: none;
 }
 </style>
