@@ -49,7 +49,14 @@
                 }
             },
             "highlighter": {
-                "color": "#CCCCCC"
+                "color": "#CCCCCC",
+                "crosshairs": {
+                    "stroke": "#CCCCCC",
+                    "dot": {
+                        "fill": "#CCCCCC",
+                        "stroke": "#1A1A1A"
+                    }
+                }
             },
             "timeTag": {
                 "backgroundColor": "#2A2A2A",
@@ -141,7 +148,14 @@
                 }
             },
             "highlighter": {
-                "color": "#CCCCCC"
+                "color": "#CCCCCC",
+                "crosshairs": {
+                    "stroke": "#CCCCCC",
+                    "dot": {
+                        "fill": "#CCCCCC",
+                        "stroke": "#1A1A1A"
+                    }
+                }
             },
             "timeTag": {
                 "backgroundColor": "#2A2A2A",
@@ -226,7 +240,14 @@
                 }
             },
             "highlighter": {
-                "color": "#424242"
+                "color": "#424242",
+                "crosshairs": {
+                    "stroke": "#424242",
+                    "dot": {
+                        "fill": "#424242",
+                        "stroke": "#FFF8E1"
+                    }
+                }
             },
             "timeTag": {
                 "backgroundColor": "#424242",
@@ -315,7 +336,14 @@
                 }
             },
             "highlighter": {
-                "color": "#FFF8E1"
+                "color": "#FFF8E1",
+                "crosshairs": {
+                    "stroke": "#FFF8E1",
+                    "dot": {
+                        "fill": "#FFF8E1",
+                        "stroke": "#1E1E1E"
+                    }
+                }
             },
             "timeTag": {
                 "backgroundColor": "#5D4037",
@@ -399,7 +427,14 @@
                 "highlightColor": "#66CC66"
             },
             "highlighter": {
-                "color": "#66CC66"
+                "color": "#66CC66",
+                "crosshairs": {
+                    "stroke": "#66CC66",
+                    "dot": {
+                        "fill": "#66CC66",
+                        "stroke": "#1A1A1A"
+                    }
+                }
             },
             "timeTag": {
                 "backgroundColor": "#1A1A1A",
@@ -482,7 +517,14 @@
                 "highlightColor": "#8F837A"
             },
             "highlighter": {
-                "color": "#8F837A"
+                "color": "#8F837A",
+                "crosshairs": {
+                    "stroke": "#8F837A",
+                    "dot": {
+                        "fill": "#8F837A",
+                        "stroke": "#fbfafa"
+                    }
+                }
             },
             "timeTag": {
                 "backgroundColor": "#fbfafa",
@@ -569,7 +611,14 @@
                 "highlightColor": "#50606C"
             },
             "highlighter": {
-                "color": "#7DA9B5"
+                "color": "#7DA9B5",
+                "crosshairs": {
+                    "stroke": "#7DA9B5",
+                    "dot": {
+                        "fill": "#7DA9B5",
+                        "stroke": "#f6f6fb"
+                    }
+                }
             },
             "timeTag": {
                 "backgroundColor": "#f6f6fb",
