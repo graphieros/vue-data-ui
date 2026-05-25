@@ -20,6 +20,7 @@ import {
     isFunction,
     triggerEvent,
     XMLNS,
+    isValidNumber,
 } from '../lib';
 import { debounce, throttle } from '../canvas-lib';
 import { useResponsive } from '../useResponsive';
@@ -294,11 +295,8 @@ function miniXToValue(x) {
 }
 
 function getMiniValue(point) {
-    if (props.useValueRange) {
-        return Number(point?.y);
-    }
-
-    return Number(point);
+    const value = props.useValueRange ? point?.y : point;
+    return isValidNumber(value) ? Number(value) : null;
 }
 
 function getMiniXValue(point, index) {
