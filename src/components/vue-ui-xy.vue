@@ -63,6 +63,17 @@ import {
     treeShake,
     isValidNumber,
 } from '../lib';
+import {
+    canShowValue,
+    fillArray,
+    groupBy,
+    isCoordinatePoint,
+    isObjectivelyDifferentIndex,
+    memoizeByArrayRef,
+    normalizeRange,
+    safeDiv,
+    safeInt,
+} from '../utils/xy.js';
 import { useLocale } from '../useLocale.js';
 import { useConfig } from '../useConfig';
 import { usePrinter } from '../usePrinter.js';
@@ -302,15 +313,6 @@ const svg = computed(() => {
         width: width.value,
     };
 });
-
-function safeInt(n) {
-    return Number.isFinite(n) ? Math.max(0, Math.floor(n)) : 0;
-}
-function safeDiv(a, b, fallback = 0) {
-    return Number.isFinite(a) && Number.isFinite(b) && Math.abs(b) > 1e-9
-        ? a / b
-        : fallback;
-}
 
 const mutableInitialized = ref(false);
 
@@ -620,22 +622,6 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
     }),
 });
 
-function memoizeByArrayRef(fn) {
-    const wm = new WeakMap();
-    return (arr, ...rest) => {
-        let m = wm.get(arr);
-        const key = JSON.stringify(rest);
-        if (m && m.has(key)) return m.get(key);
-        const out = fn(arr, ...rest);
-        if (!m) {
-            m = new Map();
-            wm.set(arr, m);
-        }
-        m.set(key, out);
-        return out;
-    };
-}
-
 const lttbMemo = memoizeByArrayRef((series, threshold) => {
     return largestTriangleThreeBucketsArray({ data: series, threshold });
 });
@@ -827,16 +813,6 @@ const dataRange = computed(() => {
     };
 });
 
-function normalizeRange(minValue, maxValue) {
-    let min = Number.isFinite(minValue) ? minValue : 0;
-    let max = Number.isFinite(maxValue) ? maxValue : 1;
-
-    if (min === max) max = min + 1;
-    else if (min > max) [min, max] = [max, min];
-
-    return { min, max };
-}
-
 const min = computed(() => {
     const { min: dataMin, max: dataMax } = dataRange.value;
 
@@ -911,15 +887,6 @@ const relativeZero = computed(() => {
     if (niceScale.value.min >= 0) return 0;
     return Math.abs(niceScale.value.min);
 });
-
-function isCoordinatePoint(point) {
-    return (
-        point &&
-        typeof point === 'object' &&
-        Number.isFinite(Number(point.x)) &&
-        Number.isFinite(Number(point.y))
-    );
-}
 
 const isContinuousScale = computed(() => {
     return FINAL_DATASET.value.some((datapoint) => {
@@ -1665,13 +1632,6 @@ function checkAutoScaleError(datapoint) {
     }
 }
 
-function fillArray(len, src) {
-    const L = safeInt(len);
-    const res = Array(L).fill(0);
-    for (let i = 0; i < src.length && i < L; i += 1) res[i] = src[i] ?? 0;
-    return res;
-}
-
 function validSlicerEnd(v) {
     const _max = Math.max(
         ...FINAL_DATASET.value.map(
@@ -1700,13 +1660,6 @@ const slicerReady = ref(false);
 
 const absoluteSlicerStartIndex = ref(0);
 const absoluteSlicerEndIndex = ref(0);
-
-function isObjectivelyDifferentIndex(a, b) {
-    const na = Number(a);
-    const nb = Number(b);
-    if (!Number.isFinite(na) || !Number.isFinite(nb)) return false;
-    return !Object.is(na, nb);
-}
 
 function setupSlicer() {
     if (isSettingUp.value) return;
@@ -1844,10 +1797,6 @@ function onSlicerEnd(v) {
 async function refreshSlicer() {
     await setupSlicer();
     emit('zoomReset');
-}
-
-function canShowValue(v) {
-    return ![null, undefined, NaN, Infinity, -Infinity].includes(v);
 }
 
 const absoluteMax = computed(() => niceScale.value.max + relativeZero.value);
@@ -2563,17 +2512,6 @@ const activeSeriesWithStackRatios = computed(() => {
         ),
     );
 });
-
-function groupBy(array, getKey) {
-    const result = Object.create(null);
-    for (let index = 0; index < array.length; index += 1) {
-        const item = array[index];
-        const key = String(getKey(item));
-        if (!result[key]) result[key] = [];
-        result[key].push(item);
-    }
-    return result;
-}
 
 const scaleGroups = computed(() => {
     const grouped = groupBy(
