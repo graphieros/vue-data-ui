@@ -51,6 +51,17 @@ function createDs(n, m = 100) {
     return arr;
 }
 
+function createContinuousDs(n, m = 100) {
+    const arr = [];
+    for (let i = 0; i < n; i += 1) {
+        arr.push({
+            x: i,
+            y: Math.random() * m,
+        });
+    }
+    return arr;
+}
+
 function generateDayTimestamps(length) {
     const result = [];
     const start = new Date();
@@ -149,7 +160,8 @@ const dataset = ref([
     {
         name: 'Serie A with name',
         type: 'line',
-        series: [100, 200, 300, -200, 100, 120, 100, 200, 100, 250],
+        // series: createDs(100),
+        series: createContinuousDs(100),
         // series: [
         //     { x: 25.4, y: 10 },
         //     { x: 23.1, y: 15 }, // Closer to the first point
@@ -1566,13 +1578,13 @@ function logTooltip(tooltip) {
                 </template> -->
                 <template #optionPdf> PRINT PDF </template>
                 <template #optionStack> STACK IT </template>
-                <template #legend="{ legend }">
+                <!-- <template #legend="{ legend }">
                     {{ logLegend(legend) }}
                     #LEGEND
                     <div style="font-size: 8px">
                         {{ legend }}
                     </div>
-                </template>
+                </template> -->
                 <template
                     #tooltip-before="{
                         datapoint,

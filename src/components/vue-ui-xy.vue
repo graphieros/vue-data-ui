@@ -2126,10 +2126,11 @@ function onSvgMouseLeave() {
         RAF_MOUSE_MOVE = 0;
     }
     hoveredIndex.value = null;
+    selectedMinimapIndex.value = null;
+    selectedMinimapXValue.value = null;
     toggleTooltipVisibility(false, null);
     continuousTooltipSet.value = [];
     continuousTooltipX.value = null;
-    selectedMinimapXValue.value = null;
 }
 
 function onSvgClick(e) {
@@ -9246,7 +9247,9 @@ defineExpose({
                 FINAL_CONFIG.chart.zoom.minimap.selectedColorOpacity
             "
             :minimapSelectedIndex="
-                isContinuousScale ? selectedMinimapXValue : selectedMinimapIndex
+                isContinuousScale
+                    ? selectedMinimapXValue
+                    : (selectedSerieIndex ?? selectedMinimapIndex)
             "
             :minimapSelectionRadius="
                 FINAL_CONFIG.chart.zoom.minimap.selectionRadius

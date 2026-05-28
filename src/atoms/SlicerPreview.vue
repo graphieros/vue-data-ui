@@ -270,6 +270,8 @@ const dragStartClientX = ref(0);
 const dragPointerOffsetX = ref(0);
 const minimapSvg = ref(null);
 
+const isDraggingRangeHandle = computed(() => activeHandle.value !== null);
+
 const rightValue = computed(() => {
     return props.useValueRange ? endValue.value : endValue.value - 1;
 });
@@ -560,6 +562,10 @@ const innerMinimapWidth = computed(() => {
 });
 
 const unitWidthX = computed(() => {
+    if (props.minimapCompact && !props.useValueRange) {
+        return svgMinimap.value.width / Math.max(1, absLen.value - 1);
+    }
+
     const denom = Math.max(1, maxSeries.value - (props.minimapCompact ? 1 : 0));
     return svgMinimap.value.width / denom;
 });
@@ -956,7 +962,11 @@ const endForInput = computed({
     },
 });
 
-function setSelectedTrap(v) {
+let selectedTrapToken = 0;
+
+function setSelectedTrap(v, token) {
+    if (token !== selectedTrapToken) return;
+
     if (props.useValueRange) {
         selectedTrap.value = Number.isFinite(Number(v))
             ? valueToMiniX(Number(v))
@@ -971,17 +981,19 @@ const setSelectedTrapDebounced = debounce(setSelectedTrap, 60);
 watch(
     () => props.minimapSelectedIndex,
     (newVal, oldVal) => {
+        selectedTrapToken += 1;
         if ([null, undefined].includes(newVal)) {
             selectedTrap.value = null;
             return;
         }
         if (newVal === oldVal) return;
-        setSelectedTrapDebounced(newVal);
+        setSelectedTrapDebounced(newVal, selectedTrapToken);
     },
     { immediate: true },
 );
 
 function trapMouse(trap) {
+    if (isDraggingRangeHandle.value) return;
     selectedTrap.value = trap;
 
     const s = startMini.value;
@@ -1018,7 +1030,9 @@ function getClosestContinuousTrap(localX) {
 }
 
 function onTrapMouseMove(event) {
-    if (!hasAvailableTraps.value) return;
+    if (!hasAvailableTraps.value || isDraggingRangeHandle.value) {
+        return;
+    }
 
     const localX = clientXToMinimapX(event.clientX);
 
@@ -1042,6 +1056,9 @@ function onTrapMouseMove(event) {
 
 function clearTrapMouse() {
     selectedTrap.value = null;
+    if (isDraggingRangeHandle.value) {
+        return;
+    }
     emit('trapMouse', null);
     emit('trapMouseValue', null);
 }
@@ -1654,26 +1671,27 @@ const handleRightA11y = computed(() => ({
 
 function clientXToMinimapX(clientX) {
     if (!minimapSvg.value) return 0;
-
     const rect = minimapSvg.value.getBoundingClientRect();
     if (!rect.width) return 0;
-
-    return ((clientX - rect.left) / rect.width) * svgMinimap.value.width;
+    const ratio = (clientX - rect.left) / rect.width;
+    return Math.min(1, Math.max(0, ratio)) * svgMinimap.value.width;
 }
 
 function localXToMiniPointIndex(localX) {
-    const offset = props.minimapCompact ? 0 : unitWidthX.value / 2;
-    const raw = (localX - offset) / Math.max(1, unitWidthX.value);
-
-    return Math.max(
-        0,
-        Math.min(Math.max(0, absLen.value - 1), Math.round(raw)),
-    );
+    const maxIndex = Math.max(0, absLen.value - 1);
+    const width = Math.max(1, svgMinimap.value.width);
+    const ratio = Math.min(1, Math.max(0, localX / width));
+    return Math.min(maxIndex, Math.max(0, Math.round(ratio * maxIndex)));
 }
 
 function updateHandleDragFromLocalX(localX) {
+    const clampedLocalX = Math.min(
+        Math.max(0, localX),
+        Math.max(1, svgMinimap.value.width),
+    );
+
     if (props.useValueRange) {
-        const value = miniXToValue(localX);
+        const value = miniXToValue(clampedLocalX);
 
         if (activeHandle.value === 'start') {
             const nextStart = Math.min(
@@ -1700,7 +1718,7 @@ function updateHandleDragFromLocalX(localX) {
         }
     }
 
-    const pointIndex = localXToMiniPointIndex(localX);
+    const pointIndex = localXToMiniPointIndex(clampedLocalX);
 
     if (activeHandle.value === 'start') {
         const nextStart = Math.min(
@@ -1770,6 +1788,8 @@ function beginHandleDrag(side, event) {
 
     event.preventDefault();
     event.stopPropagation();
+
+    selectedTrap.value = null;
 
     const minimapX = clientXToMinimapX(event.clientX);
 
