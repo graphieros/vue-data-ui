@@ -73,6 +73,10 @@
             "types": "./dist/types/utils.d.ts",
             "import": "./dist/utils.js"
         },
+        "./ssr": {
+            "types": "./dist/types/ssr.d.ts",
+            "import": "./dist/ssr.js"
+        },
         "./*": {
             "types": "./dist/types/*.d.ts",
             "import": "./dist/components/*.js",

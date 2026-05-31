@@ -275,6 +275,7 @@ const entries = {
         'src/entries/vue-ui-pattern-seed.js',
     ),
     utils: resolve(__dirname, 'src/entries/utils.js'),
+    ssr: resolve(__dirname, 'src/svg/ssr.js'),
 };
 
 export default defineConfig({

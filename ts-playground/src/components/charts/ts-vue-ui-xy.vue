@@ -2,7 +2,7 @@
 /**
  * This playground showcases all the slots and their implementations for <VueUiXy>
  */
-import { computed } from 'vue';
+import { computed, ref, watchEffect } from 'vue';
 import {
     VueUiXy,
     type VueUiXyConfig,
@@ -35,6 +35,8 @@ import XySvg from '../slots/vue-ui-xy/xy-svg.vue';
 import KeyboardNavigationHint from '../slots/common/keyboard-navigation-hint.vue';
 import Watermark from '../slots/common/watermark.vue';
 import Skeleton from '../slots/common/skeleton.vue';
+
+import { createStaticVueUiXy } from 'vue-data-ui/ssr';
 
 function makeDs(n: number) {
     const arr = [];
@@ -593,7 +595,7 @@ const config = computed<VueUiXyConfig>(() => {
     return mergeConfigs({
         defaultConfig: testPreconfig.value,
         userConfig: {
-            theme: '',
+            theme: 'dark',
             chart: {
                 userOptions: {
                     buttons: {
@@ -633,10 +635,39 @@ function zoomEnd(payload: VueUiXyEmitZoom) {
 function copyAlt(payload: VueUiXyEmitCopyAlt) {
     console.log('@copyAlt', payload);
 }
+
+const svgRender = ref('');
+
+watchEffect(async () => {
+    svgRender.value = await createStaticVueUiXy({
+        dataset: dataset.value,
+        config: config.value,
+        additionalSvgContent: ({ series, drawingArea }) => {
+            return series
+                .map((s) => {
+                    const lastPlot = s.plots.at(-1);
+                    if (!lastPlot) return '';
+                    return `
+                    <text
+                        x="${lastPlot.x}"
+                        y="${lastPlot.y}"
+                        font-size="25"
+                        fill="red"
+                        text-anchor="start"
+                    >
+                        ${lastPlot.value}
+                    </text>
+                `;
+                })
+                .join('');
+        },
+    });
+});
 </script>
 
 <template>
     <div>
+        <div v-html="svgRender" />
         <VueUiXy
             :dataset
             :config

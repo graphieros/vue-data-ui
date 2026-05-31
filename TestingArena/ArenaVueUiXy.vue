@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watchEffect } from 'vue';
 import LocalVueUiXy from '../src/components/vue-ui-xy.vue';
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from './Box.vue';
@@ -12,6 +12,8 @@ import { useConfigurationControls } from './createConfigModel';
 import { useConfig } from '../src/useConfig';
 import useThemeOptions from './useThemeOptions';
 import { getVueDataUiConfig, mergeConfigs, useObjectBindings } from '../src';
+
+import { createStaticVueUiXy } from '../src/svg/ssr.js';
 
 const {
     local,
@@ -158,17 +160,22 @@ function generateDayTimestamps(length) {
 
 const dataset = ref([
     {
-        name: 'Serie A with name',
+        name: 'Serie A',
         type: 'line',
-        // series: createDs(100),
-        series: createContinuousDs(100),
+        shape: 'star',
+        series: createDs(20),
+        // series: createContinuousDs(100),
         // series: [
         //     { x: 25.4, y: 10 },
         //     { x: 23.1, y: 15 }, // Closer to the first point
         //     { x: 15.2, y: 120 }, // Further down the axis
         //     { x: 6.8, y: 500 }, // Much further down the axis
         // ],
-        dataLabels: true,
+        dataLabels: false,
+        smooth: true,
+        useArea: false,
+        useStepper: false,
+        dashIndices: [19],
         // useArea: true,
         // smooth: true
     },
@@ -189,9 +196,15 @@ const dataset = ref([
     // {
     //     name: 'SERIE',
     //     type: 'bar',
-    //     series: [100, 200, 300, -200, 100, 120, 100, 200, 100, 250],
+    //     series: createDs(20),
     //     dataLabels: true,
     // },
+    {
+        name: 'Serie B',
+        type: 'bar',
+        series: createDs(20),
+        dataLabels: false,
+    },
 ]);
 
 // onMounted(() => {
@@ -532,7 +545,7 @@ const model = createModel([
     NUMBER('chart.zoom.preview.strokeWidth', { def: 2, min: 0, max: 12 }),
 
     NUMBER('chart.padding.top', { def: 100, min: 0, max: 100 }),
-    NUMBER('chart.padding.right', { def: 0, min: 0, max: 100 }),
+    NUMBER('chart.padding.right', { def: 64, min: 0, max: 100 }),
     NUMBER('chart.padding.bottom', { def: 0, min: 0, max: 100 }),
     NUMBER('chart.padding.left', { def: 0, min: 0, max: 100 }),
 
@@ -1314,9 +1327,38 @@ function logLegend(legend) {
 function logTooltip(tooltip) {
     console.log({ tooltip });
 }
+
+const svgRender = ref('');
+
+watchEffect(async () => {
+    svgRender.value = await createStaticVueUiXy({
+        dataset: dataset.value,
+        config: config.value,
+        additionalSvgContent: ({ series, drawingArea }) => {
+            return series
+                .map((s) => {
+                    const lastPlot = s.plots.at(-1);
+                    return `
+                    <text
+                        x="${lastPlot.x}"
+                        y="${lastPlot.y}"
+                        font-size="25"
+                        fill="red"
+                        text-anchor="start"
+                    >
+                        ${lastPlot.value}
+                    </text>
+                `;
+                })
+                .join('');
+        },
+    });
+});
 </script>
 
 <template>
+    <div v-html="svgRender" />
+
     <button @click="toggleTable">TOGGLE TABLE</button>
     <button @click="toggleLabels">TOGGLE LABELS</button>
     <button @click="toggleStack">TOGGLE STACK</button>
