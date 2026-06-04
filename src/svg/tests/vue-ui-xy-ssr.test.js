@@ -74,8 +74,9 @@ describe('renderVueUiXySvg', () => {
 
         const svg = await renderVueUiXySvg(state);
 
-        expect(svg).toContain('fill="#ff0000"');
-        expect(svg).not.toContain('fill="#00ff00"');
+        expect(svg).toMatch(/fill="url\(#plotGradient_0_/);
+        expect(svg).toContain('stop-color="#ff0000ff"');
+        expect(svg).not.toContain('#00ff00');
     });
 
     test('uses customPalette when dataset color is missing', async () => {
@@ -249,7 +250,7 @@ describe('renderVueUiXySvg', () => {
 
         const svg = await renderVueUiXySvg(state);
 
-        expect(svg).toContain('plotGradient_0_ssr');
-        expect(svg).toContain('fill="url(#plotGradient_0_ssr)"');
+        expect(svg).toMatch(/id="plotGradient_0_[^"]+"/);
+        expect(svg).toMatch(/fill="url\(#plotGradient_0_[^"]+\)"/);
     });
 });

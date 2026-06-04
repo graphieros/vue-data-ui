@@ -2,13 +2,7 @@
 /**
  * This playground showcases all the slots and their implementations for <VueUiDonut>
  */
-import {
-    ref,
-    computed,
-    onMounted,
-    useTemplateRef,
-    watchEffect,
-} from 'vue';
+import { ref, computed, onMounted, useTemplateRef, watchEffect } from 'vue';
 import {
     VueUiDonut,
     type VueUiDonutConfig,
