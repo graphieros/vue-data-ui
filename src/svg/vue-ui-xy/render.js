@@ -19,6 +19,7 @@ import {
     createStraightPathWithCuts,
     createStraightPathWithCutsSegments,
     createTSpansFromLineBreaksOnX,
+    createUid,
     dataLabel,
     escapeXml,
     escapeXmlAttr,
@@ -26,6 +27,7 @@ import {
     setGradientOffset,
     setOpacity,
     shiftHue,
+    XMLNS,
 } from '../../lib.js';
 
 import {
@@ -43,6 +45,7 @@ import {
 import { useConfig } from '../../useConfig.js';
 import { useTimeLabels } from '../../useTimeLabels.js';
 import themes from '../../themes/vue_ui_xy.json';
+import { renderVueDataUiVersion } from '../utils/render-common.js';
 
 function usesIndividualScale(config) {
     return Boolean(
@@ -236,8 +239,10 @@ function getZeroY(state) {
     return drawingArea.bottom - ratio * drawingArea.height;
 }
 
+const uid = createUid();
+
 function getUniqueId(state) {
-    return state.uniqueId ?? 'ssr';
+    return uid;
 }
 
 function getBarGradientId(state, serieIndex, sign) {
@@ -256,7 +261,6 @@ function getLineStroke(state, serie, serieIndex) {
     if (serie.temperatureColors && !serie.isFlatTemperatureLine) {
         return `url(#${getTemperatureGradientId(state, serieIndex)})`;
     }
-
     return serie.color;
 }
 
@@ -2253,7 +2257,7 @@ function splitLineSegments(plots) {
 }
 
 function getAreaGradientId(state, serieIndex) {
-    return `areaGradient_${serieIndex}_${state.uniqueId ?? 'ssr'}`;
+    return `areaGradient_${serieIndex}_${getUniqueId()}`;
 }
 
 function renderAreaGradients(state, series) {
@@ -3449,11 +3453,12 @@ export async function renderVueUiXySvg(state) {
 
     return `
 <svg
-    xmlns="http://www.w3.org/2000/svg"
+    xmlns="${XMLNS}"
     width="100%"
     viewBox="0 0 ${width} ${height}"
     role="img"
 >
+    ${renderVueDataUiVersion()}
     ${renderSvgTitle(renderState)}
     ${renderAreaGradients(renderState, adjustedSeries)}
     ${renderChartGradients(renderState, adjustedSeries)}

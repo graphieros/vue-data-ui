@@ -36,7 +36,7 @@ import KeyboardNavigationHint from '../slots/common/keyboard-navigation-hint.vue
 import Watermark from '../slots/common/watermark.vue';
 import Skeleton from '../slots/common/skeleton.vue';
 
-import { createStaticVueUiXy } from 'vue-data-ui/ssr';
+import { createStaticVueUiXy } from 'vue-data-ui/ssr/vue-ui-xy';
 
 function makeDs(n: number) {
     const arr = [];

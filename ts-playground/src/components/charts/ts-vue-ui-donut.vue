@@ -5,9 +5,9 @@
 import {
     ref,
     computed,
-    type ComponentInstance,
     onMounted,
     useTemplateRef,
+    watchEffect,
 } from 'vue';
 import {
     VueUiDonut,
@@ -40,10 +40,52 @@ import CommonMenuIcon from '../slots/common/menu-icon.vue';
 import CommonOptionFullscreen from '../slots/common/option-fullscreen.vue';
 import CommonOptionAnnotator from '../slots/common/option-annotator.vue';
 
+import { createStaticVueUiDonut } from 'vue-data-ui/ssr/vue-ui-donut';
+
 const dataset = computed<VueUiDonutDatasetItem[]>(() => [
     {
         name: 'A',
-        values: [1],
+        values: [0.1],
+        comment: 'Comment',
+    },
+    {
+        name: 'A',
+        values: [0.1],
+        comment: 'Comment',
+    },
+    {
+        name: 'A',
+        values: [0.1],
+        comment: 'Comment',
+    },
+    {
+        name: 'A',
+        values: [0.1],
+        comment: 'Comment',
+    },
+    {
+        name: 'A',
+        values: [0.1],
+        comment: 'Comment',
+    },
+    {
+        name: 'A',
+        values: [0.1],
+        comment: 'Comment',
+    },
+    {
+        name: 'A',
+        values: [0.1],
+        comment: 'Comment',
+    },
+    {
+        name: 'A',
+        values: [0.1],
+        comment: 'Comment',
+    },
+    {
+        name: 'A',
+        values: [0.1],
         comment: 'Comment',
     },
     {
@@ -193,7 +235,7 @@ const testPreconfig = computed<VueUiDonutConfig>(() => {
                 width: 512,
                 height: 360,
                 layout: {
-                    curvedMarkers: false,
+                    curvedMarkers: true,
                     labels: {
                         dataLabels: {
                             showValueFirst: true,
@@ -201,7 +243,7 @@ const testPreconfig = computed<VueUiDonutConfig>(() => {
                             useValueParens: false,
                             show: true,
                             useLabelSlots: false,
-                            hideUnderValue: 3,
+                            hideUnderValue: 0,
                             smallArcClusterThreshold: 8,
                             smallArcClusterFontSize: 12,
                             oneLine: false,
@@ -404,10 +446,23 @@ function selectDatapoint(payload: VueUiDonutEmitSelectDatapoint) {
 function copyAlt(payload: VueUiDonutEmitCopyAlt) {
     console.log('@copyAlt', payload);
 }
+
+const svgRender = ref('');
+
+watchEffect(async () => {
+    svgRender.value = await createStaticVueUiDonut({
+        dataset: dataset.value,
+        config: config.value,
+        additionalSvgContent: ({ center, innerRadius }) => {
+            return `<circle cx="${center.x}" cy="${center.y}" r="${innerRadius}" fill="#FF000050"/>`;
+        },
+    });
+});
 </script>
 
 <template>
     <div>
+        <div v-html="svgRender" />
         <VueUiDonut
             :dataset
             :config

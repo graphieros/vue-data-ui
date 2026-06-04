@@ -276,6 +276,8 @@ const entries = {
     ),
     utils: resolve(__dirname, 'src/entries/utils.js'),
     ssr: resolve(__dirname, 'src/svg/ssr.js'),
+    'ssr/vue-ui-xy': resolve(__dirname, 'src/svg/entries/vue-ui-xy'),
+    'ssr/vue-ui-donut': resolve(__dirname, 'src/svg/entries/vue-ui-donut'),
 };
 
 export default defineConfig({

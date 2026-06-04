@@ -1,6 +1,18 @@
-import type { VueUiXyDatasetItem, VueUiXyConfig } from 'vue-data-ui';
+import type {
+    VueUiXyDatasetItem,
+    VueUiXyConfig,
+    VueUiDonutDatasetItem,
+    VueUiDonutConfig,
+    VueUiDonutDatapoint,
+} from 'vue-data-ui';
 
-export type { VueUiXyDatasetItem, VueUiXyConfig };
+export type {
+    VueUiXyDatasetItem,
+    VueUiXyConfig,
+    VueUiDonutDatasetItem,
+    VueUiDonutConfig,
+    VueUiDonutDatapoint,
+};
 
 export type VueUiXyAdditionalSvgContentContext = {
     width: number;
@@ -125,4 +137,46 @@ export type RenderStaticVueUiXyState = {
  */
 export function createStaticVueUiXy(
     state: RenderStaticVueUiXyState,
+): Promise<string>;
+
+/**
+ * vue-ui-donut
+ */
+
+export type VueUiDonutAdditionalSvgContentContext = {
+    center: { x: number; y: number };
+    config: VueUiDonutConfig;
+    drawingArea: {
+        bottom: number;
+        height: number;
+        left: number;
+        right: number;
+        top: number;
+        width: number;
+    };
+    height: number;
+    innerRadius: number;
+    radius: number;
+    series: VueUiDonutDatapoint[];
+    thickness: number;
+    width: number;
+};
+
+export type VueUiDonutAdditionalSvgContent =
+    | string
+    | ((
+          context: VueUiDonutAdditionalSvgContentContext,
+      ) => string | null | undefined);
+
+export type RenderStaticVueUiDonutState = {
+    dataset: VueUiDonutDatasetItem[];
+    config?: VueUiDonutConfig;
+    width?: number;
+    height?: number;
+    svgTitle?: string;
+    additionalSvgContent?: VueUiDonutAdditionalSvgContent;
+};
+
+export function createStaticVueUiDonut(
+    state: RenderStaticVueUiDonutState,
 ): Promise<string>;

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watchEffect } from 'vue';
 import LocalVueUiDonut from '../src/components/vue-ui-donut.vue';
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from './Box.vue';
@@ -13,6 +13,7 @@ import useThemeOptions from './useThemeOptions';
 import LocalPatternSlot from '../src/atoms/vue-ui-pattern-seed.vue';
 import { VueUiPatternSeed } from 'vue-data-ui/vue-ui-pattern-seed';
 import { createPatternDef } from 'vue-data-ui/utils';
+import { createStaticVueUiDonut } from '../src/svg/ssr.js';
 
 const { vue_ui_donut: DEFAULT_CONFIG } = useConfig();
 
@@ -42,7 +43,7 @@ onMounted(() => {
         dataset.value = [
             {
                 name: 'Series H',
-                values: [0.05],
+                values: [0.05, 3],
             },
             {
                 name: 'Series A with some\nlong label that\nis cut',
@@ -72,24 +73,8 @@ onMounted(() => {
                 name: 'Series G',
                 values: [0.05],
             },
-            {
-                name: 'Series I',
-                values: [0.25],
-            },
-            {
-                name: 'Series J',
-                values: [0.25],
-            },
-            {
-                name: 'Series K',
-                values: [0.25],
-            },
-            {
-                name: 'Series L',
-                values: [0.25],
-            },
         ];
-    }, 2000);
+    }, 100);
 });
 
 const alternateDataset = ref([
@@ -856,15 +841,15 @@ const config = computed(() => {
                             },
                             value: {
                                 ...c.style.chart.layout.labels.value,
-                                formatter: ({ value, config }) => {
-                                    return `f  - ${value}`;
-                                },
+                                // formatter: ({ value, config }) => {
+                                //     return `f  - ${value}`;
+                                // },
                             },
                             dataLabels: {
                                 ...c.style.chart.layout.labels.dataLabels,
-                                formatter: ({ value }) => {
-                                    return `f - ${value}`;
-                                },
+                                // formatter: ({ value }) => {
+                                //     return `f - ${value}`;
+                                // },
                             },
                         },
                     },
@@ -919,9 +904,19 @@ onMounted(async () => {
         // }, 5000)
     }
 });
+
+const svgRender = ref('');
+
+watchEffect(async () => {
+    svgRender.value = await createStaticVueUiDonut({
+        dataset: dataset.value,
+        config: config.value,
+    });
+});
 </script>
 
 <template>
+    <div v-html="svgRender" style="max-width: 700px" />
     <button @click="toggleTable">TOGGLE TABLE</button>
     <button @click="toggleLabels">TOGGLE LABELS</button>
     <button @click="toggleProps">TOGGLE PROPS: {{ isPropsToggled }}</button>
