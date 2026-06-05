@@ -3198,10 +3198,12 @@ function renderHighlightAreas(state, series) {
 }
 
 function getAnnotationY(state, value) {
+    if (value == null) return null;
     const { drawingArea, scale } = state;
-    const ratio = (Number(value) - scale.min) / (scale.max - scale.min || 1);
-
-    return drawingArea.bottom - ratio * drawingArea.height;
+    const zeroY = getZeroY(state);
+    const range = scale.max - scale.min || 1;
+    const ratio = (Number(value) - 0) / range;
+    return zeroY - ratio * drawingArea.height;
 }
 
 function getAnnotationTextWidth(label) {
@@ -3274,17 +3276,18 @@ function renderAnnotations(state) {
         const line = yAxis.line ?? {};
         const area = yAxis.area ?? {};
 
-        const hasYTop = yAxis.yTop !== null && yAxis.yTop !== undefined;
-        const hasYBottom =
-            yAxis.yBottom !== null && yAxis.yBottom !== undefined;
+        const rawTop = yAxis.yTop;
+        const rawBottom = yAxis.yBottom;
 
-        const yTop = hasYTop ? getAnnotationY(state, yAxis.yTop) : null;
-        const yBottom = hasYBottom
-            ? getAnnotationY(state, yAxis.yBottom)
-            : null;
+        const hasYTop = rawTop != null;
+        const hasYBottom = rawBottom != null;
+        const hasArea = hasYTop && hasYBottom && rawTop !== rawBottom;
 
-        const finiteYTop = Number.isFinite(Number(yTop));
-        const finiteYBottom = Number.isFinite(Number(yBottom));
+        const yTop = getAnnotationY(state, rawTop);
+        const yBottom = getAnnotationY(state, rawBottom);
+
+        const finiteYTop = Number.isFinite(yTop);
+        const finiteYBottom = Number.isFinite(yBottom);
 
         if (!finiteYTop && !finiteYBottom) {
             return;
@@ -3324,19 +3327,14 @@ function renderAnnotations(state) {
             );
         }
 
-        if (finiteYTop && finiteYBottom && yTop !== yBottom) {
+        if (hasArea && finiteYTop && finiteYBottom) {
             annotationContent.push(
                 emptyElement('rect', {
                     x: drawingArea.left,
                     y: Math.min(yTop, yBottom),
                     width: drawingArea.width,
                     height: Math.abs(yTop - yBottom),
-                    fill: setOpacity(
-                        area.fill ||
-                            line.stroke ||
-                            getConfigValue(config, 'chart.color', '#2A2A2A'),
-                        safeNumber(area.opacity, 20),
-                    ),
+                    fill: setOpacity(area.fill, safeNumber(area.opacity, 20)),
                     'data-cy': 'xy-annotation-y-area',
                     'pointer-events': 'none',
                 }),
@@ -3465,7 +3463,6 @@ export async function renderVueUiXySvg(state) {
     ${renderBackground(renderState)}
     ${renderTitle(renderState)}
     ${renderHighlightAreas(renderState, adjustedSeries)}
-    ${renderAnnotations(renderState)}
     ${renderGrid(renderState)}
     ${await renderXAxisTicks(renderState, adjustedSeries)}
     ${renderScaleLabels(renderState)}
@@ -3479,6 +3476,7 @@ export async function renderVueUiXySvg(state) {
     ${renderLineDots(renderState, adjustedSeries)}
     ${renderDatapointLabels(renderState, adjustedSeries)}
     ${renderLegend(renderState, adjustedSeries)}
+    ${renderAnnotations(renderState)}
     ${renderAdditionalSvgContent(renderState, adjustedSeries)}
 </svg>`.trim();
 }
