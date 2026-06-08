@@ -1556,6 +1556,15 @@ export function useConfig(options = {}) {
                 backgroundColor: COLOR_BACKGROUND,
                 color: COLOR_TEXT_PRIMARY,
                 layout: {
+                    scaleToAxisMax: false,
+                    targetReference: {
+                        show: false,
+                        stroke: COLOR_BLACK,
+                        strokeWidth: 1,
+                        strokeDasharray: 4,
+                        showInLegend: true,
+                        legendLabel: 'Target',
+                    },
                     plots: {
                         show: true,
                         radius: 2,

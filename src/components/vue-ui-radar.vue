@@ -560,8 +560,28 @@ function hideSeries(name) {
 }
 
 const max = computed(() =>
-    Math.max(...seriesCopy.value.flatMap((s) => s.values)),
+    Math.max(0, ...seriesCopy.value.flatMap((s) => s.values)),
 );
+
+function getScaleMax(serie) {
+    if (FINAL_CONFIG.value.style.chart.layout.scaleToAxisMax) {
+        return Math.max(1, serie.target || 0, ...serie.values);
+    }
+    return serie.target || max.value || 1;
+}
+
+const targetReference = computed(() => {
+    return seriesCopy.value.map((serie, i) => {
+        const coordinate = outerPolygon.value.coordinates[i];
+        return plot({
+            centerX: svg.value.width / 2,
+            centerY: svg.value.height / 2,
+            apexX: coordinate.x,
+            apexY: coordinate.y,
+            proportion: (serie.target || 0) / getScaleMax(serie),
+        });
+    });
+});
 
 const apexes = computed(() => {
     return seriesCopy.value.length;
@@ -597,18 +617,19 @@ const innerPolygons = computed(() => {
 const radar = computed(() => {
     return outerPolygon.value.coordinates
         .map((c, i) => {
+            const serie = seriesCopy.value[i];
             const plots = seriesCopy.value[i].values.map((v) => {
                 return plot({
                     centerX: svg.value.width / 2,
                     centerY: svg.value.height / 2,
                     apexX: c.x,
                     apexY: c.y,
-                    proportion: v / (seriesCopy.value[i].target || max.value),
+                    proportion: v / getScaleMax(serie),
                 });
             });
             return {
                 ...c,
-                ...seriesCopy.value[i],
+                ...serie,
                 plots,
             };
         })
@@ -1651,6 +1672,28 @@ defineExpose({
                     </g>
                 </g>
 
+                <!-- TARGET REFERENCE POLYGON -->
+                <path
+                    v-if="FINAL_CONFIG.style.chart.layout.targetReference.show"
+                    data-cy="polygon_target-reference"
+                    class="vue-ui-radar-target-polygon"
+                    :d="`M${makePath(targetReference, false, true)}Z`"
+                    fill="none"
+                    :stroke="
+                        FINAL_CONFIG.style.chart.layout.targetReference.stroke
+                    "
+                    :stroke-width="
+                        FINAL_CONFIG.style.chart.layout.targetReference
+                            .strokeWidth
+                    "
+                    stroke-linejoin="round"
+                    stroke-linecap="round"
+                    :stroke-dasharray="
+                        FINAL_CONFIG.style.chart.layout.targetReference
+                            .strokeDasharray
+                    "
+                />
+
                 <g v-if="FINAL_CONFIG.style.chart.layout.plots.show">
                     <g v-for="(category, i) in radar">
                         <circle
@@ -1762,6 +1805,62 @@ defineExpose({
                                 v-if="!loading"
                             >
                                 {{ legend.display }}
+                            </div>
+                        </template>
+
+                        <template
+                            #after
+                            v-if="
+                                FINAL_CONFIG.style.chart.layout.targetReference
+                                    .show &&
+                                FINAL_CONFIG.style.chart.layout.targetReference
+                                    .showInLegend
+                            "
+                        >
+                            <!-- TARGET REFERENCE EXTRA LEGEND ITEM -->
+                            <div class="vue-data-ui-legend-item">
+                                <div
+                                    :style="{
+                                        display: 'flex',
+                                        height: FINAL_CONFIG.style.chart.legend
+                                            .fontSize,
+                                    }"
+                                >
+                                    <svg
+                                        :style="{
+                                            width:
+                                                FINAL_CONFIG.style.chart.legend
+                                                    .fontSize * 2,
+                                        }"
+                                        viewBox="0 0 16 8"
+                                    >
+                                        <line
+                                            x1="0"
+                                            x2="16"
+                                            y1="4"
+                                            y2="4"
+                                            :stroke="
+                                                FINAL_CONFIG.style.chart.layout
+                                                    .targetReference.stroke
+                                            "
+                                            :stroke-width="
+                                                FINAL_CONFIG.style.chart.layout
+                                                    .targetReference
+                                                    .strokeWidth * 0.7
+                                            "
+                                            :stroke-dasharray="
+                                                FINAL_CONFIG.style.chart.layout
+                                                    .targetReference
+                                                    .strokeDasharray * 0.7
+                                            "
+                                            stroke-linecap="round"
+                                        />
+                                    </svg>
+                                </div>
+                                <span>{{
+                                    FINAL_CONFIG.style.chart.layout
+                                        .targetReference.legendLabel
+                                }}</span>
                             </div>
                         </template>
 
@@ -2048,5 +2147,17 @@ svg:focus-visible {
     clip: rect(0 0 0 0);
     white-space: normal;
     border: 0;
+}
+
+.vue-data-ui-legend-item {
+    user-select: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: fit-content;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 </style>

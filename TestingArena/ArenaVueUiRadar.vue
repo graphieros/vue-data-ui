@@ -27,8 +27,8 @@ const src = {
     series: [
         {
             name: 'Serie 1 with a long name',
-            values: [60.01, 20, 100],
-            target: 200,
+            values: [60.01, 20, 250],
+            target: 300,
             formatter: ({ value }) => {
                 return `f1 - ${value}`;
             },
@@ -36,7 +36,7 @@ const src = {
         {
             name: 'Serie 2 with a long name',
             values: [20, 80, 40],
-            target: 100,
+            target: 60,
             // formatter: ({value}) => {
             //     return `f2 - ${value}`
             // }
@@ -44,7 +44,7 @@ const src = {
         {
             name: 'Serie 3 also quite long',
             values: [50, 60, 70],
-            target: 100,
+            target: 50,
         },
     ],
 };
@@ -145,6 +145,21 @@ const model = createModel([
     TEXT('style.fontFamily', { def: 'inherit' }),
     COLOR('style.chart.backgroundColor', { def: '#FFFFFF' }),
     COLOR('style.chart.color', { def: '#1A1A1A' }),
+
+    CHECKBOX('style.chart.layout.scaleToAxisMax', { def: true }),
+    CHECKBOX('style.chart.layout.targetReference.show', { def: true }),
+    COLOR('style.chart.layout.targetReference.stroke', { def: '#1A1A1A' }),
+    NUMBER('style.chart.layout.targetReference.strokeWidth', {
+        def: 1,
+        min: 0,
+        max: 12,
+    }),
+    NUMBER('style.chart.layout.targetReference.strokeDasharray', {
+        def: 3,
+        min: 0,
+        max: 12,
+    }),
+
     CHECKBOX('style.chart.layout.plots.show', { def: true }),
     RANGE('style.chart.layout.plots.radius', { def: 2, min: 0, max: 24 }),
     COLOR('style.chart.layout.outerPolygon.stroke', { def: '#CCCCCC' }),
@@ -724,3 +739,9 @@ onMounted(async () => {
         </template>
     </Box>
 </template>
+
+<!-- <style>
+.vue-ui-radar-target-polygon {
+    fill: #FF000020 !important;
+}
+</style> -->

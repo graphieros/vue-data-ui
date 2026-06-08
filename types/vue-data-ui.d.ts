@@ -7432,6 +7432,15 @@ declare module 'vue-data-ui' {
                 backgroundColor?: string;
                 color?: string;
                 layout?: {
+                    scaleToAxisMax?: boolean;
+                    targetReference?: {
+                        show?: boolean;
+                        stroke?: string;
+                        strokeWidth?: number;
+                        strokeDasharray?: number;
+                        showInLegend?: boolean;
+                        legendLabel?: string;
+                    };
                     plots?: {
                         show?: boolean;
                         radius?: number;
