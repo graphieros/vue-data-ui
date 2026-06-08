@@ -118,6 +118,8 @@ function handleFocus(event, legend, i) {
             </svg>
             <slot name="item" :legend="legend" :index="i" />
         </div>
+
+        <slot name="after" />
     </div>
 </template>
 
