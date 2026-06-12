@@ -123,8 +123,8 @@ const testPreconfig = computed<VueUiRadarConfig>(() => {
                         strokeWidth: 1,
                         strokeDasharray: 4,
                         showInLegend: true,
-                        legendLabel: 'Target'
-                    },  
+                        legendLabel: 'Target',
+                    },
                     plots: {
                         show: true,
                         radius: 2,
