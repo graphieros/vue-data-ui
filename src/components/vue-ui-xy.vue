@@ -326,7 +326,11 @@ const fontSizes = ref({
     plotLabels: 10,
 });
 
-const plotRadii = ref({ plot: 3, line: 3 });
+const plotRadii = ref({ plot: 3, line: 3, selectedLine: 3 });
+
+const selectedPlotRadius = computed(() => {
+    return Math.max(plotRadii.value.line * 1.5, plotRadii.value.selectedLine);
+});
 
 onMounted(() => {
     readyTeleport.value = true;
@@ -4567,6 +4571,8 @@ function convertSizes() {
         fontSizes.value.plotLabels = FINAL_CONFIG.value.chart.labels.fontSize;
         plotRadii.value.plot = FINAL_CONFIG.value.plot.radius;
         plotRadii.value.line = FINAL_CONFIG.value.line.radius;
+        plotRadii.value.selectedLine =
+            FINAL_CONFIG.value.line.dot.selectedRadius;
         return;
     }
     // Adaptative sizes in responsive mode
@@ -4610,7 +4616,14 @@ function convertSizes() {
         adjuster: 800,
         source: FINAL_CONFIG.value.line.radius,
         threshold: 1,
-        fallback: 1,
+        fallback: 0,
+    });
+    plotRadii.value.selectedLine = translateSize({
+        relator: width.value,
+        adjuster: 800,
+        source: FINAL_CONFIG.value.line.dot.selectedRadius,
+        threshold: 1,
+        fallback: 0,
     });
 }
 
@@ -4802,6 +4815,8 @@ function prepareChart() {
         fontSizes.value.plotLabels = FINAL_CONFIG.value.chart.labels.fontSize;
         plotRadii.value.plot = FINAL_CONFIG.value.plot.radius;
         plotRadii.value.line = FINAL_CONFIG.value.line.radius;
+        plotRadii.value.selectedLine =
+            FINAL_CONFIG.value.line.dot.selectedRadius;
         viewBox.value = `0 0 ${width.value} ${height.value}`;
     }
     setParentElementReference();
@@ -7591,10 +7606,10 @@ defineExpose({
                                     }"
                                     :radius="
                                         isSelectedDatapoint(serie, plot, j)
-                                            ? (plotRadii.line || 6) * 1.5
+                                            ? selectedPlotRadius || 0
                                             : isPlotAlone(serie.plots, j)
-                                              ? plotRadii.line || 6
-                                              : plotRadii.line || 6
+                                              ? plotRadii.line || 0
+                                              : plotRadii.line || 0
                                     "
                                     :stroke="
                                         FINAL_CONFIG.line.dot.useSerieColor

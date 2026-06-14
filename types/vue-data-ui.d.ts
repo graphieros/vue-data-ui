@@ -5927,6 +5927,7 @@ declare module 'vue-data-ui' {
                 useSerieColor?: boolean;
                 fill?: string;
                 strokeWidth?: number;
+                selectedRadius?: number;
             };
             labels?: {
                 show?: boolean;

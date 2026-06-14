@@ -1033,6 +1033,7 @@ export function useConfig(options = {}) {
                 fillOpacity: 0.25,
             },
             dot: {
+                selectedRadius: 4.5,
                 hideAboveMaxSerieLength: 62,
                 useSerieColor: true,
                 fill: COLOR_WHITE,

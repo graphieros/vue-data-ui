@@ -162,7 +162,7 @@ const dataset = ref([
     {
         name: 'Serie A',
         type: 'line',
-        shape: 'star',
+        // shape: 'star',
         series: createDs(20),
         // series: createContinuousDs(100),
         // series: [
@@ -796,7 +796,7 @@ const model = createModel([
     NUMBER('bar.border.strokeWidth', { def: 1, min: 0, max: 12, step: 0.5 }),
 
     CHECKBOX('line.showTransition', { def: true }),
-    NUMBER('line.radius', { def: 6, min: 0, max: 20 }),
+    NUMBER('line.radius', { def: 3, min: 0, max: 20 }),
     CHECKBOX('line.useGradient', { def: false }),
     NUMBER('line.strokeWidth', { def: 2, min: 1, max: 20 }),
     CHECKBOX('line.cutNullValues', { def: true }),
@@ -808,6 +808,7 @@ const model = createModel([
     CHECKBOX('line.area.useGradient', { def: true }),
     RANGE('line.area.opacity', { def: 30, min: 0, max: 100 }),
 
+    NUMBER('line.dot.selectedRadius', { def: 4.5, min: 0, max: 12 }),
     CHECKBOX('line.dot.useSerieColor', { def: false }),
     COLOR('line.dot.fill', { def: '#FFFFFF' }),
     NUMBER('line.dot.strokeWidth', { def: 2, min: 0, max: 12, step: 0.1 }),
