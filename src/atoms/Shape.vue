@@ -24,6 +24,9 @@ const props = defineProps({
     transition: {
         type: String,
     },
+    still: {
+        type: Boolean,
+    },
 });
 
 const emit = defineEmits(['mouseover', 'mouseout', 'click']);
@@ -87,6 +90,7 @@ const d = computed(() => {
     <g data-cy="atom-shape">
         <circle
             class="vdui-shape-circle"
+            :class="{ 'vdui-shape-no-transition': still }"
             v-if="config && config.points === 1"
             :cx="plot.x"
             :cy="plot.y"
@@ -101,6 +105,7 @@ const d = computed(() => {
         />
         <path
             class="vdui-shape-polygon"
+            :class="{ 'vdui-shape-no-transition': still }"
             v-if="config && config.points >= limit"
             :d="d"
             :fill="color"
@@ -113,6 +118,7 @@ const d = computed(() => {
         />
         <polygon
             class="vdui-shape-star"
+            :class="{ 'vdui-shape-no-transition': still }"
             v-if="starPoints"
             :points="starPoints"
             :fill="color"
@@ -125,3 +131,9 @@ const d = computed(() => {
         />
     </g>
 </template>
+
+<style scoped>
+.vdui-shape-no-transition {
+    transition: none !important;
+}
+</style>

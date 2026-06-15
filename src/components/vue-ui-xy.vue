@@ -1579,31 +1579,6 @@ const maxSeries = computed(() => {
     return Math.max(1, len);
 });
 
-const showRangeSizeShapes = ref(true);
-let showRangeSizeShapesTimeout = null;
-
-watch(
-    maxSeries,
-    (newValue, oldValue) => {
-        if (oldValue === undefined || newValue === oldValue) return;
-
-        showRangeSizeShapes.value = false;
-
-        if (showRangeSizeShapesTimeout)
-            clearTimeout(showRangeSizeShapesTimeout);
-
-        const duration = Math.max(
-            FINAL_CONFIG.value.line.transitionDurationMs || 0,
-            FINAL_CONFIG.value.plot.transitionDurationMs || 0,
-        );
-
-        showRangeSizeShapesTimeout = window.setTimeout(() => {
-            showRangeSizeShapes.value = true;
-        }, duration);
-    },
-    { flush: 'sync' },
-);
-
 function selectMinimapIndex(payload) {
     if (isContinuousScale.value) return;
     selectedMinimapIndex.value = payload;
@@ -1757,6 +1732,69 @@ function setupSlicer() {
 
 const suppressChild = ref(false);
 
+const disableShapeTransitionForRangeResize = ref(false);
+let queuedSlicerFrame = null;
+let restoreShapeTransitionFrame = null;
+let queuedSlicerUpdate = {};
+
+function getSlicerRangeSize(source = slicer.value) {
+    return Number(source.end) - Number(source.start);
+}
+
+function clearQueuedSlicerFrames() {
+    if (queuedSlicerFrame) {
+        cancelAnimationFrame(queuedSlicerFrame);
+        queuedSlicerFrame = null;
+    }
+
+    if (restoreShapeTransitionFrame) {
+        cancelAnimationFrame(restoreShapeTransitionFrame);
+        restoreShapeTransitionFrame = null;
+    }
+}
+
+function queueSlicerUpdate(update) {
+    queuedSlicerUpdate = {
+        ...queuedSlicerUpdate,
+        ...update,
+    };
+
+    if (queuedSlicerFrame) {
+        cancelAnimationFrame(queuedSlicerFrame);
+    }
+
+    queuedSlicerFrame = requestAnimationFrame(() => {
+        const previousRangeSize = getSlicerRangeSize();
+
+        const nextSlicer = {
+            ...slicer.value,
+            ...queuedSlicerUpdate,
+        };
+
+        const nextRangeSize = getSlicerRangeSize(nextSlicer);
+
+        disableShapeTransitionForRangeResize.value =
+            nextRangeSize !== previousRangeSize;
+
+        slicer.value = nextSlicer;
+        slicerPrecog.value = { ...nextSlicer };
+
+        queuedSlicerUpdate = {};
+        queuedSlicerFrame = null;
+
+        normalizeSlicerWindow();
+
+        if (restoreShapeTransitionFrame) {
+            cancelAnimationFrame(restoreShapeTransitionFrame);
+        }
+
+        restoreShapeTransitionFrame = requestAnimationFrame(() => {
+            disableShapeTransitionForRangeResize.value = false;
+            restoreShapeTransitionFrame = null;
+        });
+    });
+}
+
 function onSlicerStart(v) {
     if (isSettingUp.value || suppressChild.value) return;
 
@@ -1773,9 +1811,7 @@ function onSlicerStart(v) {
     if (!Number.isFinite(nextStart)) return;
     if (nextStart === slicer.value.start) return;
 
-    slicer.value.start = nextStart;
-    slicerPrecog.value.start = nextStart;
-    normalizeSlicerWindow();
+    queueSlicerUpdate({ start: nextStart });
 }
 
 function onSlicerEnd(v) {
@@ -1802,9 +1838,7 @@ function onSlicerEnd(v) {
 
         if (end === slicer.value.end) return;
 
-        slicer.value.end = end;
-        slicerPrecog.value.end = end;
-        normalizeSlicerWindow();
+        queueSlicerUpdate({ end });
 
         return;
     }
@@ -1818,13 +1852,26 @@ function onSlicerEnd(v) {
 
     if (end === slicer.value.end) return;
 
-    slicer.value.end = end;
-    slicerPrecog.value.end = end;
-    normalizeSlicerWindow();
+    queueSlicerUpdate({ end });
 }
 
 async function refreshSlicer() {
+    const previousRangeSize = getSlicerRangeSize();
+    disableShapeTransitionForRangeResize.value = true;
     await setupSlicer();
+    const nextRangeSize = getSlicerRangeSize();
+    if (nextRangeSize === previousRangeSize) {
+        disableShapeTransitionForRangeResize.value = false;
+    } else {
+        await nextTick();
+        if (restoreShapeTransitionFrame) {
+            cancelAnimationFrame(restoreShapeTransitionFrame);
+        }
+        restoreShapeTransitionFrame = requestAnimationFrame(() => {
+            disableShapeTransitionForRangeResize.value = false;
+            restoreShapeTransitionFrame = null;
+        });
+    }
     emit('zoomReset');
 }
 
@@ -4893,9 +4940,7 @@ onBeforeUnmount(() => {
         resizeObserver.value.disconnect();
         resizeObserver.value = null;
     }
-    if (showRangeSizeShapesTimeout) {
-        clearTimeout(showRangeSizeShapesTimeout);
-    }
+    clearQueuedSlicerFrames();
 });
 
 useTimeLabelCollision({
@@ -7200,7 +7245,6 @@ defineExpose({
                             >
                                 <Shape
                                     :data-cy="`xy-plot-${i}-${j}`"
-                                    v-show="showRangeSizeShapes"
                                     v-if="plot && canShowValue(plot.value)"
                                     :shape="
                                         [
@@ -7243,10 +7287,14 @@ defineExpose({
                                     "
                                     :transition="
                                         loading ||
+                                        disableShapeTransitionForRangeResize ||
                                         !FINAL_CONFIG.plot.showTransition ||
                                         isSelectedDatapoint(serie, plot, j)
                                             ? undefined
                                             : `all ${FINAL_CONFIG.plot.transitionDurationMs}ms ease-in-out`
+                                    "
+                                    :still="
+                                        disableShapeTransitionForRangeResize
                                     "
                                 />
 
@@ -7613,7 +7661,6 @@ defineExpose({
                             >
                                 <Shape
                                     data-cy="datapoint-line-plot"
-                                    v-show="showRangeSizeShapes"
                                     v-if="
                                         (!optimize.linePlot &&
                                             plot &&
@@ -7670,10 +7717,14 @@ defineExpose({
                                     "
                                     :transition="
                                         loading ||
+                                        disableShapeTransitionForRangeResize ||
                                         !FINAL_CONFIG.line.showTransition ||
                                         isSelectedDatapoint(serie, plot, j)
                                             ? undefined
                                             : `all ${FINAL_CONFIG.line.transitionDurationMs}ms ease-in-out`
+                                    "
+                                    :still="
+                                        disableShapeTransitionForRangeResize
                                     "
                                 />
 
