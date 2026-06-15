@@ -1588,8 +1588,9 @@ watch(
         if (oldValue === undefined || newValue === oldValue) return;
 
         showRangeSizeShapes.value = false;
-        
-        if (showRangeSizeShapesTimeout) clearTimeout(showRangeSizeShapesTimeout);
+
+        if (showRangeSizeShapesTimeout)
+            clearTimeout(showRangeSizeShapesTimeout);
 
         const duration = Math.max(
             FINAL_CONFIG.value.line.transitionDurationMs || 0,
