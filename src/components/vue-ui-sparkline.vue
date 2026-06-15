@@ -1659,7 +1659,16 @@ const a11yTable = computed(() => {
                     @mouseleave="() => unselectPlot(plot, i)"
                     @click="() => selectDatapoint(plot, i)"
                 />
-                <slot name="svg" :svg="svg" />
+                <slot
+                    name="svg"
+                    :svg="{
+                        ...svg,
+                        drawingArea,
+                        timeLabels,
+                        series: mutableDataset,
+                        hoveredIndex: activeTooltipIndex,
+                    }"
+                />
             </svg>
             <div
                 v-if="$slots.hint"

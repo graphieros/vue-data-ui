@@ -6160,6 +6160,7 @@ declare module 'vue-data-ui' {
             absoluteIndex: number;
             text: string;
         };
+        absoluteIndex: number;
     };
     export type VueUiAnnotatorActionColorSlotProps = { color: string };
     export type VueUiAnnotatorActionDrawSlotProps = {
@@ -9468,6 +9469,18 @@ declare module 'vue-data-ui' {
             height: number;
             padding: number;
             width: number;
+            drawingArea: {
+                bottom: number;
+                height: number;
+                left: number;
+                right: number;
+                start: number;
+                top: number;
+                width: number;
+            };
+            series: VueUiSparklineFormattedDatapoint[];
+            timeLabels: Array<{ text: string; absoluteIndex: number }>;
+            hoveredIndex: number | null;
         };
     };
 

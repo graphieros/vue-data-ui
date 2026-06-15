@@ -241,6 +241,10 @@ const config = computed(() => {
 });
 
 const step = ref(0);
+
+function log(n) {
+    console.log(n);
+}
 </script>
 
 <template>
@@ -308,6 +312,10 @@ const step = ref(0);
                 :config="isPropsToggled ? alternateConfig : config"
                 :key="`local_${step}`"
             >
+                <template #svg="{ svg }">
+                    {{ log(svg) }}
+                </template>
+
                 <template #hint="{ hint, isVisible }">
                     <div style="color: white" v-if="isVisible">
                         {{ hint }}
