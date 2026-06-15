@@ -1579,6 +1579,30 @@ const maxSeries = computed(() => {
     return Math.max(1, len);
 });
 
+const showRangeSizeShapes = ref(true);
+let showRangeSizeShapesTimeout = null;
+
+watch(
+    maxSeries,
+    (newValue, oldValue) => {
+        if (oldValue === undefined || newValue === oldValue) return;
+
+        showRangeSizeShapes.value = false;
+        
+        if (showRangeSizeShapesTimeout) clearTimeout(showRangeSizeShapesTimeout);
+
+        const duration = Math.max(
+            FINAL_CONFIG.value.line.transitionDurationMs || 0,
+            FINAL_CONFIG.value.plot.transitionDurationMs || 0,
+        );
+
+        showRangeSizeShapesTimeout = window.setTimeout(() => {
+            showRangeSizeShapes.value = true;
+        }, duration);
+    },
+    { flush: 'sync' },
+);
+
 function selectMinimapIndex(payload) {
     if (isContinuousScale.value) return;
     selectedMinimapIndex.value = payload;
@@ -4086,11 +4110,30 @@ const interLineAreas = computed(() => {
 /******************************************************************************************/
 
 const dataTooltipSlot = computed(() => {
-    const timeLabel = timeLabels.value[selectedSerieIndex.value];
+    const continuousSelectedIndex =
+        continuousTooltipSet.value[0]?.index ?? null;
+    const selectedIndex = isContinuousScale.value
+        ? continuousSelectedIndex
+        : selectedSerieIndex.value;
+
+    const timeLabel = isContinuousScale.value
+        ? {
+              text: String(
+                  continuousTooltipSet.value[0]?.point.raw?.x ??
+                      continuousTooltipSet.value[0]?.point.x,
+              ),
+              absoluteIndex: continuousSelectedIndex,
+          }
+        : timeLabels.value[selectedSerieIndex.value];
+
     return {
         timeLabel,
         datapoint: selectedSeries.value,
         seriesIndex: selectedSerieIndex.value,
+        selectedIndex,
+        absoluteIndex: isContinuousScale.value
+            ? continuousSelectedIndex
+            : selectedSerieIndex.value + slicer.value.start,
         series: absoluteDataset.value,
         bars: barSet.value,
         lines: lineSet.value,
@@ -4323,7 +4366,7 @@ const tooltipContent = computed(() => {
                     : '';
 
                 const label_x = FINAL_CONFIG.value.chart.tooltip.showValue
-                    ? time.text
+                    ? (time?.text ?? '')
                     : '';
                 const valueLabel = isContinuousScale.value
                     ? `
@@ -4848,6 +4891,9 @@ onBeforeUnmount(() => {
         resizeObserver.value.unobserve(observedEl.value);
         resizeObserver.value.disconnect();
         resizeObserver.value = null;
+    }
+    if (showRangeSizeShapesTimeout) {
+        clearTimeout(showRangeSizeShapesTimeout);
     }
 });
 
@@ -7153,6 +7199,7 @@ defineExpose({
                             >
                                 <Shape
                                     :data-cy="`xy-plot-${i}-${j}`"
+                                    v-show="showRangeSizeShapes"
                                     v-if="plot && canShowValue(plot.value)"
                                     :shape="
                                         [
@@ -7565,6 +7612,7 @@ defineExpose({
                             >
                                 <Shape
                                     data-cy="datapoint-line-plot"
+                                    v-show="showRangeSizeShapes"
                                     v-if="
                                         (!optimize.linePlot &&
                                             plot &&

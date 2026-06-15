@@ -988,7 +988,7 @@ const config = computed(() => {
                     alwaysOnTop: true,
                     offsetX: 0,
                     formatter: ({ value }) => {
-                        return value.toString();
+                        return (value ?? '').toString();
                         // return ['Something', value];
                         // return `Something\n${value}`
                     },
