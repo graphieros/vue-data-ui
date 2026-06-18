@@ -853,7 +853,19 @@ function createLayoutAdjustedState(state, series) {
 
     function remapPlotX(plot, plotIndex) {
         if (isContinuousScale(state)) {
-            return remapX(plot.x);
+            const rawX = Number(plot.rawX);
+
+            if (Number.isFinite(rawX)) {
+                return getContinuousX(
+                    {
+                        ...state,
+                        drawingArea,
+                    },
+                    rawX,
+                );
+            }
+
+            return null;
         }
 
         return getDatapointX(
@@ -1209,12 +1221,185 @@ function renderIndividualScaleLabels(state) {
     );
 }
 
+function getContinuousBarXValues(barSeries) {
+    return [
+        ...new Set(
+            barSeries
+                .flatMap((serie) => safeArray(serie.plots))
+                .map((plot) => Number(plot.x))
+                .filter(Number.isFinite),
+        ),
+    ].sort((firstValue, secondValue) => firstValue - secondValue);
+}
+
+function getContinuousBarWidth(state, barSeries, barSeriesCount = 1) {
+    const { drawingArea, config } = state;
+    const xValues = getContinuousBarXValues(barSeries);
+
+    const fallbackWidth = drawingArea.width * 0.05;
+
+    if (xValues.length < 2) {
+        return Math.max(0.00001, fallbackWidth / Math.max(1, barSeriesCount));
+    }
+
+    const smallestGap = xValues
+        .slice(1)
+        .reduce((currentSmallestGap, xValue, index) => {
+            const previousXValue = xValues[index];
+            const gap = Math.abs(xValue - previousXValue);
+
+            return gap > 0
+                ? Math.min(currentSmallestGap, gap)
+                : currentSmallestGap;
+        }, Number.POSITIVE_INFINITY);
+
+    const periodGap = safeNumber(
+        getConfigValue(config, 'bar.periodGap', 0.2),
+        0.2,
+    );
+
+    const usableWidth =
+        Number.isFinite(smallestGap) && smallestGap > 0
+            ? smallestGap * (1 - periodGap)
+            : fallbackWidth;
+
+    return Math.max(0.00001, usableWidth / Math.max(1, barSeriesCount));
+}
+
+function renderContinuousBars(state, barSeries, stacked) {
+    const { config } = state;
+
+    const innerGapRatio = safeNumber(
+        getConfigValue(config, 'bar.innerGap', 0.05),
+        0.05,
+    );
+
+    const borderRadius = getConfigValue(config, 'bar.borderRadius', 0);
+    const output = [];
+
+    if (stacked) {
+        const barWidth = getContinuousBarWidth(state, barSeries, 1);
+        const innerGap = barWidth * Math.min(Math.abs(innerGapRatio), 0.95);
+        const finalBarWidth = Math.max(0.00001, barWidth - innerGap);
+
+        barSeries.forEach((serie, serieIndex) => {
+            const zeroY = Number.isFinite(Number(serie.__zeroY))
+                ? Number(serie.__zeroY)
+                : getZeroY(state);
+
+            safeArray(serie.plots).forEach((plot) => {
+                if (
+                    !plot ||
+                    plot.value === null ||
+                    plot.value === undefined ||
+                    !Number.isFinite(Number(plot.value)) ||
+                    !Number.isFinite(Number(plot.x)) ||
+                    !Number.isFinite(Number(plot.y))
+                ) {
+                    return;
+                }
+
+                const x = plot.x - finalBarWidth / 2;
+                const { y, height } = getClippedBarGeometry(
+                    state,
+                    serie,
+                    plot,
+                    zeroY,
+                );
+
+                plot.__barLabelX = plot.x;
+
+                output.push(
+                    emptyElement('rect', {
+                        'data-cy': 'datapoint-bar',
+                        x,
+                        y,
+                        width: finalBarWidth,
+                        height,
+                        rx: borderRadius,
+                        fill: getBarFill(
+                            state,
+                            serie,
+                            serieIndex,
+                            Number(plot.value),
+                        ),
+                        ...getBarBorderAttributes(state, serie),
+                    }),
+                );
+            });
+        });
+
+        return element('g', { 'data-layer': 'bars' }, output.join(''));
+    }
+
+    const barSeriesCount = Math.max(1, barSeries.length);
+    const barWidth = getContinuousBarWidth(state, barSeries, barSeriesCount);
+    const innerGap = barWidth * Math.min(Math.abs(innerGapRatio), 0.95);
+    const finalBarWidth = Math.max(0.00001, barWidth - innerGap);
+    const groupWidth = barWidth * barSeriesCount;
+
+    barSeries.forEach((serie, serieIndex) => {
+        const zeroY = Number.isFinite(Number(serie.__zeroY))
+            ? Number(serie.__zeroY)
+            : getZeroY(state);
+
+        safeArray(serie.plots).forEach((plot) => {
+            if (
+                !plot ||
+                plot.value === null ||
+                plot.value === undefined ||
+                !Number.isFinite(Number(plot.value)) ||
+                !Number.isFinite(Number(plot.x)) ||
+                !Number.isFinite(Number(plot.y))
+            ) {
+                return;
+            }
+
+            const groupLeft = plot.x - groupWidth / 2;
+            const x = groupLeft + barWidth * serieIndex + innerGap / 2;
+
+            const { y, height } = getClippedBarGeometry(
+                state,
+                serie,
+                plot,
+                zeroY,
+            );
+
+            plot.__barLabelX = x + finalBarWidth / 2;
+
+            output.push(
+                emptyElement('rect', {
+                    'data-cy': 'datapoint-bar',
+                    x,
+                    y,
+                    width: finalBarWidth,
+                    height,
+                    rx: borderRadius,
+                    fill: getBarFill(
+                        state,
+                        serie,
+                        serieIndex,
+                        Number(plot.value),
+                    ),
+                    ...getBarBorderAttributes(state, serie),
+                }),
+            );
+        });
+    });
+
+    return element('g', { 'data-layer': 'bars' }, output.join(''));
+}
+
 function renderBars(state, series) {
     const { config, drawingArea } = state;
     const stacked = isYAxisStacked(config);
     const barSeries = series.filter((serie) => serie.type === 'bar');
 
     if (!barSeries.length) return '';
+
+    if (isContinuousScale(state)) {
+        return renderContinuousBars(state, barSeries, stacked);
+    }
 
     const maxSeries = Math.max(
         1,
@@ -1549,33 +1734,27 @@ function isCoordinatePoint(point) {
 }
 
 function isContinuousScale(state) {
+    if (Boolean(state.isContinuous)) {
+        return true;
+    }
+
     return safeArray(state.series).some((serie) =>
         safeArray(serie.series).some(isCoordinatePoint),
     );
 }
 
-function getDatapointX(state, index, maxSeries) {
-    const { drawingArea, config } = state;
-    const gridPosition = getConfigValue(
-        config,
-        'chart.grid.position',
-        'middle',
-    );
-
-    const availableWidth = drawingArea.width;
-    const spacing =
-        gridPosition === 'middle'
-            ? availableWidth / Math.max(1, maxSeries)
-            : availableWidth / Math.max(1, maxSeries - 1);
-
-    if (gridPosition === 'middle') {
-        return drawingArea.left + spacing / 2 + spacing * index;
+function getContinuousXRange(state) {
+    if (
+        state.xScale &&
+        Number.isFinite(Number(state.xScale.min)) &&
+        Number.isFinite(Number(state.xScale.max))
+    ) {
+        return {
+            min: Number(state.xScale.min),
+            max: Number(state.xScale.max),
+        };
     }
 
-    return drawingArea.left + spacing * index;
-}
-
-function getContinuousXRange(state) {
     const values = safeArray(state.series)
         .flatMap((serie) => safeArray(serie.series))
         .filter(isCoordinatePoint)
@@ -1608,17 +1787,27 @@ function getContinuousX(state, x) {
 function formatContinuousXLabel(state, tick, index) {
     const { config } = state;
 
-    return dataLabel({
+    const fallback = dataLabel({
         v: tick,
-        s: getConfigValue(config, 'chart.labels.prefix', ''),
-        p: getConfigValue(config, 'chart.labels.suffix', ''),
+        p: getConfigValue(config, 'chart.labels.prefix', ''),
+        s: getConfigValue(config, 'chart.labels.suffix', ''),
         r: getConfigValue(config, 'chart.grid.labels.xAxis.rounding', 0),
     });
+
+    return applyDataLabel(
+        getConfigValue(config, 'chart.grid.labels.xAxis.formatter', null),
+        tick,
+        fallback,
+        {
+            datapoint: tick,
+            seriesIndex: null,
+        },
+    );
 }
 
 function getContinuousXLabels(state) {
-    const { scale, config } = state;
-    const ticks = safeArray(scale?.ticks);
+    const { xScale, config } = state;
+    const ticks = safeArray(xScale?.ticks);
 
     const reversed = Boolean(
         getConfigValue(config, 'chart.grid.labels.xAxis.reverse', false),
@@ -1632,6 +1821,27 @@ function getContinuousXLabels(state) {
         index,
         absoluteIndex: index,
     }));
+}
+
+function getDatapointX(state, index, maxSeries) {
+    const { drawingArea, config } = state;
+    const gridPosition = getConfigValue(
+        config,
+        'chart.grid.position',
+        'middle',
+    );
+
+    const availableWidth = drawingArea.width;
+    const spacing =
+        gridPosition === 'middle'
+            ? availableWidth / Math.max(1, maxSeries)
+            : availableWidth / Math.max(1, maxSeries - 1);
+
+    if (gridPosition === 'middle') {
+        return drawingArea.left + spacing / 2 + spacing * index;
+    }
+
+    return drawingArea.left + spacing * index;
 }
 
 async function getTimeLabels(state, series) {

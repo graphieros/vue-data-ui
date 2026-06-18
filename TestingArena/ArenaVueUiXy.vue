@@ -57,7 +57,7 @@ function createContinuousDs(n, m = 100) {
     const arr = [];
     for (let i = 0; i < n; i += 1) {
         arr.push({
-            x: i,
+            x: i + Math.random(),
             y: Math.random() * m,
         });
     }
@@ -163,7 +163,7 @@ const dataset = ref([
         name: 'Serie A',
         type: 'line',
         // shape: 'star',
-        series: createDs(20),
+        series: createDs(90),
         // series: createContinuousDs(100),
         // series: [
         //     { x: 25.4, y: 10 },
@@ -171,6 +171,7 @@ const dataset = ref([
         //     { x: 15.2, y: 120 }, // Further down the axis
         //     { x: 6.8, y: 500 }, // Much further down the axis
         // ],
+        // comments: ["", "", "", "", "This is a comment that can be long, or that can be short but it depends."],
         dataLabels: false,
         smooth: true,
         useArea: false,
@@ -202,7 +203,7 @@ const dataset = ref([
     {
         name: 'Serie B',
         type: 'bar',
-        series: createDs(20),
+        series: createDs(90),
         dataLabels: false,
     },
 ]);
@@ -707,6 +708,7 @@ const model = createModel([
     CHECKBOX('chart.grid.labels.yAxis.useNiceScale', { def: false }),
 
     CHECKBOX('chart.grid.labels.yAxis.showCrosshairs', { def: true }),
+    CHECKBOX('chart.grid.labels.xAxis.reverse', { def: false }),
     CHECKBOX('chart.grid.labels.xAxis.showCrosshairs', { def: true }),
     NUMBER('chart.grid.labels.xAxis.crosshairSize', {
         def: 6,
