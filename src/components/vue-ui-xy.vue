@@ -2485,6 +2485,13 @@ function emitSelectLegend() {
 }
 
 function segregate(legendItem) {
+    disableShapeTransitionForRangeResize.value = false;
+
+    if (restoreShapeTransitionFrame) {
+        cancelAnimationFrame(restoreShapeTransitionFrame);
+        restoreShapeTransitionFrame = null;
+    }
+
     if (segregatedSeriesSet.value.has(legendItem.id)) {
         segregatedSeries.value = segregatedSeries.value.filter(
             (id) => id !== legendItem.id,
@@ -2494,6 +2501,7 @@ function segregate(legendItem) {
             return;
         segregatedSeries.value.push(legendItem.id);
     }
+
     emitSelectLegend();
     segregateStep.value += 1;
 }
@@ -7872,7 +7880,7 @@ defineExpose({
                             <g
                                 data-cy="datapoint-plot"
                                 v-for="(plot, j) in serie.plots"
-                                :key="`circle_plot_${i}_${j}`"
+                                :key="`circle_plot_${serie.id}_${j}`"
                             >
                                 <Shape
                                     :data-cy="`xy-plot-${i}-${j}`"
@@ -8373,7 +8381,7 @@ defineExpose({
 
                             <template
                                 v-for="(plot, j) in serie.plots"
-                                :key="`circle_line_${i}_${j}`"
+                                :key="`circle_line_${serie.id}_${j}`"
                             >
                                 <Shape
                                     data-cy="datapoint-line-plot"
