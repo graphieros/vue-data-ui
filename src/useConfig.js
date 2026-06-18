@@ -2422,6 +2422,7 @@ export function useConfig(options = {}) {
                     roundingPercentage: 0,
                     prefix: '',
                     suffix: '',
+                    showValue: true,
                 },
                 tooltip: {
                     ...TOOLTIP,

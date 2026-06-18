@@ -9037,6 +9037,7 @@ declare module 'vue-data-ui' {
                     roundingPercentage?: number;
                     prefix?: string;
                     suffix?: string;
+                    showValue?: boolean;
                 };
                 tooltip?: ChartTooltip & {
                     showValue?: boolean;

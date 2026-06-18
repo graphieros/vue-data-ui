@@ -1011,6 +1011,22 @@ function useTooltip(bar, seriesIndex, triggerMode = 'pointer') {
     }
 }
 
+function getLegendItem({ legend, index }) {
+    const _cfg = FINAL_CONFIG.value.style.chart.legend;
+    if (!_cfg.showValue) return legend.name;
+    return `${legend.name}: ${applyDataLabel(
+        FINAL_CONFIG.value.style.chart.layout.bars.dataLabels.value.formatter,
+        legend.value,
+        dataLabel({
+            p: _cfg.prefix,
+            v: legend.value,
+            s: _cfg.suffix,
+            r: _cfg.roundingValue,
+        }),
+        { datapoint: legend, seriesIndex: index },
+    )}`;
+}
+
 function makeDataLabel(value, datapoint, seriesIndex, sign) {
     if (!FINAL_CONFIG.value.style.chart.layout.bars.dataLabels.value.show) {
         return '';
@@ -1807,22 +1823,7 @@ defineExpose({
                         @click="segregate(legend.id)"
                         :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`"
                     >
-                        {{ legend.name }}:
-                        {{
-                            applyDataLabel(
-                                FINAL_CONFIG.style.chart.layout.bars.dataLabels
-                                    .value.formatter,
-                                legend.value,
-                                dataLabel({
-                                    p: FINAL_CONFIG.style.chart.legend.prefix,
-                                    v: legend.value,
-                                    s: FINAL_CONFIG.style.chart.legend.suffix,
-                                    r: FINAL_CONFIG.style.chart.legend
-                                        .roundingValue,
-                                }),
-                                { datapoint: legend, seriesIndex: index },
-                            )
-                        }}
+                        {{ getLegendItem({ legend, index }) }}
                     </div>
                 </template>
 
@@ -2618,22 +2619,7 @@ defineExpose({
                         @click="segregate(legend.id)"
                         :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`"
                     >
-                        {{ legend.name }}:
-                        {{
-                            applyDataLabel(
-                                FINAL_CONFIG.style.chart.layout.bars.dataLabels
-                                    .value.formatter,
-                                legend.value,
-                                dataLabel({
-                                    p: FINAL_CONFIG.style.chart.legend.prefix,
-                                    v: legend.value,
-                                    s: FINAL_CONFIG.style.chart.legend.suffix,
-                                    r: FINAL_CONFIG.style.chart.legend
-                                        .roundingValue,
-                                }),
-                                { datapoint: legend, seriesIndex: index },
-                            )
-                        }}
+                        {{ getLegendItem({ legend, index }) }}
                     </div>
                 </template>
 

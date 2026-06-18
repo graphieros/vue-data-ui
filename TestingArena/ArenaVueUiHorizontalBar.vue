@@ -256,6 +256,7 @@ const model = createModel([
     TEXT('style.chart.legend.prefix', { def: 'P' }),
     TEXT('style.chart.legend.suffix', { def: 'S' }),
     CHECKBOX('style.chart.legend.selectAllToggle.show', { def: true }),
+    CHECKBOX('style.chart.legend.showValue', { def: false }),
 
     CHECKBOX('style.chart.tooltip.show', { def: true }),
     COLOR('style.chart.tooltip.backgroundColor', { def: '#FFFFFF' }),
