@@ -175,7 +175,12 @@ const isAnnotator = ref(false);
 const isFullscreen = ref(false);
 const isTooltip = ref(false);
 const selectedRowIndex = ref(null);
+
 const segregatedSeries = ref([]);
+const segregatedSeriesSet = computed(() => {
+    return new Set(segregatedSeries.value);
+});
+
 const uniqueId = ref(createUid());
 const step = ref(0);
 const tableStep = ref(0);
@@ -198,6 +203,12 @@ const selectedMinimapXValue = ref(null);
 const selectedSerieIndex = ref(null);
 const activeTooltipIndex = ref(null); // a11y
 const tooltipA11yPosition = ref({ x: 0, y: 0 }); // a11y
+
+const visibilityResizeObserver = ref(null);
+const timeTagResizeObserver = ref(null);
+const observedTimeTagElement = ref(null);
+const timeTagResizeAnimationFrame = ref(null);
+const stopTimeTagObserverWatch = ref(null);
 
 /**
  * Reference to the chart’s parent element.
@@ -305,6 +316,18 @@ async function runParentStableLayoutPass() {
 
     parentLayoutStableRunSequence.value += 1;
     parentLayoutIsStable.value = true;
+}
+
+const parentStableLayoutRefreshIsQueued = ref(false);
+
+function queueParentStableLayoutRefresh() {
+    if (parentStableLayoutRefreshIsQueued.value) return;
+    parentStableLayoutRefreshIsQueued.value = true;
+    nextTick(() => {
+        parentStableLayoutRefreshIsQueued.value = false;
+        setParentElementReference();
+        runParentStableLayoutPass();
+    });
 }
 
 const svg = computed(() => {
@@ -633,16 +656,33 @@ const lttbMemo = memoizeByArrayRef((series, threshold) => {
 const lttb = (series) =>
     lttbMemo(series, FINAL_CONFIG.value.downsample.threshold);
 
-const maxX = computed({
-    get: () => {
-        return Math.max(
-            ...FINAL_DATASET.value.map(
-                (datapoint) => lttb(datapoint.series).length,
-            ),
-        );
-    },
-    set: (v) => v,
+const downsampledSeriesLengths = computed(() => {
+    const threshold = FINAL_CONFIG.value.downsample.threshold;
+
+    return FINAL_DATASET.value.map((datapoint) => {
+        return lttbMemo(datapoint.series, threshold).length;
+    });
 });
+
+const maxDownsampledSeriesLength = computed(() => {
+    let _max = -Infinity;
+    for (let i = 0; i < downsampledSeriesLengths.value.length; i += 1) {
+        const length = downsampledSeriesLengths.value[i];
+        if (length > _max) _max = length;
+    }
+    return _max;
+});
+
+const maxDownsampledSeriesLengthWithZero = computed(() => {
+    let _max = 0;
+    for (let i = 0; i < downsampledSeriesLengths.value.length; i += 1) {
+        const length = downsampledSeriesLengths.value[i];
+        if (length > _max) _max = length;
+    }
+    return _max;
+});
+
+const maxX = computed(() => maxDownsampledSeriesLength.value);
 
 const slicer = ref({ start: 0, end: maxX.value });
 const slicerPrecog = ref({ start: 0, end: maxX.value });
@@ -803,18 +843,10 @@ const hasUserScale = computed(() => {
 });
 
 const dataRange = computed(() => {
-    const series = safeDataset.value
-        .filter((s) => !segregatedSeries.value.includes(s.id))
-        .flatMap((d) => (Array.isArray(d.series) ? d.series : []))
-        .map(getValueFromPoint)
-        .filter(Number.isFinite);
-
-    if (!series.length) return { min: 0, max: 1 };
-
-    return {
-        min: Math.min(...series),
-        max: Math.max(...series),
-    };
+    const activeDataset = safeDataset.value.filter(
+        (seriesItem) => !segregatedSeriesSet.value.has(seriesItem.id),
+    );
+    return scanPointValueMinMax(activeDataset, 0, 1);
 });
 
 const min = computed(() => {
@@ -901,25 +933,55 @@ const isContinuousScale = computed(() => {
     });
 });
 
-onMounted(() => {
-    if (
-        isContinuousScale.value &&
-        props.dataset.some((el) => el.type === 'bar')
-    ) {
-        console.warn(
-            `Vue Data UI - VueUiXy: series of type 'bar' are not supported in continuous mode.\n\nContinuous mode requires 'line' and 'plot' series to use coordinate-based datasets:\n[{ x: number, y: number }]\n\nIf you need to mix 'bar', 'line', and 'plot' series in the same chart, all series must use the standard\n[number, number, number...]`,
-        );
+watchEffect(() => {
+    if (!isContinuousScale.value) {
+        return;
     }
+
+    const hasUnsupportedSeries = FINAL_DATASET.value.some((datapoint) => {
+        return !canUseSeriesInContinuousMode(datapoint);
+    });
+
+    if (!hasUnsupportedSeries) {
+        return;
+    }
+
+    console.warn(
+        `Vue Data UI - VueUiXy: mixed continuous and non-continuous series are not supported in the same chart.\n\nContinuous mode requires all visible 'line' and 'plot' series to use coordinate-based datasets:\n[{ x: number, y: number }]\n\nSeries of type 'bar' and standard numeric series are ignored in continuous mode to prevent runtime errors.\n\nIf you need to mix 'bar', 'line', and 'plot' series in the same chart, all series must use the standard [number, number, number...] format.`,
+    );
 });
 
-function normalizeCoordinatePoint(point, index) {
-    const hasNullBreak =
+function isNullCoordinateBreak(point) {
+    return (
         point &&
         typeof point === 'object' &&
         point.x === null &&
-        point.y === null;
+        point.y === null
+    );
+}
 
-    if (hasNullBreak) {
+function isCoordinateSeries(series) {
+    return (
+        Array.isArray(series) &&
+        series.some((point) => {
+            return isCoordinatePoint(point) || isNullCoordinateBreak(point);
+        })
+    );
+}
+
+function canUseSeriesInContinuousMode(datapoint) {
+    if (!isContinuousScale.value) {
+        return true;
+    }
+
+    return (
+        ['line', 'plot'].includes(datapoint.type) &&
+        isCoordinateSeries(datapoint.series)
+    );
+}
+
+function normalizeCoordinatePoint(point, index) {
+    if (isNullCoordinateBreak(point)) {
         return {
             x: null,
             y: null,
@@ -929,17 +991,30 @@ function normalizeCoordinatePoint(point, index) {
         };
     }
 
+    if (!point || typeof point !== 'object') {
+        return {
+            x: null,
+            y: null,
+            index,
+            raw: point,
+            isNull: true,
+            isInvalid: true,
+        };
+    }
+
     return {
         x: Number(point.x),
         y: isSafeValue(point.y) ? Number(point.y) : null,
         index,
         raw: point,
         isNull: false,
+        isInvalid: false,
     };
 }
 
 function getValueFromPoint(point) {
-    return isContinuousScale.value ? point.y : point;
+    if (!isContinuousScale.value) return point;
+    return point && typeof point === 'object' ? point.y : null;
 }
 
 const safeDataset = computed(() => {
@@ -948,11 +1023,14 @@ const safeDataset = computed(() => {
     }
 
     return FINAL_DATASET.value.map((datapoint, i) => {
-        const sourceSeries = isContinuousScale.value
-            ? datapoint.series
-            : lttb(datapoint.series);
-
         const id = `uniqueId_${i}`;
+        const canUseContinuousSeries = canUseSeriesInContinuousMode(datapoint);
+
+        const sourceSeries = isContinuousScale.value
+            ? canUseContinuousSeries
+                ? datapoint.series
+                : []
+            : lttb(datapoint.series);
 
         return {
             ...datapoint,
@@ -963,6 +1041,17 @@ const safeDataset = computed(() => {
                           normalizeCoordinatePoint(point, index),
                       )
                       .filter((point) => {
+                          if (point.isInvalid) {
+                              return false;
+                          }
+
+                          if (point.x === null && point.y === null) {
+                              return (
+                                  slicer.value.start <= 0 &&
+                                  slicer.value.end >= 0
+                              );
+                          }
+
                           return (
                               point.x >= slicer.value.start &&
                               point.x <= slicer.value.end
@@ -1001,7 +1090,7 @@ const absoluteDataset = computed(() => {
                 ? datapoint.series.map((point) => point.y)
                 : datapoint.series,
             segregate: () => segregate(datapoint),
-            isSegregated: segregatedSeries.value.includes(datapoint.id),
+            isSegregated: segregatedSeriesSet.value.has(datapoint.id),
         };
     });
 });
@@ -1025,7 +1114,7 @@ const relativeDataset = computed(() => {
                     : datapoint.series,
             };
         })
-        .filter((s) => !segregatedSeries.value.includes(s.id));
+        .filter((s) => !segregatedSeriesSet.value.has(s.id));
 });
 
 const allSegregated = computed(
@@ -1074,33 +1163,7 @@ function getScaleLabelX() {
 }
 
 function updateContinuousTooltip(svgX) {
-    const closestGlobal = relativeDataset.value
-        .filter((datapoint) => ['line', 'plot'].includes(datapoint.type))
-        .flatMap((datapoint) => {
-            return datapoint.series.map((point, index) => {
-                const x = getContinuousX(point);
-
-                return {
-                    datapoint,
-                    point,
-                    index,
-                    x,
-                    y: point.y,
-                    distance: Math.abs(x - svgX),
-                };
-            });
-        })
-        .filter(
-            (item) =>
-                isValidNumber(item.point?.x) && isValidNumber(item.point?.y),
-        )
-        .reduce((closest, item) => {
-            if (!closest || item.distance < closest.distance) {
-                return item;
-            }
-
-            return closest;
-        }, null);
+    const closestGlobal = getClosestContinuousTooltipPoint(svgX);
 
     if (!closestGlobal) {
         continuousTooltipSet.value = [];
@@ -1111,31 +1174,17 @@ function updateContinuousTooltip(svgX) {
 
     const selectedX = Number(closestGlobal.point.x);
 
-    const matchingPoints = relativeDataset.value
-        .filter((datapoint) => ['line', 'plot'].includes(datapoint.type))
-        .map((datapoint) => {
-            const index = datapoint.series.findIndex((point) => {
-                return Number(point.x) === selectedX && isValidNumber(point.y);
-            });
+    const matchingPoints =
+        continuousTooltipLookup.value.matchingPointsByXValue.get(selectedX) ||
+        [];
 
-            if (index === -1) {
-                return null;
-            }
+    continuousTooltipSet.value = matchingPoints.map((point) => {
+        return {
+            ...point,
+            distance: 0,
+        };
+    });
 
-            const point = datapoint.series[index];
-
-            return {
-                datapoint,
-                point,
-                index,
-                x: getContinuousX(point),
-                y: point.y,
-                distance: 0,
-            };
-        })
-        .filter(Boolean);
-
-    continuousTooltipSet.value = matchingPoints;
     continuousTooltipX.value = getContinuousX({ x: selectedX });
     selectedMinimapXValue.value = selectedX;
 }
@@ -1412,6 +1461,14 @@ async function setUserOptionsVisibility(state = false) {
     userOptionsVisible.value = state;
 }
 
+function showUserOptions() {
+    setUserOptionsVisibility(true);
+}
+
+function hideUserOptions() {
+    setUserOptionsVisibility(false);
+}
+
 function toggleAnnotator() {
     isAnnotator.value = !isAnnotator.value;
 }
@@ -1424,15 +1481,7 @@ watchEffect(() => {
     const requestId = ++timeLabelsRequestId;
 
     (async () => {
-        const maxDatapoints = Math.max(
-            ...FINAL_DATASET.value.map(
-                (datapoint) =>
-                    largestTriangleThreeBucketsArray({
-                        data: datapoint.series,
-                        threshold: FINAL_CONFIG.value.downsample.threshold,
-                    }).length,
-            ),
-        );
+        const maxDatapoints = maxDownsampledSeriesLength.value;
 
         const labels = await useTimeLabels({
             values: FINAL_CONFIG.value.chart.grid.labels.xAxisLabels.values,
@@ -1455,15 +1504,7 @@ watchEffect(() => {
     const requestId = ++allTimeLabelsRequestId;
 
     (async () => {
-        const maxDatapoints = Math.max(
-            ...FINAL_DATASET.value.map(
-                (datapoint) =>
-                    largestTriangleThreeBucketsArray({
-                        data: datapoint.series,
-                        threshold: FINAL_CONFIG.value.downsample.threshold,
-                    }).length,
-            ),
-        );
+        const maxDatapoints = maxDownsampledSeriesLength.value;
 
         const labels = await useTimeLabels({
             values: FINAL_CONFIG.value.chart.grid.labels.xAxisLabels.values,
@@ -1547,6 +1588,10 @@ onBeforeUnmount(() => {
     timeLabelsHeight.value = 0;
     timeLabelsBBoxX.value = 0;
     stableParentSize.stop();
+    if (visibilityResizeObserver.value) {
+        visibilityResizeObserver.value.disconnect();
+        visibilityResizeObserver.value = null;
+    }
 });
 
 function selectTimeLabel(label, relativeIndex) {
@@ -1637,14 +1682,12 @@ function checkAutoScaleError(datapoint) {
 }
 
 function validSlicerEnd(v) {
-    const _max = Math.max(
-        ...FINAL_DATASET.value.map(
-            (datapoint) => lttb(datapoint.series).length,
-        ),
-    );
+    const _max = maxDownsampledSeriesLength.value;
+
     if (v > _max) {
         return _max;
     }
+
     if (
         v < 0 ||
         (FINAL_CONFIG.value.chart.zoom.startIndex !== null &&
@@ -1656,6 +1699,7 @@ function validSlicerEnd(v) {
             return 1;
         }
     }
+
     return v;
 }
 
@@ -1693,13 +1737,8 @@ function setupSlicer() {
 
         const { startIndex, endIndex } = FINAL_CONFIG.value.chart.zoom;
         const max = FINAL_CONFIG.value.chart.zoom.keepState
-            ? Math.max(
-                  0,
-                  ...FINAL_DATASET.value.map((dp) => lttb(dp.series).length),
-              )
-            : Math.max(
-                  ...FINAL_DATASET.value.map((dp) => lttb(dp.series).length),
-              );
+            ? maxDownsampledSeriesLengthWithZero.value
+            : maxDownsampledSeriesLength.value;
 
         if (FINAL_CONFIG.value.chart.zoom.keepState && max <= 0) {
             return;
@@ -2009,16 +2048,15 @@ function calcIndividualHeight(plot) {
 }
 
 const slot = computed(() => {
-    const denom = Math.max(1, maxSeries.value);
-    const w = Math.max(1, drawingArea.value.width);
-    const bars = Math.max(
-        1,
-        safeDataset.value.filter(
-            (s) => s.type === 'bar' && !segregatedSeries.value.includes(s.id),
-        ).length,
-    );
+    const denominator = Math.max(1, maxSeries.value);
+    const widthValue = Math.max(1, drawingArea.value.width);
+
     return {
-        bar: safeDiv(w, denom * bars, 1),
+        bar: safeDiv(
+            widthValue,
+            denominator * activeBarSeriesCountWithFallback.value,
+            1,
+        ),
         plot: horizontalDatapointSpacing.value,
         line: horizontalDatapointSpacing.value,
     };
@@ -2066,23 +2104,144 @@ const hoveredIndex = ref(null);
 const continuousTooltipSet = ref([]);
 const continuousTooltipX = ref(null);
 
+const continuousTooltipLookup = computed(() => {
+    if (!isContinuousScale.value) {
+        return {
+            sortedPoints: [],
+            matchingPointsByXValue: new Map(),
+        };
+    }
+
+    const sortedPoints = [];
+    const matchingPointsByXValue = new Map();
+    let sourceOrder = 0;
+
+    for (
+        let seriesIndex = 0;
+        seriesIndex < relativeDataset.value.length;
+        seriesIndex += 1
+    ) {
+        const datapoint = relativeDataset.value[seriesIndex];
+
+        if (!['line', 'plot'].includes(datapoint.type)) continue;
+        if (!Array.isArray(datapoint.series)) continue;
+
+        for (
+            let pointIndex = 0;
+            pointIndex < datapoint.series.length;
+            pointIndex += 1
+        ) {
+            const point = datapoint.series[pointIndex];
+            if (!isValidNumber(point?.x) || !isValidNumber(point?.y)) continue;
+            const xValue = Number(point.x);
+            const x = getContinuousX(point);
+
+            const tooltipPoint = {
+                datapoint,
+                point,
+                index: pointIndex,
+                x,
+                y: point.y,
+                distance: 0,
+                sourceOrder,
+            };
+
+            sortedPoints.push({
+                ...tooltipPoint,
+                xValue,
+            });
+
+            if (!matchingPointsByXValue.has(xValue)) {
+                matchingPointsByXValue.set(xValue, []);
+            }
+
+            matchingPointsByXValue.get(xValue).push(tooltipPoint);
+            sourceOrder += 1;
+        }
+    }
+
+    sortedPoints.sort((firstPoint, secondPoint) => {
+        if (firstPoint.x !== secondPoint.x) {
+            return firstPoint.x - secondPoint.x;
+        }
+
+        return firstPoint.sourceOrder - secondPoint.sourceOrder;
+    });
+
+    return {
+        sortedPoints,
+        matchingPointsByXValue,
+    };
+});
+
+function getClosestContinuousTooltipPoint(svgX) {
+    const sortedPoints = continuousTooltipLookup.value.sortedPoints;
+
+    if (!sortedPoints.length) {
+        return null;
+    }
+
+    let left = 0;
+    let right = sortedPoints.length - 1;
+
+    while (left <= right) {
+        const middle = Math.floor((left + right) / 2);
+
+        if (sortedPoints[middle].x < svgX) {
+            left = middle + 1;
+        } else {
+            right = middle - 1;
+        }
+    }
+
+    const candidateIndexes = new Set();
+
+    if (left >= 0 && left < sortedPoints.length) {
+        candidateIndexes.add(left);
+    }
+
+    if (left - 1 >= 0 && left - 1 < sortedPoints.length) {
+        candidateIndexes.add(left - 1);
+    }
+
+    if (left + 1 >= 0 && left + 1 < sortedPoints.length) {
+        candidateIndexes.add(left + 1);
+    }
+
+    let closestPoint = null;
+
+    candidateIndexes.forEach((candidateIndex) => {
+        const point = sortedPoints[candidateIndex];
+        const distance = Math.abs(point.x - svgX);
+
+        if (
+            !closestPoint ||
+            distance < closestPoint.distance ||
+            (distance === closestPoint.distance &&
+                point.sourceOrder < closestPoint.sourceOrder)
+        ) {
+            closestPoint = {
+                ...point,
+                distance,
+            };
+        }
+    });
+
+    return closestPoint;
+}
+
 const continuousKeyboardXValues = computed(() => {
     if (!isContinuousScale.value) {
         return [];
     }
 
-    return [
-        ...new Set(
-            relativeDataset.value
-                .flatMap((datapoint) => datapoint.series || [])
-                .filter(
-                    (point) =>
-                        isValidNumber(point?.x) && isValidNumber(point?.y),
-                )
-                .map((point) => Number(point.x)),
-        ),
-    ].sort((a, b) => {
-        return getContinuousX({ x: a }) - getContinuousX({ x: b });
+    return Array.from(
+        continuousTooltipLookup.value.matchingPointsByXValue.keys(),
+    ).sort((firstValue, secondValue) => {
+        return (
+            getContinuousX({ x: firstValue }) -
+            getContinuousX({ x: secondValue })
+        );
     });
 });
 
@@ -2166,7 +2325,7 @@ function onSvgMouseMove(e) {
         }
 
         // Ignore moves outside drawing area
-        const { left, right, top, bottom, width: areaW } = drawingArea.value;
+        const { left, right, top, bottom } = drawingArea.value;
         if (
             svgPt.x < left ||
             svgPt.x > right ||
@@ -2212,7 +2371,7 @@ function onSvgMouseLeave() {
 function onSvgClick(e) {
     const svgPt = clientToSvgCoords(e);
     if (svgPt && svgRef.value) {
-        const { left, right, top, bottom, width: areaW } = drawingArea.value;
+        const { left, right, top, bottom } = drawingArea.value;
 
         // Only react if click lands inside the drawing area
         if (
@@ -2326,7 +2485,7 @@ function emitSelectLegend() {
 }
 
 function segregate(legendItem) {
-    if (segregatedSeries.value.includes(legendItem.id)) {
+    if (segregatedSeriesSet.value.has(legendItem.id)) {
         segregatedSeries.value = segregatedSeries.value.filter(
             (id) => id !== legendItem.id,
         );
@@ -2359,7 +2518,7 @@ function validSeriesToToggle(name) {
 function showSeries(name) {
     const dp = validSeriesToToggle(name);
     if (dp === null) return;
-    if (segregatedSeries.value.includes(dp.id)) {
+    if (segregatedSeriesSet.value.has(dp.id)) {
         segregate({ id: dp.id });
     }
 }
@@ -2367,7 +2526,7 @@ function showSeries(name) {
 function hideSeries(name) {
     const dp = validSeriesToToggle(name);
     if (dp === null) return;
-    if (!segregatedSeries.value.includes(dp.id)) {
+    if (!segregatedSeriesSet.value.has(dp.id)) {
         segregate({ id: dp.id });
     }
 }
@@ -2556,15 +2715,29 @@ function getHighlightAreaHorizontalBandWidth(index) {
 function getHoveredIndexFromSvgX(svgX) {
     const left = drawingArea.value?.left || 0;
     const right = drawingArea.value?.right || 0;
-    for (let i = 0; i < maxSeries.value; i += 1) {
-        const bandLeft = Math.max(left, getHorizontalBandX(i));
-        const bandRight = Math.min(
-            right,
-            getHorizontalBandX(i) + horizontalBandWidth.value,
-        );
-        if (svgX >= bandLeft && svgX <= bandRight) return i;
+    const seriesCount = maxSeries.value;
+
+    if (seriesCount <= 0) return null;
+    if (svgX < left || svgX > right) return null;
+
+    const spacing = horizontalDatapointSpacing.value;
+
+    if (spacing <= 0) return 0;
+
+    let index;
+
+    if (FINAL_CONFIG.value.chart.grid.position === 'middle') {
+        index = Math.ceil((svgX - left) / spacing) - 1;
+    } else if (seriesCount <= 1) {
+        index = 0;
+    } else {
+        index = Math.ceil((svgX - left) / spacing - 0.5);
     }
-    return null;
+
+    if (index < 0) return 0;
+    if (index >= seriesCount) return seriesCount - 1;
+
+    return index;
 }
 
 // config.chart.highlighter
@@ -2585,9 +2758,53 @@ function getHorizontalSpanWidth(span) {
 const activeSeriesWithStackRatios = computed(() => {
     return assignStackRatios(
         absoluteDataset.value.filter(
-            (ds) => !segregatedSeries.value.includes(ds.id),
+            (ds) => !segregatedSeriesSet.value.has(ds.id),
         ),
     );
+});
+
+const displaySeriesTypes = ['bar', 'line', 'plot'];
+
+const activeDisplaySeriesWithStackRatios = computed(() => {
+    return activeSeriesWithStackRatios.value.filter((s) =>
+        displaySeriesTypes.includes(s.type),
+    );
+});
+
+const activeDisplaySeriesCount = computed(() => {
+    return activeDisplaySeriesWithStackRatios.value.length;
+});
+
+const activeBarSeriesWithStackRatios = computed(() => {
+    return activeDisplaySeriesWithStackRatios.value.filter(
+        (s) => s.type === 'bar',
+    );
+});
+
+const activeLineSeriesWithStackRatios = computed(() => {
+    return activeDisplaySeriesWithStackRatios.value.filter(
+        (s) => s.type === 'line',
+    );
+});
+
+const activePlotSeriesWithStackRatios = computed(() => {
+    return activeDisplaySeriesWithStackRatios.value.filter(
+        (s) => s.type === 'plot',
+    );
+});
+
+const activeBarSeries = computed(() => {
+    return safeDataset.value.filter(
+        (s) => s.type === 'bar' && !segregatedSeriesSet.value.has(s.id),
+    );
+});
+
+const activeBarSeriesCount = computed(() => {
+    return activeBarSeries.value.length;
+});
+
+const activeBarSeriesCountWithFallback = computed(() => {
+    return Math.max(1, activeBarSeriesCount.value);
 });
 
 const scaleGroups = computed(() => {
@@ -2595,25 +2812,106 @@ const scaleGroups = computed(() => {
         activeSeriesWithStackRatios.value,
         (item) => item.scaleLabel,
     );
+
     const result = {};
+
     for (const [group, items] of Object.entries(grouped)) {
-        const allValues = items.flatMap((item) => item.absoluteValues);
+        let minimum = Infinity;
+        let maximum = -Infinity;
+        let hasValue = false;
+
+        for (let itemIndex = 0; itemIndex < items.length; itemIndex += 1) {
+            const values = items[itemIndex].absoluteValues || [];
+
+            for (
+                let valueIndex = 0;
+                valueIndex < values.length;
+                valueIndex += 1
+            ) {
+                const rawValue = values[valueIndex];
+                const value = rawValue === null ? 0 : Number(rawValue);
+
+                if (Number.isNaN(value)) {
+                    minimum = NaN;
+                    maximum = NaN;
+                    hasValue = true;
+                    break;
+                }
+
+                hasValue = true;
+
+                if (value < minimum) {
+                    minimum = value;
+                }
+
+                if (value > maximum) {
+                    maximum = value;
+                }
+            }
+
+            if (Number.isNaN(minimum) || Number.isNaN(maximum)) {
+                break;
+            }
+        }
+
         result[group] = {
-            min: Math.min(...allValues) || 0,
-            max: Math.max(...allValues) || 1,
-            groupId: `scale_group_${createUid()}`,
+            min: hasValue ? minimum : 0,
+            max: hasValue ? maximum : 1,
+            groupId: createStableIdentifier('scale_group', [group]),
         };
     }
+
     return result;
 });
 
+const scaleGroupSeriesCounts = computed(() => {
+    return activeSeriesWithStackRatios.value.reduce((acc, seriesItem) => {
+        const scaleLabel = seriesItem.scaleLabel || '';
+        acc[scaleLabel] = (acc[scaleLabel] || 0) + 1;
+        return acc;
+    }, {});
+});
+
+function createScaleGroupEntry({
+    datapoint,
+    scaleYLabels,
+    autoScaleYLabels,
+    zeroPosition,
+    autoScaleZeroPosition,
+    individualMax,
+    autoScaleMax,
+    yOffset,
+    individualHeight,
+}) {
+    const scaleLabel = datapoint.scaleLabel || '';
+    const baseScaleGroup = scaleGroups.value[scaleLabel] || {};
+
+    return {
+        ...baseScaleGroup,
+        name: datapoint.name,
+        groupName: scaleLabel,
+        groupColor:
+            FINAL_CONFIG.value.chart.grid.labels.yAxis.groupColor ||
+            datapoint.color,
+        color: datapoint.color,
+        scaleYLabels: datapoint.autoScaling ? autoScaleYLabels : scaleYLabels,
+        zeroPosition: datapoint.autoScaling
+            ? autoScaleZeroPosition
+            : zeroPosition,
+        individualMax: datapoint.autoScaling ? autoScaleMax : individualMax,
+        scaleLabel,
+        id: datapoint.id,
+        yOffset,
+        individualHeight,
+        autoScaleYLabels,
+        unique: scaleGroupSeriesCounts.value[scaleLabel] === 1,
+    };
+}
+
 const barSlot = computed(() => {
-    const len = safeDataset.value
-        .filter((serie) => serie.type === 'bar')
-        .filter((s) => !segregatedSeries.value.includes(s.id)).length;
     return (
-        drawingArea.value.width / maxSeries.value / len -
-        barPeriodGap.value * len
+        drawingArea.value.width / maxSeries.value / activeBarSeriesCount.value -
+        barPeriodGap.value * activeBarSeriesCount.value
     );
 });
 
@@ -2640,23 +2938,47 @@ const barInnerGap = computed(
 
 const minimap = computed(() => {
     if (!FINAL_CONFIG.value.chart.zoom.minimap.show) return [];
-    const _source = datasetWithIds.value.filter(
-        (ds) => !segregatedSeries.value.includes(ds.id),
-    );
-    const maxIndex = Math.max(
-        ..._source.map((datapoint) => datapoint.series.length),
+
+    const sourceDataset = datasetWithIds.value.filter(
+        (seriesItem) => !segregatedSeriesSet.value.has(seriesItem.id),
     );
 
-    const sumAllSeries = [];
-    for (let i = 0; i < maxIndex; i += 1) {
-        sumAllSeries.push(
-            _source
-                .map((ds) => ds.series[i] || 0)
-                .reduce((a, b) => (a || 0) + (b || 0), 0),
-        );
+    let maximumIndex = 0;
+
+    for (
+        let seriesIndex = 0;
+        seriesIndex < sourceDataset.length;
+        seriesIndex += 1
+    ) {
+        const seriesLength = sourceDataset[seriesIndex].series.length;
+
+        if (seriesLength > maximumIndex) {
+            maximumIndex = seriesLength;
+        }
     }
-    const _min = Math.min(...sumAllSeries);
-    return sumAllSeries.map((dp) => dp + (_min < 0 ? Math.abs(_min) : 0)); // positivized
+
+    const sumAllSeries = [];
+
+    for (let index = 0; index < maximumIndex; index += 1) {
+        let sum = 0;
+
+        for (
+            let seriesIndex = 0;
+            seriesIndex < sourceDataset.length;
+            seriesIndex += 1
+        ) {
+            sum += sourceDataset[seriesIndex].series[index] || 0;
+        }
+
+        sumAllSeries.push(sum);
+    }
+
+    const range = scanMathMinMax(sumAllSeries, 0, 1);
+    const minimum = range.min;
+
+    return sumAllSeries.map((datapoint) => {
+        return datapoint + (minimum < 0 ? Math.abs(minimum) : 0);
+    });
 });
 
 const allMinimaps = computed(() => {
@@ -2664,7 +2986,7 @@ const allMinimaps = computed(() => {
     const _source = datasetWithIds.value.map((ds) => {
         return {
             ...ds,
-            isVisible: !segregatedSeries.value.includes(ds.id),
+            isVisible: !segregatedSeriesSet.value.has(ds.id),
         };
     });
 
@@ -2736,31 +3058,44 @@ const yLabels = computed(() => {
 });
 
 const annotationsY = computed(() => {
-    const ann = FINAL_CONFIG.value.chart.annotations;
-    if (!ann || !Array.isArray(ann) || ann.every((a) => !a.show)) return [];
+    const annotations = FINAL_CONFIG.value.chart.annotations;
 
-    const visible = ann.filter(
-        (a) => a.show && (a.yAxis.yTop != null || a.yAxis.yBottom != null),
-    );
+    if (
+        !annotations ||
+        !Array.isArray(annotations) ||
+        annotations.every((annotation) => !annotation.show)
+    ) {
+        return [];
+    }
 
-    if (!visible.length) return [];
+    const visibleAnnotations = annotations.filter((annotation) => {
+        return (
+            annotation.show &&
+            (annotation.yAxis.yTop != null || annotation.yAxis.yBottom != null)
+        );
+    });
+
+    if (!visibleAnnotations.length) {
+        return [];
+    }
 
     const { left, right } = drawingArea.value;
     const zeroY = zero.value;
-    const _height = drawingArea.value.height;
-    const _min = niceScale.value.min;
-    const _max = niceScale.value.max;
-    const range = _max - _min;
+    const height = drawingArea.value.height;
+    const scaleMinimum = niceScale.value.min;
+    const scaleMaximum = niceScale.value.max;
+    const range = scaleMaximum - scaleMinimum;
 
-    const toY = (v) => {
-        const ratio = (v - 0) / range;
-        return zeroY - ratio * _height;
+    const toY = (value) => {
+        const ratio = (value - 0) / range;
+        return zeroY - ratio * height;
     };
 
-    return visible.map((annotation) => {
+    return visibleAnnotations.map((annotation, annotationIndex) => {
         const {
             yAxis: { yTop: rawTop, yBottom: rawBottom, label },
         } = annotation;
+
         const hasArea =
             rawTop != null && rawBottom != null && rawTop !== rawBottom;
 
@@ -2769,6 +3104,7 @@ const annotationsY = computed(() => {
 
         const ctx = getTextMeasurer(label.fontSize);
         ctx.font = `${label.fontSize}px sans-serif`;
+
         const textWidth = ctx.measureText(label.text).width;
         const textHeight = label.fontSize;
 
@@ -2788,6 +3124,7 @@ const annotationsY = computed(() => {
             baselineY - label.fontSize / 3 + label.offsetY - label.padding?.top;
 
         let rectX;
+
         if (label.textAnchor === 'middle') {
             rectX = xText - textWidth / 2 - label.padding?.left;
         } else if (label.textAnchor === 'end') {
@@ -2799,9 +3136,16 @@ const annotationsY = computed(() => {
         const rectY = yText - textHeight * 0.75 - label.padding?.top;
         const show = ![yTop, yBottom, rectY].includes(NaN);
 
+        const id = createStableIdentifier('annotation_y', [
+            annotationIndex,
+            rawTop,
+            rawBottom,
+            label.text,
+        ]);
+
         return {
             show,
-            id: `annotation_y_${createUid()}`,
+            id,
             hasArea,
             areaHeight: hasArea ? Math.abs(yTop - yBottom) : 0,
             yTop,
@@ -2809,7 +3153,10 @@ const annotationsY = computed(() => {
             config: annotation.yAxis,
             x1: left,
             x2: right,
-            _text: { x: xText, y: yText },
+            _text: {
+                x: xText,
+                y: yText,
+            },
             _box: {
                 x: rectX,
                 y: rectY,
@@ -2841,26 +3188,165 @@ function isPlotAlone(plotSeries, index) {
     );
 }
 
+function scanPointValueMinMax(dataset, fallbackMin = 0, fallbackMax = 1) {
+    let minimum = Infinity;
+    let maximum = -Infinity;
+    let hasValue = false;
+
+    for (let seriesIndex = 0; seriesIndex < dataset.length; seriesIndex += 1) {
+        const seriesItem = dataset[seriesIndex];
+
+        if (!Array.isArray(seriesItem.series)) {
+            continue;
+        }
+
+        for (
+            let pointIndex = 0;
+            pointIndex < seriesItem.series.length;
+            pointIndex += 1
+        ) {
+            const value = getValueFromPoint(seriesItem.series[pointIndex]);
+
+            if (!Number.isFinite(value)) {
+                continue;
+            }
+
+            hasValue = true;
+
+            if (value < minimum) {
+                minimum = value;
+            }
+
+            if (value > maximum) {
+                maximum = value;
+            }
+        }
+    }
+
+    return hasValue
+        ? {
+              min: minimum,
+              max: maximum,
+          }
+        : {
+              min: fallbackMin,
+              max: fallbackMax,
+          };
+}
+
+function scanContinuousXMinMax(dataset, fallbackMin = 0, fallbackMax = 1) {
+    let minimum = Infinity;
+    let maximum = -Infinity;
+    let hasValue = false;
+
+    for (let seriesIndex = 0; seriesIndex < dataset.length; seriesIndex += 1) {
+        const seriesItem = dataset[seriesIndex];
+
+        if (!Array.isArray(seriesItem.series)) {
+            continue;
+        }
+
+        for (
+            let pointIndex = 0;
+            pointIndex < seriesItem.series.length;
+            pointIndex += 1
+        ) {
+            const point = seriesItem.series[pointIndex];
+
+            if (!isCoordinatePoint(point)) {
+                continue;
+            }
+
+            const value = Number(point.x);
+
+            if (!Number.isFinite(value)) {
+                continue;
+            }
+
+            hasValue = true;
+
+            if (value < minimum) {
+                minimum = value;
+            }
+
+            if (value > maximum) {
+                maximum = value;
+            }
+        }
+    }
+
+    if (!hasValue) {
+        return {
+            min: fallbackMin,
+            max: fallbackMax,
+        };
+    }
+
+    return {
+        min: minimum,
+        max: minimum === maximum ? maximum + 1 : maximum,
+    };
+}
+
+function scanMathMinMax(values, fallbackMinimum = 0, fallbackMaximum = 1) {
+    if (!Array.isArray(values) || values.length === 0) {
+        return {
+            min: fallbackMinimum,
+            max: fallbackMaximum,
+        };
+    }
+
+    let minimum = Infinity;
+    let maximum = -Infinity;
+
+    for (let index = 0; index < values.length; index += 1) {
+        const rawValue = values[index];
+        const value = rawValue === null ? 0 : Number(rawValue);
+
+        if (Number.isNaN(value)) {
+            return {
+                min: NaN,
+                max: NaN,
+            };
+        }
+
+        if (value < minimum) {
+            minimum = value;
+        }
+
+        if (value > maximum) {
+            maximum = value;
+        }
+    }
+
+    return {
+        min: minimum,
+        max: maximum,
+    };
+}
+
+function createStableStringHash(value) {
+    const source = String(value ?? '');
+    let hash = 0;
+
+    for (let index = 0; index < source.length; index += 1) {
+        hash = (hash << 5) - hash + source.charCodeAt(index);
+        hash |= 0;
+    }
+
+    return Math.abs(hash).toString(36);
+}
+
+function createStableIdentifier(prefix, parts) {
+    return `${prefix}_${createStableStringHash(parts.join('|'))}`;
+}
+
 /******************************************************************************************/
 /                                 DATAPOINTS COMPUTING                                     /;
 /******************************************************************************************/
 
 const continuousXRange = computed(() => {
-    const values = safeDataset.value
-        .flatMap((datapoint) => datapoint.series.map((point) => point.x))
-        .filter(Number.isFinite);
-
-    if (!values.length) {
-        return { min: 0, max: 1 };
-    }
-
-    const min = Math.min(...values);
-    const max = Math.max(...values);
-
-    return {
-        min,
-        max: min === max ? max + 1 : max,
-    };
+    return scanContinuousXMinMax(safeDataset.value, 0, 1);
 });
 
 const continuousXNiceScale = computed(() => {
@@ -2945,23 +3431,7 @@ function getContinuousX({ x }) {
 }
 
 const continuousFullXRange = computed(() => {
-    const values = FINAL_DATASET.value
-        .flatMap((datapoint) => datapoint.series || [])
-        .filter(isCoordinatePoint)
-        .map((point) => Number(point.x))
-        .filter(Number.isFinite);
-
-    if (!values.length) {
-        return { min: 0, max: 1 };
-    }
-
-    const min = Math.min(...values);
-    const max = Math.max(...values);
-
-    return {
-        min,
-        max: min === max ? max + 1 : max,
-    };
+    return scanContinuousXMinMax(FINAL_DATASET.value, 0, 1);
 });
 
 const slicerMin = computed(() => {
@@ -2980,6 +3450,13 @@ function getPointX(point, index) {
         return getContinuousX(point);
     }
     return getDatapointX(index);
+}
+
+function getDatasetXValue(point) {
+    if (!isContinuousScale.value || !point) {
+        return null;
+    }
+    return point.x ?? null;
 }
 
 function getSerieVerticalGeometry({
@@ -3068,944 +3545,778 @@ function getSerieVerticalGeometry({
     };
 }
 
+function createAutoScaleContext({
+    datapoint,
+    clampNegativeAutoScaleMaximum = false,
+}) {
+    const scaleGroup = scaleGroups.value[datapoint.scaleLabel];
+    const scaleMinimum = scaleGroup.min;
+    const scaleMaximum = scaleGroup.max;
+
+    const ratios = datapoint.absoluteValues
+        .filter((value) => ![null, undefined].includes(value))
+        .map((value) => {
+            return (value - scaleMinimum) / (scaleMaximum - scaleMinimum);
+        });
+
+    return {
+        ratios,
+        valueMin: scaleMinimum,
+        valueMax:
+            clampNegativeAutoScaleMaximum && scaleMaximum < 0
+                ? 0
+                : scaleMaximum,
+    };
+}
+
+function createIndividualExtremes({
+    datapoint,
+    filterMinimumValues = false,
+    preserveLooseMinimumExpression = false,
+}) {
+    const maximumRange = scanMathMinMax(datapoint.absoluteValues, 0, 1);
+
+    const minimumValues = filterMinimumValues
+        ? datapoint.absoluteValues.filter(
+              (value) => ![null, undefined].includes(value),
+          )
+        : datapoint.absoluteValues;
+
+    const minimumRange = scanMathMinMax(minimumValues, 0, 1);
+    const minimum = minimumRange.min;
+
+    return {
+        max: datapoint.scaleMax || maximumRange.max || 1,
+        min: preserveLooseMinimumExpression
+            ? datapoint.scaleMin || minimum > 0
+                ? 0
+                : minimum
+            : datapoint.scaleMin || (minimum > 0 ? 0 : minimum),
+    };
+}
+
+function createAutoScaleRatiosToNiceScale({ values, autoScaleSteps }) {
+    return values.map((value) => {
+        if (autoScaleSteps.min >= 0) {
+            return (
+                (value - Math.abs(autoScaleSteps.min)) /
+                (autoScaleSteps.max - Math.abs(autoScaleSteps.min))
+            );
+        }
+
+        return (
+            (value + Math.abs(autoScaleSteps.min)) /
+            (autoScaleSteps.max + Math.abs(autoScaleSteps.min))
+        );
+    });
+}
+
+function createIndividualScaleYLabels({
+    datapoint,
+    individualScale,
+    yOffset,
+    individualHeight,
+}) {
+    return individualScale.ticks.map((tick) => {
+        return {
+            y: getYFromScaleValue({
+                value: tick,
+                scaleMin: individualScale.min,
+                scaleMax: individualScale.max,
+                yOffset,
+                individualHeight,
+            }),
+            value: tick,
+            prefix: datapoint.prefix || FINAL_CONFIG.value.chart.labels.prefix,
+            suffix: datapoint.suffix || FINAL_CONFIG.value.chart.labels.suffix,
+            datapoint,
+        };
+    });
+}
+
+function createAutoScaleYLabels({
+    datapoint,
+    autoScaleSteps,
+    yOffset,
+    individualHeight,
+}) {
+    return autoScaleSteps.ticks.map((tick) => {
+        const ratio =
+            (tick - autoScaleSteps.min) /
+            (autoScaleSteps.max - autoScaleSteps.min || 1);
+
+        return {
+            y: getYFromRatio({
+                ratio,
+                yOffset,
+                individualHeight,
+            }),
+            value: tick,
+            prefix: datapoint.prefix || FINAL_CONFIG.value.chart.labels.prefix,
+            suffix: datapoint.suffix || FINAL_CONFIG.value.chart.labels.suffix,
+            datapoint,
+        };
+    });
+}
+
+function createSeriesVerticalContext({
+    datapoint,
+    totalSeries,
+    gap,
+    usableHeight,
+    forceExactScale = false,
+    clampNegativeAutoScaleMaximum = false,
+    filterMinimumValues = false,
+    preserveLooseMinimumExpression = false,
+}) {
+    checkAutoScaleError(datapoint);
+
+    const autoScale = createAutoScaleContext({
+        datapoint,
+        clampNegativeAutoScaleMaximum,
+    });
+
+    const individualExtremes = createIndividualExtremes({
+        datapoint,
+        filterMinimumValues,
+        preserveLooseMinimumExpression,
+    });
+
+    const geometry = getSerieVerticalGeometry({
+        datapoint,
+        totalSeries,
+        gap,
+        usableHeight,
+        autoScaleValueMin: autoScale.valueMin,
+        autoScaleValueMax: autoScale.valueMax,
+        individualExtremes,
+        forceExactScale,
+    });
+
+    const scaleYLabels = createIndividualScaleYLabels({
+        datapoint,
+        individualScale: geometry.individualScale,
+        yOffset: geometry.yOffset,
+        individualHeight: geometry.individualHeight,
+    });
+
+    const autoScaleYLabels = createAutoScaleYLabels({
+        datapoint,
+        autoScaleSteps: geometry.autoScaleSteps,
+        yOffset: geometry.yOffset,
+        individualHeight: geometry.individualHeight,
+    });
+
+    const autoScaleRatiosToNiceScale = createAutoScaleRatiosToNiceScale({
+        values: datapoint.absoluteValues,
+        autoScaleSteps: geometry.autoScaleSteps,
+    });
+
+    return {
+        autoScale,
+        individualExtremes,
+        scaleYLabels,
+        autoScaleYLabels,
+        autoScaleRatiosToNiceScale,
+        ...geometry,
+    };
+}
+
+function getSlicedComments(comments) {
+    if (!Array.isArray(comments)) return [];
+    return comments.slice(slicer.value.start, slicer.value.end);
+}
+
+function getSlicedComment(comments, index) {
+    if (!Array.isArray(comments)) return '';
+    return comments[index + slicer.value.start] || '';
+}
+
 const barSet = computed(() => {
-    const stackSeries = activeSeriesWithStackRatios.value.filter((s) =>
-        ['bar', 'line', 'plot'].includes(s.type),
-    );
-    const totalSeries = stackSeries.length;
+    const totalSeries = activeDisplaySeriesCount.value;
     const gap = FINAL_CONFIG.value.chart.grid.labels.yAxis.gap;
     const stacked = mutableConfig.value.isStacked;
     const totalGap = stacked ? gap * (totalSeries - 1) : 0;
     const usableHeight = drawingArea.value.height - totalGap;
 
-    return stackSeries
-        .filter((s) => s.type === 'bar')
-        .map((datapoint, i) => {
-            checkAutoScaleError(datapoint);
-            const _min = scaleGroups.value[datapoint.scaleLabel].min;
-            const _max = scaleGroups.value[datapoint.scaleLabel].max;
-            const autoScaledRatios = datapoint.absoluteValues
-                .filter((v) => ![null, undefined].includes(v))
-                .map((v) => {
-                    return (v - _min) / (_max - _min);
-                });
+    return activeBarSeriesWithStackRatios.value.map((datapoint, i) => {
+        const {
+            individualScale,
+            autoScaleSteps,
+            individualZero,
+            individualMax,
+            autoScaleMax,
+            yOffset,
+            individualHeight,
+            zeroPosition,
+            autoScaleZeroPosition,
+            scaleYLabels,
+            autoScaleYLabels,
+            autoScaleRatiosToNiceScale,
+        } = createSeriesVerticalContext({
+            datapoint,
+            totalSeries,
+            gap,
+            usableHeight,
+            clampNegativeAutoScaleMaximum: true,
+            filterMinimumValues: true,
+            preserveLooseMinimumExpression: true,
+        });
 
-            const autoScale = {
-                ratios: autoScaledRatios,
-                valueMin: _min,
-                valueMax: _max < 0 ? 0 : _max,
+        const barLen = activeBarSeriesCount.value;
+
+        const comments = getSlicedComments(datapoint.comments);
+
+        const plots = datapoint.series.map((plot, j) => {
+            const yRatio = mutableConfig.value.useIndividualScale
+                ? (datapoint.absoluteValues[j] + individualZero) / individualMax
+                : ratioToMax(plot);
+            const x =
+                mutableConfig.value.useIndividualScale &&
+                mutableConfig.value.isStacked
+                    ? drawingArea.value?.left +
+                      (drawingArea.value.width / maxSeries.value) * j
+                    : drawingArea.value?.left +
+                      slot.value.bar * i +
+                      slot.value.bar * j * barLen -
+                      barSlot.value / 2 -
+                      i * barPeriodGap.value;
+
+            return {
+                yOffset: checkNaN(yOffset),
+                individualHeight: checkNaN(individualHeight),
+                x: checkNaN(x),
+                y: getYFromRatio({
+                    ratio: yRatio,
+                    yOffset,
+                    individualHeight,
+                }),
+                value: datapoint.absoluteValues[j],
+                zeroPosition: checkNaN(zeroPosition),
+                individualMax: checkNaN(individualMax),
+                comment: comments[j] || '',
             };
+        });
 
-            const individualExtremes = {
-                max:
-                    datapoint.scaleMax ||
-                    Math.max(...datapoint.absoluteValues) ||
-                    1,
-                min:
-                    datapoint.scaleMin ||
-                    Math.min(
-                        ...datapoint.absoluteValues.filter(
-                            (v) => ![undefined, null].includes(v),
-                        ),
-                    ) > 0
-                        ? 0
-                        : Math.min(
-                              ...datapoint.absoluteValues.filter(
-                                  (v) => ![null, undefined].includes(v),
-                              ),
-                          ),
+        const autoScalePlots = datapoint.series.map((_, j) => {
+            const x =
+                mutableConfig.value.useIndividualScale &&
+                mutableConfig.value.isStacked
+                    ? drawingArea.value?.left +
+                      (drawingArea.value.width / maxSeries.value) * j
+                    : drawingArea.value?.left -
+                      slot.value.bar / 2 +
+                      slot.value.bar * i +
+                      slot.value.bar *
+                          j *
+                          absoluteDataset.value
+                              .filter((ds) => ds.type === 'bar')
+                              .filter(
+                                  (s) => !segregatedSeriesSet.value.has(s.id),
+                              ).length;
+            return {
+                yOffset: checkNaN(yOffset),
+                individualHeight: checkNaN(individualHeight),
+                x: checkNaN(x),
+                y: checkNaN(
+                    getYFromRatio({
+                        ratio: autoScaleRatiosToNiceScale[j] || 0,
+                        yOffset: checkNaN(yOffset),
+                        individualHeight: checkNaN(individualHeight),
+                    }),
+                ),
+                value: datapoint.absoluteValues[j],
+                zeroPosition: checkNaN(zeroPosition),
+                individualMax: checkNaN(individualMax),
+                comment: comments[j] || '',
             };
+        });
 
-            const {
-                individualScale,
-                autoScaleSteps,
-                individualZero,
-                individualMax,
-                autoScaleMax,
-                yOffset,
-                individualHeight,
-                zeroPosition,
-                autoScaleZeroPosition,
-            } = getSerieVerticalGeometry({
-                datapoint,
-                totalSeries,
-                gap,
-                usableHeight,
-                autoScaleValueMin: autoScale.valueMin,
-                autoScaleValueMax: autoScale.valueMax,
-                individualExtremes,
-            });
+        const scaleGroup = createScaleGroupEntry({
+            datapoint,
+            scaleYLabels,
+            autoScaleYLabels,
+            zeroPosition,
+            autoScaleZeroPosition,
+            individualMax,
+            autoScaleMax,
+            yOffset,
+            individualHeight,
+        });
 
-            const barLen = absoluteDataset.value
-                .filter((ds) => ds.type === 'bar')
-                .filter((s) => !segregatedSeries.value.includes(s.id)).length;
+        return {
+            ...datapoint,
+            yOffset,
+            autoScaleYLabels,
+            individualHeight,
+            scaleYLabels: datapoint.autoScaling
+                ? autoScaleYLabels
+                : scaleYLabels,
+            individualScale: datapoint.autoScaling
+                ? autoScaleSteps
+                : individualScale,
+            individualMax: datapoint.autoScaling ? autoScaleMax : individualMax,
+            zeroPosition: datapoint.autoScaling
+                ? autoScaleZeroPosition
+                : zeroPosition,
+            plots: datapoint.autoScaling ? autoScalePlots : plots,
+            scaleGroup,
+            groupId: scaleGroup.groupId,
+        };
+    });
+});
 
-            const plots = datapoint.series.map((plot, j) => {
-                const yRatio = mutableConfig.value.useIndividualScale
-                    ? (datapoint.absoluteValues[j] + individualZero) /
-                      individualMax
-                    : ratioToMax(plot);
-                const x =
-                    mutableConfig.value.useIndividualScale &&
-                    mutableConfig.value.isStacked
-                        ? drawingArea.value?.left +
-                          (drawingArea.value.width / maxSeries.value) * j
-                        : drawingArea.value?.left +
-                          slot.value.bar * i +
-                          slot.value.bar * j * barLen -
-                          barSlot.value / 2 -
-                          i * barPeriodGap.value;
+const lineSet = computed(() => {
+    const totalSeries = activeDisplaySeriesCount.value;
+    const gap = FINAL_CONFIG.value.chart.grid.labels.yAxis.gap;
+    const stacked = mutableConfig.value.isStacked;
+    const totalGap = stacked ? gap * (totalSeries - 1) : 0;
+    const usableHeight = drawingArea.value.height - totalGap;
 
+    return activeLineSeriesWithStackRatios.value.map((datapoint, i) => {
+        const {
+            individualScale,
+            autoScaleSteps,
+            individualZero,
+            individualMax,
+            autoScaleMax,
+            yOffset,
+            individualHeight,
+            zeroPosition,
+            autoScaleZeroPosition,
+            scaleYLabels,
+            autoScaleYLabels,
+            autoScaleRatiosToNiceScale,
+        } = createSeriesVerticalContext({
+            datapoint,
+            totalSeries,
+            gap,
+            usableHeight,
+        });
+
+        const comments = getSlicedComments(datapoint.comments);
+
+        const plots = datapoint.series.map((plot, j) => {
+            if (isContinuousScale.value && (plot.x == null || plot.y == null)) {
                 return {
-                    yOffset: checkNaN(yOffset),
-                    individualHeight: checkNaN(individualHeight),
-                    x: checkNaN(x),
-                    y: getYFromRatio({
+                    index: j,
+                    x: null,
+                    y: null,
+                    value: null,
+                    datasetXValue: getDatasetXValue(plot),
+                    comment: datapoint.comments
+                        ? datapoint.comments.slice(
+                              slicer.value.start,
+                              slicer.value.end,
+                          )[j] || ''
+                        : '',
+                };
+            }
+            const yRatio = mutableConfig.value.useIndividualScale
+                ? (datapoint.absoluteValues[j] + Math.abs(individualZero)) /
+                  individualMax
+                : ratioToMax(getValueFromPoint(plot));
+
+            return {
+                index: j,
+                x: checkNaN(getPointX(plot, j)),
+                datasetXValue: getDatasetXValue(plot),
+                y: checkNaN(
+                    getYFromRatio({
                         ratio: yRatio,
                         yOffset,
                         individualHeight,
                     }),
-                    value: datapoint.absoluteValues[j],
-                    zeroPosition: checkNaN(zeroPosition),
-                    individualMax: checkNaN(individualMax),
-                    comment: datapoint.comments
-                        ? datapoint.comments.slice(
-                              slicer.value.start,
-                              slicer.value.end,
-                          )[j] || ''
-                        : '',
-                };
-            });
-
-            const autoScaleRatiosToNiceScale = datapoint.absoluteValues.map(
-                (v) => {
-                    if (autoScaleSteps.min >= 0) {
-                        return (
-                            (v - Math.abs(autoScaleSteps.min)) /
-                            (autoScaleSteps.max - Math.abs(autoScaleSteps.min))
-                        );
-                    } else {
-                        return (
-                            (v + Math.abs(autoScaleSteps.min)) /
-                            (autoScaleSteps.max + Math.abs(autoScaleSteps.min))
-                        );
-                    }
-                },
-            );
-
-            const autoScalePlots = datapoint.series.map((_, j) => {
-                const x =
-                    mutableConfig.value.useIndividualScale &&
-                    mutableConfig.value.isStacked
-                        ? drawingArea.value?.left +
-                          (drawingArea.value.width / maxSeries.value) * j
-                        : drawingArea.value?.left -
-                          slot.value.bar / 2 +
-                          slot.value.bar * i +
-                          slot.value.bar *
-                              j *
-                              absoluteDataset.value
-                                  .filter((ds) => ds.type === 'bar')
-                                  .filter(
-                                      (s) =>
-                                          !segregatedSeries.value.includes(
-                                              s.id,
-                                          ),
-                                  ).length;
-                return {
-                    yOffset: checkNaN(yOffset),
-                    individualHeight: checkNaN(individualHeight),
-                    x: checkNaN(x),
-                    y: checkNaN(
-                        getYFromRatio({
-                            ratio: autoScaleRatiosToNiceScale[j] || 0,
-                            yOffset: checkNaN(yOffset),
-                            individualHeight: checkNaN(individualHeight),
-                        }),
-                    ),
-                    value: datapoint.absoluteValues[j],
-                    zeroPosition: checkNaN(zeroPosition),
-                    individualMax: checkNaN(individualMax),
-                    comment: datapoint.comments
-                        ? datapoint.comments.slice(
-                              slicer.value.start,
-                              slicer.value.end,
-                          )[j] || ''
-                        : '',
-                };
-            });
-
-            const scaleYLabels = individualScale.ticks.map((t) => {
-                return {
-                    y: getYFromScaleValue({
-                        value: t,
-                        scaleMin: individualScale.min,
-                        scaleMax: individualScale.max,
-                        yOffset,
-                        individualHeight,
-                    }),
-                    value: t,
-                    prefix:
-                        datapoint.prefix ||
-                        FINAL_CONFIG.value.chart.labels.prefix,
-                    suffix:
-                        datapoint.suffix ||
-                        FINAL_CONFIG.value.chart.labels.suffix,
-                    datapoint,
-                };
-            });
-
-            const autoScaleYLabels = autoScaleSteps.ticks.map((t) => {
-                const ratio =
-                    (t - autoScaleSteps.min) /
-                    (autoScaleSteps.max - autoScaleSteps.min || 1);
-
-                return {
-                    y: getYFromRatio({
-                        ratio,
-                        yOffset,
-                        individualHeight,
-                    }),
-                    value: t,
-                    prefix:
-                        datapoint.prefix ||
-                        FINAL_CONFIG.value.chart.labels.prefix,
-                    suffix:
-                        datapoint.suffix ||
-                        FINAL_CONFIG.value.chart.labels.suffix,
-                    datapoint,
-                };
-            });
-
-            scaleGroups.value[datapoint.scaleLabel].name = datapoint.name;
-            scaleGroups.value[datapoint.scaleLabel].groupName =
-                datapoint.scaleLabel;
-            scaleGroups.value[datapoint.scaleLabel].groupColor =
-                FINAL_CONFIG.value.chart.grid.labels.yAxis.groupColor ||
-                datapoint.color;
-            scaleGroups.value[datapoint.scaleLabel].color = datapoint.color;
-            scaleGroups.value[datapoint.scaleLabel].scaleYLabels =
-                datapoint.autoScaling ? autoScaleYLabels : scaleYLabels;
-            scaleGroups.value[datapoint.scaleLabel].zeroPosition =
-                datapoint.autoScaling ? autoScaleZeroPosition : zeroPosition;
-            scaleGroups.value[datapoint.scaleLabel].individualMax =
-                datapoint.autoScaling ? autoScaleMax : individualMax;
-            scaleGroups.value[datapoint.scaleLabel].scaleLabel =
-                datapoint.scaleLabel;
-            scaleGroups.value[datapoint.scaleLabel].id = datapoint.id;
-            scaleGroups.value[datapoint.scaleLabel].yOffset = yOffset;
-            scaleGroups.value[datapoint.scaleLabel].individualHeight =
-                individualHeight;
-            scaleGroups.value[datapoint.scaleLabel].autoScaleYLabels =
-                autoScaleYLabels;
-            scaleGroups.value[datapoint.scaleLabel].unique =
-                activeSeriesWithStackRatios.value.filter(
-                    (el) => el.scaleLabel === datapoint.scaleLabel,
-                ).length === 1;
-
-            return {
-                ...datapoint,
-                yOffset,
-                autoScaleYLabels,
-                individualHeight,
-                scaleYLabels: datapoint.autoScaling
-                    ? autoScaleYLabels
-                    : scaleYLabels,
-                individualScale: datapoint.autoScaling
-                    ? autoScaleSteps
-                    : individualScale,
-                individualMax: datapoint.autoScaling
-                    ? autoScaleMax
-                    : individualMax,
-                zeroPosition: datapoint.autoScaling
-                    ? autoScaleZeroPosition
-                    : zeroPosition,
-                plots: datapoint.autoScaling ? autoScalePlots : plots,
-                groupId: scaleGroups.value[datapoint.scaleLabel].groupId,
+                ),
+                value: datapoint.absoluteValues[j],
+                comment: comments[j] || '',
             };
         });
-});
 
-const lineSet = computed(() => {
-    const stackSeries = activeSeriesWithStackRatios.value.filter((s) =>
-        ['bar', 'line', 'plot'].includes(s.type),
-    );
-    const totalSeries = stackSeries.length;
-    const gap = FINAL_CONFIG.value.chart.grid.labels.yAxis.gap;
-    const stacked = mutableConfig.value.isStacked;
-    const totalGap = stacked ? gap * (totalSeries - 1) : 0;
-    const usableHeight = drawingArea.value.height - totalGap;
+        const autoScalePlots = datapoint.series.map((plot, j) => {
+            if (
+                isContinuousScale.value &&
+                (plot.x === null || plot.y === null)
+            ) {
+                return {
+                    index: j,
+                    x: null,
+                    y: null,
+                    datasetXValue: getDatasetXValue(plot),
+                    value: null,
+                    comment: comments[j] || '',
+                };
+            }
 
-    return stackSeries
-        .filter((s) => s.type === 'line')
-        .map((datapoint, i) => {
-            checkAutoScaleError(datapoint);
-
-            const _min = scaleGroups.value[datapoint.scaleLabel].min;
-            const _max = scaleGroups.value[datapoint.scaleLabel].max;
-            const autoScaledRatios = datapoint.absoluteValues
-                .filter((v) => ![null, undefined].includes(v))
-                .map((v) => {
-                    return (v - _min) / (_max - _min);
-                });
-
-            const autoScale = {
-                ratios: autoScaledRatios,
-                valueMin: _min,
-                valueMax: _max,
-            };
-
-            const individualExtremes = {
-                max:
-                    datapoint.scaleMax ||
-                    Math.max(...datapoint.absoluteValues) ||
-                    1,
-                min:
-                    datapoint.scaleMin ||
-                    (Math.min(...datapoint.absoluteValues) > 0
-                        ? 0
-                        : Math.min(...datapoint.absoluteValues)),
-            };
-
-            const {
-                individualScale,
-                autoScaleSteps,
-                individualZero,
-                individualMax,
-                autoScaleMax,
-                yOffset,
-                individualHeight,
-                zeroPosition,
-                autoScaleZeroPosition,
-            } = getSerieVerticalGeometry({
-                datapoint,
-                totalSeries,
-                gap,
-                usableHeight,
-                autoScaleValueMin: autoScale.valueMin,
-                autoScaleValueMax: autoScale.valueMax,
-                individualExtremes,
-            });
-
-            const plots = datapoint.series.map((plot, j) => {
-                if (
-                    isContinuousScale.value &&
-                    (plot.x == null || plot.y == null)
-                ) {
-                    return {
-                        index: j,
-                        x: null,
-                        y: null,
-                        value: null,
-                        comment: datapoint.comments
-                            ? datapoint.comments.slice(
-                                  slicer.value.start,
-                                  slicer.value.end,
-                              )[j] || ''
-                            : '',
-                    };
-                }
-                const yRatio = mutableConfig.value.useIndividualScale
-                    ? (datapoint.absoluteValues[j] + Math.abs(individualZero)) /
-                      individualMax
-                    : ratioToMax(getValueFromPoint(plot));
-
+            if (![undefined, null].includes(datapoint.absoluteValues[j])) {
                 return {
                     index: j,
                     x: checkNaN(getPointX(plot, j)),
+                    datasetXValue: getDatasetXValue(plot),
                     y: checkNaN(
                         getYFromRatio({
-                            ratio: yRatio,
+                            ratio: autoScaleRatiosToNiceScale[j] || 0,
                             yOffset,
                             individualHeight,
                         }),
                     ),
                     value: datapoint.absoluteValues[j],
-                    comment: datapoint.comments
-                        ? datapoint.comments.slice(
-                              slicer.value.start,
-                              slicer.value.end,
-                          )[j] || ''
-                        : '',
+                    comment: comments[j] || '',
                 };
-            });
-
-            const autoScaleRatiosToNiceScale = datapoint.absoluteValues.map(
-                (v) => {
-                    if (autoScaleSteps.min >= 0) {
-                        return (
-                            (v - Math.abs(autoScaleSteps.min)) /
-                            (autoScaleSteps.max - Math.abs(autoScaleSteps.min))
-                        );
-                    } else {
-                        return (
-                            (v + Math.abs(autoScaleSteps.min)) /
-                            (autoScaleSteps.max + Math.abs(autoScaleSteps.min))
-                        );
-                    }
-                },
-            );
-
-            const autoScalePlots = datapoint.series.map((plot, j) => {
-                if (
-                    isContinuousScale.value &&
-                    (plot.x === null || plot.y === null)
-                ) {
-                    return {
-                        index: j,
-                        x: null,
-                        y: null,
-                        value: null,
-                        comment: datapoint.comments
-                            ? datapoint.comments.slice(
-                                  slicer.value.start,
-                                  slicer.value.end,
-                              )[j] || ''
-                            : '',
-                    };
-                }
-
-                if (![undefined, null].includes(datapoint.absoluteValues[j])) {
-                    return {
-                        index: j,
-                        x: checkNaN(getPointX(plot, j)),
-                        y: checkNaN(
-                            getYFromRatio({
-                                ratio: autoScaleRatiosToNiceScale[j] || 0,
-                                yOffset,
-                                individualHeight,
-                            }),
-                        ),
-                        value: datapoint.absoluteValues[j],
-                        comment: datapoint.comments
-                            ? datapoint.comments.slice(
-                                  slicer.value.start,
-                                  slicer.value.end,
-                              )[j] || ''
-                            : '',
-                    };
-                } else {
-                    return {
-                        index: j,
-                        x: checkNaN(getPointX(plot, j)),
-                        y: zeroPosition,
-                        value: datapoint.absoluteValues[j],
-                        comment: datapoint.comments
-                            ? datapoint.comments.slice(
-                                  slicer.value.start,
-                                  slicer.value.end,
-                              )[j] || ''
-                            : '',
-                    };
-                }
-            });
-
-            const hasDashedSegments =
-                datapoint.dashIndices &&
-                Array.isArray(datapoint.dashIndices) &&
-                datapoint?.dashIndices?.length > 0;
-
-            const curve = FINAL_CONFIG.value.line.cutNullValues
-                ? createSmoothPathWithCuts(plots)
-                : createSmoothPath(plots.filter((p) => p.value !== null));
-
-            const autoScaleCurve = FINAL_CONFIG.value.line.cutNullValues
-                ? createSmoothPathWithCuts(autoScalePlots)
-                : createSmoothPath(
-                      autoScalePlots.filter((p) => p.value !== null),
-                  );
-
-            const straight = FINAL_CONFIG.value.line.cutNullValues
-                ? createStraightPathWithCuts(plots)
-                : createStraightPath(plots.filter((p) => p.value !== null));
-
-            const autoScaleStraight = FINAL_CONFIG.value.line.cutNullValues
-                ? createStraightPathWithCuts(autoScalePlots)
-                : createStraightPath(
-                      autoScalePlots.filter((p) => p.value !== null),
-                  );
-
-            const stepper = createStepperPath(
-                FINAL_CONFIG.value.line.cutNullValues
-                    ? plots
-                    : plots.filter((p) => p.value !== null),
-            );
-
-            const autoScaleStepper = createStepperPath(
-                FINAL_CONFIG.value.line.cutNullValues
-                    ? autoScalePlots
-                    : autoScalePlots.filter((p) => p.value !== null),
-            );
-
-            const dashedStraight = hasDashedSegments
-                ? createStraightPathWithCutsSegments(
-                      FINAL_CONFIG.value.line.cutNullValues
-                          ? plots
-                          : plots.filter((p) => p.value !== null),
-                      datapoint.dashIndices.map((_) => _ - slicer.value.start),
-                  )
-                : [];
-            const dashedSmooth = hasDashedSegments
-                ? createSmoothPathWithCutsSegments(
-                      FINAL_CONFIG.value.line.cutNullValues
-                          ? plots
-                          : plots.filter((p) => p.value !== null),
-                      datapoint.dashIndices.map((_) => _ - slicer.value.start),
-                  )
-                : [];
-
-            const scaleYLabels = individualScale.ticks.map((t) => {
+            } else {
                 return {
-                    y: getYFromScaleValue({
-                        value: t,
-                        scaleMin: individualScale.min,
-                        scaleMax: individualScale.max,
-                        yOffset,
-                        individualHeight,
-                    }),
-                    value: t,
-                    prefix:
-                        datapoint.prefix ||
-                        FINAL_CONFIG.value.chart.labels.prefix,
-                    suffix:
-                        datapoint.suffix ||
-                        FINAL_CONFIG.value.chart.labels.suffix,
-                    datapoint,
+                    index: j,
+                    x: checkNaN(getPointX(plot, j)),
+                    y: zeroPosition,
+                    value: datapoint.absoluteValues[j],
+                    comment: comments[j] || '',
                 };
-            });
-
-            const autoScaleYLabels = autoScaleSteps.ticks.map((t) => {
-                const ratio =
-                    (t - autoScaleSteps.min) /
-                    (autoScaleSteps.max - autoScaleSteps.min || 1);
-
-                return {
-                    y: getYFromRatio({
-                        ratio,
-                        yOffset,
-                        individualHeight,
-                    }),
-                    value: t,
-                    prefix:
-                        datapoint.prefix ||
-                        FINAL_CONFIG.value.chart.labels.prefix,
-                    suffix:
-                        datapoint.suffix ||
-                        FINAL_CONFIG.value.chart.labels.suffix,
-                    datapoint,
-                };
-            });
-
-            scaleGroups.value[datapoint.scaleLabel].name = datapoint.name;
-            scaleGroups.value[datapoint.scaleLabel].groupName =
-                datapoint.scaleLabel;
-            scaleGroups.value[datapoint.scaleLabel].groupColor =
-                FINAL_CONFIG.value.chart.grid.labels.yAxis.groupColor ||
-                datapoint.color;
-            scaleGroups.value[datapoint.scaleLabel].color = datapoint.color;
-            scaleGroups.value[datapoint.scaleLabel].scaleYLabels =
-                datapoint.autoScaling ? autoScaleYLabels : scaleYLabels;
-            scaleGroups.value[datapoint.scaleLabel].zeroPosition =
-                datapoint.autoScaling ? autoScaleZeroPosition : zeroPosition;
-            scaleGroups.value[datapoint.scaleLabel].individualMax =
-                datapoint.autoScaling ? autoScaleMax : individualMax;
-            scaleGroups.value[datapoint.scaleLabel].scaleLabel =
-                datapoint.scaleLabel;
-            scaleGroups.value[datapoint.scaleLabel].id = datapoint.id;
-            scaleGroups.value[datapoint.scaleLabel].yOffset = yOffset;
-            scaleGroups.value[datapoint.scaleLabel].individualHeight =
-                individualHeight;
-            scaleGroups.value[datapoint.scaleLabel].autoScaleYLabels =
-                autoScaleYLabels;
-            scaleGroups.value[datapoint.scaleLabel].unique =
-                activeSeriesWithStackRatios.value.filter(
-                    (el) => el.scaleLabel === datapoint.scaleLabel,
-                ).length === 1;
-
-            const areaZeroPosition = mutableConfig.value.useIndividualScale
-                ? datapoint.autoScaling
-                    ? autoScaleZeroPosition
-                    : zeroPosition
-                : globalAreaBaselineY.value;
-
-            const adustedAreaZeroPosition = Math.max(
-                Math.max(
-                    datapoint.autoScaling
-                        ? autoScaleZeroPosition
-                        : scaleYLabels.at(-1)
-                          ? scaleYLabels.at(-1).y
-                          : 0,
-                    drawingArea.value?.top,
-                ),
-                areaZeroPosition,
-            );
-
-            const stepperAreaPlots = datapoint.autoScaling
-                ? autoScalePlots
-                : plots;
-
-            const stepperAreaPlotsWithNullPolicy = FINAL_CONFIG.value.line
-                .cutNullValues
-                ? stepperAreaPlots
-                : stepperAreaPlots.filter((p) => p.value !== null);
-
-            const visibleValues = datapoint.absoluteValues.filter(
-                (value) => ![null, undefined, NaN].includes(value),
-            );
-
-            const isFlatTemperatureLine =
-                !!datapoint.temperatureColors &&
-                new Set(visibleValues).size <= 1;
-
-            return {
-                ...datapoint,
-                isFlatTemperatureLine,
-                temperatureColors: datapoint.temperatureColors
-                    ? datapoint.temperatureColors.map((c) =>
-                          convertColorToHex(c),
-                      )
-                    : null,
-                yOffset,
-                autoScaleYLabels,
-                individualHeight,
-                scaleYLabels: datapoint.autoScaling
-                    ? autoScaleYLabels
-                    : scaleYLabels,
-                individualScale: datapoint.autoScaling
-                    ? autoScaleSteps
-                    : individualScale,
-                individualMax: datapoint.autoScaling
-                    ? autoScaleMax
-                    : individualMax,
-                zeroPosition: datapoint.autoScaling
-                    ? autoScaleZeroPosition
-                    : zeroPosition,
-                curve: datapoint.useStepper
-                    ? datapoint.autoScaling
-                        ? autoScaleStepper
-                        : stepper
-                    : datapoint.autoScaling
-                      ? autoScaleCurve
-                      : curve,
-                plots: datapoint.autoScaling ? autoScalePlots : plots,
-                dashedStraight,
-                dashedSmooth,
-                hasDashedSegments,
-                area: !datapoint.useArea
-                    ? ''
-                    : datapoint.useStepper
-                      ? createStepperPath(
-                            stepperAreaPlotsWithNullPolicy,
-                            adustedAreaZeroPosition,
-                        )
-                      : mutableConfig.value.useIndividualScale
-                        ? FINAL_CONFIG.value.line.cutNullValues
-                            ? createIndividualAreaWithCuts(
-                                  datapoint.autoScaling
-                                      ? autoScalePlots
-                                      : plots,
-                                  adustedAreaZeroPosition,
-                              )
-                            : createIndividualArea(
-                                  datapoint.autoScaling
-                                      ? autoScalePlots.filter(
-                                            (p) => p.value !== null,
-                                        )
-                                      : plots.filter((p) => p.value !== null),
-                                  adustedAreaZeroPosition,
-                              )
-                        : FINAL_CONFIG.value.line.cutNullValues
-                          ? createIndividualAreaWithCuts(
-                                plots,
-                                adustedAreaZeroPosition,
-                            )
-                          : createIndividualArea(
-                                plots.filter((p) => p.value !== null),
-                                adustedAreaZeroPosition,
-                            ),
-                curveAreas: !datapoint.useArea
-                    ? []
-                    : datapoint.useStepper
-                      ? createStepperPath(
-                            stepperAreaPlotsWithNullPolicy,
-                            adustedAreaZeroPosition,
-                        )
-                            .split(';')
-                            .filter(Boolean)
-                            .map((d) => `M${d}Z`)
-                      : createSmoothAreaSegments(
-                            datapoint.autoScaling
-                                ? FINAL_CONFIG.value.line.cutNullValues
-                                    ? autoScalePlots
-                                    : autoScalePlots.filter(
-                                          (p) => p.value !== null,
-                                      )
-                                : FINAL_CONFIG.value.line.cutNullValues
-                                  ? plots
-                                  : plots.filter((p) => p.value !== null),
-                            adustedAreaZeroPosition,
-                            FINAL_CONFIG.value.line.cutNullValues,
-                        ),
-                straight: datapoint.useStepper
-                    ? datapoint.autoScaling
-                        ? autoScaleStepper
-                        : stepper
-                    : datapoint.autoScaling
-                      ? autoScaleStraight
-                      : straight,
-                groupId: scaleGroups.value[datapoint.scaleLabel].groupId,
-            };
+            }
         });
+
+        const hasDashedSegments =
+            datapoint.dashIndices &&
+            Array.isArray(datapoint.dashIndices) &&
+            datapoint?.dashIndices?.length > 0;
+
+        const curve = FINAL_CONFIG.value.line.cutNullValues
+            ? createSmoothPathWithCuts(plots)
+            : createSmoothPath(plots.filter((p) => p.value !== null));
+
+        const autoScaleCurve = FINAL_CONFIG.value.line.cutNullValues
+            ? createSmoothPathWithCuts(autoScalePlots)
+            : createSmoothPath(autoScalePlots.filter((p) => p.value !== null));
+
+        const straight = FINAL_CONFIG.value.line.cutNullValues
+            ? createStraightPathWithCuts(plots)
+            : createStraightPath(plots.filter((p) => p.value !== null));
+
+        const autoScaleStraight = FINAL_CONFIG.value.line.cutNullValues
+            ? createStraightPathWithCuts(autoScalePlots)
+            : createStraightPath(
+                  autoScalePlots.filter((p) => p.value !== null),
+              );
+
+        const stepper = createStepperPath(
+            FINAL_CONFIG.value.line.cutNullValues
+                ? plots
+                : plots.filter((p) => p.value !== null),
+        );
+
+        const autoScaleStepper = createStepperPath(
+            FINAL_CONFIG.value.line.cutNullValues
+                ? autoScalePlots
+                : autoScalePlots.filter((p) => p.value !== null),
+        );
+
+        const dashedStraight = hasDashedSegments
+            ? createStraightPathWithCutsSegments(
+                  FINAL_CONFIG.value.line.cutNullValues
+                      ? plots
+                      : plots.filter((p) => p.value !== null),
+                  datapoint.dashIndices.map((_) => _ - slicer.value.start),
+              )
+            : [];
+        const dashedSmooth = hasDashedSegments
+            ? createSmoothPathWithCutsSegments(
+                  FINAL_CONFIG.value.line.cutNullValues
+                      ? plots
+                      : plots.filter((p) => p.value !== null),
+                  datapoint.dashIndices.map((_) => _ - slicer.value.start),
+              )
+            : [];
+
+        const scaleGroup = createScaleGroupEntry({
+            datapoint,
+            scaleYLabels,
+            autoScaleYLabels,
+            zeroPosition,
+            autoScaleZeroPosition,
+            individualMax,
+            autoScaleMax,
+            yOffset,
+            individualHeight,
+        });
+
+        const areaZeroPosition = mutableConfig.value.useIndividualScale
+            ? datapoint.autoScaling
+                ? autoScaleZeroPosition
+                : zeroPosition
+            : globalAreaBaselineY.value;
+
+        const adustedAreaZeroPosition = Math.max(
+            Math.max(
+                datapoint.autoScaling
+                    ? autoScaleZeroPosition
+                    : scaleYLabels.at(-1)
+                      ? scaleYLabels.at(-1).y
+                      : 0,
+                drawingArea.value?.top,
+            ),
+            areaZeroPosition,
+        );
+
+        const stepperAreaPlots = datapoint.autoScaling ? autoScalePlots : plots;
+
+        const stepperAreaPlotsWithNullPolicy = FINAL_CONFIG.value.line
+            .cutNullValues
+            ? stepperAreaPlots
+            : stepperAreaPlots.filter((p) => p.value !== null);
+
+        const visibleValues = datapoint.absoluteValues.filter(
+            (value) => ![null, undefined, NaN].includes(value),
+        );
+
+        const isFlatTemperatureLine =
+            !!datapoint.temperatureColors && new Set(visibleValues).size <= 1;
+
+        return {
+            ...datapoint,
+            isFlatTemperatureLine,
+            temperatureColors: datapoint.temperatureColors
+                ? datapoint.temperatureColors.map((c) => convertColorToHex(c))
+                : null,
+            yOffset,
+            autoScaleYLabels,
+            individualHeight,
+            scaleYLabels: datapoint.autoScaling
+                ? autoScaleYLabels
+                : scaleYLabels,
+            individualScale: datapoint.autoScaling
+                ? autoScaleSteps
+                : individualScale,
+            individualMax: datapoint.autoScaling ? autoScaleMax : individualMax,
+            zeroPosition: datapoint.autoScaling
+                ? autoScaleZeroPosition
+                : zeroPosition,
+            curve: datapoint.useStepper
+                ? datapoint.autoScaling
+                    ? autoScaleStepper
+                    : stepper
+                : datapoint.autoScaling
+                  ? autoScaleCurve
+                  : curve,
+            plots: datapoint.autoScaling ? autoScalePlots : plots,
+            dashedStraight,
+            dashedSmooth,
+            hasDashedSegments,
+            area: !datapoint.useArea
+                ? ''
+                : datapoint.useStepper
+                  ? createStepperPath(
+                        stepperAreaPlotsWithNullPolicy,
+                        adustedAreaZeroPosition,
+                    )
+                  : mutableConfig.value.useIndividualScale
+                    ? FINAL_CONFIG.value.line.cutNullValues
+                        ? createIndividualAreaWithCuts(
+                              datapoint.autoScaling ? autoScalePlots : plots,
+                              adustedAreaZeroPosition,
+                          )
+                        : createIndividualArea(
+                              datapoint.autoScaling
+                                  ? autoScalePlots.filter(
+                                        (p) => p.value !== null,
+                                    )
+                                  : plots.filter((p) => p.value !== null),
+                              adustedAreaZeroPosition,
+                          )
+                    : FINAL_CONFIG.value.line.cutNullValues
+                      ? createIndividualAreaWithCuts(
+                            plots,
+                            adustedAreaZeroPosition,
+                        )
+                      : createIndividualArea(
+                            plots.filter((p) => p.value !== null),
+                            adustedAreaZeroPosition,
+                        ),
+            curveAreas: !datapoint.useArea
+                ? []
+                : datapoint.useStepper
+                  ? createStepperPath(
+                        stepperAreaPlotsWithNullPolicy,
+                        adustedAreaZeroPosition,
+                    )
+                        .split(';')
+                        .filter(Boolean)
+                        .map((d) => `M${d}Z`)
+                  : createSmoothAreaSegments(
+                        datapoint.autoScaling
+                            ? FINAL_CONFIG.value.line.cutNullValues
+                                ? autoScalePlots
+                                : autoScalePlots.filter((p) => p.value !== null)
+                            : FINAL_CONFIG.value.line.cutNullValues
+                              ? plots
+                              : plots.filter((p) => p.value !== null),
+                        adustedAreaZeroPosition,
+                        FINAL_CONFIG.value.line.cutNullValues,
+                    ),
+            straight: datapoint.useStepper
+                ? datapoint.autoScaling
+                    ? autoScaleStepper
+                    : stepper
+                : datapoint.autoScaling
+                  ? autoScaleStraight
+                  : straight,
+            scaleGroup,
+            groupId: scaleGroup.groupId,
+        };
+    });
 });
 
 const plotSet = computed(() => {
-    const stackSeries = activeSeriesWithStackRatios.value.filter((s) =>
-        ['bar', 'line', 'plot'].includes(s.type),
-    );
-    const totalSeries = stackSeries.length;
+    const totalSeries = activeDisplaySeriesCount.value;
     const gap = FINAL_CONFIG.value.chart.grid.labels.yAxis.gap;
     const stacked = mutableConfig.value.isStacked;
     const totalGap = stacked ? gap * (totalSeries - 1) : 0;
     const usableHeight = drawingArea.value.height - totalGap;
 
-    return stackSeries
-        .filter((s) => s.type === 'plot')
-        .map((datapoint) => {
-            checkAutoScaleError(datapoint);
-            const _min = scaleGroups.value[datapoint.scaleLabel].min;
-            const _max = scaleGroups.value[datapoint.scaleLabel].max;
-            const autoScaledRatios = datapoint.absoluteValues
-                .filter((v) => ![null, undefined].includes(v))
-                .map((v) => {
-                    return (v - _min) / (_max - _min);
-                });
+    return activePlotSeriesWithStackRatios.value.map((datapoint) => {
+        const {
+            individualScale,
+            autoScaleSteps,
+            individualZero,
+            individualMax,
+            autoScaleMax,
+            yOffset,
+            individualHeight,
+            zeroPosition,
+            autoScaleZeroPosition,
+            scaleYLabels,
+            autoScaleYLabels,
+            autoScaleRatiosToNiceScale,
+        } = createSeriesVerticalContext({
+            datapoint,
+            totalSeries,
+            gap,
+            usableHeight,
+            forceExactScale: true,
+            preserveLooseMinimumExpression: true,
+        });
 
-            const autoScale = {
-                ratios: autoScaledRatios,
-                valueMin: _min,
-                valueMax: _max,
-            };
+        const comments = getSlicedComments(datapoint.comments);
 
-            const individualExtremes = {
-                max:
-                    datapoint.scaleMax ||
-                    Math.max(...datapoint.absoluteValues) ||
-                    1,
-                min:
-                    datapoint.scaleMin ||
-                    Math.min(...datapoint.absoluteValues) > 0
-                        ? 0
-                        : Math.min(...datapoint.absoluteValues),
-            };
-
-            const {
-                individualScale,
-                autoScaleSteps,
-                individualZero,
-                individualMax,
-                autoScaleMax,
-                yOffset,
-                individualHeight,
-                zeroPosition,
-                autoScaleZeroPosition,
-            } = getSerieVerticalGeometry({
-                datapoint,
-                totalSeries,
-                gap,
-                usableHeight,
-                autoScaleValueMin: autoScale.valueMin,
-                autoScaleValueMax: autoScale.valueMax,
-                individualExtremes,
-                forceExactScale: true,
-            });
-
-            const plots = datapoint.series.map((plot, j) => {
-                if (
-                    isContinuousScale.value &&
-                    (plot.x == null || plot.y == null)
-                ) {
-                    return {
-                        index: j,
-                        x: null,
-                        y: null,
-                        value: null,
-                        comment: datapoint.comments
-                            ? datapoint.comments.slice(
-                                  slicer.value.start,
-                                  slicer.value.end,
-                              )[j] || ''
-                            : '',
-                    };
-                }
-
-                const yRatio = mutableConfig.value.useIndividualScale
-                    ? (datapoint.absoluteValues[j] + Math.abs(individualZero)) /
-                      individualMax
-                    : ratioToMax(getValueFromPoint(plot));
+        const plots = datapoint.series.map((plot, j) => {
+            if (isContinuousScale.value && (plot.x == null || plot.y == null)) {
                 return {
                     index: j,
-                    x: checkNaN(getPointX(plot, j)),
-                    y: checkNaN(
-                        getYFromRatio({
-                            ratio: yRatio,
-                            yOffset,
-                            individualHeight,
-                        }),
-                    ),
-                    value: datapoint.absoluteValues[j],
-                    comment: datapoint.comments
-                        ? datapoint.comments.slice(
-                              slicer.value.start,
-                              slicer.value.end,
-                          )[j] || ''
-                        : '',
+                    x: null,
+                    datasetXValue: getDatasetXValue(plot),
+                    y: null,
+                    value: null,
+                    comment: comments[j] || '',
                 };
-            });
+            }
 
-            const autoScaleRatiosToNiceScale = datapoint.absoluteValues.map(
-                (v) => {
-                    if (autoScaleSteps.min >= 0) {
-                        return (
-                            (v - Math.abs(autoScaleSteps.min)) /
-                            (autoScaleSteps.max - Math.abs(autoScaleSteps.min))
-                        );
-                    } else {
-                        return (
-                            (v + Math.abs(autoScaleSteps.min)) /
-                            (autoScaleSteps.max + Math.abs(autoScaleSteps.min))
-                        );
-                    }
-                },
-            );
-
-            const autoScalePlots = datapoint.series.map((plot, j) => {
-                if (
-                    isContinuousScale.value &&
-                    (plot.x === null || plot.y === null)
-                ) {
-                    return {
-                        index: j,
-                        x: null,
-                        y: null,
-                        value: null,
-                        comment: datapoint.comments
-                            ? datapoint.comments.slice(
-                                  slicer.value.start,
-                                  slicer.value.end,
-                              )[j] || ''
-                            : '',
-                    };
-                }
-
-                return {
-                    index: j,
-                    x: checkNaN(getPointX(plot, j)),
-                    y: checkNaN(
-                        getYFromRatio({
-                            ratio: autoScaleRatiosToNiceScale[j] || 0,
-                            yOffset,
-                            individualHeight,
-                        }),
-                    ),
-                    value: datapoint.absoluteValues[j],
-                    comment: datapoint.comments
-                        ? datapoint.comments.slice(
-                              slicer.value.start,
-                              slicer.value.end,
-                          )[j] || ''
-                        : '',
-                };
-            });
-
-            const scaleYLabels = individualScale.ticks.map((t) => {
-                return {
-                    y: getYFromScaleValue({
-                        value: t,
-                        scaleMin: individualScale.min,
-                        scaleMax: individualScale.max,
-                        yOffset,
-                        individualHeight,
-                    }),
-                    value: t,
-                    prefix:
-                        datapoint.prefix ||
-                        FINAL_CONFIG.value.chart.labels.prefix,
-                    suffix:
-                        datapoint.suffix ||
-                        FINAL_CONFIG.value.chart.labels.suffix,
-                    datapoint,
-                };
-            });
-
-            const autoScaleYLabels = autoScaleSteps.ticks.map((t) => {
-                const ratio =
-                    (t - autoScaleSteps.min) /
-                    (autoScaleSteps.max - autoScaleSteps.min || 1);
-
-                return {
-                    y: getYFromRatio({
-                        ratio,
-                        yOffset,
-                        individualHeight,
-                    }),
-                    value: t,
-                    prefix:
-                        datapoint.prefix ||
-                        FINAL_CONFIG.value.chart.labels.prefix,
-                    suffix:
-                        datapoint.suffix ||
-                        FINAL_CONFIG.value.chart.labels.suffix,
-                    datapoint,
-                };
-            });
-
-            scaleGroups.value[datapoint.scaleLabel].name = datapoint.name;
-            scaleGroups.value[datapoint.scaleLabel].groupName =
-                datapoint.scaleLabel;
-            scaleGroups.value[datapoint.scaleLabel].groupColor =
-                FINAL_CONFIG.value.chart.grid.labels.yAxis.groupColor ||
-                datapoint.color;
-            scaleGroups.value[datapoint.scaleLabel].color = datapoint.color;
-            scaleGroups.value[datapoint.scaleLabel].scaleYLabels =
-                datapoint.autoScaling ? autoScaleYLabels : scaleYLabels;
-            scaleGroups.value[datapoint.scaleLabel].zeroPosition =
-                datapoint.autoScaling ? autoScaleZeroPosition : zeroPosition;
-            scaleGroups.value[datapoint.scaleLabel].individualMax =
-                datapoint.autoScaling ? autoScaleMax : individualMax;
-            scaleGroups.value[datapoint.scaleLabel].scaleLabel =
-                datapoint.scaleLabel;
-            scaleGroups.value[datapoint.scaleLabel].id = datapoint.id;
-            scaleGroups.value[datapoint.scaleLabel].yOffset = yOffset;
-            scaleGroups.value[datapoint.scaleLabel].individualHeight =
-                individualHeight;
-            scaleGroups.value[datapoint.scaleLabel].autoScaleYLabels =
-                autoScaleYLabels;
-            scaleGroups.value[datapoint.scaleLabel].unique =
-                activeSeriesWithStackRatios.value.filter(
-                    (el) => el.scaleLabel === datapoint.scaleLabel,
-                ).length === 1;
-
+            const yRatio = mutableConfig.value.useIndividualScale
+                ? (datapoint.absoluteValues[j] + Math.abs(individualZero)) /
+                  individualMax
+                : ratioToMax(getValueFromPoint(plot));
             return {
-                ...datapoint,
-                yOffset,
-                autoScaleYLabels,
-                individualHeight,
-                scaleYLabels: datapoint.autoScaling
-                    ? autoScaleYLabels
-                    : scaleYLabels,
-                individualScale: datapoint.autoScaling
-                    ? autoScaleSteps
-                    : individualScale,
-                individualMax: datapoint.autoScaling
-                    ? autoScaleMax
-                    : individualMax,
-                zeroPosition: datapoint.autoScaling
-                    ? autoScaleZeroPosition
-                    : zeroPosition,
-                plots: datapoint.autoScaling ? autoScalePlots : plots,
-                groupId: scaleGroups.value[datapoint.scaleLabel].groupId,
+                index: j,
+                x: checkNaN(getPointX(plot, j)),
+                datasetXValue: getDatasetXValue(plot),
+                y: checkNaN(
+                    getYFromRatio({
+                        ratio: yRatio,
+                        yOffset,
+                        individualHeight,
+                    }),
+                ),
+                value: datapoint.absoluteValues[j],
+                comment: comments[j] || '',
             };
         });
+
+        const autoScalePlots = datapoint.series.map((plot, j) => {
+            if (
+                isContinuousScale.value &&
+                (plot.x === null || plot.y === null)
+            ) {
+                return {
+                    index: j,
+                    x: null,
+                    datasetXValue: getDatasetXValue(plot),
+                    y: null,
+                    value: null,
+                    comment: comments[j] || '',
+                };
+            }
+
+            return {
+                index: j,
+                x: checkNaN(getPointX(plot, j)),
+                datasetXValue: getDatasetXValue(plot),
+                y: checkNaN(
+                    getYFromRatio({
+                        ratio: autoScaleRatiosToNiceScale[j] || 0,
+                        yOffset,
+                        individualHeight,
+                    }),
+                ),
+                value: datapoint.absoluteValues[j],
+                comment: comments[j] || '',
+            };
+        });
+
+        const scaleGroup = createScaleGroupEntry({
+            datapoint,
+            scaleYLabels,
+            autoScaleYLabels,
+            zeroPosition,
+            autoScaleZeroPosition,
+            individualMax,
+            autoScaleMax,
+            yOffset,
+            individualHeight,
+        });
+
+        return {
+            ...datapoint,
+            yOffset,
+            autoScaleYLabels,
+            individualHeight,
+            scaleYLabels: datapoint.autoScaling
+                ? autoScaleYLabels
+                : scaleYLabels,
+            individualScale: datapoint.autoScaling
+                ? autoScaleSteps
+                : individualScale,
+            individualMax: datapoint.autoScaling ? autoScaleMax : individualMax,
+            zeroPosition: datapoint.autoScaling
+                ? autoScaleZeroPosition
+                : zeroPosition,
+            plots: datapoint.autoScaling ? autoScalePlots : plots,
+            scaleGroup,
+            groupId: scaleGroup.groupId,
+        };
+    });
+});
+
+const hydratedScaleGroups = computed(() => {
+    const result = Object.entries(scaleGroups.value).reduce(
+        (acc, [scaleLabel, scaleGroup]) => {
+            acc[scaleLabel] = {
+                ...scaleGroup,
+                scaleLabel,
+            };
+
+            return acc;
+        },
+        {},
+    );
+
+    [...lineSet.value, ...barSet.value, ...plotSet.value].forEach(
+        (seriesItem) => {
+            if (!seriesItem.scaleGroup) return;
+            result[seriesItem.scaleLabel || ''] = {
+                ...result[seriesItem.scaleLabel || ''],
+                ...seriesItem.scaleGroup,
+            };
+        },
+    );
+
+    return result;
 });
 
 const allScales = computed(() => {
@@ -4055,7 +4366,7 @@ const allScales = computed(() => {
 
     const _source =
         mutableConfig.value.useIndividualScale && !mutableConfig.value.isStacked
-            ? Object.values(scaleGroups.value)
+            ? Object.values(hydratedScaleGroups.value)
             : [...lines, ...bars, ...plots];
 
     const len = _source.flatMap((el) => el).length;
@@ -4243,6 +4554,147 @@ const preciseAllTimeLabels = computed(() => {
     }));
 });
 
+const tooltipMarkerShapeCache = new Map();
+
+function createTooltipCustomFormatterPayload(time) {
+    return {
+        absoluteIndex: selectedSerieIndex.value + slicer.value.start,
+        seriesIndex: selectedSerieIndex.value,
+        datapoint: selectedSeries.value,
+        series: absoluteDataset.value,
+        bars: barSet.value,
+        lines: lineSet.value,
+        plots: plotSet.value,
+        config: FINAL_CONFIG.value,
+        dateLabel: time,
+    };
+}
+
+function getTooltipMarkerShapeCacheKey(seriesItem) {
+    return [
+        icons.value[seriesItem.type],
+        seriesItem.shape || '',
+        seriesItem.color,
+        FINAL_CONFIG.value.chart.tooltip.backgroundColor,
+        Boolean(SLOTS.pattern),
+        uniqueId.value,
+        seriesItem.slotAbsoluteIndex,
+    ].join('|');
+}
+
+function getTooltipMarkerShape(seriesItem) {
+    const cacheKey = getTooltipMarkerShapeCacheKey(seriesItem);
+
+    if (tooltipMarkerShapeCache.has(cacheKey)) {
+        return tooltipMarkerShapeCache.get(cacheKey);
+    }
+
+    const tooltipBackgroundColor =
+        FINAL_CONFIG.value.chart.tooltip.backgroundColor;
+
+    let shape = '';
+    let insideShape = '';
+
+    switch (icons.value[seriesItem.type]) {
+        case 'bar':
+            shape = `<svg viewBox="0 0 40 40" height="14" width="14">${
+                SLOTS.pattern
+                    ? `<rect x="0" y="0" rx="1" stroke="none" height="40" width="40" fill="${seriesItem.color}" />`
+                    : ''
+            }<rect x="0" y="0" rx="1" stroke="none" height="40" width="40" fill="${
+                SLOTS.pattern
+                    ? `url(#pattern_${uniqueId.value}_${seriesItem.slotAbsoluteIndex})`
+                    : seriesItem.color
+            }" /></svg>`;
+            break;
+
+        case 'line':
+            if (
+                !seriesItem.shape ||
+                ![
+                    'star',
+                    'triangle',
+                    'square',
+                    'diamond',
+                    'pentagon',
+                    'hexagon',
+                ].includes(seriesItem.shape)
+            ) {
+                insideShape = `<circle cx="10" cy="8" r="4" stroke="${tooltipBackgroundColor}" stroke-width="0.5" fill="${seriesItem.color}" />`;
+            } else if (seriesItem.shape === 'triangle') {
+                insideShape = `<path d="${createPolygonPath({ plot: { x: 10, y: 8 }, radius: 4, sides: 3, rotation: 0.52 }).path}" fill="${seriesItem.color}" stroke="${tooltipBackgroundColor}" stroke-width="0.5" />`;
+            } else if (seriesItem.shape === 'square') {
+                insideShape = `<path d="${createPolygonPath({ plot: { x: 10, y: 8 }, radius: 4, sides: 4, rotation: 0.8 }).path}" fill="${seriesItem.color}" stroke="${tooltipBackgroundColor}" stroke-width="0.5" />`;
+            } else if (seriesItem.shape === 'diamond') {
+                insideShape = `<path d="${createPolygonPath({ plot: { x: 10, y: 8 }, radius: 4, sides: 4, rotation: 0 }).path}" fill="${seriesItem.color}" stroke="${tooltipBackgroundColor}" stroke-width="0.5" />`;
+            } else if (seriesItem.shape === 'pentagon') {
+                insideShape = `<path d="${createPolygonPath({ plot: { x: 10, y: 8 }, radius: 4, sides: 5, rotation: 0.95 }).path}" fill="${seriesItem.color}" stroke="${tooltipBackgroundColor}" stroke-width="0.5" />`;
+            } else if (seriesItem.shape === 'hexagon') {
+                insideShape = `<path d="${createPolygonPath({ plot: { x: 10, y: 8 }, radius: 4, sides: 6, rotation: 0 }).path}" fill="${seriesItem.color}" stroke="${tooltipBackgroundColor}" stroke-width="0.5" />`;
+            } else if (seriesItem.shape === 'star') {
+                insideShape = `<polygon stroke="${tooltipBackgroundColor}" stroke-width="0.5" fill="${seriesItem.color}" points="${createStar({ plot: { x: 10, y: 8 }, radius: 4 })}" />`;
+            }
+
+            shape = `<svg viewBox="0 0 20 12" height="14" width="20"><rect rx="1.5" x="0" y="6.5" stroke="${tooltipBackgroundColor}" stroke-width="0.5" height="3" width="20" fill="${seriesItem.color}" />${insideShape}</svg>`;
+            break;
+
+        case 'plot':
+            if (
+                !seriesItem.shape ||
+                ![
+                    'star',
+                    'triangle',
+                    'square',
+                    'diamond',
+                    'pentagon',
+                    'hexagon',
+                ].includes(seriesItem.shape)
+            ) {
+                shape = `<svg viewBox="0 0 12 12" height="14" width="14"><circle cx="6" cy="6" r="6" stroke="${tooltipBackgroundColor}" stroke-width="1" fill="${seriesItem.color}" /></svg>`;
+                break;
+            }
+
+            if (seriesItem.shape === 'star') {
+                shape = `<svg viewBox="0 0 12 12" height="14" width="14"><polygon stroke="${tooltipBackgroundColor}" stroke-width="1" fill="${seriesItem.color}" points="${createStar({ plot: { x: 6, y: 6 }, radius: 5 })}" /></svg>`;
+                break;
+            }
+
+            if (seriesItem.shape === 'triangle') {
+                shape = `<svg viewBox="0 0 12 12" height="14" width="14"><path d="${createPolygonPath({ plot: { x: 6, y: 6 }, radius: 6, sides: 3, rotation: 0.52 }).path}" fill="${seriesItem.color}" stroke="${tooltipBackgroundColor}" stroke-width="1" /></svg>`;
+                break;
+            }
+
+            if (seriesItem.shape === 'square') {
+                shape = `<svg viewBox="0 0 12 12" height="14" width="14"><path d="${createPolygonPath({ plot: { x: 6, y: 6 }, radius: 6, sides: 4, rotation: 0.8 }).path}" fill="${seriesItem.color}" stroke="${tooltipBackgroundColor}" stroke-width="1" /></svg>`;
+                break;
+            }
+
+            if (seriesItem.shape === 'diamond') {
+                shape = `<svg viewBox="0 0 12 12" height="14" width="14"><path d="${createPolygonPath({ plot: { x: 6, y: 6 }, radius: 5, sides: 4, rotation: 0 }).path}" fill="${seriesItem.color}" stroke="${tooltipBackgroundColor}" stroke-width="1" /></svg>`;
+                break;
+            }
+
+            if (seriesItem.shape === 'pentagon') {
+                shape = `<svg viewBox="0 0 12 12" height="14" width="14"><path d="${createPolygonPath({ plot: { x: 6, y: 6 }, radius: 5, sides: 5, rotation: 0.95 }).path}" fill="${seriesItem.color}" stroke="${tooltipBackgroundColor}" stroke-width="1" /></svg>`;
+                break;
+            }
+
+            if (seriesItem.shape === 'hexagon') {
+                shape = `<svg viewBox="0 0 12 12" height="14" width="14"><path d="${createPolygonPath({ plot: { x: 6, y: 6 }, radius: 5, sides: 6, rotation: 0 }).path}" fill="${seriesItem.color}" stroke="${tooltipBackgroundColor}" stroke-width="1" /></svg>`;
+                break;
+            }
+
+            break;
+
+        default:
+            break;
+    }
+
+    tooltipMarkerShapeCache.set(cacheKey, shape);
+
+    return shape;
+}
+
 const tooltipContent = computed(() => {
     let html = '';
 
@@ -4273,160 +4725,68 @@ const tooltipContent = computed(() => {
 
     const customFormat = FINAL_CONFIG.value.chart.tooltip.customFormat;
 
-    if (
-        isFunction(customFormat) &&
-        functionReturnsString(() =>
-            customFormat({
-                absoluteIndex: selectedSerieIndex.value + slicer.value.start,
-                seriesIndex: selectedSerieIndex.value,
-                datapoint: selectedSeries.value,
-                series: absoluteDataset.value,
-                bars: barSet.value,
-                lines: lineSet.value,
-                plots: plotSet.value,
-                config: FINAL_CONFIG.value,
-                dateLabel: time,
-            }),
-        )
-    ) {
-        return customFormat({
-            absoluteIndex: selectedSerieIndex.value + slicer.value.start,
-            seriesIndex: selectedSerieIndex.value,
-            datapoint: selectedSeries.value,
-            series: absoluteDataset.value,
-            bars: barSet.value,
-            lines: lineSet.value,
-            plots: plotSet.value,
-            config: FINAL_CONFIG.value,
-            dateLabel: time,
-        });
-    } else {
-        if (
-            time &&
-            time.text &&
-            FINAL_CONFIG.value.chart.tooltip.showTimeLabel
-        ) {
-            const precise = preciseTimeFormatter.value(
-                selectedSerieIndex.value + slicer.value.start,
-                FINAL_CONFIG.value.chart.tooltip.timeFormat,
+    if (isFunction(customFormat)) {
+        try {
+            const customFormattedTooltip = customFormat(
+                createTooltipCustomFormatterPayload(time),
             );
-            if (!isContinuousScale.value) {
-                html += `<div style="padding-bottom: 6px; margin-bottom: 4px; border-bottom: 1px solid ${FINAL_CONFIG.value.chart.tooltip.borderColor}; width:100%">${FINAL_CONFIG.value.chart.grid.labels.xAxisLabels.datetimeFormatter.enable && !FINAL_CONFIG.value.chart.tooltip.useDefaultTimeFormat ? precise : time.text}</div>`;
+
+            if (typeof customFormattedTooltip === 'string') {
+                return customFormattedTooltip;
             }
+        } catch (error) {
+            console.warn(
+                'Vue Data UI - VueUiXy: custom tooltip formatter failed.',
+                error,
+            );
         }
-        selectedSeries.value.forEach((s) => {
-            if (isSafeValue(s.value)) {
-                let shape = '';
-                let insideShape = '';
-                switch (icons.value[s.type]) {
-                    case 'bar':
-                        shape = `<svg viewBox="0 0 40 40" height="14" width="14">${SLOTS.pattern ? `<rect x="0" y="0" rx="1" stroke="none" height="40" width="40" fill="${s.color}" />` : ''}<rect x="0" y="0" rx="1" stroke="none" height="40" width="40" fill="${SLOTS.pattern ? `url(#pattern_${uniqueId.value}_${s.slotAbsoluteIndex}` : s.color}" /></svg>`;
-                        break;
+    }
 
-                    case 'line':
-                        if (
-                            !s.shape ||
-                            ![
-                                'star',
-                                'triangle',
-                                'square',
-                                'diamond',
-                                'pentagon',
-                                'hexagon',
-                            ].includes(s.shape)
-                        ) {
-                            insideShape = `<circle cx="10" cy="8" r="4" stroke="${FINAL_CONFIG.value.chart.tooltip.backgroundColor}" stroke-width="0.5" fill="${s.color}" />`;
-                        } else if (s.shape === 'triangle') {
-                            insideShape = `<path d="${createPolygonPath({ plot: { x: 10, y: 8 }, radius: 4, sides: 3, rotation: 0.52 }).path}" fill="${s.color}" stroke="${FINAL_CONFIG.value.chart.tooltip.backgroundColor}" stroke-width="0.5" />`;
-                        } else if (s.shape === 'square') {
-                            insideShape = `<path d="${createPolygonPath({ plot: { x: 10, y: 8 }, radius: 4, sides: 4, rotation: 0.8 }).path}" fill="${s.color}" stroke="${FINAL_CONFIG.value.chart.tooltip.backgroundColor}" stroke-width="0.5" />`;
-                        } else if (s.shape === 'diamond') {
-                            insideShape = `<path d="${createPolygonPath({ plot: { x: 10, y: 8 }, radius: 4, sides: 4, rotation: 0 }).path}" fill="${s.color}" stroke="${FINAL_CONFIG.value.chart.tooltip.backgroundColor}" stroke-width="0.5" />`;
-                        } else if (s.shape === 'pentagon') {
-                            insideShape = `<path d="${createPolygonPath({ plot: { x: 10, y: 8 }, radius: 4, sides: 5, rotation: 0.95 }).path}" fill="${s.color}" stroke="${FINAL_CONFIG.value.chart.tooltip.backgroundColor}" stroke-width="0.5" />`;
-                        } else if (s.shape === 'hexagon') {
-                            insideShape = `<path d="${createPolygonPath({ plot: { x: 10, y: 8 }, radius: 4, sides: 6, rotation: 0 }).path}" fill="${s.color}" stroke="${FINAL_CONFIG.value.chart.tooltip.backgroundColor}" stroke-width="0.5" />`;
-                        } else if (s.shape === 'star') {
-                            insideShape = `<polygon stroke="${FINAL_CONFIG.value.chart.tooltip.backgroundColor}" stroke-width="0.5" fill="${s.color}" points="${createStar({ plot: { x: 10, y: 8 }, radius: 4 })}" />`;
-                        }
-                        shape = `<svg viewBox="0 0 20 12" height="14" width="20"><rect rx="1.5" x="0" y="6.5" stroke="${FINAL_CONFIG.value.chart.tooltip.backgroundColor}" stroke-width="0.5" height="3" width="20" fill="${s.color}" />${insideShape}</svg>`;
-                        break;
+    if (time && time.text && FINAL_CONFIG.value.chart.tooltip.showTimeLabel) {
+        const precise = preciseTimeFormatter.value(
+            selectedSerieIndex.value + slicer.value.start,
+            FINAL_CONFIG.value.chart.tooltip.timeFormat,
+        );
+        if (!isContinuousScale.value) {
+            html += `<div style="padding-bottom: 6px; margin-bottom: 4px; border-bottom: 1px solid ${FINAL_CONFIG.value.chart.tooltip.borderColor}; width:100%">${FINAL_CONFIG.value.chart.grid.labels.xAxisLabels.datetimeFormatter.enable && !FINAL_CONFIG.value.chart.tooltip.useDefaultTimeFormat ? precise : time.text}</div>`;
+        }
+    }
+    selectedSeries.value.forEach((s) => {
+        if (isSafeValue(s.value)) {
+            const shape = getTooltipMarkerShape(s);
 
-                    case 'plot':
-                        if (
-                            !s.shape ||
-                            ![
-                                'star',
-                                'triangle',
-                                'square',
-                                'diamond',
-                                'pentagon',
-                                'hexagon',
-                            ].includes(s.shape)
-                        ) {
-                            shape = `<svg viewBox="0 0 12 12" height="14" width="14"><circle cx="6" cy="6" r="6" stroke="${FINAL_CONFIG.value.chart.tooltip.backgroundColor}" stroke-width="1" fill="${s.color}" /></svg>`;
-                            break;
-                        }
-                        if (s.shape === 'star') {
-                            shape = `<svg viewBox="0 0 12 12" height="14" width="14"><polygon stroke="${FINAL_CONFIG.value.chart.tooltip.backgroundColor}" stroke-width="1" fill="${s.color}" points="${createStar({ plot: { x: 6, y: 6 }, radius: 5 })}" /></svg>`;
-                            break;
-                        }
-                        if (s.shape === 'triangle') {
-                            shape = `<svg viewBox="0 0 12 12" height="14" width="14"><path d="${createPolygonPath({ plot: { x: 6, y: 6 }, radius: 6, sides: 3, rotation: 0.52 }).path}" fill="${s.color}" stroke="${FINAL_CONFIG.value.chart.tooltip.backgroundColor}" stroke-width="1" /></svg>`;
-                            break;
-                        }
-                        if (s.shape === 'square') {
-                            shape = `<svg viewBox="0 0 12 12" height="14" width="14"><path d="${createPolygonPath({ plot: { x: 6, y: 6 }, radius: 6, sides: 4, rotation: 0.8 }).path}" fill="${s.color}" stroke="${FINAL_CONFIG.value.chart.tooltip.backgroundColor}" stroke-width="1" /></svg>`;
-                            break;
-                        }
-                        if (s.shape === 'diamond') {
-                            shape = `<svg viewBox="0 0 12 12" height="14" width="14"><path d="${createPolygonPath({ plot: { x: 6, y: 6 }, radius: 5, sides: 4, rotation: 0 }).path}" fill="${s.color}" stroke="${FINAL_CONFIG.value.chart.tooltip.backgroundColor}" stroke-width="1" /></svg>`;
-                            break;
-                        }
-                        if (s.shape === 'pentagon') {
-                            shape = `<svg viewBox="0 0 12 12" height="14" width="14"><path d="${createPolygonPath({ plot: { x: 6, y: 6 }, radius: 5, sides: 5, rotation: 0.95 }).path}" fill="${s.color}" stroke="${FINAL_CONFIG.value.chart.tooltip.backgroundColor}" stroke-width="1" /></svg>`;
-                            break;
-                        }
-                        if (s.shape === 'hexagon') {
-                            shape = `<svg viewBox="0 0 12 12" height="14" width="14"><path d="${createPolygonPath({ plot: { x: 6, y: 6 }, radius: 5, sides: 6, rotation: 0 }).path}" fill="${s.color}" stroke="${FINAL_CONFIG.value.chart.tooltip.backgroundColor}" stroke-width="1" /></svg>`;
-                            break;
-                        }
-                    default:
-                        break;
-                }
+            const label_y = FINAL_CONFIG.value.chart.tooltip.showValue
+                ? applyDataLabel(
+                      s.type === 'line'
+                          ? FINAL_CONFIG.value.line.labels.formatter
+                          : s.type === 'bar'
+                            ? FINAL_CONFIG.value.bar.labels.formatter
+                            : FINAL_CONFIG.value.plot.labels.formatter,
+                      s.value,
+                      dataLabel({
+                          p: s.prefix,
+                          v: s.value,
+                          s: s.suffix,
+                          r: FINAL_CONFIG.value.chart.tooltip.roundingValue,
+                      }),
+                      { datapoint: s },
+                  )
+                : '';
 
-                const label_y = FINAL_CONFIG.value.chart.tooltip.showValue
-                    ? applyDataLabel(
-                          s.type === 'line'
-                              ? FINAL_CONFIG.value.line.labels.formatter
-                              : s.type === 'bar'
-                                ? FINAL_CONFIG.value.bar.labels.formatter
-                                : FINAL_CONFIG.value.plot.labels.formatter,
-                          s.value,
-                          dataLabel({
-                              p: s.prefix,
-                              v: s.value,
-                              s: s.suffix,
-                              r: FINAL_CONFIG.value.chart.tooltip.roundingValue,
-                          }),
-                          { datapoint: s },
-                      )
-                    : '';
-
-                const label_x = FINAL_CONFIG.value.chart.tooltip.showValue
-                    ? (time?.text ?? '')
-                    : '';
-                const valueLabel = isContinuousScale.value
-                    ? `
+            const label_x = FINAL_CONFIG.value.chart.tooltip.showValue
+                ? (time?.text ?? '')
+                : '';
+            const valueLabel = isContinuousScale.value
+                ? `
                     <span>${FINAL_CONFIG.value.chart.grid.labels.axis.xLabel || 'X'}: </span>
                     <span>${label_x}</span>, 
                     <span>${FINAL_CONFIG.value.chart.grid.labels.axis.yLabel || 'Y'}: </span>
                     <span>${label_y}</span>
                 `
-                    : label_y;
+                : label_y;
 
-                if (isContinuousScale.value) {
-                    html += `
+            if (isContinuousScale.value) {
+                html += `
                         <div style="display:flex;flex-direction:column;">
                             <div style="display:flex; flex-direction:row; gap:3px;">
                                 <div style="width:20px">${shape}</div>
@@ -4437,74 +4797,240 @@ const tooltipContent = computed(() => {
                             </div>
                         </div>
                     `;
-                } else {
-                    html += `<div style="display:flex;flex-direction:row; align-items:center;gap:3px;white-space:nowrap;"><div style="width:20px">${shape}</div> ${s.name}: <b>${valueLabel}</b> ${
-                        FINAL_CONFIG.value.chart.tooltip.showPercentage
-                            ? `(${dataLabel({
-                                  v: checkNaN((Math.abs(s.value) / sum) * 100),
-                                  s: '%',
-                                  r: FINAL_CONFIG.value.chart.tooltip
-                                      .roundingPercentage,
-                              })})`
-                            : ''
-                    }</div>`;
-                }
-
-                if (
-                    FINAL_CONFIG.value.chart.comments.showInTooltip &&
-                    s.comments.length &&
-                    s.comments.slice(slicer.value.start, slicer.value.end)[
-                        selectedSerieIndex.value
-                    ]
-                ) {
-                    html += `<div class="vue-data-ui-tooltip-comment" style="background:${s.color}20; padding: 6px; margin-bottom: 6px; border-left: 1px solid ${s.color}">${s.comments.slice(slicer.value.start, slicer.value.end)[selectedSerieIndex.value]}</div>`;
-                }
+            } else {
+                html += `<div style="display:flex;flex-direction:row; align-items:center;gap:3px;white-space:nowrap;"><div style="width:20px">${shape}</div> ${s.name}: <b>${valueLabel}</b> ${
+                    FINAL_CONFIG.value.chart.tooltip.showPercentage
+                        ? `(${dataLabel({
+                              v: checkNaN((Math.abs(s.value) / sum) * 100),
+                              s: '%',
+                              r: FINAL_CONFIG.value.chart.tooltip
+                                  .roundingPercentage,
+                          })})`
+                        : ''
+                }</div>`;
             }
-        });
-        return `<div style="border-radius:4px;padding:12px;font-variant-numeric: tabular-nums;color:${FINAL_CONFIG.value.chart.tooltip.color}">${html}</div>`;
+
+            const tooltipComment = getSlicedComment(
+                s.comments,
+                selectedSerieIndex.value,
+            );
+
+            if (
+                FINAL_CONFIG.value.chart.comments.showInTooltip &&
+                tooltipComment
+            ) {
+                html += `<div class="vue-data-ui-tooltip-comment" style="background:${s.color}20; padding: 6px; margin-bottom: 6px; border-left: 1px solid ${s.color}">${tooltipComment}</div>`;
+            }
+        }
+    });
+    return `<div style="border-radius:4px;padding:12px;font-variant-numeric: tabular-nums;color:${FINAL_CONFIG.value.chart.tooltip.color}">${html}</div>`;
+});
+
+const continuousTableXValues = computed(() => {
+    if (!isContinuousScale.value) {
+        return [];
     }
+
+    const seenXValues = new Set();
+    const xValues = [];
+
+    relativeDataset.value.forEach((seriesItem) => {
+        seriesItem.series.forEach((point) => {
+            const xValue = Number(point?.x);
+
+            if (!Number.isFinite(xValue)) {
+                return;
+            }
+
+            const xValueKey = String(xValue);
+
+            if (seenXValues.has(xValueKey)) {
+                return;
+            }
+
+            seenXValues.add(xValueKey);
+            xValues.push(xValue);
+        });
+    });
+
+    return xValues.sort((firstValue, secondValue) => {
+        return isXAxisReversed.value
+            ? secondValue - firstValue
+            : firstValue - secondValue;
+    });
+});
+
+function getContinuousTablePeriodLabel(xValue) {
+    const value = Number(xValue);
+
+    if (!Number.isFinite(value)) {
+        return '-';
+    }
+
+    return applyDataLabel(
+        FINAL_CONFIG.value.chart.grid.labels.xAxis.formatter,
+        value,
+        dataLabel({
+            v: value,
+            r: FINAL_CONFIG.value.table.rounding,
+        }),
+        {
+            datapoint: value,
+            seriesIndex: null,
+        },
+    );
+}
+
+function getTablePeriodLabel(index) {
+    if (isContinuousScale.value) {
+        return getContinuousTablePeriodLabel(index);
+    }
+
+    if (FINAL_CONFIG.value.table.useDefaultTimeFormat) {
+        return timeLabels.value[index]?.text ?? '-';
+    }
+
+    return preciseTimeFormatter.value(
+        index + slicer.value.start,
+        FINAL_CONFIG.value.table.timeFormat,
+    );
+}
+
+function getTableRawValue(seriesItem, rowReference) {
+    if (isContinuousScale.value) {
+        const xValue = Number(rowReference);
+
+        if (!Number.isFinite(xValue)) {
+            return null;
+        }
+
+        const point = seriesItem.series.find((candidate) => {
+            return Number(candidate?.x) === xValue;
+        });
+
+        return point?.y ?? null;
+    }
+
+    return seriesItem.absoluteValues[rowReference];
+}
+
+function getTableCsvValue(seriesItem, rowReference) {
+    const value = getTableRawValue(seriesItem, rowReference);
+
+    return canShowValue(value)
+        ? Number(value.toFixed(FINAL_CONFIG.value.table.rounding))
+        : '';
+}
+
+function getTableFormattedValue(seriesItem, rowReference) {
+    const value = getTableRawValue(seriesItem, rowReference);
+
+    if (!canShowValue(value)) {
+        return '';
+    }
+
+    return applyDataLabel(
+        seriesItem.type === 'line'
+            ? FINAL_CONFIG.value.line.labels.formatter
+            : seriesItem.type === 'bar'
+              ? FINAL_CONFIG.value.bar.labels.formatter
+              : FINAL_CONFIG.value.plot.labels.formatter,
+        value,
+        dataLabel({
+            p: seriesItem.prefix || FINAL_CONFIG.value.chart.labels.prefix,
+            v: value,
+            s: seriesItem.suffix || FINAL_CONFIG.value.chart.labels.suffix,
+            r: FINAL_CONFIG.value.table.rounding,
+        }),
+    );
+}
+
+function getTableRowSum(rowReference) {
+    return relativeDataset.value
+        .map((seriesItem) => {
+            return getTableRawValue(seriesItem, rowReference) ?? 0;
+        })
+        .reduce((firstValue, secondValue) => {
+            return firstValue + secondValue;
+        }, 0);
+}
+
+const tableRows = computed(() => {
+    if (isContinuousScale.value) {
+        return continuousTableXValues.value.map((xValue) => {
+            const sum = getTableRowSum(xValue);
+
+            return {
+                period: getTablePeriodLabel(xValue),
+                csvValues: relativeDataset.value.map((seriesItem) => {
+                    return getTableCsvValue(seriesItem, xValue);
+                }),
+                formattedValues: relativeDataset.value.map((seriesItem) => {
+                    return getTableFormattedValue(seriesItem, xValue);
+                }),
+                sum,
+                formattedSum: sum.toFixed(FINAL_CONFIG.value.table.rounding),
+            };
+        });
+    }
+
+    const rows = [];
+
+    for (let index = 0; index < maxSeries.value; index += 1) {
+        const sum = getTableRowSum(index);
+
+        rows.push({
+            period: getTablePeriodLabel(index),
+            csvValues: relativeDataset.value.map((seriesItem) => {
+                return getTableCsvValue(seriesItem, index);
+            }),
+            formattedValues: relativeDataset.value.map((seriesItem) => {
+                return getTableFormattedValue(seriesItem, index);
+            }),
+            sum,
+            formattedSum: sum.toFixed(FINAL_CONFIG.value.table.rounding),
+        });
+    }
+
+    return rows;
 });
 
 const table = computed(() => {
-    if (safeDataset.value.length === 0)
-        return { head: [], body: [], config: {}, columnNames: [] };
-    const head = relativeDataset.value.map((s) => {
+    if (safeDataset.value.length === 0) {
         return {
-            label: s.name,
-            color: s.color,
-            type: s.type,
+            head: [],
+            body: [],
+            config: {},
+            columnNames: [],
+        };
+    }
+
+    const head = relativeDataset.value.map((seriesItem) => {
+        return {
+            label: seriesItem.name,
+            color: seriesItem.color,
+            type: seriesItem.type,
         };
     });
-    const body = [];
 
-    timeLabels.value.forEach((t, i) => {
-        const row = FINAL_CONFIG.value.table.useDefaultTimeFormat
-            ? [t.text]
-            : [
-                  preciseTimeFormatter.value(
-                      i + slicer.value.start,
-                      FINAL_CONFIG.value.table.timeFormat,
-                  ),
-              ];
-        relativeDataset.value.forEach((s) => {
-            row.push(
-                canShowValue(s.absoluteValues[i])
-                    ? Number(
-                          s.absoluteValues[i].toFixed(
-                              FINAL_CONFIG.value.table.rounding,
-                          ),
-                      )
-                    : '',
-            );
-        });
-        body.push(row);
+    const body = tableRows.value.map((row) => {
+        return [row.period].concat(row.csvValues);
     });
-    return { head, body };
+
+    return {
+        head,
+        body,
+    };
 });
 
 const dataTable = computed(() => {
     const showSum = FINAL_CONFIG.value.table.showSum;
-    let head = [''].concat(relativeDataset.value.map((ds) => ds.name));
+
+    let head = [
+        isContinuousScale.value
+            ? FINAL_CONFIG.value.chart.grid.labels.axis.xLabel || 'X'
+            : '',
+    ].concat(relativeDataset.value.map((seriesItem) => seriesItem.name));
 
     if (showSum) {
         head = head.concat(
@@ -4512,52 +5038,12 @@ const dataTable = computed(() => {
         );
     }
 
-    let body = [];
-    for (let i = 0; i < maxSeries.value; i += 1) {
-        const sum = relativeDataset.value
-            .map((ds) => {
-                return ds.absoluteValues[i] ?? 0;
-            })
-            .reduce((a, b) => a + b, 0);
+    const body = tableRows.value.map((row) => {
+        return [row.period]
+            .concat(row.formattedValues)
+            .concat(showSum ? row.formattedSum : []);
+    });
 
-        body.push(
-            [
-                FINAL_CONFIG.value.table.useDefaultTimeFormat
-                    ? (timeLabels.value[i]?.text ?? '-')
-                    : preciseTimeFormatter.value(
-                          i + slicer.value.start,
-                          FINAL_CONFIG.value.table.timeFormat,
-                      ),
-            ]
-                .concat(
-                    relativeDataset.value.map((ds) => {
-                        return applyDataLabel(
-                            ds.type === 'line'
-                                ? FINAL_CONFIG.value.line.labels.formatter
-                                : ds.type === 'bar'
-                                  ? FINAL_CONFIG.value.bar.labels.formatter
-                                  : FINAL_CONFIG.value.plot.labels.formatter,
-                            ds.absoluteValues[i] ?? 0,
-                            dataLabel({
-                                p:
-                                    ds.prefix ||
-                                    FINAL_CONFIG.value.chart.labels.prefix,
-                                v: ds.absoluteValues[i] ?? 0,
-                                s:
-                                    ds.suffix ||
-                                    FINAL_CONFIG.value.chart.labels.suffix,
-                                r: FINAL_CONFIG.value.table.rounding,
-                            }),
-                        );
-                    }),
-                )
-                .concat(
-                    showSum
-                        ? (sum ?? 0).toFixed(FINAL_CONFIG.value.table.rounding)
-                        : [],
-                ),
-        );
-    }
     const config = {
         th: {
             backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
@@ -4571,11 +5057,21 @@ const dataTable = computed(() => {
         },
         breakpoint: FINAL_CONFIG.value.table.responsiveBreakpoint,
     };
-    const colNames = [FINAL_CONFIG.value.table.columnNames.period]
-        .concat(relativeDataset.value.map((ds) => ds.name))
+
+    const colNames = [
+        isContinuousScale.value
+            ? FINAL_CONFIG.value.chart.grid.labels.axis.xLabel || 'X'
+            : FINAL_CONFIG.value.table.columnNames.period,
+    ]
+        .concat(relativeDataset.value.map((seriesItem) => seriesItem.name))
         .concat(FINAL_CONFIG.value.table.columnNames.total);
 
-    return { head, body, config, colNames };
+    return {
+        head,
+        body,
+        config,
+        colNames,
+    };
 });
 
 function generateCsv(callback = null) {
@@ -4584,10 +5080,16 @@ function generateCsv(callback = null) {
         [FINAL_CONFIG.value.chart.title.subtitle.text],
         [''],
     ];
-    const head = ['', ...table.value.head.map((h) => h.label)];
+
+    const firstColumnName = isContinuousScale.value
+        ? FINAL_CONFIG.value.chart.grid.labels.axis.xLabel || 'X'
+        : FINAL_CONFIG.value.table.columnNames.period;
+
+    const head = [firstColumnName, ...table.value.head.map((h) => h.label)];
     const body = table.value.body;
     const _table = title.concat([head]).concat(body);
     const csvContent = createCsvContent(_table);
+
     if (!callback) {
         downloadCsv({
             csvContent,
@@ -4775,8 +5277,13 @@ function prepareChart() {
         const parent = _chart.parentNode;
 
         if (resizeObserver.value) {
-            resizeObserver.value.unobserve(observedEl.value);
+            if (observedEl.value) {
+                resizeObserver.value.unobserve(observedEl.value);
+            }
+
             resizeObserver.value.disconnect();
+            resizeObserver.value = null;
+            observedEl.value = null;
         }
 
         const { height: _height, width: _width } =
@@ -4884,8 +5391,7 @@ function prepareChart() {
                         entry.contentRect.width;
                     viewBox.value = `0 0 ${width.value < 0 ? 10 : width.value} ${height.value < 0 ? 10 : height.value}`;
                     convertSizes();
-                    setParentElementReference();
-                    runParentStableLayoutPass();
+                    queueParentStableLayoutRefresh();
                 });
             }
         });
@@ -4910,8 +5416,7 @@ function prepareChart() {
             FINAL_CONFIG.value.line.dot.selectedRadius;
         viewBox.value = `0 0 ${width.value} ${height.value}`;
     }
-    setParentElementReference();
-    runParentStableLayoutPass();
+    queueParentStableLayoutRefresh();
 }
 
 function setClientPosition(e) {
@@ -4935,11 +5440,18 @@ onBeforeUnmount(() => {
     document.removeEventListener('mousemove', setClientPosition, {
         passive: true,
     });
+
     if (resizeObserver.value) {
-        resizeObserver.value.unobserve(observedEl.value);
+        if (observedEl.value) {
+            resizeObserver.value.unobserve(observedEl.value);
+        }
+
         resizeObserver.value.disconnect();
         resizeObserver.value = null;
+        observedEl.value = null;
     }
+
+    cleanupTimeTagObserver();
     clearQueuedSlicerFrames();
 });
 
@@ -5007,56 +5519,110 @@ function timeTagX() {
     return checkNaN(clamped);
 }
 
-onMounted(() => {
-    let observedTimeTagEl = null;
-    let raf = null;
+function cleanupTimeTagObserver() {
+    if (timeTagResizeAnimationFrame.value !== null) {
+        cancelAnimationFrame(timeTagResizeAnimationFrame.value);
+        timeTagResizeAnimationFrame.value = null;
+    }
 
-    const setW = (w) => {
-        cancelAnimationFrame(raf);
-        raf = requestAnimationFrame(() => {
-            timeTagInnerW.value = Math.min(Math.max(Math.ceil(w || 0), 1), 200);
-        });
-    };
+    if (timeTagResizeObserver.value && observedTimeTagElement.value) {
+        timeTagResizeObserver.value.unobserve(observedTimeTagElement.value);
+    }
 
-    const ro = new ResizeObserver((entries) => {
-        let entry =
-            entries.find((e) => e.target === observedTimeTagEl) || entries[0];
-        if (!entry) return;
-        setW(entry.contentRect.width || 200);
+    if (timeTagResizeObserver.value) {
+        timeTagResizeObserver.value.disconnect();
+        timeTagResizeObserver.value = null;
+    }
+
+    if (stopTimeTagObserverWatch.value) {
+        stopTimeTagObserverWatch.value();
+        stopTimeTagObserverWatch.value = null;
+    }
+
+    observedTimeTagElement.value = null;
+}
+
+function setTimeTagMeasuredWidth(width) {
+    if (timeTagResizeAnimationFrame.value !== null) {
+        cancelAnimationFrame(timeTagResizeAnimationFrame.value);
+    }
+
+    timeTagResizeAnimationFrame.value = requestAnimationFrame(() => {
+        timeTagInnerW.value = Math.min(Math.max(Math.ceil(width || 0), 1), 200);
+        timeTagResizeAnimationFrame.value = null;
+    });
+}
+
+function observeTimeTagElement(element) {
+    if (!timeTagResizeObserver.value || !element) {
+        return;
+    }
+
+    if (
+        observedTimeTagElement.value &&
+        observedTimeTagElement.value !== element
+    ) {
+        timeTagResizeObserver.value.unobserve(observedTimeTagElement.value);
+        observedTimeTagElement.value = null;
+    }
+
+    if (element === observedTimeTagElement.value) {
+        return;
+    }
+
+    nextTick(() => {
+        if (element.offsetParent === null) {
+            return;
+        }
+
+        setTimeTagMeasuredWidth(
+            element.offsetWidth || element.getBoundingClientRect().width || 200,
+        );
     });
 
-    const stop = watchEffect((onInvalidate) => {
-        const el = timeTagEl.value;
-        if (observedTimeTagEl && observedTimeTagEl !== el) {
-            ro.unobserve(observedTimeTagEl);
-            observedTimeTagEl = null;
+    timeTagResizeObserver.value.observe(element);
+    observedTimeTagElement.value = element;
+}
+
+onMounted(() => {
+    timeTagResizeObserver.value = new ResizeObserver((entries) => {
+        const entry =
+            entries.find(
+                (resizeEntry) =>
+                    resizeEntry.target === observedTimeTagElement.value,
+            ) || entries[0];
+
+        if (!entry) return;
+        setTimeTagMeasuredWidth(entry.contentRect.width || 200);
+    });
+
+    stopTimeTagObserverWatch.value = watchEffect((onInvalidate) => {
+        const element = timeTagEl.value;
+
+        if (!element) {
+            if (timeTagResizeObserver.value && observedTimeTagElement.value) {
+                timeTagResizeObserver.value.unobserve(
+                    observedTimeTagElement.value,
+                );
+                observedTimeTagElement.value = null;
+            }
+            return;
         }
 
-        if (el && el !== observedTimeTagEl) {
-            nextTick(() => {
-                if (el.offsetParent === null) return;
-                setW(el.offsetWidth || el.getBoundingClientRect().width || 200);
-            });
-            ro.observe(el);
-            observedTimeTagEl = el;
-        }
+        observeTimeTagElement(element);
 
         onInvalidate(() => {
-            if (observedTimeTagEl) {
-                ro.unobserve(observedTimeTagEl);
-                observedTimeTagEl = null;
+            if (
+                timeTagResizeObserver.value &&
+                observedTimeTagElement.value &&
+                observedTimeTagElement.value !== timeTagEl.value
+            ) {
+                timeTagResizeObserver.value.unobserve(
+                    observedTimeTagElement.value,
+                );
+                observedTimeTagElement.value = null;
             }
         });
-    });
-
-    onBeforeUnmount(() => {
-        try {
-            if (observedTimeTagEl) ro.unobserve(observedTimeTagEl);
-            ro.disconnect();
-            stop();
-        } catch {
-            // ignore
-        }
     });
 });
 
@@ -5154,6 +5720,7 @@ const timeTagContent = computed(() => {
 // Datapoint labels
 function getDataLabelContent({ serie, plot, type }) {
     if (!canShowValue(plot.value)) return '';
+
     const yValue = dataLabel({
         p: serie.prefix || FINAL_CONFIG.value.chart.labels.prefix,
         v: plot.value,
@@ -5161,10 +5728,12 @@ function getDataLabelContent({ serie, plot, type }) {
         r: FINAL_CONFIG.value[type].labels.rounding,
     });
 
+    const datasetXValue = plot.datasetXValue;
+
     const content =
-        isContinuousScale.value && isValidNumber(plot.x)
+        isContinuousScale.value && isValidNumber(datasetXValue)
             ? `x: ${dataLabel({
-                  v: plot.x,
+                  v: datasetXValue,
                   r: FINAL_CONFIG.value.chart.grid.labels.xAxis.rounding,
               })}\ny: ${yValue}`
             : applyDataLabel(
@@ -5336,6 +5905,58 @@ function isSelectedDatapoint(serie, plot, index) {
     );
 }
 
+function shouldShowDataLabel({ serie, plot, index, type }) {
+    if (!plot || !canShowValue(plot.value)) return false;
+    if (!FINAL_CONFIG.value[type].labels.show) return false;
+    if (!mutableConfig.value.dataLabels.show) return false;
+    return (
+        !Object.hasOwn(serie, 'dataLabels') ||
+        serie.dataLabels === true ||
+        isSelectedDatapoint(serie, plot, index)
+    );
+}
+
+function createDataLabelItems(seriesSet, type) {
+    const items = [];
+
+    seriesSet.forEach((serie, serieIndex) => {
+        const plots = Array.isArray(serie.plots) ? serie.plots : [];
+
+        plots.forEach((plot, plotIndex) => {
+            if (
+                !shouldShowDataLabel({
+                    serie,
+                    plot,
+                    index: plotIndex,
+                    type,
+                })
+            ) {
+                return;
+            }
+
+            items.push({
+                key: `data_label_${type}_${serie.id}_${plot.index ?? plotIndex}`,
+                serie,
+                serieIndex,
+                plot,
+                plotIndex,
+            });
+        });
+    });
+
+    return items;
+}
+
+const barDataLabelItems = computed(() =>
+    createDataLabelItems(barSet.value, 'bar'),
+);
+const plotDataLabelItems = computed(() =>
+    createDataLabelItems(plotSet.value, 'plot'),
+);
+const lineDataLabelItems = computed(() =>
+    createDataLabelItems(lineSet.value, 'line'),
+);
+
 // Force reflow when component is mounted in a hidden div
 watch(
     () => props.dataset,
@@ -5345,14 +5966,9 @@ watch(
         }
 
         if (FINAL_CONFIG.value.chart.zoom.keepState) {
-            maxX.value = Math.max(
-                0,
-                ...FINAL_DATASET.value.map(
-                    (datapoint) => lttb(datapoint.series).length,
-                ),
-            );
+            const currentMaxX = maxX.value;
 
-            if (maxX.value > 0) {
+            if (currentMaxX > 0) {
                 const previousStart = slicer.value.start;
                 const previousEnd = slicer.value.end;
 
@@ -5365,12 +5981,12 @@ watch(
                 } else {
                     const nextStart = Math.max(
                         0,
-                        Math.min(previousStart, maxX.value - 1),
+                        Math.min(previousStart, currentMaxX - 1),
                     );
 
                     const nextEnd = Math.max(
                         nextStart + 1,
-                        Math.min(previousEnd, maxX.value),
+                        Math.min(previousEnd, currentMaxX),
                     );
 
                     slicer.value = {
@@ -5384,16 +6000,10 @@ watch(
                     };
 
                     absoluteSlicerStartIndex.value = 0;
-                    absoluteSlicerEndIndex.value = maxX.value;
+                    absoluteSlicerEndIndex.value = currentMaxX;
                 }
             }
         } else {
-            maxX.value = Math.max(
-                ...FINAL_DATASET.value.map(
-                    (datapoint) => lttb(datapoint.series).length,
-                ),
-            );
-
             slicer.value = {
                 start: 0,
                 end: maxX.value,
@@ -5402,8 +6012,7 @@ watch(
 
         slicerStep.value += 1;
         segregateStep.value += 1;
-        setParentElementReference();
-        runParentStableLayoutPass();
+        queueParentStableLayoutRefresh();
         normalizeSlicerWindow();
     },
     { deep: true },
@@ -5419,19 +6028,9 @@ watch(
         prepareChart();
         titleStep.value += 1;
         tableStep.value += 1;
-
         seedMutableFromConfig();
-        setParentElementReference();
-        runParentStableLayoutPass();
 
         if (FINAL_CONFIG.value.chart.zoom.keepState) {
-            maxX.value = Math.max(
-                0,
-                ...FINAL_DATASET.value.map(
-                    (datapoint) => lttb(datapoint.series).length,
-                ),
-            );
-
             if (
                 maxX.value > 0 &&
                 (!slicerReady.value ||
@@ -5447,31 +6046,44 @@ watch(
 );
 
 const isActuallyVisible = ref(false);
+const wasActuallyVisible = ref(false);
 
 function recomputeVisibility() {
-    const el = chart.value?.parentNode;
-    if (!el) {
+    const element = chart.value?.parentNode;
+
+    if (!element) {
+        wasActuallyVisible.value = isActuallyVisible.value;
         isActuallyVisible.value = false;
         return;
     }
-    const r = el.getBoundingClientRect();
-    isActuallyVisible.value = r.width > 2 && r.height > 2;
+
+    const rect = element.getBoundingClientRect();
+
+    wasActuallyVisible.value = isActuallyVisible.value;
+    isActuallyVisible.value = rect.width > 0 && rect.height > 0;
+}
+
+function shouldInitializeSlicerAfterVisibilityChange() {
+    if (!isActuallyVisible.value) return false;
+    if (wasActuallyVisible.value) return false;
+    if (slicerReady.value) return false;
+    return slicer.value.start === 0 && slicer.value.end === 0;
 }
 
 onMounted(() => {
     recomputeVisibility();
-    const ro = new ResizeObserver(() => {
+    visibilityResizeObserver.value = new ResizeObserver(() => {
         recomputeVisibility();
-        if (isActuallyVisible.value) {
-            // re-measure and re-init once we have size
-            prepareChart();
-            normalizeSlicerWindow();
-            if (!FINAL_CONFIG.value.chart.zoom.keepState) {
-                setupSlicer();
-            }
+        if (!isActuallyVisible.value) return;
+        prepareChart();
+        normalizeSlicerWindow();
+        if (shouldInitializeSlicerAfterVisibilityChange()) {
+            setupSlicer();
         }
     });
-    if (chart.value?.parentNode) ro.observe(chart.value.parentNode);
+    if (chart.value?.parentNode) {
+        visibilityResizeObserver.value.observe(chart.value.parentNode);
+    }
 });
 
 // v3 - Essential to make shifting between loading config and final config work
@@ -5763,18 +6375,14 @@ const a11yTable = computed(() => {
     if (!dataTable.value) return null;
     const showSum = FINAL_CONFIG.value.table.showSum;
     let headers = [FINAL_CONFIG.value.table.columnNames.period].concat(
-        relativeDataset.value.map((ds) => ds.name),
+        relativeDataset.value.map((seriesItem) => seriesItem.name),
     );
     if (showSum) {
         headers = headers.concat(FINAL_CONFIG.value.table.columnNames.total);
     }
-    const rows = dataTable.value.body.slice(
-        slicer.value.start,
-        slicer.value.end,
-    );
     return {
         headers,
-        rows,
+        rows: dataTable.value.body,
     };
 });
 
@@ -5804,8 +6412,8 @@ defineExpose({
         :class="`vue-data-ui-component vue-ui-xy ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${FINAL_CONFIG.useCssAnimation ? '' : 'vue-ui-dna'}`"
         ref="chart"
         :style="`background:${FINAL_CONFIG.chart.backgroundColor}; color:${FINAL_CONFIG.chart.color};width:100%;font-family:${FINAL_CONFIG.chart.fontFamily};${FINAL_CONFIG.responsive ? 'height: 100%' : ''}`"
-        @mouseenter="() => setUserOptionsVisibility(true)"
-        @mouseleave="() => setUserOptionsVisibility(false)"
+        @mouseenter="showUserOptions"
+        @mouseleave="hideUserOptions"
         @click="onSvgClick"
     >
         <!-- A11Y -->
@@ -6099,6 +6707,7 @@ defineExpose({
                                     <line
                                         data-cy="xy-grid-horizontal-line"
                                         v-for="l in yLabels"
+                                        :key="`horizontal_grid_line_${l.value}_${l.y}`"
                                         :x1="drawingArea?.left"
                                         :x2="drawingArea?.right"
                                         :y1="forceValidValue(l.y)"
@@ -6117,7 +6726,10 @@ defineExpose({
                                     FINAL_CONFIG.chart.grid.showHorizontalLines
                                 "
                             >
-                                <g v-for="grid in allScales">
+                                <g
+                                    v-for="grid in allScales"
+                                    :key="`individual_grid_${grid.groupId || grid.id}`"
+                                >
                                     <template
                                         v-if="
                                             grid.id === selectedScale &&
@@ -6126,6 +6738,7 @@ defineExpose({
                                     >
                                         <line
                                             v-for="l in grid.yLabels"
+                                            :key="`selected_individual_grid_line_${grid.groupId || grid.id}_${l.value}_${l.y}`"
                                             :x1="drawingArea?.left"
                                             :x2="drawingArea?.right"
                                             :y1="forceValidValue(l.y)"
@@ -6141,6 +6754,7 @@ defineExpose({
                                     <template v-else-if="grid.yLabels.length">
                                         <line
                                             v-for="l in grid.yLabels"
+                                            :key="`individual_grid_line_${grid.groupId || grid.id}_${l.value}_${l.y}`"
                                             :x1="drawingArea?.left"
                                             :x2="drawingArea?.right"
                                             :y1="forceValidValue(l.y)"
@@ -6344,10 +6958,16 @@ defineExpose({
                         </template>
 
                         <!-- HIGHLIGHT AREAS -->
-                        <g v-for="oneArea in highlightAreas">
+                        <g
+                            v-for="oneArea in highlightAreas"
+                            :key="`highlight_area_${oneArea.from}_${oneArea.span}_${oneArea.color}`"
+                        >
                             <template v-if="oneArea.show">
                                 <!-- HIGHLIGHT AREA FILLED RECT UNITS -->
-                                <g v-for="(_, i) in oneArea.span">
+                                <g
+                                    v-for="(_, i) in oneArea.span"
+                                    :key="`highlight_area_rect_${oneArea.from}_${i}`"
+                                >
                                     <rect
                                         data-cy="highlight-area"
                                         :style="{
@@ -6385,7 +7005,10 @@ defineExpose({
                                     />
                                 </g>
                                 <!-- HIGHLIGHT AREA CAPTION -->
-                                <g v-for="(_, i) in oneArea.span">
+                                <g
+                                    v-for="(_, i) in oneArea.span"
+                                    :key="`highlight_area_caption_${oneArea.from}_${i}`"
+                                >
                                     <foreignObject
                                         v-if="oneArea.caption.text && i === 0"
                                         :x="
@@ -6811,7 +7434,10 @@ defineExpose({
                             style="transition: opacity 0.2s"
                         >
                             <template v-if="mutableConfig.useIndividualScale">
-                                <g v-for="el in allScales">
+                                <g
+                                    v-for="el in allScales"
+                                    :key="`individual_scale_axis_${el.groupId || el.id}`"
+                                >
                                     <line
                                         :x1="
                                             mutableConfig.isStacked
@@ -6865,6 +7491,7 @@ defineExpose({
 
                                 <g
                                     v-for="el in allScales"
+                                    :key="`individual_scale_label_${el.groupId || el.id}`"
                                     :style="`opacity:${selectedScale ? (selectedScale === el.groupId ? 1 : 0.3) : 1};transition:opacity 0.2s ease-in-out`"
                                 >
                                     <text
@@ -6940,7 +7567,10 @@ defineExpose({
                                         }}
                                     </text>
 
-                                    <template v-for="(yLabel, j) in el.yLabels">
+                                    <template
+                                        v-for="(yLabel, j) in el.yLabels"
+                                        :key="`individual_scale_y_crosshair_${el.groupId || el.id}_${yLabel.value}_${j}`"
+                                    >
                                         <line
                                             v-if="
                                                 FINAL_CONFIG.chart.grid.labels
@@ -6992,6 +7622,7 @@ defineExpose({
 
                                     <text
                                         v-for="(yLabel, j) in el.yLabels"
+                                        :key="`individual_scale_y_label_${el.groupId || el.id}_${yLabel.value}_${j}`"
                                         :transform="`translate(${
                                             mutableConfig.isStacked
                                                 ? yAxisLabelsAreRight
@@ -7340,19 +7971,86 @@ defineExpose({
                         </g>
 
                         <!-- LINE COATINGS -->
+                        <!-- LINE COATINGS -->
                         <g
                             v-for="(serie, i) in lineSet"
                             :key="`serie_line_${serie.id}`"
                             :class="`serie_line_${i}`"
                             :style="`opacity:${selectedScale ? (selectedScale === serie.groupId ? 1 : 0.2) : 1};transition:opacity 0.2s ease-in-out`"
                         >
+                            <template v-if="serie.hasDashedSegments">
+                                <template v-if="serie.smooth">
+                                    <path
+                                        v-for="seg in serie.dashedSmooth"
+                                        :key="`line_coating_smooth_segment_${seg.path}`"
+                                        data-cy="datapoint-line-coating-smooth-segment"
+                                        fill="none"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        :d="`M ${seg.path}`"
+                                        :stroke="
+                                            FINAL_CONFIG.chart.backgroundColor
+                                        "
+                                        :stroke-width="
+                                            FINAL_CONFIG.line.strokeWidth + 1
+                                        "
+                                        :stroke-dasharray="
+                                            seg.dashed
+                                                ? FINAL_CONFIG.line
+                                                      .strokeWidth * 2
+                                                : 0
+                                        "
+                                        :style="{
+                                            transition:
+                                                loading ||
+                                                !FINAL_CONFIG.line
+                                                    .showTransition
+                                                    ? undefined
+                                                    : `all ${FINAL_CONFIG.line.transitionDurationMs}ms ease-in-out`,
+                                        }"
+                                    />
+                                </template>
+
+                                <template v-else>
+                                    <path
+                                        v-for="seg in serie.dashedStraight"
+                                        :key="`line_coating_straight_segment_${seg.path}`"
+                                        data-cy="datapoint-line-coating-straight-segment"
+                                        fill="none"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        :d="`M ${seg.path}`"
+                                        :stroke="
+                                            FINAL_CONFIG.chart.backgroundColor
+                                        "
+                                        :stroke-width="
+                                            FINAL_CONFIG.line.strokeWidth + 1
+                                        "
+                                        :stroke-dasharray="
+                                            seg.dashed
+                                                ? FINAL_CONFIG.line
+                                                      .strokeWidth * 2
+                                                : 0
+                                        "
+                                        :style="{
+                                            transition:
+                                                loading ||
+                                                !FINAL_CONFIG.line
+                                                    .showTransition
+                                                    ? undefined
+                                                    : `all ${FINAL_CONFIG.line.transitionDurationMs}ms ease-in-out`,
+                                        }"
+                                    />
+                                </template>
+                            </template>
+
                             <path
-                                data-cy="datapoint-line-coating-smooth"
-                                v-if="
+                                v-else-if="
                                     serie.smooth &&
                                     serie.plots.length > 1 &&
                                     !!serie.curve
                                 "
+                                data-cy="datapoint-line-coating-smooth"
                                 :d="`M${serie.curve}`"
                                 :stroke="FINAL_CONFIG.chart.backgroundColor"
                                 :stroke-width="
@@ -7364,6 +8062,8 @@ defineExpose({
                                         : 0
                                 "
                                 fill="none"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
                                 :style="{
                                     transition:
                                         loading ||
@@ -7374,10 +8074,10 @@ defineExpose({
                             />
 
                             <path
-                                data-cy="datapoint-line-coating-straight"
                                 v-else-if="
                                     serie.plots.length > 1 && !!serie.straight
                                 "
+                                data-cy="datapoint-line-coating-straight"
                                 :d="`M${serie.straight}`"
                                 :stroke="FINAL_CONFIG.chart.backgroundColor"
                                 :stroke-width="
@@ -7596,6 +8296,14 @@ defineExpose({
                                                       .strokeWidth * 2
                                                 : 0
                                         "
+                                        :style="{
+                                            transition:
+                                                loading ||
+                                                !FINAL_CONFIG.line
+                                                    .showTransition
+                                                    ? undefined
+                                                    : `all ${FINAL_CONFIG.line.transitionDurationMs}ms ease-in-out`,
+                                        }"
                                     />
                                 </template>
                                 <template v-else>
@@ -7621,6 +8329,14 @@ defineExpose({
                                                       .strokeWidth * 2
                                                 : 0
                                         "
+                                        :style="{
+                                            transition:
+                                                loading ||
+                                                !FINAL_CONFIG.line
+                                                    .showTransition
+                                                    ? undefined
+                                                    : `all ${FINAL_CONFIG.line.transitionDurationMs}ms ease-in-out`,
+                                        }"
                                     />
                                 </template>
                             </template>
@@ -7777,6 +8493,38 @@ defineExpose({
                                 mutableConfig.dataLabels.show
                             "
                         >
+                            <!-- BAR DATA LABELS -->
+                            <template
+                                v-for="item in barDataLabelItems"
+                                :key="item.key"
+                            >
+                                <text
+                                    data-cy="datapoint-bar-label"
+                                    :text-anchor="
+                                        getDataLabelTextAnchor({
+                                            plot: item.plot,
+                                            type: 'bar',
+                                        })
+                                    "
+                                    :font-size="fontSizes.plotLabels"
+                                    :transform="
+                                        getDataLabelTransformBar({
+                                            plot: item.plot,
+                                        })
+                                    "
+                                    :fill="FINAL_CONFIG.bar.labels.color"
+                                    :stroke="FINAL_CONFIG.chart.backgroundColor"
+                                    paint-order="stroke"
+                                    :style="`opacity:${selectedScale ? (selectedScale === item.serie.groupId ? 1 : 0.2) : 1};transition:opacity 0.2s ease-in-out`"
+                                    v-html="
+                                        getDataLabelContent({
+                                            serie: item.serie,
+                                            plot: item.plot,
+                                            type: 'bar',
+                                        })
+                                    "
+                                />
+                            </template>
                             <template
                                 v-for="(serie, i) in barSet"
                                 :key="`xLabel_bar_${serie.id}`"
@@ -7786,47 +8534,6 @@ defineExpose({
                                     v-for="(plot, j) in serie.plots"
                                     :key="`xLabel_bar_${i}_${j}`"
                                 >
-                                    <text
-                                        data-cy="datapoint-bar-label"
-                                        v-if="
-                                            plot &&
-                                            (!Object.hasOwn(
-                                                serie,
-                                                'dataLabels',
-                                            ) ||
-                                                serie.dataLabels === true ||
-                                                (selectedSerieIndex !== null &&
-                                                    selectedSerieIndex === j) ||
-                                                (selectedMinimapIndex !==
-                                                    null &&
-                                                    selectedMinimapIndex ===
-                                                        j)) &&
-                                            FINAL_CONFIG.bar.labels.show
-                                        "
-                                        :text-anchor="
-                                            getDataLabelTextAnchor({
-                                                plot,
-                                                type: 'bar',
-                                            })
-                                        "
-                                        :font-size="fontSizes.plotLabels"
-                                        :transform="
-                                            getDataLabelTransformBar({ plot })
-                                        "
-                                        :fill="FINAL_CONFIG.bar.labels.color"
-                                        :stroke="
-                                            FINAL_CONFIG.chart.backgroundColor
-                                        "
-                                        paint-order="stroke"
-                                        :style="`opacity:${selectedScale ? (selectedScale === serie.groupId ? 1 : 0.2) : 1};transition:opacity 0.2s ease-in-out`"
-                                        v-html="
-                                            getDataLabelContent({
-                                                serie,
-                                                plot,
-                                                type: 'bar',
-                                            })
-                                        "
-                                    />
                                     <text
                                         v-if="
                                             plot &&
@@ -7885,56 +8592,41 @@ defineExpose({
                                 mutableConfig.dataLabels.show
                             "
                         >
+                            <!-- PLOT DATA LABELS -->
                             <template
-                                v-for="(serie, i) in plotSet"
-                                :key="`xLabel_plot_${serie.id}`"
-                                :class="`xLabel_plot_${i}`"
+                                v-for="item in plotDataLabelItems"
+                                :key="item.key"
                             >
-                                <template
-                                    v-for="(plot, j) in serie.plots"
-                                    :key="`xLabel_plot_${i}_${j}`"
-                                >
-                                    <text
-                                        data-cy="datapoint-plot-label"
-                                        v-if="
-                                            (plot &&
-                                                !Object.hasOwn(
-                                                    serie,
-                                                    'dataLabels',
-                                                )) ||
-                                            serie.dataLabels === true ||
-                                            isSelectedDatapoint(serie, plot, j)
-                                        "
-                                        :transform="
-                                            getDataLabelTransformLineOrPlot({
-                                                plot,
-                                                type: 'plot',
-                                            })
-                                        "
-                                        :text-anchor="
-                                            getDataLabelTextAnchor({
-                                                plot,
-                                                type: 'plot',
-                                            })
-                                        "
-                                        :font-size="fontSizes.plotLabels"
-                                        :fill="FINAL_CONFIG.plot.labels.color"
-                                        :stroke="
-                                            FINAL_CONFIG.chart.backgroundColor
-                                        "
-                                        paint-order="stroke"
-                                        :style="`opacity:${selectedScale ? (selectedScale === serie.groupId ? 1 : 0.2) : 1};transition:opacity 0.2s ease-in-out`"
-                                        v-html="
-                                            getDataLabelContent({
-                                                serie,
-                                                plot,
-                                                type: 'plot',
-                                            })
-                                        "
-                                    />
-                                </template>
+                                <text
+                                    data-cy="datapoint-plot-label"
+                                    :transform="
+                                        getDataLabelTransformLineOrPlot({
+                                            plot: item.plot,
+                                            type: 'plot',
+                                        })
+                                    "
+                                    :text-anchor="
+                                        getDataLabelTextAnchor({
+                                            plot: item.plot,
+                                            type: 'plot',
+                                        })
+                                    "
+                                    :font-size="fontSizes.plotLabels"
+                                    :fill="FINAL_CONFIG.plot.labels.color"
+                                    :stroke="FINAL_CONFIG.chart.backgroundColor"
+                                    paint-order="stroke"
+                                    :style="`opacity:${selectedScale ? (selectedScale === item.serie.groupId ? 1 : 0.2) : 1};transition:opacity 0.2s ease-in-out`"
+                                    v-html="
+                                        getDataLabelContent({
+                                            serie: item.serie,
+                                            plot: item.plot,
+                                            type: 'plot',
+                                        })
+                                    "
+                                />
                             </template>
                         </g>
+
                         <g v-else>
                             <template
                                 v-for="(serie, i) in plotSet"
@@ -8053,54 +8745,38 @@ defineExpose({
                                 mutableConfig.dataLabels.show
                             "
                         >
+                            <!-- LINE DATA LABELS -->
                             <template
-                                v-for="(serie, i) in lineSet"
-                                :key="`xLabel_line_${serie.id}`"
-                                :class="`xLabel_line_${i}`"
+                                v-for="item in lineDataLabelItems"
+                                :key="item.key"
                             >
-                                <template
-                                    v-for="(plot, j) in serie.plots"
-                                    :key="`xLabel_line_${i}_${j}`"
-                                >
-                                    <text
-                                        data-cy="datapoint-line-label"
-                                        v-if="
-                                            (plot &&
-                                                !Object.hasOwn(
-                                                    serie,
-                                                    'dataLabels',
-                                                )) ||
-                                            serie.dataLabels === true ||
-                                            isSelectedDatapoint(serie, plot, j)
-                                        "
-                                        :transform="
-                                            getDataLabelTransformLineOrPlot({
-                                                plot,
-                                                type: 'line',
-                                            })
-                                        "
-                                        :text-anchor="
-                                            getDataLabelTextAnchor({
-                                                plot,
-                                                type: 'line',
-                                            })
-                                        "
-                                        :font-size="fontSizes.plotLabels"
-                                        :fill="FINAL_CONFIG.line.labels.color"
-                                        :stroke="
-                                            FINAL_CONFIG.chart.backgroundColor
-                                        "
-                                        paint-order="stroke"
-                                        :style="`opacity:${selectedScale ? (selectedScale === serie.groupId ? 1 : 0.2) : 1};transition:opacity 0.2s ease-in-out`"
-                                        v-html="
-                                            getDataLabelContent({
-                                                serie,
-                                                plot,
-                                                type: 'line',
-                                            })
-                                        "
-                                    />
-                                </template>
+                                <text
+                                    data-cy="datapoint-line-label"
+                                    :transform="
+                                        getDataLabelTransformLineOrPlot({
+                                            plot: item.plot,
+                                            type: 'line',
+                                        })
+                                    "
+                                    :text-anchor="
+                                        getDataLabelTextAnchor({
+                                            plot: item.plot,
+                                            type: 'line',
+                                        })
+                                    "
+                                    :font-size="fontSizes.plotLabels"
+                                    :fill="FINAL_CONFIG.line.labels.color"
+                                    :stroke="FINAL_CONFIG.chart.backgroundColor"
+                                    paint-order="stroke"
+                                    :style="`opacity:${selectedScale ? (selectedScale === item.serie.groupId ? 1 : 0.2) : 1};transition:opacity 0.2s ease-in-out`"
+                                    v-html="
+                                        getDataLabelContent({
+                                            serie: item.serie,
+                                            plot: item.plot,
+                                            type: 'line',
+                                        })
+                                    "
+                                />
                             </template>
                         </g>
 
@@ -8488,6 +9164,7 @@ defineExpose({
                             <defs>
                                 <linearGradient
                                     v-for="(trap, i) in allScales"
+                                    :key="`individual_scale_gradient_${trap.groupId || trap.id || i}`"
                                     :id="`individual_scale_gradient_${uniqueId}_${i}`"
                                     :x1="yAxisLabelsAreRight ? '100%' : '0%'"
                                     :x2="yAxisLabelsAreRight ? '0%' : '100%'"
@@ -8510,6 +9187,7 @@ defineExpose({
                             </defs>
                             <rect
                                 v-for="(trap, i) in allScales"
+                                :key="`individual_scale_background_${trap.groupId || trap.id || i}`"
                                 :x="
                                     yAxisLabelsAreRight
                                         ? trap.x
@@ -8665,9 +9343,7 @@ defineExpose({
                                                         ? 'pointer'
                                                         : 'default',
                                             }"
-                                            @click="
-                                                () => selectTimeLabel(label, i)
-                                            "
+                                            @click="selectTimeLabel(label, i)"
                                         >
                                             {{ label.text || '' }}
                                         </text>
@@ -8711,9 +9387,7 @@ defineExpose({
                                                     y: 0,
                                                 })
                                             "
-                                            @click="
-                                                () => selectTimeLabel(label, i)
-                                            "
+                                            @click="selectTimeLabel(label, i)"
                                         />
                                     </template>
                                 </g>
@@ -8769,7 +9443,7 @@ defineExpose({
                         >
                             <g
                                 v-for="annotation in annotationsY"
-                                :key="annotation.uid"
+                                :key="annotation.id"
                             >
                                 <line
                                     v-if="
@@ -9491,7 +10165,7 @@ defineExpose({
                                     absoluteDataset.length === 1,
                                 'vue-ui-xy-legend-item': true,
                                 'vue-ui-xy-legend-item-segregated':
-                                    segregatedSeries.includes(legendItem.id),
+                                    segregatedSeriesSet.has(legendItem.id),
                             }"
                             :style="{
                                 cursor: isCursorPointer ? 'pointer' : 'default',

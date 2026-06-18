@@ -1510,6 +1510,40 @@
             "id": "4b423dba-9fc5-45b8-9dca-20e1f2678b9e",
             "createdAt": 1779169675598,
             "updatedAt": 1779522497320
+        },
+        {
+            "title": "continuous mode not applied in SSR",
+            "component": "VueUiXy",
+            "description": "Continuous mode is not applied in SSR",
+            "priority": 2,
+            "author": "graphieros",
+            "done": true,
+            "exchanges": [],
+            "type": "bug",
+            "withComponentCheckList": false,
+            "checkList": {},
+            "withCustomCheckList": false,
+            "customCheckList": {},
+            "id": "85fa9877-4f69-435f-be3c-5142b6070007",
+            "createdAt": 1781763659528,
+            "updatedAt": 1781792653828
+        },
+        {
+            "title": "table continuous mode",
+            "component": "VueUiXy",
+            "description": "The table is missing proper formatting for continuous series.",
+            "priority": 2,
+            "author": "graphieros",
+            "done": true,
+            "exchanges": [],
+            "type": "bug",
+            "withComponentCheckList": false,
+            "checkList": {},
+            "withCustomCheckList": false,
+            "customCheckList": {},
+            "id": "bc87a86a-c893-4c19-a42a-c83508d289c3",
+            "createdAt": 1781771348805,
+            "updatedAt": 1781791241305
         }
     ]
 }
