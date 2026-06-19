@@ -7,6 +7,7 @@ import {
     VueUiHorizontalBar,
     VueUiIcon,
     VueUiXy,
+    VueUiWordCloud
 } from 'vue-data-ui';
 import PendingTodoList from './PendingTodoList.vue';
 import DoneTodoList from './DoneTodoList.vue';
@@ -23,6 +24,7 @@ const {
     updateOne,
     deleteOne,
 } = useCrud('/api/items');
+
 
 onMounted(() => {
     readAll();
@@ -690,9 +692,84 @@ const stats = computed(() => {
         },
     };
 });
+
+const ignoredWords = [
+    'IN',
+    'ADD',
+    'TO',
+    'A',
+    'IS',
+    'AS',
+    'TO',
+    '1',
+    'AND',
+    'WITH',
+    'BE',
+    'WHERE',
+    'THE',
+    'FOR',
+    'OF',
+    'NO',
+    'NOT',
+    'OR',
+    'ON',
+    'IF',
+    '2',
+    '3',
+    '4',
+    '5',
+    '6',
+    '7',
+    '8',
+    '9',
+    '0',
+    'AT',
+    'IT',
+    'G',
+    'AN',
+    'BY',
+    'IN',
+    'UP', 
+    'HAS',
+    'SHOULD'
+].map(el => el.toLowerCase())
+
+const wordCloudData = computed(() => {
+    const words = items.value
+        .map(item => [item.title.toLowerCase(), item.description.toLowerCase()].join(' ')
+            .split(' ')
+            .map(w => w.replace('VUEUI', '').replaceAll(',', ' ').replaceAll('_', '').replaceAll('.', ' ').replaceAll('#', '').replaceAll('&', '').replaceAll('-', ' ').replaceAll(':', ' ').replaceAll('/', ' ').replaceAll('(', ' ').replaceAll(')', ' ').replaceAll("'", '').replaceAll('"', '').trim())
+            .filter(w => !ignoredWords.includes(w))
+            .join(' '))
+        .join(' ')
+
+       console.log(words) 
+    return words
+});
+
+const wordCloudConfig = computed(() => ({
+    theme: 'dark',
+    userOptions: {
+        show: false,
+    },
+    style: {
+        chart: {
+            words: {
+                color: '#AAAAAA',
+                usePalette: false,
+                proximity: 20,
+                packingWeight: 10,
+            }
+        }
+    }
+}))
+
 </script>
 
 <template>
+    <div style="width:100%; max-width: 500px; margin: 0 auto;">
+        <VueUiWordCloud v-if="wordCloudData" :dataset="wordCloudData" :config="wordCloudConfig"/>
+    </div>
     <button class="open-btn" @click="openDialog()">
         <VueUiIcon name="checkList" stroke="#8A8A8A" />
         <div class="badge" v-if="toBeDone.length">
