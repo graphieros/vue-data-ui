@@ -3349,6 +3349,14 @@ function createStableIdentifier(prefix, parts) {
     return `${prefix}_${createStableStringHash(parts.join('|'))}`;
 }
 
+function getLinePathTransition() {
+    return loading.value ||
+        disableShapeTransitionForRangeResize.value ||
+        !FINAL_CONFIG.value.line.showTransition
+        ? undefined
+        : `all ${FINAL_CONFIG.value.line.transitionDurationMs}ms ease-in-out`;
+}
+
 /******************************************************************************************/
 /                                 DATAPOINTS COMPUTING                                     /;
 /******************************************************************************************/
@@ -7927,8 +7935,7 @@ defineExpose({
                                     :transition="
                                         loading ||
                                         disableShapeTransitionForRangeResize ||
-                                        !FINAL_CONFIG.plot.showTransition ||
-                                        isSelectedDatapoint(serie, plot, j)
+                                        !FINAL_CONFIG.plot.showTransition
                                             ? undefined
                                             : `all ${FINAL_CONFIG.plot.transitionDurationMs}ms ease-in-out`
                                     "
@@ -7979,7 +7986,6 @@ defineExpose({
                         </g>
 
                         <!-- LINE COATINGS -->
-                        <!-- LINE COATINGS -->
                         <g
                             v-for="(serie, i) in lineSet"
                             :key="`serie_line_${serie.id}`"
@@ -7989,8 +7995,10 @@ defineExpose({
                             <template v-if="serie.hasDashedSegments">
                                 <template v-if="serie.smooth">
                                     <path
-                                        v-for="seg in serie.dashedSmooth"
-                                        :key="`line_coating_smooth_segment_${seg.path}`"
+                                        v-for="(
+                                            seg, segIndex
+                                        ) in serie.dashedSmooth"
+                                        :key="`line_coating_smooth_segment_${serie.id}_${segIndex}`"
                                         data-cy="datapoint-line-coating-smooth-segment"
                                         fill="none"
                                         stroke-linecap="round"
@@ -8009,20 +8017,17 @@ defineExpose({
                                                 : 0
                                         "
                                         :style="{
-                                            transition:
-                                                loading ||
-                                                !FINAL_CONFIG.line
-                                                    .showTransition
-                                                    ? undefined
-                                                    : `all ${FINAL_CONFIG.line.transitionDurationMs}ms ease-in-out`,
+                                            transition: getLinePathTransition(),
                                         }"
                                     />
                                 </template>
 
                                 <template v-else>
                                     <path
-                                        v-for="seg in serie.dashedStraight"
-                                        :key="`line_coating_straight_segment_${seg.path}`"
+                                        v-for="(
+                                            seg, segIndex
+                                        ) in serie.dashedStraight"
+                                        :key="`line_coating_straight_segment_${serie.id}_${segIndex}`"
                                         data-cy="datapoint-line-coating-straight-segment"
                                         fill="none"
                                         stroke-linecap="round"
@@ -8041,12 +8046,7 @@ defineExpose({
                                                 : 0
                                         "
                                         :style="{
-                                            transition:
-                                                loading ||
-                                                !FINAL_CONFIG.line
-                                                    .showTransition
-                                                    ? undefined
-                                                    : `all ${FINAL_CONFIG.line.transitionDurationMs}ms ease-in-out`,
+                                            transition: getLinePathTransition(),
                                         }"
                                     />
                                 </template>
@@ -8072,13 +8072,7 @@ defineExpose({
                                 fill="none"
                                 stroke-linecap="round"
                                 stroke-linejoin="round"
-                                :style="{
-                                    transition:
-                                        loading ||
-                                        !FINAL_CONFIG.line.showTransition
-                                            ? undefined
-                                            : `all ${FINAL_CONFIG.line.transitionDurationMs}ms ease-in-out`,
-                                }"
+                                :style="{ transition: getLinePathTransition() }"
                             />
 
                             <path
@@ -8099,13 +8093,7 @@ defineExpose({
                                 fill="none"
                                 stroke-linecap="round"
                                 stroke-linejoin="round"
-                                :style="{
-                                    transition:
-                                        loading ||
-                                        !FINAL_CONFIG.line.showTransition
-                                            ? undefined
-                                            : `all ${FINAL_CONFIG.line.transitionDurationMs}ms ease-in-out`,
-                                }"
+                                :style="{ transition: getLinePathTransition() }"
                             />
                         </g>
 
@@ -8139,13 +8127,7 @@ defineExpose({
                                 "
                                 stroke="none"
                                 pointer-events="none"
-                                :style="{
-                                    transition:
-                                        loading ||
-                                        !FINAL_CONFIG.line.showTransition
-                                            ? undefined
-                                            : `all ${FINAL_CONFIG.line.transitionDurationMs}ms ease-in-out`,
-                                }"
+                                :style="{ transition: getLinePathTransition() }"
                             />
                         </g>
 
@@ -8179,11 +8161,7 @@ defineExpose({
                                             "
                                             :style="{
                                                 transition:
-                                                    loading ||
-                                                    !FINAL_CONFIG.line
-                                                        .showTransition
-                                                        ? undefined
-                                                        : `all ${FINAL_CONFIG.line.transitionDurationMs}ms ease-in-out`,
+                                                    getLinePathTransition(),
                                             }"
                                         />
                                         <path
@@ -8192,11 +8170,7 @@ defineExpose({
                                             :fill="`url(#pattern_${uniqueId}_${serie.slotAbsoluteIndex})`"
                                             :style="{
                                                 transition:
-                                                    loading ||
-                                                    !FINAL_CONFIG.line
-                                                        .showTransition
-                                                        ? undefined
-                                                        : `all ${FINAL_CONFIG.line.transitionDurationMs}ms ease-in-out`,
+                                                    getLinePathTransition(),
                                             }"
                                         />
                                     </template>
@@ -8224,11 +8198,7 @@ defineExpose({
                                             "
                                             :style="{
                                                 transition:
-                                                    loading ||
-                                                    !FINAL_CONFIG.line
-                                                        .showTransition
-                                                        ? undefined
-                                                        : `all ${FINAL_CONFIG.line.transitionDurationMs}ms ease-in-out`,
+                                                    getLinePathTransition(),
                                             }"
                                         />
                                         <path
@@ -8237,11 +8207,7 @@ defineExpose({
                                             :fill="`url(#pattern_${uniqueId}_${serie.slotAbsoluteIndex})`"
                                             :style="{
                                                 transition:
-                                                    loading ||
-                                                    !FINAL_CONFIG.line
-                                                        .showTransition
-                                                        ? undefined
-                                                        : `all ${FINAL_CONFIG.line.transitionDurationMs}ms ease-in-out`,
+                                                    getLinePathTransition(),
                                             }"
                                         />
                                     </template>
@@ -8271,20 +8237,16 @@ defineExpose({
                                 "
                                 fill="none"
                                 stroke-linecap="round"
-                                :style="{
-                                    transition:
-                                        loading ||
-                                        !FINAL_CONFIG.line.showTransition
-                                            ? undefined
-                                            : `all ${FINAL_CONFIG.line.transitionDurationMs}ms ease-in-out`,
-                                }"
+                                :style="{ transition: getLinePathTransition() }"
                             />
 
                             <template v-else-if="serie.hasDashedSegments">
                                 <template v-if="serie.smooth">
                                     <path
-                                        v-for="seg in serie.dashedSmooth"
-                                        :key="seg.path"
+                                        v-for="(
+                                            seg, segIndex
+                                        ) in serie.dashedSmooth"
+                                        :key="`line_smooth_segment_${serie.id}_${segIndex}`"
                                         fill="none"
                                         stroke-linecap="round"
                                         stroke-linejoin="round"
@@ -8305,19 +8267,16 @@ defineExpose({
                                                 : 0
                                         "
                                         :style="{
-                                            transition:
-                                                loading ||
-                                                !FINAL_CONFIG.line
-                                                    .showTransition
-                                                    ? undefined
-                                                    : `all ${FINAL_CONFIG.line.transitionDurationMs}ms ease-in-out`,
+                                            transition: getLinePathTransition(),
                                         }"
                                     />
                                 </template>
                                 <template v-else>
                                     <path
-                                        v-for="seg in serie.dashedStraight"
-                                        :key="seg.path"
+                                        v-for="(
+                                            seg, segIndex
+                                        ) in serie.dashedStraight"
+                                        :key="`line_straight_segment_${serie.id}_${segIndex}`"
                                         fill="none"
                                         stroke-linecap="round"
                                         stroke-linejoin="round"
@@ -8338,12 +8297,7 @@ defineExpose({
                                                 : 0
                                         "
                                         :style="{
-                                            transition:
-                                                loading ||
-                                                !FINAL_CONFIG.line
-                                                    .showTransition
-                                                    ? undefined
-                                                    : `all ${FINAL_CONFIG.line.transitionDurationMs}ms ease-in-out`,
+                                            transition: getLinePathTransition(),
                                         }"
                                     />
                                 </template>
@@ -8370,13 +8324,7 @@ defineExpose({
                                 fill="none"
                                 stroke-linecap="round"
                                 stroke-linejoin="round"
-                                :style="{
-                                    transition:
-                                        loading ||
-                                        !FINAL_CONFIG.line.showTransition
-                                            ? undefined
-                                            : `all ${FINAL_CONFIG.line.transitionDurationMs}ms ease-in-out`,
-                                }"
+                                :style="{ transition: getLinePathTransition() }"
                             />
 
                             <template
@@ -8442,8 +8390,7 @@ defineExpose({
                                     :transition="
                                         loading ||
                                         disableShapeTransitionForRangeResize ||
-                                        !FINAL_CONFIG.line.showTransition ||
-                                        isSelectedDatapoint(serie, plot, j)
+                                        !FINAL_CONFIG.line.showTransition
                                             ? undefined
                                             : `all ${FINAL_CONFIG.line.transitionDurationMs}ms ease-in-out`
                                     "
@@ -8490,6 +8437,105 @@ defineExpose({
                                         </div>
                                     </foreignObject>
                                 </template>
+                            </template>
+                        </g>
+
+                        <!-- ORIGINAL FIRST LINE SERIES DOT OVERLAY -->
+                        <g
+                            v-if="originalFirstLineSeriesDotOverlay"
+                            :key="`original_first_line_overlay_${originalFirstLineSeriesDotOverlay.id}`"
+                            :style="`opacity:${selectedScale ? (selectedScale === originalFirstLineSeriesDotOverlay.groupId ? 1 : 0.2) : 1};transition:opacity 0.2s ease-in-out`"
+                        >
+                            <template
+                                v-for="(
+                                    plot, j
+                                ) in originalFirstLineSeriesDotOverlay.plots"
+                                :key="`original_first_line_overlay_dot_${originalFirstLineSeriesDotOverlay.id}_${j}`"
+                            >
+                                <Shape
+                                    data-cy="datapoint-line-plot"
+                                    v-if="
+                                        (!optimize.linePlot &&
+                                            plot &&
+                                            canShowValue(plot.value)) ||
+                                        (optimize.linePlot &&
+                                            plot &&
+                                            canShowValue(plot.value) &&
+                                            ((selectedSerieIndex !== null &&
+                                                selectedSerieIndex === j) ||
+                                                (selectedMinimapIndex !==
+                                                    null &&
+                                                    selectedMinimapIndex ===
+                                                        j))) ||
+                                        isPlotAlone(
+                                            originalFirstLineSeriesDotOverlay.plots,
+                                            j,
+                                        )
+                                    "
+                                    :shape="
+                                        [
+                                            'triangle',
+                                            'square',
+                                            'diamond',
+                                            'pentagon',
+                                            'hexagon',
+                                            'star',
+                                        ].includes(
+                                            originalFirstLineSeriesDotOverlay.shape,
+                                        )
+                                            ? originalFirstLineSeriesDotOverlay.shape
+                                            : 'circle'
+                                    "
+                                    :color="
+                                        FINAL_CONFIG.line.useGradient
+                                            ? `url(#lineGradient_0_${uniqueId})`
+                                            : FINAL_CONFIG.line.dot
+                                                    .useSerieColor
+                                              ? originalFirstLineSeriesDotOverlay.color
+                                              : FINAL_CONFIG.line.dot.fill
+                                    "
+                                    :plot="{
+                                        x: checkNaN(plot.x),
+                                        y: checkNaN(plot.y),
+                                    }"
+                                    :radius="
+                                        isSelectedDatapoint(
+                                            originalFirstLineSeriesDotOverlay,
+                                            plot,
+                                            j,
+                                        )
+                                            ? selectedPlotRadius || 0
+                                            : isPlotAlone(
+                                                    originalFirstLineSeriesDotOverlay.plots,
+                                                    j,
+                                                )
+                                              ? plotRadii.line || 0
+                                              : plotRadii.line || 0
+                                    "
+                                    :stroke="
+                                        FINAL_CONFIG.line.dot.useSerieColor
+                                            ? FINAL_CONFIG.chart.backgroundColor
+                                            : originalFirstLineSeriesDotOverlay.color
+                                    "
+                                    :strokeWidth="
+                                        FINAL_CONFIG.line.dot.strokeWidth
+                                    "
+                                    :transition="
+                                        loading ||
+                                        disableShapeTransitionForRangeResize ||
+                                        !FINAL_CONFIG.line.showTransition ||
+                                        isSelectedDatapoint(
+                                            originalFirstLineSeriesDotOverlay,
+                                            plot,
+                                            j,
+                                        )
+                                            ? undefined
+                                            : `all ${FINAL_CONFIG.line.transitionDurationMs}ms ease-in-out`
+                                    "
+                                    :still="
+                                        disableShapeTransitionForRangeResize
+                                    "
+                                />
                             </template>
                         </g>
 
