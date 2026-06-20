@@ -269,6 +269,7 @@ const dragStarted = ref(false);
 const dragStartClientX = ref(0);
 const dragPointerOffsetX = ref(0);
 const minimapSvg = ref(null);
+const isApplyingFocusOnDrag = ref(false);
 
 const isDraggingRangeHandle = computed(() => activeHandle.value !== null);
 
@@ -1195,29 +1196,42 @@ const startDragging = async (event) => {
     initialMouseX.value = x;
     dragStartX.value = x;
 
-    if (props.focusOnDrag && !isZoom.value && zoomWrapper.value) {
-        dragStartIndex.value = clientXToIndex(x);
-        const ratio = Math.min(0.95, Math.max(0.05, props.focusRangeRatio));
+    if (
+        props.focusOnDrag &&
+        !isZoom.value &&
+        zoomWrapper.value &&
+        !isApplyingFocusOnDrag.value
+    ) {
+        isApplyingFocusOnDrag.value = true;
 
-        const total = props.max - props.min;
-        const span = Math.max(1, Math.round(total * ratio));
-        const half = Math.floor(span / 2);
+        try {
+            dragStartIndex.value = clientXToIndex(x);
+            const ratio = Math.min(0.95, Math.max(0.05, props.focusRangeRatio));
+            const total = Number(props.max) - Number(props.min);
+            const span = Math.max(1, Math.round(total * ratio));
+            const half = Math.floor(span / 2);
+            let focusStart = dragStartIndex.value - half;
 
-        let focusStart = dragStartIndex.value - half;
-        focusStart = Math.max(
-            props.min,
-            Math.min(focusStart, props.max - span),
-        );
-        const focusEnd = Math.min(props.max, focusStart + span);
+            focusStart = Math.max(
+                Number(props.min),
+                Math.min(focusStart, Number(props.max) - span),
+            );
 
-        start.value = focusStart;
-        end.value = focusEnd;
-        emitFutureStart(focusStart);
-        emitFutureEnd(focusEnd);
+            const focusEnd = Math.min(Number(props.max), focusStart + span);
 
-        triggerEvent(zoomWrapper.value, 'mouseup');
-        await nextTick();
-        triggerEvent(zoomWrapper.value, 'mousedown', { clientX: x });
+            start.value = focusStart;
+            end.value = focusEnd;
+
+            emitFutureStart(focusStart);
+            emitFutureEnd(focusEnd);
+            triggerEvent(zoomWrapper.value, 'mouseup');
+            await nextTick();
+            triggerEvent(zoomWrapper.value, 'mousedown', { clientX: x });
+        } finally {
+            isApplyingFocusOnDrag.value = false;
+        }
+
+        return;
     }
 
     dragStartStart.value = startValue.value;

@@ -7,7 +7,7 @@ import {
     VueUiHorizontalBar,
     VueUiIcon,
     VueUiXy,
-    VueUiWordCloud
+    VueUiWordCloud,
 } from 'vue-data-ui';
 import PendingTodoList from './PendingTodoList.vue';
 import DoneTodoList from './DoneTodoList.vue';
@@ -26,14 +26,13 @@ const {
     deleteOne,
 } = useCrud('/api/items');
 
-
 onMounted(() => {
     readAll();
 });
 
-const route  = useRoute();
+const route = useRoute();
 
-const isRootRoute = computed(() => route.path === '/')
+const isRootRoute = computed(() => route.path === '/');
 
 const dialog = ref(null);
 const todoDialog = ref(null);
@@ -734,22 +733,41 @@ const ignoredWords = [
     'AN',
     'BY',
     'IN',
-    'UP', 
+    'UP',
     'HAS',
     'SHOULD',
     'ARE',
-    'UN'
-].map(el => el.toLowerCase())
+    'UN',
+].map((el) => el.toLowerCase());
 
 const wordCloudData = computed(() => {
     const words = items.value
-        .map(item => [item.title.toLowerCase(), item.description.toLowerCase()].join(' ')
-            .split(' ')
-            .map(w => w.replace('VUEUI', '').replaceAll(',', ' ').replaceAll('_', '').replaceAll('.', ' ').replaceAll('#', '').replaceAll('&', '').replaceAll('-', ' ').replaceAll(':', ' ').replaceAll('/', ' ').replaceAll('(', ' ').replaceAll(')', ' ').replaceAll("'", '').replaceAll('"', '').trim())
-            .filter(w => !ignoredWords.includes(w))
-            .join(' '))
-        .join(' ')
-    return words
+        .map((item) =>
+            [item.title.toLowerCase(), item.description.toLowerCase()]
+                .join(' ')
+                .split(' ')
+                .map((w) =>
+                    w
+                        .replace('VUEUI', '')
+                        .replaceAll(',', ' ')
+                        .replaceAll('_', '')
+                        .replaceAll('.', ' ')
+                        .replaceAll('#', '')
+                        .replaceAll('&', '')
+                        .replaceAll('-', ' ')
+                        .replaceAll(':', ' ')
+                        .replaceAll('/', ' ')
+                        .replaceAll('(', ' ')
+                        .replaceAll(')', ' ')
+                        .replaceAll("'", '')
+                        .replaceAll('"', '')
+                        .trim(),
+                )
+                .filter((w) => !ignoredWords.includes(w))
+                .join(' '),
+        )
+        .join(' ');
+    return words;
 });
 
 const WIDTH = ref(0);
@@ -767,7 +785,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
     window.removeEventListener('resize', setWH);
-})
+});
 
 const wordCloudConfig = computed(() => ({
     theme: 'dark',
@@ -790,28 +808,32 @@ const wordCloudConfig = computed(() => ({
                 packingWeight: 10,
             },
             zoom: {
-                show: false
-            }
-        }
-    }
-}))
-
-
+                show: false,
+            },
+        },
+    },
+}));
 </script>
 
 <template>
-    <div :style="{
-        position: 'fixed',
-        top: 0,
-        left: 300,
-        width: WIDTH + 'px',
-        height: HEIGHT + 'px',
-        opacity: 0.1,
-        pointerEvents: 'none',
-        userSelect: 'none'
-    }" 
-    v-if="isRootRoute">
-        <VueUiWordCloud v-if="wordCloudData" :dataset="wordCloudData" :config="wordCloudConfig"/>
+    <div
+        :style="{
+            position: 'fixed',
+            top: 0,
+            left: 300,
+            width: WIDTH + 'px',
+            height: HEIGHT + 'px',
+            opacity: 0.1,
+            pointerEvents: 'none',
+            userSelect: 'none',
+        }"
+        v-if="isRootRoute"
+    >
+        <VueUiWordCloud
+            v-if="wordCloudData"
+            :dataset="wordCloudData"
+            :config="wordCloudConfig"
+        />
     </div>
     <button class="open-btn" @click="openDialog()">
         <VueUiIcon name="checkList" stroke="#8A8A8A" />
