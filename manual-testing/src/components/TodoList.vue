@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch, onBeforeUnmount } from 'vue';
 import useCrud from '../composables/useCrud';
 import { createUid, treeShake } from '../../../src/lib';
 import {
@@ -12,6 +12,7 @@ import {
 import PendingTodoList from './PendingTodoList.vue';
 import DoneTodoList from './DoneTodoList.vue';
 import { components } from '../../../cypress/fixtures/vdui-components';
+import { useRoute } from 'vue-router';
 
 const {
     items,
@@ -29,6 +30,10 @@ const {
 onMounted(() => {
     readAll();
 });
+
+const route  = useRoute();
+
+const isRootRoute = computed(() => route.path === '/')
 
 const dialog = ref(null);
 const todoDialog = ref(null);
@@ -731,7 +736,9 @@ const ignoredWords = [
     'IN',
     'UP', 
     'HAS',
-    'SHOULD'
+    'SHOULD',
+    'ARE',
+    'UN'
 ].map(el => el.toLowerCase())
 
 const wordCloudData = computed(() => {
@@ -742,32 +749,68 @@ const wordCloudData = computed(() => {
             .filter(w => !ignoredWords.includes(w))
             .join(' '))
         .join(' ')
-
-       console.log(words) 
     return words
 });
+
+const WIDTH = ref(0);
+const HEIGHT = ref(0);
+
+async function setWH() {
+    WIDTH.value = window.innerWidth - 300;
+    HEIGHT.value = window.innerHeight;
+}
+
+onMounted(() => {
+    setWH();
+    window.addEventListener('resize', setWH);
+});
+
+onBeforeUnmount(() => {
+    window.removeEventListener('resize', setWH);
+})
 
 const wordCloudConfig = computed(() => ({
     theme: 'dark',
     userOptions: {
         show: false,
     },
+    responsive: true,
     style: {
         chart: {
+            controls: {
+                show: false,
+            },
+            tooltip: {
+                show: false,
+            },
             words: {
                 color: '#AAAAAA',
                 usePalette: false,
                 proximity: 20,
                 packingWeight: 10,
+            },
+            zoom: {
+                show: false
             }
         }
     }
 }))
 
+
 </script>
 
 <template>
-    <div style="width:100%; max-width: 500px; margin: 0 auto;">
+    <div :style="{
+        position: 'fixed',
+        top: 0,
+        left: 300,
+        width: WIDTH + 'px',
+        height: HEIGHT + 'px',
+        opacity: 0.1,
+        pointerEvents: 'none',
+        userSelect: 'none'
+    }" 
+    v-if="isRootRoute">
         <VueUiWordCloud v-if="wordCloudData" :dataset="wordCloudData" :config="wordCloudConfig"/>
     </div>
     <button class="open-btn" @click="openDialog()">
