@@ -2,7 +2,7 @@
 /**
  * This playground showcases all the slots and their implementations for <VueUiXy>
  */
-import { computed, ref, watchEffect } from 'vue';
+import { computed, ref, useTemplateRef, watchEffect } from 'vue';
 import {
     VueUiXy,
     type VueUiXyConfig,
@@ -37,6 +37,8 @@ import Watermark from '../slots/common/watermark.vue';
 import Skeleton from '../slots/common/skeleton.vue';
 
 import { createStaticVueUiXy } from 'vue-data-ui/ssr/vue-ui-xy';
+
+import { useTooltipPosition } from 'vue-data-ui/composables';
 
 function makeDs(n: number) {
     const arr = [];
@@ -74,6 +76,10 @@ const dataset = computed<VueUiXyDatasetItem[]>(() => [
         series: [7, 7, 7, 7, 7, 7, 7],
     },
 ]);
+
+const chartRef = useTemplateRef('chartRef');
+
+const tooltipPosition = useTooltipPosition(chartRef);
 
 const testPreconfig = computed<VueUiXyConfig>(() => {
     return {
@@ -389,7 +395,7 @@ const testPreconfig = computed<VueUiXyConfig>(() => {
                 borderColor: '#e1e5e8',
                 borderWidth: 1,
                 backgroundOpacity: 100,
-                position: 'center',
+                position: tooltipPosition.value,
                 offsetY: 24,
                 offsetX: 0,
                 smooth: true,
@@ -669,6 +675,7 @@ watchEffect(async () => {
     <div>
         <div v-html="svgRender" />
         <VueUiXy
+            ref="chartRef"
             :dataset
             :config
             @selectTimeLabel="selectTimeLabel"
