@@ -275,6 +275,7 @@ const entries = {
         'src/entries/vue-ui-pattern-seed.js',
     ),
     utils: resolve(__dirname, 'src/entries/utils.js'),
+    composables: resolve(__dirname, 'src/entries/composables.js'),
     ssr: resolve(__dirname, 'src/svg/ssr.js'),
     'ssr/vue-ui-xy': resolve(__dirname, 'src/svg/entries/vue-ui-xy'),
     'ssr/vue-ui-donut': resolve(__dirname, 'src/svg/entries/vue-ui-donut'),

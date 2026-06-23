@@ -1,5 +1,12 @@
 declare module 'vue-data-ui' {
-    import type { Ref, DefineComponent, VNodeChild, Component } from 'vue';
+    import type {
+        Ref,
+        DefineComponent,
+        VNodeChild,
+        Component,
+        ComputedRef,
+        MaybeRefOrGetter,
+    } from 'vue';
 
     export type VueUiUnknownObj = {
         [key: string]: unknown;
@@ -17358,4 +17365,44 @@ declare module 'vue-data-ui' {
             smoothingTau: number;
         },
     ): Array<{ value: number | null }>;
+
+    //--------------------------------------------------------------------------------------------//
+
+    /**
+     * COMPOSABLE TYPES
+     *
+     * IMPORTANT: these types are duplicated in composables.d.ts
+     * They are kept in vue-data-ui.d.ts for the legacy import from "vue-data-ui" to work.
+     * If we ever ship a v4 these types can be forcefully removed from vue-data-ui.ts, with
+     * a breaking change.
+     */
+
+    //--------------------------------------------------------------------------------------------
+
+    export type TooltipPositionTargetElement =
+        | HTMLElement
+        | {
+              $el?: HTMLElement | null;
+          };
+
+    export type TooltipPositionTarget = MaybeRefOrGetter<
+        TooltipPositionTargetElement | null | undefined
+    >;
+
+    /**
+     * Vue Data UI composable
+     * ---
+     * Returns a dynamic tooltip position based on the mouse position inside a chart element.
+     * ---
+     * This value can be passed to vue-data-ui component configurations using the
+     * `tooltip.position` attribute.
+     *
+     * @param chartRef - A Vue ref, computed ref, getter, raw `HTMLElement`, Vue component instance,
+     * or object exposing a `$el` element used as the chart container.
+     * @returns A computed tooltip position: `"center"` when the mouse is outside the element,
+     * `"left"` when the mouse is on the right side of the element, otherwise `"right"`.
+     */
+    export function useTooltipPosition(
+        chartRef: TooltipPositionTarget,
+    ): ComputedRef<TooltipPosition>;
 }
