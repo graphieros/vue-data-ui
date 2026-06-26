@@ -2615,7 +2615,7 @@ const datasetWithIds = computed(() => {
 const tableSparklineDataset = computed(() => {
     return relativeDataset.value.map((ds) => {
         const source = ds.absoluteValues.map((s) =>
-            [undefined, null].includes(s) ? 0 : s,
+            [undefined, null].includes(s) ? null : s,
         );
         return {
             id: ds.id,
@@ -2659,6 +2659,7 @@ const tableSparklineConfig = computed(() => {
         },
         sparkline: {
             animation: { show: false },
+            cutNullValues: FINAL_CONFIG.value.line.cutNullValues,
         },
     };
 });

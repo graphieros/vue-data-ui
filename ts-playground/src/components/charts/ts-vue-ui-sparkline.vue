@@ -31,7 +31,7 @@ const dataset = computed<VueUiSparklineDatasetItem[]>(() => {
         },
         {
             period: 'period 4',
-            value: -3,
+            value: null,
         },
         {
             period: 'period 5',
@@ -39,7 +39,7 @@ const dataset = computed<VueUiSparklineDatasetItem[]>(() => {
         },
         {
             period: 'period 6',
-            value: -5,
+            value: null,
         },
         {
             period: 'period 7',
@@ -122,7 +122,7 @@ const config = computed<VueUiSparklineConfig>(() => {
             },
         },
         temperatureColors: {
-            show: false,
+            show: true,
             colors: ['#34eb96', '#eb4034'],
         },
         events: {
@@ -150,6 +150,7 @@ const config = computed<VueUiSparklineConfig>(() => {
                 color: '#1f77b4',
                 strokeWidth: 3,
                 smooth: false,
+                cutNullValues: true,
                 dashIndices: [],
                 dashArray: 4,
                 pulse: {

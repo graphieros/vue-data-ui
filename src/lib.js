@@ -1883,6 +1883,79 @@ export function calculateNiceScaleWithExactExtremes(
     };
 }
 
+function normalizeHexColor(hexColor) {
+    if (typeof hexColor !== 'string') {
+        console.error('hexColor must be a string');
+        return '#000000ff';
+    }
+
+    const color = hexColor.trim();
+
+    if (!color.startsWith('#')) {
+        console.error('hexColor must start with #');
+        return '#000000ff';
+    }
+
+    const rawColor = color.slice(1);
+
+    if (![3, 4, 6, 8].includes(rawColor.length)) {
+        console.error('hexColor must be #RGB, #RGBA, #RRGGBB, or #RRGGBBAA');
+        return '#000000ff';
+    }
+
+    if (!/^[0-9a-fA-F]+$/.test(rawColor)) {
+        console.error('hexColor contains invalid characters');
+        return '#000000ff';
+    }
+
+    if (rawColor.length === 3 || rawColor.length === 4) {
+        return `#${rawColor
+            .split('')
+            .map((character) => character + character)
+            .join('')}`;
+    }
+    return color;
+}
+
+const hexToRgba = (hexColor) => {
+    const normalizedHexColor = normalizeHexColor(hexColor);
+    const red = parseInt(normalizedHexColor.substring(1, 3), 16);
+    const green = parseInt(normalizedHexColor.substring(3, 5), 16);
+    const blue = parseInt(normalizedHexColor.substring(5, 7), 16);
+    const alpha =
+        normalizedHexColor.length === 9
+            ? parseInt(normalizedHexColor.substring(7, 9), 16) / 255
+            : 1;
+    return {
+        r: red,
+        g: green,
+        b: blue,
+        a: alpha,
+    };
+};
+
+const rgba_to_hex = ({ r, g, b, a = 1 }) => {
+    const alpha = clamp(a, 0, 1);
+    const hexColor = `#${decimalToHex(r)}${decimalToHex(g)}${decimalToHex(b)}`;
+    if (alpha < 1) return `${hexColor}${decimalToHex(alpha * 255)}`;
+    return hexColor;
+};
+
+export function clamp(value, min, max) {
+    return Math.min(Math.max(value, min), max);
+}
+
+export function interpolate(from, to, amount) {
+    const normalizedAmount = clamp(amount, 0, 1);
+
+    return {
+        r: from.r + (to.r - from.r) * normalizedAmount,
+        g: from.g + (to.g - from.g) * normalizedAmount,
+        b: from.b + (to.b - from.b) * normalizedAmount,
+        a: from.a + (to.a - from.a) * normalizedAmount,
+    };
+}
+
 export function interpolateColorHex(
     minColor,
     maxColor,
@@ -1890,31 +1963,6 @@ export function interpolateColorHex(
     maxValue,
     value,
 ) {
-    const hexToRgba = (hex) => {
-        let r = parseInt(hex.substring(1, 3), 16);
-        let g = parseInt(hex.substring(3, 5), 16);
-        let b = parseInt(hex.substring(5, 7), 16);
-        let a = 1; // Default alpha value
-
-        if (hex.length === 9) {
-            a = parseInt(hex.substring(7, 9), 16) / 255; // Extract alpha value if present
-        }
-
-        return { r, g, b, a };
-    };
-
-    const rgbToHex = ({ r, g, b, a }) => {
-        const decimalToHex = (x) => x.toString(16).padStart(2, '0');
-        const hex = `#${decimalToHex(r)}${decimalToHex(g)}${decimalToHex(b)}`;
-        if (a !== 1) {
-            const alphaHex = Math.round(a * 255)
-                .toString(16)
-                .padStart(2, '0');
-            return hex + alphaHex;
-        }
-        return hex;
-    };
-
     const minColorRgb = hexToRgba(minColor);
     const maxColorRgb = hexToRgba(maxColor);
 
@@ -1938,7 +1986,50 @@ export function interpolateColorHex(
     const interpolatedAlpha =
         minColorRgb.a + (maxColorRgb.a - minColorRgb.a) * normalizedValue;
 
-    return rgbToHex({ ...interpolatedRgb, a: interpolatedAlpha });
+    return rgba_to_hex({ ...interpolatedRgb, a: interpolatedAlpha });
+}
+
+export function interpolateHexColors({ colors, ratio }) {
+    if (!Array.isArray(colors)) {
+        throw new Error('colors must be an array');
+    }
+
+    if (!colors.length) {
+        throw new Error('colors must contain at least 1 hex color');
+    }
+
+    const toHexByte = (value) => {
+        return Math.round(clamp(value, 0, 255))
+            .toString(16)
+            .padStart(2, '0');
+    };
+
+    const rgbaToHex = ({ r, g, b, a = 1 }) => {
+        return `#${toHexByte(r)}${toHexByte(g)}${toHexByte(b)}${toHexByte(
+            clamp(a, 0, 1) * 255,
+        )}`;
+    };
+
+    if (colors.length === 1) {
+        return rgbaToHex(hexToRgba(colors[0]));
+    }
+
+    const normalizedRatio = clamp(ratio, 0, 1);
+    const rgbaColors = colors.map(hexToRgba);
+    const segmentCount = rgbaColors.length - 1;
+    const scaledRatio = normalizedRatio * segmentCount;
+    const segmentIndex = Math.min(Math.floor(scaledRatio), segmentCount - 1);
+    const localRatio = scaledRatio - segmentIndex;
+
+    const startColor = rgbaColors[segmentIndex];
+    const endColor = rgbaColors[segmentIndex + 1];
+
+    return rgbaToHex({
+        r: startColor.r + (endColor.r - startColor.r) * localRatio,
+        g: startColor.g + (endColor.g - startColor.g) * localRatio,
+        b: startColor.b + (endColor.b - startColor.b) * localRatio,
+        a: startColor.a + (endColor.a - startColor.a) * localRatio,
+    });
 }
 
 /**
@@ -4764,5 +4855,7 @@ const lib = {
     createSmoothPathWithCutsSegments,
     svgToClientCoords,
     isValidNumber,
+    interpolateHexColors,
+    clamp,
 };
 export default lib;

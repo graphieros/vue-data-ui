@@ -23,7 +23,7 @@ const dataset = computed<VueUiTableSparklineDatasetItem[]>(() => {
         },
         {
             name: 'Serie 2',
-            values: [8, 12, 13, 25, 31, 42],
+            values: [8, 12, null, 25, null, 42],
             color: '#42d392',
         },
         {
@@ -74,6 +74,7 @@ const testPreconfig = computed<VueUiTableSparklineConfig>(() => {
             strokeWidth: 3,
             type: 'line',
             smooth: true,
+            cutNullValues: true,
             dimensions: {
                 width: 150,
                 heightRatio: 1,

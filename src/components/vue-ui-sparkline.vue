@@ -17,8 +17,13 @@ import {
     calcMedian,
     convertColorToHex,
     createSmoothPath,
+    createIndividualArea,
+    createIndividualAreaWithCuts,
+    createSmoothAreaSegments,
+    createSmoothPathWithCuts,
     createSmoothPathWithCutsSegments,
     createStraightPath,
+    createStraightPathWithCuts,
     createStraightPathWithCutsSegments,
     createUid,
     dataLabel as dl,
@@ -32,6 +37,7 @@ import {
     setOpacity,
     shiftHue,
     treeShake,
+    interpolateHexColors,
     XMLNS,
 } from '../lib';
 import { throttle } from '../canvas-lib';
@@ -710,9 +716,9 @@ const mutableDataset = computed(() => {
     return safeDatasetCopy.value.map((s, i) => {
         const absoluteValue =
             isNaN(s.value) ||
-            [undefined, null, 'NaN', NaN, Infinity, -Infinity].includes(s.value)
+            [undefined, 'NaN', NaN, Infinity, -Infinity].includes(s.value)
                 ? 0
-                : s.value || 0;
+                : s.value;
         const width = drawingArea.value.width / len.value;
         return {
             value: s.value,
@@ -764,22 +770,6 @@ const currentSelectedIndex = computed(() => {
     }
 
     return null;
-});
-
-const area = computed(() => {
-    const start = {
-        x: mutableDataset.value[0].x || 0,
-        y: (svg.value.height || 0) - 6,
-    };
-    const end = {
-        x: mutableDataset.value[mutableDataset.value.length - 1].x || 0,
-        y: (svg.value.height || 0) - 6,
-    };
-    const path = [];
-    mutableDataset.value.forEach((v) => {
-        path.push(`${v.x || 0},${v.y || 0} `);
-    });
-    return [start.x, start.y, ...path, end.x, end.y].toString();
 });
 
 const selectedPlot = ref(undefined);
@@ -888,50 +878,183 @@ const hasDashedSegments = computed(() => {
     );
 });
 
+const lineCutNullValues = computed(() => {
+    return FINAL_CONFIG.value.style.line.cutNullValues;
+});
+
+function canShowPlotValue(value) {
+    return ![null, undefined, 'NaN', NaN, Infinity, -Infinity].includes(value);
+}
+
+function isPlotAlone(plot, plotIndex) {
+    const before = plot[plotIndex - 1];
+    const after = plot[plotIndex + 1];
+
+    const isAlone =
+        (!!before && !!after && before.value == null && after.value == null) ||
+        (!before && !!after && after.value == null) ||
+        (!!before && !after && before.value == null);
+
+    return (
+        canShowPlotValue(plot[plotIndex]?.value) &&
+        isAlone &&
+        lineCutNullValues.value
+    );
+}
+
+function isSelectedPlot(plot, plotIndex) {
+    return (
+        (selectedPlot.value && plot.id === selectedPlot.value.id) ||
+        currentSelectedIndex.value === plotIndex ||
+        FINAL_DATASET.value.length === 1
+    );
+}
+
+function shouldShowPlotCircle(plot, plotIndex) {
+    if (isBar.value || !canShowPlotValue(plot?.value)) {
+        return false;
+    }
+    return (
+        (FINAL_CONFIG.value.style.plot.show &&
+            isSelectedPlot(plot, plotIndex)) ||
+        isPlotAlone(mutableDataset.value, plotIndex)
+    );
+}
+
+function getPlotRadius(plot, plotIndex) {
+    return Math.max(
+        1,
+        isSelectedPlot(plot, plotIndex)
+            ? FINAL_CONFIG.value.style.plot.radius
+            : FINAL_CONFIG.value.style.plot.radius * 0.7,
+    );
+}
+
+function getPlotStroke(plot, plotIndex) {
+    return isSelectedPlot(plot, plotIndex)
+        ? FINAL_CONFIG.value.style.plot.stroke
+        : FINAL_CONFIG.value.style.backgroundColor;
+}
+
+const lineDataset = computed(() => {
+    return lineCutNullValues.value
+        ? mutableDataset.value
+        : mutableDataset.value.filter((plot) => plot.value !== null);
+});
+
+const lineValidDataset = computed(() => {
+    return mutableDataset.value.filter((plot) => plot.value !== null);
+});
+
+const hasEnoughLineValues = computed(() => {
+    return lineValidDataset.value.length > 1;
+});
+
 const smoothLinePath = computed(() => {
-    if (isBar.value) return '';
-    return createSmoothPath(mutableDataset.value);
+    if (isBar.value || !hasEnoughLineValues.value) return '';
+
+    return lineCutNullValues.value
+        ? createSmoothPathWithCuts(mutableDataset.value)
+        : createSmoothPath(lineDataset.value);
 });
 
 const straightLinePath = computed(() => {
-    if (isBar.value) return '';
-    return createStraightPath(mutableDataset.value);
+    if (isBar.value || !hasEnoughLineValues.value) return '';
+
+    return lineCutNullValues.value
+        ? createStraightPathWithCuts(mutableDataset.value)
+        : createStraightPath(lineDataset.value);
 });
 
 const dashedSmoothSegments = computed(() => {
-    if (isBar.value || !hasDashedSegments.value) return [];
+    if (isBar.value || !hasDashedSegments.value || !hasEnoughLineValues.value) {
+        return [];
+    }
+
     return createSmoothPathWithCutsSegments(
-        mutableDataset.value,
+        lineDataset.value,
         FINAL_CONFIG.value.style.line.dashIndices,
     );
 });
 
 const dashedStraightSegments = computed(() => {
-    if (isBar.value || !hasDashedSegments.value) return [];
+    if (isBar.value || !hasDashedSegments.value || !hasEnoughLineValues.value) {
+        return [];
+    }
+
     return createStraightPathWithCutsSegments(
-        mutableDataset.value,
+        lineDataset.value,
         FINAL_CONFIG.value.style.line.dashIndices,
     );
+});
+
+const lineAreaPaths = computed(() => {
+    if (isBar.value || !FINAL_CONFIG.value.style.area.show) return [];
+    if (!hasEnoughLineValues.value) return [];
+
+    if (FINAL_CONFIG.value.style.line.smooth) {
+        return createSmoothAreaSegments(
+            lineDataset.value,
+            drawingArea.value.bottom,
+            lineCutNullValues.value,
+        ).filter(Boolean);
+    }
+
+    const areaPath = lineCutNullValues.value
+        ? createIndividualAreaWithCuts(
+              mutableDataset.value,
+              drawingArea.value.bottom,
+          )
+        : createIndividualArea(lineDataset.value, drawingArea.value.bottom);
+
+    return areaPath
+        .split(';')
+        .filter(Boolean)
+        .map((path) => `M${path}Z`);
 });
 
 const gradientSvgPathData = computed(() => {
     if (isBar.value || !FINAL_CONFIG.value.gradientPath.show) return '';
     if (FINAL_CONFIG.value.temperatureColors.show) return '';
+
     const pathData = FINAL_CONFIG.value.style.line.smooth
         ? smoothLinePath.value
         : straightLinePath.value;
+
     return `M ${pathData || '0,0'}`;
+});
+
+const temperaturePlotColors = computed(() => {
+    if (!FINAL_CONFIG.value.temperatureColors.show) return null;
+    const colors = FINAL_CONFIG.value.temperatureColors.colors;
+    if (!Array.isArray(colors) || !colors.length) return null;
+    return colors.map((color) => convertColorToHex(color));
 });
 
 const temperatureColors = computed(() => {
     if (!FINAL_CONFIG.value.temperatureColors.show) return null;
-    if (isFlatTemperature.value) return null;
-    if (!FINAL_CONFIG.value.temperatureColors.colors.length) return null;
-
-    return FINAL_CONFIG.value.temperatureColors.colors.map((color) =>
-        convertColorToHex(color),
-    );
+    const colors = FINAL_CONFIG.value.temperatureColors.colors;
+    if (!Array.isArray(colors) || !colors.length) return null;
+    return colors.map((color) => convertColorToHex(color));
 });
+
+function getTemperaturePlotRatio(plot) {
+    if (!Number.isFinite(plot?.y)) return 0;
+    const drawingHeight = drawingArea.value.height || 1;
+    const rawRatio = (plot.y - drawingArea.value.top) / drawingHeight;
+    return Math.min(1, Math.max(0, rawRatio));
+}
+
+function getPlotFillColor(plot) {
+    const colors = temperaturePlotColors.value;
+    if (!Array.isArray(colors) || !colors.length) {
+        return plot.color;
+    }
+    return interpolateHexColors({
+        colors,
+        ratio: getTemperaturePlotRatio(plot),
+    });
+}
 
 watch(
     () => [
@@ -1279,18 +1402,26 @@ const a11yTable = computed(() => {
                     <linearGradient
                         v-if="
                             FINAL_CONFIG.temperatureColors.show &&
-                            !!temperatureColors &&
-                            !isFlatTemperature
+                            !!temperatureColors
                         "
                         :id="`temperature_grad_sparkline_${uid}`"
-                        gradientTransform="rotate(90)"
+                        gradientUnits="userSpaceOnUse"
+                        x1="0"
+                        x2="0"
+                        :y1="drawingArea.top"
+                        :y2="drawingArea.bottom"
                     >
                         <stop
-                            v-for="(color, i) in temperatureColors"
-                            :key="`temperature_grad_stop_${i}_${uid}`"
+                            v-for="(color, colorIndex) in temperatureColors"
+                            :key="`temperature_grad_stop_${colorIndex}_${uid}`"
                             :stop-color="color"
                             :offset="
-                                setGradientOffset(i, temperatureColors.length)
+                                temperatureColors.length === 1
+                                    ? '0%'
+                                    : setGradientOffset(
+                                          colorIndex,
+                                          temperatureColors.length,
+                                      )
                             "
                         />
                     </linearGradient>
@@ -1301,34 +1432,21 @@ const a11yTable = computed(() => {
                     v-if="
                         FINAL_CONFIG.style.area.show &&
                         !isBar &&
-                        mutableDataset[0] &&
-                        mutableDataset.length > 1
+                        lineAreaPaths.length
                     "
                 >
                     <path
+                        v-for="(
+                            lineAreaPath, lineAreaPathIndex
+                        ) in lineAreaPaths"
+                        :key="`sparkline_area_${lineAreaPathIndex}_${uid}`"
                         class="vue-ui-sparkline-area"
-                        data-cy="sparkline-smooth-area"
-                        v-if="FINAL_CONFIG.style.line.smooth"
-                        :d="`M ${mutableDataset[0].x},${drawingArea.bottom} ${createSmoothPath(mutableDataset)} L ${mutableDataset.at(-1).x},${drawingArea.bottom} Z`"
-                        :fill="
-                            FINAL_CONFIG.style.area.useGradient
-                                ? `url(#sparkline_gradient_${uid})`
-                                : setOpacity(
-                                      FINAL_CONFIG.style.area.color,
-                                      FINAL_CONFIG.style.area.opacity,
-                                  )
+                        :data-cy="
+                            FINAL_CONFIG.style.line.smooth
+                                ? 'sparkline-smooth-area'
+                                : 'sparkline-angle-area'
                         "
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        :style="{
-                            transition: loading ? undefined : 'all 0.2s',
-                        }"
-                    />
-                    <path
-                        class="vue-ui-sparkline-area"
-                        data-cy="sparkline-angle-area"
-                        v-else
-                        :d="`M${area}Z`"
+                        :d="lineAreaPath"
                         :fill="
                             FINAL_CONFIG.style.area.useGradient
                                 ? `url(#sparkline_gradient_${uid})`
@@ -1567,21 +1685,17 @@ const a11yTable = computed(() => {
 
                 <!-- PLOTS -->
                 <g
-                    v-if="FINAL_CONFIG.style.plot.show"
-                    v-for="(plot, i) in mutableDataset"
+                    v-for="(plot, plotIndex) in mutableDataset"
+                    :key="`sparkline_plot_${plot.id}`"
                 >
                     <circle
                         data-cy="selection-plot"
-                        v-if="
-                            (selectedPlot && plot.id === selectedPlot.id) ||
-                            selectedIndex === i ||
-                            FINAL_DATASET.length === 1
-                        "
+                        v-if="shouldShowPlotCircle(plot, plotIndex)"
                         :cx="plot.x"
                         :cy="plot.y"
-                        :r="FINAL_CONFIG.style.plot.radius"
-                        :fill="plot.color"
-                        :stroke="FINAL_CONFIG.style.plot.stroke"
+                        :r="getPlotRadius(plot, plotIndex)"
+                        :fill="getPlotFillColor(plot)"
+                        :stroke="getPlotStroke(plot, plotIndex)"
                         :stroke-width="FINAL_CONFIG.style.plot.strokeWidth"
                     />
                 </g>

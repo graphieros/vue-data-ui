@@ -5,7 +5,7 @@ export function canShowValue(v) {
 export function fillArray(len, src) {
     const L = safeInt(len);
     const res = Array(L).fill(0);
-    for (let i = 0; i < src.length && i < L; i += 1) res[i] = src[i] ?? 0;
+    for (let i = 0; i < src.length && i < L; i += 1) res[i] = src[i] ?? null;
     return res;
 }
 

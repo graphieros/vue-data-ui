@@ -1354,7 +1354,7 @@ declare module 'vue-data-ui' {
 
     export type VueUiTableSparklineDatasetItem = {
         name: string;
-        values: number[];
+        values: Array<number | null>;
         color?: string;
     };
 
@@ -1387,6 +1387,7 @@ declare module 'vue-data-ui' {
             strokeWidth?: number;
             type?: 'line' | 'bar';
             smooth?: boolean;
+            cutNullValues?: boolean;
             dimensions?: {
                 width?: number;
                 heightRatio?: number;
@@ -9299,15 +9300,8 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiSparklineDatasetItem = {
-        absoluteValue?: number | null;
         period: string | number;
         value: number | null;
-        id?: string;
-        plotValue?: number;
-        toMax?: number;
-        width?: number;
-        x?: number;
-        y?: number;
     };
 
     export type VueUiSparklineConfig = {
@@ -9363,6 +9357,7 @@ declare module 'vue-data-ui' {
                 color?: string;
                 strokeWidth?: number;
                 smooth?: boolean;
+                cutNullValues?: boolean;
                 dashIndices?: number[];
                 dashArray?: number;
                 pulse?: {

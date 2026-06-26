@@ -3071,6 +3071,7 @@ export function useConfig(options = {}) {
                 color: COLOR_BLUE,
                 strokeWidth: 3,
                 smooth: false,
+                cutNullValues: false,
                 dashIndices: [],
                 dashArray: 4,
                 pulse: {
@@ -5068,6 +5069,7 @@ export function useConfig(options = {}) {
             strokeWidth: 3,
             type: SHAPE.LINE,
             smooth: true,
+            cutNullValues: false,
             dimensions: {
                 width: 150,
                 heightRatio: 1,

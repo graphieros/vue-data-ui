@@ -200,6 +200,61 @@ onBeforeUnmount(() => {
     }
 });
 
+function normalizeNullableNumber(value) {
+    if ([null, undefined].includes(value)) {
+        return null;
+    }
+
+    const numericValue = Number(value);
+
+    return Number.isFinite(numericValue) ? numericValue : null;
+}
+
+function isValidNumber(value) {
+    return typeof value === 'number' && Number.isFinite(value);
+}
+
+function getNumericValues(values = []) {
+    return values.map(normalizeNullableNumber).filter(isValidNumber);
+}
+
+function compareNullableNumbers(a, b, sortOrder) {
+    const aValue = normalizeNullableNumber(a);
+    const bValue = normalizeNullableNumber(b);
+
+    const aIsNumber = isValidNumber(aValue);
+    const bIsNumber = isValidNumber(bValue);
+
+    if (aIsNumber && bIsNumber) {
+        return sortOrder === -1 ? aValue - bValue : bValue - aValue;
+    }
+
+    if (aIsNumber) return -1;
+    if (bIsNumber) return 1;
+
+    return 0;
+}
+
+function formatNullableValue(value, rounding, context = {}) {
+    const numericValue = normalizeNullableNumber(value);
+
+    if (numericValue === null) {
+        return '-';
+    }
+
+    return applyDataLabel(
+        FINAL_CONFIG.value.formatter,
+        numericValue,
+        dataLabel({
+            p: FINAL_CONFIG.value.prefix,
+            v: numericValue,
+            s: FINAL_CONFIG.value.suffix,
+            r: rounding,
+        }),
+        context,
+    );
+}
+
 const computedDataset = computed(() => {
     props.dataset.forEach((ds, i) => {
         getMissingDatasetAttributes({
@@ -216,15 +271,19 @@ const computedDataset = computed(() => {
     });
 
     return props.dataset.map((ds, i) => {
-        const cleanValues = (ds.values || []).map((v) =>
-            isNaN(v) ? 0 : (v ?? 0),
-        );
-        const sum = cleanValues.reduce((a, b) => a + b, 0);
-        const average = sum / cleanValues.length;
-        const median = calcMedian(cleanValues);
+        const values = ds.values || [];
+        const numericValues = getNumericValues(values);
+        const sum = numericValues.length
+            ? numericValues.reduce((a, b) => a + b, 0)
+            : null;
+        const average = numericValues.length
+            ? sum / numericValues.length
+            : null;
+        const median = numericValues.length ? calcMedian(numericValues) : null;
+
         return {
             ...ds,
-            values: ds.values || [],
+            values,
             color:
                 convertColorToHex(ds.color) ||
                 customPalette.value[i] ||
@@ -233,10 +292,10 @@ const computedDataset = computed(() => {
             sum,
             average,
             median,
-            sparklineDataset: cleanValues.map((v, i) => {
+            sparklineDataset: values.map((v, i) => {
                 return {
                     period: FINAL_CONFIG.value.colNames[i] || `col ${i}`,
-                    value: v || 0,
+                    value: normalizeNullableNumber(v),
                 };
             }),
         };
@@ -245,13 +304,13 @@ const computedDataset = computed(() => {
 
 function addOrdersAttribute(dataset) {
     const combinedValues = (dataset[0]?.values || []).map((_, index) =>
-        dataset.map((series) => series?.values[index] || []),
+        dataset.map((series) => series?.values?.[index] ?? null),
     );
 
     const orders = combinedValues.map((values) =>
         values
             .map((value, index) => [value, index])
-            .sort((a, b) => b[0] - a[0])
+            .sort((a, b) => compareNullableNumbers(a[0], b[0], 1))
             .map((item) => item[1]),
     );
 
@@ -328,7 +387,7 @@ function orderDatasetByIndex(th, index, order) {
     currentSortingIndex.value = index;
 
     const combinedValues = datasetWithOrders.value.map(
-        (series) => series.values[index] || [],
+        (series) => series.values?.[index] ?? null,
     );
 
     const sortOrder = order;
@@ -343,7 +402,7 @@ function orderDatasetByIndex(th, index, order) {
 
     const sortedIndices = combinedValues
         .map((value, i) => [i, value])
-        .sort((a, b) => sortOrder * (b[1] - a[1]))
+        .sort((a, b) => compareNullableNumbers(a[1], b[1], sortOrder))
         .map((item) => item[0]);
 
     const sortedDataset = sortedIndices.map((i) => datasetWithOrders.value[i]);
@@ -457,20 +516,18 @@ function orderDatasetByAttribute(attribute, index, order) {
     const sortOrder = sortOrders.value[attribute];
 
     const sortedDataset = [...mutableDataset.value].sort((a, b) => {
-        const aValue =
-            a[attribute] ?? (typeof a[attribute] === 'number' ? 0 : '');
-        const bValue =
-            b[attribute] ?? (typeof b[attribute] === 'number' ? 0 : '');
+        const aValue = a[attribute];
+        const bValue = b[attribute];
 
         if (typeof aValue === 'string' && typeof bValue === 'string') {
             return sortOrder === -1
                 ? aValue.localeCompare(bValue)
                 : bValue.localeCompare(aValue);
-        } else if (typeof aValue === 'number' && typeof bValue === 'number') {
-            return sortOrder === -1 ? aValue - bValue : bValue - aValue;
         }
-        return 0;
+
+        return compareNullableNumbers(aValue, bValue, sortOrder);
     });
+
     mutableDataset.value = sortedDataset;
 }
 
@@ -1070,23 +1127,15 @@ defineExpose({
                             "
                         >
                             {{
-                                [null, undefined].includes(tr.values[j])
-                                    ? '-'
-                                    : applyDataLabel(
-                                          FINAL_CONFIG.formatter,
-                                          Number(tr.values[j]),
-                                          dataLabel({
-                                              p: FINAL_CONFIG.prefix,
-                                              v: Number(tr.values[j]),
-                                              s: FINAL_CONFIG.suffix,
-                                              r: FINAL_CONFIG.roundingValues,
-                                          }),
-                                          {
-                                              datapoint: tr,
-                                              seriesIndex: i,
-                                              datapointIndex: j,
-                                          },
-                                      )
+                                formatNullableValue(
+                                    tr.values[j],
+                                    FINAL_CONFIG.roundingValues,
+                                    {
+                                        datapoint: tr,
+                                        seriesIndex: i,
+                                        datapointIndex: j,
+                                    },
+                                )
                             }}
                         </td>
                         <td
@@ -1105,15 +1154,9 @@ defineExpose({
                             class="vue-ui-data-table__tbody__td"
                         >
                             {{
-                                applyDataLabel(
-                                    FINAL_CONFIG.formatter,
+                                formatNullableValue(
                                     tr.sum,
-                                    dataLabel({
-                                        p: FINAL_CONFIG.prefix,
-                                        v: tr.sum,
-                                        s: FINAL_CONFIG.suffix,
-                                        r: FINAL_CONFIG.roundingTotal,
-                                    }),
+                                    FINAL_CONFIG.roundingTotal,
                                     { datapoint: tr.sum, seriesIndex: i },
                                 )
                             }}
@@ -1134,15 +1177,9 @@ defineExpose({
                             class="vue-ui-data-table__tbody__td"
                         >
                             {{
-                                applyDataLabel(
-                                    FINAL_CONFIG.formatter,
+                                formatNullableValue(
                                     tr.average,
-                                    dataLabel({
-                                        p: FINAL_CONFIG.prefix,
-                                        v: tr.average,
-                                        s: FINAL_CONFIG.suffix,
-                                        r: FINAL_CONFIG.roundingAverage,
-                                    }),
+                                    FINAL_CONFIG.roundingAverage,
                                     { datapoint: tr.average, seriesIndex: i },
                                 )
                             }}
@@ -1163,15 +1200,9 @@ defineExpose({
                             class="vue-ui-data-table__tbody__td"
                         >
                             {{
-                                applyDataLabel(
-                                    FINAL_CONFIG.formatter,
+                                formatNullableValue(
                                     tr.median,
-                                    dataLabel({
-                                        p: FINAL_CONFIG.prefix,
-                                        v: tr.median,
-                                        s: FINAL_CONFIG.suffix,
-                                        r: FINAL_CONFIG.roundingMedian,
-                                    }),
+                                    FINAL_CONFIG.roundingMedian,
                                     { datapoint: tr.median, seriesIndex: i },
                                 )
                             }}
@@ -1230,6 +1261,9 @@ defineExpose({
                                             color: tr.color,
                                             smooth: FINAL_CONFIG.sparkline
                                                 .smooth,
+                                            cutNullValues:
+                                                FINAL_CONFIG.sparkline
+                                                    .cutNullValues,
                                             strokeWidth:
                                                 FINAL_CONFIG.sparkline
                                                     .strokeWidth,

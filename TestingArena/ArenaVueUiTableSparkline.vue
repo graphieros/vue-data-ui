@@ -23,7 +23,7 @@ const dataset = ref([
     },
     {
         name: 'Serie 2',
-        values: [8.2, 12, 13, 25, 31, 42, 53, 42, 31, 25, 13, 12, 8],
+        values: [8.2, 12, 13, null, 31, null, null, 42, 31, 25, 13, 12, 8],
     },
     {
         name: 'Serie 3',
@@ -79,6 +79,7 @@ const model = createModel([
     NUMBER('sparkline.strokeWidth', { def: 3, min: 1, max: 12 }),
     SELECT('sparkline.type', ['line', 'bar'], { def: 'line' }),
     CHECKBOX('sparkline.smooth', { def: true }),
+    CHECKBOX('sparkline.cutNullValues', { def: true }),
     CHECKBOX('sparkline.animation.show', { def: true }),
     NUMBER('sparkline.animation.animationFrames', {
         def: 360,

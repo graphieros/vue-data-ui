@@ -49,9 +49,13 @@ describe('fillArray', () => {
         expect(fillArray(2, [1, 2, 3, 4])).toEqual([1, 2]);
     });
 
-    test('replaces nullish source values with zero', () => {
+    test('replaces nullish source values with null', () => {
         expect(fillArray(5, [1, null, undefined, 4, 5])).toEqual([
-            1, 0, 0, 4, 5,
+            1,
+            null,
+            null,
+            4,
+            5,
         ]);
     });
 

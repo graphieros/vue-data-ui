@@ -23,9 +23,17 @@ onMounted(() => {
         dataset.value = [
             { period: 1735689600000, value: 1 },
             { period: 1738368000000, value: 1.1 },
+            { period: 1740787200000, value: null },
             { period: 1740787200000, value: 1 },
-            { period: 1743465600000, value: 1 },
-            { period: 1746057600000, value: 1 },
+            { period: 1740787200000, value: null },
+            { period: 1740787200000, value: 2 },
+            { period: 1740787200000, value: null },
+            { period: 1743465600000, value: 3 },
+            { period: 1743465600000, value: 3 },
+            { period: 1743465600000, value: 3 },
+            { period: 1740787200000, value: null },
+            { period: 1743465600000, value: 3 },
+            { period: 1746057600000, value: 2 },
             { period: 1748736000000, value: 1 },
         ];
     }, 2000);
@@ -102,6 +110,7 @@ const model = createModel([
 
     CHECKBOX('temperatureColors.show', { def: true }),
 
+    CHECKBOX('style.line.cutNullValues', { def: true }),
     CHECKBOX('style.line.pulse.show', { def: true }),
     CHECKBOX('style.line.pulse.radius', { def: 2 }),
     COLOR('style.line.pulse.color', { def: '#FF0000' }),
