@@ -41,6 +41,8 @@ const model = createModel([
     CHECKBOX('userOptions.useCursorPointer', { def: false }),
     CHECKBOX('userOptions.show', { def: true }),
     CHECKBOX('strictPixelPadding', { def: true }),
+    SELECT('quality', ['fast', 'balanced', 'precise'], { def: 'fast' }),
+
     CHECKBOX('userOptions.buttons.tooltip', { def: true }),
     CHECKBOX('userOptions.buttons.pdf', { def: true }),
     CHECKBOX('userOptions.buttons.csv', { def: true }),
@@ -64,8 +66,8 @@ const model = createModel([
     NUMBER('style.chart.width', { def: 512, min: 200, max: 1000 }),
     NUMBER('style.chart.words.maxFontSize', { def: 100, min: 10, max: 300 }),
     NUMBER('style.chart.words.minFontSize', { def: 10, min: 10, max: 300 }),
-    NUMBER('style.chart.words.proximity', { def: 10, min: 0, max: 50 }),
-    NUMBER('style.chart.words.packingWeight', { def: 10, min: 0, max: 50 }),
+    NUMBER('style.chart.words.proximity', { def: 0, min: 0, max: 20 }),
+
     COLOR('style.chart.words.color', { def: '#1A1A1A' }),
     CHECKBOX('style.chart.words.usePalette', { def: true }),
     NUMBER('style.chart.words.hoverOpacity', {

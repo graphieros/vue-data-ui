@@ -149,7 +149,7 @@ const testPreconfig = computed<VueUiWordCloudConfig>(() => {
                     maxFontSize: 100,
                     minFontSize: 10,
                     bold: false,
-                    proximity: 10,
+                    proximity: 0,
                     packingWeight: 1,
                     color: '#2D353C',
                     usePalette: true,

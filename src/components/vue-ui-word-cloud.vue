@@ -13,6 +13,7 @@ import {
 import { debounce } from '../canvas-lib';
 import {
     checkNaN,
+    convertColorToHex,
     createCsvContent,
     createUid,
     createWordCloudDatasetFromPlainText,
@@ -465,14 +466,16 @@ function generateWordCloud() {
             fontSize,
             width: size.width,
             height: size.height,
-            color: FINAL_CONFIG.value.style.chart.words.usePalette
-                ? FINAL_CONFIG.value.customPalette[i] ||
-                  FINAL_CONFIG.value.customPalette[
-                      i % FINAL_CONFIG.value.customPalette.length
-                  ] ||
-                  palette[i] ||
-                  palette[i % palette.length]
-                : FINAL_CONFIG.value.style.chart.words.color,
+            color: word.color
+                ? convertColorToHex(word.color)
+                : FINAL_CONFIG.value.style.chart.words.usePalette
+                  ? FINAL_CONFIG.value.customPalette[i] ||
+                    FINAL_CONFIG.value.customPalette[
+                        i % FINAL_CONFIG.value.customPalette.length
+                    ] ||
+                    palette[i] ||
+                    palette[i % palette.length]
+                  : FINAL_CONFIG.value.style.chart.words.color,
         };
     });
 
@@ -485,6 +488,7 @@ function generateWordCloud() {
         svg: svg.value,
         proximity: FINAL_CONFIG.value.style.chart.words.proximity,
         strictPixelPadding: FINAL_CONFIG.value.strictPixelPadding,
+        quality: FINAL_CONFIG.value.quality,
         onProgress: ({ all }) => {
             for (const w of all) {
                 const id = w.id;

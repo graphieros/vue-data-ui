@@ -10,6 +10,71 @@
  * - position words inside a given area using a spiral placement algorithm
  */
 
+const QUALITY_PRESETS = {
+    fast: {
+        spiralStep: 6,
+        fallbackSpiralStep: 2,
+        spiralRadiusStep: 2,
+        fallbackSpiralRadiusStep: 1,
+        primaryAttempts: 10000,
+        fallbackAttempts: 25000,
+        minimumVisualPadding: 2,
+        scaleStep: 0.9,
+    },
+    balanced: {
+        spiralStep: 4,
+        fallbackSpiralStep: 1,
+        spiralRadiusStep: 1.5,
+        fallbackSpiralRadiusStep: 1,
+        primaryAttempts: 20000,
+        fallbackAttempts: 50000,
+        minimumVisualPadding: 3,
+        scaleStep: 0.92,
+    },
+    precise: {
+        spiralStep: 2,
+        fallbackSpiralStep: 1,
+        spiralRadiusStep: 1,
+        fallbackSpiralRadiusStep: 0.75,
+        primaryAttempts: 50000,
+        fallbackAttempts: 100000,
+        minimumVisualPadding: 4,
+        scaleStep: 0.95,
+    },
+};
+
+const DEFAULT_QUALITY = 'fast';
+
+function getQualityPreset(quality) {
+    return QUALITY_PRESETS[quality] || QUALITY_PRESETS[DEFAULT_QUALITY];
+}
+
+const spiralLookupCache = new Map();
+
+function getSpiralLookup(step) {
+    const key = String(step);
+    const cached = spiralLookupCache.get(key);
+    if (cached) return cached;
+
+    const degreesToRadians = Math.PI / 180;
+    const cosineArray = [];
+    const sineArray = [];
+
+    for (let angleDegrees = 0; angleDegrees < 360; angleDegrees += step) {
+        const angle = angleDegrees * degreesToRadians;
+        cosineArray.push(Math.cos(angle));
+        sineArray.push(Math.sin(angle));
+    }
+
+    const lookup = {
+        cosineArray,
+        sineArray,
+    };
+
+    spiralLookupCache.set(key, lookup);
+    return lookup;
+}
+
 /* ------------------------------------------------------------------------- */
 /* Bitmap generation                                                         */
 /* ------------------------------------------------------------------------- */
@@ -48,21 +113,56 @@ export function getWordBitmap({
     svg,
 }) {
     const isBold = svg.style && svg.style.bold;
-    const font = `${isBold ? 'bold ' : ''}${fontSize}px Arial`;
+    const fontFamily =
+        (svg.style && svg.style.fontFamily) ||
+        'Arial, "Noto Sans Arabic", Tahoma, sans-serif';
+
+    const font = `${isBold ? 'bold ' : ''}${fontSize}px ${fontFamily}`;
+    const wordName = String(word.name || '');
+    const hasArabic = /[\u0600-\u06FF]/.test(wordName);
 
     context.font = font;
-    const metrics = context.measureText(word.name);
-    const textWidth = Math.ceil(metrics.width) + 2 + (pad ? pad * 2 : 0);
-    const textHeight = Math.ceil(fontSize) + 2 + (pad ? pad * 2 : 0);
+    context.direction = hasArabic ? 'rtl' : 'ltr';
+    context.textAlign = 'left';
+    context.textBaseline = 'alphabetic';
+
+    const metrics = context.measureText(wordName);
+
+    const actualLeft = Math.ceil(Math.abs(metrics.actualBoundingBoxLeft || 0));
+    const actualRight = Math.ceil(
+        Math.abs(metrics.actualBoundingBoxRight || metrics.width),
+    );
+    const actualAscent = Math.ceil(metrics.actualBoundingBoxAscent || fontSize);
+    const actualDescent = Math.ceil(
+        metrics.actualBoundingBoxDescent || fontSize * 0.25,
+    );
+
+    const basePadding = Math.max(0, Math.round(pad || 0));
+
+    // Arabic glyphs, ligatures, diacritics, browser font fallback, and SVG
+    // strokes can extend beyond the simple text advance box. A safety
+    // padding makes the collision bitmap closer to the final rendering
+    const visualSafetyPadding = Math.ceil(fontSize * (hasArabic ? 0.22 : 0.12));
+    const totalPadding = basePadding + visualSafetyPadding;
+
+    const textWidth = Math.max(1, actualLeft + actualRight + totalPadding * 2);
+    const textHeight = Math.max(
+        1,
+        actualAscent + actualDescent + totalPadding * 2,
+    );
 
     canvas.width = textWidth;
     canvas.height = textHeight;
-
     context.font = font;
-    context.textAlign = 'center';
-    context.textBaseline = 'middle';
+    context.direction = hasArabic ? 'rtl' : 'ltr';
+    context.textAlign = 'left';
+    context.textBaseline = 'alphabetic';
     context.fillStyle = 'black';
-    context.fillText(word.name, textWidth / 2, textHeight / 2);
+
+    const drawX = totalPadding + actualLeft;
+    const drawY = totalPadding + actualAscent;
+
+    context.fillText(wordName, drawX, drawY);
 
     const image = context.getImageData(0, 0, textWidth, textHeight);
     const data = image.data;
@@ -505,81 +605,72 @@ export function dilateWordMask({ wordMask, w: width, h: height, dilation }) {
 /* ------------------------------------------------------------------------- */
 
 /**
+ * Internal: merge per-row run buckets into a sorted, non-overlapping run list.
+ * Each bucket entry is an `[xStart, xEnd]` pair for a given row. Runs that
+ * overlap or touch are merged into a single `[y, xStart, xEnd]` output run
+ */
+function mergeRunBuckets(rowBuckets, height) {
+    const outputRuns = [];
+
+    for (let y = 0; y < height; y += 1) {
+        const bucket = rowBuckets[y];
+        if (!bucket || bucket.length === 0) continue;
+
+        bucket.sort((a, b) => a[0] - b[0]);
+
+        let currentStart = bucket[0][0];
+        let currentEnd = bucket[0][1];
+
+        for (let index = 1; index < bucket.length; index += 1) {
+            const start = bucket[index][0];
+            const end = bucket[index][1];
+
+            if (start <= currentEnd + 1) {
+                if (end > currentEnd) currentEnd = end;
+            } else {
+                outputRuns.push([y, currentStart, currentEnd]);
+                currentStart = start;
+                currentEnd = end;
+            }
+        }
+
+        outputRuns.push([y, currentStart, currentEnd]);
+    }
+
+    return outputRuns;
+}
+
+/**
  * Internal: dilate a bitmap expressed as runs and return new runs.
  * This avoids building a per-pixel coordinate list in the hot path.
  */
 function dilateRunsToRuns({ runs, w: width, h: height, dilation }) {
-    const grid = new Uint8Array(width * height);
-    const seeds = [];
+    if (!runs.length || dilation <= 0) return runs;
+
+    const rowBuckets = new Array(height);
 
     for (let index = 0; index < runs.length; index += 1) {
         const row = runs[index];
         const y = row[0];
-        const xStart = row[1];
-        const xEnd = row[2];
+        const xStart = Math.max(0, row[1] - dilation);
+        const xEnd = Math.min(width - 1, row[2] + dilation);
 
-        const rowOffset = y * width;
+        const yStart = Math.max(0, y - dilation);
+        const yEnd = Math.min(height - 1, y + dilation);
 
-        for (let x = xStart; x <= xEnd; x += 1) {
-            const flatIndex = rowOffset + x;
+        for (let expandedY = yStart; expandedY <= yEnd; expandedY += 1) {
+            let bucket = rowBuckets[expandedY];
 
-            if (!grid[flatIndex]) {
-                grid[flatIndex] = 1;
-                seeds.push(flatIndex);
+            if (!bucket) {
+                bucket = [];
+                rowBuckets[expandedY] = bucket;
             }
+
+            bucket.push([xStart, xEnd]);
         }
     }
 
-    for (let seedIndex = 0; seedIndex < seeds.length; seedIndex += 1) {
-        const flatIndex = seeds[seedIndex];
-        const y = (flatIndex / width) | 0;
-        const x = flatIndex - y * width;
-
-        for (let deltaY = -dilation; deltaY <= dilation; deltaY += 1) {
-            const neighborY = y + deltaY;
-            if (neighborY < 0 || neighborY >= height) continue;
-
-            const neighborRowOffset = neighborY * width;
-
-            for (let deltaX = -dilation; deltaX <= dilation; deltaX += 1) {
-                if (deltaX === 0 && deltaY === 0) continue;
-
-                const neighborX = x + deltaX;
-                if (neighborX < 0 || neighborX >= width) continue;
-
-                grid[neighborRowOffset + neighborX] = 1;
-            }
-        }
-    }
-
-    const outputRuns = [];
-
-    for (let y = 0; y < height; y += 1) {
-        const rowOffset = y * width;
-        let runStart = -1;
-        let isInRun = false;
-
-        for (let x = 0; x < width; x += 1) {
-            const value = grid[rowOffset + x];
-
-            if (value) {
-                if (!isInRun) {
-                    isInRun = true;
-                    runStart = x;
-                }
-            } else if (isInRun) {
-                outputRuns.push([y, runStart, x - 1]);
-                isInRun = false;
-                runStart = -1;
-            }
-        }
-
-        if (isInRun) {
-            outputRuns.push([y, runStart, width - 1]);
-        }
-    }
-
-    return outputRuns;
+    return mergeRunBuckets(rowBuckets, height);
 }
 
 /* ------------------------------------------------------------------------- */
@@ -749,36 +840,6 @@ function getCachedDilatedMask({
 }
 
 /* ------------------------------------------------------------------------- */
-/* Precomputed spiral angles                                                 */
-/* ------------------------------------------------------------------------- */
-
-const spiralStep = 6;
-const fallbackSpiralStep = 2;
-const degreesToRadians = Math.PI / 180;
-
-const spiralCosValues = [];
-const spiralSinValues = [];
-
-for (let angleDegrees = 0; angleDegrees < 360; angleDegrees += spiralStep) {
-    const angle = angleDegrees * degreesToRadians;
-    spiralCosValues.push(Math.cos(angle));
-    spiralSinValues.push(Math.sin(angle));
-}
-
-const fallbackSpiralCosValues = [];
-const fallbackSpiralSinValues = [];
-
-for (
-    let angleDegrees = 0;
-    angleDegrees < 360;
-    angleDegrees += fallbackSpiralStep
-) {
-    const angle = angleDegrees * degreesToRadians;
-    fallbackSpiralCosValues.push(Math.cos(angle));
-    fallbackSpiralSinValues.push(Math.sin(angle));
-}
-
-/* ------------------------------------------------------------------------- */
 /* Layout scaling                                                            */
 /* ------------------------------------------------------------------------- */
 
@@ -899,12 +960,36 @@ function computeTargetFontSize({
 /* Placement helpers                                                         */
 /* ------------------------------------------------------------------------- */
 
+function getCollisionDilation({
+    bitmapHeight,
+    proximity,
+    strictPixelPadding,
+    minimumVisualPadding,
+}) {
+    const proximityPadding = Math.max(0, Math.round(proximity || 0));
+
+    // SVG rendering can extend slightly beyond the canvas glyph mask because
+    // of stroke, antialiasing, font hinting, and browser text rendering.
+    const strokePadding = Math.ceil(bitmapHeight * 0.035) + 2;
+
+    const strictPadding = strictPixelPadding ? 3 : 0;
+
+    return Math.max(
+        proximityPadding,
+        strokePadding,
+        strictPadding,
+        minimumVisualPadding,
+    );
+}
+
 function buildRunsForBitmap({
     currentBitmap,
     strictPixelPadding,
     scaleFactor,
     baseBitmap,
     bitmapKey,
+    proximity,
+    minimumVisualPadding,
 }) {
     let runs = currentBitmap.runs;
     const bitmapWidth = currentBitmap.w;
@@ -914,7 +999,7 @@ function buildRunsForBitmap({
     const bitmapMaximumX = currentBitmap.maxX;
     const bitmapMaximumY = currentBitmap.maxY;
 
-    if (!strictPixelPadding || !runs.length) {
+    if (!runs.length) {
         return {
             runs,
             bitmapWidth,
@@ -926,13 +1011,32 @@ function buildRunsForBitmap({
         };
     }
 
-    if (scaleFactor === 1) {
+    const dilation = getCollisionDilation({
+        bitmapHeight,
+        proximity,
+        strictPixelPadding,
+        minimumVisualPadding,
+    });
+
+    if (dilation <= 0) {
+        return {
+            runs,
+            bitmapWidth,
+            bitmapHeight,
+            bitmapMinimumX,
+            bitmapMinimumY,
+            bitmapMaximumX,
+            bitmapMaximumY,
+        };
+    }
+
+    if (scaleFactor === 1 && dilation === 2 && strictPixelPadding) {
         const dilated = getCachedDilatedMask({
             bitmapKey,
             wordMask: baseBitmap.wordMask,
             w: baseBitmap.w,
             h: baseBitmap.h,
-            dilation: 2,
+            dilation,
         });
 
         return {
@@ -950,7 +1054,7 @@ function buildRunsForBitmap({
         runs,
         w: bitmapWidth,
         h: bitmapHeight,
-        dilation: 2,
+        dilation,
     });
 
     return {
@@ -985,6 +1089,8 @@ async function tryPlaceWordOnSpiral({
     radiusStep,
     maximumAttempts,
     maybeYield,
+    proximity,
+    minimumVisualPadding,
 }) {
     let scaleFactor = 1;
 
@@ -1000,6 +1106,8 @@ async function tryPlaceWordOnSpiral({
             scaleFactor,
             baseBitmap,
             bitmapKey,
+            proximity,
+            minimumVisualPadding,
         });
 
         const {
@@ -1117,8 +1225,10 @@ async function attemptPlaceWordWithFallback({
     minimumFontSize,
     rawWord,
     maybeYield,
-    spiralRadiusStep,
-    fallbackSpiralRadiusStep,
+    proximity,
+    qualityPreset,
+    primarySpiral,
+    fallbackSpiral,
 }) {
     const primaryPlacement = await tryPlaceWordOnSpiral({
         baseBitmap,
@@ -1136,11 +1246,13 @@ async function attemptPlaceWordWithFallback({
         bitmapKey,
         minimumFontSize,
         rawWord,
-        cosineArray: spiralCosValues,
-        sineArray: spiralSinValues,
-        radiusStep: spiralRadiusStep,
-        maximumAttempts: 10000,
+        cosineArray: primarySpiral.cosineArray,
+        sineArray: primarySpiral.sineArray,
+        radiusStep: qualityPreset.spiralRadiusStep,
+        maximumAttempts: qualityPreset.primaryAttempts,
         maybeYield,
+        proximity,
+        minimumVisualPadding: qualityPreset.minimumVisualPadding,
     });
 
     if (primaryPlacement) {
@@ -1163,11 +1275,13 @@ async function attemptPlaceWordWithFallback({
         bitmapKey,
         minimumFontSize,
         rawWord,
-        cosineArray: fallbackSpiralCosValues,
-        sineArray: fallbackSpiralSinValues,
-        radiusStep: fallbackSpiralRadiusStep,
-        maximumAttempts: 25000,
+        cosineArray: fallbackSpiral.cosineArray,
+        sineArray: fallbackSpiral.sineArray,
+        radiusStep: qualityPreset.fallbackSpiralRadiusStep,
+        maximumAttempts: qualityPreset.fallbackAttempts,
         maybeYield,
+        proximity,
+        minimumVisualPadding: qualityPreset.minimumVisualPadding,
     });
 
     return fallbackPlacement;
@@ -1186,6 +1300,7 @@ export async function positionWordsAsync({
     proximity = 0,
     svg,
     strictPixelPadding,
+    quality = DEFAULT_QUALITY,
     onProgress,
     debugTiming = false,
 }) {
@@ -1208,6 +1323,10 @@ export async function positionWordsAsync({
     const maskWidth = Math.round(width);
     const maskHeight = Math.round(height);
 
+    const qualityPreset = getQualityPreset(quality);
+    const primarySpiral = getSpiralLookup(qualityPreset.spiralStep);
+    const fallbackSpiral = getSpiralLookup(qualityPreset.fallbackSpiralStep);
+
     const minimumFontSize = 1;
     const configuredMinimumFontSize = svg.minFontSize;
     const maximumFontSize = Math.min(svg.maxFontSize, 100);
@@ -1226,8 +1345,6 @@ export async function positionWordsAsync({
     canvas.width = maskWidth;
     canvas.height = maskHeight;
 
-    const spiralRadiusStep = 2;
-    const fallbackSpiralRadiusStep = 1;
     const maximumRadius = Math.max(maskWidth, maskHeight);
     const centerX = Math.floor(maskWidth / 2);
     const centerY = Math.floor(maskHeight / 2);
@@ -1243,7 +1360,7 @@ export async function positionWordsAsync({
     );
 
     const positionedWords = [];
-    const scaleStep = 0.9;
+    const scaleStep = qualityPreset.scaleStep;
 
     for (
         let sortedIndex = 0;
@@ -1305,8 +1422,10 @@ export async function positionWordsAsync({
             minimumFontSize,
             rawWord,
             maybeYield,
-            spiralRadiusStep,
-            fallbackSpiralRadiusStep,
+            proximity,
+            qualityPreset,
+            primarySpiral,
+            fallbackSpiral,
         });
 
         if (placedWord) {

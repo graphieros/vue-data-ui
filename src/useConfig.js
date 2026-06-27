@@ -5186,6 +5186,7 @@ export function useConfig(options = {}) {
         customPalette: [],
         useCssAnimation: false, // v2 = true
         animationDelayMs: 20,
+        quality: 'fast', // 'fast' | 'balanced' | 'precise'
         strictPixelPadding: true, // If true, strict per-pixel padding is used (dilateWordMask); if false, just rectangular bounding box (or pad).
         userOptions: USER_OPTIONS({
             tooltip: true,
@@ -5225,8 +5226,8 @@ export function useConfig(options = {}) {
                     maxFontSize: 100,
                     minFontSize: FONT._10,
                     bold: false,
-                    proximity: 10,
-                    packingWeight: 1,
+                    proximity: 0,
+                    packingWeight: 1, // deprecated
                     color: COLOR_TEXT_PRIMARY,
                     usePalette: true,
                     hoverOpacity: 0.5,

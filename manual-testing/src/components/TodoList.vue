@@ -792,9 +792,12 @@ const wordCloudConfig = computed(() => ({
     userOptions: {
         show: false,
     },
-    responsive: true,
+    quality: 'precise',
+    responsive: false,
     style: {
         chart: {
+            width: WIDTH.value / 3,
+            height: HEIGHT.value / 3,
             controls: {
                 show: false,
             },
@@ -804,8 +807,7 @@ const wordCloudConfig = computed(() => ({
             words: {
                 color: '#AAAAAA',
                 usePalette: false,
-                proximity: 20,
-                packingWeight: 10,
+                proximity: 0,
             },
             zoom: {
                 show: false,
@@ -823,7 +825,7 @@ const wordCloudConfig = computed(() => ({
             left: 300,
             width: WIDTH + 'px',
             height: HEIGHT + 'px',
-            opacity: 0.1,
+            opacity: 0.05,
             pointerEvents: 'none',
             userSelect: 'none',
         }"
@@ -833,6 +835,7 @@ const wordCloudConfig = computed(() => ({
             v-if="wordCloudData"
             :dataset="wordCloudData"
             :config="wordCloudConfig"
+            :key="`wc_${WIDTH}_${HEIGHT}`"
         />
     </div>
     <button class="open-btn" @click="openDialog()">

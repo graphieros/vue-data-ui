@@ -11505,6 +11505,7 @@ declare module 'vue-data-ui' {
         [key: string]: any;
         name: string;
         value: number;
+        color?: string;
     };
 
     export type VueUiWordCloudDatapoint = {
@@ -11547,8 +11548,9 @@ declare module 'vue-data-ui' {
             VueUiWordCloudConfig
         >;
         useCssAnimation?: boolean;
-        animationDelayMs?: number;
+        animationDelayMs?: number; // deprectated
         strictPixelPadding?: boolean;
+        quality: 'fast' | 'balanced' | 'precise';
         style?: {
             fontFamily?: string;
             chart?: {
@@ -11563,7 +11565,7 @@ declare module 'vue-data-ui' {
                     minFontSize?: number;
                     bold?: boolean;
                     proximity?: number;
-                    packingWeight?: number;
+                    packingWeight?: number; // deprecated
                     color?: string;
                     usePalette?: boolean;
                     hoverOpacity?: number;
