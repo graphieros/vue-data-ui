@@ -11550,7 +11550,7 @@ declare module 'vue-data-ui' {
         useCssAnimation?: boolean;
         animationDelayMs?: number; // deprectated
         strictPixelPadding?: boolean;
-        quality: 'fast' | 'balanced' | 'precise';
+        quality?: 'fast' | 'balanced' | 'precise';
         style?: {
             fontFamily?: string;
             chart?: {
