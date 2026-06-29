@@ -95,6 +95,7 @@ import {
     setOpacity,
     setOpacityIfWithinBBox,
     shiftHue,
+    slugify,
     srgbEncodeFromLinear,
     sumByAttribute,
     sumSeries,
@@ -4881,5 +4882,29 @@ describe('createStepperPath', () => {
             { x: NaN, y: 30, value: 30 },
         ];
         expect(createStepperPath(points)).toBe('');
+    });
+});
+
+describe('slugify', () => {
+    test('lowercases, trims and hyphenates ASCII text', () => {
+        expect(slugify('  Hello World  ')).toBe('hello-world');
+        expect(slugify('Hello   World')).toBe('hello-world');
+    });
+
+    test('keeps Unicode letters and numbers instead of dropping them', () => {
+        expect(slugify('日本語')).toBe('日本語');
+        expect(slugify('한국어')).toBe('한국어');
+        expect(slugify('Café')).toBe('café');
+        expect(slugify('Ø2')).toBe('ø2');
+    });
+
+    test('produces distinct ids for distinct non-ASCII labels', () => {
+        expect(slugify('日本')).not.toBe(slugify('한국'));
+        expect(slugify('Москва')).not.toBe(slugify('Київ'));
+    });
+
+    test('still removes punctuation and symbols', () => {
+        expect(slugify('a@b!c')).toBe('abc');
+        expect(slugify('hot 🔥 take')).toBe('hot-take');
     });
 });
