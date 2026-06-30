@@ -3804,7 +3804,7 @@ export function slugify(str) {
         .toString()
         .toLowerCase()
         .replace(/\s+/g, '-') // Replace spaces with -
-        .replace(/[^\w\-]+/g, '') // Remove all non-word chars
+        .replace(/[^\p{L}\p{N}_-]+/gu, '') // Remove all non-word chars, keeping Unicode letters and numbers
         .replace(/\-\-+/g, '-') // Replace multiple - with single -
         .replace(/^-+/, '') // Trim start
         .replace(/-+$/, ''); // Trim end
