@@ -697,6 +697,12 @@ const measuredLabelsHeight = ref(0);
 
 const labelsHeightRaf = ref(0);
 
+function setMeasuredLabelsHeight(value) {
+    const nextValue = Number.isFinite(value) ? value : 0;
+    if (measuredLabelsHeight.value === nextValue) return;
+    measuredLabelsHeight.value = nextValue;
+}
+
 function measureLabelsHeightNow() {
     // What contributes to Y offset depends on orientation
     const el =
@@ -705,18 +711,16 @@ function measureLabelsHeightNow() {
             : scaleLabels.value;
 
     if (!el) {
-        measuredLabelsHeight.value = 0;
+        setMeasuredLabelsHeight(0);
         return;
     }
 
     try {
         // SVG group bbox is the most reliable "rendered height"
         const box = el.getBBox();
-        measuredLabelsHeight.value = Number.isFinite(box?.height)
-            ? box.height
-            : 0;
+        setMeasuredLabelsHeight(box?.height);
     } catch (_) {
-        measuredLabelsHeight.value = 0;
+        setMeasuredLabelsHeight(0);
     }
 }
 
@@ -883,6 +887,7 @@ const precogRect = computed(() => {
 const unmutableDataset = computed(() => {
     return FINAL_DATASET.value.map((ds, i) => {
         const id = `stackbar_serie_${i}`;
+        const datasetKey = String(ds.key ?? ds.id ?? ds.name ?? id);
         const color =
             convertColorToHex(ds.color) ||
             customPalette.value[i] ||
@@ -890,6 +895,7 @@ const unmutableDataset = computed(() => {
             palette[i % palette.length];
         return {
             ...ds,
+            datasetKey,
             // In distributed mode, all values are converted to positive
             series: JSON.parse(JSON.stringify(ds.series)).map((v) => {
                 return FINAL_CONFIG.value.style.chart.bars.distributed
@@ -1096,7 +1102,7 @@ const datasetSignedTotals = computed(() => {
     };
 });
 
-const yLabels = computed(() => {
+const yScale = computed(() => {
     const MAX =
         FINAL_CONFIG.value.style.chart.grid.scale.scaleMax !== null &&
         !FINAL_CONFIG.value.style.chart.bars.distributed
@@ -1111,48 +1117,91 @@ const yLabels = computed(() => {
               ? 0
               : workingMin;
 
-    const scale =
-        !FINAL_CONFIG.value.style.chart.bars.distributed &&
+    return !FINAL_CONFIG.value.style.chart.bars.distributed &&
         (FINAL_CONFIG.value.style.chart.grid.scale.scaleMax !== null ||
             FINAL_CONFIG.value.style.chart.grid.scale.scaleMin !== null)
-            ? calculateNiceScaleWithExactExtremes(
-                  MIN > 0 ? 0 : MIN,
-                  MAX < 0 ? 0 : MAX,
-                  FINAL_CONFIG.value.style.chart.grid.scale.ticks,
-              )
-            : calculateNiceScale(
-                  MIN > 0 ? 0 : MIN,
-                  MAX < 0 ? 0 : MAX,
-                  FINAL_CONFIG.value.style.chart.grid.scale.ticks,
-              );
-    return scale.ticks.map((t) => {
+        ? calculateNiceScaleWithExactExtremes(
+              MIN > 0 ? 0 : MIN,
+              MAX < 0 ? 0 : MAX,
+              FINAL_CONFIG.value.style.chart.grid.scale.ticks,
+          )
+        : calculateNiceScale(
+              MIN > 0 ? 0 : MIN,
+              MAX < 0 ? 0 : MAX,
+              FINAL_CONFIG.value.style.chart.grid.scale.ticks,
+          );
+});
+
+const yLabelValues = computed(() => yScale.value.ticks);
+
+const yLabels = computed(() => {
+    const scale = yScale.value;
+    const scaleRange = scale.max + Math.abs(scale.min);
+
+    return yLabelValues.value.map((t) => {
         return {
             zero:
                 drawingArea.value.bottom -
-                drawingArea.value.height *
-                    (Math.abs(scale.min) / (scale.max + Math.abs(scale.min))),
+                drawingArea.value.height * (Math.abs(scale.min) / scaleRange),
             y:
                 drawingArea.value.bottom -
                 drawingArea.value.height *
-                    ((t + Math.abs(scale.min)) /
-                        (scale.max + Math.abs(scale.min))),
+                    ((t + Math.abs(scale.min)) / scaleRange),
             x: yAxisLabelsAreRight.value
                 ? drawingArea.value.right + 8
                 : drawingArea.value.left - 8,
             horizontal_zero:
                 drawingArea.value.left +
-                drawingArea.value.width *
-                    (Math.abs(scale.min) / (scale.max + Math.abs(scale.min))),
+                drawingArea.value.width * (Math.abs(scale.min) / scaleRange),
             horizontal_x:
                 drawingArea.value.left +
                 drawingArea.value.width *
-                    ((t + Math.abs(scale.min)) /
-                        (scale.max + Math.abs(scale.min))),
+                    ((t + Math.abs(scale.min)) / scaleRange),
             horizontal_y: drawingArea.value.bottom - 8,
             value: t,
         };
     });
 });
+
+const formattedScaleLabelSignature = computed(() => {
+    const axisLabels = FINAL_CONFIG.value.style.chart.grid.y.axisLabels;
+    const { prefix, suffix } = FINAL_CONFIG.value.style.chart.bars.dataLabels;
+
+    return yLabelValues.value
+        .map((value) =>
+            String(
+                applyDataLabel(
+                    axisLabels.formatter,
+                    value,
+                    dataLabel({
+                        p: prefix,
+                        v: value,
+                        s: suffix,
+                        r: axisLabels.rounding,
+                    }),
+                    { datapoint: { value } },
+                ) ?? '',
+            ),
+        )
+        .join('|');
+});
+
+watch(
+    () => [
+        formattedScaleLabelSignature.value,
+        FINAL_CONFIG.value.orientation,
+        FINAL_CONFIG.value.style.chart.grid.y.axisLabels.show,
+        FINAL_CONFIG.value.style.chart.grid.y.axisLabels.fontSize,
+        FINAL_CONFIG.value.style.chart.grid.y.axisLabels.bold,
+        FINAL_CONFIG.value.style.chart.grid.y.position,
+    ],
+    () => {
+        if (!FINAL_CONFIG.value.style.chart.grid.y.axisLabels.show) return;
+
+        runParentStableLayoutPass();
+    },
+    { flush: 'post' },
+);
 
 const timeLabels = ref([]);
 const allTimeLabels = ref([]);
@@ -1247,8 +1296,7 @@ watchEffect(
         const visibleTimeLabels =
             displayedTimeLabels.value?.map((l) => l?.text ?? '').join('|') ||
             '';
-        const scaleTicks =
-            yLabels.value?.map((l) => l?.value ?? '').join('|') || '';
+        const scaleLabelsText = formattedScaleLabelSignature.value;
 
         // Triggers on resize
         const w = defaultSizes.value.width;
@@ -1265,7 +1313,7 @@ watchEffect(
         void tlRotation;
         void tlOffsetY;
         void visibleTimeLabels;
-        void scaleTicks;
+        void scaleLabelsText;
         void w;
         void h;
         void tlEl;
@@ -1341,6 +1389,36 @@ const preciseAllTimeLabelsTooltip = computed(() => {
         absoluteIndex: i,
     }));
 });
+
+const stackbarTimeLabelCounts = computed(() => {
+    const counts = new Map();
+    const values =
+        FINAL_CONFIG.value.style.chart.grid.x.timeLabels.values || [];
+    values.forEach((value) => {
+        if ([null, undefined, ''].includes(value)) return;
+        const key = String(value);
+        counts.set(key, (counts.get(key) || 0) + 1);
+    });
+    return counts;
+});
+
+function getStackbarDatapointKey(absoluteIndex) {
+    const values =
+        FINAL_CONFIG.value.style.chart.grid.x.timeLabels.values || [];
+    const value = values[absoluteIndex];
+    if ([null, undefined, ''].includes(value)) {
+        return `fallback-${absoluteIndex}`;
+    }
+    const key = String(value);
+    if ((stackbarTimeLabelCounts.value.get(key) || 0) > 1) {
+        return `${key}-${absoluteIndex}`;
+    }
+    return key;
+}
+
+function getStackbarRectKey(ds, absoluteIndex) {
+    return `${ds.datasetKey}:${getStackbarDatapointKey(absoluteIndex)}`;
+}
 
 const formattedDataset = computed(() => {
     if (!isDataset.value && !loading.value) return [];
@@ -1427,6 +1505,14 @@ const formattedDataset = computed(() => {
             const signedSliced = ds.signedSeries.slice(
                 slicer.value.start,
                 slicer.value.end,
+            );
+
+            const rectKeys = slicedSeries.map((_, i) =>
+                getStackbarRectKey(ds, slicer.value.start + i),
+            );
+
+            const minimapRectKeys = fullSeries.map((_, absoluteIndex) =>
+                getStackbarRectKey(ds, absoluteIndex),
             );
 
             const x = slicedSeries.map((_dp, i) => {
@@ -1613,6 +1699,8 @@ const formattedDataset = computed(() => {
                 }),
                 series: slicedSeries,
                 signedSeries: signedSliced,
+                rectKeys,
+                minimapRectKeys,
                 x,
                 y,
                 height,
@@ -3062,7 +3150,10 @@ defineExpose({
                     />
                 </template>
 
-                <g v-for="(dp, i) in formattedDataset">
+                <g
+                    v-for="(dp, i) in formattedDataset"
+                    :key="`stackbar-group-${dp.datasetKey}`"
+                >
                     <defs v-if="$slots.pattern">
                         <slot
                             name="pattern"
@@ -3077,6 +3168,7 @@ defineExpose({
                     <template v-if="FINAL_CONFIG.orientation === 'vertical'">
                         <rect
                             v-for="(rect, j) in dp.x"
+                            :key="`stackbar-rect-${dp.rectKeys[j]}`"
                             :x="rect"
                             :y="forceValidValue(dp.y[j])"
                             :height="
@@ -3112,6 +3204,7 @@ defineExpose({
                         <g v-if="$slots.pattern">
                             <rect
                                 v-for="(rect, j) in dp.x"
+                                :key="`stackbar-pattern-rect-${dp.rectKeys[j]}`"
                                 :x="rect"
                                 :y="forceValidValue(dp.y[j])"
                                 :height="
@@ -3156,6 +3249,7 @@ defineExpose({
                     <template v-else>
                         <rect
                             v-for="(rect, j) in dp.horizontal_x"
+                            :key="`stackbar-rect-${dp.rectKeys[j]}`"
                             :x="forceValidValue(rect, drawingArea.left)"
                             :y="dp.horizontal_y[j] < 0 ? 0 : dp.horizontal_y[j]"
                             :width="
@@ -3195,6 +3289,7 @@ defineExpose({
                         <g v-if="$slots.pattern">
                             <rect
                                 v-for="(rect, j) in dp.horizontal_x"
+                                :key="`stackbar-pattern-rect-${dp.rectKeys[j]}`"
                                 :x="forceValidValue(rect, drawingArea.left)"
                                 :y="
                                     dp.horizontal_y[j] < 0
@@ -4079,10 +4174,12 @@ defineExpose({
                     name="svg"
                     :svg="{
                         drawingArea,
+                        slicer,
                         data: formattedDataset,
                         isPrintingImg:
                             isPrinting || isImaging || isCallbackImaging,
                         isPrintingSvg: isCallbackSvg,
+                        barWidth: barSlot,
                     }"
                 />
             </svg>
@@ -4236,7 +4333,7 @@ defineExpose({
                 <g v-for="dp in formattedDataset" :key="dp.id">
                     <template
                         v-for="(x, j) in dp.xMinimap({ left: 0, unitW })"
-                        :key="j"
+                        :key="`minimap-rect-${dp.minimapRectKeys[j]}`"
                     >
                         <rect
                             :x="

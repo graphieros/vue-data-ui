@@ -13306,6 +13306,7 @@ declare module 'vue-data-ui' {
         }) => number[];
         y: number[];
         yMinimap: ({ minimapH }: { minimapH: number }) => number[];
+        rectKeys: string[];
     };
 
     export type VueUiStackbarTimeLabelSlotProps = {
@@ -13335,6 +13336,11 @@ declare module 'vue-data-ui' {
             };
             isPrintingImg: boolean;
             isPrintingSvg: boolean;
+            slicer: {
+                start: number;
+                end: number;
+            };
+            barWidth: number;
         };
     };
 
@@ -13780,6 +13786,10 @@ declare module 'vue-data-ui' {
             };
             isPrintingImg: boolean;
             isPrintingSvg: boolean;
+            slicer: {
+                start: number;
+                end: number;
+            };
         };
     };
 

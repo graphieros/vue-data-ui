@@ -1839,6 +1839,45 @@ const boundsX = computed(() => ({
     width: drawingArea.value.width,
 }));
 
+const formattedScaleLabelSignature = computed(() => {
+    const axisLabels = FINAL_CONFIG.value.style.chart.grid.y.axisLabels;
+    const { prefix, suffix } = FINAL_CONFIG.value.style.chart.lines.dataLabels;
+
+    return yLabels.value
+        .map((yLabel) =>
+            String(
+                applyDataLabel(
+                    axisLabels.formatter,
+                    yLabel.value,
+                    dataLabel({
+                        p: prefix,
+                        v: yLabel.value,
+                        s: suffix,
+                        r: axisLabels.rounding,
+                    }),
+                    { datapoint: yLabel },
+                ) ?? '',
+            ),
+        )
+        .join('|');
+});
+
+watch(
+    [
+        formattedScaleLabelSignature,
+        () => FINAL_CONFIG.value.style.chart.grid.y.axisLabels.show,
+        () => FINAL_CONFIG.value.style.chart.grid.y.axisLabels.fontSize,
+        () => FINAL_CONFIG.value.style.chart.grid.y.axisLabels.bold,
+        () => FINAL_CONFIG.value.style.chart.grid.y.position,
+    ],
+    () => {
+        if (!FINAL_CONFIG.value.style.chart.grid.y.axisLabels.show) return;
+
+        runParentStableLayoutPass();
+    },
+    { flush: 'post' },
+);
+
 const suppressChild = ref(false);
 
 const WIDTH = computed(() => defaultSizes.value.width);
