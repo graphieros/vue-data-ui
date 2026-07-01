@@ -4731,6 +4731,34 @@ export function isValidNumber(value) {
     );
 }
 
+export function createCatmullRomPath(points, tension = 1) {
+    if (!points.length) return '';
+    if (points.length === 1) return `${points[0].x} ${points[0].y}`;
+
+    const d = [`${points[0].x} ${points[0].y}`];
+
+    for (let i = 0; i < points.length - 1; i++) {
+        const p0 = points[i - 1] || points[i];
+        const p1 = points[i];
+        const p2 = points[i + 1];
+        const p3 = points[i + 2] || p2;
+
+        const cp1 = {
+            x: p1.x + ((p2.x - p0.x) / 6) * tension,
+            y: p1.y + ((p2.y - p0.y) / 6) * tension,
+        };
+
+        const cp2 = {
+            x: p2.x - ((p3.x - p1.x) / 6) * tension,
+            y: p2.y - ((p3.y - p1.y) / 6) * tension,
+        };
+
+        d.push(`C ${cp1.x} ${cp1.y}, ${cp2.x} ${cp2.y}, ${p2.x} ${p2.y}`);
+    }
+
+    return d.join(' ');
+}
+
 const lib = {
     XMLNS,
     abbreviate,
@@ -4755,6 +4783,7 @@ const lib = {
     checkFormatter,
     checkNaN,
     checkObj,
+    clamp,
     clampToByte,
     clampToUnitInterval,
     closestDecimal,
@@ -4764,6 +4793,7 @@ const lib = {
     convertOklabToSrgb,
     convertOklchToRgb,
     createAreaWithCuts,
+    createCatmullRomPath,
     createCsvContent,
     createHalfCircleArc,
     createIndividualArea,
@@ -4771,15 +4801,17 @@ const lib = {
     createPolarAreas,
     createPolygonPath,
     createShadesOfGrey,
-    createStepperPath,
     createSmoothAreaSegments,
     createSmoothPath,
     createSmoothPathVertical,
     createSmoothPathWithCuts,
+    createSmoothPathWithCutsSegments,
     createSpiralPath,
     createStar,
+    createStepperPath,
     createStraightPath,
     createStraightPathWithCuts,
+    createStraightPathWithCutsSegments,
     createTSpans,
     createTSpansFromLineBreaksOnX,
     createTSpansFromLineBreaksOnY,
@@ -4814,8 +4846,10 @@ const lib = {
     giftWrap,
     hasDeepProperty,
     interpolateColorHex,
+    interpolateHexColors,
     isFunction,
     isSafeValue,
+    isValidNumber,
     isValidUserValue,
     largestTriangleThreeBucketsArray,
     largestTriangleThreeBucketsArrayObjects,
@@ -4845,17 +4879,12 @@ const lib = {
     srgbEncodeFromLinear,
     sumByAttribute,
     sumSeries,
+    svgToClientCoords,
     themePalettes,
     translateSize,
     treeShake,
     triggerEvent,
     triggerResize,
     wrapText,
-    createStraightPathWithCutsSegments,
-    createSmoothPathWithCutsSegments,
-    svgToClientCoords,
-    isValidNumber,
-    interpolateHexColors,
-    clamp,
 };
 export default lib;

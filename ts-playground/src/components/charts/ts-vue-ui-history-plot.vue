@@ -42,6 +42,10 @@ const dataset = computed<VueUiHistoryPlotDatasetItem[]>(() => {
                 { x: 313, y: 0.4, label: 'March' },
                 { x: 555, y: 1.2, label: 'April' },
             ],
+            smooth: true,
+            temperatureColors: ['#FF0000', '#00FF00'],
+            temperatureAngle: 0,
+            usePlotTemperatureColors: true,
         },
         {
             name: 'Series 2',

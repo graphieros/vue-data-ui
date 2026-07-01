@@ -1544,6 +1544,23 @@
             "id": "bc87a86a-c893-4c19-a42a-c83508d289c3",
             "createdAt": 1781771348805,
             "updatedAt": 1781791241305
+        },
+        {
+            "title": "scale & datalabels transform",
+            "component": "All concerned",
+            "description": "For scale labels and other text elements, replace x & y properties with transform, so that css transitions can be applied by users.",
+            "priority": 0,
+            "author": "graphieros",
+            "done": false,
+            "exchanges": [],
+            "type": "feature",
+            "withComponentCheckList": false,
+            "checkList": {},
+            "withCustomCheckList": false,
+            "customCheckList": {},
+            "id": "91e79525-1b93-4c6d-a3dc-fac73450dc13",
+            "createdAt": 1782916298857,
+            "updatedAt": 1782916298857
         }
     ]
 }

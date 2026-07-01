@@ -14281,6 +14281,10 @@ declare module 'vue-data-ui' {
         name: string;
         values: Array<{ x: number; y: number; label?: string }>;
         color?: string;
+        smooth?: boolean;
+        temperatureColors?: string[];
+        temperatureAngle?: number;
+        usePlotTemperatureColors?: boolean;
     };
 
     export type VueUiHistoryPlotConfig = {
@@ -14411,6 +14415,7 @@ declare module 'vue-data-ui' {
                     radius?: number;
                     stroke?: string;
                     strokeWidth?: number;
+                    unselectedOpacity?: number;
                     gradient?: {
                         show?: boolean;
                         intensity?: number;

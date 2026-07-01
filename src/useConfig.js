@@ -6931,6 +6931,7 @@ export function useConfig(options = {}) {
                     radius: 16,
                     stroke: COLOR_WHITE,
                     strokeWidth: 1,
+                    unselectedOpacity: 0.1,
                     gradient: {
                         show: true,
                         intensity: 40,

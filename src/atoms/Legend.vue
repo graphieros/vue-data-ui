@@ -49,6 +49,32 @@ function handleFocus(event, legend, i) {
     event.preventDefault();
     emit('focusMarker', { legend, i });
 }
+
+function hasLegendGradient(legend) {
+    return Array.isArray(legend.gradientColors) && legend.gradientColors.length;
+}
+
+function getLegendGradientId(legend, i) {
+    const baseId = props.id || props.config.cy || 'legend';
+    const colorsId = hasLegendGradient(legend)
+        ? legend.gradientColors.join('_')
+        : '';
+    return `${baseId}_${legend.seriesIndex ?? i}_${i}_${colorsId}_gradient`
+        .replace(/[^a-zA-Z0-9_-]/g, '_')
+        .slice(0, 160);
+}
+
+function getLegendGradientOffset(colorIndex, colorsLength) {
+    if (colorsLength === 1) return '0%';
+    return `${(colorIndex / (colorsLength - 1)) * 100}%`;
+}
+
+function getLegendMarkerViewBox(legend) {
+    if (hasLegendGradient(legend)) return '0 0 90 60';
+    return legend.shape && legend.shape === 'star'
+        ? '-10 -10 80 80'
+        : '0 0 60 60';
+}
 </script>
 
 <template>
@@ -87,16 +113,44 @@ function handleFocus(event, legend, i) {
                 v-if="legend.shape"
                 @click="handleClick(legend, i)"
                 height="1em"
-                width="1em"
-                :viewBox="
-                    legend.shape && legend.shape === 'star'
-                        ? '-10 -10 80 80'
-                        : '0 0 60 60'
-                "
+                :width="hasLegendGradient(legend) ? '1.4em' : '1em'"
+                :viewBox="getLegendMarkerViewBox(legend)"
                 :style="`overflow: visible; opacity:${legend.opacity}`"
                 aria-hidden="true"
             >
+                <defs v-if="hasLegendGradient(legend)">
+                    <linearGradient
+                        :id="getLegendGradientId(legend, i)"
+                        x1="0%"
+                        y1="0%"
+                        x2="100%"
+                        y2="0%"
+                    >
+                        <stop
+                            v-for="(color, colorIndex) in legend.gradientColors"
+                            :key="`legend_gradient_${i}_${colorIndex}`"
+                            :offset="
+                                getLegendGradientOffset(
+                                    colorIndex,
+                                    legend.gradientColors.length,
+                                )
+                            "
+                            :stop-color="color"
+                        />
+                    </linearGradient>
+                </defs>
+                <rect
+                    v-if="hasLegendGradient(legend)"
+                    x="3"
+                    y="12"
+                    width="84"
+                    height="38"
+                    rx="21"
+                    stroke="none"
+                    :fill="`url(#${getLegendGradientId(legend, i)})`"
+                />
                 <Shape
+                    v-else
                     stroke="none"
                     :shape="legend.shape"
                     :radius="30"

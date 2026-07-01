@@ -45,6 +45,13 @@ describe('<Legend />', () => {
             value: 8,
             shape: 'star',
         },
+        {
+            name: 'gradient',
+            color: '#66AA66',
+            value: 8,
+            shape: 'circle',
+            gradientColors: ['#FF0000', '#00FF00'],
+        },
     ];
 
     it('renders correctly with slots', () => {
@@ -82,7 +89,7 @@ describe('<Legend />', () => {
                 .and('contain', 'Legend Title');
             cy.get('[data-cy="legend-item"]')
                 .as('items')
-                .should('have.length', 7);
+                .should('have.length', legend.length);
             cy.get('@items').each((item, i) => {
                 cy.wrap(item).as('item');
                 cy.get('@item').should(

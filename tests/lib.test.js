@@ -36,17 +36,18 @@ import {
     convertOklchToRgb,
     createArc,
     createAreaWithCuts,
+    createCatmullRomPath,
     createHalfCircleArc,
     createIndividualArea,
     createIndividualAreaWithCuts,
     createPolarAreas,
     createPolygonPath,
-    createStepperPath,
     createSmoothAreaSegments,
     createSmoothPath,
     createSmoothPathWithCuts,
     createSpiralPath,
     createStar,
+    createStepperPath,
     createStraightPathWithCuts,
     createTSpans,
     createTSpansFromLineBreaksOnX,
@@ -4906,5 +4907,63 @@ describe('slugify', () => {
     test('still removes punctuation and symbols', () => {
         expect(slugify('a@b!c')).toBe('abc');
         expect(slugify('hot 🔥 take')).toBe('hot-take');
+    });
+});
+
+describe('createCatmullRomPath', () => {
+    test('returns an empty string when there are no points', () => {
+        expect(createCatmullRomPath([])).toBe('');
+    });
+
+    test('returns the single point coordinates when there is only one point', () => {
+        expect(createCatmullRomPath([{ x: 10, y: 20 }])).toBe('10 20');
+    });
+
+    test('creates a cubic curve between two points', () => {
+        const points = [
+            { x: 0, y: 0 },
+            { x: 6, y: 6 },
+        ];
+        expect(createCatmullRomPath(points)).toBe('0 0 C 1 1, 5 5, 6 6');
+    });
+
+    test('creates consecutive cubic curves through multiple points', () => {
+        const points = [
+            { x: 0, y: 0 },
+            { x: 6, y: 6 },
+            { x: 12, y: 0 },
+        ];
+        expect(createCatmullRomPath(points)).toBe(
+            '0 0 C 1 1, 4 6, 6 6 C 8 6, 11 1, 12 0',
+        );
+    });
+
+    test('applies the provided tension to control points', () => {
+        const points = [
+            { x: 0, y: 0 },
+            { x: 6, y: 6 },
+        ];
+        expect(createCatmullRomPath(points, 0.5)).toBe(
+            '0 0 C 0.5 0.5, 5.5 5.5, 6 6',
+        );
+    });
+
+    test('supports a higher tension value', () => {
+        const points = [
+            { x: 0, y: 0 },
+            { x: 6, y: 6 },
+        ];
+        expect(createCatmullRomPath(points, 2)).toBe('0 0 C 2 2, 4 4, 6 6');
+    });
+
+    test('does not mutate the input points', () => {
+        const points = [
+            { x: 0, y: 0 },
+            { x: 6, y: 6 },
+            { x: 12, y: 0 },
+        ];
+        const originalPoints = structuredClone(points);
+        createCatmullRomPath(points);
+        expect(points).toEqual(originalPoints);
     });
 });

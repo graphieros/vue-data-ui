@@ -18,7 +18,9 @@ import {
     calculateNiceScale,
     convertColorToHex,
     convertCustomPalette,
+    createCatmullRomPath,
     createCsvContent,
+    createSmoothPath,
     createTSpansFromLineBreaksOnX,
     createUid,
     darkenHexColor,
@@ -30,10 +32,12 @@ import {
     lightenHexColor,
     objectIsEmpty,
     palette,
+    setGradientOffset,
     svgToClientCoords,
     themePalettes,
     translateSize,
     treeShake,
+    interpolateHexColors,
 } from '../lib';
 import { throttle } from '../canvas-lib';
 import { useConfig } from '../useConfig';
@@ -601,6 +605,11 @@ const sizes = ref({
 
 const formattedDataset = computed(() => {
     return FINAL_DATASET.value.map((ds, i) => {
+        const temperatureColors =
+            Array.isArray(ds.temperatureColors) && ds.temperatureColors.length
+                ? ds.temperatureColors.map((color) => convertColorToHex(color))
+                : undefined;
+
         return {
             ...ds,
             color: ds.color
@@ -608,10 +617,19 @@ const formattedDataset = computed(() => {
                 : customPalette.value[i] ||
                   palette[i] ||
                   palette[i % palette.length],
+            temperatureColors,
+            temperatureAngle: normalizeTemperatureAngle(ds.temperatureAngle),
+            usePlotTemperatureColors: ds.usePlotTemperatureColors !== false,
             seriesIndex: i,
         };
     });
 });
+
+function normalizeTemperatureAngle(angle = 0) {
+    const numericAngle = Number(angle);
+    if (!Number.isFinite(numericAngle)) return 0;
+    return ((numericAngle % 360) + 360) % 360;
+}
 
 const maxX = computed(() => {
     return Math.max(
@@ -727,19 +745,207 @@ const drawableDataset = computed(() => {
                     id: createUid(),
                 };
             });
-            const path = plots
-                .map((p) => {
-                    return `${p.x},${p.y} `;
-                })
-                .join('')
-                .trim();
+            const path = ds.smooth
+                ? createCatmullRomPath(plots)
+                : plots
+                      .map((p) => {
+                          return `${p.x},${p.y} `;
+                      })
+                      .join('')
+                      .trim();
             return {
                 ...ds,
+                gradientIndex: i,
                 plots,
                 path: `M${path}`,
             };
         });
 });
+
+const drawableDatasetWithActiveLast = computed(() => {
+    if (
+        selectedDatapoint.value === null ||
+        activeTooltipSeriesIndex.value === null
+    ) {
+        return drawableDataset.value;
+    }
+
+    const activeIndex = drawableDataset.value.findIndex(
+        (ds) => ds.seriesIndex === activeTooltipSeriesIndex.value,
+    );
+
+    if (activeIndex === -1) {
+        return drawableDataset.value;
+    }
+
+    const activeSerie = drawableDataset.value[activeIndex];
+
+    return [
+        ...drawableDataset.value.slice(0, activeIndex),
+        ...drawableDataset.value.slice(activeIndex + 1),
+        activeSerie,
+    ];
+});
+
+const hasTemperatureGradients = computed(() => {
+    return drawableDataset.value.some((ds) => hasTemperatureColors(ds));
+});
+
+function hasTemperatureColors(ds) {
+    return Array.isArray(ds?.temperatureColors) && ds.temperatureColors.length;
+}
+
+function usePlotTemperatureColors(ds) {
+    return hasTemperatureColors(ds) && ds.usePlotTemperatureColors;
+}
+
+function getSeriesPlotBounds(ds) {
+    const plots = Array.isArray(ds?.plots) ? ds.plots : [];
+
+    if (!plots.length) {
+        return {
+            minX: 0,
+            maxX: 0,
+            minY: 0,
+            maxY: 0,
+            width: 0,
+            height: 0,
+        };
+    }
+
+    const xValues = plots.map((plot) => plot.x);
+    const yValues = plots.map((plot) => plot.y);
+    const minX = Math.min(...xValues);
+    const maxX = Math.max(...xValues);
+    const minY = Math.min(...yValues);
+    const maxY = Math.max(...yValues);
+
+    return {
+        minX,
+        maxX,
+        minY,
+        maxY,
+        width: maxX - minX,
+        height: maxY - minY,
+    };
+}
+
+function getTemperatureGradientCoordinates(ds) {
+    const angle = normalizeTemperatureAngle(ds?.temperatureAngle);
+    const radians = (angle * Math.PI) / 180;
+    const dx = Math.sin(radians);
+    const dy = Math.cos(radians);
+    const bounds = getSeriesPlotBounds(ds);
+    const centerX = bounds.minX + bounds.width / 2;
+    const centerY = bounds.minY + bounds.height / 2;
+    const halfLength =
+        (Math.abs(dx) * bounds.width + Math.abs(dy) * bounds.height) / 2 || 1;
+
+    return {
+        x1: centerX - dx * halfLength,
+        y1: centerY - dy * halfLength,
+        x2: centerX + dx * halfLength,
+        y2: centerY + dy * halfLength,
+    };
+}
+
+function getTemperaturePlotRatio(ds, plot) {
+    const { x1, y1, x2, y2 } = getTemperatureGradientCoordinates(ds);
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const lengthSquared = dx * dx + dy * dy;
+
+    if (!lengthSquared) return 0;
+
+    const rawRatio = ((plot.x - x1) * dx + (plot.y - y1) * dy) / lengthSquared;
+    return Math.min(1, Math.max(0, rawRatio));
+}
+
+function getTemperaturePlotColor(ds, plot) {
+    return interpolateHexColors({
+        colors: ds.temperatureColors,
+        ratio: getTemperaturePlotRatio(ds, plot),
+    });
+}
+
+function getTemperaturePlotGradientId(ds, plot) {
+    return `temperature_plot_grad_history_${ds.seriesIndex}_${plot.id}_${uid.value}`;
+}
+
+function getPlotFillColor(ds, plot, seriesIndex) {
+    if (usePlotTemperatureColors(ds)) {
+        return FINAL_CONFIG.value.style.chart.plots.gradient.show
+            ? `url(#${getTemperaturePlotGradientId(ds, plot)})`
+            : getTemperaturePlotColor(ds, plot);
+    }
+
+    return FINAL_CONFIG.value.style.chart.plots.gradient.show
+        ? `url(#gradient_${seriesIndex}_${uid.value})`
+        : plot.color;
+}
+
+function getPlotBaseColor(ds, plot) {
+    return usePlotTemperatureColors(ds)
+        ? getTemperaturePlotColor(ds, plot)
+        : ds.color;
+}
+
+function getIndexLabelFillColor(ds, plot) {
+    return FINAL_CONFIG.value.style.chart.plots.indexLabels
+        .adaptColorToBackground
+        ? adaptColorToBackground(getPlotBaseColor(ds, plot))
+        : FINAL_CONFIG.value.style.chart.plots.indexLabels.color;
+}
+
+function getTooltipMarkerColor(seriesIndex, datapoint) {
+    const serie = drawableDataset.value.find(
+        (ds) => ds.seriesIndex === seriesIndex,
+    );
+
+    if (serie && usePlotTemperatureColors(serie)) {
+        return getTemperaturePlotColor(serie, datapoint);
+    }
+
+    return datapoint.color;
+}
+
+function getPathStroke(ds) {
+    if (hasTemperatureColors(ds)) {
+        return `url(#temperature_grad_history_${ds.seriesIndex}_${uid.value})`;
+    }
+
+    return FINAL_CONFIG.value.style.chart.paths.useSerieColor
+        ? ds.color
+        : FINAL_CONFIG.value.style.chart.paths.stroke;
+}
+
+function getSeriesOpacity(seriesIndex) {
+    return selectedDatapoint.value === null ||
+        activeTooltipSeriesIndex.value === seriesIndex
+        ? 1
+        : Math.min(1, FINAL_CONFIG.value.style.chart.plots.unselectedOpacity);
+}
+
+const isSeriesHighlighted = computed(() => {
+    return (
+        selectedDatapoint.value !== null &&
+        activeTooltipSeriesIndex.value !== null
+    );
+});
+
+const hasHighlightedSeries = ref(false);
+
+function shouldAnimateSeries() {
+    return (
+        FINAL_CONFIG.value.useCssAnimation &&
+        !loading.value &&
+        !hasHighlightedSeries.value
+    );
+}
+
+function getSeriesOpacityTransition() {
+    return 'opacity 0.2s ease-in-out';
+}
 
 function toggleLegend() {
     if (segregated.value.length) {
@@ -796,12 +1002,17 @@ function hideSeries(name) {
 
 const legendSet = computed(() => {
     return formattedDataset.value.map((ds) => {
+        const gradientColors = hasTemperatureColors(ds)
+            ? ds.temperatureColors
+            : null;
+
         return {
             ...ds,
+            gradientColors,
             opacity: segregated.value.includes(ds.seriesIndex) ? 0.5 : 1,
             segregate: () => segregate(ds.seriesIndex),
             isSegregated: segregated.value.includes(ds.seriesIndex),
-            shape: 'circle',
+            shape: gradientColors ? 'gradient' : 'circle',
         };
     });
 });
@@ -883,9 +1094,17 @@ function useTooltip({
     activeTooltipSeriesIndex.value = seriesIndex;
     activeTooltipPlotIndex.value = plotIndex;
     tooltipTriggerMode.value = triggerMode;
+    hasHighlightedSeries.value = true;
+
+    const tooltipMarkerColor = getTooltipMarkerColor(seriesIndex, datapoint);
+    const tooltipDatapoint = {
+        ...datapoint,
+        color: tooltipMarkerColor,
+    };
 
     dataTooltipSlot.value = {
-        datapoint,
+        datapoint: tooltipDatapoint,
+        color: tooltipMarkerColor,
         seriesIndex,
         plotIndex,
         config: FINAL_CONFIG.value,
@@ -899,7 +1118,8 @@ function useTooltip({
         try {
             const customFormatString = customFormat({
                 seriesIndex,
-                datapoint,
+                datapoint: tooltipDatapoint,
+                color: tooltipMarkerColor,
                 plotIndex,
                 series: formattedDataset.value,
                 config: FINAL_CONFIG.value,
@@ -916,7 +1136,7 @@ function useTooltip({
 
     if (!useCustomFormat.value) {
         let html = '';
-        html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;border-bottom:1px solid ${FINAL_CONFIG.value.style.chart.tooltip.borderColor};margin-bottom:3px;padding-bottom:6px;"><svg viewBox="0 0 12 12" height="14" width="14"><circle data-cy="donut-tooltip-marker" cx="6" cy="6" r="6" stroke="none" fill="${datapoint.color}"/></svg><span>${datapoint.seriesName}</span></div>`;
+        html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;border-bottom:1px solid ${FINAL_CONFIG.value.style.chart.tooltip.borderColor};margin-bottom:3px;padding-bottom:6px;"><svg viewBox="0 0 12 12" height="14" width="14"><circle data-cy="donut-tooltip-marker" cx="6" cy="6" r="6" stroke="none" fill="${tooltipMarkerColor}"/></svg><span>${datapoint.seriesName}</span></div>`;
 
         html += `<div>${datapoint.label}</div>`;
 
@@ -1703,28 +1923,109 @@ defineExpose({
                     <slot name="chart-background" />
                 </foreignObject>
 
-                <defs v-if="FINAL_CONFIG.style.chart.plots.gradient.show">
-                    <radialGradient
-                        v-for="(ds, i) in drawableDataset"
-                        :id="`gradient_${i}_${uid}`"
-                        fy="30%"
+                <defs
+                    v-if="
+                        FINAL_CONFIG.style.chart.plots.gradient.show ||
+                        hasTemperatureGradients
+                    "
+                >
+                    <template
+                        v-if="FINAL_CONFIG.style.chart.plots.gradient.show"
                     >
-                        <stop
-                            offset="10%"
-                            :stop-color="
-                                lightenHexColor(
-                                    ds.color,
-                                    FINAL_CONFIG.style.chart.plots.gradient
-                                        .intensity / 100,
-                                )
+                        <radialGradient
+                            v-for="(ds, i) in drawableDataset"
+                            :key="`gradient_${i}_${uid}`"
+                            :id="`gradient_${i}_${uid}`"
+                            fy="30%"
+                        >
+                            <stop
+                                offset="10%"
+                                :stop-color="
+                                    lightenHexColor(
+                                        ds.color,
+                                        FINAL_CONFIG.style.chart.plots.gradient
+                                            .intensity / 100,
+                                    )
+                                "
+                            />
+                            <stop
+                                offset="90%"
+                                :stop-color="darkenHexColor(ds.color, 0.1)"
+                            />
+                            <stop offset="100%" :stop-color="ds.color" />
+                        </radialGradient>
+                    </template>
+
+                    <template
+                        v-for="ds in drawableDataset"
+                        :key="`temperature_grad_history_template_${ds.seriesIndex}_${uid}`"
+                    >
+                        <template
+                            v-if="
+                                FINAL_CONFIG.style.chart.plots.gradient.show &&
+                                usePlotTemperatureColors(ds)
                             "
-                        />
-                        <stop
-                            offset="90%"
-                            :stop-color="darkenHexColor(ds.color, 0.1)"
-                        />
-                        <stop offset="100%" :stop-color="ds.color" />
-                    </radialGradient>
+                        >
+                            <radialGradient
+                                v-for="plot in ds.plots"
+                                :key="`temperature_plot_grad_history_${ds.seriesIndex}_${plot.id}_${uid}`"
+                                :id="getTemperaturePlotGradientId(ds, plot)"
+                                fy="30%"
+                            >
+                                <stop
+                                    offset="10%"
+                                    :stop-color="
+                                        lightenHexColor(
+                                            getTemperaturePlotColor(ds, plot),
+                                            FINAL_CONFIG.style.chart.plots
+                                                .gradient.intensity / 100,
+                                        )
+                                    "
+                                />
+                                <stop
+                                    offset="90%"
+                                    :stop-color="
+                                        darkenHexColor(
+                                            getTemperaturePlotColor(ds, plot),
+                                            0.1,
+                                        )
+                                    "
+                                />
+                                <stop
+                                    offset="100%"
+                                    :stop-color="
+                                        getTemperaturePlotColor(ds, plot)
+                                    "
+                                />
+                            </radialGradient>
+                        </template>
+
+                        <linearGradient
+                            v-if="hasTemperatureColors(ds)"
+                            :id="`temperature_grad_history_${ds.seriesIndex}_${uid}`"
+                            gradientUnits="userSpaceOnUse"
+                            :x1="getTemperatureGradientCoordinates(ds).x1"
+                            :y1="getTemperatureGradientCoordinates(ds).y1"
+                            :x2="getTemperatureGradientCoordinates(ds).x2"
+                            :y2="getTemperatureGradientCoordinates(ds).y2"
+                        >
+                            <stop
+                                v-for="(
+                                    color, colorIndex
+                                ) in ds.temperatureColors"
+                                :key="`temperature_grad_history_stop_${ds.seriesIndex}_${colorIndex}_${uid}`"
+                                :stop-color="color"
+                                :offset="
+                                    ds.temperatureColors.length === 1
+                                        ? '0%'
+                                        : setGradientOffset(
+                                              colorIndex,
+                                              ds.temperatureColors.length,
+                                          )
+                                "
+                            />
+                        </linearGradient>
+                    </template>
                 </defs>
 
                 <!-- GRID -->
@@ -1953,12 +2254,15 @@ defineExpose({
                 />
 
                 <!-- PLOTS & PATHS -->
-                <g v-for="(ds, i) in drawableDataset">
+                <g
+                    v-for="ds in drawableDatasetWithActiveLast"
+                    :key="`history_plot_serie_${ds.seriesIndex}_${uid}`"
+                >
                     <!-- PATHS -->
                     <g
                         v-if="FINAL_CONFIG.style.chart.paths.show"
                         :style="{
-                            opacity: selectedDatapoint === null ? 1 : 0.3,
+                            opacity: getSeriesOpacity(ds.seriesIndex),
                         }"
                     >
                         <path
@@ -1972,18 +2276,13 @@ defineExpose({
                             stroke-linecap="round"
                             stroke-linejoin="round"
                             :class="{
-                                animated:
-                                    FINAL_CONFIG.useCssAnimation && !loading,
+                                animated: shouldAnimateSeries(),
                             }"
                         />
                         <path
                             data-cy="datapoint-path"
                             :d="ds.path"
-                            :stroke="
-                                FINAL_CONFIG.style.chart.paths.useSerieColor
-                                    ? ds.color
-                                    : FINAL_CONFIG.style.chart.paths.stroke
-                            "
+                            :stroke="getPathStroke(ds)"
                             :stroke-width="
                                 FINAL_CONFIG.style.chart.paths.strokeWidth
                             "
@@ -1991,8 +2290,7 @@ defineExpose({
                             stroke-linecap="round"
                             stroke-linejoin="round"
                             :class="{
-                                animated:
-                                    FINAL_CONFIG.useCssAnimation && !loading,
+                                animated: shouldAnimateSeries(),
                             }"
                         />
                     </g>
@@ -2014,27 +2312,18 @@ defineExpose({
                         v-for="plot in ds.plots"
                         :cx="plot.x"
                         :cy="plot.y"
-                        :fill="
-                            FINAL_CONFIG.style.chart.plots.gradient.show
-                                ? `url(#gradient_${i}_${uid})`
-                                : plot.color
-                        "
+                        :fill="getPlotFillColor(ds, plot, ds.gradientIndex)"
                         :r="sizes.plots"
                         :stroke="FINAL_CONFIG.style.chart.plots.stroke"
                         :stroke-width="
                             FINAL_CONFIG.style.chart.plots.strokeWidth
                         "
                         :class="{
-                            animated: FINAL_CONFIG.useCssAnimation && !loading,
+                            animated: shouldAnimateSeries(),
                         }"
                         :style="{
-                            opacity:
-                                selectedDatapoint === null
-                                    ? 1
-                                    : selectedDatapoint.id === plot.id
-                                      ? 1
-                                      : 0.3,
-                            transition: 'opacity 0.2s ease-in-out',
+                            opacity: getSeriesOpacity(ds.seriesIndex),
+                            transition: getSeriesOpacityTransition(),
                         }"
                     />
 
@@ -2067,18 +2356,11 @@ defineExpose({
                                 "
                                 text-anchor="middle"
                                 :class="{
-                                    animated:
-                                        FINAL_CONFIG.useCssAnimation &&
-                                        !loading,
+                                    animated: shouldAnimateSeries(),
                                 }"
                                 :style="{
-                                    opacity:
-                                        selectedDatapoint === null
-                                            ? 1
-                                            : selectedDatapoint.id === plot.id
-                                              ? 1
-                                              : 0.3,
-                                    transition: 'opacity 0.2s ease-in-out',
+                                    opacity: getSeriesOpacity(ds.seriesIndex),
+                                    transition: getSeriesOpacityTransition(),
                                 }"
                             >
                                 {{ plot.label }}
@@ -2111,18 +2393,11 @@ defineExpose({
                                 "
                                 text-anchor="middle"
                                 :class="{
-                                    animated:
-                                        FINAL_CONFIG.useCssAnimation &&
-                                        !loading,
+                                    animated: shouldAnimateSeries(),
                                 }"
                                 :style="{
-                                    opacity:
-                                        selectedDatapoint === null
-                                            ? 1
-                                            : selectedDatapoint.id === plot.id
-                                              ? 1
-                                              : 0.3,
-                                    transition: 'opacity 0.2s ease-in-out',
+                                    opacity: getSeriesOpacity(ds.seriesIndex),
+                                    transition: getSeriesOpacityTransition(),
                                 }"
                                 v-html="
                                     createTSpansFromLineBreaksOnX({
@@ -2168,26 +2443,14 @@ defineExpose({
                                     ? 'bold'
                                     : 'normal'
                             "
-                            :fill="
-                                FINAL_CONFIG.style.chart.plots.indexLabels
-                                    .adaptColorToBackground
-                                    ? adaptColorToBackground(ds.color)
-                                    : FINAL_CONFIG.style.chart.plots.indexLabels
-                                          .color
-                            "
+                            :fill="getIndexLabelFillColor(ds, label)"
                             text-anchor="middle"
                             :class="{
-                                animated:
-                                    FINAL_CONFIG.useCssAnimation && !loading,
+                                animated: shouldAnimateSeries(),
                             }"
                             :style="{
-                                opacity:
-                                    selectedDatapoint === null
-                                        ? 1
-                                        : selectedDatapoint.id === label.id
-                                          ? 1
-                                          : 0.3,
-                                transition: 'opacity 0.2s ease-in-out',
+                                opacity: getSeriesOpacity(ds.seriesIndex),
+                                transition: getSeriesOpacityTransition(),
                             }"
                         >
                             {{
@@ -2201,7 +2464,10 @@ defineExpose({
                 </g>
 
                 <!-- TOOLTIP TRAPS -->
-                <g v-for="ds in drawableDataset">
+                <g
+                    v-for="ds in drawableDatasetWithActiveLast"
+                    :key="`history_plot_trap_serie_${ds.seriesIndex}_${uid}`"
+                >
                     <circle
                         data-cy="tooltip-trap"
                         v-for="(plot, i) in ds.plots"

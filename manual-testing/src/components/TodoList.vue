@@ -818,7 +818,7 @@ const wordCloudConfig = computed(() => ({
 </script>
 
 <template>
-    <div
+    <!-- <div
         :style="{
             position: 'fixed',
             top: 0,
@@ -837,7 +837,7 @@ const wordCloudConfig = computed(() => ({
             :config="wordCloudConfig"
             :key="`wc_${WIDTH}_${HEIGHT}`"
         />
-    </div>
+    </div> -->
     <button class="open-btn" @click="openDialog()">
         <VueUiIcon name="checkList" stroke="#8A8A8A" />
         <div class="badge" v-if="toBeDone.length">

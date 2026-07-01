@@ -27,12 +27,16 @@ onMounted(() => {
                 name: 'Series 1',
                 values: [
                     { x: 2, y: 21, label: 'F' },
-                    { x: 3, y: 13, label: 'E' },
+                    { x: 7, y: 13, label: 'E' },
                     { x: 5, y: 8, label: 'D' },
-                    { x: 8, y: 5, label: 'C' },
+                    { x: 22, y: 5, label: 'C' },
                     { x: 13, y: 3, label: 'B' },
                     { x: 21, y: 2, label: 'A' },
                 ],
+                smooth: true,
+                temperatureColors: ['#FF0000', '#00FF00'],
+                temperatureAngle: 0,
+                usePlotTemperatureColors: true,
             },
             {
                 name: 'Series 2',
@@ -42,6 +46,7 @@ onMounted(() => {
                     { x: 65, y: 3, label: 'T3' },
                     { x: 12, y: 2.5, label: 'T4' },
                 ],
+                smooth: true,
             },
             {
                 name: 'Series 3',
@@ -51,9 +56,10 @@ onMounted(() => {
                     { x: 25, y: 2, label: 'T3' },
                     { x: 42, y: 7, label: 'T4' },
                 ],
+                smooth: true,
             },
         ];
-    }, 2000);
+    }, 10);
 });
 
 const model = createModel([
@@ -137,6 +143,8 @@ const model = createModel([
 
     SELECT('style.chart.legend.position', ['top', 'bottom'], { def: 'bottom' }),
     CHECKBOX('style.chart.legend.selectAllToggle.show', { def: true }),
+    COLOR('style.chart.legend.backgroundColor', { def: '#FFFFFF' }),
+    COLOR('style.chart.legend.color', { def: '#1A1A1A' }),
 
     RANGE('style.chart.plots.radius', { def: 16, min: 8, max: 42 }),
     COLOR('style.chart.plots.stroke', { def: '#FFFFFF' }),
