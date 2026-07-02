@@ -4,6 +4,7 @@ import type { VueUiStripPlotTooltipSlotProps } from 'vue-data-ui/vue-ui-strip-pl
 const props = defineProps<{
     datapoint: VueUiStripPlotTooltipSlotProps['datapoint'];
     seriesIndex: VueUiStripPlotTooltipSlotProps['seriesIndex'];
+    boxPlot: VueUiStripPlotTooltipSlotProps['boxPlot'];
 }>();
 </script>
 
@@ -15,6 +16,8 @@ const props = defineProps<{
         <br />
         datapoint:
         <div style="font-size: 8px; line-height: 0.7rem">{{ datapoint }}</div>
+        boxPlot:
+        <div style="font-size: 8px; line-height: 0.7rem">{{ boxPlot }}</div>
     </code>
 </template>
 

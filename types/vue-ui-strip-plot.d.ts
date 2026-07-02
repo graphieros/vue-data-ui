@@ -20,6 +20,7 @@ import type {
     VueUiStripPlotEmits,
     VueUiStripPlotEmitSelectDatapoint,
     VueUiStripPlotEmitCopyAlt,
+    VueUiStripPlotBoxPlot,
 } from 'vue-data-ui';
 
 export type {
@@ -42,6 +43,7 @@ export type {
     VueUiStripPlotEmits,
     VueUiStripPlotEmitSelectDatapoint,
     VueUiStripPlotEmitCopyAlt,
+    VueUiStripPlotBoxPlot,
 };
 
 declare const VueUiStripPlotBase: DefineComponent<

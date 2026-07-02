@@ -111,6 +111,7 @@ function addDatapoint() {
 }
 
 const model = createModel([
+    SELECT('type', ['classic', 'scatter', 'violin'], { def: 'violin' }),
     CHECKBOX('debug', { def: true }),
     CHECKBOX('loading', { def: false }),
     CHECKBOX('responsive', { def: false }),
@@ -140,6 +141,46 @@ const model = createModel([
     COLOR('style.chart.color', { def: '#1A1A1A' }),
     NUMBER('style.chart.height', { def: 600, min: 200, max: 1000 }),
     NUMBER('style.chart.stripWidth', { def: 120, min: 48, max: 300 }),
+
+    NUMBER('style.chart.violin.widthRatio', {
+        def: 1,
+        min: 0,
+        max: 1,
+        step: 0.1,
+    }),
+    NUMBER('style.chart.violin.strokeWidth', { def: 1, min: 1, max: 5 }),
+    NUMBER('style.chart.violin.opacity', {
+        def: 0.2,
+        min: 0,
+        max: 1,
+        step: 0.1,
+    }),
+    NUMBER('style.chart.violin.strokeOpacity', {
+        def: 0.35,
+        min: 0.1,
+        max: 1,
+        step: 0.01,
+    }),
+    CHECKBOX('style.chart.violin.useSerieColor', { def: true }),
+    COLOR('style.chart.violin.stroke', { def: '#5A5A5A' }),
+
+    CHECKBOX('style.chart.violin.boxPlot.show', { def: true }),
+    CHECKBOX('style.chart.violin.boxPlot.useSerieColor', { def: false }),
+    COLOR('style.chart.violin.boxPlot.color', { def: '#5A5A5A' }),
+    NUMBER('style.chart.violin.boxPlot.medianCircleRadiusRatio', {
+        def: 1,
+        min: 0.1,
+        max: 2,
+        step: 0.1,
+    }),
+    COLOR('style.chart.violin.boxPlot.medianCircleFill', { def: '#FFFFFF' }),
+    NUMBER('style.chart.violin.boxPlot.widthRatio', {
+        def: 1,
+        min: 0.1,
+        max: 2,
+        step: 0.1,
+    }),
+
     NUMBER('style.chart.padding.top', { def: 0, min: 0, max: 100 }),
     NUMBER('style.chart.padding.left', { def: 0, min: 0, max: 100 }),
     NUMBER('style.chart.padding.right', { def: 0, min: 0, max: 100 }),
@@ -180,7 +221,7 @@ const model = createModel([
         max: 1,
         step: 0.01,
     }),
-    NUMBER('style.chart.plots.radius', { def: 20, min: 1, max: 100 }),
+    NUMBER('style.chart.plots.radius', { def: 4, min: 1, max: 100 }),
     COLOR('style.chart.plots.stroke', { def: '#FFFFFF' }),
     NUMBER('style.chart.plots.strokeWidth', { def: 1, min: 0, max: 12 }),
     SELECT(
@@ -315,7 +356,10 @@ const testCustomTooltip = ref(false);
 
 const { themeOptions, currentTheme } = useThemeOptions();
 
-const configTheme = computed(() => ({ theme: currentTheme.value }));
+const configTheme = computed(() => ({
+    theme: currentTheme.value,
+    type: 'violin',
+}));
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value);

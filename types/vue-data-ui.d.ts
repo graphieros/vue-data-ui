@@ -11001,6 +11001,32 @@ declare module 'vue-data-ui' {
                         intensity?: number;
                     };
                 };
+                violin?: {
+                    widthRatio?: number;
+                    strokeWidth?: number;
+                    opacity?: number;
+                    strokeOpacity?: number;
+                    useSerieColor?: boolean;
+                    stroke?: string;
+                    fill?: string;
+                    boxPlot?: {
+                        show?: boolean;
+                        widthRatio?: number;
+                        useSerieColor?: boolean;
+                        color?: string;
+                        medianCircleRadiusRatio?: number;
+                        medianCircleFill?: string;
+                    };
+                    tooltipLabels?: {
+                        upperAdjacent?: string;
+                        q3?: string;
+                        median?: string;
+                        q1?: string;
+                        lowerAdjacent?: string;
+                        iqr?: string;
+                        count?: string;
+                    };
+                };
                 labels?: {
                     prefix?: string;
                     suffix?: string;
@@ -11048,7 +11074,8 @@ declare module 'vue-data-ui' {
                         | null
                         | ((
                               params: VueUiTooltipParams<
-                                  VueUiStripPlotDatapoint,
+                                  | VueUiStripPlotDatapoint
+                                  | VueUiStripPlotBoxPlot,
                                   VueUiStripPlotSeriesItem[],
                                   VueUiStripPlotConfig
                               >,
@@ -11131,11 +11158,36 @@ declare module 'vue-data-ui' {
         };
     };
 
+    export type VueUiStripPlotBoxPlot = {
+        id: string;
+        color: string;
+        boxPlotColor: string;
+        name: string;
+        count: number;
+        lowerAdjacent: number;
+        q1: number;
+        median: number;
+        q3: number;
+        upperAdjacent: number;
+        iqr: number;
+        lowerFence: number;
+        upperFence: number;
+        centerX: number;
+        boxLeft: number;
+        boxWidth: number;
+        q1Y: number;
+        medianY: number;
+        q3Y: number;
+        lowerY: number;
+        upperY: number;
+    };
+
     export type VueUiStripPlotTooltipSlotProps = {
         config: VueUiStripPlotConfig;
-        datapoint: VueUiStripPlotDatapoint;
+        datapoint: VueUiStripPlotDatapoint | undefined;
         series: VueUiStripPlotSeriesItem;
         seriesIndex: number;
+        boxPlot: VueUiStripPlotBoxPlot;
     };
 
     export type VueUiStripPlotProps = {

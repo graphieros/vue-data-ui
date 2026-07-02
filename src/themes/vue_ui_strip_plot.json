@@ -47,6 +47,11 @@
                         "show": false
                     }
                 },
+                "violin": {
+                    "boxPlot": {
+                        "medianCircleFill": "#1A1A1A"
+                    }
+                },
                 "labels": {
                     "bestPlotLabel": {
                         "color": "#CCCCCC"
@@ -102,6 +107,11 @@
                 },
                 "plots": {
                     "stroke": "#1A1A1A"
+                },
+                "violin": {
+                    "boxPlot": {
+                        "medianCircleFill": "#1A1A1A"
+                    }
                 },
                 "labels": {
                     "bestPlotLabel": {
@@ -159,6 +169,11 @@
                 "plots": {
                     "stroke": "#FFF8E1"
                 },
+                "violin": {
+                    "boxPlot": {
+                        "medianCircleFill": "#FFF8E1"
+                    }
+                },
                 "labels": {
                     "bestPlotLabel": {
                         "color": "#424242"
@@ -214,6 +229,11 @@
                 },
                 "plots": {
                     "stroke": "#1E1E1E"
+                },
+                "violin": {
+                    "boxPlot": {
+                        "medianCircleFill": "#1E1E1E"
+                    }
                 },
                 "labels": {
                     "bestPlotLabel": {
@@ -271,6 +291,11 @@
                 "plots": {
                     "stroke": "#00FF00"
                 },
+                "violin": {
+                    "boxPlot": {
+                        "medianCircleFill": "#1A1A1A"
+                    }
+                },
                 "labels": {
                     "bestPlotLabel": {
                         "color": "#AACCAA"
@@ -326,6 +351,11 @@
                 "plots": {
                     "stroke": "#fbfafa"
                 },
+                "violin": {
+                    "boxPlot": {
+                        "medianCircleFill": "#fbfafa"
+                    }
+                },
                 "labels": {
                     "bestPlotLabel": {
                         "color": "#A0AC94"
@@ -380,6 +410,11 @@
                 },
                 "plots": {
                     "stroke": "#404C5A"
+                },
+                "violin": {
+                    "boxPlot": {
+                        "medianCircleFill": "#F6F6FB"
+                    }
                 },
                 "labels": {
                     "bestPlotLabel": {

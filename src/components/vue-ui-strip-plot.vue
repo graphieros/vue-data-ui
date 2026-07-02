@@ -15,6 +15,7 @@ import {
     applyDataLabel,
     calculateNiceScale,
     checkNaN,
+    clampNumber,
     convertColorToHex,
     convertCustomPalette,
     createCsvContent,
@@ -70,6 +71,8 @@ const PackageVersion = defineAsyncComponent(
 const BaseDraggableDialog = defineAsyncComponent(
     () => import('../atoms/BaseDraggableDialog.vue'),
 );
+
+const STRIP_PLOT_TYPES = ['classic', 'scatter', 'violin'];
 
 const { vue_ui_strip_plot: DEFAULT_CONFIG } = useConfig();
 const { isThemeValid, warnInvalidTheme } = useThemeCheck();
@@ -128,6 +131,10 @@ const tooltipA11yPosition = ref({ x: 0, y: 0 }); // a11y
 const isFocus = ref(false); // a11y
 
 const FINAL_CONFIG = ref(prepareConfig());
+
+const chartType = computed(() =>
+    normalizeStripPlotType(FINAL_CONFIG.value.type),
+);
 
 const isCursorPointer = computed(
     () => FINAL_CONFIG.value.userOptions.useCursorPointer,
@@ -268,6 +275,10 @@ function prepareConfig() {
             ? finalConfig.customPalette
             : themePalettes[theme] || palette,
     };
+}
+
+function normalizeStripPlotType(type) {
+    return STRIP_PLOT_TYPES.includes(type) ? type : 'classic';
 }
 
 watch(
@@ -484,6 +495,21 @@ const adjustedPlotRadius = computed(() => {
     return Math.min(plotRadius.value, (drawingArea.value.stripWidth / 2) * 0.9);
 });
 
+function svgNumber(value) {
+    return Number.isFinite(value) ? Number(value.toFixed(2)) : 0;
+}
+
+function getViolinMaxWidth() {
+    return (
+        Math.max(
+            0,
+            (drawingArea.value.stripWidth / 2 -
+                adjustedPlotRadius.value * 1.8) *
+                0.86,
+        ) * Math.min(1, FINAL_CONFIG.value.style.chart.violin.widthRatio)
+    );
+}
+
 function getOffsetX() {
     let base = 0;
     if (scaleLabels.value) {
@@ -568,6 +594,14 @@ const drawingArea = computed(() => {
     };
 });
 
+function getStripCenterX(seriesIndex) {
+    return (
+        drawingArea.value.left +
+        (seriesIndex + 1) * drawingArea.value.stripWidth -
+        drawingArea.value.stripWidth / 2
+    );
+}
+
 const immutableDataset = computed(() => {
     return FINAL_DATASET.value.map((ds, i) => {
         const id = createUid();
@@ -608,10 +642,7 @@ const mutableDataset = computed(() => {
             plots: ds.plots.map((p) => {
                 return {
                     ...p,
-                    x:
-                        drawingArea.value.left +
-                        (i + 1) * drawingArea.value.stripWidth -
-                        drawingArea.value.stripWidth / 2,
+                    x: getStripCenterX(i),
                 };
             }),
         };
@@ -642,21 +673,432 @@ const scale = computed(() => {
 
 const drawableDataset = computed(() => {
     return (mutableDataset.value || []).map((ds, i) => {
+        const plots = ds.plots.map((p) => {
+            return {
+                ...p,
+                y:
+                    drawingArea.value.bottom -
+                    ((p.value + Math.abs(scale.value.min)) /
+                        (scale.value.max + Math.abs(scale.value.min))) *
+                        drawingArea.value.height,
+            };
+        });
+
+        const xOffsets =
+            chartType.value === 'classic'
+                ? plots.map(() => 0)
+                : getPackedXOffsets(plots);
+
         return {
             ...ds,
-            plots: ds.plots.map((p) => {
+            plots: plots.map((p, j) => {
                 return {
                     ...p,
-                    y:
-                        drawingArea.value.bottom -
-                        ((p.value + Math.abs(scale.value.min)) /
-                            (scale.value.max + Math.abs(scale.value.min))) *
-                            drawingArea.value.height,
+                    x: p.x + xOffsets[j],
                 };
             }),
         };
     });
 });
+
+const isViolinBoxPlot = computed(() => {
+    return (
+        chartType.value === 'violin' &&
+        !!FINAL_CONFIG.value.style.chart.violin?.boxPlot?.show
+    );
+});
+
+function quantile(sortedValues, q) {
+    if (!sortedValues.length) return 0;
+    if (sortedValues.length === 1) return sortedValues[0];
+
+    const position = (sortedValues.length - 1) * q;
+    const base = Math.floor(position);
+    const rest = position - base;
+    const next = sortedValues[base + 1];
+
+    return next === undefined
+        ? sortedValues[base]
+        : sortedValues[base] + rest * (next - sortedValues[base]);
+}
+
+function getYFromValue(value) {
+    const denominator = scale.value.max + Math.abs(scale.value.min);
+    if (!denominator) return drawingArea.value.bottom;
+
+    return (
+        drawingArea.value.bottom -
+        ((value + Math.abs(scale.value.min)) / denominator) *
+            drawingArea.value.height
+    );
+}
+
+const boxPlotSummaries = computed(() => {
+    if (!isViolinBoxPlot.value) return [];
+
+    return drawableDataset.value.map((ds, seriesIndex) => {
+        const values = ds.plots.map((plot) => plot.value).sort((a, b) => a - b);
+        const q1 = quantile(values, 0.25);
+        const median = quantile(values, 0.5);
+        const q3 = quantile(values, 0.75);
+        const iqr = q3 - q1;
+        const lowerFence = q1 - iqr * 1.5;
+        const upperFence = q3 + iqr * 1.5;
+        const lowerAdjacent = values.find((value) => value >= lowerFence);
+        const upperAdjacent = values
+            .slice()
+            .reverse()
+            .find((value) => value <= upperFence);
+        const centerX = getStripCenterX(seriesIndex);
+        const boxWidth =
+            Math.max(
+                adjustedPlotRadius.value * 2.8,
+                Math.min(
+                    getViolinMaxWidth() * 0.32,
+                    drawingArea.value.stripWidth * 0.12,
+                ),
+            ) *
+            Math.min(
+                1.5,
+                FINAL_CONFIG.value.style.chart.violin.boxPlot.widthRatio,
+            );
+
+        return {
+            id: ds.id,
+            boxPlotColor: FINAL_CONFIG.value.style.chart.violin.boxPlot
+                .useSerieColor
+                ? ds.color
+                : FINAL_CONFIG.value.style.chart.violin.boxPlot.color,
+            color: ds.color,
+            name: ds.name,
+            count: values.length,
+            lowerAdjacent: lowerAdjacent ?? values[0],
+            q1,
+            median,
+            q3,
+            upperAdjacent: upperAdjacent ?? values[values.length - 1],
+            iqr,
+            lowerFence,
+            upperFence,
+            centerX,
+            boxLeft: centerX - boxWidth / 2,
+            boxWidth: boxWidth,
+            q1Y: getYFromValue(q1),
+            medianY: getYFromValue(median),
+            q3Y: getYFromValue(q3),
+            lowerY: getYFromValue(lowerAdjacent ?? values[0]),
+            upperY: getYFromValue(upperAdjacent ?? values[values.length - 1]),
+        };
+    });
+});
+
+const boxPlotTableColumns = computed(() => [
+    FINAL_CONFIG.value.table.columnNames.series,
+    FINAL_CONFIG.value.style.chart.violin.tooltipLabels.lowerAdjacent,
+    FINAL_CONFIG.value.style.chart.violin.tooltipLabels.q1,
+    FINAL_CONFIG.value.style.chart.violin.tooltipLabels.median,
+    FINAL_CONFIG.value.style.chart.violin.tooltipLabels.q3,
+    FINAL_CONFIG.value.style.chart.violin.tooltipLabels.upperAdjacent,
+    FINAL_CONFIG.value.style.chart.violin.tooltipLabels.iqr,
+    FINAL_CONFIG.value.style.chart.violin.tooltipLabels.count,
+]);
+
+function formatTableValue(value) {
+    return dataLabel({
+        p: FINAL_CONFIG.value.style.chart.labels.prefix,
+        v: value,
+        s: FINAL_CONFIG.value.style.chart.labels.suffix,
+        r: FINAL_CONFIG.value.table.td.roundingValue,
+    });
+}
+
+function getPackedXOffsets(plots) {
+    const maxOffset =
+        chartType.value === 'violin'
+            ? Math.max(0, getViolinMaxWidth() - adjustedPlotRadius.value * 1.15)
+            : Math.max(
+                  0,
+                  drawingArea.value.stripWidth / 2 -
+                      adjustedPlotRadius.value * 1.5,
+              );
+
+    if (!plots.length || !maxOffset) return plots.map(() => 0);
+
+    const offsets = plots.map(() => 0);
+    const minDistance = adjustedPlotRadius.value * 2.1;
+    const step = Math.min(maxOffset, minDistance);
+    const candidates = [0];
+
+    for (let offset = step; offset <= maxOffset + step / 2; offset += step) {
+        candidates.push(-Math.min(offset, maxOffset));
+        candidates.push(Math.min(offset, maxOffset));
+    }
+
+    const placed = [];
+
+    plots.forEach((plot, plotIndex) => {
+        const offset =
+            candidates.find((candidate) => {
+                return placed.every((placedPlot) => {
+                    const dx = candidate - placedPlot.offset;
+                    const dy = plot.y - placedPlot.y;
+                    return Math.hypot(dx, dy) >= minDistance;
+                });
+            }) ?? 0;
+
+        offsets[plotIndex] = offset;
+        placed.push({
+            y: plot.y,
+            offset,
+        });
+    });
+
+    return offsets;
+}
+
+const violinShapes = computed(() => {
+    if (chartType.value !== 'violin') return [];
+
+    return drawableDataset.value.map((ds, seriesIndex) => {
+        return {
+            id: ds.id,
+            color: FINAL_CONFIG.value.style.chart.violin.useSerieColor
+                ? ds.color
+                : FINAL_CONFIG.value.style.chart.violin.stroke,
+            fill: FINAL_CONFIG.value.style.chart.violin.useSerieColor
+                ? ds.color
+                : FINAL_CONFIG.value.style.chart.violin.fill,
+            path: createViolinPath(ds.plots, seriesIndex),
+            connectors: createViolinConnectors(ds.plots, seriesIndex),
+        };
+    });
+});
+
+function createViolinPath(plots, seriesIndex) {
+    const maxWidth = getViolinMaxWidth();
+
+    if (!plots.length || !drawingArea.value.height || !maxWidth) return '';
+
+    const centerX = getStripCenterX(seriesIndex);
+    const yValues = plots.map((plot) => plot.y);
+    const bandwidth = getViolinBandwidth(yValues);
+    const clusters = getViolinClusters({ yValues, bandwidth });
+
+    if (clusters.length > 1) {
+        return clusters
+            .map((cluster) => {
+                return createViolinKdePath({
+                    yValues: cluster,
+                    centerX,
+                    maxWidth: getViolinClusterMaxWidth({
+                        clusterLength: cluster.length,
+                        totalLength: yValues.length,
+                        maxWidth,
+                    }),
+                    bandwidth: getViolinBandwidth(cluster),
+                });
+            })
+            .join(' ');
+    }
+
+    return createViolinKdePath({
+        yValues,
+        centerX,
+        maxWidth,
+        bandwidth,
+    });
+}
+
+function createViolinConnectors(plots, seriesIndex) {
+    if (!plots.length) return [];
+
+    const centerX = getStripCenterX(seriesIndex);
+    const yValues = plots.map((plot) => plot.y);
+    const bandwidth = getViolinBandwidth(yValues);
+    const clusters = getViolinClusters({ yValues, bandwidth });
+
+    if (clusters.length < 2) return [];
+
+    return clusters.slice(1).map((cluster, index) => {
+        const previousCluster = clusters[index];
+        const previousBandwidth = getViolinBandwidth(previousCluster);
+        const currentBandwidth = getViolinBandwidth(cluster);
+        const y1 = clampNumber(
+            Math.max(...previousCluster) + previousBandwidth * 2.35,
+            drawingArea.value.top,
+            drawingArea.value.bottom,
+        );
+        const y2 = clampNumber(
+            Math.min(...cluster) - currentBandwidth * 2.35,
+            drawingArea.value.top,
+            drawingArea.value.bottom,
+        );
+
+        return {
+            x: svgNumber(centerX),
+            y1: svgNumber(y1),
+            y2: svgNumber(y2),
+        };
+    });
+}
+
+function getViolinClusterMaxWidth({ clusterLength, totalLength, maxWidth }) {
+    const relativeWeight = Math.pow(clusterLength / totalLength, 0.6);
+    const smallClusterFactor = clusterLength <= 2 ? 0.72 : 1;
+
+    return Math.max(
+        adjustedPlotRadius.value * 2.2,
+        maxWidth * clampNumber(relativeWeight * smallClusterFactor, 0.18, 1),
+    );
+}
+
+function getViolinBandwidth(yValues) {
+    const mean =
+        yValues.reduce((sum, y) => sum + y, 0) / Math.max(1, yValues.length);
+    const variance =
+        yValues.reduce((sum, y) => sum + (y - mean) ** 2, 0) /
+        Math.max(1, yValues.length);
+    const standardDeviation = Math.sqrt(variance);
+    const minBandwidth =
+        yValues.length < 2
+            ? Math.max(
+                  adjustedPlotRadius.value * 2.6,
+                  drawingArea.value.height / 48,
+              )
+            : adjustedPlotRadius.value * 2.1;
+
+    return clampNumber(
+        1.06 * standardDeviation * Math.pow(yValues.length, -0.2),
+        minBandwidth,
+        drawingArea.value.height / 5,
+    );
+}
+
+function getViolinClusters({ yValues, bandwidth }) {
+    if (yValues.length < 2) return [yValues];
+
+    const sortedValues = [...yValues].sort((a, b) => a - b);
+    const gapThreshold = Math.max(
+        bandwidth * 1.45,
+        adjustedPlotRadius.value * 5,
+    );
+    const clusters = [];
+    let cluster = [sortedValues[0]];
+
+    for (let i = 1; i < sortedValues.length; i += 1) {
+        if (Math.abs(sortedValues[i] - sortedValues[i - 1]) > gapThreshold) {
+            clusters.push(cluster);
+            cluster = [sortedValues[i]];
+        } else {
+            cluster.push(sortedValues[i]);
+        }
+    }
+
+    clusters.push(cluster);
+
+    return mergeCollidingViolinClusters(clusters);
+}
+
+function mergeCollidingViolinClusters(clusters) {
+    return clusters.reduce((mergedClusters, cluster) => {
+        const previousCluster = mergedClusters[mergedClusters.length - 1];
+
+        if (!previousCluster) {
+            mergedClusters.push(cluster);
+            return mergedClusters;
+        }
+
+        const previousBandwidth = getViolinBandwidth(previousCluster);
+        const currentBandwidth = getViolinBandwidth(cluster);
+        const previousBottom =
+            Math.max(...previousCluster) + previousBandwidth * 2.35;
+        const currentTop = Math.min(...cluster) - currentBandwidth * 2.35;
+
+        if (previousBottom >= currentTop) {
+            previousCluster.push(...cluster);
+        } else {
+            mergedClusters.push(cluster);
+        }
+
+        return mergedClusters;
+    }, []);
+}
+
+function createViolinKdePath({ yValues, centerX, maxWidth, bandwidth }) {
+    const top = clampNumber(
+        Math.min(...yValues) - bandwidth * 2.35,
+        drawingArea.value.top,
+        drawingArea.value.bottom,
+    );
+    const bottom = clampNumber(
+        Math.max(...yValues) + bandwidth * 2.35,
+        drawingArea.value.top,
+        drawingArea.value.bottom,
+    );
+    const sampleCount = Math.max(
+        48,
+        Math.min(120, Math.round((bottom - top) / Math.max(1, bandwidth / 4))),
+    );
+    const samples = Array.from({ length: sampleCount }, (_, i) => {
+        const y = top + ((bottom - top) * i) / Math.max(1, sampleCount - 1);
+        const density = yValues.reduce((sum, plotY) => {
+            const distance = (y - plotY) / bandwidth;
+            return sum + Math.exp(-0.5 * distance * distance);
+        }, 0);
+        return {
+            y,
+            density,
+        };
+    });
+
+    const maxDensity = Math.max(...samples.map((sample) => sample.density));
+    if (!maxDensity) return '';
+
+    const points = samples.map((sample, i) => {
+        const isEndpoint = i === 0 || i === samples.length - 1;
+        const width = isEndpoint ? 0 : (sample.density / maxDensity) * maxWidth;
+        return {
+            y: svgNumber(sample.y),
+            width: svgNumber(width),
+        };
+    });
+
+    const leftPoints = points.map((point) => {
+        return {
+            x: svgNumber(centerX - point.width),
+            y: point.y,
+        };
+    });
+    const rightPoints = points
+        .slice(0, -1)
+        .reverse()
+        .map((point) => {
+            return {
+                x: svgNumber(centerX + point.width),
+                y: point.y,
+            };
+        });
+
+    return `${drawViolinBody([...leftPoints, ...rightPoints])} Z`;
+}
+
+function drawViolinBody(points) {
+    if (!points.length) return '';
+    if (points.length === 1) return `M ${points[0].x} ${points[0].y}`;
+
+    let path = `M ${points[0].x} ${points[0].y}`;
+
+    for (let i = 1; i < points.length - 1; i += 1) {
+        const current = points[i];
+        const next = points[i + 1];
+        const midX = svgNumber((current.x + next.x) / 2);
+        const midY = svgNumber((current.y + next.y) / 2);
+        path += ` Q ${current.x} ${current.y} ${midX} ${midY}`;
+    }
+
+    const last = points[points.length - 1];
+    return `${path} L ${last.x} ${last.y}`;
+}
 
 const yLines = computed(() => {
     return scale.value.ticks.map((t) => {
@@ -690,6 +1132,20 @@ function onTrapClick({ datapoint, seriesIndex }) {
     if (FINAL_CONFIG.value.events.datapointClick) {
         FINAL_CONFIG.value.events.datapointClick({ datapoint, seriesIndex });
     }
+}
+
+function formatTooltipValue(value, context = {}) {
+    return applyDataLabel(
+        FINAL_CONFIG.value.style.chart.labels.formatter,
+        value,
+        dataLabel({
+            p: FINAL_CONFIG.value.style.chart.labels.prefix,
+            v: value,
+            s: FINAL_CONFIG.value.style.chart.labels.suffix,
+            r: FINAL_CONFIG.value.style.chart.tooltip.roundingValue,
+        }),
+        context,
+    );
 }
 
 function useTooltip({ datapoint, seriesIndex, triggerMode = 'pointer' }) {
@@ -730,20 +1186,81 @@ function useTooltip({ datapoint, seriesIndex, triggerMode = 'pointer' }) {
         let html = '';
 
         html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><svg viewBox="0 0 12 12" height="14" width="14"><circle data-cy="donut-tooltip-marker" cx="6" cy="6" r="6" stroke="none" fill="${FINAL_CONFIG.value.style.chart.plots.gradient.show ? `url(#${datapoint.parentId})` : datapoint.color}"/></svg>${datapoint.name}</div>`;
-        html += `<div>${applyDataLabel(
-            FINAL_CONFIG.value.style.chart.labels.formatter,
-            datapoint.value,
-            dataLabel({
-                p: FINAL_CONFIG.value.style.chart.labels.prefix,
-                v: datapoint.value,
-                s: FINAL_CONFIG.value.style.chart.labels.suffix,
-                r: FINAL_CONFIG.value.style.chart.tooltip.roundingValue,
-            }),
-            { datapoint, seriesIndex },
-        )}</div>`;
+        html += `<div>${formatTooltipValue(datapoint.value, { datapoint, seriesIndex })}</div>`;
 
         tooltipContent.value = `<div>${html}</div>`;
     }
+}
+
+function onBoxPlotLeave() {
+    if (tooltipTriggerMode.value === 'keyboard') return;
+    isTooltip.value = false;
+    selectedDatapoint.value = null;
+}
+
+function useBoxPlotTooltip({ boxPlot, seriesIndex, triggerMode = 'pointer' }) {
+    tooltipTriggerMode.value = triggerMode;
+    selectedDatapoint.value = null;
+    isTooltip.value = true;
+
+    dataTooltipSlot.value = {
+        boxPlot,
+        seriesIndex,
+        config: FINAL_CONFIG.value,
+        series: immutableDataset.value,
+    };
+
+    const customFormat = FINAL_CONFIG.value.style.chart.tooltip.customFormat;
+
+    if (isFunction(customFormat)) {
+        try {
+            const customPayload = {
+                boxPlot,
+                seriesIndex,
+                series: immutableDataset.value,
+                config: FINAL_CONFIG.value,
+            };
+
+            if (functionReturnsString(() => customFormat(customPayload))) {
+                tooltipContent.value = customFormat(customPayload);
+                return;
+            }
+        } catch (_) {
+            // Fall back to the built-in boxplot tooltip when a datapoint-only custom tooltip is provided.
+        }
+    }
+
+    const rows = [
+        [
+            FINAL_CONFIG.value.style.chart.violin.tooltipLabels.upperAdjacent,
+            boxPlot.upperAdjacent,
+        ],
+        [FINAL_CONFIG.value.style.chart.violin.tooltipLabels.q3, boxPlot.q3],
+        [
+            FINAL_CONFIG.value.style.chart.violin.tooltipLabels.median,
+            boxPlot.median,
+        ],
+        [FINAL_CONFIG.value.style.chart.violin.tooltipLabels.q1, boxPlot.q1],
+        [
+            FINAL_CONFIG.value.style.chart.violin.tooltipLabels.lowerAdjacent,
+            boxPlot.lowerAdjacent,
+        ],
+        [FINAL_CONFIG.value.style.chart.violin.tooltipLabels.iqr, boxPlot.iqr],
+    ];
+
+    const marker = `<svg viewBox="0 0 12 12" height="14" width="14"><rect x="1" y="1" width="10" height="10" rx="2" stroke="none" fill="${boxPlot.color}"/></svg>`;
+    const body = rows
+        .map(([label, value]) => {
+            return `<div style="display:flex;flex-direction:row;gap:12px;align-items:center;justify-content:space-between;"><span>${label}</span><b>${formatTooltipValue(value, { boxPlot, seriesIndex })}</b></div>`;
+        })
+        .join('');
+
+    tooltipContent.value =
+        `<div style="min-width:160px;">` +
+        `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;margin-bottom:6px;">${marker}${boxPlot.name}</div>` +
+        body +
+        `<div style="display:flex;flex-direction:row;gap:12px;align-items:center;justify-content:space-between;margin-top:6px;"><span>${FINAL_CONFIG.value.style.chart.violin.tooltipLabels.count}</span><b>${boxPlot.count}</b></div>` +
+        `</div>`;
 }
 
 const table = computed(() => {
@@ -767,17 +1284,35 @@ const table = computed(() => {
 
 function generateCsv(callback = null) {
     nextTick(() => {
-        const labels = table.value.head.map((h, i) => {
-            return [[h.name], [table.value.body[i]]];
-        });
+        let rows = [];
+        let columns = [
+            FINAL_CONFIG.value.table.columnNames.series,
+            FINAL_CONFIG.value.table.columnNames.value,
+        ];
+
+        if (isViolinBoxPlot.value) {
+            columns = boxPlotTableColumns.value;
+            rows = boxPlotSummaries.value.map((boxPlot) => [
+                [boxPlot.name],
+                [boxPlot.lowerAdjacent],
+                [boxPlot.q1],
+                [boxPlot.median],
+                [boxPlot.q3],
+                [boxPlot.upperAdjacent],
+                [boxPlot.iqr],
+                [boxPlot.count],
+            ]);
+        } else {
+            rows = table.value.head.map((h, i) => {
+                return [[h.name], [table.value.body[i]]];
+            });
+        }
+
         const tableXls = [
             [FINAL_CONFIG.value.style.chart.title.text],
             [FINAL_CONFIG.value.style.chart.title.subtitle.text],
-            [
-                [FINAL_CONFIG.value.table.columnNames.series],
-                [FINAL_CONFIG.value.table.columnNames.value],
-            ],
-        ].concat(labels);
+            columns.map((column) => [column]),
+        ].concat(rows);
 
         const csvContent = createCsvContent(tableXls);
 
@@ -795,6 +1330,46 @@ function generateCsv(callback = null) {
 }
 
 const dataTable = computed(() => {
+    if (isViolinBoxPlot.value) {
+        const colNames = boxPlotTableColumns.value;
+        const body = boxPlotSummaries.value.map((boxPlot) => {
+            return [
+                {
+                    color: boxPlot.color,
+                    name: boxPlot.name,
+                },
+                formatTableValue(boxPlot.lowerAdjacent),
+                formatTableValue(boxPlot.q1),
+                formatTableValue(boxPlot.median),
+                formatTableValue(boxPlot.q3),
+                formatTableValue(boxPlot.upperAdjacent),
+                formatTableValue(boxPlot.iqr),
+                boxPlot.count,
+            ];
+        });
+
+        const config = {
+            th: {
+                backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
+                color: FINAL_CONFIG.value.table.th.color,
+                outline: FINAL_CONFIG.value.table.th.outline,
+            },
+            td: {
+                backgroundColor: FINAL_CONFIG.value.table.td.backgroundColor,
+                color: FINAL_CONFIG.value.table.td.color,
+                outline: FINAL_CONFIG.value.table.td.outline,
+            },
+            breakpoint: FINAL_CONFIG.value.table.responsiveBreakpoint,
+        };
+
+        return {
+            colNames,
+            head: colNames,
+            body,
+            config,
+        };
+    }
+
     const head = [
         FINAL_CONFIG.value.table.columnNames.series,
         FINAL_CONFIG.value.table.columnNames.value,
@@ -1311,7 +1886,10 @@ defineExpose({
             :hasImg="FINAL_CONFIG.userOptions.buttons.img"
             :hasSvg="FINAL_CONFIG.userOptions.buttons.svg"
             :hasTable="FINAL_CONFIG.userOptions.buttons.table"
-            :hasLabel="FINAL_CONFIG.userOptions.buttons.labels"
+            :hasLabel="
+                FINAL_CONFIG.userOptions.buttons.labels &&
+                FINAL_CONFIG.type !== 'violin'
+            "
             :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
             :hasAltCopy="FINAL_CONFIG.userOptions.buttons.altCopy"
             :isTooltip="mutableConfig.showTooltip"
@@ -1720,58 +2298,181 @@ defineExpose({
                         <stop offset="100%" :stop-color="ds.color" />
                     </radialGradient>
                 </defs>
-                <template v-for="(ds, S) in drawableDataset">
-                    <!--FIXME: Animation only works on circles, as y is direct and dynamic whereas other shapes build paths -->
-                    <Shape
-                        v-for="(plot, i) in ds.plots"
-                        v-bind="$attrs"
-                        :plot="{
-                            x: plot.x,
-                            y: animationStarted ? plot.y : drawingArea.top,
-                        }"
-                        :radius="
-                            selectedDatapoint &&
-                            selectedDatapoint.id === plot.id
-                                ? adjustedPlotRadius * 1.5
-                                : adjustedPlotRadius
+
+                <!-- VIOLINS -->
+                <template v-for="(violin, S) in violinShapes" :key="violin.id">
+                    <path
+                        v-if="violin.path"
+                        data-cy="violin-plot"
+                        :d="violin.path"
+                        :fill="violin.fill"
+                        :stroke="violin.color"
+                        :fill-opacity="FINAL_CONFIG.style.chart.violin.opacity"
+                        :stroke-opacity="
+                            FINAL_CONFIG.style.chart.violin.strokeOpacity
                         "
-                        :shape="FINAL_CONFIG.style.chart.plots.shape"
-                        :stroke="FINAL_CONFIG.style.chart.plots.stroke"
-                        :strokeWidth="
-                            FINAL_CONFIG.style.chart.plots.strokeWidth
+                        :stroke-width="
+                            FINAL_CONFIG.style.chart.violin.strokeWidth
                         "
-                        :color="
-                            FINAL_CONFIG.style.chart.plots.gradient.show
-                                ? `url(#${ds.id})`
-                                : ds.color
-                        "
-                        :style="`transition: all 0.2s ease-in-out; opacity:${selectedDatapoint ? (selectedDatapoint.id === plot.id ? 1 : 0.2) : FINAL_CONFIG.style.chart.plots.opacity};${animationActive ? `transition-delay:${i * 50}ms` : ''}`"
-                        :class="{
-                            'vue-ui-strip-plot-animated':
-                                FINAL_CONFIG.useCssAnimation &&
-                                animationActive &&
-                                !loading,
-                            'vue-ui-strip-plot-select-circle':
-                                FINAL_CONFIG.useCssAnimation &&
-                                !animationActive,
+                        :style="{
+                            pointerEvents: isViolinBoxPlot ? 'auto' : 'none',
+                            cursor:
+                                isViolinBoxPlot && isCursorPointer
+                                    ? 'pointer'
+                                    : 'default',
                         }"
                         @mouseenter="
-                            useTooltip({
-                                datapoint: plot,
-                                seriesIndex: i,
+                            isViolinBoxPlot &&
+                            boxPlotSummaries[S] &&
+                            useBoxPlotTooltip({
+                                boxPlot: boxPlotSummaries[S],
+                                seriesIndex: S,
                                 triggerMode: 'pointer',
                             })
                         "
-                        @mouseleave="
-                            onTrapLeave({ datapoint: plot, seriesIndex: i })
+                        @mouseleave="isViolinBoxPlot && onBoxPlotLeave()"
+                    />
+                    <line
+                        v-for="(connector, i) in violin.connectors"
+                        :key="`violin_connector_${violin.id}_${i}`"
+                        data-cy="violin-connector"
+                        :x1="connector.x"
+                        :x2="connector.x"
+                        :y1="connector.y1"
+                        :y2="connector.y2"
+                        :stroke="violin.color"
+                        :stroke-opacity="
+                            FINAL_CONFIG.style.chart.violin.strokeOpacity
                         "
-                        @click="
-                            onTrapClick({ datapoint: plot, seriesIndex: i })
+                        :stroke-width="
+                            FINAL_CONFIG.style.chart.violin.strokeWidth
                         "
+                        stroke-linecap="round"
+                        style="pointer-events: none"
+                    />
+                </template>
+
+                <!-- VIOLIN BOXPLOTS -->
+                <g
+                    v-for="(boxPlot, S) in boxPlotSummaries"
+                    :key="`boxplot_${boxPlot.id}`"
+                    data-cy="violin-boxplot"
+                    :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }"
+                    @mouseenter="
+                        useBoxPlotTooltip({
+                            boxPlot,
+                            seriesIndex: S,
+                            triggerMode: 'pointer',
+                        })
+                    "
+                    @mouseleave="onBoxPlotLeave"
+                >
+                    <line
+                        :x1="boxPlot.centerX"
+                        :x2="boxPlot.centerX"
+                        :y1="boxPlot.upperY"
+                        :y2="boxPlot.lowerY"
+                        :stroke="darkenHexColor(boxPlot.boxPlotColor, 0.2)"
+                        :stroke-width="
+                            Math.max(
+                                1,
+                                FINAL_CONFIG.style.chart.violin.strokeWidth,
+                            )
+                        "
+                        stroke-linecap="round"
+                    />
+                    <rect
+                        :x="boxPlot.boxLeft"
+                        :y="Math.min(boxPlot.q1Y, boxPlot.q3Y)"
+                        :width="boxPlot.boxWidth"
+                        :height="
+                            Math.max(1, Math.abs(boxPlot.q3Y - boxPlot.q1Y))
+                        "
+                        :fill="boxPlot.boxPlotColor"
+                        :stroke="darkenHexColor(boxPlot.boxPlotColor, 0.2)"
+                        :stroke-width="
+                            Math.max(
+                                1,
+                                FINAL_CONFIG.style.chart.violin.strokeWidth,
+                            )
+                        "
+                        :rx="boxPlot.boxWidth / 20"
                     />
 
+                    <!-- MEDIAN -->
+                    <circle
+                        :cx="boxPlot.boxLeft + boxPlot.boxWidth / 2"
+                        :cy="boxPlot.medianY"
+                        :r="
+                            (boxPlot.boxWidth / 3) *
+                            Math.min(
+                                1,
+                                FINAL_CONFIG.style.chart.violin.boxPlot
+                                    .medianCircleRadiusRatio,
+                            )
+                        "
+                        :fill="
+                            FINAL_CONFIG.style.chart.violin.boxPlot
+                                .medianCircleFill
+                        "
+                        :stroke="darkenHexColor(boxPlot.boxPlotColor, 0.2)"
+                    />
+                </g>
+
+                <template v-for="(ds, S) in drawableDataset">
+                    <!--FIXME: Animation only works on circles, as y is direct and dynamic whereas other shapes build paths -->
+                    <template v-if="!isViolinBoxPlot">
+                        <Shape
+                            v-for="(plot, i) in ds.plots"
+                            v-bind="$attrs"
+                            :plot="{
+                                x: plot.x,
+                                y: animationStarted ? plot.y : drawingArea.top,
+                            }"
+                            :radius="
+                                selectedDatapoint &&
+                                selectedDatapoint.id === plot.id
+                                    ? adjustedPlotRadius * 1.5
+                                    : adjustedPlotRadius
+                            "
+                            :shape="FINAL_CONFIG.style.chart.plots.shape"
+                            :stroke="FINAL_CONFIG.style.chart.plots.stroke"
+                            :strokeWidth="
+                                FINAL_CONFIG.style.chart.plots.strokeWidth
+                            "
+                            :color="
+                                FINAL_CONFIG.style.chart.plots.gradient.show
+                                    ? `url(#${ds.id})`
+                                    : ds.color
+                            "
+                            :style="`transition: all 0.2s ease-in-out; opacity:${selectedDatapoint ? (selectedDatapoint.id === plot.id ? 1 : 0.2) : FINAL_CONFIG.style.chart.plots.opacity};${animationActive ? `transition-delay:${i * 50}ms` : ''}`"
+                            :class="{
+                                'vue-ui-strip-plot-animated':
+                                    FINAL_CONFIG.useCssAnimation &&
+                                    animationActive &&
+                                    !loading,
+                                'vue-ui-strip-plot-select-circle':
+                                    FINAL_CONFIG.useCssAnimation &&
+                                    !animationActive,
+                            }"
+                            @mouseenter="
+                                useTooltip({
+                                    datapoint: plot,
+                                    seriesIndex: i,
+                                    triggerMode: 'pointer',
+                                })
+                            "
+                            @mouseleave="
+                                onTrapLeave({ datapoint: plot, seriesIndex: i })
+                            "
+                            @click="
+                                onTrapClick({ datapoint: plot, seriesIndex: i })
+                            "
+                        />
+                    </template>
+
                     <!-- BEST PLOT LABELS -->
-                    <g v-if="mutableConfig.dataLabels.show">
+                    <g v-if="mutableConfig.dataLabels.show && !isViolinBoxPlot">
                         <template v-for="(plot, i) in ds.plots">
                             <text
                                 data-cy="best-plot-label"
@@ -1838,6 +2539,8 @@ defineExpose({
                         isPrintingImg:
                             isPrinting || isImaging || isCallbackImaging,
                         isPrintingSvg: isCallbackSvg,
+                        boxPlotSummaries,
+                        series: mutableDataset,
                     }"
                 />
             </svg>

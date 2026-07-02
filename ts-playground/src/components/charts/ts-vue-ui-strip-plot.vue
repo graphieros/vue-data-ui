@@ -110,6 +110,7 @@ const dataset = computed<VueUiStripPlotDataset[]>(() => {
 
 const testPreconfig = computed<VueUiStripPlotConfig>(() => {
     return {
+        type: 'violin',
         skeletonDataset: null,
         skeletonConfig: null,
         debug: false,
@@ -223,14 +224,40 @@ const testPreconfig = computed<VueUiStripPlotConfig>(() => {
                     },
                 },
                 plots: {
-                    opacity: 0.5,
-                    radius: 20,
+                    opacity: 0.9,
+                    radius: 4,
                     stroke: '#FFFFFF',
                     strokeWidth: 1,
                     shape: 'circle',
                     gradient: {
                         show: true,
                         intensity: 40,
+                    },
+                },
+                violin: {
+                    widthRatio: 1,
+                    strokeWidth: 1,
+                    opacity: 0.2,
+                    strokeOpacity: 0.35,
+                    useSerieColor: true,
+                    stroke: '#5A5A5A',
+                    fill: '#5A5A5A',
+                    boxPlot: {
+                        show: true,
+                        widthRatio: 1,
+                        useSerieColor: true,
+                        color: '#5A5A5A',
+                        medianCircleRadiusRatio: 1,
+                        medianCircleFill: '#FFFFFF',
+                    },
+                    tooltipLabels: {
+                        upperAdjacent: 'Upper adjacent',
+                        q3: 'Q3',
+                        median: 'Median',
+                        q1: 'Q1',
+                        lowerAdjacent: 'Lower adjacent',
+                        iqr: 'IQR',
+                        count: 'Count',
                     },
                 },
                 labels: {
@@ -521,8 +548,8 @@ function copyAlt(payload: VueUiStripPlotEmitCopyAlt) {
                 <br />
             </template>
 
-            <template #tooltip="{ datapoint, seriesIndex }">
-                <StripPlotTooltip :datapoint :series-index />
+            <template #tooltip="{ datapoint, seriesIndex, boxPlot }">
+                <StripPlotTooltip :datapoint :series-index :box-plot />
             </template>
 
             <template #tooltip-after>

@@ -1120,7 +1120,7 @@ export function degreesToRadians(degrees) {
     return (degrees * Math.PI) / 180;
 }
 
-function clampNumber(value, min, max) {
+export function clampNumber(value, min, max) {
     return Math.min(Math.max(value, min), max);
 }
 

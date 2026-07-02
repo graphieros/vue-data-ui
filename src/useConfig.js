@@ -4626,6 +4626,7 @@ export function useConfig(options = {}) {
         debug: false, // v3
         loading: false, // v3
         responsive: false,
+        type: 'classic' | 'scatter' | 'violin',
         a11y: {
             ...A11Y,
             translations: {
@@ -4683,14 +4684,40 @@ export function useConfig(options = {}) {
                     },
                 },
                 plots: {
-                    opacity: 0.5,
-                    radius: 20,
+                    opacity: 0.9,
+                    radius: 4,
                     stroke: COLOR_WHITE,
                     strokeWidth: 1,
                     shape: SHAPE.CIRCLE,
                     gradient: {
                         show: true,
                         intensity: 40,
+                    },
+                },
+                violin: {
+                    widthRatio: 1,
+                    strokeWidth: 1,
+                    opacity: 0.2,
+                    strokeOpacity: 0.35,
+                    useSerieColor: true,
+                    stroke: '#5A5A5A',
+                    fill: '#5A5A5A',
+                    boxPlot: {
+                        show: true,
+                        widthRatio: 1,
+                        useSerieColor: true,
+                        color: '#5A5A5A',
+                        medianCircleRadiusRatio: 1,
+                        medianCircleFill: COLOR_WHITE,
+                    },
+                    tooltipLabels: {
+                        upperAdjacent: 'Upper adjacent',
+                        q3: 'Q3',
+                        median: 'Median',
+                        q1: 'Q1',
+                        lowerAdjacent: 'Lower adjacent',
+                        iqr: 'IQR',
+                        count: 'Count',
                     },
                 },
                 labels: {
