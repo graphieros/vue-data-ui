@@ -35,8 +35,9 @@ onMounted(() => {
                 ],
                 smooth: true,
                 temperatureColors: ['#FF0000', '#00FF00'],
-                temperatureAngle: 0,
+                temperatureAngle: 90,
                 usePlotTemperatureColors: true,
+                temperatureIndependant: true,
             },
             {
                 name: 'Series 2',
@@ -321,7 +322,7 @@ onMounted(async () => {
                         {{ datapoint }}
                     </template> -->
 
-                    <template #chart-background>
+                    <!-- <template #chart-background>
                         <div
                             style="
                                 width: 100%;
@@ -333,7 +334,7 @@ onMounted(async () => {
                                 );
                             "
                         />
-                    </template>
+                    </template> -->
                 </LocalVueUiHistoryPlot>
             </div>
         </template>

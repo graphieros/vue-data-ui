@@ -619,6 +619,7 @@ const formattedDataset = computed(() => {
                   palette[i % palette.length],
             temperatureColors,
             temperatureAngle: normalizeTemperatureAngle(ds.temperatureAngle),
+            temperatureIndependant: ds.temperatureIndependant === true,
             usePlotTemperatureColors: ds.usePlotTemperatureColors !== false,
             seriesIndex: i,
         };
@@ -830,12 +831,31 @@ function getSeriesPlotBounds(ds) {
     };
 }
 
+function getDrawingAreaBounds() {
+    const area = drawingArea.value;
+
+    return {
+        minX: area.left,
+        maxX: area.right,
+        minY: area.top,
+        maxY: area.bottom,
+        width: area.width,
+        height: area.height,
+    };
+}
+
+function getTemperatureBounds(ds) {
+    return ds?.temperatureIndependant
+        ? getSeriesPlotBounds(ds)
+        : getDrawingAreaBounds();
+}
+
 function getTemperatureGradientCoordinates(ds) {
     const angle = normalizeTemperatureAngle(ds?.temperatureAngle);
     const radians = (angle * Math.PI) / 180;
     const dx = Math.sin(radians);
     const dy = Math.cos(radians);
-    const bounds = getSeriesPlotBounds(ds);
+    const bounds = getTemperatureBounds(ds);
     const centerX = bounds.minX + bounds.width / 2;
     const centerY = bounds.minY + bounds.height / 2;
     const halfLength =

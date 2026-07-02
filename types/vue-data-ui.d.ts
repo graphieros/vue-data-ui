@@ -14337,6 +14337,7 @@ declare module 'vue-data-ui' {
         temperatureColors?: string[];
         temperatureAngle?: number;
         usePlotTemperatureColors?: boolean;
+        temperatureIndependant?: boolean;
     };
 
     export type VueUiHistoryPlotConfig = {
