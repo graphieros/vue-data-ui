@@ -42,7 +42,7 @@ export function usePrinter({ elementId, fileName, canPrint = true, options }) {
                         domElement: document.getElementById(elementId),
                         fileName,
                         format: 'png',
-                        options,
+                        scale: options?.scale,
                     });
                 } catch (error) {
                     console.error('Error generating image:', error);

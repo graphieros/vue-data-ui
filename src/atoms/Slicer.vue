@@ -1024,6 +1024,7 @@ const selectionIndicator = computed(() => {
         :data-minimap="hasMinimap"
         data-cy="slicer"
         data-dom-to-png-ignore
+        data-dom-to-png-ignore-layout
         style="padding: 0 48px"
         class="vue-data-ui-zoom"
         ref="zoomWrapper"

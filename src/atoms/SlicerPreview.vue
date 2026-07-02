@@ -1894,6 +1894,7 @@ defineExpose({
         data-cy="slicer"
         :data-minimap="hasMinimap"
         data-dom-to-png-ignore
+        data-dom-to-png-ignore-layout
         style="padding: 0 48px"
         class="vue-data-ui-zoom"
         ref="zoomWrapper"
