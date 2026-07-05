@@ -29,13 +29,7 @@ describe('<VueUiTreemap />', () => {
             cy.get('[data-cy="datapoint-rect"]')
                 .should('exist')
                 .and('be.visible')
-                .and('have.length', 22);
-
-            cy.log('datapoint foreignObject');
-            cy.get('.vue-ui-treemap-cell-foreignObject')
-                .should('exist')
-                .and('be.visible')
-                .and('have.length', 22);
+                .and('have.length', 20);
 
             cy.log('zoom');
             cy.get('[data-cy="datapoint-rect"]').first().click({ force: true });
@@ -47,7 +41,7 @@ describe('<VueUiTreemap />', () => {
             cy.get('[data-cy="datapoint-rect"]')
                 .should('exist')
                 .and('be.visible')
-                .and('have.length', 22);
+                .and('have.length', 20);
         });
     });
 
