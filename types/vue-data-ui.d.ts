@@ -655,6 +655,9 @@ declare module 'vue-data-ui' {
                 height?: number;
                 width?: number;
                 padding?: ChartPadding;
+                zoom?: {
+                    show?: boolean;
+                };
                 layout?: {
                     sorted?: boolean;
                     rects?: {
@@ -783,6 +786,8 @@ declare module 'vue-data-ui' {
         toggleFullscreen(): void;
         showSeries(name: string): void;
         hideSeries(name: string): void;
+        toggleZoom(): void;
+        resetZoom(): void;
     };
 
     export type VueUiTreemapBreadcrumbLabelSlotProps = {
@@ -845,6 +850,11 @@ declare module 'vue-data-ui' {
         seriesIndex: number;
     };
 
+    export type VueUiTreemapOptionZoomSlotProps = {
+        toggleZoom: () => void;
+        isZoomLocked: boolean;
+    };
+
     export type VueUiTreemapProps = {
         config?: VueUiTreemapConfig;
         dataset: VueUiTreemapDatasetItem[];
@@ -888,6 +898,9 @@ declare module 'vue-data-ui' {
                 optionImg?: () => VNodeChild;
                 optionSvg?: () => VNodeChild;
                 optionTable?: () => VNodeChild;
+                optionZoom?: (
+                    props: VueUiTreemapOptionZoomSlotProps,
+                ) => VNodeChild;
                 optionFullscreen?: (
                     props: VueUiOptionFullscreenSlotProps,
                 ) => VNodeChild;

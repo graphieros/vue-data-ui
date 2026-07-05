@@ -1328,6 +1328,7 @@ export function useConfig(options = {}) {
             fullscreen: true,
             annotator: true,
             svg: true,
+            zoom: true,
         }),
         style: {
             fontFamily: 'inherit',
@@ -1369,7 +1370,7 @@ export function useConfig(options = {}) {
                         fontSize: FONT._24,
                         minFontSize: FONT._10,
                         hideUnderProportion: 0.03,
-                        prefix: 'Value: ',
+                        prefix: '',
                         suffix: '',
                         rounding: 0,
                         formatter: null,
@@ -1395,6 +1396,9 @@ export function useConfig(options = {}) {
                 tooltip: {
                     ...TOOLTIP,
                     roundingValue: 1,
+                },
+                zoom: {
+                    show: false,
                 },
             },
         },

@@ -172,6 +172,10 @@ const testPreconfig = computed<VueUiTreemapConfig>(() => {
                 color: '#2D353C',
                 height: 500,
                 width: 800,
+                zoom: {
+                    show: false,
+                    speed: 1,
+                },
                 padding: {
                     top: 0,
                     right: 0,

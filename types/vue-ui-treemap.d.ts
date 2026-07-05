@@ -24,6 +24,7 @@ import type {
     VueUiTreemapEmitSelectLegend,
     VueUiTreemapEmitSelectDatapoint,
     VueUiTreemapEmitCopyAlt,
+    VueUiTreemapOptionZoomSlotProps,
 } from 'vue-data-ui';
 
 export type {
@@ -50,6 +51,7 @@ export type {
     VueUiTreemapEmitSelectLegend,
     VueUiTreemapEmitSelectDatapoint,
     VueUiTreemapEmitCopyAlt,
+    VueUiTreemapOptionZoomSlotProps,
 };
 
 declare const VueUiTreemapBase: DefineComponent<
@@ -75,6 +77,7 @@ export const VueUiTreemap: typeof VueUiTreemapBase & {
             optionImg?: () => VNodeChild;
             optionSvg?: () => VNodeChild;
             optionTable?: () => VNodeChild;
+            optionZoom?: (props: VueUiTreemapOptionZoomSlotProps) => VNodeChild;
             optionFullscreen?: (
                 props: VueUiOptionFullscreenSlotProps,
             ) => VNodeChild;

@@ -22,7 +22,6 @@ import {
     deepClone,
     downloadCsv,
     error,
-    escapeHtml,
     functionReturnsString,
     isFunction,
     lightenHexColor,
@@ -43,6 +42,8 @@ import { useResponsive } from '../useResponsive';
 import { useThemeCheck } from '../useThemeCheck';
 import { useUserOptionState } from '../useUserOptionState';
 import { useChartAccessibility } from '../useChartAccessibility';
+import { usePrefersReducedMotion } from '../usePrefersMotion.js';
+import usePanZoom from '../usePanZoom';
 import img from '../img';
 import Title from '../atoms/Title.vue';
 import themes from '../themes/vue_ui_treemap.json';
@@ -88,6 +89,7 @@ const props = defineProps({
 
 const emit = defineEmits(['selectLegend', 'selectDatapoint', 'copyAlt']);
 const slots = useSlots();
+const prefersReducedMotion = usePrefersReducedMotion();
 
 onMounted(() => {
     if (slots['chart-background']) {
@@ -245,6 +247,8 @@ watch(
         mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
         mutableConfig.value.showTooltip =
             FINAL_CONFIG.value.style.chart.tooltip.show;
+        mutableConfig.value.showZoom =
+            FINAL_CONFIG.value.style.chart.zoom?.show ?? false;
     },
     { deep: true },
 );
@@ -269,6 +273,7 @@ const customPalette = computed(() => {
 const mutableConfig = ref({
     showTable: FINAL_CONFIG.value.table.show,
     showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show,
+    showZoom: FINAL_CONFIG.value.style.chart.zoom?.show ?? false,
 });
 
 // v3 - Essential to make shifting between loading config and final config work
@@ -278,6 +283,7 @@ watch(
         mutableConfig.value = {
             showTable: FINAL_CONFIG.value.table.show,
             showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show,
+            showZoom: FINAL_CONFIG.value.style.chart.zoom?.show ?? false,
         };
     },
     { immediate: true },
@@ -678,8 +684,17 @@ function getInnerTreemapBounds(rect) {
 }
 
 function shouldShowNodeLabel(rect) {
-    const { height, lineHeight, width } = getTreemapTextBox(rect);
-    return height >= lineHeight && width > 6;
+    return shouldShowLabelByProportion(rect);
+}
+
+function shouldShowLabelByProportion(rect) {
+    const hideUnderProportion = Number(
+        FINAL_CONFIG.value.style.chart.layout.labels.hideUnderProportion,
+    );
+    if (!Number.isFinite(hideUnderProportion) || hideUnderProportion <= 0) {
+        return true;
+    }
+    return rect.proportion > hideUnderProportion;
 }
 
 function buildVisibleTreemapLayout(
@@ -901,51 +916,178 @@ function getWidth({ x0, x1 }) {
     return x1 - x0 <= 0 ? 0.0001 : x1 - x0;
 }
 
-function calcFontSize(rect) {
+function getLabelFontBounds() {
     const cfg = FINAL_CONFIG.value.style.chart.layout.labels;
-    const base = cfg.fontSize;
-    const minFontSize = cfg.minFontSize;
-    const maxFontSize = cfg.fontSize * 2;
+    const minFontSize = Number(cfg.minFontSize);
+    const maxFontSize = Number(cfg.fontSize);
 
-    const scalePower = 0.5;
-    const baseScaleLow = 0.6;
-    const baseScaleHigh = 1;
+    const lowerBound = Math.max(
+        0,
+        Math.min(
+            Number.isFinite(minFontSize) ? minFontSize : 0,
+            Number.isFinite(maxFontSize) ? maxFontSize : 0,
+        ),
+    );
+    const upperBound = Math.max(
+        lowerBound,
+        Number.isFinite(maxFontSize) ? maxFontSize : lowerBound,
+    );
+
+    return {
+        lowerBound,
+        upperBound,
+    };
+}
+
+function getLabelPadding(fontSize) {
+    const minPadding = Math.min(4, Math.max(fontSize * 0.25, 0.5));
+    return {
+        paddingX: minPadding,
+        paddingTop: minPadding,
+    };
+}
+
+function getTreemapTextBoxForFontSize(rect, fontSize) {
+    const { paddingX, paddingTop } = getLabelPadding(fontSize);
+    const lineHeight = fontSize * 1.1;
+
+    const x = rect.x0 + paddingX;
+    const y = rect.y0 + paddingTop;
+    const width = Math.max(getWidth(rect) - paddingX * 2, 0);
+    const height = Math.max(getHeight(rect) - paddingTop * 2, 0);
+
+    return {
+        x,
+        y,
+        width,
+        height,
+        lineHeight,
+    };
+}
+
+function getFormattedLabelValue(rect, seriesIndex) {
+    return applyDataLabel(
+        FINAL_CONFIG.value.style.chart.layout.labels.formatter,
+        rect.value,
+        dataLabel({
+            p: FINAL_CONFIG.value.style.chart.layout.labels.prefix,
+            v: rect.value,
+            s: FINAL_CONFIG.value.style.chart.layout.labels.suffix,
+            r: FINAL_CONFIG.value.style.chart.tooltip.roundingValue,
+        }),
+        { datapoint: rect, seriesIndex },
+    );
+}
+
+function getFullLabelLines(rect, seriesIndex) {
+    const formattedValue = getFormattedLabelValue(rect, seriesIndex);
+    if (Array.isArray(rect.children) && rect.children.length) {
+        return [`${rect.name} (${formattedValue})`];
+    }
+    return [`${rect.name}`, formattedValue].filter((line) => `${line}`.length);
+}
+
+function fullLabelFits(rect, fontSize, seriesIndex) {
+    const lines = getFullLabelLines(rect, seriesIndex);
+    const textBox = getTreemapTextBoxForFontSize(rect, fontSize);
+    if (!lines.length || textBox.width <= 0 || textBox.height <= 0) {
+        return false;
+    }
+    if (lines.length * textBox.lineHeight > textBox.height) {
+        return false;
+    }
+    return lines.every((line, index) => {
+        return (
+            measureTreemapTextWidth(line, fontSize, index === 0 ? 500 : 400) <=
+            textBox.width
+        );
+    });
+}
+
+function getComfortableClippedFontSize(
+    rect,
+    seriesIndex,
+    lowerBound,
+    upperBound,
+) {
+    const lines = getFullLabelLines(rect, seriesIndex);
+    const longestLineLength = Math.max(
+        1,
+        ...lines.map((line) => String(line).length),
+    );
+    const targetVisibleCharacters = Math.min(
+        18,
+        Math.max(10, Math.ceil(longestLineLength * 0.7)),
+    );
+    const lineCount = Math.max(1, lines.length);
+    const availableWidth = Math.max(getWidth(rect) - 1, 0.0001);
+    const availableHeight = Math.max(getHeight(rect) - 1, 0.0001);
+    const widthLimitedSize = availableWidth / (targetVisibleCharacters * 0.58);
+    const heightLimitedSize = availableHeight / (lineCount * 1.35);
+
+    return Math.max(
+        lowerBound,
+        Math.min(upperBound, widthLimitedSize, heightLimitedSize),
+    );
+}
+
+function calcFontSize(rect, seriesIndex) {
+    const { lowerBound, upperBound } = getLabelFontBounds();
     const maxOfMinDim = 0.9;
 
-    let proportion = rect.proportion;
-    if (!(typeof proportion === 'number' && isFinite(proportion))) {
-        const area = Math.max(1e-6, getWidth(rect) * getHeight(rect));
-        const full = Math.max(1e-6, svg.value.width * svg.value.height);
-        proportion = area / full;
+    const minDim = Math.max(0.0001, Math.min(getWidth(rect), getHeight(rect)));
+    const maxRectFontSize = Math.max(
+        lowerBound,
+        Math.min(upperBound, minDim * maxOfMinDim),
+    );
+    const comfortableFontSize = Math.min(
+        maxRectFontSize,
+        getComfortableClippedFontSize(
+            rect,
+            seriesIndex,
+            lowerBound,
+            upperBound,
+        ),
+    );
+
+    if (fullLabelFits(rect, comfortableFontSize, seriesIndex)) {
+        return comfortableFontSize;
     }
 
-    const areaScaled = Math.pow(
-        Math.min(1, Math.max(0, proportion)),
-        scalePower,
+    if (!fullLabelFits(rect, lowerBound, seriesIndex)) {
+        return comfortableFontSize;
+    }
+
+    let start = lowerBound;
+    let end = comfortableFontSize;
+    let best = lowerBound;
+
+    for (let i = 0; i < 8; i += 1) {
+        const middle = (start + end) / 2;
+        if (fullLabelFits(rect, middle, seriesIndex)) {
+            best = middle;
+            start = middle;
+        } else {
+            end = middle;
+        }
+    }
+
+    const readableFullFitFloor = Math.max(
+        lowerBound,
+        comfortableFontSize * 0.7,
     );
-    const areaMultiplier =
-        baseScaleLow + (baseScaleHigh - baseScaleLow) * areaScaled;
 
-    const depth = Math.max(0, Number(rect.depth) || 0);
-    const depthFactor = Math.pow(0.9, depth);
-    let fontSize = base * areaMultiplier * depthFactor;
-
-    const minDim = Math.max(0.0001, Math.min(getWidth(rect), getHeight(rect)));
-    fontSize = Math.min(fontSize, minDim * maxOfMinDim);
-    fontSize = Math.min(fontSize, maxFontSize);
-    fontSize = Math.max(minFontSize, fontSize);
-
-    return fontSize;
+    return best >= readableFullFitFloor ? best : comfortableFontSize;
 }
 function toggleFullscreen(state) {
     isFullscreen.value = state;
     step.value += 1;
 }
 
-const viewBox = computed(() => {
+const initialViewBox = computed(() => {
     return {
-        startX: 0,
-        startY: 0,
+        x: 0,
+        y: 0,
         width: svg.value.vbWidth,
         height: svg.value.vbHeight,
     };
@@ -980,7 +1122,7 @@ function getAncestorIds(id) {
 
 const isZoom = computed(() => drillStack.value.length > 0);
 
-function resetZoom() {
+function resetDrillZoom() {
     currentSet.value = immutableDataset.value.slice();
     drillStack.value = [];
     emit('selectDatapoint', undefined);
@@ -1005,7 +1147,7 @@ function setZoomTarget(node, rect, seriesIndex) {
 function zoomOutOneLevel(rect, seriesIndex) {
     const currentZoomId = getCurrentZoomId();
     if (!currentZoomId) {
-        resetZoom();
+        resetDrillZoom();
         return;
     }
     const currentNode = findNodeById(currentZoomId);
@@ -1016,12 +1158,12 @@ function zoomOutOneLevel(rect, seriesIndex) {
                 seriesIndex,
             });
         }
-        resetZoom();
+        resetDrillZoom();
         return;
     }
     const parentNode = findNodeById(currentNode.parentId);
     if (!parentNode) {
-        resetZoom();
+        resetDrillZoom();
         return;
     }
     drillStack.value = [...getAncestorIds(parentNode.id), parentNode.id];
@@ -1038,7 +1180,7 @@ function zoomOutOneLevel(rect, seriesIndex) {
 
 function zoom(rect, seriesIndex) {
     if (!rect) {
-        resetZoom();
+        resetDrillZoom();
         return;
     }
     const node = findNodeById(rect.id);
@@ -1224,6 +1366,7 @@ const dataTooltipSlot = ref(null);
 
 function useTooltip({ datapoint, seriesIndex, triggerMode = 'pointer' }) {
     if (allSegregated.value) return;
+    if (triggerMode === 'pointer' && panZoomDragStart.value) return;
 
     if (FINAL_CONFIG.value.events.datapointEnter) {
         FINAL_CONFIG.value.events.datapointEnter({ datapoint, seriesIndex });
@@ -1401,9 +1544,97 @@ function toggleTooltip() {
     mutableConfig.value.showTooltip = !mutableConfig.value.showTooltip;
 }
 
+function toggleZoom() {
+    mutableConfig.value.showZoom = !mutableConfig.value.showZoom;
+}
+
 const isAnnotator = ref(false);
 function toggleAnnotator() {
     isAnnotator.value = !isAnnotator.value;
+}
+
+const active = computed(
+    () => !isAnnotator.value && mutableConfig.value.showZoom,
+);
+const panZoomDragStart = ref(null);
+const didPanZoomDrag = ref(false);
+const PAN_ZOOM_DRAG_THRESHOLD = 4;
+
+const {
+    viewBox,
+    resetZoom,
+    isZoom: isPanZoom,
+    setInitialViewBox,
+} = usePanZoom(
+    svgRef,
+    {
+        x: initialViewBox.value.x,
+        y: initialViewBox.value.y,
+        width: Math.max(10, initialViewBox.value.width),
+        height: Math.max(10, initialViewBox.value.height),
+    },
+    1,
+    active,
+);
+
+const shouldClipPanZoom = computed(() => {
+    return mutableConfig.value.showZoom || isPanZoom.value;
+});
+
+watch(
+    [
+        () => initialViewBox.value.x,
+        () => initialViewBox.value.y,
+        () => initialViewBox.value.width,
+        () => initialViewBox.value.height,
+    ],
+    () => {
+        nextTick(() => {
+            setInitialViewBox({
+                x: initialViewBox.value.x,
+                y: initialViewBox.value.y,
+                width: Math.max(10, initialViewBox.value.width),
+                height: Math.max(10, initialViewBox.value.height),
+            });
+        });
+    },
+    { immediate: true },
+);
+
+function onPanZoomPointerDown(event) {
+    if (!active.value) return;
+    if (event.button !== undefined && event.button !== 0) return;
+    panZoomDragStart.value = {
+        x: event.clientX,
+        y: event.clientY,
+    };
+    didPanZoomDrag.value = false;
+}
+
+function onPanZoomPointerMove(event) {
+    if (!active.value || !panZoomDragStart.value) return;
+
+    const deltaX = event.clientX - panZoomDragStart.value.x;
+    const deltaY = event.clientY - panZoomDragStart.value.y;
+
+    if (Math.hypot(deltaX, deltaY) > PAN_ZOOM_DRAG_THRESHOLD) {
+        didPanZoomDrag.value = true;
+    }
+}
+
+function onPanZoomPointerUp() {
+    panZoomDragStart.value = null;
+
+    if (didPanZoomDrag.value) {
+        window.setTimeout(() => {
+            didPanZoomDrag.value = false;
+        }, 0);
+    }
+}
+
+function onRectClick(rect, seriesIndex) {
+    if (didPanZoomDrag.value) return;
+    zoom(rect, seriesIndex);
 }
 
 const activeCrumbIndex = ref(null);
@@ -1551,10 +1782,9 @@ function onGenerateImage(payload) {
     generateImage();
 }
 
-function getLabelMetrics(rect) {
-    const fontSize = calcFontSize(rect);
-    const paddingX = Math.max(fontSize * 0.5, 4);
-    const paddingTop = Math.max(fontSize * 0.5, 4);
+function getLabelMetrics(rect, seriesIndex) {
+    const fontSize = calcFontSize(rect, seriesIndex);
+    const { paddingX, paddingTop } = getLabelPadding(fontSize);
     const lineHeight = fontSize * 1.1;
 
     return {
@@ -1565,21 +1795,11 @@ function getLabelMetrics(rect) {
     };
 }
 
-function getTreemapTextBox(rect) {
-    const { paddingX, paddingTop, lineHeight } = getLabelMetrics(rect);
-
-    const x = rect.x0 + paddingX;
-    const y = rect.y0 + paddingTop;
-    const width = Math.max(getWidth(rect) - paddingX * 2, 0);
-    const height = Math.max(getHeight(rect) - paddingTop * 2, 0);
-
-    return {
-        x,
-        y,
-        width,
-        height,
-        lineHeight,
-    };
+function getTreemapTextBox(rect, seriesIndex) {
+    return getTreemapTextBoxForFontSize(
+        rect,
+        getLabelMetrics(rect, seriesIndex).fontSize,
+    );
 }
 
 function getLabelTextColor(rect) {
@@ -1589,150 +1809,103 @@ function getLabelTextColor(rect) {
 }
 
 function getLabelLines(rect, seriesIndex) {
-    const { fontSize, lineHeight } = getLabelMetrics(rect);
-    const availableWidth = getTreemapLabelAvailableWidth(rect);
-    const availableHeight = getTreemapLabelAvailableHeight(rect);
+    const { fontSize, lineHeight } = getLabelMetrics(rect, seriesIndex);
+    const availableWidth = getTreemapLabelAvailableWidth(rect, seriesIndex);
+    const availableHeight = getTreemapLabelAvailableHeight(rect, seriesIndex);
 
     if (availableWidth <= 0 || availableHeight <= 0) {
         return [];
     }
 
     const maxLines = Math.max(
-        Math.floor(availableHeight / Math.max(lineHeight, 1)),
+        Math.floor(availableHeight / Math.max(lineHeight, 0.0001)),
         1,
     );
 
-    const formattedValue = applyDataLabel(
-        FINAL_CONFIG.value.style.chart.layout.labels.formatter,
-        rect.value,
-        dataLabel({
-            p: FINAL_CONFIG.value.style.chart.layout.labels.prefix,
-            v: rect.value,
-            s: FINAL_CONFIG.value.style.chart.layout.labels.suffix,
-            r: FINAL_CONFIG.value.style.chart.tooltip.roundingValue,
-        }),
-        { datapoint: rect, seriesIndex },
-    );
-
-    const lineGapSafety = Math.ceil(fontSize * 0.2);
-    const horizontalSafety = Math.ceil(fontSize * 1.4);
-    const effectiveWidth = Math.max(
-        availableWidth - horizontalSafety - lineGapSafety,
-        0,
-    );
-
-    if (effectiveWidth <= 0) {
-        return [];
-    }
-
-    if (Array.isArray(rect.children) && rect.children.length) {
-        const line = ellipsizeTreemapText(
-            `${rect.name} (${formattedValue})`,
-            effectiveWidth,
-            fontSize,
-            500,
-        );
-
-        return line ? [line] : [];
-    }
-
-    const lines = [];
-
-    const nameLine = ellipsizeTreemapText(
-        `${rect.name}`,
-        effectiveWidth,
-        fontSize,
-        500,
-    );
-
-    if (nameLine) {
-        lines.push(nameLine);
-    }
-
-    if (maxLines >= 2) {
-        const valueLine = ellipsizeTreemapText(
-            formattedValue,
-            effectiveWidth,
-            fontSize,
-            400,
-        );
-
-        if (valueLine) {
-            lines.push(valueLine);
-        }
-    }
-
-    return lines.slice(0, maxLines);
+    return getFullLabelLines(rect, seriesIndex)
+        .slice(0, maxLines)
+        .map((line) => String(line ?? ''))
+        .filter(Boolean);
 }
 
-function buildTreemapText({ rect, seriesIndex, isTitle }) {
+function buildTreemapLabel({ rect, seriesIndex }) {
     if (
         !rect ||
         !FINAL_CONFIG.value.style.chart.layout.labels.showDefaultLabels ||
         !shouldShowNodeLabel(rect)
     ) {
-        return '';
+        return null;
     }
 
-    const { fontSize } = getLabelMetrics(rect);
+    const { fontSize } = getLabelMetrics(rect, seriesIndex);
     const textColor = getLabelTextColor(rect);
     const lines = getLabelLines(rect, seriesIndex);
-    const textBox = getTreemapTextBox(rect);
+    const textBox = getTreemapTextBox(rect, seriesIndex);
 
     if (!lines.length || textBox.width <= 0 || textBox.height <= 0) {
-        return '';
+        return null;
     }
 
-    const clipId = `treemap_clip_${uid.value}_${rect.id}_${rect.depth}_${seriesIndex}`;
+    const clipId = `treemap_clip_${uid.value}_${rect.id}`;
 
-    const clipX = textBox.x;
-    const clipY = textBox.y;
-    const clipWidth = Math.max(textBox.width, 0);
-    const clipHeight = Math.max(textBox.height, 0);
+    const clipX = rect.x0;
+    const clipY = rect.y0;
+    const clipWidth = Math.max(getWidth(rect), 0);
+    const clipHeight = Math.max(getHeight(rect), 0);
 
-    const textNodes = lines
-        .map((line, index) => {
-            const y = textBox.y + textBox.lineHeight * index;
-
-            return `
-                <text
-                    x="${textBox.x}"
-                    y="${y}"
-                    fill="${textColor}"
-                    font-size="${fontSize}"
-                    font-family="${FINAL_CONFIG.value.style.fontFamily}"
-                    font-weight="${index === 0 ? 500 : 400}"
-                    text-anchor="start"
-                    dominant-baseline="text-before-edge"
-                >
-                    ${escapeHtml(line)}
-                </text>
-            `;
-        })
-        .join('');
-
-    return `
-        <g>
-            <defs>
-                <clipPath id="${clipId}" clipPathUnits="userSpaceOnUse">
-                    <rect
-                        x="${clipX}"
-                        y="${clipY}"
-                        width="${clipWidth}"
-                        height="${clipHeight}"
-                    />
-                </clipPath>
-            </defs>
-            <g clip-path="url(#${clipId})">
-                ${textNodes}
-            </g>
-        </g>
-    `;
+    return {
+        key: getTreemapLabelCacheKey(rect),
+        clipId,
+        clipX,
+        clipY,
+        clipWidth,
+        clipHeight,
+        lines: lines.map((line, index) => ({
+            key: `${rect.id}_${index}`,
+            text: line,
+            x: textBox.x,
+            y: textBox.y + textBox.lineHeight * index,
+            fill: textColor,
+            fontSize,
+            fontFamily: FINAL_CONFIG.value.style.fontFamily,
+            fontWeight: index === 0 ? 500 : 400,
+        })),
+    };
 }
+
+function getTreemapLabelCacheKey(rect) {
+    return `${rect.id}`;
+}
+
+const treemapLabels = computed(() => {
+    if (
+        slots.rect ||
+        loading.value ||
+        !FINAL_CONFIG.value.style.chart.layout.labels.showDefaultLabels ||
+        allSegregated.value
+    ) {
+        return [];
+    }
+
+    return squarified.value
+        .map((rect, seriesIndex) => {
+            if (!rect.showLabel) return null;
+
+            return buildTreemapLabel({
+                rect,
+                seriesIndex,
+            });
+        })
+        .filter(Boolean);
+});
 
 let treemapMeasureCanvas;
 
 function getTreemapMeasureContext() {
+    if (typeof document === 'undefined') {
+        return null;
+    }
+
     if (!treemapMeasureCanvas) {
         treemapMeasureCanvas = document.createElement('canvas');
     }
@@ -1751,58 +1924,12 @@ function measureTreemapTextWidth(text, fontSize, fontWeight = 400) {
     return context.measureText(String(text)).width;
 }
 
-function ellipsizeTreemapText(text, maxWidth, fontSize, fontWeight = 400) {
-    const raw = String(text ?? '');
-
-    if (!raw.length || maxWidth <= 0) {
-        return '';
-    }
-
-    if (measureTreemapTextWidth(raw, fontSize, fontWeight) <= maxWidth) {
-        return raw;
-    }
-
-    const ellipsis = '…';
-    const ellipsisWidth = measureTreemapTextWidth(
-        ellipsis,
-        fontSize,
-        fontWeight,
-    );
-
-    if (ellipsisWidth > maxWidth) {
-        return '';
-    }
-
-    let start = 0;
-    let end = raw.length;
-    let best = '';
-
-    while (start <= end) {
-        const middle = Math.floor((start + end) / 2);
-        const candidate = `${raw.slice(0, middle)}${ellipsis}`;
-        const candidateWidth = measureTreemapTextWidth(
-            candidate,
-            fontSize,
-            fontWeight,
-        );
-
-        if (candidateWidth <= maxWidth) {
-            best = candidate;
-            start = middle + 1;
-        } else {
-            end = middle - 1;
-        }
-    }
-
-    return best || ellipsis;
+function getTreemapLabelAvailableWidth(rect, seriesIndex) {
+    return getTreemapTextBox(rect, seriesIndex).width;
 }
 
-function getTreemapLabelAvailableWidth(rect) {
-    return getTreemapTextBox(rect).width;
-}
-
-function getTreemapLabelAvailableHeight(rect) {
-    return getTreemapTextBox(rect).height;
+function getTreemapLabelAvailableHeight(rect, seriesIndex) {
+    return getTreemapTextBox(rect, seriesIndex).height;
 }
 
 function getSafeRadius(rect) {
@@ -1956,10 +2083,10 @@ function setKeyboardTooltipPositionFromIndex(index) {
     tooltipA11yPosition.value = {
         x:
             box.left +
-            ((svgX - viewBox.value.startX) / viewBox.value.width) * box.width,
+            ((svgX - viewBox.value.x) / viewBox.value.width) * box.width,
         y:
             box.top +
-            ((svgY - viewBox.value.startY) / viewBox.value.height) * box.height,
+            ((svgY - viewBox.value.y) / viewBox.value.height) * box.height,
     };
 }
 
@@ -1968,6 +2095,8 @@ const a11yTable = computed(() => {
     const rows = dataTable.value?.body ?? [];
     return { headers, rows };
 });
+
+const textColor = computed(() => FINAL_CONFIG.value.style.chart.color);
 
 defineExpose({
     getData,
@@ -1980,8 +2109,10 @@ defineExpose({
     showSeries,
     toggleTable,
     toggleTooltip,
+    toggleZoom,
     toggleAnnotator,
     toggleFullscreen,
+    resetZoom,
     copyAlt,
 });
 </script>
@@ -2104,6 +2235,8 @@ defineExpose({
             :printScale="FINAL_CONFIG.userOptions.print.scale"
             :tableDialog="FINAL_CONFIG.table.useDialog"
             :isCursorPointer="isCursorPointer"
+            :hasZoom="FINAL_CONFIG.userOptions.buttons.zoom"
+            :isZoom="mutableConfig.showZoom"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
@@ -2112,6 +2245,7 @@ defineExpose({
             @toggleTable="toggleTable"
             @toggleTooltip="toggleTooltip"
             @toggleAnnotator="toggleAnnotator"
+            @toggleZoom="toggleZoom"
             @copyAlt="copyAlt"
             :style="{
                 visibility: keepUserOptionState
@@ -2160,6 +2294,12 @@ defineExpose({
                     name="optionAnnotator"
                     v-bind="{ toggleAnnotator, isAnnotator }"
                 />
+            </template>
+            <template
+                v-if="$slots.optionZoom"
+                #optionZoom="{ toggleZoom, isZoomLocked }"
+            >
+                <slot name="optionZoom" v-bind="{ toggleZoom, isZoomLocked }" />
             </template>
             <template
                 v-if="$slots.optionAltCopy"
@@ -2261,15 +2401,21 @@ defineExpose({
                     'vue-data-ui-fulscreen--off': !isFullscreen,
                     'vue-data-ui-zoom-plus': !isZoom,
                     'vue-data-ui-zoom-minus': isZoom,
+                    'no-transition': prefersReducedMotion,
                     loading: loading,
                 }"
                 data-cy="treemap-svg"
-                :viewBox="`${viewBox.startX} ${viewBox.startY} ${viewBox.width <= 0 ? 10 : viewBox.width} ${viewBox.height <= 0 ? 10 : viewBox.height}`"
-                :style="`max-width:100%; overflow: hidden; background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
+                :viewBox="`${viewBox.x} ${viewBox.y} ${viewBox.width <= 0 ? 10 : viewBox.width} ${viewBox.height <= 0 ? 10 : viewBox.height}`"
+                :style="`max-width:100%; overflow:${shouldClipPanZoom ? 'hidden' : 'visible'}; background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
                 tabindex="0"
                 @focus="onSvgFocus"
                 @blur="onSvgBlur"
                 @keydown="onSvgKeydown"
+                @pointerdown="onPanZoomPointerDown"
+                @pointermove="onPanZoomPointerMove"
+                @pointerup="onPanZoomPointerUp"
+                @pointercancel="onPanZoomPointerUp"
+                @pointerleave="onPanZoomPointerUp"
             >
                 <PackageVersion />
 
@@ -2339,7 +2485,7 @@ defineExpose({
                                     : FINAL_CONFIG.style.chart.layout.rects
                                           .strokeWidth
                             "
-                            @click.stop="zoom(rect, i)"
+                            @click.stop="onRectClick(rect, i)"
                             @mouseenter="
                                 () =>
                                     useTooltip({
@@ -2362,77 +2508,90 @@ defineExpose({
                     </g>
 
                     <g
-                        v-for="(rect, i) in squarified"
-                        :key="`label_${rect.id}_${rect.depth}`"
+                        v-for="label in treemapLabels"
+                        :key="label.key"
+                        style="pointer-events: none"
                     >
-                        <g
-                            v-if="
-                                !$slots.rect &&
-                                !loading &&
-                                FINAL_CONFIG.style.chart.layout.labels
-                                    .showDefaultLabels &&
-                                !allSegregated &&
-                                rect.showLabel
-                            "
-                            style="pointer-events: none"
-                            v-html="
-                                buildTreemapText({
-                                    rect,
-                                    seriesIndex: i,
-                                    isTitle: !!(
-                                        rect.children && rect.children.length
-                                    ),
-                                })
-                            "
-                        />
+                        <defs>
+                            <clipPath
+                                :id="label.clipId"
+                                clipPathUnits="userSpaceOnUse"
+                            >
+                                <rect
+                                    class="vue-ui-treemap-data-label-clip"
+                                    :x="label.clipX"
+                                    :y="label.clipY"
+                                    :width="label.clipWidth"
+                                    :height="label.clipHeight"
+                                />
+                            </clipPath>
+                        </defs>
+                        <g :clip-path="`url(#${label.clipId})`">
+                            <text
+                                v-for="line in label.lines"
+                                :key="line.key"
+                                class="vue-ui-treemap-data-label"
+                                :transform="`translate(${line.x}, ${line.y})`"
+                                :fill="line.fill"
+                                :font-size="line.fontSize"
+                                :font-family="line.fontFamily"
+                                :font-weight="line.fontWeight"
+                                text-anchor="start"
+                                dominant-baseline="text-before-edge"
+                            >
+                                {{ line.text }}
+                            </text>
+                        </g>
                     </g>
 
-                    <g
-                        v-for="(rect, i) in squarified"
-                        :key="`slot_${rect.id}_${rect.depth}`"
-                    >
-                        <foreignObject
-                            :x="rect.x0"
-                            :y="rect.y0"
-                            :height="getHeight(rect)"
-                            :width="getWidth(rect)"
-                            class="vue-ui-treemap-cell-foreignObject"
-                            style="pointer-events: none"
+                    <g v-if="$slots.rect">
+                        <g
+                            v-for="(rect, i) in squarified"
+                            :key="`slot_${rect.id}_${rect.depth}`"
                         >
-                            <div
-                                :style="{
-                                    width: '100%',
-                                    height: '100%',
-                                }"
-                                class="vue-ui-treemap-cell"
+                            <foreignObject
+                                :x="rect.x0"
+                                :y="rect.y0"
+                                :height="getHeight(rect)"
+                                :width="getWidth(rect)"
+                                class="vue-ui-treemap-cell-foreignObject"
+                                style="pointer-events: none; overflow: hidden"
                             >
-                                <slot
-                                    v-if="!loading"
-                                    name="rect"
-                                    v-bind="{
-                                        rect: {
-                                            ...rect,
-                                            height: getHeight(rect),
-                                            width: getWidth(rect),
-                                            isSelected: !selectedRect
-                                                ? true
-                                                : selectedRect.id === rect.id,
-                                        },
-                                        shouldShow:
-                                            rect.proportion >
-                                                FINAL_CONFIG.style.chart.layout
-                                                    .labels
-                                                    .hideUnderProportion ||
-                                            isZoom,
-                                        fontSize: calcFontSize(rect),
-                                        isZoom,
-                                        textColor: adaptColorToBackground(
-                                            rect.color,
-                                        ),
+                                <div
+                                    :style="{
+                                        width: '100%',
+                                        height: '100%',
+                                        overflow: 'hidden',
                                     }"
-                                />
-                            </div>
-                        </foreignObject>
+                                    class="vue-ui-treemap-cell"
+                                >
+                                    <slot
+                                        v-if="!loading"
+                                        name="rect"
+                                        v-bind="{
+                                            rect: {
+                                                ...rect,
+                                                height: getHeight(rect),
+                                                width: getWidth(rect),
+                                                isSelected: !selectedRect
+                                                    ? true
+                                                    : selectedRect.id ===
+                                                      rect.id,
+                                            },
+                                            shouldShow:
+                                                shouldShowLabelByProportion(
+                                                    rect,
+                                                ) || isZoom,
+                                            fontSize: calcFontSize(rect, i),
+                                            isZoom,
+                                            textColor: adaptColorToBackground(
+                                                rect.color,
+                                            ),
+                                        }"
+                                    />
+                                </div>
+                            </foreignObject>
+                        </g>
                     </g>
                 </g>
 
@@ -2449,6 +2608,28 @@ defineExpose({
                     }"
                 />
             </svg>
+
+            <div v-if="isPanZoom" data-dom-to-png-ignore class="reset-wrapper">
+                <slot name="reset-action" :reset="resetZoom">
+                    <button
+                        data-cy-reset
+                        tabindex="0"
+                        role="button"
+                        class="vue-data-ui-refresh-button"
+                        :style="{
+                            background:
+                                FINAL_CONFIG.style.chart.backgroundColor,
+                            cursor: isCursorPointer ? 'pointer' : 'default',
+                        }"
+                        @click="resetZoom(true)"
+                    >
+                        <BaseIcon
+                            name="refresh"
+                            :stroke="FINAL_CONFIG.style.chart.color"
+                        />
+                    </button>
+                </slot>
+            </div>
 
             <div
                 v-if="$slots.hint"
@@ -2669,14 +2850,19 @@ defineExpose({
     text-align: left;
 }
 
-.vue-ui-treemap-cell,
-.vue-ui-treemap-cell-foreignObject {
+.vue-ui-treemap-cell {
     pointer-events: none;
     padding: 3px;
 }
 
+.vue-ui-treemap-cell-foreignObject {
+    overflow: hidden;
+    pointer-events: none;
+}
+
 .vue-ui-treemap-cell {
     height: 100%;
+    overflow: hidden;
     width: 100%;
 }
 
@@ -2684,7 +2870,14 @@ defineExpose({
     transition: all 0.2s ease-in-out;
 }
 
-.loading .vue-ui-treemap-rect {
+.vue-ui-treemap-data-label,
+.vue-ui-treemap-data-label-clip {
+    transition: all 0.2s ease-in-out;
+}
+
+.loading .vue-ui-treemap-rect,
+.loading .vue-ui-treemap-data-label,
+.loading .vue-ui-treemap-data-label-clip {
     transition: none;
 }
 
@@ -2698,6 +2891,38 @@ defineExpose({
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+.reset-wrapper {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    padding: 0 24px;
+    height: 40px;
+    position: absolute;
+    bottom: 12px;
+    right: 0;
+}
+
+.vue-data-ui-refresh-button {
+    outline: none;
+    border: none;
+    background: transparent;
+    height: 36px;
+    width: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: transform 0.2s ease-in-out;
+    transform-origin: center;
+    &:focus {
+        outline: 1px solid v-bind(textColor);
+    }
+    &:hover {
+        transform: rotate(-90deg);
+    }
 }
 
 .vue-ui-treemap-cell-zoom {
@@ -2784,5 +3009,11 @@ svg:focus-visible,
     clip: rect(0 0 0 0);
     white-space: normal;
     border: 0;
+}
+
+.no-transition .vue-ui-treemap-rect,
+.no-transition .vue-ui-treemap-data-label,
+.no-transition .vue-ui-treemap-data-label-clip {
+    transition: none !important;
 }
 </style>
