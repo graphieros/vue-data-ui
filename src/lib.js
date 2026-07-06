@@ -4759,6 +4759,28 @@ export function createCatmullRomPath(points, tension = 1) {
     return d.join(' ');
 }
 
+// Use for getImage exposed methods for components with SlicerPreview
+export function getImageDimensions(src, scale = 1) {
+    if (!src || typeof window === 'undefined') {
+        return Promise.resolve(null);
+    }
+
+    return new Promise((resolve) => {
+        const image = new window.Image();
+        image.onload = () => {
+            const width = image.naturalWidth / scale;
+            const height = image.naturalHeight / scale;
+            resolve({
+                width,
+                height,
+                aspectRatio: height ? width / height : 0,
+            });
+        };
+        image.onerror = () => resolve(null);
+        image.src = src;
+    });
+}
+
 const lib = {
     XMLNS,
     abbreviate,
@@ -4838,6 +4860,7 @@ const lib = {
     getCloserPoint,
     getCumulativeAverage,
     getCumulativeMedian,
+    getImageDimensions,
     getLineCountFromString,
     getMissingDatasetAttributes,
     getPalette,

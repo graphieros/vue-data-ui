@@ -22,6 +22,7 @@ import {
     downloadCsv,
     error,
     functionReturnsString,
+    getImageDimensions,
     isFunction,
     objectIsEmpty,
     setOpacity,
@@ -1457,21 +1458,28 @@ function toggleAnnotator() {
 
 async function getImage({ scale = 2 } = {}) {
     if (!candlestickChart.value) return;
-    const { width, height } = candlestickChart.value.getBoundingClientRect();
-    const aspectRatio = width / height;
     const { imageUri, base64 } = await img({
         domElement: candlestickChart.value,
         base64: true,
         img: true,
         scale,
     });
+    const fallbackRect = candlestickChart.value.getBoundingClientRect();
+    const fallbackDimensions = {
+        width: fallbackRect.width,
+        height: fallbackRect.height,
+        aspectRatio: fallbackRect.height
+            ? fallbackRect.width / fallbackRect.height
+            : 0,
+    };
+    const imageDimensions =
+        (await getImageDimensions(imageUri, scale)) ?? fallbackDimensions;
+
     return {
         imageUri,
         base64,
         title: FINAL_CONFIG.value.style.title.text,
-        width,
-        height,
-        aspectRatio,
+        ...imageDimensions,
     };
 }
 
@@ -2795,6 +2803,7 @@ defineExpose({
 
         <SlicerPreview
             ref="chartSlicer"
+            data-dom-to-png-ignore-layout
             v-if="
                 FINAL_CONFIG.style.zoom.show &&
                 len > 6 &&

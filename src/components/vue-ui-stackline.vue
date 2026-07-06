@@ -31,6 +31,7 @@ import {
     error,
     forceValidValue,
     functionReturnsString,
+    getImageDimensions,
     getMissingDatasetAttributes,
     isFunction,
     isSafeValue,
@@ -2597,21 +2598,28 @@ async function generateSvg({ isCb }) {
 
 async function getImage({ scale = 2 } = {}) {
     if (!stacklineChart.value) return;
-    const { width, height } = stacklineChart.value.getBoundingClientRect();
-    const aspectRatio = width / height;
     const { imageUri, base64 } = await img({
         domElement: stacklineChart.value,
         base64: true,
         img: true,
         scale,
     });
+    const fallbackRect = stacklineChart.value.getBoundingClientRect();
+    const fallbackDimensions = {
+        width: fallbackRect.width,
+        height: fallbackRect.height,
+        aspectRatio: fallbackRect.height
+            ? fallbackRect.width / fallbackRect.height
+            : 0,
+    };
+    const imageDimensions =
+        (await getImageDimensions(imageUri, scale)) ?? fallbackDimensions;
+
     return {
         imageUri,
         base64,
         title: FINAL_CONFIG.value.style.chart.title.text,
-        width,
-        height,
-        aspectRatio,
+        ...imageDimensions,
     };
 }
 
@@ -4536,6 +4544,7 @@ defineExpose({
         <!-- SLICER PREVIEW -->
         <SlicerPreview
             ref="chartSlicer"
+            data-dom-to-png-ignore-layout
             v-if="
                 FINAL_CONFIG.style.chart.zoom.show &&
                 isDataset &&

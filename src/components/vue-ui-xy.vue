@@ -62,6 +62,7 @@ import {
     translateSize,
     treeShake,
     isValidNumber,
+    getImageDimensions,
 } from '../lib';
 import {
     canShowValue,
@@ -2434,21 +2435,28 @@ function getData() {
 
 async function getImage({ scale = 2 } = {}) {
     if (!chart.value) return;
-    const { width, height } = chart.value.getBoundingClientRect();
-    const aspectRatio = width / height;
     const { imageUri, base64 } = await img({
         domElement: chart.value,
         base64: true,
         img: true,
         scale,
     });
+    const fallbackRect = chart.value.getBoundingClientRect();
+    const fallbackDimensions = {
+        width: fallbackRect.width,
+        height: fallbackRect.height,
+        aspectRatio: fallbackRect.height
+            ? fallbackRect.width / fallbackRect.height
+            : 0,
+    };
+    const imageDimensions =
+        (await getImageDimensions(imageUri, scale)) ?? fallbackDimensions;
+
     return {
         imageUri,
         base64,
         title: FINAL_CONFIG.value.chart.title.text,
-        width,
-        height,
-        aspectRatio,
+        ...imageDimensions,
     };
 }
 

@@ -34,6 +34,7 @@ import {
     setOpacity,
     themePalettes,
     treeShake,
+    getImageDimensions,
 } from '../lib';
 import { throttle } from '../canvas-lib';
 import {
@@ -3110,21 +3111,28 @@ function toggleAnnotator() {
 
 async function getImage({ scale = 2 } = {}) {
     if (!xy.value) return;
-    const { width, height } = xy.value.getBoundingClientRect();
-    const aspectRatio = width / height;
     const { imageUri, base64 } = await img({
         domElement: xy.value,
         base64: true,
         img: true,
         scale,
     });
+    const fallbackRect = xy.value.getBoundingClientRect();
+    const fallbackDimensions = {
+        width: fallbackRect.width,
+        height: fallbackRect.height,
+        aspectRatio: fallbackRect.height
+            ? fallbackRect.width / fallbackRect.height
+            : 0,
+    };
+    const imageDimensions =
+        (await getImageDimensions(imageUri, scale)) ?? fallbackDimensions;
+
     return {
         imageUri,
         base64,
         title: FINAL_CONFIG.value.style.chart.title.text,
-        width,
-        height,
-        aspectRatio,
+        ...imageDimensions,
     };
 }
 
@@ -3490,6 +3498,7 @@ defineExpose({
 
         <SlicerPreview
             ref="chartSlicer"
+            data-dom-to-png-ignore-layout
             v-if="
                 FINAL_CONFIG.style.chart.zoom.show &&
                 maxSeries > 6 &&
