@@ -12,7 +12,7 @@ import { VueUiDonut as VueUiDonutTreeshaken } from 'vue-data-ui/vue-ui-donut';
 import useThemeOptions from './useThemeOptions';
 import LocalPatternSlot from '../src/atoms/vue-ui-pattern-seed.vue';
 import { VueUiPatternSeed } from 'vue-data-ui/vue-ui-pattern-seed';
-import { createPatternDef } from 'vue-data-ui/utils';
+import { createPatternDef, createColorWheel } from 'vue-data-ui/utils';
 import { createStaticVueUiDonut } from '../src/svg/ssr.js';
 
 const { vue_ui_donut: DEFAULT_CONFIG } = useConfig();
@@ -741,6 +741,10 @@ const configTheme = computed(() => ({
     theme: currentTheme.value,
 }));
 
+const customPalette = computed(() => {
+    return createColorWheel('oklch(0.628 0.2577 29.23)', dataset.value.length);
+});
+
 const config = computed(() => {
     const c = convertArrayToObject(model.value);
     if (testCustomTooltip.value) {
@@ -762,6 +766,7 @@ const config = computed(() => {
     } else {
         return {
             ...c,
+            customPalette: customPalette.value,
             userOptions: {
                 ...c.userOptions,
                 buttons: {

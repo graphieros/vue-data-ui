@@ -75,6 +75,7 @@ export { default as getVueDataUiConfig } from './getVueDataUiConfig';
 export { default as getThemeConfig } from './getThemeConfig';
 export {
     abbreviate,
+    createColorWheel,
     createSmoothPath,
     createStraightPath,
     createTSpans,

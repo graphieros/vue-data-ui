@@ -42,6 +42,7 @@ import {
     createIndividualAreaWithCuts,
     createPolarAreas,
     createPolygonPath,
+    createColorWheel,
     createSmoothAreaSegments,
     createSmoothPath,
     createSmoothPathWithCuts,
@@ -4965,5 +4966,107 @@ describe('createCatmullRomPath', () => {
         const originalPoints = structuredClone(points);
         createCatmullRomPath(points);
         expect(points).toEqual(originalPoints);
+    });
+});
+
+describe('createColorWheel', () => {
+    const expectedFourColors = [
+        '#ff0000ff',
+        '#80ff00ff',
+        '#00ffffff',
+        '#7f00ffff',
+    ];
+
+    test('returns a given number of colors', () => {
+        expect(createColorWheel('#FF0000', 6)).toHaveLength(6);
+    });
+
+    test('returns expected colors', () => {
+        expect(createColorWheel('#FF0000', 4)).toStrictEqual(
+            expectedFourColors,
+        );
+
+        expect(createColorWheel('#00FF00', 10)).toStrictEqual([
+            '#00ff00ff',
+            '#00ff99ff',
+            '#00ccffff',
+            '#0033ffff',
+            '#6600ffff',
+            '#ff00ffff',
+            '#ff0066ff',
+            '#ff3300ff',
+            '#ffcc00ff',
+            '#99ff00ff',
+        ]);
+    });
+
+    test('returns the normalized starting color when count is 1', () => {
+        const color = '#ff0000ff';
+        expect(createColorWheel(color, 1)).toStrictEqual([color]);
+    });
+
+    test('works with rgb', () => {
+        expect(createColorWheel('rgb(255, 0, 0)', 4)).toStrictEqual(
+            expectedFourColors,
+        );
+    });
+
+    test('works with rgba', () => {
+        expect(createColorWheel('rgba(255, 0, 0, 1)', 4)).toStrictEqual(
+            expectedFourColors,
+        );
+        expect(createColorWheel('rgba(255, 0, 0, 0.5)', 4)).toStrictEqual(
+            expectedFourColors.map((c) => c.slice(0, -2) + '80'),
+        );
+    });
+
+    test('works with oklch', () => {
+        expect(createColorWheel('oklch(0.628 0.2577 29.23)', 4)).toStrictEqual(
+            expectedFourColors,
+        );
+        expect(
+            createColorWheel('oklch(0.628 0.2577 29.23 / 50.2%)', 4),
+        ).toStrictEqual(expectedFourColors.map((c) => c.slice(0, -2) + '80'));
+    });
+
+    test('works with hsl', () => {
+        expect(createColorWheel('hsl(0 100% 50%)', 4)).toStrictEqual(
+            expectedFourColors,
+        );
+        expect(createColorWheel('hsla(0 100% 50% / 0.5)', 4)).toStrictEqual(
+            expectedFourColors.map((c) => c.slice(0, -2) + '80'),
+        );
+    });
+
+    test('preserves alpha from hex colors', () => {
+        expect(createColorWheel('#ff000050', 4)).toStrictEqual(
+            expectedFourColors.map((c) => c.slice(0, -2) + '50'),
+        );
+    });
+
+    test('returns an empty array when count is not positive', () => {
+        expect(createColorWheel('#FF0000', 0)).toStrictEqual([]);
+        expect(createColorWheel('#FF0000', -1)).toStrictEqual([]);
+    });
+
+    test('floors decimal counts', () => {
+        expect(createColorWheel('#FF0000', 3.9)).toHaveLength(3);
+    });
+
+    test('returns an empty array when the starting color is invalid', () => {
+        expect(createColorWheel('wat', 4)).toStrictEqual([]);
+    });
+
+    test('logs an error and returns an empty array when the starting color is invalid', () => {
+        const consoleError = vi
+            .spyOn(console, 'error')
+            .mockImplementation(() => {});
+
+        expect(createColorWheel('wat', 4)).toStrictEqual([]);
+        expect(consoleError).toHaveBeenCalledWith(
+            'Vue Data Ui - createColorWheel - Invalid starting color: null',
+        );
+
+        consoleError.mockRestore();
     });
 });

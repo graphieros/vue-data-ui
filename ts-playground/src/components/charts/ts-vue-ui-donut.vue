@@ -11,7 +11,7 @@ import {
     type VueUiDonutEmitSelectDatapoint,
     type VueUiDonutEmitSelectLegend,
 } from 'vue-data-ui/vue-ui-donut';
-import { mergeConfigs } from 'vue-data-ui/utils';
+import { mergeConfigs, createColorWheel } from 'vue-data-ui/utils';
 import 'vue-data-ui/style.css';
 
 import DonutLegend from '../slots/vue-ui-donut/donut-legend.vue';
@@ -36,7 +36,7 @@ import CommonOptionAnnotator from '../slots/common/option-annotator.vue';
 
 import { createStaticVueUiDonut } from 'vue-data-ui/ssr/vue-ui-donut';
 
-const dataset = computed<VueUiDonutDatasetItem[]>(() => [
+const datasetSource = computed<VueUiDonutDatasetItem[]>(() => [
     {
         name: 'A',
         values: [0.1],
@@ -91,6 +91,23 @@ const dataset = computed<VueUiDonutDatasetItem[]>(() => [
         values: [3],
     },
 ]);
+
+const colorWheel = computed(() =>
+    createColorWheel('#FFAADD', datasetSource.value.length * 1.618),
+);
+
+const dataset = computed(() => {
+    return [...datasetSource.value]
+        .sort((a, b) => {
+            const sumA = a.values.reduce((acc, val) => acc + (val ?? 0), 0);
+            const sumB = b.values.reduce((acc, val) => acc + (val ?? 0), 0);
+            return sumB - sumA;
+        })
+        .map((dp, i) => ({
+            ...dp,
+            color: colorWheel.value[i],
+        }));
+});
 
 const testPreconfig = computed<VueUiDonutConfig>(() => {
     return {

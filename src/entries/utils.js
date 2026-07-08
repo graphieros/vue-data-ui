@@ -6,6 +6,7 @@ import getThemeConfig from '../getThemeConfig';
 import {
     abbreviate,
     adaptColorToBackground,
+    createColorWheel,
     createSmoothPath,
     createStraightPath,
     createTSpans,
@@ -33,6 +34,7 @@ export { getThemeConfig };
 
 export {
     abbreviate,
+    createColorWheel,
     createSmoothPath,
     createStraightPath,
     createTSpans,

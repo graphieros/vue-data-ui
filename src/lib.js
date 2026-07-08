@@ -4781,6 +4781,25 @@ export function getImageDimensions(src, scale = 1) {
     });
 }
 
+export function createColorWheel(startColor, len) {
+    const length = Math.floor(Number(len));
+
+    if (!Number.isFinite(length) || length <= 0) {
+        return [];
+    }
+
+    const hex = convertColorToHex(startColor);
+
+    if (!hex) {
+        console.error(
+            `Vue Data Ui - createColorWheel - Invalid starting color: ${hex}`,
+        );
+        return [];
+    }
+
+    return Array.from({ length }, (_, i) => shiftHue(hex, i / length));
+}
+
 const lib = {
     XMLNS,
     abbreviate,
@@ -4822,6 +4841,7 @@ const lib = {
     createIndividualAreaWithCuts,
     createPolarAreas,
     createPolygonPath,
+    createColorWheel,
     createShadesOfGrey,
     createSmoothAreaSegments,
     createSmoothPath,

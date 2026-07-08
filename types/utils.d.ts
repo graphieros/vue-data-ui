@@ -285,6 +285,24 @@ export const adaptColorToBackground: (
 /**
  * Vue Data UI utility
  * ---
+ * Creates equally spaced colors around the hue circle from a starting color, and a number of desired colors to output.
+ * ---
+ * @example
+ * const myPalette = createColorWheel('#FF0000', 6);
+ * const myPalette = createColorWheel('red', 6);
+ * const myPalette = createColorWheel('rgb(255,0,0)', 6);
+ * const myPalette = createColorWheel('rgba(255,0,0, 0.5)', 6);
+ * const myPalette = createColorWheel('oklch(0.628 0.2577 29.23)', 6);
+ *
+ * @param startColor - The starting color, in any format already supported by Vue Data UI.
+ * @param count - The number of colors to generate.
+ * @returns An array of hex colors.
+ */
+export const createColorWheel: (startColor: string, count: number) => string[];
+
+/**
+ * Vue Data UI utility
+ * ---
  * Darkens a color by a specified strength.
  * ___
  * @example
