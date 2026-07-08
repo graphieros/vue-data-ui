@@ -3,6 +3,7 @@ import {
     computed,
     defineAsyncComponent,
     nextTick,
+    onBeforeUnmount,
     onMounted,
     ref,
     toRefs,
@@ -116,7 +117,12 @@ onMounted(() => {
 });
 
 let worldGeo = WORLD_DATA;
-const { projections, getProjectedBounds, setupTerritories } = geo;
+const {
+    projections,
+    getProjectedBounds,
+    setupTerritories,
+    geoToPath: makeGeoPath,
+} = geo;
 
 function prepareConfig() {
     let mergedConfig = useNestedProp({
@@ -267,7 +273,9 @@ const viewBox = computed(() => {
         worldGeo.features,
         sizes.value.width,
         sizes.value.height,
+        center.value,
     );
+
     return {
         str: `${minX} ${minY} ${width} ${height}`,
         minX,
@@ -303,38 +311,12 @@ function project([lon, lat]) {
 }
 
 function geoToPath(geometry) {
-    //----------------------------------------------------------------------------------------------
-    // NOTE: Should we decide to use d3-geo in the future:
-    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    // if (projection.value === 'globe') {
-    //     const globeProj = geoOrthographic()
-    //         .translate([sizes.value.width / 2, sizes.value.height / 2])
-    //         .scale(Math.min(sizes.value.width, sizes.value.height) / 2 * 0.95)
-    //         .rotate([-center.value[0], -center.value[1]])
-    //         .clipAngle(90);
-    //     const pathGen = geoPath(globeProj);
-    //     return pathGen(geometry);
-    // }
-    //----------------------------------------------------------------------------------------------
-
-    const drawPoly = (coords) =>
-        coords
-            .map((ring) => {
-                const pts = ring.map(([lon, lat]) => project([lon, lat]));
-                const validPts = pts.filter(
-                    ([x, y]) => Number.isFinite(x) && Number.isFinite(y),
-                );
-                if (validPts.length < 3) return '';
-                return (
-                    'M' + validPts.map(([x, y]) => `${x},${y}`).join('L') + 'Z'
-                );
-            })
-            .filter(Boolean)
-            .join(' ');
-    if (geometry.type === 'Polygon') return drawPoly(geometry.coordinates);
-    if (geometry.type === 'MultiPolygon')
-        return geometry.coordinates.map(drawPoly).join(' ');
-    return '';
+    return makeGeoPath(geometry, {
+        projection: projection.value,
+        width: sizes.value.width,
+        height: sizes.value.height,
+        center: center.value,
+    });
 }
 
 const categories = computed(() => {
@@ -362,6 +344,16 @@ function getColorByCategory(category) {
     return found ? found.color : '#000000';
 }
 
+const territoryUidByCode = new Map();
+
+function getTerritoryUid(code) {
+    if (!territoryUidByCode.has(code)) {
+        territoryUidByCode.set(code, `territory-${createUid()}`);
+    }
+
+    return territoryUidByCode.get(code);
+}
+
 const countries = computed(() => {
     const _center = center.value;
     return worldGeo.features.map((feature) => {
@@ -386,7 +378,7 @@ const countries = computed(() => {
             value: item ? item.value : null,
             category: item ? item.category || null : null,
             isActive: !!item,
-            uid: `territory-${createUid()}`,
+            uid: getTerritoryUid(code),
         };
     });
 });
@@ -426,6 +418,14 @@ const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
 const useCustomFormat = ref(false);
 const dataTooltipSlot = ref(null);
 const selectedDatapoint = ref(null);
+
+const selectedDatapointPath = computed(() => {
+    if (!selectedDatapoint.value) {
+        return '';
+    }
+
+    return geoToPath(selectedDatapoint.value.geometry);
+});
 
 function getLargestPolygon(geometry) {
     if (!geometry) return [];
@@ -584,6 +584,45 @@ const center = ref([
     FINAL_CONFIG.value.style.chart.globe.center.y,
 ]);
 
+let dragStartCenter = [0, 0];
+let pendingCenter = null;
+let centerFrame = null;
+
+const GLOBE_ROTATION_SPEED = 0.5;
+
+function clampLatitude(lat) {
+    return Math.max(-90, Math.min(90, lat));
+}
+
+function normalizeLongitude(lon) {
+    return ((((lon + 180) % 360) + 360) % 360) - 180;
+}
+
+function flushPendingCenter() {
+    if (pendingCenter) {
+        center.value = pendingCenter;
+        pendingCenter = null;
+    }
+}
+
+function scheduleCenterUpdate(nextCenter) {
+    pendingCenter = nextCenter;
+
+    if (typeof requestAnimationFrame === 'undefined') {
+        flushPendingCenter();
+        return;
+    }
+
+    if (centerFrame !== null) {
+        return;
+    }
+
+    centerFrame = requestAnimationFrame(() => {
+        centerFrame = null;
+        flushPendingCenter();
+    });
+}
+
 watch(
     () => [
         FINAL_CONFIG.value.style.chart.globe.center.x,
@@ -591,52 +630,76 @@ watch(
     ],
     ([newX, newY]) => {
         center.value = [newX, newY];
+        pendingCenter = null;
     },
 );
 
-function onMouseDown(e) {
+function beginDrag(clientX, clientY) {
     drag.value = true;
-    dragStart.value = { x: e.clientX, y: e.clientY };
+    dragStart.value = { x: clientX, y: clientY };
+    dragStartCenter = pendingCenter || [center.value[0], center.value[1]];
+}
+
+function updateDrag(clientX, clientY) {
+    if (!drag.value || projection.value !== 'globe' || isAnnotator.value) {
+        return;
+    }
+
+    const dx = clientX - dragStart.value.x;
+    const dy = clientY - dragStart.value.y;
+
+    const lon = normalizeLongitude(
+        dragStartCenter[0] - dx * GLOBE_ROTATION_SPEED,
+    );
+
+    const lat = clampLatitude(dragStartCenter[1] + dy * GLOBE_ROTATION_SPEED);
+
+    scheduleCenterUpdate([lon, lat]);
+}
+
+function endDrag() {
+    drag.value = false;
+
+    if (centerFrame !== null && typeof cancelAnimationFrame !== 'undefined') {
+        cancelAnimationFrame(centerFrame);
+        centerFrame = null;
+    }
+
+    flushPendingCenter();
+}
+
+function onMouseDown(e) {
+    beginDrag(e.clientX, e.clientY);
 }
 
 function onMouseMove(e) {
-    if (!drag.value || projection.value !== 'globe' || isAnnotator.value)
-        return;
-    const dx = e.clientX - dragStart.value.x;
-    const dy = e.clientY - dragStart.value.y;
-    let lon = center.value[0] - dx * 0.5;
-    let lat = center.value[1] + dy * 0.5;
-    lat = Math.max(-90, Math.min(90, lat));
-    center.value = [lon, lat];
-    dragStart.value = { x: e.clientX, y: e.clientY };
+    updateDrag(e.clientX, e.clientY);
 }
 
 function onMouseUp() {
-    drag.value = false;
+    endDrag();
 }
 
 function onTouchStart(e) {
-    drag.value = true;
     const touch = e.touches[0];
-    dragStart.value = { x: touch.clientX, y: touch.clientY };
+    beginDrag(touch.clientX, touch.clientY);
 }
 
 function onTouchMove(e) {
-    if (!drag.value || projection.value !== 'globe' || isAnnotator.value)
-        return;
     const touch = e.touches[0];
-    const dx = touch.clientX - dragStart.value.x;
-    const dy = touch.clientY - dragStart.value.y;
-    let lon = center.value[0] - dx * 0.5;
-    let lat = center.value[1] + dy * 0.5;
-    lat = Math.max(-90, Math.min(90, lat));
-    center.value = [lon, lat];
-    dragStart.value = { x: touch.clientX, y: touch.clientY };
+    updateDrag(touch.clientX, touch.clientY);
 }
 
 function onTouchEnd() {
-    drag.value = false;
+    endDrag();
 }
+
+onBeforeUnmount(() => {
+    if (centerFrame !== null && typeof cancelAnimationFrame !== 'undefined') {
+        cancelAnimationFrame(centerFrame);
+        centerFrame = null;
+    }
+});
 
 const table = computed(() => {
     const src = countries.value.toSorted(
@@ -1322,19 +1385,18 @@ defineExpose({
                         style="pointer-events: none"
                         class="vue-ui-world-territory"
                     />
-                    <path
-                        v-if="selectedDatapoint"
-                        :d="geoToPath(selectedDatapoint.geometry)"
-                        fill="transparent"
-                        :stroke="FINAL_CONFIG.style.chart.territory.stroke"
-                        :stroke-width="
-                            FINAL_CONFIG.style.chart.territory
-                                .strokeWidthSelected
-                        "
-                        style="pointer-events: none"
-                        class="vue-ui-world-territory"
-                    />
                 </template>
+                <path
+                    v-if="selectedDatapoint"
+                    :d="selectedDatapointPath"
+                    fill="transparent"
+                    :stroke="FINAL_CONFIG.style.chart.territory.stroke"
+                    :stroke-width="
+                        FINAL_CONFIG.style.chart.territory.strokeWidthSelected
+                    "
+                    style="pointer-events: none"
+                    class="vue-ui-world-territory"
+                />
             </g>
 
             <slot

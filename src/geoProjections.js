@@ -45,6 +45,389 @@ function simplifyGeoJSON(geoJson, keepProps = []) {
     };
 }
 
+const GLOBE_RADIUS_RATIO = 0.95;
+const GLOBE_VISIBILITY_EPSILON = 1e-9;
+const GLOBE_HORIZON_ITERATIONS = 24;
+const PATH_ROUNDING_FACTOR = 100;
+
+const CLEAN_RING_CACHE = new WeakMap();
+const PREPARED_GLOBE_RING_CACHE = new WeakMap();
+
+function toRad(value) {
+    return (value * Math.PI) / 180;
+}
+
+function roundPathNumber(value) {
+    return Math.round(value * PATH_ROUNDING_FACTOR) / PATH_ROUNDING_FACTOR;
+}
+
+function getGlobeMetrics(width, height) {
+    return {
+        cx: width / 2,
+        cy: height / 2,
+        radius: (Math.min(width, height) / 2) * GLOBE_RADIUS_RATIO,
+    };
+}
+
+function createGlobeContext(width, height, center = [0, 0]) {
+    const [lon0, lat0] = center;
+    const lat0Rad = toRad(lat0);
+    const metrics = getGlobeMetrics(width, height);
+
+    return {
+        ...metrics,
+        lon0Rad: toRad(lon0),
+        sinLat0: Math.sin(lat0Rad),
+        cosLat0: Math.cos(lat0Rad),
+    };
+}
+
+function createPreparedGlobePoint([lon, lat]) {
+    const latRad = toRad(lat);
+
+    return {
+        lon,
+        lat,
+        lonRad: toRad(lon),
+        sinLat: Math.sin(latRad),
+        cosLat: Math.cos(latRad),
+    };
+}
+
+function getPreparedGlobeVector(point, context) {
+    const lambda = point.lonRad - context.lon0Rad;
+    const sinLambda = Math.sin(lambda);
+    const cosLambda = Math.cos(lambda);
+
+    return {
+        x: point.cosLat * sinLambda,
+        y:
+            context.cosLat0 * point.sinLat -
+            context.sinLat0 * point.cosLat * cosLambda,
+        z:
+            context.sinLat0 * point.sinLat +
+            context.cosLat0 * point.cosLat * cosLambda,
+    };
+}
+
+function getGlobeVector(coord, center = [0, 0]) {
+    return getPreparedGlobeVector(
+        createPreparedGlobePoint(coord),
+        createGlobeContext(1, 1, center),
+    );
+}
+
+function getGlobeBounds(width, height, padding = 10) {
+    const { cx, cy, radius } = getGlobeMetrics(width, height);
+
+    const minX = cx - radius - padding;
+    const minY = cy - radius - padding;
+    const maxX = cx + radius + padding;
+    const maxY = cy + radius + padding;
+
+    return {
+        minX: Math.floor(minX),
+        minY: Math.floor(minY),
+        width: Math.ceil(maxX - minX),
+        height: Math.ceil(maxY - minY),
+    };
+}
+
+function isPreparedGlobePointVisible(point, context) {
+    return (
+        getPreparedGlobeVector(point, context).z >= -GLOBE_VISIBILITY_EPSILON
+    );
+}
+
+function isGlobePointVisible(coord, center = [0, 0]) {
+    return getGlobeVector(coord, center).z >= -GLOBE_VISIBILITY_EPSILON;
+}
+
+function projectPreparedGlobePoint(
+    point,
+    context,
+    clampHiddenToHorizon = false,
+) {
+    const vector = getPreparedGlobeVector(point, context);
+
+    if (vector.z < -GLOBE_VISIBILITY_EPSILON) {
+        if (!clampHiddenToHorizon) {
+            return [NaN, NaN];
+        }
+
+        const length = Math.hypot(vector.x, vector.y);
+
+        if (!Number.isFinite(length) || length <= GLOBE_VISIBILITY_EPSILON) {
+            return [NaN, NaN];
+        }
+
+        return [
+            context.cx + context.radius * (vector.x / length),
+            context.cy - context.radius * (vector.y / length),
+        ];
+    }
+
+    return [
+        context.cx + context.radius * vector.x,
+        context.cy - context.radius * vector.y,
+    ];
+}
+
+function projectGlobePoint(
+    coord,
+    width,
+    height,
+    center = [0, 0],
+    clampHiddenToHorizon = false,
+) {
+    return projectPreparedGlobePoint(
+        createPreparedGlobePoint(coord),
+        createGlobeContext(width, height, center),
+        clampHiddenToHorizon,
+    );
+}
+
+function normalizeLongitudeDelta(delta) {
+    return ((((delta + 180) % 360) + 360) % 360) - 180;
+}
+
+function interpolatePreparedGlobePoint(a, b, t) {
+    const deltaLon = normalizeLongitudeDelta(b.lon - a.lon);
+
+    return createPreparedGlobePoint([
+        a.lon + deltaLon * t,
+        a.lat + (b.lat - a.lat) * t,
+    ]);
+}
+
+function findPreparedGlobeHorizonIntersection(a, b, context) {
+    let low = 0;
+    let high = 1;
+    const aVisible = isPreparedGlobePointVisible(a, context);
+
+    for (let i = 0; i < GLOBE_HORIZON_ITERATIONS; i += 1) {
+        const mid = (low + high) / 2;
+        const point = interpolatePreparedGlobePoint(a, b, mid);
+        const midVisible = isPreparedGlobePointVisible(point, context);
+
+        if (midVisible === aVisible) {
+            low = mid;
+        } else {
+            high = mid;
+        }
+    }
+
+    return interpolatePreparedGlobePoint(a, b, (low + high) / 2);
+}
+
+function sameGeoPoint(a, b) {
+    return Math.abs(a[0] - b[0]) < 1e-12 && Math.abs(a[1] - b[1]) < 1e-12;
+}
+
+function cleanRing(ring) {
+    if (!Array.isArray(ring)) {
+        return [];
+    }
+
+    const cached = CLEAN_RING_CACHE.get(ring);
+
+    if (cached) {
+        return cached;
+    }
+
+    const cleaned = [];
+
+    for (const point of ring) {
+        const previous = cleaned[cleaned.length - 1];
+
+        if (!previous || !sameGeoPoint(previous, point)) {
+            cleaned.push(point);
+        }
+    }
+
+    if (
+        cleaned.length > 1 &&
+        sameGeoPoint(cleaned[0], cleaned[cleaned.length - 1])
+    ) {
+        cleaned.pop();
+    }
+
+    CLEAN_RING_CACHE.set(ring, cleaned);
+
+    return cleaned;
+}
+
+function getPreparedGlobeRing(ring) {
+    if (!Array.isArray(ring)) {
+        return [];
+    }
+
+    const cached = PREPARED_GLOBE_RING_CACHE.get(ring);
+
+    if (cached) {
+        return cached;
+    }
+
+    const prepared = cleanRing(ring).map(createPreparedGlobePoint);
+
+    PREPARED_GLOBE_RING_CACHE.set(ring, prepared);
+
+    return prepared;
+}
+
+function projectedPointsToPath(points) {
+    let path = '';
+    let count = 0;
+    let previousX = null;
+    let previousY = null;
+
+    for (const point of points) {
+        if (
+            !point ||
+            !Number.isFinite(point[0]) ||
+            !Number.isFinite(point[1])
+        ) {
+            continue;
+        }
+
+        const x = roundPathNumber(point[0]);
+        const y = roundPathNumber(point[1]);
+
+        if (
+            previousX !== null &&
+            Math.abs(previousX - x) < 1e-8 &&
+            Math.abs(previousY - y) < 1e-8
+        ) {
+            continue;
+        }
+
+        path += count === 0 ? `M${x},${y}` : `L${x},${y}`;
+
+        previousX = x;
+        previousY = y;
+        count += 1;
+    }
+
+    if (count < 3) {
+        return '';
+    }
+
+    return `${path}Z`;
+}
+
+function globeRingToPath(ring, context) {
+    const source = getPreparedGlobeRing(ring);
+    const length = source.length;
+
+    if (length < 3) {
+        return '';
+    }
+
+    const visible = new Array(length);
+    let hasVisiblePoint = false;
+    let hasHorizonCrossing = false;
+
+    for (let i = 0; i < length; i += 1) {
+        visible[i] = isPreparedGlobePointVisible(source[i], context);
+
+        if (visible[i]) {
+            hasVisiblePoint = true;
+        }
+    }
+
+    for (let i = 0; i < length; i += 1) {
+        const previousIndex = (i - 1 + length) % length;
+
+        if (visible[i] !== visible[previousIndex]) {
+            hasHorizonCrossing = true;
+            break;
+        }
+    }
+
+    if (!hasVisiblePoint && !hasHorizonCrossing) {
+        return '';
+    }
+
+    const projected = [];
+
+    for (let i = 0; i < length; i += 1) {
+        const current = source[i];
+        const previous = source[(i - 1 + length) % length];
+
+        const currentVisible = visible[i];
+        const previousVisible = visible[(i - 1 + length) % length];
+
+        if (previousVisible !== currentVisible) {
+            const intersection = findPreparedGlobeHorizonIntersection(
+                previous,
+                current,
+                context,
+            );
+
+            projected.push(
+                projectPreparedGlobePoint(intersection, context, false),
+            );
+        }
+
+        projected.push(
+            projectPreparedGlobePoint(current, context, !currentVisible),
+        );
+    }
+
+    return projectedPointsToPath(projected);
+}
+
+function genericRingToPath(ring, projection, width, height, center = [0, 0]) {
+    const points = cleanRing(ring).map((coord) =>
+        projection(coord, width, height, center),
+    );
+
+    return projectedPointsToPath(points);
+}
+
+function geoToPath(
+    geometry,
+    { projection = 'globe', width, height, center = [0, 0] } = {},
+) {
+    if (!geometry || !width || !height) {
+        return '';
+    }
+
+    const projectionFn = projections[projection] || projections.globe;
+    const globeContext =
+        projection === 'globe'
+            ? createGlobeContext(width, height, center)
+            : null;
+
+    const drawPolygon = (coordinates) =>
+        coordinates
+            .map((ring) => {
+                if (projection === 'globe') {
+                    return globeRingToPath(ring, globeContext);
+                }
+
+                return genericRingToPath(
+                    ring,
+                    projectionFn,
+                    width,
+                    height,
+                    center,
+                );
+            })
+            .filter(Boolean)
+            .join(' ');
+
+    if (geometry.type === 'Polygon') {
+        return drawPolygon(geometry.coordinates);
+    }
+
+    if (geometry.type === 'MultiPolygon') {
+        return geometry.coordinates.map(drawPolygon).filter(Boolean).join(' ');
+    }
+
+    return '';
+}
+
 const projections = {
     mercator([lon, lat], width, height, center) {
         const maxLat = 85.05113;
@@ -273,30 +656,8 @@ const projections = {
             cy = height / 2;
         return [cx + x * scale, cy - y * scale];
     },
-    globe([lon, lat], width, height, center) {
-        const [lon0, lat0] = center;
-        const λ = ((lon - lon0) * Math.PI) / 180;
-        const φ = (lat * Math.PI) / 180;
-        const φ0 = (lat0 * Math.PI) / 180;
-        const R = (Math.min(width, height) / 2) * 0.95;
-        const cx = width / 2;
-        const cy = height / 2;
-        const x = R * Math.cos(φ) * Math.sin(λ) + cx;
-        const y =
-            -R *
-                (Math.cos(φ0) * Math.sin(φ) -
-                    Math.sin(φ0) * Math.cos(φ) * Math.cos(λ)) +
-            cy;
-
-        if (
-            Math.sin(φ0) * Math.sin(φ) +
-                Math.cos(φ0) * Math.cos(φ) * Math.cos(λ) <
-            0
-        ) {
-            return [NaN, NaN];
-        }
-
-        return [x, y];
+    globe(coord, width, height, center = [0, 0]) {
+        return projectGlobePoint(coord, width, height, center, false);
     },
     azimuthalEquidistant([lon, lat], width, height, center = [0, 0]) {
         const toRad = (d) => (d * Math.PI) / 180;
@@ -328,18 +689,25 @@ function getProjectedBounds(
     height,
     center = [0, 0],
 ) {
-    let minX = Infinity,
-        minY = Infinity,
-        maxX = -Infinity,
-        maxY = -Infinity;
+    if (projection === projections.globe) {
+        return getGlobeBounds(width, height);
+    }
+
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+
     for (const feature of features) {
         const geom = feature.geometry;
+
         const coordsArr =
             geom.type === 'Polygon'
                 ? [geom.coordinates]
                 : geom.type === 'MultiPolygon'
                   ? geom.coordinates
                   : [];
+
         for (const coords of coordsArr) {
             for (const ring of coords) {
                 for (const [lon, lat] of ring) {
@@ -349,7 +717,9 @@ function getProjectedBounds(
                         height,
                         center,
                     );
+
                     if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
+
                     minX = Math.min(minX, x);
                     maxX = Math.max(maxX, x);
                     minY = Math.min(minY, y);
@@ -358,6 +728,21 @@ function getProjectedBounds(
             }
         }
     }
+
+    if (
+        !Number.isFinite(minX) ||
+        !Number.isFinite(minY) ||
+        !Number.isFinite(maxX) ||
+        !Number.isFinite(maxY)
+    ) {
+        return {
+            minX: 0,
+            minY: 0,
+            width,
+            height,
+        };
+    }
+
     return {
         minX: Math.floor(minX) - 10,
         minY: Math.floor(minY) - 10,
@@ -418,6 +803,10 @@ const geo = {
     getProjectedBounds,
     setupTerritories,
     simplifyGeoJSON,
+    geoToPath,
+    getGlobeMetrics,
+    getGlobeBounds,
+    isGlobePointVisible,
 };
 
 export default geo;
