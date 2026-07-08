@@ -230,6 +230,7 @@ const model = createModel([
     CHECKBOX('debug', { def: true }),
     CHECKBOX('loading', { def: false }),
     CHECKBOX('userOptions.useCursorPointer', { def: false }),
+    CHECKBOX('style.chart.territory.showTaiwanAsPartOfChina', { def: false }),
 
     SELECT(
         'projection',
