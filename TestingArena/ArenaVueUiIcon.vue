@@ -785,6 +785,27 @@ function clearComposer() {
     fitOptions.value.offsetY = 0;
     fitOptions.value.padding = 0;
 }
+
+const roundedPath = ref('');
+const pathRounding = ref(2);
+
+function roundPath() {
+    if (!Number.isInteger(pathRounding.value) || pathRounding.value < 0) {
+        throw new Error('decimals must be a non-negative integer');
+    }
+
+    const factor = 10 ** pathRounding.value;
+
+    roundedPath.value = roundedPath.value.replace(
+        /[-+]?(?:(?:\d*\.\d+)|(?:\d+\.?))(?:[eE][-+]?\d+)?/g,
+        (match) => {
+            const rounded = Math.round(Number(match) * factor) / factor;
+            const value = Object.is(rounded, -0) ? 0 : rounded;
+
+            return value.toFixed(pathRounding.value).replace(/\.?0+$/, '');
+        },
+    );
+}
 </script>
 
 <template>
@@ -1000,6 +1021,18 @@ function clearComposer() {
                             </button>
                         </label>
                         <textarea v-html="exportCode" />
+                    </div>
+
+                    <div style="margin-top: 24px">
+                        <span>Round path values</span>
+                        <textarea v-model="roundedPath"></textarea>
+                        <input
+                            type="number"
+                            v-model="pathRounding"
+                            :min="0"
+                            :max="6"
+                        />
+                        <button @click="roundPath">APPLY ROUNDING</button>
                     </div>
                 </div>
             </details>
