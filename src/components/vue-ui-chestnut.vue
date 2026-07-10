@@ -44,6 +44,7 @@ import img from '../img';
 import themes from '../themes/vue_ui_chestnut.json';
 import BaseScanner from '../atoms/BaseScanner.vue';
 import A11yDataTable from '../atoms/A11yDataTable.vue';
+import DefGrad from '../atoms/DefGrad.vue';
 
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
@@ -1865,7 +1866,8 @@ defineExpose({
 
                 <!-- DEFS -->
                 <defs>
-                    <radialGradient
+                    <DefGrad
+                        t="radial"
                         cx="50%"
                         cy="50%"
                         r="50%"
@@ -1873,133 +1875,125 @@ defineExpose({
                         fy="50%"
                         v-for="(d, i) in mutableDataset"
                         :id="`root_gradient_${uid}_${d.rootIndex}`"
-                    >
-                        <stop
-                            offset="0%"
-                            :stop-color="
+                        :key="`root_gradient_${uid}_${d.rootIndex}`"
+                        :stops="[
+                            [
+                                '0%',
                                 setOpacity(
                                     shiftHue(d.color, 0.05),
                                     100 -
                                         FINAL_CONFIG.style.chart.layout.roots
                                             .gradientIntensity,
-                                )
-                            "
-                        />
-                        <stop offset="100%" :stop-color="d.color" />
-                    </radialGradient>
-                    <linearGradient
+                                ),
+                                1,
+                            ],
+                            ['100%', d.color, 1],
+                        ]"
+                    />
+                    <DefGrad
+                        t="linear"
                         x1="0%"
                         y1="0%"
                         x2="100%"
                         y2="0%"
                         v-for="d in mutableDataset"
                         :id="`branch_gradient_${uid}_${d.rootIndex}`"
-                    >
-                        <stop offset="0%" :stop-color="d.color" />
-                        <stop
-                            offset="100%"
-                            :stop-color="
+                        :key="`branch_gradient_${uid}_${d.rootIndex}`"
+                        :stops="[
+                            ['0%', d.color, 1],
+                            [
+                                '100%',
                                 setOpacity(
                                     shiftHue(d.color, 0.02),
                                     100 -
                                         FINAL_CONFIG.style.chart.layout.branches
                                             .gradientIntensity,
-                                )
-                            "
-                        />
-                    </linearGradient>
+                                ),
+                                1,
+                            ],
+                        ]"
+                    />
                     <!-- picked nut core gradient -->
-                    <radialGradient
+                    <DefGrad
+                        t="radial"
                         cx="50%"
                         cy="50%"
                         r="50%"
                         fx="50%"
                         fy="50%"
                         :id="`nutpick_${uid}`"
-                    >
-                        <stop
-                            offset="0%"
-                            :stop-color="setOpacity('#FFFFFF', 0)"
-                        />
-                        <stop
-                            offset="80%"
-                            :stop-color="
+                        :stops="[
+                            ['0%', setOpacity('#FFFFFF', 0), 0],
+                            [
+                                '80%',
                                 setOpacity(
                                     '#FFFFFF',
                                     FINAL_CONFIG.style.chart.layout.nuts
                                         .selected.gradientIntensity,
-                                )
-                            "
-                        />
-                        <stop
-                            offset="100%"
-                            :stop-color="setOpacity('#FFFFFF', 0)"
-                        />
-                    </radialGradient>
-                    <radialGradient
+                                ),
+                                1,
+                            ],
+                            ['100%', setOpacity('#FFFFFF', 0), 0],
+                        ]"
+                    />
+                    <DefGrad
+                        t="radial"
                         cx="50%"
                         cy="50%"
                         r="50%"
                         fx="50%"
                         fy="50%"
                         :id="`nut_${uid}`"
-                    >
-                        <stop
-                            offset="0%"
-                            :stop-color="setOpacity('#FFFFFF', 0)"
-                        />
-                        <stop
-                            offset="80%"
-                            :stop-color="
+                        :stops="[
+                            ['0%', setOpacity('#FFFFFF', 0), 0],
+                            [
+                                '80%',
                                 setOpacity(
                                     '#FFFFFF',
                                     FINAL_CONFIG.style.chart.layout.nuts
                                         .gradientIntensity,
-                                )
-                            "
-                        />
-                        <stop
-                            offset="100%"
-                            :stop-color="setOpacity('#FFFFFF', 0)"
-                        />
-                    </radialGradient>
+                                ),
+                                1,
+                            ],
+                            ['100%', setOpacity('#FFFFFF', 0), 0],
+                        ]"
+                    />
                     <!-- picked nut underlayer -->
-                    <radialGradient
+                    <DefGrad
+                        t="radial"
                         cx="50%"
                         cy="50%"
                         r="50%"
                         fx="50%"
                         fy="50%"
                         :id="`nut_underlayer_${uid}`"
-                    >
-                        <stop
-                            offset="0%"
-                            :stop-color="
+                        :stops="[
+                            [
+                                '0%',
                                 setOpacity(
                                     FINAL_CONFIG.style.chart.backgroundColor,
                                     100,
-                                )
-                            "
-                        />
-                        <stop
-                            offset="80%"
-                            :stop-color="
+                                ),
+                                1,
+                            ],
+                            [
+                                '80%',
                                 setOpacity(
                                     FINAL_CONFIG.style.chart.backgroundColor,
                                     60,
-                                )
-                            "
-                        />
-                        <stop
-                            offset="100%"
-                            :stop-color="
+                                ),
+                                1,
+                            ],
+                            [
+                                '100%',
                                 setOpacity(
                                     FINAL_CONFIG.style.chart.backgroundColor,
                                     0,
-                                )
-                            "
-                        />
-                    </radialGradient>
+                                ),
+                                1,
+                            ],
+                        ]"
+                    />
                 </defs>
 
                 <!-- GRAND TOTAL -->
@@ -2078,19 +2072,22 @@ defineExpose({
                 <!-- LINKS -->
                 <g v-for="branch in branches">
                     <defs>
-                        <linearGradient :id="`link_grad_${branch.id}`">
-                            <stop offset="0%" :stop-color="branch.color" />
-                            <stop
-                                offset="100%"
-                                :stop-color="
+                        <DefGrad
+                            t="linear"
+                            :id="`link_grad_${branch.id}`"
+                            :stops="[
+                                ['0%', branch.color, 1],
+                                [
+                                    '100%',
                                     setOpacity(
                                         branch.color,
                                         FINAL_CONFIG.style.chart.layout.links
                                             .opacity,
-                                    )
-                                "
-                            />
-                        </linearGradient>
+                                    ),
+                                    1,
+                                ],
+                            ]"
+                        />
                     </defs>
                     <path
                         :d="getLinkPath(branch)"

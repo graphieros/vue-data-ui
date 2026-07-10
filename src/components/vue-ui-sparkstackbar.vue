@@ -34,6 +34,7 @@ import themes from '../themes/vue_ui_sparkstackbar.json';
 import BaseScanner from '../atoms/BaseScanner.vue';
 import BaseLegendToggle from '../atoms/BaseLegendToggle.vue';
 import A11yDataTable from '../atoms/A11yDataTable.vue';
+import DefGrad from '../atoms/DefGrad.vue';
 
 const PackageVersion = defineAsyncComponent(
     () => import('../atoms/PackageVersion.vue'),
@@ -791,26 +792,27 @@ defineExpose({
                 <PackageVersion />
 
                 <defs>
-                    <linearGradient
+                    <DefGrad
+                        t="linear"
                         v-for="(rect, i) in drawableDataset"
+                        :id="`stack_gradient_${i}_${uid}`"
                         :key="`stack_gradient_${i}`"
                         gradientTransform="rotate(90)"
-                        :id="`stack_gradient_${i}_${uid}`"
-                    >
-                        <stop offset="0%" :stop-color="rect.color" />
-                        <stop
-                            offset="50%"
-                            :stop-color="
+                        :stops="[
+                            ['0%', rect.color, 1],
+                            [
+                                '50%',
                                 setOpacity(
                                     shiftHue(rect.color, 0.05),
                                     100 -
                                         FINAL_CONFIG.style.bar.gradient
                                             .intensity,
-                                )
-                            "
-                        />
-                        <stop offset="100%" :stop-color="rect.color" />
-                    </linearGradient>
+                                ),
+                                1,
+                            ],
+                            ['100%', rect.color, 1],
+                        ]"
+                    />
                     <clipPath id="stackPill" clipPathUnits="objectBoundingBox">
                         <rect
                             x="0.005"
@@ -979,10 +981,12 @@ defineExpose({
                         viewBox="0 0 10 10"
                     >
                         <defs>
-                            <radialGradient :id="`legend_grad_${i}-${uid}`">
-                                <stop
-                                    offset="0%"
-                                    :stop-color="
+                            <DefGrad
+                                t="radial"
+                                :id="`legend_grad_${i}-${uid}`"
+                                :stops="[
+                                    [
+                                        '0%',
                                         loading
                                             ? '#FFFFFF'
                                             : setOpacity(
@@ -990,11 +994,12 @@ defineExpose({
                                                   100 -
                                                       FINAL_CONFIG.style.bar
                                                           .gradient.intensity,
-                                              )
-                                    "
-                                />
-                                <stop offset="100%" :stop-color="rect.color" />
-                            </radialGradient>
+                                              ),
+                                        1,
+                                    ],
+                                    ['100%', rect.color, 1],
+                                ]"
+                            />
                         </defs>
                         <circle
                             :cx="5"

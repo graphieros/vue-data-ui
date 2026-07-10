@@ -47,6 +47,7 @@ import img from '../img.js';
 import themes from '../themes/vue_ui_gauge.json';
 import Title from '../atoms/Title.vue'; // Must be ready in responsive mode
 import BaseScanner from '../atoms/BaseScanner.vue';
+import DefGrad from '../atoms/DefGrad.vue';
 
 const PenAndPaper = defineAsyncComponent(
     () => import('../atoms/PenAndPaper.vue'),
@@ -1041,30 +1042,28 @@ defineExpose({
             </foreignObject>
 
             <defs>
-                <radialGradient
+                <DefGrad
+                    t="radial"
                     :id="`gradient_${uid}`"
                     cx="50%"
                     cy="50%"
                     r="50%"
                     fx="50%"
                     fy="50%"
-                >
-                    <stop offset="0%" :stop-color="setOpacity('#FFFFFF', 1)" />
-                    <stop
-                        offset="80%"
-                        :stop-color="
+                    :stops="[
+                        ['0%', setOpacity('#FFFFFF', 1), 1],
+                        [
+                            '80%',
                             setOpacity(
                                 '#FFFFFF',
                                 FINAL_CONFIG.style.chart.layout.track
                                     .gradientIntensity,
-                            )
-                        "
-                    />
-                    <stop
-                        offset="100%"
-                        :stop-color="setOpacity('#FFFFFF', 1)"
-                    />
-                </radialGradient>
+                            ),
+                            1,
+                        ],
+                        ['100%', setOpacity('#FFFFFF', 1), 1],
+                    ]"
+                />
             </defs>
 
             <defs>

@@ -12,6 +12,7 @@ import { useNestedProp } from '../useNestedProp';
 import { useConfig } from '../useConfig';
 import { applyDataLabel } from '../lib.js';
 import { dataLabel } from '../lib.js';
+import DefGrad from '../atoms/DefGrad.vue';
 
 const { vue_ui_rating: DEFAULT_CONFIG } = useConfig();
 
@@ -342,25 +343,31 @@ defineExpose({
                             class="vue-ui-rating-unit"
                         >
                             <defs>
-                                <radialGradient
+                                <DefGrad
+                                    t="radial"
                                     cx="50%"
                                     cy="50%"
                                     r="50%"
                                     fx="50%"
                                     fy="50%"
                                     :id="`star_gradient_under_${uid}`"
-                                >
-                                    <stop
-                                        offset="0%"
-                                        :stop-color="`${shiftHue(FINAL_CONFIG.style.star.activeColor, 0.05)}`"
-                                    />
-                                    <stop
-                                        offset="100%"
-                                        :stop-color="
-                                            FINAL_CONFIG.style.star.activeColor
-                                        "
-                                    />
-                                </radialGradient>
+                                    :stops="[
+                                        [
+                                            '0%',
+                                            shiftHue(
+                                                FINAL_CONFIG.style.star
+                                                    .activeColor,
+                                                0.05,
+                                            ),
+                                            1,
+                                        ],
+                                        [
+                                            '100%',
+                                            FINAL_CONFIG.style.star.activeColor,
+                                            1,
+                                        ],
+                                    ]"
+                                />
                             </defs>
                             <polygon
                                 :data-cy="`rating-shape-${i}`"
@@ -417,25 +424,31 @@ defineExpose({
                             style="position: absolute; top: 0; left: 0"
                         >
                             <defs>
-                                <radialGradient
+                                <DefGrad
+                                    t="radial"
                                     cx="50%"
                                     cy="50%"
                                     r="50%"
                                     fx="50%"
                                     fy="50%"
                                     :id="`star_gradient_over_${uid}`"
-                                >
-                                    <stop
-                                        offset="0%"
-                                        :stop-color="`${shiftHue(FINAL_CONFIG.style.star.activeColor, 0.05)}`"
-                                    />
-                                    <stop
-                                        offset="100%"
-                                        :stop-color="
-                                            FINAL_CONFIG.style.star.activeColor
-                                        "
-                                    />
-                                </radialGradient>
+                                    :stops="[
+                                        [
+                                            '0%',
+                                            shiftHue(
+                                                FINAL_CONFIG.style.star
+                                                    .activeColor,
+                                                0.05,
+                                            ),
+                                            1,
+                                        ],
+                                        [
+                                            '100%',
+                                            FINAL_CONFIG.style.star.activeColor,
+                                            1,
+                                        ],
+                                    ]"
+                                />
                             </defs>
 
                             <polygon

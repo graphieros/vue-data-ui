@@ -54,6 +54,7 @@ import Legend from '../atoms/Legend.vue'; // Must be ready in responsive mode
 import BaseScanner from '../atoms/BaseScanner.vue';
 import A11yDataTable from '../atoms/A11yDataTable.vue';
 import BaseLegendToggle from '../atoms/BaseLegendToggle.vue';
+import DefGrad from '../atoms/DefGrad.vue';
 
 const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
@@ -1996,34 +1997,27 @@ defineExpose({
 
                     <!-- GRADIENTS -->
                     <defs>
-                        <radialGradient
+                        <DefGrad
+                            t="radial"
                             v-for="(_, i) in gradientSets"
                             :id="`radial_${uid}_${i}`"
-                        >
-                            <stop
-                                offset="0%"
-                                stop-color="#FFFFFF"
-                                stop-opacity="0"
-                            />
-                            <stop
-                                :offset="`${(1 - donutThickness / radii[i]) * 100}%`"
-                                :stop-color="setOpacity('#FFFFFF', 0)"
-                                stop-opacity="0"
-                            />
-                            <stop
-                                :offset="`${(1 - donutThickness / radii[i] / 2) * 100}%`"
-                                stop-color="#FFFFFF"
-                                :stop-opacity="
+                            :key="`radial_${uid}_${i}`"
+                            :stops="[
+                                ['0%', '#FFFFFF', 0],
+                                [
+                                    `${(1 - donutThickness / radii[i]) * 100}%`,
+                                    setOpacity('#FFFFFF', 0),
+                                    0,
+                                ],
+                                [
+                                    `${(1 - donutThickness / radii[i] / 2) * 100}%`,
+                                    '#FFFFFF',
                                     FINAL_CONFIG.style.chart.gradientIntensity /
-                                    100
-                                "
-                            />
-                            <stop
-                                offset="100%"
-                                stop-color="#FFFFFF"
-                                stop-opacity="0"
-                            />
-                        </radialGradient>
+                                        100,
+                                ],
+                                ['100%', '#FFFFFF', 0],
+                            ]"
+                        />
                     </defs>
 
                     <!-- FILTERS -->

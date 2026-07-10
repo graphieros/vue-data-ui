@@ -45,6 +45,7 @@ import themes from '../themes/vue_ui_dumbbell.json';
 import Legend from '../atoms/Legend.vue'; // Must be ready in responsive mode
 import BaseScanner from '../atoms/BaseScanner.vue';
 import A11yDataTable from '../atoms/A11yDataTable.vue';
+import DefGrad from '../atoms/DefGrad.vue';
 
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
@@ -1903,150 +1904,160 @@ defineExpose({
 
                 <!-- PLOTS -->
                 <defs>
-                    <radialGradient :id="`start_grad_${uid}`" fy="30%">
-                        <stop
-                            offset="10%"
-                            :stop-color="
+                    <DefGrad
+                        t="radial"
+                        :id="`start_grad_${uid}`"
+                        fy="30%"
+                        :stops="[
+                            [
+                                '10%',
                                 lightenHexColor(
                                     FINAL_CONFIG.style.chart.plots.startColor,
                                     FINAL_CONFIG.style.chart.plots.gradient
                                         .intensity / 100,
-                                )
-                            "
-                        />
-                        <stop
-                            offset="90%"
-                            :stop-color="
+                                ),
+                                1,
+                            ],
+                            [
+                                '90%',
                                 darkenHexColor(
                                     FINAL_CONFIG.style.chart.plots.startColor,
                                     0.1,
-                                )
-                            "
-                        />
-                        <stop
-                            offset="100%"
-                            :stop-color="
-                                FINAL_CONFIG.style.chart.plots.startColor
-                            "
-                        />
-                    </radialGradient>
-                    <radialGradient :id="`end_grad_${uid}`" fy="30%">
-                        <stop
-                            offset="10%"
-                            :stop-color="
+                                ),
+                                1,
+                            ],
+                            [
+                                '100%',
+                                FINAL_CONFIG.style.chart.plots.startColor,
+                                1,
+                            ],
+                        ]"
+                    />
+                    <DefGrad
+                        t="radial"
+                        :id="`end_grad_${uid}`"
+                        fy="30%"
+                        :stops="[
+                            [
+                                '10%',
                                 lightenHexColor(
                                     FINAL_CONFIG.style.chart.plots.endColor,
                                     FINAL_CONFIG.style.chart.plots.gradient
                                         .intensity / 100,
-                                )
-                            "
-                        />
-                        <stop
-                            offset="90%"
-                            :stop-color="
+                                ),
+                                1,
+                            ],
+                            [
+                                '90%',
                                 darkenHexColor(
                                     FINAL_CONFIG.style.chart.plots.endColor,
                                     0.1,
-                                )
-                            "
-                        />
-                        <stop
-                            offset="100%"
-                            :stop-color="
-                                FINAL_CONFIG.style.chart.plots.endColor
-                            "
-                        />
-                    </radialGradient>
-                    <radialGradient :id="`positive_grad_${uid}`" fy="30%">
-                        <stop
-                            offset="10%"
-                            :stop-color="
+                                ),
+                                1,
+                            ],
+                            [
+                                '100%',
+                                FINAL_CONFIG.style.chart.plots.endColor,
+                                1,
+                            ],
+                        ]"
+                    />
+                    <DefGrad
+                        t="radial"
+                        :id="`positive_grad_${uid}`"
+                        fy="30%"
+                        :stops="[
+                            [
+                                '10%',
                                 lightenHexColor(
                                     FINAL_CONFIG.style.chart.plots
                                         .evaluationColors.positive,
                                     FINAL_CONFIG.style.chart.plots.gradient
                                         .intensity / 100,
-                                )
-                            "
-                        />
-                        <stop
-                            offset="90%"
-                            :stop-color="
+                                ),
+                                1,
+                            ],
+                            [
+                                '90%',
                                 darkenHexColor(
                                     FINAL_CONFIG.style.chart.plots
                                         .evaluationColors.positive,
                                     0.1,
-                                )
-                            "
-                        />
-                        <stop
-                            offset="100%"
-                            :stop-color="
+                                ),
+                                1,
+                            ],
+                            [
+                                '100%',
                                 FINAL_CONFIG.style.chart.plots.evaluationColors
-                                    .positive
-                            "
-                        />
-                    </radialGradient>
-                    <radialGradient :id="`negative_grad_${uid}`" fy="30%">
-                        <stop
-                            offset="10%"
-                            :stop-color="
+                                    .positive,
+                                1,
+                            ],
+                        ]"
+                    />
+                    <DefGrad
+                        t="radial"
+                        :id="`negative_grad_${uid}`"
+                        fy="30%"
+                        :stops="[
+                            [
+                                '10%',
                                 lightenHexColor(
                                     FINAL_CONFIG.style.chart.plots
                                         .evaluationColors.negative,
                                     FINAL_CONFIG.style.chart.plots.gradient
                                         .intensity / 100,
-                                )
-                            "
-                        />
-                        <stop
-                            offset="90%"
-                            :stop-color="
+                                ),
+                                1,
+                            ],
+                            [
+                                '90%',
                                 darkenHexColor(
                                     FINAL_CONFIG.style.chart.plots
                                         .evaluationColors.negative,
                                     0.1,
-                                )
-                            "
-                        />
-                        <stop
-                            offset="100%"
-                            :stop-color="
+                                ),
+                                1,
+                            ],
+                            [
+                                '100%',
                                 FINAL_CONFIG.style.chart.plots.evaluationColors
-                                    .negative
-                            "
-                        />
-                    </radialGradient>
-                    <radialGradient :id="`neutral_grad_${uid}`" fy="30%">
-                        <stop
-                            offset="10%"
-                            :stop-color="
+                                    .negative,
+                                1,
+                            ],
+                        ]"
+                    />
+                    <DefGrad
+                        t="radial"
+                        :id="`neutral_grad_${uid}`"
+                        fy="30%"
+                        :stops="[
+                            [
+                                '10%',
                                 lightenHexColor(
                                     FINAL_CONFIG.style.chart.plots
                                         .evaluationColors.neutral,
                                     FINAL_CONFIG.style.chart.plots.gradient
                                         .intensity / 100,
-                                )
-                            "
-                        />
-                        <stop
-                            offset="90%"
-                            :stop-color="
+                                ),
+                                1,
+                            ],
+                            [
+                                '90%',
                                 darkenHexColor(
                                     FINAL_CONFIG.style.chart.plots
                                         .evaluationColors.neutral,
                                     0.1,
-                                )
-                            "
-                        />
-                        <stop
-                            offset="100%"
-                            :stop-color="
+                                ),
+                                1,
+                            ],
+                            [
+                                '100%',
                                 FINAL_CONFIG.style.chart.plots.evaluationColors
-                                    .neutral
-                            "
-                        />
-                    </radialGradient>
+                                    .neutral,
+                                1,
+                            ],
+                        ]"
+                    />
                 </defs>
                 <g
                     v-for="(plot, i) in mutableDataset"
@@ -2054,46 +2065,46 @@ defineExpose({
                 >
                     <!-- LINK -->
                     <defs>
-                        <linearGradient
+                        <DefGrad
+                            t="linear"
                             :id="`grad_pos_${uid}`"
                             x1="0%"
                             x2="100%"
                             y1="0%"
                             y2="0%"
-                        >
-                            <stop
-                                offset="0%"
-                                :stop-color="
-                                    FINAL_CONFIG.style.chart.plots.startColor
-                                "
-                            />
-                            <stop
-                                offset="100%"
-                                :stop-color="
-                                    FINAL_CONFIG.style.chart.plots.endColor
-                                "
-                            />
-                        </linearGradient>
-                        <linearGradient
+                            :stops="[
+                                [
+                                    '0%',
+                                    FINAL_CONFIG.style.chart.plots.startColor,
+                                    1,
+                                ],
+                                [
+                                    '100%',
+                                    FINAL_CONFIG.style.chart.plots.endColor,
+                                    1,
+                                ],
+                            ]"
+                        />
+                        <DefGrad
+                            t="linear"
                             :id="`grad_neg_${uid}`"
                             x1="0%"
                             x2="100%"
                             y1="0%"
                             y2="0%"
-                        >
-                            <stop
-                                offset="0%"
-                                :stop-color="
-                                    FINAL_CONFIG.style.chart.plots.endColor
-                                "
-                            />
-                            <stop
-                                offset="100%"
-                                :stop-color="
-                                    FINAL_CONFIG.style.chart.plots.startColor
-                                "
-                            />
-                        </linearGradient>
+                            :stops="[
+                                [
+                                    '0%',
+                                    FINAL_CONFIG.style.chart.plots.endColor,
+                                    1,
+                                ],
+                                [
+                                    '100%',
+                                    FINAL_CONFIG.style.chart.plots.startColor,
+                                    1,
+                                ],
+                            ]"
+                        />
                     </defs>
                     <g
                         v-if="

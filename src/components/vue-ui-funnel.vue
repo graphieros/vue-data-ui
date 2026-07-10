@@ -36,6 +36,7 @@ import { useChartAccessibility } from '../useChartAccessibility';
 import img from '../img';
 import Title from '../atoms/Title.vue'; // Must be ready in responsive mode
 import themes from '../themes/vue_ui_funnel.json'; // Must be ready in responsive mode
+import DefGrad from '../atoms/DefGrad.vue';
 
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
 const Skeleton = defineAsyncComponent(() => import('./vue-ui-skeleton.vue'));
@@ -876,27 +877,19 @@ defineExpose({
             </foreignObject>
 
             <defs>
-                <linearGradient
+                <DefGrad
+                    t="linear"
                     :id="`funnel_area_${uid}`"
                     x1="0%"
                     x2="100%"
                     y1="0%"
                     y2="0%"
-                >
-                    <stop
-                        offset="0%"
-                        :stop-color="FINAL_CONFIG.style.chart.backgroundColor"
-                        :stop-opacity="0"
-                    />
-                    <stop
-                        offset="20%"
-                        :stop-color="FINAL_CONFIG.style.chart.area.color"
-                    />
-                    <stop
-                        offset="100%"
-                        :stop-color="FINAL_CONFIG.style.chart.area.color"
-                    />
-                </linearGradient>
+                    :stops="[
+                        ['0%', FINAL_CONFIG.style.chart.backgroundColor, 0],
+                        ['20%', FINAL_CONFIG.style.chart.area.color, 1],
+                        ['100%', FINAL_CONFIG.style.chart.area.color, 1],
+                    ]"
+                />
             </defs>
 
             <line

@@ -25,6 +25,7 @@ import {
 import { debounce, throttle } from '../canvas-lib';
 import { useResponsive } from '../useResponsive';
 import BaseIcon from './BaseIcon.vue';
+import DefGrad from './DefGrad.vue';
 
 const props = defineProps({
     uuid: {
@@ -1958,19 +1959,18 @@ defineExpose({
                         preserveAspectRatio="none"
                     >
                         <defs>
-                            <linearGradient
+                            <DefGrad
+                                t="linear"
                                 :id="uid"
                                 x1="0%"
                                 y1="0%"
                                 x2="0%"
                                 y2="100%"
-                            >
-                                <stop
-                                    offset="0%"
-                                    :stop-color="`${minimapLineColor}50`"
-                                />
-                                <stop offset="100%" stop-color="transparent" />
-                            </linearGradient>
+                                :stops="[
+                                    ['0%', minimapLineColor, 0.31],
+                                    ['100%', 'transparent', 0],
+                                ]"
+                            />
 
                             <clipPath :id="`selection_clip_${uid}`">
                                 <rect

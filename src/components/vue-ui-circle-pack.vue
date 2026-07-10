@@ -47,6 +47,7 @@ import themes from '../themes/vue_ui_circle_pack.json';
 import BaseScanner from '../atoms/BaseScanner.vue';
 import usePanZoom from '../usePanZoom';
 import A11yDataTable from '../atoms/A11yDataTable.vue';
+import DefGrad from '../atoms/DefGrad.vue';
 
 const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
@@ -1803,23 +1804,24 @@ defineExpose({
 
                 <template v-for="(circle, i) in circles" :key="circle.id">
                     <defs>
-                        <radialGradient :id="circle.id" fy="30%">
-                            <stop
-                                offset="10%"
-                                :stop-color="
+                        <DefGrad
+                            t="radial"
+                            :id="circle.id"
+                            fy="30%"
+                            :stops="[
+                                [
+                                    '10%',
                                     lightenHexColor(
                                         circle.color,
                                         FINAL_CONFIG.style.chart.circles
                                             .gradient.intensity / 100,
-                                    )
-                                "
-                            />
-                            <stop
-                                offset="90%"
-                                :stop-color="darkenHexColor(circle.color, 0.1)"
-                            />
-                            <stop offset="100%" :stop-color="circle.color" />
-                        </radialGradient>
+                                    ),
+                                    1,
+                                ],
+                                ['90%', darkenHexColor(circle.color, 0.1), 1],
+                                ['100%', circle.color, 1],
+                            ]"
+                        />
                     </defs>
 
                     <g v-if="$slots.pattern">

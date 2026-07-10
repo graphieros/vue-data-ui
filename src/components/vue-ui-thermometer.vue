@@ -40,6 +40,7 @@ import themes from '../themes/vue_ui_thermometer.json';
 import Title from '../atoms/Title.vue'; // Must be ready in responsive mode
 import img from '../img.js';
 import BaseScanner from '../atoms/BaseScanner.vue';
+import DefGrad from '../atoms/DefGrad.vue';
 
 const PackageVersion = defineAsyncComponent(
     () => import('../atoms/PackageVersion.vue'),
@@ -763,28 +764,30 @@ defineExpose({
                         :ry="drawingArea.thermoWidth / 2"
                     />
                 </clipPath>
-                <linearGradient
+                <DefGrad
+                    t="linear"
                     v-for="(graduation, i) in graduations"
                     :id="`vueUiThermometerGradient_${i}_${uid}`"
+                    :key="`t_${i}_${uid}`"
                     x1="0%"
                     y1="0%"
                     x2="100%"
                     y2="0%"
-                >
-                    <stop offset="0%" :stop-color="graduation.color" />
-                    <stop
-                        offset="50%"
-                        :stop-color="
+                    :stops="[
+                        ['0%', graduation.color, 1],
+                        [
+                            '50%',
                             setOpacity(
                                 graduation.color,
                                 100 -
                                     FINAL_CONFIG.style.chart.graduations
                                         .gradient.intensity,
-                            )
-                        "
-                    />
-                    <stop offset="100%" :stop-color="graduation.color" />
-                </linearGradient>
+                            ),
+                            1,
+                        ],
+                        ['100%', graduation.color, 1],
+                    ]"
+                />
             </defs>
 
             <g :clip-path="`url(#vueUiPill-${uid})`">

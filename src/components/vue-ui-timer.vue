@@ -17,6 +17,7 @@ import { useConfig } from '../useConfig';
 import { useChartAccessibility } from '../useChartAccessibility';
 import Title from '../atoms/Title.vue'; // Must be ready in responsive mode
 import BaseIcon from '../atoms/BaseIcon.vue'; // Must be ready in responsive mode
+import DefGrad from '../atoms/DefGrad.vue';
 
 const PackageVersion = defineAsyncComponent(
     () => import('../atoms/PackageVersion.vue'),
@@ -358,25 +359,23 @@ defineExpose({
 
             <!-- DEFS -->
             <defs v-if="FINAL_CONFIG.stopwatch.tracker.gradient.show">
-                <radialGradient
+                <DefGrad
+                    t="radial"
                     :id="`tracker_gradient_${uid}`"
                     cx="50%"
                     cy="50%"
                     r="50%"
                     fx="50%"
                     fy="50%"
-                >
-                    <stop
-                        offset="0%"
-                        :stop-color="
-                            FINAL_CONFIG.stopwatch.tracker.gradient.color
-                        "
-                    />
-                    <stop
-                        offset="100%"
-                        :stop-color="FINAL_CONFIG.stopwatch.tracker.fill"
-                    />
-                </radialGradient>
+                    :stops="[
+                        [
+                            '0%',
+                            FINAL_CONFIG.stopwatch.tracker.gradient.color,
+                            1,
+                        ],
+                        ['100%', FINAL_CONFIG.stopwatch.tracker.fill, 1],
+                    ]"
+                />
             </defs>
 
             <!-- TRACK -->

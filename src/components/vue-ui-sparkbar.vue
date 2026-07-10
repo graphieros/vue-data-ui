@@ -32,6 +32,7 @@ import { useThemeCheck } from '../useThemeCheck';
 import { usePrefersReducedMotion } from '../usePrefersMotion';
 import themes from '../themes/vue_ui_sparkbar.json';
 import BaseScanner from '../atoms/BaseScanner.vue';
+import DefGrad from '../atoms/DefGrad.vue';
 
 const PackageVersion = defineAsyncComponent(
     () => import('../atoms/PackageVersion.vue'),
@@ -576,26 +577,27 @@ function onTrapLeave(datapoint, index) {
                     <PackageVersion />
 
                     <defs>
-                        <linearGradient
+                        <DefGrad
+                            t="linear"
                             x1="0%"
                             y1="0%"
                             x2="100%"
                             y2="0%"
                             :id="`sparkbar_gradient_${i}_${uid}`"
-                        >
-                            <stop
-                                offset="0%"
-                                :stop-color="
+                            :stops="[
+                                [
+                                    '0%',
                                     setOpacity(
                                         shiftHue(bar.color, 0.03),
                                         100 -
                                             FINAL_CONFIG.style.bar.gradient
                                                 .intensity,
-                                    )
-                                "
-                            />
-                            <stop offset="100%" :stop-color="bar.color" />
-                        </linearGradient>
+                                    ),
+                                    1,
+                                ],
+                                ['100%', bar.color, 1],
+                            ]"
+                        />
                     </defs>
                     <rect
                         :height="svg.height"

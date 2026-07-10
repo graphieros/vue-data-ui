@@ -39,6 +39,7 @@ import geo from '../geoProjections';
 import Shape from '../atoms/Shape.vue';
 import BaseScanner from '../atoms/BaseScanner.vue';
 import BaseLegendToggle from '../atoms/BaseLegendToggle.vue';
+import DefGrad from '../atoms/DefGrad.vue';
 
 const Title = defineAsyncComponent(() => import('../atoms/Title.vue'));
 const Legend = defineAsyncComponent(() => import('../atoms/Legend.vue'));
@@ -1234,73 +1235,65 @@ defineExpose({
             <g v-if="isDataset">
                 <template v-if="projection === 'globe'">
                     <defs>
-                        <radialGradient
+                        <DefGrad
+                            t="radial"
                             :id="`water-${uid}`"
                             :cx="0.48"
                             :cy="0.52"
                             r="0.55"
                             fx="0.40"
                             fy="0.48"
-                        >
-                            <stop
-                                offset="0%"
-                                :stop-color="
+                            :stops="[
+                                [
+                                    '0%',
                                     lightenHexColor(
                                         FINAL_CONFIG.style.chart.globe
                                             .waterColor,
                                         0.4,
-                                    )
-                                "
-                            />
-                            <stop
-                                offset="45%"
-                                :stop-color="
-                                    FINAL_CONFIG.style.chart.globe.waterColor
-                                "
-                            />
-                            <stop
-                                offset="80%"
-                                :stop-color="
+                                    ),
+                                    1,
+                                ],
+                                [
+                                    '45%',
+                                    FINAL_CONFIG.style.chart.globe.waterColor,
+                                    1,
+                                ],
+                                [
+                                    '80%',
                                     darkenHexColor(
                                         FINAL_CONFIG.style.chart.globe
                                             .waterColor,
                                         0.2,
-                                    )
-                                "
-                            />
-                            <stop
-                                offset="100%"
-                                :stop-color="
+                                    ),
+                                    1,
+                                ],
+                                [
+                                    '100%',
                                     darkenHexColor(
                                         FINAL_CONFIG.style.chart.globe
                                             .waterColor,
                                         0.5,
-                                    )
-                                "
-                                stop-opacity="0.95"
-                            />
-                        </radialGradient>
-                        <radialGradient
+                                    ),
+                                    0.95,
+                                ],
+                            ]"
+                        />
+                        <DefGrad
+                            t="radial"
                             :id="`atmo-realistic-${uid}`"
                             :cx="0.5"
                             :cy="0.5"
                             r="0.54"
-                        >
-                            <stop
-                                offset="87%"
-                                stop-color="rgba(120,200,255,0)"
-                            />
-                            <stop
-                                offset="98%"
-                                :stop-color="
-                                    FINAL_CONFIG.style.chart.globe.waterColor
-                                "
-                            />
-                            <stop
-                                offset="100%"
-                                stop-color="rgba(120,200,255,0)"
-                            />
-                        </radialGradient>
+                            :stops="[
+                                ['87%', 'rgba(120,200,255,0)', 1],
+                                [
+                                    '98%',
+                                    FINAL_CONFIG.style.chart.globe.waterColor,
+                                    1,
+                                ],
+                                ['100%', 'rgba(120,200,255,0)', 1],
+                            ]"
+                        />
                         <filter
                             :id="`blur-${uid}`"
                             x="-30%"

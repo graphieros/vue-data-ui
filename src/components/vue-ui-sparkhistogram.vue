@@ -32,6 +32,7 @@ import Shape from '../atoms/Shape.vue';
 import themes from '../themes/vue_ui_sparkhistogram.json';
 import BaseScanner from '../atoms/BaseScanner.vue';
 import A11yDataTable from '../atoms/A11yDataTable.vue';
+import DefGrad from '../atoms/DefGrad.vue';
 
 const PackageVersion = defineAsyncComponent(
     () => import('../atoms/PackageVersion.vue'),
@@ -631,93 +632,92 @@ const a11yTable = computed(() => {
                 </foreignObject>
 
                 <defs>
-                    <radialGradient
+                    <DefGrad
+                        t="radial"
                         v-for="(posGrad, i) in computedDataset"
                         :id="`gradient_positive_${i}_${uid}`"
+                        :key="`gradient_positive_${i}_${uid}`"
                         cy="50%"
                         cx="50%"
                         r="50%"
                         fx="50%"
                         fy="50%"
-                    >
-                        <stop
-                            offset="0%"
-                            :stop-color="
+                        :stops="[
+                            [
+                                '0%',
                                 setOpacity(
                                     shiftHue(
                                         FINAL_CONFIG.style.bars.colors.positive,
                                         0.05,
                                     ),
                                     posGrad.intensity,
-                                )
-                            "
-                        />
-                        <stop
-                            offset="100%"
-                            :stop-color="
+                                ),
+                                1,
+                            ],
+                            [
+                                '100%',
                                 setOpacity(
                                     FINAL_CONFIG.style.bars.colors.positive,
                                     posGrad.intensity,
-                                )
-                            "
-                        />
-                    </radialGradient>
-
-                    <radialGradient
+                                ),
+                                1,
+                            ],
+                        ]"
+                    />
+                    <DefGrad
+                        t="radial"
                         v-for="(negGrad, i) in computedDataset"
                         :id="`gradient_negative_${i}_${uid}`"
+                        :key="`gradient_negative_${i}_${uid}`"
                         cy="50%"
                         cx="50%"
                         r="50%"
                         fx="50%"
                         fy="50%"
-                    >
-                        <stop
-                            offset="0%"
-                            :stop-color="
+                        :stops="[
+                            [
+                                '0%',
                                 setOpacity(
                                     shiftHue(
                                         FINAL_CONFIG.style.bars.colors.negative,
                                         0.05,
                                     ),
                                     negGrad.intensity,
-                                )
-                            "
-                        />
-                        <stop
-                            offset="100%"
-                            :stop-color="
+                                ),
+                                1,
+                            ],
+                            [
+                                '100%',
                                 setOpacity(
                                     FINAL_CONFIG.style.bars.colors.negative,
                                     negGrad.intensity,
-                                )
-                            "
-                        />
-                    </radialGradient>
-
-                    <radialGradient
+                                ),
+                                1,
+                            ],
+                        ]"
+                    />
+                    <DefGrad
+                        t="radial"
                         v-for="(dp, i) in computedDataset"
                         :id="`gradient_datapoint_${i}_${uid}`"
+                        :key="`gradient_datapoint_${i}_${uid}`"
                         cy="50%"
                         cx="50%"
                         r="50%"
                         fx="50%"
                         fy="50%"
-                    >
-                        <stop
-                            offset="0%"
-                            :stop-color="
+                        :stops="[
+                            [
+                                '0%',
                                 setOpacity(
                                     shiftHue(dp.color, 0.05),
                                     dp.intensity,
-                                )
-                            "
-                        />
-                        <stop
-                            offset="100%"
-                            :stop-color="setOpacity(dp.color, dp.intensity)"
-                        />
-                    </radialGradient>
+                                ),
+                                1,
+                            ],
+                            ['100%', setOpacity(dp.color, dp.intensity), 1],
+                        ]"
+                    />
                 </defs>
 
                 <g v-for="(rect, i) in computedDataset">

@@ -47,6 +47,7 @@ import Title from '../atoms/Title.vue'; // Must be ready in responsive mode
 import themes from '../themes/vue_ui_3d_bar.json';
 import BaseScanner from '../atoms/BaseScanner.vue';
 import A11yDataTable from '../atoms/A11yDataTable.vue';
+import DefGrad from '../atoms/DefGrad.vue';
 
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
@@ -1357,199 +1358,205 @@ defineExpose({
 
                 <!-- DEFS -->
                 <defs>
-                    <radialGradient :id="`gradient_top${uid}`">
-                        <stop
-                            offset="0%"
-                            :stop-color="
+                    <DefGrad
+                        t="radial"
+                        :id="`gradient_top${uid}`"
+                        :stops="[
+                            [
+                                '0%',
                                 setOpacity(
                                     FINAL_CONFIG.style.chart.backgroundColor,
                                     0,
-                                )
-                            "
-                        />
-                        <stop
-                            offset="100%"
-                            :stop-color="FINAL_CONFIG.style.chart.bar.color"
-                        />
-                    </radialGradient>
-                    <radialGradient :id="`gradient_tube_top${uid}`">
-                        <stop
-                            offset="0%"
-                            :stop-color="
+                                ),
+                                1,
+                            ],
+                            ['100%', FINAL_CONFIG.style.chart.bar.color, 1],
+                        ]"
+                    />
+                    <DefGrad
+                        t="radial"
+                        :id="`gradient_tube_top${uid}`"
+                        :stops="[
+                            [
+                                '0%',
                                 setOpacity(
                                     lightenHexColor(
                                         FINAL_CONFIG.style.chart.bar.color,
                                         0.5,
                                     ),
                                     80,
-                                )
-                            "
-                        />
-                        <stop
-                            offset="100%"
-                            :stop-color="
+                                ),
+                                1,
+                            ],
+                            [
+                                '100%',
                                 setOpacity(
                                     darkenHexColor(
                                         FINAL_CONFIG.style.chart.bar.color,
                                         0.1,
                                     ),
                                     80,
-                                )
-                            "
-                        />
-                    </radialGradient>
-                    <radialGradient :id="`gradient_left${uid}`">
-                        <stop
-                            offset="0%"
-                            :stop-color="
+                                ),
+                                1,
+                            ],
+                        ]"
+                    />
+                    <DefGrad
+                        t="radial"
+                        :id="`gradient_left${uid}`"
+                        :stops="[
+                            [
+                                '0%',
                                 setOpacity(
                                     FINAL_CONFIG.style.chart.backgroundColor,
                                     0,
-                                )
-                            "
-                        />
-                        <stop
-                            offset="100%"
-                            :stop-color="
+                                ),
+                                1,
+                            ],
+                            [
+                                '100%',
                                 setOpacity(
                                     FINAL_CONFIG.style.chart.bar.color,
                                     20,
-                                )
-                            "
-                        />
-                    </radialGradient>
-                    <radialGradient :id="`gradient_right${uid}`">
-                        <stop
-                            offset="0%"
-                            :stop-color="
+                                ),
+                                1,
+                            ],
+                        ]"
+                    />
+                    <DefGrad
+                        t="radial"
+                        :id="`gradient_right${uid}`"
+                        :stops="[
+                            [
+                                '0%',
                                 setOpacity(
                                     FINAL_CONFIG.style.chart.backgroundColor,
                                     0,
-                                )
-                            "
-                        />
-                        <stop
-                            offset="100%"
-                            :stop-color="
+                                ),
+                                1,
+                            ],
+                            [
+                                '100%',
                                 setOpacity(
                                     FINAL_CONFIG.style.chart.bar.color,
                                     20,
-                                )
-                            "
-                        />
-                    </radialGradient>
-                    <linearGradient
+                                ),
+                                1,
+                            ],
+                        ]"
+                    />
+                    <DefGrad
+                        t="linear"
                         :id="`gradient_tube_body${uid}`"
                         x1="0%"
                         y1="0%"
                         x2="100%"
                         y2="0%"
-                    >
-                        <stop
-                            offset="0%"
-                            :stop-color="`${FINAL_CONFIG.style.chart.bar.color}`"
-                        />
-                        <stop
-                            offset="10%"
-                            :stop-color="
+                        :stops="[
+                            ['0%', FINAL_CONFIG.style.chart.bar.color, 1],
+                            [
+                                '10%',
                                 setOpacity(
                                     darkenHexColor(
                                         FINAL_CONFIG.style.chart.bar.color,
                                         0.7,
                                     ),
                                     100,
-                                )
-                            "
-                        />
-                        <stop
-                            offset="25%"
-                            :stop-color="
+                                ),
+                                1,
+                            ],
+                            [
+                                '25%',
                                 setOpacity(
                                     darkenHexColor(
                                         FINAL_CONFIG.style.chart.bar.color,
                                         0.5,
                                     ),
                                     100,
-                                )
-                            "
-                        />
-                        <stop
-                            offset="75%"
-                            :stop-color="
+                                ),
+                                1,
+                            ],
+                            [
+                                '75%',
                                 setOpacity(
                                     FINAL_CONFIG.style.chart.bar.color,
                                     80,
-                                )
-                            "
-                        />
-                        <stop
-                            offset="100%"
-                            :stop-color="
+                                ),
+                                1,
+                            ],
+                            [
+                                '100%',
                                 setOpacity(
                                     lightenHexColor(
                                         FINAL_CONFIG.style.chart.bar.color,
                                         0.7,
                                     ),
                                     100,
-                                )
-                            "
-                        />
-                    </linearGradient>
+                                ),
+                                1,
+                            ],
+                        ]"
+                    />
                 </defs>
 
                 <defs v-if="hasStack">
-                    <radialGradient
+                    <DefGrad
+                        t="radial"
                         v-for="bar in stack"
                         :id="`grad_top_${bar.id}`"
-                    >
-                        <stop
-                            offset="0%"
-                            :stop-color="
-                                setOpacity(lightenHexColor(bar.color, 0.5), 80)
-                            "
-                        />
-                        <stop offset="100%" :stop-color="bar.color" />
-                    </radialGradient>
-                    <linearGradient
+                        :key="`grad_top_${bar.id}`"
+                        :stops="[
+                            [
+                                '0%',
+                                setOpacity(lightenHexColor(bar.color, 0.5), 80),
+                                1,
+                            ],
+                            ['100%', bar.color, 1],
+                        ]"
+                    />
+                    <DefGrad
+                        t="linear"
                         v-for="bar in stack"
                         :id="`grad_left_${bar.id}`"
-                    >
-                        <stop
-                            offset="0%"
-                            :stop-color="setOpacity(bar.color, 80)"
-                        />
-                        <stop
-                            offset="100%"
-                            :stop-color="
-                                setOpacity(darkenHexColor(bar.color, 0.5), 100)
-                            "
-                        />
-                    </linearGradient>
-                    <linearGradient
+                        :key="`grad_left_${bar.id}`"
+                        :stops="[
+                            ['0%', setOpacity(bar.color, 80), 1],
+                            [
+                                '100%',
+                                setOpacity(darkenHexColor(bar.color, 0.5), 100),
+                                1,
+                            ],
+                        ]"
+                    />
+                    <DefGrad
+                        t="linear"
                         v-for="bar in stack"
                         :id="`grad_right_${bar.id}`"
-                    >
-                        <stop
-                            offset="2%"
-                            :stop-color="
-                                setOpacity(lightenHexColor(bar.color, 0.5), 100)
-                            "
-                        />
-                        <stop
-                            offset="100%"
-                            :stop-color="setOpacity(bar.color, 80)"
-                        />
-                    </linearGradient>
-                    <linearGradient
+                        :key="`grad_right_${bar.id}`"
+                        :stops="[
+                            [
+                                '2%',
+                                setOpacity(
+                                    lightenHexColor(bar.color, 0.5),
+                                    100,
+                                ),
+                                1,
+                            ],
+                            ['100%', setOpacity(bar.color, 80), 1],
+                        ]"
+                    />
+                    <DefGrad
+                        t="linear"
                         x1="0%"
                         y1="0%"
                         x2="0%"
                         y2="100%"
                         :id="`vertical_line_${uid}`"
-                    >
-                        <stop offset="0%" stop-color="#FFFFFF" />
-                        <stop offset="100%" stop-color="#FFFFFF33" />
-                    </linearGradient>
+                        :stops="[
+                            ['0%', '#FFFFFF', 1],
+                            ['100%', '#FFFFFF33', 1],
+                        ]"
+                    />
                 </defs>
 
                 <text
@@ -2160,73 +2167,66 @@ defineExpose({
                             :aria-label="buildAccessibilityAnnouncement(bar)"
                         >
                             <defs>
-                                <radialGradient
+                                <DefGrad
+                                    t="radial"
                                     :id="`gradient_tube_top_${bar.id}`"
                                     fx="10%"
                                     cy="55%"
-                                >
-                                    <stop
-                                        offset="0%"
-                                        :stop-color="
+                                    :stops="[
+                                        [
+                                            '0%',
                                             setOpacity(
                                                 lightenHexColor(bar.color, 0.5),
                                                 80,
-                                            )
-                                        "
-                                    />
-                                    <stop
-                                        offset="100%"
-                                        :stop-color="
+                                            ),
+                                            1,
+                                        ],
+                                        [
+                                            '100%',
                                             setOpacity(
                                                 darkenHexColor(bar.color, 0.1),
                                                 80,
-                                            )
-                                        "
-                                    />
-                                </radialGradient>
-                                <linearGradient
+                                            ),
+                                            1,
+                                        ],
+                                    ]"
+                                />
+                                <DefGrad
+                                    t="linear"
                                     :id="`gradient_tube_body_${bar.id}`"
                                     x1="0%"
                                     y1="0%"
                                     x2="100%"
                                     y2="0%"
-                                >
-                                    <stop
-                                        offset="0%"
-                                        :stop-color="`${bar.color}`"
-                                    />
-                                    <stop
-                                        offset="10%"
-                                        :stop-color="
+                                    :stops="[
+                                        ['0%', bar.color, 1],
+                                        [
+                                            '10%',
                                             setOpacity(
                                                 darkenHexColor(bar.color, 0.7),
                                                 100,
-                                            )
-                                        "
-                                    />
-                                    <stop
-                                        offset="25%"
-                                        :stop-color="
+                                            ),
+                                            1,
+                                        ],
+                                        [
+                                            '25%',
                                             setOpacity(
                                                 darkenHexColor(bar.color, 0.5),
                                                 100,
-                                            )
-                                        "
-                                    />
-                                    <stop
-                                        offset="75%"
-                                        :stop-color="setOpacity(bar.color, 80)"
-                                    />
-                                    <stop
-                                        offset="100%"
-                                        :stop-color="
+                                            ),
+                                            1,
+                                        ],
+                                        ['75%', setOpacity(bar.color, 80), 1],
+                                        [
+                                            '100%',
                                             setOpacity(
                                                 lightenHexColor(bar.color, 0.7),
                                                 100,
-                                            )
-                                        "
-                                    />
-                                </linearGradient>
+                                            ),
+                                            1,
+                                        ],
+                                    ]"
+                                />
                             </defs>
                             <path
                                 @mouseenter="selectSerie(bar)"

@@ -54,6 +54,7 @@ import img from '../img';
 import BaseScanner from '../atoms/BaseScanner.vue';
 import A11yDataTable from '../atoms/A11yDataTable.vue';
 import BaseLegendToggle from '../atoms/BaseLegendToggle.vue';
+import DefGrad from '../atoms/DefGrad.vue';
 
 const VueUiXy = defineAsyncComponent(() => import('./vue-ui-xy.vue'));
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
@@ -1675,38 +1676,26 @@ defineExpose({
                 <PackageVersion />
 
                 <defs>
-                    <linearGradient
+                    <DefGrad
+                        t="linear"
                         v-for="(dp, i) in legendSet"
                         :id="`gradient-${dp.id}-${uid}`"
+                        :key="`gradient-${dp.id}-${uid}`"
                         x1="50%"
                         y1="0%"
                         x2="50%"
                         y2="100%"
-                    >
-                        <stop
-                            offset="0%"
-                            :stop-color="dp.color"
-                            stop-opacity="1"
-                        />
-                        <stop
-                            offset="30%"
-                            :stop-color="dp.color"
-                            stop-opacity="0.7"
-                        />
-                        <stop
-                            offset="70%"
-                            :stop-color="dp.color"
-                            stop-opacity="0.3"
-                        />
-                        <stop
-                            offset="100%"
-                            :stop-color="dp.color"
-                            stop-opacity="0.1"
-                        />
-                    </linearGradient>
+                        :stops="[
+                            ['0%', dp.color, 1],
+                            ['30%', dp.color, 0.7],
+                            ['70%', dp.color, 0.3],
+                            ['100%', dp.color, 0.1],
+                        ]"
+                    />
 
                     <template v-for="(ds, i) in drawableDataset">
-                        <linearGradient
+                        <DefGrad
+                            t="linear"
                             v-for="(dp, j) in ds.datapoints"
                             :key="`grad${dp.id}`"
                             :id="`gradient-single-${uid}-${dp.uid}`"
@@ -1714,28 +1703,13 @@ defineExpose({
                             y1="0%"
                             x2="50%"
                             y2="100%"
-                        >
-                            <stop
-                                offset="0%"
-                                :stop-color="dp.color"
-                                stop-opacity="1"
-                            />
-                            <stop
-                                offset="30%"
-                                :stop-color="dp.color"
-                                stop-opacity="0.7"
-                            />
-                            <stop
-                                offset="70%"
-                                :stop-color="dp.color"
-                                stop-opacity="0.3"
-                            />
-                            <stop
-                                offset="100%"
-                                :stop-color="dp.color"
-                                stop-opacity="0.1"
-                            />
-                        </linearGradient>
+                            :stops="[
+                                ['0%', dp.color, 1],
+                                ['30%', dp.color, 0.7],
+                                ['70%', dp.color, 0.3],
+                                ['100%', dp.color, 0.1],
+                            ]"
+                        />
                     </template>
                 </defs>
 

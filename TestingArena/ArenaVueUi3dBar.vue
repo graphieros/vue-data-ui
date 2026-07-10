@@ -263,6 +263,7 @@ const config = computed(() => {
             },
         },
         style: {
+            ...c.style,
             chart: {
                 ...c.style.chart,
                 dataLabel: {

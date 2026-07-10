@@ -28,6 +28,7 @@ import { useChartAccessibility } from '../useChartAccessibility';
 import { usePrefersReducedMotion } from '../usePrefersMotion';
 import themes from '../themes/vue_ui_sparkgauge.json';
 import BaseScanner from '../atoms/BaseScanner.vue';
+import DefGrad from '../atoms/DefGrad.vue';
 
 const PackageVersion = defineAsyncComponent(
     () => import('../atoms/PackageVersion.vue'),
@@ -345,22 +346,18 @@ onBeforeUnmount(() => {
             </foreignObject>
 
             <defs>
-                <linearGradient
+                <DefGrad
+                    t="linear"
                     :id="`gradient_${uid}`"
                     x1="-10%"
                     y1="100%"
                     x2="110%"
                     y2="100%"
-                >
-                    <stop
-                        offset="0%"
-                        :stop-color="FINAL_CONFIG.style.colors.min"
-                    />
-                    <stop
-                        offset="100%"
-                        :stop-color="FINAL_CONFIG.style.colors.max"
-                    />
-                </linearGradient>
+                    :stops="[
+                        ['0%', FINAL_CONFIG.style.colors.min, 1],
+                        ['100%', FINAL_CONFIG.style.colors.max, 1],
+                    ]"
+                />
             </defs>
             <!-- GUTTER -->
             <path

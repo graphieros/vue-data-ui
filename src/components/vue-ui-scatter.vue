@@ -55,6 +55,7 @@ import Legend from '../atoms/Legend.vue'; // Must be ready in responsive mode
 import BaseScanner from '../atoms/BaseScanner.vue';
 import A11yDataTable from '../atoms/A11yDataTable.vue';
 import BaseLegendToggle from '../atoms/BaseLegendToggle.vue';
+import DefGrad from '../atoms/DefGrad.vue';
 
 const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
@@ -2744,42 +2745,38 @@ defineExpose({
                 <!-- MARGINAL BARS -->
                 <g v-if="FINAL_CONFIG.style.layout.marginalBars.show">
                     <defs>
-                        <linearGradient
+                        <DefGrad
+                            t="linear"
                             :id="`marginal_x_${uid}`"
                             x1="0%"
                             y1="0%"
                             x2="0%"
                             y2="100%"
-                        >
-                            <stop
-                                offset="0%"
-                                :stop-color="
-                                    FINAL_CONFIG.style.layout.marginalBars.fill
-                                "
-                            />
-                            <stop
-                                offset="100%"
-                                :stop-color="FINAL_CONFIG.style.backgroundColor"
-                            />
-                        </linearGradient>
-                        <linearGradient
+                            :stops="[
+                                [
+                                    '0%',
+                                    FINAL_CONFIG.style.layout.marginalBars.fill,
+                                    1,
+                                ],
+                                ['100%', FINAL_CONFIG.style.backgroundColor, 1],
+                            ]"
+                        />
+                        <DefGrad
+                            t="linear"
                             :id="`marginal_y_${uid}`"
                             x1="0%"
                             x2="100%"
                             y1="0%"
                             y2="0%"
-                        >
-                            <stop
-                                offset="0%"
-                                :stop-color="FINAL_CONFIG.style.backgroundColor"
-                            />
-                            <stop
-                                offset="100%"
-                                :stop-color="
-                                    FINAL_CONFIG.style.layout.marginalBars.fill
-                                "
-                            />
-                        </linearGradient>
+                            :stops="[
+                                ['0%', FINAL_CONFIG.style.backgroundColor, 1],
+                                [
+                                    '100%',
+                                    FINAL_CONFIG.style.layout.marginalBars.fill,
+                                    1,
+                                ],
+                            ]"
+                        />
                     </defs>
                     <g v-for="(x, i) in marginalBars.x">
                         <rect

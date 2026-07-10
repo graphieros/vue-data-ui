@@ -174,7 +174,7 @@ const dataset = ref([
         // comments: ["", "", "", "", "This is a comment that can be long, or that can be short but it depends."],
         dataLabels: false,
         smooth: true,
-        useArea: false,
+        useArea: true,
         useStepper: false,
         dashIndices: [19],
         // useArea: true,

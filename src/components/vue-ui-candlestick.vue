@@ -51,6 +51,7 @@ import themes from '../themes/vue_ui_candlestick.json';
 import BaseScanner from '../atoms/BaseScanner.vue';
 import A11yDataTable from '../atoms/A11yDataTable.vue';
 import SlicerPreview from '../atoms/SlicerPreview.vue'; // Must be ready in responsive mode
+import DefGrad from '../atoms/DefGrad.vue';
 
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
 const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
@@ -2042,49 +2043,71 @@ defineExpose({
                     <!-- DEFS -->
                     <defs>
                         <!-- BEARISH GRADIENT -->
-                        <linearGradient
+                        <DefGrad
+                            t="linear"
                             :id="`bearish_gradient_${uid}`"
                             x2="0%"
                             y2="100%"
-                        >
-                            <stop
-                                offset="0%"
-                                :stop-color="
+                            :stops="[
+                                [
+                                    '0%',
                                     FINAL_CONFIG.style.layout.candle.colors
-                                        .bearish
-                                "
-                            />
-                            <stop
-                                offset="50%"
-                                :stop-color="`${shiftHue(FINAL_CONFIG.style.layout.candle.colors.bearish, 0.02)}DE`"
-                            />
-                            <stop
-                                offset="100%"
-                                :stop-color="`${shiftHue(FINAL_CONFIG.style.layout.candle.colors.bearish, 0.05)}66`"
-                            />
-                        </linearGradient>
+                                        .bearish,
+                                    1,
+                                ],
+                                [
+                                    '50%',
+                                    shiftHue(
+                                        FINAL_CONFIG.style.layout.candle.colors
+                                            .bearish,
+                                        0.02,
+                                    ),
+                                    0.87,
+                                ],
+                                [
+                                    '100%',
+                                    shiftHue(
+                                        FINAL_CONFIG.style.layout.candle.colors
+                                            .bearish,
+                                        0.05,
+                                    ),
+                                    0.4,
+                                ],
+                            ]"
+                        />
                         <!-- BULLISH GRADIENT -->
-                        <linearGradient
+                        <DefGrad
+                            t="linear"
                             :id="`bullish_gradient_${uid}`"
                             x2="0%"
                             y2="100%"
-                        >
-                            <stop
-                                offset="0%"
-                                :stop-color="
+                            :stops="[
+                                [
+                                    '0%',
                                     FINAL_CONFIG.style.layout.candle.colors
-                                        .bullish
-                                "
-                            />
-                            <stop
-                                offset="50%"
-                                :stop-color="`${shiftHue(FINAL_CONFIG.style.layout.candle.colors.bullish, 0.02)}DE`"
-                            />
-                            <stop
-                                offset="100%"
-                                :stop-color="`${shiftHue(FINAL_CONFIG.style.layout.candle.colors.bullish, 0.05)}66`"
-                            />
-                        </linearGradient>
+                                        .bullish,
+                                    1,
+                                ],
+                                [
+                                    '50%',
+                                    shiftHue(
+                                        FINAL_CONFIG.style.layout.candle.colors
+                                            .bullish,
+                                        0.02,
+                                    ),
+                                    0.87,
+                                ],
+                                [
+                                    '100%',
+                                    shiftHue(
+                                        FINAL_CONFIG.style.layout.candle.colors
+                                            .bullish,
+                                        0.05,
+                                    ),
+                                    0.4,
+                                ],
+                            ]"
+                        />
                     </defs>
 
                     <!-- AXIS -->

@@ -62,6 +62,7 @@ import Legend from '../atoms/Legend.vue'; // Must be ready in responsive mode
 import BaseScanner from '../atoms/BaseScanner.vue';
 import A11yDataTable from '../atoms/A11yDataTable.vue';
 import BaseLegendToggle from '../atoms/BaseLegendToggle.vue';
+import DefGrad from '../atoms/DefGrad.vue';
 
 const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
@@ -2218,54 +2219,53 @@ defineExpose({
                             !isNaN(donutThickness / minSize)
                         "
                     >
-                        <radialGradient
+                        <DefGrad
+                            t="radial"
                             :id="`gradient_${uid}`"
                             v-if="FINAL_CONFIG.style.chart.useGradient"
-                        >
-                            <stop
-                                offset="0%"
-                                :stop-color="
+                            :stops="[
+                                [
+                                    '0%',
                                     setOpacity(
                                         FINAL_CONFIG.style.chart
                                             .backgroundColor,
                                         0,
-                                    )
-                                "
-                                stop-opacity="0"
-                            />
-                            <stop
-                                :offset="`${(1 - donutThickness / minSize) * 100}%`"
-                                :stop-color="setOpacity('#FFFFFF', 0)"
-                                stop-opacity="0"
-                            />
-                            <stop
-                                :offset="`${(1 - donutThickness / minSize / 2) * 100}%`"
-                                :stop-color="
+                                    ),
+                                    0,
+                                ],
+                                [
+                                    `${(1 - donutThickness / minSize) * 100}%`,
+                                    setOpacity('#FFFFFF', 0),
+                                    0,
+                                ],
+                                [
+                                    `${(1 - donutThickness / minSize / 2) * 100}%`,
                                     setOpacity(
                                         '#FFFFFF',
                                         FINAL_CONFIG.style.chart
                                             .gradientIntensity,
-                                    )
-                                "
-                            />
-                            <stop
-                                offset="100%"
-                                :stop-color="
+                                    ),
+                                    1,
+                                ],
+                                [
+                                    '100%',
                                     setOpacity(
                                         FINAL_CONFIG.style.chart
                                             .backgroundColor,
                                         0,
-                                    )
-                                "
-                                stop-opacity="0"
-                            />
-                        </radialGradient>
+                                    ),
+                                    0,
+                                ],
+                            ]"
+                        />
                     </defs>
 
                     <defs v-if="FINAL_CONFIG.type === 'polar'">
-                        <radialGradient
+                        <DefGrad
+                            t="radial"
                             v-for="(area, i) in polarAreas"
                             :id="`polar_gradient_${i}_${uid}`"
+                            :key="`pg_${i}_${uid}`"
                             :cx="
                                 (isNaN((area.middlePoint.x / svg.width) * 100)
                                     ? 0
@@ -2279,22 +2279,16 @@ defineExpose({
                                 '%'
                             "
                             r="62%"
-                        >
-                            <stop
-                                offset="0%"
-                                :stop-color="
-                                    shiftHue(currentDonut[i].color, 0.05)
-                                "
-                                :stop-opacity="
+                            :stops="[
+                                [
+                                    '0%',
+                                    shiftHue(currentDonut[i].color, 0.05),
                                     FINAL_CONFIG.style.chart.gradientIntensity /
-                                    100
-                                "
-                            />
-                            <stop
-                                offset="100%"
-                                :stop-color="currentDonut[i].color"
-                            />
-                        </radialGradient>
+                                        100,
+                                ],
+                                ['100%', currentDonut[i].color, 1],
+                            ]"
+                        />
                     </defs>
 
                     <!-- LABEL CONNECTOR -->

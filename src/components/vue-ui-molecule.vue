@@ -38,6 +38,7 @@ import img from '../img';
 import themes from '../themes/vue_ui_molecule.json';
 import usePanZoom from '../usePanZoom';
 import BaseScanner from '../atoms/BaseScanner.vue';
+import DefGrad from '../atoms/DefGrad.vue';
 
 const Title = defineAsyncComponent(() => import('../atoms/Title.vue'));
 const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
@@ -1076,21 +1077,21 @@ defineExpose({
             </foreignObject>
 
             <defs>
-                <radialGradient
-                    v-for="color in Object.keys(gradientIds)"
+                <DefGrad
+                    t="radial"
+                    v-for="(color, i) in Object.keys(gradientIds)"
                     :id="`gradient_${color}`"
+                    :key="`gradient_${color}_${i}`"
                     cx="50%"
                     cy="30%"
                     r="50%"
                     fx="50%"
                     fy="50%"
-                >
-                    <stop
-                        offset="0%"
-                        :stop-color="lightenHexColor(color, 0.5)"
-                    />
-                    <stop offset="100%" :stop-color="color" />
-                </radialGradient>
+                    :stops="[
+                        ['0%', lightenHexColor(color, 0.5), 1],
+                        ['100%', color, 1],
+                    ]"
+                />
             </defs>
 
             <RecursiveLinks

@@ -39,6 +39,7 @@ import themes from '../themes/vue_ui_mood_radar.json';
 import Legend from '../atoms/Legend.vue'; // Must be ready in responsive mode
 import BaseScanner from '../atoms/BaseScanner.vue';
 import A11yDataTable from '../atoms/A11yDataTable.vue';
+import DefGrad from '../atoms/DefGrad.vue';
 
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
@@ -1125,28 +1126,27 @@ defineExpose({
 
                 <!-- DEFS -->
                 <defs>
-                    <radialGradient
+                    <DefGrad
+                        t="radial"
                         cx="50%"
                         cy="50%"
                         r="50%"
                         fx="50%"
                         fy="50%"
                         :id="`mood_radar_gradient_${uid}`"
-                    >
-                        <stop
-                            offset="0%"
-                            :stop-color="
+                        :stops="[
+                            [
+                                '0%',
                                 setOpacity(
                                     FINAL_CONFIG.style.chart.layout.dataPolygon
                                         .color,
                                     FINAL_CONFIG.style.chart.layout.dataPolygon
                                         .opacity,
-                                )
-                            "
-                        />
-                        <stop
-                            offset="100%"
-                            :stop-color="
+                                ),
+                                1,
+                            ],
+                            [
+                                '100%',
                                 setOpacity(
                                     shiftHue(
                                         FINAL_CONFIG.style.chart.layout
@@ -1157,10 +1157,11 @@ defineExpose({
                                     ),
                                     FINAL_CONFIG.style.chart.layout.dataPolygon
                                         .opacity,
-                                )
-                            "
-                        />
-                    </radialGradient>
+                                ),
+                                1,
+                            ],
+                        ]"
+                    />
                 </defs>
 
                 <!-- GRID -->

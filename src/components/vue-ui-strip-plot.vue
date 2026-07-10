@@ -54,6 +54,7 @@ import Title from '../atoms/Title.vue'; // Must be ready in responsive mode
 import themes from '../themes/vue_ui_strip_plot.json';
 import BaseScanner from '../atoms/BaseScanner.vue';
 import A11yDataTable from '../atoms/A11yDataTable.vue';
+import DefGrad from '../atoms/DefGrad.vue';
 
 const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
@@ -2276,27 +2277,26 @@ defineExpose({
 
                 <!-- PLOTS -->
                 <defs>
-                    <radialGradient
+                    <DefGrad
+                        t="radial"
                         v-for="ds in mutableDataset"
                         :id="ds.id"
+                        :key="`r_${ds.id}`"
                         fy="30%"
-                    >
-                        <stop
-                            offset="10%"
-                            :stop-color="
+                        :stops="[
+                            [
+                                '10%',
                                 lightenHexColor(
                                     ds.color,
                                     FINAL_CONFIG.style.chart.plots.gradient
                                         .intensity / 100,
-                                )
-                            "
-                        />
-                        <stop
-                            offset="90%"
-                            :stop-color="darkenHexColor(ds.color, 0.1)"
-                        />
-                        <stop offset="100%" :stop-color="ds.color" />
-                    </radialGradient>
+                                ),
+                                1,
+                            ],
+                            ['90%', darkenHexColor(ds.color, 0.1), 1],
+                            ['100%', ds.color, 1],
+                        ]"
+                    />
                 </defs>
 
                 <!-- VIOLINS -->

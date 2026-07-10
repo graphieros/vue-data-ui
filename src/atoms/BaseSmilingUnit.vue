@@ -1,5 +1,6 @@
 <script setup>
 import { shiftHue, XMLNS } from '../lib';
+import DefGrad from './DefGrad.vue';
 
 const props = defineProps({
     config: { type: Object },
@@ -107,18 +108,21 @@ const emit = defineEmits(['rate', 'mouseenter', 'mouseleave']);
             stroke-linejoin="round"
         >
             <defs>
-                <radialGradient :id="`vueUiSmiley${unit - 1}`">
-                    <stop
-                        offset="0%"
-                        :stop-color="
-                            shiftHue(config.style.colors.active[unit - 1], 0.05)
-                        "
-                    />
-                    <stop
-                        offset="100%"
-                        :stop-color="config.style.colors.active[unit - 1]"
-                    />
-                </radialGradient>
+                <DefGrad
+                    t="radial"
+                    :id="`vueUiSmiley${unit - 1}`"
+                    :stops="[
+                        [
+                            '0%',
+                            shiftHue(
+                                config.style.colors.active[unit - 1],
+                                0.05,
+                            ),
+                            1,
+                        ],
+                        ['100%', config.style.colors.active[unit - 1], 1],
+                    ]"
+                />
             </defs>
             <slot name="path-icon-filled"></slot>
         </svg>
@@ -161,23 +165,25 @@ const emit = defineEmits(['rate', 'mouseenter', 'mouseleave']);
             stroke-linejoin="round"
         >
             <defs>
-                <radialGradient :id="`vueUiSmiley${unit - 1}`">
-                    <stop
-                        offset="0%"
-                        :stop-color="
+                <DefGrad
+                    t="radial"
+                    :id="`vueUiSmiley${unit - 1}`"
+                    :stops="[
+                        [
+                            '0%',
                             shiftHue(
                                 config.style.colors.activeReadonly[unit - 1],
                                 0.05,
-                            )
-                        "
-                    />
-                    <stop
-                        offset="100%"
-                        :stop-color="
-                            config.style.colors.activeReadonly[unit - 1]
-                        "
-                    />
-                </radialGradient>
+                            ),
+                            1,
+                        ],
+                        [
+                            '100%',
+                            config.style.colors.activeReadonly[unit - 1],
+                            1,
+                        ],
+                    ]"
+                />
             </defs>
             <slot name="path-icon-filled-readonly"></slot>
         </svg>

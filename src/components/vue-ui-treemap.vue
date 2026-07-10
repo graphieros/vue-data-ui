@@ -52,6 +52,7 @@ import BaseIcon from '../atoms/BaseIcon.vue';
 import BaseScanner from '../atoms/BaseScanner.vue';
 import A11yDataTable from '../atoms/A11yDataTable.vue';
 import BaseLegendToggle from '../atoms/BaseLegendToggle.vue';
+import DefGrad from '../atoms/DefGrad.vue';
 
 const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
 const PenAndPaper = defineAsyncComponent(
@@ -2425,22 +2426,23 @@ defineExpose({
                             FINAL_CONFIG.style.chart.layout.rects.gradient.show
                         "
                     >
-                        <radialGradient
+                        <DefGrad
+                            t="radial"
                             :id="`tgrad_${rect.id}`"
                             gradientTransform="translate(-1, -1.000001) scale(2, 2)"
-                        >
-                            <stop offset="18%" :stop-color="rect.color" />
-                            <stop
-                                offset="100%"
-                                :stop-color="
+                            :stops="[
+                                ['18%', rect.color, 1],
+                                [
+                                    '100%',
                                     lightenHexColor(
                                         rect.color,
                                         FINAL_CONFIG.style.chart.layout.rects
                                             .gradient.intensity / 100,
-                                    )
-                                "
-                            />
-                        </radialGradient>
+                                    ),
+                                    1,
+                                ],
+                            ]"
+                        />
                     </defs>
                 </g>
 

@@ -13,6 +13,7 @@ import { createUid, error, applyDataLabel, dataLabel, treeShake } from '../lib';
 import { useNestedProp } from '../useNestedProp';
 import { useLoading } from '../useLoading';
 import BaseScanner from '../atoms/BaseScanner.vue';
+import DefGrad from '../atoms/DefGrad.vue';
 
 const PackageVersion = defineAsyncComponent(
     () => import('../atoms/PackageVersion.vue'),
@@ -159,19 +160,18 @@ const gaugeBody = computed(() => {
             <PackageVersion />
 
             <defs v-if="FINAL_CONFIG.useGradient">
-                <linearGradient
+                <DefGrad
+                    t="linear"
                     :id="`gizmo_gradient_${uid}`"
                     x1="0%"
                     x2="100%"
                     y1="0%"
                     y2="0%"
-                >
-                    <stop
-                        offset="0%"
-                        :stop-color="FINAL_CONFIG.gradientColor"
-                    />
-                    <stop offset="100%" :stop-color="FINAL_CONFIG.color" />
-                </linearGradient>
+                    :stops="[
+                        ['0%', FINAL_CONFIG.gradientColor, 1],
+                        ['100%', FINAL_CONFIG.color, 1],
+                    ]"
+                />
             </defs>
 
             <!-- BATTERY -->

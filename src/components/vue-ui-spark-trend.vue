@@ -32,6 +32,7 @@ import { useThemeCheck } from '../useThemeCheck';
 import { usePrefersReducedMotion } from '../usePrefersMotion';
 import themes from '../themes/vue_ui_spark_trend.json';
 import BaseScanner from '../atoms/BaseScanner.vue';
+import DefGrad from '../atoms/DefGrad.vue';
 
 const PackageVersion = defineAsyncComponent(
     () => import('../atoms/PackageVersion.vue'),
@@ -552,29 +553,27 @@ const accessibleDescriptionId = computed(() => `sparktrend-a11y-${uid.value}`);
 
             <!-- DEFS -->
             <defs>
-                <linearGradient
+                <DefGrad
+                    t="linear"
                     x1="0%"
                     y1="0%"
                     x2="0%"
                     y2="100%"
                     :id="`pill_gradient_${uid}`"
-                >
-                    <stop
-                        offset="0%"
-                        :stop-color="
+                    :stops="[
+                        [
+                            '0%',
                             setOpacity(
                                 FINAL_CONFIG.style.line.useColorTrend
                                     ? trendColor
                                     : FINAL_CONFIG.style.line.stroke,
                                 FINAL_CONFIG.style.area.opacity,
-                            )
-                        "
-                    />
-                    <stop
-                        offset="100%"
-                        :stop-color="FINAL_CONFIG.style.backgroundColor"
-                    />
-                </linearGradient>
+                            ),
+                            1,
+                        ],
+                        ['100%', FINAL_CONFIG.style.backgroundColor, 1],
+                    ]"
+                />
             </defs>
 
             <!-- AREA -->

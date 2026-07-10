@@ -51,6 +51,7 @@ import Legend from '../atoms/Legend.vue'; // Must be ready in responsive mode
 import BaseScanner from '../atoms/BaseScanner.vue';
 import A11yDataTable from '../atoms/A11yDataTable.vue';
 import BaseLegendToggle from '../atoms/BaseLegendToggle.vue';
+import DefGrad from '../atoms/DefGrad.vue';
 
 const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
@@ -1898,7 +1899,8 @@ defineExpose({
 
                 <!-- DEFS -->
                 <defs>
-                    <radialGradient
+                    <DefGrad
+                        t="radial"
                         cx="50%"
                         cy="50%"
                         r="50%"
@@ -1906,28 +1908,28 @@ defineExpose({
                         fy="50%"
                         v-for="(d, i) in drawableDataset"
                         :id="`quadrant_gradient_${uid}_${i}`"
-                    >
-                        <stop
-                            offset="0%"
-                            :stop-color="
+                        :key="`quadrant_gradient_${uid}_${i}`"
+                        :stops="[
+                            [
+                                '0%',
                                 setOpacity(
                                     shiftHue(d.color, 0.05),
                                     FINAL_CONFIG.style.chart.layout.areas
                                         .opacity,
-                                )
-                            "
-                        />
-                        <stop
-                            offset="100%"
-                            :stop-color="
+                                ),
+                                1,
+                            ],
+                            [
+                                '100%',
                                 setOpacity(
                                     d.color,
                                     FINAL_CONFIG.style.chart.layout.areas
                                         .opacity,
-                                )
-                            "
-                        />
-                    </radialGradient>
+                                ),
+                                1,
+                            ],
+                        ]"
+                    />
                 </defs>
 
                 <!-- GRID -->

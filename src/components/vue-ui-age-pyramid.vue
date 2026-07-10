@@ -44,6 +44,7 @@ import Title from '../atoms/Title.vue'; // Must be ready in responsive mode
 import themes from '../themes/vue_ui_age_pyramid.json';
 import BaseScanner from '../atoms/BaseScanner.vue';
 import A11yDataTable from '../atoms/A11yDataTable.vue';
+import DefGrad from '../atoms/DefGrad.vue';
 
 const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
@@ -1251,22 +1252,21 @@ defineExpose({
                 </foreignObject>
 
                 <defs>
-                    <linearGradient
+                    <DefGrad
+                        t="linear"
                         :id="`age_pyramid_left_${uid}`"
                         x1="0%"
                         y1="0%"
                         x2="100%"
                         y2="0%"
-                    >
-                        <stop
-                            offset="0%"
-                            :stop-color="
-                                FINAL_CONFIG.style.layout.bars.left.color
-                            "
-                        />
-                        <stop
-                            offset="100%"
-                            :stop-color="
+                        :stops="[
+                            [
+                                '0%',
+                                FINAL_CONFIG.style.layout.bars.left.color,
+                                1,
+                            ],
+                            [
+                                '100%',
                                 setOpacity(
                                     shiftHue(
                                         FINAL_CONFIG.style.layout.bars.left
@@ -1277,20 +1277,21 @@ defineExpose({
                                     100 -
                                         FINAL_CONFIG.style.layout.bars.gradient
                                             .intensity,
-                                )
-                            "
-                        />
-                    </linearGradient>
-                    <linearGradient
+                                ),
+                                1,
+                            ],
+                        ]"
+                    />
+                    <DefGrad
+                        t="linear"
                         :id="`age_pyramid_right_${uid}`"
                         x1="0%"
                         y1="0%"
                         x2="100%"
                         y2="0%"
-                    >
-                        <stop
-                            offset="0%"
-                            :stop-color="
+                        :stops="[
+                            [
+                                '0%',
                                 setOpacity(
                                     shiftHue(
                                         FINAL_CONFIG.style.layout.bars.right
@@ -1301,16 +1302,16 @@ defineExpose({
                                     100 -
                                         FINAL_CONFIG.style.layout.bars.gradient
                                             .intensity,
-                                )
-                            "
-                        />
-                        <stop
-                            offset="100%"
-                            :stop-color="
-                                FINAL_CONFIG.style.layout.bars.right.color
-                            "
-                        />
-                    </linearGradient>
+                                ),
+                                1,
+                            ],
+                            [
+                                '100%',
+                                FINAL_CONFIG.style.layout.bars.right.color,
+                                1,
+                            ],
+                        ]"
+                    />
                 </defs>
 
                 <g v-for="(segment, i) in drawableDataset">

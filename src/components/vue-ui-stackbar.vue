@@ -65,6 +65,7 @@ import BaseScanner from '../atoms/BaseScanner.vue';
 import A11yDataTable from '../atoms/A11yDataTable.vue';
 import SlicerPreview from '../atoms/SlicerPreview.vue';
 import BaseLegendToggle from '../atoms/BaseLegendToggle.vue';
+import DefGrad from '../atoms/DefGrad.vue';
 
 const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
@@ -3010,27 +3011,29 @@ defineExpose({
 
                 <!-- GRADIENT DEFS -->
                 <defs v-if="FINAL_CONFIG.style.chart.bars.gradient.show">
-                    <linearGradient
+                    <DefGrad
+                        t="linear"
                         v-for="(ds, i) in formattedDataset"
                         :id="`gradient_${ds.id}`"
+                        :key="`gradient_${ds.id}_${i}`"
                         x1="0%"
                         y1="0%"
                         x2="0%"
                         y2="100%"
-                    >
-                        <stop offset="0%" :stop-color="ds.color" />
-                        <stop
-                            offset="61.8%"
-                            :stop-color="
+                        :stops="[
+                            ['0%', ds.color, 1],
+                            [
+                                '61.8%',
                                 lightenHexColor(
                                     ds.color,
                                     FINAL_CONFIG.style.chart.bars.gradient
                                         .intensity / 100,
-                                )
-                            "
-                        />
-                        <stop offset="100%" :stop-color="ds.color" />
-                    </linearGradient>
+                                ),
+                                1,
+                            ],
+                            ['100%', ds.color, 1],
+                        ]"
+                    />
                 </defs>
 
                 <!-- FRAME -->

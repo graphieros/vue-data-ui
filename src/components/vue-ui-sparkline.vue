@@ -54,6 +54,7 @@ import BaseScanner from '../atoms/BaseScanner.vue';
 import SparklinePulse from '../atoms/SparklinePulse.vue';
 import SparklineGradientPath from '../atoms/SparklineGradientPath.vue';
 import A11yDataTable from '../atoms/A11yDataTable.vue';
+import DefGrad from '../atoms/DefGrad.vue';
 
 const PackageVersion = defineAsyncComponent(
     () => import('../atoms/PackageVersion.vue'),
@@ -1318,67 +1319,63 @@ const a11yTable = computed(() => {
 
                 <!-- DEFS -->
                 <defs>
-                    <linearGradient
+                    <DefGrad
+                        t="linear"
                         x1="0%"
                         y1="0%"
                         x2="100%"
                         y2="0%"
                         :id="`sparkline_gradient_${uid}`"
-                    >
-                        <stop
-                            offset="0%"
-                            :stop-color="
+                        :stops="[
+                            [
+                                '0%',
                                 setOpacity(
                                     shiftHue(
                                         FINAL_CONFIG.style.area.color,
                                         0.05,
                                     ),
                                     FINAL_CONFIG.style.area.opacity,
-                                )
-                            "
-                        />
-                        <stop
-                            offset="100%"
-                            :stop-color="
+                                ),
+                                1,
+                            ],
+                            [
+                                '100%',
                                 setOpacity(
                                     FINAL_CONFIG.style.area.color,
                                     FINAL_CONFIG.style.area.opacity,
-                                )
-                            "
-                        />
-                    </linearGradient>
-                    <linearGradient
+                                ),
+                                1,
+                            ],
+                        ]"
+                    />
+                    <DefGrad
+                        t="linear"
                         x2="0%"
                         y2="100%"
                         :id="`sparkline_bar_gradient_pos_${uid}`"
-                    >
-                        <stop
-                            offset="0%"
-                            :stop-color="FINAL_CONFIG.style.bar.color"
-                        />
-                        <stop
-                            offset="100%"
-                            :stop-color="
-                                shiftHue(FINAL_CONFIG.style.bar.color, 0.05)
-                            "
-                        />
-                    </linearGradient>
-                    <linearGradient
+                        :stops="[
+                            ['0%', FINAL_CONFIG.style.bar.color, 1],
+                            [
+                                '100%',
+                                shiftHue(FINAL_CONFIG.style.bar.color, 0.05),
+                                1,
+                            ],
+                        ]"
+                    />
+                    <DefGrad
+                        t="linear"
                         x2="0%"
                         y2="100%"
                         :id="`sparkline_bar_gradient_neg_${uid}`"
-                    >
-                        <stop
-                            offset="0%"
-                            :stop-color="
-                                shiftHue(FINAL_CONFIG.style.bar.color, 0.05)
-                            "
-                        />
-                        <stop
-                            offset="100%"
-                            :stop-color="FINAL_CONFIG.style.bar.color"
-                        />
-                    </linearGradient>
+                        :stops="[
+                            [
+                                '0%',
+                                shiftHue(FINAL_CONFIG.style.bar.color, 0.05),
+                                1,
+                            ],
+                            ['100%', FINAL_CONFIG.style.bar.color, 1],
+                        ]"
+                    />
 
                     <filter
                         :id="`sparkline_pulse_glow_${uid}`"

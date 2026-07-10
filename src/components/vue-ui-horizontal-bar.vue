@@ -54,6 +54,7 @@ import Accordion from './vue-ui-accordion.vue';
 import BaseScanner from '../atoms/BaseScanner.vue';
 import BaseLegendToggle from '../atoms/BaseLegendToggle.vue';
 import A11yDataTable from '../atoms/A11yDataTable.vue';
+import DefGrad from '../atoms/DefGrad.vue';
 
 const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
@@ -1886,27 +1887,31 @@ defineExpose({
                     </foreignObject>
 
                     <!-- defs -->
-                    <linearGradient
-                        x1="0%"
-                        y1="0%"
-                        x2="100%"
-                        y2="0%"
-                        v-for="(bar, i) in bars"
-                        :id="`vertical_bar_gradient_${uid}_${i}`"
-                    >
-                        <stop offset="0%" :stop-color="bar.color" />
-                        <stop
-                            offset="100%"
-                            :stop-color="
-                                setOpacity(
-                                    shiftHue(bar.color, 0.03),
-                                    100 -
-                                        FINAL_CONFIG.style.chart.layout.bars
-                                            .gradientIntensity,
-                                )
-                            "
+                    <defs>
+                        <DefGrad
+                            t="linear"
+                            x1="0%"
+                            y1="0%"
+                            x2="100%"
+                            y2="0%"
+                            v-for="(bar, i) in bars"
+                            :id="`vertical_bar_gradient_${uid}_${i}`"
+                            :key="`vertical_bar_gradient_${uid}_${i}`"
+                            :stops="[
+                                ['0%', bar.color, 1],
+                                [
+                                    '100%',
+                                    setOpacity(
+                                        shiftHue(bar.color, 0.03),
+                                        100 -
+                                            FINAL_CONFIG.style.chart.layout.bars
+                                                .gradientIntensity,
+                                    ),
+                                    1,
+                                ],
+                            ]"
                         />
-                    </linearGradient>
+                    </defs>
 
                     <g v-if="$slots.pattern">
                         <defs v-for="bar in bars">

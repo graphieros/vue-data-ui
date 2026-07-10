@@ -33,7 +33,7 @@ const scat1 = computed(() => {
 
 const scat2 = computed(() => {
     const arr = [];
-    for (let i = -2; i < 2; i += 1) {
+    for (let i = -100; i < 100; i += 1) {
         arr.push({
             x: Math.random() * (Math.random() > 0.5 ? i / 4 : -i / 4),
             y: Math.random() * (Math.random() > 0.5 ? i / 4 : -i / 4),
@@ -55,28 +55,28 @@ const dataset = ref([
     },
 ]);
 
-// onMounted(() => {
-//     setTimeout(() => {
-//         dataset.value = [
-//             {
-//                 name: 'Cluster 2',
-//                 values: scat2.value,
-//                 shape: 'circle',
-//                 marked: true,
-//             },
-//             {
-//                 name: 'Cluster 1',
-//                 values: scat1.value,
-//                 shape: 'star',
-//             },
-//             {
-//                 name: 'Cluster 3',
-//                 values: scat1.value,
-//                 shape: 'square',
-//             },
-//         ];
-//     }, 0);
-// });
+onMounted(() => {
+    setTimeout(() => {
+        dataset.value = [
+            {
+                name: 'Cluster 2',
+                values: scat2.value,
+                shape: 'circle',
+                marked: true,
+            },
+            {
+                name: 'Cluster 1',
+                values: scat1.value,
+                shape: 'star',
+            },
+            {
+                name: 'Cluster 3',
+                values: scat1.value,
+                shape: 'square',
+            },
+        ];
+    }, 0);
+});
 
 const alternateDataset = ref([
     {
@@ -162,7 +162,7 @@ const model = createModel([
     COLOR('style.layout.axis.stroke', { def: '#e1e5e8' }),
     NUMBER('style.layout.axis.strokeWidth', { def: 1, min: 0, max: 12 }),
 
-    CHECKBOX('style.layout.marginalBars.show', { def: false }),
+    CHECKBOX('style.layout.marginalBars.show', { def: true }),
     NUMBER('style.layout.marginalBars.size', { def: 40, min: 12, max: 100 }),
     NUMBER('style.layout.marginalBars.tranches', { def: 20, min: 5, max: 100 }),
     RANGE('style.layout.marginalBars.opacity', {

@@ -95,6 +95,7 @@ import SlicerPreview from '../atoms/SlicerPreview.vue'; // v3
 import Accordion from './vue-ui-accordion.vue'; // Must be ready in responsive mode
 import BaseLegendToggle from '../atoms/BaseLegendToggle.vue';
 import A11yDataTable from '../atoms/A11yDataTable.vue';
+import DefGrad from '../atoms/DefGrad.vue';
 
 const props = defineProps({
     config: {
@@ -6840,42 +6841,44 @@ defineExpose({
                                     />
                                 </template>
                                 <template v-else>
-                                    <linearGradient
+                                    <DefGrad
+                                        t="linear"
                                         :id="`rectGradient_pos_${i}_${uniqueId}`"
                                         x2="0%"
                                         y2="100%"
-                                    >
-                                        <stop
-                                            offset="0%"
-                                            :stop-color="serie.color"
-                                        />
-                                        <stop
-                                            offset="62%"
-                                            :stop-color="`${shiftHue(serie.color, 0.02)}`"
-                                        />
-                                        <stop
-                                            offset="100%"
-                                            :stop-color="`${shiftHue(serie.color, 0.05)}`"
-                                        />
-                                    </linearGradient>
-                                    <linearGradient
+                                        :stops="[
+                                            ['0%', serie.color, 1],
+                                            [
+                                                '62%',
+                                                shiftHue(serie.color, 0.02),
+                                                1,
+                                            ],
+                                            [
+                                                '100%',
+                                                shiftHue(serie.color, 0.05),
+                                                1,
+                                            ],
+                                        ]"
+                                    />
+                                    <DefGrad
+                                        t="linear"
                                         :id="`rectGradient_neg_${i}_${uniqueId}`"
                                         x2="0%"
                                         y2="100%"
-                                    >
-                                        <stop
-                                            offset="0%"
-                                            :stop-color="`${shiftHue(serie.color, 0.05)}`"
-                                        />
-                                        <stop
-                                            offset="38%"
-                                            :stop-color="`${shiftHue(serie.color, 0.02)}`"
-                                        />
-                                        <stop
-                                            offset="100%"
-                                            :stop-color="serie.color"
-                                        />
-                                    </linearGradient>
+                                        :stops="[
+                                            [
+                                                '0%',
+                                                shiftHue(serie.color, 0.05),
+                                                1,
+                                            ],
+                                            [
+                                                '38%',
+                                                shiftHue(serie.color, 0.02),
+                                                1,
+                                            ],
+                                            ['100%', serie.color, 1],
+                                        ]"
+                                    />
                                 </template>
                             </defs>
                         </template>
@@ -6886,23 +6889,19 @@ defineExpose({
                             :key="`def_plot_${i}`"
                         >
                             <defs :data-cy="`xy-def-plot-${i}`">
-                                <radialGradient
+                                <DefGrad
+                                    t="radial"
                                     :id="`plotGradient_${i}_${uniqueId}`"
                                     cx="50%"
                                     cy="50%"
                                     r="50%"
                                     fx="50%"
                                     fy="50%"
-                                >
-                                    <stop
-                                        offset="0%"
-                                        :stop-color="`${shiftHue(serie.color, 0.05)}`"
-                                    />
-                                    <stop
-                                        offset="100%"
-                                        :stop-color="serie.color"
-                                    />
-                                </radialGradient>
+                                    :stops="[
+                                        ['0%', shiftHue(serie.color, 0.05), 1],
+                                        ['100%', serie.color, 1],
+                                    ]"
+                                />
                             </defs>
                         </template>
 
@@ -6912,23 +6911,19 @@ defineExpose({
                             :key="`def_line_${serie.id}`"
                         >
                             <defs :data-cy="`xy-def-line-${i}`">
-                                <radialGradient
+                                <DefGrad
+                                    t="radial"
                                     :id="`lineGradient_${i}_${uniqueId}`"
                                     cx="50%"
                                     cy="50%"
                                     r="50%"
                                     fx="50%"
                                     fy="50%"
-                                >
-                                    <stop
-                                        offset="0%"
-                                        :stop-color="`${shiftHue(serie.color, 0.05)}`"
-                                    />
-                                    <stop
-                                        offset="100%"
-                                        :stop-color="serie.color"
-                                    />
-                                </radialGradient>
+                                    :stops="[
+                                        ['0%', shiftHue(serie.color, 0.05), 1],
+                                        ['100%', serie.color, 1],
+                                    ]"
+                                />
                                 <slot
                                     v-if="$slots['area-gradient']"
                                     name="area-gradient"
@@ -6937,23 +6932,33 @@ defineExpose({
                                         id: `areaGradient_${i}_${uniqueId}`,
                                     }"
                                 />
-                                <linearGradient
+                                <DefGrad
                                     v-else
+                                    t="linear"
                                     :id="`areaGradient_${i}_${uniqueId}`"
                                     x1="0%"
                                     x2="100%"
                                     y1="0%"
                                     y2="0%"
-                                >
-                                    <stop
-                                        offset="0%"
-                                        :stop-color="`${setOpacity(shiftHue(serie.color, 0.03), FINAL_CONFIG.line.area.opacity)}`"
-                                    />
-                                    <stop
-                                        offset="100%"
-                                        :stop-color="`${setOpacity(serie.color, FINAL_CONFIG.line.area.opacity)}`"
-                                    />
-                                </linearGradient>
+                                    :stops="[
+                                        [
+                                            '0%',
+                                            setOpacity(
+                                                shiftHue(serie.color, 0.03),
+                                                FINAL_CONFIG.line.area.opacity,
+                                            ),
+                                            1,
+                                        ],
+                                        [
+                                            '100%',
+                                            setOpacity(
+                                                serie.color,
+                                                FINAL_CONFIG.line.area.opacity,
+                                            ),
+                                            1,
+                                        ],
+                                    ]"
+                                />
                             </defs>
                             <defs
                                 v-if="
@@ -9126,7 +9131,8 @@ defineExpose({
                             "
                         >
                             <defs>
-                                <linearGradient
+                                <DefGrad
+                                    t="linear"
                                     v-for="(trap, i) in allScales"
                                     :key="`individual_scale_gradient_${trap.groupId || trap.id || i}`"
                                     :id="`individual_scale_gradient_${uniqueId}_${i}`"
@@ -9134,20 +9140,15 @@ defineExpose({
                                     :x2="yAxisLabelsAreRight ? '0%' : '100%'"
                                     y1="0%"
                                     y2="0%"
-                                >
-                                    <stop
-                                        offset="0%"
-                                        :stop-color="
-                                            FINAL_CONFIG.chart.backgroundColor
-                                        "
-                                        stop-opacity="0"
-                                    />
-                                    <stop
-                                        offset="100%"
-                                        :stop-color="trap.color"
-                                        stop-opacity="0.2"
-                                    />
-                                </linearGradient>
+                                    :stops="[
+                                        [
+                                            '0%',
+                                            FINAL_CONFIG.chart.backgroundColor,
+                                            0,
+                                        ],
+                                        ['100%', trap.color, 0.2],
+                                    ]"
+                                />
                             </defs>
                             <rect
                                 v-for="(trap, i) in allScales"

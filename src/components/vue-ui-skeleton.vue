@@ -4,6 +4,7 @@ import { createPolygonPath, createStar, setOpacity, XMLNS } from '../lib.js';
 import { useNestedProp } from '../useNestedProp';
 import { useConfig } from '../useConfig';
 import PackageVersion from '../atoms/PackageVersion.vue';
+import DefGrad from '../atoms/DefGrad.vue';
 
 const { vue_ui_skeleton: DEFAULT_CONFIG } = useConfig();
 
@@ -344,34 +345,20 @@ const chordPaths = ref([
             >
                 <PackageVersion />
                 <defs>
-                    <linearGradient
+                    <DefGrad
+                        t="linear"
                         :id="`ridgeline-gradient-${uid}`"
                         x1="50%"
                         y1="0%"
                         x2="50%"
                         y2="100%"
-                    >
-                        <stop
-                            offset="0%"
-                            :stop-color="FINAL_CONFIG.style.ridgeline.color"
-                            stop-opacity="1"
-                        />
-                        <stop
-                            offset="30%"
-                            :stop-color="FINAL_CONFIG.style.ridgeline.color"
-                            stop-opacity="0.7"
-                        />
-                        <stop
-                            offset="70%"
-                            :stop-color="FINAL_CONFIG.style.ridgeline.color"
-                            stop-opacity="0.3"
-                        />
-                        <stop
-                            offset="100%"
-                            :stop-color="FINAL_CONFIG.style.ridgeline.color"
-                            stop-opacity="0.1"
-                        />
-                    </linearGradient>
+                        :stops="[
+                            ['0%', FINAL_CONFIG.style.ridgeline.color, 1],
+                            ['30%', FINAL_CONFIG.style.ridgeline.color, 0.7],
+                            ['70%', FINAL_CONFIG.style.ridgeline.color, 0.3],
+                            ['100%', FINAL_CONFIG.style.ridgeline.color, 0.1],
+                        ]"
+                    />
                 </defs>
                 <path
                     :fill="`url(#ridgeline-gradient-${uid})`"

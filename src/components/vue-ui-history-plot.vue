@@ -57,6 +57,7 @@ import Legend from '../atoms/Legend.vue'; // Must be ready in responsive mode
 import BaseScanner from '../atoms/BaseScanner.vue';
 import A11yDataTable from '../atoms/A11yDataTable.vue';
 import BaseLegendToggle from '../atoms/BaseLegendToggle.vue';
+import DefGrad from '../atoms/DefGrad.vue';
 
 const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
@@ -1952,28 +1953,26 @@ defineExpose({
                     <template
                         v-if="FINAL_CONFIG.style.chart.plots.gradient.show"
                     >
-                        <radialGradient
+                        <DefGrad
+                            t="radial"
                             v-for="(ds, i) in drawableDataset"
                             :key="`gradient_${i}_${uid}`"
                             :id="`gradient_${i}_${uid}`"
                             fy="30%"
-                        >
-                            <stop
-                                offset="10%"
-                                :stop-color="
+                            :stops="[
+                                [
+                                    '10%',
                                     lightenHexColor(
                                         ds.color,
                                         FINAL_CONFIG.style.chart.plots.gradient
                                             .intensity / 100,
-                                    )
-                                "
-                            />
-                            <stop
-                                offset="90%"
-                                :stop-color="darkenHexColor(ds.color, 0.1)"
-                            />
-                            <stop offset="100%" :stop-color="ds.color" />
-                        </radialGradient>
+                                    ),
+                                    1,
+                                ],
+                                ['90%', darkenHexColor(ds.color, 0.1), 1],
+                                ['100%', ds.color, 1],
+                            ]"
+                        />
                     </template>
 
                     <template
@@ -1986,38 +1985,37 @@ defineExpose({
                                 usePlotTemperatureColors(ds)
                             "
                         >
-                            <radialGradient
+                            <DefGrad
+                                t="radial"
                                 v-for="plot in ds.plots"
                                 :key="`temperature_plot_grad_history_${ds.seriesIndex}_${plot.id}_${uid}`"
                                 :id="getTemperaturePlotGradientId(ds, plot)"
                                 fy="30%"
-                            >
-                                <stop
-                                    offset="10%"
-                                    :stop-color="
+                                :stops="[
+                                    [
+                                        '10%',
                                         lightenHexColor(
                                             getTemperaturePlotColor(ds, plot),
                                             FINAL_CONFIG.style.chart.plots
                                                 .gradient.intensity / 100,
-                                        )
-                                    "
-                                />
-                                <stop
-                                    offset="90%"
-                                    :stop-color="
+                                        ),
+                                        1,
+                                    ],
+                                    [
+                                        '90%',
                                         darkenHexColor(
                                             getTemperaturePlotColor(ds, plot),
                                             0.1,
-                                        )
-                                    "
-                                />
-                                <stop
-                                    offset="100%"
-                                    :stop-color="
-                                        getTemperaturePlotColor(ds, plot)
-                                    "
-                                />
-                            </radialGradient>
+                                        ),
+                                        1,
+                                    ],
+                                    [
+                                        '100%',
+                                        getTemperaturePlotColor(ds, plot),
+                                        1,
+                                    ],
+                                ]"
+                            />
                         </template>
 
                         <linearGradient

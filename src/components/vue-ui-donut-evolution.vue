@@ -59,6 +59,7 @@ import Slicer from '../atoms/Slicer.vue'; // Must be ready in responsive mode
 import BaseScanner from '../atoms/BaseScanner.vue';
 import A11yDataTable from '../atoms/A11yDataTable.vue';
 import BaseLegendToggle from '../atoms/BaseLegendToggle.vue';
+import DefGrad from '../atoms/DefGrad.vue';
 
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
@@ -1755,66 +1756,65 @@ defineExpose({
                 </foreignObject>
 
                 <defs>
-                    <linearGradient
+                    <DefGrad
+                        t="linear"
                         :id="`hover_${uid}`"
                         x1="0%"
                         y1="0%"
                         x2="0%"
                         y2="100%"
-                    >
-                        <stop
-                            offset="0%"
-                            :stop-color="
+                        :stops="[
+                            [
+                                '0%',
                                 setOpacity(
                                     FINAL_CONFIG.style.chart.backgroundColor,
                                     FINAL_CONFIG.style.chart.layout.highlighter
                                         .opacity,
-                                )
-                            "
-                        />
-                        <stop
-                            offset="100%"
-                            :stop-color="
+                                ),
+                                1,
+                            ],
+                            [
+                                '100%',
                                 setOpacity(
                                     FINAL_CONFIG.style.chart.layout.highlighter
                                         .color,
                                     FINAL_CONFIG.style.chart.layout.highlighter
                                         .opacity,
-                                )
-                            "
-                        />
-                    </linearGradient>
+                                ),
+                                1,
+                            ],
+                        ]"
+                    />
 
-                    <radialGradient :id="`focus_${uid}`">
-                        <stop
-                            offset="0%"
-                            :stop-color="
+                    <DefGrad
+                        t="radial"
+                        :id="`focus_${uid}`"
+                        :stops="[
+                            [
+                                '0%',
                                 setOpacity(
                                     convertColorToHex(
                                         FINAL_CONFIG.style.chart
                                             .backgroundColor,
                                     ),
                                     0,
-                                )
-                            "
-                        />
-                        <stop
-                            offset="77%"
-                            :stop-color="setOpacity('#FFFFFF', 30)"
-                        />
-                        <stop
-                            offset="100%"
-                            :stop-color="
+                                ),
+                                1,
+                            ],
+                            ['77%', setOpacity('#FFFFFF', 30), 1],
+                            [
+                                '100%',
                                 setOpacity(
                                     convertColorToHex(
                                         FINAL_CONFIG.style.chart
                                             .backgroundColor,
                                     ),
                                     0,
-                                )
-                            "
-                        />
-                    </radialGradient>
+                                ),
+                                1,
+                            ],
+                        ]"
+                    />
                 </defs>
 
                 <!-- GRID -->
