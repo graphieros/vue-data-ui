@@ -39,17 +39,6 @@ export function scoreRectangle(node, width, height) {
     return Math.max(Math.abs(centerX * height), Math.abs(centerY * width));
 }
 
-// Unused for now: to be used for further improvement (nested packings)
-export function scoreCircle(node) {
-    const circleA = node._;
-    const circleB = node.next._;
-    const distance = circleA.r + circleB.r;
-    const centerX = (circleA.x * circleB.r + circleB.x * circleA.r) / distance;
-    const centerY = (circleA.y * circleB.r + circleB.y * circleA.r) / distance;
-
-    return centerX * centerX + centerY * centerY;
-}
-
 export function pack(circles, height, width) {
     const score = scoreRectangle;
     const circleCount = circles.length;
