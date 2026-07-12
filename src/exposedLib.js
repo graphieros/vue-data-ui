@@ -1,4 +1,6 @@
 import {
+    calcAverage,
+    calcMedian,
     convertColorToHex,
     darkenHexColor,
     lightenHexColor,
@@ -25,11 +27,21 @@ export function mergeConfigs({ defaultConfig, userConfig }) {
     return treeShake({ defaultConfig, userConfig });
 }
 
+export function average(arr) {
+    return calcAverage(arr);
+}
+
+export function median(arr) {
+    return calcMedian(arr);
+}
+
 const exposedLib = {
-    lightenColor,
+    average,
     darkenColor,
-    shiftColorHue,
+    lightenColor,
+    median,
     mergeConfigs,
+    shiftColorHue,
 };
 
 export default exposedLib;

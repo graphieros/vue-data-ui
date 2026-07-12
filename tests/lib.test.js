@@ -16,6 +16,7 @@ import {
     autoFontSize,
     buildInterLineAreas,
     calcLinearProgression,
+    calcAverage,
     calcMedian,
     calcPolygonPoints,
     calcStarPoints,
@@ -876,12 +877,91 @@ describe('createStar', () => {
     });
 });
 
+describe('calcAverage', () => {
+    test('returns null for invalid input', () => {
+        const cases = [
+            { input: [], expected: null },
+            { input: [[]], expected: null },
+            { input: [{}], expected: null },
+            { input: [{ k: '1' }], expected: null },
+            { input: ['text'], expected: null },
+            { input: ['1'], expected: null },
+            { input: [NaN], expected: null },
+            { input: [undefined], expected: null },
+            { input: [Infinity], expected: null },
+            { input: [-Infinity], expected: null },
+            { input: [null], expected: null },
+            { input: [true], expected: null },
+            { input: [false], expected: null },
+        ];
+        cases.forEach((_case) => {
+            expect(calcAverage(_case.input)).toBe(_case.expected);
+            expect(calcAverage(_case.input[0])).toBe(_case.expected);
+        });
+    });
+    test('returns an average from valid values in an array', () => {
+        const cases = [
+            { input: [undefined, 2, 4], expected: 3 },
+            { input: ['text', 2, 4], expected: 3 },
+            { input: ['1', 2, 4], expected: 3 },
+            { input: [NaN, 2, 4], expected: 3 },
+            { input: [Infinity, 2, 4], expected: 3 },
+            { input: [-Infinity, 2, 4], expected: 3 },
+            { input: [null, 2, 4], expected: 3 },
+            { input: [true, 2, 4], expected: 3 },
+            { input: [false, 2, 4], expected: 3 },
+            { input: [[], 2, 4], expected: 3 },
+            { input: [{}, 2, 4], expected: 3 },
+            { input: [{ k: '1' }, 2, 4], expected: 3 },
+        ];
+        cases.forEach((_case) => {
+            expect(calcAverage(_case.input)).toBe(_case.expected);
+        });
+    });
+});
+
 describe('calcMedian', () => {
     test('caclulates a median from an array of numbers', () => {
         const arr = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
         expect(calcMedian(arr)).toBe(4.5);
         const arr2 = [0.212, 1.313, 2.333, 3.618];
         expect(calcMedian(arr2)).toBe(1.823);
+    });
+    test('returns null for invalid input', () => {
+        const invalid = [
+            [],
+            undefined,
+            [undefined, NaN],
+            'text',
+            ['text', '2'],
+            NaN,
+            [NaN, '1'],
+            [true, false],
+            [true],
+            [false],
+        ];
+        invalid.forEach((_case) => {
+            expect(calcMedian(_case)).toBe(null);
+        });
+    });
+    test('ignores invalid values and computes median with available valid values', () => {
+        const cases = [
+            {
+                input: [undefined, 1, NaN],
+                expected: 1,
+            },
+            {
+                input: ['text', 1, NaN, 2, 12, 5],
+                expected: 3.5,
+            },
+            {
+                input: [1, NaN, Infinity, -Infinity, true],
+                expected: 1,
+            },
+        ];
+        cases.forEach((_case) => {
+            expect(calcMedian(_case.input)).toBe(_case.expected);
+        });
     });
 });
 

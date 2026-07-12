@@ -87,10 +87,12 @@ export {
 } from './lib';
 
 export {
-    lightenColor,
+    average,
     darkenColor,
-    shiftColorHue,
+    lightenColor,
+    median,
     mergeConfigs,
+    shiftColorHue,
 } from './exposedLib';
 export { applyDataCorrection } from './data-correction';
 export { useObjectBindings } from './useObjectBindings';

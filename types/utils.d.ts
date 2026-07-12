@@ -567,3 +567,43 @@ export const createPatternDef: ({
     minSize,
     disambiguator,
 }: CreatePatternArgs) => string;
+
+/**
+ * Vue Data UI utility
+ * ---
+ * Calculates the median of all finite numbers in an array.
+ * Invalid values are ignored, and the original array is not mutated.
+ * Returns null when the input is not an array or contains no finite numbers.
+ * ___
+ * @example
+ * const median = median([1, 3, 5, 7]); // 4
+ *
+ * const medianWithInvalidValues = median([1, undefined, 3, NaN, 5]); // 3
+ *
+ * const invalidMedian = median([]); // null
+ *
+ * @param {unknown} arr - Input value expected to be an array. Only finite numbers are included in the calculation.
+ *
+ * @returns {number | null} The median of the finite numbers, or null when no finite numbers are available.
+ */
+export const median: (arr: unknown) => number | null;
+
+/**
+ * Vue Data UI utility
+ * ---
+ * Calculates the average of all finite numbers in an array.
+ * Invalid values are ignored, and the original array is not mutated.
+ * Returns null when the input is not an array or contains no finite numbers.
+ * ___
+ * @example
+ * const average = average([0, 10]); // 5
+ *
+ * const averageWithInvalidValues = average([0, undefined, 5, NaN, 10]); // 5
+ *
+ * const invalidAverage = average([]); // null
+ *
+ * @param {unknown} arr - Input value expected to be an array. Only finite numbers are included in the calculation.
+ *
+ * @returns {number | null} The average of the finite numbers, or null when no finite numbers are available.
+ */
+export const average: (arr: unknown) => number | null;

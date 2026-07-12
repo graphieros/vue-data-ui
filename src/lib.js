@@ -1352,9 +1352,37 @@ export function calcLinearProgression(plots) {
 }
 
 export function calcMedian(arr) {
-    const mid = Math.floor(arr.length / 2);
-    const nums = [...arr].sort((a, b) => a - b);
-    return arr.length % 2 !== 0 ? nums[mid] : (nums[mid - 1] + nums[mid]) / 2;
+    if (!Array.isArray(arr) || arr.length === 0) {
+        return null;
+    }
+    const valid = arr.filter(Number.isFinite);
+    if (valid.length === 0) {
+        return null;
+    }
+    if (valid.length === 1) {
+        return valid[0];
+    }
+    valid.sort((a, b) => a - b);
+    const mid = Math.floor(valid.length / 2);
+    return valid.length % 2 === 1
+        ? valid[mid]
+        : valid[mid - 1] / 2 + valid[mid] / 2;
+}
+
+export function calcAverage(arr) {
+    if (!Array.isArray(arr) || arr.length === 0) {
+        return null;
+    }
+    let average = 0;
+    let count = 0;
+    for (const value of arr) {
+        if (!Number.isFinite(value)) {
+            continue;
+        }
+        count += 1;
+        average = average * ((count - 1) / count) + value / count;
+    }
+    return count === 0 ? null : average;
 }
 
 export function createStraightPath(points) {
@@ -3881,7 +3909,7 @@ export function getCumulativeMedian({ values, config = {} }) {
         list.push(n);
         list.sort((a, b) => a - b);
         const len = list.length;
-        const mid = len >> 1;
+        const mid = Math.floor(len / 2);
         if (len % 2 === 1) {
             medians.push(list[mid]);
         } else {
@@ -4814,6 +4842,7 @@ const lib = {
     calcLinearProgression,
     calcMarkerOffsetX,
     calcMarkerOffsetY,
+    calcAverage,
     calcMedian,
     calcNutArrowPath,
     calcTrend,

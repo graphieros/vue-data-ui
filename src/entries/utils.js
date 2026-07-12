@@ -18,10 +18,12 @@ import {
 } from '../lib';
 
 import {
-    lightenColor,
+    average,
     darkenColor,
-    shiftColorHue,
+    lightenColor,
+    median,
     mergeConfigs,
+    shiftColorHue,
 } from '../exposedLib';
 
 import { createPatternDef } from '../patternUtils';
@@ -46,7 +48,14 @@ export {
     adaptColorToBackground,
 };
 
-export { lightenColor, darkenColor, shiftColorHue, mergeConfigs };
+export {
+    average,
+    lightenColor,
+    darkenColor,
+    shiftColorHue,
+    mergeConfigs,
+    median,
+};
 
 export { useObjectBindings };
 
@@ -72,6 +81,8 @@ const vueDataUiUtilities = {
     mergeConfigs,
     useObjectBindings,
     adaptColorToBackground,
+    average,
+    median,
 };
 
 export default vueDataUiUtilities;
