@@ -22,16 +22,18 @@ function makeDs(d, n) {
     const dp = {
         name: d,
         value: 0,
-        children: []
-    }
+        children: [],
+    };
     for (let i = 0; i < n; i += 1) {
         dp.children.push({
             name: `${d}_${i}`,
             value: Math.round(Math.random() * 100),
-        })
+        });
     }
-    dp.value = Math.round(dp.children.map(c => c.value).reduce((a, b) => a + b, 0))
-    return dp
+    dp.value = Math.round(
+        dp.children.map((c) => c.value).reduce((a, b) => a + b, 0),
+    );
+    return dp;
 }
 
 const dataset = ref([
@@ -40,7 +42,7 @@ const dataset = ref([
     makeDs('Series C', 12),
     makeDs('Series D', 6),
     makeDs('Series E', 3),
-])
+]);
 
 // const dataset = ref([
 //     {
@@ -220,7 +222,11 @@ const model = createModel([
     }),
     COLOR('style.chart.layout.rects.group.label.color', { def: '#FF0000' }),
 
-    NUMBER('style.chart.layout.labels.fontSizeZoomFactor', { def: 6, min: 1, max: 12}),
+    NUMBER('style.chart.layout.labels.fontSizeZoomFactor', {
+        def: 6,
+        min: 1,
+        max: 12,
+    }),
     CHECKBOX('style.chart.layout.labels.showDefaultLabels', { def: true }),
     RANGE('style.chart.layout.labels.fontSize', {
         def: 14,
