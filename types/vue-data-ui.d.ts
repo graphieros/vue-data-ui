@@ -688,6 +688,7 @@ declare module 'vue-data-ui' {
                     labels?: {
                         showDefaultLabels?: boolean;
                         fontSize?: number;
+                        fontSizeZoomFactor?: number;
                         minFontSize?: number;
                         hideUnderProportion?: number;
                         prefix?: string;

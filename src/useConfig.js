@@ -1368,6 +1368,7 @@ export function useConfig(options = {}) {
                     labels: {
                         showDefaultLabels: true,
                         fontSize: FONT._24,
+                        fontSizeZoomFactor: 6,
                         minFontSize: FONT._10,
                         hideUnderProportion: 0.03,
                         prefix: '',

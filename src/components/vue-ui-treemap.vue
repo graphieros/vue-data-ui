@@ -685,7 +685,10 @@ function getInnerTreemapBounds(rect) {
 }
 
 function shouldShowNodeLabel(rect) {
-    return shouldShowLabelByProportion(rect);
+    return (
+        FINAL_CONFIG.value.style.chart.layout.labels.hideUnderProportion ===
+            0 || shouldShowLabelByProportion(rect)
+    );
 }
 
 function shouldShowLabelByProportion(rect) {
@@ -824,6 +827,14 @@ const squarifiedRaw = computed(() => {
 
 const squarified = computed(() => squarifiedRaw.value);
 
+function getStrokeWidth(rect) {
+    const base =
+        selectedRect.value && selectedRect.value.id === rect.id
+            ? FINAL_CONFIG.value.style.chart.layout.rects.selected.strokeWidth
+            : FINAL_CONFIG.value.style.chart.layout.rects.strokeWidth;
+    return base * inverseScale.value;
+}
+
 function computeParentWrapping(rects) {
     const visibleRootId = drillStack.value.length
         ? drillStack.value[drillStack.value.length - 1]
@@ -910,11 +921,11 @@ function computeParentWrapping(rects) {
 }
 
 function getHeight({ y0, y1 }) {
-    return y1 - y0 <= 0 ? 0.0001 : y1 - y0;
+    return y1 - y0 <= 0 ? 0.0001 : Math.round((y1 - y0) * 10000) / 10000;
 }
 
 function getWidth({ x0, x1 }) {
-    return x1 - x0 <= 0 ? 0.0001 : x1 - x0;
+    return x1 - x0 <= 0 ? 0.0001 : Math.round((x1 - x0) * 10000) / 10000;
 }
 
 function getLabelFontBounds() {
@@ -1566,6 +1577,7 @@ const {
     resetZoom,
     isZoom: isPanZoom,
     setInitialViewBox,
+    scale,
 } = usePanZoom(
     svgRef,
     {
@@ -1577,6 +1589,18 @@ const {
     1,
     active,
 );
+
+const inverseScale = computed(() => 1 / scale.value);
+
+const labelZoomFactor = computed(() => {
+    return Math.min(
+        1,
+        FINAL_CONFIG.value.style.chart.layout.labels.fontSizeZoomFactor /
+            Math.max(scale.value, 0.0001),
+    );
+});
+
+const labelZoomTransform = computed(() => `scale(${labelZoomFactor.value})`);
 
 const shouldClipPanZoom = computed(() => {
     return mutableConfig.value.showZoom || isPanZoom.value;
@@ -1796,37 +1820,47 @@ function getLabelMetrics(rect, seriesIndex) {
     };
 }
 
-function getTreemapTextBox(rect, seriesIndex) {
-    return getTreemapTextBoxForFontSize(
-        rect,
-        getLabelMetrics(rect, seriesIndex).fontSize,
-    );
-}
-
 function getLabelTextColor(rect) {
     return adaptColorToBackground(
         rect.color ?? FINAL_CONFIG.value.style.chart.backgroundColor,
     );
 }
 
-function getLabelLines(rect, seriesIndex) {
-    const { fontSize, lineHeight } = getLabelMetrics(rect, seriesIndex);
-    const availableWidth = getTreemapLabelAvailableWidth(rect, seriesIndex);
-    const availableHeight = getTreemapLabelAvailableHeight(rect, seriesIndex);
-
-    if (availableWidth <= 0 || availableHeight <= 0) {
-        return [];
+function getLabelLineMaxZoomFactor({ availableHeight, lineHeight, lineIndex }) {
+    if (lineIndex === 0) {
+        return Infinity;
     }
 
-    const maxLines = Math.max(
-        Math.floor(availableHeight / Math.max(lineHeight, 0.0001)),
-        1,
-    );
+    const minimumAdaptedLineHeight = 0.0001;
+    const maximumLineHeight = availableHeight / (lineIndex + 1);
 
-    return getFullLabelLines(rect, seriesIndex)
-        .slice(0, maxLines)
-        .map((line) => String(line ?? ''))
-        .filter(Boolean);
+    if (maximumLineHeight < minimumAdaptedLineHeight) {
+        return -Infinity;
+    }
+
+    if (lineHeight <= 0) {
+        return Infinity;
+    }
+
+    return maximumLineHeight / lineHeight;
+}
+
+function shouldAlwaysShowAllLabelLines() {
+    return (
+        Number(
+            FINAL_CONFIG.value.style.chart.layout.labels.hideUnderProportion,
+        ) === 0
+    );
+}
+
+function getTreemapLabelZoomTransform(label) {
+    const zoomFactor = labelZoomFactor.value;
+
+    if (!label.alwaysShowAllLines) {
+        return labelZoomTransform.value;
+    }
+
+    return `scale(${Math.min(zoomFactor, label.allLinesScaleCap)})`;
 }
 
 function buildTreemapLabel({ rect, seriesIndex }) {
@@ -1838,14 +1872,30 @@ function buildTreemapLabel({ rect, seriesIndex }) {
         return null;
     }
 
-    const { fontSize } = getLabelMetrics(rect, seriesIndex);
+    const { fontSize, paddingX, paddingTop, lineHeight } = getLabelMetrics(
+        rect,
+        seriesIndex,
+    );
     const textColor = getLabelTextColor(rect);
-    const lines = getLabelLines(rect, seriesIndex);
-    const textBox = getTreemapTextBox(rect, seriesIndex);
+    const lines = getFullLabelLines(rect, seriesIndex).map((line) =>
+        String(line ?? ''),
+    );
+    const textBox = getTreemapTextBoxForFontSize(rect, fontSize);
 
-    if (!lines.length || textBox.width <= 0 || textBox.height <= 0) {
+    if (!lines.some(Boolean) || textBox.width <= 0 || textBox.height <= 0) {
         return null;
     }
+
+    const alwaysShowAllLines = shouldAlwaysShowAllLabelLines();
+    const allLinesScaleCap = alwaysShowAllLines
+        ? Math.max(
+              0.0001,
+              Math.min(
+                  1,
+                  textBox.height / Math.max(lines.length * lineHeight, 0.0001),
+              ),
+          )
+        : 1;
 
     const clipId = `treemap_clip_${uid.value}_${rect.id}`;
 
@@ -1861,11 +1911,19 @@ function buildTreemapLabel({ rect, seriesIndex }) {
         clipY,
         clipWidth,
         clipHeight,
+        translate: `translate(${rect.x0}, ${rect.y0})`,
+        alwaysShowAllLines,
+        allLinesScaleCap,
         lines: lines.map((line, index) => ({
             key: `${rect.id}_${index}`,
             text: line,
-            x: textBox.x,
-            y: textBox.y + textBox.lineHeight * index,
+            x: paddingX,
+            y: paddingTop + lineHeight * index,
+            maxZoomFactor: getLabelLineMaxZoomFactor({
+                availableHeight: textBox.height,
+                lineHeight,
+                lineIndex: index,
+            }),
             fill: textColor,
             fontSize,
             fontFamily: FINAL_CONFIG.value.style.fontFamily,
@@ -1923,14 +1981,6 @@ function measureTreemapTextWidth(text, fontSize, fontWeight = 400) {
 
     context.font = `${fontWeight} ${fontSize}px ${FINAL_CONFIG.value.style.fontFamily}`;
     return context.measureText(String(text)).width;
-}
-
-function getTreemapLabelAvailableWidth(rect, seriesIndex) {
-    return getTreemapTextBox(rect, seriesIndex).width;
-}
-
-function getTreemapLabelAvailableHeight(rect, seriesIndex) {
-    return getTreemapTextBox(rect, seriesIndex).height;
 }
 
 function getSafeRadius(rect) {
@@ -2472,7 +2522,11 @@ defineExpose({
                                         FINAL_CONFIG.style.chart
                                             .backgroundColor)
                             "
-                            :rx="getSafeRadius(rect)"
+                            :rx="
+                                scale > 1
+                                    ? getSafeRadius(rect) * inverseScale
+                                    : getSafeRadius(rect)
+                            "
                             :stroke="
                                 selectedRect && selectedRect.id === rect.id
                                     ? FINAL_CONFIG.style.chart.layout.rects
@@ -2480,13 +2534,7 @@ defineExpose({
                                     : FINAL_CONFIG.style.chart.layout.rects
                                           .stroke
                             "
-                            :stroke-width="
-                                selectedRect && selectedRect.id === rect.id
-                                    ? FINAL_CONFIG.style.chart.layout.rects
-                                          .selected.strokeWidth
-                                    : FINAL_CONFIG.style.chart.layout.rects
-                                          .strokeWidth
-                            "
+                            :stroke-width="getStrokeWidth(rect)"
                             @click.stop="onRectClick(rect, i)"
                             @mouseenter="
                                 () =>
@@ -2529,20 +2577,39 @@ defineExpose({
                             </clipPath>
                         </defs>
                         <g :clip-path="`url(#${label.clipId})`">
-                            <text
-                                v-for="line in label.lines"
-                                :key="line.key"
-                                class="vue-ui-treemap-data-label"
-                                :transform="`translate(${line.x}, ${line.y})`"
-                                :fill="line.fill"
-                                :font-size="line.fontSize"
-                                :font-family="line.fontFamily"
-                                :font-weight="line.fontWeight"
-                                text-anchor="start"
-                                dominant-baseline="text-before-edge"
-                            >
-                                {{ line.text }}
-                            </text>
+                            <g :transform="label.translate">
+                                <g
+                                    class="vue-ui-treemap-data-label-scale"
+                                    :transform="
+                                        getTreemapLabelZoomTransform(label)
+                                    "
+                                >
+                                    <template
+                                        v-for="line in label.lines"
+                                        :key="line.key"
+                                    >
+                                        <text
+                                            v-if="
+                                                line.text &&
+                                                (label.alwaysShowAllLines ||
+                                                    labelZoomFactor <=
+                                                        line.maxZoomFactor)
+                                            "
+                                            class="vue-ui-treemap-data-label"
+                                            :x="line.x"
+                                            :y="line.y"
+                                            :fill="line.fill"
+                                            :font-size="line.fontSize"
+                                            :font-family="line.fontFamily"
+                                            :font-weight="line.fontWeight"
+                                            text-anchor="start"
+                                            dominant-baseline="text-before-edge"
+                                        >
+                                            {{ line.text }}
+                                        </text>
+                                    </template>
+                                </g>
+                            </g>
                         </g>
                     </g>
 
@@ -2877,9 +2944,14 @@ defineExpose({
     transition: all 0.2s ease-in-out;
 }
 
+.vue-ui-treemap-data-label-scale {
+    transition: transform 0.2s ease-in-out;
+}
+
 .loading .vue-ui-treemap-rect,
 .loading .vue-ui-treemap-data-label,
-.loading .vue-ui-treemap-data-label-clip {
+.loading .vue-ui-treemap-data-label-clip,
+.loading .vue-ui-treemap-data-label-scale {
     transition: none;
 }
 
@@ -3015,7 +3087,8 @@ svg:focus-visible,
 
 .no-transition .vue-ui-treemap-rect,
 .no-transition .vue-ui-treemap-data-label,
-.no-transition .vue-ui-treemap-data-label-clip {
+.no-transition .vue-ui-treemap-data-label-clip,
+.no-transition .vue-ui-treemap-data-label-scale {
     transition: none !important;
 }
 </style>
