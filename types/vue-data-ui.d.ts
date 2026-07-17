@@ -17459,14 +17459,31 @@ declare module 'vue-data-ui' {
     //--------------------------------------------------------------------------------------------
 
     export type TooltipPositionTargetElement =
-        | HTMLElement
+        | Element
         | {
-              $el?: HTMLElement | null;
+              readonly $el?: unknown;
           };
 
-    export type TooltipPositionTarget = MaybeRefOrGetter<
-        TooltipPositionTargetElement | null | undefined
-    >;
+    export type TooltipPositionTargetValue =
+        | TooltipPositionTargetElement
+        | null
+        | undefined;
+
+    /**
+     * Structurally compatible with Ref, ShallowRef, ComputedRef and useTemplateRef.
+     *
+     * This deliberately does not extend Vue's Ref type because Ref contains a
+     * private unique-symbol brand that can become incompatible when multiple Vue
+     * type resolutions are present.
+     */
+    export type TooltipPositionTargetRef<T = TooltipPositionTargetValue> = {
+        readonly value: T;
+    };
+
+    export type TooltipPositionTarget<T = TooltipPositionTargetValue> =
+        | T
+        | TooltipPositionTargetRef<T>
+        | (() => T);
 
     /**
      * Vue Data UI composable
@@ -17476,12 +17493,12 @@ declare module 'vue-data-ui' {
      * This value can be passed to vue-data-ui component configurations using the
      * `tooltip.position` attribute.
      *
-     * @param chartRef - A Vue ref, computed ref, getter, raw `HTMLElement`, Vue component instance,
-     * or object exposing a `$el` element used as the chart container.
+     * @param chartRef - A Vue ref, shallow ref, computed ref, readonly template ref,
+     * getter, raw Element, Vue component instance, or object exposing `$el`.
      * @returns A computed tooltip position: `"center"` when the mouse is outside the element,
      * `"left"` when the mouse is on the right side of the element, otherwise `"right"`.
      */
-    export function useTooltipPosition(
-        chartRef: TooltipPositionTarget,
+    export function useTooltipPosition<T>(
+        chartRef: TooltipPositionTarget<T>,
     ): ComputedRef<TooltipPosition>;
 }

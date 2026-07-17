@@ -56,6 +56,7 @@ import { useNestedProp } from '../useNestedProp';
 import { useResponsive } from '../useResponsive';
 import { useTimeLabels } from '../useTimeLabels';
 import { useThemeCheck } from '../useThemeCheck';
+import { useMountedDelay } from '../useMountedDelay.js';
 import { useStableElementSize } from '../useStableElementSize';
 import { useChartAccessibility } from '../useChartAccessibility';
 import { useTimeLabelCollision } from '../useTimeLabelCollider';
@@ -90,6 +91,7 @@ const BaseDraggableDialog = defineAsyncComponent(
 
 const { vue_ui_stackline: DEFAULT_CONFIG } = useConfig();
 const { isThemeValid, warnInvalidTheme } = useThemeCheck();
+const { isReady } = useMountedDelay(300);
 const slots = useSlots();
 
 const props = defineProps({
@@ -831,7 +833,7 @@ const precogRect = computed(() => {
 
 const unmutableDataset = computed(() => {
     return FINAL_DATASET.value.map((ds, i) => {
-        const id = `stackline_serie_${i}`;
+        const id = createUid();
         const color =
             convertColorToHex(ds.color) ||
             customPalette.value[i] ||
@@ -3761,10 +3763,9 @@ defineExpose({
                         "
                         :opacity="FINAL_CONFIG.style.chart.lines.areaOpacity"
                         :style="{
-                            transition:
-                                loading || !FINAL_CONFIG.useCssAnimation
-                                    ? undefined
-                                    : 'all 0.3s ease-in-out',
+                            transition: loading
+                                ? undefined
+                                : 'all 0.2s ease-in-out',
                         }"
                     />
                 </template>
@@ -3786,10 +3787,9 @@ defineExpose({
                         fill="none"
                         stroke-linecap="round"
                         :style="{
-                            transition:
-                                loading || !FINAL_CONFIG.useCssAnimation
-                                    ? undefined
-                                    : 'all 0.3s ease-in-out',
+                            transition: loading
+                                ? undefined
+                                : 'all 0.2s ease-in-out',
                         }"
                     />
                 </template>
@@ -3821,15 +3821,10 @@ defineExpose({
                             :stroke-width="1"
                         />
                         <text
+                            class="vue-data-ui-datalabel"
                             data-cy="scale-label-y"
                             v-for="(yLabel, i) in yLabels"
-                            :x="yLabel.x"
-                            :y="
-                                yLabel.y +
-                                FINAL_CONFIG.style.chart.grid.y.axisLabels
-                                    .fontSize /
-                                    3
-                            "
+                            :transform="`translate(${yLabel.x}, ${yLabel.y + FINAL_CONFIG.style.chart.grid.y.axisLabels.fontSize / 3})`"
                             :font-size="
                                 FINAL_CONFIG.style.chart.grid.y.axisLabels
                                     .fontSize
@@ -4092,7 +4087,10 @@ defineExpose({
                 </template>
 
                 <!-- PLOTS -->
-                <template v-for="ds in formattedDataset">
+                <template
+                    v-for="ds in formattedDataset"
+                    :key="`shp_sel_${ds.id}`"
+                >
                     <g
                         v-if="
                             userHovers &&
@@ -4169,15 +4167,16 @@ defineExpose({
                                     :transition="
                                         loading
                                             ? undefined
-                                            : `all ${FINAL_CONFIG.style.chart.lines.transitionDurationMs}ms ease-in-out`
+                                            : `all 0.2ms ease-in-out`
                                     "
+                                    :still="loading"
                                 />
                             </template>
                         </template>
                     </g>
                 </template>
 
-                <template v-for="ds in formattedDataset">
+                <template v-for="ds in formattedDataset" :key="`shp_${ds.id}`">
                     <template
                         v-if="
                             slicer.end - slicer.start <
@@ -4185,7 +4184,10 @@ defineExpose({
                                 .hideAboveMaxSerieLength
                         "
                     >
-                        <g v-for="(plot, k) in ds.points" :key="k">
+                        <g
+                            v-for="(plot, k) in ds.points"
+                            :key="`shp_${ds.id}_${slicer.start + k}`"
+                        >
                             <Shape
                                 v-if="
                                     ds.fullSeries?.[slicer.start + ds.rel[k]] !=
@@ -4238,8 +4240,9 @@ defineExpose({
                                 :transition="
                                     loading
                                         ? undefined
-                                        : `all ${FINAL_CONFIG.style.chart.lines.transitionDurationMs}ms ease-in-out`
+                                        : `all 0.2ms ease-in-out`
                                 "
+                                :still="loading"
                             />
                         </g>
                     </template>
@@ -4254,9 +4257,13 @@ defineExpose({
                             slicer.end - slicer.start
                     "
                 >
-                    <g v-for="(dp, i) in formattedDataset" :key="i">
-                        <template v-for="(plot, j) in dp.points" :key="j">
+                    <g v-for="(dp, i) in formattedDataset" :key="`dl_${dp.id}`">
+                        <template
+                            v-for="(plot, j) in dp.points"
+                            :key="`dp_${dp.id}_${slicer.start + j}`"
+                        >
                             <text
+                                :class="{ 'vue-data-ui-datalabel': isReady }"
                                 data-cy="label-datapoint"
                                 v-if="
                                     isLabelDisplayed(
@@ -4264,21 +4271,7 @@ defineExpose({
                                         dp.proportions[j],
                                     )
                                 "
-                                :x="plot.x"
-                                :y="
-                                    plot.y +
-                                    (dp.series[j] >= 0
-                                        ? -FINAL_CONFIG.style.chart.lines
-                                              .dataLabels.fontSize /
-                                              2 +
-                                          FINAL_CONFIG.style.chart.lines
-                                              .dataLabels.offsetY
-                                        : FINAL_CONFIG.style.chart.lines
-                                              .dataLabels.fontSize *
-                                              1.2 -
-                                          FINAL_CONFIG.style.chart.lines
-                                              .dataLabels.offsetY)
-                                "
+                                :transform="`translate(${plot.x}, ${plot.y + (dp.series[j] >= 0 ? -FINAL_CONFIG.style.chart.lines.dataLabels.fontSize / 2 + FINAL_CONFIG.style.chart.lines.dataLabels.offsetY : FINAL_CONFIG.style.chart.lines.dataLabels.fontSize * 1.2 - FINAL_CONFIG.style.chart.lines.dataLabels.offsetY)})`"
                                 :font-size="
                                     FINAL_CONFIG.style.chart.lines.dataLabels
                                         .fontSize
@@ -4324,8 +4317,12 @@ defineExpose({
                             formattedDataset.length > 1
                         "
                     >
-                        <template v-for="(total, i) in totalLabels">
+                        <template
+                            v-for="(total, i) in totalLabels"
+                            :key="`total_l_${i + slicer.start}`"
+                        >
                             <text
+                                :class="{ 'vue-data-ui-datalabel': isReady }"
                                 data-cy="label-total"
                                 v-if="
                                     FINAL_CONFIG.style.chart.lines.dataLabels
@@ -4333,8 +4330,7 @@ defineExpose({
                                         ? total.value !== 0
                                         : true
                                 "
-                                :x="xAtVisibleIndex(i)"
-                                :y="placeLabelTotalY(i)"
+                                :transform="`translate(${xAtVisibleIndex(i)}, ${placeLabelTotalY(i)})`"
                                 text-anchor="middle"
                                 :font-size="
                                     FINAL_CONFIG.style.chart.lines.totalValues
@@ -4748,6 +4744,10 @@ svg:focus-visible {
     outline: 2px solid currentColor;
 }
 
+.vue-data-ui-datalabel {
+    transition: all 0.2s ease-in-out !important;
+}
+
 .sr-only {
     position: absolute;
     width: 1px;
@@ -4759,5 +4759,12 @@ svg:focus-visible {
     clip: rect(0 0 0 0);
     white-space: normal;
     border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .vue-data-ui-component * {
+        transition: none !important;
+        animation: none !important;
+    }
 }
 </style>

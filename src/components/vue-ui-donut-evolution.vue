@@ -48,6 +48,7 @@ import { useTimeLabels } from '../useTimeLabels';
 import { useNestedProp } from '../useNestedProp';
 import { useResponsive } from '../useResponsive.js';
 import { useThemeCheck } from '../useThemeCheck.js';
+import { useMountedDelay } from '../useMountedDelay.js';
 import { useUserOptionState } from '../useUserOptionState';
 import { useChartAccessibility } from '../useChartAccessibility';
 import { useTimeLabelCollision } from '../useTimeLabelCollider.js';
@@ -80,6 +81,7 @@ const BaseDraggableDialog = defineAsyncComponent(
 
 const { vue_ui_donut_evolution: DEFAULT_CONFIG } = useConfig();
 const { isThemeValid, warnInvalidTheme } = useThemeCheck();
+const { isReady } = useMountedDelay(300);
 
 const props = defineProps({
     config: {
@@ -1923,51 +1925,31 @@ defineExpose({
                         'donut-behind': hoveredIndex !== null,
                     }"
                 >
-                    <g v-for="(yLabel, i) in yLabels">
-                        <line
+                    <g v-for="(yLabel, i) in yLabels" :key="`sl_${i}`">
+                        <path
+                            :class="{ 'vue-data-ui-datalabel': isReady }"
                             data-cy="axis-y-tick"
                             v-if="
                                 yLabel.value >= niceScale.min &&
                                 yLabel.value <= niceScale.max
                             "
-                            :x1="yAxisLabelsAreRight ? svg.right : svg.left"
-                            :x2="
-                                yAxisLabelsAreRight
-                                    ? svg.right + 5
-                                    : svg.left - 5
-                            "
-                            :y1="yLabel.y"
-                            :y2="yLabel.y"
+                            :d="`M${yAxisLabelsAreRight ? svg.right : svg.left},${yLabel.y} ${yAxisLabelsAreRight ? svg.right + 5 : svg.left - 5},${yLabel.y}`"
                             :stroke="
                                 FINAL_CONFIG.style.chart.layout.grid.stroke
                             "
                             :stroke-width="
                                 FINAL_CONFIG.style.chart.layout.grid.strokeWidth
                             "
+                            stroke-linecap="round"
                         />
                         <text
                             data-cy="axis-y-label"
+                            :class="{ 'vue-data-ui-datalabel': isReady }"
                             v-if="
                                 yLabel.value >= niceScale.min &&
                                 yLabel.value <= niceScale.max
                             "
-                            :x="
-                                yAxisLabelsAreRight
-                                    ? svg.right -
-                                      FINAL_CONFIG.style.chart.layout.grid.yAxis
-                                          .dataLabels.offsetX +
-                                      7
-                                    : svg.left +
-                                      FINAL_CONFIG.style.chart.layout.grid.yAxis
-                                          .dataLabels.offsetX -
-                                      7
-                            "
-                            :y="
-                                yLabel.y +
-                                FINAL_CONFIG.style.chart.layout.grid.yAxis
-                                    .dataLabels.fontSize /
-                                    3
-                            "
+                            :transform="`translate(${yAxisLabelsAreRight ? svg.right - FINAL_CONFIG.style.chart.layout.grid.yAxis.dataLabels.offsetX + 7 : svg.left + FINAL_CONFIG.style.chart.layout.grid.yAxis.dataLabels.offsetX - 7}, ${yLabel.y + FINAL_CONFIG.style.chart.layout.grid.yAxis.dataLabels.fontSize / 3})`"
                             :font-size="
                                 FINAL_CONFIG.style.chart.layout.grid.yAxis
                                     .dataLabels.fontSize
@@ -2700,5 +2682,16 @@ svg:focus-visible {
     clip: rect(0 0 0 0);
     white-space: normal;
     border: 0;
+}
+
+.vue-data-ui-datalabel {
+    transition: all 0.2s ease-in-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .vue-data-ui-component * {
+        transition: none !important;
+        animation: none !important;
+    }
 }
 </style>

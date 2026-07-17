@@ -42,6 +42,7 @@ import { useNestedProp } from '../useNestedProp';
 import { useResponsive } from '../useResponsive';
 import { useTimeLabels } from '../useTimeLabels';
 import { useThemeCheck } from '../useThemeCheck.js';
+import { useMountedDelay } from '../useMountedDelay.js';
 import { useUserOptionState } from '../useUserOptionState';
 import { useChartAccessibility } from '../useChartAccessibility';
 import { useTimeLabelCollision } from '../useTimeLabelCollider';
@@ -72,6 +73,7 @@ const BaseDraggableDialog = defineAsyncComponent(
 
 const { vue_ui_candlestick: DEFAULT_CONFIG } = useConfig();
 const { isThemeValid, warnInvalidTheme } = useThemeCheck();
+const { isReady } = useMountedDelay(300);
 
 const props = defineProps({
     config: {
@@ -2238,7 +2240,7 @@ defineExpose({
                         "
                         ref="scaleLabels"
                     >
-                        <g v-for="(yLabel, i) in yLabels">
+                        <g v-for="(yLabel, i) in yLabels" :key="`sl_${i}`">
                             <line
                                 data-cy="y-scale-tick"
                                 v-if="
@@ -2265,22 +2267,12 @@ defineExpose({
                             />
                             <text
                                 data-cy="y-scale-label"
+                                :class="{ 'vue-data-ui-datalabel': isReady }"
                                 v-if="
                                     yLabel.value >= niceScale.min &&
                                     yLabel.value <= niceScale.max
                                 "
-                                :x="
-                                    yAxisLabelsAreRight
-                                        ? drawingArea.right +
-                                          8 +
-                                          FINAL_CONFIG.style.layout.grid.yAxis
-                                              .dataLabels.offsetX
-                                        : drawingArea.left -
-                                          8 +
-                                          FINAL_CONFIG.style.layout.grid.yAxis
-                                              .dataLabels.offsetX
-                                "
-                                :y="yLabel.y + svg.yAxisFontSize / 3"
+                                :transform="`translate(${yAxisLabelsAreRight ? drawingArea.right + 8 + FINAL_CONFIG.style.layout.grid.yAxis.dataLabels.offsetX : drawingArea.left - 8 + FINAL_CONFIG.style.layout.grid.yAxis.dataLabels.offsetX}, ${yLabel.y + svg.yAxisFontSize / 3})`"
                                 :text-anchor="
                                     yAxisLabelsAreRight ? 'start' : 'end'
                                 "
@@ -3123,7 +3115,8 @@ rect {
     z-index: 1;
 }
 
-.vue-data-ui-transition {
+.vue-data-ui-transition,
+.vue-data-ui-datalabel {
     transition: all 0.2s ease-in-out !important;
 }
 
@@ -3146,5 +3139,12 @@ svg:focus-visible {
     clip: rect(0 0 0 0);
     white-space: normal;
     border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .vue-data-ui-component * {
+        transition: none !important;
+        animation: none !important;
+    }
 }
 </style>

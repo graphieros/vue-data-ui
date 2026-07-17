@@ -84,6 +84,7 @@ import { useSvgExport } from '../useSvgExport.js';
 import { useNestedProp } from '../useNestedProp';
 import { useThemeCheck } from '../useThemeCheck.js';
 import { useTimeLabels } from '../useTimeLabels.js';
+import { useMountedDelay } from '../useMountedDelay.js';
 import { useStableElementSize } from '../useStableElementSize.js';
 import { useTimeLabelCollision } from '../useTimeLabelCollider.js';
 import img from '../img.js';
@@ -149,6 +150,7 @@ const instance = getCurrentInstance();
 
 const { vue_ui_xy: DEFAULT_CONFIG } = useConfig();
 const { isThemeValid, warnInvalidTheme } = useThemeCheck();
+const { isReady } = useMountedDelay(300);
 
 const chart = ref(null);
 const chartTitle = ref(null);
@@ -5961,7 +5963,7 @@ function createDataLabelItems(seriesSet, type) {
             }
 
             items.push({
-                key: `data_label_${type}_${serie.id}_${plot.index ?? plotIndex}`,
+                key: `data_label_${type}_${serie.id}_${(plot.index ?? plotIndex) + slicer.value.start}`,
                 serie,
                 serieIndex,
                 plot,
@@ -7525,6 +7527,9 @@ defineExpose({
                                     :style="`opacity:${selectedScale ? (selectedScale === el.groupId ? 1 : 0.3) : 1};transition:opacity 0.2s ease-in-out`"
                                 >
                                     <text
+                                        :class="{
+                                            'vue-data-ui-datalabel': isReady,
+                                        }"
                                         :fill="el.color"
                                         :font-size="fontSizes.dataLabels * 0.8"
                                         text-anchor="middle"
@@ -7651,6 +7656,9 @@ defineExpose({
                                     </template>
 
                                     <text
+                                        :class="{
+                                            'vue-data-ui-datalabel': isReady,
+                                        }"
                                         v-for="(yLabel, j) in el.yLabels"
                                         :key="`individual_scale_y_label_${el.groupId || el.id}_${yLabel.value}_${j}`"
                                         :transform="`translate(${
@@ -7752,6 +7760,9 @@ defineExpose({
                                         }"
                                     />
                                     <text
+                                        :class="{
+                                            'vue-data-ui-datalabel': isReady,
+                                        }"
                                         data-cy="axis-y-label"
                                         v-if="
                                             yLabel.value >= niceScale.min &&
@@ -7808,6 +7819,7 @@ defineExpose({
                             class="vue-ui-xy-crosshair-selection"
                         >
                             <text
+                                :class="{ 'vue-data-ui-datalabel': isReady }"
                                 v-for="plot in crosshairSelectedPlots"
                                 :key="`crosshair_y_label_${plot.serie.id}_${plot.index}`"
                                 :transform="`translate(${
@@ -8468,6 +8480,9 @@ defineExpose({
                                 :key="item.key"
                             >
                                 <text
+                                    :class="{
+                                        'vue-data-ui-datalabel': isReady,
+                                    }"
                                     data-cy="datapoint-bar-label"
                                     :text-anchor="
                                         getDataLabelTextAnchor({
@@ -8484,7 +8499,7 @@ defineExpose({
                                     :fill="FINAL_CONFIG.bar.labels.color"
                                     :stroke="FINAL_CONFIG.chart.backgroundColor"
                                     paint-order="stroke"
-                                    :style="`opacity:${selectedScale ? (selectedScale === item.serie.groupId ? 1 : 0.2) : 1};transition:opacity 0.2s ease-in-out`"
+                                    :style="`opacity:${selectedScale ? (selectedScale === item.serie.groupId ? 1 : 0.2) : 1};`"
                                     v-html="
                                         getDataLabelContent({
                                             serie: item.serie,
@@ -8504,24 +8519,14 @@ defineExpose({
                                     :key="`xLabel_bar_${i}_${j}`"
                                 >
                                     <text
+                                        :class="{
+                                            'vue-data-ui-datalabel': isReady,
+                                        }"
                                         v-if="
                                             plot &&
                                             FINAL_CONFIG.bar.serieName.show
                                         "
-                                        :x="
-                                            mutableConfig.useIndividualScale &&
-                                            mutableConfig.isStacked
-                                                ? plot.x + slot.line / 2
-                                                : plot.x + calcRectWidth() * 1.1
-                                        "
-                                        :y="
-                                            plot.y +
-                                            (plot.value > 0
-                                                ? FINAL_CONFIG.bar.serieName
-                                                      .offsetY
-                                                : -FINAL_CONFIG.bar.serieName
-                                                      .offsetY * 3)
-                                        "
+                                        :transform="`translate(${mutableConfig.useIndividualScale && mutableConfig.isStacked ? plot.x + slot.line / 2 : plot.x + calcRectWidth() * 1.1}, ${plot.y + (plot.value > 0 ? FINAL_CONFIG.bar.serieName.offsetY : -FINAL_CONFIG.bar.serieName.offsetY * 3)})`"
                                         text-anchor="middle"
                                         :font-size="fontSizes.plotLabels"
                                         :fill="
@@ -8567,6 +8572,9 @@ defineExpose({
                                 :key="item.key"
                             >
                                 <text
+                                    :class="{
+                                        'vue-data-ui-datalabel': isReady,
+                                    }"
                                     data-cy="datapoint-plot-label"
                                     :transform="
                                         getDataLabelTransformLineOrPlot({
@@ -8584,7 +8592,7 @@ defineExpose({
                                     :fill="FINAL_CONFIG.plot.labels.color"
                                     :stroke="FINAL_CONFIG.chart.backgroundColor"
                                     paint-order="stroke"
-                                    :style="`opacity:${selectedScale ? (selectedScale === item.serie.groupId ? 1 : 0.2) : 1};transition:opacity 0.2s ease-in-out`"
+                                    :style="`opacity:${selectedScale ? (selectedScale === item.serie.groupId ? 1 : 0.2) : 1}`"
                                     v-html="
                                         getDataLabelContent({
                                             serie: item.serie,
@@ -8720,6 +8728,9 @@ defineExpose({
                                 :key="item.key"
                             >
                                 <text
+                                    :class="{
+                                        'vue-data-ui-datalabel': isReady,
+                                    }"
                                     data-cy="datapoint-line-label"
                                     :transform="
                                         getDataLabelTransformLineOrPlot({
@@ -8737,7 +8748,7 @@ defineExpose({
                                     :fill="FINAL_CONFIG.line.labels.color"
                                     :stroke="FINAL_CONFIG.chart.backgroundColor"
                                     paint-order="stroke"
-                                    :style="`opacity:${selectedScale ? (selectedScale === item.serie.groupId ? 1 : 0.2) : 1};transition:opacity 0.2s ease-in-out`"
+                                    :style="`opacity:${selectedScale ? (selectedScale === item.serie.groupId ? 1 : 0.2) : 1};`"
                                     v-html="
                                         getDataLabelContent({
                                             serie: item.serie,
@@ -9088,19 +9099,13 @@ defineExpose({
                                     :marker-end="`url(#progression_arrow_${i})`"
                                 />
                                 <text
+                                    :class="{
+                                        'vue-data-ui-datalabel': isReady,
+                                    }"
                                     v-if="serie.plots.length > 1"
                                     :data-cy="`xy-progression-label-${i}`"
                                     text-anchor="middle"
-                                    :x="
-                                        calcLinearProgression(serie.plots).x2 +
-                                        (serie.type === 'bar'
-                                            ? calcRectWidth()
-                                            : 0)
-                                    "
-                                    :y="
-                                        calcLinearProgression(serie.plots).y2 -
-                                        12
-                                    "
+                                    :transform="`translate(${calcLinearProgression(serie.plots).x2 + (serie.type === 'bar' ? calcRectWidth() : 0)}, ${calcLinearProgression(serie.plots).y2 - 12})`"
                                     :font-size="fontSizes.plotLabels"
                                     :fill="serie.color"
                                     :stroke="FINAL_CONFIG.chart.backgroundColor"
@@ -9495,8 +9500,10 @@ defineExpose({
                                     "
                                     :id="annotation.id"
                                     class="vue-ui-xy-annotation-label"
-                                    :x="annotation._text.x"
-                                    :y="annotation._text.y"
+                                    :class="{
+                                        'vue-data-ui-datalabel': isReady,
+                                    }"
+                                    :transform="`translate(${annotation._text.x}, ${annotation._text.y})`"
                                     :font-size="
                                         annotation.config.label.fontSize
                                     "
@@ -10495,9 +10502,14 @@ line.vue-ui-xy-tag-plot {
     border-radius: 3px 0 0 3px;
 }
 
+.vue-data-ui-datalabel {
+    transition: all 0.2s ease-in-out;
+}
+
 .vue-ui-xy.no-transition path,
 .vue-ui-xy.no-transition line,
-.vue-ui-xy.no-transition rect {
+.vue-ui-xy.no-transition rect,
+.vue-ui-xy.no-transition .vue-data-ui-datalabel {
     transition: none !important;
 }
 
@@ -10524,5 +10536,12 @@ svg:focus-visible {
 
 .vue-ui-xy-crosshair-selection line {
     animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .vue-data-ui-component * {
+        transition: none !important;
+        animation: none !important;
+    }
 }
 </style>

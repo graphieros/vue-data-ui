@@ -52,6 +52,7 @@ import { useNestedProp } from '../useNestedProp';
 import { useResponsive } from '../useResponsive';
 import { useTimeLabels } from '../useTimeLabels';
 import { useThemeCheck } from '../useThemeCheck.js';
+import { useMountedDelay } from '../useMountedDelay.js';
 import { useUserOptionState } from '../useUserOptionState';
 import { useStableElementSize } from '../useStableElementSize.js';
 import { useChartAccessibility } from '../useChartAccessibility';
@@ -86,6 +87,7 @@ const BaseDraggableDialog = defineAsyncComponent(
 
 const { vue_ui_stackbar: DEFAULT_CONFIG } = useConfig();
 const { isThemeValid, warnInvalidTheme } = useThemeCheck();
+const { isReady } = useMountedDelay(300);
 const slots = useSlots();
 
 const props = defineProps({
@@ -888,7 +890,7 @@ const precogRect = computed(() => {
 
 const unmutableDataset = computed(() => {
     return FINAL_DATASET.value.map((ds, i) => {
-        const id = `stackbar_serie_${i}`;
+        const id = createUid();
         const datasetKey = String(ds.key ?? ds.id ?? ds.name ?? id);
         const color =
             convertColorToHex(ds.color) ||
@@ -3455,33 +3457,22 @@ defineExpose({
                         FINAL_CONFIG.orientation === 'vertical'
                     "
                 >
-                    <g v-for="(dp, i) in formattedDataset">
+                    <g v-for="(dp, i) in formattedDataset" :key="`dp_${dp.id}`">
                         <!-- RECT LABELS -->
-                        <template v-for="(rect, j) in dp.x">
+                        <template
+                            v-for="(rect, j) in dp.x"
+                            :key="`rect_${dp.id}_${slicer.start + j}`"
+                        >
                             <text
                                 data-cy="label-datapoint"
+                                :class="{ 'vue-data-ui-datalabel': isReady }"
                                 v-if="
                                     isLabelDisplayed(
                                         dp.series[j],
                                         dp.proportions[j],
                                     )
                                 "
-                                :x="
-                                    rect +
-                                    (barSlot *
-                                        (1 -
-                                            FINAL_CONFIG.style.chart.bars
-                                                .gapRatio /
-                                                2)) /
-                                        2
-                                "
-                                :y="
-                                    dp.y[j] +
-                                    dp.height[j] / 2 +
-                                    FINAL_CONFIG.style.chart.bars.dataLabels
-                                        .fontSize /
-                                        3
-                                "
+                                :transform="`translate(${rect + (barSlot * (1 - FINAL_CONFIG.style.chart.bars.gapRatio / 2)) / 2}, ${dp.y[j] + dp.height[j] / 2 + FINAL_CONFIG.style.chart.bars.dataLabels.fontSize / 3})`"
                                 :font-size="
                                     FINAL_CONFIG.style.chart.bars.dataLabels
                                         .fontSize
@@ -3531,19 +3522,20 @@ defineExpose({
                             formattedDataset.length > 1
                         "
                     >
-                        <template v-for="(total, i) in totalLabels">
+                        <template
+                            v-for="(total, i) in totalLabels"
+                            :key="`tl_${i + slicer.start}`"
+                        >
                             <text
                                 data-cy="label-total"
+                                :class="{ 'vue-data-ui-datalabel': isReady }"
                                 v-if="
                                     FINAL_CONFIG.style.chart.bars.dataLabels
                                         .hideEmptyValues
                                         ? total.value !== 0
                                         : true
                                 "
-                                :x="
-                                    drawingArea.left + barSlot * i + barSlot / 2
-                                "
-                                :y="placeLabelTotalY(i)"
+                                :transform="`translate(${drawingArea.left + barSlot * i + barSlot / 2}, ${placeLabelTotalY(i)})`"
                                 text-anchor="middle"
                                 :font-size="
                                     FINAL_CONFIG.style.chart.bars.totalValues
@@ -3585,31 +3577,14 @@ defineExpose({
                         <template v-for="(rect, j) in dp.horizontal_x">
                             <text
                                 data-cy="label-datapoint"
+                                :class="{ 'vue-data-ui-datalabel': isReady }"
                                 v-if="
                                     isLabelDisplayed(
                                         dp.series[j],
                                         dp.proportions[j],
                                     )
                                 "
-                                :x="
-                                    rect +
-                                    (dp.horizontal_width[j] < 0
-                                        ? 0.0001
-                                        : dp.horizontal_width[j]) /
-                                        2
-                                "
-                                :y="
-                                    dp.horizontal_y[j] +
-                                    (barSlot *
-                                        (1 -
-                                            FINAL_CONFIG.style.chart.bars
-                                                .gapRatio /
-                                                2)) /
-                                        2 +
-                                    FINAL_CONFIG.style.chart.bars.dataLabels
-                                        .fontSize /
-                                        3
-                                "
+                                :transform="`translate(${rect + (dp.horizontal_width[j] < 0 ? 0.0001 : dp.horizontal_width[j]) / 2}, ${dp.horizontal_y[j] + (barSlot * (1 - FINAL_CONFIG.style.chart.bars.gapRatio / 2)) / 2 + FINAL_CONFIG.style.chart.bars.dataLabels.fontSize / 3})`"
                                 :font-size="
                                     FINAL_CONFIG.style.chart.bars.dataLabels
                                         .fontSize
@@ -3661,21 +3636,14 @@ defineExpose({
                         <template v-for="(total, i) in totalLabels">
                             <text
                                 data-cy="label-total"
+                                :class="{ 'vue-data-ui-datalabel': isReady }"
                                 v-if="
                                     FINAL_CONFIG.style.chart.bars.dataLabels
                                         .hideEmptyValues
                                         ? total.value !== 0
                                         : true
                                 "
-                                :x="placeLabelTotalX(i)"
-                                :y="
-                                    drawingArea.top +
-                                    barSlot * i +
-                                    barSlot / 2 +
-                                    FINAL_CONFIG.style.chart.bars.totalValues
-                                        .fontSize /
-                                        3
-                                "
+                                :transform="`translate(${placeLabelTotalX(i)}, ${drawingArea.top + barSlot * i + barSlot / 2 + FINAL_CONFIG.style.chart.bars.totalValues.fontSize / 3})`"
                                 text-anchor="start"
                                 :font-size="
                                     FINAL_CONFIG.style.chart.bars.totalValues
@@ -3714,34 +3682,22 @@ defineExpose({
                     "
                 >
                     <g ref="scaleLabels">
-                        <line
+                        <path
                             data-cy="scale-line-y"
                             v-for="(yLabel, i) in yLabels"
-                            :x1="
-                                yAxisLabelsAreRight
-                                    ? drawingArea.right
-                                    : drawingArea.left
-                            "
-                            :x2="
-                                yAxisLabelsAreRight
-                                    ? drawingArea.right + 6
-                                    : drawingArea.left - 6
-                            "
-                            :y1="yLabel.y"
-                            :y2="yLabel.y"
+                            :key="`ty_${i}`"
                             :stroke="FINAL_CONFIG.style.chart.grid.x.axisColor"
+                            :class="{ 'vue-data-ui-datalabel': isReady }"
+                            :d="`M${yAxisLabelsAreRight ? drawingArea.right : drawingArea.left},${yLabel.y} ${yAxisLabelsAreRight ? drawingArea.right + 6 : drawingArea.left - 6},${yLabel.y}`"
                             :stroke-width="1"
+                            stroke-linecap="round"
                         />
                         <text
+                            :class="{ 'vue-data-ui-datalabel': isReady }"
                             data-cy="scale-label-y"
                             v-for="(yLabel, i) in yLabels"
-                            :x="yLabel.x"
-                            :y="
-                                yLabel.y +
-                                FINAL_CONFIG.style.chart.grid.y.axisLabels
-                                    .fontSize /
-                                    3
-                            "
+                            :key="`tl_${i}`"
+                            :transform="`translate(${yLabel.x}, ${yLabel.y + FINAL_CONFIG.style.chart.grid.y.axisLabels.fontSize / 3})`"
                             :font-size="
                                 FINAL_CONFIG.style.chart.grid.y.axisLabels
                                     .fontSize
@@ -3786,13 +3742,12 @@ defineExpose({
                     "
                 >
                     <g ref="scaleLabels">
-                        <line
+                        <path
                             data-cy="scale-line-y"
                             v-for="(yLabel, i) in yLabels"
-                            :x1="yLabel.horizontal_x"
-                            :x2="yLabel.horizontal_x"
-                            :y1="drawingArea.bottom"
-                            :y2="drawingArea.bottom + 6"
+                            :key="`scy_${i}`"
+                            :d="`M${yLabel.horizontal_x},${drawingArea.bottom} ${yLabel.horizontal_x},${drawingArea.bottom + 6}`"
+                            :class="{ 'vue-data-ui-datalabel': isReady }"
                             :stroke="FINAL_CONFIG.style.chart.grid.x.axisColor"
                             :stroke-width="1"
                             stroke-linecap="round"
@@ -3800,7 +3755,9 @@ defineExpose({
                         <text
                             data-cy="scale-label-y"
                             class="vue-data-ui-time-label"
+                            :class="{ 'vue-data-ui-datalabel': isReady }"
                             v-for="(yLabel, i) in yLabels"
+                            :key="`tly_${i}`"
                             :font-size="
                                 FINAL_CONFIG.style.chart.grid.x.timeLabels
                                     .fontSize
@@ -3935,6 +3892,9 @@ defineExpose({
                                 </text>
                                 <text
                                     v-else
+                                    :class="{
+                                        'vue-data-ui-datalabel': isReady,
+                                    }"
                                     :key="i + '-multi'"
                                     data-cy="time-label"
                                     :text-anchor="
@@ -4042,15 +4002,7 @@ defineExpose({
                                         FINAL_CONFIG.style.chart.grid.y
                                             .axisLabels.color
                                     "
-                                    :x="drawingArea.left - 8"
-                                    :y="
-                                        drawingArea.top +
-                                        barSlot * i +
-                                        barSlot / 2 +
-                                        FINAL_CONFIG.style.chart.grid.y
-                                            .axisLabels.fontSize /
-                                            3
-                                    "
+                                    :transform="`translate(${drawingArea.left - 8}, ${drawingArea.top + barSlot * i + barSlot / 2 + FINAL_CONFIG.style.chart.grid.y.axisLabels.fontSize / 3})`"
                                     :style="{
                                         cursor: isCursorPointer
                                             ? 'pointer'
@@ -4078,15 +4030,7 @@ defineExpose({
                                         FINAL_CONFIG.style.chart.grid.y
                                             .axisLabels.color
                                     "
-                                    :x="drawingArea.left - 8"
-                                    :y="
-                                        drawingArea.top +
-                                        barSlot * i +
-                                        barSlot / 2 +
-                                        FINAL_CONFIG.style.chart.grid.y
-                                            .axisLabels.fontSize /
-                                            3
-                                    "
+                                    :transform="`translate(${drawingArea.left - 8}, ${drawingArea.top + barSlot * i + barSlot / 2 + FINAL_CONFIG.style.chart.grid.y.axisLabels.fontSize / 3})`"
                                     :style="{
                                         cursor: isCursorPointer
                                             ? 'pointer'
@@ -4610,7 +4554,8 @@ defineExpose({
     transform-origin: center;
 }
 
-.vue-data-ui-bar-transition {
+.vue-data-ui-bar-transition,
+.vue-data-ui-datalabel {
     transition: all 0.2s ease-in-out !important;
 }
 
@@ -4657,5 +4602,12 @@ svg:focus-visible {
     clip: rect(0 0 0 0);
     white-space: normal;
     border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .vue-data-ui-component * {
+        transition: none !important;
+        animation: none !important;
+    }
 }
 </style>

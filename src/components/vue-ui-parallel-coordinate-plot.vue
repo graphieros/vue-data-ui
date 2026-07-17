@@ -44,6 +44,7 @@ import { useSvgExport } from '../useSvgExport';
 import { useResponsive } from '../useResponsive';
 import { useNestedProp } from '../useNestedProp';
 import { useThemeCheck } from '../useThemeCheck';
+import { useMountedDelay } from '../useMountedDelay.js';
 import { useUserOptionState } from '../useUserOptionState';
 import { useChartAccessibility } from '../useChartAccessibility';
 import { useTimeLabelCollision } from '../useTimeLabelCollider';
@@ -75,6 +76,7 @@ const BaseDraggableDialog = defineAsyncComponent(
 
 const { vue_ui_parallel_coordinate_plot: DEFAULT_CONFIG } = useConfig();
 const { isThemeValid, warnInvalidTheme } = useThemeCheck();
+const { isReady } = useMountedDelay(300);
 
 const props = defineProps({
     config: {
@@ -1582,13 +1584,12 @@ defineExpose({
                         v-if="FINAL_CONFIG.style.chart.yAxis.labels.ticks.show"
                     >
                         <!-- TICKS -->
-                        <line
-                            v-for="tick in scale.ticks"
+                        <path
+                            class="vue-ui-pcp-transition"
+                            v-for="(tick, j) in scale.ticks"
+                            :key="`tick_${scale.name}_${j}`"
                             data-cy="scale-tick"
-                            :x1="tick.x"
-                            :x2="tick.x - 10"
-                            :y1="tick.y"
-                            :y2="tick.y"
+                            :d="`M${tick.x},${tick.y} ${tick.x - 10},${tick.y}`"
                             :stroke="FINAL_CONFIG.style.chart.yAxis.stroke"
                             :stroke-width="
                                 FINAL_CONFIG.style.chart.yAxis.strokeWidth
@@ -1600,19 +1601,10 @@ defineExpose({
                         <g v-if="!loading">
                             <text
                                 data-cy="scale-label"
-                                v-for="tick in scale.ticks"
-                                :x="
-                                    tick.x -
-                                    12 +
-                                    FINAL_CONFIG.style.chart.yAxis.labels.ticks
-                                        .offsetX
-                                "
-                                :y="
-                                    tick.y +
-                                    FINAL_CONFIG.style.chart.yAxis.labels.ticks
-                                        .offsetY +
-                                    chartDimensions.ticksFontSize / 3
-                                "
+                                v-for="(tick, j) in scale.ticks"
+                                :key="`tl_${scale.name}_${j}`"
+                                :class="{ 'vue-data-ui-datalabel': isReady }"
+                                :transform="`translate(${tick.x - 12 + FINAL_CONFIG.style.chart.yAxis.labels.ticks.offsetX}, ${tick.y + FINAL_CONFIG.style.chart.yAxis.labels.ticks.offsetY + chartDimensions.ticksFontSize / 3})`"
                                 :fill="
                                     FINAL_CONFIG.style.chart.yAxis.labels.ticks
                                         .color
@@ -2222,7 +2214,8 @@ defineExpose({
     position: relative;
 }
 
-.vue-ui-pcp-transition {
+.vue-ui-pcp-transition,
+.vue-data-ui-datalabel {
     transition: all 0.2s ease-in-out;
 }
 
@@ -2273,5 +2266,12 @@ svg:focus-visible {
     clip: rect(0 0 0 0);
     white-space: normal;
     border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .vue-data-ui-component * {
+        transition: none !important;
+        animation: none !important;
+    }
 }
 </style>

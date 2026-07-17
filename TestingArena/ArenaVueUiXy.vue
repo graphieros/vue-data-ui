@@ -47,7 +47,9 @@ function createDs(n, m = 100) {
         if ([10, 11, 13, 14, 15, 20, 22, 23, 25].includes(i)) {
             arr.push(null);
         } else {
-            arr.push(Math.random() * m * (Math.random() > 0.3 ? 1 : -1));
+            arr.push(
+                Math.random() * m * (Math.random() > 0.3 ? 1 : -1) * 10000,
+            );
         }
     }
     return arr;

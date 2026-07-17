@@ -1625,6 +1625,32 @@
             "id": "91e79525-1b93-4c6d-a3dc-fac73450dc13",
             "createdAt": 1782916298857,
             "updatedAt": 1783248074096
+        },
+        {
+            "title": "Transition axis data labels",
+            "component": "",
+            "description": "Set label coordinates in transform property instead of x & y, add .vue-data-ui-scale-label css class and apply same transition properties as svg elements",
+            "priority": 2,
+            "author": "graphieros",
+            "done": true,
+            "exchanges": [],
+            "type": "feature",
+            "withComponentCheckList": false,
+            "checkList": {},
+            "withCustomCheckList": true,
+            "customCheckList": {
+                "vue-ui-stackbar": true,
+                "vue-ui-stackline": true,
+                "vue-ui-xy": true,
+                "vue-ui-candlestick": true,
+                "vue-ui-quickèchart": true,
+                "vue-ui-parallel-coordinate-plot": true,
+                "vue-ui-donut-evolution": true,
+                "vue-ui-strip-plot": true
+            },
+            "id": "09394db8-f40b-42c2-875d-28f49d3d31d5",
+            "createdAt": 1784178797161,
+            "updatedAt": 1784285765327
         }
     ]
 }

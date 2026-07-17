@@ -45,6 +45,7 @@ import { useSvgExport } from '../useSvgExport';
 import { useNestedProp } from '../useNestedProp';
 import { useResponsive } from '../useResponsive';
 import { useThemeCheck } from '../useThemeCheck';
+import { useMountedDelay } from '../useMountedDelay.js';
 import { useUserOptionState } from '../useUserOptionState';
 import { useChartAccessibility } from '../useChartAccessibility';
 import img from '../img';
@@ -76,6 +77,7 @@ const BaseDraggableDialog = defineAsyncComponent(
 
 const { vue_ui_scatter: DEFAULT_CONFIG } = useConfig();
 const { isThemeValid, warnInvalidTheme } = useThemeCheck();
+const { isReady } = useMountedDelay(300);
 
 const props = defineProps({
     config: {
@@ -2612,29 +2614,19 @@ defineExpose({
                         class="vue-ui-scatter-scale-group"
                         :key="`scatter-x-scale-${uid}-${scaleItemIndex}`"
                         :opacity="useXSelectorScaleLabel ? 0 : 1"
-                        style="transition: opacity 0.1s ease-in-out"
                     >
-                        <line
-                            :x1="scaleItem.x"
-                            :x2="scaleItem.x"
-                            :y1="zero.y - 4"
-                            :y2="zero.y + 4"
+                        <path
+                            :class="{ 'vue-data-ui-datalabel': isReady }"
                             :stroke="FINAL_CONFIG.style.layout.axis.stroke"
                             :stroke-width="
                                 FINAL_CONFIG.style.layout.axis.strokeWidth
                             "
+                            :d="`M${scaleItem.x},${zero.y - 4} ${scaleItem.x},${zero.y + 4}`"
                             stroke-linecap="round"
                         />
                         <text
-                            :x="scaleItem.x"
-                            :y="
-                                zero.y +
-                                FINAL_CONFIG.style.layout.dataLabels.xAxis
-                                    .scales.labels.fontSize +
-                                6 +
-                                FINAL_CONFIG.style.layout.dataLabels.xAxis
-                                    .scales.labels.offsetY
-                            "
+                            :class="{ 'vue-data-ui-datalabel': isReady }"
+                            :transform="`translate(${scaleItem.x}, ${zero.y + FINAL_CONFIG.style.layout.dataLabels.xAxis.scales.labels.fontSize + 6 + FINAL_CONFIG.style.layout.dataLabels.xAxis.scales.labels.offsetY})`"
                             text-anchor="middle"
                             :font-size="
                                 FINAL_CONFIG.style.layout.dataLabels.xAxis
@@ -2654,7 +2646,6 @@ defineExpose({
                 </g>
 
                 <!-- Y AXIS SCALE -->
-
                 <g
                     v-if="
                         FINAL_CONFIG.style.layout.dataLabels.yAxis.scales
@@ -2696,11 +2687,9 @@ defineExpose({
                         v-for="(scaleItem, scaleItemIndex) in yAxisScaleItems"
                         :key="`scatter-y-scale-${uid}-${scaleItemIndex}`"
                     >
-                        <line
-                            :x1="zero.x - 4"
-                            :x2="zero.x + 4"
-                            :y1="scaleItem.y"
-                            :y2="scaleItem.y"
+                        <path
+                            :class="{ 'vue-data-ui-datalabel': isReady }"
+                            :d="`M${zero.x - 4},${scaleItem.y} ${zero.x + 4},${scaleItem.y}`"
                             :stroke="FINAL_CONFIG.style.layout.axis.stroke"
                             :stroke-width="
                                 FINAL_CONFIG.style.layout.axis.strokeWidth
@@ -2709,21 +2698,8 @@ defineExpose({
                         />
 
                         <text
-                            :x="
-                                zero.x -
-                                FINAL_CONFIG.style.layout.dataLabels.yAxis
-                                    .scales.labels.fontSize /
-                                    2 -
-                                8 +
-                                FINAL_CONFIG.style.layout.dataLabels.yAxis
-                                    .scales.labels.offsetX
-                            "
-                            :y="
-                                scaleItem.y +
-                                FINAL_CONFIG.style.layout.dataLabels.yAxis
-                                    .scales.labels.fontSize /
-                                    3
-                            "
+                            :class="{ 'vue-data-ui-datalabel': isReady }"
+                            :transform="`translate(${zero.x - FINAL_CONFIG.style.layout.dataLabels.yAxis.scales.labels.fontSize / 2 - 8 + FINAL_CONFIG.style.layout.dataLabels.yAxis.scales.labels.offsetX}, ${scaleItem.y + FINAL_CONFIG.style.layout.dataLabels.yAxis.scales.labels.fontSize / 3})`"
                             text-anchor="end"
                             :font-size="
                                 FINAL_CONFIG.style.layout.dataLabels.yAxis
@@ -4331,5 +4307,20 @@ svg:focus-visible {
     clip: rect(0 0 0 0);
     white-space: normal;
     border: 0;
+}
+
+.vue-ui-scatter-scale-group {
+    transition: opacity 0.1s ease-in-out;
+}
+
+.vue-data-ui-datalabel {
+    transition: all 0.2s ease-in-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .vue-data-ui-component * {
+        transition: none !important;
+        animation: none !important;
+    }
 }
 </style>

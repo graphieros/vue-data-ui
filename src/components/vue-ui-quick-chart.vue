@@ -45,6 +45,7 @@ import { useNestedProp } from '../useNestedProp';
 import { useResponsive } from '../useResponsive';
 import { useTimeLabels } from '../useTimeLabels';
 import { useThemeCheck } from '../useThemeCheck';
+import { useMountedDelay } from '../useMountedDelay.js';
 import { useChartAccessibility } from '../useChartAccessibility';
 import { useTimeLabelCollision } from '../useTimeLabelCollider';
 import img from '../img';
@@ -68,6 +69,7 @@ const UserOptions = defineAsyncComponent(
 
 const { vue_ui_quick_chart: DEFAULT_CONFIG } = useConfig();
 const { isThemeValid, warnInvalidTheme } = useThemeCheck();
+const { isReady } = useMountedDelay(300);
 
 const props = defineProps({
     config: {
@@ -2765,25 +2767,24 @@ defineExpose({
                         v-if="FINAL_CONFIG.xyShowScale"
                         ref="scaleLabels"
                     >
-                        <template v-for="(label, i) in line.yLabels">
-                            <line
+                        <template
+                            v-for="(label, i) in line.yLabels"
+                            :key="`sl_${i}`"
+                        >
+                            <path
                                 data-cy="scale-line-tick"
+                                :class="{ 'vue-data-ui-datalabel': isReady }"
+                                :d="`M${label.x + 4},${label.y} ${line.drawingArea.left},${label.y}`"
                                 v-if="label.y <= line.drawingArea.bottom"
-                                :x1="label.x + 4"
-                                :x2="line.drawingArea.left"
-                                :y1="label.y"
-                                :y2="label.y"
                                 :stroke="FINAL_CONFIG.xyAxisStroke"
                                 :stroke-width="FINAL_CONFIG.xyAxisStrokeWidth"
                                 stroke-linecap="round"
                             />
                             <text
+                                :class="{ 'vue-data-ui-datalabel': isReady }"
                                 data-cy="scale-line-label"
                                 v-if="label.y <= line.drawingArea.bottom"
-                                :x="label.x"
-                                :y="
-                                    label.y + FINAL_CONFIG.xyLabelsYFontSize / 3
-                                "
+                                :transform="`translate(${label.x}, ${label.y + FINAL_CONFIG.xyLabelsYFontSize / 3})`"
                                 text-anchor="end"
                                 :font-size="FINAL_CONFIG.xyLabelsYFontSize"
                                 :fill="FINAL_CONFIG.color"
@@ -2921,7 +2922,10 @@ defineExpose({
                         </g>
                     </g>
                     <g class="plots">
-                        <template v-for="(ds, i) in line.dataset">
+                        <template
+                            v-for="(ds, i) in line.dataset"
+                            :key="`serie_${ds.id}`"
+                        >
                             <g class="line-plot-series">
                                 <template v-if="FINAL_CONFIG.lineSmooth">
                                     <path
@@ -2943,7 +2947,7 @@ defineExpose({
                                         :style="{
                                             transition: loading
                                                 ? undefined
-                                                : 'all 0.3s ease-in-out',
+                                                : 'all 0.2s ease-in-out',
                                         }"
                                     />
                                     <path
@@ -2965,7 +2969,7 @@ defineExpose({
                                         :style="{
                                             transition: loading
                                                 ? undefined
-                                                : 'all 0.3s ease-in-out',
+                                                : 'all 0.2s ease-in-out',
                                         }"
                                     ></path>
                                 </template>
@@ -2989,7 +2993,7 @@ defineExpose({
                                         :style="{
                                             transition: loading
                                                 ? undefined
-                                                : 'all 0.3s ease-in-out',
+                                                : 'all 0.2s ease-in-out',
                                         }"
                                     />
                                     <path
@@ -3011,11 +3015,14 @@ defineExpose({
                                         :style="{
                                             transition: loading
                                                 ? undefined
-                                                : 'all 0.3s ease-in-out',
+                                                : 'all 0.2s ease-in-out',
                                         }"
                                     />
                                 </template>
-                                <template v-for="(plot, j) in ds.coordinates">
+                                <template
+                                    v-for="(plot, j) in ds.coordinates"
+                                    :key="`dp_${ds.id}_${j + slicer.start}`"
+                                >
                                     <circle
                                         data-cy="datapoint-plot"
                                         :cx="plot.x"
@@ -3026,12 +3033,11 @@ defineExpose({
                                         stroke-width="0.5"
                                         :class="{
                                             'vue-ui-quick-chart-plot': true,
-                                            'quick-animation': !loading,
                                         }"
                                         :style="{
                                             transition: loading
                                                 ? undefined
-                                                : 'all 0.3s ease-in-out',
+                                                : 'all 0.2s ease-in-out',
                                         }"
                                     />
                                 </template>
@@ -3039,26 +3045,24 @@ defineExpose({
                         </template>
                     </g>
                     <g class="dataLabels" v-if="FINAL_CONFIG.showDataLabels">
-                        <template v-for="(ds, i) in line.dataset">
+                        <template
+                            v-for="(ds, i) in line.dataset"
+                            :key="`ds_${ds.id}`"
+                        >
                             <text
+                                class="vue-ui-quick-chart-label"
+                                :class="{ 'vue-data-ui-datalabel': isReady }"
                                 data-cy="datapoint-label"
                                 v-for="(plot, j) in ds.coordinates"
+                                :key="`plot_${ds.id}_${j + slicer.start}`"
                                 text-anchor="middle"
                                 :font-size="FINAL_CONFIG.dataLabelFontSize"
                                 :fill="ds.color"
-                                :x="plot.x"
-                                :y="
-                                    checkNaN(plot.y) -
-                                    FINAL_CONFIG.dataLabelFontSize / 2
-                                "
-                                :class="{
-                                    'vue-ui-quick-chart-label': true,
-                                    'quick-animation': !loading,
-                                }"
+                                :transform="`translate(${plot.x}, ${checkNaN(plot.y) - FINAL_CONFIG.dataLabelFontSize / 2})`"
                                 :style="{
                                     transition: loading
                                         ? undefined
-                                        : 'all 0.3s ease-in-out',
+                                        : 'all 0.2s ease-in-out',
                                 }"
                             >
                                 {{
@@ -3171,25 +3175,24 @@ defineExpose({
                         v-if="FINAL_CONFIG.xyShowScale"
                         ref="scaleLabels"
                     >
-                        <template v-for="(label, i) in bar.yLabels">
-                            <line
+                        <template
+                            v-for="(label, i) in bar.yLabels"
+                            :key="`sl_${i}`"
+                        >
+                            <path
                                 data-cy="scale-bar-tick"
+                                :class="{ 'vue-data-ui-datalabel': isReady }"
                                 v-if="label.y <= bar.drawingArea.bottom"
-                                :x1="label.x + 4"
-                                :x2="bar.drawingArea.left"
-                                :y1="label.y"
-                                :y2="label.y"
+                                :d="`M${label.x + 4},${label.y} ${bar.drawingArea.left},${label.y}`"
                                 :stroke="FINAL_CONFIG.xyAxisStroke"
                                 :stroke-width="FINAL_CONFIG.xyAxisStrokeWidth"
                                 stroke-linecap="round"
                             />
                             <text
+                                :class="{ 'vue-data-ui-datalabel': isReady }"
                                 data-cy="scale-bar-label"
                                 v-if="label.y <= bar.drawingArea.bottom"
-                                :x="label.x"
-                                :y="
-                                    label.y + FINAL_CONFIG.xyLabelsYFontSize / 3
-                                "
+                                :transform="`translate(${label.x}, ${label.y + FINAL_CONFIG.xyLabelsYFontSize / 3})`"
                                 text-anchor="end"
                                 :font-size="FINAL_CONFIG.xyLabelsYFontSize"
                                 :fill="FINAL_CONFIG.color"
@@ -3367,19 +3370,18 @@ defineExpose({
                         </template>
                     </g>
                     <g class="dataLabels" v-if="FINAL_CONFIG.showDataLabels">
-                        <template v-for="(ds, i) in bar.dataset">
+                        <template
+                            v-for="(ds, i) in bar.dataset"
+                            :key="`ds_${ds.id}`"
+                        >
                             <text
                                 data-cy="datapoint-label"
                                 v-for="(plot, j) in ds.coordinates"
-                                :x="plot.x + plot.width / 2"
-                                :y="
-                                    checkNaN(plot.y) -
-                                    FINAL_CONFIG.dataLabelFontSize / 2
-                                "
+                                :key="`plot_${j + slicer.start}`"
+                                :transform="`translate(${plot.x + plot.width / 2}, ${checkNaN(plot.y) - FINAL_CONFIG.dataLabelFontSize / 2})`"
                                 text-anchor="middle"
                                 :font-size="FINAL_CONFIG.dataLabelFontSize"
                                 :fill="ds.color"
-                                class="quick-animation"
                             >
                                 {{
                                     applyDataLabel(
@@ -4032,5 +4034,16 @@ svg:focus-visible {
     clip: rect(0 0 0 0);
     white-space: normal;
     border: 0;
+}
+
+.vue-data-ui-datalabel {
+    transition: all 0.2s ease-in-out !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .vue-data-ui-component * {
+        transition: none !important;
+        animation: none !important;
+    }
 }
 </style>

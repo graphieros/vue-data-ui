@@ -45,6 +45,7 @@ import { useSvgExport } from '../useSvgExport';
 import { useNestedProp } from '../useNestedProp';
 import { useResponsive } from '../useResponsive';
 import { useThemeCheck } from '../useThemeCheck';
+import { useMountedDelay } from '../useMountedDelay.js';
 import { useUserOptionState } from '../useUserOptionState';
 import { useChartAccessibility } from '../useChartAccessibility';
 import { useTimeLabelCollision } from '../useTimeLabelCollider';
@@ -77,6 +78,7 @@ const STRIP_PLOT_TYPES = ['classic', 'scatter', 'violin'];
 
 const { vue_ui_strip_plot: DEFAULT_CONFIG } = useConfig();
 const { isThemeValid, warnInvalidTheme } = useThemeCheck();
+const { isReady } = useMountedDelay(300);
 
 const props = defineProps({
     config: {
@@ -2101,19 +2103,10 @@ defineExpose({
                 >
                     <text
                         data-cy="axis-y-label"
+                        :class="{ 'vue-data-ui-datalabel': isReady }"
                         v-for="(label, i) in yLines"
-                        :x="
-                            label.x1 +
-                            FINAL_CONFIG.style.chart.labels.yAxisLabels
-                                .offsetX -
-                            5
-                        "
-                        :y="
-                            label.y +
-                            FINAL_CONFIG.style.chart.labels.yAxisLabels
-                                .fontSize /
-                                3
-                        "
+                        :key="`sl_${i}`"
+                        :transform="`translate(${label.x1 + FINAL_CONFIG.style.chart.labels.yAxisLabels.offsetX - 5}, ${label.y + FINAL_CONFIG.style.chart.labels.yAxisLabels.fontSize / 3})`"
                         :fill="
                             FINAL_CONFIG.style.chart.labels.yAxisLabels.color
                         "
@@ -2708,6 +2701,17 @@ svg:focus-visible {
     clip: rect(0 0 0 0);
     white-space: normal;
     border: 0;
+}
+
+.vue-data-ui-datalabel {
+    transition: all 0.2s ease-in-out !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .vue-data-ui-component * {
+        transition: none !important;
+        animation: none !important;
+    }
 }
 </style>
 
