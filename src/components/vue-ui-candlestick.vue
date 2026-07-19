@@ -1364,7 +1364,7 @@ const dataTable = computed(() => {
         });
 
         return [
-            `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 12" height="12" width="12" style="margin-right: 6px"><rect x="0" y="0" height="12" width="12" rx="${FINAL_CONFIG.value.style.layout.candle.borderRadius * 3}" fill="${FINAL_CONFIG.value.style.layout.candle.gradient.show ? (ds.isBullish ? `url(#bullish_gradient_${uid.value}` : `url(#bearish_gradient_${uid.value})`) : ds.isBullish ? FINAL_CONFIG.value.style.layout.candle.colors.bullish : FINAL_CONFIG.value.style.layout.candle.colors.bearish}"/></svg> ${timeLabel}`,
+            `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 12" height="12" width="12" style="margin-right: 6px"><rect x="0" y="0" height="12" width="12" rx="${FINAL_CONFIG.value.style.layout.candle.borderRadius * 3}" fill="${FINAL_CONFIG.value.style.layout.candle.gradient.show ? (ds.isBullish ? `url(#bullish_gradient_${uid.value})` : `url(#bearish_gradient_${uid.value})`) : ds.isBullish ? FINAL_CONFIG.value.style.layout.candle.colors.bullish : FINAL_CONFIG.value.style.layout.candle.colors.bearish}"/></svg> ${timeLabel}`,
             label_open,
             label_high,
             label_low,
