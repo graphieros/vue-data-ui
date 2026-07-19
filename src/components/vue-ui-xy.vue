@@ -2088,6 +2088,17 @@ function calcRectX(plot) {
     return plot.x + slot.value.bar / 2;
 }
 
+function getBarCenterX(plot) {
+    if (
+        mutableConfig.value.useIndividualScale &&
+        mutableConfig.value.isStacked
+    ) {
+        return plot.x + slot.value.line / 2;
+    }
+
+    return calcRectX(plot) + calcRectWidth() / 2 - barPeriodGap.value / 2;
+}
+
 function calcRectY(plot) {
     if (plot.value >= 0) return plot.y;
     return [null, undefined, NaN, Infinity, -Infinity].includes(zero.value)
@@ -5788,14 +5799,7 @@ function getDataLabelTransformBar({ plot }) {
     const barHeight = Math.abs(calcIndividualHeight(plot));
     const isNegative = plot.value < 0;
     const coords = {
-        x:
-            (mutableConfig.value.useIndividualScale &&
-            mutableConfig.value.isStacked
-                ? plot.x + slot.value.line / 2
-                : calcRectX(plot) +
-                  calcRectWidth() / 2 -
-                  barPeriodGap.value / 2) +
-            FINAL_CONFIG.value.bar.labels.offsetX,
+        x: getBarCenterX(plot) + FINAL_CONFIG.value.bar.labels.offsetX,
         y:
             checkNaN(plot.y) +
             (FINAL_CONFIG.value.bar.labels.alwaysOnTop
@@ -5847,10 +5851,7 @@ const highlighterX = computed(() => {
         return null;
     }
     return getDatapointX(
-        (selectedSerieIndex.value !== null ? selectedSerieIndex.value : 0) ||
-            (selectedMinimapIndex.value !== null
-                ? selectedMinimapIndex.value
-                : 0),
+        selectedSerieIndex.value ?? selectedMinimapIndex.value ?? 0,
     );
 });
 
@@ -5866,12 +5867,21 @@ const crosshairSelectedPlots = computed(() => {
 
     return sets.flatMap((serie) => {
         return (serie.plots || [])
-            .filter((plot, index) => isSelectedDatapoint(serie, plot, index))
-            .filter((plot) => canShowValue(plot.value))
-            .map((plot) => ({
+            .map((plot, index) => ({
+                plot,
+                index,
+            }))
+            .filter(({ plot, index }) =>
+                isSelectedDatapoint(serie, plot, index),
+            )
+            .filter(({ plot }) => canShowValue(plot.value))
+            .map(({ plot, index }) => ({
                 ...plot,
+                index: plot.index ?? index,
                 serie,
-                x: checkNaN(plot.x),
+                x: checkNaN(
+                    serie.type === 'bar' ? getBarCenterX(plot) : plot.x,
+                ),
                 y: checkNaN(plot.y),
             }));
     });
