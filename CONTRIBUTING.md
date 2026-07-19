@@ -31,12 +31,15 @@ Here are a few things you can do that will increase the likelihood of your pull 
 
 - Write and update tests.
 - Keep your changes as focused as possible. If there are multiple changes you would like to make that are not dependent upon each other, consider submitting them as separate pull requests.
-- Write a [good commit message](http://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html)
+- Write a [good commit message](http://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html) and use the [Conventional Commits](https://www.conventionalcommits.org/) format.
+- Use same format for PR titles as for commit messages.
 
 ### Commit messages examples
 
-- "Fix - {component name} - {description of the fix}"
-- "New feature - {component name} - {description of the feature}"
+- "fix: {component name} - {description of the fix}"
+- "feat: {component name} - {description of the feature}"
+- "chore(deps): {description of the dependency update}"
+- "refactor(css): {description of the css fix}"
 
 Work in Progress pull requests are also welcome to get feedback early on, or if there is something that has blocked you.
 
