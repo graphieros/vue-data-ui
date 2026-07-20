@@ -4135,9 +4135,96 @@ export function wrapText(str, maxChars = 20) {
     return result;
 }
 
+function isValidInterLinePlot(plot) {
+    return (
+        plot &&
+        ![null, undefined].includes(plot.value) &&
+        Number.isFinite(plot.x) &&
+        Number.isFinite(plot.y)
+    );
+}
+
+/**
+ * Converts 'horizontal then vertical' stepper plots into a straight polyline
+ * that the generic interline sampler can evaluate.
+ * A small x offset is inserted immediately before each vertical step so x
+ * coords remain strictly monotonic while preserving the visible step
+ */
+function expandStepperPlotsForInterLine(plots, cutNullValues) {
+    if (!Array.isArray(plots) || !plots.length) return [];
+
+    const runs = [];
+    let currentRun = [];
+
+    const flushRun = () => {
+        if (currentRun.length) {
+            runs.push(currentRun);
+            currentRun = [];
+        }
+    };
+
+    for (const plot of plots) {
+        if (isValidInterLinePlot(plot)) {
+            currentRun.push(plot);
+        } else if (cutNullValues) {
+            flushRun();
+        }
+    }
+    flushRun();
+
+    if (!cutNullValues) {
+        const connectedRun = runs.flat();
+        runs.length = 0;
+        if (connectedRun.length) runs.push(connectedRun);
+    }
+
+    const expanded = [];
+
+    runs.forEach((run, runIndex) => {
+        if (runIndex > 0) {
+            expanded.push({ x: null, y: null, value: null });
+        }
+
+        if (!run.length) return;
+        expanded.push({ ...run[0] });
+
+        for (let i = 1; i < run.length; i += 1) {
+            const previous = run[i - 1];
+            const current = run[i];
+            const deltaX = current.x - previous.x;
+
+            if (!Number.isFinite(deltaX) || deltaX === 0) {
+                expanded.push({ ...current });
+                continue;
+            }
+
+            const direction = Math.sign(deltaX);
+            const epsilon = Math.min(Math.abs(deltaX) * 1e-6, 1e-4);
+            const beforeStepX = current.x - direction * epsilon;
+            const isBetween =
+                direction > 0
+                    ? beforeStepX > previous.x
+                    : beforeStepX < previous.x;
+
+            if (isBetween) {
+                expanded.push({
+                    ...previous,
+                    x: beforeStepX,
+                    y: previous.y,
+                    value: previous.value,
+                });
+            }
+
+            expanded.push({ ...current });
+        }
+    });
+
+    return expanded;
+}
+
 /**
  * Build SVG polygons representing the filled area(s) between two lines.
- * - Works with straight or smoothed (monotone cubic) lines.
+ * - Works with straight, smoothed (monotone cubic), or stepped lines.
  * - Samples both lines on a common X grid (pixel step).
  * - Optionally merges consecutive intervals with the same nature
  *   into larger polygons (fewer path nodes).
@@ -4149,6 +4236,8 @@ export function wrapText(str, maxChars = 20) {
  *   colorLineB: string,
  *   smoothA?: boolean,
  *   smoothB?: boolean,
+ *   stepperA?: boolean,
+ *   stepperB?: boolean,
  *   sampleStepPx?: number,
  *   cutNullValues?: boolean,
  *   merge?: boolean
@@ -4157,25 +4246,34 @@ export function wrapText(str, maxChars = 20) {
  */
 export function buildInterLineAreas(opts) {
     const {
-        lineA,
-        lineB,
+        lineA: rawLineA,
+        lineB: rawLineB,
         colorLineA, // fill when A is above
         colorLineB, // fill when B is above
         smoothA = false,
         smoothB = false,
+        stepperA = false,
+        stepperB = false,
         sampleStepPx = 2,
         cutNullValues = true, // break across gaps
         merge = true, // merge into large polygons
     } = opts || {};
 
     if (
-        !Array.isArray(lineA) ||
-        !Array.isArray(lineB) ||
-        !lineA.length ||
-        !lineB.length
+        !Array.isArray(rawLineA) ||
+        !Array.isArray(rawLineB) ||
+        !rawLineA.length ||
+        !rawLineB.length
     ) {
         return [];
     }
+
+    const lineA = stepperA
+        ? expandStepperPlotsForInterLine(rawLineA, cutNullValues)
+        : rawLineA;
+    const lineB = stepperB
+        ? expandStepperPlotsForInterLine(rawLineB, cutNullValues)
+        : rawLineB;
 
     const isNum = (n) => Number.isFinite(n);
 
@@ -4472,8 +4570,8 @@ export function buildInterLineAreas(opts) {
         return out;
     }
 
-    const sampledA = sampleLine(lineA, smoothA);
-    const sampledB = sampleLine(lineB, smoothB);
+    const sampledA = sampleLine(lineA, stepperA ? false : smoothA);
+    const sampledB = sampleLine(lineB, stepperB ? false : smoothB);
 
     // insert crossing points so top is constant between consecutive samples
     const { A: refinedA, B: refinedB } = refineWithCrossings(

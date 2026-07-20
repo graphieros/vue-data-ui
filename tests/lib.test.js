@@ -4662,6 +4662,175 @@ describe('buildInterLineAreas', () => {
         expect(allClosed(merged)).toBe(true);
     });
 
+    test('stepperA uses horizontal-then-vertical geometry instead of straight interpolation', () => {
+        const A = [
+            { x: 0, y: 10, value: 1 },
+            { x: 10, y: 0, value: 1 },
+            { x: 20, y: 10, value: 1 },
+        ];
+        const B = [
+            { x: 0, y: 5, value: 1 },
+            { x: 20, y: 5, value: 1 },
+        ];
+
+        const steppedAreas = buildInterLineAreas({
+            lineA: A,
+            lineB: B,
+            colorLineA: GREEN,
+            colorLineB: RED,
+            stepperA: true,
+            sampleStepPx: 1,
+            merge: true,
+        });
+        const straightAreas = buildInterLineAreas({
+            lineA: A,
+            lineB: B,
+            colorLineA: GREEN,
+            colorLineB: RED,
+            sampleStepPx: 1,
+            merge: true,
+        });
+
+        expect(steppedAreas.map(({ color }) => color)).toStrictEqual([
+            RED,
+            GREEN,
+        ]);
+        expect(straightAreas.map(({ color }) => color)).toStrictEqual([
+            RED,
+            GREEN,
+            RED,
+        ]);
+        expect(steppedAreas).not.toStrictEqual(straightAreas);
+        expect(allClosed(steppedAreas)).toBe(true);
+    });
+
+    test('stepperA and stepperB can be applied together', () => {
+        const A = [
+            { x: 0, y: 10, value: 1 },
+            { x: 10, y: 0, value: 1 },
+            { x: 20, y: 10, value: 1 },
+        ];
+        const B = [
+            { x: 0, y: 0, value: 1 },
+            { x: 10, y: 10, value: 1 },
+            { x: 20, y: 0, value: 1 },
+        ];
+
+        const steppedAreas = buildInterLineAreas({
+            lineA: A,
+            lineB: B,
+            colorLineA: GREEN,
+            colorLineB: RED,
+            stepperA: true,
+            stepperB: true,
+            sampleStepPx: 1,
+            merge: true,
+        });
+        const straightAreas = buildInterLineAreas({
+            lineA: A,
+            lineB: B,
+            colorLineA: GREEN,
+            colorLineB: RED,
+            sampleStepPx: 1,
+            merge: true,
+        });
+
+        expect(steppedAreas.map(({ color }) => color)).toStrictEqual([
+            RED,
+            GREEN,
+        ]);
+        expect(straightAreas.map(({ color }) => color)).toStrictEqual([
+            RED,
+            GREEN,
+            RED,
+        ]);
+        expect(allClosed(steppedAreas)).toBe(true);
+    });
+
+    test('stepper mode takes precedence over smooth mode for the same line', () => {
+        const A = [
+            { x: 0, y: 10, value: 1 },
+            { x: 10, y: 0, value: 1 },
+            { x: 20, y: 10, value: 1 },
+        ];
+        const B = [
+            { x: 0, y: 5, value: 1 },
+            { x: 20, y: 5, value: 1 },
+        ];
+
+        const steppedAreas = buildInterLineAreas({
+            lineA: A,
+            lineB: B,
+            colorLineA: GREEN,
+            colorLineB: RED,
+            stepperA: true,
+            smoothA: false,
+            sampleStepPx: 1,
+            merge: true,
+        });
+        const steppedAndSmoothAreas = buildInterLineAreas({
+            lineA: A,
+            lineB: B,
+            colorLineA: GREEN,
+            colorLineB: RED,
+            stepperA: true,
+            smoothA: true,
+            sampleStepPx: 1,
+            merge: true,
+        });
+
+        expect(steppedAndSmoothAreas).toStrictEqual(steppedAreas);
+    });
+
+    test('stepper lines preserve null gaps when cutNullValues is enabled', () => {
+        const A = [
+            { x: 0, y: 0, value: 1 },
+            { x: 10, y: 0, value: 1 },
+            { x: 15, y: 0, value: null },
+            { x: 20, y: 0, value: 1 },
+            { x: 30, y: 0, value: 1 },
+        ];
+        const B = [
+            { x: 0, y: 10, value: 1 },
+            { x: 10, y: 10, value: 1 },
+            { x: 15, y: 10, value: null },
+            { x: 20, y: 10, value: 1 },
+            { x: 30, y: 10, value: 1 },
+        ];
+
+        const withCuts = buildInterLineAreas({
+            lineA: A,
+            lineB: B,
+            colorLineA: GREEN,
+            colorLineB: RED,
+            stepperA: true,
+            stepperB: true,
+            cutNullValues: true,
+            sampleStepPx: 2,
+            merge: false,
+        });
+        const withoutCuts = buildInterLineAreas({
+            lineA: A,
+            lineB: B,
+            colorLineA: GREEN,
+            colorLineB: RED,
+            stepperA: true,
+            stepperB: true,
+            cutNullValues: false,
+            sampleStepPx: 2,
+            merge: false,
+        });
+
+        expect(withCuts).toHaveLength(10);
+        expect(withoutCuts).toHaveLength(15);
+        expect(withCuts.some(({ d }) => d.includes('M10,0 L12,0'))).toBe(false);
+        expect(withoutCuts.some(({ d }) => d.includes('M10,0 L12,0'))).toBe(
+            true,
+        );
+        expect(allClosed(withCuts)).toBe(true);
+        expect(allClosed(withoutCuts)).toBe(true);
+    });
+
     test('paths are valid SVG polygons for a simple case', () => {
         const A = [
             { x: 0, y: 0, value: 1 },

@@ -4492,6 +4492,8 @@ const interLineAreas = computed(() => {
             lineB: B.plots,
             smoothA: !!A.smooth,
             smoothB: !!B.smooth,
+            stepperA: !!A.useStepper,
+            stepperB: !!B.useStepper,
             colorLineA,
             colorLineB,
             sampleStepPx: 2,
