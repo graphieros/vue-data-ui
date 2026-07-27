@@ -305,6 +305,13 @@ declare module 'vue-data-ui' {
         };
     };
 
+    export type ChartTransitions = {
+        enable?: boolean;
+        pauseOnLoad?: boolean;
+        pauseOnDatasetChange?: boolean;
+        activationDelayMs?: number;
+    };
+
     export type ChartComments = {
         show?: boolean;
         showInTooltip?: boolean;
@@ -636,6 +643,7 @@ declare module 'vue-data-ui' {
         loading?: boolean; // v3
         responsive?: boolean;
         a11y?: A11YConfig;
+        transitions?: ChartTransitions;
         events?: {
             datapointEnter?: VueUiTreemapEvent; // v3
             datapointLeave?: VueUiTreemapEvent; // v3
@@ -1002,6 +1010,7 @@ declare module 'vue-data-ui' {
         loading?: boolean; // v3
         responsive?: boolean; // v3
         a11y?: A11YConfig;
+        transitions?: ChartTransitions;
         events?: {
             // v3
             datapointEnter?: VueUiGalaxyEvent; // v3
@@ -2491,6 +2500,7 @@ declare module 'vue-data-ui' {
         loading?: boolean; // v3
         responsive?: boolean; // v3
         a11y?: A11YConfig;
+        transitions?: ChartTransitions;
         events?: {
             // v3
             datapointEnter?: VueUiDonutEvolutionEvent; // v3
@@ -3028,6 +3038,7 @@ declare module 'vue-data-ui' {
         loading?: boolean; // v3
         responsive?: boolean;
         a11y?: A11YConfig;
+        transitions?: ChartTransitions;
         events?: {
             datapointEnter?: VueUiRingsEvent; // v3
             datapointLeave?: VueUiRingsEvent; // v3
@@ -4628,6 +4639,7 @@ declare module 'vue-data-ui' {
         loading?: boolean;
         responsive?: boolean;
         a11y?: A11YConfig;
+        transitions?: ChartTransitions;
         events?: {
             // v3
             datapointEnter?: VueUiCandlestickEvent; // v3
@@ -4955,6 +4967,7 @@ declare module 'vue-data-ui' {
         loading?: boolean; // v3
         responsive?: boolean;
         a11y?: A11YConfig;
+        transitions?: ChartTransitions;
         events?: {
             datapointEnter?: VueUiScatterEvent; // v3
             datapointLeave?: VueUiScatterEvent; // v3
@@ -5679,6 +5692,7 @@ declare module 'vue-data-ui' {
         responsive?: boolean; // v3
         loading?: boolean; // v3
         a11y?: A11YConfig;
+        transitions?: ChartTransitions;
         events?: {
             // v3
             datapointEnter?: VueUiXyEvent; // v3
@@ -8660,6 +8674,7 @@ declare module 'vue-data-ui' {
         loading?: boolean; // v3
         responsive?: boolean;
         a11y?: A11YConfig;
+        transitions?: ChartTransitions;
         events?: {
             datapointEnter?: VueUiOnionEvent; // v3
             datapointLeave?: VueUiOnionEvent; // v3
@@ -8979,6 +8994,7 @@ declare module 'vue-data-ui' {
         customPalette?: string[];
         useCssAnimation?: boolean;
         a11y?: A11YConfig;
+        transitions?: ChartTransitions;
         events?: {
             datapointEnter?: VueUiVerticalBarEvent | VueUiHorizontalBarEvent;
             datapointLeave?: VueUiVerticalBarEvent | VueUiHorizontalBarEvent;
@@ -10366,6 +10382,7 @@ declare module 'vue-data-ui' {
         debug?: boolean; // v3
         loading?: boolean; // v3
         a11y?: A11YConfig;
+        transitions?: ChartTransitions;
         events?: {
             datapointEnter?: ChartEvent<object | object[]>;
             datapointLeave?: ChartEvent<object | object[]>;
@@ -10950,6 +10967,7 @@ declare module 'vue-data-ui' {
         loading?: boolean; // v3
         responsive?: boolean;
         a11y?: A11YConfig;
+        transitions?: ChartTransitions;
         events?: {
             // v3
             datapointEnter?: VueUiStripPlotEvent; // v3
@@ -12427,6 +12445,7 @@ declare module 'vue-data-ui' {
         loading?: boolean; // v3
         responsive?: boolean;
         a11y?: A11YConfig;
+        transitions?: ChartTransitions;
         events?: {
             // v3
             datapointEnter?: VueUiParallelCoordinatePlotEvent; // v3
@@ -13127,6 +13146,7 @@ declare module 'vue-data-ui' {
         customPalette?: string[];
         useCssAnimation?: boolean;
         a11y?: A11YConfig;
+        transitions?: ChartTransitions;
         events?: {
             // v3
             datapointEnter?: VueUiStackbarEvent; // v3
@@ -13567,6 +13587,7 @@ declare module 'vue-data-ui' {
         theme?: Theme;
         responsive?: boolean;
         a11y?: A11YConfig;
+        transitions?: ChartTransitions;
         events?: {
             datapointEnter?: VueUiStacklineEvent;
             datapointLeave?: VueUiStacklineEvent;
@@ -14363,6 +14384,7 @@ declare module 'vue-data-ui' {
         loading?: boolean; // v3
         responsive?: boolean;
         a11y?: A11YConfig;
+        transitions?: ChartTransitions;
         events?: {
             // v3
             datapointEnter?: VueUiHistoryPlotEvent; // v3
@@ -14726,6 +14748,7 @@ declare module 'vue-data-ui' {
         responsive?: boolean;
         loading?: boolean; // v3
         a11y?: A11YConfig;
+        transitions?: ChartTransitions;
         events?: {
             // v3
             datapointEnter?: VueUiCirclePackEvent; // v3

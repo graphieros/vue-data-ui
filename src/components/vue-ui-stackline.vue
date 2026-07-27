@@ -56,7 +56,7 @@ import { useNestedProp } from '../useNestedProp';
 import { useResponsive } from '../useResponsive';
 import { useTimeLabels } from '../useTimeLabels';
 import { useThemeCheck } from '../useThemeCheck';
-import { useMountedDelay } from '../useMountedDelay.js';
+import { useTransitions } from '../useTransitions.js';
 import { useStableElementSize } from '../useStableElementSize';
 import { useChartAccessibility } from '../useChartAccessibility';
 import { useTimeLabelCollision } from '../useTimeLabelCollider';
@@ -91,7 +91,7 @@ const BaseDraggableDialog = defineAsyncComponent(
 
 const { vue_ui_stackline: DEFAULT_CONFIG } = useConfig();
 const { isThemeValid, warnInvalidTheme } = useThemeCheck();
-const { isReady } = useMountedDelay(300);
+
 const slots = useSlots();
 
 const props = defineProps({
@@ -225,6 +225,11 @@ onMounted(() => {
 });
 
 const FINAL_CONFIG = ref(prepareConfig());
+
+const { transitionEnabled } = useTransitions({
+    config: () => FINAL_CONFIG.value.transitions,
+    dataset: () => props.dataset,
+});
 
 const isCursorPointer = computed(
     () => FINAL_CONFIG.value.userOptions.useCursorPointer,
@@ -3511,7 +3516,9 @@ defineExpose({
                 :viewBox="`0 0 ${drawingArea.chartWidth <= 0 ? 10 : drawingArea.chartWidth} ${drawingArea.chartHeight <= 0 ? 10 : drawingArea.chartHeight}`"
                 :class="{
                     'vue-data-ui-loading': loading,
-                    'no-transition': !FINAL_CONFIG.useCssAnimation,
+                    'vue-data-ui-fullscreen--on': isFullscreen,
+                    'vue-data-ui-fulscreen--off': !isFullscreen,
+                    'vue-data-ui-no-transition': !transitionEnabled,
                 }"
                 :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
                 role="img"
@@ -3762,11 +3769,7 @@ defineExpose({
                                   : ds.color
                         "
                         :opacity="FINAL_CONFIG.style.chart.lines.areaOpacity"
-                        :style="{
-                            transition: loading
-                                ? undefined
-                                : 'all 0.2s ease-in-out',
-                        }"
+                        :class="{ 'vue-data-ui-transition': transitionEnabled }"
                     />
                 </template>
                 <template v-for="ds in formattedDataset">
@@ -3786,11 +3789,7 @@ defineExpose({
                         "
                         fill="none"
                         stroke-linecap="round"
-                        :style="{
-                            transition: loading
-                                ? undefined
-                                : 'all 0.2s ease-in-out',
-                        }"
+                        :class="{ 'vue-data-ui-transition': transitionEnabled }"
                     />
                 </template>
 
@@ -3805,6 +3804,10 @@ defineExpose({
                         <line
                             data-cy="scale-line-y"
                             v-for="(yLabel, i) in yLabels"
+                            :key="`ytick_${i}`"
+                            :class="{
+                                'vue-data-ui-transition': transitionEnabled,
+                            }"
                             :x1="
                                 yAxisLabelsAreRight
                                     ? boundsX.right
@@ -3821,7 +3824,9 @@ defineExpose({
                             :stroke-width="1"
                         />
                         <text
-                            class="vue-data-ui-datalabel"
+                            :class="{
+                                'vue-data-ui-transition': transitionEnabled,
+                            }"
                             data-cy="scale-label-y"
                             v-for="(yLabel, i) in yLabels"
                             :transform="`translate(${yLabel.x}, ${yLabel.y + FINAL_CONFIG.style.chart.grid.y.axisLabels.fontSize / 3})`"
@@ -4164,12 +4169,11 @@ defineExpose({
                                         FINAL_CONFIG.style.chart.lines.dot
                                             .strokeWidth
                                     "
-                                    :transition="
-                                        loading
-                                            ? undefined
-                                            : `all 0.2ms ease-in-out`
-                                    "
                                     :still="loading"
+                                    :class="{
+                                        'vue-data-ui-transition':
+                                            transitionEnabled,
+                                    }"
                                 />
                             </template>
                         </template>
@@ -4237,12 +4241,10 @@ defineExpose({
                                     FINAL_CONFIG.style.chart.lines.dot
                                         .strokeWidth
                                 "
-                                :transition="
-                                    loading
-                                        ? undefined
-                                        : `all 0.2ms ease-in-out`
-                                "
                                 :still="loading"
+                                :class="{
+                                    'vue-data-ui-transition': transitionEnabled,
+                                }"
                             />
                         </g>
                     </template>
@@ -4263,7 +4265,9 @@ defineExpose({
                             :key="`dp_${dp.id}_${slicer.start + j}`"
                         >
                             <text
-                                :class="{ 'vue-data-ui-datalabel': isReady }"
+                                :class="{
+                                    'vue-data-ui-transition': transitionEnabled,
+                                }"
                                 data-cy="label-datapoint"
                                 v-if="
                                     isLabelDisplayed(
@@ -4322,7 +4326,9 @@ defineExpose({
                             :key="`total_l_${i + slicer.start}`"
                         >
                             <text
-                                :class="{ 'vue-data-ui-datalabel': isReady }"
+                                :class="{
+                                    'vue-data-ui-transition': transitionEnabled,
+                                }"
                                 data-cy="label-total"
                                 v-if="
                                     FINAL_CONFIG.style.chart.lines.dataLabels
@@ -4744,8 +4750,8 @@ svg:focus-visible {
     outline: 2px solid currentColor;
 }
 
-.vue-data-ui-datalabel {
-    transition: all 0.2s ease-in-out !important;
+.vue-data-ui-transition {
+    transition: all 0.2s ease-in-out;
 }
 
 .sr-only {
@@ -4766,5 +4772,10 @@ svg:focus-visible {
         transition: none !important;
         animation: none !important;
     }
+}
+
+.vue-data-ui-no-transition * {
+    transition: none !important;
+    animation: none !important;
 }
 </style>

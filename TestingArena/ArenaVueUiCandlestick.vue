@@ -24,7 +24,7 @@ function generateRandomCandlestickData({
     count = 12,
     startDate = Date.UTC(2024, 0, 1), // starting date (Jan 1, 2024)
     interval = 30 * 24 * 60 * 60 * 1000, // 1 month in ms
-    startPrice = 100,
+    startPrice = 100000,
     volatility = 0.2, // 20% volatility
 } = {}) {
     const data = [];
@@ -106,6 +106,11 @@ const model = createModel([
     CHECKBOX('debug', { def: false }),
     CHECKBOX('responsive', { def: false }),
     CHECKBOX('responsiveProportionalSizing', { def: false }),
+
+    CHECKBOX('transitions.enable', { def: true }),
+    CHECKBOX('transitions.pauseOnLoad', { def: true }),
+    CHECKBOX('transitions.pauseOnDatasetChange', { def: false }),
+    NUMBER('transitions.activationDelayMs', { def: 300 }),
 
     CHECKBOX('userOptions.useCursorPointer', { def: false }),
     CHECKBOX('userOptions.show', { def: true }),

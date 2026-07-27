@@ -48,7 +48,8 @@ import { useTimeLabels } from '../useTimeLabels';
 import { useNestedProp } from '../useNestedProp';
 import { useResponsive } from '../useResponsive.js';
 import { useThemeCheck } from '../useThemeCheck.js';
-import { useMountedDelay } from '../useMountedDelay.js';
+import { useTransitions } from '../useTransitions.js';
+import { useStableElementSize } from '../useStableElementSize.js';
 import { useUserOptionState } from '../useUserOptionState';
 import { useChartAccessibility } from '../useChartAccessibility';
 import { useTimeLabelCollision } from '../useTimeLabelCollider.js';
@@ -81,7 +82,6 @@ const BaseDraggableDialog = defineAsyncComponent(
 
 const { vue_ui_donut_evolution: DEFAULT_CONFIG } = useConfig();
 const { isThemeValid, warnInvalidTheme } = useThemeCheck();
-const { isReady } = useMountedDelay(300);
 
 const props = defineProps({
     config: {
@@ -121,6 +121,53 @@ const userOptionsRef = ref(null);
 const isCallbackImaging = ref(false);
 const isCallbackSvg = ref(false);
 
+const parentElement = shallowRef(null);
+const parentLayoutStableRunSequence = ref(0);
+const pendingParentLayoutSequence = ref(0);
+const parentStableLayoutRefreshIsQueued = ref(false);
+
+function setParentElementReference() {
+    parentElement.value = donutEvolutionChart.value?.parentNode ?? null;
+}
+
+function nextPaintFrame() {
+    return new Promise((resolve) => {
+        requestAnimationFrame(() => {
+            requestAnimationFrame(resolve);
+        });
+    });
+}
+
+async function runParentStableLayoutPass() {
+    const currentSequence = ++pendingParentLayoutSequence.value;
+    await nextTick();
+    await nextPaintFrame();
+    await nextPaintFrame();
+    if (currentSequence !== pendingParentLayoutSequence.value) return;
+    parentLayoutStableRunSequence.value += 1;
+}
+
+function queueParentStableLayoutRefresh() {
+    if (parentStableLayoutRefreshIsQueued.value) return;
+    parentStableLayoutRefreshIsQueued.value = true;
+    nextTick(() => {
+        parentStableLayoutRefreshIsQueued.value = false;
+        setParentElementReference();
+        runParentStableLayoutPass();
+    });
+}
+
+const stableParentSize = useStableElementSize({
+    elementRef: parentElement,
+    minimumWidth: 2,
+    minimumHeight: 2,
+    stableFramesRequired: 2,
+    once: false,
+    onSizeAccepted: () => {
+        runParentStableLayoutPass();
+    },
+});
+
 const chartTitle = ref(null);
 const chartLegend = ref(null);
 const source = ref(null);
@@ -144,7 +191,10 @@ const isDataset = computed(() => {
 
 onMounted(() => {
     readyTeleport.value = true;
+    setParentElementReference();
+    stableParentSize.start();
     prepareChart();
+    runParentStableLayoutPass();
 });
 
 const debug = computed(() => !!FINAL_CONFIG.value.debug);
@@ -209,6 +259,7 @@ function prepareChart() {
             requestAnimationFrame(() => {
                 defaultSizes.value.width = width;
                 defaultSizes.value.height = height - 12;
+                queueParentStableLayoutRefresh();
                 clearTimeout(to.value);
                 to.value = setTimeout(() => {
                     isLoaded.value = true;
@@ -227,9 +278,16 @@ function prepareChart() {
         observedEl.value = donutEvolutionChart.value.parentNode;
         resizeObserver.value.observe(observedEl.value);
     }
+
+    queueParentStableLayoutRefresh();
 }
 
 const FINAL_CONFIG = ref(prepareConfig());
+
+const { transitionEnabled } = useTransitions({
+    config: () => FINAL_CONFIG.value.transitions,
+    dataset: () => props.dataset,
+});
 
 const isCursorPointer = computed(
     () => FINAL_CONFIG.value.userOptions.useCursorPointer,
@@ -362,6 +420,8 @@ async function setupSlicer() {
         };
         slicerStep.value += 1;
     }
+
+    queueParentStableLayoutRefresh();
 }
 
 function validSlicerEnd(v) {
@@ -554,6 +614,18 @@ watchEffect((onInvalidate) => {
 
 onBeforeUnmount(() => {
     timeLabelsHeight.value = 0;
+    stableParentSize.stop();
+    clearTimeout(to.value);
+
+    if (resizeObserver.value) {
+        if (observedEl.value) {
+            resizeObserver.value.unobserve(observedEl.value);
+        }
+
+        resizeObserver.value.disconnect();
+        resizeObserver.value = null;
+        observedEl.value = null;
+    }
 });
 
 const timeLabelsY = computed(() => {
@@ -574,6 +646,8 @@ const timeLabelsY = computed(() => {
 });
 
 const svg = computed(() => {
+    void parentLayoutStableRunSequence.value;
+
     const scaleLabelX = getScaleLabelX();
 
     const topOffset =
@@ -774,6 +848,14 @@ const niceScale = computed(() => {
         FINAL_CONFIG.value.style.chart.layout.grid.yAxis.dataLabels.steps,
     );
 });
+
+watch(
+    () => niceScale.value.ticks.join('|'),
+    () => {
+        queueParentStableLayoutRefresh();
+    },
+    { flush: 'post' },
+);
 
 function ratioToMax(value) {
     return (
@@ -1732,6 +1814,7 @@ defineExpose({
                 :class="{
                     'vue-data-ui-fullscreen--on': isFullscreen,
                     'vue-data-ui-fulscreen--off': !isFullscreen,
+                    'vue-data-ui-no-transition': !transitionEnabled,
                 }"
                 data-cy="donut-evolution-svg"
                 :viewBox="`0 0 ${svg.absoluteWidth} ${svg.absoluteHeight}`"
@@ -1927,7 +2010,9 @@ defineExpose({
                 >
                     <g v-for="(yLabel, i) in yLabels" :key="`sl_${i}`">
                         <path
-                            :class="{ 'vue-data-ui-datalabel': isReady }"
+                            :class="{
+                                'vue-data-ui-transition': transitionEnabled,
+                            }"
                             data-cy="axis-y-tick"
                             v-if="
                                 yLabel.value >= niceScale.min &&
@@ -1944,7 +2029,9 @@ defineExpose({
                         />
                         <text
                             data-cy="axis-y-label"
-                            :class="{ 'vue-data-ui-datalabel': isReady }"
+                            :class="{
+                                'vue-data-ui-transition': transitionEnabled,
+                            }"
                             v-if="
                                 yLabel.value >= niceScale.min &&
                                 yLabel.value <= niceScale.max
@@ -2612,11 +2699,6 @@ defineExpose({
     position: relative;
 }
 
-.vue-ui-donut-evolution-focus {
-    animation: donut 0.5s ease-in-out;
-    transform-origin: center;
-}
-
 .donut-hover {
     cursor: pointer;
 }
@@ -2626,41 +2708,6 @@ defineExpose({
 }
 .donut-behind {
     opacity: 0.1;
-}
-
-@keyframes donut {
-    0% {
-        transform: scale(0.9, 0.9);
-        opacity: 0;
-    }
-    80% {
-        transform: scale(1.02, 1.02);
-        opacity: 1;
-    }
-    to {
-        transform: scale(1, 1);
-        opacity: 1;
-    }
-}
-
-.vue-ui-donut-evolution-dialog * {
-    animation: dialog-pop 0.1s ease-in !important;
-    transform-origin: center !important;
-}
-
-@keyframes dialog-pop {
-    0% {
-        transform: scale(0.8, 0.8);
-        opacity: 0;
-    }
-    90% {
-        transform: scale(1.05, 1.05);
-        opacity: 1;
-    }
-    100% {
-        transform: scale(1, 1);
-        opacity: 1;
-    }
 }
 
 svg:focus {
@@ -2684,7 +2731,7 @@ svg:focus-visible {
     border: 0;
 }
 
-.vue-data-ui-datalabel {
+.vue-data-ui-transition {
     transition: all 0.2s ease-in-out;
 }
 
@@ -2693,5 +2740,10 @@ svg:focus-visible {
         transition: none !important;
         animation: none !important;
     }
+}
+
+.vue-data-ui-no-transition * {
+    transition: none !important;
+    animation: none !important;
 }
 </style>

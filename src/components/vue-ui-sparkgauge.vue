@@ -471,4 +471,11 @@ onBeforeUnmount(() => {
         opacity: -1;
     }
 }
+
+@media (prefers-reduced-motion: reduce) {
+    .vue-data-ui-component * {
+        transition: none !important;
+        animation: none !important;
+    }
+}
 </style>

@@ -1136,4 +1136,14 @@ text.vue-ui-thermometer-temperature-value {
         height: v-bind(cssTemp);
     }
 }
+
+@media (prefers-reduced-motion: reduce) {
+    .vue-data-ui-component * {
+        transition: none !important;
+        animation: none !important;
+    }
+    text.vue-ui-thermometer-temperature-value {
+        opacity: 1;
+    }
+}
 </style>

@@ -33,6 +33,7 @@ import { useResponsive } from '../useResponsive';
 import { useThemeCheck } from '../useThemeCheck';
 import { useUserOptionState } from '../useUserOptionState';
 import { useChartAccessibility } from '../useChartAccessibility';
+import { usePrefersReducedMotion } from '../usePrefersMotion';
 import img from '../img';
 import Title from '../atoms/Title.vue'; // Must be ready in responsive mode
 import themes from '../themes/vue_ui_funnel.json'; // Must be ready in responsive mode
@@ -57,6 +58,7 @@ const BaseDraggableDialog = defineAsyncComponent(
 
 const { vue_ui_funnel: DEFAULT_CONFIG } = useConfig();
 const { isThemeValid, warnInvalidTheme } = useThemeCheck();
+const prefersReducedMotion = usePrefersReducedMotion();
 
 const props = defineProps({
     config: {
@@ -902,15 +904,18 @@ defineExpose({
                 "
                 stroke-linecap="round"
                 :class="{
-                    animated: FINAL_CONFIG.useCssAnimation,
+                    animated:
+                        FINAL_CONFIG.useCssAnimation && !prefersReducedMotion,
                 }"
                 :style="{
-                    strokeDasharray: FINAL_CONFIG.useCssAnimation
-                        ? drawingArea.height
-                        : 0,
-                    strokeDashoffset: FINAL_CONFIG.useCssAnimation
-                        ? drawingArea.height
-                        : 0,
+                    strokeDasharray:
+                        FINAL_CONFIG.useCssAnimation && !prefersReducedMotion
+                            ? drawingArea.height
+                            : 0,
+                    strokeDashoffset:
+                        FINAL_CONFIG.useCssAnimation && !prefersReducedMotion
+                            ? drawingArea.height
+                            : 0,
                 }"
             />
 
@@ -921,7 +926,10 @@ defineExpose({
                 :stroke="FINAL_CONFIG.style.chart.circles.stroke"
                 :stroke-width="FINAL_CONFIG.style.chart.circles.strokeWidth"
                 :class="{
-                    animated: FINAL_CONFIG.useCssAnimation && !loaded,
+                    animated:
+                        FINAL_CONFIG.useCssAnimation &&
+                        !loaded &&
+                        !prefersReducedMotion,
                 }"
                 :style="{
                     animationDelay: `${150 * i}ms`,
@@ -951,7 +959,10 @@ defineExpose({
                         : 'normal'
                 "
                 :class="{
-                    animated: FINAL_CONFIG.useCssAnimation && !loaded,
+                    animated:
+                        FINAL_CONFIG.useCssAnimation &&
+                        !loaded &&
+                        !prefersReducedMotion,
                 }"
                 :style="{
                     animationDelay: `${150 * i}ms`,
@@ -978,7 +989,10 @@ defineExpose({
                 :points="funnelArea"
                 :fill="`url(#funnel_area_${uid})`"
                 :class="{
-                    animated: FINAL_CONFIG.useCssAnimation && !loaded,
+                    animated:
+                        FINAL_CONFIG.useCssAnimation &&
+                        !loaded &&
+                        !prefersReducedMotion,
                 }"
                 :style="{
                     transition: FINAL_CONFIG.useCssAnimation
@@ -995,7 +1009,10 @@ defineExpose({
                 :stroke-width="FINAL_CONFIG.style.chart.bars.strokeWidth"
                 :rx="FINAL_CONFIG.style.chart.bars.borderRadius"
                 :class="{
-                    animated: FINAL_CONFIG.useCssAnimation && !loaded,
+                    animated:
+                        FINAL_CONFIG.useCssAnimation &&
+                        !loaded &&
+                        !prefersReducedMotion,
                 }"
                 :style="{
                     animationDelay: `${150 * i}ms`,
@@ -1025,7 +1042,10 @@ defineExpose({
                             : 'normal'
                     "
                     :class="{
-                        animated: FINAL_CONFIG.useCssAnimation && !loaded,
+                        animated:
+                            FINAL_CONFIG.useCssAnimation &&
+                            !loaded &&
+                            !prefersReducedMotion,
                     }"
                     :style="{
                         animationDelay: `${150 * i}ms`,
@@ -1055,7 +1075,10 @@ defineExpose({
                             : 'normal'
                     "
                     :class="{
-                        animated: FINAL_CONFIG.useCssAnimation && !loaded,
+                        animated:
+                            FINAL_CONFIG.useCssAnimation &&
+                            !loaded &&
+                            !prefersReducedMotion,
                     }"
                     :style="{
                         animationDelay: `${150 * i}ms`,

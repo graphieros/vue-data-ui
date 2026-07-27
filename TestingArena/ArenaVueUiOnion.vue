@@ -24,7 +24,7 @@ onMounted(() => {
     setTimeout(() => {
         dataset.value = [
             {
-                name: 'Serie 1',
+                name: 'Serie 1 with a long name',
                 percentage: 20,
                 value: 1200,
             },

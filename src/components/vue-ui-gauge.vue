@@ -42,6 +42,7 @@ import { useNestedProp } from '../useNestedProp';
 import { useThemeCheck } from '../useThemeCheck.js';
 import { useUserOptionState } from '../useUserOptionState';
 import { useChartAccessibility } from '../useChartAccessibility.js';
+import { usePrefersReducedMotion } from '../usePrefersMotion';
 import { useAutoSizeLabelsInsideViewbox } from '../useAutoSizeLabelsInsideViewbox.js';
 import img from '../img.js';
 import themes from '../themes/vue_ui_gauge.json';
@@ -61,6 +62,7 @@ const PackageVersion = defineAsyncComponent(
 
 const { vue_ui_gauge: DEFAULT_CONFIG } = useConfig();
 const { isThemeValid, warnInvalidTheme } = useThemeCheck();
+const prefersReducedMotion = usePrefersReducedMotion();
 
 const props = defineProps({
     config: {
@@ -299,11 +301,33 @@ const svg = ref({
 const max = ref(0);
 const min = ref(0);
 
+const shouldAnimate = computed(
+    () =>
+        FINAL_CONFIG.value.style.chart.animation.use &&
+        !prefersReducedMotion.value,
+);
+
 const activeRating = ref(
-    FINAL_CONFIG.value.style.chart.animation.use
+    shouldAnimate.value
         ? Math.min(...FINAL_DATASET.value.series.map((s) => s.from))
         : FINAL_DATASET.value.value,
 );
+
+let animationFrame = null;
+
+function stopAnimation() {
+    if (animationFrame !== null) {
+        cancelAnimationFrame(animationFrame);
+        animationFrame = null;
+    }
+}
+
+watch(shouldAnimate, (animationEnabled) => {
+    if (!animationEnabled) {
+        stopAnimation();
+        activeRating.value = FINAL_DATASET.value.value;
+    }
+});
 
 watch(
     () => FINAL_DATASET.value.value,
@@ -547,6 +571,8 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
+    stopAnimation();
+
     if (resizeObserver.value) {
         if (observedEl.value) {
             resizeObserver.value.unobserve(observedEl.value);
@@ -564,10 +590,23 @@ function useAnimation(targetValue) {
     max.value = Math.max(...arr);
     min.value = Math.min(...arr);
 
-    let speed = FINAL_CONFIG.value.style.chart.animation.speed;
+    stopAnimation();
+
+    if (!shouldAnimate.value) {
+        activeRating.value = targetValue;
+        return;
+    }
+
+    const speed = FINAL_CONFIG.value.style.chart.animation.speed;
     const chunk = Math.abs(targetValue - activeRating.value) / (speed * 60);
 
     function animate() {
+        if (!shouldAnimate.value) {
+            activeRating.value = targetValue;
+            animationFrame = null;
+            return;
+        }
+
         if (activeRating.value < targetValue) {
             activeRating.value = Math.min(
                 activeRating.value + chunk,
@@ -581,9 +620,12 @@ function useAnimation(targetValue) {
         }
 
         if (activeRating.value !== targetValue) {
-            requestAnimationFrame(animate);
+            animationFrame = requestAnimationFrame(animate);
+        } else {
+            animationFrame = null;
         }
     }
+
     animate();
 }
 

@@ -43,6 +43,7 @@ import { useSvgExport } from '../useSvgExport';
 import { useNestedProp } from '../useNestedProp';
 import { useResponsive } from '../useResponsive';
 import { useThemeCheck } from '../useThemeCheck';
+import { useTransitions } from '../useTransitions.js';
 import { useUserOptionState } from '../useUserOptionState';
 import { useChartAccessibility } from '../useChartAccessibility';
 import img from '../img';
@@ -123,6 +124,11 @@ const tooltipTriggerMode = ref('pointer'); // a11y
 const isFocus = ref(false); // a11y
 
 const FINAL_CONFIG = ref(prepareConfig());
+
+const { transitionEnabled } = useTransitions({
+    config: () => FINAL_CONFIG.value.transitions,
+    dataset: () => props.dataset,
+});
 
 const isCursorPointer = computed(
     () => FINAL_CONFIG.value.userOptions.useCursorPointer,
@@ -1426,6 +1432,7 @@ defineExpose({
                     'vue-data-ui-fullscreen--on': isFullscreen,
                     'vue-data-ui-fulscreen--off': !isFullscreen,
                     resizing: resizing || loading,
+                    'vue-data-ui-no-transition': !transitionEnabled,
                 }"
                 data-cy="rings-svg"
                 :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`"
@@ -1493,12 +1500,12 @@ defineExpose({
                 </g>
 
                 <!-- RINGS -->
-                <g v-for="(ring, i) in convertedDataset">
+                <g v-for="(ring, i) in convertedDataset" :key="`r_${ring.uid}`">
                     <circle
                         data-cy="ring-underlayer"
                         :class="{
-                            'vue-ui-rings-item':
-                                isLoaded && FINAL_CONFIG.useCssAnimation,
+                            'vue-data-ui-transition':
+                                isLoaded && transitionEnabled,
                             'vue-rings-item-onload':
                                 !isLoaded &&
                                 FINAL_CONFIG.useCssAnimation &&
@@ -1520,8 +1527,8 @@ defineExpose({
                     <circle
                         data-cy="ring"
                         :class="{
-                            'vue-ui-rings-item':
-                                isLoaded && FINAL_CONFIG.useCssAnimation,
+                            'vue-data-ui-transition':
+                                isLoaded && transitionEnabled,
                             'vue-rings-item-onload':
                                 !isLoaded &&
                                 FINAL_CONFIG.useCssAnimation &&
@@ -1550,8 +1557,8 @@ defineExpose({
                         v-if="$slots.pattern"
                         :data-cy="`ring-pattern-${i}`"
                         :class="{
-                            'vue-ui-rings-item':
-                                isLoaded && FINAL_CONFIG.useCssAnimation,
+                            'vue-data-ui-transition':
+                                isLoaded && transitionEnabled,
                             'vue-rings-item-onload':
                                 !isLoaded &&
                                 FINAL_CONFIG.useCssAnimation &&
@@ -1617,8 +1624,8 @@ defineExpose({
                                     .dataLabels.markers.strokeWidth
                             "
                             :class="{
-                                'vue-ui-rings-item':
-                                    isLoaded && FINAL_CONFIG.useCssAnimation,
+                                'vue-data-ui-transition':
+                                    isLoaded && transitionEnabled,
                                 'vue-rings-item-onload':
                                     !isLoaded &&
                                     FINAL_CONFIG.useCssAnimation &&
@@ -1642,8 +1649,8 @@ defineExpose({
                             :fill="ring.color"
                             :stroke="FINAL_CONFIG.style.chart.backgroundColor"
                             :class="{
-                                'vue-ui-rings-item':
-                                    isLoaded && FINAL_CONFIG.useCssAnimation,
+                                'vue-data-ui-transition':
+                                    isLoaded && transitionEnabled,
                                 'vue-rings-item-onload':
                                     !isLoaded &&
                                     FINAL_CONFIG.useCssAnimation &&
@@ -1658,21 +1665,6 @@ defineExpose({
                         />
 
                         <text
-                            :x="
-                                getMarkerCoordinates(ring, i).x +
-                                (FINAL_CONFIG.style.chart.layout.labels
-                                    .dataLabels.markers.position === 'left'
-                                    ? -FINAL_CONFIG.style.chart.layout.labels
-                                          .dataLabels.offsetX
-                                    : FINAL_CONFIG.style.chart.layout.labels
-                                          .dataLabels.offsetX)
-                            "
-                            :y="
-                                getMarkerCoordinates(ring, i).y +
-                                FINAL_CONFIG.style.chart.layout.labels
-                                    .dataLabels.fontSize /
-                                    3
-                            "
                             :text-anchor="
                                 FINAL_CONFIG.style.chart.layout.labels
                                     .dataLabels.markers.position === 'left'
@@ -1694,8 +1686,8 @@ defineExpose({
                                     : 'normal'
                             "
                             :class="{
-                                'vue-ui-rings-item':
-                                    isLoaded && FINAL_CONFIG.useCssAnimation,
+                                'vue-data-ui-transition':
+                                    isLoaded && transitionEnabled,
                                 'vue-rings-item-onload':
                                     !isLoaded &&
                                     FINAL_CONFIG.useCssAnimation &&
@@ -1707,6 +1699,21 @@ defineExpose({
                                     selectedSerie !== null &&
                                     selectedSerie !== i,
                             }"
+                            :transform="`translate(${
+                                getMarkerCoordinates(ring, i).x +
+                                (FINAL_CONFIG.style.chart.layout.labels
+                                    .dataLabels.markers.position === 'left'
+                                    ? -FINAL_CONFIG.style.chart.layout.labels
+                                          .dataLabels.offsetX - 6
+                                    : FINAL_CONFIG.style.chart.layout.labels
+                                          .dataLabels.offsetX) +
+                                6
+                            }, ${
+                                getMarkerCoordinates(ring, i).y +
+                                FINAL_CONFIG.style.chart.layout.labels
+                                    .dataLabels.fontSize /
+                                    3
+                            })`"
                             @mouseenter="useTooltip(ring, i, 'pointer')"
                             @mouseleave="onTrapLeave(ring, i)"
                             @click="onTrapClick(ring, i)"
@@ -1718,28 +1725,8 @@ defineExpose({
                                             .dataLabels.fontSize,
                                     fill: FINAL_CONFIG.style.chart.layout.labels
                                         .dataLabels.color,
-                                    x:
-                                        getMarkerCoordinates(ring, i).x +
-                                        (FINAL_CONFIG.style.chart.layout.labels
-                                            .dataLabels.markers.position ===
-                                        'left'
-                                            ? -FINAL_CONFIG.style.chart.layout
-                                                  .labels.dataLabels.offsetX -
-                                              6 -
-                                              FINAL_CONFIG.style.chart.layout
-                                                  .labels.dataLabels.markers
-                                                  .radius
-                                            : FINAL_CONFIG.style.chart.layout
-                                                  .labels.dataLabels.offsetX +
-                                              6 +
-                                              FINAL_CONFIG.style.chart.layout
-                                                  .labels.dataLabels.markers
-                                                  .radius),
-                                    y:
-                                        getMarkerCoordinates(ring, i).y +
-                                        FINAL_CONFIG.style.chart.layout.labels
-                                            .dataLabels.fontSize /
-                                            3,
+                                    x: 0,
+                                    y: 0,
                                     translateY: true,
                                 })
                             "
@@ -2002,10 +1989,6 @@ defineExpose({
     transition: opacity 0.15s ease-in-out;
 }
 
-.vue-ui-rings-item {
-    transition: all 0.2s ease-in-out;
-}
-
 .resizing .vue-ui-rings-item {
     transition: none;
 }
@@ -2055,5 +2038,21 @@ svg:focus-visible {
     clip: rect(0 0 0 0);
     white-space: normal;
     border: 0;
+}
+
+.vue-data-ui-transition {
+    transition: all 0.2s ease-in-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .vue-data-ui-component * {
+        transition: none !important;
+        animation: none !important;
+    }
+}
+
+.vue-data-ui-no-transition * {
+    transition: none !important;
+    animation: none !important;
 }
 </style>

@@ -1329,7 +1329,6 @@ defineExpose({
                 :class="{
                     'vue-data-ui-fullscreen--on': isFullscreen,
                     'vue-data-ui-fulscreen--off': !isFullscreen,
-                    animated: FINAL_CONFIG.useCssAnimation,
                 }"
                 data-cy="3d-bar-svg"
                 :viewBox="`0 0 ${svg.absoluteWidth} ${svg.height}`"
@@ -2622,27 +2621,6 @@ defineExpose({
 }
 .vue-ui-3d-bar-stack {
     transition: opacity 0.2s ease-in-out;
-}
-.animated {
-    .vue-ui-donut-arc-path {
-        animation: donut 0.5s ease-in-out;
-        transform-origin: center;
-    }
-}
-
-@keyframes donut {
-    0% {
-        transform: scale(0.9, 0.9);
-        opacity: 0;
-    }
-    80% {
-        transform: scale(1.02, 1.02);
-        opacity: 1;
-    }
-    to {
-        transform: scale(1, 1);
-        opacity: 1;
-    }
 }
 
 svg:focus {

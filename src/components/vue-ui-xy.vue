@@ -84,7 +84,7 @@ import { useSvgExport } from '../useSvgExport.js';
 import { useNestedProp } from '../useNestedProp';
 import { useThemeCheck } from '../useThemeCheck.js';
 import { useTimeLabels } from '../useTimeLabels.js';
-import { useMountedDelay } from '../useMountedDelay.js';
+import { useTransitions } from '../useTransitions.js';
 import { useStableElementSize } from '../useStableElementSize.js';
 import { useTimeLabelCollision } from '../useTimeLabelCollider.js';
 import img from '../img.js';
@@ -150,7 +150,6 @@ const instance = getCurrentInstance();
 
 const { vue_ui_xy: DEFAULT_CONFIG } = useConfig();
 const { isThemeValid, warnInvalidTheme } = useThemeCheck();
-const { isReady } = useMountedDelay(300);
 
 const chart = ref(null);
 const chartTitle = ref(null);
@@ -496,6 +495,11 @@ const isDataset = computed({
 });
 
 const FINAL_CONFIG = ref(prepareConfig());
+
+const { transitionEnabled } = useTransitions({
+    config: () => FINAL_CONFIG.value.transitions,
+    dataset: () => props.dataset,
+});
 
 const isCursorPointer = computed(
     () => FINAL_CONFIG.value.chart.userOptions.useCursorPointer,
@@ -6655,6 +6659,7 @@ defineExpose({
                 :class="{
                     'vue-data-ui-fullscreen--on': isFullscreen,
                     'vue-data-ui-fulscreen--off': !isFullscreen,
+                    'vue-data-ui-no-transition': !transitionEnabled,
                 }"
                 data-cy="xy-svg"
                 :width="'100%'"
@@ -7540,7 +7545,8 @@ defineExpose({
                                 >
                                     <text
                                         :class="{
-                                            'vue-data-ui-datalabel': isReady,
+                                            'vue-data-ui-transition':
+                                                transitionEnabled,
                                         }"
                                         :fill="el.color"
                                         :font-size="fontSizes.dataLabels * 0.8"
@@ -7669,7 +7675,8 @@ defineExpose({
 
                                     <text
                                         :class="{
-                                            'vue-data-ui-datalabel': isReady,
+                                            'vue-data-ui-transition':
+                                                transitionEnabled,
                                         }"
                                         v-for="(yLabel, j) in el.yLabels"
                                         :key="`individual_scale_y_label_${el.groupId || el.id}_${yLabel.value}_${j}`"
@@ -7773,7 +7780,8 @@ defineExpose({
                                     />
                                     <text
                                         :class="{
-                                            'vue-data-ui-datalabel': isReady,
+                                            'vue-data-ui-transition':
+                                                transitionEnabled,
                                         }"
                                         data-cy="axis-y-label"
                                         v-if="
@@ -7831,7 +7839,9 @@ defineExpose({
                             class="vue-ui-xy-crosshair-selection"
                         >
                             <text
-                                :class="{ 'vue-data-ui-datalabel': isReady }"
+                                :class="{
+                                    'vue-data-ui-transition': transitionEnabled,
+                                }"
                                 v-for="plot in crosshairSelectedPlots"
                                 :key="`crosshair_y_label_${plot.serie.id}_${plot.index}`"
                                 :transform="`translate(${
@@ -8493,7 +8503,8 @@ defineExpose({
                             >
                                 <text
                                     :class="{
-                                        'vue-data-ui-datalabel': isReady,
+                                        'vue-data-ui-transition':
+                                            transitionEnabled,
                                     }"
                                     data-cy="datapoint-bar-label"
                                     :text-anchor="
@@ -8532,7 +8543,8 @@ defineExpose({
                                 >
                                     <text
                                         :class="{
-                                            'vue-data-ui-datalabel': isReady,
+                                            'vue-data-ui-transition':
+                                                transitionEnabled,
                                         }"
                                         v-if="
                                             plot &&
@@ -8585,7 +8597,8 @@ defineExpose({
                             >
                                 <text
                                     :class="{
-                                        'vue-data-ui-datalabel': isReady,
+                                        'vue-data-ui-transition':
+                                            transitionEnabled,
                                     }"
                                     data-cy="datapoint-plot-label"
                                     :transform="
@@ -8741,7 +8754,8 @@ defineExpose({
                             >
                                 <text
                                     :class="{
-                                        'vue-data-ui-datalabel': isReady,
+                                        'vue-data-ui-transition':
+                                            transitionEnabled,
                                     }"
                                     data-cy="datapoint-line-label"
                                     :transform="
@@ -9112,7 +9126,8 @@ defineExpose({
                                 />
                                 <text
                                     :class="{
-                                        'vue-data-ui-datalabel': isReady,
+                                        'vue-data-ui-transition':
+                                            transitionEnabled,
                                     }"
                                     v-if="serie.plots.length > 1"
                                     :data-cy="`xy-progression-label-${i}`"
@@ -9513,7 +9528,8 @@ defineExpose({
                                     :id="annotation.id"
                                     class="vue-ui-xy-annotation-label"
                                     :class="{
-                                        'vue-data-ui-datalabel': isReady,
+                                        'vue-data-ui-transition':
+                                            transitionEnabled,
                                     }"
                                     :transform="`translate(${annotation._text.x}, ${annotation._text.y})`"
                                     :font-size="
@@ -10423,30 +10439,6 @@ defineExpose({
     transition: unset;
 }
 
-path,
-line,
-rect {
-    animation: xyAnimation 0.5s ease-in-out;
-    transform-origin: center;
-}
-
-@keyframes xyAnimation {
-    0% {
-        transform: scale(0.9, 0.9);
-        opacity: 0;
-    }
-
-    80% {
-        transform: scale(1.02, 1.02);
-        opacity: 1;
-    }
-
-    to {
-        transform: scale(1, 1);
-        opacity: 1;
-    }
-}
-
 .vue-ui-xy {
     position: relative;
 }
@@ -10514,14 +10506,14 @@ line.vue-ui-xy-tag-plot {
     border-radius: 3px 0 0 3px;
 }
 
-.vue-data-ui-datalabel {
+.vue-data-ui-transition {
     transition: all 0.2s ease-in-out;
 }
 
 .vue-ui-xy.no-transition path,
 .vue-ui-xy.no-transition line,
 .vue-ui-xy.no-transition rect,
-.vue-ui-xy.no-transition .vue-data-ui-datalabel {
+.vue-ui-xy.no-transition .vue-data-ui-transition {
     transition: none !important;
 }
 
@@ -10555,5 +10547,10 @@ svg:focus-visible {
         transition: none !important;
         animation: none !important;
     }
+}
+
+.vue-data-ui-no-transition * {
+    transition: none !important;
+    animation: none !important;
 }
 </style>

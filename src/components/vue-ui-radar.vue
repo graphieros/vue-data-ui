@@ -2058,24 +2058,11 @@ defineExpose({
 path,
 line,
 rect,
-circle {
-    animation: xyAnimation 0.5s ease-in-out !important;
+circle,
+polygon {
     transform-origin: center;
 }
-@keyframes xyAnimation {
-    0% {
-        transform: scale(0.9, 0.9);
-        opacity: 0;
-    }
-    80% {
-        transform: scale(1.02, 1.02);
-        opacity: 1;
-    }
-    to {
-        transform: scale(1, 1);
-        opacity: 1;
-    }
-}
+
 .vue-ui-radar {
     user-select: none;
     position: relative;
@@ -2088,10 +2075,6 @@ circle {
     justify-content: center;
     text-align: center;
     width: 100%;
-}
-
-polygon {
-    transform-origin: center;
 }
 
 .vue-ui-radar-tooltip-datalabel {
@@ -2161,5 +2144,12 @@ svg:focus-visible {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .vue-data-ui-component * {
+        transition: none !important;
+        animation: none !important;
+    }
 }
 </style>

@@ -42,7 +42,7 @@ import { useNestedProp } from '../useNestedProp';
 import { useResponsive } from '../useResponsive';
 import { useTimeLabels } from '../useTimeLabels';
 import { useThemeCheck } from '../useThemeCheck.js';
-import { useMountedDelay } from '../useMountedDelay.js';
+import { useTransitions } from '../useTransitions.js';
 import { useUserOptionState } from '../useUserOptionState';
 import { useChartAccessibility } from '../useChartAccessibility';
 import { useTimeLabelCollision } from '../useTimeLabelCollider';
@@ -73,7 +73,6 @@ const BaseDraggableDialog = defineAsyncComponent(
 
 const { vue_ui_candlestick: DEFAULT_CONFIG } = useConfig();
 const { isThemeValid, warnInvalidTheme } = useThemeCheck();
-const { isReady } = useMountedDelay(300);
 
 const props = defineProps({
     config: {
@@ -130,6 +129,11 @@ const tooltipTriggerMode = ref('pointer'); // a11y
 const isFocus = ref(false); // a11y
 
 const FINAL_CONFIG = ref(prepareConfig());
+
+const { transitionEnabled } = useTransitions({
+    config: () => FINAL_CONFIG.value.transitions,
+    dataset: () => props.dataset,
+});
 
 const isCursorPointer = computed(
     () => FINAL_CONFIG.value.userOptions.useCursorPointer,
@@ -2017,6 +2021,7 @@ defineExpose({
                 :class="{
                     'vue-data-ui-fullscreen--on': isFullscreen,
                     'vue-data-ui-fulscreen--off': !isFullscreen,
+                    'vue-data-ui-no-transition': !transitionEnabled,
                 }"
                 :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`"
                 :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.style.color}`"
@@ -2267,7 +2272,9 @@ defineExpose({
                             />
                             <text
                                 data-cy="y-scale-label"
-                                :class="{ 'vue-data-ui-datalabel': isReady }"
+                                :class="{
+                                    'vue-data-ui-transition': transitionEnabled,
+                                }"
                                 v-if="
                                     yLabel.value >= niceScale.min &&
                                     yLabel.value <= niceScale.max
@@ -2721,7 +2728,10 @@ defineExpose({
                     </template>
 
                     <template v-if="FINAL_CONFIG.type === 'ohlc'">
-                        <g v-for="(dp, i) in drawableDataset">
+                        <g
+                            v-for="(dp, i) in drawableDataset"
+                            :key="`ohlc_${dp.absoluteIndex}`"
+                        >
                             <path
                                 :d="`M ${dp.high.x},${dp.high.y} ${dp.low.x},${dp.low.y} M${dp.open.x - Math.min(6, slot / 3)},${dp.open.y} ${dp.open.x},${dp.open.y} M${dp.close.x},${dp.close.y} ${dp.close.x + Math.min(6, slot / 3)},${dp.close.y}`"
                                 :stroke="
@@ -2732,6 +2742,11 @@ defineExpose({
                                               .colors.bearish
                                 "
                                 :stroke-width="1"
+                                :class="{
+                                    'vue-data-ui-transition': transitionEnabled,
+                                }"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
                             />
                         </g>
                     </template>
@@ -3075,26 +3090,6 @@ defineExpose({
     width: 100%;
 }
 
-path,
-line,
-rect {
-    animation: xyAnimation 0.5s ease-in-out;
-    transform-origin: center;
-}
-@keyframes xyAnimation {
-    0% {
-        transform: scale(0.9, 0.9);
-        opacity: 0;
-    }
-    80% {
-        transform: scale(1.02, 1.02);
-        opacity: 1;
-    }
-    to {
-        transform: scale(1, 1);
-        opacity: 1;
-    }
-}
 .vue-ui-candlestick .vue-ui-candlestick-label {
     align-items: center;
     display: flex;
@@ -3115,9 +3110,8 @@ rect {
     z-index: 1;
 }
 
-.vue-data-ui-transition,
-.vue-data-ui-datalabel {
-    transition: all 0.2s ease-in-out !important;
+.vue-data-ui-transition {
+    transition: all 0.2s ease-in-out;
 }
 
 svg:focus {
@@ -3146,5 +3140,10 @@ svg:focus-visible {
         transition: none !important;
         animation: none !important;
     }
+}
+
+.vue-data-ui-no-transition * {
+    transition: none !important;
+    animation: none !important;
 }
 </style>

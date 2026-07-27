@@ -126,6 +126,13 @@ export function useConfig(options = {}) {
         teleportTo: 'body', // or any other css selector (used in the `to` attr of the Teleport component)
     };
 
+    const TRANSITIONS = {
+        enable: true, // forcefully disabled when `prefers-reduced-motion: reduce`
+        pauseOnLoad: true,
+        pauseOnDatasetChange: false, // can be expensive
+        activationDelayMs: 300,
+    };
+
     const AXIS_DATE_FORMATTER = {
         enable: false,
         locale: 'en',
@@ -315,6 +322,7 @@ export function useConfig(options = {}) {
         theme: '',
         responsive: false,
         a11y: A11Y,
+        transitions: TRANSITIONS,
         events: {
             datapointEnter: null,
             datapointLeave: null,
@@ -533,6 +541,7 @@ export function useConfig(options = {}) {
                     'Use the left and right, or up and down arrow keys to move between datapoints',
             },
         },
+        transitions: TRANSITIONS,
         events: {
             // v3
             datapointEnter: null, // v3
@@ -742,6 +751,7 @@ export function useConfig(options = {}) {
         customPalette: [],
         useCssAnimation: false, // v3 (v2 = true)
         downsample: LTTB,
+        transitions: TRANSITIONS,
         chart: {
             fontFamily: 'inherit',
             backgroundColor: COLOR_BACKGROUND,
@@ -1311,6 +1321,7 @@ export function useConfig(options = {}) {
                     'Use the left and right, or up and down arrow keys to move between datapoints',
             },
         },
+        transitions: TRANSITIONS,
         events: {
             // v3
             datapointEnter: null, // v3
@@ -1370,7 +1381,7 @@ export function useConfig(options = {}) {
                         fontSize: FONT._24,
                         fontSizeZoomFactor: 6,
                         minFontSize: FONT._10,
-                        hideUnderProportion: 0.03,
+                        hideUnderProportion: 0, // 3.23.0
                         prefix: '',
                         suffix: '',
                         rounding: 0,
@@ -2234,6 +2245,7 @@ export function useConfig(options = {}) {
                     'Use the left and right, or up and down arrow keys to move between datapoints',
             },
         },
+        transitions: TRANSITIONS,
         events: {
             // v3
             datapointEnter: null, // v3
@@ -2339,6 +2351,7 @@ export function useConfig(options = {}) {
         theme: '',
         customPalette: [],
         useCssAnimation: false, // v3 (v2 = true)
+        transitions: TRANSITIONS,
         a11y: {
             ...A11Y,
             translations: {
@@ -2638,6 +2651,7 @@ export function useConfig(options = {}) {
                     'Use the left and right, or up and down arrow keys to move between datapoints',
             },
         },
+        transitions: TRANSITIONS,
         events: {
             datapointEnter: null, // v3
             datapointLeave: null, // v3
@@ -2866,6 +2880,7 @@ export function useConfig(options = {}) {
         responsive: false,
         responsiveProportionalSizing: true,
         a11y: A11Y,
+        transitions: TRANSITIONS,
         events: {
             // v3
             datapointEnter: null, // v3
@@ -3527,12 +3542,13 @@ export function useConfig(options = {}) {
             datapointLeave: null, // v3
             datapointClick: null, // v3
         },
+        transitions: TRANSITIONS,
         responsive: false,
         theme: '',
         axisLabelsFontSize: FONT._12,
         backgroundColor: COLOR_BACKGROUND,
         barGap: 12,
-        barAnimated: true,
+        barAnimated: true, // deprecated
         barStrokeWidth: 1,
         blurOnHover: true,
         chartIsBarUnderDatasetLength: 6,
@@ -3564,7 +3580,7 @@ export function useConfig(options = {}) {
         showLegendSelectAllToggle: false,
         legendSelectAllToggleBackgroundColor: COLOR_BORDER,
         legendSelectAllToggleColor: COLOR_TEXT_PRIMARY,
-        lineAnimated: true,
+        lineAnimated: true, // deprecated
         lineSmooth: true,
         lineStrokeWidth: 2,
         paletteStartIndex: 0,
@@ -3946,6 +3962,7 @@ export function useConfig(options = {}) {
                     'Use the left and right, or up and down arrow keys to move between datapoints',
             },
         },
+        transitions: TRANSITIONS,
         events: {
             datapointEnter: null, // v3
             datapointLeave: null, // v3
@@ -4057,6 +4074,7 @@ export function useConfig(options = {}) {
             datapointLeave: null, // v3
             datapointClick: null, // v3
         },
+        transitions: TRANSITIONS,
         customPalette: [],
         style: {
             fontFamily: 'inherit',
@@ -4540,6 +4558,7 @@ export function useConfig(options = {}) {
                     'Use the left and right, or up and down arrow keys to move between datapoints',
             },
         },
+        transitions: TRANSITIONS,
         events: {
             // v3
             datapointEnter: null, // v3
@@ -4640,6 +4659,7 @@ export function useConfig(options = {}) {
                     'Use the left and right, or up and down arrow keys to move between datapoints',
             },
         },
+        transitions: TRANSITIONS,
         events: {
             // v3
             datapointEnter: null, // v3
@@ -5569,6 +5589,7 @@ export function useConfig(options = {}) {
                     'Use the left and right, or up and down arrow keys to move between datapoints',
             },
         },
+        transitions: TRANSITIONS,
         events: {
             // v3
             datapointEnter: null, // v3
@@ -6836,6 +6857,7 @@ export function useConfig(options = {}) {
                     'Use the left and right, or up and down arrow keys to move between datapoints',
             },
         },
+        transitions: TRANSITIONS,
         events: {
             // v3
             datapointEnter: null, // v3
@@ -7015,6 +7037,7 @@ export function useConfig(options = {}) {
                     'Use the left and right, or up and down arrow keys to move between datapoints',
             },
         },
+        transitions: TRANSITIONS,
         events: {
             // v3
             datapointEnter: null, // v3

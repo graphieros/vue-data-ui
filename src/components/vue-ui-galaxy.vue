@@ -28,7 +28,6 @@ import {
     treeShake,
     XMLNS,
 } from '../lib';
-import { buildValuePercentageLabel } from '../labelUtils';
 import { throttle } from '../canvas-lib';
 import { useConfig } from '../useConfig';
 import { useLoading } from '../useLoading';
@@ -37,8 +36,10 @@ import { useSvgExport } from '../useSvgExport';
 import { useNestedProp } from '../useNestedProp';
 import { useResponsive } from '../useResponsive';
 import { useThemeCheck } from '../useThemeCheck';
+import { useTransitions } from '../useTransitions.js';
 import { useUserOptionState } from '../useUserOptionState';
 import { useChartAccessibility } from '../useChartAccessibility';
+import { buildValuePercentageLabel } from '../labelUtils';
 import img from '../img';
 import Title from '../atoms/Title.vue';
 import Legend from '../atoms/Legend.vue';
@@ -114,6 +115,11 @@ const isDataset = computed(() => {
 });
 
 const FINAL_CONFIG = ref(prepareConfig());
+
+const { transitionEnabled } = useTransitions({
+    config: () => FINAL_CONFIG.value.transitions,
+    dataset: () => props.dataset,
+});
 
 const isCursorPointer = computed(
     () => FINAL_CONFIG.value.userOptions.useCursorPointer,
@@ -1358,7 +1364,7 @@ defineExpose({
                 </defs>
 
                 <!-- PATHS -->
-                <g v-for="datapoint in galaxySet">
+                <g v-for="datapoint in galaxySet" :key="`dp_${datapoint.id}`">
                     <path
                         data-cy="datapoint-border"
                         v-if="datapoint.value"
@@ -1366,6 +1372,7 @@ defineExpose({
                         fill="none"
                         :stroke="FINAL_CONFIG.style.chart.backgroundColor"
                         :stroke-width="getStrokeWidth(datapoint).border"
+                        :class="{ 'vue-data-ui-transition': transitionEnabled }"
                         stroke-linecap="round"
                     />
                     <path
@@ -1376,7 +1383,13 @@ defineExpose({
                         :stroke="datapoint.color"
                         :stroke-width="getStrokeWidth(datapoint).path"
                         stroke-linecap="round"
-                        :class="`${selectedSerie && selectedSerie !== datapoint.id && FINAL_CONFIG.useBlurOnHover ? 'vue-ui-galaxy-blur' : ''}`"
+                        :class="{
+                            'vue-data-ui-transition': transitionEnabled,
+                            'vue-ui-galaxy-blur':
+                                selectedSerie &&
+                                selectedSerie !== datapoint.id &&
+                                FINAL_CONFIG.useBlurOnHover,
+                        }"
                     />
                     <g
                         :filter="`url(#blur_${uid})`"
@@ -1394,7 +1407,14 @@ defineExpose({
                             "
                             :stroke-width="getStrokeWidth(datapoint).blur"
                             stroke-linecap="round"
-                            :class="`vue-ui-galaxy-gradient ${selectedSerie && selectedSerie !== datapoint.id && FINAL_CONFIG.useBlurOnHover ? 'vue-ui-galaxy-blur' : ''}`"
+                            :class="{
+                                'vue-ui-galaxy-gradient': true,
+                                'vue-data-ui-transition': transitionEnabled,
+                                'vue-ui-galaxy-blur':
+                                    selectedSerie &&
+                                    selectedSerie !== datapoint.id &&
+                                    FINAL_CONFIG.useBlurOnHover,
+                            }"
                         />
                     </g>
                 </g>
@@ -1654,29 +1674,8 @@ defineExpose({
     position: relative;
 }
 
-path {
-    animation: galaxy 0.5s ease-in-out;
-    transform-origin: center;
-    transition: stroke-width 0.1s ease-in-out !important;
-}
-
 .loading path {
     transition: none !important;
-}
-
-@keyframes galaxy {
-    0% {
-        transform: scale(0.9, 0.9);
-        opacity: 0;
-    }
-    80% {
-        transform: scale(1.02, 1.02);
-        opacity: 1;
-    }
-    to {
-        transform: scale(1, 1);
-        opacity: 1;
-    }
 }
 
 .vue-ui-galaxy .vue-ui-galaxy-label {
@@ -1732,5 +1731,21 @@ svg:focus-visible {
     clip: rect(0 0 0 0);
     white-space: normal;
     border: 0;
+}
+
+.vue-data-ui-transition {
+    transition: all 0.2s ease-in-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .vue-data-ui-component * {
+        transition: none !important;
+        animation: none !important;
+    }
+}
+
+.vue-data-ui-no-transition * {
+    transition: none !important;
+    animation: none !important;
 }
 </style>

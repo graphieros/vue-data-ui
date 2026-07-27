@@ -40,9 +40,9 @@ import { useSvgExport } from '../useSvgExport';
 import { useNestedProp } from '../useNestedProp';
 import { useResponsive } from '../useResponsive';
 import { useThemeCheck } from '../useThemeCheck';
+import { useTransitions } from '../useTransitions.js';
 import { useUserOptionState } from '../useUserOptionState';
 import { useChartAccessibility } from '../useChartAccessibility';
-import { usePrefersReducedMotion } from '../usePrefersMotion.js';
 import usePanZoom from '../usePanZoom';
 import img from '../img';
 import Title from '../atoms/Title.vue';
@@ -90,7 +90,6 @@ const props = defineProps({
 
 const emit = defineEmits(['selectLegend', 'selectDatapoint', 'copyAlt']);
 const slots = useSlots();
-const prefersReducedMotion = usePrefersReducedMotion();
 
 onMounted(() => {
     if (slots['chart-background']) {
@@ -138,6 +137,11 @@ const tooltipTriggerMode = ref('pointer'); // a11y
 const isFocus = ref(false); // a11y
 
 const FINAL_CONFIG = ref(prepareConfig());
+
+const { transitionEnabled } = useTransitions({
+    config: () => FINAL_CONFIG.value.transitions,
+    dataset: () => props.dataset,
+});
 
 const isCursorPointer = computed(
     () => FINAL_CONFIG.value.userOptions.useCursorPointer,
@@ -2452,7 +2456,7 @@ defineExpose({
                     'vue-data-ui-fulscreen--off': !isFullscreen,
                     'vue-data-ui-zoom-plus': !isZoom,
                     'vue-data-ui-zoom-minus': isZoom,
-                    'no-transition': prefersReducedMotion,
+                    'vue-data-ui-no-transition': !transitionEnabled,
                     loading: loading,
                 }"
                 data-cy="treemap-svg"
@@ -2549,7 +2553,9 @@ defineExpose({
                             "
                             :style="`opacity:${selectedRect ? (selectedRect.id === rect.id ? 1 : FINAL_CONFIG.style.chart.layout.rects.selected.unselectedOpacity) : 1}`"
                             :class="[
-                                'vue-ui-treemap-rect',
+                                transitionEnabled
+                                    ? 'vue-data-ui-transition'
+                                    : '',
                                 isCurrentZoomTarget(rect)
                                     ? 'vue-data-ui-zoom-minus'
                                     : 'vue-data-ui-zoom-plus',
@@ -2568,7 +2574,10 @@ defineExpose({
                                 clipPathUnits="userSpaceOnUse"
                             >
                                 <rect
-                                    class="vue-ui-treemap-data-label-clip"
+                                    :class="{
+                                        'vue-data-ui-transition':
+                                            transitionEnabled,
+                                    }"
                                     :x="label.clipX"
                                     :y="label.clipY"
                                     :width="label.clipWidth"
@@ -2579,7 +2588,10 @@ defineExpose({
                         <g :clip-path="`url(#${label.clipId})`">
                             <g :transform="label.translate">
                                 <g
-                                    class="vue-ui-treemap-data-label-scale"
+                                    :class="{
+                                        'vue-data-ui-transition':
+                                            transitionEnabled,
+                                    }"
                                     :transform="
                                         getTreemapLabelZoomTransform(label)
                                     "
@@ -2595,13 +2607,16 @@ defineExpose({
                                                     labelZoomFactor <=
                                                         line.maxZoomFactor)
                                             "
-                                            class="vue-ui-treemap-data-label"
                                             :x="line.x"
                                             :y="line.y"
                                             :fill="line.fill"
                                             :font-size="line.fontSize"
                                             :font-family="line.fontFamily"
                                             :font-weight="line.fontWeight"
+                                            :class="{
+                                                'vue-data-ui-transition':
+                                                    transitionEnabled,
+                                            }"
                                             text-anchor="start"
                                             dominant-baseline="text-before-edge"
                                         >
@@ -2935,26 +2950,6 @@ defineExpose({
     width: 100%;
 }
 
-.vue-ui-treemap-rect {
-    transition: all 0.2s ease-in-out;
-}
-
-.vue-ui-treemap-data-label,
-.vue-ui-treemap-data-label-clip {
-    transition: all 0.2s ease-in-out;
-}
-
-.vue-ui-treemap-data-label-scale {
-    transition: transform 0.2s ease-in-out;
-}
-
-.loading .vue-ui-treemap-rect,
-.loading .vue-ui-treemap-data-label,
-.loading .vue-ui-treemap-data-label-clip,
-.loading .vue-ui-treemap-data-label-scale {
-    transition: none;
-}
-
 .vue-ui-treemap-zoom-info {
     pointer-events: none;
     position: absolute;
@@ -2996,23 +2991,6 @@ defineExpose({
     }
     &:hover {
         transform: rotate(-90deg);
-    }
-}
-
-.vue-ui-treemap-cell-zoom {
-    animation: zoom-cell 0.2s ease-in forwards !important;
-    transform-origin: center;
-}
-
-@keyframes zoom-cell {
-    0% {
-        transform: scale(0.8, 0.8);
-        opacity: 0;
-        filter: drop-shadow(0px 12px 12px black);
-    }
-    100% {
-        transform: scale(1, 1);
-        opacity: 1;
     }
 }
 
@@ -3085,10 +3063,19 @@ svg:focus-visible,
     border: 0;
 }
 
-.no-transition .vue-ui-treemap-rect,
-.no-transition .vue-ui-treemap-data-label,
-.no-transition .vue-ui-treemap-data-label-clip,
-.no-transition .vue-ui-treemap-data-label-scale {
+.vue-data-ui-transition {
+    transition: all 0.2s ease-in-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .vue-data-ui-component * {
+        transition: none !important;
+        animation: none !important;
+    }
+}
+
+.vue-data-ui-no-transition * {
     transition: none !important;
+    animation: none !important;
 }
 </style>

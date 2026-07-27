@@ -1453,7 +1453,6 @@ defineExpose({
                 :class="{
                     'vue-data-ui-loading': loading,
                     'no-transition': !FINAL_CONFIG.useCssAnimation,
-                    'with-transition': FINAL_CONFIG.useCssAnimation,
                 }"
                 :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
                 role="img"
@@ -2072,46 +2071,6 @@ defineExpose({
 
 .transition-opacity {
     transition: opacity 0.2s ease-in-out;
-}
-
-.with-transition {
-    path,
-    line,
-    rect,
-    circle {
-        animation: start-transition 0.5s ease-in;
-        transform-origin: center;
-    }
-
-    @keyframes start-transition {
-        0% {
-            transform: scale(0.9, 0.9);
-            opacity: 0;
-        }
-
-        80% {
-            transform: scale(1.02, 1.02);
-            opacity: 1;
-        }
-
-        to {
-            transform: scale(1, 1);
-            opacity: 1;
-        }
-    }
-
-    text {
-        animation: start-opacity 0.5 ease-in;
-    }
-
-    @keyframes start-opacity {
-        from {
-            opacity: 0;
-        }
-        to {
-            opacity: 1;
-        }
-    }
 }
 
 svg:focus {

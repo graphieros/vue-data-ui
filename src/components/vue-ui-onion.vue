@@ -36,6 +36,7 @@ import { useSvgExport } from '../useSvgExport.js';
 import { useNestedProp } from '../useNestedProp';
 import { useResponsive } from '../useResponsive';
 import { useThemeCheck } from '../useThemeCheck.js';
+import { useTransitions } from '../useTransitions.js';
 import { useUserOptionState } from '../useUserOptionState';
 import { useChartAccessibility } from '../useChartAccessibility.js';
 import { useAutoSizeLabelsInsideViewbox } from '../useAutoSizeLabelsInsideViewbox.js';
@@ -112,6 +113,11 @@ const tooltipTriggerMode = ref('pointer'); // a11y
 const isFocus = ref(false); // a11y
 
 const FINAL_CONFIG = ref(prepareConfig());
+
+const { transitionEnabled } = useTransitions({
+    config: () => FINAL_CONFIG.value.transitions,
+    dataset: () => props.dataset,
+});
 
 const isCursorPointer = computed(
     () => FINAL_CONFIG.value.userOptions.useCursorPointer,
@@ -276,18 +282,127 @@ onMounted(() => {
     prepareChart();
 });
 
-const labels_font_size = computed({
-    get: () => FINAL_CONFIG.value.style.chart.layout.labels.fontSize,
-    set: (v) => v,
-});
-
 const { autoSizeLabels } = useAutoSizeLabelsInsideViewbox({
     svgRef,
-    fontSize: FINAL_CONFIG.value.style.chart.layout.labels.fontSize,
-    minFontSize: FINAL_CONFIG.value.style.chart.layout.labels.minFontSize,
-    sizeRef: labels_font_size,
+    fontSize: () => FINAL_CONFIG.value.style.chart.layout.labels.fontSize,
+    minFontSize: () => FINAL_CONFIG.value.style.chart.layout.labels.minFontSize,
     labelClass: '.vue-ui-onion-label',
 });
+
+let autoSizeLabelsFrameId = null;
+let autoSizeLabelsTimeoutId = null;
+let autoSizeLabelsScheduleId = 0;
+
+function clearAutoSizeLabelsSchedule() {
+    if (autoSizeLabelsFrameId !== null) {
+        cancelAnimationFrame(autoSizeLabelsFrameId);
+        autoSizeLabelsFrameId = null;
+    }
+
+    if (autoSizeLabelsTimeoutId !== null) {
+        clearTimeout(autoSizeLabelsTimeoutId);
+        autoSizeLabelsTimeoutId = null;
+    }
+}
+
+function parseCssTimeList(value) {
+    return String(value)
+        .split(',')
+        .map((time) => {
+            const trimmedTime = time.trim();
+            const parsedTime = Number.parseFloat(trimmedTime);
+
+            if (!Number.isFinite(parsedTime)) return 0;
+
+            return trimmedTime.endsWith('ms') ? parsedTime : parsedTime * 1000;
+        });
+}
+
+function getLabelTransitionDurationMs() {
+    if (
+        typeof window === 'undefined' ||
+        !transitionEnabled.value ||
+        resizing.value ||
+        loading.value ||
+        !svgRef.value
+    ) {
+        return 0;
+    }
+
+    const labels = Array.from(
+        svgRef.value.querySelectorAll(
+            '.vue-ui-onion-label.vue-data-ui-transition',
+        ),
+    );
+
+    return labels.reduce((maxDuration, label) => {
+        const styles = window.getComputedStyle(label);
+
+        if (styles.transitionProperty === 'none') {
+            return maxDuration;
+        }
+
+        const durations = parseCssTimeList(styles.transitionDuration);
+        const delays = parseCssTimeList(styles.transitionDelay);
+        const transitionCount = Math.max(durations.length, delays.length);
+
+        const labelDuration = Array.from(
+            { length: transitionCount },
+            (_, index) => {
+                const duration = durations[index % durations.length] ?? 0;
+                const delay = delays[index % delays.length] ?? 0;
+
+                return duration + delay;
+            },
+        ).reduce((currentMax, duration) => Math.max(currentMax, duration), 0);
+
+        return Math.max(maxDuration, labelDuration);
+    }, 0);
+}
+
+function runAutoSizeLabels() {
+    if (typeof window === 'undefined') return;
+
+    autoSizeLabelsFrameId = requestAnimationFrame(() => {
+        autoSizeLabelsFrameId = null;
+        autoSizeLabels();
+    });
+}
+
+function scheduleAutoSizeLabels() {
+    if (typeof window === 'undefined') return;
+
+    const scheduleId = ++autoSizeLabelsScheduleId;
+
+    clearAutoSizeLabelsSchedule();
+
+    nextTick(() => {
+        if (scheduleId !== autoSizeLabelsScheduleId) return;
+
+        autoSizeLabelsFrameId = requestAnimationFrame(() => {
+            autoSizeLabelsFrameId = null;
+
+            if (scheduleId !== autoSizeLabelsScheduleId) return;
+
+            const transitionDurationMs = getLabelTransitionDurationMs();
+
+            if (transitionDurationMs <= 0) {
+                runAutoSizeLabels();
+                return;
+            }
+
+            autoSizeLabelsTimeoutId = setTimeout(() => {
+                autoSizeLabelsTimeoutId = null;
+
+                if (scheduleId !== autoSizeLabelsScheduleId) {
+                    return;
+                }
+
+                runAutoSizeLabels();
+            }, transitionDurationMs + 34);
+        });
+    });
+}
 
 const debug = computed(() => FINAL_CONFIG.value.debug);
 let to = null;
@@ -340,7 +455,7 @@ function prepareChart() {
                 svg.value.minRadius = Math.min(width, height) * paddingRatio;
                 to = setTimeout(() => {
                     resizing.value = false;
-                    autoSizeLabels();
+                    scheduleAutoSizeLabels();
                 }, 0);
             });
         });
@@ -356,10 +471,13 @@ function prepareChart() {
         observedEl.value = onionChart.value.parentNode;
         resizeObserver.value.observe(observedEl.value);
     }
-    requestAnimationFrame(autoSizeLabels);
+    scheduleAutoSizeLabels();
 }
 
 onBeforeUnmount(() => {
+    autoSizeLabelsScheduleId += 1;
+    clearAutoSizeLabelsSchedule();
+
     if (resizeObserver.value) {
         if (observedEl.value) {
             resizeObserver.value.unobserve(observedEl.value);
@@ -482,8 +600,13 @@ watch(
         if (Array.isArray(_) && _.length > 0) {
             manualLoading.value = false;
         }
+
+        scheduleAutoSizeLabels();
     },
-    { deep: true },
+    {
+        deep: true,
+        flush: 'post',
+    },
 );
 
 function anim() {
@@ -611,6 +734,8 @@ function toggleLegend() {
             segregated.value.push(l.id);
         });
     }
+
+    scheduleAutoSizeLabels();
     emit('selectLegend', mutableDataset.value);
 }
 
@@ -622,6 +747,8 @@ function segregate(id) {
             return;
         segregated.value.push(id);
     }
+
+    scheduleAutoSizeLabels();
     emit('selectLegend', mutableDataset.value);
 }
 
@@ -1371,6 +1498,8 @@ defineExpose({
                     'vue-data-ui-fullscreen--on': isFullscreen,
                     'vue-data-ui-fulscreen--off': !isFullscreen,
                     resizing: resizing,
+                    'vue-data-ui-no-transition':
+                        !transitionEnabled || resizing || loading,
                 }"
                 :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`"
                 :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
@@ -1414,18 +1543,11 @@ defineExpose({
                             FINAL_CONFIG.useBlurOnHover &&
                             ![null, undefined].includes(selectedSerie) &&
                             selectedSerie !== i,
+                        'vue-data-ui-transition': transitionEnabled,
                     }"
                     :style="{
                         transform: 'rotate(-90deg)',
                         transformOrigin: '50% 50%',
-                        transition:
-                            resizing || loading
-                                ? 'none'
-                                : 'all 0.3s ease-in-out !important',
-                        animation:
-                            resizing || loading
-                                ? 'none'
-                                : 'xyAnimation 0.5s ease-in',
                     }"
                 />
 
@@ -1447,19 +1569,12 @@ defineExpose({
                             FINAL_CONFIG.useBlurOnHover &&
                             ![null, undefined].includes(selectedSerie) &&
                             selectedSerie !== i,
+                        'vue-data-ui-transition': transitionEnabled,
                     }"
                     stroke-linecap="round"
                     :style="{
                         transform: 'rotate(-90deg)',
                         transformOrigin: '50% 50%',
-                        transition:
-                            resizing || loading
-                                ? 'none'
-                                : 'all 0.3s ease-in-out !important',
-                        animation:
-                            resizing || loading
-                                ? 'none'
-                                : 'xyAnimation 0.5s ease-in',
                     }"
                 />
 
@@ -1500,15 +1615,8 @@ defineExpose({
                         :style="{
                             transform: 'rotate(-90deg)',
                             transformOrigin: '50% 50%',
-                            transition:
-                                resizing || loading
-                                    ? 'none'
-                                    : 'all 0.3s ease-in-out !important',
-                            animation:
-                                resizing || loading
-                                    ? 'none'
-                                    : 'xyAnimation 0.5s ease-in',
                         }"
+                        :class="{ 'vue-data-ui-transition': transitionEnabled }"
                     />
                 </g>
 
@@ -1547,6 +1655,7 @@ defineExpose({
                 <g v-if="FINAL_CONFIG.style.chart.layout.labels.show">
                     <g
                         v-for="(onion, i) in mutableDataset"
+                        :key="`dl_${onion.id}`"
                         @mouseenter="
                             useTooltip({
                                 datapoint: onion,
@@ -1560,17 +1669,19 @@ defineExpose({
                     >
                         <text
                             class="vue-ui-onion-label"
+                            :class="{
+                                'vue-data-ui-transition': transitionEnabled,
+                            }"
                             data-cy="onion-label"
                             v-if="!segregated.includes(onion.id)"
-                            :x="
+                            :transform="`translate(${
                                 svg.width / 2 -
                                 onionSkin.gutter * 0.8 +
                                 FINAL_CONFIG.style.chart.layout.labels.offsetX
-                            "
-                            :y="
+                            },${
                                 onion.labelY +
                                 FINAL_CONFIG.style.chart.layout.labels.offsetY
-                            "
+                            })`"
                             text-anchor="end"
                             :font-size="
                                 FINAL_CONFIG.style.chart.layout.labels.fontSize
@@ -1815,20 +1926,6 @@ defineExpose({
     position: relative;
 }
 
-@keyframes xyAnimation {
-    0% {
-        transform: scale(0.9, 0.9) rotate(-90g);
-        opacity: 0;
-    }
-    80% {
-        transform: scale(1.02, 1.02) rotate(-90deg);
-        opacity: 1;
-    }
-    to {
-        transform: scale(1, 1) rotate(-90deg);
-        opacity: 1;
-    }
-}
 .vue-ui-onion .vue-ui-onion-label {
     align-items: center;
     display: flex;
@@ -1837,6 +1934,7 @@ defineExpose({
     justify-content: center;
     text-align: center;
     width: 100%;
+    transition: all 0.2s ease-in-out;
 }
 
 .vue-ui-onion-tooltip {
@@ -1848,8 +1946,6 @@ defineExpose({
     padding: 12px;
     z-index: 1;
 }
-
-/** */
 
 .vue-ui-onion table {
     width: 100%;
@@ -1891,5 +1987,28 @@ svg:focus-visible {
     clip: rect(0 0 0 0);
     white-space: normal;
     border: 0;
+}
+
+.vue-data-ui-transition {
+    transition: all 0.2s ease-in-out;
+}
+
+.vue-ui-onion .vue-ui-onion-label {
+    transition:
+        transform 0.2s ease-in-out,
+        fill 0.2s ease-in-out,
+        font-size 0.2s ease-in-out !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .vue-data-ui-component * {
+        transition: none !important;
+        animation: none !important;
+    }
+}
+
+.vue-data-ui-no-transition * {
+    transition: none !important;
+    animation: none !important;
 }
 </style>

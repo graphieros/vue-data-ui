@@ -2960,7 +2960,6 @@ defineExpose({
                             (el) => !el.ghost,
                         )"
                         :filter="getBlurFilter(i)"
-                        :class="{ animated: FINAL_CONFIG.useCssAnimation }"
                         :key="arc.seriesIndex"
                         :opacity="getLabelOpacity(arc)"
                     >
@@ -3955,28 +3954,6 @@ defineExpose({
 .vue-ui-donut {
     user-select: none;
     position: relative;
-}
-
-.animated {
-    animation: donut 0.5s ease-in-out;
-    transform-origin: center;
-}
-
-@keyframes donut {
-    0% {
-        transform: scale(0.9, 0.9);
-        opacity: 0;
-    }
-
-    80% {
-        transform: scale(1.02, 1.02);
-        opacity: 1;
-    }
-
-    to {
-        transform: scale(1, 1);
-        opacity: 1;
-    }
 }
 
 .vue-ui-donut .vue-ui-donut-label {

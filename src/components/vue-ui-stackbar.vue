@@ -52,7 +52,7 @@ import { useNestedProp } from '../useNestedProp';
 import { useResponsive } from '../useResponsive';
 import { useTimeLabels } from '../useTimeLabels';
 import { useThemeCheck } from '../useThemeCheck.js';
-import { useMountedDelay } from '../useMountedDelay.js';
+import { useTransitions } from '../useTransitions.js';
 import { useUserOptionState } from '../useUserOptionState';
 import { useStableElementSize } from '../useStableElementSize.js';
 import { useChartAccessibility } from '../useChartAccessibility';
@@ -87,7 +87,7 @@ const BaseDraggableDialog = defineAsyncComponent(
 
 const { vue_ui_stackbar: DEFAULT_CONFIG } = useConfig();
 const { isThemeValid, warnInvalidTheme } = useThemeCheck();
-const { isReady } = useMountedDelay(300);
+
 const slots = useSlots();
 
 const props = defineProps({
@@ -214,6 +214,11 @@ onMounted(() => {
 });
 
 const FINAL_CONFIG = ref(prepareConfig());
+
+const { transitionEnabled } = useTransitions({
+    config: () => FINAL_CONFIG.value.transitions,
+    dataset: () => props.dataset,
+});
 
 const isCursorPointer = computed(
     () => FINAL_CONFIG.value.userOptions.useCursorPointer,
@@ -2988,7 +2993,12 @@ defineExpose({
                 :xmlns="XMLNS"
                 :aria-describedby="`chart-instructions-${uid}`"
                 :viewBox="`0 0 ${drawingArea.chartWidth <= 0 ? 10 : drawingArea.chartWidth} ${drawingArea.chartHeight <= 0 ? 10 : drawingArea.chartHeight}`"
-                :class="{ 'vue-data-ui-loading': loading }"
+                :class="{
+                    'vue-data-ui-loading': loading,
+                    'vue-data-ui-fullscreen--on': isFullscreen,
+                    'vue-data-ui-fulscreen--off': !isFullscreen,
+                    'vue-data-ui-no-transition': !transitionEnabled,
+                }"
                 :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
                 tabindex="0"
                 @focus="onSvgFocus"
@@ -3209,8 +3219,6 @@ defineExpose({
                             stroke-linecap="round"
                             stroke-linejoin="round"
                             :class="{
-                                'vue-data-ui-bar-animated':
-                                    FINAL_CONFIG.useCssAnimation,
                                 'vue-data-ui-bar-transition': isLoaded,
                             }"
                         />
@@ -3250,8 +3258,6 @@ defineExpose({
                                 stroke-linecap="round"
                                 stroke-linejoin="round"
                                 :class="{
-                                    'vue-data-ui-bar-animated':
-                                        FINAL_CONFIG.useCssAnimation,
                                     'vue-data-ui-bar-transition': isLoaded,
                                 }"
                             />
@@ -3294,8 +3300,6 @@ defineExpose({
                             stroke-linecap="round"
                             stroke-linejoin="round"
                             :class="{
-                                'vue-data-ui-bar-animated':
-                                    FINAL_CONFIG.useCssAnimation,
                                 'vue-data-ui-bar-transition': isLoaded,
                             }"
                         />
@@ -3341,8 +3345,6 @@ defineExpose({
                                 stroke-linecap="round"
                                 stroke-linejoin="round"
                                 :class="{
-                                    'vue-data-ui-bar-animated':
-                                        FINAL_CONFIG.useCssAnimation,
                                     'vue-data-ui-bar-transition': isLoaded,
                                 }"
                             />
@@ -3465,7 +3467,9 @@ defineExpose({
                         >
                             <text
                                 data-cy="label-datapoint"
-                                :class="{ 'vue-data-ui-datalabel': isReady }"
+                                :class="{
+                                    'vue-data-ui-transition': transitionEnabled,
+                                }"
                                 v-if="
                                     isLabelDisplayed(
                                         dp.series[j],
@@ -3528,7 +3532,9 @@ defineExpose({
                         >
                             <text
                                 data-cy="label-total"
-                                :class="{ 'vue-data-ui-datalabel': isReady }"
+                                :class="{
+                                    'vue-data-ui-transition': transitionEnabled,
+                                }"
                                 v-if="
                                     FINAL_CONFIG.style.chart.bars.dataLabels
                                         .hideEmptyValues
@@ -3577,7 +3583,9 @@ defineExpose({
                         <template v-for="(rect, j) in dp.horizontal_x">
                             <text
                                 data-cy="label-datapoint"
-                                :class="{ 'vue-data-ui-datalabel': isReady }"
+                                :class="{
+                                    'vue-data-ui-transition': transitionEnabled,
+                                }"
                                 v-if="
                                     isLabelDisplayed(
                                         dp.series[j],
@@ -3636,7 +3644,9 @@ defineExpose({
                         <template v-for="(total, i) in totalLabels">
                             <text
                                 data-cy="label-total"
-                                :class="{ 'vue-data-ui-datalabel': isReady }"
+                                :class="{
+                                    'vue-data-ui-transition': transitionEnabled,
+                                }"
                                 v-if="
                                     FINAL_CONFIG.style.chart.bars.dataLabels
                                         .hideEmptyValues
@@ -3687,13 +3697,17 @@ defineExpose({
                             v-for="(yLabel, i) in yLabels"
                             :key="`ty_${i}`"
                             :stroke="FINAL_CONFIG.style.chart.grid.x.axisColor"
-                            :class="{ 'vue-data-ui-datalabel': isReady }"
+                            :class="{
+                                'vue-data-ui-transition': transitionEnabled,
+                            }"
                             :d="`M${yAxisLabelsAreRight ? drawingArea.right : drawingArea.left},${yLabel.y} ${yAxisLabelsAreRight ? drawingArea.right + 6 : drawingArea.left - 6},${yLabel.y}`"
                             :stroke-width="1"
                             stroke-linecap="round"
                         />
                         <text
-                            :class="{ 'vue-data-ui-datalabel': isReady }"
+                            :class="{
+                                'vue-data-ui-transition': transitionEnabled,
+                            }"
                             data-cy="scale-label-y"
                             v-for="(yLabel, i) in yLabels"
                             :key="`tl_${i}`"
@@ -3747,7 +3761,9 @@ defineExpose({
                             v-for="(yLabel, i) in yLabels"
                             :key="`scy_${i}`"
                             :d="`M${yLabel.horizontal_x},${drawingArea.bottom} ${yLabel.horizontal_x},${drawingArea.bottom + 6}`"
-                            :class="{ 'vue-data-ui-datalabel': isReady }"
+                            :class="{
+                                'vue-data-ui-transition': transitionEnabled,
+                            }"
                             :stroke="FINAL_CONFIG.style.chart.grid.x.axisColor"
                             :stroke-width="1"
                             stroke-linecap="round"
@@ -3755,7 +3771,9 @@ defineExpose({
                         <text
                             data-cy="scale-label-y"
                             class="vue-data-ui-time-label"
-                            :class="{ 'vue-data-ui-datalabel': isReady }"
+                            :class="{
+                                'vue-data-ui-transition': transitionEnabled,
+                            }"
                             v-for="(yLabel, i) in yLabels"
                             :key="`tly_${i}`"
                             :font-size="
@@ -3893,7 +3911,8 @@ defineExpose({
                                 <text
                                     v-else
                                     :class="{
-                                        'vue-data-ui-datalabel': isReady,
+                                        'vue-data-ui-transition':
+                                            transitionEnabled,
                                     }"
                                     :key="i + '-multi'"
                                     data-cy="time-label"
@@ -4549,29 +4568,9 @@ defineExpose({
     width: 100%;
 }
 
-.vue-data-ui-bar-animated {
-    animation: vueDataUiBarAnimation 0.5s ease-in-out;
-    transform-origin: center;
-}
-
 .vue-data-ui-bar-transition,
-.vue-data-ui-datalabel {
-    transition: all 0.2s ease-in-out !important;
-}
-
-@keyframes vueDataUiBarAnimation {
-    0% {
-        transform: scale(0.9, 0.9);
-        opacity: 0;
-    }
-    80% {
-        transform: scale(1.02, 1.02);
-        opacity: 1;
-    }
-    to {
-        transform: scale(1, 1);
-        opacity: 1;
-    }
+.vue-data-ui-transition {
+    transition: all 0.2s ease-in-out;
 }
 
 .vue-data-ui-loading {
@@ -4609,5 +4608,10 @@ svg:focus-visible {
         transition: none !important;
         animation: none !important;
     }
+}
+
+.vue-data-ui-no-transition * {
+    transition: none !important;
+    animation: none !important;
 }
 </style>

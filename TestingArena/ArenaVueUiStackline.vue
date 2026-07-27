@@ -134,6 +134,11 @@ const model = createModel([
     CHECKBOX('loading', { def: false }),
     CHECKBOX('debug', { def: false }),
 
+    CHECKBOX('transitions.enable', { def: false }),
+    CHECKBOX('transitions.pauseOnLoad', { def: true }),
+    CHECKBOX('transitions.pauseOnDatasetChange', { def: false }),
+    NUMBER('transitions.activationDelayMs', { def: 300 }),
+
     CHECKBOX('userOptions.useCursorPointer', { def: false }),
     SELECT('userOptions.position', ['left', 'right'], { def: 'right' }),
     SELECT('orientation', ['vertical', 'horizontal'], { def: 'vertical' }),

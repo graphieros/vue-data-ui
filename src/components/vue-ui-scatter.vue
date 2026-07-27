@@ -45,7 +45,7 @@ import { useSvgExport } from '../useSvgExport';
 import { useNestedProp } from '../useNestedProp';
 import { useResponsive } from '../useResponsive';
 import { useThemeCheck } from '../useThemeCheck';
-import { useMountedDelay } from '../useMountedDelay.js';
+import { useTransitions } from '../useTransitions.js';
 import { useUserOptionState } from '../useUserOptionState';
 import { useChartAccessibility } from '../useChartAccessibility';
 import img from '../img';
@@ -77,7 +77,6 @@ const BaseDraggableDialog = defineAsyncComponent(
 
 const { vue_ui_scatter: DEFAULT_CONFIG } = useConfig();
 const { isThemeValid, warnInvalidTheme } = useThemeCheck();
-const { isReady } = useMountedDelay(300);
 
 const props = defineProps({
     config: {
@@ -137,6 +136,11 @@ const isFocus = ref(false); // a11y
 const activeTooltipIndex = ref(null); // a11y
 
 const FINAL_CONFIG = ref(prepareConfig());
+
+const { transitionEnabled } = useTransitions({
+    config: () => FINAL_CONFIG.value.transitions,
+    dataset: () => props.dataset,
+});
 
 const isCursorPointer = computed(
     () => FINAL_CONFIG.value.userOptions.useCursorPointer,
@@ -2519,7 +2523,7 @@ defineExpose({
                 :class="{
                     'vue-data-ui-fullscreen--on': isFullscreen,
                     'vue-data-ui-fulscreen--off': !isFullscreen,
-                    animated: FINAL_CONFIG.useCssAnimation,
+                    'vue-data-ui-no-transition': !transitionEnabled,
                 }"
                 :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`"
                 :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.style.color}`"
@@ -2616,7 +2620,9 @@ defineExpose({
                         :opacity="useXSelectorScaleLabel ? 0 : 1"
                     >
                         <path
-                            :class="{ 'vue-data-ui-datalabel': isReady }"
+                            :class="{
+                                'vue-data-ui-transition': transitionEnabled,
+                            }"
                             :stroke="FINAL_CONFIG.style.layout.axis.stroke"
                             :stroke-width="
                                 FINAL_CONFIG.style.layout.axis.strokeWidth
@@ -2625,7 +2631,9 @@ defineExpose({
                             stroke-linecap="round"
                         />
                         <text
-                            :class="{ 'vue-data-ui-datalabel': isReady }"
+                            :class="{
+                                'vue-data-ui-transition': transitionEnabled,
+                            }"
                             :transform="`translate(${scaleItem.x}, ${zero.y + FINAL_CONFIG.style.layout.dataLabels.xAxis.scales.labels.fontSize + 6 + FINAL_CONFIG.style.layout.dataLabels.xAxis.scales.labels.offsetY})`"
                             text-anchor="middle"
                             :font-size="
@@ -2688,7 +2696,9 @@ defineExpose({
                         :key="`scatter-y-scale-${uid}-${scaleItemIndex}`"
                     >
                         <path
-                            :class="{ 'vue-data-ui-datalabel': isReady }"
+                            :class="{
+                                'vue-data-ui-transition': transitionEnabled,
+                            }"
                             :d="`M${zero.x - 4},${scaleItem.y} ${zero.x + 4},${scaleItem.y}`"
                             :stroke="FINAL_CONFIG.style.layout.axis.stroke"
                             :stroke-width="
@@ -2698,7 +2708,9 @@ defineExpose({
                         />
 
                         <text
-                            :class="{ 'vue-data-ui-datalabel': isReady }"
+                            :class="{
+                                'vue-data-ui-transition': transitionEnabled,
+                            }"
                             :transform="`translate(${zero.x - FINAL_CONFIG.style.layout.dataLabels.yAxis.scales.labels.fontSize / 2 - 8 + FINAL_CONFIG.style.layout.dataLabels.yAxis.scales.labels.offsetX}, ${scaleItem.y + FINAL_CONFIG.style.layout.dataLabels.yAxis.scales.labels.fontSize / 3})`"
                             text-anchor="end"
                             :font-size="
@@ -4230,27 +4242,6 @@ defineExpose({
     position: relative;
 }
 
-.animated path,
-.animated line:not(.line-pointer),
-.animated circle:not(.line-pointer) {
-    animation: verticalBarAnimation 0.5s ease-in-out !important;
-    transform-origin: center !important;
-}
-
-@keyframes verticalBarAnimation {
-    0% {
-        transform: scale(0.9, 0.9);
-        opacity: 0;
-    }
-    80% {
-        transform: scale(1.02, 1.02);
-        opacity: 1;
-    }
-    to {
-        transform: scale(1, 1);
-        opacity: 1;
-    }
-}
 .vue-ui-scatter .vue-ui-scatter-label {
     align-items: center;
     display: flex;
@@ -4313,7 +4304,7 @@ svg:focus-visible {
     transition: opacity 0.1s ease-in-out;
 }
 
-.vue-data-ui-datalabel {
+.vue-data-ui-transition {
     transition: all 0.2s ease-in-out;
 }
 
@@ -4322,5 +4313,10 @@ svg:focus-visible {
         transition: none !important;
         animation: none !important;
     }
+}
+
+.vue-data-ui-no-transition * {
+    transition: none !important;
+    animation: none !important;
 }
 </style>

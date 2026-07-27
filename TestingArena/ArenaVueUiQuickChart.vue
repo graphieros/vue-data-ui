@@ -148,10 +148,16 @@ function alterDataset() {
     datasets.value.shortArray.push(Math.random() * 50);
 }
 
-const selectedSerie = ref('shortObject');
+const selectedSerie = ref('shortArray');
 
 const model = createModel([
     CHECKBOX('debug', { def: true }),
+
+    CHECKBOX('transitions.enable', { def: true }),
+    CHECKBOX('transitions.pauseOnLoad', { def: true }),
+    CHECKBOX('transitions.pauseOnDatasetChange', { def: false }),
+    NUMBER('transitions.activationDelayMs', { def: 300 }),
+
     CHECKBOX('useCursorPointer', { def: false }),
     CHECKBOX('loading', { def: false }),
     COLOR('backgroundColor', { def: '#FFFFFF' }),

@@ -78,13 +78,18 @@ onMounted(() => {
                 ],
             },
         ];
-    }, 2000);
+    }, 0);
 });
 
 const model = createModel([
     CHECKBOX('debug', { def: true }),
     CHECKBOX('loading', { def: false }),
     CHECKBOX('responsiveProportionalSizing', { def: false }),
+
+    CHECKBOX('transitions.enable', { def: true }),
+    CHECKBOX('transitions.pauseOnLoad', { def: true }),
+    CHECKBOX('transitions.pauseOnDatasetChange', { def: false }),
+    NUMBER('transitions.activationDelayMs', { def: 300 }),
 
     CHECKBOX('style.chart.comments.show', { def: true }),
     CHECKBOX('style.chart.comments.showInTooltip', { def: true }),

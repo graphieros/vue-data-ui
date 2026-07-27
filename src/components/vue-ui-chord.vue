@@ -1788,8 +1788,6 @@ defineExpose({
                             v-if="c.source.value"
                             :class="{
                                 'vue-ui-chord-ribbon': true,
-                                'vue-ui-chord-ribbon-animated':
-                                    FINAL_CONFIG.useCssAnimation && !loaded,
                             }"
                             :d="ribbonPath(c.source, c.target)"
                             :fill="FINAL_CONFIG.style.chart.backgroundColor"
@@ -1804,8 +1802,6 @@ defineExpose({
                             v-if="c.source.value"
                             :class="{
                                 'vue-ui-chord-ribbon': true,
-                                'vue-ui-chord-ribbon-animated':
-                                    FINAL_CONFIG.useCssAnimation && !loaded,
                             }"
                             :d="ribbonPath(c.source, c.target)"
                             :fill="formattedDataset.colors[c.source.index]"
@@ -1855,8 +1851,6 @@ defineExpose({
                             v-if="c.source.value && $slots.pattern"
                             :class="{
                                 'vue-ui-chord-ribbon': true,
-                                'vue-ui-chord-ribbon-animated':
-                                    FINAL_CONFIG.useCssAnimation && !loaded,
                             }"
                             :d="ribbonPath(c.source, c.target)"
                             :fill="`url(#pattern_${uid}_${c.source.index})`"
@@ -2338,23 +2332,6 @@ defineExpose({
     transition:
         opacity 0.2s ease-in-out,
         transform 0.2s ease-in-out;
-}
-
-.vue-ui-chord-arc-animated,
-.vue-ui-chord-ribbon-animated {
-    animation: chord-animation 0.5s ease-in-out;
-}
-
-@keyframes chord-animation {
-    0% {
-        transform: scale(0.9, 0.9);
-    }
-    80% {
-        transform: scale(1.02, 1.02);
-    }
-    to {
-        transform: scale(1, 1);
-    }
 }
 
 .reset-wrapper {

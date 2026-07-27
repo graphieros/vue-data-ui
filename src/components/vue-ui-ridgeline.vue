@@ -1767,10 +1767,6 @@ defineExpose({
                             "
                             stroke-linecap="round"
                             stroke-linejoin="round"
-                            :class="{
-                                'vue-ui-ridgeline-animate':
-                                    FINAL_CONFIG.useCssAnimation && !loading,
-                            }"
                             :style="{
                                 strokeDasharray: dp.pathLength,
                                 strokeDashoffset: FINAL_CONFIG.useCssAnimation
@@ -1795,10 +1791,6 @@ defineExpose({
                             "
                             stroke-linecap="round"
                             stroke-linejoin="round"
-                            :class="{
-                                'vue-ui-ridgeline-animate':
-                                    FINAL_CONFIG.useCssAnimation && !loading,
-                            }"
                             :style="{
                                 strokeDasharray: dp.pathLength,
                                 strokeDashoffset: FINAL_CONFIG.useCssAnimation
@@ -2501,40 +2493,6 @@ defineExpose({
     position: relative;
 }
 
-@keyframes vueDataUiLineAnimation {
-    to {
-        stroke-dashoffset: 0;
-    }
-}
-
-.vue-data-ui-line-animated {
-    animation: vueDataUiLineAnimation 1.5s ease-out forwards;
-}
-
-.vue-ui-ridgeline-animate {
-    transform-origin: center;
-    animation:
-        lineAnimation 0.5s ease-in-out,
-        vueDataUiLineAnimation 0.5s ease-out forwards;
-}
-
-@keyframes lineAnimation {
-    0% {
-        transform: scale(0.9, 0.9);
-        opacity: 0;
-    }
-
-    80% {
-        transform: scale(1.02, 1.02);
-        opacity: 1;
-    }
-
-    to {
-        transform: scale(1, 1);
-        opacity: 1;
-    }
-}
-
 svg:focus {
     outline: none;
 }
@@ -2554,5 +2512,12 @@ svg:focus-visible {
     clip: rect(0 0 0 0);
     white-space: normal;
     border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .vue-data-ui-component * {
+        transition: none !important;
+        animation: none !important;
+    }
 }
 </style>

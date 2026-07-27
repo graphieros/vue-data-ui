@@ -2146,10 +2146,6 @@ defineExpose({
                                 <g v-for="(arc, j) in item.donut">
                                     <text
                                         data-cy="datapoint-name"
-                                        :class="{
-                                            animated:
-                                                FINAL_CONFIG.useCssAnimation,
-                                        }"
                                         v-if="
                                             j === 0 && svg.width && svg.height
                                         "
@@ -2205,10 +2201,6 @@ defineExpose({
                                 <g v-for="(arc, j) in item.donut">
                                     <text
                                         data-cy="datapoint-name"
-                                        :class="{
-                                            animated:
-                                                FINAL_CONFIG.useCssAnimation,
-                                        }"
                                         v-if="
                                             j === 0 && svg.width && svg.height
                                         "
@@ -2272,9 +2264,6 @@ defineExpose({
                             >
                                 <text
                                     data-cy="datapoint-percentage"
-                                    :class="{
-                                        animated: FINAL_CONFIG.useCssAnimation,
-                                    }"
                                     v-show="
                                         mutableConfig.dataLabels.show &&
                                         FINAL_CONFIG.style.chart.layout.labels
@@ -2351,9 +2340,6 @@ defineExpose({
 
                                 <text
                                     data-cy="datapoint-value"
-                                    :class="{
-                                        animated: FINAL_CONFIG.useCssAnimation,
-                                    }"
                                     v-show="
                                         mutableConfig.dataLabels.show &&
                                         FINAL_CONFIG.style.chart.layout.labels
@@ -2726,28 +2712,6 @@ defineExpose({
 .vue-ui-nested-donuts {
     user-select: none;
     position: relative;
-}
-
-.animated {
-    animation: donut 0.5s ease-in-out;
-    transform-origin: center;
-}
-
-@keyframes donut {
-    0% {
-        transform: scale(0.9, 0.9);
-        opacity: 0;
-    }
-
-    80% {
-        transform: scale(1.02, 1.02);
-        opacity: 1;
-    }
-
-    to {
-        transform: scale(1, 1);
-        opacity: 1;
-    }
 }
 
 .vue-ui-nested-donuts-legend {

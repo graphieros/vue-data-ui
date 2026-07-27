@@ -45,7 +45,8 @@ import { useNestedProp } from '../useNestedProp';
 import { useResponsive } from '../useResponsive';
 import { useTimeLabels } from '../useTimeLabels';
 import { useThemeCheck } from '../useThemeCheck';
-import { useMountedDelay } from '../useMountedDelay.js';
+import { useTransitions } from '../useTransitions.js';
+import { useStableElementSize } from '../useStableElementSize.js';
 import { useChartAccessibility } from '../useChartAccessibility';
 import { useTimeLabelCollision } from '../useTimeLabelCollider';
 import img from '../img';
@@ -69,7 +70,6 @@ const UserOptions = defineAsyncComponent(
 
 const { vue_ui_quick_chart: DEFAULT_CONFIG } = useConfig();
 const { isThemeValid, warnInvalidTheme } = useThemeCheck();
-const { isReady } = useMountedDelay(300);
 
 const props = defineProps({
     config: {
@@ -109,8 +109,64 @@ const scaleLabels = ref(null);
 const xAxisLabel = ref(null);
 const yAxisLabel = ref(null);
 
+const parentElement = shallowRef(null);
+const parentLayoutIsStable = ref(false);
+const parentLayoutStableRunSequence = ref(0);
+const pendingParentLayoutSequence = ref(0);
+const parentStableLayoutRefreshIsQueued = ref(false);
+
+function setParentElementReference() {
+    parentElement.value = quickChart.value?.parentNode ?? null;
+}
+
+function nextPaintFrame() {
+    return new Promise((resolve) => {
+        requestAnimationFrame(() => {
+            requestAnimationFrame(resolve);
+        });
+    });
+}
+
+async function runParentStableLayoutPass() {
+    const currentSequence = ++pendingParentLayoutSequence.value;
+    parentLayoutIsStable.value = false;
+    await nextTick();
+    await nextPaintFrame();
+    await nextPaintFrame();
+    if (currentSequence !== pendingParentLayoutSequence.value) return;
+    parentLayoutStableRunSequence.value += 1;
+    parentLayoutIsStable.value = true;
+}
+
+function queueParentStableLayoutRefresh() {
+    if (parentStableLayoutRefreshIsQueued.value) return;
+    parentStableLayoutRefreshIsQueued.value = true;
+    nextTick(() => {
+        parentStableLayoutRefreshIsQueued.value = false;
+        setParentElementReference();
+        runParentStableLayoutPass();
+    });
+}
+
+const stableParentSize = useStableElementSize({
+    elementRef: parentElement,
+    minimumWidth: 2,
+    minimumHeight: 2,
+    stableFramesRequired: 2,
+    once: false,
+    onSizeAccepted: () => {
+        runParentStableLayoutPass();
+    },
+});
+
 const donutStroke = ref('#FFFFFF');
 const FINAL_CONFIG = ref(prepareConfig());
+
+const { transitionEnabled } = useTransitions({
+    config: () => FINAL_CONFIG.value.transitions,
+    dataset: () => props.dataset,
+});
+
 const debug = computed(() => !!FINAL_CONFIG.value.debug);
 const isCursorPointer = computed(() => FINAL_CONFIG.value.useCursorPointer);
 
@@ -149,22 +205,6 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
     ...toRefs(props),
     FINAL_CONFIG,
     prepareConfig,
-    callback: () => {
-        Promise.resolve().then(async () => {
-            await nextTick();
-            if (
-                chartType.value === detector.chartType.LINE &&
-                FINAL_CONFIG.value.lineAnimated &&
-                !loading.value
-            ) {
-                animateLineNow({
-                    pathDuration: 1000,
-                    pointDuration: 1200,
-                    labelDuration: 1200,
-                });
-            }
-        });
-    },
     skeletonDataset: props.config?.skeletonDataset ?? [
         1, 2, 3, 5, 8, 13, 21, 34, 55, 89,
     ],
@@ -255,6 +295,7 @@ watch(
         slicer.value.start = 0;
         slicer.value.end = formattedDataset.value.maxSeriesLength;
         slicerStep.value += 1;
+        queueParentStableLayoutRefresh();
     },
     { deep: true },
 );
@@ -352,9 +393,12 @@ watch(
 const resizeObserver = shallowRef(null);
 const observedEl = shallowRef(null);
 
-onMounted(async () => {
+onMounted(() => {
     readyTeleport.value = true;
+    setParentElementReference();
+    stableParentSize.start();
     prepareChart();
+    runParentStableLayoutPass();
 });
 
 function prepareChart() {
@@ -385,6 +429,7 @@ function prepareChart() {
             requestAnimationFrame(() => {
                 defaultSizes.value.width = width;
                 defaultSizes.value.height = height;
+                queueParentStableLayoutRefresh();
             });
         });
 
@@ -400,14 +445,19 @@ function prepareChart() {
         resizeObserver.value.observe(observedEl.value);
     }
     setupSlicer();
+    queueParentStableLayoutRefresh();
 }
 
 onBeforeUnmount(() => {
+    stableParentSize.stop();
+
     if (resizeObserver.value) {
         if (observedEl.value) {
             resizeObserver.value.unobserve(observedEl.value);
         }
         resizeObserver.value.disconnect();
+        resizeObserver.value = null;
+        observedEl.value = null;
     }
 });
 
@@ -828,6 +878,8 @@ async function setupSlicer() {
         };
         slicerStep.value += 1;
     }
+
+    queueParentStableLayoutRefresh();
 }
 
 function validSlicerEnd(v) {
@@ -952,6 +1004,8 @@ const timeLabelsY = computed(() => {
 const line = computed(() => {
     if (chartType.value !== detector.chartType.LINE) return null;
 
+    void parentLayoutStableRunSequence.value;
+
     const chartDimensions = {
         height: defaultSizes.value.height,
         width: defaultSizes.value.width,
@@ -1075,8 +1129,8 @@ const line = computed(() => {
     const scale =
         extremes.max === extremes.min
             ? calculateNiceScale(
-                  extremes.min,
-                  extremes.min + 1,
+                  Math.min(extremes.min, 0),
+                  extremes.min === 0 ? 1 : Math.max(extremes.min, 0),
                   FINAL_CONFIG.value.xyScaleSegments,
               )
             : calculateNiceScale(
@@ -1262,6 +1316,8 @@ const line = computed(() => {
 const bar = computed(() => {
     if (chartType.value !== detector.chartType.BAR) return null;
 
+    void parentLayoutStableRunSequence.value;
+
     const chartDimensions = {
         height: defaultSizes.value.height,
         width: defaultSizes.value.width,
@@ -1399,8 +1455,8 @@ const bar = computed(() => {
     const scale =
         extremes.min === extremes.max
             ? calculateNiceScale(
-                  extremes.min,
-                  extremes.min + 1,
+                  Math.min(extremes.min, 0),
+                  extremes.min === 0 ? 1 : Math.max(extremes.min, 0),
                   FINAL_CONFIG.value.xyScaleSegments,
               )
             : calculateNiceScale(
@@ -1694,82 +1750,6 @@ function bucketByXTolerance(elems, getX) {
     }
     buckets.push(current);
     return buckets;
-}
-
-function animateLineNow({
-    pathDuration,
-    pathEasing = 'ease-in-out',
-    pointDuration,
-    labelDuration,
-    pointDelay = 0,
-    labelDelay = 0,
-    pointStep = 0,
-    labelStep = 0,
-    intraSeriesStep = 0,
-} = {}) {
-    const wrappers = Array.isArray(pathWrapper?.value)
-        ? pathWrapper.value
-        : [pathWrapper?.value].filter(Boolean);
-    const tops = Array.isArray(pathTop?.value)
-        ? pathTop.value
-        : [pathTop?.value].filter(Boolean);
-    const paths = [...wrappers, ...tops].filter(Boolean);
-
-    const root = quickChart?.value || null;
-
-    const points = root
-        ? Array.from(root.querySelectorAll('.vue-ui-quick-chart-plot'))
-        : [];
-    const labels = root
-        ? Array.from(root.querySelectorAll('.vue-ui-quick-chart-label'))
-        : [];
-
-    paths.forEach(primePath);
-    primeRevealables(points, { fromOpacity: '0', fromScale: '0.75' });
-    primeRevealables(labels, { fromOpacity: '0', fromScale: '0.98' });
-
-    points.forEach((el) => el.classList.remove('quick-animation'));
-    labels.forEach((el) => el.classList.remove('quick-animation'));
-
-    if (root) {
-        void root.offsetWidth;
-    }
-
-    const pointCols = points.length
-        ? bucketByXTolerance(points, getXFromCircle)
-        : [];
-    const labelCols = labels.length
-        ? bucketByXTolerance(labels, getXFromText)
-        : [];
-
-    requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-            paths.forEach((p) => {
-                p.style.transition = `stroke-dashoffset ${pathDuration}ms ${pathEasing}`;
-                p.style.strokeDashoffset = '0';
-            });
-
-            pointCols.forEach((col, colIndex) => {
-                col.items.forEach((el, k) => {
-                    const delay =
-                        pointDelay + colIndex * pointStep + k * intraSeriesStep;
-                    el.style.transition = `opacity ${pointDuration}ms ease-out ${delay}ms, transform ${pointDuration}ms ease-out ${delay}ms`;
-                    el.style.opacity = '1';
-                    el.style.transform = 'scale(1)';
-                });
-            });
-
-            labelCols.forEach((col, colIndex) => {
-                col.items.forEach((el, k) => {
-                    const delay =
-                        labelDelay + colIndex * labelStep + k * intraSeriesStep;
-                    el.style.transition = `opacity ${labelDuration}ms ease-out ${delay}ms, transform ${labelDuration}ms ease-out ${delay}ms`;
-                    el.style.opacity = '1';
-                    el.style.transform = 'scale(1)';
-                });
-            });
-        });
-    });
 }
 
 const allMinimaps = computed(() => {
@@ -2430,6 +2410,9 @@ defineExpose({
                 :aria-describedby="`chart-instructions-${uid}`"
                 :viewBox="viewBox"
                 :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.color}`"
+                :class="{
+                    'vue-data-ui-no-transition': !transitionEnabled,
+                }"
                 tabindex="0"
                 @focus="onSvgFocus"
                 @blur="onSvgBlur"
@@ -2603,10 +2586,7 @@ defineExpose({
                             "
                         />
                     </g>
-                    <g
-                        class="donut-labels quick-animation"
-                        v-if="FINAL_CONFIG.showDataLabels"
-                    >
+                    <g class="donut-labels" v-if="FINAL_CONFIG.showDataLabels">
                         <template v-for="(arc, i) in donut.chart">
                             <circle
                                 data-cy="datapoint-donut-marker-circle"
@@ -2665,10 +2645,7 @@ defineExpose({
                             </text>
                         </template>
                     </g>
-                    <g
-                        class="donut-hollow quick-animation"
-                        v-if="FINAL_CONFIG.donutShowTotal"
-                    >
+                    <g class="donut-hollow" v-if="FINAL_CONFIG.donutShowTotal">
                         <text
                             data-cy="donut-hollow-total-label"
                             text-anchor="middle"
@@ -2773,7 +2750,9 @@ defineExpose({
                         >
                             <path
                                 data-cy="scale-line-tick"
-                                :class="{ 'vue-data-ui-datalabel': isReady }"
+                                :class="{
+                                    'vue-data-ui-transition': transitionEnabled,
+                                }"
                                 :d="`M${label.x + 4},${label.y} ${line.drawingArea.left},${label.y}`"
                                 v-if="label.y <= line.drawingArea.bottom"
                                 :stroke="FINAL_CONFIG.xyAxisStroke"
@@ -2781,7 +2760,9 @@ defineExpose({
                                 stroke-linecap="round"
                             />
                             <text
-                                :class="{ 'vue-data-ui-datalabel': isReady }"
+                                :class="{
+                                    'vue-data-ui-transition': transitionEnabled,
+                                }"
                                 data-cy="scale-line-label"
                                 v-if="label.y <= line.drawingArea.bottom"
                                 :transform="`translate(${label.x}, ${label.y + FINAL_CONFIG.xyLabelsYFontSize / 3})`"
@@ -2939,15 +2920,8 @@ defineExpose({
                                         stroke-linecap="round"
                                         fill="none"
                                         :class="{
-                                            'quick-animation': !loading,
-                                            'vue-data-ui-line-animated':
-                                                FINAL_CONFIG.lineAnimated &&
-                                                !loading,
-                                        }"
-                                        :style="{
-                                            transition: loading
-                                                ? undefined
-                                                : 'all 0.2s ease-in-out',
+                                            'vue-data-ui-transition':
+                                                transitionEnabled,
                                         }"
                                     />
                                     <path
@@ -2961,10 +2935,8 @@ defineExpose({
                                         stroke-linecap="round"
                                         fill="none"
                                         :class="{
-                                            'quick-animation': !loading,
-                                            'vue-data-ui-line-animated':
-                                                FINAL_CONFIG.lineAnimated &&
-                                                !loading,
+                                            'vue-data-ui-transition':
+                                                transitionEnabled,
                                         }"
                                         :style="{
                                             transition: loading
@@ -2985,15 +2957,8 @@ defineExpose({
                                         stroke-linecap="round"
                                         fill="none"
                                         :class="{
-                                            'quick-animation': !loading,
-                                            'vue-data-ui-line-animated':
-                                                FINAL_CONFIG.lineAnimated &&
-                                                !loading,
-                                        }"
-                                        :style="{
-                                            transition: loading
-                                                ? undefined
-                                                : 'all 0.2s ease-in-out',
+                                            'vue-data-ui-transition':
+                                                transitionEnabled,
                                         }"
                                     />
                                     <path
@@ -3007,15 +2972,8 @@ defineExpose({
                                         stroke-linecap="round"
                                         fill="none"
                                         :class="{
-                                            'quick-animation': !loading,
-                                            'vue-data-ui-line-animated':
-                                                FINAL_CONFIG.lineAnimated &&
-                                                !loading,
-                                        }"
-                                        :style="{
-                                            transition: loading
-                                                ? undefined
-                                                : 'all 0.2s ease-in-out',
+                                            'vue-data-ui-transition':
+                                                transitionEnabled,
                                         }"
                                     />
                                 </template>
@@ -3033,11 +2991,8 @@ defineExpose({
                                         stroke-width="0.5"
                                         :class="{
                                             'vue-ui-quick-chart-plot': true,
-                                        }"
-                                        :style="{
-                                            transition: loading
-                                                ? undefined
-                                                : 'all 0.2s ease-in-out',
+                                            'vue-data-ui-transition':
+                                                transitionEnabled,
                                         }"
                                     />
                                 </template>
@@ -3051,7 +3006,9 @@ defineExpose({
                         >
                             <text
                                 class="vue-ui-quick-chart-label"
-                                :class="{ 'vue-data-ui-datalabel': isReady }"
+                                :class="{
+                                    'vue-data-ui-transition': transitionEnabled,
+                                }"
                                 data-cy="datapoint-label"
                                 v-for="(plot, j) in ds.coordinates"
                                 :key="`plot_${ds.id}_${j + slicer.start}`"
@@ -3059,11 +3016,6 @@ defineExpose({
                                 :font-size="FINAL_CONFIG.dataLabelFontSize"
                                 :fill="ds.color"
                                 :transform="`translate(${plot.x}, ${checkNaN(plot.y) - FINAL_CONFIG.dataLabelFontSize / 2})`"
-                                :style="{
-                                    transition: loading
-                                        ? undefined
-                                        : 'all 0.2s ease-in-out',
-                                }"
                             >
                                 {{
                                     applyDataLabel(
@@ -3181,7 +3133,9 @@ defineExpose({
                         >
                             <path
                                 data-cy="scale-bar-tick"
-                                :class="{ 'vue-data-ui-datalabel': isReady }"
+                                :class="{
+                                    'vue-data-ui-transition': transitionEnabled,
+                                }"
                                 v-if="label.y <= bar.drawingArea.bottom"
                                 :d="`M${label.x + 4},${label.y} ${bar.drawingArea.left},${label.y}`"
                                 :stroke="FINAL_CONFIG.xyAxisStroke"
@@ -3189,7 +3143,9 @@ defineExpose({
                                 stroke-linecap="round"
                             />
                             <text
-                                :class="{ 'vue-data-ui-datalabel': isReady }"
+                                :class="{
+                                    'vue-data-ui-transition': transitionEnabled,
+                                }"
                                 data-cy="scale-bar-label"
                                 v-if="label.y <= bar.drawingArea.bottom"
                                 :transform="`translate(${label.x}, ${label.y + FINAL_CONFIG.xyLabelsYFontSize / 3})`"
@@ -3336,37 +3292,9 @@ defineExpose({
                                 :stroke-width="FINAL_CONFIG.barStrokeWidth"
                                 stroke-linecap="round"
                                 :class="{
-                                    'vue-data-ui-bar-animated':
-                                        FINAL_CONFIG.barAnimated &&
-                                        plot.value < 0 &&
-                                        !loading,
+                                    'vue-data-ui-transition': transitionEnabled,
                                 }"
-                            >
-                                <animate
-                                    v-if="
-                                        FINAL_CONFIG.barAnimated &&
-                                        plot.value > 0 &&
-                                        !isPrinting &&
-                                        !isImaging
-                                    "
-                                    attributeName="height"
-                                    :from="0"
-                                    :to="plot.height"
-                                    dur="0.5s"
-                                />
-                                <animate
-                                    v-if="
-                                        FINAL_CONFIG.barAnimated &&
-                                        plot.value > 0 &&
-                                        !isPrinting &&
-                                        !isImaging
-                                    "
-                                    attributeName="y"
-                                    :from="bar.absoluteZero"
-                                    :to="bar.absoluteZero - plot.height"
-                                    dur="0.5s"
-                                />
-                            </rect>
+                            />
                         </template>
                     </g>
                     <g class="dataLabels" v-if="FINAL_CONFIG.showDataLabels">
@@ -3376,6 +3304,9 @@ defineExpose({
                         >
                             <text
                                 data-cy="datapoint-label"
+                                :class="{
+                                    'vue-data-ui-transition': transitionEnabled,
+                                }"
                                 v-for="(plot, j) in ds.coordinates"
                                 :key="`plot_${j + slicer.start}`"
                                 :transform="`translate(${plot.x + plot.width / 2}, ${checkNaN(plot.y) - FINAL_CONFIG.dataLabelFontSize / 2})`"
@@ -3984,26 +3915,6 @@ defineExpose({
     outline-offset: 2px;
 }
 
-.quick-animation {
-    animation: quick 0.5s ease-in-out;
-    transform-origin: center;
-}
-
-@keyframes quick {
-    0% {
-        transform: scale(0.9, 0.9);
-        opacity: 0;
-    }
-    80% {
-        transform: scale(1.02, 1.02);
-        opacity: 1;
-    }
-    to {
-        transform: scale(1, 1);
-        opacity: 1;
-    }
-}
-
 .vue-data-ui-bar-animated {
     animation: vueDataUiBarAnimation 0.5s cubic-bezier(0.79, 0.21, 0.79, 0.21)
         forwards;
@@ -4036,8 +3947,8 @@ svg:focus-visible {
     border: 0;
 }
 
-.vue-data-ui-datalabel {
-    transition: all 0.2s ease-in-out !important;
+.vue-data-ui-transition {
+    transition: all 0.2s ease-in-out;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -4045,5 +3956,10 @@ svg:focus-visible {
         transition: none !important;
         animation: none !important;
     }
+}
+
+.vue-data-ui-no-transition * {
+    transition: none !important;
+    animation: none !important;
 }
 </style>

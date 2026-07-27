@@ -1495,18 +1495,15 @@ defineExpose({
     position: relative;
 }
 
-/* Don't animate everything by default */
 .vue-ui-word-cloud * {
     transition: none;
 }
 
-/* This group moves when the algorithm updates x/y */
 .vue-ui-word-cloud-word {
     will-change: transform;
     transition: transform 0.25s ease-out;
 }
 
-/* SVG text stability */
 .vue-ui-word-cloud svg {
     shape-rendering: geometricPrecision;
     text-rendering: optimizeLegibility;

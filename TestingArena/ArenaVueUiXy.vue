@@ -474,6 +474,11 @@ const model = createModel([
     CHECKBOX('autoSize', { def: false }),
     CHECKBOX('chart.userOptions.useCursorPointer', { def: false }),
 
+    CHECKBOX('transitions.enable', { def: true }),
+    CHECKBOX('transitions.pauseOnLoad', { def: true }),
+    CHECKBOX('transitions.pauseOnDatasetChange', { def: false }),
+    NUMBER('transitions.activationDelayMs', { def: 300 }),
+
     CHECKBOX('responsive', { def: false }),
     CHECKBOX('responsiveProportionalSizing', { def: false }),
     CHECKBOX('loading', { def: false }),

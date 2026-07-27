@@ -444,7 +444,13 @@ function animateSL() {
 
     stopAnimation();
 
-    if (gradientPathEnabled || !cfg.show || loading.value || ds.length <= 1) {
+    if (
+        gradientPathEnabled ||
+        !cfg.show ||
+        loading.value ||
+        ds.length <= 1 ||
+        prefersReducedMotion.value
+    ) {
         safeDatasetCopy.value = ds;
         lastAnimationKey.value = key;
         return;
@@ -1873,5 +1879,12 @@ svg:focus-visible {
     clip: rect(0 0 0 0);
     white-space: normal;
     border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .vue-data-ui-component * {
+        transition: none !important;
+        animation: none !important;
+    }
 }
 </style>

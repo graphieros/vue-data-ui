@@ -30,6 +30,7 @@ import { useLoading } from '../useLoading';
 import { useNestedProp } from '../useNestedProp';
 import { useThemeCheck } from '../useThemeCheck';
 import { useChartAccessibility } from '../useChartAccessibility';
+import { usePrefersReducedMotion } from '../usePrefersMotion';
 import themes from '../themes/vue_ui_sparkstackbar.json';
 import BaseScanner from '../atoms/BaseScanner.vue';
 import BaseLegendToggle from '../atoms/BaseLegendToggle.vue';
@@ -43,6 +44,7 @@ const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
 
 const { vue_ui_sparkstackbar: DEFAULT_CONFIG } = useConfig();
 const { isThemeValid, warnInvalidTheme } = useThemeCheck();
+const prefersReducedMotion = usePrefersReducedMotion();
 
 const props = defineProps({
     config: {
@@ -202,7 +204,10 @@ const safeDatasetCopy = ref(
 const isAnimating = ref(true);
 
 function animateChart() {
-    if (!FINAL_CONFIG.value.style.animation.show) {
+    if (
+        !FINAL_CONFIG.value.style.animation.show ||
+        prefersReducedMotion.value
+    ) {
         isAnimating.value = false;
         return;
     }
@@ -1131,7 +1136,7 @@ defineExpose({
     opacity: 0.3;
 }
 rect.animated {
-    transition: all 0.3s ease-in-out !important;
+    transition: all 0.2s ease-in-out !important;
 }
 
 svg:focus,
@@ -1156,5 +1161,12 @@ svg:focus-visible,
     clip: rect(0 0 0 0);
     white-space: normal;
     border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .vue-data-ui-component * {
+        transition: none !important;
+        animation: none !important;
+    }
 }
 </style>

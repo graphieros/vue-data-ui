@@ -26,7 +26,7 @@ onMounted(() => {
             {
                 name: 'Series 1',
                 values: [
-                    { x: 2, y: 21, label: 'F' },
+                    { x: 2, y: 21, label: 'F\nF' },
                     { x: 7, y: 13, label: 'E' },
                     { x: 5, y: 8, label: 'D' },
                     { x: 22, y: 5, label: 'C' },

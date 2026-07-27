@@ -10,7 +10,6 @@ import {
     watch,
 } from 'vue';
 import WORLD_DATA from '../resources/worldGeo.js';
-import { useConfig } from '../useConfig';
 import {
     applyDataLabel,
     convertColorToHex,
@@ -28,6 +27,7 @@ import {
     treeShake,
     XMLNS,
 } from '../lib';
+import { useConfig } from '../useConfig';
 import { useLoading } from '../useLoading.js';
 import { usePrinter } from '../usePrinter';
 import { useSvgExport } from '../useSvgExport.js';

@@ -47,6 +47,7 @@ import { useSvgExport } from '../useSvgExport';
 import { useNestedProp } from '../useNestedProp';
 import { useResponsive } from '../useResponsive';
 import { useThemeCheck } from '../useThemeCheck';
+import { useTransitions } from '../useTransitions.js';
 import { useUserOptionState } from '../useUserOptionState';
 import { useChartAccessibility } from '../useChartAccessibility';
 import { useTimeLabelCollision } from '../useTimeLabelCollider';
@@ -336,6 +337,11 @@ function prepareConfig() {
 }
 
 const FINAL_CONFIG = ref(prepareConfig());
+
+const { transitionEnabled } = useTransitions({
+    config: () => FINAL_CONFIG.value.transitions,
+    dataset: () => props.dataset,
+});
 
 const isCursorPointer = computed(
     () => FINAL_CONFIG.value.userOptions.useCursorPointer,
@@ -955,14 +961,6 @@ const isSeriesHighlighted = computed(() => {
 });
 
 const hasHighlightedSeries = ref(false);
-
-function shouldAnimateSeries() {
-    return (
-        FINAL_CONFIG.value.useCssAnimation &&
-        !loading.value &&
-        !hasHighlightedSeries.value
-    );
-}
 
 function getSeriesOpacityTransition() {
     return 'opacity 0.2s ease-in-out';
@@ -2284,6 +2282,9 @@ defineExpose({
                         }"
                     >
                         <path
+                            :class="{
+                                'vue-data-ui-transition': transitionEnabled,
+                            }"
                             data-cy="datapoint-path-wrapper"
                             :d="ds.path"
                             :stroke="FINAL_CONFIG.style.chart.backgroundColor"
@@ -2293,11 +2294,11 @@ defineExpose({
                             fill="none"
                             stroke-linecap="round"
                             stroke-linejoin="round"
-                            :class="{
-                                animated: shouldAnimateSeries(),
-                            }"
                         />
                         <path
+                            :class="{
+                                'vue-data-ui-transition': transitionEnabled,
+                            }"
                             data-cy="datapoint-path"
                             :d="ds.path"
                             :stroke="getPathStroke(ds)"
@@ -2307,9 +2308,6 @@ defineExpose({
                             fill="none"
                             stroke-linecap="round"
                             stroke-linejoin="round"
-                            :class="{
-                                animated: shouldAnimateSeries(),
-                            }"
                         />
                     </g>
 
@@ -2323,6 +2321,7 @@ defineExpose({
                         :fill="FINAL_CONFIG.style.chart.backgroundColor"
                         :r="sizes.plots"
                         stroke="none"
+                        :class="{ 'vue-data-ui-transition': transitionEnabled }"
                     />
                     <!-- Visible plots -->
                     <circle
@@ -2336,33 +2335,22 @@ defineExpose({
                         :stroke-width="
                             FINAL_CONFIG.style.chart.plots.strokeWidth
                         "
-                        :class="{
-                            animated: shouldAnimateSeries(),
-                        }"
+                        :class="{ 'vue-data-ui-transition': transitionEnabled }"
                         :style="{
                             opacity: getSeriesOpacity(ds.seriesIndex),
-                            transition: getSeriesOpacityTransition(),
                         }"
                     />
 
                     <g v-if="FINAL_CONFIG.style.chart.plots.labels.show">
-                        <g v-for="plot in ds.plots">
+                        <g v-for="(plot, i) in ds.plots" :key="`plab_${i}`">
                             <!-- SINGLE LINE -->
                             <text
                                 v-if="!String(plot.label).includes('\n')"
                                 data-cy="datapoint-label"
-                                :x="
-                                    plot.x +
-                                    FINAL_CONFIG.style.chart.plots.labels
-                                        .offsetX
-                                "
-                                :y="
-                                    plot.y +
-                                    FINAL_CONFIG.style.chart.plots.labels
-                                        .offsetY +
-                                    sizes.plots +
-                                    sizes.labels
-                                "
+                                :class="{
+                                    'vue-data-ui-transition': transitionEnabled,
+                                }"
+                                :transform="`translate(${plot.x + FINAL_CONFIG.style.chart.plots.labels.offsetX}, ${plot.y + FINAL_CONFIG.style.chart.plots.labels.offsetY + sizes.plots + sizes.labels})`"
                                 :font-size="sizes.labels"
                                 :fill="
                                     FINAL_CONFIG.style.chart.plots.labels.color
@@ -2373,12 +2361,8 @@ defineExpose({
                                         : 'normal'
                                 "
                                 text-anchor="middle"
-                                :class="{
-                                    animated: shouldAnimateSeries(),
-                                }"
                                 :style="{
                                     opacity: getSeriesOpacity(ds.seriesIndex),
-                                    transition: getSeriesOpacityTransition(),
                                 }"
                             >
                                 {{ plot.label }}
@@ -2388,18 +2372,10 @@ defineExpose({
                             <text
                                 v-else
                                 data-cy="datapoint-label"
-                                :x="
-                                    plot.x +
-                                    FINAL_CONFIG.style.chart.plots.labels
-                                        .offsetX
-                                "
-                                :y="
-                                    plot.y +
-                                    FINAL_CONFIG.style.chart.plots.labels
-                                        .offsetY +
-                                    sizes.plots +
-                                    sizes.labels
-                                "
+                                :class="{
+                                    'vue-data-ui-transition': transitionEnabled,
+                                }"
+                                :transform="`translate(${plot.x + FINAL_CONFIG.style.chart.plots.labels.offsetX}, ${plot.y + FINAL_CONFIG.style.chart.plots.labels.offsetY + sizes.plots + sizes.labels})`"
                                 :font-size="sizes.labels"
                                 :fill="
                                     FINAL_CONFIG.style.chart.plots.labels.color
@@ -2410,12 +2386,8 @@ defineExpose({
                                         : 'normal'
                                 "
                                 text-anchor="middle"
-                                :class="{
-                                    animated: shouldAnimateSeries(),
-                                }"
                                 :style="{
                                     opacity: getSeriesOpacity(ds.seriesIndex),
-                                    transition: getSeriesOpacityTransition(),
                                 }"
                                 v-html="
                                     createTSpansFromLineBreaksOnX({
@@ -2423,16 +2395,8 @@ defineExpose({
                                         fontSize: sizes.labels,
                                         fill: FINAL_CONFIG.style.chart.plots
                                             .labels.color,
-                                        x:
-                                            plot.x +
-                                            FINAL_CONFIG.style.chart.plots
-                                                .labels.offsetX,
-                                        y:
-                                            plot.y +
-                                            FINAL_CONFIG.style.chart.plots
-                                                .labels.offsetY +
-                                            sizes.plots +
-                                            sizes.labels,
+                                        x: 0,
+                                        y: 0,
                                     })
                                 "
                             />
@@ -2444,17 +2408,11 @@ defineExpose({
                         <text
                             data-cy="datapoint-index-label"
                             v-for="(label, n) in ds.plots"
-                            :x="
-                                label.x +
-                                FINAL_CONFIG.style.chart.plots.indexLabels
-                                    .offsetX
-                            "
-                            :y="
-                                label.y +
-                                FINAL_CONFIG.style.chart.plots.indexLabels
-                                    .offsetY +
-                                sizes.indexLabels / 3
-                            "
+                            :key="`lab_${n}`"
+                            :class="{
+                                'vue-data-ui-transition': transitionEnabled,
+                            }"
+                            :transform="`translate(${label.x + FINAL_CONFIG.style.chart.plots.indexLabels.offsetX}, ${label.y + FINAL_CONFIG.style.chart.plots.indexLabels.offsetY + sizes.indexLabels / 3})`"
                             :font-size="sizes.indexLabels"
                             :font-weight="
                                 FINAL_CONFIG.style.chart.plots.indexLabels.bold
@@ -2463,12 +2421,8 @@ defineExpose({
                             "
                             :fill="getIndexLabelFillColor(ds, label)"
                             text-anchor="middle"
-                            :class="{
-                                animated: shouldAnimateSeries(),
-                            }"
                             :style="{
                                 opacity: getSeriesOpacity(ds.seriesIndex),
-                                transition: getSeriesOpacityTransition(),
                             }"
                         >
                             {{
@@ -2743,25 +2697,6 @@ defineExpose({
     width: 100%;
 }
 
-.animated {
-    animation: hpanim 0.5s ease-in-out;
-    transform-origin: center;
-}
-@keyframes hpanim {
-    0% {
-        transform: scale(0.9, 0.9);
-        opacity: 0;
-    }
-    80% {
-        transform: scale(1.02, 1.02);
-        opacity: 1;
-    }
-    to {
-        transform: scale(1, 1);
-        opacity: 1;
-    }
-}
-
 svg:focus {
     outline: none;
 }
@@ -2781,5 +2716,21 @@ svg:focus-visible {
     clip: rect(0 0 0 0);
     white-space: normal;
     border: 0;
+}
+
+.vue-data-ui-transition {
+    transition: all 0.2s ease-in-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .vue-data-ui-component * {
+        transition: none !important;
+        animation: none !important;
+    }
+}
+
+.vue-data-ui-no-transition * {
+    transition: none !important;
+    animation: none !important;
 }
 </style>

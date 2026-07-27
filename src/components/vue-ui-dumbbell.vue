@@ -39,6 +39,7 @@ import { useThemeCheck } from '../useThemeCheck';
 import { useUserOptionState } from '../useUserOptionState';
 import { useChartAccessibility } from '../useChartAccessibility';
 import { useTimeLabelCollision } from '../useTimeLabelCollider';
+import { usePrefersReducedMotion } from '../usePrefersMotion';
 import img from '../img';
 import Title from '../atoms/Title.vue'; // Must be ready in responsive mode
 import themes from '../themes/vue_ui_dumbbell.json';
@@ -65,6 +66,7 @@ const BaseDraggableDialog = defineAsyncComponent(
 
 const { vue_ui_dumbbell: DEFAULT_CONFIG } = useConfig();
 const { isThemeValid, warnInvalidTheme } = useThemeCheck();
+const prefersReducedMotion = usePrefersReducedMotion();
 
 const props = defineProps({
     config: {
@@ -617,7 +619,7 @@ function prepareDataset() {
 
     initMutableFromImmutable();
 
-    if (!FINAL_CONFIG.value.useAnimation) {
+    if (!FINAL_CONFIG.value.useAnimation || prefersReducedMotion.value) {
         mutableDataset.value = MUTABLE.value.map((ds) => {
             const endNum = Number(ds.end);
             return {

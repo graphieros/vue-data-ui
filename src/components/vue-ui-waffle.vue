@@ -33,7 +33,6 @@ import {
     treeShake,
     XMLNS,
 } from '../lib';
-import { buildValuePercentageLabel } from '../labelUtils';
 import { throttle } from '../canvas-lib';
 import { useConfig } from '../useConfig';
 import { useLoading } from '../useLoading';
@@ -44,6 +43,8 @@ import { useResponsive } from '../useResponsive';
 import { useThemeCheck } from '../useThemeCheck';
 import { useUserOptionState } from '../useUserOptionState';
 import { useChartAccessibility } from '../useChartAccessibility';
+import { usePrefersReducedMotion } from '../usePrefersMotion';
+import { buildValuePercentageLabel } from '../labelUtils';
 import img from '../img';
 import Shape from '../atoms/Shape.vue';
 import Title from '../atoms/Title.vue'; // Must be ready in responsive mode
@@ -73,6 +74,7 @@ const BaseDraggableDialog = defineAsyncComponent(
 
 const { vue_ui_waffle: DEFAULT_CONFIG } = useConfig();
 const { isThemeValid, warnInvalidTheme } = useThemeCheck();
+const prefersReducedMotion = usePrefersReducedMotion();
 
 const props = defineProps({
     config: {
@@ -672,13 +674,25 @@ function getSeriesSumById(seriesId, sourceDataset) {
 }
 
 function cancelAnimationBySeriesId(seriesId) {
+    let hasCancelledAnimation = false;
+
     if (animationFrameUpBySeriesId.value[seriesId]) {
         cancelAnimationFrame(animationFrameUpBySeriesId.value[seriesId]);
         delete animationFrameUpBySeriesId.value[seriesId];
+        hasCancelledAnimation = true;
     }
     if (animationFrameDownBySeriesId.value[seriesId]) {
         cancelAnimationFrame(animationFrameDownBySeriesId.value[seriesId]);
         delete animationFrameDownBySeriesId.value[seriesId];
+        hasCancelledAnimation = true;
+    }
+
+    if (hasCancelledAnimation) {
+        activeAnimationCount.value = Math.max(
+            0,
+            activeAnimationCount.value - 1,
+        );
+        isAnimating.value = activeAnimationCount.value > 0;
     }
 }
 
@@ -792,6 +806,27 @@ function segregate(seriesId, allowHideAll = false) {
     if (segregated.value.includes(seriesId)) {
         segregated.value = segregated.value.filter((item) => item !== seriesId);
 
+        if (prefersReducedMotion.value) {
+            cancelAnimationBySeriesId(seriesId);
+            setSeriesValuesById(seriesId, targetValue);
+
+            emit(
+                'selectLegend',
+                waffleSet.value.map((waffleItem) => ({
+                    name: waffleItem.name,
+                    color: waffleItem.color,
+                    value: waffleItem.value,
+                    proportion:
+                        waffleItem.proportion /
+                        Math.pow(
+                            FINAL_CONFIG.value.style.chart.layout.grid.size,
+                            2,
+                        ),
+                })),
+            );
+            return;
+        }
+
         animateSeriesValue({
             seriesId,
             fromValue: sourceValue,
@@ -818,6 +853,32 @@ function segregate(seriesId, allowHideAll = false) {
     }
 
     if (!canHideMore) return;
+
+    if (prefersReducedMotion.value) {
+        cancelAnimationBySeriesId(seriesId);
+
+        if (!segregated.value.includes(seriesId)) {
+            segregated.value.push(seriesId);
+        }
+
+        setSeriesValuesById(seriesId, 0);
+
+        emit(
+            'selectLegend',
+            waffleSet.value.map((waffleItem) => ({
+                name: waffleItem.name,
+                color: waffleItem.color,
+                value: waffleItem.value,
+                proportion:
+                    waffleItem.proportion /
+                    Math.pow(
+                        FINAL_CONFIG.value.style.chart.layout.grid.size,
+                        2,
+                    ),
+            })),
+        );
+        return;
+    }
 
     animateSeriesValue({
         seriesId,

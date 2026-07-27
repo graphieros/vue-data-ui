@@ -31,16 +31,17 @@ import {
     themePalettes,
     treeShake,
 } from '../lib';
+import { throttle } from '../canvas-lib';
 import { usePrinter } from '../usePrinter';
 import { useLoading } from '../useLoading';
 import { pack, bounds } from '../packCircles';
 import { useSvgExport } from '../useSvgExport';
 import { useNestedProp } from '../useNestedProp';
 import { useThemeCheck } from '../useThemeCheck';
+import { useResponsive } from '../useResponsive';
+import { useTransitions } from '../useTransitions.js';
 import { useUserOptionState } from '../useUserOptionState';
 import { useChartAccessibility } from '../useChartAccessibility';
-import { throttle } from '../canvas-lib';
-import { useResponsive } from '../useResponsive';
 import img from '../img';
 import Title from '../atoms/Title.vue'; // Must be ready in responsive mode
 import themes from '../themes/vue_ui_circle_pack.json';
@@ -112,6 +113,11 @@ const tooltipTriggerMode = ref('pointer'); // a11y
 const isFocus = ref(false); // a11y
 
 const FINAL_CONFIG = ref(prepareConfig());
+
+const { transitionEnabled } = useTransitions({
+    config: () => FINAL_CONFIG.value.transitions,
+    dataset: () => props.dataset,
+});
 
 const isCursorPointer = computed(
     () => FINAL_CONFIG.value.userOptions.useCursorPointer,
@@ -1781,6 +1787,7 @@ defineExpose({
                     'vue-data-ui-fullscreen--on': isFullscreen,
                     'vue-data-ui-fulscreen--off': !isFullscreen,
                     'not-responsive': !FINAL_CONFIG.responsive,
+                    'vue-data-ui-no-transition': !transitionEnabled,
                 }"
                 :style="`display:block;${FINAL_CONFIG.responsive ? 'width:100%;height:auto' : 'height:100%;'};overflow:${mutableConfig.showZoom ? 'hidden' : 'visible'};background:transparent;color:${FINAL_CONFIG.style.chart.color};background:${FINAL_CONFIG.style.chart.backgroundColor};`"
                 tabindex="0"
@@ -1838,6 +1845,7 @@ defineExpose({
 
                     <!-- 'CIRCLE' (using rect as circle does not css transition properly) -->
                     <rect
+                        :class="{ 'vue-data-ui-transition': transitionEnabled }"
                         data-cy="datapoint-circle"
                         :x="circle.x - circle.r"
                         :y="circle.y - circle.r"
@@ -1862,6 +1870,7 @@ defineExpose({
 
                     <rect
                         v-if="$slots.pattern"
+                        :class="{ 'vue-data-ui-transition': transitionEnabled }"
                         :x="circle.x - circle.r"
                         :y="circle.y - circle.r"
                         :width="circle.r * 2"
@@ -1882,6 +1891,7 @@ defineExpose({
                 <template v-for="(circle, i) in circles" :key="circle.id">
                     <rect
                         v-if="!circle.hasChildren"
+                        :class="{ 'vue-data-ui-transition': transitionEnabled }"
                         data-cy="datapoint-circle-overlay"
                         :x="circle.x - circle.r"
                         :y="circle.y - circle.r"
@@ -1905,13 +1915,15 @@ defineExpose({
                                     : 'none',
                             opacity: selectedDatapoint ? 1 : 0,
                             pointerEvents: 'none',
-                            transition: 'opacity 0.2s ease-in-out',
                         }"
                     />
                 </template>
 
                 <!-- LABELS -->
-                <template v-for="(circle, i) in circles" :key="circle.id">
+                <template
+                    v-for="(circle, i) in circles"
+                    :key="`cl_${circle.id}`"
+                >
                     <slot
                         name="data-label"
                         v-if="
@@ -1950,10 +1962,11 @@ defineExpose({
                             "
                             :style="{
                                 pointerEvents: 'none',
-                                transition: 'opacity 0.2s ease-in-out',
                             }"
-                            :x="circle.x"
-                            :y="
+                            :class="{
+                                'vue-data-ui-transition': transitionEnabled,
+                            }"
+                            :transform="`translate(${circle.x}, ${
                                 circle.y +
                                 calcOffsetY(
                                     circle.r,
@@ -1961,7 +1974,7 @@ defineExpose({
                                         .offsetY,
                                 ) -
                                 circle.r / 10
-                            "
+                            })`"
                             :font-size="
                                 (circle.r / 3) *
                                 FINAL_CONFIG.style.chart.circles.labels.name
@@ -1988,6 +2001,9 @@ defineExpose({
                         <!-- LABEL VALUE -->
                         <text
                             data-cy="label-value"
+                            :class="{
+                                'vue-data-ui-transition': transitionEnabled,
+                            }"
                             v-if="
                                 FINAL_CONFIG.style.chart.circles.labels.value
                                     .show && canShowCircleLabel(circle)
@@ -1996,8 +2012,7 @@ defineExpose({
                                 pointerEvents: 'none',
                                 transition: 'opacity 0.2s ease-in-out',
                             }"
-                            :x="circle.x"
-                            :y="
+                            :transform="`translate(${circle.x}, ${
                                 circle.y +
                                 calcOffsetY(
                                     circle.r,
@@ -2005,7 +2020,7 @@ defineExpose({
                                         .value.offsetY,
                                 ) +
                                 circle.r / 2.5
-                            "
+                            })`"
                             :font-size="
                                 getValueFontSize(circle) *
                                 FINAL_CONFIG.style.chart.circles.labels.value
@@ -2056,14 +2071,13 @@ defineExpose({
                 >
                     <g
                         v-for="tooltip in parentTooltipItems"
-                        :key="tooltip.id"
+                        :key="`tltp_${tooltip.id}`"
                         data-cy="parent-svg-tooltip"
                     >
-                        <line
-                            :x1="tooltip.anchorX"
-                            :y1="tooltip.anchorY"
-                            :x2="tooltip.lineX"
-                            :y2="tooltip.lineY"
+                        <path
+                            :class="{
+                                'vue-data-ui-transition': transitionEnabled,
+                            }"
                             :stroke="
                                 FINAL_CONFIG.style.chart.parentTooltips.link
                                     .useSerieColor
@@ -2084,8 +2098,12 @@ defineExpose({
                                 FINAL_CONFIG.style.chart.parentTooltips.link
                                     .opacity
                             "
+                            :d="`M${tooltip.anchorX}, ${tooltip.anchorY} ${tooltip.lineX}, ${tooltip.lineY}`"
                         />
                         <rect
+                            :class="{
+                                'vue-data-ui-transition': transitionEnabled,
+                            }"
                             :x="tooltip.x"
                             :y="tooltip.y"
                             :width="tooltip.width"
@@ -2116,27 +2134,31 @@ defineExpose({
                         />
 
                         <slot name="parent-tooltip" v-bind="{ ...tooltip }">
-                            <circle
-                                :cx="tooltip.x + tooltip.paddingX * 1.3"
-                                :cy="
-                                    tooltip.y +
-                                    tooltip.paddingY +
-                                    tooltip.lineHeight / 2
-                                "
-                                :r="tooltip.fontSize * 0.35"
+                            <rect
+                                :class="{
+                                    'vue-data-ui-transition': transitionEnabled,
+                                }"
                                 :fill="tooltip.color"
-                            />
-                            <text
                                 :x="
                                     tooltip.x +
-                                    tooltip.paddingX +
-                                    tooltip.fontSize
+                                    tooltip.paddingX * 1.3 -
+                                    tooltip.fontSize * 0.35
                                 "
                                 :y="
                                     tooltip.y +
                                     tooltip.paddingY +
-                                    tooltip.fontSize
+                                    tooltip.lineHeight / 2 -
+                                    tooltip.fontSize * 0.35
                                 "
+                                :rx="tooltip.fontSize * 0.35"
+                                :width="tooltip.fontSize * 0.7"
+                                :height="tooltip.fontSize * 0.7"
+                            />
+                            <text
+                                :class="{
+                                    'vue-data-ui-transition': transitionEnabled,
+                                }"
+                                :transform="`translate(${tooltip.x + tooltip.paddingX + tooltip.fontSize}, ${tooltip.y + tooltip.paddingY + tooltip.fontSize})`"
                                 :font-size="tooltip.fontSize"
                                 :fill="
                                     FINAL_CONFIG.style.chart.parentTooltips
@@ -2148,11 +2170,7 @@ defineExpose({
                                 <tspan
                                     v-for="(line, lineIndex) in tooltip.lines"
                                     :key="`${tooltip.id}_${lineIndex}`"
-                                    :x="
-                                        tooltip.x +
-                                        tooltip.paddingX +
-                                        tooltip.fontSize
-                                    "
+                                    :x="0"
                                     :dy="
                                         lineIndex === 0 ? 0 : tooltip.lineHeight
                                     "
@@ -2350,16 +2368,6 @@ defineExpose({
     overflow: visible;
 }
 
-rect,
-text {
-    transition: all 0.2s ease-in-out !important;
-}
-
-.loading rect,
-.loading text {
-    transition: none !important;
-}
-
 .vue-ui-circle-pack-svg-container {
     position: relative;
 }
@@ -2415,5 +2423,21 @@ svg:focus-visible {
     &:hover {
         transform: rotate(-90deg);
     }
+}
+
+.vue-data-ui-transition {
+    transition: all 0.2s ease-in-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .vue-data-ui-component * {
+        transition: none !important;
+        animation: none !important;
+    }
+}
+
+.vue-data-ui-no-transition * {
+    transition: none !important;
+    animation: none !important;
 }
 </style>

@@ -947,4 +947,11 @@ svg:focus-visible {
     white-space: normal;
     border: 0;
 }
+
+@media (prefers-reduced-motion: reduce) {
+    .vue-data-ui-component * {
+        transition: none !important;
+        animation: none !important;
+    }
+}
 </style>

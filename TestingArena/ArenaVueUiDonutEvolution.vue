@@ -26,7 +26,7 @@ onMounted(() => {
         dataset.value = [
             {
                 name: 'Serie 1',
-                values: [55.123425162, 34, 21, 13, 8, 5, 8, 13, 21, 34, 55],
+                values: [1000, 34, 21, 13, 8, 5, 8, 13, 21, 34, 55],
             },
             {
                 name: 'Serie 2',
@@ -57,6 +57,11 @@ const monthValues = computed(() => {
 const model = createModel([
     CHECKBOX('loading', { def: false }),
     CHECKBOX('debug', { def: true }),
+
+    CHECKBOX('transitions.enable', { def: true }),
+    CHECKBOX('transitions.pauseOnLoad', { def: true }),
+    CHECKBOX('transitions.pauseOnDatasetChange', { def: false }),
+    NUMBER('transitions.activationDelayMs', { def: 300 }),
 
     CHECKBOX('userOptions.useCursorPointer', { def: false }),
     CHECKBOX('userOptions.show', { def: true }),

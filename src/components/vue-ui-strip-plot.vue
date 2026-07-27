@@ -45,7 +45,7 @@ import { useSvgExport } from '../useSvgExport';
 import { useNestedProp } from '../useNestedProp';
 import { useResponsive } from '../useResponsive';
 import { useThemeCheck } from '../useThemeCheck';
-import { useMountedDelay } from '../useMountedDelay.js';
+import { useTransitions } from '../useTransitions.js';
 import { useUserOptionState } from '../useUserOptionState';
 import { useChartAccessibility } from '../useChartAccessibility';
 import { useTimeLabelCollision } from '../useTimeLabelCollider';
@@ -78,7 +78,6 @@ const STRIP_PLOT_TYPES = ['classic', 'scatter', 'violin'];
 
 const { vue_ui_strip_plot: DEFAULT_CONFIG } = useConfig();
 const { isThemeValid, warnInvalidTheme } = useThemeCheck();
-const { isReady } = useMountedDelay(300);
 
 const props = defineProps({
     config: {
@@ -134,6 +133,11 @@ const tooltipA11yPosition = ref({ x: 0, y: 0 }); // a11y
 const isFocus = ref(false); // a11y
 
 const FINAL_CONFIG = ref(prepareConfig());
+
+const { transitionEnabled } = useTransitions({
+    config: () => FINAL_CONFIG.value.transitions,
+    dataset: () => props.dataset,
+});
 
 const chartType = computed(() =>
     normalizeStripPlotType(FINAL_CONFIG.value.type),
@@ -1988,6 +1992,7 @@ defineExpose({
                 :class="{
                     'vue-data-ui-fullscreen--on': isFullscreen,
                     'vue-data-ui-fulscreen--off': !isFullscreen,
+                    'vue-data-ui-no-transition': !transitionEnabled,
                 }"
                 :viewBox="`0 0 ${WIDTH} ${HEIGHT}`"
                 :style="`max-width:100%; overflow: visible; background:transparent;color:${FINAL_CONFIG.style.chart.color};`"
@@ -2103,7 +2108,7 @@ defineExpose({
                 >
                     <text
                         data-cy="axis-y-label"
-                        :class="{ 'vue-data-ui-datalabel': isReady }"
+                        :class="{ 'vue-data-ui-transition': transitionEnabled }"
                         v-for="(label, i) in yLines"
                         :key="`sl_${i}`"
                         :transform="`translate(${label.x1 + FINAL_CONFIG.style.chart.labels.yAxisLabels.offsetX - 5}, ${label.y + FINAL_CONFIG.style.chart.labels.yAxisLabels.fontSize / 3})`"
@@ -2703,8 +2708,8 @@ svg:focus-visible {
     border: 0;
 }
 
-.vue-data-ui-datalabel {
-    transition: all 0.2s ease-in-out !important;
+.vue-data-ui-transition {
+    transition: all 0.2s ease-in-out;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -2713,14 +2718,17 @@ svg:focus-visible {
         animation: none !important;
     }
 }
-</style>
 
-<style>
 .vue-ui-strip-plot-animated * {
     transition-property: cy, opacity;
     transition-duration: 0.3s;
 }
 .vue-ui-strip-plot-select-circle * {
     transition: all 0.1s ease-in-out !important;
+}
+
+.vue-data-ui-no-transition * {
+    transition: none !important;
+    animation: none !important;
 }
 </style>

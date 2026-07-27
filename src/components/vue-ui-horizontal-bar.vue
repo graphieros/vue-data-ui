@@ -42,6 +42,7 @@ import { useSvgExport } from '../useSvgExport.js';
 import { useResponsive } from '../useResponsive';
 import { useNestedProp } from '../useNestedProp';
 import { useThemeCheck } from '../useThemeCheck.js';
+import { useTransitions } from '../useTransitions.js';
 import { useTableResponsive } from '../useTableResponsive';
 import { useUserOptionState } from '../useUserOptionState';
 import { useChartAccessibility } from '../useChartAccessibility.js';
@@ -119,9 +120,9 @@ const segregated = ref([]);
 const sorts = ref({ none: 0, asc: 1, desc: 2 });
 const sortIndex = ref(0);
 const isSortNeutral = ref(false);
-const dataLabelOverflow = ref(0);
-const dataLabelOverflowLeft = ref(0);
-const dataLabels = ref(null);
+const dataLabelFontMetricsRevision = ref(0);
+let dataLabelMeasureCanvas = null;
+let dataLabelMeasureContext = null;
 const isCallbackImaging = ref(false);
 const isCallbackSvg = ref(false);
 const activeTooltipIndex = ref(null); // a11y
@@ -131,6 +132,11 @@ const tooltipTriggerMode = ref('pointer');
 const emit = defineEmits(['selectLegend', 'copyAlt', 'selectDatapoint']);
 
 const FINAL_CONFIG = ref(prepareConfig());
+
+const { transitionEnabled } = useTransitions({
+    config: () => FINAL_CONFIG.value.transitions,
+    dataset: () => props.dataset,
+});
 
 const isCursorPointer = computed(
     () => FINAL_CONFIG.value.userOptions.useCursorPointer,
@@ -653,62 +659,191 @@ onMounted(() => {
     updateChildColumnWidth();
 });
 
-function updateDataLabelOverflow() {
-    nextTick(() => {
-        dataLabelOverflow.value = 0;
-        dataLabelOverflowLeft.value = 0;
+function getDataLabelMeasureContext() {
+    if (typeof document === 'undefined') return null;
 
-        requestAnimationFrame(() => {
-            if (!dataLabels.value) {
-                dataLabelOverflow.value = 0;
-                dataLabelOverflowLeft.value = 0;
-                return;
-            }
+    if (!dataLabelMeasureCanvas) {
+        dataLabelMeasureCanvas = document.createElement('canvas');
+        dataLabelMeasureContext = dataLabelMeasureCanvas.getContext('2d');
+    }
 
-            const texts = Array.from(dataLabels.value.querySelectorAll('text'));
-
-            if (!texts.length) {
-                dataLabelOverflow.value = 0;
-                dataLabelOverflowLeft.value = 0;
-                return;
-            }
-
-            let minLeft = Infinity;
-            let maxRight = 0;
-
-            texts.forEach((t) => {
-                const bbox = t.getBBox();
-
-                const leftEdge = bbox.x;
-                const rightEdge = bbox.x + bbox.width;
-
-                if (leftEdge < minLeft) minLeft = leftEdge;
-                if (rightEdge > maxRight) maxRight = rightEdge;
-            });
-
-            const svgLeftLimit = 0;
-            const svgRightLimit = WIDTH.value;
-            const safety = 24;
-            const leftOverflow = Math.max(0, svgLeftLimit - minLeft + safety);
-            const rightOverflow = Math.max(
-                0,
-                maxRight - svgRightLimit + safety,
-            );
-            dataLabelOverflowLeft.value = leftOverflow;
-            dataLabelOverflow.value = rightOverflow;
-        });
-    });
+    return dataLabelMeasureContext;
 }
 
-watch(segregated, () => updateDataLabelOverflow(), { deep: true });
+function measureDataLabelText(text) {
+    const label = String(text ?? '');
+    const barsConfig = FINAL_CONFIG.value.style.chart.layout.bars;
+    const fontSize = barsConfig.dataLabels.fontSize;
+    const fontWeight = barsConfig.dataLabels.bold ? 700 : 400;
+    const fontFamily = FINAL_CONFIG.value.style.fontFamily;
+    const context = getDataLabelMeasureContext();
 
-watch(
-    () => [bars.value, WIDTH.value, HEIGHT.value],
-    () => updateDataLabelOverflow(),
-    { deep: true },
-);
+    if (!context) {
+        return label.length * fontSize * 0.6;
+    }
 
-onMounted(() => updateDataLabelOverflow());
+    context.font = `${fontWeight} ${fontSize}px ${fontFamily}`;
+
+    return context.measureText(label).width;
+}
+
+function getMaximumVisibleValue() {
+    const values = mutableDataset.value.flatMap((serie) => {
+        if (serie.children && serie.children.length) {
+            return serie.children.map((child) => Math.abs(child.value));
+        }
+
+        return Math.abs(serie.value);
+    });
+
+    if (!values.length) return 0;
+
+    return Math.max(...values);
+}
+
+const dataLabelReservations = computed(() => {
+    // Recompute when a webfont finishes loading without depending on the
+    // animated SVG label nodes themselves.
+    dataLabelFontMetricsRevision.value;
+
+    const barsConfig = FINAL_CONFIG.value.style.chart.layout.bars;
+    const baseLeft =
+        childColumnWidth.value +
+        Math.abs(barsConfig.nameLabels.offsetX) +
+        barsConfig.offsetX;
+    const right = svg.value.width - svg.value.padding.right;
+    const baseWidth = Math.max(0, right - baseLeft - barsConfig.offsetX);
+    const safety = 40;
+    const leftLimit = safety;
+    const rightLimit = svg.value.width - safety;
+    const visibleMaximum = getMaximumVisibleValue();
+    const metrics = bars.value.map((serie, index) => ({
+        serie,
+        textWidth: measureDataLabelText(
+            makeDataLabel(serie.value, serie, index, serie.sign),
+        ),
+    }));
+
+    if (!metrics.length || baseWidth <= 0) {
+        return {
+            left: 0,
+            right: 0,
+        };
+    }
+
+    const containsNegativeValue = metrics.some(
+        ({ serie }) => serie.sign === -1,
+    );
+
+    if (!containsNegativeValue) {
+        const rightReservation = metrics.reduce(
+            (maximumReservation, { serie, textWidth }) => {
+                const ratio = visibleMaximum
+                    ? Math.abs(serie.value) / visibleMaximum
+                    : 0;
+
+                if (ratio <= 0 || textWidth <= 0) {
+                    return maximumReservation;
+                }
+
+                const unreservedLabelX =
+                    baseLeft +
+                    baseWidth * ratio +
+                    3 +
+                    barsConfig.dataLabels.offsetX;
+                const requiredReservation =
+                    (unreservedLabelX + textWidth - rightLimit) / ratio;
+
+                return Math.max(maximumReservation, requiredReservation);
+            },
+            0,
+        );
+
+        return {
+            left: 0,
+            right: Math.ceil(
+                Math.min(baseWidth, Math.max(0, rightReservation)),
+            ),
+        };
+    }
+
+    const baseCenter = baseLeft + baseWidth / 2;
+    let minimumCenterShift = -Infinity;
+    let maximumCenterShift = Infinity;
+
+    metrics.forEach(({ serie, textWidth }) => {
+        if (serie.sign === -1) {
+            const unshiftedRightEdge =
+                baseCenter + 12 + barsConfig.dataLabels.offsetX + textWidth;
+
+            maximumCenterShift = Math.min(
+                maximumCenterShift,
+                rightLimit - unshiftedRightEdge,
+            );
+            return;
+        }
+
+        const unshiftedLeftEdge =
+            baseCenter - 12 - barsConfig.dataLabels.offsetX - textWidth;
+
+        minimumCenterShift = Math.max(
+            minimumCenterShift,
+            leftLimit - unshiftedLeftEdge,
+        );
+    });
+
+    let centerShift = 0;
+
+    if (minimumCenterShift > maximumCenterShift) {
+        centerShift = (minimumCenterShift + maximumCenterShift) / 2;
+    } else {
+        centerShift = Math.min(
+            maximumCenterShift,
+            Math.max(minimumCenterShift, 0),
+        );
+    }
+
+    const reservationDifference = centerShift * 2;
+
+    return reservationDifference >= 0
+        ? {
+              left: Math.ceil(Math.min(baseWidth, reservationDifference)),
+              right: 0,
+          }
+        : {
+              left: 0,
+              right: Math.ceil(Math.min(baseWidth, -reservationDifference)),
+          };
+});
+
+const dataLabelOverflow = computed(() => dataLabelReservations.value.right);
+const dataLabelOverflowLeft = computed(() => dataLabelReservations.value.left);
+
+function refreshDataLabelFontMetrics() {
+    dataLabelFontMetricsRevision.value += 1;
+}
+
+onMounted(() => {
+    if (typeof document === 'undefined' || !document.fonts) return;
+
+    document.fonts.ready.then(refreshDataLabelFontMetrics);
+    document.fonts.addEventListener?.(
+        'loadingdone',
+        refreshDataLabelFontMetrics,
+    );
+});
+
+onBeforeUnmount(() => {
+    if (typeof document !== 'undefined' && document.fonts) {
+        document.fonts.removeEventListener?.(
+            'loadingdone',
+            refreshDataLabelFontMetrics,
+        );
+    }
+
+    dataLabelMeasureCanvas = null;
+    dataLabelMeasureContext = null;
+});
 
 const drawingArea = computed(() => {
     const left =
@@ -725,7 +860,6 @@ const drawingArea = computed(() => {
         right -
             left -
             dataLabelOverflow.value -
-            dataLabelOverflowLeft.value -
             FINAL_CONFIG.value.style.chart.layout.bars.offsetX,
     );
 
@@ -748,7 +882,6 @@ function toggleLegend() {
             segregated.value.push(s.id);
         });
     }
-    updateDataLabelOverflow();
     emit('selectLegend', mutableDataset.value);
 }
 
@@ -762,7 +895,6 @@ async function segregate(id) {
     }
 
     emit('selectLegend', mutableDataset.value);
-    updateDataLabelOverflow();
 }
 
 function validSeriesToToggle(name) {
@@ -1860,6 +1992,7 @@ defineExpose({
                 :class="{
                     'vue-data-ui-fullscreen--on': isFullscreen,
                     'vue-data-ui-fulscreen--off': !isFullscreen,
+                    'vue-data-ui-no-transition': !transitionEnabled,
                 }"
                 :viewBox="`0 0 ${WIDTH} ${HEIGHT}`"
                 :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
@@ -1928,7 +2061,7 @@ defineExpose({
                     <template
                         v-if="FINAL_CONFIG.style.chart.layout.bars.rowColor"
                     >
-                        <g v-for="(_, i) in bars">
+                        <g v-for="(bar, i) in bars" :key="`row_${bar.id}`">
                             <!-- BAR GUTTERS -->
                             <rect
                                 :x="0"
@@ -1949,11 +2082,17 @@ defineExpose({
                                         .rowRadius
                                 "
                                 :style="{ pointerEvents: 'none' }"
+                                :class="{
+                                    'vue-data-ui-transition': transitionEnabled,
+                                }"
                             />
                         </g>
                     </template>
 
-                    <g v-for="(serie, i) in bars">
+                    <g
+                        v-for="(serie, i) in bars"
+                        :key="`underlayer_${serie.id}`"
+                    >
                         <!-- UNDERLAYER -->
                         <rect
                             data-cy="datapoint-underlayer"
@@ -1992,11 +2131,13 @@ defineExpose({
                                 FINAL_CONFIG.style.chart.layout.bars
                                     .borderRadius
                             "
-                            :class="{ animated: FINAL_CONFIG.useCssAnimation }"
+                            :class="{
+                                'vue-data-ui-transition': transitionEnabled,
+                            }"
                         />
                     </g>
 
-                    <g v-for="(serie, i) in bars">
+                    <g v-for="(serie, i) in bars" :key="`barloop_${serie.id}`">
                         <!-- BARS -->
                         <rect
                             data-cy="datapoint-bar"
@@ -2051,7 +2192,9 @@ defineExpose({
                                           .strokeWidth
                                     : 0
                             "
-                            :class="{ animated: FINAL_CONFIG.useCssAnimation }"
+                            :class="{
+                                'vue-data-ui-transition': transitionEnabled,
+                            }"
                         />
                         <rect
                             v-if="$slots.pattern"
@@ -2098,11 +2241,13 @@ defineExpose({
                                           .strokeWidth
                                     : 0
                             "
-                            :class="{ animated: FINAL_CONFIG.useCssAnimation }"
+                            :class="{
+                                'vue-data-ui-transition': transitionEnabled,
+                            }"
                         />
 
                         <!-- SEPARATORS -->
-                        <line
+                        <path
                             data-cy="datapoint-separator"
                             v-if="
                                 (!serie.isChild || serie.isLastChild) &&
@@ -2110,27 +2255,6 @@ defineExpose({
                                     .show &&
                                 i !== bars.length - 1
                             "
-                            :x1="WIDTH"
-                            :x2="
-                                FINAL_CONFIG.style.chart.layout.separators
-                                    .fullWidth
-                                    ? 0
-                                    : drawingArea.left
-                            "
-                            :y1="
-                                barHeight +
-                                BAR_GAP / 2 +
-                                drawingArea.top +
-                                (BAR_GAP + barHeight) * i +
-                                parentLabelOffsets[i] * parentLabelBlockHeight
-                            "
-                            :y2="
-                                barHeight +
-                                BAR_GAP / 2 +
-                                drawingArea.top +
-                                (BAR_GAP + barHeight) * i +
-                                parentLabelOffsets[i] * parentLabelBlockHeight
-                            "
                             :stroke="
                                 FINAL_CONFIG.style.chart.layout.separators.color
                             "
@@ -2139,21 +2263,17 @@ defineExpose({
                                     .strokeWidth
                             "
                             stroke-linecap="round"
-                            :style="{
-                                transition: 'none !important',
-                                animation: 'none !important',
+                            :class="{
+                                'vue-data-ui-transition': transitionEnabled,
                             }"
+                            :d="`M${WIDTH}, ${barHeight + BAR_GAP / 2 + drawingArea.top + (BAR_GAP + barHeight) * i + parentLabelOffsets[i] * parentLabelBlockHeight} ${FINAL_CONFIG.style.chart.layout.separators.fullWidth ? 0 : drawingArea.left}, ${barHeight + BAR_GAP / 2 + drawingArea.top + (BAR_GAP + barHeight) * i + parentLabelOffsets[i] * parentLabelBlockHeight}`"
                         />
 
-                        <line
+                        <path
                             v-if="
                                 hasNegative &&
                                 FINAL_CONFIG.style.chart.layout.separators.show
                             "
-                            :x1="drawingArea.left + drawingArea.width / 2"
-                            :x2="drawingArea.left + drawingArea.width / 2"
-                            :y1="drawingArea.top"
-                            :y2="drawingArea.bottom"
                             :stroke="
                                 FINAL_CONFIG.style.chart.layout.separators.color
                             "
@@ -2162,6 +2282,10 @@ defineExpose({
                                     .strokeWidth
                             "
                             stroke-linecap="round"
+                            :class="{
+                                'vue-data-ui-transition': transitionEnabled,
+                            }"
+                            :d="`M${drawingArea.left + drawingArea.width / 2}, ${drawingArea.top} ${drawingArea.left + drawingArea.width / 2}, ${drawingArea.bottom}`"
                         />
                     </g>
 
@@ -2169,10 +2293,14 @@ defineExpose({
                     <g ref="parentLabels">
                         <g
                             v-for="(serie, i) in bars"
+                            :key="`pn_${serie.id}`"
                             class="vue-ui-horizontal-bar-parent-label"
                         >
                             <rect
                                 class="vue-ui-horizontal-bar-parent-marker"
+                                :class="{
+                                    'vue-data-ui-transition': transitionEnabled,
+                                }"
                                 v-if="
                                     serie.isChild &&
                                     serie.childIndex === 0 &&
@@ -2196,20 +2324,19 @@ defineExpose({
                                 "
                                 :rx="1"
                                 :fill="serie.color"
-                                style="
-                                    animation: none !important;
-                                    transition: none !important;
-                                "
                             />
                             <text
                                 data-cy="datapoint-parent-name"
+                                :class="{
+                                    'vue-data-ui-transition': transitionEnabled,
+                                }"
                                 v-if="
                                     serie.isChild &&
                                     serie.childIndex === 0 &&
                                     FINAL_CONFIG.style.chart.layout.bars
                                         .parentLabels.show
                                 "
-                                :y="getParentData(serie, i).y"
+                                :transform="`translate(${FINAL_CONFIG.style.chart.layout.bars.parentLabels.offsetX + FINAL_CONFIG.style.chart.layout.bars.parentLabels.fontSize}, ${getParentData(serie, i).y})`"
                                 :font-size="
                                     FINAL_CONFIG.style.chart.layout.bars
                                         .parentLabels.fontSize
@@ -2217,12 +2344,6 @@ defineExpose({
                                 :fill="
                                     FINAL_CONFIG.style.chart.layout.bars
                                         .parentLabels.color
-                                "
-                                :x="
-                                    FINAL_CONFIG.style.chart.layout.bars
-                                        .parentLabels.offsetX +
-                                    FINAL_CONFIG.style.chart.layout.bars
-                                        .parentLabels.fontSize
                                 "
                                 :font-weight="
                                     FINAL_CONFIG.style.chart.layout.bars
@@ -2239,33 +2360,24 @@ defineExpose({
                                                 .parentLabels.fontSize,
                                         fill: FINAL_CONFIG.style.chart.layout
                                             .bars.parentLabels.color,
-                                        x:
-                                            FINAL_CONFIG.style.chart.layout.bars
-                                                .parentLabels.offsetX +
-                                            FINAL_CONFIG.style.chart.layout.bars
-                                                .parentLabels.fontSize,
-                                        y: getParentData(serie, i).y,
+                                        x: 0,
+                                        y: 0,
                                         translateY: false,
                                     })
                                 "
                             />
                             <text
                                 data-cy="datapoint-parent-value"
+                                :class="{
+                                    'vue-data-ui-transition': transitionEnabled,
+                                }"
                                 v-if="
                                     serie.isChild &&
                                     serie.childIndex === 0 &&
                                     FINAL_CONFIG.style.chart.layout.bars
                                         .parentLabels.show
                                 "
-                                :y="
-                                    getParentData(serie, i).y +
-                                    getLineCountFromString(
-                                        getParentName(serie, i),
-                                    ) *
-                                        FINAL_CONFIG.style.chart.layout.bars
-                                            .parentLabels.fontSize *
-                                        1.1
-                                "
+                                :transform="`translate(${FINAL_CONFIG.style.chart.layout.bars.parentLabels.offsetX + FINAL_CONFIG.style.chart.layout.bars.parentLabels.fontSize}, ${getParentData(serie, i).y + getLineCountFromString(getParentName(serie, i)) * FINAL_CONFIG.style.chart.layout.bars.parentLabels.fontSize * 1.1})`"
                                 :font-size="
                                     FINAL_CONFIG.style.chart.layout.bars
                                         .parentLabels.fontSize
@@ -2273,12 +2385,6 @@ defineExpose({
                                 :fill="
                                     FINAL_CONFIG.style.chart.layout.bars
                                         .parentLabels.color
-                                "
-                                :x="
-                                    FINAL_CONFIG.style.chart.layout.bars
-                                        .parentLabels.offsetX +
-                                    FINAL_CONFIG.style.chart.layout.bars
-                                        .parentLabels.fontSize
                                 "
                                 :font-weight="
                                     FINAL_CONFIG.style.chart.layout.bars
@@ -2297,6 +2403,7 @@ defineExpose({
                     <g ref="childLabels">
                         <g
                             v-for="(serie, i) in immutableBars"
+                            :key="`cl_${serie.id}`"
                             class="vue-ui-horizontal-bar-child-label"
                         >
                             <text
@@ -2306,24 +2413,10 @@ defineExpose({
                                         .nameLabels.show
                                 "
                                 text-anchor="start"
-                                :x="
-                                    Math.abs(
-                                        FINAL_CONFIG.style.chart.layout.bars
-                                            .nameLabels.offsetX,
-                                    )
-                                "
-                                :y="
-                                    checkNaN(
-                                        drawingArea.top +
-                                            (BAR_GAP + barHeight) * i +
-                                            barHeight / 2 +
-                                            FINAL_CONFIG.style.chart.layout.bars
-                                                .nameLabels.fontSize /
-                                                2 +
-                                            parentLabelOffsets[i] *
-                                                parentLabelBlockHeight,
-                                    )
-                                "
+                                :class="{
+                                    'vue-data-ui-transition': transitionEnabled,
+                                }"
+                                :transform="`translate(${Math.abs(FINAL_CONFIG.style.chart.layout.bars.nameLabels.offsetX)}, ${checkNaN(drawingArea.top + (BAR_GAP + barHeight) * i + barHeight / 2 + FINAL_CONFIG.style.chart.layout.bars.nameLabels.fontSize / 2 + parentLabelOffsets[i] * parentLabelBlockHeight)})`"
                                 :font-size="
                                     FINAL_CONFIG.style.chart.layout.bars
                                         .nameLabels.fontSize
@@ -2343,20 +2436,8 @@ defineExpose({
                                             FINAL_CONFIG.style.chart.layout.bars
                                                 .nameLabels.fontSize,
                                         fill: 'transparent',
-                                        x: Math.abs(
-                                            FINAL_CONFIG.style.chart.layout.bars
-                                                .nameLabels.offsetX,
-                                        ),
-                                        y: checkNaN(
-                                            drawingArea.top +
-                                                (BAR_GAP + barHeight) * i +
-                                                barHeight / 2 +
-                                                FINAL_CONFIG.style.chart.layout
-                                                    .bars.nameLabels.fontSize /
-                                                    2 +
-                                                parentLabelOffsets[i] *
-                                                    parentLabelBlockHeight,
-                                        ),
+                                        x: 0,
+                                        y: 0,
                                         translateY: true,
                                     })
                                 "
@@ -2367,24 +2448,27 @@ defineExpose({
                     <g>
                         <g
                             v-for="(serie, i) in bars"
+                            :key="`vislab_${serie.id}`"
                             class="vue-ui-horizontal-bar-child-label"
                         >
                             <!-- CHILDREN | LONELY PARENTS NAMES -->
                             <text
                                 data-cy="datapoint-name"
+                                :class="{
+                                    'vue-data-ui-transition': transitionEnabled,
+                                }"
                                 v-if="
                                     (serie.isChild || !serie.hasChildren) &&
                                     FINAL_CONFIG.style.chart.layout.bars
                                         .nameLabels.show
                                 "
                                 text-anchor="end"
-                                :x="
+                                :transform="`translate(${
                                     drawingArea.left +
                                     FINAL_CONFIG.style.chart.layout.bars
                                         .nameLabels.offsetX -
                                     6
-                                "
-                                :y="
+                                }, ${
                                     drawingArea.top +
                                     (BAR_GAP + barHeight) * i +
                                     barHeight / 2 +
@@ -2393,7 +2477,7 @@ defineExpose({
                                         3 +
                                     parentLabelOffsets[i] *
                                         parentLabelBlockHeight
-                                "
+                                })`"
                                 :font-size="
                                     FINAL_CONFIG.style.chart.layout.bars
                                         .nameLabels.fontSize
@@ -2416,20 +2500,8 @@ defineExpose({
                                                 .nameLabels.fontSize,
                                         fill: FINAL_CONFIG.style.chart.layout
                                             .bars.nameLabels.color,
-                                        x:
-                                            drawingArea.left +
-                                            FINAL_CONFIG.style.chart.layout.bars
-                                                .nameLabels.offsetX -
-                                            6,
-                                        y:
-                                            drawingArea.top +
-                                            (BAR_GAP + barHeight) * i +
-                                            barHeight / 2 +
-                                            FINAL_CONFIG.style.chart.layout.bars
-                                                .nameLabels.fontSize /
-                                                3 +
-                                            parentLabelOffsets[i] *
-                                                parentLabelBlockHeight,
+                                        x: 0,
+                                        y: 0,
                                         translateY: true,
                                     })
                                 "
@@ -2438,14 +2510,18 @@ defineExpose({
                     </g>
 
                     <!-- DATA LABELS -->
-                    <g ref="dataLabels">
+                    <g>
                         <g
                             v-for="(serie, i) in bars"
+                            :key="`sdl_${serie.id}`"
                             class="vue-ui-horizontal-bar-child-label"
                         >
                             <text
                                 data-cy="datapoint-label"
-                                :x="
+                                :class="{
+                                    'vue-data-ui-transition': transitionEnabled,
+                                }"
+                                :transform="`translate(${
                                     !hasNegative
                                         ? Math.min(
                                               calcDataLabelX(serie.value) +
@@ -2463,8 +2539,7 @@ defineExpose({
                                                     .bars.dataLabels.offsetX
                                               : FINAL_CONFIG.style.chart.layout
                                                     .bars.dataLabels.offsetX)
-                                "
-                                :y="
+                                },${
                                     drawingArea.top +
                                     (BAR_GAP + barHeight) * i +
                                     barHeight / 2 +
@@ -2473,7 +2548,7 @@ defineExpose({
                                     FINAL_CONFIG.style.chart.layout.bars
                                         .dataLabels.fontSize /
                                         3
-                                "
+                                })`"
                                 :text-anchor="
                                     !hasNegative || serie.sign === -1
                                         ? 'start'
@@ -3093,32 +3168,6 @@ defineExpose({
     transition: unset;
 }
 
-path,
-line,
-rect,
-circle,
-polygon {
-    animation: verticalBarAnimation 0.5s ease-in-out;
-    transform-origin: center;
-}
-
-@keyframes verticalBarAnimation {
-    0% {
-        transform: scale(0.9, 0.9);
-        opacity: 0;
-    }
-
-    80% {
-        transform: scale(1.02, 1.02);
-        opacity: 1;
-    }
-
-    to {
-        transform: scale(1, 1);
-        opacity: 1;
-    }
-}
-
 .vue-ui-vertical-bar {
     user-select: none;
     position: relative;
@@ -3198,8 +3247,8 @@ caption {
     }
 }
 
-.animated {
-    transition: all 0.3s ease-in-out !important;
+.vue-data-ui-transition {
+    transition: all 0.2s ease-in-out;
 }
 
 svg:focus {
@@ -3221,5 +3270,10 @@ svg:focus-visible {
     clip: rect(0 0 0 0);
     white-space: normal;
     border: 0;
+}
+
+.vue-data-ui-no-transition * {
+    transition: none !important;
+    animation: none !important;
 }
 </style>
