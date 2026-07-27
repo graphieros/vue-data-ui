@@ -2553,6 +2553,7 @@ defineExpose({
                             "
                             :style="`opacity:${selectedRect ? (selectedRect.id === rect.id ? 1 : FINAL_CONFIG.style.chart.layout.rects.selected.unselectedOpacity) : 1}`"
                             :class="[
+                                'vue-ui-treemap-rect',
                                 transitionEnabled
                                     ? 'vue-data-ui-transition'
                                     : '',
