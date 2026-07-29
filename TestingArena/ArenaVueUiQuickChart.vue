@@ -151,6 +151,7 @@ function alterDataset() {
 const selectedSerie = ref('shortArray');
 
 const model = createModel([
+    CHECKBOX('devHints.enable', { def: true }),
     CHECKBOX('debug', { def: true }),
 
     CHECKBOX('transitions.enable', { def: true }),

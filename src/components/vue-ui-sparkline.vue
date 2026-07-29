@@ -41,6 +41,7 @@ import {
     XMLNS,
 } from '../lib';
 import { throttle } from '../canvas-lib';
+import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 import { useLoading } from '../useLoading';
 import { useNestedProp } from '../useNestedProp';
@@ -110,6 +111,31 @@ const activeTooltipIndex = ref(null); // a11y
 const internalSelectedIndex = ref(null); // a11y
 
 const FINAL_CONFIG = ref(prepareConfig());
+
+useHints({
+    config: () => FINAL_CONFIG.value,
+    dataset: () => props.dataset,
+    component: 'VueUiSparkline',
+    rules: [
+        COMMON_RULES.emptyArray,
+        {
+            test: (dataset) => dataset.length > 500,
+            message: [
+                '👀 The dataset has > 500 datapoints. Consider if you really need this level of detail.',
+                '',
+                '▶️ Use larger time scales, or aggregated values',
+            ],
+        },
+        {
+            test: (dataset) => dataset.length > 1095,
+            message: [
+                '👀 The dataset has > 1095 datapoints. Above this threshold, the dataset is computed through an LTTB algorithm, to preserve the shape of the data without increasing the number of datapoints.',
+                '',
+                '▶️ If you need this level of detail, you can change config.downsample.threshold and set a higher value. Note that performance will be impacted.',
+            ],
+        },
+    ],
+});
 
 function makeSkeletonDs(n) {
     if (

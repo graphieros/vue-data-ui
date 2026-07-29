@@ -1,7 +1,14 @@
 <script setup>
 import { ref, computed } from 'vue';
-import { createPolygonPath, createStar, setOpacity, XMLNS } from '../lib.js';
+import {
+    createPolygonPath,
+    createStar,
+    setOpacity,
+    XMLNS,
+    createUid,
+} from '../lib.js';
 import { useNestedProp } from '../useNestedProp';
+import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 import PackageVersion from '../atoms/PackageVersion.vue';
 import DefGrad from '../atoms/DefGrad.vue';
@@ -17,13 +24,20 @@ const props = defineProps({
     },
 });
 
-const uid = ref(`vue-ui-skeleton-${Math.random()}`);
+const uid = ref(`vue-ui-skeleton-${createUid()}`);
 
 const FINAL_CONFIG = computed(() => {
     return useNestedProp({
         userConfig: props.config,
         defaultConfig: DEFAULT_CONFIG,
     });
+});
+
+useHints({
+    config: () => FINAL_CONFIG.value,
+    dataset: () => [],
+    component: 'VueUiSkeleton',
+    rules: [COMMON_RULES.noHint],
 });
 
 const isAnimated = computed(() => {

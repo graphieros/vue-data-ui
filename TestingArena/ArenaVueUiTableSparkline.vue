@@ -16,10 +16,18 @@ const { vue_ui_table_sparkline: DEFAULT_CONFIG } = useConfig();
 const { CHECKBOX, NUMBER, RANGE, TEXT, COLOR, SELECT, createModel } =
     useConfigurationControls(DEFAULT_CONFIG);
 
+function makeDs(n) {
+    const arr = [];
+    for (let i = 0; i < n; i += 1) {
+        arr.push(Math.round(Math.random() * 10) + 1);
+    }
+    return arr;
+}
+
 const dataset = ref([
     {
         name: 'Serie 1',
-        values: [0, 1, 2, 3, 5, 8, 13],
+        values: makeDs(12),
     },
     {
         name: 'Serie 2',
@@ -49,6 +57,7 @@ onMounted(() => {
 });
 
 const model = createModel([
+    CHECKBOX('devHints.enable', { def: true }),
     CHECKBOX('userOptions.useCursorPointer', { def: false }),
     CHECKBOX('userOptions.show', { def: true }),
     CHECKBOX('userOptions.buttons.pdf', { def: true }),

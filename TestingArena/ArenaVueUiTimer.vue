@@ -16,6 +16,7 @@ const { CHECKBOX, NUMBER, RANGE, TEXT, COLOR, SELECT, createModel } =
     useConfigurationControls(DEFAULT_CONFIG);
 
 const model = createModel([
+    CHECKBOX('devHints.enable', { def: true }),
     CHECKBOX('responsive', { def: false }),
     CHECKBOX('responsiveProportionalSizing', { def: false }),
     CHECKBOX('useCursorPointer', { def: false }),

@@ -25,6 +25,7 @@ import {
     XMLNS,
 } from '../lib.js';
 import { throttle } from '../canvas-lib.js';
+import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 import { useLoading } from '../useLoading.js';
 import { usePrinter } from '../usePrinter';
@@ -93,6 +94,14 @@ onMounted(() => {
 });
 
 const FINAL_CONFIG = ref(prepareConfig());
+
+useHints({
+    config: () => FINAL_CONFIG.value,
+    dataset: () => props.dataset,
+    component: 'VueUiThermometer',
+    rules: [COMMON_RULES.noHint],
+});
+
 const baseWidth = ref(FINAL_CONFIG.value.style.chart.thermometer.width);
 const HEIGHT = ref(FINAL_CONFIG.value.style.chart.height);
 const WIDTH = ref(FINAL_CONFIG.value.style.chart.width);

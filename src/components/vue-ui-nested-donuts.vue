@@ -38,6 +38,7 @@ import {
 } from '../lib';
 import { buildValuePercentageLabel } from '../labelUtils';
 import { throttle } from '../canvas-lib';
+import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 import { useLoading } from '../useLoading';
 import { usePrinter } from '../usePrinter';
@@ -134,6 +135,45 @@ function toggleFullscreen(state) {
 }
 
 const FINAL_CONFIG = ref(prepareConfig());
+
+useHints({
+    config: () => FINAL_CONFIG.value,
+    dataset: () => props.dataset,
+    component: 'VueUiNestedDonuts',
+    rules: [
+        COMMON_RULES.emptyArray,
+        {
+            test: (ds) => ds.some((dp) => dp.series.length > 6),
+            message: [
+                '👀 Some series have > 6 data points. Consider:',
+                '',
+                '▶️ Grouping small values dynamically into a single "Other" data point.',
+                '',
+                '▶️ Using filters to let users choose a maximum number of data points to display.',
+                '',
+                '▶️ Using VueUiHorizontalBar instead to make the dataset breakdown easier to read.',
+            ],
+        },
+        {
+            test: (ds) => ds.length === 1,
+            message: [
+                '👀 There is only one series in your dataset. Consider:',
+                '',
+                '▶️ Using VueUiDonut instead.',
+            ],
+        },
+        {
+            test: (ds) => ds.length > 6,
+            message: [
+                '👀 The number of series in your dataset > 6. Consider:',
+                '',
+                '▶️ Using filters to let users choose a maximum number of series to display',
+                '',
+                '▶️ Using VueUiHorizontalBar instead to make the dataset breakdown easier to read.',
+            ],
+        },
+    ],
+});
 
 const isCursorPointer = computed(
     () => FINAL_CONFIG.value.userOptions.useCursorPointer,

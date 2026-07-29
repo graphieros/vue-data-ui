@@ -26,6 +26,7 @@ import {
     treeShake,
     XMLNS,
 } from '../lib';
+import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 import { useLoading } from '../useLoading';
 import { usePrinter } from '../usePrinter';
@@ -120,6 +121,31 @@ const isCallbackImaging = ref(false);
 const isCallbackSvg = ref(false);
 
 const FINAL_CONFIG = ref(prepareConfig());
+
+useHints({
+    config: () => FINAL_CONFIG.value,
+    dataset: () => props.dataset,
+    component: 'VueUiMolecule',
+    rules: [
+        COMMON_RULES.emptyArray,
+        {
+            test: (ds) => ds[0] && ds[0].nodes && ds[0].nodes.length === 0,
+            message: [
+                '👀 There are no children nodes attached to the root node. Consider:',
+                '',
+                '▶️ Adding children nodes to the root node.',
+            ],
+        },
+        {
+            test: (ds) => ds[0] && ds[0].nodes && ds[0].nodes.length > 8,
+            message: [
+                '👀 The number of children nodes > 8, some nodes might overlap. Consider:',
+                '',
+                '▶️ Grouping data into broader categories.',
+            ],
+        },
+    ],
+});
 
 const isCursorPointer = computed(
     () => FINAL_CONFIG.value.userOptions.useCursorPointer,

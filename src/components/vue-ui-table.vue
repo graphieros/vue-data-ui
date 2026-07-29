@@ -1257,6 +1257,7 @@ import {
     createUid,
 } from '../lib';
 import { useConfig } from '../useConfig';
+import { COMMON_RULES, useHints } from '../useHints';
 import VueUiXy from './vue-ui-xy.vue';
 import VueUiDonut from './vue-ui-donut.vue';
 import BaseIcon from '../atoms/BaseIcon.vue';
@@ -1436,6 +1437,13 @@ const FINAL_CONFIG = computed(() => {
         userConfig: props.config,
     });
     return convertConfigColors(reconcilied);
+});
+
+useHints({
+    config: () => FINAL_CONFIG.value,
+    dataset: () => props.dataset,
+    component: 'VueUiTable',
+    rules: [COMMON_RULES.noHint],
 });
 
 const isCursorPointer = computed(() => FINAL_CONFIG.value.useCursorPointer);

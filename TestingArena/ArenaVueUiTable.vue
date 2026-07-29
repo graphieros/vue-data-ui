@@ -240,6 +240,7 @@ onMounted(() => {
 });
 
 const config = ref({
+    devHints: { enable: true },
     style: {
         title: {
             text: 'Some title that can be long',

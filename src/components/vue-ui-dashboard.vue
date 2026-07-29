@@ -1,6 +1,7 @@
 <script setup>
 import { ref, watch, computed, defineAsyncComponent } from 'vue';
 import { useNestedProp } from '../useNestedProp';
+import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 import { createUid } from '../lib';
 import { usePrinter } from '../usePrinter';
@@ -217,6 +218,13 @@ const FINAL_CONFIG = computed(() => {
         userConfig: props.config,
         defaultConfig: DEFAULT_CONFIG,
     });
+});
+
+useHints({
+    config: () => FINAL_CONFIG.value,
+    dataset: () => props.dataset,
+    component: 'VueUiDashboard',
+    rules: [COMMON_RULES.noHint],
 });
 
 const isCursorPointer = computed(

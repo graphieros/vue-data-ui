@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue';
 import { useNestedProp } from '../useNestedProp';
 import { XMLNS } from '../lib';
+import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 
 const { vue_ui_mini_loader: DEFAULT_CONFIG } = useConfig();
@@ -20,6 +21,13 @@ const FINAL_CONFIG = computed(() => {
         userConfig: props.config,
         defaultConfig: DEFAULT_CONFIG,
     });
+});
+
+useHints({
+    config: () => FINAL_CONFIG.value,
+    dataset: () => [],
+    component: 'VueUiMiniLoader',
+    rules: [COMMON_RULES.noHint],
 });
 
 const viewBox = ref({

@@ -112,6 +112,7 @@ function addDatapoint() {
 
 const model = createModel([
     SELECT('type', ['classic', 'scatter', 'violin'], { def: 'violin' }),
+    CHECKBOX('devHints.enable', { def: true }),
     CHECKBOX('debug', { def: true }),
     CHECKBOX('loading', { def: false }),
     CHECKBOX('responsive', { def: false }),

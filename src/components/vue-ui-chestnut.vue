@@ -31,6 +31,7 @@ import {
     treeShake,
     XMLNS,
 } from '../lib';
+import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 import { useLoading } from '../useLoading';
 import { usePrinter } from '../usePrinter';
@@ -104,6 +105,39 @@ const accessibilityCursor = ref({
 });
 
 const FINAL_CONFIG = ref(prepareConfig());
+
+useHints({
+    config: () => FINAL_CONFIG.value,
+    dataset: () => props.dataset,
+    component: 'VueUiChestnut',
+    rules: [
+        COMMON_RULES.emptyArray,
+        {
+            test: (ds) =>
+                ds.some((dp) => dp?.branches && dp.branches.length > 10),
+            message: [
+                '👀 Some root has > 10 branches, which can make the chart heavy. Consider:',
+                '',
+                '▶️ Grouping some branches in broader categories.',
+            ],
+        },
+        {
+            test: (ds) =>
+                ds.some(
+                    (dp) =>
+                        dp?.branches &&
+                        dp.branches.some(
+                            (b) => b?.breakdown && b?.breakdown.length > 6,
+                        ),
+                ),
+            message: [
+                '👀 Some donuts have > 6 series. Consider:',
+                '',
+                '▶️ Grouping small values into an "Other" category.',
+            ],
+        },
+    ],
+});
 
 const isCursorPointer = computed(
     () => FINAL_CONFIG.value.userOptions.useCursorPointer,

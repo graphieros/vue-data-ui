@@ -101,6 +101,7 @@ function alterDataset() {
 }
 
 const model = createModel([
+    CHECKBOX('devHints.enable', { def: true }),
     SELECT('type', ['ohlc', 'candlestick'], { def: 'ohlc' }),
     CHECKBOX('loading', { def: false }),
     CHECKBOX('debug', { def: false }),

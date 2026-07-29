@@ -8,6 +8,7 @@ import {
     defineAsyncComponent,
     toRefs,
 } from 'vue';
+import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 import { createUid, error, applyDataLabel, dataLabel, treeShake } from '../lib';
 import { useNestedProp } from '../useNestedProp';
@@ -67,6 +68,13 @@ function prepareChart() {
 }
 
 const FINAL_CONFIG = ref(prepareConfig());
+
+useHints({
+    config: () => FINAL_CONFIG.value,
+    dataset: () => props.dataset,
+    component: 'VueUiGizmo',
+    rules: [COMMON_RULES.noHint],
+});
 
 const skeletonConfig = computed(() => {
     return treeShake({

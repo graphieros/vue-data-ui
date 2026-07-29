@@ -21,6 +21,7 @@ import {
 import { throttle } from '../canvas-lib';
 import usePanZoom from '../usePanZoom';
 import { useDag } from '../useDag';
+import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 import { useLoading } from '../useLoading';
 import { usePrinter } from '../usePrinter';
@@ -98,6 +99,13 @@ const tooltipTriggerMode = ref('pointer');
 const isFocus = ref(false);
 
 const FINAL_CONFIG = ref(prepareConfig());
+
+useHints({
+    config: () => FINAL_CONFIG.value,
+    dataset: () => props.dataset,
+    component: 'VueUiDag',
+    rules: [COMMON_RULES.noHint],
+});
 
 const isCursorPointer = computed(
     () => FINAL_CONFIG.value.userOptions.useCursorPointer,

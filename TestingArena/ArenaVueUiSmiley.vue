@@ -28,6 +28,7 @@ const dataset = ref({
 });
 
 const model = createModel([
+    CHECKBOX('devHints.enable', { def: true }),
     CHECKBOX('readonly', { def: true }),
     NUMBER('style.itemSize', { def: 32, min: 12, max: 96 }),
     COLOR('style.backgroundColor', { def: '#FFFFFF' }),

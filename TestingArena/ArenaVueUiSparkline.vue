@@ -96,6 +96,7 @@ function alterDataset() {
 }
 
 const model = createModel([
+    CHECKBOX('devHints.enable', { def: true }),
     CHECKBOX('debug', { def: true }),
     CHECKBOX('loading', { def: false }),
     CHECKBOX('responsive', { def: false }),

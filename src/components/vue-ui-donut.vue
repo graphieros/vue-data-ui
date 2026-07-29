@@ -44,6 +44,7 @@ import {
 } from '../lib';
 import { buildValuePercentageLabel, fillLabel } from '../labelUtils';
 import { throttle } from '../canvas-lib';
+import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 import { usePrinter } from '../usePrinter';
 import { useLoading } from '../useLoading';
@@ -377,6 +378,28 @@ function prepareConfig() {
 }
 
 const FINAL_CONFIG = ref(prepareConfig());
+
+useHints({
+    config: () => FINAL_CONFIG.value,
+    dataset: () => props.dataset,
+    component: 'VueUiDonut',
+    rules: [
+        COMMON_RULES.singleSeries,
+        COMMON_RULES.emptyArray,
+        {
+            test: (ds) => ds.length > 6,
+            message: [
+                '👀 The number of series is > 6. Consider:',
+                '',
+                '▶️ Grouping small values dynamically into a single "Other" series.',
+                '',
+                '▶️ Using filters to let users choose a maximum number of series to display.',
+                '',
+                '▶️ Using VueUiHorizontalBar instead to make the dataset breakdown easier to read.',
+            ],
+        },
+    ],
+});
 
 const isCursorPointer = computed(
     () => FINAL_CONFIG.value.userOptions.useCursorPointer,

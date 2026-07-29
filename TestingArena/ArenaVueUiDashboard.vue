@@ -17,6 +17,7 @@ const { CHECKBOX, NUMBER, RANGE, TEXT, COLOR, SELECT, createModel } =
     useConfigurationControls(DEFAULT_CONFIG);
 
 const model = createModel([
+    CHECKBOX('devHints.enable', { def: true }),
     CHECKBOX('locked', { def: false }),
     COLOR('style.board.backgroundColor', { def: '#e1e5e8' }),
     COLOR('style.board.color', { def: '#4A4A4A' }),

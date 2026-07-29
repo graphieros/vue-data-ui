@@ -35,6 +35,7 @@ import {
     XMLNS,
 } from '../lib.js';
 import { throttle } from '../canvas-lib';
+import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 import { useLoading } from '../useLoading.js';
 import { usePrinter } from '../usePrinter';
@@ -132,6 +133,27 @@ const tooltipTriggerMode = ref('pointer');
 const emit = defineEmits(['selectLegend', 'copyAlt', 'selectDatapoint']);
 
 const FINAL_CONFIG = ref(prepareConfig());
+
+useHints({
+    config: () => FINAL_CONFIG.value,
+    dataset: () => props.dataset,
+    component: 'VueUiHorizontalBar',
+    rules: [
+        COMMON_RULES.emptyArray,
+        {
+            test: (dataset) =>
+                dataset.length > 50 ||
+                dataset.some((s) => s.children && s.children.length > 50),
+            message: [
+                '👀 There are > 50 series / bars, which will probably force users to scroll. Consider:',
+                '',
+                '▶️ Grouping small values into an "Other" category.',
+                '',
+                '▶️ Using filters, or several instances of the component with subsets of related series.',
+            ],
+        },
+    ],
+});
 
 const { transitionEnabled } = useTransitions({
     config: () => FINAL_CONFIG.value.transitions,

@@ -26,6 +26,7 @@ import {
     palette,
     themePalettes,
 } from '../lib';
+import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 import { usePrinter } from '../usePrinter';
 import { useThemeCheck } from '../useThemeCheck';
@@ -81,6 +82,32 @@ const FINAL_CONFIG = computed({
     set: (newCfg) => {
         return newCfg;
     },
+});
+
+useHints({
+    config: () => FINAL_CONFIG.value,
+    dataset: () => props.dataset,
+    component: 'VueUiTableSparkline',
+    rules: [
+        COMMON_RULES.emptyArray,
+        {
+            test: (ds) => ds.some((dp) => dp?.values && dp.values.length > 500),
+            message: [
+                '👀 One or more series have > 500 datapoints. Consider if you really need this level of detail.',
+                '',
+                '▶️ Use larger time scales, or aggregated values',
+            ],
+        },
+        {
+            test: (ds) =>
+                ds.some((dp) => dp?.values && dp.values.length > 1095),
+            message: [
+                '👀 One or more series have > 1095 datapoints. Above this threshold, the dataset is computed through an LTTB algorithm, to preserve the shape of the data without increasing the number of datapoints.',
+                '',
+                '▶️ If you need this level of detail, you can change config.downsample.threshold and set a higher value. Note that performance will be impacted.',
+            ],
+        },
+    ],
 });
 
 const isCursorPointer = computed(

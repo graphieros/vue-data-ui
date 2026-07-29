@@ -34,6 +34,7 @@ import {
     XMLNS,
 } from '../lib';
 import { throttle } from '../canvas-lib';
+import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 import { useLoading } from '../useLoading';
 import { usePrinter } from '../usePrinter';
@@ -117,6 +118,43 @@ const activePointIndex = ref(null); // a11y
 const isFocus = ref(false); // a11y
 
 const FINAL_CONFIG = ref(prepareConfig());
+
+useHints({
+    config: () => FINAL_CONFIG.value,
+    dataset: () => props.dataset,
+    component: 'VueUiBump',
+    rules: [
+        COMMON_RULES.emptyArray,
+        {
+            test: (ds) => ds.length > 31,
+            message: [
+                '👀 The number of series > 31. Consider:',
+                '',
+                '▶️ Using filters to let users choose a maximum number of series to display',
+                '',
+                '▶️ Use several instances of the component to show related series',
+            ],
+        },
+        {
+            test: (ds) => ds.length === 1,
+            message: [
+                '👀 There is only 1 series in your dataset. Consider:',
+                '',
+                '▶️ Using a line chart, with VueUiXy.',
+            ],
+        },
+        {
+            test: (ds) => ds.some((dp) => dp.values.length > 31),
+            message: [
+                '👀 Some series contain > 31 data points, which can make the chart hard to read. Consider:',
+                '',
+                '▶️ Use filters to show less data points at a time.',
+                '',
+                '▶️ Use larger time scales, or aggregated values.',
+            ],
+        },
+    ],
+});
 
 const isCursorPointer = computed(
     () => FINAL_CONFIG.value.userOptions.useCursorPointer,

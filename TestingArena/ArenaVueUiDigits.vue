@@ -12,12 +12,13 @@ import { useConfig } from '../src/useConfig';
 
 const { vue_ui_digits: DEFAULT_CONFIG } = useConfig();
 
-const { RANGE, TEXT, COLOR, createModel } =
+const { RANGE, TEXT, COLOR, CHECKBOX, createModel } =
     useConfigurationControls(DEFAULT_CONFIG);
 
 const dataset = ref(0.123456789);
 
 const model = createModel([
+    CHECKBOX('devHints.enable', { def: true }),
     TEXT('height', { def: '100%' }),
     TEXT('width', { def: null }),
     COLOR('backgroundColor', { def: '#FFFFFF ' }),

@@ -37,6 +37,7 @@ import {
     XMLNS,
 } from '../lib';
 import { throttle } from '../canvas-lib';
+import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 import { usePrinter } from '../usePrinter';
 import { useLoading } from '../useLoading';
@@ -134,6 +135,44 @@ const FINAL_CONFIG = ref(prepareConfig());
 const { transitionEnabled } = useTransitions({
     config: () => FINAL_CONFIG.value.transitions,
     dataset: () => props.dataset,
+});
+
+useHints({
+    config: () => FINAL_CONFIG.value,
+    dataset: () => props.dataset,
+    component: 'VueUiParallelCoordinatePlot',
+    rules: [
+        COMMON_RULES.emptyArray,
+        {
+            test: (dataset) => dataset.length > 10,
+            message: [
+                '👀 There are > 10 series. Consider:',
+                '',
+                '▶️ Using filters, to show less series at the same time and make the chart more readable.',
+            ],
+        },
+        {
+            test: (dataset) =>
+                dataset.some((s) =>
+                    (s?.series ?? []).some(
+                        (_s) => (_s?.values ?? []).length > 15,
+                    ),
+                ),
+            message: [
+                '👀 There are > 15 axes, which can make the chart hard to read. Consider:',
+                '',
+                '▶️ Using filters, to allow users to select a maximum set of metrics.',
+            ],
+        },
+        {
+            test: (dataset) => dataset.some((s) => s?.series?.length > 5),
+            message: [
+                '👀 Some series have > 5 datapoints. Consider:',
+                '',
+                '▶️ Using filters, to allow users to select a maximum set of metrics.',
+            ],
+        },
+    ],
 });
 
 const isCursorPointer = computed(

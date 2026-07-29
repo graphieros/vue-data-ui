@@ -30,6 +30,7 @@ import {
     XMLNS,
 } from '../lib';
 import { throttle } from '../canvas-lib';
+import { useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 import { useLoading } from '../useLoading';
 import { usePrinter } from '../usePrinter';
@@ -119,6 +120,22 @@ const activeA11yIndex = ref(null); // a11y
 const isFocus = ref(false); // a11y
 
 const FINAL_CONFIG = ref(prepareConfig());
+
+useHints({
+    config: () => FINAL_CONFIG.value,
+    dataset: () => props.dataset,
+    component: 'VueUiChord',
+    rules: [
+        {
+            test: (ds) => ds.matrix && ds.matrix.length > 12,
+            message: [
+                '👀 The number of groups > 12, the chart might become hard to read. Consider:',
+                '',
+                '▶️ Using broader groups to reduce their number.',
+            ],
+        },
+    ],
+});
 
 const isCursorPointer = computed(
     () => FINAL_CONFIG.value.userOptions.useCursorPointer,

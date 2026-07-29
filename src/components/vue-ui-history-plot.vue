@@ -40,6 +40,7 @@ import {
     interpolateHexColors,
 } from '../lib';
 import { throttle } from '../canvas-lib';
+import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 import { useLoading } from '../useLoading';
 import { usePrinter } from '../usePrinter';
@@ -337,6 +338,23 @@ function prepareConfig() {
 }
 
 const FINAL_CONFIG = ref(prepareConfig());
+
+useHints({
+    config: () => FINAL_CONFIG.value,
+    dataset: () => props.dataset,
+    component: 'VueUiHistoryPlot',
+    rules: [
+        COMMON_RULES.emptyArray,
+        {
+            test: (ds) => ds.length > 6,
+            message: [
+                '👀 The number of series is > 6. Consider:',
+                '',
+                '▶️ Using filters to let users choose a maximum number of series to display.',
+            ],
+        },
+    ],
+});
 
 const { transitionEnabled } = useTransitions({
     config: () => FINAL_CONFIG.value.transitions,

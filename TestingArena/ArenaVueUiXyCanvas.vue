@@ -137,6 +137,7 @@ async function longpolling() {
 // })
 
 const model = createModel([
+    CHECKBOX('devHints.enable', { def: true }),
     CHECKBOX('loading', { def: false }),
     CHECKBOX('debug', { def: true }),
     NUMBER('downsample.threshold', { def: 120000, min: 0, max: 10000000 }),

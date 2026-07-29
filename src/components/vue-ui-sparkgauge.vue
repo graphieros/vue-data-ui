@@ -21,6 +21,7 @@ import {
     treeShake,
     XMLNS,
 } from '../lib';
+import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 import { useLoading } from '../useLoading';
 import { useThemeCheck } from '../useThemeCheck';
@@ -58,6 +59,13 @@ const props = defineProps({
 const uid = ref(createUid());
 
 const FINAL_CONFIG = ref(prepareConfig());
+
+useHints({
+    config: () => FINAL_CONFIG.value,
+    dataset: () => props.dataset,
+    component: 'VueUiSparkgauge',
+    rules: [COMMON_RULES.noHint],
+});
 
 const shouldAnimate = computed(() => {
     return (

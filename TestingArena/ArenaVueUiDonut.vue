@@ -107,6 +107,7 @@ function alterDataset() {
 }
 
 const model = createModel([
+    CHECKBOX('devHints.enable', { def: true }),
     CHECKBOX('debug', { def: true }),
     CHECKBOX('autoSize', { def: true }),
     CHECKBOX('startAnimation.show', { def: true }),

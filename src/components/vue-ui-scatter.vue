@@ -38,6 +38,7 @@ import {
     XMLNS,
 } from '../lib';
 import { throttle } from '../canvas-lib';
+import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 import { useLoading } from '../useLoading';
 import { usePrinter } from '../usePrinter';
@@ -136,6 +137,24 @@ const isFocus = ref(false); // a11y
 const activeTooltipIndex = ref(null); // a11y
 
 const FINAL_CONFIG = ref(prepareConfig());
+
+useHints({
+    config: () => FINAL_CONFIG.value,
+    dataset: () => props.dataset,
+    component: 'VueUiScatter',
+    rules: [
+        COMMON_RULES.emptyArray,
+        {
+            test: (ds) => ds.length > 6,
+            message: [
+                '👀 The number of series (clusters) is > 6. Consider:',
+                '',
+                '',
+                '▶️ Using filters to let users choose a maximum number of series (clusters) to display.',
+            ],
+        },
+    ],
+});
 
 const { transitionEnabled } = useTransitions({
     config: () => FINAL_CONFIG.value.transitions,

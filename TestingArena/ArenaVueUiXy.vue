@@ -165,7 +165,7 @@ const dataset = ref([
         name: 'Serie A',
         type: 'line',
         // shape: 'star',
-        series: createDs(90),
+        series: createDs(80),
         // series: createContinuousDs(100),
         // series: [
         //     { x: 25.4, y: 10 },
@@ -470,6 +470,7 @@ function toggleProps() {
 // ]);
 
 const model = createModel([
+    CHECKBOX('devHints.enable', { def: true }),
     CHECKBOX('debug', { def: true }),
     CHECKBOX('autoSize', { def: false }),
     CHECKBOX('chart.userOptions.useCursorPointer', { def: false }),

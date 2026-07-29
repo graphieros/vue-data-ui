@@ -33,6 +33,7 @@ import {
 } from '../lib';
 import { generateTreemap } from '../treemap';
 import { throttle } from '../canvas-lib';
+import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 import { useLoading } from '../useLoading';
 import { usePrinter } from '../usePrinter';
@@ -137,6 +138,41 @@ const tooltipTriggerMode = ref('pointer'); // a11y
 const isFocus = ref(false); // a11y
 
 const FINAL_CONFIG = ref(prepareConfig());
+
+useHints({
+    config: () => FINAL_CONFIG.value,
+    dataset: () => props.dataset,
+    component: 'VueUiTreemap',
+    rules: [
+        COMMON_RULES.emptyArray,
+        {
+            test: (ds) =>
+                (ds.length === 1 &&
+                    ds[0]?.children &&
+                    ds[0].children.length < 6 &&
+                    ds[0].children.length > 0) ||
+                ds
+                    .flatMap((dp) => dp?.children?.length ?? 0)
+                    .reduce((a, b) => a + b, 0) < 6,
+            message: [
+                '👀 The number of data points is < 6. Consider:',
+                '',
+                '▶️ Using another type of chart instead to better show proportions: VueUiDonut, VueUiWaffle',
+            ],
+        },
+        {
+            test: (ds) =>
+                ds.length === 1 &&
+                ds[0]?.children &&
+                ds[0].children.length === 0,
+            message: [
+                '👀 There is a series defined in the dataset but it has no children items.',
+                '',
+                '▶️ Add children items to your series.',
+            ],
+        },
+    ],
+});
 
 const { transitionEnabled } = useTransitions({
     config: () => FINAL_CONFIG.value.transitions,

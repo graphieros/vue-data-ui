@@ -15,34 +15,42 @@ const { vue_ui_table_heatmap: DEFAULT_CONFIG } = useConfig();
 const { CHECKBOX, NUMBER, RANGE, TEXT, COLOR, SELECT, createModel } =
     useConfigurationControls(DEFAULT_CONFIG);
 
+function makeDs(n) {
+    const arr = [];
+    for (let i = 0; i < n; i += 1) {
+        arr.push(Math.round(Math.random() * 10) + 1);
+    }
+    return arr;
+}
+
 const dataset = ref([
     {
         name: 'Serie 1',
-        values: [20, 30, 40, 50, 40, 30, 20],
+        values: makeDs(6),
         color: '#1f77b4',
         shape: 'circle',
     },
     {
         name: 'Serie 2',
-        values: [30, 40, 50, 60, 50, 40, 30],
+        values: makeDs(7),
         color: '#aec7e8',
         shape: 'triangle',
     },
     {
         name: 'Serie 3',
-        values: [40, 50, 60, 70, 60, 50, 40],
+        values: makeDs(7),
         color: '#ff7f0e',
         shape: 'diamond',
     },
     {
         name: 'Serie 4',
-        values: [50, 60, 70, 80, 70, 60, 50],
+        values: makeDs(7),
         color: '#ffbb78',
         shape: 'hexagon',
     },
     {
         name: 'Serie 5',
-        values: [60, 70, 80, 90, 80, 70, 60],
+        values: makeDs(7),
         color: '#2ca02c',
         shape: 'star',
     },
@@ -55,6 +63,7 @@ onMounted(() => {
 });
 
 const model = createModel([
+    CHECKBOX('devHints.enable', { def: true }),
     CHECKBOX('userOptions.show', { def: true }),
     CHECKBOX('userOptions.buttons.pdf', { def: true }),
     CHECKBOX('userOptions.buttons.img', { def: true }),

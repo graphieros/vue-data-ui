@@ -9,6 +9,7 @@ import {
     XMLNS,
 } from '../lib.js';
 import { useNestedProp } from '../useNestedProp';
+import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 import { applyDataLabel } from '../lib.js';
 import { dataLabel } from '../lib.js';
@@ -55,6 +56,13 @@ const FINAL_CONFIG = computed({
     set: (newCfg) => {
         return newCfg;
     },
+});
+
+useHints({
+    config: () => FINAL_CONFIG.value,
+    dataset: () => [],
+    component: 'VueUiRating',
+    rules: [COMMON_RULES.noHint],
 });
 
 const isCursorPointer = computed(() => FINAL_CONFIG.value.useCursorPointer);

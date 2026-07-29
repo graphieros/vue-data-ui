@@ -75,6 +75,7 @@ import {
     safeDiv,
     safeInt,
 } from '../utils/xy.js';
+import { COMMON_RULES, useHints } from '../useHints.js';
 import { useLocale } from '../useLocale.js';
 import { useConfig } from '../useConfig';
 import { usePrinter } from '../usePrinter.js';
@@ -495,6 +496,45 @@ const isDataset = computed({
 });
 
 const FINAL_CONFIG = ref(prepareConfig());
+
+useHints({
+    config: () => FINAL_CONFIG.value,
+    dataset: () => props.dataset,
+    component: 'VueUiXy',
+    rules: [
+        COMMON_RULES.emptyArray,
+        {
+            test: (dataset) => dataset.some((s) => s.series.length > 365),
+            message: [
+                '👀 One or more series have more than 365 datapoints. Consider if you really need this level of detail.',
+                '',
+                '▶️ Use larger time scales, or aggregated values',
+                '',
+                '▶️ Filter the time range by adding date inputs in your UI.',
+            ],
+        },
+        {
+            test: (dataset) => dataset.some((s) => s.series.length > 1095),
+            message: [
+                '👀 One or more series have more than 1095 datapoints. Above this threshold, the dataset is computed through an LTTB algorithm, to preserve the shape of the data without increasing the number of datapoints.',
+                '',
+                '▶️ If you need this level of detail, you can change config.downsample.threshold and set a higher value. Note that performance will be impacted.',
+            ],
+        },
+        {
+            test: (dataset) => dataset.length > 6,
+            message: [
+                '👀 The number of series is greater than 6. If your chart is hard to read, you might consider other ways of charting the data:',
+                '',
+                '▶️ A summary table with sparklines (custom, with VueUiSparkline), or VueUiTableSparkline.',
+                '',
+                '▶️ Individual charts for individual series, or fewer series with comparable scopes.',
+                '',
+                '▶️ Add filters to reduce the number of visible series on the chart, to reduce cognitive load.',
+            ],
+        },
+    ],
+});
 
 const { transitionEnabled } = useTransitions({
     config: () => FINAL_CONFIG.value.transitions,

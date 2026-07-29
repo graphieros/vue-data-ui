@@ -23,6 +23,7 @@ function updateVal() {
 }
 
 const model = createModel([
+    CHECKBOX('devHints.enable', { def: true }),
     CHECKBOX('debug', { def: true }),
     RANGE('animationFrames', { def: 60, min: 0, max: 1000 }),
     COLOR('backgroundColor', { def: '#FFFFFF' }),

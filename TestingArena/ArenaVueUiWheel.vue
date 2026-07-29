@@ -53,6 +53,7 @@ function alterDataset() {
 }
 
 const model = createModel([
+    CHECKBOX('devHints.enable', { def: true }),
     SELECT('layout', ['3d', 'classic'], { def: '3d' }),
     CHECKBOX('debug', { def: true }),
     CHECKBOX('loading', { def: false }),

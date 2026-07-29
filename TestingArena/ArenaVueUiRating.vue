@@ -28,6 +28,7 @@ const dataset = ref({
 });
 
 const model = createModel([
+    CHECKBOX('devHints.enable', { def: true }),
     SELECT('type', ['star', 'image'], { def: 'star' }),
     CHECKBOX('readonly', { def: false }),
     NUMBER('from', { def: 1, min: 0, max: 100 }),

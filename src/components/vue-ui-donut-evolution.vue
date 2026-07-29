@@ -40,6 +40,7 @@ import {
     isValidUserValue,
 } from '../lib';
 import { throttle } from '../canvas-lib';
+import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 import { usePrinter } from '../usePrinter';
 import { useLoading } from '../useLoading.js';
@@ -283,6 +284,47 @@ function prepareChart() {
 }
 
 const FINAL_CONFIG = ref(prepareConfig());
+
+useHints({
+    config: () => FINAL_CONFIG.value,
+    dataset: () => props.dataset,
+    component: 'VueUiDonutEvolution',
+    rules: [
+        COMMON_RULES.emptyArray,
+        {
+            test: (ds) => ds.length === 1,
+            message: [
+                '👀 There is only a single series in your dataset. Consider:',
+                '',
+                '▶️ Using VueUiXy instead, for a regular line chart.',
+            ],
+        },
+        {
+            test: (ds) => ds.length > 6,
+            message: [
+                '👀 The number of series is > 6, which makes donuts hard to read. Consider:',
+                '',
+                '▶️ Grouping small values dynamically into a single "Other" series.',
+                '',
+                '▶️ Using filters to let users choose a maximum number of series to display.',
+                '',
+                '▶️ Using VueUiHorizontalBar instead to make the dataset breakdown easier to read.',
+            ],
+        },
+        {
+            test: (ds) => ds.some((dp) => dp.values.length > 24),
+            message: [
+                '👀 Some series have a number of data points > 24, which can make the chart and donuts hard to read. Consider:',
+                '',
+                '▶️ Using larger time scales, or aggregated values.',
+                '',
+                '▶️ Filtering the time range by adding date intputs in your UI.',
+                '',
+                '▶️ Using VueUiXy to show longer series in a more comfortable display.',
+            ],
+        },
+    ],
+});
 
 const { transitionEnabled } = useTransitions({
     config: () => FINAL_CONFIG.value.transitions,

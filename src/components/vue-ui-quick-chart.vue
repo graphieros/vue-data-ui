@@ -37,6 +37,7 @@ import {
     objectIsEmpty,
 } from '../lib';
 import { throttle } from '../canvas-lib';
+import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 import { useLoading } from '../useLoading';
 import { usePrinter } from '../usePrinter';
@@ -161,6 +162,25 @@ const stableParentSize = useStableElementSize({
 
 const donutStroke = ref('#FFFFFF');
 const FINAL_CONFIG = ref(prepareConfig());
+
+useHints({
+    config: () => FINAL_CONFIG.value,
+    dataset: () => props.dataset,
+    component: 'VueUiQuickChart',
+    rules: [
+        COMMON_RULES.emptyArray,
+        {
+            test: () => true,
+            message: [
+                '👀 This is a swiss-knife component. If you need more control, consider using dedicated components:',
+                '',
+                '▶️ VueUiXy for time series line and/or bars',
+                '',
+                '▶️ VueUiDonut, VueUiWaffle, VueUiRings for proportions',
+            ],
+        },
+    ],
+});
 
 const { transitionEnabled } = useTransitions({
     config: () => FINAL_CONFIG.value.transitions,

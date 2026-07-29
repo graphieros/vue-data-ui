@@ -19,6 +19,7 @@ import {
 } from '../lib.js';
 import usePanZoom from '../usePanZoom.js';
 import { throttle } from '../canvas-lib.js';
+import { COMMON_RULES, useHints } from '../useHints.js';
 import { useConfig } from '../useConfig.js';
 import { useLoading } from '../useLoading.js';
 import { usePrinter } from '../usePrinter.js';
@@ -126,6 +127,22 @@ function prepareConfig() {
 }
 
 const FINAL_CONFIG = ref(prepareConfig());
+
+useHints({
+    config: () => FINAL_CONFIG.value,
+    dataset: () => props.dataset,
+    component: 'VueUiGeo',
+    rules: [
+        {
+            test: (ds) => ds.length > 100,
+            message: [
+                '👀 The number of data points > 100, which can make the chart hard to read. Consider:',
+                '',
+                '▶️ Using filters to reduce the number of data points displayed at the same time, and offer users some level of control.',
+            ],
+        },
+    ],
+});
 
 const isCursorPointer = computed(
     () => FINAL_CONFIG.value.userOptions.useCursorPointer,

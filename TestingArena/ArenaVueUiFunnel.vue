@@ -43,6 +43,7 @@ const dataset = ref([
 ]);
 
 const model = createModel([
+    CHECKBOX('devHints.enable', { def: true }),
     CHECKBOX('responsive', { def: false }),
     CHECKBOX('responsiveProportionalSizing', { def: false }),
 

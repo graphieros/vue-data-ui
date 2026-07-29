@@ -34,6 +34,7 @@ import {
     XMLNS,
 } from '../lib';
 import { throttle } from '../canvas-lib';
+import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 import { useLoading } from '../useLoading';
 import { usePrinter } from '../usePrinter';
@@ -117,6 +118,51 @@ const tooltipTriggerMode = ref('pointer'); // a11y
 const isFocus = ref(false); // a11y
 
 const FINAL_CONFIG = ref(prepareConfig());
+
+useHints({
+    config: () => FINAL_CONFIG.value,
+    dataset: () => props.dataset,
+    component: 'VueUiRadar',
+    rules: [
+        {
+            test: (ds) => ds?.categories && ds.categories.length === 0,
+            message: [
+                '👀 There are no categories in your dataset. Consider:',
+                '',
+                '▶️ Adding categories...',
+            ],
+        },
+        {
+            test: (ds) => ds?.series && ds.series.length === 0,
+            message: [
+                '👀 There are no series in your dataset. Consider:',
+                '',
+                '▶️ Adding series...',
+            ],
+        },
+        {
+            test: (ds) => ds?.categories && ds.categories.length > 3,
+            message: [
+                '👀 The number of categories > 3, the chart might become hard to read. Consider:',
+                '',
+                '▶️ Using several instances of the component to display related categories.',
+                '',
+                '▶️ Adding filters to allow users to choose a maximum number of categories.',
+            ],
+        },
+        {
+            test: (ds) => ds?.series && ds.series.length > 12,
+            message: [
+                '👀 The number of series is > 12. Consider:',
+                '',
+                '▶️ Using several instances of the component to distribute the series.',
+                '',
+                '▶️ Using filters to let users choose a maximum number of series to display.',
+                '',
+            ],
+        },
+    ],
+});
 
 const isCursorPointer = computed(
     () => FINAL_CONFIG.value.userOptions.useCursorPointer,

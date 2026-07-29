@@ -42,6 +42,30 @@ onMounted(() => {
                 {
                     name: 'High',
                     from: 0,
+                    to: 10,
+                    // color: '#8A8A8A'
+                },
+                {
+                    name: 'High',
+                    from: 10,
+                    to: 20,
+                    // color: '#8A8A8A'
+                },
+                {
+                    name: 'High',
+                    from: 20,
+                    to: 30,
+                    // color: '#8A8A8A'
+                },
+                {
+                    name: 'High',
+                    from: 30,
+                    to: 40,
+                    // color: '#8A8A8A'
+                },
+                {
+                    name: 'High',
+                    from: 40,
                     to: 100,
                     // color: '#8A8A8A'
                 },
@@ -55,7 +79,8 @@ function randomizeData() {
 }
 
 const model = createModel([
-    CHECKBOX('userOptions.debug', { def: true }),
+    CHECKBOX('devHints.enable', { def: true }),
+    CHECKBOX('debug', { def: true }),
     CHECKBOX('userOptions.loading', { def: false }),
     CHECKBOX('userOptions.show', { def: true }),
 

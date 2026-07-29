@@ -23,6 +23,7 @@ import {
     XMLNS,
 } from '../lib';
 import { throttle } from '../canvas-lib';
+import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 import { useLoading } from '../useLoading';
 import { useFitSvgText } from '../useFitSvgText';
@@ -68,6 +69,23 @@ const raf = ref(null);
 const uid = ref(createUid());
 
 const FINAL_CONFIG = ref(prepareConfig());
+
+useHints({
+    config: () => FINAL_CONFIG.value,
+    dataset: () => props.dataset,
+    component: 'VueUiSparkTrend',
+    rules: [
+        COMMON_RULES.emptyArray,
+        {
+            test: (dataset) => dataset.length > 1095,
+            message: [
+                '👀 The dataset has > 1095 datapoints. Above this threshold, the dataset is computed through an LTTB algorithm, to preserve the shape of the data without increasing the number of datapoints.',
+                '',
+                '▶️ If you need this level of detail, you can change config.downsample.threshold and set a higher value. Note that performance will be impacted.',
+            ],
+        },
+    ],
+});
 
 const skeletonConfig = computed(() => {
     return treeShake({

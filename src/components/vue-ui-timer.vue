@@ -13,6 +13,7 @@ import { XMLNS, createUid, translateSize } from '../lib';
 import { throttle } from '../canvas-lib';
 import { useResponsive } from '../useResponsive';
 import { Timer } from '../timer';
+import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 import { useChartAccessibility } from '../useChartAccessibility';
 import Title from '../atoms/Title.vue'; // Must be ready in responsive mode
@@ -128,6 +129,13 @@ const FINAL_CONFIG = computed({
     set: (newCfg) => {
         return newCfg;
     },
+});
+
+useHints({
+    config: () => FINAL_CONFIG.value,
+    dataset: () => [], // no dataset for this component
+    component: 'VueUiTimer',
+    rules: [COMMON_RULES.noHint],
 });
 
 const isCursorPointer = computed(() => FINAL_CONFIG.value.useCursorPointer);

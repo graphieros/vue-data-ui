@@ -150,6 +150,7 @@ function alterDataset() {
 }
 
 const model = ref([
+    { key: 'devHints.enable', def: true, type: 'checkbox' },
     { key: 'debug', def: true, type: 'checkbox' },
     { key: 'loading', def: false, type: 'checkbox' },
     { key: 'style.backgroundColor', def: '#FFFFFF', type: 'color' },

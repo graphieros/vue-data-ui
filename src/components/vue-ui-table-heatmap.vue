@@ -18,6 +18,7 @@ import {
     interpolateColorHex,
     objectIsEmpty,
 } from '../lib';
+import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 import { usePrinter } from '../usePrinter';
 import { useNestedProp } from '../useNestedProp';
@@ -70,6 +71,31 @@ const FINAL_CONFIG = computed({
     set: (newCfg) => {
         return newCfg;
     },
+});
+
+useHints({
+    config: () => FINAL_CONFIG.value,
+    dataset: () => props.dataset,
+    component: 'VueUiTableHeatmap',
+    rules: [
+        COMMON_RULES.emptyArray,
+        {
+            test: (ds) => ds.length > 31,
+            message: [
+                '👀 The number of series is > 31. Consider:',
+                '',
+                '▶️ Using filters to let users choose a maximum number of series to display.',
+            ],
+        },
+        {
+            test: (ds) => ds.some((dp) => dp?.values && dp?.values.length > 31),
+            message: [
+                '👀 Some series have a number of data points > 31. Consider:',
+                '',
+                '▶️ Using filters to let users choose a maximum number of data points to display.',
+            ],
+        },
+    ],
 });
 
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } =

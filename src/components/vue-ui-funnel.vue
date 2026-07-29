@@ -25,6 +25,7 @@ import {
     XMLNS,
 } from '../lib';
 import { throttle } from '../canvas-lib';
+import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 import { usePrinter } from '../usePrinter';
 import { useSvgExport } from '../useSvgExport';
@@ -232,6 +233,23 @@ const FINAL_CONFIG = computed({
     set: (newCfg) => {
         return newCfg;
     },
+});
+
+useHints({
+    config: () => FINAL_CONFIG.value,
+    dataset: () => props.dataset,
+    component: 'VueUiFunnel',
+    rules: [
+        COMMON_RULES.emptyArray,
+        {
+            test: (dataset) => dataset.length > 10,
+            message: [
+                '👀 The dataset has a length > 10. Consider:',
+                '',
+                '▶️ Aggregating some datapoints into broader categories',
+            ],
+        },
+    ],
 });
 
 const isCursorPointer = computed(

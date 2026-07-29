@@ -21,6 +21,7 @@ import {
     XMLNS,
 } from '../lib';
 import { throttle } from '../canvas-lib';
+import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 import { useLoading } from '../useLoading';
 import { useFitSvgText } from '../useFitSvgText';
@@ -68,6 +69,23 @@ const keyboardIndex = ref(null); // a11y
 const interactionMode = ref('pointer'); // a11y
 
 const FINAL_CONFIG = ref(prepareConfig());
+
+useHints({
+    config: () => FINAL_CONFIG.value,
+    dataset: () => props.dataset,
+    component: 'VueUiSparkHistogram',
+    rules: [
+        COMMON_RULES.singleSeries,
+        {
+            test: (dataset) => dataset.length > 31,
+            message: [
+                '👀 The number of datapoints is > 31. For a more readable chart, consider:',
+                '',
+                '▶️ Using VueUiXy with a line series',
+            ],
+        },
+    ],
+});
 
 const skeletonConfig = computed(() => {
     return treeShake({

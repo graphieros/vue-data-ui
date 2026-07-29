@@ -29,6 +29,7 @@ import {
 } from '../lib.js';
 import { buildValuePercentageLabel } from '../labelUtils';
 import { throttle } from '../canvas-lib';
+import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 import { useLoading } from '../useLoading.js';
 import { usePrinter } from '../usePrinter';
@@ -113,6 +114,27 @@ const tooltipTriggerMode = ref('pointer'); // a11y
 const isFocus = ref(false); // a11y
 
 const FINAL_CONFIG = ref(prepareConfig());
+
+useHints({
+    config: () => FINAL_CONFIG.value,
+    dataset: () => props.dataset,
+    component: 'VueUiOnion',
+    rules: [
+        COMMON_RULES.emptyArray,
+        {
+            test: (ds) => ds.length > 8,
+            message: [
+                '👀 The number of series is > 8. Consider:',
+                '',
+                '▶️ Grouping small values dynamically into a single "Other" series.',
+                '',
+                '▶️ Using filters to let users choose a maximum number of series to display.',
+                '',
+                '▶️ Using VueUiHorizontalBar instead to make the dataset breakdown easier to read.',
+            ],
+        },
+    ],
+});
 
 const { transitionEnabled } = useTransitions({
     config: () => FINAL_CONFIG.value.transitions,

@@ -46,6 +46,7 @@ import {
     rect,
     text,
 } from '../canvas-lib';
+import { COMMON_RULES, useHints } from '../useHints';
 import { useLocale } from '../useLocale';
 import { useConfig } from '../useConfig';
 import { useLoading } from '../useLoading';
@@ -157,6 +158,31 @@ onMounted(() => {
 });
 
 const FINAL_CONFIG = ref(prepareConfig());
+
+useHints({
+    config: () => FINAL_CONFIG.value,
+    dataset: () => props.dataset,
+    component: 'VueUiXyCanvas',
+    rules: [
+        COMMON_RULES.emptyArray,
+        {
+            test: (dataset) => dataset.every((s) => s.series.length < 300),
+            message: [
+                '👀 Series have < 300 datapoints. Consider:',
+                '',
+                '▶️ Using VueUiXy instead, if you need more options, or more customization possibilities.',
+            ],
+        },
+        {
+            test: (dataset) => dataset.some((s) => s.series.length > 10000),
+            message: [
+                '👀 The dataset has > 10_000 datapoints. Above this threshold, the dataset is computed through an LTTB algorithm, to preserve the shape of the data without increasing the number of datapoints.',
+                '',
+                '▶️ If you need this level of detail, you can change config.downsample.threshold and set a higher value. Note that performance can be impacted. JS runtime might crash with > 100_000 datapoints.',
+            ],
+        },
+    ],
+});
 
 const chartAriaLabel = computed(() => {
     const title = FINAL_CONFIG.value.style.chart.title.text || 'XY chart';

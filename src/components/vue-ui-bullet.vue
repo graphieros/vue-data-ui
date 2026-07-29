@@ -9,7 +9,6 @@ import {
     toRefs,
     watch,
 } from 'vue';
-import { useConfig } from '../useConfig';
 import {
     XMLNS,
     createUid,
@@ -24,6 +23,8 @@ import {
     dataLabel,
 } from '../lib';
 import { throttle } from '../canvas-lib';
+import { COMMON_RULES, useHints } from '../useHints';
+import { useConfig } from '../useConfig';
 import { usePrinter } from '../usePrinter';
 import { useLoading } from '../useLoading';
 import { useSvgExport } from '../useSvgExport';
@@ -263,6 +264,22 @@ function prepareConfig() {
 }
 
 const FINAL_CONFIG = ref(prepareConfig());
+
+useHints({
+    config: () => FINAL_CONFIG.value,
+    dataset: () => props.dataset,
+    component: 'VueUiBullet',
+    rules: [
+        {
+            test: (ds) => ds?.segments && ds?.segments.length > 8,
+            message: [
+                '👀 The number of target segments is > 8, which can make the chart hard to read and a large legend. Consider:',
+                '',
+                '▶️ Using broader segments.',
+            ],
+        },
+    ],
+});
 
 const isCursorPointer = computed(
     () => FINAL_CONFIG.value.userOptions.useCursorPointer,

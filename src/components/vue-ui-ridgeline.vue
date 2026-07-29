@@ -35,6 +35,7 @@ import {
     XMLNS,
 } from '../lib';
 import { throttle } from '../canvas-lib';
+import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 import { useLoading } from '../useLoading';
 import { usePrinter } from '../usePrinter';
@@ -169,6 +170,46 @@ function prepareConfig() {
 }
 
 const FINAL_CONFIG = ref(prepareConfig());
+
+useHints({
+    config: () => FINAL_CONFIG.value,
+    dataset: () => props.dataset,
+    component: 'VueUiRidgeline',
+    rules: [
+        COMMON_RULES.emptyArray,
+        {
+            test: (ds) => ds.length > 31,
+            message: [
+                '👀 The number of series > 31. Consider:',
+                '',
+                '▶️ Using filters to let users choose a maximum number of series to display',
+                '',
+                '▶️ Use several instances of the component to show related series',
+            ],
+        },
+        {
+            test: (ds) =>
+                ds.some((dp) =>
+                    dp.datapoints.some((s) => s.values.length > 200),
+                ),
+            message: [
+                '👀 Some series contain > 200 data points, which can affect performance. Consider if you really need this level of detail.',
+                '',
+                '▶️ Use larger time scales, or aggregated values.',
+                '',
+                '▶️ Filter the time range by adding date inputs in your UI.',
+            ],
+        },
+        {
+            test: (ds) => ds.length < 6 && ds.length > 0,
+            message: [
+                '👀 The number of series < 6. Consider:',
+                '',
+                '▶️ Using VueUiXy instead',
+            ],
+        },
+    ],
+});
 
 const isCursorPointer = computed(
     () => FINAL_CONFIG.value.userOptions.useCursorPointer,

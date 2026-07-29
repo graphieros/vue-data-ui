@@ -2201,6 +2201,7 @@ import {
     nextTick,
 } from 'vue';
 import { opacity, treeShake, convertConfigColors, createUid } from '../lib';
+import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 import { domToPng } from '../dom-to-png';
 import { registerAnnotatorShortcuts } from '../registerAnnotatorShortcuts';
@@ -2328,6 +2329,13 @@ const FINAL_CONFIG = computed(() => {
     });
 
     return convertConfigColors(reconcilied);
+});
+
+useHints({
+    config: () => FINAL_CONFIG.value,
+    dataset: () => [],
+    component: 'VueUiAnnotator',
+    rules: [COMMON_RULES.noHint],
 });
 
 const isCursorPointer = computed(() => FINAL_CONFIG.value.useCursorPointer);

@@ -46,6 +46,7 @@ import {
     XMLNS,
 } from '../lib';
 import { throttle } from '../canvas-lib';
+import { COMMON_RULES, useHints } from '../useHints';
 import { useLocale } from '../useLocale';
 import { useConfig } from '../useConfig';
 import { useDateTime } from '../useDateTime';
@@ -225,6 +226,35 @@ onMounted(() => {
 });
 
 const FINAL_CONFIG = ref(prepareConfig());
+
+useHints({
+    config: () => FINAL_CONFIG.value,
+    dataset: () => props.dataset,
+    component: 'VueUiStackline',
+    rules: [
+        COMMON_RULES.emptyArray,
+        {
+            test: (dataset) => dataset.some((s) => s.series.length > 200),
+            message: [
+                '👀 Some series have > 200 datapoints, which can impact performance. Consider:',
+                '',
+                '▶️ Aggregating data to larger time units, to reduce the number of datapoints.',
+                '',
+                '▶️ Using filters to constraint the data to a specific time range.',
+            ],
+        },
+        {
+            test: (dataset) => dataset.length > 6,
+            message: [
+                '👀 The number of series > 6, which can make the chart hard to read. Consider:',
+                '',
+                '▶️ Grouping small values into an "Other" category.',
+                '',
+                '▶️ Using filters to let users choose a maximum number of series to display.',
+            ],
+        },
+    ],
+});
 
 const { transitionEnabled } = useTransitions({
     config: () => FINAL_CONFIG.value.transitions,

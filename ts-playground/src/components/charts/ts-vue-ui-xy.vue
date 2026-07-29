@@ -83,6 +83,7 @@ const tooltipPosition = useTooltipPosition(chartRef);
 
 const testPreconfig = computed<VueUiXyConfig>(() => {
     return {
+        devHints: { enable: true },
         skeletonConfig: null,
         skeletonDataset: null,
         debug: false,
@@ -97,6 +98,12 @@ const testPreconfig = computed<VueUiXyConfig>(() => {
                     'A data table for this chart is available below.',
                 tableCaption: 'Chart data table',
             },
+        },
+        transitions: {
+            enable: true,
+            pauseOnLoad: true,
+            pauseOnDatasetChange: false,
+            activationDelayMs: 300,
         },
         events: {
             datapointEnter: null,

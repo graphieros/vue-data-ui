@@ -2,6 +2,7 @@
 import { ref, computed, onMounted, watch, useSlots } from 'vue';
 import { applyDataLabel, dataLabel, error, objectIsEmpty } from '../lib';
 import { useNestedProp } from '../useNestedProp';
+import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 import BaseSmilingUnit from '../atoms/BaseSmilingUnit.vue';
 
@@ -50,6 +51,13 @@ function prepareChart() {
 onMounted(prepareChart);
 
 const FINAL_CONFIG = ref(prepareConfig());
+
+useHints({
+    config: () => FINAL_CONFIG.value,
+    dataset: () => [],
+    component: 'VueUiSmiley',
+    rules: [COMMON_RULES.noHint],
+});
 
 const isCursorPointer = computed(() => FINAL_CONFIG.value.useCursorPointer);
 

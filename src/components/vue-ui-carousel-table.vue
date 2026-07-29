@@ -10,8 +10,6 @@ import {
     defineAsyncComponent,
     shallowRef,
 } from 'vue';
-import { useConfig } from '../useConfig';
-import { useNestedProp } from '../useNestedProp';
 import {
     createCsvContent,
     createUid,
@@ -20,7 +18,10 @@ import {
     objectIsEmpty,
     setOpacity,
 } from '../lib';
+import { COMMON_RULES, useHints } from '../useHints';
+import { useConfig } from '../useConfig';
 import { usePrinter } from '../usePrinter';
+import { useNestedProp } from '../useNestedProp';
 import { useUserOptionState } from '../useUserOptionState';
 import { usePrefersReducedMotion } from '../usePrefersMotion';
 
@@ -102,6 +103,13 @@ const FINAL_CONFIG = computed({
     set: (newCfg) => {
         return newCfg;
     },
+});
+
+useHints({
+    config: () => FINAL_CONFIG.value,
+    dataset: () => props.dataset,
+    component: 'VueUiCarouselTable',
+    rules: [COMMON_RULES.noHint],
 });
 
 const isCursorPointer = computed(

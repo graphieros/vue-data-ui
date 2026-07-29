@@ -29,6 +29,7 @@ import {
     XMLNS,
 } from '../lib';
 import { throttle } from '../canvas-lib';
+import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 import { usePrinter } from '../usePrinter';
 import { useLoading } from '../useLoading';
@@ -124,6 +125,25 @@ const isFocus = ref(false); // a11y
 const areSeriesNamesColliding = ref(false);
 
 const FINAL_CONFIG = ref(prepareConfig());
+
+useHints({
+    config: () => FINAL_CONFIG.value,
+    dataset: () => props.dataset,
+    component: 'VueUiDumbbell',
+    rules: [
+        COMMON_RULES.emptyArray,
+        {
+            test: (ds) => ds.length > 31,
+            message: [
+                '👀 The number of series is > 31. Consider:',
+                '',
+                '▶️ Using filters to let users choose a maximum number of series to display.',
+                '',
+                '▶️ Using multiple instances of the component to display related series.',
+            ],
+        },
+    ],
+});
 
 const isCursorPointer = computed(
     () => FINAL_CONFIG.value.userOptions.useCursorPointer,

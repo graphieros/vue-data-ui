@@ -32,6 +32,7 @@ import {
     XMLNS,
 } from '../lib';
 import { throttle } from '../canvas-lib';
+import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 import { useLocale } from '../useLocale.js';
 import { usePrinter } from '../usePrinter';
@@ -129,6 +130,25 @@ const tooltipTriggerMode = ref('pointer'); // a11y
 const isFocus = ref(false); // a11y
 
 const FINAL_CONFIG = ref(prepareConfig());
+
+useHints({
+    config: () => FINAL_CONFIG.value,
+    dataset: () => props.dataset,
+    component: 'VueUiCandlestick',
+    rules: [
+        COMMON_RULES.emptyArray,
+        {
+            test: (dataset) => dataset.length > 200,
+            message: [
+                '👀 Dataset has > 200 points, which can cause performance issues. Consider:',
+                '',
+                '▶️ Adding date inputs to constraint the dataset into a specific timeframe',
+                '',
+                '▶️ Aggregate the data to larger time series to reduce the number of datapoints.',
+            ],
+        },
+    ],
+});
 
 const { transitionEnabled } = useTransitions({
     config: () => FINAL_CONFIG.value.transitions,

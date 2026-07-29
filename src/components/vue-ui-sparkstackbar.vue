@@ -25,6 +25,7 @@ import {
     treeShake,
     XMLNS,
 } from '../lib';
+import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 import { useLoading } from '../useLoading';
 import { useNestedProp } from '../useNestedProp';
@@ -86,6 +87,25 @@ const selectedIndex = ref(null); // a11y
 const legendItemRefs = ref([]); // a11y
 
 const FINAL_CONFIG = ref(prepareConfig());
+
+useHints({
+    config: () => FINAL_CONFIG.value,
+    dataset: () => props.dataset,
+    component: 'VueUiSparkStackbar',
+    rules: [
+        COMMON_RULES.emptyArray,
+        {
+            test: (dataset) => dataset.length > 6,
+            message: [
+                '👀 The number of series is > 6. Consider:',
+                '',
+                '▶️ Grouping small values dynamically into a single "Other" series.',
+                '',
+                '▶️ Using VueUiHorizontalBar instead to make the dataset breakdown easier to read.',
+            ],
+        },
+    ],
+});
 
 const isCursorPointer = computed(() => FINAL_CONFIG.value.useCursorPointer);
 

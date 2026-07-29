@@ -3,6 +3,7 @@ import { computed } from 'vue';
 import Digit from '../atoms/Digit.vue';
 import { useNestedProp } from '../useNestedProp';
 import { createUid, XMLNS } from '../lib';
+import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 import PackageVersion from '../atoms/PackageVersion.vue';
 
@@ -26,6 +27,13 @@ const FINAL_CONFIG = computed(() => {
         userConfig: props.config,
         defaultConfig: DEFAULT_CONFIG,
     });
+});
+
+useHints({
+    config: () => FINAL_CONFIG.value,
+    dataset: () => props.dataset,
+    component: 'VueUiDigits',
+    rules: [COMMON_RULES.noHint],
 });
 
 const digits = computed(() => {

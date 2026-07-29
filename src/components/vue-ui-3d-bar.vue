@@ -33,6 +33,7 @@ import {
     XMLNS,
 } from '../lib';
 import { throttle } from '../canvas-lib';
+import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 import { useLoading } from '../useLoading';
 import { usePrinter } from '../usePrinter';
@@ -108,6 +109,38 @@ const activeAccessibilityIndex = ref(null);
 const a11yAnnouncement = ref('');
 
 const FINAL_CONFIG = ref(prepareConfig());
+
+useHints({
+    config: () => FINAL_CONFIG.value,
+    dataset: () => props.dataset,
+    component: 'VueUi3dBar',
+    rules: [
+        {
+            test: (ds) => ds?.series && ds.series.length > 8,
+            message: [
+                '👀 The number of series is > 8. Consider:',
+                '',
+                '▶️ Grouping small values dynamically into a single "Other" series.',
+                '',
+                '▶️ Using filters to let users choose a maximum number of series to display.',
+                '',
+                '▶️ Using VueUiHorizontalBar instead to make the dataset breakdown easier to read.',
+            ],
+        },
+        {
+            test: (ds) =>
+                ds?.series &&
+                ds.series.some(
+                    (dp) => dp?.breakdown && dp.breakdown.length > 6,
+                ),
+            message: [
+                '👀 Some donut breakdowns have > 6 data points. Consider:',
+                '',
+                '▶️ Grouping small values dynamically into a single "Other" data point.',
+            ],
+        },
+    ],
+});
 
 const isCursorPointer = computed(
     () => FINAL_CONFIG.value.userOptions.useCursorPointer,

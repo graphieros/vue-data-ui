@@ -10,6 +10,7 @@ import {
 import { useNestedProp } from '../useNestedProp';
 import { applyDataLabel, createUid, dataLabel } from '../lib';
 import { useConfig } from '../useConfig';
+import { COMMON_RULES, useHints } from '../useHints.js';
 import { usePrefersReducedMotion } from '../usePrefersMotion';
 
 const Digits = defineAsyncComponent(() => import('./vue-ui-digits.vue'));
@@ -37,6 +38,13 @@ const FINAL_CONFIG = computed({
     set: (newCfg) => {
         return newCfg;
     },
+});
+
+useHints({
+    config: () => FINAL_CONFIG.value,
+    dataset: () => props.dataset,
+    component: 'VueUiKpi',
+    rules: [COMMON_RULES.noHint],
 });
 
 const slots = useSlots();

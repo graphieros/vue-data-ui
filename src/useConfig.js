@@ -71,6 +71,10 @@ export function useConfig(options = {}) {
         threshold: 1095, // v2 = 500
     };
 
+    const DEV_HINTS = {
+        enable: false,
+    };
+
     const LABEL_VP_ORDER = {
         showValueFirst: true,
         usePercentageParens: true,
@@ -315,6 +319,7 @@ export function useConfig(options = {}) {
     };
 
     const vue_ui_stackline = {
+        devHints: DEV_HINTS,
         skeletonDataset: null,
         skeletonConfig: null,
         loading: false,
@@ -527,6 +532,7 @@ export function useConfig(options = {}) {
     };
 
     const vue_ui_stackbar = {
+        devHints: DEV_HINTS,
         skeletonDataset: null,
         skeletonConfig: null,
         loading: false, // v3
@@ -734,6 +740,7 @@ export function useConfig(options = {}) {
 
     // NOTE: Any update to this config will be reflected in VueUiRidgeline, which uses VueUiXy in its dialog.
     const vue_ui_xy = {
+        devHints: DEV_HINTS,
         skeletonConfig: null,
         skeletonDataset: null,
         debug: false, // v3
@@ -1116,6 +1123,7 @@ export function useConfig(options = {}) {
     };
 
     const vue_ui_donut = {
+        devHints: DEV_HINTS,
         skeletonConfig: null,
         skeletonDataset: null,
         debug: false, // v3
@@ -1308,6 +1316,7 @@ export function useConfig(options = {}) {
     };
 
     const vue_ui_treemap = {
+        devHints: DEV_HINTS,
         skeletonDataset: null,
         skeletonConfig: null,
         debug: false, // v3
@@ -1432,6 +1441,7 @@ export function useConfig(options = {}) {
     };
 
     const vue_ui_waffle = {
+        devHints: DEV_HINTS,
         skeletonDataset: null,
         skeletonConfig: null,
         debug: false, // v3
@@ -1545,6 +1555,7 @@ export function useConfig(options = {}) {
     };
 
     const vue_ui_radar = {
+        devHints: DEV_HINTS,
         skeletonConfig: null,
         skeletonDataset: null,
         debug: false, // v3
@@ -1657,6 +1668,7 @@ export function useConfig(options = {}) {
     };
 
     const vue_ui_quadrant = {
+        devHints: DEV_HINTS,
         skeletonDataset: null,
         skeletonConfig: null,
         debug: false, // v3
@@ -1821,6 +1833,7 @@ export function useConfig(options = {}) {
     };
 
     const vue_ui_gauge = {
+        devHints: DEV_HINTS,
         skeletonDataset: null,
         skeletonConfig: null,
         debug: false, // v3
@@ -1921,6 +1934,7 @@ export function useConfig(options = {}) {
     };
 
     const vue_ui_wheel = {
+        devHints: DEV_HINTS,
         skeletonDataset: null,
         skeletonConfig: null,
         debug: false, // v3
@@ -1991,6 +2005,7 @@ export function useConfig(options = {}) {
     };
 
     const vue_ui_tiremarks = {
+        devHints: DEV_HINTS,
         skeletonDataset: null,
         skeletonConfig: null,
         debug: false, // v3
@@ -2048,6 +2063,7 @@ export function useConfig(options = {}) {
     };
 
     const vue_ui_chestnut = {
+        devHints: DEV_HINTS,
         debug: false, // v3
         loading: false, // v3
         theme: '',
@@ -2232,6 +2248,7 @@ export function useConfig(options = {}) {
     };
 
     const vue_ui_onion = {
+        devHints: DEV_HINTS,
         skeletonDataset: null,
         skeletonConfig: null,
         debug: false, // v3
@@ -2342,6 +2359,7 @@ export function useConfig(options = {}) {
 
     const vue_ui_vertical_bar = {
         // v3 renamed to _horizontal_ (yet still works)
+        devHints: DEV_HINTS,
         skeletonDataset: null,
         skeletonConfig: null,
         debug: false, // v3
@@ -2488,6 +2506,7 @@ export function useConfig(options = {}) {
     const vue_ui_horizontal_bar = vue_ui_vertical_bar;
 
     const vue_ui_heatmap = {
+        devHints: DEV_HINTS,
         skeletonDataset: null,
         skeletonConfig: null,
         debug: false, // v3
@@ -2638,6 +2657,7 @@ export function useConfig(options = {}) {
     };
 
     const vue_ui_scatter = {
+        devHints: DEV_HINTS,
         skeletonConfig: null,
         skeletonDataset: null,
         debug: false, // v3
@@ -2872,6 +2892,7 @@ export function useConfig(options = {}) {
     };
 
     const vue_ui_candlestick = {
+        devHints: DEV_HINTS,
         skeletonDataset: null,
         skeletonConfig: null,
         type: 'candlestick', // or 'ohlc'
@@ -3039,6 +3060,7 @@ export function useConfig(options = {}) {
     };
 
     const vue_ui_sparkline = {
+        devHints: DEV_HINTS,
         skeletonConfig: null,
         skeletonDataset: null,
         debug: false, // v3
@@ -3173,6 +3195,7 @@ export function useConfig(options = {}) {
     };
 
     const vue_ui_sparkbar = {
+        devHints: DEV_HINTS,
         skeletonDataset: null,
         skeletonConfig: null,
         debug: false, // v3
@@ -3242,6 +3265,7 @@ export function useConfig(options = {}) {
     };
 
     const vue_ui_sparkstackbar = {
+        devHints: DEV_HINTS,
         skeletonDataset: null,
         skeletonConfig: null,
         debug: false, // v3
@@ -3320,6 +3344,7 @@ export function useConfig(options = {}) {
     };
 
     const vue_ui_sparkhistogram = {
+        devHints: DEV_HINTS,
         skeletonConfig: null,
         skeletonDataset: null,
         debug: false, // v3
@@ -3420,6 +3445,7 @@ export function useConfig(options = {}) {
     };
 
     const vue_ui_sparkgauge = {
+        devHints: DEV_HINTS,
         skeletonConfig: null,
         skeletonDataset: null,
         debug: false, // v3
@@ -3471,6 +3497,7 @@ export function useConfig(options = {}) {
     };
 
     const vue_ui_spark_trend = {
+        devHints: DEV_HINTS,
         skeletonConfig: null,
         skeletonDataset: null,
         debug: false, // v3
@@ -3531,6 +3558,7 @@ export function useConfig(options = {}) {
     };
 
     const vue_ui_quick_chart = {
+        devHints: DEV_HINTS,
         skeletonDataset: null,
         skeletonConfig: null,
         debug: false, // v3
@@ -3692,6 +3720,7 @@ export function useConfig(options = {}) {
     };
 
     const vue_ui_age_pyramid = {
+        devHints: DEV_HINTS,
         skeletonConfig: null,
         skeletonDataset: null,
         debug: false, // v3
@@ -3815,6 +3844,7 @@ export function useConfig(options = {}) {
     };
 
     const vue_ui_relation_circle = {
+        devHints: DEV_HINTS,
         skeletonConfig: null,
         skeletonDataset: null,
         debug: false, // v3
@@ -3887,6 +3917,7 @@ export function useConfig(options = {}) {
     };
 
     const vue_ui_thermometer = {
+        devHints: DEV_HINTS,
         skeletonDataset: null,
         skeletonConfig: null,
         debug: false, // v3
@@ -3949,6 +3980,7 @@ export function useConfig(options = {}) {
     };
 
     const vue_ui_rings = {
+        devHints: DEV_HINTS,
         skeletonConfig: null,
         skeletonDataset: null,
         debug: false, // v3
@@ -4061,6 +4093,7 @@ export function useConfig(options = {}) {
     };
 
     const vue_ui_donut_evolution = {
+        devHints: DEV_HINTS,
         skeletonConfig: null,
         skeletonDataset: null,
         debug: false, // v3
@@ -4253,6 +4286,7 @@ export function useConfig(options = {}) {
     };
 
     const vue_ui_mood_radar = {
+        devHints: DEV_HINTS,
         skeletonConfig: null,
         skeletonDataset: null,
         debug: false, // v3
@@ -4353,6 +4387,7 @@ export function useConfig(options = {}) {
     };
 
     const vue_ui_molecule = {
+        devHints: DEV_HINTS,
         skeletonDataset: null,
         skeletonConfig: null,
         debug: false, // v3
@@ -4413,6 +4448,7 @@ export function useConfig(options = {}) {
     };
 
     const vue_ui_nested_donuts = {
+        devHints: DEV_HINTS,
         skeletonConfig: null,
         skeletonDataset: null,
         debug: false, // v3
@@ -4545,6 +4581,7 @@ export function useConfig(options = {}) {
     };
 
     const vue_ui_galaxy = {
+        devHints: DEV_HINTS,
         skeletonConfig: null,
         skeletonDataset: null,
         debug: false, // v3
@@ -4645,6 +4682,7 @@ export function useConfig(options = {}) {
     };
 
     const vue_ui_strip_plot = {
+        devHints: DEV_HINTS,
         skeletonDataset: null,
         skeletonConfig: null,
         debug: false, // v3
@@ -4808,6 +4846,7 @@ export function useConfig(options = {}) {
     };
 
     const vue_ui_dumbbell = {
+        devHints: DEV_HINTS,
         skeletonConfig: null,
         skeletonDataset: null,
         debug: false, // v3
@@ -4991,6 +5030,7 @@ export function useConfig(options = {}) {
     };
 
     const vue_ui_3d_bar = {
+        devHints: DEV_HINTS,
         skeletonConfig: null,
         skeletonDataset: null,
         debug: false, // v3
@@ -5093,6 +5133,7 @@ export function useConfig(options = {}) {
     };
 
     const vue_ui_table_sparkline = {
+        devHints: DEV_HINTS,
         theme: '',
         customPalette: [],
         responsiveBreakpoint: 500,
@@ -5182,6 +5223,7 @@ export function useConfig(options = {}) {
     };
 
     const vue_ui_table_heatmap = {
+        devHints: DEV_HINTS,
         theme: '',
         style: {
             fontFamily: 'inherit',
@@ -5215,6 +5257,7 @@ export function useConfig(options = {}) {
     };
 
     const vue_ui_word_cloud = {
+        devHints: DEV_HINTS,
         skeletonConfig: null,
         skeletonDataset: null,
         debug: false, // v3
@@ -5310,6 +5353,7 @@ export function useConfig(options = {}) {
     };
 
     const vue_ui_xy_canvas = {
+        devHints: DEV_HINTS,
         skeletonDataset: null,
         skeletonConfig: null,
         debug: false,
@@ -5476,6 +5520,7 @@ export function useConfig(options = {}) {
     };
 
     const vue_ui_flow = {
+        devHints: DEV_HINTS,
         skeletonDataset: null,
         skeletonConfig: null,
         debug: false, // v3
@@ -5576,6 +5621,7 @@ export function useConfig(options = {}) {
     };
 
     const vue_ui_parallel_coordinate_plot = {
+        devHints: DEV_HINTS,
         skeletonConfig: null,
         skeletonDataset: null,
         debug: false, // v3
@@ -5696,6 +5742,7 @@ export function useConfig(options = {}) {
     };
 
     const vue_ui_timer = {
+        devHints: DEV_HINTS,
         type: 'stopwatch',
         responsive: false,
         responsiveProportionalSizing: true,
@@ -5814,6 +5861,7 @@ export function useConfig(options = {}) {
     };
 
     const vue_ui_kpi = {
+        devHints: DEV_HINTS,
         debug: false, // v3
         animationFrames: 60,
         animationValueStart: 0,
@@ -5846,6 +5894,7 @@ export function useConfig(options = {}) {
     };
 
     const vue_ui_mini_loader = {
+        devHints: DEV_HINTS,
         type: 'onion',
         onion: {
             gutterColor: COLOR_GREY_MID,
@@ -5874,6 +5923,7 @@ export function useConfig(options = {}) {
     };
 
     const vue_ui_smiley = {
+        devHints: DEV_HINTS,
         readonly: false,
         useCursorPointer: false,
         style: {
@@ -5937,6 +5987,7 @@ export function useConfig(options = {}) {
     };
 
     const vue_ui_rating = {
+        devHints: DEV_HINTS,
         type: SHAPE.STAR,
         readonly: false,
         from: 1,
@@ -6002,6 +6053,7 @@ export function useConfig(options = {}) {
     };
 
     const vue_ui_annotator = {
+        devHints: DEV_HINTS,
         alwaysVisible: false,
         useCursorPointer: false,
         style: {
@@ -6079,6 +6131,7 @@ export function useConfig(options = {}) {
     };
 
     const vue_ui_dashboard = {
+        devHints: DEV_HINTS,
         locked: false,
         style: {
             board: {
@@ -6127,6 +6180,7 @@ export function useConfig(options = {}) {
     };
 
     const vue_ui_skeleton = {
+        devHints: DEV_HINTS,
         type: SHAPE.LINE,
         style: {
             backgroundColor: COLOR_BACKGROUND,
@@ -6316,6 +6370,7 @@ export function useConfig(options = {}) {
     };
 
     const vue_ui_table = {
+        devHints: DEV_HINTS,
         fontFamily: 'inherit',
         maxHeight: 500,
         rowsPerPage: 25,
@@ -6527,6 +6582,7 @@ export function useConfig(options = {}) {
         useChart: true,
     };
     const vue_ui_digits = {
+        devHints: DEV_HINTS,
         height: '100%',
         width: null,
         backgroundColor: COLOR_BACKGROUND,
@@ -6538,6 +6594,7 @@ export function useConfig(options = {}) {
     };
 
     const vue_ui_carousel_table = {
+        devHints: DEV_HINTS,
         responsiveBreakpoint: 400,
         userOptions: USER_OPTIONS({
             tooltip: false,
@@ -6642,6 +6699,7 @@ export function useConfig(options = {}) {
     };
 
     const vue_ui_gizmo = {
+        devHints: DEV_HINTS,
         a11y: {
             translations: {
                 label: 'Progress',
@@ -6664,6 +6722,7 @@ export function useConfig(options = {}) {
     };
 
     const vue_ui_bullet = {
+        devHints: DEV_HINTS,
         debug: false, // v3
         loading: false, // v3
         responsive: false, // v3
@@ -6749,6 +6808,7 @@ export function useConfig(options = {}) {
     };
 
     const vue_ui_funnel = {
+        devHints: DEV_HINTS,
         theme: '',
         responsive: false,
         responsiveProportionalSizing: true,
@@ -6844,6 +6904,7 @@ export function useConfig(options = {}) {
     };
 
     const vue_ui_history_plot = {
+        devHints: DEV_HINTS,
         skeletonDataset: null,
         skeletonConfig: null,
         debug: false, // v3
@@ -7026,6 +7087,7 @@ export function useConfig(options = {}) {
     };
 
     const vue_ui_circle_pack = {
+        devHints: DEV_HINTS,
         debug: false, // v3
         loading: false, // v3
         responsive: false,
@@ -7138,6 +7200,7 @@ export function useConfig(options = {}) {
     };
 
     const vue_ui_world = {
+        devHints: DEV_HINTS,
         skeletonDataset: null,
         skeletonConfig: null,
         debug: false, // v3
@@ -7230,6 +7293,7 @@ export function useConfig(options = {}) {
     };
 
     const vue_ui_ridgeline = {
+        devHints: DEV_HINTS,
         skeletonDataset: null,
         skeletonConfig: null,
         debug: false, // v3
@@ -7407,6 +7471,7 @@ export function useConfig(options = {}) {
     };
 
     const vue_ui_chord = {
+        devHints: DEV_HINTS,
         debug: false, // v3
         loading: false, // v3
         responsive: false,
@@ -7507,6 +7572,7 @@ export function useConfig(options = {}) {
     };
 
     const vue_ui_dag = {
+        devHints: DEV_HINTS,
         skeletonConfig: null,
         skeletonDataset: null,
         loading: false,
@@ -7633,6 +7699,7 @@ export function useConfig(options = {}) {
     };
 
     const vue_ui_geo = {
+        devHints: DEV_HINTS,
         skeletonDataset: null,
         skeletonConfig: null,
         loading: false,
@@ -7727,6 +7794,7 @@ export function useConfig(options = {}) {
     };
 
     const vue_ui_bump = {
+        devHints: DEV_HINTS,
         skeletonConfig: null,
         skeletonDataset: null,
         loading: false,

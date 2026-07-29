@@ -25,6 +25,7 @@ import {
     treeShake,
     XMLNS,
 } from '../lib';
+import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 import { useLoading } from '../useLoading';
 import { useNestedProp } from '../useNestedProp';
@@ -77,6 +78,13 @@ onMounted(() => {
 const uid = ref(createUid());
 
 const FINAL_CONFIG = ref(prepareConfig());
+
+useHints({
+    config: () => FINAL_CONFIG.value,
+    dataset: () => props.dataset,
+    component: 'VueUiSparkbar',
+    rules: [COMMON_RULES.noHint],
+});
 
 const skeletonConfig = computed(() => {
     return treeShake({

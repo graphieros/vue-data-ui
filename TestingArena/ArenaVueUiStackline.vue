@@ -131,6 +131,7 @@ const dataset = ref([
 ]);
 
 const model = createModel([
+    CHECKBOX('devHints.enable', { def: true }),
     CHECKBOX('loading', { def: false }),
     CHECKBOX('debug', { def: false }),
 

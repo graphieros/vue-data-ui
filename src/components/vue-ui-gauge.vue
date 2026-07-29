@@ -33,9 +33,10 @@ import {
     checkNaN,
 } from '../lib.js';
 import { throttle } from '../canvas-lib';
+import { COMMON_RULES, useHints } from '../useHints';
+import { useConfig } from '../useConfig';
 import { useLoading } from '../useLoading.js';
 import { usePrinter } from '../usePrinter';
-import { useConfig } from '../useConfig';
 import { useSvgExport } from '../useSvgExport.js';
 import { useResponsive } from '../useResponsive';
 import { useNestedProp } from '../useNestedProp';
@@ -103,6 +104,22 @@ const isCallbackImaging = ref(false);
 const isCallbackSvg = ref(false);
 
 const FINAL_CONFIG = ref(prepareConfig());
+
+useHints({
+    config: () => FINAL_CONFIG.value,
+    dataset: () => props.dataset,
+    component: 'VueUiGauge',
+    rules: [
+        {
+            test: (ds) => ds?.series && ds.series?.length > 6,
+            message: [
+                '👀 The number of steps is > 6, which can make the chart hard to read and labels overlap. Consider:',
+                '',
+                '▶️ Using broader steps.',
+            ],
+        },
+    ],
+});
 
 const isCursorPointer = computed(
     () => FINAL_CONFIG.value.userOptions.useCursorPointer,
