@@ -52,6 +52,7 @@ const dataset = computed(() => initDataset());
 
 const testPreconfig = computed<VueUiHeatmapConfig>(() => {
     return {
+        devHints: { enable: true },
         skeletonDataset: null,
         skeletonConfig: null,
         debug: false,

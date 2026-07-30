@@ -16,6 +16,7 @@ const dataset = computed<number[]>(() => {
 
 const config = computed<VueUiSparkTrendConfig>(() => {
     return {
+        devHints: { enable: true },
         skeletonConfig: null,
         skeletonDataset: null,
         debug: false,

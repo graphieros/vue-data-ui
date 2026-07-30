@@ -21,6 +21,7 @@ const dataset = computed<VueUiRatingDataset>(() => {
 
 const config = computed<VueUiRatingConfig>(() => {
     return {
+        devHints: { enable: true },
         type: 'star',
         readonly: false,
         from: 1,

@@ -36,6 +36,7 @@ const dataset = computed<VueUiMoodRadarDataset>(() => {
 
 const testPreconfig = computed<VueUiMoodRadarConfig>(() => {
     return {
+        devHints: { enable: true },
         skeletonConfig: null,
         skeletonDataset: null,
         debug: false,

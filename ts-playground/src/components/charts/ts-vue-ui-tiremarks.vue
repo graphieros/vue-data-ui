@@ -29,6 +29,7 @@ const dataset = computed<VueUiTiremarksDataset>(() => ({ percentage: 79 }));
 
 const testPreconfig = computed<VueUiTiremarksConfig>(() => {
     return {
+        devHints: { enable: true },
         skeletonDataset: null,
         skeletonConfig: null,
         debug: false,

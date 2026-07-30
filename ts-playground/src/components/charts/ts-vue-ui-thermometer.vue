@@ -39,6 +39,7 @@ const dataset = computed<VueUiThermometerDataset>(() => {
 
 const testPreconfig = computed<VueUiThermometerConfig>(() => {
     return {
+        devHints: { enable: true },
         skeletonDataset: null,
         skeletonConfig: null,
         debug: false,

@@ -217,6 +217,7 @@ const dataset = computed<VueUiMoleculeDatasetNode[]>(() => {
 
 const testPreconfig = computed<VueUiMoleculeConfig>(() => {
     return {
+        devHints: { enable: true },
         skeletonDataset: null,
         skeletonConfig: null,
         debug: false,

@@ -53,6 +53,7 @@ const dataset = computed<VueUiBulletDataset>(() => {
 
 const testPreconfig = computed<VueUiBulletConfig>(() => {
     return {
+        devHints: { enable: true },
         debug: false,
         loading: false,
         responsive: false,

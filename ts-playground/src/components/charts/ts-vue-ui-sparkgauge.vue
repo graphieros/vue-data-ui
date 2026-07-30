@@ -24,6 +24,7 @@ const dataset = computed<VueUiSparkgaugeDataset>(() => {
 
 const config = computed<VueUiSparkgaugeConfig>(() => {
     return {
+        devHints: { enable: true },
         skeletonConfig: null,
         skeletonDataset: null,
         debug: false,

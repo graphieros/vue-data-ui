@@ -62,6 +62,7 @@ const dataset = computed<VueUiStacklineDatasetItem[]>(() => {
 
 const testPreconfig = computed<VueUiStacklineConfig>(() => {
     return {
+        devHints: { enable: true },
         skeletonDataset: null,
         skeletonConfig: null,
         loading: false,
@@ -76,6 +77,12 @@ const testPreconfig = computed<VueUiStacklineConfig>(() => {
                     'A data table for this chart is available below.',
                 tableCaption: 'Chart data table',
             },
+        },
+        transitions: {
+            enable: true,
+            pauseOnLoad: true,
+            pauseOnDatasetChange: false,
+            activationDelayMs: 300,
         },
         events: {
             datapointEnter: null,

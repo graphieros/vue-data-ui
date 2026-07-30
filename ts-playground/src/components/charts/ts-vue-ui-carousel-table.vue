@@ -31,6 +31,7 @@ const dataset = computed<VueUiCarouselTableDataset>(() => {
 
 const testPreconfig = computed<VueUiCarouselTableConfig>(() => {
     return {
+        devHints: { enable: true },
         responsiveBreakpoint: 400,
         userOptions: {
             show: true,

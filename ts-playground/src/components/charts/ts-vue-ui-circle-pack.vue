@@ -81,6 +81,7 @@ const dataset = computed<VueUiCirclePackDatasetItem[]>(() => {
 
 const testPreconfig = computed<VueUiCirclePackConfig>(() => {
     return {
+        devHints: { enable: true },
         debug: false,
         loading: false,
         responsive: false,
@@ -92,6 +93,12 @@ const testPreconfig = computed<VueUiCirclePackConfig>(() => {
                     'A data table for this chart is available below.',
                 tableCaption: 'Chart data table',
             },
+        },
+        transitions: {
+            enable: true,
+            pauseOnLoad: true,
+            pauseOnDatasetChange: false,
+            activationDelayMs: 300,
         },
         events: {
             datapointEnter: null,

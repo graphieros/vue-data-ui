@@ -93,6 +93,7 @@ const dataset = computed<VueUiSparkHistogramDatasetItem[]>(() => {
 
 const config = computed<VueUiSparkHistogramConfig>(() => {
     return {
+        devHints: { enable: true },
         skeletonConfig: null,
         skeletonDataset: null,
         debug: false,

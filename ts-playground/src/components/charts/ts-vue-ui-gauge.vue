@@ -53,6 +53,7 @@ const dataset = computed<VueUiGaugeDataset>(() => {
 
 const testPreconfig = computed<VueUiGaugeConfig>(() => {
     return {
+        devHints: { enable: true },
         skeletonDataset: null,
         skeletonConfig: null,
         debug: false,

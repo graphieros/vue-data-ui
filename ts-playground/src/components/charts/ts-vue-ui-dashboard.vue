@@ -60,6 +60,7 @@ const dataset = computed<VueUiDashboardElement[]>(() => {
 
 const testPreconfig = computed<VueUiDashboardConfig>(() => {
     return {
+        devHints: { enable: true },
         locked: false,
         style: {
             board: {

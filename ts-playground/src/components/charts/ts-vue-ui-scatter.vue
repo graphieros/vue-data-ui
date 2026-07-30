@@ -75,6 +75,7 @@ const dataset = computed<VueUiScatterDatasetItem[]>(() => {
 
 const testPreconfig = computed<VueUiScatterConfig>(() => {
     return {
+        devHints: { enable: true },
         skeletonConfig: null,
         skeletonDataset: null,
         debug: false,
@@ -88,6 +89,12 @@ const testPreconfig = computed<VueUiScatterConfig>(() => {
                     'A data table for this chart is available below.',
                 tableCaption: 'Chart data table',
             },
+        },
+        transitions: {
+            enable: true,
+            pauseOnLoad: true,
+            pauseOnDatasetChange: false,
+            activationDelayMs: 300,
         },
         events: {
             datapointEnter: null,

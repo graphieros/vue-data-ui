@@ -82,6 +82,7 @@ const dataset = computed<VueUiBumpDatasetItem[]>(() => {
 
 const testPreconfig = computed<VueUiBumpConfig>(() => {
     return {
+        devHints: { enable: true },
         skeletonConfig: null,
         skeletonDataset: null,
         loading: false,

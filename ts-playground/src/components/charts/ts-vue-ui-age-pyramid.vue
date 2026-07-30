@@ -46,6 +46,7 @@ const dataset = computed<VueUiAgePyramidDataset>(() => makeDs(51, 10));
 
 const testPreconfig = computed<VueUiAgePyramidConfig>(() => {
     return {
+        devHints: { enable: true },
         skeletonConfig: null,
         skeletonDataset: null,
         debug: false,

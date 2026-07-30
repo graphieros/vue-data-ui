@@ -29,6 +29,7 @@ import PatternSlot from '../slots/common/pattern-slot.vue';
 
 import 'vue-data-ui/style.css';
 import Skeleton from '../slots/common/skeleton.vue';
+import { getVueDataUiConfig } from 'vue-data-ui';
 
 const dataset = computed<VueUiChordDataset>(() => {
     return {
@@ -44,7 +45,183 @@ const dataset = computed<VueUiChordDataset>(() => {
 });
 
 const testPreconfig = computed<VueUiChordConfig>(() => {
-    return {};
+    return {
+        devHints: { enable: false },
+        debug: false,
+        loading: false,
+        responsive: false,
+        a11y: {
+            translations: {
+                keyboardNavigation:
+                    'Use the left and right, or up and down arrow keys to move between datapoints',
+                tableAvailable:
+                    'A data table for this chart is available below.',
+                tableCaption: 'Chart data table',
+            },
+        },
+        events: {
+            datapointEnter: null,
+            datapointLeave: null,
+            datapointClick: null,
+        },
+        theme: '',
+        customPalette: [],
+        enableRotation: true,
+        initialRotation: 0,
+        useCssAnimation: false,
+        userOptions: {
+            show: true,
+            showOnChartHover: false,
+            keepStateOnChartLeave: true,
+            position: 'right',
+            buttons: {
+                tooltip: false,
+                pdf: true,
+                csv: true,
+                img: true,
+                table: true,
+                labels: false,
+                fullscreen: true,
+                sort: false,
+                stack: false,
+                animation: false,
+                annotator: true,
+                svg: true,
+                zoom: false,
+                altCopy: false,
+            },
+            callbacks: {
+                animation: null,
+                annotator: null,
+                csv: null,
+                fullscreen: null,
+                img: null,
+                labels: null,
+                pdf: null,
+                sort: null,
+                stack: null,
+                table: null,
+                tooltip: null,
+                svg: null,
+                zoom: null,
+                altCopy: null,
+            },
+            buttonTitles: {
+                open: 'Open options',
+                close: 'Close options',
+                pdf: 'Download PDF',
+                csv: 'Download CSV',
+                img: 'Download PNG',
+                table: 'Toggle table',
+                fullscreen: 'Toggle fullscreen',
+                annotator: 'Toggle annotator',
+                svg: 'Download SVG',
+                altCopy: 'Copy alt text',
+            },
+            print: {
+                scale: 2,
+                orientation: 'auto',
+                overflowTolerance: 0.2,
+            },
+            useCursorPointer: false,
+        },
+        table: {
+            show: false,
+            responsiveBreakpoint: 400,
+            useDialog: false,
+            th: {
+                backgroundColor: '#FFFFFF',
+                color: '#2D353C',
+                outline: 'none',
+            },
+            td: {
+                backgroundColor: '#FFFFFF',
+                color: '#2D353C',
+                outline: 'none',
+            },
+        },
+        style: {
+            fontFamily: 'inherit',
+            chart: {
+                backgroundColor: '#FFFFFF',
+                color: '#2D353C',
+                legend: {
+                    show: true,
+                    bold: false,
+                    backgroundColor: '#FFFFFF',
+                    color: '#2D353C',
+                    fontSize: 14,
+                    selectAllToggle: {
+                        show: false,
+                        backgroundColor: '#e1e5e8',
+                        color: '#2D353C',
+                    },
+                    position: 'bottom',
+                },
+                title: {
+                    text: '',
+                    color: '#2D353C',
+                    fontSize: 20,
+                    bold: true,
+                    textAlign: 'center',
+                    paddingLeft: 0,
+                    paddingRight: 0,
+                    subtitle: {
+                        color: '#A1A1A1',
+                        text: '',
+                        fontSize: 16,
+                        bold: false,
+                    },
+                },
+                arcs: {
+                    innerRadiusRatio: 1,
+                    outerRadiusRatio: 1,
+                    padAngle: 5,
+                    stroke: '#FFFFFF',
+                    strokeWidth: 1,
+                    labels: {
+                        show: true,
+                        fontSize: 14,
+                        bold: false,
+                        curved: false,
+                        adaptColorToBackground: true,
+                        color: '#2D353C',
+                        offset: 0,
+                        showPercentage: true,
+                        roundingPercentage: 0,
+                    },
+                },
+                ribbons: {
+                    stroke: '#FFFFFF',
+                    strokeWidth: 1,
+                    underlayerOpacity: 1,
+                    labels: {
+                        show: true,
+                        formatter: null,
+                        prefix: '',
+                        suffix: '',
+                        rounding: 0,
+                        fontSize: 14,
+                        bold: false,
+                        useSerieColor: false,
+                        color: '#2D353C',
+                        offset: 0,
+                        minSeparationDeg: 3,
+                        connector: {
+                            stroke: '#2D353C',
+                            strokeWidth: 1,
+                        },
+                        marker: {
+                            show: true,
+                            radius: 3,
+                            stroke: '#FFFFFF',
+                            strokeWidth: 1,
+                        },
+                    },
+                },
+            },
+        },
+    };
 });
 
 const config = computed<VueUiChordConfig>(() => {

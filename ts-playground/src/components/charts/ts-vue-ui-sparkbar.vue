@@ -36,6 +36,7 @@ const dataset = computed<VueUiSparkbarDatasetItem[]>(() => {
 
 const config = computed<VueUiSparkbarConfig>(() => {
     return {
+        devHints: { enable: true },
         skeletonDataset: null,
         skeletonConfig: null,
         debug: false,

@@ -61,6 +61,7 @@ const dataset = computed<VueUiHistoryPlotDatasetItem[]>(() => {
 
 const testPreconfig = computed<VueUiHistoryPlotConfig>(() => {
     return {
+        devHints: { enable: true },
         skeletonDataset: null,
         skeletonConfig: null,
         debug: false,
@@ -74,6 +75,12 @@ const testPreconfig = computed<VueUiHistoryPlotConfig>(() => {
                     'A data table for this chart is available below.',
                 tableCaption: 'Chart data table',
             },
+        },
+        transitions: {
+            enable: true,
+            pauseOnLoad: true,
+            pauseOnDatasetChange: false,
+            activationDelayMs: 300,
         },
         events: {
             datapointEnter: null,

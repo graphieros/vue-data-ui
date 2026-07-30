@@ -88,6 +88,7 @@ const dataset = computed<VueUiRadarDataset>(() => {
 
 const testPreconfig = computed<VueUiRadarConfig>(() => {
     return {
+        devHints: { enable: true },
         skeletonConfig: null,
         skeletonDataset: null,
         debug: false,

@@ -106,6 +106,7 @@ const dataset = computed<VueUiChestnutDatasetRoot[]>(() => {
 
 const testPreconfig = computed<VueUiChestnutConfig>(() => {
     return {
+        devHints: { enable: true },
         debug: false,
         loading: false,
         theme: '',

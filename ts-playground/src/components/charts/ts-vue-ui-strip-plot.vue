@@ -110,6 +110,7 @@ const dataset = computed<VueUiStripPlotDataset[]>(() => {
 
 const testPreconfig = computed<VueUiStripPlotConfig>(() => {
     return {
+        devHints: { enable: true },
         type: 'violin',
         skeletonDataset: null,
         skeletonConfig: null,
@@ -124,6 +125,12 @@ const testPreconfig = computed<VueUiStripPlotConfig>(() => {
                     'A data table for this chart is available below.',
                 tableCaption: 'Chart data table',
             },
+        },
+        transitions: {
+            enable: true,
+            pauseOnLoad: true,
+            pauseOnDatasetChange: false,
+            activationDelayMs: 300,
         },
         events: {
             datapointEnter: null,

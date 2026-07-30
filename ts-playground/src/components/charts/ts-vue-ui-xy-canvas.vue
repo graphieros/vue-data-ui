@@ -59,6 +59,7 @@ const dataset = computed<VueUiXyCanvasDatasetItem[]>(() => {
 
 const testPreconfig = computed<VueUiXyCanvasConfig>(() => {
     return {
+        devHints: { enable: true },
         skeletonDataset: null,
         skeletonConfig: null,
         debug: false,

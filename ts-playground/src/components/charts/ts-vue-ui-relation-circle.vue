@@ -129,6 +129,7 @@ const dataset = computed<VueUiRelationCircleDatasetItem[]>(() => {
 
 const testPreconfig = computed<VueUiRelationCircleConfig>(() => {
     return {
+        devHints: { enable: true },
         skeletonConfig: null,
         skeletonDataset: null,
         debug: false,

@@ -28,6 +28,7 @@ const dataset = computed<VueUiWheelDataset>(() => ({ percentage: 79 }));
 
 const testPreconfig = computed<VueUiWheelConfig>(() => {
     return {
+        devHints: { enable: true },
         skeletonDataset: null,
         skeletonConfig: null,
         debug: false,

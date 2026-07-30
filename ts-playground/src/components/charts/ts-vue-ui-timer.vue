@@ -12,6 +12,7 @@ import 'vue-data-ui/style.css';
 
 const config = computed<VueUiTimerConfig>(() => {
     return {
+        devHints: { enable: true },
         type: 'stopwatch',
         responsive: false,
         responsiveProportionalSizing: true,

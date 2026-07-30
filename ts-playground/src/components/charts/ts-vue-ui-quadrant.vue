@@ -115,6 +115,7 @@ const dataset = computed<VueUiQuadrantDatasetItem[]>(() => {
 
 const testPreconfig = computed<VueUiQuadrantConfig>(() => {
     return {
+        devHints: { enable: true },
         skeletonDataset: null,
         skeletonConfig: null,
         debug: false,

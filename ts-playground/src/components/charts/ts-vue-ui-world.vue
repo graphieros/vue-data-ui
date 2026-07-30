@@ -40,6 +40,7 @@ const dataset = computed<VueUiWorldDataset>(() => {
 
 const testPreconfig = computed<VueUiWorldConfig>(() => {
     return {
+        devHints: { enable: true },
         skeletonDataset: null,
         skeletonConfig: null,
         debug: false,

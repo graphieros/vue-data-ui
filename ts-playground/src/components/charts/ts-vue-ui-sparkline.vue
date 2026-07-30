@@ -90,6 +90,7 @@ const dataset = computed<VueUiSparklineDatasetItem[]>(() => {
 
 const config = computed<VueUiSparklineConfig>(() => {
     return {
+        devHints: { enable: true },
         skeletonConfig: null,
         skeletonDataset: null,
         debug: false,

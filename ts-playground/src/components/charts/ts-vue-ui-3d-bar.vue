@@ -63,6 +63,7 @@ const dataset = computed<VueUi3dBarDataset>(() => {
 
 const testPreconfig = computed<VueUi3dBarConfig>(() => {
     return {
+        devHints: { enable: true },
         skeletonConfig: null,
         skeletonDataset: null,
         debug: false,

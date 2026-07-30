@@ -69,6 +69,7 @@ const dataset = computed<VueUiNestedDonutsDatasetItem[]>(() => {
 
 const testPreconfig = computed<VueUiNestedDonutsConfig>(() => {
     return {
+        devHints: { enable: true },
         skeletonConfig: null,
         skeletonDataset: null,
         debug: false,

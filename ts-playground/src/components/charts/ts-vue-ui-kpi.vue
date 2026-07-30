@@ -6,6 +6,7 @@ const dataset = computed<VueUiKpiProps['dataset']>(() => 999);
 
 const config = computed<VueUiKpiProps['config']>(() => {
     return {
+        devHints: { enable: true },
         debug: false,
         animationFrames: 60,
         animationValueStart: 0,

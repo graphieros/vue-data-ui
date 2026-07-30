@@ -111,6 +111,7 @@ const dataset = computed(() => {
 
 const testPreconfig = computed<VueUiDonutConfig>(() => {
     return {
+        devHints: { enable: true },
         skeletonConfig: null,
         skeletonDataset: null,
         debug: false,

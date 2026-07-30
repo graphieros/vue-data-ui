@@ -42,6 +42,7 @@ const dataset = computed<VueUiDumbbellDataset[]>(() => {
 
 const testPreconfig = computed<VueUiDumbbellConfig>(() => {
     return {
+        devHints: { enable: true },
         skeletonConfig: null,
         skeletonDataset: null,
         debug: false,

@@ -40,6 +40,7 @@ const dataset = computed<VueUiWordCloudDatasetItem[]>(() => {
 
 const testPreconfig = computed<VueUiWordCloudConfig>(() => {
     return {
+        devHints: { enable: true },
         skeletonConfig: null,
         skeletonDataset: null,
         debug: false,

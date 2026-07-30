@@ -64,6 +64,7 @@ const dataset = computed<VueUiRidgelineDatasetItem[]>(() => {
 
 const testPreconfig = computed<VueUiRidgelineConfig>(() => {
     return {
+        devHints: { enable: true },
         skeletonDataset: null,
         skeletonConfig: null,
         debug: false,

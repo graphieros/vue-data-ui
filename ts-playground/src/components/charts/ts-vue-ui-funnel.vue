@@ -52,6 +52,7 @@ const dataset = computed<VueUiFunnelDatasetItem[]>(() => {
 
 const testPreconfig = computed<VueUiFunnelConfig>(() => {
     return {
+        devHints: { enable: true },
         theme: '',
         responsive: false,
         responsiveProportionalSizing: true,

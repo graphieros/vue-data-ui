@@ -48,6 +48,7 @@ const dataset = computed<VueUiWaffleDatasetItem[]>(() => {
 
 const testPreconfig = computed<VueUiWaffleConfig>(() => {
     return {
+        devHints: { enable: true },
         skeletonDataset: null,
         skeletonConfig: null,
         debug: false,

@@ -13,6 +13,7 @@ const dataset = ref<VueUiGizmoDataset>(69);
 
 const config = computed<VueUiGizmoConfig>(() => {
     return {
+        devHints: { enable: true },
         a11y: {
             translations: {
                 label: 'Progress',

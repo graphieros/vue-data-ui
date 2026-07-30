@@ -68,6 +68,7 @@ const dataset = computed<VueUiFlowDatasetItem[]>(() => {
 
 const testPreconfig = computed<VueUiFlowConfig>(() => {
     return {
+        devHints: { enable: true },
         skeletonDataset: null,
         skeletonConfig: null,
         debug: false,

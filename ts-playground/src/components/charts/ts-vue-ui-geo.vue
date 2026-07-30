@@ -76,6 +76,7 @@ const dataset = computed<VueUiGeoDatasetItem[]>(() => {
 
 const testPreconfig = computed<VueUiGeoConfig>(() => {
     return {
+        devHints: { enable: true },
         skeletonDataset: null,
         skeletonConfig: null,
         loading: false,
