@@ -14,6 +14,7 @@ import {
     VueUiSkeleton,
     VueUiAccordion,
     VueUiPattern,
+    VueUiHill,
     VueDataUi,
 } from 'vue-data-ui';
 import 'vue-data-ui/style.css';
@@ -32,5 +33,6 @@ app.component('VueUiMiniLoader', VueUiMiniLoader);
 app.component('VueUiSkeleton', VueUiSkeleton);
 app.component('VueUiAccordion', VueUiAccordion);
 app.component('VueUiPattern', VueUiPattern);
+app.component('VueUiHill', VueUiHill);
 
 app.mount('#app');

@@ -1,4 +1,5 @@
 <script setup>
+import { computed } from 'vue';
 import { useNestedProp } from '../useNestedProp';
 
 const props = defineProps({
@@ -14,27 +15,29 @@ const props = defineProps({
     },
 });
 
-const CONFIG = useNestedProp({
-    userConfig: props.config,
-    defaultConfig: {
-        title: {
-            cy: '',
-            text: '',
-            color: '',
-            fontSize: 20,
-            bold: true,
-            textAlign: 'center',
-            paddingLeft: 0,
-            paddingRight: 0,
+const CONFIG = computed(() => {
+    return useNestedProp({
+        userConfig: props.config,
+        defaultConfig: {
+            title: {
+                cy: '',
+                text: '',
+                color: '',
+                fontSize: 20,
+                bold: true,
+                textAlign: 'center',
+                paddingLeft: 0,
+                paddingRight: 0,
+            },
+            subtitle: {
+                cy: '',
+                text: '',
+                color: '',
+                fontSize: 14,
+                bold: false,
+            },
         },
-        subtitle: {
-            cy: '',
-            text: '',
-            color: '',
-            fontSize: 14,
-            bold: false,
-        },
-    },
+    });
 });
 </script>
 

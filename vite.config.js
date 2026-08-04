@@ -267,6 +267,7 @@ const entries = {
         __dirname,
         'src/entries/vue-ui-chord.js',
     ),
+    'components/vue-ui-hill': resolve(__dirname, 'src/entries/vue-ui-hill.js'),
     'components/vue-ui-dag': resolve(__dirname, 'src/entries/vue-ui-dag.js'),
     'components/vue-ui-geo': resolve(__dirname, 'src/entries/vue-ui-geo.js'),
     'components/vue-ui-bump': resolve(__dirname, 'src/entries/vue-ui-bump.js'),

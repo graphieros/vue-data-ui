@@ -4926,12 +4926,21 @@ export function createColorWheel(startColor, len) {
     return Array.from({ length }, (_, i) => shiftHue(hex, i / length));
 }
 
+export function applyEllipsis(value, maxLength) {
+    if (!maxLength || !value) return value;
+    const text = String(value ?? '');
+    const limit = Math.max(0, Number(maxLength) || 0);
+
+    return text.length > limit ? `${text.slice(0, limit)}...` : text;
+}
+
 const lib = {
     XMLNS,
     abbreviate,
     adaptColorToBackground,
     addVector,
     applyDataLabel,
+    applyEllipsis,
     assignStackRatios,
     autoFontSize,
     buildDisplayedTimeLabels,

@@ -5,6 +5,7 @@ import BaseIcon from './../src/atoms/BaseIcon.vue';
 import { VueUiIcon } from 'vue-data-ui';
 
 const icons = ref([
+    'chartHill',
     'annotator',
     'chart3dBar',
     'chartAgePyramid',

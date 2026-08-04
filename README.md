@@ -11,7 +11,7 @@
 [![License](https://npmx.dev/api/registry/badge/license/vue-data-ui)](https://npmx.dev/package/vue-data-ui)
 [![Types](https://npmx.dev/api/registry/badge/types/vue-data-ui)](https://npmx.dev/package/vue-data-ui)
 [![npm downloads](https://npmx.dev/api/registry/badge/downloads/vue-data-ui)](https://npmx.dev/package/vue-data-ui?modal=chart)
-[![Static Badge](https://npmx.dev/api/registry/badge/version/nuxt?color=22c55e&value=67&label=components)](https://vue-data-ui.graphieros.com)
+[![Static Badge](https://npmx.dev/api/registry/badge/version/nuxt?color=22c55e&value=68&label=components)](https://vue-data-ui.graphieros.com)
 [![GitHub issues](https://img.shields.io/github/issues/graphieros/vue-data-ui)](https://github.com/graphieros/vue-data-ui/issues)
 [![MadeWithVueJs.com shield](https://madewithvuejs.com/storage/repo-shields/4526-shield.svg)](https://madewithvuejs.com/p/vue-data-ui/shield-link)
 [![GitHub Repo stars](https://img.shields.io/github/stars/graphieros/vue-data-ui)](https://github.com/graphieros/vue-data-ui)
@@ -99,6 +99,10 @@ Available components
 
 - [VueUiGeo](https://vue-data-ui.graphieros.com/docs#vue-ui-geo)
 - [VueUiWorld](https://vue-data-ui.graphieros.com/docs#vue-ui-world)
+
+## Productivity
+
+- [VueUiHill](https://vue-data-ui.graphieros.com/docs#vue-ui-hill)
 
 ## Utilities
 
@@ -253,6 +257,7 @@ All charts expose a #legend slot except for:
 - VueUiFlow
 - VueUiFunnel
 - VueUiHeatmap
+- VueUiHill
 - VueUiRelationCircle
 - VueUiSparkHistogram
 - VueUiSparkStackbar
@@ -621,6 +626,12 @@ From the dataset you pass into the props, this component will produce the most a
 | `VueUiRating` | `VueUiRatingDataset` | `VueUiRatingConfig` | `@rate`, `getData`,`toggleReadonly` | `#layer-under`, `#layer-above` |
 | `VueUiSmiley` | `VueUiRatingDataset` | `VueUiSmileyConfig` | `@rate`, `getData`,`toggleReadonly` |                                |
 
+### Productivity
+
+| Name        | dataset type           | config type       | emits / exposed methods                                                                                                                                        | slots                                                                                                          | custom tooltip | themes |
+| ----------- | ---------------------- | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | -------------- | ------ |
+| `VueUiHill` | `VueUiHillDatasetItem` | `VueUiHillConfig` | `edit`, `save`, `cancel`, `copyAlt`, `dragStart`, `dragEnd`, `datapointEnter`, `datapointLeave`, `selectDatapoint`, `generatePdf`, `generateImage`, `getImage` | `#svg`, `#analysis`, `#loading`, `#watermark`, `#chart-background`, `#hill-edit`, `#hill-cancel`, `#hill-save` | ❌             | ✅     |
+
 ### Utilities
 
 | Name              | dataset type              | config type             | emits / exposed methods                          | slots                                                   |
@@ -811,6 +822,7 @@ User options actions available per chart:
 | VueUiWorld                  | optionAltCopy, optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionSvg                            |
 | VueUiXy                     | optionAltCopy, optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionStack, optionAnnotator, optionSvg |
 | VueUiXyCanvas               | optionAltCopy, optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionStack, optionAnnotator            |
+| VueUiHill                   | optionAltCopy, optionPdf, optionImg, optionCsv optionLabels, optionFullscreen, optionAnnotator, hill-edit, hill-cancel, hill-save                   |
 
 User options menu icon can be customized using the #menuIcon slot:
 

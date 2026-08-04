@@ -140,6 +140,7 @@ const components = {
     VueUiDag: defineAsyncComponent(() => import('./vue-ui-dag.vue')),
     VueUiGeo: defineAsyncComponent(() => import('./vue-ui-geo.vue')),
     VueUiBump: defineAsyncComponent(() => import('./vue-ui-bump.vue')),
+    VueUiHill: defineAsyncComponent(() => import('./vue-ui-hill.vue')),
 };
 
 const componentProps = {
@@ -210,47 +211,55 @@ const componentProps = {
     VueUiDag: ['config', 'dataset'],
     VueUiGeo: ['config', 'dataset'],
     VueUiBump: ['config', 'dataset'],
+    VueUiHill: ['config', 'dataset'],
 };
 
 const emit = defineEmits([
-    'selectLegend',
-    'selectDatapoint',
-    'toggleOpenState',
-    'saveAnnotations',
-    'selectRoot',
-    'selectBranch',
-    'selectNut',
+    'cancel',
     'change',
-    'selectPlot',
-    'selectSide',
-    'rate',
-    'postImage',
-    'hoverIndex',
-    'selectX',
-    'toggleLock',
-    'toggleTooltip',
-    'start',
-    'play',
-    'pause',
-    'reset',
-    'restart',
-    'lap',
-    'toggleAnnotator',
-    'selectGroup',
-    'selectRibbon',
-    'toggleTable',
-    'resetZoom',
-    'showSeries',
+    'copyAlt',
+    'dragEnd',
+    'datapointEnter',
+    'datapointLeave',
+    'dragStart',
+    'edit',
+    'focusLocation',
     'hideSeries',
-    'toggleZoom',
-    'onNodeClick',
+    'hoverIndex',
+    'lap',
     'onMidpointEnter',
     'onMidpointLeave',
-    'focusLocation',
-    'zoomStart',
+    'onNodeClick',
+    'pause',
+    'play',
+    'postImage',
+    'rate',
+    'reset',
+    'resetZoom',
+    'restart',
+    'save',
+    'saveAnnotations',
+    'selectBranch',
+    'selectDatapoint',
+    'selectGroup',
+    'selectLegend',
+    'selectNut',
+    'selectPlot',
+    'selectRibbon',
+    'selectRoot',
+    'selectSide',
+    'selectX',
+    'showSeries',
+    'start',
+    'toggleAnnotator',
+    'toggleLock',
+    'toggleOpenState',
+    'toggleTable',
+    'toggleTooltip',
+    'toggleZoom',
     'zoomEnd',
     'zoomReset',
-    'copyAlt',
+    'zoomStart',
 ]);
 
 const isError = computed(() => !components[props.component]);
@@ -307,6 +316,13 @@ const zoomOut = ref(() => null);
 const switchOrientation = ref(() => null);
 const focusLocation = ref(() => null);
 const copyAlt = ref(() => null);
+const edit = ref(() => null);
+const save = ref(() => null);
+const cancel = ref(() => null);
+const dragStart = ref(() => null);
+const dragEnd = ref(() => null);
+const datapointEnter = ref(() => null);
+const datapointLeave = ref(() => null);
 
 onMounted(() => {
     if (isError.value) {
@@ -445,6 +461,27 @@ watch(currentComponentRef, async (newRef) => {
         if (newRef.copyAlt) {
             copyAlt.value = newRef.copyAlt;
         }
+        if (newRef.edit) {
+            edit.value = newRef.edit;
+        }
+        if (newRef.save) {
+            save.value = newRef.save;
+        }
+        if (newRef.cancel) {
+            cancel.value = newRef.cancel;
+        }
+        if (newRef.dragStart) {
+            dragStart.value = newRef.dragStart;
+        }
+        if (newRef.dragEnd) {
+            dragEnd.value = newRef.dragEnd;
+        }
+        if (newRef.datapointEnter) {
+            datapointEnter.value = newRef.datapointEnter;
+        }
+        if (newRef.datapointLeave) {
+            datapointLeave.value = newRef.datapointLeave;
+        }
     }
 });
 
@@ -495,6 +532,13 @@ const getEventHandlers = () => {
         'zoomEnd',
         'zoomReset',
         'copyAlt',
+        'edit',
+        'save',
+        'cancel',
+        'dragStart',
+        'dragEnd',
+        'datapointEnter',
+        'datapointLeave',
     ];
     const handlers = {};
     eventNames.forEach((event) => {
@@ -581,6 +625,8 @@ defineExpose({
     switchOrientation,
     focusLocation,
     copyAlt,
+    save,
+    cancel,
 });
 
 const notSupported = computed(() => {

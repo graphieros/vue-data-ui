@@ -68,6 +68,7 @@ import ArenaVueUiChord from '../TestingArena/ArenaVueUiChord.vue';
 import ArenaVueUiDashboard from '../TestingArena/ArenaVueUiDashboard.vue';
 import ArenaVueUiAnnotator from '../TestingArena/ArenaVueUiAnnotator.vue';
 import ArenaVueUiStackline from '../TestingArena/ArenaVueUiStackline.vue';
+import ArenaVueUiHill from '../TestingArena/ArenaVueUiHill.vue';
 
 /**
  * TODO: migrate manual testing for the following:
@@ -135,6 +136,7 @@ const mapping = ref({
     VueUiChord: markRaw(ArenaVueUiChord),
     VueUiDashboard: markRaw(ArenaVueUiDashboard),
     VueUiAnnotator: markRaw(ArenaVueUiAnnotator),
+    VueUiHill: markRaw(ArenaVueUiHill),
 });
 
 const options = computed(() => Object.keys(mapping.value));

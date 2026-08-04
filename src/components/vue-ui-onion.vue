@@ -2019,13 +2019,16 @@ svg:focus-visible {
     transition:
         transform 0.2s ease-in-out,
         fill 0.2s ease-in-out,
-        font-size 0.2s ease-in-out !important;
+        font-size 0.2s ease-in-out;
 }
 
 @media (prefers-reduced-motion: reduce) {
     .vue-data-ui-component * {
         transition: none !important;
         animation: none !important;
+    }
+    .vue-ui-onion .vue-ui-onion-label {
+        transition: none !important;
     }
 }
 

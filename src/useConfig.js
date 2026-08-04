@@ -318,6 +318,224 @@ export function useConfig(options = {}) {
         merged: false,
     };
 
+    const vue_ui_hill = {
+        devHints: DEV_HINTS,
+        loading: false,
+        readonly: false,
+        editing: false,
+        theme: '',
+        customPalette: [],
+        transitions: TRANSITIONS,
+        userOptions: USER_OPTIONS({
+            tooltip: false,
+            pdf: true,
+            csv: true,
+            img: true,
+            table: false,
+            labels: false,
+            fullscreen: true,
+            annotator: true,
+            svg: true,
+        }),
+        a11y: {
+            ...A11Y,
+            translations: {
+                ...A11Y.translations,
+                keyboardNavigation:
+                    'Use the left and right arrow keys to adjust the selected datapoint.',
+                topOfHill: 'Top of the hill',
+            },
+        },
+        events: {
+            edit: null,
+            save: null,
+            cancel: null,
+            change: null,
+            dragStart: null,
+            dragEnd: null,
+            datapointEnter: null,
+            datapointLeave: null,
+            selectDatapoint: null,
+        },
+        interaction: {
+            keyboardStep: 0.01,
+            peakTolerance: 0.005, // controls phase text
+        },
+        style: {
+            fontFamily: 'inherit',
+            chart: {
+                backgroundColor: COLOR_BACKGROUND,
+                color: COLOR_TEXT_PRIMARY,
+                width: 800,
+                height: 300,
+                title: TITLE,
+                toolbar: {
+                    show: true,
+                    status: {
+                        lastUpdated: 'Last updated just now',
+                        editInstruction: 'Drag each dot to adjust its position',
+                        color: COLOR_TEXT_PRIMARY,
+                        fontSize: FONT._14,
+                        bold: false,
+                        lineHeight: 1.3,
+                    },
+                    buttons: {
+                        translations: {
+                            edit: 'Edit',
+                            cancel: 'Cancel',
+                            save: 'Save',
+                        },
+                    },
+                },
+                layout: {
+                    hill: {
+                        geometry: {
+                            horizontalPaddingRatio: 0.05,
+                            topPaddingRatio: 0.15,
+                            bottomPaddingRatio: 0.15,
+                            curvature: 0.7,
+                        },
+                        baseline: {
+                            show: true,
+                            stroke: COLOR_GREY_MID,
+                            strokeWidth: 1,
+                            strokeDasharray: 0,
+                        },
+                        midline: {
+                            show: true,
+                            stroke: COLOR_GREY_MID,
+                            strokeWidth: 1,
+                            strokeDasharray: '2.5 3.5',
+                        },
+                        curve: {
+                            stroke: COLOR_GREY,
+                            strokeWidth: 1.5,
+                            strokeDasharray: 0,
+                        },
+                    },
+                    plots: {
+                        radius: 10,
+                        hitRadius: 10,
+                        stroke: COLOR_BACKGROUND,
+                        strokeWidth: 2,
+                        mutedOpacity: 0.4,
+                        disabledOpacity: 0.4,
+                        shadow: {
+                            show: true,
+                            color: COLOR_TEXT_PRIMARY,
+                            offsetX: 0,
+                            offsetY: 0.5,
+                            blur: 0.4,
+                        },
+                        stacking: {
+                            show: true,
+                            // Stack when overlap exceeds 70% of the circle radius.
+                            // 0 = stack on any overlap
+                            // 0.5 = stack when overlap exceeds half the radius
+                            // 1 = stack when overlap exceeds the full radius
+                            overlapThresholdRatio: 0.8,
+                            gap: 5, // plot.radius / 2
+                            overflow: {
+                                show: true,
+                                transitionDuration: 300,
+                                marker: {
+                                    radius: 10,
+                                    stroke: COLOR_BACKGROUND,
+                                    strokeWidth: 1,
+                                    labelColor: COLOR_TEXT_PRIMARY,
+                                    labelOffsetY: 0,
+                                    fontSize: FONT._14,
+                                    bold: false,
+                                    fill: COLOR_GREY_MID,
+                                },
+                                menu: {
+                                    width: 220,
+                                    maxHeight: 220,
+                                    backgroundColor: COLOR_BACKGROUND,
+                                    color: COLOR_TEXT_PRIMARY,
+                                    borderColor: 'transparent',
+                                    borderRadius: 3,
+                                    title: '',
+                                },
+                            },
+                        },
+                        dragMarker: {
+                            show: true,
+                            strokeWidth: 1.5,
+                            crossPath: 'M-5 0H5M0-5V5',
+                            positionIndicator: {
+                                show: true,
+                                useSerieColor: true,
+                                color: COLOR_GREY_LIGHT,
+                                strokeWidth: 1,
+                                strokeDasharray: '2 4',
+                                circle: {
+                                    show: true,
+                                    radius: 3,
+                                    stroke: COLOR_BACKGROUND,
+                                    strokeWidth: 1,
+                                },
+                                value: {
+                                    show: true,
+                                    offsetY: 0,
+                                    fontSize: FONT._12,
+                                    useSerieColor: false,
+                                    color: COLOR_TEXT_PRIMARY,
+                                    formatter: null,
+                                    rounding: 0,
+                                },
+                            },
+                        },
+                    },
+                    labels: {
+                        item: {
+                            ellipsisThresholdChars: 24, // can be null = no ellipsis
+                            show: true,
+                            useSerieColor: false,
+                            color: COLOR_TEXT_PRIMARY,
+                            fontSize: FONT._14,
+                            bold: false,
+                            offsetX: 0,
+                            offsetY: 0,
+                            autoSideThreshold: 0.75,
+                            stroke: COLOR_BACKGROUND,
+                            strokeWidth: 5,
+                        },
+                        phases: {
+                            show: true,
+                            color: COLOR_TEXT_SECONDARY,
+                            fontSize: FONT._14,
+                            bold: true,
+                            letterSpacing: '0.1em',
+                            offsetY: 0,
+                            left: {
+                                text: 'FIGURING THINGS OUT',
+                            },
+                            right: {
+                                text: 'MAKING IT HAPPEN',
+                            },
+                        },
+                    },
+                    stackbar: {
+                        show: true,
+                        paddingTop: 0,
+                        paddingBottom: 12,
+                        height: 14,
+                        stroke: COLOR_BACKGROUND,
+                        strokeWidth: 1.5,
+                        gutterColor: COLOR_GREY_LIGHT,
+                        label: {
+                            show: true,
+                            color: COLOR_TEXT_PRIMARY,
+                            fontSize: FONT._12,
+                            formatter: null,
+                        },
+                    },
+                },
+            },
+        },
+    };
+
     const vue_ui_stackline = {
         devHints: DEV_HINTS,
         skeletonDataset: null,
@@ -7968,6 +8186,7 @@ export function useConfig(options = {}) {
         vue_ui_dag,
         vue_ui_geo,
         vue_ui_bump,
+        vue_ui_circle_pack,
         // non chart components
         vue_ui_cursor,
         vue_ui_accordion,
@@ -7980,6 +8199,6 @@ export function useConfig(options = {}) {
         vue_ui_skeleton,
         vue_ui_table,
         vue_ui_digits,
-        vue_ui_circle_pack,
+        vue_ui_hill,
     };
 }

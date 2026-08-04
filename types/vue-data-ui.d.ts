@@ -19,6 +19,7 @@ declare module 'vue-data-ui' {
     >;
 
     export type VueDataUiAnyDataset =
+        | VueUiHillDatasetItem[]
         | VueUi3dBarDataset
         | VueUiAgePyramidDataset
         | VueUiAnnotatorDataset
@@ -80,6 +81,7 @@ declare module 'vue-data-ui' {
         | VueUiBumpDatasetItem[];
 
     export type VueDataUiAnyConfig =
+        | VueUiHillConfig
         | VueUi3dBarConfig
         | VueUiAgePyramidConfig
         | VueUiAnnotatorConfig
@@ -2232,6 +2234,7 @@ declare module 'vue-data-ui' {
         | 'chartGalaxy'
         | 'chartGauge'
         | 'chartHeatmap'
+        | 'chartHill'
         | 'chartHistoryPlot'
         | 'chartLine'
         | 'chartMoodRadar'
@@ -16761,7 +16764,407 @@ declare module 'vue-data-ui' {
         };
     };
 
+    export type VueUiHillDatasetItem = {
+        [key: string]: any;
+        id?: string;
+        color?: string;
+        label?: string;
+        muted?: boolean;
+        disabled?: boolean;
+    };
+
+    export type VueUiHillFormattedDatasetItem = VueUiHillDatasetItem & {
+        labelSide: string;
+        name: string;
+        position: number;
+        color: string;
+        status: 'todo' | 'left' | 'top' | 'right' | 'done';
+    };
+
+    export type VueUiHillExtendedDatasetItem = {
+        [key: string]: any;
+        __index: number;
+        color: string;
+        datasetIndex: number;
+        disabled: boolean;
+        id: string;
+        isPromotedFromStackOverflow: boolean;
+        isStackOverflowHidden: boolean;
+        label: string;
+        labelSide: string;
+        labelX: number;
+        muted: boolean;
+        name: string;
+        position: number;
+        proportion: number;
+        proportionStart: number;
+        stackDisplayIndex: number;
+        stackId: string;
+        stackSize: number;
+        status: 'todo' | 'left' | 'top' | 'right' | 'done';
+        textAnchor: 'start' | 'middle' | 'end';
+        x: number;
+        y: number;
+    };
+
+    export type VueUiHillEvents = {
+        edit?: null | ((data: VueUiHillFormattedDatasetItem[]) => void);
+        save?: null | ((data: VueUiHillFormattedDatasetItem[]) => void);
+        cancel?: null | ((data: VueUiHillFormattedDatasetItem[]) => void);
+        change?:
+            | null
+            | (({
+                  datapoint,
+                  dataset,
+              }: {
+                  datapoint: VueUiHillFormattedDatasetItem;
+                  dataset: VueUiHillFormattedDatasetItem[];
+              }) => void);
+        dragStart?: null | ((data: VueUiHillFormattedDatasetItem[]) => void);
+        dragEnd?: null | ((data: VueUiHillFormattedDatasetItem[]) => void);
+        datapointEnter?:
+            | null
+            | (({
+                  datapoint,
+                  index,
+              }: {
+                  datapoint: VueUiHillFormattedDatasetItem;
+                  index: number;
+              }) => void);
+        datapointLeave?:
+            | null
+            | (({
+                  datapoint,
+                  index,
+              }: {
+                  datapoint: VueUiHillFormattedDatasetItem;
+                  index: number;
+              }) => void);
+        selectDatapoint?:
+            | null
+            | (({
+                  datapoint,
+                  index,
+              }: {
+                  datapoint: VueUiHillFormattedDatasetItem;
+                  index: number;
+              }) => void);
+    };
+
+    export type VueUiHillConfig = {
+        devHints?: DevHints;
+        loading?: boolean;
+        readonly?: boolean;
+        editing?: boolean;
+        theme?: Theme;
+        customPalette?: string[];
+        transitions?: ChartTransitions;
+        userOptions?: ChartUserOptions<
+            VueUiHillFormattedDatasetItem[],
+            VueUiHillConfig
+        >;
+        a11y?: A11YConfig & {
+            topOfHill?: string;
+        };
+        events?: VueUiHillEvents;
+        interaction?: {
+            keyboardStep?: number;
+            peakTolerance?: number;
+        };
+        style?: {
+            fontFamily?: string;
+            chart?: {
+                backgroundColor?: string;
+                color?: string;
+                width?: number;
+                height?: number;
+                title?: ChartTitle;
+                toolbar?: {
+                    show?: boolean;
+                    status?: {
+                        lastUpdated?: string;
+                        editInstruction?: string;
+                        color?: string;
+                        fontSize?: number;
+                        bold?: boolean;
+                        lineHeight?: number;
+                    };
+                    buttons?: {
+                        translations?: {
+                            edit?: string;
+                            cancel?: string;
+                            save?: string;
+                        };
+                    };
+                };
+                layout?: {
+                    hill?: {
+                        geometry?: {
+                            horizontalPaddingRatio?: number;
+                            topPaddingRatio?: number;
+                            bottomPaddingRatio?: number;
+                            curvature?: number;
+                        };
+                        baseline?: {
+                            show?: boolean;
+                            stroke?: string;
+                            strokeWidth?: number;
+                            strokeDasharray: string | number;
+                        };
+                        midline?: {
+                            show?: boolean;
+                            stroke?: string;
+                            strokeWidth?: number;
+                            strokeDasharray?: string | number;
+                        };
+                        curve?: {
+                            stroke?: string;
+                            strokeWidth?: number;
+                            strokeDasharray?: string | number;
+                        };
+                    };
+                    plots?: {
+                        radius?: number;
+                        hitRadius?: number;
+                        stroke?: string;
+                        strokeWidth?: number;
+                        mutedOpacity?: number;
+                        disabledOpacity?: number;
+                        shadow?: {
+                            show?: boolean;
+                            color?: string;
+                            offsetX?: number;
+                            offsetY?: number;
+                            blur?: number;
+                        };
+                        stacking?: {
+                            show?: boolean;
+                            overlapThresholdRatio?: number;
+                            gap: number | null;
+                            overflow?: {
+                                show?: boolean;
+                                transitionDuration?: number;
+                                marker?: {
+                                    radius?: number;
+                                    stroke?: string;
+                                    strokeWidth?: number;
+                                    labelColor?: string;
+                                    labelOffsetY?: number;
+                                    fontSize?: number;
+                                    bold?: boolean;
+                                    fill?: string;
+                                };
+                                menu?: {
+                                    width?: number;
+                                    maxHeight?: number;
+                                    backgroundColor?: string;
+                                    color?: string;
+                                    borderColor?: string;
+                                    borderRadius?: number;
+                                    title?: string;
+                                };
+                            };
+                        };
+                        dragMarker?: {
+                            show?: boolean;
+                            strokeWidth?: number;
+                            crossPath?: string;
+                            positionIndicator?: {
+                                show?: boolean;
+                                useSerieColor?: boolean;
+                                color?: string;
+                                strokeWidth?: number;
+                                strokeDasharray?: string | number;
+                                circle?: {
+                                    show?: boolean;
+                                    radius?: number;
+                                    stroke?: string;
+                                    strokeWidth?: number;
+                                };
+                                value?: {
+                                    show?: boolean;
+                                    offsetY?: number;
+                                    fontSize?: number;
+                                    useSerieColor?: boolean;
+                                    color?: string;
+                                    formatter?: Formatter;
+                                    rounding?: number;
+                                };
+                            };
+                        };
+                    };
+                    labels?: {
+                        item?: {
+                            ellipsisThresholdChars?: number;
+                            show?: boolean;
+                            color?: string;
+                            useSeriesColor?: boolean;
+                            fontSize?: number;
+                            bold?: boolean;
+                            offsetX?: number;
+                            offsetY?: number;
+                            autoSideThreshold?: number;
+                            stroke?: string;
+                            strokeWidth?: number;
+                        };
+                        phases?: {
+                            show?: boolean;
+                            color?: string;
+                            fontSize?: number;
+                            bold?: boolean;
+                            letterSpacing?: string;
+                            offsetY?: number;
+                            left?: {
+                                text?: string;
+                            };
+                            right?: {
+                                text?: string;
+                            };
+                        };
+                    };
+                    stackbar?: {
+                        show?: boolean;
+                        paddingTop?: number;
+                        paddingBottom?: number;
+                        height?: number;
+                        stroke?: string;
+                        strokeWidth?: number;
+                        gutterColor?: string;
+                        label?: {
+                            show?: boolean;
+                            color?: string;
+                            fontSize?: number;
+                            formatter: Formatter;
+                        };
+                    };
+                };
+            };
+        };
+    };
+
+    export type VueUiHillProps = {
+        config?: VueUiHillConfig;
+        dataset: VueUiHillDatasetItem[];
+    };
+
+    export type VueUiHillEmitCopyAlt = {
+        config: VueUiHillConfig;
+        dataset: VueUiHillFormattedDatasetItem[];
+    };
+
+    export type VueUiHillEmitChange = {
+        datapoint: VueUiHillFormattedDatasetItem;
+        dataset: VueUiHillFormattedDatasetItem[];
+    };
+
+    export type VueUiHillEmitDatapointEnter = {
+        datapoint: VueUiHillFormattedDatasetItem;
+        index: number;
+    };
+
+    export type VueUiHillEmitDatapointLeave = {
+        datapoint: VueUiHillFormattedDatasetItem;
+        index: number;
+    };
+
+    export type VueUiHillEmitSelectDatapoint = {
+        datapoint: VueUiHillFormattedDatasetItem;
+        index: number;
+    };
+
+    export type VueUiHillEmits = {
+        edit: (data: VueUiHillFormattedDatasetItem[]) => void;
+        save: (data: VueUiHillFormattedDatasetItem[]) => void;
+        cancel: (data: VueUiHillFormattedDatasetItem[]) => void;
+        change: (data: VueUiHillEmitChange) => void;
+        dragStart: (datapoint: VueUiHillFormattedDatasetItem) => void;
+        dragEnd: (datapoint: VueUiHillFormattedDatasetItem) => void;
+        datapointEnter: (data: VueUiHillEmitDatapointEnter) => void;
+        datapointLeave: (data: VueUiHillEmitDatapointLeave) => void;
+        selectDatapoint: (data: VueUiHillEmitSelectDatapoint) => void;
+        copyAlt: (payload: VueUiHillEmitCopyAlt) => void;
+    };
+
+    export type VueUiHillExpose = {
+        isEditing: boolean;
+        generatePdf(): void;
+        generateCsv(): void;
+        generateSvg(): void;
+        generateImage(): void;
+        toggleAnnotator(): void;
+        toggleFullscreen(): void;
+        getImage(options?: { scale?: number }): GetImagePromise;
+        getData(): Promise<Array<VueUiHillExtendedDatasetItem>>;
+        save(): void;
+        cancel(): void;
+        copyAlt(): void;
+    };
+
+    const VueUiHillBase: DefineComponent<
+        VueUiHillProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiHillEmits
+    >;
+
+    export type VueUiHillSvgSlotProps = {
+        svg: {
+            datapoints: VueUiHillExtendedDatasetItem[];
+            drawingArea: {
+                baseY: number;
+                centerX: number;
+                endX: number;
+                left: Array<{ x: number; y: number }>;
+                peakY: number;
+                right: Array<{ x: number; y: number }>;
+                startX: number;
+                width: number;
+            };
+            isEditing: boolean;
+            isPrintingImg: boolean;
+            isPrintingSvg: boolean;
+        };
+    };
+
+    export type VueUiHillAnalysisSlotProps = {
+        data: VueUiHillExtendedDatasetItem[];
+    };
+
+    export const VueUiHill: typeof VueUiHillBase & {
+        new (): VueUiHillExpose & {
+            $slots: CommonAnnotatorSlots & {
+                ['hill-edit']?: () => VNodeChild;
+                ['hill-save']?: () => VNodeChild;
+                ['hill-cancel']?: () => VNodeChild;
+                ['custom-menu-before']?: () => VNodeChild;
+                ['custom-menu-after']?: () => VNodeChild;
+                ['chart-background']?: () => VNodeChild;
+                svg?: (props: VueUiHillSvgSlotProps) => VNodeChild;
+                analysis?: (props: VueUiHillAnalysisSlotProps) => VNodeChild;
+                menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
+                optionPdf?: () => VNodeChild;
+                optionCsv?: () => VNodeChild;
+                optionImg?: () => VNodeChild;
+                optionSvg?: () => VNodeChild;
+                optionFullscreen?: (
+                    props: VueUiOptionFullscreenSlotProps,
+                ) => VNodeChild;
+                optionAltCopy?: () => VNodeChild;
+                optionAnnotator?: (
+                    props: VueUiOptionAnnotatorSlotProps,
+                ) => VNodeChild;
+                loading?: () => VNodeChild;
+                watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
+            };
+        };
+    };
+
     export type VueDataUiConfig =
+        | VueUiHillConfig
         | VueUi3dBarConfig
         | VueUiAgePyramidConfig
         | VueUiAnnotatorConfig
@@ -16830,6 +17233,7 @@ declare module 'vue-data-ui' {
         | VueUiBumpConfig;
 
     export type VueDataUiConfigKey =
+        | 'vue_ui_hill'
         | 'vue_ui_3d_bar'
         | 'vue_ui_age_pyramid'
         | 'vue_ui_annotator'

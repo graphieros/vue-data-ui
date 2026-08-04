@@ -6,6 +6,32 @@
  */
 export const components = [
     {
+        name: 'VueUiHill',
+        wrapperClass: '.vue-ui-hill',
+        dataset: [
+            {
+                label: 'LABEL A',
+                position: 0.5,
+            },
+            {
+                label: 'LABEL B',
+                position: 0.2,
+            },
+        ],
+        config: {
+            style: {
+                chart: {
+                    title: {
+                        text: 'Title',
+                        subtitle: {
+                            text: 'Subtitle',
+                        },
+                    },
+                },
+            },
+        },
+    },
+    {
         name: 'VueUiBump',
         dataset: [
             { name: 'A', values: [1, 2, 3] },

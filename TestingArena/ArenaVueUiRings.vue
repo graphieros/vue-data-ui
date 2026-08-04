@@ -18,34 +18,55 @@ const { vue_ui_rings: DEFAULT_CONFIG } = useConfig();
 const { CHECKBOX, NUMBER, RANGE, TEXT, COLOR, SELECT, createModel } =
     useConfigurationControls(DEFAULT_CONFIG);
 
-const dataset = ref(undefined);
+const dataset = ref([
+    {
+        name: 'Serie 1',
+        values: [100],
+    },
+    {
+        name: 'Serie 2',
+        values: [200],
+    },
+    {
+        name: 'Serie 3',
+        values: [300, 1],
+    },
+    {
+        name: 'Serie 4',
+        values: [50, 1],
+    },
+    {
+        name: 'Serie 5',
+        values: [25, 1],
+    },
+]);
 
-onMounted(() => {
-    setTimeout(() => {
-        dataset.value = [
-            {
-                name: 'Serie 1',
-                values: [100],
-            },
-            {
-                name: 'Serie 2',
-                values: [200],
-            },
-            {
-                name: 'Serie 3',
-                values: [300, 1],
-            },
-            {
-                name: 'Serie 4',
-                values: [50, 1],
-            },
-            {
-                name: 'Serie 5',
-                values: [25, 1],
-            },
-        ];
-    }, 2000);
-});
+// onMounted(() => {
+//     setTimeout(() => {
+//         dataset.value = [
+//             {
+//                 name: 'Serie 1',
+//                 values: [100],
+//             },
+//             {
+//                 name: 'Serie 2',
+//                 values: [200],
+//             },
+//             {
+//                 name: 'Serie 3',
+//                 values: [300, 1],
+//             },
+//             {
+//                 name: 'Serie 4',
+//                 values: [50, 1],
+//             },
+//             {
+//                 name: 'Serie 5',
+//                 values: [25, 1],
+//             },
+//         ];
+//     }, 2000);
+// });
 
 const alternateDataset = ref([
     { name: 'Alt 1', values: [20] },

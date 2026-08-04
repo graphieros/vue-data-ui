@@ -12,6 +12,7 @@ import {
     adaptColorToBackground,
     addVector,
     applyDataLabel,
+    applyEllipsis,
     assignStackRatios,
     autoFontSize,
     buildInterLineAreas,
@@ -5317,5 +5318,24 @@ describe('createColorWheel', () => {
         );
 
         consoleError.mockRestore();
+    });
+});
+
+describe('applyEllipsis', () => {
+    const testCases = [
+        { value: '', threshold: 0, expected: '' },
+        { value: '', threshold: 1, expected: '' },
+        { value: '', threshold: null, expected: '' },
+        { value: 'booya', threshold: null, expected: 'booya' },
+        { value: 'booya', threshold: 3, expected: 'boo...' },
+        { value: 'boo ya', threshold: 4, expected: 'boo ...' },
+        { value: 'boo ya', threshold: 5, expected: 'boo y...' },
+    ];
+    test('applies ellipsis to str inputs', () => {
+        testCases.forEach((_case) => {
+            expect(applyEllipsis(_case.value, _case.threshold)).toBe(
+                _case.expected,
+            );
+        });
     });
 });

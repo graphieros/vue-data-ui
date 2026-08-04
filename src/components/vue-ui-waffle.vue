@@ -132,7 +132,7 @@ const FINAL_CONFIG = ref(prepareConfig());
 useHints({
     config: () => FINAL_CONFIG.value,
     dataset: () => props.dataset,
-    component: 'VueWaffle',
+    component: 'VueUiWaffle',
     rules: [
         COMMON_RULES.singleSeries,
         COMMON_RULES.emptyArray,
