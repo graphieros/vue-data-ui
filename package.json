@@ -119,15 +119,15 @@
         }
     },
     "devDependencies": {
-        "@vitejs/plugin-vue": "^6.0.7",
-        "cypress": "^15.17.0",
+        "@vitejs/plugin-vue": "^6.0.8",
+        "cypress": "^15.19.0",
         "jsdom": "^29.1.1",
         "prettier": "3.8.1",
         "remove-attr": "^0.0.13",
         "sass": "^1.57.1",
         "simple-git": "^3.36.0",
         "typescript": "^6.0.2",
-        "vite": "^8.1.5",
+        "vite": "^8.2.0",
         "vitest": "^4.1.8",
         "vue": "^3.5.40"
     }
