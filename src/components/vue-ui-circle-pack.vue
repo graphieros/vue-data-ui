@@ -287,6 +287,12 @@ watch(
 
 const SIZE = ref({ h: 10, w: 10 });
 const boundValues = ref([0, 0, 100, 100]);
+const initialParentTooltipViewBox = ref({
+    x: 0,
+    y: 0,
+    width: 100,
+    height: 100,
+});
 
 const debug = computed(() => FINAL_CONFIG.value.debug);
 
@@ -341,6 +347,7 @@ function recomputePacking(targetWidth, targetHeight) {
             baseViewBox.width,
             baseViewBox.height,
         ];
+        initialParentTooltipViewBox.value = { ...baseViewBox };
         setInitialViewBox(baseViewBox);
         return;
     }
@@ -384,6 +391,7 @@ function recomputePacking(targetWidth, targetHeight) {
         initialViewBox.height,
     ];
 
+    initialParentTooltipViewBox.value = { ...initialViewBox };
     setInitialViewBox(initialViewBox);
 }
 
@@ -827,9 +835,9 @@ function rectangleCollidesWithCircle(rectangle, circle, gap = 0) {
     return distanceX * distanceX + distanceY * distanceY <= circle.r * circle.r;
 }
 
-function clampRectangleToViewBox(rectangle, sourceViewBox) {
+function clampRectangleToViewBox(rectangle, sourceViewBox, scale = 1) {
     const margin = Math.max(
-        4,
+        4 * scale,
         Math.min(sourceViewBox.width, sourceViewBox.height) * 0.01,
     );
 
@@ -989,7 +997,7 @@ function getParentTooltipExternalCandidateRect(
 }
 
 function createParentTooltipItems(sourceViewBox, options = {}) {
-    const { clamp = true } = options;
+    const { clamp = true, scale = 1 } = options;
 
     if (
         !circles.value.length ||
@@ -1000,19 +1008,20 @@ function createParentTooltipItems(sourceViewBox, options = {}) {
         return [];
     }
 
-    const fontSize = Math.max(
-        8,
-        FINAL_CONFIG.value.style.chart.parentTooltips.fontSizeRatio * 10,
-    );
+    const fontSize =
+        Math.max(
+            8,
+            FINAL_CONFIG.value.style.chart.parentTooltips.fontSizeRatio * 10,
+        ) * scale;
     const lineHeight = fontSize * 1.25;
     const paddingX = fontSize * 0.75;
     const paddingY = fontSize * 0.55;
     const distance = Math.max(
-        8,
+        8 * scale,
         Math.min(sourceViewBox.width, sourceViewBox.height) * 0.025,
     );
     const collisionGap = Math.max(
-        2,
+        2 * scale,
         Math.min(sourceViewBox.width, sourceViewBox.height) * 0.006,
     );
 
@@ -1085,6 +1094,7 @@ function createParentTooltipItems(sourceViewBox, options = {}) {
                               height,
                           },
                           sourceViewBox,
+                          scale,
                       )
                     : {
                           x: raw.x,
@@ -1131,15 +1141,37 @@ function createParentTooltipItems(sourceViewBox, options = {}) {
             lineHeight,
             paddingX,
             paddingY,
+            scale,
         });
     });
 
     return tooltips;
 }
 
+function getParentTooltipScale(sourceViewBox) {
+    const initialViewBox = initialParentTooltipViewBox.value;
+
+    if (
+        !initialViewBox.width ||
+        !initialViewBox.height ||
+        !sourceViewBox.width ||
+        !sourceViewBox.height
+    ) {
+        return 1;
+    }
+
+    const scale = Math.min(
+        sourceViewBox.width / initialViewBox.width,
+        sourceViewBox.height / initialViewBox.height,
+    );
+
+    return Number.isFinite(scale) && scale > 0 ? scale : 1;
+}
+
 const parentTooltipItems = computed(() => {
     return createParentTooltipItems(viewBox.value, {
         clamp: true,
+        scale: getParentTooltipScale(viewBox.value),
     });
 });
 
@@ -1883,6 +1915,7 @@ defineExpose({
                         :width="circle.r * 2"
                         :height="circle.r * 2"
                         :stroke="FINAL_CONFIG.style.chart.circles.stroke"
+                        vector-effect="non-scaling-stroke"
                         :stroke-width="
                             (FINAL_CONFIG.style.chart.circles.strokeWidth *
                                 (maxRadius || 1)) /
@@ -1907,6 +1940,7 @@ defineExpose({
                         :width="circle.r * 2"
                         :height="circle.r * 2"
                         :stroke="FINAL_CONFIG.style.chart.circles.stroke"
+                        vector-effect="non-scaling-stroke"
                         :stroke-width="
                             (FINAL_CONFIG.style.chart.circles.strokeWidth *
                                 (maxRadius || 1)) /
@@ -2116,6 +2150,7 @@ defineExpose({
                                     : FINAL_CONFIG.style.chart.parentTooltips
                                           .link.stroke
                             "
+                            vector-effect="non-scaling-stroke"
                             :stroke-width="
                                 FINAL_CONFIG.style.chart.parentTooltips.link
                                     .strokeWidth
@@ -2140,7 +2175,18 @@ defineExpose({
                             :width="tooltip.width"
                             :height="tooltip.height"
                             :rx="
-                                Math.max(3, tooltip.fontSize / 2.5) *
+                                Math.max(
+                                    3 * tooltip.scale,
+                                    tooltip.fontSize / 2.5,
+                                ) *
+                                FINAL_CONFIG.style.chart.parentTooltips
+                                    .borderRadiusRatio
+                            "
+                            :ry="
+                                Math.max(
+                                    3 * tooltip.scale,
+                                    tooltip.fontSize / 2.5,
+                                ) *
                                 FINAL_CONFIG.style.chart.parentTooltips
                                     .borderRadiusRatio
                             "
@@ -2155,6 +2201,7 @@ defineExpose({
                                     : FINAL_CONFIG.style.chart.parentTooltips
                                           .stroke
                             "
+                            vector-effect="non-scaling-stroke"
                             :stroke-width="
                                 FINAL_CONFIG.style.chart.parentTooltips
                                     .strokeWidth
