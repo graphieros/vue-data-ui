@@ -291,6 +291,7 @@ const model = createModel([
     }),
 
     CHECKBOX('style.zoom.show', { def: true }),
+    CHECKBOX('style.zoom.minimap.autoFit', { def: false }),
     RANGE('style.zoom.maxWidth', { def: null, min: 100, max: 1000 }),
     COLOR('style.zoom.color', { def: '#CCCCCC' }),
     COLOR('style.zoom.highlightColor', { def: '#4A4A4A' }),

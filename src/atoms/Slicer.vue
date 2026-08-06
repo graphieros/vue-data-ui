@@ -15,6 +15,7 @@ import {
     createStraightPath,
     createStraightPathWithCuts,
     createUid,
+    isValidNumber,
     triggerEvent,
     XMLNS,
 } from '../lib';
@@ -162,6 +163,14 @@ const props = defineProps({
         type: Number,
         default: null,
     },
+    minimapLeftInsetRatio: {
+        type: Number,
+        default: null,
+    },
+    minimapRightInsetRatio: {
+        type: Number,
+        default: null,
+    },
     isCursorPointer: {
         type: Boolean,
         default: false,
@@ -200,6 +209,36 @@ const zoomWrapper = ref(null);
 const startValue = ref(props.min);
 const endValue = ref(props.max);
 const hasMinimap = computed(() => !!props.allMinimaps.length);
+
+const shouldAutoFitToDrawingArea = computed(() => {
+    return (
+        isValidNumber(props.minimapLeftInsetRatio) &&
+        isValidNumber(props.minimapRightInsetRatio)
+    );
+});
+
+const zoomWrapperStyle = computed(() => {
+    const leftInsetPercent =
+        Math.min(1, Math.max(0, props.minimapLeftInsetRatio)) * 100;
+    const rightInsetPercent =
+        Math.min(1, Math.max(0, props.minimapRightInsetRatio)) * 100;
+    const padding = shouldAutoFitToDrawingArea.value
+        ? `0 ${rightInsetPercent}% 0 ${leftInsetPercent}%`
+        : '0 48px';
+
+    return {
+        padding,
+        maxWidth:
+            props.maxWidth && !shouldAutoFitToDrawingArea.value
+                ? `${props.maxWidth}px`
+                : undefined,
+        margin:
+            props.maxWidth && !shouldAutoFitToDrawingArea.value
+                ? '0 auto'
+                : undefined,
+    };
+});
+
 const uid = ref(createUid());
 const useMini = computed(() => hasMinimap.value && props.minimapCompact);
 
@@ -1026,16 +1065,12 @@ const selectionIndicator = computed(() => {
         data-cy="slicer"
         data-dom-to-png-ignore
         data-dom-to-png-ignore-layout
-        style="padding: 0 48px"
         class="vue-data-ui-zoom"
         ref="zoomWrapper"
         @mousedown="startDragging"
         @touchstart="startDragging"
         @touchend="showTooltip = false"
-        :style="{
-            maxWidth: maxWidth ? maxWidth + 'px' : undefined,
-            margin: maxWidth ? '0 auto' : undefined,
-        }"
+        :style="zoomWrapperStyle"
     >
         <div
             class="vue-data-ui-slicer-labels"

@@ -189,6 +189,7 @@ const model = createModel([
         step: 0.1,
     }),
 
+    CHECKBOX('style.chart.zoom.minimap.autoFit', { def: true }),
     CHECKBOX('style.chart.zoom.minimap.show', { def: true }),
     CHECKBOX('style.chart.zoom.preview.enable', { def: true }),
 

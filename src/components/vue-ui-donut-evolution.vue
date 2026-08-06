@@ -2542,6 +2542,18 @@ defineExpose({
                 :focusRangeRatio="FINAL_CONFIG.style.chart.zoom.focusRangeRatio"
                 :isCursorPointer="isCursorPointer"
                 :maxWidth="FINAL_CONFIG.style.chart.zoom.maxWidth"
+                :minimapLeftInsetRatio="
+                    svg.absoluteWidth > 0 &&
+                    FINAL_CONFIG.style.chart.zoom.autoFit
+                        ? svg.left / svg.absoluteWidth
+                        : null
+                "
+                :minimapRightInsetRatio="
+                    svg.absoluteWidth > 0 &&
+                    FINAL_CONFIG.style.chart.zoom.autoFit
+                        ? (svg.absoluteWidth - svg.right) / svg.absoluteWidth
+                        : null
+                "
                 @reset="refreshSlicer"
             >
                 <template #reset-action="{ reset }">

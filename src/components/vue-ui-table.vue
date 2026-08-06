@@ -1726,6 +1726,7 @@ const chartData = computed(() => {
             },
             zoom: {
                 show: FINAL_CONFIG.value.style.chart.layout.zoom.show,
+                autoFit: FINAL_CONFIG.value.style.chart.layout.zoom.autoFit,
                 focusOnDrag: true,
                 minimap: {
                     show: true,

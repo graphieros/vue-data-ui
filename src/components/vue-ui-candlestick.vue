@@ -2926,6 +2926,16 @@ defineExpose({
             :minScale="FINAL_CONFIG.style.layout.grid.yAxis.scale.min"
             :maxScale="FINAL_CONFIG.style.layout.grid.yAxis.scale.max"
             :maxWidth="FINAL_CONFIG.style.zoom.maxWidth"
+            :minimapLeftInsetRatio="
+                svg.width > 0 && FINAL_CONFIG.style.zoom.autoFit
+                    ? drawingArea.left / svg.width
+                    : null
+            "
+            :minimapRightInsetRatio="
+                svg.width > 0 && FINAL_CONFIG.style.zoom.autoFit
+                    ? (svg.width - drawingArea.right) / svg.width
+                    : null
+            "
             :additionalMinimapHeight="
                 FINAL_CONFIG.style.zoom.minimap.additionalHeight
             "

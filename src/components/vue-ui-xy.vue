@@ -10122,6 +10122,16 @@ defineExpose({
             :minScale="FINAL_CONFIG.chart.grid.labels.yAxis.scaleMin"
             :maxScale="FINAL_CONFIG.chart.grid.labels.yAxis.scaleMax"
             :maxWidth="FINAL_CONFIG.chart.zoom.maxWidth"
+            :minimapLeftInsetRatio="
+                width > 0 && FINAL_CONFIG.chart.zoom.autoFit
+                    ? drawingArea.left / width
+                    : null
+            "
+            :minimapRightInsetRatio="
+                width > 0 && FINAL_CONFIG.chart.zoom.autoFit
+                    ? (width - drawingArea.right) / width
+                    : null
+            "
             :additionalMinimapHeight="
                 FINAL_CONFIG.chart.zoom.minimap.additionalHeight
             "

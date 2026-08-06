@@ -205,6 +205,7 @@ const model = createModel([
     }),
     NUMBER('style.chart.zoom.preview.strokeWidth', { def: 2, min: 0, max: 12 }),
 
+    CHECKBOX('style.chart.zoom.minimap.autoFit', { def: false }),
     CHECKBOX('style.chart.zoom.minimap.show', { def: true }),
     CHECKBOX('style.chart.zoom.minimap.smooth', { def: true }),
     COLOR('style.chart.zoom.minimap.selectedColor', { def: '#1f77b4' }),

@@ -4309,6 +4309,19 @@ defineExpose({
                 FINAL_CONFIG.style.chart.zoom.minimap.verticalHandles
             "
             :maxWidth="FINAL_CONFIG.style.chart.zoom.maxWidth"
+            :minimapLeftInsetRatio="
+                drawingArea.chartWidth > 0 &&
+                FINAL_CONFIG.style.chart.zoom.autoFit
+                    ? drawingArea.left / drawingArea.chartWidth
+                    : null
+            "
+            :minimapRightInsetRatio="
+                drawingArea.chartWidth > 0 &&
+                FINAL_CONFIG.style.chart.zoom.autoFit
+                    ? (drawingArea.chartWidth - drawingArea.right) /
+                      drawingArea.chartWidth
+                    : null
+            "
             :isCursorPointer="isCursorPointer"
             :additionalMinimapHeight="
                 FINAL_CONFIG.style.chart.zoom.minimap.additionalHeight

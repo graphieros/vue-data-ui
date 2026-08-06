@@ -512,6 +512,7 @@ declare module 'vue-data-ui' {
 
     export type ChartZoom = {
         show?: boolean;
+        autoFit?: boolean;
         color?: string;
         highlightColor?: string;
         fontSize?: number;
@@ -9804,6 +9805,7 @@ declare module 'vue-data-ui' {
                     };
                     zoom?: {
                         show?: boolean;
+                        autoFit?: boolean;
                     };
                     datetimeFormatter?: AxisDateFormatter;
                 };
@@ -10532,6 +10534,7 @@ declare module 'vue-data-ui' {
         xyShowScale?: boolean;
         yAxisLabel?: string;
         zoomXy?: boolean;
+        zoomXyAutoFit?: boolean;
         zoomColor?: string;
         zoomHighlightColor?: string;
         zoomFontSize?: number;

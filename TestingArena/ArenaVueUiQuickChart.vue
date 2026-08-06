@@ -275,6 +275,7 @@ const model = createModel([
     NUMBER('zoomFontSize', { def: 14, min: 8, max: 48 }),
     CHECKBOX('zoomUseResetSlot', { def: false }),
 
+    CHECKBOX('zoomMinimap.autoFit', { def: false }),
     CHECKBOX('zoomMinimap.show', { def: true }),
     CHECKBOX('zoomMinimap.smooth', { def: true }),
     COLOR('zoomMinimap.selectedColor', { def: '#1F77B4' }),

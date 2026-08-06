@@ -279,6 +279,7 @@ export function useConfig(options = {}) {
 
     const ZOOM = {
         show: true,
+        autoFit: false,
         color: COLOR_GREY_MID,
         highlightColor: COLOR_GREY_DARK,
         fontSize: FONT._14,
@@ -3923,6 +3924,7 @@ export function useConfig(options = {}) {
         xyShowScale: true,
         yAxisLabel: '',
         zoomXy: true,
+        zoomXyAutoFit: false,
         zoomColor: COLOR_GREY_MID,
         zoomHighlightColor: COLOR_GREY_DARK,
         zoomFontSize: FONT._14,
@@ -6770,6 +6772,7 @@ export function useConfig(options = {}) {
                     },
                     zoom: {
                         show: true,
+                        autoFit: true,
                     },
                 },
             },
@@ -7601,6 +7604,7 @@ export function useConfig(options = {}) {
                             },
                             zoom: {
                                 ...vue_ui_xy.chart.zoom,
+                                autoFit: true,
                                 minimap: {
                                     ...vue_ui_xy.chart.zoom.minimap,
                                     show: true,

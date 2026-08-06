@@ -1714,6 +1714,36 @@ const bar = computed(() => {
     };
 });
 
+const slicerDrawingArea = computed(() => {
+    if (chartType.value === detector.chartType.LINE) {
+        return line.value?.drawingArea ?? null;
+    }
+
+    if (chartType.value === detector.chartType.BAR) {
+        return bar.value?.drawingArea ?? null;
+    }
+
+    return null;
+});
+
+const slicerMinimapLeftInsetRatio = computed(() => {
+    const drawingArea = slicerDrawingArea.value;
+    const svgWidth = defaultSizes.value.width;
+
+    if (!drawingArea || svgWidth <= 0 || !FINAL_CONFIG.value.zoomXyAutoFit)
+        return null;
+    return drawingArea.left / svgWidth;
+});
+
+const slicerMinimapRightInsetRatio = computed(() => {
+    const drawingArea = slicerDrawingArea.value;
+    const svgWidth = defaultSizes.value.width;
+
+    if (!drawingArea || svgWidth <= 0 || !FINAL_CONFIG.value.zoomXyAutoFit)
+        return null;
+    return (svgWidth - drawingArea.right) / svgWidth;
+});
+
 function primePath(p) {
     if (!p) return;
     const len = p.getTotalLength();
@@ -3579,6 +3609,8 @@ defineExpose({
                 :focusOnDrag="FINAL_CONFIG.zoomFocusOnDrag"
                 :focusRangeRatio="FINAL_CONFIG.zoomFocusRangeRatio"
                 :maxWidth="FINAL_CONFIG.zoomMaxWidth"
+                :minimapLeftInsetRatio="slicerMinimapLeftInsetRatio"
+                :minimapRightInsetRatio="slicerMinimapRightInsetRatio"
                 @reset="refreshSlicer"
                 @trapMouse="setCommonSelectedIndex"
             >

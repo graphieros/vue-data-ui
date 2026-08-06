@@ -516,6 +516,7 @@ const model = createModel([
     CHECKBOX('chart.zoom.focusOnDrag', { def: true }),
     NUMBER('chart.zoom.focusRangeRatio', { def: 0.2, min: 0.1, max: 0.9 }),
 
+    CHECKBOX('chart.zoom.minimap.autoFit', { def: false }),
     CHECKBOX('chart.zoom.minimap.show', { def: true }),
     NUMBER('chart.zoom.minimap.additionalHeight', { def: 0, min: 0, max: 24 }),
     SELECT(
