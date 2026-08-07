@@ -51,7 +51,7 @@ import { useStableElementSize } from '../useStableElementSize.js';
 import { useChartAccessibility } from '../useChartAccessibility';
 import { useTimeLabelCollision } from '../useTimeLabelCollider';
 import img from '../img';
-import Slicer from '../atoms/Slicer.vue';
+import SlicerPreview from '../atoms/SlicerPreview.vue';
 import themes from '../themes/vue_ui_quick_chart.json';
 import BaseScanner from '../atoms/BaseScanner.vue';
 import A11yDataTable from '../atoms/A11yDataTable.vue';
@@ -3538,27 +3538,14 @@ defineExpose({
             :key="`slicer_${slicerStep}`"
             ref="quickChartSlicer"
         >
-            <Slicer
+            <SlicerPreview
                 ref="slicerComponent"
                 :key="`slicer_${slicerStep}`"
+                :timeLabels="timeLabels"
                 :background="FINAL_CONFIG.zoomColor"
                 :borderColor="FINAL_CONFIG.backgroundColor"
                 :fontSize="FINAL_CONFIG.zoomFontSize"
                 :useResetSlot="FINAL_CONFIG.zoomUseResetSlot"
-                :labelLeft="
-                    FINAL_CONFIG.xyPeriods[slicer.start]
-                        ? timeLabels[0]
-                            ? timeLabels[0].text
-                            : ''
-                        : ''
-                "
-                :labelRight="
-                    FINAL_CONFIG.xyPeriods[slicer.end - 1]
-                        ? timeLabels?.length
-                            ? timeLabels.at(-1).text
-                            : ''
-                        : ''
-                "
                 :textColor="FINAL_CONFIG.color"
                 :inputColor="FINAL_CONFIG.zoomColor"
                 :selectColor="FINAL_CONFIG.zoomHighlightColor"
@@ -3617,7 +3604,7 @@ defineExpose({
                 <template #reset-action="{ reset }">
                     <slot name="reset-action" v-bind="{ reset }" />
                 </template>
-            </Slicer>
+            </SlicerPreview>
         </div>
 
         <div :id="`legend-bottom-${uid}`" />

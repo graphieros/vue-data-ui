@@ -58,7 +58,7 @@ import img from '../img';
 import Title from '../atoms/Title.vue'; // Must be ready in responsive mode
 import themes from '../themes/vue_ui_donut_evolution.json';
 import Legend from '../atoms/Legend.vue'; // Must be ready in responsive mode
-import Slicer from '../atoms/Slicer.vue'; // Must be ready in responsive mode
+import SlicerPreview from '../atoms/SlicerPreview.vue'; // Must be ready in responsive mode
 import BaseScanner from '../atoms/BaseScanner.vue';
 import A11yDataTable from '../atoms/A11yDataTable.vue';
 import BaseLegendToggle from '../atoms/BaseLegendToggle.vue';
@@ -2503,7 +2503,7 @@ defineExpose({
             :style="`width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor}`"
             data-dom-to-png-ignore
         >
-            <Slicer
+            <SlicerPreview
                 ref="slicerComponent"
                 v-if="maxLength > 1 && FINAL_CONFIG.style.chart.zoom.show"
                 :key="`slicer_${slicerStep}`"
@@ -2511,8 +2511,7 @@ defineExpose({
                 :borderColor="FINAL_CONFIG.style.chart.backgroundColor"
                 :fontSize="FINAL_CONFIG.style.chart.zoom.fontSize"
                 :useResetSlot="FINAL_CONFIG.style.chart.zoom.useResetSlot"
-                :labelLeft="timeLabels[0] ? timeLabels[0].text : ''"
-                :labelRight="timeLabels.at(-1) ? timeLabels.at(-1).text : ''"
+                :timeLabels="timeLabels"
                 :textColor="FINAL_CONFIG.style.chart.color"
                 :inputColor="FINAL_CONFIG.style.chart.zoom.color"
                 :selectColor="FINAL_CONFIG.style.chart.zoom.highlightColor"
@@ -2559,7 +2558,7 @@ defineExpose({
                 <template #reset-action="{ reset }">
                     <slot name="reset-action" v-bind="{ reset }" />
                 </template>
-            </Slicer>
+            </SlicerPreview>
         </div>
 
         <div :id="`legend-bottom-${uid}`" />
