@@ -25,9 +25,9 @@ import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 import { useLoading } from '../useLoading';
 import { usePrinter } from '../usePrinter';
-import { useSvgExport } from '../useSvgExport';
 import { useNestedProp } from '../useNestedProp';
 import { useThemeCheck } from '../useThemeCheck';
+import { useChartExport } from '../useChartExport';
 import { useUserOptionState } from '../useUserOptionState';
 import { useChartAccessibility } from '../useChartAccessibility';
 import { useResponsive } from '../useResponsive';
@@ -87,8 +87,6 @@ const titleStep = ref(0);
 const step = ref(0);
 const userHovers = ref(false);
 const isDataset = ref(false);
-const isCallbackImaging = ref(false);
-const isCallbackSvg = ref(false);
 const resizeObserver = ref(null);
 const observedEl = ref(null);
 
@@ -268,37 +266,16 @@ const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
 const svgBg = computed(() => FINAL_CONFIG.value.style.chart.backgroundColor);
 const svgTitle = computed(() => FINAL_CONFIG.value.style.chart.title);
 
-const { exportSvg, getSvg } = useSvgExport({
-    svg: svgRef,
-    title: svgTitle,
-    legend: undefined,
-    legendItems: undefined,
-    backgroundColor: svgBg,
-});
-
-async function generateSvg({ isCb }) {
-    isCallbackSvg.value = true;
-
-    await nextTick();
-
-    try {
-        if (isCb) {
-            const { blob, url, text, dataUrl } = await getSvg();
-            await Promise.resolve(
-                FINAL_CONFIG.value.userOptions.callbacks.svg({
-                    blob,
-                    url,
-                    text,
-                    dataUrl,
-                }),
-            );
-        } else {
-            await Promise.resolve(exportSvg());
-        }
-    } finally {
-        isCallbackSvg.value = false;
-    }
-}
+const { isCallbackImaging, isCallbackSvg, generateSvg, onGenerateImage } =
+    useChartExport({
+        svg: svgRef,
+        title: svgTitle,
+        legend: null,
+        legendItems: null,
+        backgroundColor: svgBg,
+        getSvgCallback: () => FINAL_CONFIG.value.userOptions.callbacks.svg,
+        generateImage,
+    });
 
 function onChartEnter() {
     userHovers.value = true;
@@ -1314,20 +1291,6 @@ function makeMarkerId(edgeIdentifier) {
 
 function getData() {
     return layoutData.value;
-}
-
-function onGenerateImage(payload) {
-    if (payload?.stage === 'start') {
-        isCallbackImaging.value = true;
-        return;
-    }
-
-    if (payload?.stage === 'end') {
-        isCallbackImaging.value = false;
-        return;
-    }
-
-    generateImage();
 }
 
 async function copyAlt() {

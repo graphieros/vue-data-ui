@@ -39,11 +39,11 @@ import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 import { useLoading } from '../useLoading';
 import { usePrinter } from '../usePrinter';
-import { useSvgExport } from '../useSvgExport';
 import { useResponsive } from '../useResponsive';
 import { useNestedProp } from '../useNestedProp';
 import { useTimeLabels } from '../useTimeLabels';
 import { useThemeCheck } from '../useThemeCheck';
+import { useChartExport } from '../useChartExport';
 import { useUserOptionState } from '../useUserOptionState';
 import { useChartAccessibility } from '../useChartAccessibility';
 import { useTimeLabelCollision } from '../useTimeLabelCollider';
@@ -131,8 +131,6 @@ const parentHeight = ref(0);
 const timeLabelsEls = ref(null);
 const tableUnit = ref(null);
 const userOptionsRef = ref(null);
-const isCallbackImaging = ref(false);
-const isCallbackSvg = ref(false);
 
 const activeA11ySeriesIndex = ref(null); // a11y
 const isFocus = ref(false); // a11y
@@ -1291,51 +1289,16 @@ const svgLegend = computed(() => ({
 }));
 const svgTitle = computed(() => FINAL_CONFIG.value.style.chart.title);
 
-const { exportSvg, getSvg } = useSvgExport({
-    svg: svgRef,
-    title: svgTitle,
-    legend: svgLegend,
-    legendItems: legendSet,
-    backgroundColor: svgBg,
-});
-
-async function generateSvg({ isCb }) {
-    isCallbackSvg.value = true;
-
-    await nextTick();
-
-    try {
-        if (isCb) {
-            const { blob, url, text, dataUrl } = await getSvg();
-            await Promise.resolve(
-                FINAL_CONFIG.value.userOptions.callbacks.svg({
-                    blob,
-                    url,
-                    text,
-                    dataUrl,
-                }),
-            );
-        } else {
-            await Promise.resolve(exportSvg());
-        }
-    } finally {
-        isCallbackSvg.value = false;
-    }
-}
-
-function onGenerateImage(payload) {
-    if (payload?.stage === 'start') {
-        isCallbackImaging.value = true;
-        return;
-    }
-
-    if (payload?.stage === 'end') {
-        isCallbackImaging.value = false;
-        return;
-    }
-
-    generateImage();
-}
+const { isCallbackImaging, isCallbackSvg, generateSvg, onGenerateImage } =
+    useChartExport({
+        svg: svgRef,
+        title: svgTitle,
+        legend: svgLegend,
+        legendItems: legendSet,
+        backgroundColor: svgBg,
+        getSvgCallback: () => FINAL_CONFIG.value.userOptions.callbacks.svg,
+        generateImage,
+    });
 
 function copyAltXy(d) {
     copyAlt('xy-zoom', d.dataset, d.config);

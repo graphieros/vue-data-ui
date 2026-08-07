@@ -38,11 +38,11 @@ import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 import { useLoading } from '../useLoading';
 import { usePrinter } from '../usePrinter';
-import { useSvgExport } from '../useSvgExport';
 import { useNestedProp } from '../useNestedProp';
 import { useResponsive } from '../useResponsive';
 import { useThemeCheck } from '../useThemeCheck';
 import { useTimeLabels } from '../useTimeLabels';
+import { useChartExport } from '../useChartExport';
 import { useUserOptionState } from '../useUserOptionState';
 import { useChartAccessibility } from '../useChartAccessibility';
 import { useTimeLabelCollision } from '../useTimeLabelCollider';
@@ -107,8 +107,6 @@ const tableStep = ref(0);
 const tableUnit = ref(null);
 const userOptionsRef = ref(null);
 const userHovers = ref(false);
-const isCallbackImaging = ref(false);
-const isCallbackSvg = ref(false);
 const selectedSeries = ref(null);
 const labelsLeft = ref(null);
 const labelsRight = ref(null);
@@ -1168,37 +1166,16 @@ const dataTable = computed(() => {
 const svgBg = computed(() => FINAL_CONFIG.value.style.chart.backgroundColor);
 const svgTitle = computed(() => FINAL_CONFIG.value.style.chart.title);
 
-const { exportSvg, getSvg } = useSvgExport({
-    svg: svgRef,
-    title: svgTitle,
-    legend: null,
-    legendItems: null,
-    backgroundColor: svgBg,
-});
-
-async function generateSvg({ isCb }) {
-    isCallbackSvg.value = true;
-
-    await nextTick();
-
-    try {
-        if (isCb) {
-            const { blob, url, text, dataUrl } = await getSvg();
-            await Promise.resolve(
-                FINAL_CONFIG.value.userOptions.callbacks.svg({
-                    blob,
-                    url,
-                    text,
-                    dataUrl,
-                }),
-            );
-        } else {
-            await Promise.resolve(exportSvg());
-        }
-    } finally {
-        isCallbackSvg.value = false;
-    }
-}
+const { isCallbackImaging, isCallbackSvg, generateSvg, onGenerateImage } =
+    useChartExport({
+        svg: svgRef,
+        title: svgTitle,
+        legend: null,
+        legendItems: null,
+        backgroundColor: svgBg,
+        getSvgCallback: () => FINAL_CONFIG.value.userOptions.callbacks.svg,
+        generateImage,
+    });
 
 async function getImage({ scale = 2 } = {}) {
     if (!bumpChart.value) return;
@@ -1247,20 +1224,6 @@ function onPointClick(datapoint, _serie) {
             seriesIndex: datapoint?.pointIndex ?? null,
         });
     }
-}
-
-function onGenerateImage(payload) {
-    if (payload?.stage === 'start') {
-        isCallbackImaging.value = true;
-        return;
-    }
-
-    if (payload?.stage === 'end') {
-        isCallbackImaging.value = false;
-        return;
-    }
-
-    generateImage();
 }
 
 async function copyAlt() {

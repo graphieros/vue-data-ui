@@ -41,11 +41,11 @@ import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 import { useLoading } from '../useLoading';
 import { usePrinter } from '../usePrinter';
-import { useSvgExport } from '../useSvgExport';
 import { useNestedProp } from '../useNestedProp';
 import { useResponsive } from '../useResponsive';
 import { useTimeLabels } from '../useTimeLabels';
 import { useThemeCheck } from '../useThemeCheck';
+import { useChartExport } from '../useChartExport';
 import { useTransitions } from '../useTransitions.js';
 import { useStableElementSize } from '../useStableElementSize.js';
 import { useChartAccessibility } from '../useChartAccessibility';
@@ -1941,27 +1941,15 @@ const svgTitle = computed(() => ({
     },
 }));
 
-const { exportSvg, getSvg } = useSvgExport({
+const { generateSvg, onGenerateImage } = useChartExport({
     svg: svgRef,
     title: svgTitle,
     legend: svgLegend,
     legendItems: svgLegendItems,
     backgroundColor: svgBg,
+    getSvgCallback: () => FINAL_CONFIG.value.userOptionsCallbacks.svg,
+    generateImage,
 });
-
-async function generateSvg({ isCb }) {
-    if (isCb) {
-        const { blob, url, text, dataUrl } = await getSvg();
-        FINAL_CONFIG.value.userOptionsCallbacks.svg({
-            blob,
-            url,
-            text,
-            dataUrl,
-        });
-    } else {
-        exportSvg();
-    }
-}
 
 async function copyAlt() {
     emit('copyAlt', {
@@ -2380,7 +2368,7 @@ defineExpose({
             :isCursorPointer="isCursorPointer"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
-            @generateImage="generateImage"
+            @generateImage="onGenerateImage"
             @generateSvg="generateSvg"
             @toggleTooltip="toggleTooltip"
             @toggleAnnotator="toggleAnnotator"

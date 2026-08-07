@@ -35,11 +35,11 @@ import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 import { usePrinter } from '../usePrinter';
 import { useLoading } from '../useLoading';
-import { useSvgExport } from '../useSvgExport';
 import { useNestedProp } from '../useNestedProp';
 import { useResponsive } from '../useResponsive';
 import { useTimeLabels } from '../useTimeLabels';
 import { useThemeCheck } from '../useThemeCheck';
+import { useChartExport } from '../useChartExport';
 import { useTableResponsive } from '../useTableResponsive';
 import { useUserOptionState } from '../useUserOptionState';
 import { useTimeLabelCollision } from '../useTimeLabelCollider';
@@ -109,8 +109,6 @@ const titleStep = ref(0);
 const datapoints = ref(null);
 const tableUnit = ref(null);
 const userOptionsRef = ref(null);
-const isCallbackImaging = ref(false);
-const isCallbackSvg = ref(false);
 
 const chartTitle = ref(null);
 const noTitle = ref(null);
@@ -1104,49 +1102,16 @@ function closeTable() {
 const svgBg = computed(() => FINAL_CONFIG.value.style.backgroundColor);
 const svgTitle = computed(() => FINAL_CONFIG.value.style.title);
 
-const { exportSvg, getSvg } = useSvgExport({
-    svg: svgRef,
-    title: svgTitle,
-    backgroundColor: svgBg,
-});
-
-async function generateSvg({ isCb }) {
-    isCallbackSvg.value = true;
-
-    await nextTick();
-
-    try {
-        if (isCb) {
-            const { blob, url, text, dataUrl } = await getSvg();
-            await Promise.resolve(
-                FINAL_CONFIG.value.userOptions.callbacks.svg({
-                    blob,
-                    url,
-                    text,
-                    dataUrl,
-                }),
-            );
-        } else {
-            await Promise.resolve(exportSvg());
-        }
-    } finally {
-        isCallbackSvg.value = false;
-    }
-}
-
-function onGenerateImage(payload) {
-    if (payload?.stage === 'start') {
-        isCallbackImaging.value = true;
-        return;
-    }
-
-    if (payload?.stage === 'end') {
-        isCallbackImaging.value = false;
-        return;
-    }
-
-    generateImage();
-}
+const { isCallbackImaging, isCallbackSvg, generateSvg, onGenerateImage } =
+    useChartExport({
+        svg: svgRef,
+        title: svgTitle,
+        legend: null,
+        legendItems: null,
+        backgroundColor: svgBg,
+        getSvgCallback: () => FINAL_CONFIG.value.userOptions.callbacks.svg,
+        generateImage,
+    });
 
 async function copyAlt() {
     emit('copyAlt', {

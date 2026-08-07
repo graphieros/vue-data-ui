@@ -38,11 +38,11 @@ import { useLocale } from '../useLocale.js';
 import { usePrinter } from '../usePrinter';
 import { useLoading } from '../useLoading.js';
 import { useDateTime } from '../useDateTime.js';
-import { useSvgExport } from '../useSvgExport.js';
 import { useNestedProp } from '../useNestedProp';
 import { useResponsive } from '../useResponsive';
 import { useTimeLabels } from '../useTimeLabels';
 import { useThemeCheck } from '../useThemeCheck.js';
+import { useChartExport } from '../useChartExport.js';
 import { useTransitions } from '../useTransitions.js';
 import { useUserOptionState } from '../useUserOptionState';
 import { useChartAccessibility } from '../useChartAccessibility';
@@ -121,8 +121,6 @@ const timeLabelsEls = ref(null);
 const tableUnit = ref(null);
 const userOptionsRef = ref(null);
 const selectedMinimapIndex = ref(null);
-const isCallbackImaging = ref(false);
-const isCallbackSvg = ref(false);
 
 const activeTooltipIndex = ref(null); // a11y
 const tooltipA11yPosition = ref({ x: 0, y: 0 }); // a11y
@@ -1616,35 +1614,16 @@ function closeTable() {
 const svgBg = computed(() => FINAL_CONFIG.value.style.backgroundColor);
 const svgTitle = computed(() => FINAL_CONFIG.value.style.title);
 
-const { exportSvg, getSvg } = useSvgExport({
-    svg: svgRef,
-    title: svgTitle,
-    backgroundColor: svgBg,
-});
-
-async function generateSvg({ isCb }) {
-    isCallbackSvg.value = true;
-
-    await nextTick();
-
-    try {
-        if (isCb) {
-            const { blob, url, text, dataUrl } = await getSvg();
-            await Promise.resolve(
-                FINAL_CONFIG.value.userOptions.callbacks.svg({
-                    blob,
-                    url,
-                    text,
-                    dataUrl,
-                }),
-            );
-        } else {
-            await Promise.resolve(exportSvg());
-        }
-    } finally {
-        isCallbackSvg.value = false;
-    }
-}
+const { isCallbackImaging, isCallbackSvg, generateSvg, onGenerateImage } =
+    useChartExport({
+        svg: svgRef,
+        title: svgTitle,
+        legend: null,
+        legendItems: null,
+        backgroundColor: svgBg,
+        getSvgCallback: () => FINAL_CONFIG.value.userOptions.callbacks.svg,
+        generateImage,
+    });
 
 function selectMinimapIndex(i) {
     selectedMinimapIndex.value = i;
@@ -1674,20 +1653,6 @@ function selectX({ seriesIndex, datapoint }) {
         index,
         indexLabel: '',
     });
-}
-
-function onGenerateImage(payload) {
-    if (payload?.stage === 'start') {
-        isCallbackImaging.value = true;
-        return;
-    }
-
-    if (payload?.stage === 'end') {
-        isCallbackImaging.value = false;
-        return;
-    }
-
-    generateImage();
 }
 
 async function copyAlt() {

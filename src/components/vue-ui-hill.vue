@@ -24,10 +24,10 @@ import {
 } from '../lib';
 import { useConfig } from '../useConfig';
 import { usePrinter } from '../usePrinter.js';
-import { useSvgExport } from '../useSvgExport.js';
 import { useNestedProp } from '../useNestedProp';
 import { useThemeCheck } from '../useThemeCheck';
 import { useTransitions } from '../useTransitions';
+import { useChartExport } from '../useChartExport.js';
 import { useUserOptionState } from '../useUserOptionState.js';
 import { COMMON_RULES, useHints } from '../useHints';
 import img from '../img';
@@ -72,9 +72,6 @@ const hillChartRef = useTemplateRef('hillChartRef');
 const svgRef = useTemplateRef('svgRef');
 const overflowMenuRef = useTemplateRef('overflowMenuRef');
 const userOptionsRef = useTemplateRef('userOptionsRef');
-
-const isCallbackSvg = ref(false);
-const isCallbackImaging = ref(false);
 
 const titleStep = ref(0);
 
@@ -1917,55 +1914,20 @@ function formatPosition(datapoint) {
     );
 }
 
-function onGenerateImage(payload) {
-    if (payload?.stage === 'start') {
-        isCallbackImaging.value = true;
-        return;
-    }
-
-    if (payload?.stage === 'end') {
-        isCallbackImaging.value = false;
-        return;
-    }
-
-    generateImage();
-}
-
 const svgBg = computed(() => FINAL_CONFIG.value.style.chart.backgroundColor);
 const svgLegend = computed(() => FINAL_CONFIG.value.style.chart.legend);
 const svgTitle = computed(() => FINAL_CONFIG.value.style.chart.title);
 
-const { exportSvg, getSvg } = useSvgExport({
-    svg: svgRef,
-    title: svgTitle,
-    legend: svgLegend,
-    legendItems: null,
-    backgroundColor: svgBg,
-});
-
-async function generateSvg({ isCb }) {
-    isCallbackSvg.value = true;
-
-    await nextTick();
-
-    try {
-        if (isCb) {
-            const { blob, url, text, dataUrl } = await getSvg();
-            await Promise.resolve(
-                FINAL_CONFIG.value.userOptions.callbacks.svg({
-                    blob,
-                    url,
-                    text,
-                    dataUrl,
-                }),
-            );
-        } else {
-            await Promise.resolve(exportSvg());
-        }
-    } finally {
-        isCallbackSvg.value = false;
-    }
-}
+const { isCallbackImaging, isCallbackSvg, generateSvg, onGenerateImage } =
+    useChartExport({
+        svg: svgRef,
+        title: svgTitle,
+        legend: svgLegend,
+        legendItems: null,
+        backgroundColor: svgBg,
+        getSvgCallback: () => FINAL_CONFIG.value.userOptions.callbacks.svg,
+        generateImage,
+    });
 
 function generateCsv(callback = null) {
     nextTick(() => {

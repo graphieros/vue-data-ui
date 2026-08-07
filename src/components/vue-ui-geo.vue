@@ -23,10 +23,10 @@ import { COMMON_RULES, useHints } from '../useHints.js';
 import { useConfig } from '../useConfig.js';
 import { useLoading } from '../useLoading.js';
 import { usePrinter } from '../usePrinter.js';
-import { useSvgExport } from '../useSvgExport.js';
 import { useResponsive } from '../useResponsive.js';
 import { useNestedProp } from '../useNestedProp.js';
 import { useThemeCheck } from '../useThemeCheck.js';
+import { useChartExport } from '../useChartExport.js';
 import { useUserOptionState } from '../useUserOptionState.js';
 import { useChartAccessibility } from '../useChartAccessibility.js';
 import img from '../img.js';
@@ -71,8 +71,6 @@ const { isThemeValid, warnInvalidTheme } = useThemeCheck();
 const uid = ref(createUid());
 const step = ref(0);
 const titleStep = ref(0);
-const isCallbackImaging = ref(false);
-const isCallbackSvg = ref(false);
 
 const geoChart = ref(null);
 const didInitialFit = ref(false);
@@ -1763,51 +1761,16 @@ function toggleTooltip() {
 const svgBg = computed(() => FINAL_CONFIG.value.style.chart.backgroundColor);
 const svgTitle = computed(() => FINAL_CONFIG.value.style.chart.title);
 
-const { exportSvg, getSvg } = useSvgExport({
-    svg: svgRef,
-    title: svgTitle,
-    legend: undefined,
-    legendItems: undefined,
-    backgroundColor: svgBg,
-});
-
-async function generateSvg({ isCb }) {
-    isCallbackSvg.value = true;
-
-    await nextTick();
-
-    try {
-        if (isCb) {
-            const { blob, url, text, dataUrl } = await getSvg();
-            await Promise.resolve(
-                FINAL_CONFIG.value.userOptions.callbacks.svg({
-                    blob,
-                    url,
-                    text,
-                    dataUrl,
-                }),
-            );
-        } else {
-            await Promise.resolve(exportSvg());
-        }
-    } finally {
-        isCallbackSvg.value = false;
-    }
-}
-
-function onGenerateImage(payload) {
-    if (payload?.stage === 'start') {
-        isCallbackImaging.value = true;
-        return;
-    }
-
-    if (payload?.stage === 'end') {
-        isCallbackImaging.value = false;
-        return;
-    }
-
-    generateImage();
-}
+const { isCallbackImaging, isCallbackSvg, generateSvg, onGenerateImage } =
+    useChartExport({
+        svg: svgRef,
+        title: svgTitle,
+        legend: null,
+        legendItems: null,
+        backgroundColor: svgBg,
+        getSvgCallback: () => FINAL_CONFIG.value.userOptions.callbacks.svg,
+        generateImage,
+    });
 
 async function getImage({ scale = 2 } = {}) {
     if (!geoChart.value) return;
