@@ -51,6 +51,7 @@ const dataset = computed<VueUiTableHeatmapDatasetItem[]>(() => {
 
 const testPreconfig = computed<VueUiTableHeatmapConfig>(() => {
     return {
+        debug: false,
         theme: '',
         style: {
             fontFamily: 'inherit',

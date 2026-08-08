@@ -46,6 +46,7 @@ const dataset = computed<VueUiTableSparklineDatasetItem[]>(() => {
 
 const testPreconfig = computed<VueUiTableSparklineConfig>(() => {
     return {
+        debug: false,
         devHints: { enable: true },
         theme: '',
         customPalette: [],
