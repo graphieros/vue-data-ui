@@ -3170,7 +3170,7 @@ defineExpose({
 
                 <g
                     v-for="(dp, i) in formattedDataset"
-                    :key="`stackbar-group-${dp.datasetKey}`"
+                    :key="`stackbar-group-${dp.datasetKey}-${i}-${uid}`"
                 >
                     <defs v-if="$slots.pattern">
                         <slot
