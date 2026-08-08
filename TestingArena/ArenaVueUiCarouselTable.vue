@@ -28,6 +28,7 @@ const { CHECKBOX, NUMBER, RANGE, TEXT, COLOR, SELECT, createModel } =
     useConfigurationControls(DEFAULT_CONFIG);
 
 const model = createModel([
+    CHECKBOX('debug', { def: true }),
     CHECKBOX('devHints.enable', { def: true }),
     NUMBER('responsiveBreakpoint', { def: 400, min: 300, max: 800 }),
 

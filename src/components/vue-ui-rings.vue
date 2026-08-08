@@ -316,7 +316,7 @@ onMounted(() => {
     prepareChart();
 });
 
-const debug = computed(() => !!FINAL_CONFIG.value.debug);
+const debug = computed(() => FINAL_CONFIG.value.debug);
 
 function prepareChart() {
     if (objectIsEmpty(props.dataset)) {
@@ -489,7 +489,7 @@ function segregate(uid) {
 
 function validSeriesToToggle(name) {
     if (!datasetCopy.value.length) {
-        if (FINAL_CONFIG.value.debug) {
+        if (debug.value) {
             console.warn('VueUiRings - There are no series to show.');
         }
         return null;
@@ -497,7 +497,7 @@ function validSeriesToToggle(name) {
     const dp = datasetCopy.value.find((d) => d.name === name);
 
     if (!dp) {
-        if (FINAL_CONFIG.value.debug) {
+        if (debug.value) {
             console.warn(`VueUiRings - Series name not found "${name}"`);
         }
         return null;

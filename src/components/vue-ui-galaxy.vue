@@ -191,7 +191,7 @@ onMounted(() => {
     prepareChart();
 });
 
-const debug = computed(() => !!FINAL_CONFIG.value.debug);
+const debug = computed(() => FINAL_CONFIG.value.debug);
 
 function prepareChart() {
     if (objectIsEmpty(props.dataset)) {
@@ -201,20 +201,21 @@ function prepareChart() {
             debug: debug.value,
         });
     } else {
-        props.dataset.forEach((ds, i) => {
-            getMissingDatasetAttributes({
-                datasetObject: ds,
-                requiredAttributes: ['name', 'values'],
-            }).forEach((attr) => {
-                error({
-                    componentName: 'VueUiGalaxy',
-                    type: 'datasetSerieAttribute',
-                    property: attr,
-                    index: i,
-                    debug: debug.value,
+        if (debug.value) {
+            props.dataset.forEach((ds, i) => {
+                getMissingDatasetAttributes({
+                    datasetObject: ds,
+                    requiredAttributes: ['name', 'values'],
+                }).forEach((attr) => {
+                    error({
+                        componentName: 'VueUiGalaxy',
+                        type: 'datasetSerieAttribute',
+                        property: attr,
+                        index: i,
+                    });
                 });
             });
-        });
+        }
     }
 
     if (FINAL_CONFIG.value.responsive) {
@@ -384,14 +385,14 @@ function segregate(datapoint) {
 
 function validSeriesToToggle(name) {
     if (!immutableSet.value.length) {
-        if (FINAL_CONFIG.value.debug) {
+        if (debug.value) {
             console.warn('VueUiGalaxy - There are no series to show.');
         }
         return null;
     }
     const dp = immutableSet.value.find((d) => d.name === name);
     if (!dp) {
-        if (FINAL_CONFIG.value.debug) {
+        if (debug.value) {
             console.warn(`VueUiGalaxy - Series name not found "${name}"`);
         }
         return null;

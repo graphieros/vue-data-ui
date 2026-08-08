@@ -296,14 +296,15 @@ function validateRawDataset() {
     });
 
     if (missing.length) {
-        missing.forEach((attr) => {
-            error({
-                componentName: 'VueUiChord',
-                type: 'datasetAttribute',
-                property: attr,
-                debug: debug.value,
+        if (debug.value) {
+            missing.forEach((attr) => {
+                error({
+                    componentName: 'VueUiChord',
+                    type: 'datasetAttribute',
+                    property: attr,
+                });
             });
-        });
+        }
         isDataset.value = false;
         manualLoading.value = true;
         return;
@@ -311,12 +312,14 @@ function validateRawDataset() {
 
     const m = props.dataset.matrix;
     if (!Array.isArray(m) || m.length < 2) {
-        console.warn(`VueUiChord: dataset.matrix requires a minimum of 2 datapoints, for example:
+        if (debug.value) {
+            console.warn(`VueUiChord: dataset.matrix requires a minimum of 2 datapoints, for example:
         
 matrix:[
     [1, 1],
     [1, 1]
 ]`);
+        }
         isDataset.value = false;
         manualLoading.value = true;
         return;
@@ -327,11 +330,13 @@ matrix:[
         (row) => !Array.isArray(row) || row.length !== n,
     );
     if (badIdx !== -1) {
-        console.warn(
-            `VueUiChord - Invalid matrix: dataset.matrix at index ${badIdx} has ${Array.isArray(m[badIdx]) ? m[badIdx].length : 'NaN'} elements instead of the required ${n}
+        if (debug.value) {
+            console.warn(
+                `VueUiChord - Invalid matrix: dataset.matrix at index ${badIdx} has ${Array.isArray(m[badIdx]) ? m[badIdx].length : 'NaN'} elements instead of the required ${n}
 
 dataset.matrix[${badIdx}] = [${Array.isArray(m[badIdx]) ? m[badIdx].toString() : 'invalid'}]`,
-        );
+            );
+        }
         isDataset.value = false;
         manualLoading.value = true;
         return;
@@ -401,18 +406,22 @@ function checkDataset() {
         !Object.hasOwn(FINAL_DATASET.value, 'matrix') ||
         FINAL_DATASET.value.matrix.length < 2
     ) {
-        console.warn(
-            `VueUiChord: dataset.matrix requires a minimum of 2 datapoints, for example:\n\nmatrix:[\n  [1, 1],\n  [1, 1]\n]`,
-        );
+        if (debug.value) {
+            console.warn(
+                `VueUiChord: dataset.matrix requires a minimum of 2 datapoints, for example:\n\nmatrix:[\n  [1, 1],\n  [1, 1]\n]`,
+            );
+        }
         isDataset.value = false;
         return;
     }
 
     FINAL_DATASET.value.matrix.forEach((m, i) => {
         if (m.length !== FINAL_DATASET.value.matrix.length) {
-            console.warn(
-                `VueUiChord - Invalid matrix: dataset.matrix at index ${i} has ${m.length} elements instead of the required ${FINAL_DATASET.value.matrix.length}\n\ndataset.matrix[${i}] = [${m.toString()}] has a length of ${m.length} but should have the same length as the matrix itself (${FINAL_DATASET.value.matrix.length})`,
-            );
+            if (debug.value) {
+                console.warn(
+                    `VueUiChord - Invalid matrix: dataset.matrix at index ${i} has ${m.length} elements instead of the required ${FINAL_DATASET.value.matrix.length}\n\ndataset.matrix[${i}] = [${m.toString()}] has a length of ${m.length} but should have the same length as the matrix itself (${FINAL_DATASET.value.matrix.length})`,
+                );
+            }
             isDataset.value = false;
         }
     });

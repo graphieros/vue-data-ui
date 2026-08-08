@@ -196,7 +196,7 @@ onMounted(() => {
     runParentStableLayoutPass();
 });
 
-const debug = computed(() => !!FINAL_CONFIG.value.debug);
+const debug = computed(() => FINAL_CONFIG.value.debug);
 
 function prepareChart() {
     if (objectIsEmpty(props.dataset)) {
@@ -731,26 +731,26 @@ const svg = computed(() => {
 });
 
 const convertedDataset = computed(() => {
-    FINAL_DATASET.value.forEach((ds, i) => {
-        if ([null, undefined].includes(ds.name)) {
-            error({
-                componentName: 'VueUiDonutEvolution',
-                type: 'datasetSerieAttribute',
-                property: 'name',
-                index: i,
-                debug: debug.value,
-            });
-        }
-        if ([null, undefined].includes(ds.values)) {
-            error({
-                componentName: 'VueUiDonutEvolution',
-                type: 'datasetSerieAttribute',
-                property: 'values',
-                index: i,
-                debug: debug.value,
-            });
-        }
-    });
+    if (debug.value) {
+        FINAL_DATASET.value.forEach((ds, i) => {
+            if ([null, undefined].includes(ds.name)) {
+                error({
+                    componentName: 'VueUiDonutEvolution',
+                    type: 'datasetSerieAttribute',
+                    property: 'name',
+                    index: i,
+                });
+            }
+            if ([null, undefined].includes(ds.values)) {
+                error({
+                    componentName: 'VueUiDonutEvolution',
+                    type: 'datasetSerieAttribute',
+                    property: 'values',
+                    index: i,
+                });
+            }
+        });
+    }
 
     return FINAL_DATASET.value.map((ds, i) => {
         return {
@@ -1172,14 +1172,14 @@ function segregate(id) {
 
 function validSeriesToToggle(name) {
     if (!convertedDataset.value.length) {
-        if (FINAL_CONFIG.value.debug) {
+        if (debug.value) {
             console.warn('VueUiDonutEvolution - There are no series to show.');
         }
         return null;
     }
     const dp = convertedDataset.value.find((d) => d.name === name);
     if (!dp) {
-        if (FINAL_CONFIG.value.debug) {
+        if (debug.value) {
             console.warn(
                 `VueUiDonutEvolution - Series name not found "${name}"`,
             );

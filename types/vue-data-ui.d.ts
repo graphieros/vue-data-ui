@@ -1392,6 +1392,7 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiTableSparklineConfig = {
+        debug?: boolean;
         devHints?: DevHints;
         theme?: Theme;
         customPalette?: string[];
@@ -9872,6 +9873,7 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiRatingConfig = {
+        debug?: boolean;
         devHints?: DevHints;
         type?: 'star' | 'image';
         readonly?: boolean;
@@ -9972,6 +9974,7 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiSmileyConfig = {
+        debug?: boolean;
         devHints?: DevHints;
         readonly?: boolean;
         useCursorPointer?: boolean;
@@ -10287,6 +10290,7 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiTableHeatmapConfig = {
+        debug?: boolean;
         devHints?: DevHints;
         theme?: Theme;
         style?: {
@@ -12990,6 +12994,7 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiCarouselTableConfig = {
+        debug?: boolean;
         devHints?: DevHints;
         responsiveBreakpoint?: number;
         animation?: {
@@ -14269,6 +14274,7 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiFunnelConfig = {
+        debug?: boolean;
         devHints?: DevHints;
         theme?: Theme;
         responsive?: boolean;

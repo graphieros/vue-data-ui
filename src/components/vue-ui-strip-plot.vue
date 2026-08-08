@@ -349,7 +349,7 @@ onMounted(() => {
     prepareChart();
 });
 
-const debug = computed(() => !!FINAL_CONFIG.value.debug);
+const debug = computed(() => FINAL_CONFIG.value.debug);
 
 function prepareChart() {
     if (objectIsEmpty(props.dataset)) {

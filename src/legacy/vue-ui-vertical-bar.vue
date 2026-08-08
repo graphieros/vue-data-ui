@@ -399,7 +399,7 @@ onMounted(() => {
     ro.observe(verticalBarChart.value.parentElement);
 });
 
-const debug = computed(() => !!FINAL_CONFIG.value.debug);
+const debug = computed(() => FINAL_CONFIG.value.debug);
 const remainingHeight = ref(0);
 
 function prepareChart() {

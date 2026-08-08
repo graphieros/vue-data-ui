@@ -187,7 +187,7 @@ const { transitionEnabled } = useTransitions({
     dataset: () => props.dataset,
 });
 
-const debug = computed(() => !!FINAL_CONFIG.value.debug);
+const debug = computed(() => FINAL_CONFIG.value.debug);
 const isCursorPointer = computed(() => FINAL_CONFIG.value.useCursorPointer);
 
 const activeTooltipIndex = ref(null); // a11y

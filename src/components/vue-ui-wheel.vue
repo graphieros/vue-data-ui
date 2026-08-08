@@ -256,7 +256,7 @@ onMounted(() => {
     prepareChart();
 });
 
-const debug = computed(() => !!FINAL_CONFIG.value.debug);
+const debug = computed(() => FINAL_CONFIG.value.debug);
 
 function prepareChart() {
     if (objectIsEmpty(props.dataset)) {
@@ -720,13 +720,13 @@ function useAnimation(targetValue) {
 
 const tickAmount = computed(() => {
     if (
-        FINAL_CONFIG.value.debug &&
+        debug.value &&
         FINAL_CONFIG.value.style.chart.layout.wheel.ticks.quantity < 12
     ) {
         console.warn(`VueUiWheel - The min number of ticks is 12`);
     }
     if (
-        FINAL_CONFIG.value.debug &&
+        debug.value &&
         FINAL_CONFIG.value.style.chart.layout.wheel.ticks.quantity > 200
     ) {
         console.warn(`VueUiWheel - The max number of ticks is 200`);

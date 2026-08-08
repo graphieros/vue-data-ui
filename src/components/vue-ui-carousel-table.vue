@@ -59,8 +59,19 @@ onMounted(() => {
     prepareChart();
 });
 
+const FINAL_CONFIG = computed({
+    get: () => {
+        return prepareConfig();
+    },
+    set: (newCfg) => {
+        return newCfg;
+    },
+});
+
+const debug = computed(() => FINAL_CONFIG.value.debug);
+
 onMounted(() => {
-    if (slots['chart-background']) {
+    if (slots['chart-background'] && debug.value) {
         console.warn(
             'VueUiCarouselTable does not support the #chart-background slot.',
         );
@@ -72,6 +83,7 @@ function prepareChart() {
         error({
             componentName: 'VueUiCarouselTable',
             type: 'dataset',
+            debug: debug.value,
         });
     } else {
         if (!props.dataset.head || objectIsEmpty(props.dataset.head)) {
@@ -79,6 +91,7 @@ function prepareChart() {
                 componentName: 'VueUiCarouselTable',
                 type: 'datasetAttribute',
                 property: 'head',
+                debug: debug.value,
             });
             isDataset.value = false;
         }
@@ -87,6 +100,7 @@ function prepareChart() {
                 componentName: 'VueUiCarouselTable',
                 type: 'datasetAttribute',
                 property: 'body',
+                debug: debug.value,
             });
             isDataset.value = false;
         }
@@ -95,15 +109,6 @@ function prepareChart() {
         FINAL_CONFIG.value.userOptions.buttons.animation = false;
     }
 }
-
-const FINAL_CONFIG = computed({
-    get: () => {
-        return prepareConfig();
-    },
-    set: (newCfg) => {
-        return newCfg;
-    },
-});
 
 useHints({
     config: () => FINAL_CONFIG.value,

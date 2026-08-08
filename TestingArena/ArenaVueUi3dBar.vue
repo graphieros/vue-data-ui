@@ -94,7 +94,7 @@ onMounted(() => {
 
 const model = createModel([
     CHECKBOX('devHints.enable', { def: true }),
-    CHECKBOX('debug', { def: true }),
+    CHECKBOX('debug', { def: false }),
     CHECKBOX('loading', { def: false }),
     CHECKBOX('responsive', { def: false }),
     CHECKBOX('useCssAnimation', { def: false }),

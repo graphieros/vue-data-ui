@@ -336,7 +336,7 @@ onMounted(() => {
     prepareChart();
 });
 
-const debug = computed(() => !!FINAL_CONFIG.value.debug);
+const debug = computed(() => FINAL_CONFIG.value.debug);
 
 function prepareChart() {
     if (objectIsEmpty(props.dataset)) {
@@ -626,62 +626,58 @@ const mutableDataset = computed(() => {
 });
 
 const datasetBreakdown = computed(() => {
-    FINAL_DATASET.value.forEach((ds, i) => {
-        if ([null, undefined].includes(ds[0])) {
-            error({
-                componentName: 'VueUiCandlestick',
-                type: 'datasetAttribute',
-                property: 'period (index 0)',
-                index: i,
-                debug: debug.value,
-            });
-        }
-        if ([null, undefined].includes(ds[1])) {
-            error({
-                componentName: 'VueUiCandlestick',
-                type: 'datasetAttribute',
-                property: 'open (index 1)',
-                index: i,
-                debug: debug.value,
-            });
-        }
-        if ([null, undefined].includes(ds[2])) {
-            error({
-                componentName: 'VueUiCandlestick',
-                type: 'datasetAttribute',
-                property: 'high (index 2)',
-                index: i,
-                debug: debug.value,
-            });
-        }
-        if ([null, undefined].includes(ds[3])) {
-            error({
-                componentName: 'VueUiCandlestick',
-                type: 'datasetAttribute',
-                property: 'low (index 3)',
-                index: i,
-                debug: debug.value,
-            });
-        }
-        if ([null, undefined].includes(ds[4])) {
-            error({
-                componentName: 'VueUiCandlestick',
-                type: 'datasetAttribute',
-                property: 'close (index 4)',
-                index: i,
-                debug: debug.value,
-            });
-        }
-        if ([null, undefined].includes(ds[5])) {
-            error({
-                componentName: 'VueUiCandlestick',
-                type: 'datasetAttribute',
-                property: 'volume (index 5)',
-                index: i,
-                debug: debug.value,
-            });
-        }
-    });
+    if (debug.value) {
+        FINAL_DATASET.value.forEach((ds, i) => {
+            if ([null, undefined].includes(ds[0])) {
+                error({
+                    componentName: 'VueUiCandlestick',
+                    type: 'datasetAttribute',
+                    property: 'period (index 0)',
+                    index: i,
+                });
+            }
+            if ([null, undefined].includes(ds[1])) {
+                error({
+                    componentName: 'VueUiCandlestick',
+                    type: 'datasetAttribute',
+                    property: 'open (index 1)',
+                    index: i,
+                });
+            }
+            if ([null, undefined].includes(ds[2])) {
+                error({
+                    componentName: 'VueUiCandlestick',
+                    type: 'datasetAttribute',
+                    property: 'high (index 2)',
+                    index: i,
+                });
+            }
+            if ([null, undefined].includes(ds[3])) {
+                error({
+                    componentName: 'VueUiCandlestick',
+                    type: 'datasetAttribute',
+                    property: 'low (index 3)',
+                    index: i,
+                });
+            }
+            if ([null, undefined].includes(ds[4])) {
+                error({
+                    componentName: 'VueUiCandlestick',
+                    type: 'datasetAttribute',
+                    property: 'close (index 4)',
+                    index: i,
+                });
+            }
+            if ([null, undefined].includes(ds[5])) {
+                error({
+                    componentName: 'VueUiCandlestick',
+                    type: 'datasetAttribute',
+                    property: 'volume (index 5)',
+                    index: i,
+                });
+            }
+        });
+    }
 
     return mutableDataset.value.map((ds) => {
         return {

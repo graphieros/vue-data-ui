@@ -345,7 +345,7 @@ onMounted(async () => {
     readyTeleport.value = true;
 });
 
-const debug = computed(() => !!FINAL_CONFIG.value.debug);
+const debug = computed(() => FINAL_CONFIG.value.debug);
 
 function prepareChart() {
     if (objectIsEmpty(props.dataset)) {
@@ -586,34 +586,36 @@ const drawingArea = computed(() => {
 });
 
 const extremes = computed(() => {
-    FINAL_DATASET.value.forEach((ds, i) => {
-        getMissingDatasetAttributes({
-            datasetObject: ds,
-            requiredAttributes: ['values'],
-        }).forEach((attr) => {
-            error({
-                componentName: 'VueUiScatter',
-                type: 'datasetSerieAttribute',
-                property: attr,
-                index: i,
-            });
-        });
-        if (ds.values) {
-            ds.values.forEach((v, j) => {
-                getMissingDatasetAttributes({
-                    datasetObject: v,
-                    requiredAttributes: ['x', 'y'],
-                }).forEach((attr) => {
-                    error({
-                        componentName: 'VueUiScatter',
-                        type: 'datasetSerieAttribute',
-                        property: `values.${attr}`,
-                        index: `${i} - ${j}`,
-                    });
+    if (debug.value) {
+        FINAL_DATASET.value.forEach((ds, i) => {
+            getMissingDatasetAttributes({
+                datasetObject: ds,
+                requiredAttributes: ['values'],
+            }).forEach((attr) => {
+                error({
+                    componentName: 'VueUiScatter',
+                    type: 'datasetSerieAttribute',
+                    property: attr,
+                    index: i,
                 });
             });
-        }
-    });
+            if (ds.values) {
+                ds.values.forEach((v, j) => {
+                    getMissingDatasetAttributes({
+                        datasetObject: v,
+                        requiredAttributes: ['x', 'y'],
+                    }).forEach((attr) => {
+                        error({
+                            componentName: 'VueUiScatter',
+                            type: 'datasetSerieAttribute',
+                            property: `values.${attr}`,
+                            index: `${i} - ${j}`,
+                        });
+                    });
+                });
+            }
+        });
+    }
 
     const xMin = Math.min(
         ...datasetWithId.value
@@ -1480,14 +1482,14 @@ function segregate(id) {
 
 function validSeriesToToggle(name) {
     if (!datasetWithId.value.length) {
-        if (FINAL_CONFIG.value.debug) {
+        if (debug.value) {
             console.warn('VueUiScatter - There are no series to show.');
         }
         return null;
     }
     const dp = datasetWithId.value.find((d) => d.name === name);
     if (!dp) {
-        if (FINAL_CONFIG.value.debug) {
+        if (debug.value) {
             console.warn(`VueUiScatter - Series name not found "${name}"`);
         }
         return null;

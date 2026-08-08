@@ -5353,6 +5353,7 @@ export function useConfig(options = {}) {
     };
 
     const vue_ui_table_sparkline = {
+        debug: false,
         devHints: DEV_HINTS,
         theme: '',
         customPalette: [],
@@ -5443,6 +5444,7 @@ export function useConfig(options = {}) {
     };
 
     const vue_ui_table_heatmap = {
+        debug: false,
         devHints: DEV_HINTS,
         theme: '',
         style: {
@@ -6143,6 +6145,7 @@ export function useConfig(options = {}) {
     };
 
     const vue_ui_smiley = {
+        debug: false,
         devHints: DEV_HINTS,
         readonly: false,
         useCursorPointer: false,
@@ -6207,6 +6210,7 @@ export function useConfig(options = {}) {
     };
 
     const vue_ui_rating = {
+        debug: false,
         devHints: DEV_HINTS,
         type: SHAPE.STAR,
         readonly: false,
@@ -6815,6 +6819,7 @@ export function useConfig(options = {}) {
     };
 
     const vue_ui_carousel_table = {
+        debug: false,
         devHints: DEV_HINTS,
         responsiveBreakpoint: 400,
         userOptions: USER_OPTIONS({
@@ -7029,6 +7034,7 @@ export function useConfig(options = {}) {
     };
 
     const vue_ui_funnel = {
+        debug: false,
         devHints: DEV_HINTS,
         theme: '',
         responsive: false,

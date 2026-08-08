@@ -559,7 +559,7 @@ async function restartPulse() {
     updatePulsePathLength();
 }
 
-const debug = computed(() => !!FINAL_CONFIG.value.debug);
+const debug = computed(() => FINAL_CONFIG.value.debug);
 
 function prepareChart() {
     if (objectIsEmpty(props.dataset)) {
@@ -570,20 +570,21 @@ function prepareChart() {
         });
         manualLoading.value = true; // v3
     } else {
-        props.dataset.forEach((ds, i) => {
-            getMissingDatasetAttributes({
-                datasetObject: ds,
-                requiredAttributes: ['period', 'value'],
-            }).forEach((attr) => {
-                error({
-                    componentName: 'VueUiSparkline',
-                    type: 'datasetSerieAttribute',
-                    property: attr,
-                    index: i,
-                    debug: debug.value,
+        if (debug.value) {
+            props.dataset.forEach((ds, i) => {
+                getMissingDatasetAttributes({
+                    datasetObject: ds,
+                    requiredAttributes: ['period', 'value'],
+                }).forEach((attr) => {
+                    error({
+                        componentName: 'VueUiSparkline',
+                        type: 'datasetSerieAttribute',
+                        property: attr,
+                        index: i,
+                    });
                 });
             });
-        });
+        }
     }
 
     // v3

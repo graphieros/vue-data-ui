@@ -27,8 +27,12 @@ const slots = useSlots();
 const emit = defineEmits(['rate']);
 const hoveredValue = ref(null);
 
+const FINAL_CONFIG = ref(prepareConfig());
+
+const debug = computed(() => FINAL_CONFIG.value.debug);
+
 onMounted(() => {
-    if (slots['chart-background']) {
+    if (slots['chart-background'] && debug.value) {
         console.warn(
             'VueUiSmiley does not support the #chart-background slot.',
         );
@@ -44,13 +48,12 @@ function prepareChart() {
             componentName: 'VueUiSmiley',
             type: 'datasetAttribute',
             property: 'rating',
+            debug: debug.value,
         });
     }
 }
 
 onMounted(prepareChart);
-
-const FINAL_CONFIG = ref(prepareConfig());
 
 useHints({
     config: () => FINAL_CONFIG.value,

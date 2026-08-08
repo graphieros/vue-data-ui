@@ -67,14 +67,6 @@ const TD = ref(null);
 const slots = useSlots();
 const isCallbackImaging = ref(false);
 
-onMounted(() => {
-    if (slots['chart-background']) {
-        console.warn(
-            'VueUiTableSparkline does not support the #chart-background slot.',
-        );
-    }
-});
-
 const FINAL_CONFIG = computed({
     get: () => {
         return prepareConfig();
@@ -82,6 +74,14 @@ const FINAL_CONFIG = computed({
     set: (newCfg) => {
         return newCfg;
     },
+});
+
+onMounted(() => {
+    if (slots['chart-background'] && FINAL_CONFIG.value.debug) {
+        console.warn(
+            'VueUiTableSparkline does not support the #chart-background slot.',
+        );
+    }
 });
 
 useHints({

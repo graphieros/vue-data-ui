@@ -277,7 +277,7 @@ watch(
 const resizeObserver = shallowRef(null);
 const observedEl = shallowRef(null);
 
-const debug = computed(() => !!FINAL_CONFIG.value.debug);
+const debug = computed(() => FINAL_CONFIG.value.debug);
 
 function prepareChart() {
     if (objectIsEmpty(props.dataset)) {
@@ -289,20 +289,21 @@ function prepareChart() {
         isDataset.value = false;
         manualLoading.value = true; // v3
     } else {
-        props.dataset.forEach((ds, i) => {
-            getMissingDatasetAttributes({
-                datasetObject: ds,
-                requiredAttributes: ['name', 'values'],
-            }).forEach((attr) => {
-                error({
-                    componentName: 'VueUiWaffle',
-                    type: 'datasetSerieAttribute',
-                    property: attr,
-                    index: i,
-                    debug: debug.value,
+        if (debug.value) {
+            props.dataset.forEach((ds, i) => {
+                getMissingDatasetAttributes({
+                    datasetObject: ds,
+                    requiredAttributes: ['name', 'values'],
+                }).forEach((attr) => {
+                    error({
+                        componentName: 'VueUiWaffle',
+                        type: 'datasetSerieAttribute',
+                        property: attr,
+                        index: i,
+                    });
                 });
             });
-        });
+        }
     }
 
     // v3
@@ -533,16 +534,18 @@ const immutableProportions = computed(() => {
 });
 
 const waffleSet = computed(() => {
-    FINAL_DATASET.value.forEach((ds, i) => {
-        if ([null, undefined].includes(ds.values)) {
-            error({
-                componentName: 'VueUiWaffle',
-                type: 'datasetSerieAttribute',
-                property: 'values (number[])',
-                index: i,
-            });
-        }
-    });
+    if (debug.value) {
+        FINAL_DATASET.value.forEach((ds, i) => {
+            if ([null, undefined].includes(ds.values)) {
+                error({
+                    componentName: 'VueUiWaffle',
+                    type: 'datasetSerieAttribute',
+                    property: 'values (number[])',
+                    index: i,
+                });
+            }
+        });
+    }
     return datasetCopy.value
         .filter((serie, i) => !segregated.value.includes(serie.uid))
         .map((serie, i) => {
@@ -932,14 +935,14 @@ function segregate(seriesId, allowHideAll = false) {
 
 function validSeriesToToggle(name) {
     if (!immutableSet.value.length) {
-        if (FINAL_CONFIG.value.debug) {
+        if (debug.value) {
             console.warn('VueUiWaffle - There are no series to show.');
         }
         return null;
     }
     const dp = immutableSet.value.find((d) => d.name === name);
     if (!dp) {
-        if (FINAL_CONFIG.value.debug) {
+        if (debug.value) {
             console.warn(`VueUiWaffle - Series name not found "${name}"`);
         }
         return null;

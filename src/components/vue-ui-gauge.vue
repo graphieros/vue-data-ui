@@ -432,7 +432,7 @@ const { autoSizeLabels } = useAutoSizeLabelsInsideViewbox({
     labelClass: '.vue-ui-gauge-label-flat',
 });
 
-const debug = computed(() => !!FINAL_CONFIG.value.debug);
+const debug = computed(() => FINAL_CONFIG.value.debug);
 
 function prepareChart() {
     let hasError = false;

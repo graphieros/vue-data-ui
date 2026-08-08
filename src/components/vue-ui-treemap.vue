@@ -92,14 +92,6 @@ const props = defineProps({
 const emit = defineEmits(['selectLegend', 'selectDatapoint', 'copyAlt']);
 const slots = useSlots();
 
-onMounted(() => {
-    if (slots['chart-background']) {
-        console.warn(
-            'VueUiTreemap does not support the #chart-background slot.',
-        );
-    }
-});
-
 const isDataset = computed(() => {
     return !!props.dataset && props.dataset.length;
 });
@@ -512,6 +504,14 @@ onMounted(() => {
 });
 
 const debug = computed(() => FINAL_CONFIG.value.debug);
+
+onMounted(() => {
+    if (slots['chart-background'] && debug.value) {
+        console.warn(
+            'VueUiTreemap does not support the #chart-background slot.',
+        );
+    }
+});
 
 function prepareChart() {
     if (objectIsEmpty(props.dataset)) {
@@ -1371,14 +1371,14 @@ function segregate(rect) {
 
 function validSeriesToToggle(name) {
     if (!immutableDataset.value.length) {
-        if (FINAL_CONFIG.value.debug) {
+        if (debug.value) {
             console.warn('VueUiTreemap - There are no series to show.');
         }
         return null;
     }
     const dp = immutableDataset.value.find((d) => d.name === name);
     if (!dp) {
-        if (FINAL_CONFIG.value.debug) {
+        if (debug.value) {
             console.warn(`VueUiTreemap - Series name not found "${name}"`);
         }
         return null;

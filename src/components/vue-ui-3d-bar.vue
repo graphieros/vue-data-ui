@@ -404,9 +404,10 @@ onMounted(() => {
     animateOnLoad();
 });
 
-const debug = computed(() => !!FINAL_CONFIG.value.debug);
+const debug = computed(() => FINAL_CONFIG.value.debug);
 
-function prepareChart() {
+function logErrors() {
+    if (!debug.value) return;
     if (objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUi3dBar',
@@ -459,6 +460,10 @@ function prepareChart() {
             });
         }
     }
+}
+
+function prepareChart() {
+    logErrors();
 
     if (FINAL_CONFIG.value.responsive) {
         const handleResize = throttle(() => {

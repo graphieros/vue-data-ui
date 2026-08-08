@@ -162,7 +162,7 @@ onMounted(() => {
     prepareChart();
 });
 
-const debug = computed(() => !!FINAL_CONFIG.value.debug);
+const debug = computed(() => FINAL_CONFIG.value.debug);
 
 function prepareChart() {
     if (objectIsEmpty(props.dataset)) {
@@ -172,20 +172,21 @@ function prepareChart() {
             debug: debug.value,
         });
     } else {
-        props.dataset.forEach((ds, i) => {
-            getMissingDatasetAttributes({
-                datasetObject: ds,
-                requiredAttributes: ['value'],
-            }).forEach((attr) => {
-                error({
-                    componentName: 'VueUiSparkHistogram',
-                    type: 'datasetSerieAttribute',
-                    property: attr,
-                    index: i,
-                    debug: debug.value,
+        if (debug.value) {
+            props.dataset.forEach((ds, i) => {
+                getMissingDatasetAttributes({
+                    datasetObject: ds,
+                    requiredAttributes: ['value'],
+                }).forEach((attr) => {
+                    error({
+                        componentName: 'VueUiSparkHistogram',
+                        type: 'datasetSerieAttribute',
+                        property: attr,
+                        index: i,
+                    });
                 });
             });
-        });
+        }
     }
 
     if (FINAL_CONFIG.value.responsive) {

@@ -28,7 +28,7 @@ onMounted(() => {
                 [12000, 2000, 9000, 3000],
                 [1000, 10000, 2000, 6001],
                 [2000, 1600, 8000, 8001],
-                [1000, 1000, 1000, 7001],
+                [1000, 1000, 1000, 1200],
             ],
             labels: [
                 'Group A',
@@ -68,8 +68,8 @@ onMounted(() => {
 });
 
 const model = createModel([
-    CHECKBOX('devHints.enable', { def: true }),
     CHECKBOX('debug', { def: true }),
+    CHECKBOX('devHints.enable', { def: true }),
     CHECKBOX('loading', { def: false }),
     CHECKBOX('responsive', { def: false }),
     CHECKBOX('enableRotation', { def: true }),

@@ -39,14 +39,6 @@ const focusedValue = ref(undefined);
 const units = ref([]);
 const slots = useSlots();
 
-onMounted(() => {
-    if (slots['chart-background']) {
-        console.warn(
-            'VueUiRating does not support the #chart-background slot.',
-        );
-    }
-});
-
 const emit = defineEmits(['rate']);
 
 const FINAL_CONFIG = computed({
@@ -56,6 +48,14 @@ const FINAL_CONFIG = computed({
     set: (newCfg) => {
         return newCfg;
     },
+});
+
+onMounted(() => {
+    if (slots['chart-background'] && FINAL_CONFIG.value.debug) {
+        console.warn(
+            'VueUiRating does not support the #chart-background slot.',
+        );
+    }
 });
 
 useHints({
@@ -141,6 +141,7 @@ function prepareChart() {
             componentName: 'VueUiRating',
             type: 'datasetAttribute',
             property: 'rating',
+            debug: FINAL_CONFIG.value.debug,
         });
     }
     units.value = [];

@@ -487,20 +487,21 @@ function validateRadarDataset() {
             debug: debug.value,
         });
     } else {
-        ds.categories.forEach((cat, i) => {
-            getMissingDatasetAttributes({
-                datasetObject: cat,
-                requiredAttributes: ['name'],
-            }).forEach((attr) => {
-                error({
-                    componentName: 'VueUiRadar',
-                    type: 'datasetAttribute',
-                    property: `category.${attr} at index ${i}`,
-                    index: i,
-                    debug: debug.value,
+        if (debug.value) {
+            ds.categories.forEach((cat, i) => {
+                getMissingDatasetAttributes({
+                    datasetObject: cat,
+                    requiredAttributes: ['name'],
+                }).forEach((attr) => {
+                    error({
+                        componentName: 'VueUiRadar',
+                        type: 'datasetAttribute',
+                        property: `category.${attr} at index ${i}`,
+                        index: i,
+                    });
                 });
             });
-        });
+        }
     }
 
     if ([null, undefined].includes(ds?.series)) {
@@ -512,21 +513,22 @@ function validateRadarDataset() {
             debug: debug.value,
         });
     } else {
-        ds.series.forEach((serie, i) => {
-            getMissingDatasetAttributes({
-                datasetObject: serie,
-                requiredAttributes: ['name', 'values', 'target'],
-            }).forEach((attr) => {
-                error({
-                    componentName: 'VueUiRadar',
-                    type: 'datasetSerieAttribute',
-                    key: 'series',
-                    property: attr,
-                    index: i,
-                    debug: debug.value,
+        if (debug.value) {
+            ds.series.forEach((serie, i) => {
+                getMissingDatasetAttributes({
+                    datasetObject: serie,
+                    requiredAttributes: ['name', 'values', 'target'],
+                }).forEach((attr) => {
+                    error({
+                        componentName: 'VueUiRadar',
+                        type: 'datasetSerieAttribute',
+                        key: 'series',
+                        property: attr,
+                        index: i,
+                    });
                 });
             });
-        });
+        }
     }
 }
 
@@ -573,14 +575,14 @@ const seriesCopy = computed(() => {
 
 function validSeriesToToggle(name) {
     if (!seriesCopy.value.length) {
-        if (FINAL_CONFIG.value.debug) {
+        if (debug.value) {
             console.warn('VueUiRadar - There are no series to show.');
         }
         return null;
     }
     const dp = legendSet.value.find((d) => d.name === name);
     if (!dp) {
-        if (FINAL_CONFIG.value.debug) {
+        if (debug.value) {
             console.warn(`VueUiRadar - Series name not found "${name}"`);
         }
         return null;

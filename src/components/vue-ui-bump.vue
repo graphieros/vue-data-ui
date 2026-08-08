@@ -364,7 +364,7 @@ const customPalette = computed(() => {
 const resizeObserver = shallowRef(null);
 const observedEl = shallowRef(null);
 const to = ref(null);
-const debug = computed(() => !!FINAL_CONFIG.value.debug);
+const debug = computed(() => FINAL_CONFIG.value.debug);
 
 function prepareChart() {
     if (objectIsEmpty(props.dataset)) {

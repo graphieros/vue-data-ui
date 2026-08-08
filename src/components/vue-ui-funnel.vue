@@ -98,11 +98,59 @@ const isDataset = computed(() => {
 
 onMounted(prepareChart);
 
+onBeforeUnmount(() => {
+    if (resizeObserver.value) {
+        if (observedEl.value) {
+            resizeObserver.value.unobserve(observedEl.value);
+        }
+        resizeObserver.value.disconnect();
+    }
+});
+
+function prepareConfig() {
+    const mergedConfig = useNestedProp({
+        userConfig: props.config,
+        defaultConfig: DEFAULT_CONFIG,
+    });
+
+    const theme = mergedConfig.theme;
+    if (!theme) return mergedConfig;
+
+    if (!isThemeValid.value(mergedConfig)) {
+        warnInvalidTheme(mergedConfig);
+        return mergedConfig;
+    }
+
+    const fused = useNestedProp({
+        userConfig: themes[theme] || props.config,
+        defaultConfig: mergedConfig,
+    });
+
+    const finalConfig = useNestedProp({
+        userConfig: props.config,
+        defaultConfig: fused,
+    });
+
+    return finalConfig;
+}
+
+const FINAL_CONFIG = computed({
+    get: () => {
+        return prepareConfig();
+    },
+    set: (newCfg) => {
+        return newCfg;
+    },
+});
+
+const debug = computed(() => FINAL_CONFIG.value.debug);
+
 function prepareChart() {
     if (objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiFunnel',
             type: 'dataset',
+            debug: debug.value,
         });
     } else {
         props.dataset.forEach((ds, i) => {
@@ -116,6 +164,7 @@ function prepareChart() {
                     type: 'datasetSerieAttribute',
                     property: attr,
                     index: i,
+                    debug: debug.value,
                 });
             });
         });
@@ -187,51 +236,6 @@ function prepareChart() {
         resizeObserver.value.observe(observedEl.value);
     }
 }
-
-onBeforeUnmount(() => {
-    if (resizeObserver.value) {
-        if (observedEl.value) {
-            resizeObserver.value.unobserve(observedEl.value);
-        }
-        resizeObserver.value.disconnect();
-    }
-});
-
-function prepareConfig() {
-    const mergedConfig = useNestedProp({
-        userConfig: props.config,
-        defaultConfig: DEFAULT_CONFIG,
-    });
-
-    const theme = mergedConfig.theme;
-    if (!theme) return mergedConfig;
-
-    if (!isThemeValid.value(mergedConfig)) {
-        warnInvalidTheme(mergedConfig);
-        return mergedConfig;
-    }
-
-    const fused = useNestedProp({
-        userConfig: themes[theme] || props.config,
-        defaultConfig: mergedConfig,
-    });
-
-    const finalConfig = useNestedProp({
-        userConfig: props.config,
-        defaultConfig: fused,
-    });
-
-    return finalConfig;
-}
-
-const FINAL_CONFIG = computed({
-    get: () => {
-        return prepareConfig();
-    },
-    set: (newCfg) => {
-        return newCfg;
-    },
-});
 
 useHints({
     config: () => FINAL_CONFIG.value,

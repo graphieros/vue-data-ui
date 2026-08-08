@@ -414,6 +414,7 @@ const radar = computed(() => {
                 componentName: 'VueUiMoodRadar',
                 type: 'datasetAttribute',
                 property: rating,
+                debug: debug.value,
             });
         }
     });

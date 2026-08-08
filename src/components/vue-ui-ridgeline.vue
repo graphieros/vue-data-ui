@@ -407,7 +407,7 @@ const { svgRef } = useChartAccessibility({
     config: FINAL_CONFIG.value.style.chart.title,
 });
 
-const debug = computed(() => !!FINAL_CONFIG.value.debug);
+const debug = computed(() => FINAL_CONFIG.value.debug);
 
 function prepareChart() {
     const ds = FINAL_DATASET.value || [];
@@ -615,14 +615,14 @@ function segregate(slug) {
 
 function validSeriesToToggle(name) {
     if (!legendSet.value.length) {
-        if (FINAL_CONFIG.value.debug) {
+        if (debug.value) {
             console.warn('VueUiRidgeline - There are no series to show.');
         }
         return null;
     }
     const dp = legendSet.value.find((d) => d.name === name);
     if (!dp) {
-        if (FINAL_CONFIG.value.debug) {
+        if (debug.value) {
             console.warn(`VueUiRidgeline - Series name not found "${name}"`);
         }
         return null;

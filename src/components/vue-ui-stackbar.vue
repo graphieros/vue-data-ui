@@ -521,7 +521,7 @@ const customPalette = computed(() => {
 const resizeObserver = shallowRef(null);
 const observedEl = shallowRef(null);
 const to = ref(null);
-const debug = computed(() => !!FINAL_CONFIG.value.debug);
+const debug = computed(() => FINAL_CONFIG.value.debug);
 
 function prepareChart({ resetSlicer = true } = {}) {
     if (objectIsEmpty(props.dataset)) {
@@ -2228,14 +2228,14 @@ function segregate(item) {
 
 function validSeriesToToggle(name) {
     if (!unmutableDataset.value.length) {
-        if (FINAL_CONFIG.value.debug) {
+        if (debug.value) {
             console.warn('VueUiStackbar - There are no series to show.');
         }
         return null;
     }
     const dp = unmutableDataset.value.find((d) => d.name === name);
     if (!dp) {
-        if (FINAL_CONFIG.value.debug) {
+        if (debug.value) {
             console.warn(`VueUiStackbar - Series name not found "${name}"`);
         }
         return null;

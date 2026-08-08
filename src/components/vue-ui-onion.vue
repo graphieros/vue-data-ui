@@ -526,24 +526,26 @@ const drawableArea = computed(() => {
 });
 
 const immutableDataset = computed(() => {
-    FINAL_DATASET.value.forEach((ds, i) => {
-        if ([null, undefined].includes(ds.name)) {
-            error({
-                componentName: 'VueUiOnion',
-                type: 'datasetSerieAttribute',
-                property: 'name',
-                index: i,
-            });
-        }
-        if ([undefined].includes(ds.percentage)) {
-            error({
-                componentName: 'VueUiOnion',
-                type: 'datasetSerieAttribute',
-                property: 'percentage',
-                index: i,
-            });
-        }
-    });
+    if (debug.value) {
+        FINAL_DATASET.value.forEach((ds, i) => {
+            if ([null, undefined].includes(ds.name)) {
+                error({
+                    componentName: 'VueUiOnion',
+                    type: 'datasetSerieAttribute',
+                    property: 'name',
+                    index: i,
+                });
+            }
+            if ([undefined].includes(ds.percentage)) {
+                error({
+                    componentName: 'VueUiOnion',
+                    type: 'datasetSerieAttribute',
+                    property: 'percentage',
+                    index: i,
+                });
+            }
+        });
+    }
 
     return FINAL_DATASET.value.map((onion, i) => {
         const id = `onion_serie_${i}_${uid.value}`;
@@ -774,14 +776,14 @@ function segregate(id) {
 
 function validSeriesToToggle(name) {
     if (!immutableDataset.value.length) {
-        if (FINAL_CONFIG.value.debug) {
+        if (debug.value) {
             console.warn('VueUiOnion - There are no series to show.');
         }
         return null;
     }
     const dp = immutableDataset.value.find((d) => d.name === name);
     if (!dp) {
-        if (FINAL_CONFIG.value.debug) {
+        if (debug.value) {
             console.warn(`VueUiOnion - Series name not found "${name}"`);
         }
         return null;

@@ -337,7 +337,7 @@ onMounted(() => {
     prepareChart();
 });
 
-const debug = computed(() => !!FINAL_CONFIG.value.debug);
+const debug = computed(() => FINAL_CONFIG.value.debug);
 
 function prepareChart() {
     if (objectIsEmpty(props.dataset)) {
@@ -610,7 +610,7 @@ const immutableDataset = computed(() => {
 
 function validSeriesToToggle(name) {
     if (!immutableDataset.value.length) {
-        if (FINAL_CONFIG.value.debug) {
+        if (debug.value) {
             console.warn(
                 'VueUiParallelCoordinatePlot - There are no series to show.',
             );
@@ -619,7 +619,7 @@ function validSeriesToToggle(name) {
     }
     const dp = immutableDataset.value.find((d) => d.name === name);
     if (!dp) {
-        if (FINAL_CONFIG.value.debug) {
+        if (debug.value) {
             console.warn(
                 `VueUiParallelCoordinatePlot - Series name not found "${name}"`,
             );

@@ -46,6 +46,7 @@ const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
 const { vue_ui_sparkstackbar: DEFAULT_CONFIG } = useConfig();
 const { isThemeValid, warnInvalidTheme } = useThemeCheck();
 const prefersReducedMotion = usePrefersReducedMotion();
+const slots = useSlots();
 
 const props = defineProps({
     config: {
@@ -60,16 +61,6 @@ const props = defineProps({
             return [];
         },
     },
-});
-
-const slots = useSlots();
-
-onMounted(() => {
-    if (slots['chart-background']) {
-        console.warn(
-            'VueUiSparkStackbar does not support the #chart-background slot.',
-        );
-    }
 });
 
 const sparkstackbarChart = ref(null);
@@ -87,6 +78,16 @@ const selectedIndex = ref(null); // a11y
 const legendItemRefs = ref([]); // a11y
 
 const FINAL_CONFIG = ref(prepareConfig());
+
+const debug = computed(() => FINAL_CONFIG.value.debug);
+
+onMounted(() => {
+    if (slots['chart-background'] && debug.value) {
+        console.warn(
+            'VueUiSparkStackbar does not support the #chart-background slot.',
+        );
+    }
+});
 
 useHints({
     config: () => FINAL_CONFIG.value,
@@ -286,8 +287,6 @@ onMounted(() => {
     prepareChart();
 });
 
-const debug = computed(() => FINAL_CONFIG.value.debug);
-
 function prepareChart() {
     if (objectIsEmpty(props.dataset)) {
         error({
@@ -296,20 +295,21 @@ function prepareChart() {
             debug: debug.value,
         });
     } else {
-        props.dataset.forEach((ds, i) => {
-            getMissingDatasetAttributes({
-                datasetObject: ds,
-                requiredAttributes: ['name', 'value'],
-            }).forEach((attr) => {
-                error({
-                    componentName: 'VueUiSparkStackbar',
-                    type: 'datasetSerieAttribute',
-                    property: attr,
-                    index: i,
-                    debug: debug.value,
+        if (debug.value) {
+            props.dataset.forEach((ds, i) => {
+                getMissingDatasetAttributes({
+                    datasetObject: ds,
+                    requiredAttributes: ['name', 'value'],
+                }).forEach((attr) => {
+                    error({
+                        componentName: 'VueUiSparkStackbar',
+                        type: 'datasetSerieAttribute',
+                        property: attr,
+                        index: i,
+                    });
                 });
             });
-        });
+        }
     }
 
     animateChart();

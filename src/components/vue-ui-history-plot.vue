@@ -145,7 +145,7 @@ onMounted(() => {
     prepareChart();
 });
 
-const debug = computed(() => !!FINAL_CONFIG.value.debug);
+const debug = computed(() => FINAL_CONFIG.value.debug);
 
 function prepareChart() {
     if (objectIsEmpty(props.dataset)) {
@@ -1004,14 +1004,14 @@ function segregate(index) {
 
 function validSeriesToToggle(name) {
     if (!formattedDataset.value.length) {
-        if (FINAL_CONFIG.value.debug) {
+        if (debug.value) {
             console.warn('VueUiHistoryPlot - There are no series to show.');
         }
         return null;
     }
     const dp = formattedDataset.value.find((d) => d.name === name);
     if (!dp) {
-        if (FINAL_CONFIG.value.debug) {
+        if (debug.value) {
             console.warn(`VueUiHistoryPlot - Series name not found "${name}"`);
         }
         return null;

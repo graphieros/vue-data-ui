@@ -303,20 +303,21 @@ function prepareChart() {
         });
         manualLoading.value = true;
     } else {
-        props.dataset.forEach((ds, i) => {
-            getMissingDatasetAttributes({
-                datasetObject: ds,
-                requiredAttributes: ['id', 'label', 'relations', 'weights'],
-            }).forEach((attr) => {
-                error({
-                    componentName: 'VueUiRelationCircle',
-                    type: 'datasetSerieAttribute',
-                    property: attr,
-                    index: i,
-                    debug: debug.value,
+        if (debug.value) {
+            props.dataset.forEach((ds, i) => {
+                getMissingDatasetAttributes({
+                    datasetObject: ds,
+                    requiredAttributes: ['id', 'label', 'relations', 'weights'],
+                }).forEach((attr) => {
+                    error({
+                        componentName: 'VueUiRelationCircle',
+                        type: 'datasetSerieAttribute',
+                        property: attr,
+                        index: i,
+                    });
                 });
             });
-        });
+        }
     }
     // v3
     if (!objectIsEmpty(props.dataset)) {

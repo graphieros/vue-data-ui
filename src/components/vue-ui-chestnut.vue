@@ -387,55 +387,56 @@ const treeTotal = computed(() => {
         .reduce((a, b) => a + b, 0);
 });
 
+const debug = computed(() => FINAL_CONFIG.value.debug);
+
 const mutableDataset = computed(() => {
-    FINAL_DATASET.value.forEach((ds, i) => {
-        getMissingDatasetAttributes({
-            datasetObject: ds,
-            requiredAttributes: ['name', 'branches'],
-        }).forEach((attr) => {
-            error({
-                componentName: 'VueUiChestnut',
-                type: 'datasetSerieAttribute',
-                property: attr,
-                index: i,
-                debug: debug.value,
-            });
-        });
-
-        if (ds.branches) {
-            ds.branches.forEach((branch, j) => {
-                getMissingDatasetAttributes({
-                    datasetObject: branch,
-                    requiredAttributes: ['name', 'value'],
-                }).forEach((attr) => {
-                    error({
-                        componentName: 'VueUiChestnut',
-                        type: 'datasetSerieAttribute',
-                        property: attr,
-                        index: `${i} - ${j}`,
-                        debug: debug.value,
-                    });
+    if (debug.value) {
+        FINAL_DATASET.value.forEach((ds, i) => {
+            getMissingDatasetAttributes({
+                datasetObject: ds,
+                requiredAttributes: ['name', 'branches'],
+            }).forEach((attr) => {
+                error({
+                    componentName: 'VueUiChestnut',
+                    type: 'datasetSerieAttribute',
+                    property: attr,
+                    index: i,
                 });
+            });
 
-                if (branch.breakdown) {
-                    branch.breakdown.forEach((b, k) => {
-                        getMissingDatasetAttributes({
-                            datasetObject: b,
-                            requiredAttributes: ['name', 'value'],
-                        }).forEach((attr) => {
-                            error({
-                                componentName: 'VueUiChestnut',
-                                type: 'datasetSerieAttribute',
-                                property: attr,
-                                index: `${i} - ${j} - ${k}`,
-                                debug: debug.value,
-                            });
+            if (ds.branches) {
+                ds.branches.forEach((branch, j) => {
+                    getMissingDatasetAttributes({
+                        datasetObject: branch,
+                        requiredAttributes: ['name', 'value'],
+                    }).forEach((attr) => {
+                        error({
+                            componentName: 'VueUiChestnut',
+                            type: 'datasetSerieAttribute',
+                            property: attr,
+                            index: `${i} - ${j}`,
                         });
                     });
-                }
-            });
-        }
-    });
+
+                    if (branch.breakdown) {
+                        branch.breakdown.forEach((b, k) => {
+                            getMissingDatasetAttributes({
+                                datasetObject: b,
+                                requiredAttributes: ['name', 'value'],
+                            }).forEach((attr) => {
+                                error({
+                                    componentName: 'VueUiChestnut',
+                                    type: 'datasetSerieAttribute',
+                                    property: attr,
+                                    index: `${i} - ${j} - ${k}`,
+                                });
+                            });
+                        });
+                    }
+                });
+            }
+        });
+    }
 
     return FINAL_DATASET.value.map((root, i) => {
         const rootTotal = (root.branches || [])
@@ -903,8 +904,6 @@ function isArcBigEnough(arc) {
 onMounted(() => {
     prepareChart();
 });
-
-const debug = computed(() => FINAL_CONFIG.value.debug);
 
 function prepareChart() {
     if (objectIsEmpty(props.dataset)) {

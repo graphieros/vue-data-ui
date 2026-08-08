@@ -209,7 +209,7 @@ function prepareConfig() {
     return finalConfig;
 }
 
-const debug = computed(() => !!FINAL_CONFIG.value.debug);
+const debug = computed(() => FINAL_CONFIG.value.debug);
 
 onMounted(async () => {
     if (objectIsEmpty(props.dataset)) {
@@ -221,7 +221,7 @@ onMounted(async () => {
         isDataset.value = false;
         manualLoading.value = true;
     }
-    if (!props.dataset.nodes) {
+    if (!props.dataset.nodes || props.dataset.nodes.length === 0) {
         error({
             componentName: 'VueUiDag',
             type: 'datasetAttributeEmpty',
@@ -1230,8 +1230,8 @@ function setMidpoint(edge) {
     }
 
     return {
-        cx: edge.midpoint.x,
-        cy: edge.midpoint.y,
+        cx: edge?.midpoint?.x,
+        cy: edge?.midpoint?.y,
         r: FINAL_CONFIG.value.style.chart.midpoints.radius,
         fill: isKeyboardSelected
             ? (FINAL_CONFIG.value.style.chart.midpoints.selectedEdge.stroke ??

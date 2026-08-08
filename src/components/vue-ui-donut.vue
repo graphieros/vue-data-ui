@@ -250,7 +250,7 @@ onBeforeUnmount(() => {
     }
 });
 
-const debug = computed(() => !!FINAL_CONFIG.value.debug);
+const debug = computed(() => FINAL_CONFIG.value.debug);
 
 function prepareChart() {
     if (objectIsEmpty(props.dataset)) {
@@ -278,17 +278,18 @@ function prepareChart() {
                 manualLoading.value = true; // v3
             });
         });
-        props.dataset.forEach((ds, i) => {
-            if (!ds.name || ds.name === '') {
-                error({
-                    componentName: 'VueUiDonut',
-                    type: 'datasetAttributeEmpty',
-                    property: 'name',
-                    index: i,
-                    debug: debug.value,
-                });
-            }
-        });
+        if (debug.value) {
+            props.dataset.forEach((ds, i) => {
+                if (!ds.name || ds.name === '') {
+                    error({
+                        componentName: 'VueUiDonut',
+                        type: 'datasetAttributeEmpty',
+                        property: 'name',
+                        index: i,
+                    });
+                }
+            });
+        }
     }
 
     // v3
@@ -855,14 +856,14 @@ function segregate(index) {
 
 function validSeriesToToggle(name) {
     if (!immutableSet.value.length) {
-        if (FINAL_CONFIG.value.debug) {
+        if (debug.value) {
             console.warn('VueUiDonut - There are no series to show.');
         }
         return null;
     }
     const dp = immutableSet.value.find((d) => d.name === name);
     if (!dp) {
-        if (FINAL_CONFIG.value.debug) {
+        if (debug.value) {
             console.warn(`VueUiDonut - Series name not found "${name}"`);
         }
         return null;

@@ -19,7 +19,7 @@ const { vue_ui_bullet: DEFAULT_CONFIG } = useConfig();
 const { CHECKBOX, NUMBER, RANGE, TEXT, COLOR, SELECT, createModel } =
     useConfigurationControls(DEFAULT_CONFIG);
 
-const dataset = ref(undefined);
+const dataset = ref([]);
 
 onMounted(() => {
     setTimeout(() => {

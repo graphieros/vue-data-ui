@@ -56,14 +56,6 @@ const isFullscreen = ref(false);
 const step = ref(0);
 const slots = useSlots();
 
-onMounted(() => {
-    if (slots['chart-background']) {
-        console.warn(
-            'VueUiTableHeatmap does not support the #chart-background slot.',
-        );
-    }
-});
-
 const FINAL_CONFIG = computed({
     get: () => {
         return prepareConfig();
@@ -71,6 +63,16 @@ const FINAL_CONFIG = computed({
     set: (newCfg) => {
         return newCfg;
     },
+});
+
+const debug = computed(() => FINAL_CONFIG.value.debug);
+
+onMounted(() => {
+    if (slots['chart-background'] && debug.value) {
+        console.warn(
+            'VueUiTableHeatmap does not support the #chart-background slot.',
+        );
+    }
 });
 
 useHints({
@@ -162,6 +164,7 @@ function prepareChart() {
         error({
             componentName: 'VueUiTableHeatmap',
             type: 'dataset',
+            debug: debug.value,
         });
     } else {
         // FIXME: errors for each datapoint

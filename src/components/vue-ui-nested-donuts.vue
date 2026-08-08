@@ -460,7 +460,7 @@ onMounted(async () => {
 const resizeObserver = shallowRef(null);
 const observedEl = shallowRef(null);
 
-const debug = computed(() => !!FINAL_CONFIG.value.debug);
+const debug = computed(() => FINAL_CONFIG.value.debug);
 
 function prepareChart() {
     if (objectIsEmpty(props.dataset)) {
@@ -864,7 +864,7 @@ function segregateDonut(item) {
 
 function validSeriesToToggle(name) {
     if (!immutableDataset.value.length) {
-        if (FINAL_CONFIG.value.debug) {
+        if (debug.value) {
             console.warn('VueUiNestedDonuts - There are no series to show.');
         }
         return null;
@@ -875,7 +875,7 @@ function validSeriesToToggle(name) {
         .filter((el) => el.name === name);
 
     if (!dp) {
-        if (FINAL_CONFIG.value.debug) {
+        if (debug.value) {
             console.warn(`VueUiNestedDonuts - Series name not found "${name}"`);
         }
         return null;

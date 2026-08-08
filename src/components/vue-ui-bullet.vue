@@ -88,56 +88,64 @@ const isDataset = computed({
     },
 });
 
+const FINAL_CONFIG = ref(prepareConfig());
+
+const debug = computed(() => FINAL_CONFIG.value.debug);
+
 const hasSegments = computed(() => {
     if (!FINAL_DATASET.value.segments) {
-        console.warn(`VueUiBullet: dataset segments is empty. Provide segments with this datastructure:\n
-segments: [
-    {
-        name: string;
-        from: number;
-        to: number;
-        color?: string;
-    },
-    {...}
-]
-        `);
+        if (debug.value) {
+            console.warn(`VueUiBullet: dataset segments is empty. Provide segments with this datastructure:\n
+    segments: [
+        {
+            name: string;
+            from: number;
+            to: number;
+            color?: string;
+        },
+        {...}
+    ]
+            `);
+        }
         isDataset.value = false;
         return false;
     }
     if (!Array.isArray(FINAL_DATASET.value.segments)) {
-        console.warn(`VueUiBullet: dataset segments must be an array of objects with this datastructure:\n
-segments: [
-    {
-        name: string;
-        from: number;
-        to: number;
-        color?: string;
-    },
-    {...}
-] 
-        `);
+        if (debug.value) {
+            console.warn(`VueUiBullet: dataset segments must be an array of objects with this datastructure:\n
+    segments: [
+        {
+            name: string;
+            from: number;
+            to: number;
+            color?: string;
+        },
+        {...}
+    ] 
+            `);
+        }
         isDataset.value = false;
         return false;
     }
     if (!FINAL_DATASET.value.segments.length) {
-        console.warn(`VueUiBullet: dataset segments is empty. Provide segments with this datastructure:\n
-segments: [
-    {
-        name: string;
-        from: number;
-        to: number;
-        color?: string;
-    },
-    {...}
-]
-        `);
+        if (debug.value) {
+            console.warn(`VueUiBullet: dataset segments is empty. Provide segments with this datastructure:\n
+    segments: [
+        {
+            name: string;
+            from: number;
+            to: number;
+            color?: string;
+        },
+        {...}
+    ]
+            `);
+        }
         isDataset.value = false;
         return false;
     }
     return true;
 });
-
-const debug = computed(() => !!FINAL_CONFIG.value.debug);
 
 const padding = computed(() => {
     const { top, right, bottom, left } = FINAL_CONFIG.value.style.chart.padding;
@@ -260,8 +268,6 @@ function prepareConfig() {
 
     return finalConfig;
 }
-
-const FINAL_CONFIG = ref(prepareConfig());
 
 useHints({
     config: () => FINAL_CONFIG.value,

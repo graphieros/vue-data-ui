@@ -352,7 +352,7 @@ const breakpoint = computed(() => {
     return FINAL_CONFIG.value.table.responsiveBreakpoint;
 });
 
-const debug = computed(() => !!FINAL_CONFIG.value.debug);
+const debug = computed(() => FINAL_CONFIG.value.debug);
 const remainingHeight = ref(0);
 const resizeObserver = ref(null);
 const observedEl = ref(null);
@@ -919,14 +919,14 @@ async function segregate(id) {
 
 function validSeriesToToggle(name) {
     if (!immutableDataset.value.length) {
-        if (FINAL_CONFIG.value.debug) {
+        if (debug.value) {
             console.warn('VueUiHorizontalBar - There are no series to show.');
         }
         return null;
     }
     const dp = immutableDataset.value.find((d) => d.name === name);
     if (!dp) {
-        if (FINAL_CONFIG.value.debug) {
+        if (debug.value) {
             console.warn(
                 `VueUiHorizontalBar - Series name not found "${name}"`,
             );

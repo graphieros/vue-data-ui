@@ -35,6 +35,8 @@ function makeDs(n) {
     return arr;
 }
 
+// const dataset = ref([]);
+
 const dataset = ref([
     {
         name: 'Series A with\n a long name',

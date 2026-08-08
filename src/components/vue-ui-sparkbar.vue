@@ -67,17 +67,19 @@ const props = defineProps({
 
 const slots = useSlots();
 
+const uid = ref(createUid());
+
+const FINAL_CONFIG = ref(prepareConfig());
+
+const debug = computed(() => FINAL_CONFIG.value.debug);
+
 onMounted(() => {
-    if (slots['chart-background']) {
+    if (slots['chart-background'] && debug.value) {
         console.warn(
             'VueUiSparkbar does not support the #chart-background slot.',
         );
     }
 });
-
-const uid = ref(createUid());
-
-const FINAL_CONFIG = ref(prepareConfig());
 
 useHints({
     config: () => FINAL_CONFIG.value,
@@ -122,8 +124,6 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
         userConfig: skeletonConfig.value,
     }),
 });
-
-const debug = computed(() => !!FINAL_CONFIG.value.debug);
 
 function prepareConfig() {
     const mergedConfig = useNestedProp({
@@ -261,20 +261,21 @@ const max = computed(() => {
 });
 
 const drawableDataset = computed(() => {
-    FINAL_DATASET.value.forEach((ds, i) => {
-        getMissingDatasetAttributes({
-            datasetObject: ds,
-            requiredAttributes: ['name', 'value'],
-        }).forEach((attr) => {
-            error({
-                componentName: 'VueUiSparkbar',
-                type: 'datasetSerieAttribute',
-                property: attr,
-                index: i,
-                debug: debug.value,
+    if (debug.value) {
+        FINAL_DATASET.value.forEach((ds, i) => {
+            getMissingDatasetAttributes({
+                datasetObject: ds,
+                requiredAttributes: ['name', 'value'],
+            }).forEach((attr) => {
+                error({
+                    componentName: 'VueUiSparkbar',
+                    type: 'datasetSerieAttribute',
+                    property: attr,
+                    index: i,
+                });
             });
         });
-    });
+    }
 
     return safeDatasetCopy.value.map((d, i) => {
         return {

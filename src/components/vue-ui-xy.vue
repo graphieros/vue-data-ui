@@ -359,7 +359,7 @@ const selectedPlotRadius = computed(() => {
 
 onMounted(() => {
     readyTeleport.value = true;
-    if (props.dataset.length) {
+    if (props.dataset.length && debug.value) {
         props.dataset.forEach((ds, i) => {
             if ([null, undefined].includes(ds.series)) {
                 error({
@@ -367,7 +367,6 @@ onMounted(() => {
                     type: 'datasetSerieAttribute',
                     property: 'series (number[])',
                     index: i,
-                    debug: debug.value,
                 });
             }
         });
@@ -589,7 +588,7 @@ function seedMutableFromConfig() {
     }
 }
 
-const debug = computed(() => !!FINAL_CONFIG.value.debug);
+const debug = computed(() => FINAL_CONFIG.value.debug);
 
 const skeletonConfig = computed(() => {
     return treeShake({
@@ -2572,14 +2571,14 @@ function segregate(legendItem) {
 
 function validSeriesToToggle(name) {
     if (!absoluteDataset.value.length) {
-        if (FINAL_CONFIG.value.debug) {
+        if (debug.value) {
             console.warn('VueUiXy - There are no series to show.');
         }
         return null;
     }
     const dp = absoluteDataset.value.find((d) => d.name === name);
     if (!dp) {
-        if (FINAL_CONFIG.value.debug) {
+        if (debug.value) {
             console.warn(`VueUiXy - Series name not found "${name}"`);
         }
         return null;

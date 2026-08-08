@@ -149,14 +149,6 @@ const isDataset = computed(
 const emit = defineEmits(['selectLegend', 'selectX', 'copyAlt']);
 const slots = useSlots();
 
-onMounted(() => {
-    if (slots['chart-background']) {
-        console.warn(
-            'VueUiXyCanvas does not support the #chart-background slot.',
-        );
-    }
-});
-
 const FINAL_CONFIG = ref(prepareConfig());
 
 useHints({
@@ -227,7 +219,15 @@ const isCursorPointer = computed(
     () => FINAL_CONFIG.value.userOptions.useCursorPointer,
 );
 
-const debug = computed(() => !!FINAL_CONFIG.value.debug);
+const debug = computed(() => FINAL_CONFIG.value.debug);
+
+onMounted(() => {
+    if (slots['chart-background'] && debug.value) {
+        console.warn(
+            'VueUiXyCanvas does not support the #chart-background slot.',
+        );
+    }
+});
 
 const skeletonConfig = computed(() => {
     return treeShake({
@@ -2820,8 +2820,12 @@ onMounted(() => {
 });
 
 function prepareChart() {
-    if (objectIsEmpty(props.dataset) && debug.value) {
-        error({ componentName: 'VueUiXyCanvas', type: 'dataset' });
+    if (objectIsEmpty(props.dataset)) {
+        error({
+            componentName: 'VueUiXyCanvas',
+            type: 'dataset',
+            debug: debug.value,
+        });
     }
 
     nextTick(() => {
@@ -2919,14 +2923,14 @@ function segregate(index) {
 
 function validSeriesToToggle(name) {
     if (!dsCopy.value.length) {
-        if (FINAL_CONFIG.value.debug) {
+        if (debug.value) {
             console.warn('VueUiXyCanvas - There are no series to show.');
         }
         return null;
     }
     const dp = dsCopy.value.find((d) => d.name === name);
     if (!dp) {
-        if (FINAL_CONFIG.value.debug) {
+        if (debug.value) {
             console.warn(`VueUiXyCanvas - Series name not found "${name}"`);
         }
         return null;

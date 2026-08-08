@@ -286,39 +286,38 @@ function prepareChart() {
             debug: debug.value,
         });
     } else {
-        props.dataset.forEach((ds, i) => {
-            if ([null, undefined].includes(ds.name)) {
-                error({
-                    componentName: 'VueUiQuadrant',
-                    type: 'datasetSerieAttribute',
-                    property: 'name',
-                    index: i,
-                    debug: debug.value,
-                });
-            }
-            if ([null, undefined].includes(ds.series)) {
-                error({
-                    componentName: 'VueUiQuadrant',
-                    type: 'datasetSerieAttribute',
-                    property: 'series',
-                    index: i,
-                    debug: debug.value,
-                });
-            } else {
-                ds.series.forEach((serie, j) => {
-                    if ([null, undefined].includes(serie.name)) {
-                        error({
-                            componentName: 'VueUiQuadrant',
-                            type: 'datasetSerieAttribute',
-                            property: 'name',
-                            key: 'series',
-                            index: j,
-                            debug: debug.value,
-                        });
-                    }
-                });
-            }
-        });
+        if (debug.value) {
+            props.dataset.forEach((ds, i) => {
+                if ([null, undefined].includes(ds.name)) {
+                    error({
+                        componentName: 'VueUiQuadrant',
+                        type: 'datasetSerieAttribute',
+                        property: 'name',
+                        index: i,
+                    });
+                }
+                if ([null, undefined].includes(ds.series)) {
+                    error({
+                        componentName: 'VueUiQuadrant',
+                        type: 'datasetSerieAttribute',
+                        property: 'series',
+                        index: i,
+                    });
+                } else {
+                    ds.series.forEach((serie, j) => {
+                        if ([null, undefined].includes(serie.name)) {
+                            error({
+                                componentName: 'VueUiQuadrant',
+                                type: 'datasetSerieAttribute',
+                                property: 'name',
+                                key: 'series',
+                                index: j,
+                            });
+                        }
+                    });
+                }
+            });
+        }
     }
 
     if (FINAL_CONFIG.value.responsive) {
@@ -731,30 +730,30 @@ const datasetReference = computed(() => {
 });
 
 const drawableDataset = computed(() => {
-    FINAL_DATASET.value.forEach((ds, i) => {
-        ds.series.forEach((serie, j) => {
-            if ([null, undefined].includes(serie.x)) {
-                error({
-                    componentName: 'VueUiQuadrant',
-                    type: 'datasetSerieAttribute',
-                    property: 'x',
-                    key: 'series',
-                    index: j,
-                    debug: debug.value,
-                });
-            }
-            if ([null, undefined].includes(serie.y)) {
-                error({
-                    componentName: 'VueUiQuadrant',
-                    type: 'datasetSerieAttribute',
-                    property: 'y',
-                    key: 'series',
-                    index: j,
-                    debug: debug.value,
-                });
-            }
+    if (debug.value) {
+        FINAL_DATASET.value.forEach((ds, i) => {
+            ds.series.forEach((serie, j) => {
+                if ([null, undefined].includes(serie.x)) {
+                    error({
+                        componentName: 'VueUiQuadrant',
+                        type: 'datasetSerieAttribute',
+                        property: 'x',
+                        key: 'series',
+                        index: j,
+                    });
+                }
+                if ([null, undefined].includes(serie.y)) {
+                    error({
+                        componentName: 'VueUiQuadrant',
+                        type: 'datasetSerieAttribute',
+                        property: 'y',
+                        key: 'series',
+                        index: j,
+                    });
+                }
+            });
         });
-    });
+    }
     return mutableDataset.value.map((category, i) => {
         return {
             ...category,
@@ -943,14 +942,14 @@ const legendSet = computed(() => {
 
 function validSeriesToToggle(name) {
     if (!legendSet.value.length) {
-        if (FINAL_CONFIG.value.debug) {
+        if (debug.value) {
             console.warn('VueUiQuadrant - There are no series to show.');
         }
         return null;
     }
     const dp = legendSet.value.find((d) => d.name === name);
     if (!dp) {
-        if (FINAL_CONFIG.value.debug) {
+        if (debug.value) {
             console.warn(`VueUiQuadrant - Series name not found "${name}"`);
         }
         return null;
