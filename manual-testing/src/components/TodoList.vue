@@ -1,7 +1,7 @@
 <script setup>
-import { ref, computed, onMounted, watch, onBeforeUnmount } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import useCrud from '../composables/useCrud';
-import { createUid, treeShake } from '../../../src/lib';
+import { createUid } from '../../../src/lib';
 import {
     VueUiDonut,
     VueUiHorizontalBar,
@@ -14,17 +14,8 @@ import DoneTodoList from './DoneTodoList.vue';
 import { components } from '../../../cypress/fixtures/vdui-components';
 import { useRoute } from 'vue-router';
 
-const {
-    items,
-    toBeDone,
-    done,
-    isLoading,
-    errorMessage,
-    readAll,
-    createOne,
-    updateOne,
-    deleteOne,
-} = useCrud('/api/items');
+const { items, toBeDone, done, readAll, createOne, updateOne, deleteOne } =
+    useCrud('/api/items');
 
 onMounted(() => {
     readAll();
@@ -589,8 +580,11 @@ const stats = computed(() => {
                         height: 350,
                         padding: {
                             left: 24,
+                            right: 64,
                         },
                         grid: {
+                            stroke: '#8A8A8A',
+                            showHorizontalLines: true,
                             labels: {
                                 axis: {
                                     yLabel: 'Item count',
@@ -601,7 +595,8 @@ const stats = computed(() => {
                                         done.value,
                                         false,
                                     ),
-                                    showOnlyAtModulo: 7,
+                                    showOnlyAtModulo: true,
+                                    modulo: 7,
                                 },
                                 yAxis: {
                                     commonScaleSteps: 5,
@@ -616,8 +611,10 @@ const stats = computed(() => {
                             backgroundOpacity: 0,
                         },
                         zoom: {
+                            autoFit: true,
                             minimap: {
                                 show: true,
+                                frameColor: 'transparent',
                             },
                         },
                     },
