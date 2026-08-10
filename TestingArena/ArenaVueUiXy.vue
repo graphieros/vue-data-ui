@@ -165,8 +165,24 @@ const dataset = ref([
         name: 'Serie A',
         type: 'line',
         // shape: 'star',
-        series: createDs(80),
-        // series: createContinuousDs(100),
+        // series: createDs(80),
+        series: [
+            { x: 1, y: 1 },
+            { x: 2, y: 2 },
+            { x: 3, y: 3 },
+            { x: 4, y: 1 },
+            { x: 5, y: 2 },
+            { x: 6, y: 2 },
+            { x: 7, y: 2 },
+            { x: 8, y: 2 },
+            { x: 9, y: 2 },
+            { x: 10, y: 2 },
+            { x: 11, y: 2 },
+            { x: 12, y: 2 },
+            { x: 13, y: 2 },
+            { x: 14, y: 2 },
+            { x: 15, y: 2 },
+        ],
         // series: [
         //     { x: 25.4, y: 10 },
         //     { x: 23.1, y: 15 }, // Closer to the first point
@@ -202,12 +218,12 @@ const dataset = ref([
     //     series: createDs(20),
     //     dataLabels: true,
     // },
-    {
-        name: 'Serie B',
-        type: 'bar',
-        series: createDs(90),
-        dataLabels: false,
-    },
+    // {
+    //     name: 'Serie B',
+    //     type: 'bar',
+    //     series: createDs(90),
+    //     dataLabels: false,
+    // },
 ]);
 
 // onMounted(() => {
@@ -717,7 +733,8 @@ const model = createModel([
     CHECKBOX('chart.grid.labels.yAxis.useNiceScale', { def: false }),
 
     CHECKBOX('chart.grid.labels.yAxis.showCrosshairs', { def: true }),
-    CHECKBOX('chart.grid.labels.xAxis.reverse', { def: false }),
+    CHECKBOX('chart.grid.labels.xAxis.reverse', { def: true }),
+    CHECKBOX('chart.grid.labels.yAxis.reverse', { def: true }),
     CHECKBOX('chart.grid.labels.xAxis.showCrosshairs', { def: true }),
     NUMBER('chart.grid.labels.xAxis.crosshairSize', {
         def: 6,

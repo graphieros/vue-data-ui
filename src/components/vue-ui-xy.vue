@@ -744,6 +744,27 @@ function setPrecog(side, val) {
     slicerPrecog.value[side] = val;
 }
 
+function setSlicerChildValues(start, end) {
+    if (!chartSlicer.value) return;
+    if (isContinuousScale.value && isXAxisReversed.value) {
+        chartSlicer.value.setStartValue(-Number(end));
+        chartSlicer.value.setEndValue(-Number(start));
+        return;
+    }
+    chartSlicer.value.setStartValue(start);
+    chartSlicer.value.setEndValue(end);
+}
+
+function setMinimapPrecog(side, value) {
+    if (!isContinuousScale.value || !isXAxisReversed.value) {
+        setPrecog(side, value);
+        return;
+    }
+    const numericValue = Number(value);
+    if (!Number.isFinite(numericValue)) return;
+    setPrecog(side === 'start' ? 'end' : 'start', -numericValue);
+}
+
 function normalizeSlicerWindow() {
     if (isContinuousScale.value) {
         const min = continuousFullXRange.value.min;
@@ -767,11 +788,7 @@ function normalizeSlicerWindow() {
         slicerPrecog.value.start = start;
         slicerPrecog.value.end = end;
 
-        if (chartSlicer.value) {
-            chartSlicer.value.setStartValue(start);
-            chartSlicer.value.setEndValue(end);
-        }
-
+        setSlicerChildValues(start, end);
         return;
     }
 
@@ -791,11 +808,7 @@ function normalizeSlicerWindow() {
     slicer.value = { start: s, end: e };
     slicerPrecog.value.start = s;
     slicerPrecog.value.end = e;
-
-    if (chartSlicer.value) {
-        chartSlicer.value.setStartValue(s);
-        chartSlicer.value.setEndValue(e);
-    }
+    setSlicerChildValues(s, e);
 }
 
 const precogRect = computed(() => {
@@ -805,8 +818,14 @@ const precogRect = computed(() => {
     const windowLen = windowEnd - windowStart;
     const unit = totalWidth / windowLen;
 
-    const rawStart = slicerPrecog.value.start - windowStart;
-    const rawEnd = slicerPrecog.value.end - windowStart;
+    const reverseContinuousX = isContinuousScale.value && isXAxisReversed.value;
+
+    const rawStart = reverseContinuousX
+        ? windowEnd - slicerPrecog.value.end
+        : slicerPrecog.value.start - windowStart;
+    const rawEnd = reverseContinuousX
+        ? windowEnd - slicerPrecog.value.start
+        : slicerPrecog.value.end - windowStart;
     const relStart = Math.max(0, Math.min(windowLen, rawStart));
     const relEnd = Math.max(0, Math.min(windowLen, rawEnd));
 
@@ -1681,9 +1700,10 @@ function selectMinimapXValue(value) {
         continuousTooltipX.value = null;
         return;
     }
-
-    selectedMinimapXValue.value = Number(value);
-    updateContinuousTooltipFromXValue(Number(value));
+    const numericValue = Number(value);
+    const sourceValue = isXAxisReversed.value ? -numericValue : numericValue;
+    selectedMinimapXValue.value = sourceValue;
+    updateContinuousTooltipFromXValue(sourceValue);
 }
 
 const hasHighlighterSelection = computed(() => {
@@ -1761,22 +1781,14 @@ function setupSlicer() {
         if (isContinuousScale.value) {
             const start = continuousFullXRange.value.min;
             const end = continuousFullXRange.value.max;
-
             absoluteSlicerStartIndex.value = start;
             absoluteSlicerEndIndex.value = end;
-
             slicer.value.start = start;
             slicer.value.end = end;
             slicerPrecog.value.start = start;
             slicerPrecog.value.end = end;
-
             slicerReady.value = true;
-
-            if (chartSlicer.value) {
-                chartSlicer.value.setStartValue(start);
-                chartSlicer.value.setEndValue(end);
-            }
-
+            setSlicerChildValues(start, end);
             return;
         }
 
@@ -1877,6 +1889,26 @@ function queueSlicerUpdate(update) {
             restoreShapeTransitionFrame = null;
         });
     });
+}
+
+function onMinimapSlicerStart(v) {
+    if (isContinuousScale.value && isXAxisReversed.value) {
+        const numericValue = Number(v);
+        if (!Number.isFinite(numericValue)) return;
+        onSlicerEnd(-numericValue);
+        return;
+    }
+    onSlicerStart(v);
+}
+
+function onMinimapSlicerEnd(v) {
+    if (isContinuousScale.value && isXAxisReversed.value) {
+        const numericValue = Number(v);
+        if (!Number.isFinite(numericValue)) return;
+        onSlicerStart(-numericValue);
+        return;
+    }
+    onSlicerEnd(v);
 }
 
 function onSlicerStart(v) {
@@ -3053,16 +3085,116 @@ const minimap = computed(() => {
     });
 });
 
+function getMirroredScaleValue(value) {
+    if ([null, undefined].includes(value)) return value;
+    const numericValue = Number(value);
+    return Number.isFinite(numericValue) ? -numericValue : value;
+}
+
 const allMinimaps = computed(() => {
     if (!FINAL_CONFIG.value.chart.zoom.minimap.show) return [];
-    const _source = datasetWithIds.value.map((ds) => {
+
+    const reverseContinuousX = isContinuousScale.value && isXAxisReversed.value;
+    const reverseContinuousY = isContinuousScale.value && isYAxisReversed.value;
+
+    return datasetWithIds.value.map((ds) => {
+        const mirroredScaleBounds = reverseContinuousY
+            ? {
+                  scaleMin: getMirroredScaleValue(ds.scaleMax),
+                  scaleMax: getMirroredScaleValue(ds.scaleMin),
+              }
+            : {};
+
         return {
             ...ds,
+            ...mirroredScaleBounds,
+            series:
+                reverseContinuousX || reverseContinuousY
+                    ? ds.series.map((point) => {
+                          if (!isCoordinatePoint(point)) return point;
+
+                          return {
+                              ...point,
+                              x: reverseContinuousX ? -point.x : point.x,
+                              y: reverseContinuousY ? -point.y : point.y,
+                          };
+                      })
+                    : ds.series,
             isVisible: !segregatedSeriesSet.value.has(ds.id),
         };
     });
+});
 
-    return _source;
+const minimapSlicerMin = computed(() => {
+    if (!isContinuousScale.value || !isXAxisReversed.value) {
+        return slicerMin.value;
+    }
+    return -slicerMax.value;
+});
+
+const minimapSlicerMax = computed(() => {
+    if (!isContinuousScale.value || !isXAxisReversed.value) {
+        return slicerMax.value;
+    }
+    return -slicerMin.value;
+});
+
+const minimapSlicerStart = computed(() => {
+    if (!isContinuousScale.value || !isXAxisReversed.value) {
+        return slicer.value.start;
+    }
+    return -Number(slicer.value.end);
+});
+
+const minimapSlicerEnd = computed(() => {
+    if (!isContinuousScale.value || !isXAxisReversed.value) {
+        return slicer.value.end;
+    }
+    return -Number(slicer.value.start);
+});
+
+const minimapSelectedXValue = computed(() => {
+    if (
+        !isContinuousScale.value ||
+        !isValidNumber(selectedMinimapXValue.value)
+    ) {
+        return selectedMinimapXValue.value;
+    }
+    return isXAxisReversed.value
+        ? -Number(selectedMinimapXValue.value)
+        : Number(selectedMinimapXValue.value);
+});
+
+const minimapScaleMin = computed(() => {
+    const scaleMin = FINAL_CONFIG.value.chart.grid.labels.yAxis.scaleMin;
+    const scaleMax = FINAL_CONFIG.value.chart.grid.labels.yAxis.scaleMax;
+    if (!isContinuousScale.value || !isYAxisReversed.value) {
+        return scaleMin;
+    }
+    return getMirroredScaleValue(scaleMax);
+});
+
+const minimapScaleMax = computed(() => {
+    const scaleMin = FINAL_CONFIG.value.chart.grid.labels.yAxis.scaleMin;
+    const scaleMax = FINAL_CONFIG.value.chart.grid.labels.yAxis.scaleMax;
+    if (!isContinuousScale.value || !isYAxisReversed.value) {
+        return scaleMax;
+    }
+    return getMirroredScaleValue(scaleMin);
+});
+
+const minimapLabelLeft = computed(() => {
+    if (!timeLabels.value.length) return '';
+    return isContinuousScale.value && isXAxisReversed.value
+        ? timeLabels.value.at(-1)?.text || ''
+        : timeLabels.value[0]?.text || '';
+});
+
+const minimapLabelRight = computed(() => {
+    if (!timeLabels.value.length) return '';
+    return isContinuousScale.value && isXAxisReversed.value
+        ? timeLabels.value[0]?.text || ''
+        : timeLabels.value.at(-1)?.text || '';
 });
 
 const selectedSeries = computed(() => {
@@ -10006,7 +10138,7 @@ defineExpose({
             :cutNullValues="FINAL_CONFIG.line.cutNullValues"
             :enableRangeHandles="FINAL_CONFIG.chart.zoom.enableRangeHandles"
             :enableSelectionDrag="FINAL_CONFIG.chart.zoom.enableSelectionDrag"
-            :end="slicer.end"
+            :end="minimapSlicerEnd"
             :focusOnDrag="FINAL_CONFIG.chart.zoom.focusOnDrag"
             :focusRangeRatio="FINAL_CONFIG.chart.zoom.focusRangeRatio"
             :fontSize="FINAL_CONFIG.chart.zoom.fontSize"
@@ -10014,10 +10146,10 @@ defineExpose({
             :immediate="!FINAL_CONFIG.chart.zoom.preview.enable"
             :inputColor="FINAL_CONFIG.chart.zoom.color"
             :isPreview="isPrecog"
-            :labelLeft="timeLabels[0] ? timeLabels[0].text : ''"
-            :labelRight="timeLabels.at(-1) ? timeLabels.at(-1).text : ''"
-            :max="slicerMax"
-            :min="slicerMin"
+            :labelLeft="minimapLabelLeft"
+            :labelRight="minimapLabelRight"
+            :max="minimapSlicerMax"
+            :min="minimapSlicerMin"
             :precision="
                 isContinuousScale
                     ? FINAL_CONFIG.chart.grid.labels.xAxis.rounding
@@ -10040,7 +10172,7 @@ defineExpose({
             "
             :minimapSelectedIndex="
                 isContinuousScale
-                    ? selectedMinimapXValue
+                    ? minimapSelectedXValue
                     : (selectedSerieIndex ?? selectedMinimapIndex)
             "
             :minimapSelectionRadius="
@@ -10053,14 +10185,14 @@ defineExpose({
             "
             :refreshStartPoint="
                 isContinuousScale
-                    ? slicerMin
+                    ? minimapSlicerMin
                     : FINAL_CONFIG.chart.zoom.startIndex !== null
                       ? FINAL_CONFIG.chart.zoom.startIndex
                       : 0
             "
             :refreshEndPoint="
                 isContinuousScale
-                    ? slicerMax
+                    ? minimapSlicerMax
                     : FINAL_CONFIG.chart.zoom.endIndex !== null
                       ? FINAL_CONFIG.chart.zoom.endIndex + 1
                       : Math.max(
@@ -10072,18 +10204,18 @@ defineExpose({
             :selectColor="FINAL_CONFIG.chart.zoom.highlightColor"
             :selectedSeries="selectedSeries"
             :smoothMinimap="FINAL_CONFIG.chart.zoom.minimap.smooth"
-            :start="slicer.start"
+            :start="minimapSlicerStart"
             :textColor="FINAL_CONFIG.chart.color"
             :timeLabels="allTimeLabels"
             :usePreciseLabels="
                 FINAL_CONFIG.chart.grid.labels.xAxisLabels.datetimeFormatter
                     .enable && !FINAL_CONFIG.chart.zoom.useDefaultFormat
             "
-            :valueEnd="slicer.end"
-            :valueStart="slicer.start"
+            :valueEnd="minimapSlicerEnd"
+            :valueStart="minimapSlicerStart"
             :verticalHandles="FINAL_CONFIG.chart.zoom.minimap.verticalHandles"
-            :minScale="FINAL_CONFIG.chart.grid.labels.yAxis.scaleMin"
-            :maxScale="FINAL_CONFIG.chart.grid.labels.yAxis.scaleMax"
+            :minScale="minimapScaleMin"
+            :maxScale="minimapScaleMax"
             :maxWidth="FINAL_CONFIG.chart.zoom.maxWidth"
             :minimapLeftInsetRatio="
                 width > 0 && FINAL_CONFIG.chart.zoom.autoFit
@@ -10109,13 +10241,13 @@ defineExpose({
             :handleFill="FINAL_CONFIG.chart.zoom.minimap.handleFill"
             :handleWidth="FINAL_CONFIG.chart.zoom.minimap.handleWidth"
             :isCursorPointer="isCursorPointer"
-            @futureEnd="(v) => setPrecog('end', v)"
-            @futureStart="(v) => setPrecog('start', v)"
+            @futureEnd="(v) => setMinimapPrecog('end', v)"
+            @futureStart="(v) => setMinimapPrecog('start', v)"
             @reset="refreshSlicer"
             @trapMouse="selectMinimapIndex"
             @trapMouseValue="selectMinimapXValue"
-            @update:end="onSlicerEnd"
-            @update:start="onSlicerStart"
+            @update:end="onMinimapSlicerEnd"
+            @update:start="onMinimapSlicerStart"
         >
             <template #reset-action="{ reset }">
                 <slot name="reset-action" v-bind="{ reset }" />
