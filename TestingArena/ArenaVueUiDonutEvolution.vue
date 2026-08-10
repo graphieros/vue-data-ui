@@ -19,6 +19,14 @@ const { vue_ui_donut_evolution: DEFAULT_CONFIG } = useConfig();
 const { CHECKBOX, NUMBER, RANGE, TEXT, COLOR, SELECT, createModel } =
     useConfigurationControls(DEFAULT_CONFIG);
 
+function makeDs(n) {
+    const arr = [];
+    for (let i = 0; i < n; i += 1) {
+        arr.push(Math.round(Math.random() * 10));
+    }
+    return arr;
+}
+
 const dataset = ref([]);
 onMounted(() => {
     dataset.value = undefined;
@@ -26,15 +34,15 @@ onMounted(() => {
         dataset.value = [
             {
                 name: 'Serie 1',
-                values: [1000, 34, 21, 13, 8, 5, 8, 13, 21, 34, 55],
+                values: makeDs(8),
             },
             {
                 name: 'Serie 2',
-                values: [50, 50, 50, 50, 50, 50, 50, 50, 50, 50],
+                values: makeDs(8),
             },
             {
                 name: 'Serie 3',
-                values: [50, 50, 50, 50, 50, 50, 50, 50, 50, 50],
+                values: makeDs(8),
             },
         ];
     }, 2000);
@@ -255,8 +263,8 @@ const model = createModel([
     COLOR('style.chart.zoom.color', { def: '#CCCCCC' }),
     COLOR('style.chart.zoom.highlightColor', { def: '#1A1A1A' }),
     CHECKBOX('style.chart.zoom.useResetSlot', { def: false }),
-    NUMBER('style.chart.zoom.startIndex', { def: null, min: 0, max: 100 }),
-    NUMBER('style.chart.zoom.endIndex', { def: null, min: 0, max: 100 }),
+    NUMBER('style.chart.zoom.startIndex', { def: 0, min: 0, max: 100 }),
+    NUMBER('style.chart.zoom.endIndex', { def: 7, min: 0, max: 100 }),
     CHECKBOX('style.chart.zoom.enableRangeHandles', { def: true }),
     CHECKBOX('style.chart.zoom.enableSelectionDrag', { def: true }),
     CHECKBOX('style.chart.zoom.focusOnDrag', { def: true }),
