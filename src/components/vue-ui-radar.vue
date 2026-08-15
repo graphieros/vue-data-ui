@@ -675,7 +675,7 @@ const plotHitRadius = computed(() => {
 
 const gridRotation = computed(() => {
     const rotate = Number(
-        FINAL_CONFIG.value.style.chart.layout.grid.rotate ?? 0,
+        FINAL_CONFIG.value.style.chart.layout.grid.rotation ?? 0,
     );
     return Number.isFinite(rotate) ? (rotate * Math.PI) / 180 : 0;
 });
