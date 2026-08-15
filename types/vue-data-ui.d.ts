@@ -7532,6 +7532,7 @@ declare module 'vue-data-ui' {
                     };
                     grid?: {
                         show?: boolean;
+                        rotation?: number;
                         stroke?: string;
                         strokeWidth?: number;
                         graduations?: number;
@@ -7541,6 +7542,7 @@ declare module 'vue-data-ui' {
                             show?: boolean;
                             fontSize?: number;
                             color?: string;
+                            offset?: number;
                         };
                     };
                 };
@@ -7590,6 +7592,7 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiRadarDatapoint = {
+        [key: string]: unknown;
         absoluteIndex: number;
         color: string;
         formatter: Formatter;

@@ -1828,6 +1828,7 @@ export function useConfig(options = {}) {
                     },
                     grid: {
                         show: true,
+                        rotation: 0,
                         stroke: COLOR_GRID,
                         strokeWidth: 0.5,
                         graduations: 5,
@@ -1837,6 +1838,7 @@ export function useConfig(options = {}) {
                             show: true,
                             fontSize: FONT._12,
                             color: COLOR_TEXT_PRIMARY,
+                            offset: 0,
                         },
                     },
                 },

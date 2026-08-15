@@ -229,11 +229,39 @@ const { svgRef } = useChartAccessibility({
     config: FINAL_CONFIG.value.style.chart.title,
 });
 
+function withGridRotateDefault(config) {
+    return {
+        ...config,
+        style: {
+            ...config.style,
+            chart: {
+                ...config.style.chart,
+                layout: {
+                    ...config.style.chart.layout,
+                    grid: {
+                        rotate: 0,
+                        ...config.style.chart.layout.grid,
+                    },
+                    labels: {
+                        ...config.style.chart.layout.labels,
+                        dataLabels: {
+                            offset: 0,
+                            ...config.style.chart.layout.labels.dataLabels,
+                        },
+                    },
+                },
+            },
+        },
+    };
+}
+
 function prepareConfig() {
-    const mergedConfig = useNestedProp({
-        userConfig: props.config,
-        defaultConfig: DEFAULT_CONFIG,
-    });
+    const mergedConfig = withGridRotateDefault(
+        useNestedProp({
+            userConfig: props.config,
+            defaultConfig: DEFAULT_CONFIG,
+        }),
+    );
 
     const theme = mergedConfig.theme;
     if (!theme) return mergedConfig;
@@ -638,12 +666,26 @@ const polygonRadius = computed(() => {
     return Math.min(svg.value.width, svg.value.height) / 3;
 });
 
+const plotHitRadius = computed(() => {
+    const radius = Number(
+        FINAL_CONFIG.value.style.chart.layout.plots.radius ?? 0,
+    );
+    return Math.max(Number.isFinite(radius) ? radius * 2.5 : 0, 10);
+});
+
+const gridRotation = computed(() => {
+    const rotate = Number(
+        FINAL_CONFIG.value.style.chart.layout.grid.rotate ?? 0,
+    );
+    return Number.isFinite(rotate) ? (rotate * Math.PI) / 180 : 0;
+});
+
 const outerPolygon = computed(() => {
     return createPolygonPath({
         plot: { x: svg.value.width / 2, y: svg.value.height / 2 },
         radius: polygonRadius.value,
         sides: apexes.value,
-        rotation: 0,
+        rotation: gridRotation.value,
     });
 });
 
@@ -691,27 +733,37 @@ const radar = computed(() => {
 });
 
 function offset({ x, y }) {
-    let anchor = 'middle';
-    x = Math.round(x);
-    y = Math.round(y);
-    if (x > svg.value.width / 2) {
-        x += 12;
-        anchor = 'start';
+    const centerX = svg.value.width / 2;
+    const centerY = svg.value.height / 2;
+    const dx = x - centerX;
+    const dy = y - centerY;
+    const distance = Math.hypot(dx, dy);
+    const configuredOffset = Number(
+        FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.offset ?? 0,
+    );
+    const labelOffset =
+        20 + (Number.isFinite(configuredOffset) ? configuredOffset : 0);
+
+    if (!distance) {
+        return { x, y, anchor: 'middle' };
     }
-    if (x < svg.value.width / 2) {
-        x -= 12;
+
+    const unitX = dx / distance;
+    const unitY = dy / distance;
+    const epsilon = 0.01;
+
+    let anchor = 'middle';
+    if (unitX > epsilon) {
+        anchor = 'start';
+    } else if (unitX < -epsilon) {
         anchor = 'end';
     }
-    if (y > svg.value.height / 2 + 1) {
-        y += 20;
-    }
-    if (y < svg.value.height / 2 - 1) {
-        y -= 12;
-    }
-    if (y === svg.value.height / 2) {
-        y += 4;
-    }
-    return { x, y, anchor };
+
+    return {
+        x: x + unitX * labelOffset,
+        y: y + unitY * labelOffset,
+        anchor,
+    };
 }
 
 const labelFontSize = computed({
@@ -1531,12 +1583,14 @@ defineExpose({
                         :stroke-width="
                             FINAL_CONFIG.style.chart.layout.grid.strokeWidth
                         "
+                        style="pointer-events: none"
                     />
                     <!-- INNER POLYGONS -->
                     <g
                         v-if="
                             FINAL_CONFIG.style.chart.layout.grid.graduations > 0
                         "
+                        style="pointer-events: none"
                     >
                         <path
                             data-cy="polygon-inner"
@@ -1549,7 +1603,7 @@ defineExpose({
                                     },
                                     radius: radius,
                                     sides: apexes,
-                                    rotation: 0,
+                                    rotation: gridRotation,
                                 }).path
                             "
                             fill="none"
@@ -1576,6 +1630,7 @@ defineExpose({
                     "
                     stroke-linejoin="round"
                     stroke-linecap="round"
+                    style="pointer-events: none"
                 />
 
                 <!-- APEX LABELS -->
@@ -1591,6 +1646,7 @@ defineExpose({
                         :x="label.labelX"
                         :y="label.labelY"
                         :text-anchor="label.labelAnchor"
+                        dominant-baseline="middle"
                         :font-size="
                             FINAL_CONFIG.style.chart.layout.labels.dataLabels
                                 .fontSize
@@ -1639,6 +1695,7 @@ defineExpose({
                                     inSegregation === i &&
                                     FINAL_CONFIG.useCssAnimation,
                             }"
+                            style="pointer-events: none"
                         />
                         <polygon
                             data-cy="polygon-datapoint"
@@ -1681,6 +1738,7 @@ defineExpose({
                                     inSegregation === i &&
                                     FINAL_CONFIG.useCssAnimation,
                             }"
+                            style="pointer-events: none"
                         />
                     </g>
                 </g>
@@ -1705,45 +1763,80 @@ defineExpose({
                         FINAL_CONFIG.style.chart.layout.targetReference
                             .strokeDasharray
                     "
+                    style="pointer-events: none"
                 />
 
                 <g v-if="FINAL_CONFIG.style.chart.layout.plots.show">
-                    <g v-for="(category, i) in radar">
-                        <circle
-                            data-cy="datapoint-circle"
+                    <g
+                        v-for="(category, i) in radar"
+                        :key="`radar-category-${i}`"
+                    >
+                        <g
                             v-for="(p, j) in category.plots"
-                            :cx="p.x"
-                            :cy="p.y"
-                            :fill="
-                                segregated.includes(j)
-                                    ? 'transparent'
-                                    : datasetCopy[j]
-                                      ? datasetCopy[j].color
-                                      : 'transparent'
+                            :key="`radar-plot-${i}-${j}`"
+                            @mouseenter="
+                                !segregated.includes(j) &&
+                                useTooltip(category, i, 'pointer')
                             "
-                            :r="
-                                selectedIndex !== null && selectedIndex === i
-                                    ? FINAL_CONFIG.style.chart.layout.plots
-                                          .radius * 1.6
-                                    : FINAL_CONFIG.style.chart.layout.plots
-                                          .radius
+                            @mouseleave="
+                                !segregated.includes(j) &&
+                                onTrapLeave(category, i)
                             "
-                            :stroke="
-                                segregated.includes(j)
-                                    ? 'transparent'
-                                    : FINAL_CONFIG.style.chart.backgroundColor
+                            @click="
+                                !segregated.includes(j) &&
+                                onTrapClick(category, i)
                             "
-                            :stroke-width="0.5"
-                            :class="{
-                                'animated-out':
-                                    segregated.includes(j) &&
-                                    FINAL_CONFIG.useCssAnimation,
-                                'animated-in':
-                                    isAnimating &&
-                                    inSegregation === j &&
-                                    FINAL_CONFIG.useCssAnimation,
-                            }"
-                        />
+                        >
+                            <circle
+                                :cx="p.x"
+                                :cy="p.y"
+                                :r="plotHitRadius"
+                                fill="transparent"
+                                stroke="transparent"
+                                :style="{
+                                    pointerEvents: segregated.includes(j)
+                                        ? 'none'
+                                        : 'all',
+                                }"
+                            />
+                            <circle
+                                data-cy="datapoint-circle"
+                                :cx="p.x"
+                                :cy="p.y"
+                                :fill="
+                                    segregated.includes(j)
+                                        ? 'transparent'
+                                        : datasetCopy[j]
+                                          ? datasetCopy[j].color
+                                          : 'transparent'
+                                "
+                                :r="
+                                    selectedIndex !== null &&
+                                    selectedIndex === i
+                                        ? FINAL_CONFIG.style.chart.layout.plots
+                                              .radius * 1.6
+                                        : FINAL_CONFIG.style.chart.layout.plots
+                                              .radius
+                                "
+                                :stroke="
+                                    segregated.includes(j)
+                                        ? 'transparent'
+                                        : FINAL_CONFIG.style.chart
+                                              .backgroundColor
+                                "
+                                :stroke-width="0.5"
+                                :class="{
+                                    'animated-out':
+                                        segregated.includes(j) &&
+                                        FINAL_CONFIG.useCssAnimation,
+                                    'animated-in':
+                                        isAnimating &&
+                                        inSegregation === j &&
+                                        FINAL_CONFIG.useCssAnimation,
+                                }"
+                                style="pointer-events: none"
+                            />
+                        </g>
                     </g>
                 </g>
                 <slot

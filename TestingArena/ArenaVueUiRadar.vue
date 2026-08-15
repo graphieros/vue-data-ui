@@ -182,6 +182,9 @@ const model = createModel([
     }),
     CHECKBOX('style.chart.layout.dataPolygon.useGradient', { def: true }),
     CHECKBOX('style.chart.layout.grid.show', { def: true }),
+
+    NUMBER('style.chart.layout.grid.rotation', { def: 0, min: -360, max: 360 }),
+
     COLOR('style.chart.layout.grid.stroke', { def: '#e1e5e8' }),
     RANGE('style.chart.layout.grid.strokeWidth', {
         def: 0.5,
@@ -191,6 +194,11 @@ const model = createModel([
     }),
     RANGE('style.chart.layout.grid.graduations', { def: 5, min: 2, max: 20 }),
     CHECKBOX('style.chart.layout.labels.dataLabels.show', { def: true }),
+    NUMBER('style.chart.layout.labels.dataLabels.offset', {
+        def: 0,
+        min: -24,
+        max: 24,
+    }),
     RANGE('style.chart.layout.labels.dataLabels.fontSize', {
         def: 12,
         min: 8,
