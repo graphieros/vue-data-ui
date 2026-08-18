@@ -1666,6 +1666,7 @@ export function useConfig(options = {}) {
         debug: false, // v3
         loading: false, // v3
         responsive: false,
+        transitions: TRANSITIONS,
         a11y: {
             ...A11Y,
             translations: {
@@ -1720,10 +1721,20 @@ export function useConfig(options = {}) {
                     rect: {
                         rounded: true,
                         rounding: 2,
-                        stroke: COLOR_BLACK,
+                        stroke: COLOR_TEXT_PRIMARY,
                         strokeWidth: 1,
                         useGradient: true,
                         gradientIntensity: 40,
+                        merged: false,
+                        selection: {
+                            unselectedOpacity: 0.6,
+                            wrap: {
+                                show: true,
+                                stroke: COLOR_TEXT_PRIMARY,
+                                strokeWidth: 3,
+                                strokeLinejoin: 'round',
+                            },
+                        },
                     },
                 },
                 title: TITLE,

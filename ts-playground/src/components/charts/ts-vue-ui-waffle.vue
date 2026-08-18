@@ -16,7 +16,6 @@ import 'vue-data-ui/style.css';
 import KeyboardNavigationHint from '../slots/common/keyboard-navigation-hint.vue';
 import Watermark from '../slots/common/watermark.vue';
 import Skeleton from '../slots/common/skeleton.vue';
-import PatternSlot from '../slots/common/pattern-slot.vue';
 import CommonAnnotatorActionColor from '../slots/common/annotator-action-color.vue';
 import CommonAnnotatorActionDraw from '../slots/common/annotator-action-draw.vue';
 import CommonAnnotatorActionUndo from '../slots/common/annotator-action-undo.vue';
@@ -109,11 +108,21 @@ const testPreconfig = computed<VueUiWaffleConfig>(() => {
                     },
                     rect: {
                         rounded: true,
+                        merged: false,
                         rounding: 2,
                         stroke: '#2D353C',
                         strokeWidth: 1,
                         useGradient: true,
                         gradientIntensity: 40,
+                        selection: {
+                            unselectedOpacity: 0.6,
+                            wrap: {
+                                show: false,
+                                stroke: '#2D353C',
+                                strokeWidth: 3,
+                                strokeLinejoin: 'round',
+                            },
+                        },
                     },
                 },
                 title: {

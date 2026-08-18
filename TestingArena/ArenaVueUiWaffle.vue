@@ -165,6 +165,23 @@ const model = createModel([
         min: 0,
         max: 100,
     }),
+    CHECKBOX('style.chart.layout.rect.merged', { def: false }),
+    NUMBER('style.chart.layout.rect.selection.unselectedOpacity', {
+        def: 0.6,
+        min: 0,
+        max: 1,
+        step: 0.1,
+    }),
+    CHECKBOX('style.chart.layout.rect.selection.wrap.show', { def: true }),
+    COLOR('style.chart.layout.rect.selection.wrap.stroke', { def: '#1A1A1A' }),
+    NUMBER('style.chart.layout.rect.selection.wrap.strokeWidth', {
+        def: 3,
+        min: 0,
+        max: 24,
+    }),
+    TEXT('style.chart.layout.rect.selection.wrap.strokeLinejoin', {
+        def: 'round',
+    }),
 
     TEXT('style.chart.title.text', {
         def: 'At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis',

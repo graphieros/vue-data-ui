@@ -29,7 +29,12 @@
                     "rect": {
                         "rounded": false,
                         "stroke": "#1A1A1A",
-                        "useGradient": false
+                        "useGradient": false,
+                        "selection": {
+                            "wrap": {
+                                "stroke": "#CCCCCC"
+                            }
+                        }
                     }
                 },
                 "legend": {
@@ -74,7 +79,12 @@
                 "layout": {
                     "rect": {
                         "rounded": false,
-                        "stroke": "#1A1A1A"
+                        "stroke": "#1A1A1A",
+                        "selection": {
+                            "wrap": {
+                                "stroke": "#CCCCCC"
+                            }
+                        }
                     }
                 },
                 "legend": {
@@ -119,7 +129,12 @@
                     "rect": {
                         "rounded": false,
                         "stroke": "#FFF8E1",
-                        "useGradient": false
+                        "useGradient": false,
+                        "selection": {
+                            "wrap": {
+                                "stroke": "#424242"
+                            }
+                        }
                     }
                 },
                 "legend": {
@@ -164,7 +179,12 @@
                     "rect": {
                         "rounded": false,
                         "stroke": "#1E1E1E",
-                        "useGradient": false
+                        "useGradient": false,
+                        "selection": {
+                            "wrap": {
+                                "stroke": "#BDBDBD"
+                            }
+                        }
                     }
                 },
                 "legend": {
@@ -209,7 +229,12 @@
                     "rect": {
                         "rounded": false,
                         "stroke": "#66CC66",
-                        "useGradient": false
+                        "useGradient": false,
+                        "selection": {
+                            "wrap": {
+                                "stroke": "#99AA99"
+                            }
+                        }
                     }
                 },
                 "legend": {
@@ -252,7 +277,12 @@
                 "layout": {
                     "rect": {
                         "rounding": 4,
-                        "stroke": "#fbfafa"
+                        "stroke": "#fbfafa",
+                        "selection": {
+                            "wrap": {
+                                "stroke": "#8A9892"
+                            }
+                        }
                     }
                 },
                 "legend": {
@@ -295,7 +325,12 @@
                     "rect": {
                         "rounded": false,
                         "stroke": "#404C5A",
-                        "useGradient": false
+                        "useGradient": false,
+                        "selection": {
+                            "wrap": {
+                                "stroke": "#50606C"
+                            }
+                        }
                     }
                 },
                 "legend": {

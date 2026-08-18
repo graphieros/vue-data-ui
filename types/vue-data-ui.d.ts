@@ -7206,6 +7206,7 @@ declare module 'vue-data-ui' {
         useBlurOnHover?: boolean;
         useCustomCells?: boolean;
         useAnimation?: boolean;
+        transitions?: ChartTransitions;
         style?: {
             fontFamily?: string;
             chart?: {
@@ -7247,6 +7248,16 @@ declare module 'vue-data-ui' {
                         strokeWidth?: number;
                         useGradient?: boolean;
                         gradientIntensity?: number;
+                        merged?: boolean;
+                        selection?: {
+                            unselectedOpacity?: number;
+                            wrap?: {
+                                show?: boolean;
+                                stroke?: string;
+                                strokeWidth?: number;
+                                strokeLinejoin?: 'bevel' | 'miter' | 'round';
+                            };
+                        };
                     };
                 };
                 title?: ChartTitle;

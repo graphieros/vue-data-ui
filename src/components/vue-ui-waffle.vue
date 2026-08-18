@@ -42,6 +42,7 @@ import { useNestedProp } from '../useNestedProp';
 import { useResponsive } from '../useResponsive';
 import { useThemeCheck } from '../useThemeCheck';
 import { useChartExport } from '../useChartExport';
+import { useTransitions } from '../useTransitions.js';
 import { useUserOptionState } from '../useUserOptionState';
 import { useChartAccessibility } from '../useChartAccessibility';
 import { usePrefersReducedMotion } from '../usePrefersMotion';
@@ -126,6 +127,11 @@ const tooltipTriggerMode = ref('pointer'); // a11y
 const isFocus = ref(false); // a11y
 
 const FINAL_CONFIG = ref(prepareConfig());
+
+const { transitionEnabled } = useTransitions({
+    config: () => FINAL_CONFIG.value.transitions,
+    dataset: () => props.dataset,
+});
 
 useHints({
     config: () => FINAL_CONFIG.value,
@@ -1242,10 +1248,220 @@ function getBlurFilter(index) {
     }
 }
 
-function showDataLabel(i, position) {
-    if (!FINAL_CONFIG.value.style.chart.layout.labels.captions.show)
-        return false;
+function getRectStyle(index) {
+    if ([null, undefined].includes(selectedSerie.value)) {
+        return { opacity: 1 };
+    } else if (selectedSerie.value === index) {
+        return { opacity: 1 };
+    } else {
+        return {
+            opacity:
+                FINAL_CONFIG.value.style.chart.layout.rect.selection
+                    .unselectedOpacity,
+        };
+    }
+}
 
+function simplifyPolygon(points) {
+    if (points.length <= 3) return points;
+    return points.filter((point, index) => {
+        const previous = points[(index - 1 + points.length) % points.length];
+        const next = points[(index + 1) % points.length];
+        const isVertical = previous.x === point.x && point.x === next.x;
+        const isHorizontal = previous.y === point.y && point.y === next.y;
+        return !isVertical && !isHorizontal;
+    });
+}
+
+function getBoundaryPolygons(cells) {
+    if (!cells.length) return [];
+
+    const cellKeys = new Set(cells.map(({ row, col }) => `${row}:${col}`));
+    const components = [];
+    const visited = new Set();
+    const neighbors = [
+        [-1, 0],
+        [0, 1],
+        [1, 0],
+        [0, -1],
+    ];
+
+    cells.forEach((cell) => {
+        const startKey = `${cell.row}:${cell.col}`;
+        if (visited.has(startKey)) return;
+
+        const component = [];
+        const queue = [cell];
+        visited.add(startKey);
+
+        while (queue.length) {
+            const current = queue.shift();
+            component.push(current);
+            neighbors.forEach(([rowOffset, colOffset]) => {
+                const row = current.row + rowOffset;
+                const col = current.col + colOffset;
+                const key = `${row}:${col}`;
+                if (!cellKeys.has(key) || visited.has(key)) return;
+                visited.add(key);
+                queue.push({ row, col });
+            });
+        }
+        components.push(component);
+    });
+
+    const polygons = [];
+
+    components.forEach((component) => {
+        const occupied = new Set(
+            component.map(({ row, col }) => `${row}:${col}`),
+        );
+        const edges = [];
+
+        component.forEach(({ row, col }) => {
+            if (!occupied.has(`${row - 1}:${col}`)) {
+                edges.push({
+                    start: { x: col, y: row },
+                    end: { x: col + 1, y: row },
+                });
+            }
+            if (!occupied.has(`${row}:${col + 1}`)) {
+                edges.push({
+                    start: { x: col + 1, y: row },
+                    end: { x: col + 1, y: row + 1 },
+                });
+            }
+            if (!occupied.has(`${row + 1}:${col}`)) {
+                edges.push({
+                    start: { x: col + 1, y: row + 1 },
+                    end: { x: col, y: row + 1 },
+                });
+            }
+            if (!occupied.has(`${row}:${col - 1}`)) {
+                edges.push({
+                    start: { x: col, y: row + 1 },
+                    end: { x: col, y: row },
+                });
+            }
+        });
+
+        const outgoing = new Map();
+        const edgeKey = (edge) =>
+            `${edge.start.x}:${edge.start.y}>${edge.end.x}:${edge.end.y}`;
+        const pointKey = (point) => `${point.x}:${point.y}`;
+        const unused = new Set(edges.map(edgeKey));
+
+        edges.forEach((edge) => {
+            const key = pointKey(edge.start);
+            if (!outgoing.has(key)) outgoing.set(key, []);
+            outgoing.get(key).push(edge);
+        });
+
+        while (unused.size) {
+            const firstKey = unused.values().next().value;
+            const firstEdge = edges.find((edge) => edgeKey(edge) === firstKey);
+            const start = firstEdge.start;
+            const polygon = [start];
+            let currentEdge = firstEdge;
+            while (currentEdge) {
+                unused.delete(edgeKey(currentEdge));
+                const current = currentEdge.end;
+                if (pointKey(current) === pointKey(start)) {
+                    break;
+                }
+                polygon.push(current);
+                currentEdge = (outgoing.get(pointKey(current)) || []).find(
+                    (edge) => unused.has(edgeKey(edge)),
+                );
+            }
+            if (polygon.length >= 4) {
+                polygons.push(simplifyPolygon(polygon));
+            }
+        }
+    });
+
+    return polygons;
+}
+
+function getSerieCells(serieIndex) {
+    const size = FINAL_CONFIG.value.style.chart.layout.grid.size;
+    const isVertical = FINAL_CONFIG.value.style.chart.layout.grid.vertical;
+    const cells = [];
+    rects.value.forEach((rect, index) => {
+        if (rect.serieIndex !== serieIndex) return;
+        const primary = Math.floor(index / size);
+        const secondary = index % size;
+        cells.push({
+            row: isVertical ? secondary : primary,
+            col: isVertical ? primary : secondary,
+        });
+    });
+    return cells;
+}
+
+function getSerieBoundaryPolygons(serieIndex) {
+    const cellWidth = absoluteRectDimension.value;
+    const cellHeight = absoluteRectDimensionY.value;
+    return getBoundaryPolygons(getSerieCells(serieIndex)).map((polygon) =>
+        polygon.map(({ x, y }) => ({
+            x: x * cellWidth,
+            y: drawingArea.value.top + y * cellHeight,
+        })),
+    );
+}
+
+function polygonToPoints(polygon) {
+    return polygon.map(({ x, y }) => `${x},${y}`).join(' ');
+}
+
+function polygonsToPath(polygons) {
+    return polygons
+        .map((polygon) => {
+            if (!polygon.length) return '';
+            const [first, ...rest] = polygon;
+            const segments = rest.map(({ x, y }) => `L ${x} ${y}`).join(' ');
+            return `M ${first.x} ${first.y} ${segments} Z`;
+        })
+        .filter(Boolean)
+        .join(' ');
+}
+
+const selectionWrapPolygons = computed(() => {
+    const selection = FINAL_CONFIG.value.style.chart.layout.rect.selection;
+    if (
+        !selection?.wrap?.show ||
+        [null, undefined].includes(selectedSerie.value)
+    ) {
+        return [];
+    }
+    return getSerieBoundaryPolygons(selectedSerie.value).map(polygonToPoints);
+});
+
+const mergedSeriePaths = computed(() => {
+    if (!FINAL_CONFIG.value.style.chart.layout.rect.merged) {
+        return [];
+    }
+    const series = new Map();
+    rects.value.forEach((rect, index) => {
+        if (series.has(rect.serieIndex)) return;
+        series.set(rect.serieIndex, {
+            serieIndex: rect.serieIndex,
+            absoluteIndex: rect.absoluteIndex,
+            color: rect.color,
+            gradientIndex: index,
+        });
+    });
+    return Array.from(series.values())
+        .map((serie) => ({
+            ...serie,
+            d: polygonsToPath(getSerieBoundaryPolygons(serie.serieIndex)),
+        }))
+        .filter((serie) => serie.d);
+});
+
+function showDataLabel(i, position) {
+    if (!FINAL_CONFIG.value.style.chart.layout.labels.captions.show) {
+        return false;
+    }
     return (
         rects.value.length &&
         !isAnimating.value &&
@@ -1915,6 +2131,7 @@ defineExpose({
                 :class="{
                     'vue-data-ui-fullscreen--on': isFullscreen,
                     'vue-data-ui-fulscreen--off': !isFullscreen,
+                    'vue-data-ui-no-transition': !transitionEnabled,
                 }"
                 data-cy="waffle-svg"
                 tabindex="0"
@@ -2030,68 +2247,75 @@ defineExpose({
                         </defs>
                     </g>
 
-                    <rect
-                        data-cy="datapoint-underlayer"
-                        v-for="(position, i) in positions"
-                        :rx="
-                            FINAL_CONFIG.style.chart.layout.rect.rounded
-                                ? FINAL_CONFIG.style.chart.layout.rect.rounding
-                                : 0
-                        "
-                        :x="
-                            position.x +
-                            FINAL_CONFIG.style.chart.layout.grid.spaceBetween /
-                                2
-                        "
-                        :y="
-                            position.y +
-                            FINAL_CONFIG.style.chart.layout.grid.spaceBetween /
-                                2
-                        "
-                        :height="rectDimensionY <= 0 ? 0.0001 : rectDimensionY"
-                        :width="rectDimension <= 0 ? 0.0001 : rectDimension"
-                        fill="white"
-                        :stroke="FINAL_CONFIG.style.chart.layout.rect.stroke"
-                        :stroke-width="
-                            FINAL_CONFIG.style.chart.layout.rect.strokeWidth
-                        "
-                        :filter="getBlurFilter(rects[i].serieIndex)"
-                    />
-                    <rect
-                        data-cy="datapoint-rect"
-                        v-for="(position, i) in positions"
-                        :rx="
-                            FINAL_CONFIG.style.chart.layout.rect.rounded
-                                ? FINAL_CONFIG.style.chart.layout.rect.rounding
-                                : 0
-                        "
-                        :x="
-                            position.x +
-                            FINAL_CONFIG.style.chart.layout.grid.spaceBetween /
-                                2
-                        "
-                        :y="
-                            position.y +
-                            FINAL_CONFIG.style.chart.layout.grid.spaceBetween /
-                                2
-                        "
-                        :height="rectDimensionY <= 0 ? 0.0001 : rectDimensionY"
-                        :width="rectDimension <= 0 ? 0.0001 : rectDimension"
-                        :fill="
-                            FINAL_CONFIG.style.chart.layout.rect.useGradient &&
-                            FINAL_CONFIG.style.chart.layout.rect
-                                .gradientIntensity > 0
-                                ? `url(#gradient_${uid}_${i})`
-                                : rects[i].color
-                        "
-                        :stroke="FINAL_CONFIG.style.chart.layout.rect.stroke"
-                        :stroke-width="
-                            FINAL_CONFIG.style.chart.layout.rect.strokeWidth
-                        "
-                        :filter="getBlurFilter(rects[i].serieIndex)"
-                    />
-                    <g v-if="$slots.pattern">
+                    <template
+                        v-if="FINAL_CONFIG.style.chart.layout.rect.merged"
+                    >
+                        <path
+                            v-for="serie in mergedSeriePaths"
+                            :key="`merged-underlayer-${serie.serieIndex}`"
+                            data-cy="datapoint-underlayer"
+                            :d="serie.d"
+                            fill="white"
+                            fill-rule="evenodd"
+                            :stroke="
+                                FINAL_CONFIG.style.chart.layout.rect.stroke
+                            "
+                            :stroke-width="
+                                FINAL_CONFIG.style.chart.layout.rect.strokeWidth
+                            "
+                            stroke-linejoin="round"
+                            :filter="getBlurFilter(serie.serieIndex)"
+                            :style="getRectStyle(serie.serieIndex)"
+                            :class="{
+                                'vue-data-ui-transition': transitionEnabled,
+                            }"
+                        />
+                        <path
+                            v-for="serie in mergedSeriePaths"
+                            :key="`merged-serie-${serie.serieIndex}`"
+                            data-cy="datapoint-rect"
+                            :d="serie.d"
+                            :fill="
+                                FINAL_CONFIG.style.chart.layout.rect
+                                    .useGradient &&
+                                FINAL_CONFIG.style.chart.layout.rect
+                                    .gradientIntensity > 0
+                                    ? `url(#gradient_${uid}_${serie.gradientIndex})`
+                                    : serie.color
+                            "
+                            fill-rule="evenodd"
+                            :stroke="
+                                FINAL_CONFIG.style.chart.layout.rect.stroke
+                            "
+                            :stroke-width="
+                                FINAL_CONFIG.style.chart.layout.rect.strokeWidth
+                            "
+                            stroke-linejoin="round"
+                            :filter="getBlurFilter(serie.serieIndex)"
+                            :style="getRectStyle(serie.serieIndex)"
+                            :class="{
+                                'vue-data-ui-transition': transitionEnabled,
+                            }"
+                        />
+                        <g v-if="$slots.pattern">
+                            <path
+                                v-for="serie in mergedSeriePaths"
+                                :key="`merged-pattern-${serie.serieIndex}`"
+                                :d="serie.d"
+                                :fill="`url(#pattern_${uid}_${serie.absoluteIndex})`"
+                                fill-rule="evenodd"
+                                stroke="none"
+                                :filter="getBlurFilter(serie.serieIndex)"
+                                :style="getRectStyle(serie.serieIndex)"
+                                :class="{
+                                    'vue-data-ui-transition': transitionEnabled,
+                                }"
+                            />
+                        </g>
+                    </template>
+                    <template v-else>
                         <rect
+                            data-cy="datapoint-underlayer"
                             v-for="(position, i) in positions"
                             :rx="
                                 FINAL_CONFIG.style.chart.layout.rect.rounded
@@ -2115,11 +2339,103 @@ defineExpose({
                                 rectDimensionY <= 0 ? 0.0001 : rectDimensionY
                             "
                             :width="rectDimension <= 0 ? 0.0001 : rectDimension"
-                            :fill="`url(#pattern_${uid}_${rects[i].absoluteIndex})`"
-                            stroke="none"
+                            fill="white"
+                            :stroke="
+                                FINAL_CONFIG.style.chart.layout.rect.stroke
+                            "
+                            :stroke-width="
+                                FINAL_CONFIG.style.chart.layout.rect.strokeWidth
+                            "
                             :filter="getBlurFilter(rects[i].serieIndex)"
+                            :style="getRectStyle(rects[i].serieIndex)"
+                            :class="{
+                                'vue-data-ui-transition': transitionEnabled,
+                            }"
                         />
-                    </g>
+                        <rect
+                            data-cy="datapoint-rect"
+                            v-for="(position, i) in positions"
+                            :rx="
+                                FINAL_CONFIG.style.chart.layout.rect.rounded
+                                    ? FINAL_CONFIG.style.chart.layout.rect
+                                          .rounding
+                                    : 0
+                            "
+                            :x="
+                                position.x +
+                                FINAL_CONFIG.style.chart.layout.grid
+                                    .spaceBetween /
+                                    2
+                            "
+                            :y="
+                                position.y +
+                                FINAL_CONFIG.style.chart.layout.grid
+                                    .spaceBetween /
+                                    2
+                            "
+                            :height="
+                                rectDimensionY <= 0 ? 0.0001 : rectDimensionY
+                            "
+                            :width="rectDimension <= 0 ? 0.0001 : rectDimension"
+                            :fill="
+                                FINAL_CONFIG.style.chart.layout.rect
+                                    .useGradient &&
+                                FINAL_CONFIG.style.chart.layout.rect
+                                    .gradientIntensity > 0
+                                    ? `url(#gradient_${uid}_${i})`
+                                    : rects[i].color
+                            "
+                            :stroke="
+                                FINAL_CONFIG.style.chart.layout.rect.stroke
+                            "
+                            :stroke-width="
+                                FINAL_CONFIG.style.chart.layout.rect.strokeWidth
+                            "
+                            :filter="getBlurFilter(rects[i].serieIndex)"
+                            :style="getRectStyle(rects[i].serieIndex)"
+                            :class="{
+                                'vue-data-ui-transition': transitionEnabled,
+                            }"
+                        />
+                        <g v-if="$slots.pattern">
+                            <rect
+                                v-for="(position, i) in positions"
+                                :rx="
+                                    FINAL_CONFIG.style.chart.layout.rect.rounded
+                                        ? FINAL_CONFIG.style.chart.layout.rect
+                                              .rounding
+                                        : 0
+                                "
+                                :x="
+                                    position.x +
+                                    FINAL_CONFIG.style.chart.layout.grid
+                                        .spaceBetween /
+                                        2
+                                "
+                                :y="
+                                    position.y +
+                                    FINAL_CONFIG.style.chart.layout.grid
+                                        .spaceBetween /
+                                        2
+                                "
+                                :height="
+                                    rectDimensionY <= 0
+                                        ? 0.0001
+                                        : rectDimensionY
+                                "
+                                :width="
+                                    rectDimension <= 0 ? 0.0001 : rectDimension
+                                "
+                                :fill="`url(#pattern_${uid}_${rects[i].absoluteIndex})`"
+                                stroke="none"
+                                :filter="getBlurFilter(rects[i].serieIndex)"
+                                :style="getRectStyle(rects[i].serieIndex)"
+                                :class="{
+                                    'vue-data-ui-transition': transitionEnabled,
+                                }"
+                            />
+                        </g>
+                    </template>
                 </template>
 
                 <template v-if="$slots.cellSvg">
@@ -2143,6 +2459,27 @@ defineExpose({
                         />
                     </g>
                 </template>
+
+                <polygon
+                    v-for="(points, polygonIndex) in selectionWrapPolygons"
+                    :key="`selected-series-wrap-${polygonIndex}`"
+                    data-cy="selected-series-wrap"
+                    :points="points"
+                    fill="none"
+                    :stroke="
+                        FINAL_CONFIG.style.chart.layout.rect.selection.wrap
+                            .stroke
+                    "
+                    :stroke-width="
+                        FINAL_CONFIG.style.chart.layout.rect.selection.wrap
+                            .strokeWidth
+                    "
+                    :stroke-linejoin="
+                        FINAL_CONFIG.style.chart.layout.rect.selection.wrap
+                            .strokeLinejoin
+                    "
+                    pointer-events="none"
+                />
 
                 <!-- DATA LABELS -->
                 <template v-for="(position, i) in positions">
@@ -2176,6 +2513,7 @@ defineExpose({
                         "
                         :fill="adaptColorToBackground(rects[i].color)"
                         :filter="getBlurFilter(rects[i].serieIndex)"
+                        :class="{ 'vue-data-ui-transition': transitionEnabled }"
                     />
                 </template>
 
@@ -2468,5 +2806,21 @@ svg:focus-visible {
     clip: rect(0 0 0 0);
     white-space: normal;
     border: 0;
+}
+
+.vue-data-ui-transition {
+    transition: opacity 0.2s ease-in-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .vue-data-ui-component * {
+        transition: none !important;
+        animation: none !important;
+    }
+}
+
+.vue-data-ui-no-transition * {
+    transition: none !important;
+    animation: none !important;
 }
 </style>
