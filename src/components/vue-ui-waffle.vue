@@ -1448,6 +1448,7 @@ const mergedSeriePaths = computed(() => {
             absoluteIndex: rect.absoluteIndex,
             color: rect.color,
             gradientIndex: index,
+            rectIndex: index,
         });
     });
     return Array.from(series.values())
@@ -2517,25 +2518,50 @@ defineExpose({
                     />
                 </template>
 
-                <rect
-                    data-cy="tooltip-trap"
-                    v-for="(position, i) in positions"
-                    :x="
-                        position.x +
-                        FINAL_CONFIG.style.chart.layout.grid.spaceBetween / 2
+                <template
+                    v-if="
+                        FINAL_CONFIG.style.chart.layout.rect.merged &&
+                        !FINAL_CONFIG.useCustomCells
                     "
-                    :y="
-                        position.y +
-                        FINAL_CONFIG.style.chart.layout.grid.spaceBetween / 2
-                    "
-                    :height="absoluteRectDimensionY"
-                    :width="absoluteRectDimension"
-                    fill="transparent"
-                    stroke="none"
-                    @mouseover="useTooltip(i)"
-                    @mouseleave="onTrapLeave(i)"
-                    @click="selectDatapoint(i)"
-                />
+                >
+                    <path
+                        v-for="serie in mergedSeriePaths"
+                        :key="`tooltip-trap-${serie.serieIndex}`"
+                        data-cy="tooltip-trap"
+                        :d="serie.d"
+                        fill="transparent"
+                        fill-rule="evenodd"
+                        stroke="none"
+                        pointer-events="fill"
+                        @mouseover="useTooltip(serie.rectIndex)"
+                        @mouseleave="onTrapLeave(serie.rectIndex)"
+                        @click="selectDatapoint(serie.rectIndex)"
+                    />
+                </template>
+                <template v-else>
+                    <rect
+                        data-cy="tooltip-trap"
+                        v-for="(position, i) in positions"
+                        :key="`tooltip-trap-${i}`"
+                        :x="
+                            position.x +
+                            FINAL_CONFIG.style.chart.layout.grid.spaceBetween /
+                                2
+                        "
+                        :y="
+                            position.y +
+                            FINAL_CONFIG.style.chart.layout.grid.spaceBetween /
+                                2
+                        "
+                        :height="absoluteRectDimensionY"
+                        :width="absoluteRectDimension"
+                        fill="transparent"
+                        stroke="none"
+                        @mouseover="useTooltip(i)"
+                        @mouseleave="onTrapLeave(i)"
+                        @click="selectDatapoint(i)"
+                    />
+                </template>
                 <slot
                     name="svg"
                     :svg="{
