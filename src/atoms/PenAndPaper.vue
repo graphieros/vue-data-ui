@@ -50,7 +50,7 @@ const G = ref(null);
 const currentDrawingPath = ref(null);
 const currentLine = ref(null);
 const startPoint = ref(null);
-const arrowMarkerId = ref(`arrow-${createUid()}`);
+const arrowMarkerIds = new Map();
 const ARROW_DEFS_ID = ref(`arrow-def-${createUid()}`);
 
 const isEditingText = ref(false);
@@ -110,6 +110,7 @@ function startSvgTextEditing(event) {
     );
     tspan.setAttribute('x', x);
     tspan.setAttribute('dy', '0');
+    tspan.setAttribute('dominant-baseline', 'hanging');
     tspan.textContent = '';
     textNode.appendChild(tspan);
     textNode.style.pointerEvents = 'none';
@@ -232,13 +233,16 @@ function handleSvgTextKeydown(e) {
 function updateSvgTextDisplay() {
     const textNode = editingTextNode.value;
     const { x } = editingTextAnchor.value;
-    while (textNode.firstChild) textNode.removeChild(textNode.firstChild);
+    while (textNode.firstChild) {
+        textNode.removeChild(textNode.firstChild);
+    }
     editingTextContent.value.forEach((line, i) => {
         const tspan = document.createElementNS(
             'http://www.w3.org/2000/svg',
             'tspan',
         );
         tspan.setAttribute('x', x);
+        tspan.setAttribute('dominant-baseline', 'hanging');
         tspan.setAttribute(
             'dy',
             i === 0 ? '0' : `${fontSize.value * 1.2 * props.scale}`,
@@ -562,23 +566,29 @@ function draw(event) {
     currentDrawingPath.value.setAttribute('d', currentPath.value);
 }
 
-function useArrowMarker() {
+function useArrowMarker(color) {
     const svg = props.svgRef;
-    if (!svg) return;
+    if (!svg) return null;
 
     let defs = svg.querySelector(`defs#${ARROW_DEFS_ID.value}`);
+
     if (!defs) {
         defs = document.createElementNS(XMLNS, 'defs');
         defs.setAttribute('id', ARROW_DEFS_ID.value);
         svg.appendChild(defs);
     }
 
-    if (defs.querySelector(`#${arrowMarkerId.value}`)) return;
+    const markerKey = String(color).trim();
 
+    if (arrowMarkerIds.has(markerKey)) {
+        return arrowMarkerIds.get(markerKey);
+    }
+
+    const markerId = `arrow-${createUid()}`;
     const size = 6;
 
     const marker = document.createElementNS(XMLNS, 'marker');
-    marker.setAttribute('id', arrowMarkerId.value);
+    marker.setAttribute('id', markerId);
     marker.setAttribute('markerUnits', 'strokeWidth');
     marker.setAttribute('markerWidth', String(size));
     marker.setAttribute('markerHeight', String(size));
@@ -589,19 +599,21 @@ function useArrowMarker() {
 
     const path = document.createElementNS(XMLNS, 'path');
     path.setAttribute('d', `M 0 0 L ${size} ${size / 2} L 0 ${size} z`);
-    path.setAttribute('fill', 'context-stroke');
+    path.setAttribute('fill', color);
     path.setAttribute('stroke', 'none');
 
     marker.appendChild(path);
     defs.appendChild(marker);
+
+    arrowMarkerIds.set(markerKey, markerId);
+
+    return markerId;
 }
 
 function startLine(event) {
     if (event.cancelable) event.preventDefault();
     if (!['line', 'arrow'].includes(mode.value)) return;
     if (!props.active || !G.value) return;
-
-    mode.value === 'arrow' && useArrowMarker();
 
     isDrawing.value = true;
     const { x, y } = toSvgPoint(event);
@@ -618,14 +630,12 @@ function startLine(event) {
     currentLine.value.setAttribute('y1', y);
     currentLine.value.setAttribute('x2', x);
     currentLine.value.setAttribute('y2', y);
-
     if (mode.value === 'arrow') {
-        currentLine.value.setAttribute(
-            'marker-end',
-            `url(#${arrowMarkerId.value})`,
-        );
+        const markerId = useArrowMarker(currentColor.value);
+        if (markerId) {
+            currentLine.value.setAttribute('marker-end', `url(#${markerId})`);
+        }
     }
-
     G.value.appendChild(currentLine.value);
 }
 
@@ -845,9 +855,123 @@ function setCursorStyle() {
     }
 }
 
+const menuRef = ref(null);
 const buttonToggle = ref(null);
+const isDraggingMenu = ref(false);
+const menuDragOffset = ref({ x: 0, y: 0 });
+const menuDragStart = ref(null);
+const menuDragPointerId = ref(null);
+
+const menuStyle = computed(() => ({
+    backgroundColor: props.backgroundColor,
+    '--vue-ui-pen-and-paper-drag-x': `${menuDragOffset.value.x}px`,
+    '--vue-ui-pen-and-paper-drag-y': `${menuDragOffset.value.y}px`,
+}));
+
+function getClientSize() {
+    return {
+        width: document.documentElement.clientWidth || window.innerWidth,
+        height: document.documentElement.clientHeight || window.innerHeight,
+    };
+}
+
+function getMenuClientRect() {
+    if (!menuRef.value) return null;
+    const elements = [
+        menuRef.value,
+        menuRef.value.querySelector('.vue-ui-pen-and-paper-drag-handle'),
+        menuRef.value.querySelector('.vertical-range'),
+    ].filter(Boolean);
+    const rects = elements.map((element) => element.getBoundingClientRect());
+
+    return {
+        left: Math.min(...rects.map((rect) => rect.left)),
+        top: Math.min(...rects.map((rect) => rect.top)),
+        right: Math.max(...rects.map((rect) => rect.right)),
+        bottom: Math.max(...rects.map((rect) => rect.bottom)),
+    };
+}
+
+function startMenuDrag(event) {
+    if (event.pointerType === 'mouse' && event.button !== 0) return;
+    if (!menuRef.value) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const rect = getMenuClientRect();
+    if (!rect) return;
+    isDraggingMenu.value = true;
+    menuDragPointerId.value = event.pointerId;
+    menuDragStart.value = {
+        clientX: event.clientX,
+        clientY: event.clientY,
+        offsetX: menuDragOffset.value.x,
+        offsetY: menuDragOffset.value.y,
+        rect,
+    };
+    window.addEventListener('pointermove', moveMenu);
+    window.addEventListener('pointerup', stopMenuDrag);
+    window.addEventListener('pointercancel', stopMenuDrag);
+}
+
+function moveMenu(event) {
+    if (!isDraggingMenu.value || !menuDragStart.value) return;
+    if (event.pointerId !== menuDragPointerId.value) return;
+    event.preventDefault();
+    const start = menuDragStart.value;
+    const { width, height } = getClientSize();
+    const deltaX = event.clientX - start.clientX;
+    const deltaY = event.clientY - start.clientY;
+    const clampedDeltaX = Math.min(
+        Math.max(deltaX, -start.rect.left),
+        width - start.rect.right,
+    );
+    const clampedDeltaY = Math.min(
+        Math.max(deltaY, -start.rect.top),
+        height - start.rect.bottom,
+    );
+    menuDragOffset.value = {
+        x: start.offsetX + clampedDeltaX,
+        y: start.offsetY + clampedDeltaY,
+    };
+}
+
+function stopMenuDrag(event) {
+    if (
+        event?.pointerId !== undefined &&
+        menuDragPointerId.value !== null &&
+        event.pointerId !== menuDragPointerId.value
+    ) {
+        return;
+    }
+    isDraggingMenu.value = false;
+    menuDragStart.value = null;
+    menuDragPointerId.value = null;
+    window.removeEventListener('pointermove', moveMenu);
+    window.removeEventListener('pointerup', stopMenuDrag);
+    window.removeEventListener('pointercancel', stopMenuDrag);
+}
+
+function keepMenuInClient() {
+    if (!menuRef.value || !props.active) return;
+    const rect = getMenuClientRect();
+    if (!rect) return;
+    const { width, height } = getClientSize();
+    let correctionX = 0;
+    let correctionY = 0;
+    if (rect.left < 0) correctionX = -rect.left;
+    else if (rect.right > width) correctionX = width - rect.right;
+    if (rect.top < 0) correctionY = -rect.top;
+    else if (rect.bottom > height) correctionY = height - rect.bottom;
+    if (correctionX || correctionY) {
+        menuDragOffset.value = {
+            x: menuDragOffset.value.x + correctionX,
+            y: menuDragOffset.value.y + correctionY,
+        };
+    }
+}
 
 onMounted(() => {
+    window.addEventListener('resize', keepMenuInClient);
     nextTick(() => {
         if (props.svgRef) {
             G.value = document.createElementNS(
@@ -865,7 +989,11 @@ onMounted(() => {
 watch(
     () => props.active,
     async (isActive) => {
-        if (!isActive) return;
+        if (!isActive) {
+            stopMenuDrag();
+            menuDragOffset.value = { x: 0, y: 0 };
+            return;
+        }
         await nextTick();
         buttonToggle.value?.focus();
     },
@@ -874,6 +1002,8 @@ watch(
 
 onBeforeUnmount(() => {
     stopCaretBlink();
+    stopMenuDrag();
+    window.removeEventListener('resize', keepMenuInClient);
     if (G.value && props.svgRef) {
         G.value.remove();
         disableDrawing();
@@ -884,10 +1014,29 @@ onBeforeUnmount(() => {
 <template>
     <div
         v-if="active"
+        ref="menuRef"
         data-dom-to-png-ignore
         class="vue-ui-pen-and-paper-actions"
-        :style="{ backgroundColor: backgroundColor }"
+        :class="{ 'vue-ui-pen-and-paper-actions-dragging': isDraggingMenu }"
+        :style="menuStyle"
     >
+        <button
+            type="button"
+            class="vue-ui-pen-and-paper-drag-handle"
+            aria-label="Move drawing toolbar"
+            :style="{
+                backgroundColor: backgroundColor,
+                border: `1px solid ${buttonBorderColor}`,
+                color: color,
+            }"
+            @pointerdown="startMenuDrag"
+        >
+            <svg aria-hidden="true" viewBox="0 0 6 12" style="width: 100%">
+                <circle :fill="color" cx="3" cy="3" r="0.7" />
+                <circle :fill="color" cx="3" cy="6" r="0.7" />
+                <circle :fill="color" cx="3" cy="9" r="0.7" />
+            </svg>
+        </button>
         <button
             ref="buttonToggle"
             class="vue-ui-pen-and-paper-action"
@@ -1052,11 +1201,42 @@ onBeforeUnmount(() => {
     position: absolute;
     top: 50%;
     left: 0;
-    transform: translateY(-50%);
+    transform: translate(
+        var(--vue-ui-pen-and-paper-drag-x, 0px),
+        calc(-50% + var(--vue-ui-pen-and-paper-drag-y, 0px))
+    );
     display: flex;
     flex-direction: column;
     gap: 4px;
     z-index: 1;
+}
+
+.vue-ui-pen-and-paper-drag-handle {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    left: -16px;
+    width: 16px;
+    height: 100%;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px 0 0 4px;
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+    z-index: 2;
+}
+
+.vue-ui-pen-and-paper-drag-handle span {
+    font-size: 16px;
+    line-height: 1;
+    pointer-events: none;
+}
+
+.vue-ui-pen-and-paper-actions-dragging .vue-ui-pen-and-paper-drag-handle {
+    cursor: grabbing;
 }
 
 .vue-ui-pen-and-paper-action {
