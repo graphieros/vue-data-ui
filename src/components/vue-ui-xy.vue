@@ -6593,7 +6593,6 @@ defineExpose({
         :style="`background:${FINAL_CONFIG.chart.backgroundColor}; color:${FINAL_CONFIG.chart.color};width:100%;font-family:${FINAL_CONFIG.chart.fontFamily};${FINAL_CONFIG.responsive ? 'height: 100%' : ''}`"
         @mouseenter="showUserOptions"
         @mouseleave="hideUserOptions"
-        @click="onSvgClick"
     >
         <!-- A11Y -->
         <div :id="`chart-instructions-${uniqueId}`" class="sr-only">
