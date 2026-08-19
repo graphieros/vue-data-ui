@@ -27,7 +27,7 @@ onMounted(() => {
             {
                 name: 'Some continent\nwith a long name',
                 plots: [
-                    { name: 'Some Country with\na long name', value: 24.9 },
+                    { name: 'Some Country with\na long name', value: 31.9 },
                     { name: 'Beijing', value: 21.9 },
                     { name: 'Delhi', value: 16.8 },
                     { name: 'Guangzhou', value: 16.1 },
@@ -54,51 +54,51 @@ onMounted(() => {
                     { name: 'Nairobi', value: 4.4 },
                 ],
             },
-            {
-                name: 'Europe',
-                plots: [
-                    { name: 'Moscow', value: 13 },
-                    { name: 'London', value: 9 },
-                    { name: 'Saint Petersburg', value: 5.4 },
-                    { name: 'Berlin', value: 3.8 },
-                    { name: 'Madrid', value: 3.3 },
-                    { name: 'Kyiv', value: 3 },
-                    { name: 'Rome', value: 2.7 },
-                    { name: 'Paris', value: 2.1 },
-                    { name: 'Minsk', value: 2 },
-                    { name: 'Vienna', value: 1.9 },
-                ],
-            },
-            {
-                name: 'America',
-                plots: [
-                    { name: 'Sao Paulo', value: 12.2 },
-                    { name: 'Lima', value: 9.7 },
-                    { name: 'Mexico City', value: 9.2 },
-                    { name: 'New York', value: 8.4 },
-                    { name: 'Bogota', value: 8 },
-                    { name: 'Rio de Janeiro', value: 6.7 },
-                    { name: 'Santiago', value: 6.2 },
-                    { name: 'Los Angeles', value: 4 },
-                    { name: 'Buenos Aires', value: 3 },
-                    { name: 'Brasilia', value: 2.9 },
-                ],
-            },
-            {
-                name: 'Australia & Oceania',
-                plots: [
-                    { name: 'Sydney', value: 5.4 },
-                    { name: 'Melbourne', value: 5.1 },
-                    { name: 'Brisbane', value: 2.6 },
-                    { name: 'Perth', value: 2.1 },
-                    { name: 'Auckland', value: 1.7 },
-                    { name: 'Adelaide', value: 1.4 },
-                    { name: 'Honolulu', value: 1 },
-                    { name: 'Gold Coast', value: 0.7 },
-                    { name: 'Newcastle-Maitland', value: 0.5 },
-                    { name: 'Canberra', value: 0.46 },
-                ],
-            },
+            // {
+            //     name: 'Europe',
+            //     plots: [
+            //         { name: 'Moscow', value: 13 },
+            //         { name: 'London', value: 9 },
+            //         { name: 'Saint Petersburg', value: 5.4 },
+            //         { name: 'Berlin', value: 3.8 },
+            //         { name: 'Madrid', value: 3.3 },
+            //         { name: 'Kyiv', value: 3 },
+            //         { name: 'Rome', value: 2.7 },
+            //         { name: 'Paris', value: 2.1 },
+            //         { name: 'Minsk', value: 2 },
+            //         { name: 'Vienna', value: 1.9 },
+            //     ],
+            // },
+            // {
+            //     name: 'America',
+            //     plots: [
+            //         { name: 'Sao Paulo', value: 12.2 },
+            //         { name: 'Lima', value: 9.7 },
+            //         { name: 'Mexico City', value: 9.2 },
+            //         { name: 'New York', value: 8.4 },
+            //         { name: 'Bogota', value: 8 },
+            //         { name: 'Rio de Janeiro', value: 6.7 },
+            //         { name: 'Santiago', value: 6.2 },
+            //         { name: 'Los Angeles', value: 4 },
+            //         { name: 'Buenos Aires', value: 3 },
+            //         { name: 'Brasilia', value: 2.9 },
+            //     ],
+            // },
+            // {
+            //     name: 'Australia & Oceania',
+            //     plots: [
+            //         { name: 'Sydney', value: 5.4 },
+            //         { name: 'Melbourne', value: 5.1 },
+            //         { name: 'Brisbane', value: 2.6 },
+            //         { name: 'Perth', value: 2.1 },
+            //         { name: 'Auckland', value: 1.7 },
+            //         { name: 'Adelaide', value: 1.4 },
+            //         { name: 'Honolulu', value: 1 },
+            //         { name: 'Gold Coast', value: 0.7 },
+            //         { name: 'Newcastle-Maitland', value: 0.5 },
+            //         { name: 'Canberra', value: 0.46 },
+            //     ],
+            // },
         ];
     }, 2000);
 });
@@ -165,7 +165,7 @@ const model = createModel([
     CHECKBOX('style.chart.violin.useSerieColor', { def: true }),
     COLOR('style.chart.violin.stroke', { def: '#5A5A5A' }),
 
-    CHECKBOX('style.chart.violin.boxPlot.show', { def: true }),
+    CHECKBOX('style.chart.violin.boxPlot.show', { def: false }),
     CHECKBOX('style.chart.violin.boxPlot.useSerieColor', { def: false }),
     COLOR('style.chart.violin.boxPlot.color', { def: '#5A5A5A' }),
     NUMBER('style.chart.violin.boxPlot.medianCircleRadiusRatio', {
@@ -187,6 +187,8 @@ const model = createModel([
     NUMBER('style.chart.padding.right', { def: 0, min: 0, max: 100 }),
     NUMBER('style.chart.padding.bottom', { def: 0, min: 0, max: 100 }),
     CHECKBOX('style.chart.grid.show', { def: true }),
+    NUMBER('style.chart.grid.scaleMin', { def: null, min: -100, max: 100 }),
+    NUMBER('style.chart.grid.scaleMax', { def: null, min: -100, max: 100 }),
     COLOR('style.chart.grid.stroke', { def: '#e1e5e8' }),
     NUMBER('style.chart.grid.strokeWidth', { def: 1, min: 0, max: 12 }),
     NUMBER('style.chart.grid.scaleSteps', { def: 10, min: 2, max: 20 }),
@@ -419,10 +421,10 @@ const config = computed(() => {
                     ...c.style.chart,
                     labels: {
                         ...c.style.chart.labels,
-                        formatter: ({ value, config }) => {
-                            // console.log(config)
-                            return `f | ${value}`;
-                        },
+                        // formatter: ({ value, config }) => {
+                        //     // console.log(config)
+                        //     return `f | ${value}`;
+                        // },
                     },
                 },
             },

@@ -11079,6 +11079,8 @@ declare module 'vue-data-ui' {
                     stroke?: string;
                     strokeWidth?: number;
                     scaleSteps?: number;
+                    scaleMin?: number;
+                    scaleMax?: number;
                     horizontalGrid?: {
                         show?: boolean;
                         stroke?: string;

@@ -4966,6 +4966,8 @@ export function useConfig(options = {}) {
                     stroke: COLOR_GREY_MID,
                     strokeWidth: 1,
                     scaleSteps: 10,
+                    scaleMin: null,
+                    scaleMax: null,
                     horizontalGrid: {
                         show: true,
                         stroke: COLOR_GREY_MID,

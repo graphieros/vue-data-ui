@@ -14,6 +14,7 @@ import {
 import {
     applyDataLabel,
     calculateNiceScale,
+    calculateNiceScaleWithExactExtremes,
     checkNaN,
     clampNumber,
     convertColorToHex,
@@ -689,23 +690,51 @@ const extremes = computed(() => {
 });
 
 const scale = computed(() => {
-    return calculateNiceScale(
-        extremes.value.min < 0 ? extremes.value.min : 0,
-        extremes.value.max,
+    const min = FINAL_CONFIG.value.style.chart.grid.scaleMin;
+    const max = FINAL_CONFIG.value.style.chart.grid.scaleMax;
+    const scaleSteps = Math.max(
+        2,
         FINAL_CONFIG.value.style.chart.grid.scaleSteps,
     );
+    const autoMin = extremes.value.min < 0 ? extremes.value.min : 0;
+    const autoMax = extremes.value.max;
+
+    if (min === null && max === null) {
+        return calculateNiceScale(autoMin, autoMax, scaleSteps);
+    }
+
+    if (min !== null && max !== null) {
+        return calculateNiceScaleWithExactExtremes(min, max, scaleSteps);
+    }
+
+    const niceScale = calculateNiceScale(
+        min !== null ? min : autoMin,
+        max !== null ? max : autoMax,
+        scaleSteps,
+    );
+
+    return calculateNiceScaleWithExactExtremes(
+        min !== null ? min : niceScale.min,
+        max !== null ? max : niceScale.max,
+        scaleSteps,
+    );
 });
+
+function getYFromValue(value) {
+    const scaleRange = scale.value.max - scale.value.min;
+    if (!scaleRange) return drawingArea.value.bottom;
+    return (
+        drawingArea.value.bottom -
+        ((value - scale.value.min) / scaleRange) * drawingArea.value.height
+    );
+}
 
 const drawableDataset = computed(() => {
     return (mutableDataset.value || []).map((ds, i) => {
         const plots = ds.plots.map((p) => {
             return {
                 ...p,
-                y:
-                    drawingArea.value.bottom -
-                    ((p.value + Math.abs(scale.value.min)) /
-                        (scale.value.max + Math.abs(scale.value.min))) *
-                        drawingArea.value.height,
+                y: getYFromValue(p.value),
             };
         });
 
@@ -745,17 +774,6 @@ function quantile(sortedValues, q) {
     return next === undefined
         ? sortedValues[base]
         : sortedValues[base] + rest * (next - sortedValues[base]);
-}
-
-function getYFromValue(value) {
-    const denominator = scale.value.max + Math.abs(scale.value.min);
-    if (!denominator) return drawingArea.value.bottom;
-
-    return (
-        drawingArea.value.bottom -
-        ((value + Math.abs(scale.value.min)) / denominator) *
-            drawingArea.value.height
-    );
 }
 
 const boxPlotSummaries = computed(() => {
@@ -1128,11 +1146,7 @@ function drawViolinBody(points) {
 const yLines = computed(() => {
     return scale.value.ticks.map((t) => {
         return {
-            y:
-                drawingArea.value.bottom -
-                drawingArea.value.height *
-                    ((t + Math.abs(scale.value.min)) /
-                        (scale.value.max + Math.abs(scale.value.min))),
+            y: getYFromValue(t),
             x1: drawingArea.value.left,
             x2: drawingArea.value.right,
             value: t,
