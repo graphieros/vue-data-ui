@@ -211,7 +211,7 @@ declare module 'vue-data-ui' {
     export type VueUi3dBarEvent = ChartEvent<VueUi3dBarDatapoint>;
     export type VueUiDonutEvent = ChartEvent<VueUiDonutDatapoint>;
     export type VueUiRadarEvent = ChartEvent<VueUiRadarDatapoint>;
-    export type VueUiXyEvent = ChartEvent<VueUiXyDatapointItem[]>;
+    export type VueUiXyEvent = ChartEvent<VueUiXyDatasetItem[]>;
     export type VueUiRingsEvent = ChartEvent<VueUiRingsDatapoint>;
     export type VueUiOnionEvent = ChartEvent<VueUiOnionDatapoint>;
     export type VueUiWorldEvent = ChartEvent<VueUiWorldDatapoint>;
@@ -6340,12 +6340,7 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiXyEmitSelectX = {
-        datapoint: {
-            name: string;
-            value: number | null;
-            color: string;
-            type: 'line' | 'bar' | 'plot';
-        };
+        datapoint: VueUiXyDatasetItem[];
         index: number;
         indexLabel: string;
     };

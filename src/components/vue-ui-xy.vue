@@ -2485,6 +2485,7 @@ function onSvgClick(e) {
 function selectX(index) {
     const datapoint = relativeDataset.value.map((s) => {
         return {
+            ...s,
             name: s.name,
             value: [null, undefined, NaN].includes(s.absoluteValues[index])
                 ? null
@@ -2495,7 +2496,7 @@ function selectX(index) {
     });
 
     emit('selectX', {
-        dataset: datapoint,
+        datapoint,
         index,
         indexLabel:
             FINAL_CONFIG.value.chart.grid.labels.xAxisLabels.values[index],
@@ -5320,6 +5321,7 @@ function toggleTooltipVisibility(show, selectedIndex = null) {
 
     const datapoint = relativeDataset.value.map((s) => {
         return {
+            ...s,
             name: s.name,
             value: [null, undefined, NaN].includes(
                 s.absoluteValues[selectedIndex],
