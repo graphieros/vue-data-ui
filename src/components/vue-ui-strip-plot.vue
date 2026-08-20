@@ -2659,10 +2659,9 @@ defineExpose({
                     @close="closeTable"
                 >
                     <template #th="{ th }">
-                        <div
-                            v-html="th"
-                            style="display: flex; align-items: center"
-                        ></div>
+                        <div style="display: flex; align-items: center">
+                            {{ th }}
+                        </div>
                     </template>
                     <template #td="{ td }">
                         {{ td.name || td }}

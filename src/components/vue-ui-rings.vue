@@ -848,7 +848,7 @@ const table = computed(() => {
 
 const dataTable = computed(() => {
     const head = [
-        ` <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 16v2a1 1 0 0 1 -1 1h-11l6 -7l-6 -7h11a1 1 0 0 1 1 1v2" /></svg>`,
+        `__SUM__`,
         dataLabel({
             p: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.prefix,
             v: grandTotal.value,
@@ -1932,10 +1932,14 @@ defineExpose({
                     @close="closeTable"
                 >
                     <template #th="{ th }">
-                        <div
-                            v-html="th"
-                            style="display: flex; align-items: center"
-                        ></div>
+                        <div v-if="th === '__SUM__'">
+                            <BaseIcon
+                                name="sigma"
+                                :stroke="dataTable.config.th.color"
+                                :size="16"
+                            />
+                        </div>
+                        <div v-else>{{ th }}</div>
                     </template>
                     <template #td="{ td }">
                         {{ td.name || td }}

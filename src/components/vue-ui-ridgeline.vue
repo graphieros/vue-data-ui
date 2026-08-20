@@ -2426,7 +2426,7 @@ defineExpose({
                     @close="closeTable"
                 >
                     <template #th="{ th }">
-                        <div v-html="th" />
+                        <div>{{ th }}</div>
                     </template>
                     <template #td="{ td }">
                         {{

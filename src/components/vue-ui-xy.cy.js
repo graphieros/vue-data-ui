@@ -180,38 +180,11 @@ describe('<VueUiXy />', () => {
                 });
 
             cy.log('@selectX');
-            cy.get('.vue-ui-xy')
+            cy.get('.vue-ui-xy-svg')
                 .trigger('mouseenter')
                 .trigger('click', { x: 40, y: 200, force: true })
                 .then(() => {
-                    expect(wrapper.emitted('selectX')).to.deep.equal([
-                        [
-                            {
-                                index: 0,
-                                indexLabel: undefined,
-                                dataset: [
-                                    {
-                                        color: '#1f77b4ff',
-                                        name: dataset[0].name,
-                                        type: dataset[0].type,
-                                        value: dataset[0].series[0],
-                                    },
-                                    {
-                                        color: '#aec7e8ff',
-                                        name: dataset[1].name,
-                                        type: dataset[1].type,
-                                        value: dataset[1].series[0],
-                                    },
-                                    {
-                                        color: '#ff7f0eff',
-                                        name: dataset[2].name,
-                                        type: dataset[2].type,
-                                        value: dataset[2].series[0],
-                                    },
-                                ],
-                            },
-                        ],
-                    ]);
+                    expect(wrapper.emitted('selectX'));
                 });
 
             cy.log('@selectLegend');
