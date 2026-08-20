@@ -2379,10 +2379,18 @@ describe('darkenHexColor', () => {
 
 describe('setOpacity', () => {
     test('should set an opacity to a simple hex color', () => {
+        const result0 = setOpacity('#00FF00', 0);
+        expect(result0).toBe('#00FF0000');
         const result1 = setOpacity('#00FF00');
         expect(result1).toBe('#00FF00FF');
         const result2 = setOpacity('#00FF00', 50);
         expect(result2).toBe('#00FF0080');
+        const result3 = setOpacity('#00FF00', 33);
+        expect(result3).toBe('#00FF0054');
+        const result4 = setOpacity('#00FF00', 25);
+        expect(result4).toBe('#00FF0040');
+        const result5 = setOpacity('#00FF00', 12);
+        expect(result5).toBe('#00FF001F');
     });
     test('should override the opacity of a hex color with alpha channel', () => {
         const result = setOpacity('#00FF0080', 100);
