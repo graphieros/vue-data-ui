@@ -1249,14 +1249,7 @@ defineExpose({
                     @close="closeTable"
                 >
                     <template #th="{ th }">
-                        <div v-if="th === '__SUM__'">
-                            <BaseIcon
-                                name="sigma"
-                                :stroke="dataTable.config.th.color"
-                                :size="16"
-                            />
-                        </div>
-                        <div v-else>{{ th }}</div>
+                        <div>{{ th }}</div>
                     </template>
                     <template #td="{ td }">
                         {{ td.name || td }}
