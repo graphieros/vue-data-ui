@@ -15910,7 +15910,7 @@ declare module 'vue-data-ui' {
 
     export type VueUiDagNode = {
         [key: string]: any;
-        id: string;
+        id: string | number;
         label: string;
         backgroundColor?: string;
         color?: string;
@@ -16032,6 +16032,13 @@ declare module 'vue-data-ui' {
         };
     };
 
+    export type VueUiDagFocusOnNodeOptions = {
+        smooth?: boolean;
+        duration?: number;
+        zoomReset?: boolean;
+        zoom?: number;
+    };
+
     export type VueUiDagExpose = {
         getData(): Promise<{
             arrowShape: 'undirected' | 'normal' | 'vee';
@@ -16058,6 +16065,10 @@ declare module 'vue-data-ui' {
         zoomOut(): void;
         resetZoom(): void;
         switchDirection(): void;
+        focusOnNode(
+            nodeId: number | string,
+            options?: VueUiDagFocusOnNodeOptions,
+        ): Promise<boolean>;
     };
 
     export type VueUiDagOptionZoomSlotProps = {
@@ -16073,7 +16084,7 @@ declare module 'vue-data-ui' {
 
     export type VueUiDagPositionedNode = {
         height: number;
-        id: string;
+        id: string | number;
         label: string;
         original: VueUiDagNode;
         width: number;

@@ -2,7 +2,7 @@
 /**
  * This playground showcases all the slots and their implementations for <VueUiDag>
  */
-import { computed } from 'vue';
+import { computed, useTemplateRef } from 'vue';
 import { mergeConfigs } from 'vue-data-ui/utils';
 import {
     VueUiDag,
@@ -12,6 +12,7 @@ import {
     type VueUiDagEmitOnMidpointEnter,
     type VueUiDagEmitOnNodeClick,
     type VueUiDagEmitRotate,
+    type VueUiDagFocusOnNodeOptions,
 } from 'vue-data-ui/vue-ui-dag';
 
 import CommonAnnotatorActionColor from '../slots/common/annotator-action-color.vue';
@@ -285,11 +286,44 @@ function copyAlt(payload: VueUiDagEmitCopyAlt) {
 function rotate(payload: VueUiDagEmitRotate) {
     console.log('@rotate', payload);
 }
+
+const chartRef = useTemplateRef('chartRef');
+
+async function focusOnNode(
+    id: string | number,
+    options: VueUiDagFocusOnNodeOptions,
+) {
+    if (!chartRef.value) return;
+    const _success = await chartRef.value.focusOnNode(id, options);
+}
 </script>
 
 <template>
+    <div
+        style="
+            display: flex;
+            flex-direction: row;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        "
+    >
+        <button
+            v-for="node in dataset.nodes"
+            :key="node.id"
+            @click="
+                focusOnNode(node.id, {
+                    smooth: true,
+                    duration: 500,
+                })
+            "
+        >
+            {{ node.id }}
+        </button>
+    </div>
+
     <div style="max-width: 400px">
         <VueUiDag
+            ref="chartRef"
             :dataset
             :config
             @onNodeClick="onNodeClick"

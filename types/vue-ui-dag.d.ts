@@ -33,6 +33,7 @@ import type {
     VueUiDagEmitOnMidpointEnter,
     VueUiDagEmitCopyAlt,
     VueUiDagEmitRotate,
+    VueUiDagFocusOnNodeOptions,
 } from 'vue-data-ui';
 
 export type {
@@ -68,6 +69,7 @@ export type {
     VueUiDagEmitOnMidpointEnter,
     VueUiDagEmitCopyAlt,
     VueUiDagEmitRotate,
+    VueUiDagFocusOnNodeOptions,
 };
 
 declare const VueUiDagBase: DefineComponent<

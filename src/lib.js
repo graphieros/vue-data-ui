@@ -3772,6 +3772,10 @@ export function easeOutCubic(t) {
     return 1 - Math.pow(1 - t, 3);
 }
 
+export function easeInOutCubic(t) {
+    return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+}
+
 export function getCumulativeAverage({ values, config = {} }) {
     const { keepInvalid = true, convertInvalidToZero = false } = config;
 
@@ -4125,6 +4129,10 @@ function expandStepperPlotsForInterLine(plots, cutNullValues) {
     return expanded;
 }
 
+export function lerp(start, end, progress) {
+    return start + (end - start) * progress;
+}
+
 /**
  * Build SVG polygons representing the filled area(s) between two lines.
  * - Works with straight, smoothed (monotone cubic), or stepped lines.
@@ -4296,10 +4304,6 @@ export function buildInterLineAreas(opts) {
             }
         }
         return out;
-    }
-
-    function lerp(a, b, t) {
-        return a + t * (b - a);
     }
 
     // Refine by inserting exact crossing points so top only changes at sample boundaries
@@ -4837,6 +4841,10 @@ export function applyEllipsis(value, maxLength) {
     return text.length > limit ? `${text.slice(0, limit)}...` : text;
 }
 
+export function sleep(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 const lib = {
     XMLNS,
     abbreviate,
@@ -4904,6 +4912,7 @@ const lib = {
     deepEmptyObjectToNull,
     degreesToRadians,
     downloadCsv,
+    easeInOutCubic,
     easeOutCubic,
     emptyObjectToNull,
     error,
@@ -4935,6 +4944,7 @@ const lib = {
     isValidUserValue,
     largestTriangleThreeBucketsArray,
     largestTriangleThreeBucketsArrayObjects,
+    lerp,
     lightenHexColor,
     makeDonut,
     makePath,
@@ -4957,6 +4967,7 @@ const lib = {
     setOpacity,
     setOpacityIfWithinBBox,
     shiftHue,
+    sleep,
     slugify,
     srgbEncodeFromLinear,
     sumByAttribute,

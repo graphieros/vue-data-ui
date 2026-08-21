@@ -59,6 +59,8 @@ import {
     darkenHexColor,
     dataLabel,
     degreesToRadians,
+    easeInOutCubic,
+    easeOutCubic,
     error,
     escapeXml,
     escapeXmlAttr,
@@ -82,6 +84,7 @@ import {
     isValidUserValue,
     largestTriangleThreeBuckets,
     largestTriangleThreeBucketsArray,
+    lerp,
     lightenHexColor,
     makeDonut,
     makePath,
@@ -5345,5 +5348,39 @@ describe('applyEllipsis', () => {
                 _case.expected,
             );
         });
+    });
+});
+
+describe('lerp', () => {
+    test('lerps', () => {
+        expect(lerp(2, 1, 1)).toEqual(1);
+        expect(lerp(2, 1, 0.5)).toEqual(1.5);
+        expect(lerp(2, 1, 0.3)).toEqual(1.7);
+        expect(lerp(2, 1, 0)).toEqual(2);
+    });
+});
+
+describe('easeOutCubic', () => {
+    test('eases out', () => {
+        expect(easeOutCubic(0)).toEqual(0);
+        expect(easeOutCubic(1)).toEqual(1);
+        expect(easeOutCubic(2)).toEqual(2);
+        expect(easeOutCubic(3)).toEqual(9);
+        expect(easeOutCubic(4)).toEqual(28);
+        expect(easeOutCubic(5)).toEqual(65);
+    });
+});
+
+describe('easeInOutCubic', () => {
+    test('eases in out', () => {
+        expect(easeInOutCubic(0)).toEqual(0);
+        expect(easeInOutCubic(0.2)).toBeCloseTo(0.032);
+        expect(easeInOutCubic(0.4)).toBeCloseTo(0.256);
+        expect(easeInOutCubic(1)).toEqual(1);
+        expect(easeInOutCubic(-1)).toEqual(-4);
+        expect(easeInOutCubic(2)).toEqual(5);
+        expect(easeInOutCubic(3)).toEqual(33);
+        expect(easeInOutCubic(4)).toEqual(109);
+        expect(easeInOutCubic(5)).toEqual(257);
     });
 });

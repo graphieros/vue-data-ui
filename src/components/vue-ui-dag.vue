@@ -13,8 +13,11 @@ import {
     convertColorToHex,
     createTSpansFromLineBreaksOnY,
     createUid,
+    easeInOutCubic,
     error,
+    lerp,
     objectIsEmpty,
+    sleep,
     treeShake,
     XMLNS,
 } from '../lib';
@@ -457,6 +460,106 @@ const {
         isNodeTooltip.value = false;
     },
 );
+
+let focusAnimationFrame = null;
+
+async function focusOnNode(
+    nodeId,
+    { smooth = true, duration = 300, zoomReset = false, zoom = null } = {},
+) {
+    const node = getNodeById(nodeId);
+    if (!node) return false;
+
+    const currentViewBox = panZoomViewBox.value;
+    if (!currentViewBox) return false;
+
+    const startViewBox = {
+        x: Number(currentViewBox.x),
+        y: Number(currentViewBox.y),
+        width: Number(currentViewBox.width),
+        height: Number(currentViewBox.height),
+    };
+
+    const startScale = scale.value;
+
+    let targetWidth = startViewBox.width;
+    let targetHeight = startViewBox.height;
+    let targetScale = startScale;
+
+    if ((Number.isFinite(zoom) && zoom > 0) || zoomReset) {
+        resetZoom(false);
+        const resetViewBox = panZoomViewBox.value;
+        const zoomLevel = Number.isFinite(zoom) && zoom > 0 ? zoom / 100 : 1;
+        targetWidth = Number(resetViewBox.width) / zoomLevel;
+        targetHeight = Number(resetViewBox.height) / zoomLevel;
+        targetScale = zoomLevel;
+        panZoomViewBox.value = { ...startViewBox };
+        scale.value = startScale;
+    }
+
+    const nodeX = Number(node.x);
+    const nodeY = Number(node.y);
+
+    if (
+        !Number.isFinite(startViewBox.x) ||
+        !Number.isFinite(startViewBox.y) ||
+        !Number.isFinite(startViewBox.width) ||
+        !Number.isFinite(startViewBox.height) ||
+        !Number.isFinite(targetWidth) ||
+        !Number.isFinite(targetHeight) ||
+        !Number.isFinite(nodeX) ||
+        !Number.isFinite(nodeY)
+    ) {
+        return false;
+    }
+
+    const targetViewBox = {
+        x: nodeX - targetWidth / 2,
+        y: nodeY - targetHeight / 2,
+        width: targetWidth,
+        height: targetHeight,
+    };
+
+    if (focusAnimationFrame !== null) {
+        cancelAnimationFrame(focusAnimationFrame);
+        focusAnimationFrame = null;
+    }
+
+    isNodeTooltip.value = false;
+
+    if (!smooth || duration <= 0) {
+        panZoomViewBox.value = targetViewBox;
+        scale.value = targetScale;
+        return true;
+    }
+
+    const startTime = performance.now();
+
+    function animate(currentTime) {
+        const progress = Math.min((currentTime - startTime) / duration, 1);
+        const easedProgress = easeInOutCubic(progress);
+        panZoomViewBox.value = {
+            x: lerp(startViewBox.x, targetViewBox.x, easedProgress),
+            y: lerp(startViewBox.y, targetViewBox.y, easedProgress),
+            width: lerp(startViewBox.width, targetViewBox.width, easedProgress),
+            height: lerp(
+                startViewBox.height,
+                targetViewBox.height,
+                easedProgress,
+            ),
+        };
+        scale.value = lerp(startScale, targetScale, easedProgress);
+        if (progress < 1) {
+            focusAnimationFrame = requestAnimationFrame(animate);
+        } else {
+            panZoomViewBox.value = targetViewBox;
+            scale.value = targetScale;
+            focusAnimationFrame = null;
+        }
+    }
+    focusAnimationFrame = requestAnimationFrame(animate);
+    return true;
+}
 
 function toggleZoom() {
     panZoomActive.value = !panZoomActive.value;
@@ -1617,6 +1720,7 @@ defineExpose({
     resetZoom,
     switchDirection,
     copyAlt,
+    focusOnNode,
 });
 </script>
 

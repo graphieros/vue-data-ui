@@ -275,6 +275,27 @@ const configTheme = computed(() => ({
         },
     },
 }));
+
+async function focusOnNode(id, options) {
+    if (!local.value) return;
+    const success = await local.value.focusOnNode(id, options);
+    if (!success) {
+        console.error(`Invalid node id: ${id}`);
+    } else {
+        console.log(`Successfully focused on node with id: ${id}`);
+    }
+}
+
+onMounted(() => {
+    setTimeout(() => {
+        focusOnNode('A', {
+            smooth: true,
+            duration: 300,
+            zoomReset: true,
+            zoom: 200,
+        });
+    }, 5000);
+});
 </script>
 
 <template>
