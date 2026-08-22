@@ -446,15 +446,17 @@ const absoluteRectDimensionY = computed(() => {
     );
 });
 
-function calculateProportions(numbers) {
+function calculateSquareCounts(numbers) {
     const totalSquares =
         FINAL_CONFIG.value.style.chart.layout.grid.size *
         FINAL_CONFIG.value.style.chart.layout.grid.size;
     const totalSum = numbers.reduce((a, b) => a + b, 0);
-    const proportions = numbers.map((num) => (num / totalSum) * totalSquares);
+    const exactSquareCounts = numbers.map(
+        (num) => (num / totalSum) * totalSquares,
+    );
 
-    const intParts = proportions.map(Math.floor);
-    const fractionalParts = proportions.map((num) => num % 1);
+    const intParts = exactSquareCounts.map(Math.floor);
+    const fractionalParts = exactSquareCounts.map((num) => num % 1);
 
     let remainingSquares = totalSquares - intParts.reduce((a, b) => a + b, 0);
 
@@ -515,7 +517,7 @@ watch(
     { deep: true },
 );
 
-const proportions = computed(() => {
+const squareCounts = computed(() => {
     const numbers = datasetCopy.value
         .filter((serie, i) => !segregated.value.includes(serie.uid))
         .map((serie, i) => {
@@ -525,10 +527,10 @@ const proportions = computed(() => {
                 return (serie.values || []).reduce((a, b) => a + b, 0);
             }
         });
-    return calculateProportions(numbers);
+    return calculateSquareCounts(numbers);
 });
 
-const immutableProportions = computed(() => {
+const immutableSquareCounts = computed(() => {
     const numbers = datasetCopy.value.map((serie, i) => {
         if (allDatapointsAreEmpty.value) {
             return 1;
@@ -536,8 +538,12 @@ const immutableProportions = computed(() => {
             return (serie.values || []).reduce((a, b) => a + b);
         }
     });
-    return calculateProportions(numbers);
+    return calculateSquareCounts(numbers);
 });
+
+const totalGridSquares = computed(() =>
+    Math.pow(FINAL_CONFIG.value.style.chart.layout.grid.size, 2),
+);
 
 const waffleSet = computed(() => {
     if (debug.value) {
@@ -555,6 +561,8 @@ const waffleSet = computed(() => {
     return datasetCopy.value
         .filter((serie, i) => !segregated.value.includes(serie.uid))
         .map((serie, i) => {
+            const squareCount = squareCounts.value[i];
+
             return {
                 absoluteIndex: serie.absoluteIndex,
                 uid: serie.uid,
@@ -562,13 +570,16 @@ const waffleSet = computed(() => {
                 color: serie.color,
                 value: (serie.values || []).reduce((a, b) => a + b, 0),
                 absoluteValues: serie.values || [],
-                proportion: proportions.value[i],
+                squareCount,
+                proportion: squareCount / totalGridSquares.value,
             };
         });
 });
 
 const immutableSet = computed(() => {
     return datasetCopy.value.map((serie, i) => {
+        const squareCount = immutableSquareCounts.value[i];
+
         return {
             absoluteIndex: serie.absoluteIndex,
             uid: serie.uid,
@@ -576,7 +587,8 @@ const immutableSet = computed(() => {
             color: serie.color,
             value: (serie.values || []).reduce((a, b) => a + b, 0),
             absoluteValues: serie.values || [],
-            proportion: immutableProportions.value[i],
+            squareCount,
+            proportion: squareCount / totalGridSquares.value,
         };
     });
 });
@@ -587,24 +599,25 @@ function getData() {
             name: ds.name,
             color: ds.color,
             value: ds.value,
+            squareCount: ds.squareCount,
             proportion: ds.proportion,
         };
     });
 }
 
 const cumulatedSet = computed(() => {
-    let cumulativeProportion = 0;
+    let cumulativeSquareCount = 0;
 
     return waffleSet.value.map((serie, i) => {
-        const start = cumulativeProportion;
-        const end = start + serie.proportion;
+        const start = cumulativeSquareCount;
+        const end = start + serie.squareCount;
 
         const rects = [];
         for (let j = Math.floor(start); j < Math.floor(end); j += 1) {
             rects.push(j);
         }
 
-        cumulativeProportion = end;
+        cumulativeSquareCount = end;
 
         return {
             ...serie,
@@ -846,12 +859,7 @@ function segregate(seriesId, allowHideAll = false) {
                     name: waffleItem.name,
                     color: waffleItem.color,
                     value: waffleItem.value,
-                    proportion:
-                        waffleItem.proportion /
-                        Math.pow(
-                            FINAL_CONFIG.value.style.chart.layout.grid.size,
-                            2,
-                        ),
+                    proportion: waffleItem.proportion,
                 })),
             );
             return;
@@ -869,12 +877,7 @@ function segregate(seriesId, allowHideAll = false) {
                     name: waffleItem.name,
                     color: waffleItem.color,
                     value: waffleItem.value,
-                    proportion:
-                        waffleItem.proportion /
-                        Math.pow(
-                            FINAL_CONFIG.value.style.chart.layout.grid.size,
-                            2,
-                        ),
+                    proportion: waffleItem.proportion,
                 })),
             );
         });
@@ -899,12 +902,7 @@ function segregate(seriesId, allowHideAll = false) {
                 name: waffleItem.name,
                 color: waffleItem.color,
                 value: waffleItem.value,
-                proportion:
-                    waffleItem.proportion /
-                    Math.pow(
-                        FINAL_CONFIG.value.style.chart.layout.grid.size,
-                        2,
-                    ),
+                proportion: waffleItem.proportion,
             })),
         );
         return;
@@ -928,12 +926,7 @@ function segregate(seriesId, allowHideAll = false) {
                 name: waffleItem.name,
                 color: waffleItem.color,
                 value: waffleItem.value,
-                proportion:
-                    waffleItem.proportion /
-                    Math.pow(
-                        FINAL_CONFIG.value.style.chart.layout.grid.size,
-                        2,
-                    ),
+                proportion: waffleItem.proportion,
             })),
         );
     });
@@ -1490,7 +1483,7 @@ function getCaption(i, position = null) {
         { datapoint: rects.value[i], position },
     );
     const percentageLabel = dataLabel({
-        v: rects.value[i].proportion,
+        v: rects.value[i].proportion * 100,
         s: '%',
         r: FINAL_CONFIG.value.style.chart.layout.labels.captions
             .roundingPercentage,
