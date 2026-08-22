@@ -2939,6 +2939,8 @@ defineExpose({
     height: 40px;
     margin: 0 auto;
     padding-bottom: 12px;
+    touch-action: pan-y;
+    overscroll-behavior-x: contain;
 }
 
 .minimap {
@@ -3265,13 +3267,13 @@ input[type='range'].range-invisible::-ms-thumb {
     opacity: 1;
     transition: opacity 0.15s ease-in-out;
     pointer-events: auto;
-    touch-action: none;
+    touch-action: pan-y;
     cursor: ew-resize;
 }
 
 .vue-ui-zoom-compact-minimap-handle-hit {
     pointer-events: all;
-    touch-action: none;
+    touch-action: pan-y;
     cursor: ew-resize;
 }
 
