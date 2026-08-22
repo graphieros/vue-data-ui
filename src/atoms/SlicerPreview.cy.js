@@ -133,6 +133,21 @@ describe('<SlicerPreview />', () => {
             .then(({ wrapper }) => wrapper);
     }
 
+    function pressCompactHandle(side, key, times = 1) {
+        const selector = `[data-cy="slicer-compact-handle-${side}"]`;
+        let chain = cy.get(selector).should('exist').and('be.visible');
+
+        for (let i = 0; i < times; i += 1) {
+            chain = chain.trigger('keydown', {
+                eventConstructor: 'KeyboardEvent',
+                key,
+                bubbles: true,
+            });
+        }
+
+        return chain;
+    }
+
     it('shows start & end labels on hover', () => {
         mountSlicerPreview();
         cy.get('[data-cy="slicer"]').trigger('mouseenter');
@@ -151,40 +166,32 @@ describe('<SlicerPreview />', () => {
         cy.get('@right').should('not.be.visible');
     });
 
-    it('range handles update labels immediately (future*) and commit updates v-model', () => {
+    it('compact range handles update labels and v-model', () => {
         mountSlicerPreview().then((cmp) => {
             const model = cmp.vm.slicer;
 
-            cy.get('[data-cy="slicer-handle-left"]')
-                .invoke('val', 1)
-                .trigger('input', { force: true });
+            cy.get('[data-cy="slicer-handle-left"]').should('not.exist');
+            cy.get('[data-cy="slicer-handle-right"]').should('not.exist');
+
+            pressCompactHandle('left', 'ArrowRight');
 
             cy.get('[data-cy="slicer"]').trigger('mouseenter');
             cy.get('[data-cy="slicer-label-left"]').should(
                 'contain',
                 '____ 1 ____',
             );
-
             cy.wrap(model).should('have.property', 'start', 1);
             cy.wrap(model).should('have.property', 'end', ds.length);
 
-            cy.get('[data-cy="slicer-handle-left"]').trigger('change', {
-                force: true,
-            });
-            cy.wrap(model).should('have.property', 'start', 1);
+            // The compact right handle represents the inclusive label index,
+            // while the v-model end value is exclusive. 20 -> 9 = 11 steps.
+            pressCompactHandle('right', 'ArrowLeft', 11);
 
-            cy.get('[data-cy="slicer-handle-right"]')
-                .invoke('val', 8)
-                .trigger('input', { force: true });
             cy.get('[data-cy="slicer-label-right"]').should(
                 'contain',
                 '____ 8 ____',
             );
-            cy.wrap(model).should('have.property', 'end', 9);
-
-            cy.get('[data-cy="slicer-handle-right"]').trigger('change', {
-                force: true,
-            });
+            cy.wrap(model).should('have.property', 'start', 1);
             cy.wrap(model).should('have.property', 'end', 9);
         });
     });
@@ -192,12 +199,10 @@ describe('<SlicerPreview />', () => {
     it('merges tooltips when both labels target the same index', () => {
         mountSlicerPreview();
 
-        cy.get('[data-cy="slicer-handle-left"]')
-            .invoke('val', 2)
-            .trigger('input', { force: true });
-        cy.get('[data-cy="slicer-handle-right"]')
-            .invoke('val', 3)
-            .trigger('input', { force: true });
+        pressCompactHandle('left', 'ArrowRight', 2);
+        // end = 3 means the right label points to inclusive index 2.
+        pressCompactHandle('right', 'ArrowLeft', ds.length - 3);
+
         cy.get('[data-cy="slicer"]').trigger('mouseenter');
         cy.get('[data-cy="slicer-label-merged"]')
             .should('be.visible')
@@ -209,14 +214,9 @@ describe('<SlicerPreview />', () => {
     it('merges the two labels in a single tooltip when tooltips collide (adjacent indices)', () => {
         mountSlicerPreview();
 
-        cy.get('[data-cy="slicer-handle-left"]')
-            .invoke('val', 2)
-            .trigger('input', { force: true })
-            .trigger('change', { force: true });
-        cy.get('[data-cy="slicer-handle-right"]')
-            .invoke('val', 4)
-            .trigger('input', { force: true })
-            .trigger('change', { force: true });
+        pressCompactHandle('left', 'ArrowRight', 2);
+        // end = 5 means the right label points to inclusive index 4.
+        pressCompactHandle('right', 'ArrowLeft', ds.length - 5);
 
         cy.get('[data-cy="slicer"]').trigger('mouseenter');
         cy.get('[data-cy="slicer-label-merged"]')
