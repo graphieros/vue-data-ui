@@ -20,7 +20,7 @@
         "@vue/tsconfig": "^0.9.1",
         "npm-run-all2": "^8.0.4",
         "typescript": "~6.0.0",
-        "vite": "^8.2.1",
+        "vite": "^8.2.2",
         "vite-plugin-vue-devtools": "^8.2.1",
         "vue-tsc": "^3.3.9",
         "vue-data-ui": "file:../../vue-data-ui"
