@@ -4506,6 +4506,19 @@ const plotSet = computed(() => {
     });
 });
 
+const svgSlotData = computed(() => [
+    ...lineSet.value,
+    ...barSet.value.map((serie) => ({
+        ...serie,
+        plots: serie.plots.map((plot) => ({
+            ...plot,
+            x: checkNaN(getBarCenterX(plot)),
+            y: checkNaN(plot.y),
+        })),
+    })),
+    ...plotSet.value,
+]);
+
 const hydratedScaleGroups = computed(() => {
     const result = Object.entries(scaleGroups.value).reduce(
         (acc, [scaleLabel, scaleGroup]) => {
@@ -9755,7 +9768,7 @@ defineExpose({
                             isPrintingImg:
                                 isPrinting || isImaging || isCallbackImaging,
                             isPrintingSvg: isCallbackSvg,
-                            data: [...lineSet, ...barSet, ...plotSet],
+                            data: svgSlotData,
                             drawingArea,
                         }"
                     />
