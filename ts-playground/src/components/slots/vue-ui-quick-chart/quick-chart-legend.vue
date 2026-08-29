@@ -4,8 +4,6 @@ import type { VueUiQuickChartLegendSlotProps } from 'vue-data-ui/vue-ui-quick-ch
 const props = defineProps<{
     legend: VueUiQuickChartLegendSlotProps['legend'];
 }>();
-
-console.log(props.legend);
 </script>
 
 <template>
