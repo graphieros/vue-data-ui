@@ -1,5 +1,12 @@
 <script setup>
-import { ref, computed, onMounted, watchEffect } from 'vue';
+import {
+    ref,
+    computed,
+    onMounted,
+    watchEffect,
+    defineAsyncComponent,
+    useTemplateRef,
+} from 'vue';
 import LocalVueUiDonut from '../src/components/vue-ui-donut.vue';
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from './Box.vue';
@@ -14,6 +21,10 @@ import LocalPatternSlot from '../src/atoms/vue-ui-pattern-seed.vue';
 import { VueUiPatternSeed } from 'vue-data-ui/vue-ui-pattern-seed';
 import { createPatternDef, createColorWheel } from 'vue-data-ui/utils';
 import { createStaticVueUiDonut } from '../src/svg/ssr.js';
+
+const VueUiLabel = defineAsyncComponent(
+    () => import('../src/components/vue-ui-label.vue'),
+);
 
 const { vue_ui_donut: DEFAULT_CONFIG } = useConfig();
 
@@ -743,7 +754,10 @@ const configTheme = computed(() => ({
 }));
 
 const customPalette = computed(() => {
-    return createColorWheel('oklch(0.628 0.2577 29.23)', dataset.value.length);
+    return createColorWheel(
+        'oklch(0.628 0.2577 29.23)',
+        dataset.value?.length ?? 1,
+    );
 });
 
 const config = computed(() => {
@@ -919,6 +933,56 @@ watchEffect(async () => {
         config: config.value,
     });
 });
+
+const labelCoordinates = ref({
+    x: 200,
+    y: 200,
+    position: {
+        x: null,
+        y: null,
+    },
+});
+
+const labels = ref([
+    {
+        x: 100,
+        y: 100,
+        title: 'LABEL A',
+        content: 'Small label, no title',
+        position: { x: null, y: null },
+        id: 'A',
+        shape: 'circle',
+        color: '#FF0000',
+    },
+    {
+        x: 300,
+        y: 300,
+        title: 'LABEL B',
+        content: 'This is label B and it probably spans on several lines.',
+        position: { x: null, y: null },
+        id: 'B',
+        shape: 'triangle',
+        color: '#FFBB00',
+    },
+]);
+
+function updateLabelCoordinates(payload) {
+    const newPosition = payload.position;
+    const thisLabel = labels.value.find((l) => l.id === payload.id);
+    thisLabel.position = newPosition;
+}
+
+function log(payload) {
+    console.log({ payload });
+}
+
+const labelRefs = useTemplateRef('labels');
+
+function reorderAll() {
+    labelRefs.value?.forEach((label) => {
+        label.reorder();
+    });
+}
 </script>
 
 <template>
@@ -958,6 +1022,7 @@ watchEffect(async () => {
                     background: white;
                 "
             >
+                <button @click="reorderAll">REORDER</button>
                 <LocalVueDataUi
                     component="VueUiDonut"
                     :dataset="dataset"
@@ -966,6 +1031,46 @@ watchEffect(async () => {
                         responsive: true,
                     }"
                 >
+                    <template #svg="{ svg }">
+                        <VueUiLabel
+                            ref="labels"
+                            v-for="label in labels"
+                            :key="label.id"
+                            :dataset="{
+                                ...label,
+                                x: svg.width / 2,
+                                y: svg.height / 2,
+                            }"
+                            @dragEnd="updateLabelCoordinates"
+                            @mouseenter="log"
+                            @click="log"
+                            :config="{
+                                title: {
+                                    text: label.title,
+                                    marker: {
+                                        beforeText: true,
+                                        shape: label.shape,
+                                        color: label.color,
+                                        offsetY: 0,
+                                    },
+                                },
+                                content: {
+                                    text: label.content,
+                                },
+                            }"
+                        >
+                            <template #after="n">
+                                <!-- <foreignObject
+                                    :x="box.x"
+                                    :y="box.y"
+                                    width="100"
+                                    height="100"
+                                >
+                                    <a href="/">LINK</a>
+                                </foreignObject> -->
+                            </template>
+                        </VueUiLabel>
+                    </template>
                     <template #custom-menu-before> BEFORE </template>
                     <template #custom-menu-after> AFTER </template>
                     <!-- <template #pattern="{ patternId, seriesIndex }">
@@ -1029,6 +1134,33 @@ watchEffect(async () => {
 
         <template #theme>
             <LocalVueUiDonut :dataset="dataset" :config="configTheme">
+                <template #svg="{ svg }">
+                    <VueUiLabel
+                        v-for="label in labels"
+                        :key="label.id"
+                        :dataset="{
+                            ...label,
+                            x: svg.width / 2,
+                            y: svg.height / 2,
+                        }"
+                        @dragEnd="updateLabelCoordinates"
+                        :config="{
+                            theme: currentTheme,
+                            title: {
+                                text: label.title,
+                                marker: {
+                                    beforeText: true,
+                                    shape: label.shape,
+                                    color: label.color,
+                                    offsetY: 0,
+                                },
+                            },
+                            content: {
+                                text: label.content,
+                            },
+                        }"
+                    />
+                </template>
                 <template #pattern="{ patternId, seriesIndex }">
                     <VueUiPatternSeed
                         v-if="seriesIndex != 0"

@@ -11,7 +11,7 @@
 [![License](https://npmx.dev/api/registry/badge/license/vue-data-ui)](https://npmx.dev/package/vue-data-ui)
 [![Types](https://npmx.dev/api/registry/badge/types/vue-data-ui)](https://npmx.dev/package/vue-data-ui)
 [![npm downloads](https://npmx.dev/api/registry/badge/downloads/vue-data-ui)](https://npmx.dev/package/vue-data-ui?modal=chart)
-[![Static Badge](https://npmx.dev/api/registry/badge/version/nuxt?color=22c55e&value=68&label=components)](https://vue-data-ui.graphieros.com)
+[![Static Badge](https://npmx.dev/api/registry/badge/version/nuxt?color=22c55e&value=69&label=components)](https://vue-data-ui.graphieros.com)
 [![GitHub issues](https://img.shields.io/github/issues/graphieros/vue-data-ui)](https://github.com/graphieros/vue-data-ui/issues)
 [![MadeWithVueJs.com shield](https://madewithvuejs.com/storage/repo-shields/4526-shield.svg)](https://madewithvuejs.com/p/vue-data-ui/shield-link)
 [![GitHub Repo stars](https://img.shields.io/github/stars/graphieros/vue-data-ui)](https://github.com/graphieros/vue-data-ui)
@@ -634,18 +634,19 @@ From the dataset you pass into the props, this component will produce the most a
 
 ### Utilities
 
-| Name              | dataset type              | config type             | emits / exposed methods                          | slots                                                   |
-| ----------------- | ------------------------- | ----------------------- | ------------------------------------------------ | ------------------------------------------------------- |
-| `VueUiAccordion`  | ❌                        | `VueUiAccordionConfig`  | ❌                                               | `#arrow`, `#title`, `#content`                          |
-| `VueUiAnnotator`  | `VueUiAnnotatorDataset`   | `VueUiAnnotatorConfig`  | `@toggleOpenState`, `@saveAnnotations`           | ❌                                                      |
-| `VueUiCursor`     | ❌                        | `VueUiCursorConfig`     | ❌                                               | ❌                                                      |
-| `VueUiDashboard`  | `VueUiDashboardElement[]` | `VueUiDashboardConfig`  | `@change`                                        | `#content`, `#top`, `#bottom`                           |
-| `VueUiDigits`     | `number`                  | `VueUiDigitsConfig`     | ❌                                               | ❌                                                      |
-| `VueUiKpi`        | `number`                  | `VueUiKpiConfig`        | ❌                                               | `#title`, `#value`, `#comment-before`, `#comment-after` |
-| `VueUiMiniLoader` | ❌                        | `VueUiMiniLoaderConfig` | ❌                                               | ❌                                                      |
-| `VueUiSkeleton`   | ❌                        | `VueUiSkeletonConfig`   | ❌                                               | ❌                                                      |
-| `VueUiTimer`      | ❌                        | `VueUiTimerConfig`      | `@start`, `@pause`, `@reset`, `@restart`, `@lap` | `#time`, `#controls`, `#laps`, `#chart-background`      |
-| `VueUiIcon`       | see below                 | -                       | -                                                | `#exp`, `#sub`                                          |
+| Name              | dataset type              | config type             | emits / exposed methods                                                                                 | slots                                                   |
+| ----------------- | ------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| `VueUiAccordion`  | ❌                        | `VueUiAccordionConfig`  | ❌                                                                                                      | `#arrow`, `#title`, `#content`                          |
+| `VueUiAnnotator`  | `VueUiAnnotatorDataset`   | `VueUiAnnotatorConfig`  | `@toggleOpenState`, `@saveAnnotations`                                                                  | ❌                                                      |
+| `VueUiCursor`     | ❌                        | `VueUiCursorConfig`     | ❌                                                                                                      | ❌                                                      |
+| `VueUiDashboard`  | `VueUiDashboardElement[]` | `VueUiDashboardConfig`  | `@change`                                                                                               | `#content`, `#top`, `#bottom`                           |
+| `VueUiDigits`     | `number`                  | `VueUiDigitsConfig`     | ❌                                                                                                      | ❌                                                      |
+| `VueUiKpi`        | `number`                  | `VueUiKpiConfig`        | ❌                                                                                                      | `#title`, `#value`, `#comment-before`, `#comment-after` |
+| `VueUiLabel`      | `VueUiLabelDataset`       | `VueUiLabelConfig`      | `@dragStart`, `@drag`, `@dragEnd`, `@mouseenter`, `@mouseleave`, `@click`, `@focus`, `@blur`, `reorder` | `#before`, `#after`, `#title`, `#content`               |
+| `VueUiMiniLoader` | ❌                        | `VueUiMiniLoaderConfig` | ❌                                                                                                      | ❌                                                      |
+| `VueUiSkeleton`   | ❌                        | `VueUiSkeletonConfig`   | ❌                                                                                                      | ❌                                                      |
+| `VueUiTimer`      | ❌                        | `VueUiTimerConfig`      | `@start`, `@pause`, `@reset`, `@restart`, `@lap`                                                        | `#time`, `#controls`, `#laps`, `#chart-background`      |
+| `VueUiIcon`       | see below                 | -                       | -                                                                                                       | `#exp`, `#sub`                                          |
 
 ### Icons
 

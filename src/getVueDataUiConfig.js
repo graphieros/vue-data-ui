@@ -30,6 +30,7 @@ const availableComponents = [
     'vue_ui_history_plot',
     'vue_ui_horizontal_bar',
     'vue_ui_kpi',
+    'vue_ui_label',
     'vue_ui_mini_loader',
     'vue_ui_molecule',
     'vue_ui_mood_radar',

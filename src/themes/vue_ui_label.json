@@ -1,0 +1,157 @@
+{
+    "default": {},
+    "minimal": {
+        "drag": {
+            "showSeparator": false
+        }
+    },
+    "minimalDark": {
+        "drag": {
+            "showSeparator": false,
+            "iconColor": "#CCCCCC"
+        },
+        "title": {
+            "color": "#CCCCCC"
+        },
+        "content": {
+            "color": "#CCCCCC"
+        },
+        "link": {
+            "stroke": "#CCCCCC",
+            "targetPlot": {
+                "stroke": "#1A1A1A"
+            }
+        },
+        "box": {
+            "backgroundColor": "#1A1A1ADD",
+            "borderColor": "#CCCCCC"
+        }
+    },
+    "dark": {
+        "drag": {
+            "iconColor": "#CCCCCC"
+        },
+        "title": {
+            "color": "#CCCCCC"
+        },
+        "content": {
+            "color": "#CCCCCC"
+        },
+        "link": {
+            "stroke": "#CCCCCC",
+            "targetPlot": {
+                "stroke": "#1A1A1A"
+            }
+        },
+        "box": {
+            "backgroundColor": "#1A1A1ADD",
+            "borderColor": "#CCCCCC"
+        }
+    },
+    "celebration": {
+        "drag": {
+            "iconColor": "#5D4037"
+        },
+        "title": {
+            "color": "#424242"
+        },
+        "content": {
+            "color": "#424242"
+        },
+        "link": {
+            "stroke": "#5D4037",
+            "targetPlot": {
+                "stroke": "#FFF8E1"
+            }
+        },
+        "box": {
+            "backgroundColor": "#FFF8E1DD",
+            "borderColor": "#5D4037"
+        }
+    },
+    "celebrationNight": {
+        "drag": {
+            "iconColor": "#BDBDBD"
+        },
+        "title": {
+            "color": "#BDBDBD"
+        },
+        "content": {
+            "color": "#BDBDBD"
+        },
+        "link": {
+            "stroke": "#FF8A65",
+            "targetPlot": {
+                "stroke": "#1E1E1E"
+            }
+        },
+        "box": {
+            "backgroundColor": "#1E1E1EDD",
+            "borderColor": "#FF8A65"
+        }
+    },
+    "hack": {
+        "drag": {
+            "iconColor": "#99AA99"
+        },
+        "title": {
+            "color": "#66CC66"
+        },
+        "content": {
+            "color": "#99AA99"
+        },
+        "link": {
+            "stroke": "#99AA99",
+            "targetPlot": {
+                "stroke": "#2A2F2A"
+            }
+        },
+        "box": {
+            "backgroundColor": "#2A2F2ADD",
+            "borderColor": "#99AA99"
+        }
+    },
+    "zen": {
+        "drag": {
+            "iconColor": "#8A9892"
+        },
+        "title": {
+            "color": "#8A9892"
+        },
+        "content": {
+            "color": "#8A9892"
+        },
+        "link": {
+            "stroke": "#8A9892",
+            "targetPlot": {
+                "stroke": "#fbfafa"
+            }
+        },
+        "box": {
+            "backgroundColor": "#fbfafaDD",
+            "borderColor": "#99AA99"
+        }
+    },
+    "concrete": {
+        "drag": {
+            "iconColor": "#829C98",
+            "showSeparator": true
+        },
+        "title": {
+            "color": "#50606C"
+        },
+        "content": {
+            "color": "#50606C"
+        },
+        "link": {
+            "stroke": "#829C98",
+            "targetPlot": {
+                "stroke": "#f6f6fb"
+            }
+        },
+        "box": {
+            "backgroundColor": "#f6f6fbDD",
+            "borderColor": "#829C98"
+        }
+    }
+}

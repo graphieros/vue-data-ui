@@ -78,7 +78,8 @@ declare module 'vue-data-ui' {
         | VueUiStacklineDatasetItem[]
         | VueUiDagDataset
         | VueUiGeoDatasetItem[]
-        | VueUiBumpDatasetItem[];
+        | VueUiBumpDatasetItem[]
+        | VueUiLabelDataset;
 
     export type VueDataUiAnyConfig =
         | VueUiHillConfig
@@ -145,7 +146,8 @@ declare module 'vue-data-ui' {
         | VueUiStacklineConfig
         | VueUiDagConfig
         | VueUiGeoConfig
-        | VueUiBumpConfig;
+        | VueUiBumpConfig
+        | VueUiLabelConfig;
 
     export type VueDataUiProps = {
         loader?: VueDataUiLoader | null;
@@ -17194,6 +17196,152 @@ declare module 'vue-data-ui' {
         };
     };
 
+    export type VueUiLabelConfig = {
+        theme?: Theme;
+        a11y?: {
+            translations?: {
+                keyboardNavigation?: string;
+            };
+        };
+        title?: {
+            text?: string;
+            color?: string;
+            fontSize?: number;
+            lineHeight?: number;
+            bold?: boolean;
+            textAlign?: 'left' | 'center' | 'right';
+            gap?: number;
+            marker?: {
+                color?: string | null;
+                shape?: Shape;
+                beforeText?: boolean;
+                size?: number;
+                offsetY?: number;
+            };
+        };
+        content?: {
+            text?: string;
+            color?: string;
+            fontSize?: number;
+            lineHeight?: number;
+            bold?: boolean;
+            textAlign?: 'left' | 'center' | 'right';
+        };
+        position?: 'auto' | 'top' | 'right' | 'bottom' | 'left';
+        link?: {
+            show?: boolean;
+            stroke?: string;
+            strokeWidth?: number;
+            strokeDasharray?: string | number;
+            length?: number;
+            targetPlot: {
+                show?: boolean;
+                radius?: number;
+                stroke?: string;
+                strokeWidth?: number;
+            };
+        };
+        box?: {
+            show?: boolean;
+            backgroundColor?: string;
+            borderColor?: string;
+            borderWidth?: number;
+            borderRadius?: number;
+            padding?: ChartPadding;
+            maxWidth?: number;
+        };
+        drag?: {
+            enable?: boolean;
+            handlePosition?: 'top' | 'right' | 'bottom' | 'left';
+            handleWidth?: number;
+            showSeparator?: boolean;
+            iconColor?: string;
+            iconOpacity?: number;
+            iconSize?: number;
+        };
+        overflow?: boolean;
+        overlap?: boolean;
+        collisionGap?: number;
+    };
+
+    export type VueUiLabelDataset = {
+        [key: string]: any;
+        id?: number | string;
+        x: number;
+        y: number;
+        position?: {
+            x: number | null;
+            y: number | null;
+        };
+    };
+
+    export type VueUiLabelProps = {
+        config?: VueUiLabelConfig;
+        dataset: VueUiLabelDataset;
+    };
+
+    export type VueUiLabelEmitDragStart = {
+        dataset: VueUiLabelDataset;
+        offset: { x: number; y: number };
+        rect: {
+            x: number;
+            y: number;
+            height: number;
+            width: number;
+        };
+    };
+    export type VueUiLabelEmitDrag = VueUiLabelEmitDragStart;
+    export type VueUiLabelEmitDragEnd = VueUiLabelDataset;
+
+    export type VueUiLabelEmits = {
+        dragStart: (payload: VueUiLabelEmitDragStart) => void;
+        drag: (payload: VueUiLabelEmitDrag) => void;
+        dragEnd: (payload: VueUiLabelEmitDragEnd) => void;
+        mouseenter: (payload: VueUiLabelDataset) => void;
+        mouseleave: (payload: VueUiLabelDataset) => void;
+        click: (payload: VueUiLabelDataset) => void;
+        focus: (payload: VueUiLabelDataset) => void;
+        blur: (payload: VueUiLabelDataset) => void;
+    };
+
+    const VueUiLabelBase: DefineComponent<
+        VueUiLabelProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiLabelEmits
+    >;
+
+    export type VueUiLabelSlotProps = {
+        box: {
+            height: number;
+            width: number;
+            rx: number;
+            x: number;
+            y: number;
+        };
+        config: VueUiLabelConfig;
+        dataset: VueUiLabelDataset;
+    };
+
+    export type VueUiLabelExpose = {
+        reorder(): void;
+    };
+
+    export const VueUiLabel: typeof VueUiLabelBase & {
+        new (): VueUiLabelExpose & {
+            $slots: {
+                after: (props: VueUiLabelSlotProps) => VNodeChild;
+                before: (props: VueUiLabelSlotProps) => VNodeChild;
+                title: (props: VueUiLabelSlotProps) => VNodeChild;
+                content: (props: VueUiLabelSlotProps) => VNodeChild;
+            };
+        };
+    };
+
     export type VueDataUiConfig =
         | VueUiHillConfig
         | VueUi3dBarConfig
@@ -17261,7 +17409,8 @@ declare module 'vue-data-ui' {
         | VueUiStacklineConfig
         | VueUiDagConfig
         | VueUiGeoConfig
-        | VueUiBumpConfig;
+        | VueUiBumpConfig
+        | VueUiLabelConfig;
 
     export type VueDataUiConfigKey =
         | 'vue_ui_hill'
@@ -17276,6 +17425,7 @@ declare module 'vue-data-ui' {
         | 'vue_ui_donut_evolution'
         | 'vue_ui_gauge'
         | 'vue_ui_heatmap'
+        | 'vue_ui_label'
         | 'vue_ui_mini_loader'
         | 'vue_ui_molecule'
         | 'vue_ui_mood_radar'

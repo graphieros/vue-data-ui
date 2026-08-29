@@ -275,6 +275,10 @@ const entries = {
         __dirname,
         'src/entries/vue-ui-pattern-seed.js',
     ),
+    'components/vue-ui-label': resolve(
+        __dirname,
+        'src/entries/vue-ui-label.js',
+    ),
     utils: resolve(__dirname, 'src/entries/utils.js'),
     composables: resolve(__dirname, 'src/entries/composables.js'),
     ssr: resolve(__dirname, 'src/svg/ssr.js'),

@@ -71,6 +71,7 @@ export { default as VueUiGeo } from './components/vue-ui-geo.vue';
 export { default as VueUiBump } from './components/vue-ui-bump.vue';
 export { default as VueUiHill } from './components/vue-ui-hill.vue';
 export { default as VueUiPatternSeed } from './atoms/vue-ui-pattern-seed.vue';
+export { default as VueUiLabel } from './components/vue-ui-label.vue';
 
 export { default as getVueDataUiConfig } from './getVueDataUiConfig';
 export { default as getThemeConfig } from './getThemeConfig';

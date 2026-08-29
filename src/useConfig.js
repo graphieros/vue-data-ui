@@ -8155,6 +8155,76 @@ export function useConfig(options = {}) {
         },
     };
 
+    const vue_ui_label = {
+        theme: '',
+        a11y: {
+            translations: {
+                keyboardNavigation:
+                    'Use the arrow keys to move this label. Hold Shift while pressing an arrow key to move it by a larger step.',
+            },
+        },
+        title: {
+            text: '',
+            color: COLOR_TEXT_PRIMARY,
+            fontSize: 14,
+            lineHeight: 14,
+            bold: false,
+            textAlign: 'left',
+            gap: 6,
+            // The marker is displayed if it has a color and if title.text
+            marker: {
+                color: null,
+                shape: 'circle',
+                beforeText: true,
+                size: 14,
+                offsetY: 0,
+            },
+        },
+        content: {
+            text: '',
+            color: COLOR_TEXT_PRIMARY,
+            fontSize: 12,
+            lineHeight: 12,
+            bold: false,
+            textAlign: 'left',
+        },
+        position: 'auto',
+        link: {
+            show: true,
+            stroke: COLOR_TEXT_PRIMARY,
+            strokeWidth: 1,
+            strokeDasharray: '0',
+            length: 20,
+            targetPlot: {
+                show: true,
+                radius: 2,
+                stroke: COLOR_BACKGROUND,
+                strokeWidth: 1,
+            },
+        },
+        box: {
+            show: true,
+            backgroundColor: COLOR_BACKGROUND,
+            borderColor: COLOR_TEXT_PRIMARY,
+            borderWidth: 1,
+            borderRadius: 3,
+            padding: PADDING([8, 8, 8, 8]),
+            maxWidth: 200,
+        },
+        drag: {
+            enable: true,
+            handlePosition: 'left',
+            handleWidth: 18,
+            showSeparator: false,
+            iconColor: COLOR_TEXT_PRIMARY,
+            iconOpacity: 0.6,
+            iconSize: 16,
+        },
+        overflow: false,
+        overlap: false,
+        collisionGap: 0,
+    };
+
     return {
         vue_ui_xy,
         vue_ui_donut,
@@ -8225,5 +8295,6 @@ export function useConfig(options = {}) {
         vue_ui_table,
         vue_ui_digits,
         vue_ui_hill,
+        vue_ui_label,
     };
 }

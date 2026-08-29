@@ -12,7 +12,15 @@ import {
     type VueUiXyEmitSelectTimeLabel,
     type VueUiXyEmitSelectX,
     type VueUiXyEmitZoom,
+    type VueUiXySvgSlotProps,
 } from 'vue-data-ui/vue-ui-xy';
+
+import {
+    VueUiLabel,
+    type VueUiLabelConfig,
+    type VueUiLabelDataset,
+} from 'vue-data-ui/vue-ui-label';
+
 import { mergeConfigs } from 'vue-data-ui/utils';
 import 'vue-data-ui/style.css';
 import CommonResetAction from '../slots/common/reset-action.vue';
@@ -676,6 +684,28 @@ watchEffect(async () => {
         },
     });
 });
+
+function getLabels(svg: VueUiXySvgSlotProps['svg']) {
+    const plotsFirstSeries = svg.data[0]?.plots;
+    const res = plotsFirstSeries?.map((plot, i) => {
+        return {
+            id: `plot_${i}`,
+            dataset: {
+                x: plot.x,
+                y: plot.y,
+            },
+            config: {
+                title: {
+                    text: `plot_${plot.x}_${plot.y}`,
+                },
+                content: {
+                    text: `This is a label`,
+                },
+            },
+        };
+    });
+    return res;
+}
 </script>
 
 <template>
@@ -878,6 +908,12 @@ watchEffect(async () => {
 
             <template #svg="{ svg }">
                 <XySvg :svg />
+                <VueUiLabel
+                    v-for="label in getLabels(svg)"
+                    :key="label.id"
+                    :dataset="label.dataset"
+                    :config="label.config"
+                />
             </template>
 
             <template #hint="{ hint, isVisible }">

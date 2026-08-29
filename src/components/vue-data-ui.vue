@@ -141,6 +141,7 @@ const components = {
     VueUiGeo: defineAsyncComponent(() => import('./vue-ui-geo.vue')),
     VueUiBump: defineAsyncComponent(() => import('./vue-ui-bump.vue')),
     VueUiHill: defineAsyncComponent(() => import('./vue-ui-hill.vue')),
+    VueUiLabel: defineAsyncComponent(() => import('./vue-ui-label.vue')),
 };
 
 const componentProps = {
@@ -212,12 +213,14 @@ const componentProps = {
     VueUiGeo: ['config', 'dataset'],
     VueUiBump: ['config', 'dataset'],
     VueUiHill: ['config', 'dataset'],
+    VueUiLabel: ['config', 'dataset'],
 };
 
 const emit = defineEmits([
     'cancel',
     'change',
     'copyAlt',
+    'drag',
     'dragEnd',
     'datapointEnter',
     'datapointLeave',
@@ -321,6 +324,7 @@ const save = ref(() => null);
 const cancel = ref(() => null);
 const dragStart = ref(() => null);
 const dragEnd = ref(() => null);
+const drag = ref(() => null);
 const datapointEnter = ref(() => null);
 const datapointLeave = ref(() => null);
 
@@ -476,6 +480,9 @@ watch(currentComponentRef, async (newRef) => {
         if (newRef.dragEnd) {
             dragEnd.value = newRef.dragEnd;
         }
+        if (newRef.drag) {
+            drag.value = newRef.drag;
+        }
         if (newRef.datapointEnter) {
             datapointEnter.value = newRef.datapointEnter;
         }
@@ -537,6 +544,7 @@ const getEventHandlers = () => {
         'cancel',
         'dragStart',
         'dragEnd',
+        'drag',
         'datapointEnter',
         'datapointLeave',
     ];
