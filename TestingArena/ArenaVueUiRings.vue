@@ -282,6 +282,9 @@ const config = computed(() => {
                             ...c.style.chart.layout.labels,
                             dataLabels: {
                                 ...c.style.chart.layout.labels.dataLabels,
+                                markers: {
+                                    position: 'right',
+                                },
                                 formatter: ({ value, config }) => {
                                     // console.log(config)
                                     return `f | ${value}`;

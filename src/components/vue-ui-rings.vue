@@ -1690,7 +1690,7 @@ defineExpose({
                                 (FINAL_CONFIG.style.chart.layout.labels
                                     .dataLabels.markers.position === 'left'
                                     ? -FINAL_CONFIG.style.chart.layout.labels
-                                          .dataLabels.offsetX - 6
+                                          .dataLabels.offsetX - 14
                                     : FINAL_CONFIG.style.chart.layout.labels
                                           .dataLabels.offsetX) +
                                 6
