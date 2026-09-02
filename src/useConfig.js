@@ -3459,6 +3459,7 @@ export function useConfig(options = {}) {
                 opacity: 100,
             },
             bar: {
+                borderRadius: null,
                 gradient: {
                     show: true,
                     intensity: 40,

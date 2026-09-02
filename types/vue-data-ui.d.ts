@@ -4282,6 +4282,7 @@ declare module 'vue-data-ui' {
                 opacity?: number;
             };
             bar?: {
+                borderRadius?: number | null;
                 gradient?: {
                     show?: boolean;
                     intensity?: number;

@@ -106,6 +106,8 @@ const model = createModel([
     TEXT('style.layout.targetValueText', { def: 'Target' }),
     COLOR('style.gutter.backgroundColor', { def: '#e1e5e8' }),
     RANGE('style.gutter.opacity', { def: 100, min: 0, max: 100 }),
+
+    NUMBER('style.bar.borderRadius', { def: null, min: 0, max: 100 }),
     CHECKBOX('style.bar.gradient.show', { def: true }),
     RANGE('style.bar.gradient.intensity', { def: 40, min: 0, max: 100 }),
     COLOR('style.bar.gradient.underlayerColor', { def: '#FFFFFF' }),

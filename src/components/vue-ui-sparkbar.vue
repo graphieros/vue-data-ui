@@ -350,6 +350,15 @@ function onTrapLeave(datapoint, index) {
         });
     }
 }
+
+const barRadius = computed(() => {
+    return FINAL_CONFIG.value.style.bar.borderRadius == null
+        ? svg.value.height / 2
+        : Math.min(
+              svg.value.height / 2,
+              FINAL_CONFIG.value.style.bar.borderRadius,
+          );
+});
 </script>
 
 <template>
@@ -619,7 +628,7 @@ function onTrapLeave(datapoint, index) {
                                 FINAL_CONFIG.style.gutter.opacity,
                             )
                         "
-                        :rx="svg.height / 2"
+                        :rx="barRadius"
                     />
                     <rect
                         :height="svg.height"
@@ -627,7 +636,7 @@ function onTrapLeave(datapoint, index) {
                         :x="0"
                         :y="0"
                         :fill="FINAL_CONFIG.style.bar.gradient.underlayerColor"
-                        :rx="svg.height / 2"
+                        :rx="barRadius"
                     />
                     <rect
                         :height="svg.height"
@@ -639,7 +648,7 @@ function onTrapLeave(datapoint, index) {
                                 ? `url(#sparkbar_gradient_${i}_${uid})`
                                 : bar.color
                         "
-                        :rx="svg.height / 2"
+                        :rx="barRadius"
                     />
                 </svg>
             </div>
