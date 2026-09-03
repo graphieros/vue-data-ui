@@ -445,6 +445,14 @@ const drawableDataset = computed(() => {
     return datapoints;
 });
 
+const drawableWidth = computed(() => {
+    const width = drawableDataset.value.reduce(
+        (acc, datapoint) => acc + datapoint.width,
+        0,
+    );
+    return Math.min(Math.max(width, 0), svg.value.width);
+});
+
 const emits = defineEmits(['selectDatapoint', 'selectLegend']);
 
 function selectDatapoint(datapoint, index, fromLegend = false) {
@@ -515,8 +523,21 @@ function useTooltip({ datapoint, seriesIndex, triggerMode = 'pointer' }) {
 
     if (!useCustomFormat.value) {
         let html = '';
+        const showGradient = FINAL_CONFIG.value.style.bar.gradient.show;
+        const tooltipGradientId = `tooltip_grad_${seriesIndex}_${uid.value}`;
+        const tooltipGradientColor = setOpacity(
+            shiftHue(datapoint.color, 0.05),
+            100 - FINAL_CONFIG.value.style.bar.gradient.intensity,
+        );
+        const markerUnderlayer = showGradient
+            ? `<rect x="0" y="0" width="10" height="10" rx="${legendMarkerRadius.value}" fill="${FINAL_CONFIG.value.style.bar.gradient.underlayerColor}"/>`
+            : '';
+        const markerGradient = showGradient
+            ? `<defs><radialGradient id="${tooltipGradientId}"><stop offset="0%" stop-color="${tooltipGradientColor}"/><stop offset="100%" stop-color="${datapoint.color}"/></radialGradient></defs>`
+            : '';
+
         html += `<div data-cy="donut-tooltip-name" style="width:100%;text-align:center;border-bottom:1px solid ${FINAL_CONFIG.value.style.tooltip.borderColor};padding-bottom:6px;margin-bottom:3px;">${datapoint.name}</div>`;
-        html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><svg viewBox="0 0 10 10" height="14" width="14"><rect x="0" y="0" width="10" height="10" rx="${legendMarkerRadius.value}" fill="${FINAL_CONFIG.value.style.bar.gradient.show ? `url(#legend_grad_${seriesIndex}-${uid.value})` : datapoint.color}"/></svg>`;
+        html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><svg viewBox="0 0 10 10" height="14" width="14">${markerGradient}${markerUnderlayer}<rect x="0" y="0" width="10" height="10" rx="${legendMarkerRadius.value}" fill="${showGradient ? `url(#${tooltipGradientId})` : datapoint.color}"/></svg>`;
 
         html += `<b>${datapoint.proportionLabel}</b>`;
 
@@ -872,9 +893,10 @@ defineExpose({
                         <rect
                             x="0"
                             y="0"
-                            :width="svg.width"
+                            :width="drawableWidth"
                             :height="svg.height"
                             :rx="barRadius"
+                            :class="{ animated: !isAnimating && !loading }"
                         />
                     </clipPath>
                 </defs>
@@ -930,16 +952,16 @@ defineExpose({
                         />
 
                         <!-- SERIES SEPARATORS -->
-                        <line
+                        <rect
                             v-for="(rect, i) in drawableDataset.slice(1)"
                             :key="`stack_separator_${i}`"
-                            :x1="rect.start"
-                            :x2="rect.start"
-                            y1="0"
-                            :y2="svg.height"
-                            :stroke="FINAL_CONFIG.style.backgroundColor"
-                            stroke-width="1"
+                            :x="rect.start - 0.5"
+                            y="0"
+                            width="1"
+                            :height="svg.height"
+                            :fill="FINAL_CONFIG.style.backgroundColor"
                             pointer-events="none"
+                            :class="{ animated: !isAnimating && !loading }"
                         />
 
                         <!-- TOOLTIP TRAPS -->
@@ -1091,6 +1113,17 @@ defineExpose({
                                 ]"
                             />
                         </defs>
+                        <rect
+                            v-if="FINAL_CONFIG.style.bar.gradient.show"
+                            x="0"
+                            y="0"
+                            width="10"
+                            height="10"
+                            :rx="legendMarkerRadius"
+                            :fill="
+                                FINAL_CONFIG.style.bar.gradient.underlayerColor
+                            "
+                        />
                         <rect
                             x="0"
                             y="0"
