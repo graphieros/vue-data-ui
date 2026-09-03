@@ -3495,6 +3495,7 @@ declare module 'vue-data-ui' {
                 animationFrames?: number;
             };
             bar?: {
+                borderRadius?: number | null;
                 gradient?: {
                     show?: boolean;
                     intensity?: number;

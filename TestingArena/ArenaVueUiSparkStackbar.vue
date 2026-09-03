@@ -77,6 +77,8 @@ const model = createModel([
     TEXT('style.fontFamily', { def: 'inherit' }),
     CHECKBOX('style.animation.show', { def: true }),
     NUMBER('style.animation.animationFrames', { def: 60, min: 0, max: 300 }),
+
+    NUMBER('style.bar.borderRadius', { def: null, min: 0, max: 100 }),
     CHECKBOX('style.bar.gradient.show', { def: true }),
     RANGE('style.bar.gradient.intensity', { def: 40, min: 0, max: 100 }),
     COLOR('style.bar.gradient.underlayerColor', { def: '#FFFFFF' }),

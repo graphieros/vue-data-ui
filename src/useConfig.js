@@ -3529,6 +3529,7 @@ export function useConfig(options = {}) {
                 animationFrames: 60,
             },
             bar: {
+                borderRadius: null,
                 gradient: {
                     show: true,
                     intensity: 40,

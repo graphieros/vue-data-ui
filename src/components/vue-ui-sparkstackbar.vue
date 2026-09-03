@@ -364,7 +364,16 @@ const mutableDataset = computed(() => {
     );
 });
 
+function resetTooltipState() {
+    isTooltip.value = false;
+    selectedIndex.value = null;
+    activeTooltipIndex.value = null;
+    tooltipTriggerMode.value = 'pointer';
+}
+
 function toggleLegend() {
+    resetTooltipState();
+
     if (segregated.value.length) {
         segregated.value = [];
     } else {
@@ -376,6 +385,8 @@ function toggleLegend() {
 }
 
 function segregate(index) {
+    resetTooltipState();
+
     if (segregated.value.includes(index)) {
         segregated.value = segregated.value.filter((s) => s !== index);
     } else {
@@ -481,7 +492,7 @@ function useTooltip({ datapoint, seriesIndex, triggerMode = 'pointer' }) {
         series: absoluteDataset.value,
     };
     isTooltip.value = true;
-    selectedIndex.value = seriesIndex;
+    selectedIndex.value = datapoint.seriesIndex;
     const customFormat = FINAL_CONFIG.value.style.tooltip.customFormat;
 
     if (isFunction(customFormat)) {
@@ -527,6 +538,25 @@ function useTooltip({ datapoint, seriesIndex, triggerMode = 'pointer' }) {
         tooltipContent.value = `<div>${html}</div>`;
     }
 }
+
+const barRadius = computed(() => {
+    const radius =
+        FINAL_CONFIG.value.style.bar.borderRadius == null
+            ? svg.value.height / 2
+            : FINAL_CONFIG.value.style.bar.borderRadius;
+    return Math.min(Math.max(radius, 0), svg.value.height / 2);
+});
+
+const legendMarkerRadius = computed(() => {
+    const maxBarRadius = svg.value.height / 2;
+    const maxMarkerRadius = 5;
+
+    if (maxBarRadius === 0) {
+        return maxMarkerRadius;
+    }
+
+    return (barRadius.value / maxBarRadius) * maxMarkerRadius;
+});
 
 /***************************************************************************************************
  * a11y
@@ -838,87 +868,122 @@ defineExpose({
                             ['100%', rect.color, 1],
                         ]"
                     />
-                    <clipPath id="stackPill" clipPathUnits="objectBoundingBox">
+                    <clipPath :id="`stackPill_${uid}`">
                         <rect
-                            x="0.005"
-                            y="-2"
-                            width="0.99"
-                            height="5"
-                            rx="3"
-                            ry="3"
-                            :fill="FINAL_CONFIG.style.backgroundColor"
+                            x="0"
+                            y="0"
+                            :width="svg.width"
+                            :height="svg.height"
+                            :rx="barRadius"
                         />
                     </clipPath>
                 </defs>
-                <g clip-path="url(#stackPill)" v-if="total > 0">
+                <template v-if="total > 0">
+                    <g :clip-path="`url(#stackPill_${uid})`">
+                        <rect
+                            data-cy="datapoint-underlayer"
+                            v-for="(rect, i) in drawableDataset"
+                            :key="`stack_underlayer_${i}`"
+                            :x="rect.start"
+                            :y="0"
+                            :width="rect.width"
+                            :height="svg.height"
+                            :fill="
+                                FINAL_CONFIG.style.bar.gradient.underlayerColor
+                            "
+                            :class="{ animated: !isAnimating && !loading }"
+                            :style="{
+                                opacity:
+                                    isTooltip &&
+                                    selectedIndex !== null &&
+                                    FINAL_CONFIG.style.tooltip.show
+                                        ? selectedIndex === rect.seriesIndex
+                                            ? 1
+                                            : 0.5
+                                        : 1,
+                            }"
+                        />
+                        <rect
+                            data-cy="datapoint"
+                            v-for="(rect, i) in drawableDataset"
+                            :key="`stack_${i}`"
+                            :x="rect.start"
+                            :y="0"
+                            :width="rect.width"
+                            :height="svg.height"
+                            :fill="
+                                FINAL_CONFIG.style.bar.gradient.show
+                                    ? `url(#stack_gradient_${i}_${uid})`
+                                    : rect.color
+                            "
+                            :class="{ animated: !isAnimating && !loading }"
+                            :style="{
+                                opacity:
+                                    isTooltip &&
+                                    selectedIndex !== null &&
+                                    FINAL_CONFIG.style.tooltip.show
+                                        ? selectedIndex === rect.seriesIndex
+                                            ? 1
+                                            : 0.5
+                                        : 1,
+                            }"
+                        />
+
+                        <!-- SERIES SEPARATORS -->
+                        <line
+                            v-for="(rect, i) in drawableDataset.slice(1)"
+                            :key="`stack_separator_${i}`"
+                            :x1="rect.start"
+                            :x2="rect.start"
+                            y1="0"
+                            :y2="svg.height"
+                            :stroke="FINAL_CONFIG.style.backgroundColor"
+                            stroke-width="1"
+                            pointer-events="none"
+                        />
+
+                        <!-- TOOLTIP TRAPS -->
+                        <rect
+                            data-cy="tooltip-trap"
+                            v-for="(rect, i) in drawableDataset"
+                            :key="`stack_trap_${i}`"
+                            :x="rect.start"
+                            :y="0"
+                            :width="rect.width"
+                            :height="svg.height"
+                            fill="transparent"
+                            stroke="none"
+                            :class="{ animated: !isAnimating && !loading }"
+                            @click="() => selectDatapoint(rect, i)"
+                            @mouseenter="
+                                () =>
+                                    useTooltip({
+                                        datapoint: rect,
+                                        seriesIndex: rect.seriesIndex,
+                                    })
+                            "
+                            @mouseleave="
+                                onTrapLeave({
+                                    datapoint: rect,
+                                    seriesIndex: rect.seriesIndex,
+                                })
+                            "
+                        />
+                    </g>
+
+                    <!-- OUTER BORDER: kept outside the clip so it cannot be cropped -->
                     <rect
-                        data-cy="datapoint-underlayer"
-                        v-for="(rect, i) in drawableDataset"
-                        :key="`stack_underlayer_${i}`"
-                        :x="rect.start"
-                        :y="0"
-                        :width="rect.width"
-                        :height="svg.height"
-                        :fill="FINAL_CONFIG.style.bar.gradient.underlayerColor"
-                        :class="{ animated: !isAnimating && !loading }"
-                        :style="{
-                            opacity:
-                                selectedIndex !== null &&
-                                FINAL_CONFIG.style.tooltip.show
-                                    ? selectedIndex === i
-                                        ? 1
-                                        : 0.5
-                                    : 1,
-                        }"
-                    />
-                    <rect
-                        data-cy="datapoint"
-                        v-for="(rect, i) in drawableDataset"
-                        :key="`stack_${i}`"
-                        :x="rect.start"
-                        :y="0"
-                        :width="rect.width"
-                        :height="svg.height"
-                        :fill="
-                            FINAL_CONFIG.style.bar.gradient.show
-                                ? `url(#stack_gradient_${i}_${uid})`
-                                : rect.color
-                        "
+                        x="0.5"
+                        y="0.5"
+                        :width="svg.width - 1"
+                        :height="svg.height - 1"
+                        :rx="Math.max(0, barRadius - 0.5)"
+                        fill="none"
                         :stroke="FINAL_CONFIG.style.backgroundColor"
-                        stroke-linecap="round"
-                        :class="{ animated: !isAnimating && !loading }"
-                        :style="{
-                            opacity:
-                                selectedIndex !== null &&
-                                FINAL_CONFIG.style.tooltip.show
-                                    ? selectedIndex === i
-                                        ? 1
-                                        : 0.5
-                                    : 1,
-                        }"
+                        stroke-width="1"
+                        pointer-events="none"
                     />
-                    <!-- TOOLTIP TRAPS -->
-                    <rect
-                        data-cy="tooltip-trap"
-                        v-for="(rect, i) in drawableDataset"
-                        :key="`stack_trap_${i}`"
-                        :x="rect.start"
-                        :y="0"
-                        :width="rect.width"
-                        :height="svg.height"
-                        fill="transparent"
-                        stroke="none"
-                        :class="{ animated: !isAnimating && !loading }"
-                        @click="() => selectDatapoint(rect, i)"
-                        @mouseenter="
-                            () =>
-                                useTooltip({ datapoint: rect, seriesIndex: i })
-                        "
-                        @mouseleave="
-                            onTrapLeave({ datapoint: rect, seriesIndex: i })
-                        "
-                    />
-                </g>
+                </template>
                 <rect
                     v-else
                     :x="2"
@@ -1026,10 +1091,12 @@ defineExpose({
                                 ]"
                             />
                         </defs>
-                        <circle
-                            :cx="5"
-                            :cy="5"
-                            :r="5"
+                        <rect
+                            x="0"
+                            y="0"
+                            width="10"
+                            height="10"
+                            :rx="legendMarkerRadius"
                             :fill="
                                 FINAL_CONFIG.style.bar.gradient.show
                                     ? `url(#legend_grad_${i}-${uid})`
