@@ -516,7 +516,7 @@ function useTooltip({ datapoint, seriesIndex, triggerMode = 'pointer' }) {
     if (!useCustomFormat.value) {
         let html = '';
         html += `<div data-cy="donut-tooltip-name" style="width:100%;text-align:center;border-bottom:1px solid ${FINAL_CONFIG.value.style.tooltip.borderColor};padding-bottom:6px;margin-bottom:3px;">${datapoint.name}</div>`;
-        html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><svg viewBox="0 0 12 12" height="14" width="14"><circle data-cy="donut-tooltip-marker" cx="6" cy="6" r="6" stroke="none" fill="${datapoint.color}"/></svg>`;
+        html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><svg viewBox="0 0 10 10" height="14" width="14"><rect x="0" y="0" width="10" height="10" rx="${legendMarkerRadius.value}" fill="${FINAL_CONFIG.value.style.bar.gradient.show ? `url(#legend_grad_${seriesIndex}-${uid.value})` : datapoint.color}"/></svg>`;
 
         html += `<b>${datapoint.proportionLabel}</b>`;
 
