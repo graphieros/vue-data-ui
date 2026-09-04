@@ -22,7 +22,7 @@
         "typescript": "~6.0.0",
         "vite": "^8.2.2",
         "vite-plugin-vue-devtools": "^8.2.1",
-        "vue-tsc": "^3.3.9",
+        "vue-tsc": "^3.3.11",
         "vue-data-ui": "file:../../vue-data-ui"
     },
     "engines": {
