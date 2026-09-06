@@ -1954,10 +1954,15 @@ defineExpose({
                                         FINAL_CONFIG.style.chart.xAxis.labels
                                             .showOnlyAtModulo &&
                                         i %
-                                            Math.floor(
-                                                xAxisTrapsAndLabels.length /
-                                                    FINAL_CONFIG.style.chart
-                                                        .xAxis.labels.modulo,
+                                            Math.max(
+                                                1,
+                                                Math.floor(
+                                                    Number(
+                                                        FINAL_CONFIG.style.chart
+                                                            .xAxis.labels
+                                                            .modulo,
+                                                    ) || 1,
+                                                ),
                                             ) ===
                                             0),
                                 fontSize:
@@ -2005,10 +2010,15 @@ defineExpose({
                                         FINAL_CONFIG.style.chart.xAxis.labels
                                             .showOnlyAtModulo &&
                                         i %
-                                            Math.floor(
-                                                xAxisTrapsAndLabels.length /
-                                                    FINAL_CONFIG.style.chart
-                                                        .xAxis.labels.modulo,
+                                            Math.max(
+                                                1,
+                                                Math.floor(
+                                                    Number(
+                                                        FINAL_CONFIG.style.chart
+                                                            .xAxis.labels
+                                                            .modulo,
+                                                    ) || 1,
+                                                ),
                                             ) ===
                                             0)
                                 "
@@ -2025,6 +2035,13 @@ defineExpose({
                                         FINAL_CONFIG.style.chart.xAxis.labels
                                             .color
                                     "
+                                    :stroke="
+                                        FINAL_CONFIG.style.chart.backgroundColor
+                                    "
+                                    stroke-width="3"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    paint-order="stroke fill"
                                     :font-weight="
                                         FINAL_CONFIG.style.chart.xAxis.labels
                                             .bold
@@ -2095,6 +2112,8 @@ defineExpose({
                                                     .labels.fontSize,
                                             fill: FINAL_CONFIG.style.chart.xAxis
                                                 .labels.color,
+                                            stroke: FINAL_CONFIG.style.chart
+                                                .backgroundColor,
                                             x: 0,
                                             y: 0,
                                         })

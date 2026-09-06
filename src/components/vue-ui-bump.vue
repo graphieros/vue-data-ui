@@ -851,15 +851,6 @@ watchEffect(() => {
     })();
 });
 
-const modulo = computed(() => {
-    const m = FINAL_CONFIG.value.style.chart.layout.timeLabels.modulo;
-    if (!timeLabels.value.length) return m;
-    return Math.min(
-        m,
-        [...new Set(timeLabels.value.map((t) => t.text))].length,
-    );
-});
-
 const displayedTimeLabels = computed(() => {
     const cfg = FINAL_CONFIG.value.style.chart.layout.timeLabels;
     const vis = timeLabels.value || [];
@@ -873,7 +864,7 @@ const displayedTimeLabels = computed(() => {
     return buildDisplayedTimeLabels(
         !!cfg.showOnlyFirstAndLast,
         !!cfg.showOnlyAtModulo,
-        Math.max(1, modulo.value || 1),
+        Math.max(1, Number(cfg.modulo) || 1),
         visTexts,
         allTexts,
         start,
@@ -1908,6 +1899,13 @@ defineExpose({
                                         FINAL_CONFIG.style.chart.layout
                                             .timeLabels.color
                                     "
+                                    :stroke="
+                                        FINAL_CONFIG.style.chart.backgroundColor
+                                    "
+                                    stroke-width="3"
+                                    stroke-linejoin="round"
+                                    stroke-linecap="round"
+                                    paint-order="stroke fill"
                                     :transform="`translate(${drawingArea.unitW * i + drawingArea.unitW / 2 + drawingArea.left}, ${drawingArea.chartHeight + FINAL_CONFIG.style.chart.layout.timeLabels.offsetY}), rotate(${FINAL_CONFIG.style.chart.layout.timeLabels.rotation})`"
                                 >
                                     {{ timeLabel.text }}
@@ -1949,6 +1947,8 @@ defineExpose({
                                                     .timeLabels.fontSize,
                                             fill: FINAL_CONFIG.style.chart
                                                 .layout.timeLabels.color,
+                                            stroke: FINAL_CONFIG.style.chart
+                                                .backgroundColor,
                                             x: 0,
                                             y: 0,
                                         })

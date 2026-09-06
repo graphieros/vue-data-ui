@@ -4729,6 +4729,7 @@ declare module 'vue-data-ui' {
                             };
                             datetimeFormatter?: AxisDateFormatter;
                             showOnlyFirstAndLast?: boolean;
+                            showFirstAndLast?: boolean;
                             showOnlyAtModulo?: boolean;
                             modulo?: number;
                         };
@@ -5872,6 +5873,7 @@ declare module 'vue-data-ui' {
                         values?: Array<number | string>;
                         fontSize?: number;
                         showOnlyFirstAndLast?: boolean;
+                        showFirstAndLast?: boolean;
                         yOffset?: number;
                         rotation?: number;
                         showOnlyAtModulo?: boolean;
@@ -13383,6 +13385,7 @@ declare module 'vue-data-ui' {
                             color?: string;
                             bold?: boolean;
                             showOnlyFirstAndLast?: boolean;
+                            showFirstAndLast?: boolean;
                             showOnlyAtModulo?: boolean;
                             modulo?: number;
                         };
@@ -13839,6 +13842,7 @@ declare module 'vue-data-ui' {
                             color?: string;
                             bold?: boolean;
                             showOnlyFirstAndLast?: boolean;
+                            showFirstAndLast?: boolean;
                             showOnlyAtModulo?: boolean;
                             modulo?: number;
                         };

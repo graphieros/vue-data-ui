@@ -448,6 +448,17 @@ function prepareConfig() {
             });
         }
     }
+    if (
+        props.config &&
+        hasDeepProperty(
+            props.config,
+            'chart.grid.labels.xAxisLabels.showFirstAndLast',
+        )
+    ) {
+        mergedConfig.chart.grid.labels.xAxisLabels.showFirstAndLast =
+            !!props.config.chart.grid.labels.xAxisLabels.showFirstAndLast;
+    }
+
     // ----------------------------------------------------------------------------
 
     const theme = mergedConfig.theme;
@@ -1586,13 +1597,28 @@ watchEffect(() => {
     })();
 });
 
-const modulo = computed(() => {
-    const m = FINAL_CONFIG.value.chart.grid.labels.xAxisLabels.modulo;
-    if (!timeLabels.value.length) return m;
-    return Math.min(
-        m,
-        [...new Set(timeLabels.value.map((t) => t.text))].length,
+const effectiveModulo = computed(() => {
+    const configuredModulo = Math.max(
+        1,
+        Math.floor(
+            Number(FINAL_CONFIG.value.chart.grid.labels.xAxisLabels.modulo) ||
+                1,
+        ),
     );
+
+    const totalCount = allTimeLabels.value.length;
+    const visibleCount = timeLabels.value.length;
+
+    if (!totalCount || !visibleCount) {
+        return configuredModulo;
+    }
+
+    const targetLabelCount = Math.max(
+        1,
+        Math.ceil(totalCount / configuredModulo),
+    );
+
+    return Math.max(1, Math.round(visibleCount / targetLabelCount));
 });
 
 const displayedTimeLabels = computed(() => {
@@ -1605,16 +1631,38 @@ const displayedTimeLabels = computed(() => {
     const visTexts = vis.map((l) => l?.text ?? '');
     const allTexts = all.map((l) => l?.text ?? '');
 
-    return buildDisplayedTimeLabels(
+    const displayed = buildDisplayedTimeLabels(
         !!cfg.showOnlyFirstAndLast,
         !!cfg.showOnlyAtModulo,
-        Math.max(1, modulo.value || 1),
+        effectiveModulo.value,
         visTexts,
         allTexts,
         start,
         sel,
         maxS,
     );
+
+    if (
+        !cfg.showFirstAndLast ||
+        !cfg.showOnlyAtModulo ||
+        cfg.showOnlyFirstAndLast ||
+        !displayed.length
+    ) {
+        return displayed;
+    }
+
+    const lastIndex = displayed.length - 1;
+
+    return displayed.map((label, i) => {
+        if (i !== 0 && i !== lastIndex) {
+            return label;
+        }
+
+        return {
+            ...label,
+            text: visTexts[i] ?? '',
+        };
+    });
 });
 
 const displayedTimeLabelsKey = computed(() => {
@@ -9479,6 +9527,14 @@ defineExpose({
                                                 FINAL_CONFIG.chart.grid.labels
                                                     .xAxisLabels.color
                                             "
+                                            :stroke="
+                                                FINAL_CONFIG.chart
+                                                    .backgroundColor
+                                            "
+                                            stroke-width="3"
+                                            stroke-linejoin="round"
+                                            stroke-linecap="round"
+                                            paint-order="stroke fill"
                                             :transform="`translate(${getXAxisLabelX(label, i)}, ${drawingArea?.bottom + fontSizes.xAxis * 1.5}), rotate(${FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation})`"
                                             :style="{
                                                 cursor:
@@ -9527,6 +9583,8 @@ defineExpose({
                                                     fill: FINAL_CONFIG.chart
                                                         .grid.labels.xAxisLabels
                                                         .color,
+                                                    stroke: FINAL_CONFIG.chart
+                                                        .backgroundColor,
                                                     x: 0,
                                                     y: 0,
                                                 })

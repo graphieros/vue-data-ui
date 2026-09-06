@@ -325,7 +325,7 @@ const model = createModel([
     NUMBER('style.chart.xAxis.labels.fontSize', { def: 14, min: 8, max: 48 }),
     CHECKBOX('style.chart.xAxis.labels.bold', { def: false }),
     CHECKBOX('style.chart.xAxis.labels.showOnlyAtModulo', { def: true }),
-    NUMBER('style.chart.xAxis.labels.modulo', { def: 12 }),
+    NUMBER('style.chart.xAxis.labels.modulo', { def: 2 }),
     NUMBER('style.chart.xAxis.labels.offsetY', { def: 0, min: -100, max: 100 }),
     NUMBER('style.chart.yAxis.labels.fontSize', { def: 16, min: 8, max: 48 }),
     CHECKBOX('style.chart.yAxis.labels.bold', { def: false }),

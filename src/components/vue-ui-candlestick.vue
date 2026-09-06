@@ -23,6 +23,7 @@ import {
     error,
     functionReturnsString,
     getImageDimensions,
+    hasDeepProperty,
     isFunction,
     objectIsEmpty,
     setOpacity,
@@ -260,6 +261,17 @@ function prepareConfig() {
     });
 
     let finalConfig = {};
+
+    if (
+        props.config &&
+        hasDeepProperty(
+            props.config,
+            'style.layout.grid.xAxis.dataLabels.showFirstAndLast',
+        )
+    ) {
+        mergedConfig.style.layout.grid.xAxis.dataLabels.showFirstAndLast =
+            !!props.config.style.layout.grid.xAxis.dataLabels.showFirstAndLast;
+    }
 
     const theme = mergedConfig.theme;
 
@@ -926,15 +938,6 @@ watchEffect(() => {
     })();
 });
 
-const modulo = computed(() => {
-    const m = FINAL_CONFIG.value.style.layout.grid.xAxis.dataLabels.modulo;
-    if (!timeLabels.value.length) return m;
-    return Math.min(
-        m,
-        [...new Set(timeLabels.value.map((t) => t.text))].length,
-    );
-});
-
 const localeData = ref({
     months: [],
     shortMonths: [],
@@ -998,6 +1001,31 @@ const preciseAllTimeLabels = computed(() => {
     }));
 });
 
+const effectiveModulo = computed(() => {
+    const configuredModulo = Math.max(
+        1,
+        Math.floor(
+            Number(
+                FINAL_CONFIG.value.style.layout.grid.xAxis.dataLabels.modulo,
+            ) || 1,
+        ),
+    );
+
+    const totalCount = allTimeLabels.value.length;
+    const visibleCount = timeLabels.value.length;
+
+    if (!totalCount || !visibleCount) {
+        return configuredModulo;
+    }
+
+    const targetLabelCount = Math.max(
+        1,
+        Math.ceil(totalCount / configuredModulo),
+    );
+
+    return Math.max(1, Math.round(visibleCount / targetLabelCount));
+});
+
 const displayedTimeLabels = computed(() => {
     const cfg = FINAL_CONFIG.value.style.layout.grid.xAxis.dataLabels;
     const vis = timeLabels.value || [];
@@ -1008,16 +1036,38 @@ const displayedTimeLabels = computed(() => {
     const visTexts = vis.map((l) => l?.text ?? '');
     const allTexts = all.map((l) => l?.text ?? '');
 
-    return buildDisplayedTimeLabels(
+    const displayed = buildDisplayedTimeLabels(
         !!cfg.showOnlyFirstAndLast,
         !!cfg.showOnlyAtModulo,
-        Math.max(1, modulo.value || 1),
+        effectiveModulo.value,
         visTexts,
         allTexts,
         start,
         sel,
         maxS,
     );
+
+    if (
+        !cfg.showFirstAndLast ||
+        !cfg.showOnlyAtModulo ||
+        cfg.showOnlyFirstAndLast ||
+        !displayed.length
+    ) {
+        return displayed;
+    }
+
+    const lastIndex = displayed.length - 1;
+
+    return displayed.map((label, i) => {
+        if (i !== 0 && i !== lastIndex) {
+            return label;
+        }
+
+        return {
+            ...label,
+            text: visTexts[i] ?? '',
+        };
+    });
 });
 
 const slicerLabels = computed(() => {
@@ -2358,6 +2408,11 @@ defineExpose({
                                     FINAL_CONFIG.style.layout.grid.xAxis
                                         .dataLabels.color
                                 "
+                                :stroke="FINAL_CONFIG.style.backgroundColor"
+                                stroke-width="3"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                paint-order="stroke fill"
                                 :font-weight="
                                     FINAL_CONFIG.style.layout.grid.xAxis
                                         .dataLabels.bold

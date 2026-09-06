@@ -668,8 +668,9 @@ export function useConfig(options = {}) {
                             color: COLOR_TEXT_PRIMARY,
                             bold: false,
                             showOnlyFirstAndLast: false,
+                            showFirstAndLast: true,
                             showOnlyAtModulo: false,
-                            modulo: 12,
+                            modulo: 2,
                         },
                     },
                     y: {
@@ -922,8 +923,9 @@ export function useConfig(options = {}) {
                             color: COLOR_TEXT_PRIMARY,
                             bold: false,
                             showOnlyFirstAndLast: false,
+                            showFirstAndLast: true,
                             showOnlyAtModulo: false,
-                            modulo: 12,
+                            modulo: 2,
                         },
                     },
                     y: {
@@ -1161,8 +1163,9 @@ export function useConfig(options = {}) {
                         datetimeFormatter: AXIS_DATE_FORMATTER,
                         fontSize: FONT._14,
                         showOnlyFirstAndLast: false,
+                        showFirstAndLast: true,
                         showOnlyAtModulo: false,
-                        modulo: 12,
+                        modulo: 2,
                         yOffset: 24,
                         rotation: 0,
                         autoRotate: {
@@ -3188,8 +3191,9 @@ export function useConfig(options = {}) {
                             },
                             datetimeFormatter: AXIS_DATE_FORMATTER,
                             showOnlyFirstAndLast: false,
+                            showFirstAndLast: true,
                             showOnlyAtModulo: false,
-                            modulo: 12,
+                            modulo: 2,
                         },
                     },
                     yAxis: {
@@ -6785,7 +6789,7 @@ export function useConfig(options = {}) {
                     },
                     timeLabels: {
                         showOnlyAtModulo: true,
-                        modulo: 12,
+                        modulo: 2,
                     },
                     datetimeFormatter: {
                         ...AXIS_DATE_FORMATTER,
@@ -7698,7 +7702,7 @@ export function useConfig(options = {}) {
                         fontSize: 14,
                         bold: false,
                         showOnlyAtModulo: false,
-                        modulo: 12,
+                        modulo: 2,
                         showOnlyFirstAndLast: false,
                         offsetY: 0,
                     },
@@ -8114,7 +8118,7 @@ export function useConfig(options = {}) {
                         bold: false,
                         showOnlyFirstAndLast: false,
                         showOnlyAtModulo: false,
-                        modulo: 12,
+                        modulo: 2,
                     },
                     lines: {
                         smooth: true,

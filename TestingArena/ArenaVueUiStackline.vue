@@ -411,12 +411,15 @@ const model = createModel([
         min: -90,
         max: 90,
     }),
-    CHECKBOX('style.chart.grid.x.timeLabels.showOnlyAtModulo', { def: false }),
+    CHECKBOX('style.chart.grid.x.timeLabels.showOnlyAtModulo', { def: true }),
     CHECKBOX('style.chart.grid.x.timeLabels.showOnlyFirstAndLast', {
         def: false,
     }),
+    CHECKBOX('style.chart.grid.x.timeLabels.showFirstAndLast', {
+        def: true,
+    }),
     NUMBER('style.chart.grid.x.timeLabels.modulo', {
-        def: 12,
+        def: 2,
         min: 2,
         max: 12,
     }),

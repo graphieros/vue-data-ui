@@ -440,6 +440,7 @@ const config = computed(() => {
                             ...c.style.layout.grid.xAxis,
                             dataLabels: {
                                 showOnlyFirstAndLast: false,
+                                showFirstAndLast: true,
                                 showOnlyAtModulo: true,
                                 modulo: 12,
                                 datetimeFormatter: {

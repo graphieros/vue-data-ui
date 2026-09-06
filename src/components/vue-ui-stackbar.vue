@@ -33,6 +33,7 @@ import {
     functionReturnsString,
     getImageDimensions,
     getMissingDatasetAttributes,
+    hasDeepProperty,
     isFunction,
     lightenHexColor,
     objectIsEmpty,
@@ -366,6 +367,17 @@ function prepareConfig() {
         defaultConfig: DEFAULT_CONFIG,
     });
     let finalConfig = {};
+
+    if (
+        props.config &&
+        hasDeepProperty(
+            props.config,
+            'style.chart.grid.x.timeLabels.showFirstAndLast',
+        )
+    ) {
+        mergedConfig.style.chart.grid.x.timeLabels.showFirstAndLast =
+            !!props.config.style.chart.grid.x.timeLabels.showFirstAndLast;
+    }
 
     const theme = mergedConfig.theme;
 
@@ -1287,13 +1299,28 @@ watchEffect(() => {
     })();
 });
 
-const modulo = computed(() => {
-    const m = FINAL_CONFIG.value.style.chart.grid.x.timeLabels.modulo;
-    if (!timeLabels.value.length) return m;
-    return Math.min(
-        m,
-        [...new Set(timeLabels.value.map((t) => t.text))].length,
+const effectiveModulo = computed(() => {
+    const configuredModulo = Math.max(
+        1,
+        Math.floor(
+            Number(FINAL_CONFIG.value.style.chart.grid.x.timeLabels.modulo) ||
+                1,
+        ),
     );
+
+    const totalCount = allTimeLabels.value.length;
+    const visibleCount = timeLabels.value.length;
+
+    if (!totalCount || !visibleCount) {
+        return configuredModulo;
+    }
+
+    const targetLabelCount = Math.max(
+        1,
+        Math.ceil(totalCount / configuredModulo),
+    );
+
+    return Math.max(1, Math.round(visibleCount / targetLabelCount));
 });
 
 const displayedTimeLabels = computed(() => {
@@ -1306,16 +1333,38 @@ const displayedTimeLabels = computed(() => {
     const visTexts = vis.map((l) => l?.text ?? '');
     const allTexts = all.map((l) => l?.text ?? '');
 
-    return buildDisplayedTimeLabels(
+    const displayed = buildDisplayedTimeLabels(
         !!cfg.showOnlyFirstAndLast,
         !!cfg.showOnlyAtModulo,
-        Math.max(1, modulo.value || 1),
+        effectiveModulo.value,
         visTexts,
         allTexts,
         start,
         sel,
         maxS,
     );
+
+    if (
+        !cfg.showFirstAndLast ||
+        !cfg.showOnlyAtModulo ||
+        cfg.showOnlyFirstAndLast ||
+        !displayed.length
+    ) {
+        return displayed;
+    }
+
+    const lastIndex = displayed.length - 1;
+
+    return displayed.map((label, i) => {
+        if (i !== 0 && i !== lastIndex) {
+            return label;
+        }
+
+        return {
+            ...label,
+            text: visTexts[i] ?? '',
+        };
+    });
 });
 
 watchEffect(
@@ -3966,7 +4015,7 @@ defineExpose({
                 >
                     <g ref="timeLabelsEls">
                         <g v-if="$slots['time-label']">
-                            <g v-for="(timeLabel, i) in timeLabels">
+                            <g v-for="(timeLabel, i) in displayedTimeLabels">
                                 <slot
                                     name="time-label"
                                     v-bind="{
@@ -3993,7 +4042,7 @@ defineExpose({
                             </g>
                         </g>
                         <g v-else>
-                            <g v-for="(timeLabel, i) in timeLabels">
+                            <g v-for="(timeLabel, i) in displayedTimeLabels">
                                 <text
                                     v-if="
                                         !String(timeLabel.text).includes('\n')
@@ -4014,6 +4063,13 @@ defineExpose({
                                         FINAL_CONFIG.style.chart.grid.y
                                             .axisLabels.color
                                     "
+                                    :stroke="
+                                        FINAL_CONFIG.style.chart.backgroundColor
+                                    "
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="3"
+                                    paint-order="stroke fill"
                                     :transform="`translate(${drawingArea.left - 8}, ${drawingArea.top + barSlot * i + barSlot / 2 + FINAL_CONFIG.style.chart.grid.y.axisLabels.fontSize / 3})`"
                                     :style="{
                                         cursor: isCursorPointer
@@ -4057,6 +4113,8 @@ defineExpose({
                                                     .axisLabels.fontSize,
                                             fill: FINAL_CONFIG.style.chart.grid
                                                 .y.axisLabels.color,
+                                            stroke: FINAL_CONFIG.style.chart
+                                                .backgroundColor,
                                             x: drawingArea.left - 8,
                                             y: 0,
                                         })

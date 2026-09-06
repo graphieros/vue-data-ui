@@ -33,6 +33,7 @@ import {
     functionReturnsString,
     getImageDimensions,
     getMissingDatasetAttributes,
+    hasDeepProperty,
     isFunction,
     isSafeValue,
     lightenHexColor,
@@ -379,6 +380,17 @@ function prepareConfig() {
         defaultConfig: DEFAULT_CONFIG,
     });
     let finalConfig = {};
+
+    if (
+        props.config &&
+        hasDeepProperty(
+            props.config,
+            'style.chart.grid.x.timeLabels.showFirstAndLast',
+        )
+    ) {
+        mergedConfig.style.chart.grid.x.timeLabels.showFirstAndLast =
+            !!props.config.style.chart.grid.x.timeLabels.showFirstAndLast;
+    }
 
     const theme = mergedConfig.theme;
 
@@ -1341,13 +1353,28 @@ watchEffect(() => {
     })();
 });
 
-const modulo = computed(() => {
-    const m = FINAL_CONFIG.value.style.chart.grid.x.timeLabels.modulo;
-    if (!timeLabels.value.length) return m;
-    return Math.min(
-        m,
-        [...new Set(timeLabels.value.map((t) => t.text))].length,
+const effectiveModulo = computed(() => {
+    const configuredModulo = Math.max(
+        1,
+        Math.floor(
+            Number(FINAL_CONFIG.value.style.chart.grid.x.timeLabels.modulo) ||
+                1,
+        ),
     );
+
+    const totalCount = allTimeLabels.value.length;
+    const visibleCount = timeLabels.value.length;
+
+    if (!totalCount || !visibleCount) {
+        return configuredModulo;
+    }
+
+    const targetLabelCount = Math.max(
+        1,
+        Math.ceil(totalCount / configuredModulo),
+    );
+
+    return Math.max(1, Math.round(visibleCount / targetLabelCount));
 });
 
 const displayedTimeLabels = computed(() => {
@@ -1360,16 +1387,38 @@ const displayedTimeLabels = computed(() => {
     const visTexts = vis.map((l) => l?.text ?? '');
     const allTexts = all.map((l) => l?.text ?? '');
 
-    return buildDisplayedTimeLabels(
+    const displayed = buildDisplayedTimeLabels(
         !!cfg.showOnlyFirstAndLast,
         !!cfg.showOnlyAtModulo,
-        Math.max(1, modulo.value || 1),
+        effectiveModulo.value,
         visTexts,
         allTexts,
         start,
         sel,
         maxS,
     );
+
+    if (
+        !cfg.showFirstAndLast ||
+        !cfg.showOnlyAtModulo ||
+        cfg.showOnlyFirstAndLast ||
+        !displayed.length
+    ) {
+        return displayed;
+    }
+
+    const lastIndex = displayed.length - 1;
+
+    return displayed.map((label, i) => {
+        if (i !== 0 && i !== lastIndex) {
+            return label;
+        }
+
+        return {
+            ...label,
+            text: visTexts[i] ?? '',
+        };
+    });
 });
 
 watchEffect(
@@ -3931,6 +3980,13 @@ defineExpose({
                                         FINAL_CONFIG.style.chart.grid.x
                                             .timeLabels.color
                                     "
+                                    :stroke="
+                                        FINAL_CONFIG.style.chart.backgroundColor
+                                    "
+                                    stroke-width="3"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    paint-order="stroke fill"
                                     :transform="`translate(${xAtVisibleIndex(i)}, ${drawingArea.bottom + FINAL_CONFIG.style.chart.grid.x.timeLabels.fontSize * 1.3 + FINAL_CONFIG.style.chart.grid.x.timeLabels.offsetY}), rotate(${FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation})`"
                                     :style="{
                                         cursor: isCursorPointer
@@ -3983,6 +4039,8 @@ defineExpose({
                                                     .timeLabels.fontSize,
                                             fill: FINAL_CONFIG.style.chart.grid
                                                 .x.timeLabels.color,
+                                            stroke: FINAL_CONFIG.style.chart
+                                                .backgroundColor,
                                             x: 0,
                                             y: 0,
                                         })

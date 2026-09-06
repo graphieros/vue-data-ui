@@ -1487,7 +1487,7 @@ describe('createTSpans', () => {
                 y: 0,
             }),
         ).toStrictEqual(
-            '<tspan x="0" y="0" fill="#FF0000">Lorem ipsum dolor sit amet</tspan><tspan x="0" y="20" fill="#FF0000">Lorem ipsum dolor sit amet</tspan>',
+            '<tspan x="0" y="0" fill="#FF0000" stroke="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" paint-order="stroke fill">Lorem ipsum dolor sit amet</tspan><tspan x="0" y="20" fill="#FF0000" stroke="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" paint-order="stroke fill">Lorem ipsum dolor sit amet</tspan>',
         );
     });
 });
@@ -3890,7 +3890,20 @@ describe('createTSpansFromLineBreaksOnX', () => {
             x: 0,
             y: 0,
         });
-        const expected = `<tspan x=\"0\" y=\"0\" fill=\"red\">Hello World</tspan>`;
+        const expected = `<tspan x="0" y="0" fill="red" stroke="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" paint-order="stroke fill">Hello World</tspan>`;
+        expect(result).toBe(expected);
+    });
+
+    test('creates a single <tspan> for content without line breaks with a defined stroke', () => {
+        const result = createTSpansFromLineBreaksOnX({
+            content: 'Hello World',
+            fontSize: 10,
+            fill: 'red',
+            x: 0,
+            y: 0,
+            stroke: 'blue',
+        });
+        const expected = `<tspan x="0" y="0" fill="red" stroke="blue" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" paint-order="stroke fill">Hello World</tspan>`;
         expect(result).toBe(expected);
     });
 
@@ -3904,8 +3917,8 @@ describe('createTSpansFromLineBreaksOnX', () => {
         });
         const lineHeight = 12;
         const expected = [
-            `<tspan x=\"5\" y=\"10\" fill=\"#00f\">Line1</tspan>`,
-            `<tspan x=\"5\" y=\"${10 + lineHeight}\" fill=\"#00f\">Line2</tspan>`,
+            `<tspan x="5" y="10" fill="#00f" stroke="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" paint-order="stroke fill">Line1</tspan>`,
+            `<tspan x="5" y="${10 + lineHeight}" fill="#00f" stroke="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" paint-order="stroke fill">Line2</tspan>`,
         ].join('');
         expect(result).toBe(expected);
     });
@@ -3918,7 +3931,7 @@ describe('createTSpansFromLineBreaksOnX', () => {
             x: 1,
             y: 2,
         });
-        const expected = `<tspan x=\"1\" y=\"2\" fill=\"black\"></tspan>`;
+        const expected = `<tspan x="1" y="2" fill="black" stroke="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" paint-order="stroke fill"></tspan>`;
         expect(result).toBe(expected);
     });
 
@@ -3932,9 +3945,9 @@ describe('createTSpansFromLineBreaksOnX', () => {
         });
         const lineHeight = 15;
         const expected = [
-            `<tspan x=\"2\" y=\"3\" fill=\"green\">A</tspan>`,
-            `<tspan x=\"2\" y=\"${3 + lineHeight}\" fill=\"green\">B</tspan>`,
-            `<tspan x=\"2\" y=\"${3 + lineHeight * 2}\" fill=\"green\"></tspan>`,
+            `<tspan x="2" y="3" fill="green" stroke="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" paint-order="stroke fill">A</tspan>`,
+            `<tspan x="2" y="${3 + lineHeight}" fill="green" stroke="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" paint-order="stroke fill">B</tspan>`,
+            `<tspan x="2" y="${3 + lineHeight * 2}" fill="green" stroke="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" paint-order="stroke fill"></tspan>`,
         ].join('');
         expect(result).toBe(expected);
     });
@@ -3949,9 +3962,9 @@ describe('createTSpansFromLineBreaksOnX', () => {
         });
         const lineHeight = 5;
         const expected = [
-            `<tspan x=\"0\" y=\"0\" fill=\"blue\">X</tspan>`,
-            `<tspan x=\"0\" y=\"${0 + lineHeight}\" fill=\"blue\"></tspan>`,
-            `<tspan x=\"0\" y=\"${0 + lineHeight * 2}\" fill=\"blue\">Y</tspan>`,
+            `<tspan x="0" y="0" fill="blue" stroke="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" paint-order="stroke fill">X</tspan>`,
+            `<tspan x="0" y="${0 + lineHeight}" fill="blue" stroke="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" paint-order="stroke fill"></tspan>`,
+            `<tspan x="0" y="${0 + lineHeight * 2}" fill="blue" stroke="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" paint-order="stroke fill">Y</tspan>`,
         ].join('');
         expect(result).toBe(expected);
     });
@@ -3965,7 +3978,7 @@ describe('createTSpansFromLineBreaksOnY', () => {
             fill: 'red',
             x: 5,
         });
-        const expected = `<tspan x=\"5\" dy=\"0\" fill=\"red\">Hello</tspan>`;
+        const expected = `<tspan x="5" dy="0" fill="red" stroke="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" paint-order="stroke fill">Hello</tspan>`;
         expect(result).toBe(expected);
     });
 
@@ -3979,8 +3992,8 @@ describe('createTSpansFromLineBreaksOnY', () => {
         });
         const dy = fontSize;
         const expected = [
-            `<tspan x=\"0\" dy=\"0\" fill=\"#00f\">Line1</tspan>`,
-            `<tspan x=\"0\" dy=\"${dy}\" fill=\"#00f\">Line2</tspan>`,
+            `<tspan x="0" dy="0" fill="#00f" stroke="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" paint-order="stroke fill">Line1</tspan>`,
+            `<tspan x="0" dy="${dy}" fill="#00f" stroke="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" paint-order="stroke fill">Line2</tspan>`,
         ].join('');
         expect(result).toBe(expected);
     });
@@ -3992,7 +4005,7 @@ describe('createTSpansFromLineBreaksOnY', () => {
             fill: 'black',
             x: 2,
         });
-        const expected = `<tspan x=\"2\" dy=\"0\" fill=\"black\"></tspan>`;
+        const expected = `<tspan x="2" dy="0" fill="black" stroke="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" paint-order="stroke fill"></tspan>`;
         expect(result).toBe(expected);
     });
 
@@ -4006,9 +4019,9 @@ describe('createTSpansFromLineBreaksOnY', () => {
         });
         const dy = fontSize;
         const expected = [
-            `<tspan x=\"1\" dy=\"0\" fill=\"green\">A</tspan>`,
-            `<tspan x=\"1\" dy=\"${dy}\" fill=\"green\">B</tspan>`,
-            `<tspan x=\"1\" dy=\"${dy}\" fill=\"green\"></tspan>`,
+            `<tspan x="1" dy="0" fill="green" stroke="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" paint-order="stroke fill">A</tspan>`,
+            `<tspan x="1" dy="${dy}" fill="green" stroke="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" paint-order="stroke fill">B</tspan>`,
+            `<tspan x="1" dy="${dy}" fill="green" stroke="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" paint-order="stroke fill"></tspan>`,
         ].join('');
         expect(result).toBe(expected);
     });
@@ -4023,9 +4036,9 @@ describe('createTSpansFromLineBreaksOnY', () => {
         });
         const dy = fontSize;
         const expected = [
-            `<tspan x=\"3\" dy=\"0\" fill=\"blue\">X</tspan>`,
-            `<tspan x=\"3\" dy=\"${dy}\" fill=\"blue\"></tspan>`,
-            `<tspan x=\"3\" dy=\"${dy}\" fill=\"blue\">Y</tspan>`,
+            `<tspan x="3" dy="0" fill="blue" stroke="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" paint-order="stroke fill">X</tspan>`,
+            `<tspan x="3" dy="${dy}" fill="blue" stroke="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" paint-order="stroke fill"></tspan>`,
+            `<tspan x="3" dy="${dy}" fill="blue" stroke="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" paint-order="stroke fill">Y</tspan>`,
         ].join('');
         expect(result).toBe(expected);
     });

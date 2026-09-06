@@ -2433,6 +2433,7 @@ export function createTSpansFromLineBreaksOnX({
     x,
     y,
     translateY = false,
+    stroke = 'none',
 }) {
     const lines = content.split('\n');
     const lineCount = lines.length;
@@ -2443,7 +2444,7 @@ export function createTSpansFromLineBreaksOnX({
     return lines
         .map(
             (line, idx) =>
-                `<tspan x="${x}" y="${y - offsetY + idx * fontSize}" fill="${fill}">${line}</tspan>`,
+                `<tspan x="${x}" y="${y - offsetY + idx * fontSize}" fill="${fill}" stroke="${stroke}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" paint-order="stroke fill">${line}</tspan>`,
         )
         .join('');
 }
@@ -2467,6 +2468,7 @@ export function createTSpansFromLineBreaksOnY({
     fill,
     x,
     autoOffset = false,
+    stroke = 'none',
 }) {
     const lines = content.split('\n');
 
@@ -2475,12 +2477,20 @@ export function createTSpansFromLineBreaksOnY({
     return lines
         .map((line, idx) => {
             const dy = idx === 0 ? -offset : fontSize;
-            return `<tspan x="${x}" dy="${dy}" fill="${fill}">${line}</tspan>`;
+            return `<tspan x="${x}" dy="${dy}" fill="${fill}" stroke="${stroke}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" paint-order="stroke fill">${line}</tspan>`;
         })
         .join('');
 }
 
-export function createTSpans({ content, fontSize, fill, maxWords, x, y }) {
+export function createTSpans({
+    content,
+    fontSize,
+    fill,
+    maxWords,
+    x,
+    y,
+    stroke = 'none',
+}) {
     function chunk(text, len) {
         const words = text.split(' ');
         const chunks = [];
@@ -2495,7 +2505,7 @@ export function createTSpans({ content, fontSize, fill, maxWords, x, y }) {
     const chunks = chunk(content, maxWords);
 
     chunks.forEach((c, i) => {
-        const tspan = `<tspan x="${x}" y="${y + i * fontSize}" fill="${fill}">${c}</tspan>`;
+        const tspan = `<tspan x="${x}" y="${y + i * fontSize}" fill="${fill}" stroke="${stroke}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" paint-order="stroke fill">${c}</tspan>`;
         tspans += tspan;
     });
 
@@ -4587,7 +4597,11 @@ export function cacheLastResult(fn) {
     };
 }
 
-// VueUiXy, VueUiStackbar, VueUiStackline
+// VueUiXy,
+// VueUiStackbar,
+// VueUiStackline,
+// VueUiCandlestick,
+// VueUiBump
 export const buildDisplayedTimeLabels = cacheLastResult(
     (
         showOnlyFirstAndLast,
@@ -4601,74 +4615,42 @@ export const buildDisplayedTimeLabels = cacheLastResult(
     ) => {
         if (showOnlyFirstAndLast) {
             if (visTexts.length <= 2) {
-                return visTexts.map((t, i) => ({ text: t, absoluteIndex: i }));
+                return visTexts.map((t, i) => ({
+                    text: t,
+                    absoluteIndex: i,
+                }));
             }
-            const out = visTexts.map((t, i) => {
+
+            return visTexts.map((t, i) => {
                 const keep =
                     i === 0 ||
                     i === visTexts.length - 1 ||
                     (selIdx != null && i === selIdx);
-                return { text: keep ? t : '', absoluteIndex: i };
+
+                return {
+                    text: keep ? t : '',
+                    absoluteIndex: i,
+                };
             });
-            return out;
         }
 
         if (!showOnlyAtModulo) {
-            return visTexts.map((t, i) => ({ text: t, absoluteIndex: i }));
+            return visTexts.map((t, i) => ({
+                text: t,
+                absoluteIndex: i,
+            }));
         }
 
-        const mod = Math.max(1, moduloBase || 1);
-        if (maxSeriesCount <= mod) {
-            return visTexts.map((t, i) => ({ text: t, absoluteIndex: i }));
-        }
+        const modulo = Math.max(1, Math.trunc(Number(moduloBase) || 1));
 
-        const candidates = [];
-        for (let i = 0; i < visTexts.length; i += 1) {
-            const cur = visTexts[i] ?? '';
-            if (!cur) continue;
-            const prevAbs =
-                startAbs + i - 1 >= 0
-                    ? (allTexts[startAbs + i - 1] ?? '')
-                    : null;
-            if (cur !== prevAbs) candidates.push(i);
-        }
+        return visTexts.map((text, i) => {
+            const absoluteIndex = startAbs + i;
 
-        if (!candidates.length) {
-            return visTexts.map((_t, i) => ({ text: '', absoluteIndex: i }));
-        }
-
-        const C = candidates.length;
-        const base = mod;
-        const minK = Math.max(2, Math.min(base - 3, C));
-        const maxK = Math.min(C, base + 3);
-
-        let bestK = Math.min(base, C);
-        let bestScore = Infinity;
-
-        for (let k = minK; k <= maxK; k += 1) {
-            const remainder = (C - 1) % (k - 1);
-            const drift = Math.abs(k - base);
-            const score = remainder * 10 + drift;
-            if (score < bestScore) {
-                bestScore = score;
-                bestK = k;
-            }
-        }
-
-        const picked = new Set();
-        if (bestK <= 1) {
-            picked.add(candidates[Math.round((C - 1) / 2)]);
-        } else {
-            const step = (C - 1) / (bestK - 1);
-            for (let j = 0; j < bestK; j += 1) {
-                picked.add(candidates[Math.round(j * step)]);
-            }
-        }
-
-        return visTexts.map((t, i) => ({
-            text: picked.has(i) ? t : '',
-            absoluteIndex: i,
-        }));
+            return {
+                text: text && absoluteIndex % modulo === 0 ? text : '',
+                absoluteIndex: i,
+            };
+        });
     },
 );
 

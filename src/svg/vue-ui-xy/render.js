@@ -1873,47 +1873,112 @@ async function getDisplayedTimeLabels(state, series) {
     const { config } = state;
 
     const cfg = getConfigValue(config, 'chart.grid.labels.xAxisLabels', {});
+    const values = safeArray(
+        getConfigValue(config, 'chart.grid.labels.xAxisLabels.values', []),
+    );
     const maxDatapoints = Math.max(
         0,
         ...series.map((serie) => safeArray(serie.plots).length),
     );
 
+    const hasExplicitStart =
+        state.slotStartIndex !== undefined || state.startAbs !== undefined;
+    const hasExplicitEnd =
+        state.slotEndIndex !== undefined || state.endAbs !== undefined;
+    const hasExplicitWindow = hasExplicitStart || hasExplicitEnd;
+
+    const start = Math.max(
+        0,
+        Math.floor(safeNumber(state.slotStartIndex ?? state.startAbs, 0)),
+    );
+    const end = Math.max(
+        start,
+        Math.floor(
+            safeNumber(
+                state.slotEndIndex ?? state.endAbs,
+                start + maxDatapoints,
+            ),
+        ),
+    );
+
     const visibleLabels = await getTimeLabels(state, series);
 
+    // Only treat xAxisLabels.values as the full range when explicitly providing a slicer window
+    const fullDatapointCount = hasExplicitWindow
+        ? Math.max(maxDatapoints, values.length, end)
+        : maxDatapoints;
+
     const allTimeLabels = await useTimeLabels({
-        values: getConfigValue(
-            config,
-            'chart.grid.labels.xAxisLabels.values',
-            [],
-        ),
-        maxDatapoints,
+        values,
+        maxDatapoints: fullDatapointCount,
         formatter: getConfigValue(
             config,
             'chart.grid.labels.xAxisLabels.datetimeFormatter',
             null,
         ),
         start: 0,
-        end: maxDatapoints,
+        end: fullDatapointCount,
     });
+
+    const configuredModulo = Math.max(1, Math.floor(safeNumber(cfg.modulo, 1)));
+
+    const visibleLabelCount = visibleLabels.length;
+    const fullLabelCount = allTimeLabels.length || fullDatapointCount;
+
+    const isZoomed =
+        hasExplicitWindow &&
+        fullLabelCount > 0 &&
+        (start > 0 || end < fullLabelCount);
+
+    let effectiveModulo = configuredModulo;
+
+    if (isZoomed && visibleLabelCount > 0) {
+        const targetLabelCount = Math.max(
+            1,
+            Math.ceil(fullLabelCount / configuredModulo),
+        );
+
+        effectiveModulo = Math.max(
+            1,
+            Math.round(visibleLabelCount / targetLabelCount),
+        );
+    }
 
     const visibleTexts = visibleLabels.map((label) => label?.text ?? '');
     const allTexts = allTimeLabels.map((label) => label?.text ?? '');
 
-    const modulo = Math.min(
-        safeNumber(cfg.modulo, 1),
-        Math.max(1, new Set(visibleTexts).size),
-    );
-
-    return buildDisplayedTimeLabels(
+    const displayed = buildDisplayedTimeLabels(
         Boolean(cfg.showOnlyFirstAndLast),
         Boolean(cfg.showOnlyAtModulo),
-        Math.max(1, modulo || 1),
+        effectiveModulo,
         visibleTexts,
         allTexts,
-        safeNumber(state.slotStartIndex ?? state.startAbs, 0),
+        start,
         state.selectedXIndex ?? null,
-        maxDatapoints,
+        visibleLabelCount,
     );
+
+    if (
+        !cfg.showFirstAndLast ||
+        !cfg.showOnlyAtModulo ||
+        cfg.showOnlyFirstAndLast ||
+        !displayed.length
+    ) {
+        return displayed;
+    }
+
+    const lastIndex = displayed.length - 1;
+
+    return displayed.map((label, index) => {
+        if (index !== 0 && index !== lastIndex) {
+            return label;
+        }
+
+        return {
+            ...label,
+            text: visibleTexts[index] ?? '',
+        };
+    });
 }
 
 async function getContinuousXLabelsOrDisplayedTimeLabels(state, series) {
@@ -2027,6 +2092,14 @@ async function renderXAxisLabels(state, series) {
                         'data-cy': 'time-label',
                         'text-anchor': textAnchor,
                         'font-size': fontSize,
+                        stroke: getConfigValue(
+                            config,
+                            'chart.backgroundColor',
+                            '#FFFFFF',
+                        ),
+                        'stroke-linecap': 'round',
+                        'stroke-linejoin': 'round',
+                        'paint-order': 'stroke fill',
                         fill: color,
                         transform,
                     },
@@ -2034,6 +2107,11 @@ async function renderXAxisLabels(state, series) {
                         content: String(content),
                         fontSize,
                         fill: color,
+                        stroke: getConfigValue(
+                            config,
+                            'chart.backgroundColor',
+                            '#FFFFFF',
+                        ),
                         x: 0,
                         y: 0,
                     }),
@@ -2045,6 +2123,14 @@ async function renderXAxisLabels(state, series) {
                 'data-cy': 'time-label',
                 'text-anchor': textAnchor,
                 'font-size': fontSize,
+                stroke: getConfigValue(
+                    config,
+                    'chart.backgroundColor',
+                    '#FFFFFF',
+                ),
+                'stroke-linecap': 'round',
+                'stroke-linejoin': 'round',
+                'paint-order': 'stroke fill',
                 fill: color,
                 transform,
             });
