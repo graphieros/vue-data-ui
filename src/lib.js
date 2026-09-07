@@ -4643,24 +4643,77 @@ export const buildDisplayedTimeLabels = cacheLastResult(
 
         const modulo = Math.max(1, Math.trunc(Number(moduloBase) || 1));
 
+        // Find the start index of every contiguous formatted-label group.
+        //
+        // Example:
+        // Jan Jan Jan Feb Feb Mar Jan Jan
+        //  ^           ^       ^   ^
+        //
+        // The second "Jan" is a different group because it is not adjacent
+        // to the first one.
+        const groupStarts = [];
+
+        for (let i = 0; i < allTexts.length; i += 1) {
+            const text = allTexts[i] ?? '';
+
+            if (!text) {
+                continue;
+            }
+
+            const previousText = i > 0 ? (allTexts[i - 1] ?? '') : null;
+
+            if (i === 0 || text !== previousText) {
+                groupStarts.push(i);
+            }
+        }
+
+        if (!groupStarts.length) {
+            return visTexts.map((_text, i) => ({
+                text: '',
+                absoluteIndex: i,
+            }));
+        }
+
+        const displayedIndices = new Set();
+
+        // Modulo remains based on raw datapoint indices.
+        // If formatted labels span several datapoints, snap the modulo
+        // position to the nearest group start.
+        let groupIndex = 0;
+
+        for (
+            let moduloIndex = 0;
+            moduloIndex < allTexts.length;
+            moduloIndex += modulo
+        ) {
+            while (
+                groupIndex + 1 < groupStarts.length &&
+                groupStarts[groupIndex + 1] <= moduloIndex
+            ) {
+                groupIndex += 1;
+            }
+
+            const previousStart = groupStarts[groupIndex];
+            const nextStart = groupStarts[groupIndex + 1];
+
+            let closestStart = previousStart;
+
+            if (
+                nextStart !== undefined &&
+                Math.abs(nextStart - moduloIndex) <
+                    Math.abs(previousStart - moduloIndex)
+            ) {
+                closestStart = nextStart;
+            }
+
+            displayedIndices.add(closestStart);
+        }
+
         return visTexts.map((text, i) => {
             const absoluteIndex = startAbs + i;
 
-            if (!text || absoluteIndex % modulo !== 0) {
-                return {
-                    text: '',
-                    absoluteIndex: i,
-                };
-            }
-
-            const previousText =
-                absoluteIndex > 0 ? (allTexts[absoluteIndex - 1] ?? '') : null;
-
-            const isAdjacentDuplicate =
-                absoluteIndex > 0 && text === previousText;
-
             return {
-                text: isAdjacentDuplicate ? '' : text,
+                text: text && displayedIndices.has(absoluteIndex) ? text : '',
                 absoluteIndex: i,
             };
         });
