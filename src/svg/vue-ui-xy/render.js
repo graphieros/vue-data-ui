@@ -24,6 +24,7 @@ import {
     escapeXml,
     escapeXmlAttr,
     hasDeepProperty,
+    getEffectiveTimeLabelModulo,
     setGradientOffset,
     setOpacity,
     shiftHue,
@@ -1876,6 +1877,7 @@ async function getDisplayedTimeLabels(state, series) {
     const values = safeArray(
         getConfigValue(config, 'chart.grid.labels.xAxisLabels.values', []),
     );
+
     const maxDatapoints = Math.max(
         0,
         ...series.map((serie) => safeArray(serie.plots).length),
@@ -1883,14 +1885,17 @@ async function getDisplayedTimeLabels(state, series) {
 
     const hasExplicitStart =
         state.slotStartIndex !== undefined || state.startAbs !== undefined;
+
     const hasExplicitEnd =
         state.slotEndIndex !== undefined || state.endAbs !== undefined;
+
     const hasExplicitWindow = hasExplicitStart || hasExplicitEnd;
 
     const start = Math.max(
         0,
         Math.floor(safeNumber(state.slotStartIndex ?? state.startAbs, 0)),
     );
+
     const end = Math.max(
         start,
         Math.floor(
@@ -1903,7 +1908,8 @@ async function getDisplayedTimeLabels(state, series) {
 
     const visibleLabels = await getTimeLabels(state, series);
 
-    // Only treat xAxisLabels.values as the full range when explicitly providing a slicer window
+    // Only treat xAxisLabels.values as the full range when
+    // explicitly providing a slicer window.
     const fullDatapointCount = hasExplicitWindow
         ? Math.max(maxDatapoints, values.length, end)
         : maxDatapoints;
@@ -1920,9 +1926,12 @@ async function getDisplayedTimeLabels(state, series) {
         end: fullDatapointCount,
     });
 
+    const visibleTexts = visibleLabels.map((label) => label?.text ?? '');
+
+    const allTexts = allTimeLabels.map((label) => label?.text ?? '');
+
     const configuredModulo = Math.max(1, Math.floor(safeNumber(cfg.modulo, 1)));
 
-    const visibleLabelCount = visibleLabels.length;
     const fullLabelCount = allTimeLabels.length || fullDatapointCount;
 
     const isZoomed =
@@ -1930,22 +1939,13 @@ async function getDisplayedTimeLabels(state, series) {
         fullLabelCount > 0 &&
         (start > 0 || end < fullLabelCount);
 
-    let effectiveModulo = configuredModulo;
-
-    if (isZoomed && visibleLabelCount > 0) {
-        const targetLabelCount = Math.max(
-            1,
-            Math.ceil(fullLabelCount / configuredModulo),
-        );
-
-        effectiveModulo = Math.max(
-            1,
-            Math.round(visibleLabelCount / targetLabelCount),
-        );
-    }
-
-    const visibleTexts = visibleLabels.map((label) => label?.text ?? '');
-    const allTexts = allTimeLabels.map((label) => label?.text ?? '');
+    const effectiveModulo = getEffectiveTimeLabelModulo({
+        configuredModulo,
+        visibleTexts,
+        allTexts,
+        startAbs: start,
+        isZoomed,
+    });
 
     const displayed = buildDisplayedTimeLabels(
         Boolean(cfg.showOnlyFirstAndLast),
@@ -1955,12 +1955,11 @@ async function getDisplayedTimeLabels(state, series) {
         allTexts,
         start,
         state.selectedXIndex ?? null,
-        visibleLabelCount,
+        visibleTexts.length,
     );
 
     if (
         !cfg.showFirstAndLast ||
-        !cfg.showOnlyAtModulo ||
         cfg.showOnlyFirstAndLast ||
         !displayed.length
     ) {

@@ -4597,6 +4597,130 @@ export function cacheLastResult(fn) {
     };
 }
 
+function getModuloLabelStartIndices(texts, moduloBase, startAbs = 0) {
+    const modulo = Math.max(1, Math.trunc(Number(moduloBase) || 1));
+
+    const displayedIndices = new Set();
+
+    let i = 0;
+
+    while (i < texts.length) {
+        const text = texts[i] ?? '';
+
+        if (!text) {
+            i += 1;
+            continue;
+        }
+
+        const groupStart = i;
+        let groupEnd = i;
+
+        while (
+            groupEnd + 1 < texts.length &&
+            (texts[groupEnd + 1] ?? '') === text
+        ) {
+            groupEnd += 1;
+        }
+
+        const absoluteStart = startAbs + groupStart;
+        const absoluteEnd = startAbs + groupEnd;
+
+        // Does this adjacent label group contain a modulo tick?
+        const firstModuloIndex = Math.ceil(absoluteStart / modulo) * modulo;
+
+        if (firstModuloIndex <= absoluteEnd) {
+            // Always render at the beginning of the formatted group.
+            displayedIndices.add(groupStart);
+        }
+
+        groupEnd += 1;
+        i = groupEnd;
+    }
+
+    return displayedIndices;
+}
+
+function countModuloLabels(texts, modulo, startAbs = 0) {
+    return getModuloLabelStartIndices(texts, modulo, startAbs).size;
+}
+
+export function getEffectiveTimeLabelModulo({
+    configuredModulo,
+    visibleTexts,
+    allTexts,
+    startAbs = 0,
+    isZoomed = false,
+}) {
+    const configured = Math.max(1, Math.trunc(Number(configuredModulo) || 1));
+
+    if (!isZoomed || !visibleTexts.length || !allTexts.length) {
+        return configured;
+    }
+
+    // This is the number of labels the complete chart actually
+    // rendered before zoom, after adjacent deduplication.
+    const targetLabelCount = Math.max(
+        1,
+        countModuloLabels(allTexts, configured, 0),
+    );
+
+    // Initial estimate for the zoomed range.
+    const approximateModulo = Math.max(
+        1,
+        Math.round(visibleTexts.length / targetLabelCount),
+    );
+
+    const maxModulo = Math.max(1, visibleTexts.length);
+
+    const candidates = new Set([1, configured, approximateModulo]);
+
+    // Search around the estimate because month/year groups are
+    // not all the same size.
+    for (let offset = -12; offset <= 12; offset += 1) {
+        candidates.add(
+            Math.max(1, Math.min(maxModulo, approximateModulo + offset)),
+        );
+    }
+
+    // Also test some wider alternatives for large zoom changes.
+    [0.5, 0.75, 1.25, 1.5, 2].forEach((ratio) => {
+        candidates.add(
+            Math.max(
+                1,
+                Math.min(maxModulo, Math.round(approximateModulo * ratio)),
+            ),
+        );
+    });
+
+    let bestModulo = configured;
+    let bestCountDifference = Infinity;
+    let bestModuloDifference = Infinity;
+
+    candidates.forEach((candidate) => {
+        const displayedCount = countModuloLabels(
+            visibleTexts,
+            candidate,
+            startAbs,
+        );
+
+        const countDifference = Math.abs(displayedCount - targetLabelCount);
+
+        const moduloDifference = Math.abs(candidate - approximateModulo);
+
+        if (
+            countDifference < bestCountDifference ||
+            (countDifference === bestCountDifference &&
+                moduloDifference < bestModuloDifference)
+        ) {
+            bestModulo = candidate;
+            bestCountDifference = countDifference;
+            bestModuloDifference = moduloDifference;
+        }
+    });
+
+    return bestModulo;
+}
+
 // VueUiXy,
 // VueUiStackbar,
 // VueUiStackline,
@@ -4641,82 +4765,16 @@ export const buildDisplayedTimeLabels = cacheLastResult(
             }));
         }
 
-        const modulo = Math.max(1, Math.trunc(Number(moduloBase) || 1));
+        const displayedIndices = getModuloLabelStartIndices(
+            visTexts,
+            moduloBase,
+            startAbs,
+        );
 
-        // Find the start index of every contiguous formatted-label group.
-        //
-        // Example:
-        // Jan Jan Jan Feb Feb Mar Jan Jan
-        //  ^           ^       ^   ^
-        //
-        // The second "Jan" is a different group because it is not adjacent
-        // to the first one.
-        const groupStarts = [];
-
-        for (let i = 0; i < allTexts.length; i += 1) {
-            const text = allTexts[i] ?? '';
-
-            if (!text) {
-                continue;
-            }
-
-            const previousText = i > 0 ? (allTexts[i - 1] ?? '') : null;
-
-            if (i === 0 || text !== previousText) {
-                groupStarts.push(i);
-            }
-        }
-
-        if (!groupStarts.length) {
-            return visTexts.map((_text, i) => ({
-                text: '',
-                absoluteIndex: i,
-            }));
-        }
-
-        const displayedIndices = new Set();
-
-        // Modulo remains based on raw datapoint indices.
-        // If formatted labels span several datapoints, snap the modulo
-        // position to the nearest group start.
-        let groupIndex = 0;
-
-        for (
-            let moduloIndex = 0;
-            moduloIndex < allTexts.length;
-            moduloIndex += modulo
-        ) {
-            while (
-                groupIndex + 1 < groupStarts.length &&
-                groupStarts[groupIndex + 1] <= moduloIndex
-            ) {
-                groupIndex += 1;
-            }
-
-            const previousStart = groupStarts[groupIndex];
-            const nextStart = groupStarts[groupIndex + 1];
-
-            let closestStart = previousStart;
-
-            if (
-                nextStart !== undefined &&
-                Math.abs(nextStart - moduloIndex) <
-                    Math.abs(previousStart - moduloIndex)
-            ) {
-                closestStart = nextStart;
-            }
-
-            displayedIndices.add(closestStart);
-        }
-
-        return visTexts.map((text, i) => {
-            const absoluteIndex = startAbs + i;
-
-            return {
-                text: text && displayedIndices.has(absoluteIndex) ? text : '',
-                absoluteIndex: i,
-            };
-        });
+        return visTexts.map((text, i) => ({
+            text: text && displayedIndices.has(i) ? text : '',
+            absoluteIndex: i,
+        }));
     },
 );
 
@@ -4976,6 +5034,7 @@ const lib = {
     getCloserPoint,
     getCumulativeAverage,
     getCumulativeMedian,
+    getEffectiveTimeLabelModulo,
     getImageDimensions,
     getLineCountFromString,
     getMissingDatasetAttributes,

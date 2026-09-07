@@ -31,6 +31,7 @@ import {
     error,
     forceValidValue,
     functionReturnsString,
+    getEffectiveTimeLabelModulo,
     getImageDimensions,
     getMissingDatasetAttributes,
     hasDeepProperty,
@@ -1308,30 +1309,39 @@ const effectiveModulo = computed(() => {
         ),
     );
 
-    const totalCount = allTimeLabels.value.length;
-    const visibleCount = timeLabels.value.length;
-
-    if (!totalCount || !visibleCount) {
-        return configuredModulo;
-    }
-
-    const targetLabelCount = Math.max(
-        1,
-        Math.ceil(totalCount / configuredModulo),
+    const visibleTexts = (timeLabels.value || []).map(
+        (label) => label?.text ?? '',
     );
 
-    return Math.max(1, Math.round(visibleCount / targetLabelCount));
+    const allTexts = (allTimeLabels.value || []).map(
+        (label) => label?.text ?? '',
+    );
+
+    const start = slicer.value.start ?? 0;
+
+    const isZoomed = start > 0 || visibleTexts.length < allTexts.length;
+
+    return getEffectiveTimeLabelModulo({
+        configuredModulo,
+        visibleTexts,
+        allTexts,
+        startAbs: start,
+        isZoomed,
+    });
 });
 
 const displayedTimeLabels = computed(() => {
     const cfg = FINAL_CONFIG.value.style.chart.grid.x.timeLabels;
+
     const vis = timeLabels.value || [];
     const all = allTimeLabels.value || [];
     const start = slicer.value.start ?? 0;
     const sel = trapIndex.value;
     const maxS = maxSeries.value;
-    const visTexts = vis.map((l) => l?.text ?? '');
-    const allTexts = all.map((l) => l?.text ?? '');
+
+    const visTexts = vis.map((label) => label?.text ?? '');
+
+    const allTexts = all.map((label) => label?.text ?? '');
 
     const displayed = buildDisplayedTimeLabels(
         !!cfg.showOnlyFirstAndLast,
@@ -1346,7 +1356,6 @@ const displayedTimeLabels = computed(() => {
 
     if (
         !cfg.showFirstAndLast ||
-        !cfg.showOnlyAtModulo ||
         cfg.showOnlyFirstAndLast ||
         !displayed.length
     ) {

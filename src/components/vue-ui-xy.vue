@@ -47,6 +47,7 @@ import {
     error,
     forceValidValue,
     functionReturnsString,
+    getEffectiveTimeLabelModulo,
     hasDeepProperty,
     isFunction,
     isSafeValue,
@@ -1606,19 +1607,25 @@ const effectiveModulo = computed(() => {
         ),
     );
 
-    const totalCount = allTimeLabels.value.length;
-    const visibleCount = timeLabels.value.length;
-
-    if (!totalCount || !visibleCount) {
-        return configuredModulo;
-    }
-
-    const targetLabelCount = Math.max(
-        1,
-        Math.ceil(totalCount / configuredModulo),
+    const visibleTexts = (timeLabels.value || []).map(
+        (label) => label?.text ?? '',
     );
 
-    return Math.max(1, Math.round(visibleCount / targetLabelCount));
+    const allTexts = (allTimeLabels.value || []).map(
+        (label) => label?.text ?? '',
+    );
+
+    const start = slicer.value.start ?? 0;
+
+    const isZoomed = start > 0 || visibleTexts.length < allTexts.length;
+
+    return getEffectiveTimeLabelModulo({
+        configuredModulo,
+        visibleTexts,
+        allTexts,
+        startAbs: start,
+        isZoomed,
+    });
 });
 
 const displayedTimeLabels = computed(() => {
@@ -1644,7 +1651,6 @@ const displayedTimeLabels = computed(() => {
 
     if (
         !cfg.showFirstAndLast ||
-        !cfg.showOnlyAtModulo ||
         cfg.showOnlyFirstAndLast ||
         !displayed.length
     ) {
