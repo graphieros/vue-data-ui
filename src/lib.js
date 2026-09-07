@@ -4653,18 +4653,14 @@ export const buildDisplayedTimeLabels = cacheLastResult(
                 };
             }
 
-            const previousModuloIndex = absoluteIndex - modulo;
+            const previousText =
+                absoluteIndex > 0 ? (allTexts[absoluteIndex - 1] ?? '') : null;
 
-            const previousModuloText =
-                previousModuloIndex >= 0
-                    ? (allTexts[previousModuloIndex] ?? '')
-                    : null;
-
-            const isDuplicate =
-                previousModuloIndex >= 0 && text === previousModuloText;
+            const isAdjacentDuplicate =
+                absoluteIndex > 0 && text === previousText;
 
             return {
-                text: isDuplicate ? '' : text,
+                text: isAdjacentDuplicate ? '' : text,
                 absoluteIndex: i,
             };
         });
