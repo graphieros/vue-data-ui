@@ -4646,8 +4646,25 @@ export const buildDisplayedTimeLabels = cacheLastResult(
         return visTexts.map((text, i) => {
             const absoluteIndex = startAbs + i;
 
+            if (!text || absoluteIndex % modulo !== 0) {
+                return {
+                    text: '',
+                    absoluteIndex: i,
+                };
+            }
+
+            const previousModuloIndex = absoluteIndex - modulo;
+
+            const previousModuloText =
+                previousModuloIndex >= 0
+                    ? (allTexts[previousModuloIndex] ?? '')
+                    : null;
+
+            const isDuplicate =
+                previousModuloIndex >= 0 && text === previousModuloText;
+
             return {
-                text: text && absoluteIndex % modulo === 0 ? text : '',
+                text: isDuplicate ? '' : text,
                 absoluteIndex: i,
             };
         });
