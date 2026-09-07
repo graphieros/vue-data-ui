@@ -50,6 +50,21 @@ const G = ref(null);
 const currentDrawingPath = ref(null);
 const currentLine = ref(null);
 const startPoint = ref(null);
+const selectedShape = ref(null);
+const selectionBox = ref(null);
+const isDraggingShape = ref(false);
+const shapeDragStart = ref(null);
+const shapeDragBaseTransform = ref('');
+const shapeDragOriginalState = ref('');
+const shapeDragMoved = ref(false);
+const shapeWasSelectedAtPointerDown = ref(false);
+const lineEndpointDrag = ref(null);
+const lineEndpointDragStart = ref(null);
+const isSyncingControls = ref(false);
+const pendingDrawingState = ref('');
+const HISTORY_MERGE_WINDOW_MS = 750; // If a property is modified on the same shape within this window, it is part of he same editing action, to avoid spamming history
+const SHAPE_HIT_PADDING = 8;
+const SHAPE_DRAG_THRESHOLD = 2;
 const arrowMarkerIds = new Map();
 const ARROW_DEFS_ID = ref(`arrow-def-${createUid()}`);
 
@@ -60,6 +75,8 @@ const editingTextContent = ref(['']);
 const editingCaret = ref({ row: 0, col: 0 });
 const fontSize = ref(16);
 const editingTextRegistered = ref(false);
+const editingTextOriginalState = ref('');
+const editingTextIsExisting = ref(false);
 
 const modes = ['arrow', 'text', 'line', 'draw'];
 const modeIndex = ref(0);
@@ -76,38 +93,702 @@ const cursorDraw = ref(
     `url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAABg2lDQ1BJQ0MgcHJvZmlsZQAAKJF9kT1Iw0AcxV9TpSIVh2YQcchQnSyIijhKFYtgobQVWnUwufQLmjQkKS6OgmvBwY/FqoOLs64OroIg+AHi6OSk6CIl/i8ptIjx4Lgf7+497t4BQrPKNKtnAtB020wn4lIuvyqFXhGGiAhCiMnMMpKZxSx8x9c9Any9i/Es/3N/jgG1YDEgIBHPMcO0iTeIZzZtg/M+scjKskp8Tjxu0gWJH7muePzGueSywDNFM5ueJxaJpVIXK13MyqZGPE0cVTWd8oWcxyrnLc5atc7a9+QvDBf0lQzXaY4ggSUkkYIEBXVUUIWNGK06KRbStB/38Q+7/hS5FHJVwMixgBo0yK4f/A9+d2sVpya9pHAc6H1xnI9RILQLtBqO833sOK0TIPgMXOkdf60JzH6S3uho0SNgcBu4uO5oyh5wuQMMPRmyKbtSkKZQLALvZ/RNeSByC/Sveb2193H6AGSpq+Ub4OAQGCtR9rrPu/u6e/v3TLu/H5C7crM1WjgWAAAABmJLR0QAqwB5AHWF+8OUAAAACXBIWXMAAC4jAAAuIwF4pT92AAAAB3RJTUUH5gwUExIUagzGcQAAABl0RVh0Q29tbWVudABDcmVhdGVkIHdpdGggR0lNUFeBDhcAAABfSURBVBjTldAxDoNQDIPhL0+q1L33P1AvAhN7xfK6WAgoLfSfrNiykpQtE+7RLzx2vgF9D3o8lWDmn1QVVMP0LZQGmNtqp1/cmou0XHdG/+sYeGZwFBqPCub8rkcvvAGvsi1VYarR8wAAAABJRU5ErkJggg==') 5 5, auto`,
 );
 
+function getDoodleFromEventTarget(event) {
+    const target = event?.target;
+    if (!(target instanceof Element)) return null;
+    const doodle = target.closest('.vue-data-ui-doodle');
+    return doodle && G.value?.contains(doodle) ? doodle : null;
+}
+
+function getSelectionHandleFromEvent(event) {
+    const target = event?.target;
+    if (!(target instanceof Element)) return null;
+    const handle = target.closest('.vue-data-ui-selection-handle');
+    return handle && G.value?.contains(handle) ? handle : null;
+}
+
+function getSelectionDeleteButtonFromEvent(event) {
+    const target = event?.target;
+    if (!(target instanceof Element)) return null;
+    const button = target.closest('.vue-data-ui-selection-delete');
+    return button && G.value?.contains(button) ? button : null;
+}
+
+function getDoodleId(shape) {
+    if (!shape) return '';
+    let id = shape.getAttribute('data-doodle-id');
+    if (!id) {
+        id = createUid();
+        shape.setAttribute('data-doodle-id', id);
+    }
+    return id;
+}
+
+function serializeDoodles() {
+    if (!G.value) return '';
+    return Array.from(G.value.children)
+        .filter((child) => child.classList?.contains('vue-data-ui-doodle'))
+        .map((child) => child.outerHTML)
+        .join('');
+}
+
+function restoreDoodles(state) {
+    if (!G.value) return;
+
+    deselectShape();
+    const caret = G.value.querySelector('.vue-data-ui-svg-caret');
+    if (caret) caret.remove();
+
+    Array.from(G.value.children).forEach((child) => {
+        if (child.classList?.contains('vue-data-ui-doodle')) child.remove();
+    });
+
+    if (state) {
+        const holder = document.createElementNS(XMLNS, 'g');
+        holder.innerHTML = state;
+        Array.from(holder.children).forEach((child) =>
+            G.value.appendChild(child),
+        );
+    }
+}
+
+function commitHistory(beforeState, mergeKey = null) {
+    const afterState = serializeDoodles();
+    if (beforeState === afterState) return;
+
+    const now = Date.now();
+    const last = stack.value[stack.value.length - 1];
+    const canMerge =
+        mergeKey &&
+        last?.mergeKey === mergeKey &&
+        now - last.timestamp <= HISTORY_MERGE_WINDOW_MS;
+
+    if (canMerge) {
+        last.timestamp = now;
+    } else {
+        stack.value.push({
+            state: beforeState,
+            mergeKey,
+            timestamp: now,
+        });
+    }
+    redoStack.value = [];
+}
+
+function getEventClientPoint(event) {
+    const touch = event.touches?.[0] || event.changedTouches?.[0];
+    return {
+        x: touch ? touch.clientX : event.clientX,
+        y: touch ? touch.clientY : event.clientY,
+    };
+}
+
+function getShapeLocalPoint(shape, event) {
+    const svg = props.svgRef;
+    if (!svg || !shape) return null;
+
+    const { x, y } = getEventClientPoint(event);
+    const point = svg.createSVGPoint();
+    point.x = x;
+    point.y = y;
+
+    const matrix = shape.getScreenCTM()?.inverse();
+    return matrix ? point.matrixTransform(matrix) : null;
+}
+
+function pointToSegmentDistance(px, py, x1, y1, x2, y2) {
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const lengthSquared = dx * dx + dy * dy;
+    if (!lengthSquared) return Math.hypot(px - x1, py - y1);
+
+    const t = Math.max(
+        0,
+        Math.min(1, ((px - x1) * dx + (py - y1) * dy) / lengthSquared),
+    );
+    const x = x1 + t * dx;
+    const y = y1 + t * dy;
+    return Math.hypot(px - x, py - y);
+}
+
+function isShapeNearEvent(shape, event) {
+    const point = getShapeLocalPoint(shape, event);
+    if (!point) return false;
+
+    const tagName = shape.tagName.toLowerCase();
+    const padding = SHAPE_HIT_PADDING * props.scale;
+
+    if (tagName === 'line') {
+        const x1 = Number(shape.getAttribute('x1'));
+        const y1 = Number(shape.getAttribute('y1'));
+        const x2 = Number(shape.getAttribute('x2'));
+        const y2 = Number(shape.getAttribute('y2'));
+        const stroke = Number(shape.getAttribute('stroke-width')) || 0;
+        return (
+            pointToSegmentDistance(point.x, point.y, x1, y1, x2, y2) <=
+            Math.max(padding, stroke / 2)
+        );
+    }
+
+    if (tagName === 'circle') {
+        const cx = Number(shape.getAttribute('cx'));
+        const cy = Number(shape.getAttribute('cy'));
+        const radius = Number(shape.getAttribute('r')) || 0;
+        return Math.hypot(point.x - cx, point.y - cy) <= radius + padding;
+    }
+
+    if (tagName === 'text') {
+        try {
+            const bbox = shape.getBBox();
+            return (
+                point.x >= bbox.x - padding &&
+                point.x <= bbox.x + bbox.width + padding &&
+                point.y >= bbox.y - padding &&
+                point.y <= bbox.y + bbox.height + padding
+            );
+        } catch {
+            return false;
+        }
+    }
+
+    if (tagName === 'path') {
+        try {
+            const bbox = shape.getBBox();
+            if (
+                point.x < bbox.x - padding ||
+                point.x > bbox.x + bbox.width + padding ||
+                point.y < bbox.y - padding ||
+                point.y > bbox.y + bbox.height + padding
+            ) {
+                return false;
+            }
+
+            if (typeof shape.isPointInStroke === 'function') {
+                const previousWidth = shape.getAttribute('stroke-width');
+                const hitWidth = Math.max(
+                    Number(previousWidth) || 0,
+                    padding * 2,
+                );
+                shape.setAttribute('stroke-width', hitWidth);
+                const hit = shape.isPointInStroke(point);
+                if (previousWidth === null)
+                    shape.removeAttribute('stroke-width');
+                else shape.setAttribute('stroke-width', previousWidth);
+                return hit;
+            }
+
+            const length = shape.getTotalLength();
+            const step = Math.max(2 * props.scale, 2);
+            for (let distance = 0; distance <= length; distance += step) {
+                const sample = shape.getPointAtLength(distance);
+                if (
+                    Math.hypot(point.x - sample.x, point.y - sample.y) <=
+                    padding
+                ) {
+                    return true;
+                }
+            }
+        } catch {
+            return false;
+        }
+    }
+
+    return false;
+}
+
+function findShapeAtEvent(event) {
+    const direct = getDoodleFromEventTarget(event);
+    if (direct) return direct;
+    if (!G.value) return null;
+
+    const shapes = Array.from(
+        G.value.querySelectorAll('.vue-data-ui-doodle'),
+    ).reverse();
+    return shapes.find((shape) => isShapeNearEvent(shape, event)) || null;
+}
+
+function removeSelectionBox() {
+    if (selectionBox.value?.parentNode) {
+        selectionBox.value.parentNode.removeChild(selectionBox.value);
+    }
+    selectionBox.value = null;
+}
+
+function updateSelectionBox() {
+    removeSelectionBox();
+    if (isEditingText.value) return;
+    if (!props.active || !G.value || !selectedShape.value) return;
+    if (!G.value.contains(selectedShape.value)) return;
+
+    try {
+        const shape = selectedShape.value;
+        const bbox = shape.getBBox();
+        const padding = 4 * props.scale;
+        const overlay = document.createElementNS(XMLNS, 'g');
+        overlay.setAttribute('class', 'vue-data-ui-selection-overlay');
+
+        const rect = document.createElementNS(XMLNS, 'rect');
+        rect.setAttribute('class', 'vue-data-ui-selection-box');
+        rect.setAttribute('x', bbox.x - padding);
+        rect.setAttribute('y', bbox.y - padding);
+        rect.setAttribute(
+            'width',
+            Math.max(bbox.width + padding * 2, padding * 2),
+        );
+        rect.setAttribute(
+            'height',
+            Math.max(bbox.height + padding * 2, padding * 2),
+        );
+        rect.setAttribute('fill', 'none');
+        rect.setAttribute('stroke', props.color);
+        rect.setAttribute('stroke-width', Math.max(1, props.scale));
+        rect.setAttribute(
+            'stroke-dasharray',
+            `${4 * props.scale} ${3 * props.scale}`,
+        );
+        rect.setAttribute('pointer-events', 'none');
+        overlay.appendChild(rect);
+
+        if (shape.tagName.toLowerCase() === 'line') {
+            const handleRadius = Math.max(4, 5 * props.scale);
+            const handleStrokeWidth = Math.max(1, 1.5 * props.scale);
+            const endpoints = [
+                {
+                    endpoint: 'start',
+                    x: Number(shape.getAttribute('x1')),
+                    y: Number(shape.getAttribute('y1')),
+                },
+                {
+                    endpoint: 'end',
+                    x: Number(shape.getAttribute('x2')),
+                    y: Number(shape.getAttribute('y2')),
+                },
+            ];
+
+            endpoints.forEach(({ endpoint, x, y }) => {
+                const handle = document.createElementNS(XMLNS, 'circle');
+                handle.setAttribute('class', 'vue-data-ui-selection-handle');
+                handle.setAttribute('data-line-endpoint', endpoint);
+                handle.setAttribute('cx', x);
+                handle.setAttribute('cy', y);
+                handle.setAttribute('r', handleRadius);
+                handle.setAttribute('fill', props.backgroundColor);
+                handle.setAttribute('stroke', props.color);
+                handle.setAttribute('stroke-width', handleStrokeWidth);
+                handle.setAttribute('pointer-events', 'all');
+                overlay.appendChild(handle);
+            });
+        }
+
+        const deleteSize = Math.max(20, 24 * props.scale);
+        const deleteStrokeWidth = Math.max(1, props.scale);
+        const deleteX = bbox.x + bbox.width + padding + 4 * props.scale;
+        const deleteY = bbox.y - padding - deleteSize - 4 * props.scale;
+        const deleteButton = document.createElementNS(XMLNS, 'g');
+        deleteButton.setAttribute('class', 'vue-data-ui-selection-delete');
+        deleteButton.setAttribute('role', 'button');
+        deleteButton.setAttribute('tabindex', '0');
+        deleteButton.setAttribute('aria-label', 'Delete selected drawing');
+        deleteButton.setAttribute('pointer-events', 'all');
+
+        const deleteBackground = document.createElementNS(XMLNS, 'rect');
+        deleteBackground.setAttribute('x', deleteX);
+        deleteBackground.setAttribute('y', deleteY);
+        deleteBackground.setAttribute('width', deleteSize);
+        deleteBackground.setAttribute('height', deleteSize);
+        deleteBackground.setAttribute('rx', 4 * props.scale);
+        deleteBackground.setAttribute('fill', props.backgroundColor);
+        deleteBackground.setAttribute('stroke', buttonBorderColor.value);
+        deleteBackground.setAttribute('stroke-width', deleteStrokeWidth);
+        deleteBackground.setAttribute('vector-effect', 'non-scaling-stroke');
+
+        const iconScale = deleteSize / 24;
+        const icon = document.createElementNS(XMLNS, 'path');
+        icon.setAttribute('d', 'M 8 8 L 16 16 M 16 8 L 8 16');
+        icon.setAttribute(
+            'transform',
+            `translate(${deleteX} ${deleteY}) scale(${iconScale})`,
+        );
+        icon.setAttribute('fill', 'none');
+        icon.setAttribute('stroke', props.color);
+        icon.setAttribute('stroke-width', Math.max(1.25, 1.5 * props.scale));
+        icon.setAttribute('stroke-linecap', 'round');
+        icon.setAttribute('stroke-linejoin', 'round');
+        icon.setAttribute('vector-effect', 'non-scaling-stroke');
+        icon.setAttribute('pointer-events', 'none');
+
+        deleteButton.appendChild(deleteBackground);
+        deleteButton.appendChild(icon);
+        deleteButton.addEventListener('keydown', (event) => {
+            if (event.key !== 'Enter' && event.key !== ' ') return;
+            event.preventDefault();
+            deleteSelectedShape(event);
+        });
+        overlay.appendChild(deleteButton);
+
+        const transform = shape.getAttribute('transform');
+        if (transform) overlay.setAttribute('transform', transform);
+
+        G.value.appendChild(overlay);
+        selectionBox.value = overlay;
+    } catch {
+        removeSelectionBox();
+    }
+}
+
+function deselectShape() {
+    selectedShape.value = null;
+    isDraggingShape.value = false;
+    shapeDragStart.value = null;
+    shapeDragBaseTransform.value = '';
+    shapeDragOriginalState.value = '';
+    shapeDragMoved.value = false;
+    shapeWasSelectedAtPointerDown.value = false;
+    lineEndpointDrag.value = null;
+    lineEndpointDragStart.value = null;
+    removeSelectionBox();
+    setCursorStyle();
+}
+
+function deleteSelectedShape(event = null) {
+    if (!props.active || !selectedShape.value || !G.value) return;
+    if (!G.value.contains(selectedShape.value)) return;
+
+    if (event?.cancelable) event.preventDefault();
+    event?.stopPropagation?.();
+    event?.stopImmediatePropagation?.();
+
+    const beforeState = serializeDoodles();
+    selectedShape.value.remove();
+    commitHistory(beforeState);
+    deselectShape();
+}
+
+function getShapeColor(shape) {
+    if (!shape) return null;
+    if (shape.tagName.toLowerCase() === 'text') {
+        return shape.getAttribute('fill');
+    }
+    if (shape.tagName.toLowerCase() === 'circle') {
+        return shape.getAttribute('fill');
+    }
+    return shape.getAttribute('stroke');
+}
+
+function syncControlsFromSelectedShape(shape) {
+    if (!shape) return;
+    isSyncingControls.value = true;
+    try {
+        const tagName = shape.tagName.toLowerCase();
+        const shapeColor = getShapeColor(shape);
+        if (shapeColor) currentColor.value = shapeColor;
+
+        if (tagName === 'text') {
+            modeIndex.value = modes.indexOf('text');
+            const size = Number(shape.getAttribute('font-size'));
+            if (Number.isFinite(size) && props.scale) {
+                fontSize.value = size / props.scale;
+            }
+            return;
+        }
+
+        if (tagName === 'line') {
+            modeIndex.value = shape.hasAttribute('marker-end')
+                ? modes.indexOf('arrow')
+                : modes.indexOf('line');
+        } else {
+            modeIndex.value = modes.indexOf('draw');
+        }
+
+        if (tagName === 'circle') {
+            const radius = Number(shape.getAttribute('r'));
+            if (Number.isFinite(radius) && props.scale) {
+                strokeWidth.value = (radius * 2) / props.scale;
+            }
+        } else {
+            const width = Number(shape.getAttribute('stroke-width'));
+            if (Number.isFinite(width) && props.scale) {
+                strokeWidth.value = width / props.scale;
+            }
+        }
+    } finally {
+        nextTick(() => {
+            isSyncingControls.value = false;
+        });
+    }
+}
+
+function selectShape(shape) {
+    if (!props.active || !shape || !G.value?.contains(shape)) return;
+    getDoodleId(shape);
+    selectedShape.value = shape;
+    syncControlsFromSelectedShape(shape);
+    nextTick(updateSelectionBox);
+}
+
+function startShapeInteraction(event) {
+    if (!props.active || !G.value || isEditingText.value) return;
+
+    if (getSelectionDeleteButtonFromEvent(event)) {
+        deleteSelectedShape(event);
+        return;
+    }
+
+    const handle = getSelectionHandleFromEvent(event);
+    if (
+        handle &&
+        selectedShape.value &&
+        selectedShape.value.tagName.toLowerCase() === 'line'
+    ) {
+        if (event.cancelable) event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation?.();
+
+        const endpoint = handle.getAttribute('data-line-endpoint');
+        if (!['start', 'end'].includes(endpoint)) return;
+
+        lineEndpointDrag.value = endpoint;
+        lineEndpointDragStart.value = getShapeLocalPoint(
+            selectedShape.value,
+            event,
+        );
+        isDraggingShape.value = false;
+        shapeDragMoved.value = false;
+        shapeWasSelectedAtPointerDown.value = false;
+        shapeDragOriginalState.value = serializeDoodles();
+        setCursorStyle(event);
+        return;
+    }
+
+    const shape = findShapeAtEvent(event);
+
+    if (!shape) {
+        deselectShape();
+        return;
+    }
+
+    if (event.cancelable) event.preventDefault();
+    shapeWasSelectedAtPointerDown.value = selectedShape.value === shape;
+    selectShape(shape);
+
+    const { x, y } = toSvgPoint(event);
+    isDraggingShape.value = true;
+    shapeDragMoved.value = false;
+    shapeDragStart.value = { x, y };
+    shapeDragBaseTransform.value = shape.getAttribute('transform') || '';
+    shapeDragOriginalState.value = serializeDoodles();
+    setCursorStyle(event);
+}
+
+function moveSelectedShape(event) {
+    if (!props.active || !selectedShape.value) return;
+
+    setCursorStyle(event);
+
+    if (lineEndpointDrag.value) {
+        const point = getShapeLocalPoint(selectedShape.value, event);
+        if (!point) return;
+
+        const start = lineEndpointDragStart.value;
+        if (
+            !shapeDragMoved.value &&
+            start &&
+            Math.hypot(point.x - start.x, point.y - start.y) <
+                SHAPE_DRAG_THRESHOLD * props.scale
+        ) {
+            return;
+        }
+
+        if (event.cancelable) event.preventDefault();
+        shapeDragMoved.value = true;
+
+        if (lineEndpointDrag.value === 'start') {
+            selectedShape.value.setAttribute('x1', point.x);
+            selectedShape.value.setAttribute('y1', point.y);
+        } else {
+            selectedShape.value.setAttribute('x2', point.x);
+            selectedShape.value.setAttribute('y2', point.y);
+        }
+
+        updateSelectionBox();
+        return;
+    }
+
+    if (!isDraggingShape.value || !shapeDragStart.value) return;
+
+    const { x, y } = toSvgPoint(event);
+    const dx = x - shapeDragStart.value.x;
+    const dy = y - shapeDragStart.value.y;
+    const distance = Math.hypot(dx, dy);
+
+    if (
+        !shapeDragMoved.value &&
+        distance < SHAPE_DRAG_THRESHOLD * props.scale
+    ) {
+        return;
+    }
+
+    if (event.cancelable) event.preventDefault();
+    shapeDragMoved.value = true;
+    const base = shapeDragBaseTransform.value.trim();
+    selectedShape.value.setAttribute(
+        'transform',
+        `${base ? `${base} ` : ''}translate(${dx} ${dy})`,
+    );
+    updateSelectionBox();
+}
+
+function stopShapeInteraction(event) {
+    const shape = selectedShape.value;
+    const wasDraggingLineEndpoint = !!lineEndpointDrag.value;
+    const shouldEditText =
+        !wasDraggingLineEndpoint &&
+        shape &&
+        shape.tagName.toLowerCase() === 'text' &&
+        shapeWasSelectedAtPointerDown.value &&
+        !shapeDragMoved.value &&
+        !isEditingText.value;
+
+    if (shapeDragMoved.value && shapeDragOriginalState.value) {
+        commitHistory(shapeDragOriginalState.value);
+    }
+
+    isDraggingShape.value = false;
+    shapeDragStart.value = null;
+    shapeDragOriginalState.value = '';
+    shapeDragMoved.value = false;
+    shapeWasSelectedAtPointerDown.value = false;
+    lineEndpointDrag.value = null;
+    lineEndpointDragStart.value = null;
+    shapeDragBaseTransform.value = shape?.getAttribute('transform') || '';
+
+    if (shape && G.value?.contains(shape)) {
+        updateSelectionBox();
+    }
+
+    if (shouldEditText && shape && G.value?.contains(shape)) {
+        startExistingSvgTextEditing(shape, event);
+        setCursorStyle(event);
+        return;
+    }
+
+    setCursorStyle(event);
+}
+
+function applyColorToSelectedShape(color) {
+    if (!props.active || !selectedShape.value || isSyncingControls.value) {
+        return;
+    }
+
+    const shape = selectedShape.value;
+    const tagName = shape.tagName.toLowerCase();
+    const previousColor = getShapeColor(shape);
+    if (previousColor === color) return;
+
+    const beforeState = serializeDoodles();
+    if (tagName === 'text' || tagName === 'circle') {
+        shape.setAttribute('fill', color);
+    } else {
+        shape.setAttribute('stroke', color);
+        if (tagName === 'line' && shape.hasAttribute('marker-end')) {
+            const markerId = useArrowMarker(color);
+            if (markerId) shape.setAttribute('marker-end', `url(#${markerId})`);
+        }
+    }
+
+    if (!(isEditingText.value && shape === editingTextNode.value)) {
+        commitHistory(beforeState, `color:${getDoodleId(shape)}`);
+    }
+    updateSelectionBox();
+    if (isEditingText.value && shape === editingTextNode.value) drawSvgCaret();
+}
+
+function applyStrokeWidthToSelectedShape(width) {
+    if (!props.active || !selectedShape.value || isSyncingControls.value) {
+        return;
+    }
+
+    const shape = selectedShape.value;
+    const tagName = shape.tagName.toLowerCase();
+    if (tagName === 'text') return;
+
+    const targetWidth = Number(width) * props.scale;
+    const currentValue =
+        tagName === 'circle'
+            ? Number(shape.getAttribute('r')) * 2
+            : Number(shape.getAttribute('stroke-width'));
+    if (currentValue === targetWidth) return;
+
+    const beforeState = serializeDoodles();
+    if (tagName === 'circle') {
+        shape.setAttribute('r', targetWidth / 2);
+    } else {
+        shape.setAttribute('stroke-width', targetWidth);
+    }
+    commitHistory(beforeState, `size:${getDoodleId(shape)}`);
+    updateSelectionBox();
+}
+
+function applyFontSizeToSelectedShape(size) {
+    if (!props.active || !selectedShape.value || isSyncingControls.value) {
+        return;
+    }
+
+    const shape = selectedShape.value;
+    if (shape.tagName.toLowerCase() !== 'text') return;
+
+    const fontPx = Number(size) * props.scale;
+    if (Number(shape.getAttribute('font-size')) === fontPx) return;
+
+    const beforeState = serializeDoodles();
+    shape.setAttribute('font-size', fontPx);
+    Array.from(shape.children).forEach((tspan, index) => {
+        tspan.setAttribute('dy', index === 0 ? '0' : `${fontPx * 1.2}`);
+    });
+
+    if (!(isEditingText.value && shape === editingTextNode.value)) {
+        commitHistory(beforeState, `font-size:${getDoodleId(shape)}`);
+    }
+    updateSelectionBox();
+    if (isEditingText.value && shape === editingTextNode.value) drawSvgCaret();
+}
+
+watch(currentColor, applyColorToSelectedShape);
+watch(strokeWidth, applyStrokeWidthToSelectedShape);
+watch(fontSize, applyFontSizeToSelectedShape);
+
 function switchMode() {
     if (modeIndex.value + 1 >= modes.length) modeIndex.value = 0;
     else modeIndex.value += 1;
 }
 
 function startSvgTextEditing(event) {
-    if (!G.value) return;
-
+    if (!G.value || !props.active) return;
     if (mode.value !== 'text' || isEditingText.value) return;
+    if (getSelectionHandleFromEvent(event) || findShapeAtEvent(event)) return;
+
+    deselectShape();
+    const originalState = serializeDoodles();
     const { x, y } = toSvgPoint(event);
     editingTextAnchor.value = { x, y };
     editingTextContent.value = [''];
     editingCaret.value = { row: 0, col: 0 };
     editingTextRegistered.value = false;
+    editingTextOriginalState.value = originalState;
+    editingTextIsExisting.value = false;
 
-    const textNode = document.createElementNS(
-        'http://www.w3.org/2000/svg',
-        'text',
-    );
+    const textNode = document.createElementNS(XMLNS, 'text');
     textNode.setAttribute('x', x);
     textNode.setAttribute('y', y);
     textNode.setAttribute('fill', currentColor.value);
     textNode.setAttribute('font-size', fontSize.value * props.scale);
     textNode.setAttribute('font-family', 'sans-serif');
     textNode.setAttribute('class', 'vue-data-ui-doodle');
+    textNode.setAttribute('data-doodle-id', createUid());
     textNode.setAttribute('dominant-baseline', 'hanging');
     textNode.setAttribute('pointer-events', 'all');
 
-    const tspan = document.createElementNS(
-        'http://www.w3.org/2000/svg',
-        'tspan',
-    );
+    const tspan = document.createElementNS(XMLNS, 'tspan');
     tspan.setAttribute('x', x);
     tspan.setAttribute('dy', '0');
     tspan.setAttribute('dominant-baseline', 'hanging');
@@ -117,8 +798,55 @@ function startSvgTextEditing(event) {
     textNode.style.userSelect = 'none';
 
     G.value.appendChild(textNode);
+    selectedShape.value = textNode;
     editingTextNode.value = textNode;
     isEditingText.value = true;
+    removeSelectionBox();
+
+    window.addEventListener('keydown', handleSvgTextKeydown);
+    window.addEventListener('mousedown', handleSvgTextBlur, true);
+    updateSvgTextDisplay();
+    drawSvgCaret();
+}
+
+function startExistingSvgTextEditing(shape) {
+    if (
+        !props.active ||
+        !G.value ||
+        isEditingText.value ||
+        !shape ||
+        shape.tagName.toLowerCase() !== 'text' ||
+        !G.value.contains(shape)
+    ) {
+        return;
+    }
+
+    const originalState = serializeDoodles();
+    selectedShape.value = shape;
+    syncControlsFromSelectedShape(shape);
+
+    const x = Number(shape.getAttribute('x')) || 0;
+    const y = Number(shape.getAttribute('y')) || 0;
+    const lines = Array.from(shape.children).map((tspan) => {
+        const content = tspan.textContent || '';
+        return content === '\u200B' ? '' : content.split('\u200B').join('');
+    });
+    const content = lines.length ? lines : [shape.textContent || ''];
+    const lastRow = Math.max(0, content.length - 1);
+
+    editingTextAnchor.value = { x, y };
+    editingTextContent.value = content;
+    editingCaret.value = {
+        row: lastRow,
+        col: content[lastRow]?.length || 0,
+    };
+    editingTextOriginalState.value = originalState;
+    editingTextIsExisting.value = true;
+    editingTextRegistered.value = true;
+    editingTextNode.value = shape;
+    isEditingText.value = true;
+    shape.style.pointerEvents = 'none';
+    removeSelectionBox();
 
     window.addEventListener('keydown', handleSvgTextKeydown);
     window.addEventListener('mousedown', handleSvgTextBlur, true);
@@ -129,7 +857,7 @@ function startSvgTextEditing(event) {
 function handleSvgTextKeydown(e) {
     if (!isEditingText.value) return;
     let { row, col } = editingCaret.value;
-    let lines = editingTextContent.value.slice();
+    const lines = editingTextContent.value.slice();
     let updated = false;
 
     if (e.key === 'Enter') {
@@ -203,7 +931,7 @@ function handleSvgTextKeydown(e) {
         updated = true;
         e.preventDefault();
     } else if (e.key === 'Escape') {
-        cleanupSvgTextEditing(true);
+        cleanupSvgTextEditing(false, true);
         return;
     } else if (e.key === 'Tab') {
         e.preventDefault();
@@ -212,19 +940,6 @@ function handleSvgTextKeydown(e) {
     if (updated) {
         editingTextContent.value = lines;
         editingCaret.value = { row, col };
-
-        // As soon as there is some content and this text is not yet registered add it to the undo stack and clear the redo stack
-        const hasContent = lines.some((line) => line.length > 0);
-        if (
-            hasContent &&
-            !editingTextRegistered.value &&
-            editingTextNode.value
-        ) {
-            stack.value.push(editingTextNode.value);
-            redoStack.value = [];
-            editingTextRegistered.value = true;
-        }
-
         updateSvgTextDisplay();
         drawSvgCaret();
     }
@@ -232,15 +947,14 @@ function handleSvgTextKeydown(e) {
 
 function updateSvgTextDisplay() {
     const textNode = editingTextNode.value;
+    if (!textNode) return;
+
     const { x } = editingTextAnchor.value;
     while (textNode.firstChild) {
         textNode.removeChild(textNode.firstChild);
     }
     editingTextContent.value.forEach((line, i) => {
-        const tspan = document.createElementNS(
-            'http://www.w3.org/2000/svg',
-            'tspan',
-        );
+        const tspan = document.createElementNS(XMLNS, 'tspan');
         tspan.setAttribute('x', x);
         tspan.setAttribute('dominant-baseline', 'hanging');
         tspan.setAttribute(
@@ -262,21 +976,19 @@ function stopCaretBlink() {
 }
 
 function startCaretBlink(caretEl) {
-    // reset any previous timer
     stopCaretBlink();
 
     let visible = true;
     caretEl.style.opacity = '1';
 
     caretBlinkTimer.value = setInterval(() => {
-        // if caret was removed from the DOM, stop
         if (!G.value || !caretEl || !G.value.contains(caretEl)) {
             stopCaretBlink();
             return;
         }
         visible = !visible;
         caretEl.style.opacity = visible ? '1' : '0';
-    }, 500); // 500ms = 1s period (blink)
+    }, 500);
 }
 
 function drawSvgCaret() {
@@ -300,10 +1012,7 @@ function drawSvgCaret() {
         tempText += '\u00A0';
     }
 
-    const measureText = document.createElementNS(
-        'http://www.w3.org/2000/svg',
-        'text',
-    );
+    const measureText = document.createElementNS(XMLNS, 'text');
     measureText.setAttribute('x', x);
     measureText.setAttribute('y', y);
     measureText.setAttribute('font-size', fontPx);
@@ -316,10 +1025,7 @@ function drawSvgCaret() {
     const caretY = y + row * fontPx * 1.2;
     const caretX = x + bbox.width;
 
-    const caret = document.createElementNS(
-        'http://www.w3.org/2000/svg',
-        'rect',
-    );
+    const caret = document.createElementNS(XMLNS, 'rect');
     caret.setAttribute('x', caretX);
     caret.setAttribute('y', caretY);
     caret.setAttribute('rx', 1);
@@ -327,6 +1033,9 @@ function drawSvgCaret() {
     caret.setAttribute('height', fontPx);
     caret.setAttribute('fill', currentColor.value);
     caret.setAttribute('class', 'vue-data-ui-svg-caret');
+    caret.setAttribute('pointer-events', 'none');
+    const transform = textNode.getAttribute('transform');
+    if (transform) caret.setAttribute('transform', transform);
     G.value.appendChild(caret);
 
     startCaretBlink(caret);
@@ -336,42 +1045,39 @@ function handleSvgTextBlur(e) {
     if (!editingTextNode.value) return;
 
     if (!editingTextNode.value.contains(e.target)) {
-        const tspans = editingTextNode.value.children;
-        if (
-            tspans.length === 1 &&
-            (tspans[0].textContent === '' || tspans[0].textContent === '\u200B')
-        ) {
-            editingTextNode.value.remove();
-        }
         cleanupSvgTextEditing(false);
     }
 }
 
-function cleanupSvgTextEditing(remove = false) {
+function cleanupSvgTextEditing(remove = false, cancel = false) {
     window.removeEventListener('keydown', handleSvgTextKeydown);
     window.removeEventListener('mousedown', handleSvgTextBlur, true);
-
     stopCaretBlink();
 
     const caret = G.value?.querySelector('.vue-data-ui-svg-caret');
-    if (caret && G.value) {
-        G.value.removeChild(caret);
+    if (caret) caret.remove();
+
+    const textNode = editingTextNode.value;
+    const originalState = editingTextOriginalState.value;
+    const isEmpty = editingTextContent.value.every((line) => !line.length);
+
+    if (cancel) {
+        isEditingText.value = false;
+        editingTextNode.value = null;
+        editingTextContent.value = [''];
+        editingCaret.value = { row: 0, col: 0 };
+        editingTextRegistered.value = false;
+        editingTextOriginalState.value = '';
+        editingTextIsExisting.value = false;
+        restoreDoodles(originalState);
+        return;
     }
 
-    const tspans = editingTextNode.value?.children;
-    let isEmpty = false;
-    if (tspans && tspans.length === 1) {
-        const content = tspans[0].textContent;
-        isEmpty = !content || content === '\u200B';
-    }
-
-    if (remove || isEmpty) {
-        if (
-            editingTextNode.value &&
-            G.value &&
-            G.value.contains(editingTextNode.value)
-        ) {
-            G.value.removeChild(editingTextNode.value);
+    if (textNode && G.value?.contains(textNode)) {
+        if (remove || isEmpty) {
+            textNode.remove();
+        } else {
+            textNode.style.pointerEvents = 'all';
         }
     }
 
@@ -380,6 +1086,16 @@ function cleanupSvgTextEditing(remove = false) {
     editingTextContent.value = [''];
     editingCaret.value = { row: 0, col: 0 };
     editingTextRegistered.value = false;
+    editingTextOriginalState.value = '';
+    editingTextIsExisting.value = false;
+
+    commitHistory(originalState);
+
+    if (textNode && G.value?.contains(textNode)) {
+        selectShape(textNode);
+    } else {
+        deselectShape();
+    }
 }
 
 const buttonBorderColor = computed(() => lightenHexColor(props.color, 0.6));
@@ -538,9 +1254,13 @@ function optimizeSvgPath(path) {
 }
 
 function startDrawing(event) {
-    if (event.cancelable) event.preventDefault();
     if (mode.value !== 'draw') return;
     if (!props.active || !G.value) return;
+    if (getSelectionHandleFromEvent(event) || findShapeAtEvent(event)) return;
+    if (event.cancelable) event.preventDefault();
+
+    deselectShape();
+    pendingDrawingState.value = serializeDoodles();
     isDrawing.value = true;
     const { x, y } = toSvgPoint(event);
     startPoint.value = { x, y };
@@ -555,6 +1275,8 @@ function startDrawing(event) {
     currentDrawingPath.value.setAttribute('stroke-linecap', 'round');
     currentDrawingPath.value.setAttribute('stroke-linejoin', 'round');
     currentDrawingPath.value.setAttribute('class', 'vue-data-ui-doodle');
+    currentDrawingPath.value.setAttribute('data-doodle-id', createUid());
+    currentDrawingPath.value.setAttribute('pointer-events', 'stroke');
     G.value.appendChild(currentDrawingPath.value);
 }
 
@@ -611,10 +1333,13 @@ function useArrowMarker(color) {
 }
 
 function startLine(event) {
-    if (event.cancelable) event.preventDefault();
     if (!['line', 'arrow'].includes(mode.value)) return;
     if (!props.active || !G.value) return;
+    if (getSelectionHandleFromEvent(event) || findShapeAtEvent(event)) return;
+    if (event.cancelable) event.preventDefault();
 
+    deselectShape();
+    pendingDrawingState.value = serializeDoodles();
     isDrawing.value = true;
     const { x, y } = toSvgPoint(event);
     startPoint.value = { x, y };
@@ -626,6 +1351,8 @@ function startLine(event) {
     );
     currentLine.value.setAttribute('stroke-linecap', 'round');
     currentLine.value.setAttribute('class', 'vue-data-ui-doodle');
+    currentLine.value.setAttribute('data-doodle-id', createUid());
+    currentLine.value.setAttribute('pointer-events', 'stroke');
     currentLine.value.setAttribute('x1', x);
     currentLine.value.setAttribute('y1', y);
     currentLine.value.setAttribute('x2', x);
@@ -646,8 +1373,9 @@ function drawLine(event) {
         !isDrawing.value ||
         !G.value ||
         !currentLine.value
-    )
+    ) {
         return;
+    }
     const { x, y } = toSvgPoint(event);
     currentLine.value.setAttribute('x2', x);
     currentLine.value.setAttribute('y2', y);
@@ -658,9 +1386,9 @@ function endLine(event) {
         const { x, y } = toSvgPoint(event);
         currentLine.value.setAttribute('x2', x);
         currentLine.value.setAttribute('y2', y);
-        stack.value.push(currentLine.value);
-        redoStack.value = [];
-        currentLine.value = '';
+        commitHistory(pendingDrawingState.value);
+        currentLine.value = null;
+        pendingDrawingState.value = '';
     }
     isDrawing.value = false;
 }
@@ -674,66 +1402,74 @@ function stopDrawing(event) {
             startPoint.value.x === x &&
             startPoint.value.y === y
         ) {
-            // Single click : circle
-            const circle = document.createElementNS(
-                'http://www.w3.org/2000/svg',
-                'circle',
-            );
+            currentDrawingPath.value.remove();
+            const circle = document.createElementNS(XMLNS, 'circle');
             circle.setAttribute('cx', x);
             circle.setAttribute('cy', y);
             circle.setAttribute('r', (strokeWidth.value * props.scale) / 2);
             circle.setAttribute('fill', currentColor.value);
             circle.setAttribute('class', 'vue-data-ui-doodle');
+            circle.setAttribute('data-doodle-id', createUid());
+            circle.setAttribute('pointer-events', 'all');
             G.value.appendChild(circle);
-            stack.value.push(circle);
         } else {
-            const newPath = currentDrawingPath.value;
-            newPath.setAttribute(
+            currentDrawingPath.value.setAttribute(
                 'd',
                 optimizeSvgPath(smoothPath(currentPath.value)),
             );
-            stack.value.push(newPath);
         }
-        redoStack.value = [];
-        currentDrawingPath.value = '';
+
+        commitHistory(pendingDrawingState.value);
+        pendingDrawingState.value = '';
+        currentDrawingPath.value = null;
     }
     isDrawing.value = false;
 }
 
 function deleteLastDraw() {
-    if (stack.value.length > 0) {
-        const lastShape = stack.value.pop();
-        redoStack.value.push(lastShape);
+    if (!stack.value.length || !G.value) return;
 
-        if (lastShape === editingTextNode.value) {
-            cleanupSvgTextEditing(true);
-        } else if (G.value && G.value.contains(lastShape)) {
-            G.value.removeChild(lastShape);
-        }
-    }
+    const currentState = serializeDoodles();
+    const entry = stack.value.pop();
+    redoStack.value.push({
+        state: currentState,
+        mergeKey: null,
+        timestamp: Date.now(),
+    });
+    restoreDoodles(entry.state);
 }
 
 function redoLastDraw() {
-    if (redoStack.value.length > 0) {
-        const lastUndonePath = redoStack.value.pop();
-        stack.value.push(lastUndonePath);
-        if (G.value) {
-            G.value.appendChild(lastUndonePath);
-        }
-    }
+    if (!redoStack.value.length || !G.value) return;
+
+    const currentState = serializeDoodles();
+    const entry = redoStack.value.pop();
+    stack.value.push({
+        state: currentState,
+        mergeKey: null,
+        timestamp: Date.now(),
+    });
+    restoreDoodles(entry.state);
 }
 
 function reset() {
+    if (isEditingText.value) {
+        cleanupSvgTextEditing(false);
+    }
+    deselectShape();
     if (G.value) {
         G.value.innerHTML = '';
     }
     stack.value = [];
     redoStack.value = [];
     editingTextRegistered.value = false;
+    editingTextOriginalState.value = '';
+    editingTextIsExisting.value = false;
+    pendingDrawingState.value = '';
     addInteractionMask();
 }
 
-watch(mode, (newMode) => {
+watch(mode, () => {
     if (!props.active) return;
     disableDrawing();
     enableDrawing();
@@ -742,6 +1478,19 @@ watch(mode, (newMode) => {
 
 function enableDrawing() {
     if (!props.svgRef || !props.active) return;
+
+    props.svgRef.addEventListener('mousedown', startShapeInteraction);
+    props.svgRef.addEventListener('mousemove', moveSelectedShape);
+    props.svgRef.addEventListener('mouseup', stopShapeInteraction);
+    props.svgRef.addEventListener('mouseleave', stopShapeInteraction);
+    props.svgRef.addEventListener('touchstart', startShapeInteraction, {
+        passive: false,
+    });
+    props.svgRef.addEventListener('touchmove', moveSelectedShape, {
+        passive: false,
+    });
+    props.svgRef.addEventListener('touchend', stopShapeInteraction);
+    props.svgRef.addEventListener('touchcancel', stopShapeInteraction);
 
     if (mode.value === 'draw') {
         props.svgRef.addEventListener('mousedown', startDrawing);
@@ -782,6 +1531,16 @@ function enableDrawing() {
 function disableDrawing() {
     if (!props.svgRef) return;
 
+    // interact with positioned elements
+    props.svgRef.removeEventListener('mousedown', startShapeInteraction);
+    props.svgRef.removeEventListener('mousemove', moveSelectedShape);
+    props.svgRef.removeEventListener('mouseup', stopShapeInteraction);
+    props.svgRef.removeEventListener('mouseleave', stopShapeInteraction);
+    props.svgRef.removeEventListener('touchstart', startShapeInteraction);
+    props.svgRef.removeEventListener('touchmove', moveSelectedShape);
+    props.svgRef.removeEventListener('touchend', stopShapeInteraction);
+    props.svgRef.removeEventListener('touchcancel', stopShapeInteraction);
+
     // draw
     props.svgRef.removeEventListener('mousedown', startDrawing);
     props.svgRef.removeEventListener('mousemove', draw);
@@ -816,8 +1575,10 @@ watch(
         if (newVal) {
             enableDrawing();
         } else {
+            deselectShape();
             disableDrawing();
         }
+        setCursorStyle();
     },
 );
 
@@ -844,8 +1605,47 @@ watch(
     { immediate: true },
 );
 
-function setCursorStyle() {
+function setCursorStyle(event = null) {
     if (!G.value) return;
+
+    if (!props.active) {
+        G.value.style.cursor = '';
+        return;
+    }
+
+    if (isEditingText.value) {
+        G.value.style.cursor = 'text';
+        return;
+    }
+
+    if (event && getSelectionDeleteButtonFromEvent(event)) {
+        G.value.style.cursor = 'pointer';
+        return;
+    }
+
+    if (
+        lineEndpointDrag.value ||
+        (event && getSelectionHandleFromEvent(event))
+    ) {
+        G.value.style.cursor = 'move';
+        return;
+    }
+
+    if (isDraggingShape.value && selectedShape.value) {
+        G.value.style.cursor = 'grabbing';
+        return;
+    }
+
+    if (
+        event &&
+        selectedShape.value &&
+        G.value.contains(selectedShape.value) &&
+        isShapeNearEvent(selectedShape.value, event)
+    ) {
+        G.value.style.cursor = 'grab';
+        return;
+    }
+
     if (mode.value === 'text') {
         G.value.style.cursor = 'text';
     } else if (['line', 'arrow'].includes(mode.value)) {
@@ -981,7 +1781,9 @@ onMounted(() => {
             G.value.setAttribute('class', 'vue-data-ui-doodles');
             props.svgRef.appendChild(G.value);
             setCursorStyle();
-            disableDrawing();
+            if (props.active) enableDrawing();
+            else disableDrawing();
+            addInteractionMask();
         }
     });
 });
@@ -1002,6 +1804,7 @@ watch(
 
 onBeforeUnmount(() => {
     stopCaretBlink();
+    deselectShape();
     stopMenuDrag();
     window.removeEventListener('resize', keepMenuInClient);
     if (G.value && props.svgRef) {
@@ -1269,6 +2072,19 @@ input[type='range'].vertical-range {
 </style>
 
 <style>
+.vue-data-ui-selection-box {
+    vector-effect: non-scaling-stroke;
+}
+
+.vue-data-ui-selection-handle {
+    vector-effect: non-scaling-stroke;
+    cursor: move;
+}
+
+.vue-data-ui-selection-delete {
+    cursor: pointer;
+}
+
 .vue-data-ui-svg-caret {
     opacity: 1;
 }
