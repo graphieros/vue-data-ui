@@ -63,7 +63,6 @@
                             @click="
                                 deleteEmptyTextElement();
                                 isMoveMode = !isMoveMode;
-                                activeShape = undefined;
                                 isDeleteMode = false;
                                 isDrawMode = false;
                                 isResizeMode = false;
@@ -109,9 +108,7 @@
 
                         <!-- RESIZE -->
                         <button
-                            :disabled="
-                                shapes.length === 0 || activeShape === 'line'
-                            "
+                            :disabled="shapes.length === 0"
                             :style="{
                                 background: isResizeMode
                                     ? FINAL_CONFIG.style.buttons.controls
@@ -1200,25 +1197,6 @@
                             >
                                 <label class="tool-input">
                                     {{ FINAL_CONFIG.translations.dashedLines }}
-                                    <svg
-                                        viewBox="0 0 24 24"
-                                        height="24"
-                                        width="24"
-                                        style="
-                                            margin-bottom: -5px;
-                                            margin-top: -10px;
-                                        "
-                                    >
-                                        <line
-                                            x1="0"
-                                            x2="24"
-                                            y1="12"
-                                            y2="12"
-                                            stroke-width="2"
-                                            stroke="black"
-                                            stroke-dasharray="3"
-                                        ></line>
-                                    </svg>
                                     <input
                                         name="dashStyle"
                                         type="checkbox"
@@ -2041,6 +2019,9 @@
                                     "
                                     :isCursorPointer="isCursorPointer"
                                     teleported
+                                    @update:value="
+                                        setColorOfSelectedShape($event)
+                                    "
                                 />
                             </button>
                             <TeleportedTooltip
@@ -2111,6 +2092,7 @@
                 ref="mainSvg"
                 :class="{
                     annotator__overlay: true,
+                    'annotator__overlay--inactive': !isSummaryOpen,
                     draw: true,
                     'draw--free': activeShape === 'line',
                 }"
@@ -2120,10 +2102,7 @@
                 @pointerdown="chooseAction($event)"
                 @pointerup="resetDraw($event)"
                 @touchend="resetDraw($event)"
-                @touchstart="
-                    setPointer($event);
-                    clickSvg($event);
-                "
+                @touchstart="setPointer($event)"
                 @pointermove="
                     setPointer($event);
                     chooseMove($event);
@@ -2156,18 +2135,30 @@
                         chooseMove($event);
                     "
                     @pointerup.stop.prevent="resetDraw"
-                    @click.stop.prevent
+                    @click.stop.prevent="clickSvg($event)"
                 />
 
                 <g
                     v-for="shape in userShapes"
                     :key="shape.id"
                     v-html="shape.html"
-                    @click="
-                        clickShape($event);
-                        isMoveMode = false;
-                    "
+                    :style="{ pointerEvents: isSummaryOpen ? null : 'none' }"
+                    @click="clickShape($event, shape.id)"
+                    @dblclick.stop.prevent="doubleClickShape($event, shape.id)"
                 ></g>
+
+                <line
+                    v-if="textCaret && isWriting"
+                    class="vue-ui-annotator-caret"
+                    :x1="textCaret.x"
+                    :x2="textCaret.x"
+                    :y1="textCaret.y1"
+                    :y2="textCaret.y2"
+                    :stroke="textCaret.color"
+                    stroke-width="2"
+                    pointer-events="none"
+                    vector-effect="non-scaling-stroke"
+                />
             </svg>
             <svg
                 style="position: absolute; top: 0; left: 0"
@@ -2303,6 +2294,15 @@ const textFont = ref(20);
 const transparency = ref(100);
 const transparencyCodes = opacity;
 const dragOffset = ref(null);
+const resizeHandle = ref(null);
+const resizeState = ref(null);
+const editingTextId = ref(null);
+const editingTextOriginal = ref(null);
+const editingTextWasNew = ref(false);
+const editingCaret = ref({ row: 0, col: 0 });
+const textCaret = ref(null);
+const TEXT_LINE_BREAK = '\u200E';
+const SHAPE_HIT_PADDING = 12;
 const showTooltip = ref(false);
 const tooltipKey = ref(null);
 const tooltipPos = ref({ x: 0, y: 0 });
@@ -2373,7 +2373,7 @@ const cursorClass = computed(() => {
             return 'text';
 
         case isResizeMode.value:
-            return 'se-resize';
+            return 'move';
 
         default:
             return '';
@@ -2383,105 +2383,280 @@ const cursorClass = computed(() => {
 const records = computed(() => shapes.value);
 const mainSvg = ref(null);
 
-function includeSelectionIndicator(shape) {
-    if (!shape) {
-        return;
+function isShapeHighlighted(shape) {
+    if (!shape) return false;
+
+    return Boolean(
+        lastSelectedShape.value && lastSelectedShape.value.id === shape.id,
+    );
+}
+
+function parseLinePoints(path = '') {
+    const values = String(path)
+        .trim()
+        .split(/\s+/)
+        .map(Number)
+        .filter(Number.isFinite);
+
+    const points = [];
+    for (let i = 0; i + 1 < values.length; i += 2) {
+        points.push({ x: values[i], y: values[i + 1] });
+    }
+    return points;
+}
+
+function serializeLinePoints(points = []) {
+    return points.map(({ x, y }) => `${x} ${y}`).join(' ');
+}
+
+function getLineBounds(path = '') {
+    const points = parseLinePoints(path);
+    if (!points.length) return null;
+
+    const xs = points.map((point) => point.x);
+    const ys = points.map((point) => point.y);
+    const minX = Math.min(...xs);
+    const maxX = Math.max(...xs);
+    const minY = Math.min(...ys);
+    const maxY = Math.max(...ys);
+
+    return {
+        minX,
+        minY,
+        maxX,
+        maxY,
+        width: Math.max(1, maxX - minX),
+        height: Math.max(1, maxY - minY),
+    };
+}
+
+function includeResizeHandles(shape) {
+    if (
+        !shape ||
+        !isSummaryOpen.value ||
+        !isResizeMode.value ||
+        !lastSelectedShape.value ||
+        lastSelectedShape.value.id !== shape.id
+    ) {
+        return '';
     }
 
-    switch (true) {
-        case shape.type === 'rect':
+    const handleRadius = 7;
+    const stroke = FINAL_CONFIG.value.style.color || 'grey';
+    const background =
+        FINAL_CONFIG.value.style.backgroundColor || 'rgba(255,255,255,0.95)';
+
+    const circleHandle = ({ handle, x, y, cursor = 'nwse-resize' }) => `
+        <circle
+            data-dom-to-png-ignore
+            id="${shape.id}"
+            data-resize-handle="${handle}"
+            cx="${x}"
+            cy="${y}"
+            r="${handleRadius}"
+            fill="${background}"
+            stroke="${stroke}"
+            stroke-width="2"
+            pointer-events="all"
+            style="cursor:${cursor}"
+        />
+    `;
+
+    if (shape.type === 'arrow') {
+        return `
+            ${circleHandle({
+                handle: 'arrow-start',
+                x: shape.x,
+                y: shape.y,
+                cursor: 'move',
+            })}
+            ${circleHandle({
+                handle: 'arrow-end',
+                x: shape.endX,
+                y: shape.endY,
+                cursor: 'move',
+            })}
+        `;
+    }
+
+    if (shape.type === 'line') {
+        const bounds = getLineBounds(shape.path);
+        if (!bounds) return '';
+        return circleHandle({
+            handle: 'line-scale',
+            x: bounds.maxX,
+            y: bounds.maxY,
+        });
+    }
+
+    if (shape.type === 'circle') {
+        const radius = Math.max(1, Number(shape.circleRadius) || 1);
+        const liveHandle =
+            resizeHandle.value === 'circle-radius' &&
+            resizeState.value?.shapeId === shape.id &&
+            resizeState.value?.handlePoint
+                ? resizeState.value.handlePoint
+                : null;
+
+        return circleHandle({
+            handle: 'circle-radius',
+            x: liveHandle?.x ?? shape.x + radius,
+            y: liveHandle?.y ?? shape.y,
+            cursor: 'move',
+        });
+    }
+
+    if (shape.type === 'rect') {
+        const left = Number(shape.x) || 0;
+        const top = Number(shape.y) || 0;
+        const right = left + Math.max(0, Number(shape.rectWidth) || 0);
+        const bottom = top + Math.max(0, Number(shape.rectHeight) || 0);
+
+        return `
+            ${circleHandle({
+                handle: 'rect-nw',
+                x: left,
+                y: top,
+                cursor: 'nwse-resize',
+            })}
+            ${circleHandle({
+                handle: 'rect-ne',
+                x: right,
+                y: top,
+                cursor: 'nesw-resize',
+            })}
+            ${circleHandle({
+                handle: 'rect-se',
+                x: right,
+                y: bottom,
+                cursor: 'nwse-resize',
+            })}
+            ${circleHandle({
+                handle: 'rect-sw',
+                x: left,
+                y: bottom,
+                cursor: 'nesw-resize',
+            })}
+        `;
+    }
+
+    if (shape.type === 'group') {
+        return circleHandle({
+            handle: 'group-scale',
+            x: shape.x + shape.rectWidth,
+            y: shape.y + shape.rectHeight,
+        });
+    }
+
+    return '';
+}
+
+function includeSelectionIndicator(shape) {
+    if (!shape) return '';
+    if (
+        shape.type === 'text' &&
+        isWriting.value &&
+        editingTextId.value === shape.id
+    ) {
+        return '';
+    }
+
+    const display = isShapeHighlighted(shape) ? 'initial' : 'none';
+    const padding = 20;
+
+    switch (shape.type) {
+        case 'rect':
             return `
                 <rect
-                id="${shape.id}" 
-                style="stroke-dasharray: 10; display:${
-                    hoveredShapeId.value && hoveredShapeId.value === shape.id
-                        ? 'initial'
-                        : 'none'
-                }"
-                x="${shape.x - 20}"
-                y="${shape.y - 20}"
-                height="${shape.rectHeight + 40}"
-                width="${shape.rectWidth + 40}"
-                fill="transparent"
-                stroke="grey"
+                    data-dom-to-png-ignore
+                    style="stroke-dasharray: 10; display:${display}"
+                    x="${shape.x - padding}"
+                    y="${shape.y - padding}"
+                    height="${shape.rectHeight + padding * 2}"
+                    width="${shape.rectWidth + padding * 2}"
+                    fill="transparent"
+                    stroke="grey"
+                    pointer-events="none"
                 />
             `;
 
-        case shape.type === 'circle':
+        case 'circle':
             return `
                 <rect
-                id="${shape.id}" 
-                style="stroke-dasharray: 10; display:${
-                    hoveredShapeId.value && hoveredShapeId.value === shape.id
-                        ? 'initial'
-                        : 'none'
-                }"
-                x="${shape.x - shape.circleRadius - 20}"
-                y="${shape.y - shape.circleRadius - 20}"
-                height="${shape.circleRadius * 2 + 40}"
-                width="${shape.circleRadius * 2 + 40}"
-                fill="transparent"
-                stroke="grey"
+                    data-dom-to-png-ignore
+                    style="stroke-dasharray: 10; display:${display}"
+                    x="${shape.x - shape.circleRadius - padding}"
+                    y="${shape.y - shape.circleRadius - padding}"
+                    height="${shape.circleRadius * 2 + padding * 2}"
+                    width="${shape.circleRadius * 2 + padding * 2}"
+                    fill="transparent"
+                    stroke="grey"
+                    pointer-events="none"
                 />
             `;
 
-        case shape.type === 'arrow':
-            const isPositiveX = shape.endX - shape.x > 0;
-            const isPositiveY = shape.endY - shape.y > 0;
+        case 'arrow': {
+            const minX = Math.min(shape.x, shape.endX);
+            const minY = Math.min(shape.y, shape.endY);
+            const width = Math.max(1, Math.abs(shape.endX - shape.x));
+            const height = Math.max(1, Math.abs(shape.endY - shape.y));
             return `
                 <rect
-                id="${shape.id}" 
-                style="stroke-dasharray: 10; display:${
-                    hoveredShapeId.value && hoveredShapeId.value === shape.id
-                        ? 'initial'
-                        : 'none'
-                }"
-                x="${isPositiveX ? shape.x - 20 : shape.endX - 20}"
-                y="${isPositiveY ? shape.y - 20 : shape.endY - 20}"
-                height="${
-                    isPositiveY
-                        ? shape.endY - shape.y + 40
-                        : shape.y - shape.endY + 40
-                }"
-                width="${
-                    isPositiveX
-                        ? shape.endX - shape.x + 40
-                        : shape.x - shape.endX + 40
-                }"
-                fill="transparent"
-                stroke="grey"
+                    style="stroke-dasharray: 10; display:${display}"
+                    x="${minX - padding}"
+                    y="${minY - padding}"
+                    height="${height + padding * 2}"
+                    width="${width + padding * 2}"
+                    fill="transparent"
+                    stroke="grey"
+                    pointer-events="none"
                 />
             `;
+        }
 
-        case shape.type === 'text':
+        case 'line': {
+            const bounds = getLineBounds(shape.path);
+            if (!bounds) return '';
+            return `
+                <rect
+                    style="stroke-dasharray: 10; display:${display}"
+                    x="${bounds.minX - padding}"
+                    y="${bounds.minY - padding}"
+                    height="${bounds.height + padding * 2}"
+                    width="${bounds.width + padding * 2}"
+                    fill="transparent"
+                    stroke="grey"
+                    pointer-events="none"
+                />
+            `;
+        }
+
+        case 'text': {
             const selectedText = mainSvg.value
                 ? Array.from(mainSvg.value.getElementsByTagName('text')).find(
-                      (textElement) => textElement.id === shape.id,
+                      (textElement) =>
+                          textElement.getAttribute('data-shape-id') ===
+                          shape.id,
                   )
                 : null;
-            if (!selectedText) {
-                return;
-            }
+            if (!selectedText) return '';
             const { x, y, width, height } = selectedText.getBBox();
             return `
                 <rect
-                id="${shape.id}" 
-                style="stroke-dasharray: 10; display:${
-                    hoveredShapeId.value && hoveredShapeId.value === shape.id
-                        ? 'initial'
-                        : 'none'
-                }"
-                x="${x - 20}"
-                y="${y - 20}"
-                height="${height + 40}"
-                width="${width + 40}"
-                fill="transparent"
-                stroke="grey"
+                    style="stroke-dasharray: 10; display:${display}"
+                    x="${x - padding}"
+                    y="${y - padding}"
+                    height="${height + padding * 2}"
+                    width="${width + padding * 2}"
+                    fill="transparent"
+                    stroke="grey"
+                    pointer-events="none"
                 />
             `;
+        }
 
         default:
-            return ``;
+            return '';
     }
 }
 
@@ -2613,31 +2788,68 @@ function computeCaretPosition(shape) {
     }
 }
 
+function normalizeLegacyText(value = '') {
+    return String(value).replace(/&nbsp;/g, '\u00A0');
+}
+
+function getTextLines(shape) {
+    const raw = String(shape?.textContent ?? '');
+    return raw.split(TEXT_LINE_BREAK).map(normalizeLegacyText);
+}
+
+function setTextLines(shape, lines) {
+    if (!shape) return;
+    const safeLines = lines.length ? lines : [''];
+    shape.textContent = safeLines.join(TEXT_LINE_BREAK);
+    shape.lines = Math.max(0, safeLines.length - 1);
+}
+
+function escapeSvgText(value = '') {
+    return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+}
+
+function renderTextLine(value = '') {
+    const text = escapeSvgText(normalizeLegacyText(value));
+    return text || '&#8203;';
+}
+
 function computeTextElement(shape, content, isBulletTextMode = false) {
-    switch (true) {
-        case shape.textAlign === 'start':
-            return `
-            <g id="${shape.id}">
-                <rect 
-                    id="${shape.id}" 
-                    style="display:${
-                        lastSelectedShape.value &&
-                        lastSelectedShape.value.id === shape.id
-                            ? 'initial'
-                            : 'none'
-                    };" 
-                    x="${shape.x}" 
-                    y="${shape.y - 50}" 
-                    height="${
-                        shape.lines === 0 || shape.lines === 1
-                            ? shape.fontSize * 4
-                            : shape.fontSize * 2 * shape.lines
-                    }"
-                    width="100" 
-                    fill="rgba(0,0,0,0)"
-                />
-                <text
-                style="user-select:none; height:100px;"
+    const lines = getTextLines(shape);
+    const lineCount = Math.max(1, lines.length);
+    const longestLine = lines.reduce(
+        (max, line) => Math.max(max, line.length),
+        0,
+    );
+    const hitWidth = Math.max(24, longestLine * shape.fontSize * 0.7 + 16);
+    const hitX =
+        shape.textAlign === 'middle'
+            ? shape.x - hitWidth / 2
+            : shape.textAlign === 'end'
+              ? shape.x - hitWidth
+              : shape.x;
+    const hitHeight = Math.max(
+        shape.fontSize * 1.2,
+        shape.fontSize * lineCount,
+    );
+
+    return `
+        <g id="${shape.id}">
+            <rect
+                id="${shape.id}"
+                data-shape-hit-area="true"
+                x="${hitX - 8}"
+                y="${shape.y - shape.fontSize}"
+                height="${hitHeight + 8}"
+                width="${hitWidth + 16}"
+                fill="transparent"
+                pointer-events="all"
+            />
+            <text
+                data-shape-id="${shape.id}"
+                style="user-select:none;"
                 id="${shape.id}"
                 x="${shape.x}"
                 y="${shape.y}"
@@ -2647,173 +2859,76 @@ function computeTextElement(shape, content, isBulletTextMode = false) {
                 font-weight="${shape.isBold ? 'bold' : 'normal'}"
                 font-style="${shape.isItalic ? 'italic' : 'normal'}"
                 text-decoration="${shape.isUnderline ? 'underline' : 'none'}"
-                >
-                    ${content.join('')}
-                </text>
-                ${
-                    showCaret.value &&
-                    lastSelectedShape.value &&
-                    lastSelectedShape.value.id === shape.id
-                        ? computeCaretPosition(shape)
-                        : ''
-                }
-                ${includeDeleteButton(shape, isBulletTextMode)}
-            </g> 
-            `;
-
-        case shape.textAlign === 'middle':
-            return `
-                <g id="${shape.id}">
-                <rect 
-                    id="${shape.id}" 
-                    style="display:${
-                        lastSelectedShape.value &&
-                        lastSelectedShape.value.id === shape.id
-                            ? 'initial'
-                            : 'none'
-                    };" 
-                    x="${shape.x - 50}" 
-                    y="${shape.y - 50}" 
-                    height="${
-                        shape.lines === 0 || shape.lines === 1
-                            ? shape.fontSize * 4
-                            : shape.fontSize * 2 * shape.lines
-                    }"
-                    width="100" 
-                    fill="rgba(0,0,0,0)"
-                />
-                <text
-                style="user-select:none; height:100px;"
-                id="${shape.id}"
-                x="${shape.x}"
-                y="${shape.y}"
-                text-anchor="${shape.textAlign}"
-                font-size="${shape.fontSize}"
-                fill="${shape.color}"
-                font-weight="${shape.isBold ? 'bold' : 'normal'}"
-                font-style="${shape.isItalic ? 'italic' : 'normal'}"
-                text-decoration="${shape.isUnderline ? 'underline' : 'none'}"
-                >
-                    ${content.join('')}
-                </text>
-                ${
-                    showCaret.value &&
-                    lastSelectedShape.value &&
-                    lastSelectedShape.value.id === shape.id
-                        ? computeCaretPosition(shape)
-                        : ''
-                }
-                ${includeDeleteButton(shape)}
-                </g>
-            `;
-
-        case shape.textAlign === 'end':
-            return `
-            <g id="${shape.id}">
-                <rect 
-                    id="${shape.id}" 
-                    style="display:${
-                        lastSelectedShape.value &&
-                        lastSelectedShape.value.id === shape.id
-                            ? 'initial'
-                            : 'none'
-                    };" 
-                    x="${shape.x - 100}" 
-                    y="${shape.y - 50}" 
-                    height="${
-                        shape.lines === 0 || shape.lines === 1
-                            ? shape.fontSize * 4
-                            : shape.fontSize * 2 * shape.lines
-                    }"
-                    width="100" 
-                    fill="rgba(0,0,0,0)"
-                />
-                <text
-                style="user-select:none; height:100px;"
-                id="${shape.id}"
-                x="${shape.x}"
-                y="${shape.y}"
-                text-anchor="${shape.textAlign}"
-                font-size="${shape.fontSize}"
-                fill="${shape.color}"
-                font-weight="${shape.isBold ? 'bold' : 'normal'}"
-                font-style="${shape.isItalic ? 'italic' : 'normal'}"
-                text-decoration="${shape.isUnderline ? 'underline' : 'none'}"
-                >
-                    ${content.join('')}
-                </text>
-                ${
-                    showCaret.value &&
-                    lastSelectedShape.value &&
-                    lastSelectedShape.value.id === shape.id
-                        ? computeCaretPosition(shape)
-                        : ''
-                }
-                ${includeDeleteButton(shape)}
-            </g> 
-            `;
-
-        default:
-            return '';
-    }
+                pointer-events="bounding-box"
+            >
+                ${content.join('')}
+            </text>
+            ${includeDeleteButton(shape, isBulletTextMode)}
+        </g>
+    `;
 }
 
 const userShapes = computed(() => {
     return records.value.map((shape) => {
         switch (true) {
-            case shape && shape.type === 'arrow':
+            case shape && shape.type === 'arrow': {
                 const shapeWidthMax = shape.strokeWidth > 3 ? 5 : 10;
                 const shapeWidthMin = shape.strokeWidth > 3 ? 2.5 : 5;
+                const markerId = `marker_${shape.id}`;
+                const hitStrokeWidth = Math.max(
+                    SHAPE_HIT_PADDING * 2,
+                    Number(shape.strokeWidth || 1) + SHAPE_HIT_PADDING * 2,
+                );
                 return {
                     html: `
           <defs>
-          <marker 
-              id="${shape.id}" 
-              markerWidth="${shapeWidthMax}" 
-              markerHeight="${shapeWidthMax}" 
-              refX="0" 
-              refY="${shapeWidthMin}" 
+          <marker
+              id="${markerId}"
+              markerWidth="${shapeWidthMax}"
+              markerHeight="${shapeWidthMax}"
+              refX="0"
+              refY="${shapeWidthMin}"
               orient="auto"
           >
-              <polygon 
-              points="0 0,${shapeWidthMax} ${shapeWidthMin}, 0 ${shapeWidthMax}" 
+              <polygon
+              points="0 0,${shapeWidthMax} ${shapeWidthMin}, 0 ${shapeWidthMax}"
               fill="${shape.color}"
               />
           </marker>
           </defs>
-          ${includeSelectionIndicator(shape)}
           <g id="${shape.id}">
-              <path 
-              style="stroke-linecap: round !important; ${
-                  shape.isDash
-                      ? `stroke-dasharray: ${shape.strokeWidth * 3}`
-                      : ''
-              }" 
-              stroke="${shape.color}" 
-              id="${shape.id}" 
-              d="M${shape.x},${shape.y} ${shape.endX},${shape.endY}" 
-              stroke-width="${shape.strokeWidth}" 
-              marker-end="url(#${shape.id})"
+              ${includeSelectionIndicator(shape)}
+              <path
+                  id="${shape.id}"
+                  data-shape-hit-area="true"
+                  d="M${shape.x},${shape.y} ${shape.endX},${shape.endY}"
+                  fill="none"
+                  stroke="transparent"
+                  stroke-width="${hitStrokeWidth}"
+                  pointer-events="stroke"
               />
-          </g>
-          <g id="${shape.id}">
-          <rect 
-              id="${shape.id}"
-              x="${shape.x - 10}"
-              y="${shape.y - 10}"
-              height="20"
-              width="20"
-              fill="rgba(0,0,0,0.3)"
-              style="display:${
-                  isResizeMode.value || isMoveMode.value ? 'initial' : 'none'
-              }; rx:1 !important; ry:1 !important;"
-          />
-          </g>
-          ${includeDeleteButton(shape)}
+              <path
+                  id="${shape.id}"
+                  data-shape-visible="true"
+                  style="stroke-linecap: round !important; ${
+                      shape.isDash
+                          ? `stroke-dasharray: ${shape.strokeWidth * 3}`
+                          : ''
+                  }"
+                  stroke="${shape.color}"
+                  d="M${shape.x},${shape.y} ${shape.endX},${shape.endY}"
+                  stroke-width="${shape.strokeWidth}"
+                  fill="none"
+                  pointer-events="stroke"
+                  marker-end="url(#${markerId})"
+              />
+              ${includeResizeHandles(shape)}
+              ${includeDeleteButton(shape)}
           </g>
           `,
                     id: shape.id,
                 };
+            }
 
             case shape && shape.type === 'circle':
                 return {
@@ -2839,6 +2954,7 @@ const userShapes = computed(() => {
               }"
               >
               </circle>
+              ${includeResizeHandles(shape)}
           </g>
           
           ${includeDeleteButton(shape)}`,
@@ -2849,6 +2965,7 @@ const userShapes = computed(() => {
                 return {
                     html: `<g id="${shape.id}">
             <rect
+                data-dom-to-png-ignore
                 id="${isResizeMode.value ? '' : shape.id}"
                 x="${shape.x}"
                 y="${shape.y}"
@@ -2864,7 +2981,7 @@ const userShapes = computed(() => {
                 }; display:${
                     isSelectMode.value ||
                     isDeleteMode.value ||
-                    (hoveredShapeId.value && hoveredShapeId.value === shape.id)
+                    isShapeHighlighted(shape)
                         ? 'initial'
                         : 'none'
                 };"
@@ -2872,6 +2989,7 @@ const userShapes = computed(() => {
             <g id="${shape.id}">
             ${shape.content ? shape.content : ''}
             </g>
+            ${includeResizeHandles(shape)}
             ${includeDeleteButton(shape)}
             </g> `,
                     id: shape.id,
@@ -2900,57 +3018,77 @@ const userShapes = computed(() => {
                         : ''
                 }"
             />
-            <rect id="${shape.id}"
-                x="${shape.x + shape.rectWidth}"
-                y="${shape.y + shape.rectHeight}"
-                height="20"
-                width="20"
-                fill="rgba(0,0,0,0.3)"
-                style="display:${
-                    isResizeMode.value ? 'initial' : 'none'
-                }; rx:1 !important; ry:1 !important;"
-            />
+            ${includeResizeHandles(shape)}
             ${includeDeleteButton(shape)}
             </g> `,
                     id: shape.id,
                 };
 
-            case shape && shape.type === 'line':
+            case shape && shape.type === 'line': {
+                const hitStrokeWidth = Math.max(
+                    SHAPE_HIT_PADDING * 2,
+                    Number(shape.strokeWidth || 1) + SHAPE_HIT_PADDING * 2,
+                );
                 return {
                     html: `
                 <g id="${shape.id}">
-                    <path 
-                    id="${shape.id}" 
-                    d="M${shape.path ? shape.path : ''}" 
-                    style="stroke:${
-                        shape.color + shape.alpha
-                    } !important; fill:none; stroke-width:${
-                        shape.strokeWidth
-                    } !important; stroke-linecap: round !important; stroke-linejoin: round !important;"        
+                    ${includeSelectionIndicator(shape)}
+                    <path
+                        id="${shape.id}"
+                        data-shape-hit-area="true"
+                        d="M${shape.path ? shape.path : ''}"
+                        fill="none"
+                        stroke="transparent"
+                        stroke-width="${hitStrokeWidth}"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        pointer-events="stroke"
                     />
-            ${includeDeleteButton(shape)}
+                    <path
+                        id="${shape.id}"
+                        data-shape-visible="true"
+                        d="M${shape.path ? shape.path : ''}"
+                        style="stroke:${
+                            shape.color + shape.alpha
+                        } !important; fill:none; stroke-width:${
+                            shape.strokeWidth
+                        } !important; stroke-linecap: round !important; stroke-linejoin: round !important; ${
+                            shape.isDash
+                                ? `stroke-dasharray: ${shape.strokeWidth * 3}`
+                                : ''
+                        }"
+                        pointer-events="stroke"
+                    />
+                    ${includeResizeHandles(shape)}
+                    ${includeDeleteButton(shape)}
                 </g>
                 `,
                     id: shape.id,
                 };
+            }
 
-            case shape && shape.type === 'text':
-                const parsedText = shape.textContent.split('‎');
+            case shape && shape.type === 'text': {
+                const parsedText = getTextLines(shape);
                 const parsedContent = [];
                 for (let i = 0; i < parsedText.length; i += 1) {
                     parsedContent.push(`
         ${
             shape.isBulletTextMode
-                ? `<tspan x="${shape.x - shape.fontSize}" y="${
-                      shape.y + shape.fontSize * i
-                  }" id="${shape.id}" font-size="${shape.fontSize / 2}">⬤</tspan>`
+                ? `<tspan
+                        data-bullet-line="${i}"
+                        x="${shape.x - shape.fontSize}"
+                        y="${shape.y + shape.fontSize * i}"
+                        id="${shape.id}"
+                        font-size="${shape.fontSize / 2}"
+                    >⬤</tspan>`
                 : ''
         }
-                <tspan id="${shape.id}" x="${shape.x}" y="${
-                    shape.y + shape.fontSize * i
-                }">
-                    ${parsedText[i]}
-                </tspan>`);
+                <tspan
+                    data-text-line="${i}"
+                    id="${shape.id}"
+                    x="${shape.x}"
+                    y="${shape.y + shape.fontSize * i}"
+                >${renderTextLine(parsedText[i])}</tspan>`);
                 }
                 return {
                     html: `
@@ -2959,6 +3097,8 @@ const userShapes = computed(() => {
             `,
                     id: shape.id,
                 };
+            }
+
             default:
                 break;
         }
@@ -3079,22 +3219,36 @@ function bringToFrontById(id) {
     }
 }
 
+function shapeIdFromElement(element) {
+    let current = element;
+    while (current && current !== mainSvg.value) {
+        const id = current.id;
+        if (id && shapes.value.some((shape) => shape.id === id)) return id;
+        current = current.parentElement;
+    }
+    return null;
+}
+
 function shapeIdUnderPointer(e) {
-    const idIsShape = (id) => !!id && shapes.value.some((s) => s.id === id);
+    if (!isSummaryOpen.value) return null;
 
-    // if event already targets a shape, use it
-    if (idIsShape(e?.target?.id)) return e.target.id;
+    const directId = shapeIdFromElement(e?.target);
+    if (directId) return directId;
 
-    // temporarily disable the glass to probe the element below
     const glass = mainSvg.value?.querySelector('.annotator__glass');
     if (!glass) return null;
 
+    const touch = e?.touches?.[0] || e?.changedTouches?.[0];
+    const clientX = touch ? touch.clientX : e?.clientX;
+    const clientY = touch ? touch.clientY : e?.clientY;
+    if (!Number.isFinite(clientX) || !Number.isFinite(clientY)) return null;
+
     const prev = glass.style.pointerEvents;
     glass.style.pointerEvents = 'none';
-    const el = document.elementFromPoint(e.clientX, e.clientY);
+    const el = document.elementFromPoint(clientX, clientY);
     glass.style.pointerEvents = prev || 'all';
 
-    return idIsShape(el?.id) ? el.id : null;
+    return shapeIdFromElement(el);
 }
 
 function makeHistory(opts = {}) {
@@ -3113,7 +3267,18 @@ function makeHistory(opts = {}) {
     const apply = (snap) => {
         const s = JSON.parse(snap);
         shapes.value = s.shapes;
-        lastSelectedShape.value = s.lastSelectedShape;
+        lastSelectedShape.value = s.lastSelectedShape?.id
+            ? shapes.value.find((shape) => shape.id === s.lastSelectedShape.id)
+            : undefined;
+        currentTarget.value = lastSelectedShape.value
+            ? { id: lastSelectedShape.value.id }
+            : undefined;
+        editingTextId.value = null;
+        editingTextOriginal.value = null;
+        editingTextWasNew.value = false;
+        isWriting.value = false;
+        showCaret.value = false;
+        textCaret.value = null;
     };
 
     const refreshSizes = () => {
@@ -3203,15 +3368,17 @@ function hideTooltip() {
 
 function initDragOffset(e) {
     const shapeId =
-        (e?.target && e.target.id) ||
-        (currentTarget.value && currentTarget.value.id);
-    const shape = shapes.value.find((s) => s.id === shapeId);
+        shapeIdFromElement(e?.target) ||
+        currentTarget.value?.id ||
+        hoveredShapeId.value;
+    const shape = shapes.value.find((item) => item.id === shapeId);
     if (!shape) {
         dragOffset.value = null;
         return;
     }
 
     lastSelectedShape.value = shape;
+    currentTarget.value = { id: shape.id };
 
     const px = pointerPosition.value.x;
     const py = pointerPosition.value.y;
@@ -3232,8 +3399,15 @@ function initDragOffset(e) {
             };
             break;
 
+        case 'line':
+            dragOffset.value = {
+                startX: px,
+                startY: py,
+                path: shape.path,
+            };
+            break;
+
         case 'group':
-            // Use group origin as anchor (no centering)
             dragOffset.value = {
                 dx: px - (shape.x || 0),
                 dy: py - (shape.y || 0),
@@ -3243,6 +3417,49 @@ function initDragOffset(e) {
         default:
             dragOffset.value = { dx: 0, dy: 0 };
             break;
+    }
+}
+
+function initResizeState(shape, handle) {
+    resizeHandle.value = handle || null;
+    resizeState.value = null;
+
+    if (!shape) return;
+
+    if (shape.type === 'line' && handle === 'line-scale') {
+        const points = parseLinePoints(shape.path);
+        const bounds = getLineBounds(shape.path);
+        if (!points.length || !bounds) return;
+        resizeState.value = { shapeId: shape.id, points, bounds };
+        return;
+    }
+
+    if (shape.type === 'rect' && handle?.startsWith('rect-')) {
+        const left = Number(shape.x) || 0;
+        const top = Number(shape.y) || 0;
+        const right = left + Math.max(0, Number(shape.rectWidth) || 0);
+        const bottom = top + Math.max(0, Number(shape.rectHeight) || 0);
+
+        resizeState.value = {
+            shapeId: shape.id,
+            bounds: { left, top, right, bottom },
+        };
+        return;
+    }
+
+    if (shape.type === 'circle' && handle === 'circle-radius') {
+        const radius = Math.max(1, Number(shape.circleRadius) || 1);
+        resizeState.value = {
+            shapeId: shape.id,
+            anchor: {
+                x: (Number(shape.x) || 0) - radius,
+                y: Number(shape.y) || 0,
+            },
+            handlePoint: {
+                x: (Number(shape.x) || 0) + radius,
+                y: Number(shape.y) || 0,
+            },
+        };
     }
 }
 
@@ -3287,135 +3504,300 @@ function copyPaste() {
     shapes.value.push(shapeCopy);
 }
 
+function syncControlsFromShape(shape) {
+    if (!shape) return;
+
+    if (shape.color) selectedColor.value = shape.color;
+    if (Number.isFinite(Number(shape.strokeWidth))) {
+        strokeSize.value = Number(shape.strokeWidth);
+    }
+    if ('isDash' in shape) isDash.value = Boolean(shape.isDash);
+
+    if (shape.type === 'circle') {
+        options.value.circle.filled = Boolean(shape.isFilled);
+        activeShape.value = 'circle';
+    } else if (shape.type === 'rect') {
+        options.value.rect.filled = Boolean(shape.isFilled);
+        activeShape.value = 'rect';
+    } else if (shape.type === 'arrow') {
+        activeShape.value = 'arrow';
+    } else if (shape.type === 'line') {
+        activeShape.value = 'line';
+    } else if (shape.type === 'text') {
+        textAlign.value = shape.textAlign || 'start';
+        textFont.value = Number(shape.fontSize) || textFont.value;
+        isBold.value = Boolean(shape.isBold);
+        isItalic.value = Boolean(shape.isItalic);
+        isUnderline.value = Boolean(shape.isUnderline);
+        isBulletTextMode.value = Boolean(shape.isBulletTextMode);
+    }
+}
+
 function allowEditAndHoverShapes(e) {
+    if (!isSummaryOpen.value) {
+        hoveredShapeId.value = undefined;
+        return;
+    }
+
     e.preventDefault();
     preventEdit.value = false;
-    if (e.target && e.target.id) {
-        hoveredShapeId.value = e.target.id;
+    hoveredShapeId.value = shapeIdFromElement(e.target) || undefined;
+}
+
+function updateTextCaretOverlay() {
+    const editingId = editingTextId.value;
+    if (!editingId || !mainSvg.value || !isWriting.value) {
+        textCaret.value = null;
+        return;
+    }
+
+    nextTick(() => {
+        if (
+            !mainSvg.value ||
+            !isWriting.value ||
+            editingTextId.value !== editingId
+        ) {
+            textCaret.value = null;
+            return;
+        }
+
+        const shape = shapes.value.find((item) => item.id === editingId);
+        if (!shape || shape.type !== 'text') {
+            textCaret.value = null;
+            return;
+        }
+
+        const textElement = Array.from(
+            mainSvg.value.getElementsByTagName('text'),
+        ).find(
+            (element) => element.getAttribute('data-shape-id') === editingId,
+        );
+        if (!textElement) {
+            textCaret.value = null;
+            return;
+        }
+
+        const lines = getTextLines(shape);
+        const row = Math.max(
+            0,
+            Math.min(editingCaret.value.row, lines.length - 1),
+        );
+        const line = lines[row] || '';
+        const col = Math.max(0, Math.min(editingCaret.value.col, line.length));
+        const prefix = line.slice(0, col);
+
+        const measure = document.createElementNS(
+            'http://www.w3.org/2000/svg',
+            'text',
+        );
+        measure.setAttribute('font-size', String(shape.fontSize));
+        measure.setAttribute(
+            'font-family',
+            textElement.getAttribute('font-family') || 'Helvetica',
+        );
+        measure.setAttribute('font-weight', shape.isBold ? 'bold' : 'normal');
+        measure.setAttribute(
+            'font-style',
+            shape.isItalic ? 'italic' : 'normal',
+        );
+        measure.setAttribute('visibility', 'hidden');
+        measure.setAttribute('pointer-events', 'none');
+        mainSvg.value.appendChild(measure);
+
+        const measureWidth = (value) => {
+            measure.textContent = value || '\u200B';
+            if (typeof measure.getComputedTextLength === 'function') {
+                return measure.getComputedTextLength();
+            }
+            return measure.getBBox().width;
+        };
+
+        const prefixWidth = measureWidth(prefix);
+        const lineWidth = measureWidth(line);
+        measure.remove();
+
+        let lineStartX = shape.x;
+        if (shape.textAlign === 'middle') {
+            lineStartX -= lineWidth / 2;
+        } else if (shape.textAlign === 'end') {
+            lineStartX -= lineWidth;
+        }
+
+        const baselineY = shape.y + shape.fontSize * row;
+        textCaret.value = {
+            x: lineStartX + prefixWidth,
+            y1: baselineY - shape.fontSize * 0.85,
+            y2: baselineY + shape.fontSize * 0.15,
+            color: shape.color || FINAL_CONFIG.value.style.color,
+        };
+    });
+}
+
+function startTextEditing(shape, { isNew = false } = {}) {
+    if (!shape || shape.type !== 'text') return;
+
+    if (isWriting.value && editingTextId.value === shape.id) {
+        const lines = getTextLines(shape);
+        const row = Math.max(0, lines.length - 1);
+        editingCaret.value = {
+            row,
+            col: (lines[row] || '').length,
+        };
+        showCaret.value = true;
+        updateTextCaretOverlay();
+        return;
+    }
+
+    if (isWriting.value) finishTextEditing();
+
+    if (!isNew) history.value?.begin?.();
+
+    lastSelectedShape.value = shape;
+    currentTarget.value = { id: shape.id };
+    editingTextId.value = shape.id;
+    editingTextOriginal.value = isNew ? null : copy(shape);
+    editingTextWasNew.value = isNew;
+
+    const lines = getTextLines(shape);
+    const row = Math.max(0, lines.length - 1);
+    editingCaret.value = {
+        row,
+        col: (lines[row] || '').length,
+    };
+
+    syncControlsFromShape(shape);
+    isTextMode.value = true;
+    isWriting.value = true;
+    showCaret.value = true;
+    isDrawMode.value = false;
+    activeShape.value = undefined;
+    textCaret.value = null;
+    updateTextCaretOverlay();
+}
+
+function finishTextEditing({ cancel = false } = {}) {
+    const editingId = editingTextId.value;
+    if (!editingId) {
+        isWriting.value = false;
+        showCaret.value = false;
+        textCaret.value = null;
+        return;
+    }
+
+    let shape = shapes.value.find((item) => item.id === editingId);
+
+    if (cancel) {
+        if (editingTextWasNew.value) {
+            shapes.value = shapes.value.filter((item) => item.id !== editingId);
+            shape = null;
+        } else if (editingTextOriginal.value) {
+            const index = shapes.value.findIndex(
+                (item) => item.id === editingId,
+            );
+            if (index !== -1) {
+                shapes.value[index] = copy(editingTextOriginal.value);
+                shape = shapes.value[index];
+            }
+        }
+    } else if (
+        shape &&
+        getTextLines(shape).every((line) => line.length === 0)
+    ) {
+        shapes.value = shapes.value.filter((item) => item.id !== editingId);
+        shape = null;
+    }
+
+    editingTextId.value = null;
+    editingTextOriginal.value = null;
+    editingTextWasNew.value = false;
+    editingCaret.value = { row: 0, col: 0 };
+    isWriting.value = false;
+    showCaret.value = false;
+    textCaret.value = null;
+
+    history.value?.end?.();
+
+    if (shape) {
+        lastSelectedShape.value = shape;
+        currentTarget.value = { id: shape.id };
+    } else if (lastSelectedShape.value?.id === editingId) {
+        lastSelectedShape.value = undefined;
+        currentTarget.value = undefined;
     }
 }
 
 function deleteEmptyTextElement() {
-    if (
-        !lastSelectedShape.value ||
-        !lastSelectedShape.value.id.includes('text')
-    ) {
+    if (isWriting.value) {
+        finishTextEditing();
         return;
     }
 
-    if (lastSelectedShape.value.textContent === '') {
-        shapes.value = shapes.value.filter(
-            (shape) => shape.id !== lastSelectedShape.value.id,
-        );
+    const shape = lastSelectedShape.value;
+    if (!shape || shape.type !== 'text') return;
+
+    if (getTextLines(shape).every((line) => line.length === 0)) {
+        shapes.value = shapes.value.filter((item) => item.id !== shape.id);
         lastSelectedShape.value = shapes.value.at(-1);
     }
 }
 
+function createTextAtPointer() {
+    history.value?.begin?.();
+
+    const shape = {
+        id: `text_${createUid()}`,
+        type: 'text',
+        lines: 0,
+        x: pointerPosition.value.x,
+        y: pointerPosition.value.y,
+        textContent: '',
+        fontSize: copy(textFont.value),
+        textAlign: copy(textAlign.value),
+        isBold: copy(isBold.value),
+        isItalic: copy(isItalic.value),
+        isUnderline: copy(isUnderline.value),
+        color: copy(selectedColor.value),
+        isBulletTextMode: copy(isBulletTextMode.value),
+    };
+
+    shapes.value.push(shape);
+    lastSelectedShape.value = shape;
+    currentTarget.value = { id: shape.id };
+    startTextEditing(shape, { isNew: true });
+}
+
+let preserveNewShapeSelectionUntil = 0;
+
 function clickSvg(e) {
-    if (isDeleteMode.value) {
-        return;
-    }
+    if (!isSummaryOpen.value || isDeleteMode.value) return;
+
     e.preventDefault();
     e.stopPropagation();
+    setPointer(e);
 
-    deleteEmptyTextElement();
+    const shapeId = shapeIdFromElement(e.target);
+    if (shapeId) return;
 
-    if (isTextMode.value) {
-        isWriting.value = true;
-        showCaret.value = true;
-    } else {
-        isWriting.value = false;
-        showCaret.value = false;
-        isTextMode.value = false;
-    }
-
-    let id = `text_${createUid()}`;
-
-    if (isWriting.value) {
-        history.value?.begin();
-        shapes.value.push({
-            id,
-            type: 'text',
-            lines: 0,
-            x: pointerPosition.value.x,
-            y: pointerPosition.value.y,
-            textContent: '',
-            fontSize: copy(textFont.value),
-            textAlign: copy(textAlign.value),
-            isBold: copy(isBold.value),
-            isItalic: copy(isItalic.value),
-            isUnderline: copy(isUnderline.value),
-            color: copy(selectedColor.value),
-            isBulletTextMode: copy(isBulletTextMode.value),
-        });
-        currentTarget.value = shapes.value.at(-1);
-        lastSelectedShape.value = shapes.value.at(-1);
-        history.value?.end();
+    if (Date.now() < preserveNewShapeSelectionUntil) {
         return;
     }
 
-    const setIsDashState = () => {
-        isDash.value = shapes.value.find(
-            (shape) => shape.id === e.target.id,
-        ).isDash;
-    };
-    const setStrokeSize = () => {
-        strokeSize.value = shapes.value.find(
-            (shape) => shape.id === e.target.id,
-        ).strokeWidth;
-    };
+    if (isWriting.value) finishTextEditing();
 
-    isSelectMode.value = false;
-
-    if (e.target.id.includes('arrow')) {
-        activeShape.value = 'arrow';
-        setIsDashState();
-        setStrokeSize();
-        return;
-    }
-    if (e.target.id.includes('circle')) {
-        activeShape.value = 'circle';
-        options.value.circle.filled = shapes.value.find(
-            (shape) => shape.id === e.target.id,
-        ).isFilled;
-        setIsDashState();
-        setStrokeSize();
-        return;
-    }
-    if (e.target.id.includes('rect')) {
-        activeShape.value = 'rect';
-        options.value.rect.filled = shapes.value.find(
-            (shape) => shape.id === e.target.id,
-        ).isFilled;
-        setIsDashState();
-        setStrokeSize();
-        return;
-    }
-    if (e.target.id.includes('line')) {
-        activeShape.value = 'line';
-        setStrokeSize();
+    if (isTextMode.value && !isResizeMode.value) {
+        createTextAtPointer();
         return;
     }
 
-    if (e.target.id.includes('text')) {
-        isTextMode.value = true;
-        isWriting.value = true;
-        showCaret.value = true;
-        const lastShape = shapes.value.find(
-            (shape) => shape.id === e.target.id,
-        );
-        if (lastShape && lastShape.textAlign) {
-            textAlign.value = shapes.value.find(
-                (shape) => shape.id === e.target.id,
-            ).textAlign;
-        }
-        if (lastShape) {
-            isBulletTextMode.value = shapes.value.find(
-                (shape) => shape.id === e.target.id,
-            ).isBulletTextMode;
-        }
-        return;
+    if (!isDrawMode.value && !isSelectMode.value) {
+        lastSelectedShape.value = undefined;
+        currentTarget.value = undefined;
+        hoveredShapeId.value = undefined;
+        if (!isMoveMode.value) activeShape.value = undefined;
     }
+
+    showCaret.value = false;
+    textCaret.value = null;
 }
 
 function setSelectedTextAlignTo(position) {
@@ -3423,94 +3805,140 @@ function setSelectedTextAlignTo(position) {
         return;
     }
     lastSelectedShape.value.textAlign = position;
+    textAlign.value = position;
+    updateTextCaretOverlay();
 }
 
 function undoLastShape() {
+    if (isWriting.value) finishTextEditing();
     history.value?.undo?.();
 }
 
 function redoLastShape() {
+    if (isWriting.value) finishTextEditing();
     history.value?.redo?.();
 }
 
-const NO_ACTION_KEYS = [
-    16,
-    17,
-    18,
-    20,
-    27,
-    33,
-    34,
-    35,
-    36,
-    37,
-    38,
-    39,
-    40,
-    45,
-    91,
-    112,
-    113,
-    114,
-    115,
-    116,
-    117,
-    118,
-    119,
-    120,
-    121,
-    122,
-    123,
-    221,
-    255,
-    'Unidentified',
-];
-
 function write(e) {
-    if (preventEdit.value) {
-        return;
-    }
-    e.preventDefault();
-    const keyCode = e.keyCode;
+    if (!isWriting.value || !editingTextId.value) return;
 
-    if (!isWriting.value) {
+    const text = shapes.value.find((shape) => shape.id === editingTextId.value);
+    if (!text || text.type !== 'text') {
+        finishTextEditing();
         return;
     }
-    showCaret.value = true;
-    let text;
-    if (lastSelectedShape.value.type === 'text') {
-        text = shapes.value.find(
-            (shape) => shape.id === lastSelectedShape.value.id,
-        );
+
+    let lines = getTextLines(text);
+    if (!lines.length) lines = [''];
+
+    let row = Math.max(0, Math.min(editingCaret.value.row, lines.length - 1));
+    let col = Math.max(0, Math.min(editingCaret.value.col, lines[row].length));
+    let changed = false;
+    let caretChanged = false;
+
+    if (e.key === 'Escape') {
+        e.preventDefault();
+        finishTextEditing({ cancel: true });
+        return;
+    }
+
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        const line = lines[row];
+        lines.splice(row, 1, line.slice(0, col), line.slice(col));
+        row += 1;
+        col = 0;
+        changed = true;
+    } else if (e.key === 'Backspace') {
+        e.preventDefault();
+        if (col > 0) {
+            lines[row] = lines[row].slice(0, col - 1) + lines[row].slice(col);
+            col -= 1;
+            changed = true;
+        } else if (row > 0) {
+            const previousLength = lines[row - 1].length;
+            lines[row - 1] += lines[row];
+            lines.splice(row, 1);
+            row -= 1;
+            col = previousLength;
+            changed = true;
+        }
+    } else if (e.key === 'Delete') {
+        e.preventDefault();
+        if (col < lines[row].length) {
+            lines[row] = lines[row].slice(0, col) + lines[row].slice(col + 1);
+            changed = true;
+        } else if (row < lines.length - 1) {
+            lines[row] += lines[row + 1];
+            lines.splice(row + 1, 1);
+            changed = true;
+        }
+    } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        if (col > 0) {
+            col -= 1;
+        } else if (row > 0) {
+            row -= 1;
+            col = lines[row].length;
+        }
+        caretChanged = true;
+    } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        if (col < lines[row].length) {
+            col += 1;
+        } else if (row < lines.length - 1) {
+            row += 1;
+            col = 0;
+        }
+        caretChanged = true;
+    } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (row > 0) {
+            row -= 1;
+            col = Math.min(col, lines[row].length);
+        }
+        caretChanged = true;
+    } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (row < lines.length - 1) {
+            row += 1;
+            col = Math.min(col, lines[row].length);
+        }
+        caretChanged = true;
+    } else if (e.key === 'Home') {
+        e.preventDefault();
+        col = 0;
+        caretChanged = true;
+    } else if (e.key === 'End') {
+        e.preventDefault();
+        col = lines[row].length;
+        caretChanged = true;
+    } else if (e.key === 'Tab') {
+        e.preventDefault();
+        const spaces = '    ';
+        lines[row] = lines[row].slice(0, col) + spaces + lines[row].slice(col);
+        col += spaces.length;
+        changed = true;
+    } else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.preventDefault();
+        lines[row] = lines[row].slice(0, col) + e.key + lines[row].slice(col);
+        col += e.key.length;
+        changed = true;
     } else {
-        text = shapes.value.at(-1);
-    }
-    currentTarget.value = text;
-
-    if (text.type !== 'text') {
         return;
     }
 
-    currentTarget.value.isBold = copy(isBold.value);
-    currentTarget.value.isItalic = copy(isItalic.value);
-    currentTarget.value.isUnderline = copy(isUnderline.value);
+    if (changed) {
+        text.isBold = copy(isBold.value);
+        text.isItalic = copy(isItalic.value);
+        text.isUnderline = copy(isUnderline.value);
+        setTextLines(text, lines);
+    }
 
-    switch (true) {
-        case [8, 46].includes(keyCode):
-            text.textContent = text.textContent.slice(0, -1);
-            break;
-        case keyCode === 9:
-            text.textContent += '&nbsp; &nbsp; &nbsp; &nbsp;';
-            break;
-        case keyCode === 13:
-            text.lines += 1;
-            text.textContent += '‎'; // used to parse lines to create tspan elements when ENTER is pressed
-            return;
-        case NO_ACTION_KEYS.includes(keyCode):
-            return;
-
-        default:
-            text.textContent += e.key;
+    if (changed || caretChanged) {
+        editingCaret.value = { row, col };
+        showCaret.value = true;
+        updateTextCaretOverlay();
     }
 }
 
@@ -3996,9 +4424,53 @@ function drawDown() {
 }
 
 function chooseAction(e) {
+    if (!isSummaryOpen.value) return;
+
+    setPointer(e);
+
+    const pointedId = shapeIdUnderPointer(e);
+    const pointedShape = pointedId
+        ? shapes.value.find((shape) => shape.id === pointedId)
+        : null;
+
+    if (
+        isWriting.value &&
+        editingTextId.value &&
+        pointedId !== editingTextId.value
+    ) {
+        finishTextEditing();
+    }
+
     if (isDeleteMode.value) {
         isMouseDown.value = false;
         return;
+    }
+
+    if (pointedShape) {
+        const pointerAt = Number.isFinite(e?.timeStamp)
+            ? e.timeStamp
+            : Date.now();
+        const isDoublePointerDown =
+            lastShapePointerDown.id === pointedShape.id &&
+            pointerAt - lastShapePointerDown.at >= 0 &&
+            pointerAt - lastShapePointerDown.at <= DOUBLE_CLICK_DELAY;
+
+        lastShapePointerDown = isDoublePointerDown
+            ? { id: null, at: 0 }
+            : { id: pointedShape.id, at: pointerAt };
+
+        if (isDoublePointerDown) {
+            e.preventDefault();
+            e.stopPropagation();
+            isMouseDown.value = false;
+            dragOffset.value = null;
+            resizeHandle.value = null;
+            resizeState.value = null;
+            enterShapeResizeMode(pointedShape);
+            return;
+        }
+    } else {
+        lastShapePointerDown = { id: null, at: 0 };
     }
 
     e.preventDefault();
@@ -4006,7 +4478,6 @@ function chooseAction(e) {
 
     isMouseDown.value = true;
 
-    // Only capture when we have a real pointer id
     if (e.pointerId != null) {
         try {
             mainSvg.value?.setPointerCapture?.(e.pointerId);
@@ -4016,75 +4487,126 @@ function chooseAction(e) {
         lastPointerId.value = null;
     }
 
-    if (
-        isDrawMode.value ||
-        isMoveMode.value ||
-        isResizeMode.value ||
-        isSelectMode.value
-    ) {
+    if (isDrawMode.value) {
+        if (pointedShape) {
+            isMouseDown.value = false;
+            isDrawMode.value = false;
+            lastSelectedShape.value = pointedShape;
+            currentTarget.value = { id: pointedShape.id };
+            syncControlsFromShape(pointedShape);
+            return;
+        }
         history.value?.begin?.();
+        drawDown();
+        return;
     }
 
-    if (isDrawMode.value) {
+    if (isSelectMode.value) {
+        history.value?.begin?.();
         drawDown();
         return;
     }
 
     if (isMoveMode.value) {
-        const id =
-            shapeIdUnderPointer(e) ||
-            hoveredShapeId.value ||
-            lastSelectedShape.value?.id;
-        if (id) {
-            bringToFrontById(id);
-            currentTarget.value = { id };
+        if (!pointedShape) {
+            isMouseDown.value = false;
+            currentTarget.value = undefined;
+            return;
         }
-        initDragOffset(e);
+
+        history.value?.begin?.();
+        bringToFrontById(pointedShape.id);
+        const shape = shapes.value.find((item) => item.id === pointedShape.id);
+        lastSelectedShape.value = shape;
+        currentTarget.value = { id: shape.id };
+        initDragOffset({ target: e.target });
+        return;
+    }
+
+    if (isResizeMode.value) {
+        if (!pointedShape) {
+            isMouseDown.value = false;
+            currentTarget.value = undefined;
+            dragOffset.value = null;
+            resizeHandle.value = null;
+            resizeState.value = null;
+            return;
+        }
+
+        const handle = e.target?.getAttribute?.('data-resize-handle') || null;
+        lastSelectedShape.value = pointedShape;
+        currentTarget.value = { id: pointedShape.id };
+        syncControlsFromShape(pointedShape);
+
+        if (handle) {
+            dragOffset.value = null;
+            initResizeState(pointedShape, handle);
+        } else {
+            resizeHandle.value = null;
+            resizeState.value = null;
+            initDragOffset(e);
+        }
+
+        history.value?.begin?.();
     }
 }
 
 function move(shape) {
-    if (!shape || !shape.id || shape.type === 'line') return;
+    if (!shape || !shape.id) return;
 
     if (!dragOffset.value) {
         initDragOffset({ target: { id: shape.id } });
         if (!dragOffset.value) return;
     }
 
-    const { dx, dy, endDx, endDy } = dragOffset.value;
     const px = pointerPosition.value.x;
     const py = pointerPosition.value.y;
 
     lastSelectedShape.value = shape;
 
     switch (shape.type) {
-        case 'arrow':
+        case 'arrow': {
+            const { dx, dy, endDx, endDy } = dragOffset.value;
             shape.x = px - dx;
             shape.y = py - dy;
             shape.endX = px - (endDx ?? dx);
             shape.endY = py - (endDy ?? dy);
             break;
+        }
 
         case 'circle':
-            shape.x = px - dx;
-            shape.y = py - dy;
-            break;
-
         case 'rect':
+        case 'text': {
+            const { dx, dy } = dragOffset.value;
             shape.x = px - dx;
             shape.y = py - dy;
             break;
+        }
 
-        case 'text':
-            shape.x = px - dx;
-            shape.y = py - dy;
+        case 'line': {
+            const { startX, startY, path } = dragOffset.value;
+            const dx = px - startX;
+            const dy = py - startY;
+            const points = parseLinePoints(path).map((point) => ({
+                x: point.x + dx,
+                y: point.y + dy,
+            }));
+            shape.path = serializeLinePoints(points);
+            const bounds = getLineBounds(shape.path);
+            if (bounds) {
+                shape.x = bounds.minX;
+                shape.y = bounds.minY;
+            }
             break;
+        }
 
-        case 'group':
+        case 'group': {
+            const { dx, dy } = dragOffset.value;
             shape.x = px - dx;
             shape.y = py - dy;
             moveGroup(shape);
             break;
+        }
 
         default:
             break;
@@ -4094,54 +4616,306 @@ function move(shape) {
 function moveDown() {
     const id = currentTarget.value?.id || hoveredShapeId.value;
     if (!id) return;
-    const shape = shapes.value.find((s) => s.id === id);
+    const shape = shapes.value.find((item) => item.id === id);
     if (!shape) return;
     move(shape);
 }
 
 function resize() {
-    isDrawingNewShape.value = false;
-    const shapeId = currentTarget.value.id;
-    if (!shapeId) {
-        return;
-    }
-    isDrawing.value = true;
-    const shape = shapes.value.find((shape) => shape.id === shapeId);
+    const shapeId = currentTarget.value?.id;
+    if (!shapeId) return;
+
+    const shape = shapes.value.find((item) => item.id === shapeId);
+    if (!shape) return;
+
+    const px = pointerPosition.value.x;
+    const py = pointerPosition.value.y;
     activeShape.value = shape.type;
-    shapes.value = shapes.value.filter((el) => el.id !== shapeId);
-    shapes.value.push(shape);
-    drawUp(true);
+    lastSelectedShape.value = shape;
+
+    switch (shape.type) {
+        case 'arrow':
+            if (resizeHandle.value === 'arrow-start') {
+                shape.x = px;
+                shape.y = py;
+            } else if (resizeHandle.value === 'arrow-end') {
+                shape.endX = px;
+                shape.endY = py;
+            }
+            break;
+
+        case 'line': {
+            if (
+                resizeHandle.value !== 'line-scale' ||
+                !resizeState.value?.bounds ||
+                !resizeState.value?.points
+            ) {
+                return;
+            }
+
+            const { bounds, points } = resizeState.value;
+            const newWidth = Math.max(1, px - bounds.minX);
+            const newHeight = Math.max(1, py - bounds.minY);
+            const scaleX = newWidth / Math.max(1, bounds.width);
+            const scaleY = newHeight / Math.max(1, bounds.height);
+
+            const scaled = points.map((point) => ({
+                x: bounds.minX + (point.x - bounds.minX) * scaleX,
+                y: bounds.minY + (point.y - bounds.minY) * scaleY,
+            }));
+
+            shape.path = serializeLinePoints(scaled);
+            shape.x = bounds.minX;
+            shape.y = bounds.minY;
+            break;
+        }
+
+        case 'circle': {
+            if (
+                resizeHandle.value !== 'circle-radius' ||
+                resizeState.value?.shapeId !== shape.id ||
+                !resizeState.value?.anchor
+            ) {
+                return;
+            }
+
+            const anchor = resizeState.value.anchor;
+            let handleX = px;
+            let handleY = py;
+            let dx = handleX - anchor.x;
+            let dy = handleY - anchor.y;
+            let diameter = Math.hypot(dx, dy);
+
+            if (diameter < 2) {
+                if (diameter > 0) {
+                    const scale = 2 / diameter;
+                    dx *= scale;
+                    dy *= scale;
+                } else {
+                    dx = 2;
+                    dy = 0;
+                }
+                handleX = anchor.x + dx;
+                handleY = anchor.y + dy;
+                diameter = 2;
+            }
+
+            shape.x = anchor.x + dx / 2;
+            shape.y = anchor.y + dy / 2;
+            shape.circleRadius = diameter / 2;
+            resizeState.value.handlePoint = {
+                x: handleX,
+                y: handleY,
+            };
+            break;
+        }
+
+        case 'rect': {
+            const handle = resizeHandle.value;
+            const bounds = resizeState.value?.bounds;
+            if (
+                !handle?.startsWith('rect-') ||
+                resizeState.value?.shapeId !== shape.id ||
+                !bounds
+            ) {
+                return;
+            }
+
+            const minSize = 20;
+            let left = bounds.left;
+            let top = bounds.top;
+            let right = bounds.right;
+            let bottom = bounds.bottom;
+
+            switch (handle) {
+                case 'rect-nw':
+                    left = Math.min(px, bounds.right - minSize);
+                    top = Math.min(py, bounds.bottom - minSize);
+                    break;
+                case 'rect-ne':
+                    right = Math.max(px, bounds.left + minSize);
+                    top = Math.min(py, bounds.bottom - minSize);
+                    break;
+                case 'rect-se':
+                    right = Math.max(px, bounds.left + minSize);
+                    bottom = Math.max(py, bounds.top + minSize);
+                    break;
+                case 'rect-sw':
+                    left = Math.min(px, bounds.right - minSize);
+                    bottom = Math.max(py, bounds.top + minSize);
+                    break;
+                default:
+                    return;
+            }
+
+            shape.x = left;
+            shape.y = top;
+            shape.rectWidth = right - left;
+            shape.rectHeight = bottom - top;
+            break;
+        }
+
+        case 'group':
+            if (resizeHandle.value !== 'group-scale') return;
+            shape.rectWidth = Math.max(20, px - shape.x);
+            shape.rectHeight = Math.max(20, py - shape.y);
+            break;
+
+        default:
+            break;
+    }
 }
 
 function chooseMove(e) {
-    if (isDeleteMode.value) return;
+    if (!isSummaryOpen.value || isDeleteMode.value) return;
+
     e.preventDefault();
     e.stopPropagation();
+    setPointer(e);
 
-    if (e.target.localName !== 'svg') currentTarget.value = e.target;
+    const hoveredId = shapeIdUnderPointer(e);
+    if (hoveredId) hoveredShapeId.value = hoveredId;
 
-    if (isMoveMode.value && isMouseDown.value) moveDown();
-    else if (isResizeMode.value && isMouseDown.value) resize();
+    if (isMoveMode.value && isMouseDown.value) {
+        moveDown();
+    } else if (isResizeMode.value && isMouseDown.value) {
+        if (resizeHandle.value) {
+            resize();
+        } else {
+            moveDown();
+        }
+    }
 }
 
-function clickShape(e) {
-    const shapeId = e.target.id;
-    switch (true) {
-        case isDeleteMode.value:
-            history.value?.begin();
-            shapes.value = [...shapes.value].filter(
-                (shape) => shape.id !== shapeId,
-            );
-            lastSelectedShape.value = undefined;
-            history.value?.end();
-            return;
+function enterShapeResizeMode(shape) {
+    if (!shape) return;
 
-        default:
-            lastSelectedShape.value = shapes.value.find(
-                (shape) => shape.id === shapeId,
-            );
-            break;
+    if (isWriting.value && editingTextId.value !== shape.id) {
+        finishTextEditing();
     }
+
+    lastSelectedShape.value = shape;
+    currentTarget.value = { id: shape.id };
+
+    isMoveMode.value = false;
+    isDeleteMode.value = false;
+    isResizeMode.value = true;
+    isSelectMode.value = false;
+    isDrawMode.value = false;
+
+    if (shape.type === 'text') {
+        activeShape.value = undefined;
+        syncControlsFromShape(shape);
+        startTextEditing(shape);
+        return;
+    }
+
+    isTextMode.value = false;
+    isWriting.value = false;
+    showCaret.value = false;
+    textCaret.value = null;
+    syncControlsFromShape(shape);
+}
+
+const DOUBLE_CLICK_DELAY = 450;
+let lastShapePointerDown = {
+    id: null,
+    at: 0,
+};
+let lastShapeClick = {
+    id: null,
+    at: 0,
+};
+
+function doubleClickShape(e, explicitShapeId) {
+    if (!isSummaryOpen.value) return;
+
+    const shapeId = explicitShapeId || shapeIdFromElement(e.target);
+    if (!shapeId) return;
+
+    lastShapeClick = { id: null, at: 0 };
+
+    const shape = shapes.value.find((item) => item.id === shapeId);
+    if (!shape) return;
+
+    enterShapeResizeMode(shape);
+}
+
+function clickShape(e, explicitShapeId) {
+    if (!isSummaryOpen.value) return;
+
+    const shapeId = explicitShapeId || shapeIdFromElement(e.target);
+    if (!shapeId) return;
+
+    const shape = shapes.value.find((item) => item.id === shapeId);
+    if (!shape) return;
+
+    const clickAt = Number.isFinite(e?.timeStamp) ? e.timeStamp : Date.now();
+    const isDoubleClick =
+        lastShapeClick.id === shapeId &&
+        clickAt - lastShapeClick.at >= 0 &&
+        clickAt - lastShapeClick.at <= DOUBLE_CLICK_DELAY;
+
+    lastShapeClick = isDoubleClick
+        ? { id: null, at: 0 }
+        : { id: shapeId, at: clickAt };
+
+    if (isDoubleClick && !isDeleteMode.value) {
+        enterShapeResizeMode(shape);
+        return;
+    }
+
+    const wasSelected = lastSelectedShape.value?.id === shapeId;
+    const textToolWasActive = isTextMode.value;
+
+    if (isDeleteMode.value) {
+        if (isWriting.value) finishTextEditing();
+        history.value?.begin?.();
+        shapes.value = shapes.value.filter((item) => item.id !== shapeId);
+        if (lastSelectedShape.value?.id === shapeId) {
+            lastSelectedShape.value = undefined;
+        }
+        currentTarget.value = undefined;
+        history.value?.end?.();
+        return;
+    }
+
+    if (
+        isWriting.value &&
+        editingTextId.value &&
+        editingTextId.value !== shapeId
+    ) {
+        finishTextEditing();
+    }
+
+    lastSelectedShape.value = shape;
+    currentTarget.value = { id: shape.id };
+
+    if (isMoveMode.value) {
+        showCaret.value = false;
+        textCaret.value = null;
+        return;
+    }
+
+    syncControlsFromShape(shape);
+
+    if (shape.type === 'text') {
+        const canEditText =
+            !isMoveMode.value &&
+            !isResizeMode.value &&
+            !isDrawMode.value &&
+            !isSelectMode.value;
+        isTextMode.value = canEditText;
+
+        if (canEditText && (textToolWasActive || wasSelected)) {
+            startTextEditing(shape);
+        }
+        return;
+    }
+
+    isTextMode.value = false;
+    showCaret.value = false;
+    textCaret.value = null;
 }
 
 const drawSvgContainer = ref(null);
@@ -4156,6 +4930,7 @@ function walkTheDOM(node, func) {
 }
 
 function print() {
+    if (isWriting.value) finishTextEditing();
     isPrinting.value = true;
     isDeleteMode.value = false;
     isMoveMode.value = false;
@@ -4264,6 +5039,18 @@ function print() {
 }
 
 function resetDraw(e) {
+    const completedShape =
+        isDrawMode.value &&
+        isDrawing.value &&
+        lastSelectedShape.value &&
+        ['arrow', 'circle', 'line', 'rect'].includes(
+            lastSelectedShape.value.type,
+        )
+            ? shapes.value.find(
+                  (shape) => shape.id === lastSelectedShape.value.id,
+              )
+            : null;
+
     if (!isDeleteMode.value && e) {
         e.preventDefault();
         e.stopPropagation();
@@ -4271,6 +5058,8 @@ function resetDraw(e) {
     isDrawing.value = false;
     isMouseDown.value = false;
     dragOffset.value = null;
+    resizeHandle.value = null;
+    resizeState.value = null;
 
     if (lastPointerId.value != null) {
         try {
@@ -4286,6 +5075,14 @@ function resetDraw(e) {
 
     if (isSelectMode.value) groupShapes();
     history.value?.end();
+
+    if (completedShape) {
+        // Pointer-up after drawing is followed by a synthetic click on the
+        // background/glass. Keep that click from immediately clearing the
+        // freshly-created selection so its resize handles stay visible.
+        preserveNewShapeSelectionUntil = Date.now() + 250;
+        enterShapeResizeMode(completedShape);
+    }
 }
 
 function setFillOfSelectedRect() {
@@ -4308,18 +5105,32 @@ function setFillOfSelectedCircle() {
     lastSelectedShape.value.isFilled = !lastSelectedShape.value.isFilled;
 }
 
-function setColorOfSelectedShape() {
-    if (!lastSelectedShape.value) {
+function setColorOfSelectedShape(color = selectedColor.value) {
+    const nextColor =
+        typeof color === 'string' && color.length ? color : selectedColor.value;
+
+    selectedColor.value = nextColor;
+
+    if (!lastSelectedShape.value || isMoveMode.value) {
         return;
     }
 
-    lastSelectedShape.value.color = copy(selectedColor.value);
-
-    if (['arrow', 'text'].includes(lastSelectedShape.value.id)) {
+    const selectedShape = shapes.value.find(
+        (shape) => shape.id === lastSelectedShape.value.id,
+    );
+    if (!selectedShape) {
         return;
     }
 
-    lastSelectedShape.value.alpha = copy(colorTransparency.value);
+    selectedShape.color = copy(nextColor);
+    lastSelectedShape.value = selectedShape;
+
+    if (['arrow', 'text'].includes(selectedShape.type)) {
+        updateTextCaretOverlay();
+        return;
+    }
+
+    selectedShape.alpha = copy(colorTransparency.value);
 }
 
 function setSelectedShapeToDash() {
@@ -4332,7 +5143,7 @@ function setSelectedShapeToDash() {
 function setTransparencyOfSelectedShape() {
     if (
         !lastSelectedShape.value ||
-        ['arrow', 'text'].includes(lastSelectedShape.value.id)
+        ['arrow', 'text'].includes(lastSelectedShape.value.type)
     ) {
         return;
     }
@@ -4360,6 +5171,7 @@ function setCurrentStyleOfSelectedText() {
     lastSelectedShape.value.isUnderline = copy(isUnderline.value);
     lastSelectedShape.value.fontSize = copy(textFont.value);
     lastSelectedShape.value.isBulletTextMode = copy(isBulletTextMode.value);
+    updateTextCaretOverlay();
 }
 
 function setPointer(e) {
@@ -4402,6 +5214,7 @@ function setShapeTo(shape) {
 }
 
 function toggleSummary() {
+    if (isWriting.value) finishTextEditing();
     isSummaryOpen.value = !isSummaryOpen.value;
     if (!isSummaryOpen.value) {
         isMoveMode.value = false;
@@ -4417,6 +5230,7 @@ function toggleSummary() {
 }
 
 function save() {
+    if (isWriting.value) finishTextEditing();
     emit('saveAnnotations', {
         shapes: shapes.value,
         lastSelectedShape: lastSelectedShape.value,
@@ -4517,7 +5331,12 @@ watch(shapes, (newVal) => {
 });
 
 watch(isTextMode, (bool) => {
-    showCaret.value = bool;
+    if (!bool && isWriting.value) {
+        finishTextEditing();
+        return;
+    }
+    showCaret.value = Boolean(bool && isWriting.value);
+    if (showCaret.value) updateTextCaretOverlay();
 });
 </script>
 
@@ -4656,7 +5475,12 @@ kbd {
 </style>
 
 <style>
-path.vue-ui-annotator-caret {
+.annotator__overlay--inactive,
+.annotator__overlay--inactive * {
+    pointer-events: none !important;
+}
+
+.vue-ui-annotator-caret {
     animation: caret 1s step-end infinite;
 }
 
