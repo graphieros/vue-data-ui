@@ -57,6 +57,11 @@ import A11yDataTable from '../atoms/A11yDataTable.vue';
 import BaseLegendToggle from '../atoms/BaseLegendToggle.vue';
 import DefGrad from '../atoms/DefGrad.vue';
 
+// add offsetY to y axis labels
+// add show option to x and y labels
+// expose data in svg slot (& rowHeight)
+// add selector labels stroke wrapper
+
 const VueUiXy = defineAsyncComponent(() => import('./vue-ui-xy.vue'));
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
@@ -876,20 +881,23 @@ const drawableDataset = computed(() => {
     }
 
     return formattedDataset.value.map((ds, i) => {
-        const base = drawingArea.value.top + rowHeight.value * i;
-        const zero =
-            drawingArea.value.top +
-            base +
+        const rh =
             rowHeight.value *
-                overlapRatio.value *
-                (1 - ratioToMax(absoluteMin));
+            overlapRatio.value *
+            (1 - ratioToMax(absoluteMin));
+        const base = drawingArea.value.top + rowHeight.value * i;
+        const zero = drawingArea.value.top + base + rh;
         return {
             ...ds,
             label: {
                 x:
                     startX -
                     FINAL_CONFIG.value.style.chart.yAxis.labels.fontSize,
-                y: zero,
+                y:
+                    (FINAL_CONFIG.value.style.chart.yAxis.labels.centered
+                        ? zero - rh / 2
+                        : zero) +
+                    FINAL_CONFIG.value.style.chart.yAxis.labels.offsetY,
             },
             datapoints: ds.datapoints
                 .map((dp) => {
@@ -1915,6 +1923,7 @@ defineExpose({
                                 ? 'underline'
                                 : ''
                         "
+                        dominant-baseline="middle"
                         @mouseenter="setYAxisLabelHoverIndex(i)"
                         @mouseleave="resetYAxisLabelIndex"
                         @click="createXyDatasetForDialog(ds)"
@@ -2235,12 +2244,16 @@ defineExpose({
                                                       .fontSize /
                                                       2
                                         "
-                                        :y="
-                                            plot.y +
-                                            FINAL_CONFIG.style.chart.selector
-                                                .labels.fontSize /
-                                                3
+                                        :y="plot.y"
+                                        dominant-baseline="middle"
+                                        :stroke="
+                                            FINAL_CONFIG.style.chart
+                                                .backgroundColor
                                         "
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="3"
+                                        paint-order="stroke fill"
                                         :text-anchor="
                                             isTextOverflowingRight(
                                                 plot.x,
@@ -2311,6 +2324,7 @@ defineExpose({
                         isPrintingImg:
                             isPrinting || isImaging || isCallbackImaging,
                         isPrintingSvg: isCallbackSvg,
+                        data: drawableDataset,
                     }"
                 />
             </svg>

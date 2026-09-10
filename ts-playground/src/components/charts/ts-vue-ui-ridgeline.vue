@@ -773,6 +773,8 @@ const testPreconfig = computed<VueUiRidgelineConfig>(() => {
                         bold: false,
                         color: '#2D353C',
                         offsetX: 0,
+                        offsetY: 0,
+                        centered: false,
                     },
                 },
             },
