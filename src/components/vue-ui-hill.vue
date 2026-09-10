@@ -2146,6 +2146,7 @@ defineExpose({
             :active="isAnnotator"
             :svgRef="svgRef"
             :isCursorPointer="isCursorPointer"
+            :palette="FINAL_CONFIG.userOptions.annotatorPalette"
             @close="toggleAnnotator"
         >
             <template #annotator-action-close>

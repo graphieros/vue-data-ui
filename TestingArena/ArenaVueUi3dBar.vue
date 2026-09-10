@@ -251,6 +251,7 @@ const config = computed(() => {
                     console.log({ dst, cfg });
                 },
             },
+            annotatorPalette: ['#FFFFFF', '#000000', '#FF0000', '#00FF00'],
         },
         events: {
             datapointEnter: ({ datapoint, seriesIndex }) => {

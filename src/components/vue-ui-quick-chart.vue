@@ -2305,6 +2305,7 @@ defineExpose({
             :color="FINAL_CONFIG.color"
             :active="isAnnotator"
             :isCursorPointer="isCursorPointer"
+            :palette="FINAL_CONFIG.annotatorPalette"
             @close="toggleAnnotator"
         >
             <template #annotator-action-close>

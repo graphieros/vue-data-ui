@@ -1113,6 +1113,12 @@ const config = computed(() => {
                 },
                 userOptions: {
                     ...c.chart.userOptions,
+                    annotatorPalette: [
+                        '#000000',
+                        '#FFFFFF',
+                        '#FF0000',
+                        '#00FF00',
+                    ],
                     callbacks: {
                         img: ({ domElement, imageUri, base64 }) => {
                             console.log(imageUri);

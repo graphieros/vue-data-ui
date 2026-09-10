@@ -12,6 +12,18 @@ export function useConfig(options = {}) {
     const COLOR_VUE = '#42d392';
     const COLOR_YELLOW = '#FFD055';
 
+    const COLOR_PICKER_PALETTE = [
+        '#000000',
+        '#FFFFFF',
+        '#FF5733',
+        '#33FF57',
+        '#3357FF',
+        '#FFC300',
+        '#800080',
+        '#FF1493',
+        '#00CED1',
+    ];
+
     const COLOR_BACKGROUND = options.colorBackground ?? COLOR_WHITE;
     const COLOR_TEXT_PRIMARY = options.colorTextPrimary ?? COLOR_BLACK;
     const COLOR_TEXT_SECONDARY = options.colorTextSecondary ?? COLOR_GREY;
@@ -245,6 +257,7 @@ export function useConfig(options = {}) {
                 overflowTolerance: 0.2,
             },
             useCursorPointer: false,
+            annotatorPalette: COLOR_PICKER_PALETTE,
         };
     };
 
@@ -3796,6 +3809,7 @@ export function useConfig(options = {}) {
     };
 
     const vue_ui_quick_chart = {
+        annotatorPalette: COLOR_PICKER_PALETTE,
         devHints: DEV_HINTS,
         skeletonDataset: null,
         skeletonConfig: null,
@@ -6309,6 +6323,8 @@ export function useConfig(options = {}) {
             showSave: true,
             showImage: true,
             showTooltips: true,
+            paletteColor: '#2D353C',
+            palette: COLOR_PICKER_PALETTE,
             buttons: {
                 borderRadius: 6,
                 controls: {
@@ -7713,6 +7729,8 @@ export function useConfig(options = {}) {
                         bold: false,
                         color: COLOR_TEXT_PRIMARY,
                         offsetX: 0,
+                        offsetY: 0,
+                        centered: false,
                     },
                 },
             },

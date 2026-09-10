@@ -1636,6 +1636,7 @@ defineExpose({
             :active="isAnnotator"
             :scale="maxRadius / 100"
             :isCursorPointer="isCursorPointer"
+            :palette="FINAL_CONFIG.userOptions.annotatorPalette"
             @close="toggleAnnotator"
         >
             <template #annotator-action-close>

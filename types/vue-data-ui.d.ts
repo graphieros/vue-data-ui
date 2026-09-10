@@ -3966,6 +3966,8 @@ declare module 'vue-data-ui' {
             showSave?: boolean;
             showTooltips?: boolean;
             showImage?: boolean;
+            paletteColor?: string;
+            palette?: string[];
             buttons?: {
                 borderRadius?: number;
                 controls?: {
@@ -4061,7 +4063,7 @@ declare module 'vue-data-ui' {
         saveAnnotations: (payload: VueUiAnnotatorEmitSaveAnnotations) => void;
     };
 
-    export const VueUiAnnotator: DefineComponent<
+    const VueUiAnnotatorBase: DefineComponent<
         VueUiAnnotatorProps,
         {},
         {},
@@ -4071,6 +4073,69 @@ declare module 'vue-data-ui' {
         {},
         VueUiAnnotatorEmits
     >;
+
+    export type VueUiAnnotatorToggleSlotProps = {
+        toggle: () => void;
+        isOpen: boolean;
+    };
+
+    export type VueUiAnnotatorButtonSlotProps = {
+        active: boolean;
+    };
+
+    export type VueUiAnnotatorButtonShapeSlotProps = {
+        filled: boolean;
+    };
+
+    export const VueUiAnnotator: typeof VueUiAnnotatorBase & {
+        new (): {
+            $slots: {
+                toggle?: (props: VueUiAnnotatorToggleSlotProps) => VNodeChild;
+                ['icon-move']?: (
+                    props: VueUiAnnotatorButtonSlotProps,
+                ) => VNodeChild;
+                ['icon-resize']?: (
+                    props: VueUiAnnotatorButtonSlotProps,
+                ) => VNodeChild;
+                ['icon-delete']?: (
+                    props: VueUiAnnotatorButtonSlotProps,
+                ) => VNodeChild;
+                ['icon-select-group']?: (
+                    props: VueUiAnnotatorButtonSlotProps,
+                ) => VNodeChild;
+                ['icon-bring-to-front']?: () => VNodeChild;
+                ['icon-bring-to-back']?: () => VNodeChild;
+                ['icon-copy']?: () => VNodeChild;
+                ['icon-undo']?: () => VNodeChild;
+                ['icon-redo']?: () => VNodeChild;
+                ['icon-print']?: () => VNodeChild;
+                ['icon-export-image']?: () => VNodeChild;
+                ['icon-save']?: () => VNodeChild;
+                ['icon-circle']?: (
+                    props: VueUiAnnotatorButtonShapeSlotProps,
+                ) => VNodeChild;
+                ['icon-rect']?: (
+                    props: VueUiAnnotatorButtonShapeSlotProps,
+                ) => VNodeChild;
+                ['icon-arrow']?: () => VNodeChild;
+                ['icon-freehand']?: () => VNodeChild;
+                ['icon-text']?: (
+                    props: VueUiAnnotatorButtonSlotProps,
+                ) => VNodeChild;
+                ['icon-text-align-left']?: () => VNodeChild;
+                ['icon-text-align-center']?: () => VNodeChild;
+                ['icon-text-align-right']?: () => VNodeChild;
+                ['icon-text-bullet-points']?: () => VNodeChild;
+                ['icon-text-bold']?: () => VNodeChild;
+                ['icon-text-italic']?: () => VNodeChild;
+                ['icon-text-underline']?: () => VNodeChild;
+                ['icon-color']?: (props: {
+                    color: string;
+                    backgroundColor: string;
+                }) => VNodeChild;
+            };
+        };
+    };
 
     export type VueUiDashboardConfig = {
         devHints?: DevHints;
@@ -10444,6 +10509,7 @@ declare module 'vue-data-ui' {
     }>;
 
     export type VueUiQuickChartConfig = {
+        annotatorPalette?: string[];
         devHints?: DevHints;
         skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiQuickChartConfig> | null;
         skeletonDataset?: VueUiBuiltInSkeletonDataset<VueUiQuickChartDataset> | null;
@@ -15490,6 +15556,8 @@ declare module 'vue-data-ui' {
                         bold?: boolean;
                         color?: string;
                         offsetX?: number;
+                        offsetY?: number;
+                        centered?: boolean;
                     };
                 };
             };
@@ -15571,6 +15639,7 @@ declare module 'vue-data-ui' {
                 left: number;
             };
             width: number;
+            data: VueUiRidgelineFormattedDatasetItem[];
         };
     };
 

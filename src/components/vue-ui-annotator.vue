@@ -1,38 +1,55 @@
 <template>
     <div class="vue-data-ui-component vue-ui-annotator">
         <div data-dom-to-png-ignore>
-            <Accordion
-                :config="{
-                    maxHeight: 1000,
-                    useCursorPointer: isCursorPointer,
-                    head: {
-                        backgroundColor: FINAL_CONFIG.style.backgroundColor,
-                        color: FINAL_CONFIG.style.color,
-                        iconColor: FINAL_CONFIG.style.color,
-                        iconSize: 20,
-                        icon: isSummaryOpen ? 'close' : 'annotator',
-                        padding: '6px',
-                    },
-                    body: {
-                        backgroundColor: FINAL_CONFIG.style.backgroundColor,
-                        color: FINAL_CONFIG.style.color,
-                    },
-                }"
-                @toggle="toggleSummary"
+            <slot
+                name="toggle"
+                v-bind="{ toggle: toggleSummary, isOpen: isSummaryOpen }"
             >
-                <template #title="{ color }">
-                    <div :style="{ color }">
-                        {{ FINAL_CONFIG.translations.title }}
-                    </div>
-                </template>
+                <Accordion
+                    :config="{
+                        maxHeight: 1000,
+                        useCursorPointer: isCursorPointer,
+                        head: {
+                            backgroundColor: FINAL_CONFIG.style.backgroundColor,
+                            color: FINAL_CONFIG.style.color,
+                            iconColor: FINAL_CONFIG.style.color,
+                            iconSize: 20,
+                            icon: isSummaryOpen ? 'close' : 'annotator',
+                            padding: '6px',
+                        },
+                        body: {
+                            backgroundColor: FINAL_CONFIG.style.backgroundColor,
+                            color: FINAL_CONFIG.style.color,
+                        },
+                    }"
+                    @toggle="toggleSummary"
+                >
+                    <template #title="{ color }">
+                        <div :style="{ color }">
+                            {{ FINAL_CONFIG.translations.title }}
+                        </div>
+                    </template>
 
-                <template #content="{ backgroundColor }">
-                    <div
-                        class="tool-selection"
-                        :style="{
-                            backgroundColor,
-                        }"
-                    >
+                    <template #content="{ backgroundColor }">
+                        <div :id="`toggle_default_${uid}`" />
+                    </template>
+                </Accordion>
+            </slot>
+            <div
+                v-if="$slots.toggle && isSummaryOpen"
+                :id="`toggle_slot_${uid}`"
+            />
+
+            <Teleport
+                v-if="ready && teleportReady"
+                :to="
+                    $slots.toggle
+                        ? `#toggle_slot_${uid}`
+                        : `#toggle_default_${uid}`
+                "
+            >
+                <div>
+                    <div class="tool-selection">
                         <!-- MOVE -->
                         <button
                             data-cy="annotator-button-move"
@@ -82,16 +99,21 @@
                             "
                             @blur="hideTooltip"
                         >
-                            <BaseIcon
-                                name="move"
-                                :stroke="
-                                    isMoveMode
-                                        ? FINAL_CONFIG.style.buttons.controls
-                                              .selected.color
-                                        : FINAL_CONFIG.style.buttons.controls
-                                              .color
-                                "
-                            />
+                            <slot
+                                name="icon-move"
+                                v-bind="{ active: isMoveMode }"
+                            >
+                                <BaseIcon
+                                    name="move"
+                                    :stroke="
+                                        isMoveMode
+                                            ? FINAL_CONFIG.style.buttons
+                                                  .controls.selected.color
+                                            : FINAL_CONFIG.style.buttons
+                                                  .controls.color
+                                    "
+                                />
+                            </slot>
 
                             <TeleportedTooltip
                                 v-if="FINAL_CONFIG.style.showTooltips"
@@ -155,16 +177,21 @@
                             "
                             @blur="hideTooltip"
                         >
-                            <BaseIcon
-                                name="resize"
-                                :stroke="
-                                    isResizeMode
-                                        ? FINAL_CONFIG.style.buttons.controls
-                                              .selected.color
-                                        : FINAL_CONFIG.style.buttons.controls
-                                              .color
-                                "
-                            />
+                            <slot
+                                name="icon-resize"
+                                v-bind="{ active: isResizeMode }"
+                            >
+                                <BaseIcon
+                                    name="resize"
+                                    :stroke="
+                                        isResizeMode
+                                            ? FINAL_CONFIG.style.buttons
+                                                  .controls.selected.color
+                                            : FINAL_CONFIG.style.buttons
+                                                  .controls.color
+                                    "
+                                />
+                            </slot>
 
                             <TeleportedTooltip
                                 v-if="FINAL_CONFIG.style.showTooltips"
@@ -227,16 +254,21 @@
                             "
                             @blur="hideTooltip"
                         >
-                            <BaseIcon
-                                name="trash"
-                                :stroke="
-                                    isDeleteMode
-                                        ? FINAL_CONFIG.style.buttons.controls
-                                              .selected.color
-                                        : FINAL_CONFIG.style.buttons.controls
-                                              .color
-                                "
-                            />
+                            <slot
+                                name="icon-delete"
+                                v-bind="{ active: isDeleteMode }"
+                            >
+                                <BaseIcon
+                                    name="trash"
+                                    :stroke="
+                                        isDeleteMode
+                                            ? FINAL_CONFIG.style.buttons
+                                                  .controls.selected.color
+                                            : FINAL_CONFIG.style.buttons
+                                                  .controls.color
+                                    "
+                                />
+                            </slot>
 
                             <TeleportedTooltip
                                 v-if="FINAL_CONFIG.style.showTooltips"
@@ -300,16 +332,21 @@
                             "
                             @blur="hideTooltip"
                         >
-                            <BaseIcon
-                                name="selectAndGroup"
-                                :stroke="
-                                    isSelectMode
-                                        ? FINAL_CONFIG.style.buttons.controls
-                                              .selected.color
-                                        : FINAL_CONFIG.style.buttons.controls
-                                              .color
-                                "
-                            />
+                            <slot
+                                name="icon-select-group"
+                                v-bind="{ active: isSelectMode }"
+                            >
+                                <BaseIcon
+                                    name="selectAndGroup"
+                                    :stroke="
+                                        isSelectMode
+                                            ? FINAL_CONFIG.style.buttons
+                                                  .controls.selected.color
+                                            : FINAL_CONFIG.style.buttons
+                                                  .controls.color
+                                    "
+                                />
+                            </slot>
 
                             <TeleportedTooltip
                                 v-if="FINAL_CONFIG.style.showTooltips"
@@ -364,12 +401,15 @@
                             "
                             @blur="hideTooltip"
                         >
-                            <BaseIcon
-                                name="bringToFront"
-                                :stroke="
-                                    FINAL_CONFIG.style.buttons.controls.color
-                                "
-                            />
+                            <slot name="icon-bring-to-front">
+                                <BaseIcon
+                                    name="bringToFront"
+                                    :stroke="
+                                        FINAL_CONFIG.style.buttons.controls
+                                            .color
+                                    "
+                                />
+                            </slot>
 
                             <TeleportedTooltip
                                 v-if="FINAL_CONFIG.style.showTooltips"
@@ -425,12 +465,15 @@
                             "
                             @blur="hideTooltip"
                         >
-                            <BaseIcon
-                                name="bringToBack"
-                                :stroke="
-                                    FINAL_CONFIG.style.buttons.controls.color
-                                "
-                            />
+                            <slot name="icon-bring-to-back">
+                                <BaseIcon
+                                    name="bringToBack"
+                                    :stroke="
+                                        FINAL_CONFIG.style.buttons.controls
+                                            .color
+                                    "
+                                />
+                            </slot>
 
                             <TeleportedTooltip
                                 v-if="FINAL_CONFIG.style.showTooltips"
@@ -488,13 +531,16 @@
                             "
                             @blur="hideTooltip"
                         >
-                            <BaseIcon
-                                name="copy"
-                                :stroke="
-                                    FINAL_CONFIG.style.buttons.controls.color
-                                "
-                                :size="18"
-                            />
+                            <slot name="icon-copy">
+                                <BaseIcon
+                                    name="copy"
+                                    :stroke="
+                                        FINAL_CONFIG.style.buttons.controls
+                                            .color
+                                    "
+                                    :size="18"
+                                />
+                            </slot>
 
                             <TeleportedTooltip
                                 v-if="FINAL_CONFIG.style.showTooltips"
@@ -553,13 +599,16 @@
                             "
                             @blur="hideTooltip"
                         >
-                            <BaseIcon
-                                name="refresh"
-                                :stroke="
-                                    FINAL_CONFIG.style.buttons.controls.color
-                                "
-                                :size="20"
-                            />
+                            <slot name="icon-undo">
+                                <BaseIcon
+                                    name="refresh"
+                                    :stroke="
+                                        FINAL_CONFIG.style.buttons.controls
+                                            .color
+                                    "
+                                    :size="20"
+                                />
+                            </slot>
 
                             <TeleportedTooltip
                                 v-if="FINAL_CONFIG.style.showTooltips"
@@ -618,16 +667,20 @@
                             "
                             @blur="hideTooltip"
                         >
-                            <BaseIcon
-                                name="refresh"
-                                :stroke="
-                                    FINAL_CONFIG.style.buttons.controls.color
-                                "
-                                :size="20"
-                                :style="{
-                                    transform: 'rotateX(0deg) rotateY(180deg)',
-                                }"
-                            />
+                            <slot name="icon-redo">
+                                <BaseIcon
+                                    name="refresh"
+                                    :stroke="
+                                        FINAL_CONFIG.style.buttons.controls
+                                            .color
+                                    "
+                                    :size="20"
+                                    :style="{
+                                        transform:
+                                            'rotateX(0deg) rotateY(180deg)',
+                                    }"
+                                />
+                            </slot>
 
                             <TeleportedTooltip
                                 v-if="FINAL_CONFIG.style.showTooltips"
@@ -670,12 +723,15 @@
                             "
                             @blur="hideTooltip"
                         >
-                            <BaseIcon
-                                name="printer"
-                                :stroke="
-                                    FINAL_CONFIG.style.buttons.controls.color
-                                "
-                            />
+                            <slot name="icon-print">
+                                <BaseIcon
+                                    name="printer"
+                                    :stroke="
+                                        FINAL_CONFIG.style.buttons.controls
+                                            .color
+                                    "
+                                />
+                            </slot>
 
                             <TeleportedTooltip
                                 v-if="FINAL_CONFIG.style.showTooltips"
@@ -716,13 +772,16 @@
                             "
                             @blur="hideTooltip"
                         >
-                            <BaseIcon
-                                name="image"
-                                :stroke="
-                                    FINAL_CONFIG.style.buttons.controls.color
-                                "
-                                :size="20"
-                            />
+                            <slot name="icon-export-image">
+                                <BaseIcon
+                                    name="image"
+                                    :stroke="
+                                        FINAL_CONFIG.style.buttons.controls
+                                            .color
+                                    "
+                                    :size="20"
+                                />
+                            </slot>
 
                             <TeleportedTooltip
                                 v-if="FINAL_CONFIG.style.showTooltips"
@@ -765,12 +824,15 @@
                             "
                             @blur="hideTooltip"
                         >
-                            <BaseIcon
-                                name="save"
-                                :stroke="
-                                    FINAL_CONFIG.style.buttons.controls.color
-                                "
-                            />
+                            <slot name="icon-save">
+                                <BaseIcon
+                                    name="save"
+                                    :stroke="
+                                        FINAL_CONFIG.style.buttons.controls
+                                            .color
+                                    "
+                                />
+                            </slot>
 
                             <TeleportedTooltip
                                 v-if="FINAL_CONFIG.style.showTooltips"
@@ -834,23 +896,28 @@
                             "
                             @blur="hideTooltip"
                         >
-                            <svg viewBox="0 0 12 12" style="width: 100%">
-                                <circle
-                                    :cx="6"
-                                    :cy="6"
-                                    r="4"
-                                    :fill="
-                                        options.circle.filled
-                                            ? activeShape === 'circle'
-                                                ? selectedColor +
-                                                  colorTransparency
-                                                : selectedColor +
-                                                  colorTransparency
-                                            : 'none'
-                                    "
-                                    stroke="currentColor"
-                                ></circle>
-                            </svg>
+                            <slot
+                                name="icon-circle"
+                                v-bind="{ filled: options.circle.filled }"
+                            >
+                                <svg viewBox="0 0 12 12" style="width: 100%">
+                                    <circle
+                                        :cx="6"
+                                        :cy="6"
+                                        r="4"
+                                        :fill="
+                                            options.circle.filled
+                                                ? activeShape === 'circle'
+                                                    ? selectedColor +
+                                                      colorTransparency
+                                                    : selectedColor +
+                                                      colorTransparency
+                                                : 'none'
+                                        "
+                                        stroke="currentColor"
+                                    ></circle>
+                                </svg>
+                            </slot>
 
                             <TeleportedTooltip
                                 v-if="FINAL_CONFIG.style.showTooltips"
@@ -933,25 +1000,33 @@
                             "
                             @blur="hideTooltip"
                         >
-                            <svg viewBox="0 0 12 12" style="width: 100%">
-                                <rect
-                                    x="3"
-                                    y="3"
-                                    style="rx: 0 !important; ry: 0 !important"
-                                    height="6"
-                                    width="6"
-                                    :fill="
-                                        options.rect.filled
-                                            ? activeShape === 'rect'
-                                                ? selectedColor +
-                                                  colorTransparency
-                                                : selectedColor +
-                                                  colorTransparency
-                                            : 'none'
-                                    "
-                                    stroke="currentColor"
-                                />
-                            </svg>
+                            <slot
+                                name="icon-rect"
+                                v-bind="{ filled: options.rect.filled }"
+                            >
+                                <svg viewBox="0 0 12 12" style="width: 100%">
+                                    <rect
+                                        x="3"
+                                        y="3"
+                                        style="
+                                            rx: 0 !important;
+                                            ry: 0 !important;
+                                        "
+                                        height="6"
+                                        width="6"
+                                        :fill="
+                                            options.rect.filled
+                                                ? activeShape === 'rect'
+                                                    ? selectedColor +
+                                                      colorTransparency
+                                                    : selectedColor +
+                                                      colorTransparency
+                                                : 'none'
+                                        "
+                                        stroke="currentColor"
+                                    />
+                                </svg>
+                            </slot>
 
                             <TeleportedTooltip
                                 v-if="FINAL_CONFIG.style.showTooltips"
@@ -1031,22 +1106,24 @@
                             "
                             @blur="hideTooltip"
                         >
-                            <svg viewBox="0 0 24 24" style="width: 100%">
-                                <path
-                                    :stroke="
-                                        options.arrow.filled
-                                            ? activeShape === 'arrow'
-                                                ? 'white'
-                                                : 'grey'
-                                            : 'none'
-                                    "
-                                    stroke-width="2"
-                                    d="M5,19 19,5 14,5 19,10.5 19,5"
-                                    fill="none"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                />
-                            </svg>
+                            <slot name="icon-arrow">
+                                <svg viewBox="0 0 24 24" style="width: 100%">
+                                    <path
+                                        :stroke="
+                                            options.arrow.filled
+                                                ? activeShape === 'arrow'
+                                                    ? 'white'
+                                                    : 'grey'
+                                                : 'none'
+                                        "
+                                        stroke-width="2"
+                                        d="M5,19 19,5 14,5 19,10.5 19,5"
+                                        fill="none"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    />
+                                </svg>
+                            </slot>
 
                             <TeleportedTooltip
                                 v-if="FINAL_CONFIG.style.showTooltips"
@@ -1108,24 +1185,26 @@
                             "
                             @blur="hideTooltip"
                         >
-                            <svg
-                                width="80%"
-                                viewBox="0 0 24 24"
-                                stroke-width="2"
-                                stroke="currentColor"
-                                fill="none"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                            >
-                                <path
-                                    stroke="none"
-                                    d="M0 0h24v24H0z"
+                            <slot name="icon-freehand">
+                                <svg
+                                    width="80%"
+                                    viewBox="0 0 24 24"
+                                    stroke-width="2"
+                                    stroke="currentColor"
                                     fill="none"
-                                />
-                                <path
-                                    d="M3 15c2 3 4 4 7 4s7 -3 7 -7s-3 -7 -6 -7s-5 1.5 -5 4s2 5 6 5s8.408 -2.453 10 -5"
-                                />
-                            </svg>
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                >
+                                    <path
+                                        stroke="none"
+                                        d="M0 0h24v24H0z"
+                                        fill="none"
+                                    />
+                                    <path
+                                        d="M3 15c2 3 4 4 7 4s7 -3 7 -7s-3 -7 -6 -7s-5 1.5 -5 4s2 5 6 5s8.408 -2.453 10 -5"
+                                    />
+                                </svg>
+                            </slot>
 
                             <TeleportedTooltip
                                 v-if="FINAL_CONFIG.style.showTooltips"
@@ -1262,16 +1341,21 @@
                             "
                             @blur="hideTooltip"
                         >
-                            <BaseIcon
-                                name="text"
-                                :stroke="
-                                    isTextMode
-                                        ? FINAL_CONFIG.style.buttons.shapes
-                                              .selected.color
-                                        : FINAL_CONFIG.style.buttons.shapes
-                                              .color
-                                "
-                            />
+                            <slot
+                                name="icon-text"
+                                v-bind="{ active: isTextMode }"
+                            >
+                                <BaseIcon
+                                    name="text"
+                                    :stroke="
+                                        isTextMode
+                                            ? FINAL_CONFIG.style.buttons.shapes
+                                                  .selected.color
+                                            : FINAL_CONFIG.style.buttons.shapes
+                                                  .color
+                                    "
+                                />
+                            </slot>
 
                             <TeleportedTooltip
                                 v-if="FINAL_CONFIG.style.showTooltips"
@@ -1375,24 +1459,26 @@
                                 "
                                 @blur="hideTooltip"
                             >
-                                <svg
-                                    width="80%"
-                                    viewBox="0 0 24 24"
-                                    stroke-width="2"
-                                    stroke="currentColor"
-                                    fill="none"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                >
-                                    <path
-                                        stroke="none"
-                                        d="M0 0h24v24H0z"
+                                <slot name="icon-text-align-left">
+                                    <svg
+                                        width="80%"
+                                        viewBox="0 0 24 24"
+                                        stroke-width="2"
+                                        stroke="currentColor"
                                         fill="none"
-                                    />
-                                    <path d="M4 6l16 0" />
-                                    <path d="M4 12l10 0" />
-                                    <path d="M4 18l14 0" />
-                                </svg>
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    >
+                                        <path
+                                            stroke="none"
+                                            d="M0 0h24v24H0z"
+                                            fill="none"
+                                        />
+                                        <path d="M4 6l16 0" />
+                                        <path d="M4 12l10 0" />
+                                        <path d="M4 18l14 0" />
+                                    </svg>
+                                </slot>
 
                                 <TeleportedTooltip
                                     v-if="FINAL_CONFIG.style.showTooltips"
@@ -1476,24 +1562,26 @@
                                 "
                                 @blur="hideTooltip"
                             >
-                                <svg
-                                    width="80%"
-                                    viewBox="0 0 24 24"
-                                    stroke-width="2"
-                                    stroke="currentColor"
-                                    fill="none"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                >
-                                    <path
-                                        stroke="none"
-                                        d="M0 0h24v24H0z"
+                                <slot name="icon-text-align-center">
+                                    <svg
+                                        width="80%"
+                                        viewBox="0 0 24 24"
+                                        stroke-width="2"
+                                        stroke="currentColor"
                                         fill="none"
-                                    />
-                                    <path d="M4 6l16 0" />
-                                    <path d="M8 12l8 0" />
-                                    <path d="M6 18l12 0" />
-                                </svg>
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    >
+                                        <path
+                                            stroke="none"
+                                            d="M0 0h24v24H0z"
+                                            fill="none"
+                                        />
+                                        <path d="M4 6l16 0" />
+                                        <path d="M8 12l8 0" />
+                                        <path d="M6 18l12 0" />
+                                    </svg>
+                                </slot>
 
                                 <TeleportedTooltip
                                     v-if="FINAL_CONFIG.style.showTooltips"
@@ -1569,24 +1657,26 @@
                                 "
                                 @blur="hideTooltip"
                             >
-                                <svg
-                                    width="80%"
-                                    viewBox="0 0 24 24"
-                                    stroke-width="2"
-                                    stroke="currentColor"
-                                    fill="none"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                >
-                                    <path
-                                        stroke="none"
-                                        d="M0 0h24v24H0z"
+                                <slot name="icon-text-align-right">
+                                    <svg
+                                        width="80%"
+                                        viewBox="0 0 24 24"
+                                        stroke-width="2"
+                                        stroke="currentColor"
                                         fill="none"
-                                    />
-                                    <path d="M4 6l16 0" />
-                                    <path d="M10 12l10 0" />
-                                    <path d="M6 18l14 0" />
-                                </svg>
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    >
+                                        <path
+                                            stroke="none"
+                                            d="M0 0h24v24H0z"
+                                            fill="none"
+                                        />
+                                        <path d="M4 6l16 0" />
+                                        <path d="M10 12l10 0" />
+                                        <path d="M6 18l14 0" />
+                                    </svg>
+                                </slot>
 
                                 <TeleportedTooltip
                                     v-if="FINAL_CONFIG.style.showTooltips"
@@ -1667,27 +1757,29 @@
                                 "
                                 @blur="hideTooltip"
                             >
-                                <svg
-                                    width="100%"
-                                    viewBox="0 0 24 24"
-                                    stroke-width="2"
-                                    stroke="currentColor"
-                                    fill="none"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                >
-                                    <path
-                                        stroke="none"
-                                        d="M0 0h24v24H0z"
+                                <slot name="icon-text-bullet-points">
+                                    <svg
+                                        width="100%"
+                                        viewBox="0 0 24 24"
+                                        stroke-width="2"
+                                        stroke="currentColor"
                                         fill="none"
-                                    />
-                                    <path d="M9 6l11 0" />
-                                    <path d="M9 12l11 0" />
-                                    <path d="M9 18l11 0" />
-                                    <path d="M5 6l0 .01" />
-                                    <path d="M5 12l0 .01" />
-                                    <path d="M5 18l0 .01" />
-                                </svg>
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    >
+                                        <path
+                                            stroke="none"
+                                            d="M0 0h24v24H0z"
+                                            fill="none"
+                                        />
+                                        <path d="M9 6l11 0" />
+                                        <path d="M9 12l11 0" />
+                                        <path d="M9 18l11 0" />
+                                        <path d="M5 6l0 .01" />
+                                        <path d="M5 12l0 .01" />
+                                        <path d="M5 18l0 .01" />
+                                    </svg>
+                                </slot>
 
                                 <TeleportedTooltip
                                     v-if="FINAL_CONFIG.style.showTooltips"
@@ -1758,25 +1850,29 @@
                                 "
                                 @blur="hideTooltip"
                             >
-                                <svg
-                                    width="100%"
-                                    viewBox="0 0 24 24"
-                                    stroke-width="3"
-                                    stroke="currentColor"
-                                    fill="none"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                >
-                                    <path
-                                        stroke="none"
-                                        d="M0 0h24v24H0z"
+                                <slot name="icon-text-bold">
+                                    <svg
+                                        width="100%"
+                                        viewBox="0 0 24 24"
+                                        stroke-width="3"
+                                        stroke="currentColor"
                                         fill="none"
-                                    />
-                                    <path d="M7 5h6a3.5 3.5 0 0 1 0 7h-6z" />
-                                    <path
-                                        d="M13 12h1a3.5 3.5 0 0 1 0 7h-7v-7"
-                                    />
-                                </svg>
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    >
+                                        <path
+                                            stroke="none"
+                                            d="M0 0h24v24H0z"
+                                            fill="none"
+                                        />
+                                        <path
+                                            d="M7 5h6a3.5 3.5 0 0 1 0 7h-6z"
+                                        />
+                                        <path
+                                            d="M13 12h1a3.5 3.5 0 0 1 0 7h-7v-7"
+                                        />
+                                    </svg>
+                                </slot>
 
                                 <TeleportedTooltip
                                     v-if="FINAL_CONFIG.style.showTooltips"
@@ -1846,25 +1942,27 @@
                                 "
                                 @blur="hideTooltip"
                             >
-                                <svg
-                                    width="100%"
-                                    height="44"
-                                    viewBox="0 0 24 24"
-                                    stroke-width="2"
-                                    stroke="currentColor"
-                                    fill="none"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                >
-                                    <path
-                                        stroke="none"
-                                        d="M0 0h24v24H0z"
+                                <slot name="icon-text-italic">
+                                    <svg
+                                        width="100%"
+                                        height="44"
+                                        viewBox="0 0 24 24"
+                                        stroke-width="2"
+                                        stroke="currentColor"
                                         fill="none"
-                                    />
-                                    <path d="M11 5l6 0" />
-                                    <path d="M7 19l6 0" />
-                                    <path d="M14 5l-4 14" />
-                                </svg>
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    >
+                                        <path
+                                            stroke="none"
+                                            d="M0 0h24v24H0z"
+                                            fill="none"
+                                        />
+                                        <path d="M11 5l6 0" />
+                                        <path d="M7 19l6 0" />
+                                        <path d="M14 5l-4 14" />
+                                    </svg>
+                                </slot>
 
                                 <TeleportedTooltip
                                     v-if="FINAL_CONFIG.style.showTooltips"
@@ -1943,23 +2041,25 @@
                                 "
                                 @blur="hideTooltip"
                             >
-                                <svg
-                                    width="100%"
-                                    viewBox="0 0 24 24"
-                                    stroke-width="2"
-                                    stroke="currentColor"
-                                    fill="none"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                >
-                                    <path
-                                        stroke="none"
-                                        d="M0 0h24v24H0z"
+                                <slot name="icon-text-underline">
+                                    <svg
+                                        width="100%"
+                                        viewBox="0 0 24 24"
+                                        stroke-width="2"
+                                        stroke="currentColor"
                                         fill="none"
-                                    />
-                                    <path d="M7 5v5a5 5 0 0 0 10 0v-5" />
-                                    <path d="M5 19h14" />
-                                </svg>
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    >
+                                        <path
+                                            stroke="none"
+                                            d="M0 0h24v24H0z"
+                                            fill="none"
+                                        />
+                                        <path d="M7 5v5a5 5 0 0 0 10 0v-5" />
+                                        <path d="M5 19h14" />
+                                    </svg>
+                                </slot>
 
                                 <TeleportedTooltip
                                     v-if="FINAL_CONFIG.style.showTooltips"
@@ -2018,11 +2118,24 @@
                                         FINAL_CONFIG.style.color
                                     "
                                     :isCursorPointer="isCursorPointer"
+                                    :palette="FINAL_CONFIG.style.palette"
                                     teleported
                                     @update:value="
                                         setColorOfSelectedShape($event)
                                     "
-                                />
+                                >
+                                    <template
+                                        #annotator-action-color="{ color }"
+                                    >
+                                        <slot
+                                            name="icon-color"
+                                            v-bind="{
+                                                color,
+                                                backgroundColor: selectedColor,
+                                            }"
+                                        />
+                                    </template>
+                                </ColorPicker>
                             </button>
                             <TeleportedTooltip
                                 v-if="FINAL_CONFIG.style.showTooltips"
@@ -2050,7 +2163,8 @@
                                 style="font-variant-numeric: tabular-nums"
                             >
                                 {{ FINAL_CONFIG.translations.colorAlpha }}:
-                                {{ transparency > 98 ? 100 : transparency }} %
+                                {{ transparency > 98 ? 100 : transparency }}
+                                %
                                 <input
                                     name="colorTransparency"
                                     type="range"
@@ -2068,8 +2182,8 @@
                             </label>
                         </div>
                     </div>
-                </template>
-            </Accordion>
+                </div>
+            </Teleport>
         </div>
 
         <div
@@ -2221,6 +2335,10 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['toggleOpenState', 'saveAnnotations']);
+const ready = ref(false);
+const teleportReady = ref(false);
+
+onMounted(() => (ready.value = true));
 
 const fileName = 'annotations';
 const uid = ref(createUid());
@@ -2252,6 +2370,20 @@ const isPrinting = ref(false);
 const isResizeMode = ref(false);
 const isSelectMode = ref(false);
 const isSummaryOpen = ref(false);
+
+watch(isSummaryOpen, async (isOpen) => {
+    teleportReady.value = false;
+    if (!isOpen) {
+        lastSelectedShape.value = undefined;
+        currentTarget.value = undefined;
+        hoveredShapeId.value = undefined;
+        selectedGroup.value = [];
+        isSelectMode.value = false;
+        return;
+    }
+    await nextTick();
+    teleportReady.value = true;
+});
 const isTextMode = ref(false);
 const isUnderline = ref(false);
 const isWriting = ref(false);
@@ -2283,7 +2415,6 @@ const options = ref({
         width: 12,
     },
 });
-const selectedColor = ref('#1A1A1A');
 const showCaret = ref(false);
 const sizeRatio = ref(1);
 const slottedSvg = ref(undefined);
@@ -2331,6 +2462,8 @@ const FINAL_CONFIG = computed(() => {
     return convertConfigColors(reconcilied);
 });
 
+const selectedColor = ref(FINAL_CONFIG.value.style.paletteColor);
+
 useHints({
     config: () => FINAL_CONFIG.value,
     dataset: () => [],
@@ -2353,8 +2486,10 @@ const tooltipStyleObject = computed(() => {
 
 const canSelect = computed(
     () =>
-        shapes.value.filter((shape) => !['line', 'group'].includes(shape.type))
-            .length > 1,
+        shapes.value.filter((shape) => {
+            if (shape.type !== 'group') return true;
+            return Array.isArray(shape.source) && shape.source.length > 0;
+        }).length > 1,
 );
 
 const colorTransparency = computed(
@@ -3256,7 +3391,7 @@ function makeHistory(opts = {}) {
 
     const state = { open: false, before: null, undo: [], redo: [] };
     const bytes = { undo: 0, redo: 0 };
-    const sz = (s) => (typeof s === 'string' ? s.length * 2 : 0); // UTF-16-ish
+    const sz = (s) => (typeof s === 'string' ? s.length * 2 : 0); // kinda UTF-16
 
     const snapshot = () =>
         JSON.stringify({
@@ -3942,243 +4077,223 @@ function write(e) {
     }
 }
 
+function getShapeGroupingBounds(shape) {
+    if (!shape) return null;
+
+    switch (shape.type) {
+        case 'arrow': {
+            const left = Math.min(shape.x, shape.endX);
+            const top = Math.min(shape.y, shape.endY);
+            const right = Math.max(shape.x, shape.endX);
+            const bottom = Math.max(shape.y, shape.endY);
+            return { left, top, right, bottom };
+        }
+
+        case 'circle': {
+            const radius = Math.max(0, Number(shape.circleRadius) || 0);
+            return {
+                left: shape.x - radius,
+                top: shape.y - radius,
+                right: shape.x + radius,
+                bottom: shape.y + radius,
+            };
+        }
+
+        case 'rect':
+        case 'group':
+            return {
+                left: shape.x,
+                top: shape.y,
+                right: shape.x + shape.rectWidth,
+                bottom: shape.y + shape.rectHeight,
+            };
+
+        case 'line': {
+            const bounds = getLineBounds(shape.path);
+            if (!bounds) return null;
+            return {
+                left: bounds.minX,
+                top: bounds.minY,
+                right: bounds.maxX,
+                bottom: bounds.maxY,
+            };
+        }
+
+        case 'text':
+            // Preserve the previous text selection behavior: the dimensions of the text are not stored on the shape, therefore its anchor must be placed inside
+            return {
+                left: shape.x,
+                top: shape.y,
+                right: shape.x,
+                bottom: shape.y,
+            };
+
+        default:
+            return null;
+    }
+}
+
+function isShapeInsideGroupingRect(shape, selection) {
+    const bounds = getShapeGroupingBounds(shape);
+    if (!bounds) return false;
+
+    const selectionLeft = Math.min(
+        selection.x,
+        selection.x + selection.rectWidth,
+    );
+    const selectionTop = Math.min(
+        selection.y,
+        selection.y + selection.rectHeight,
+    );
+    const selectionRight = Math.max(
+        selection.x,
+        selection.x + selection.rectWidth,
+    );
+    const selectionBottom = Math.max(
+        selection.y,
+        selection.y + selection.rectHeight,
+    );
+
+    return (
+        selectionLeft <= bounds.left &&
+        selectionTop <= bounds.top &&
+        selectionRight >= bounds.right &&
+        selectionBottom >= bounds.bottom
+    );
+}
+
+function materializeGroupedChild(shape, parentGroup) {
+    const child = copy(shape);
+    const baseX = Number(parentGroup.x) || 0;
+    const baseY = Number(parentGroup.y) || 0;
+
+    switch (child.type) {
+        case 'circle':
+        case 'rect':
+        case 'text':
+            child.x = baseX + (Number(child.diffX) || 0);
+            child.y = baseY + (Number(child.diffY) || 0);
+            break;
+
+        case 'arrow':
+            child.x = baseX + (Number(child.diffX) || 0);
+            child.y = baseY + (Number(child.diffY) || 0);
+            child.endX = baseX + (Number(child.diffEndX) || 0);
+            child.endY = baseY + (Number(child.diffEndY) || 0);
+            break;
+
+        case 'line': {
+            if (Array.isArray(child.diffPoints) && child.diffPoints.length) {
+                child.path = serializeLinePoints(
+                    child.diffPoints.map((point) => ({
+                        x: baseX + point.x,
+                        y: baseY + point.y,
+                    })),
+                );
+            }
+            break;
+        }
+
+        default:
+            break;
+    }
+
+    child.id = child.oldId || child.id;
+    delete child.diffX;
+    delete child.diffY;
+    delete child.diffEndX;
+    delete child.diffEndY;
+    delete child.diffPoints;
+
+    return child;
+}
+
+function flattenShapeForGrouping(shape) {
+    if (shape.type !== 'group') {
+        return [copy(shape)];
+    }
+
+    return (shape.source || []).flatMap((child) => {
+        if (child.type === 'group') {
+            const materialized = materializeGroupedChild(child, shape);
+            return flattenShapeForGrouping(materialized);
+        }
+        return [materializeGroupedChild(child, shape)];
+    });
+}
+
+function makeGroupedSourceShape(shape, group) {
+    const sourceShape = {
+        ...copy(shape),
+        id: group.id,
+        oldId: shape.oldId || shape.id,
+        diffX: (Number(shape.x) || 0) - group.x,
+        diffY: (Number(shape.y) || 0) - group.y,
+        diffEndX: Number.isFinite(Number(shape.endX))
+            ? Number(shape.endX) - group.x
+            : 0,
+        diffEndY: Number.isFinite(Number(shape.endY))
+            ? Number(shape.endY) - group.y
+            : 0,
+    };
+
+    if (shape.type === 'line') {
+        sourceShape.diffPoints = parseLinePoints(shape.path).map((point) => ({
+            x: point.x - group.x,
+            y: point.y - group.y,
+        }));
+    }
+
+    return sourceShape;
+}
+
 function groupShapes() {
     selectedGroup.value = [];
 
     if (activeShape.value !== 'group') {
         isSelectMode.value = false;
         shapes.value = shapes.value.filter((shape) => shape.type !== 'group');
-        return;
+        return null;
     }
+
     const group = shapes.value.at(-1);
+    if (!group || group.type !== 'group') return null;
 
-    shapes.value.forEach((shape) => {
-        if (shape.type === 'group') {
-            return;
-        }
-        switch (true) {
-            case shape.type === 'arrow':
-                // TLBR: top left -> bottom right
-                const isArrowTLBR =
-                    shape.x <= shape.endX &&
-                    shape.y <= shape.endY &&
-                    group.x <= shape.x &&
-                    group.y <= shape.y &&
-                    group.x + group.rectWidth >= shape.endX &&
-                    group.y + group.rectHeight >= shape.endY;
-
-                // BLTR: bottom left -> top right
-                const isArrowBLTR =
-                    shape.endY < shape.y &&
-                    shape.x < shape.endX &&
-                    group.x <= shape.x &&
-                    group.y <= shape.y &&
-                    group.x + group.rectWidth >= shape.endX &&
-                    group.y + group.rectHeight >= shape.y;
-
-                // TRBL: top right -> bottom left
-                const isArrowTRBL =
-                    shape.x > shape.endX &&
-                    shape.y < shape.endY &&
-                    group.x <= shape.endX &&
-                    group.y <= shape.endY &&
-                    group.x + group.rectWidth >= shape.x &&
-                    group.y + group.rectHeight >= shape.endY;
-
-                // BRTL: bottom right -> top left
-                const isArrowBRTL =
-                    shape.x > shape.endX &&
-                    shape.y > shape.endY &&
-                    group.x <= shape.endX &&
-                    group.y <= shape.endY &&
-                    group.x + group.rectWidth >= shape.x &&
-                    group.y + group.rectHeight >= shape.y;
-
-                if (isArrowTLBR || isArrowBLTR || isArrowTRBL || isArrowBRTL) {
-                    selectedGroup.value.push(shape);
-                }
-                break;
-
-            case shape.type === 'circle':
-                if (
-                    group.x <= shape.x + shape.circleRadius &&
-                    group.y <= shape.y + shape.circleRadius &&
-                    shape.x + shape.circleRadius <= group.x + group.rectWidth &&
-                    shape.y + shape.circleRadius <= group.y + group.rectHeight
-                ) {
-                    selectedGroup.value.push(shape);
-                }
-                break;
-
-            case shape.type === 'rect':
-                if (
-                    group.x <= shape.x &&
-                    group.y <= shape.y &&
-                    shape.x <= group.x + group.rectWidth &&
-                    shape.y <= group.y + group.rectHeight &&
-                    shape.x + shape.rectWidth <= group.x + group.rectWidth &&
-                    shape.y + shape.rectHeight <= group.y + group.rectHeight &&
-                    shape.rectWidth <= group.rectWidth &&
-                    shape.rectHeight <= group.rectHeight
-                ) {
-                    selectedGroup.value.push(shape);
-                }
-                break;
-
-            case shape.type === 'text':
-                if (group.x <= shape.x && group.y <= shape.y) {
-                    selectedGroup.value.push(shape);
-                }
-                break;
-
-            default:
-                break;
-        }
+    const selectedTopLevelShapes = shapes.value.filter((shape) => {
+        if (shape.id === group.id) return false;
+        return isShapeInsideGroupingRect(shape, group);
     });
 
-    // add an old independant id to the selectedShape to keep track of old id
-    // replace id of selected shape with the group id
-    selectedGroup.value = selectedGroup.value.map((shape) => {
-        return {
-            ...shape,
-            id: group.id,
-            oldId: shape.id,
-            diffX: shape.x - group.x,
-            diffY: shape.y - group.y,
-            diffEndX: shape.endX ? shape.endX - group.x : 0,
-            diffEndY: shape.endY ? shape.endY - group.y : 0,
-        };
-    });
+    if (selectedTopLevelShapes.length < 2) {
+        shapes.value = shapes.value.filter((shape) => shape.id !== group.id);
+        return null;
+    }
+
+    const flattenedShapes = selectedTopLevelShapes.flatMap((shape) =>
+        flattenShapeForGrouping(shape),
+    );
+
+    selectedGroup.value = flattenedShapes.map((shape) =>
+        makeGroupedSourceShape(shape, group),
+    );
 
     group.source = selectedGroup.value;
+    group.content = '';
 
-    if (selectedGroup.value.length > 1) {
-        const bannedIds = copy(selectedGroup.value).map((shape) => {
-            return shape.oldId;
-        });
+    const selectedTopLevelIds = new Set(
+        selectedTopLevelShapes.map((shape) => shape.id),
+    );
 
-        // remove selected shapes from the shapes array
-        shapes.value = shapes.value.filter(
-            (shape) => !bannedIds.includes(shape.id),
-        );
+    shapes.value = shapes.value.filter(
+        (shape) => shape.id === group.id || !selectedTopLevelIds.has(shape.id),
+    );
 
-        // redraw each shape in the context of the group
-        selectedGroup.value.forEach((shape) => {
-            switch (true) {
-                case shape.type === 'circle':
-                    group.content += `
-            <circle
-            id="${shape.id}"
-            cx="${shape.x}"
-            cy="${shape.y}"
-            r="${shape.circleRadius ? shape.circleRadius : Number.MIN_VALUE}"
-            fill="${
-                shape.isFilled
-                    ? shape.color + shape.alpha
-                    : 'rgba(255,255,255,0.001)'
-            }"
-            stroke="${shape.color + shape.alpha}" 
-            stroke-width="${shape.strokeWidth}"
-            style="${
-                shape.isDash ? `stroke-dasharray: ${shape.strokeWidth * 3}` : ''
-            }"
-            />
-        `;
-                    break;
+    // Rebuild from source so regrouped groups use the same rendering path
+    // as a group that has subsequently been moved.
+    moveGroup(group);
 
-                case shape.type === 'rect':
-                    group.content += `
-            <rect
-            id="${isResizeMode.value ? '' : shape.id}"
-            x="${shape.x}"
-            y="${shape.y}"
-            fill="${
-                shape.isFilled
-                    ? shape.color + shape.alpha
-                    : 'rgba(255,255,255,0.001)'
-            }"
-            height="${shape.rectHeight}"
-            width="${shape.rectWidth}"
-            stroke="${shape.color + shape.alpha}"
-            stroke-width="${shape.strokeWidth}"
-            style="rx:1 !important; ry:1 !important; ${
-                shape.isDash ? `stroke-dasharray: ${shape.strokeWidth * 3}` : ''
-            }"
-                        />
-        `;
-                    break;
-
-                case shape.type === 'arrow':
-                    const shapeWidthMax = shape.strokeWidth > 3 ? 5 : 10;
-                    const shapeWidthMin = shape.strokeWidth > 3 ? 2.5 : 5;
-                    const uid = createUid();
-                    group.content += `
-            <g id="${shape.id}">
-            <defs>
-                <marker 
-                id="${uid}" 
-                markerWidth="${shapeWidthMax}" 
-                markerHeight="${shapeWidthMax}" 
-                refX="0" 
-                refY="${shapeWidthMin}" 
-                orient="auto"
-                >
-                <polygon 
-                points="0 0,${shapeWidthMax} ${shapeWidthMin}, 0 ${shapeWidthMax}" 
-                fill="${shape.color}"
-                />
-                </marker>
-            </defs>
-
-            <path 
-                style="stroke-linecap: round !important; ${
-                    shape.isDash
-                        ? `stroke-dasharray: ${shape.strokeWidth * 3}`
-                        : ''
-                }" 
-                stroke="${shape.color}" 
-                id="${shape.id}" 
-                d="M${shape.x},${shape.y} ${shape.endX},${shape.endY}" 
-                stroke-width="${shape.strokeWidth}" 
-                marker-end="url(#${uid})"
-            />
-            </g>
-        `;
-                    break;
-
-                case shape.type === 'text':
-                    const parsedText = shape.textContent.split('‎');
-                    const parsedContent = [];
-                    for (let i = 0; i < parsedText.length; i += 1) {
-                        parsedContent.push(`
-            ${
-                shape.isBulletTextMode
-                    ? `<tspan x="${shape.x - shape.fontSize}" y="${
-                          shape.y + shape.fontSize * i
-                      }" id="${shape.id}" font-size="${shape.fontSize / 2}">⬤</tspan>`
-                    : ''
-            }
-            <tspan id="${shape.id}" x="${shape.x}" y="${
-                shape.y + shape.fontSize * i
-            }">
-                ${parsedText[i]}
-            </tspan>`);
-                    }
-                    group.content += `
-            ${computeTextElement(shape, parsedContent, shape.isBulletTextMode)}
-            `;
-                    break;
-
-                default:
-                    break;
-            }
-        });
-    } else {
-        // no valid selection: remove selection rect
-        shapes.value = shapes.value.filter((shape) => shape.id !== group.id);
-    }
+    return group;
 }
-
 function moveGroup(group) {
     group.content = '';
 
@@ -4258,6 +4373,26 @@ function moveGroup(group) {
                 break;
             }
 
+            case 'line': {
+                const points =
+                    Array.isArray(shape.diffPoints) && shape.diffPoints.length
+                        ? shape.diffPoints.map((point) => ({
+                              x: baseX + point.x,
+                              y: baseY + point.y,
+                          }))
+                        : parseLinePoints(shape.path);
+
+                const path = serializeLinePoints(points);
+                group.content += `
+          <path
+            id="${shape.id}"
+            d="M${path}"
+            style="stroke:${shape.color + shape.alpha} !important; fill:none; stroke-width:${shape.strokeWidth} !important; stroke-linecap:round !important; stroke-linejoin:round !important; ${shape.isDash ? `stroke-dasharray: ${shape.strokeWidth * 3}` : ''}"
+          />
+        `;
+                break;
+            }
+
             case 'text': {
                 const parsedText = (shape.textContent || '').split('‎');
                 const content = parsedText
@@ -4307,7 +4442,7 @@ function onPointerOut(e) {
         mainSvg.value &&
         mainSvg.value.contains(e.relatedTarget)
     )
-        return; // still inside
+        return;
     preventEdit.value = true;
     hoveredShapeId.value = undefined;
 }
@@ -5073,13 +5208,26 @@ function resetDraw(e) {
         RAF_ID.value = null;
     }
 
-    if (isSelectMode.value) groupShapes();
+    const groupedShape = isSelectMode.value ? groupShapes() : null;
     history.value?.end();
 
+    if (groupedShape) {
+        isSelectMode.value = false;
+        isMoveMode.value = true;
+        isResizeMode.value = false;
+        isDrawMode.value = false;
+        isDeleteMode.value = false;
+        isTextMode.value = false;
+        isWriting.value = false;
+        showCaret.value = false;
+        textCaret.value = null;
+        lastSelectedShape.value = groupedShape;
+        currentTarget.value = { id: groupedShape.id };
+        hoveredShapeId.value = undefined;
+        preserveNewShapeSelectionUntil = Date.now() + 250;
+    }
+
     if (completedShape) {
-        // Pointer-up after drawing is followed by a synthetic click on the
-        // background/glass. Keep that click from immediately clearing the
-        // freshly-created selection so its resize handles stay visible.
         preserveNewShapeSelectionUntil = Date.now() + 250;
         enterShapeResizeMode(completedShape);
     }
@@ -5219,12 +5367,16 @@ function toggleSummary() {
     if (!isSummaryOpen.value) {
         isMoveMode.value = false;
         isResizeMode.value = false;
+        isSelectMode.value = false;
         isTextMode.value = false;
         isWriting.value = false;
         activeShape.value = undefined;
+        lastSelectedShape.value = undefined;
+        currentTarget.value = undefined;
+        hoveredShapeId.value = undefined;
+        selectedGroup.value = [];
         showCaret.value = false;
         isDeleteMode.value = false;
-        isWriting.value = false;
     }
     emit('toggleOpenState', { isOpen: isSummaryOpen.value });
 }
@@ -5448,7 +5600,7 @@ watch(isTextMode, (bool) => {
 }
 
 .vue-ui-annotator .draw--free {
-    /* circle cursor for freehand draw mode */
+    /* cursor for freehand mode */
     cursor:
         url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAABg2lDQ1BJQ0MgcHJvZmlsZQAAKJF9kT1Iw0AcxV9TpSIVh2YQcchQnSyIijhKFYtgobQVWnUwufQLmjQkKS6OgmvBwY/FqoOLs64OroIg+AHi6OSk6CIl/i8ptIjx4Lgf7+497t4BQrPKNKtnAtB020wn4lIuvyqFXhGGiAhCiMnMMpKZxSx8x9c9Any9i/Es/3N/jgG1YDEgIBHPMcO0iTeIZzZtg/M+scjKskp8Tjxu0gWJH7muePzGueSywDNFM5ueJxaJpVIXK13MyqZGPE0cVTWd8oWcxyrnLc5atc7a9+QvDBf0lQzXaY4ggSUkkYIEBXVUUIWNGK06KRbStB/38Q+7/hS5FHJVwMixgBo0yK4f/A9+d2sVpya9pHAc6H1xnI9RILQLtBqO833sOK0TIPgMXOkdf60JzH6S3uho0SNgcBu4uO5oyh5wuQMMPRmyKbtSkKZQLALvZ/RNeSByC/Sveb2193H6AGSpq+Ub4OAQGCtR9rrPu/u6e/v3TLu/H5C7crM1WjgWAAAABmJLR0QAqwB5AHWF+8OUAAAACXBIWXMAAC4jAAAuIwF4pT92AAAAB3RJTUUH5gwUExIUagzGcQAAABl0RVh0Q29tbWVudABDcmVhdGVkIHdpdGggR0lNUFeBDhcAAABfSURBVBjTldAxDoNQDIPhL0+q1L33P1AvAhN7xfK6WAgoLfSfrNiykpQtE+7RLzx2vgF9D3o8lWDmn1QVVMP0LZQGmNtqp1/cmou0XHdG/+sYeGZwFBqPCub8rkcvvAGvsi1VYarR8wAAAABJRU5ErkJggg==')
             5 5,
@@ -5510,7 +5662,6 @@ kbd {
     will-change: transform;
 }
 
-/* Overlay above, also on its own layer */
 .annotator__overlay {
     position: absolute;
     inset: 0;

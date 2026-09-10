@@ -331,6 +331,9 @@ const model = createModel([
     CHECKBOX('style.chart.yAxis.labels.bold', { def: false }),
     COLOR('style.chart.yAxis.labels.color', { def: '#1A1A1A' }),
     NUMBER('style.chart.yAxis.labels.offsetX', { def: 0, min: -100, max: 100 }),
+    NUMBER('style.chart.yAxis.labels.offsetY', { def: 0, min: -100, max: 100 }),
+    CHECKBOX('style.chart.yAxis.labels.centered', { def: false }),
+
     CHECKBOX('table.show', { def: false }),
     CHECKBOX('table.useDialog', { def: true }),
 

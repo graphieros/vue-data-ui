@@ -36,6 +36,20 @@ const props = defineProps({
         type: Boolean,
         default: false,
     },
+    palette: {
+        type: Array,
+        default: () => [
+            '#000000',
+            '#FFFFFF',
+            '#FF5733',
+            '#33FF57',
+            '#3357FF',
+            '#FFC300',
+            '#800080',
+            '#FF1493',
+            '#00CED1',
+        ],
+    },
 });
 
 const emit = defineEmits(['close']);
@@ -1865,6 +1879,7 @@ onBeforeUnmount(() => {
                 :backgroundColor="backgroundColor"
                 :buttonBorderColor="buttonBorderColor"
                 :isCursorPointer="isCursorPointer"
+                :palette="palette"
             >
                 <template #annotator-action-color="{ color }">
                     <slot name="annotator-action-color" v-bind="{ color }" />

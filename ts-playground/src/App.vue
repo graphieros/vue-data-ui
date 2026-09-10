@@ -177,8 +177,12 @@ const TsVueUiTableHeatmap = defineAsyncComponent(
 const TsVueUiHill = defineAsyncComponent(
     () => import('./components/charts/ts-vue-ui-hill.vue'),
 );
+const TsVueUiAnnotator = defineAsyncComponent(
+    () => import('./components/charts/ts-vue-ui-annotator.vue'),
+);
 
 const components = shallowRef([
+    { name: 'VueUiAnnotator' },
     { name: 'VueUiHill' },
     { name: 'VueUiXy' },
     { name: 'VueUiDonut' },
@@ -249,6 +253,7 @@ const selectedComponent = shallowRef(components.value[0]);
     </select>
 
     <div class="wrapper">
+        <TsVueUiAnnotator v-if="selectedComponent?.name === 'VueUiAnnotator'" />
         <TsVueUiHill v-if="selectedComponent?.name === 'VueUiHill'" />
         <TsVueUiXy v-if="selectedComponent?.name === 'VueUiXy'" />
         <TsVueUiDonut v-if="selectedComponent?.name === 'VueUiDonut'" />

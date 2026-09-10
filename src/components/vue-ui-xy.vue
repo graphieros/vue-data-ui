@@ -229,9 +229,7 @@ const parentElement = shallowRef(null);
 
 /**
  * Indicates whether the parent layout has been confirmed stable.
- *
- * This is not used for measurements directly, but as a semantic signal
- * to block rendering transitions / animations until layout is safe.
+ * Block rendering transitions / animations until layout is safe.
  */
 const parentLayoutIsStable = ref(false);
 
@@ -258,10 +256,8 @@ const pendingParentLayoutSequence = ref(0);
 /**
  * Stable-size observer bound to the parent element.
  *
- * This does NOT react to every resize immediately.
- * Instead, it waits until the parent size remains unchanged
+ * Waits until the parent size remains unchanged
  * across several animation frames before declaring it “stable”.
- *
  * Once stability is confirmed, it triggers a controlled layout pass.
  */
 const stableParentSize = useStableElementSize({
@@ -6682,6 +6678,7 @@ defineExpose({
             :color="FINAL_CONFIG.chart.color"
             :active="isAnnotator"
             :isCursorPointer="isCursorPointer"
+            :palette="FINAL_CONFIG.chart.userOptions.annotatorPalette"
             @close="toggleAnnotator"
         >
             <template #annotator-action-close>

@@ -759,6 +759,7 @@ defineExpose({
             :style="{
                 zIndex: resolvedItems.length + 1,
             }"
+            :palette="FINAL_CONFIG.userOptions.annotatorPalette"
         >
             <template #annotator-action-close>
                 <slot name="annotator-action-close" />

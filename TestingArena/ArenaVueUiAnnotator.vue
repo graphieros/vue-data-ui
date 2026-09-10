@@ -108,6 +108,54 @@ const initLastSelectedShape = ref({
                 :config="config"
                 :dataset="{ shapes }"
             >
+                <!-- <template #toggle="{ toggle }">
+                    <button @click="toggle()">CLICK</button>
+                </template>
+
+                <template #icon-move="{ active }">
+                    {{ active ? '1' : '0' }}
+                </template>
+
+                <template #icon-resize="{ active }">
+                    {{ active ? '1' : '0' }}
+                </template>
+
+                <template #icon-delete="{ active }">
+                    {{ active ? '1' : '0' }}
+                </template>
+
+                <template #icon-select-group="{ active }">
+                    {{ active ? '1' : '0' }}
+                </template>
+
+                <template #icon-bring-to-front> F </template>
+                <template #icon-bring-to-back> B </template>
+                <template #icon-copy> C </template>
+                <template #icon-undo> U </template>
+                <template #icon-redo> R </template>
+                <template #icon-export-image> I </template>
+                <template #icon-save> S </template>
+                <template #icon-circle="{ filled }">{{
+                    filled ? '1' : '0'
+                }}</template>
+                <template #icon-rect="{ filled }">{{
+                    filled ? '1' : '0'
+                }}</template>
+                <template #icon-arrow> A </template>
+                <template #icon-freehand> H </template>
+                <template #icon-text="{ active }">
+                    {{ active ? '1' : '0' }}
+                </template>
+                <template #icon-text-align-left> TL </template>
+                <template #icon-text-align-center> TC </template>
+                <template #icon-text-align-right> TR </template>
+                <template #icon-text-bullet-points> BP </template>
+                <template #icon-text-bold> BLD </template>
+                <template #icon-text-italic> ITA </template>
+                <template #icon-text-underline> UND </template>
+                <template #icon-color="{ color }">
+                    {{ color }}
+                </template> -->
                 <div>
                     <Donut :dataset="donutDataset" />
                 </div>

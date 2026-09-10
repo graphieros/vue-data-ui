@@ -1805,6 +1805,7 @@ defineExpose({
             :color="FINAL_CONFIG.style.chart.color"
             :active="isAnnotator"
             :isCursorPointer="isCursorPointer"
+            :palette="FINAL_CONFIG.userOptions.annotatorPalette"
             @close="toggleAnnotator"
         >
             <template #annotator-action-close>
