@@ -2170,14 +2170,24 @@ defineExpose({
                     />
 
                     <!-- SELECTED X -->
-                    <template v-if="!!selectedX">
+                    <template
+                        v-if="
+                            !!selectedX ||
+                            FINAL_CONFIG.style.chart.selector.labels.showLast
+                        "
+                    >
                         <template v-for="ds in drawableDataset">
                             <template v-for="dp in ds.datapoints">
                                 <template v-for="(plot, k) in dp.plots">
                                     <!-- DOT -->
                                     <circle
                                         v-if="
-                                            !!selectedX && selectedX.index === k
+                                            (!!selectedX &&
+                                                selectedX.index === k) ||
+                                            (!selectedX &&
+                                                k === dp.plots.length - 1 &&
+                                                FINAL_CONFIG.style.chart
+                                                    .selector.labels.showLast)
                                         "
                                         :cx="plot.x"
                                         :cy="plot.y"
@@ -2207,7 +2217,12 @@ defineExpose({
                                     <!-- DATA LABELS -->
                                     <text
                                         v-if="
-                                            selectedX && selectedX.index === k
+                                            (selectedX &&
+                                                selectedX.index === k) ||
+                                            (!selectedX &&
+                                                k === dp.plots.length - 1 &&
+                                                FINAL_CONFIG.style.chart
+                                                    .selector.labels.showLast)
                                         "
                                         :x="
                                             isTextOverflowingRight(

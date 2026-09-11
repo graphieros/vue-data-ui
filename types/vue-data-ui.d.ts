@@ -15513,6 +15513,7 @@ declare module 'vue-data-ui' {
                         formatter?: Formatter;
                         rounding?: number;
                         color?: string;
+                        showLast?: boolean;
                     };
                     dot?: {
                         radius?: number;

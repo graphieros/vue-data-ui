@@ -7686,6 +7686,7 @@ export function useConfig(options = {}) {
                         formatter: null,
                         rounding: 0,
                         color: COLOR_TEXT_PRIMARY,
+                        showLast: false,
                     },
                     dot: {
                         radius: 4,

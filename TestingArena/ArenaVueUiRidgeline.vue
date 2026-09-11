@@ -296,6 +296,8 @@ const model = createModel([
     COLOR('style.chart.selector.stroke', { def: '#CCCCCC' }),
     NUMBER('style.chart.selector.strokeWidth', { def: 1, min: 0, max: 42 }),
     NUMBER('style.chart.selector.strokeDasharray', { def: 2, min: 0, max: 12 }),
+
+    CHECKBOX('style.chart.selector.labels.showLast', { def: true }),
     NUMBER('style.chart.selector.labels.fontSize', {
         def: 12,
         min: 6,
