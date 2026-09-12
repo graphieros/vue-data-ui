@@ -4059,6 +4059,15 @@ export function useConfig(options = {}) {
                         intensity: 60,
                         shiftHue: 0.05,
                     },
+                    labels: {
+                        show: true,
+                        showOnHover: true,
+                        fontSize: FONT._12,
+                        color: COLOR_TEXT_PRIMARY,
+                        bold: false,
+                        formatter: null,
+                        offsetX: 0,
+                    },
                 },
             },
             highlighter: {

@@ -25,6 +25,9 @@
                 "bars": {
                     "gradient": {
                         "show": false
+                    },
+                    "labels": {
+                        "color": "#CCCCCC"
                     }
                 },
                 "grid": {
@@ -76,6 +79,11 @@
             "layout": {
                 "grid": {
                     "stroke": "#5A5A5A"
+                },
+                "bars": {
+                    "labels": {
+                        "color": "#CCCCCC"
+                    }
                 },
                 "dataLabels": {
                     "sideTitles": {
@@ -146,6 +154,9 @@
                     },
                     "gradient": {
                         "show": false
+                    },
+                    "labels": {
+                        "color": "#424242"
                     }
                 }
             },
@@ -206,6 +217,9 @@
                     },
                     "gradient": {
                         "show": false
+                    },
+                    "labels": {
+                        "color": "#BDBDBD"
                     }
                 }
             },
@@ -266,6 +280,9 @@
                     },
                     "gradient": {
                         "show": false
+                    },
+                    "labels": {
+                        "color": "#99AA99"
                     }
                 }
             },
@@ -325,6 +342,9 @@
                     },
                     "gradient": {
                         "show": true
+                    },
+                    "labels": {
+                        "color": "#8A9892"
                     }
                 }
             },
@@ -384,6 +404,9 @@
                     "gradient": {
                         "show": true,
                         "intensity": 10
+                    },
+                    "labels": {
+                        "color": "#50606C"
                     }
                 }
             },

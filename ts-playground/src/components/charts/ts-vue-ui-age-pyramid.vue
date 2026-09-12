@@ -136,6 +136,15 @@ const testPreconfig = computed<VueUiAgePyramidConfig>(() => {
                         intensity: 60,
                         shiftHue: 0.05,
                     },
+                    labels: {
+                        show: true,
+                        showOnHover: true,
+                        fontSize: 12,
+                        color: '#1A1A1A',
+                        bold: false,
+                        formatter: null,
+                        offsetX: 0,
+                    },
                 },
             },
             highlighter: {

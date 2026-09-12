@@ -4540,6 +4540,15 @@ declare module 'vue-data-ui' {
                         intensity?: number;
                         shiftHue?: number;
                     };
+                    labels?: {
+                        show?: boolean;
+                        showOnHover?: boolean;
+                        fontSize?: number;
+                        color?: string;
+                        bold?: boolean;
+                        offsetX?: number;
+                        formatter?: Formatter;
+                    };
                 };
             };
             highlighter?: {

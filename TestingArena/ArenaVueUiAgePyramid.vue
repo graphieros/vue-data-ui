@@ -19,16 +19,22 @@ const { CHECKBOX, NUMBER, RANGE, TEXT, COLOR, SELECT, createModel } =
 
 const dataset = ref(undefined);
 
+function makeDs(n) {
+    const arr = [];
+    for (let i = n; i > 0; i -= 1) {
+        arr.push([
+            String(2000 - i),
+            i,
+            Math.round(Math.random() * 100) + 100,
+            Math.round(Math.random() * 100) + 100,
+        ]);
+    }
+    return arr;
+}
+
 onMounted(() => {
     setTimeout(() => {
-        dataset.value = [
-            ['2017', 5, 366538, 382762],
-            ['2018', 4, 356873, 376705],
-            ['2019', 3, 351707, 368670],
-            ['2020', 2, 341042, 356678],
-            ['2021', 1, 343026, 357351],
-            ['2022', 0, 330929, 345538],
-        ];
+        dataset.value = makeDs(20);
     }, 2000);
 });
 
@@ -91,8 +97,8 @@ const model = createModel([
 
     NUMBER('style.layout.padding.top', { def: 0, min: 0, max: 100 }),
     NUMBER('style.layout.padding.right', { def: 24, min: 0, max: 100 }),
-    NUMBER('style.layout.padding.bottom', { def: 24, min: 0, max: 100 }),
     NUMBER('style.layout.padding.left', { def: 24, min: 0, max: 100 }),
+    NUMBER('style.layout.padding.bottom', { def: 24, min: 0, max: 100 }),
 
     CHECKBOX('style.layout.grid.show', { def: true }),
     COLOR('style.layout.grid.stroke', { def: '#e1e5e8' }),
@@ -155,6 +161,13 @@ const model = createModel([
     NUMBER('style.layout.bars.borderRadius', { def: 2, min: 0, max: 24 }),
     COLOR('style.layout.bars.left.color', { def: '#DC3912' }),
     COLOR('style.layout.bars.right.color', { def: '#3366CC' }),
+
+    CHECKBOX('style.layout.bars.labels.show', { def: true }),
+    CHECKBOX('style.layout.bars.labels.showOnHover', { def: true }),
+    NUMBER('style.layout.bars.labels.fontSize', { def: 12 }),
+    COLOR('style.layout.bars.labels.color', { def: '#1A1A1A' }),
+    CHECKBOX('style.layout.bars.labels.bold', { def: false }),
+    NUMBER('style.layout.bars.labels.offsetX', { def: 0, min: -100, max: 100 }),
 
     CHECKBOX('style.layout.bars.gradient.show', { def: true }),
     COLOR('style.layout.bars.gradient.underlayer', { def: '#FFFFFF' }),
