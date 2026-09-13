@@ -113,6 +113,11 @@ const tooltipTriggerMode = ref('pointer'); // a11y
 const isFocus = ref(false); // a11y
 
 const FINAL_CONFIG = ref(prepareConfig());
+const cfgUserOptions = computed(() => FINAL_CONFIG.value.userOptions);
+const cfgTooltip = computed(() => FINAL_CONFIG.value.style.chart.tooltip);
+const cfgControls = computed(() => FINAL_CONFIG.value.style.chart.controls);
+const cfgWords = computed(() => FINAL_CONFIG.value.style.chart.words);
+const cfgChart = computed(() => FINAL_CONFIG.value.style.chart);
 
 useHints({
     config: () => FINAL_CONFIG.value,
@@ -156,10 +161,8 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
     callback: () => {
         Promise.resolve().then(() => {
             mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
-            mutableConfig.value.showTooltip =
-                FINAL_CONFIG.value.style.chart.tooltip.show;
-            mutableConfig.value.showZoom =
-                FINAL_CONFIG.value.style.chart.zoom.show;
+            mutableConfig.value.showTooltip = cfgTooltip.value.show;
+            mutableConfig.value.showZoom = cfgChart.value.zoom.show;
         });
     },
     skeletonDataset: props.config?.skeletonDataset ?? [
@@ -234,7 +237,7 @@ function setupWordCloud() {
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } =
     useUserOptionState({ config: FINAL_CONFIG.value });
 const { svgRef } = useChartAccessibility({
-    config: FINAL_CONFIG.value.style.chart.title,
+    config: cfgChart.value.title,
 });
 
 function prepareConfig() {
@@ -315,30 +318,25 @@ watch(
 
         // Reset mutable config
         mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
-        mutableConfig.value.showTooltip =
-            FINAL_CONFIG.value.style.chart.tooltip.show;
-        mutableConfig.value.showZoom = FINAL_CONFIG.value.style.chart.zoom.show;
+        mutableConfig.value.showTooltip = cfgTooltip.value.show;
+        mutableConfig.value.showZoom = cfgChart.value.zoom.show;
     },
     { deep: true },
 );
 
 const svg = ref({
-    width: FINAL_CONFIG.value.style.chart.width,
-    height: FINAL_CONFIG.value.style.chart.height,
-    maxFontSize: FINAL_CONFIG.value.style.chart.words.maxFontSize,
-    minFontSize: FINAL_CONFIG.value.style.chart.words.minFontSize,
-    bold: FINAL_CONFIG.value.style.chart.words.bold,
+    width: cfgChart.value.width,
+    height: cfgChart.value.height,
+    maxFontSize: cfgWords.value.maxFontSize,
+    minFontSize: cfgWords.value.minFontSize,
+    bold: cfgWords.value.bold,
 });
 
 const resizeJob = debounce(() => {
     const { width, height } = useResponsive({
         chart: wordCloudChart.value,
-        title: FINAL_CONFIG.value.style.chart.title.text
-            ? chartTitle.value
-            : null,
-        legend: FINAL_CONFIG.value.style.chart.controls.show
-            ? zoomControls.value?.$el
-            : null,
+        title: cfgChart.value.title.text ? chartTitle.value : null,
+        legend: cfgControls.value.show ? zoomControls.value?.$el : null,
         source: source.value,
     });
 
@@ -418,14 +416,14 @@ onBeforeUnmount(() => {
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `wordCloud_${uid.value}`,
-    fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-word-cloud',
+    fileName: cfgChart.value.title.text || 'vue-ui-word-cloud',
     options: FINAL_CONFIG.value.userOptions.print,
 });
 
 const mutableConfig = ref({
     showTable: FINAL_CONFIG.value.table.show,
-    showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show,
-    showZoom: FINAL_CONFIG.value.style.chart.zoom.show,
+    showTooltip: cfgTooltip.value.show,
+    showZoom: cfgChart.value.zoom.show,
 });
 
 // v3 - Essential to make shifting between loading config and final config work
@@ -433,9 +431,8 @@ watch(
     FINAL_CONFIG,
     () => {
         mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
-        mutableConfig.value.showTooltip =
-            FINAL_CONFIG.value.style.chart.tooltip.show;
-        mutableConfig.value.showZoom = FINAL_CONFIG.value.style.chart.zoom.show;
+        mutableConfig.value.showTooltip = cfgTooltip.value.show;
+        mutableConfig.value.showZoom = cfgChart.value.zoom.show;
     },
     { immediate: true },
 );
@@ -444,10 +441,10 @@ function measureTextSize(text, fontSize, fontFamily = 'Arial') {
     // This invisible canvas is necessary to calculate the exact dimensions of words before painting them on the svg. Cool trick
     const canvas = document.createElement('canvas');
     const context = canvas.getContext('2d');
-    context.font = `${fontSize}px ${FINAL_CONFIG.value.style.chart.words.bold ? 'bold' : 'normal'} ${fontFamily}`;
+    context.font = `${fontSize}px ${cfgWords.value.bold ? 'bold' : 'normal'} ${fontFamily}`;
     const metrics = context.measureText(text);
     return {
-        width: metrics.width + FINAL_CONFIG.value.style.chart.words.proximity,
+        width: metrics.width + cfgWords.value.proximity,
         height: fontSize,
     };
 }
@@ -475,14 +472,14 @@ function generateWordCloud() {
             height: size.height,
             color: word.color
                 ? convertColorToHex(word.color)
-                : FINAL_CONFIG.value.style.chart.words.usePalette
+                : cfgWords.value.usePalette
                   ? FINAL_CONFIG.value.customPalette[i] ||
                     FINAL_CONFIG.value.customPalette[
                         i % FINAL_CONFIG.value.customPalette.length
                     ] ||
                     palette[i] ||
                     palette[i % palette.length]
-                  : FINAL_CONFIG.value.style.chart.words.color,
+                  : cfgWords.value.color,
         };
     });
 
@@ -493,7 +490,7 @@ function generateWordCloud() {
         debugTiming: debug.value,
         words: scaledWords,
         svg: svg.value,
-        proximity: FINAL_CONFIG.value.style.chart.words.proximity,
+        proximity: cfgWords.value.proximity,
         strictPixelPadding: FINAL_CONFIG.value.strictPixelPadding,
         quality: FINAL_CONFIG.value.quality,
         onProgress: ({ all }) => {
@@ -548,8 +545,8 @@ function generateCsv(callback = null) {
             return [[h.name], [table.value.body[i]]];
         });
         const tableXls = [
-            [FINAL_CONFIG.value.style.chart.title.text],
-            [FINAL_CONFIG.value.style.chart.title.subtitle.text],
+            [cfgChart.value.title.text],
+            [cfgChart.value.title.subtitle.text],
             [[''], [FINAL_CONFIG.value.table.columnNames.value]],
         ].concat(labels);
 
@@ -558,9 +555,7 @@ function generateCsv(callback = null) {
         if (!callback) {
             downloadCsv({
                 csvContent,
-                title:
-                    FINAL_CONFIG.value.style.chart.title.text ||
-                    'vue-ui-word-cloud',
+                title: cfgChart.value.title.text || 'vue-ui-word-cloud',
             });
         } else {
             callback(csvContent);
@@ -695,7 +690,7 @@ async function getImage({ scale = 2 } = {}) {
     return {
         imageUri,
         base64,
-        title: FINAL_CONFIG.value.style.chart.title.text,
+        title: cfgChart.value.title.text,
         width,
         height,
         aspectRatio,
@@ -708,7 +703,7 @@ const tableComponent = computed(() => {
     const open = mutableConfig.value.showTable;
     return {
         component: useDialog ? BaseDraggableDialog : Accordion,
-        title: `${FINAL_CONFIG.value.style.chart.title.text}${FINAL_CONFIG.value.style.chart.title.subtitle.text ? `: ${FINAL_CONFIG.value.style.chart.title.subtitle.text}` : ''}`,
+        title: `${cfgChart.value.title.text}${cfgChart.value.title.subtitle.text ? `: ${cfgChart.value.title.subtitle.text}` : ''}`,
         props: useDialog
             ? {
                   backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
@@ -726,14 +721,12 @@ const tableComponent = computed(() => {
                       open,
                       maxHeight: 10000,
                       body: {
-                          backgroundColor:
-                              FINAL_CONFIG.value.style.chart.backgroundColor,
-                          color: FINAL_CONFIG.value.style.chart.color,
+                          backgroundColor: cfgChart.value.backgroundColor,
+                          color: cfgChart.value.color,
                       },
                       head: {
-                          backgroundColor:
-                              FINAL_CONFIG.value.style.chart.backgroundColor,
-                          color: FINAL_CONFIG.value.style.chart.color,
+                          backgroundColor: cfgChart.value.backgroundColor,
+                          color: cfgChart.value.color,
                       },
                   },
               },
@@ -761,8 +754,8 @@ function closeTable() {
     }
 }
 
-const svgBg = computed(() => FINAL_CONFIG.value.style.chart.backgroundColor);
-const svgTitle = computed(() => FINAL_CONFIG.value.style.chart.title);
+const svgBg = computed(() => cfgChart.value.backgroundColor);
+const svgTitle = computed(() => cfgChart.value.title);
 
 const { isCallbackImaging, isCallbackSvg, generateSvg, onGenerateImage } =
     useChartExport({
@@ -853,7 +846,7 @@ function useTooltip(word, index, triggerMode = 'pointer') {
         seriesIndex: index,
     };
 
-    const customFormat = FINAL_CONFIG.value.style.chart.tooltip.customFormat;
+    const customFormat = cfgTooltip.value.customFormat;
     useCustomFormat.value = false;
 
     if (isFunction(customFormat)) {
@@ -873,7 +866,7 @@ function useTooltip(word, index, triggerMode = 'pointer') {
     }
 
     if (!useCustomFormat.value) {
-        let html = `<svg viewBox="0 0 10 10" height="${FINAL_CONFIG.value.style.chart.tooltip.fontSize}"><circle cx="5" cy="5" r="5" fill="${word.color}"/></svg><span>${word.name}:</span><b>${(word.value || 0).toFixed(FINAL_CONFIG.value.style.chart.tooltip.roundingValue)}</b>`;
+        let html = `<svg viewBox="0 0 10 10" height="${cfgTooltip.value.fontSize}"><circle cx="5" cy="5" r="5" fill="${word.color}"/></svg><span>${word.name}:</span><b>${(word.value || 0).toFixed(cfgTooltip.value.roundingValue)}</b>`;
 
         tooltipContent.value = `<div dir="auto" style="display:flex; gap:4px; align-items:center; jsutify-content:center;">${html}</div>`;
     }
@@ -1005,7 +998,7 @@ defineExpose({
         :id="`wordCloud_${uid}`"
         :data-resizing="resizing"
         :data-relayout="isRelayout"
-        :style="`width: 100%; font-family:${FINAL_CONFIG.style.fontFamily};background:${FINAL_CONFIG.style.chart.backgroundColor};${FINAL_CONFIG.responsive ? 'height:100%' : ''}`"
+        :style="`width: 100%; font-family:${FINAL_CONFIG.style.fontFamily};background:${cfgChart.backgroundColor};${FINAL_CONFIG.responsive ? 'height:100%' : ''}`"
         @mouseenter="() => setUserOptionsVisibility(true)"
         @mouseleave="
             () => {
@@ -1030,13 +1023,13 @@ defineExpose({
         />
 
         <PenAndPaper
-            v-if="FINAL_CONFIG.userOptions.buttons.annotator"
+            v-if="cfgUserOptions.buttons.annotator"
             :svgRef="svgRef"
-            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
-            :color="FINAL_CONFIG.style.chart.color"
+            :backgroundColor="cfgChart.backgroundColor"
+            :color="cfgChart.color"
             :active="isAnnotator"
             :isCursorPointer="isCursorPointer"
-            :palette="FINAL_CONFIG.userOptions.annotatorPalette"
+            :palette="cfgUserOptions.annotatorPalette"
             @close="toggleAnnotator"
         >
             <template #annotator-action-close>
@@ -1061,17 +1054,17 @@ defineExpose({
 
         <div
             ref="chartTitle"
-            v-if="FINAL_CONFIG.style.chart.title.text"
+            v-if="cfgChart.title.text"
             :style="`width:100%;background:transparent;padding-bottom:24px`"
         >
             <Title
                 :key="`title_${titleStep}`"
                 :config="{
                     title: {
-                        ...FINAL_CONFIG.style.chart.title,
+                        ...cfgChart.title,
                     },
                     subtitle: {
-                        ...FINAL_CONFIG.style.chart.title.subtitle,
+                        ...cfgChart.title.subtitle,
                     },
                 }"
             />
@@ -1081,37 +1074,34 @@ defineExpose({
             ref="userOptionsRef"
             :key="`user_option_${step}`"
             v-if="
-                FINAL_CONFIG.userOptions.show &&
+                cfgUserOptions.show &&
                 isDataset &&
                 (keepUserOptionState ? true : userOptionsVisible)
             "
-            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
-            :color="FINAL_CONFIG.style.chart.color"
+            :backgroundColor="cfgChart.backgroundColor"
+            :color="cfgChart.color"
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uid"
-            :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
-            :hasXls="FINAL_CONFIG.userOptions.buttons.csv"
-            :hasImg="FINAL_CONFIG.userOptions.buttons.img"
-            :hasSvg="FINAL_CONFIG.userOptions.buttons.svg"
-            :hasTable="FINAL_CONFIG.userOptions.buttons.table"
-            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
-            :hasAltCopy="FINAL_CONFIG.userOptions.buttons.altCopy"
+            :hasPdf="cfgUserOptions.buttons.pdf"
+            :hasXls="cfgUserOptions.buttons.csv"
+            :hasImg="cfgUserOptions.buttons.img"
+            :hasSvg="cfgUserOptions.buttons.svg"
+            :hasTable="cfgUserOptions.buttons.table"
+            :hasFullscreen="cfgUserOptions.buttons.fullscreen"
+            :hasAltCopy="cfgUserOptions.buttons.altCopy"
             :isFullscreen="isFullscreen"
-            :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
+            :titles="{ ...cfgUserOptions.buttonTitles }"
             :chartElement="wordCloudChart"
-            :position="FINAL_CONFIG.userOptions.position"
-            :hasTooltip="
-                FINAL_CONFIG.style.chart.tooltip.show &&
-                FINAL_CONFIG.userOptions.buttons.tooltip
-            "
+            :position="cfgUserOptions.position"
+            :hasTooltip="cfgTooltip.show && cfgUserOptions.buttons.tooltip"
             :isTooltip="mutableConfig.showTooltip"
-            :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator"
+            :hasAnnotator="cfgUserOptions.buttons.annotator"
             :isAnnotation="isAnnotator"
-            :callbacks="FINAL_CONFIG.userOptions.callbacks"
-            :printScale="FINAL_CONFIG.userOptions.print.scale"
+            :callbacks="cfgUserOptions.callbacks"
+            :printScale="cfgUserOptions.print.scale"
             :tableDialog="FINAL_CONFIG.table.useDialog"
-            :hasZoom="FINAL_CONFIG.userOptions.buttons.zoom"
+            :hasZoom="cfgUserOptions.buttons.zoom"
             :isZoom="mutableConfig.showZoom"
             :isCursorPointer="isCursorPointer"
             @toggleFullscreen="toggleFullscreen"
@@ -1195,9 +1185,7 @@ defineExpose({
         <BaseZoomControls
             ref="zoomControls"
             v-if="
-                FINAL_CONFIG.style.chart.controls.position === 'top' &&
-                FINAL_CONFIG.style.chart.controls.show &&
-                !loading
+                cfgControls.position === 'top' && cfgControls.show && !loading
             "
             :config="FINAL_CONFIG"
             :scale="scale"
@@ -1261,18 +1249,14 @@ defineExpose({
                             :height="word.maxY - word.minY"
                             fill="transparent"
                             pointer-events="visiblePainted"
-                            :aria-label="`${word.name}: ${(word.value || 0).toFixed(FINAL_CONFIG.style.chart.tooltip.roundingValue)}`"
+                            :aria-label="`${word.name}: ${(word.value || 0).toFixed(cfgTooltip.roundingValue)}`"
                             @mouseover="useTooltip(word, index)"
                             @mouseleave="onTrapLeave(word, index)"
                             @click="onTrapClick(word, index)"
                         />
                         <text
                             :fill="word.color"
-                            :font-weight="
-                                FINAL_CONFIG.style.chart.words.bold
-                                    ? 'bold'
-                                    : 'normal'
-                            "
+                            :font-weight="cfgWords.bold ? 'bold' : 'normal'"
                             :x="0"
                             :y="0"
                             :font-size="word.fontSize"
@@ -1282,8 +1266,7 @@ defineExpose({
                             paint-order="stroke fill"
                             :stroke="
                                 !selectedWord || selectedWord === word.id
-                                    ? FINAL_CONFIG.style.chart.words
-                                          .selectedStroke
+                                    ? cfgWords.selectedStroke
                                     : undefined
                             "
                             :stroke-width="word.height * 0.05"
@@ -1291,7 +1274,7 @@ defineExpose({
                             stroke-linejoin="round"
                             :style="`
                                 pointer-events:none;
-                                fill-opacity:${!selectedWord || selectedWord === word.id || !cloudFinalized ? 1 : FINAL_CONFIG.style.chart.words.hoverOpacity} !important;
+                                fill-opacity:${!selectedWord || selectedWord === word.id || !cloudFinalized ? 1 : cfgWords.hoverOpacity} !important;
                             `"
                         >
                             {{ word.name }}
@@ -1344,8 +1327,8 @@ defineExpose({
         <BaseZoomControls
             ref="zoomControls"
             v-if="
-                FINAL_CONFIG.style.chart.controls.position === 'bottom' &&
-                FINAL_CONFIG.style.chart.controls.show &&
+                cfgControls.position === 'bottom' &&
+                cfgControls.show &&
                 !loading
             "
             :config="FINAL_CONFIG"
@@ -1358,30 +1341,26 @@ defineExpose({
         />
 
         <Tooltip
-            :teleportTo="FINAL_CONFIG.style.chart.tooltip.teleportTo"
+            :teleportTo="cfgTooltip.teleportTo"
             :show="mutableConfig.showTooltip && isTooltip"
-            :backgroundColor="FINAL_CONFIG.style.chart.tooltip.backgroundColor"
-            :color="FINAL_CONFIG.style.chart.tooltip.color"
-            :fontSize="FINAL_CONFIG.style.chart.tooltip.fontSize"
-            :borderRadius="FINAL_CONFIG.style.chart.tooltip.borderRadius"
-            :borderColor="FINAL_CONFIG.style.chart.tooltip.borderColor"
-            :borderWidth="FINAL_CONFIG.style.chart.tooltip.borderWidth"
-            :backgroundOpacity="
-                FINAL_CONFIG.style.chart.tooltip.backgroundOpacity
-            "
-            :position="FINAL_CONFIG.style.chart.tooltip.position"
-            :offsetX="FINAL_CONFIG.style.chart.tooltip.offsetX"
-            :offsetY="FINAL_CONFIG.style.chart.tooltip.offsetY"
+            :backgroundColor="cfgTooltip.backgroundColor"
+            :color="cfgTooltip.color"
+            :fontSize="cfgTooltip.fontSize"
+            :borderRadius="cfgTooltip.borderRadius"
+            :borderColor="cfgTooltip.borderColor"
+            :borderWidth="cfgTooltip.borderWidth"
+            :backgroundOpacity="cfgTooltip.backgroundOpacity"
+            :position="cfgTooltip.position"
+            :offsetX="cfgTooltip.offsetX"
+            :offsetY="cfgTooltip.offsetY"
             :parent="wordCloudChart"
             :content="tooltipContent"
             :isCustom="useCustomFormat"
             :isFullscreen="isFullscreen"
-            :smooth="FINAL_CONFIG.style.chart.tooltip.smooth"
-            :backdropFilter="FINAL_CONFIG.style.chart.tooltip.backdropFilter"
-            :smoothForce="FINAL_CONFIG.style.chart.tooltip.smoothForce"
-            :smoothSnapThreshold="
-                FINAL_CONFIG.style.chart.tooltip.smoothSnapThreshold
-            "
+            :smooth="cfgTooltip.smooth"
+            :backdropFilter="cfgTooltip.backdropFilter"
+            :smoothForce="cfgTooltip.smoothForce"
+            :smoothSnapThreshold="cfgTooltip.smoothSnapThreshold"
             :isA11yMode="tooltipTriggerMode === 'keyboard'"
             :a11yPosition="tooltipA11yPosition"
         >
@@ -1407,7 +1386,7 @@ defineExpose({
         </div>
 
         <component
-            v-if="isDataset && FINAL_CONFIG.userOptions.buttons.table"
+            v-if="isDataset && cfgUserOptions.buttons.table"
             :is="tableComponent.component"
             v-bind="tableComponent.props"
             ref="tableUnit"
@@ -1420,7 +1399,7 @@ defineExpose({
                 <button
                     tabindex="0"
                     class="vue-ui-user-options-button"
-                    @click="generateCsv(FINAL_CONFIG.userOptions.callbacks.csv)"
+                    @click="generateCsv(cfgUserOptions.callbacks.csv)"
                     :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }"
                 >
                     <BaseIcon
