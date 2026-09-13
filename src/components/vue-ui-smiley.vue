@@ -28,6 +28,8 @@ const emit = defineEmits(['rate']);
 const hoveredValue = ref(null);
 
 const FINAL_CONFIG = ref(prepareConfig());
+const cfgRating = computed(() => FINAL_CONFIG.value.style.rating);
+const cfgStyle = computed(() => FINAL_CONFIG.value.style);
 
 const debug = computed(() => FINAL_CONFIG.value.debug);
 
@@ -110,56 +112,53 @@ const units = [
     {
         key: 'smiley_0',
         pathIconFilled:
-            'M17 3.34a10 10 0 1 1 -14.995 8.984l-.005 -.324l.005 -.324a10 10 0 0 1 14.995 -8.336zm-5 9.86a4.5 4.5 0 0 0 -3.214 1.35a1 1 0 1 0 1.428 1.4a2.5 2.5 0 0 1 3.572 0a1 1 0 0 0 1.428 -1.4a4.5 4.5 0 0 0 -3.214 -1.35zm-2.99 -4.2l-.127 .007a1 1 0 0 0 0 1.986l.117 .007l.127 -.007a1 1 0 0 0 0 -1.986l-.117 -.007zm6 0l-.127 .007a1 1 0 0 0 0 1.986l.117 .007l.127 -.007a1 1 0 0 0 0 -1.986l-.117 -.007z',
+            'M17 3.34A10 10 0 112.005 12.324L2 12l.005-.324A10 10 0 0117 3.34zm-5 9.86a4.5 4.5 0 00-3.214 1.35 1 1 0 101.428 1.4 2.5 2.5 0 013.572 0 1 1 0 001.428-1.4A4.5 4.5 0 0012 13.2zM9.01 9l-.127.007a1 1 0 000 1.986L9 11l.127-.007a1 1 0 000-1.986L9.01 9zm6 0-.127.007a1 1 0 000 1.986L15 11l.127-.007a1 1 0 000-1.986L15.01 9z',
         pathIcon:
-            'M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0 M9 10l.01 0 M15 10l.01 0 M9.5 15.25a3.5 3.5 0 0 1 5 0',
+            'M3 12a9 9 0 1018 0A9 9 0 103 12m6-2h.01M15 10h.01M9.5 15.25a3.5 3.5 0 015 0',
         pathIconFilledReadonly:
-            'M17 3.34a10 10 0 1 1 -14.995 8.984l-.005 -.324l.005 -.324a10 10 0 0 1 14.995 -8.336zm-5 9.86a4.5 4.5 0 0 0 -3.214 1.35a1 1 0 1 0 1.428 1.4a2.5 2.5 0 0 1 3.572 0a1 1 0 0 0 1.428 -1.4a4.5 4.5 0 0 0 -3.214 -1.35zm-2.99 -4.2l-.127 .007a1 1 0 0 0 0 1.986l.117 .007l.127 -.007a1 1 0 0 0 0 -1.986l-.117 -.007zm6 0l-.127 .007a1 1 0 0 0 0 1.986l.117 .007l.127 -.007a1 1 0 0 0 0 -1.986l-.117 -.007z',
-        pathIconReadonly: `M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0 M9 10l.01 0 M15 10l.01 0 M9.5 15.25a3.5 3.5 0 0 1 5 0`,
+            'M17 3.34A10 10 0 112.005 12.324L2 12l.005-.324A10 10 0 0117 3.34zm-5 9.86a4.5 4.5 0 00-3.214 1.35 1 1 0 101.428 1.4 2.5 2.5 0 013.572 0 1 1 0 001.428-1.4A4.5 4.5 0 0012 13.2zM9.01 9l-.127.007a1 1 0 000 1.986L9 11l.127-.007a1 1 0 000-1.986L9.01 9zm6 0-.127.007a1 1 0 000 1.986L15 11l.127-.007a1 1 0 000-1.986L15.01 9z',
+        pathIconReadonly: `M3 12a9 9 0 1018 0A9 9 0 103 12m6-2h.01M15 10h.01M9.5 15.25a3.5 3.5 0 015 0`,
     },
     {
         key: 'smiley_1',
         pathIconFilled:
-            'M17 3.34a10 10 0 1 1 -14.995 8.984l-.005 -.324l.005 -.324a10 10 0 0 1 14.995 -8.336zm-2 10.66h-6l-.117 .007a1 1 0 0 0 0 1.986l.117 .007h6l.117 -.007a1 1 0 0 0 0 -1.986l-.117 -.007zm-5.99 -5l-.127 .007a1 1 0 0 0 0 1.986l.117 .007l.127 -.007a1 1 0 0 0 0 -1.986l-.117 -.007zm6 0l-.127 .007a1 1 0 0 0 0 1.986l.117 .007l.127 -.007a1 1 0 0 0 0 -1.986l-.117 -.007z',
-        pathIcon:
-            'M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0 M9 10l.01 0 M15 10l.01 0 M9 15l6 0',
+            'M17 3.34A10 10 0 112.005 12.324L2 12l.005-.324A10 10 0 0117 3.34zM15 14H9l-.117.007a1 1 0 000 1.986L9 16h6l.117-.007a1 1 0 000-1.986L15 14zm-5.99-5-.127.007a1 1 0 000 1.986L9 11l.127-.007a1 1 0 000-1.986L9.01 9zm6 0-.127.007a1 1 0 000 1.986L15 11l.127-.007a1 1 0 000-1.986L15.01 9z',
+        pathIcon: 'M3 12a9 9 0 1018 0A9 9 0 103 12m6-2h.01M15 10h.01M9 15h6',
         pathIconFilledReadonly:
-            'M17 3.34a10 10 0 1 1 -14.995 8.984l-.005 -.324l.005 -.324a10 10 0 0 1 14.995 -8.336zm-2 10.66h-6l-.117 .007a1 1 0 0 0 0 1.986l.117 .007h6l.117 -.007a1 1 0 0 0 0 -1.986l-.117 -.007zm-5.99 -5l-.127 .007a1 1 0 0 0 0 1.986l.117 .007l.127 -.007a1 1 0 0 0 0 -1.986l-.117 -.007zm6 0l-.127 .007a1 1 0 0 0 0 1.986l.117 .007l.127 -.007a1 1 0 0 0 0 -1.986l-.117 -.007z',
+            'M17 3.34A10 10 0 112.005 12.324L2 12l.005-.324A10 10 0 0117 3.34zM15 14H9l-.117.007a1 1 0 000 1.986L9 16h6l.117-.007a1 1 0 000-1.986L15 14zm-5.99-5-.127.007a1 1 0 000 1.986L9 11l.127-.007a1 1 0 000-1.986L9.01 9zm6 0-.127.007a1 1 0 000 1.986L15 11l.127-.007a1 1 0 000-1.986L15.01 9z',
         pathIconReadonly:
-            'M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0 M9 10l.01 0 M15 10l.01 0 M9 15l6 0',
+            'M3 12a9 9 0 1018 0A9 9 0 103 12m6-2h.01M15 10h.01M9 15h6',
     },
     {
         key: 'smiley_2',
         pathIconFilled:
-            'M17 3.34a10 10 0 1 1 -14.995 8.984l-.005 -.324l.005 -.324a10 10 0 0 1 14.995 -8.336zm-7.99 5.66l-.127 .007a1 1 0 0 0 0 1.986l.117 .007l.127 -.007a1 1 0 0 0 0 -1.986l-.117 -.007zm6 0l-.127 .007a1 1 0 0 0 0 1.986l.117 .007l.127 -.007a1 1 0 0 0 0 -1.986l-.117 -.007z',
-        pathIcon:
-            'M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0 M9 10l.01 0 M15 10l.01 0',
+            'M17 3.34A10 10 0 112.005 12.324L2 12l.005-.324A10 10 0 0117 3.34zM9.01 9l-.127.007a1 1 0 000 1.986L9 11l.127-.007a1 1 0 000-1.986L9.01 9zm6 0-.127.007a1 1 0 000 1.986L15 11l.127-.007a1 1 0 000-1.986L15.01 9z',
+        pathIcon: 'M3 12a9 9 0 1018 0A9 9 0 103 12m6-2h.01M15 10h.01',
         pathIconFilledReadonly:
-            'M17 3.34a10 10 0 1 1 -14.995 8.984l-.005 -.324l.005 -.324a10 10 0 0 1 14.995 -8.336zm-7.99 5.66l-.127 .007a1 1 0 0 0 0 1.986l.117 .007l.127 -.007a1 1 0 0 0 0 -1.986l-.117 -.007zm6 0l-.127 .007a1 1 0 0 0 0 1.986l.117 .007l.127 -.007a1 1 0 0 0 0 -1.986l-.117 -.007z',
-        pathIconReadonly:
-            'M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0 M9 10l.01 0 M15 10l.01 0',
+            'M17 3.34A10 10 0 112.005 12.324L2 12l.005-.324A10 10 0 0117 3.34zM9.01 9l-.127.007a1 1 0 000 1.986L9 11l.127-.007a1 1 0 000-1.986L9.01 9zm6 0-.127.007a1 1 0 000 1.986L15 11l.127-.007a1 1 0 000-1.986L15.01 9z',
+        pathIconReadonly: 'M3 12a9 9 0 1018 0A9 9 0 103 12m6-2h.01M15 10h.01',
     },
     {
         key: 'smiley_3',
         pathIconFilled:
-            'M17 3.34a10 10 0 1 1 -14.995 8.984l-.005 -.324l.005 -.324a10 10 0 0 1 14.995 -8.336zm-1.8 10.946a1 1 0 0 0 -1.414 .014a2.5 2.5 0 0 1 -3.572 0a1 1 0 0 0 -1.428 1.4a4.5 4.5 0 0 0 6.428 0a1 1 0 0 0 -.014 -1.414zm-6.19 -5.286l-.127 .007a1 1 0 0 0 .117 1.993l.127 -.007a1 1 0 0 0 -.117 -1.993zm6 0l-.127 .007a1 1 0 0 0 .117 1.993l.127 -.007a1 1 0 0 0 -.117 -1.993z',
+            'M17 3.34A10 10 0 112.005 12.324L2 12l.005-.324A10 10 0 0117 3.34zm-1.8 10.946a1 1 0 00-1.414.014 2.5 2.5 0 01-3.572 0 1 1 0 00-1.428 1.4 4.5 4.5 0 006.428 0 1 1 0 00-.014-1.414zM9.01 9l-.127.007A1 1 0 009 11l.127-.007A1 1 0 009.01 9zm6 0-.127.007A1 1 0 0015 11l.127-.007A1 1 0 0015.01 9z',
         pathIcon:
-            'M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0 M9 10l.01 0 M15 10l.01 0 M9.5 15a3.5 3.5 0 0 0 5 0',
+            'M3 12a9 9 0 1018 0A9 9 0 103 12m6-2h.01M15 10h.01M9.5 15a3.5 3.5 0 005 0',
         pathIconFilledReadonly:
-            'M17 3.34a10 10 0 1 1 -14.995 8.984l-.005 -.324l.005 -.324a10 10 0 0 1 14.995 -8.336zm-1.8 10.946a1 1 0 0 0 -1.414 .014a2.5 2.5 0 0 1 -3.572 0a1 1 0 0 0 -1.428 1.4a4.5 4.5 0 0 0 6.428 0a1 1 0 0 0 -.014 -1.414zm-6.19 -5.286l-.127 .007a1 1 0 0 0 .117 1.993l.127 -.007a1 1 0 0 0 -.117 -1.993zm6 0l-.127 .007a1 1 0 0 0 .117 1.993l.127 -.007a1 1 0 0 0 -.117 -1.993z',
+            'M17 3.34A10 10 0 112.005 12.324L2 12l.005-.324A10 10 0 0117 3.34zm-1.8 10.946a1 1 0 00-1.414.014 2.5 2.5 0 01-3.572 0 1 1 0 00-1.428 1.4 4.5 4.5 0 006.428 0 1 1 0 00-.014-1.414zM9.01 9l-.127.007A1 1 0 009 11l.127-.007A1 1 0 009.01 9zm6 0-.127.007A1 1 0 0015 11l.127-.007A1 1 0 0015.01 9z',
         pathIconReadonly:
-            'M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0 M9 10l.01 0 M15 10l.01 0 M9.5 15a3.5 3.5 0 0 0 5 0',
+            'M3 12a9 9 0 1018 0A9 9 0 103 12m6-2h.01M15 10h.01M9.5 15a3.5 3.5 0 005 0',
     },
     {
         key: 'smiley_4',
         pathIconFilled:
-            'M17 3.34a10 10 0 1 1 -14.995 8.984l-.005 -.324l.005 -.324a10 10 0 0 1 14.995 -8.336zm-2 9.66h-6a1 1 0 0 0 -1 1v.05a3.975 3.975 0 0 0 3.777 3.97l.227 .005a4.026 4.026 0 0 0 3.99 -3.79l.006 -.206a1 1 0 0 0 -1 -1.029zm-5.99 -5l-.127 .007a1 1 0 0 0 .117 1.993l.127 -.007a1 1 0 0 0 -.117 -1.993zm6 0l-.127 .007a1 1 0 0 0 .117 1.993l.127 -.007a1 1 0 0 0 -.117 -1.993z',
+            'M17 3.34A10 10 0 112.005 12.324L2 12l.005-.324A10 10 0 0117 3.34zM15 13H9a1 1 0 00-1 1v.05a3.975 3.975 0 003.777 3.97l.227.005a4.026 4.026 0 003.99-3.79l.006-.206A1 1 0 0015 13zm-5.99-5-.127.007A1 1 0 009 10l.127-.007A1 1 0 009.01 8zm6 0-.127.007A1 1 0 0015 10l.127-.007A1 1 0 0015.01 8z',
         pathIcon:
-            'M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0 M9 9l.01 0 M15 9l.01 0 M8 13a4 4 0 1 0 8 0h-8',
+            'M3 12a9 9 0 1018 0A9 9 0 103 12M9 9h.01M15 9h.01M8 13a4 4 0 108 0H8',
         pathIconFilledReadonly:
-            'M17 3.34a10 10 0 1 1 -14.995 8.984l-.005 -.324l.005 -.324a10 10 0 0 1 14.995 -8.336zm-2 9.66h-6a1 1 0 0 0 -1 1v.05a3.975 3.975 0 0 0 3.777 3.97l.227 .005a4.026 4.026 0 0 0 3.99 -3.79l.006 -.206a1 1 0 0 0 -1 -1.029zm-5.99 -5l-.127 .007a1 1 0 0 0 .117 1.993l.127 -.007a1 1 0 0 0 -.117 -1.993zm6 0l-.127 .007a1 1 0 0 0 .117 1.993l.127 -.007a1 1 0 0 0 -.117 -1.993z',
+            'M17 3.34A10 10 0 112.005 12.324L2 12l.005-.324A10 10 0 0117 3.34zM15 13H9a1 1 0 00-1 1v.05a3.975 3.975 0 003.777 3.97l.227.005a4.026 4.026 0 003.99-3.79l.006-.206A1 1 0 0015 13zm-5.99-5-.127.007A1 1 0 009 10l.127-.007A1 1 0 009.01 8zm6 0-.127.007A1 1 0 0015 10l.127-.007A1 1 0 0015.01 8z',
         pathIconReadonly:
-            'M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0 M9 9l.01 0 M15 9l.01 0 M8 13a4 4 0 1 0 8 0h-8',
+            'M3 12a9 9 0 1018 0A9 9 0 103 12M9 9h.01M15 9h.01M8 13a4 4 0 108 0H8',
     },
 ];
 
@@ -201,27 +200,27 @@ function calcShapeFill(index) {
 
 function getActiveColor(index) {
     if (FINAL_CONFIG.value.readonly) {
-        return FINAL_CONFIG.value.style.colors.inactive[index];
+        return cfgStyle.value.colors.inactive[index];
     } else {
         if (currentRating.value === index + 1) {
             if (
-                FINAL_CONFIG.value.style.icons.useGradient &&
-                FINAL_CONFIG.value.style.icons.filled
+                cfgStyle.value.icons.useGradient &&
+                cfgStyle.value.icons.filled
             ) {
                 return `url(#vueUiSmiley${index})`;
             }
-            return FINAL_CONFIG.value.style.colors.active[index];
+            return cfgStyle.value.colors.active[index];
         } else {
             if (hoveredValue.value !== null && hoveredValue.value === index) {
                 if (
-                    FINAL_CONFIG.value.style.icons.useGradient &&
-                    FINAL_CONFIG.value.style.icons.filled
+                    cfgStyle.value.icons.useGradient &&
+                    cfgStyle.value.icons.filled
                 ) {
                     return `url(#vueUiSmiley${index})`;
                 }
-                return FINAL_CONFIG.value.style.colors.active[index];
+                return cfgStyle.value.colors.active[index];
             } else {
-                return FINAL_CONFIG.value.style.colors.inactive[index];
+                return cfgStyle.value.colors.inactive[index];
             }
         }
     }
@@ -231,14 +230,14 @@ const formattedRating = computed(() => {
     return ({ value, tooltip = false }) =>
         applyDataLabel(
             tooltip
-                ? FINAL_CONFIG.value.style.tooltip.formatter
-                : FINAL_CONFIG.value.style.rating.formatter,
+                ? cfgStyle.value.tooltip.formatter
+                : cfgRating.value.formatter,
             value,
             dataLabel({
                 v: value,
                 r: tooltip
-                    ? FINAL_CONFIG.value.style.tooltip.roundingValue
-                    : FINAL_CONFIG.value.style.rating.roundingValue,
+                    ? cfgStyle.value.tooltip.roundingValue
+                    : cfgRating.value.roundingValue,
             }),
             FINAL_CONFIG.value,
         );
@@ -267,54 +266,48 @@ defineExpose({
 <template>
     <div
         class="vue-data-ui-component vue-ui-smiley"
-        :style="`background:${FINAL_CONFIG.style.backgroundColor};font-family:${FINAL_CONFIG.style.fontFamily};width:100%;`"
+        :style="`background:${cfgStyle.backgroundColor};font-family:${cfgStyle.fontFamily};width:100%;`"
         @mouseleave="hoveredValue = undefined"
     >
         <!-- TITLE -->
         <div
             class="vue-ui-rating-title"
-            v-if="FINAL_CONFIG.style.title.text"
+            v-if="cfgStyle.title.text"
             style="width: 100%"
         >
             <div
                 data-cy="smiley-title"
-                :style="`color:${FINAL_CONFIG.style.title.color};font-weight:${FINAL_CONFIG.style.title.bold ? 'bold' : 'normal'};text-align:${FINAL_CONFIG.style.title.textAlign};margin-bottom:${FINAL_CONFIG.style.title.offsetY}px;font-size:${FINAL_CONFIG.style.title.fontSize}px`"
+                :style="`color:${cfgStyle.title.color};font-weight:${cfgStyle.title.bold ? 'bold' : 'normal'};text-align:${cfgStyle.title.textAlign};margin-bottom:${cfgStyle.title.offsetY}px;font-size:${cfgStyle.title.fontSize}px`"
             >
-                {{ FINAL_CONFIG.style.title.text }}
+                {{ cfgStyle.title.text }}
             </div>
             <div
                 data-cy="smiley-subtitle"
-                v-if="FINAL_CONFIG.style.title.subtitle.text"
-                :style="`color:${FINAL_CONFIG.style.title.subtitle.color};font-size:${FINAL_CONFIG.style.title.subtitle.fontSize}px;text-align:${FINAL_CONFIG.style.title.textAlign};margin-bottom:${FINAL_CONFIG.style.title.subtitle.offsetY}px;font-weight:${FINAL_CONFIG.style.title.subtitle.bold ? 'bold' : 'normal'}`"
+                v-if="cfgStyle.title.subtitle.text"
+                :style="`color:${cfgStyle.title.subtitle.color};font-size:${cfgStyle.title.subtitle.fontSize}px;text-align:${cfgStyle.title.textAlign};margin-bottom:${cfgStyle.title.subtitle.offsetY}px;font-weight:${cfgStyle.title.subtitle.bold ? 'bold' : 'normal'}`"
             >
-                {{ FINAL_CONFIG.style.title.subtitle.text }}
+                {{ cfgStyle.title.subtitle.text }}
             </div>
         </div>
 
         <!-- RATING POSITION TOP -->
         <div
             data-cy="smiley-position-top"
-            v-if="
-                FINAL_CONFIG.style.rating.show &&
-                FINAL_CONFIG.style.rating.position === 'top'
-            "
-            :style="`width:100%;text-align:center;margin-bottom:${FINAL_CONFIG.style.rating.offsetY}px;font-size:${FINAL_CONFIG.style.rating.fontSize}px;font-weight:${FINAL_CONFIG.style.rating.bold ? 'bold' : 'normal'};margin-left:${FINAL_CONFIG.style.rating.offsetX}px`"
+            v-if="cfgRating.show && cfgRating.position === 'top'"
+            :style="`width:100%;text-align:center;margin-bottom:${cfgRating.offsetY}px;font-size:${cfgRating.fontSize}px;font-weight:${cfgRating.bold ? 'bold' : 'normal'};margin-left:${cfgRating.offsetX}px`"
         >
             {{ formattedRating({ value: currentRating }) }}
         </div>
 
         <div
             class="vue-ui-smiley-wrapper"
-            :style="`overflow:visible;height:${FINAL_CONFIG.style.itemSize}px;width:fit-content;margin:0 auto;display:flex;align-items:center;justify-content:center;`"
+            :style="`overflow:visible;height:${cfgStyle.itemSize}px;width:fit-content;margin:0 auto;display:flex;align-items:center;justify-content:center;`"
         >
             <!-- RATING POSITION LEFT -->
             <div
                 data-cy="smiley-position-left"
-                v-if="
-                    FINAL_CONFIG.style.rating.show &&
-                    FINAL_CONFIG.style.rating.position === 'left'
-                "
-                :style="`width:fit-content;text-align:center;margin-bottom:${FINAL_CONFIG.style.rating.offsetY}px;font-size:${FINAL_CONFIG.style.rating.fontSize}px;font-weight:${FINAL_CONFIG.style.rating.bold ? 'bold' : 'normal'};padding-right:${FINAL_CONFIG.style.rating.offsetX}px`"
+                v-if="cfgRating.show && cfgRating.position === 'left'"
+                :style="`width:fit-content;text-align:center;margin-bottom:${cfgRating.offsetY}px;font-size:${cfgRating.fontSize}px;font-weight:${cfgRating.bold ? 'bold' : 'normal'};padding-right:${cfgRating.offsetX}px`"
             >
                 {{ formattedRating({ value: currentRating }) }}
             </div>
@@ -358,9 +351,9 @@ defineExpose({
                         :d="unit.pathIconFilledReadonly"
                         stroke-width="0"
                         :fill="
-                            FINAL_CONFIG.style.icons.useGradient
+                            cfgStyle.icons.useGradient
                                 ? `url(#vueUiSmiley${i})`
-                                : FINAL_CONFIG.style.colors.activeReadonly[i]
+                                : cfgStyle.colors.activeReadonly[i]
                         "
                     />
                 </template>
@@ -372,11 +365,8 @@ defineExpose({
             <!-- RATING POSITION RIGHT -->
             <div
                 data-cy="smiley-position-right"
-                v-if="
-                    FINAL_CONFIG.style.rating.show &&
-                    FINAL_CONFIG.style.rating.position === 'right'
-                "
-                :style="`width:fit-content;text-align:center;margin-bottom:${FINAL_CONFIG.style.rating.offsetY}px;font-size:${FINAL_CONFIG.style.rating.fontSize}px;font-weight:${FINAL_CONFIG.style.rating.bold ? 'bold' : 'normal'};padding-left:${FINAL_CONFIG.style.rating.offsetX}px`"
+                v-if="cfgRating.show && cfgRating.position === 'right'"
+                :style="`width:fit-content;text-align:center;margin-bottom:${cfgRating.offsetY}px;font-size:${cfgRating.fontSize}px;font-weight:${cfgRating.bold ? 'bold' : 'normal'};padding-left:${cfgRating.offsetX}px`"
             >
                 {{ formattedRating({ value: currentRating }) }}
             </div>
@@ -385,11 +375,8 @@ defineExpose({
         <!-- RATING POSITION BOTTOM -->
         <div
             data-cy="smiley-position-bottom"
-            v-if="
-                FINAL_CONFIG.style.rating.show &&
-                FINAL_CONFIG.style.rating.position === 'bottom'
-            "
-            :style="`width:100%;text-align:center;margin-top:${FINAL_CONFIG.style.rating.offsetY}px;font-size:${FINAL_CONFIG.style.rating.fontSize}px;font-weight:${FINAL_CONFIG.style.rating.bold ? 'bold' : 'normal'};margin-left:${FINAL_CONFIG.style.rating.offsetX}px`"
+            v-if="cfgRating.show && cfgRating.position === 'bottom'"
+            :style="`width:100%;text-align:center;margin-top:${cfgRating.offsetY}px;font-size:${cfgRating.fontSize}px;font-weight:${cfgRating.bold ? 'bold' : 'normal'};margin-left:${cfgRating.offsetX}px`"
         >
             {{ formattedRating({ value: currentRating }) }}
         </div>
