@@ -111,6 +111,12 @@ const activeTooltipIndex = ref(null); // a11y
 const internalSelectedIndex = ref(null); // a11y
 
 const FINAL_CONFIG = ref(prepareConfig());
+const cfgTooltip = computed(() => FINAL_CONFIG.value.style.tooltip);
+const cfgBar = computed(() => FINAL_CONFIG.value.style.bar);
+const cfgLine = computed(() => FINAL_CONFIG.value.style.line);
+const cfgArea = computed(() => FINAL_CONFIG.value.style.area);
+const cfgLabel = computed(() => FINAL_CONFIG.value.style.dataLabel);
+const cfgStyle = computed(() => FINAL_CONFIG.value.style);
 
 useHints({
     config: () => FINAL_CONFIG.value,
@@ -195,7 +201,7 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
 });
 
 const { svgRef } = useChartAccessibility({
-    config: FINAL_CONFIG.value.style.title,
+    config: cfgStyle.value.title,
 });
 
 function prepareConfig() {
@@ -337,7 +343,7 @@ const pulseMotion = computed(() => {
 
 const pulseTrail = computed(() => {
     const t = pulse.value?.trail || {};
-    const base = FINAL_CONFIG.value.style.line.strokeWidth || 1;
+    const base = cfgLine.value.strokeWidth || 1;
 
     return {
         show: t.show !== false,
@@ -373,7 +379,7 @@ watch(
             FINAL_CONFIG.value = prepareConfig();
         }
         prepareChart();
-        svg.value.chartWidth = FINAL_CONFIG.value.style.chartWidth;
+        svg.value.chartWidth = cfgStyle.value.chartWidth;
     },
     { deep: true },
 );
@@ -403,7 +409,7 @@ function prepareDsCopy() {
     return largestTriangleThreeBucketsArrayObjects({
         data: FINAL_DATASET.value.map((d) => {
             if (
-                FINAL_CONFIG.value.style.animation.show &&
+                cfgStyle.value.animation.show &&
                 FINAL_DATASET.value.length > 1
             ) {
                 return {
@@ -597,7 +603,7 @@ function prepareChart() {
             const { width, height } = useResponsive({
                 chart: sparklineChart.value,
                 title:
-                    FINAL_CONFIG.value.style.title.show && props.showInfo
+                    cfgStyle.value.title.show && props.showInfo
                         ? chartTitle.value
                         : null,
                 source: source.value,
@@ -607,7 +613,7 @@ function prepareChart() {
                 svg.value.width = width;
                 svg.value.height = height;
                 svg.value.chartWidth =
-                    (FINAL_CONFIG.value.style.chartWidth / 500) * width;
+                    (cfgStyle.value.chartWidth / 500) * width;
                 svg.value.padding = (props.forcedPadding / 500) * width;
             });
         });
@@ -637,7 +643,7 @@ onBeforeUnmount(() => {
 const svg = ref({
     height: 80 * props.heightRatio,
     width: 500,
-    chartWidth: FINAL_CONFIG.value.style.chartWidth,
+    chartWidth: cfgStyle.value.chartWidth,
     padding: props.forcedPadding,
 });
 
@@ -649,7 +655,7 @@ const drawingArea = computed(() => {
         right: p_right,
         bottom: p_bottom,
         left: p_left,
-    } = FINAL_CONFIG.value.style.padding;
+    } = cfgStyle.value.padding;
     return {
         top: p_top,
         left: p_left,
@@ -657,12 +663,12 @@ const drawingArea = computed(() => {
         bottom: svg.value.height - p_bottom,
         start:
             props.showInfo &&
-            FINAL_CONFIG.value.style.dataLabel.show &&
-            FINAL_CONFIG.value.style.dataLabel.position === 'left'
+            cfgLabel.value.show &&
+            cfgLabel.value.position === 'left'
                 ? svg.value.width - svg.value.chartWidth + p_left
                 : svg.value.padding + p_left,
         width:
-            props.showInfo && FINAL_CONFIG.value.style.dataLabel.show
+            props.showInfo && cfgLabel.value.show
                 ? svg.value.chartWidth - p_left - p_right
                 : svg.value.width - svg.value.padding - p_left - p_right,
         height: svg.value.height - p_top - p_bottom,
@@ -670,8 +676,8 @@ const drawingArea = computed(() => {
 });
 
 const min = computed(() => {
-    if (![null, undefined].includes(FINAL_CONFIG.value.style.scaleMin)) {
-        return FINAL_CONFIG.value.style.scaleMin;
+    if (![null, undefined].includes(cfgStyle.value.scaleMin)) {
+        return cfgStyle.value.scaleMin;
     } else {
         return Math.min(
             ...safeDatasetCopy.value.map((s) =>
@@ -687,8 +693,8 @@ const min = computed(() => {
 });
 
 const max = computed(() => {
-    if (![null, undefined].includes(FINAL_CONFIG.value.style.scaleMax)) {
-        return FINAL_CONFIG.value.style.scaleMax;
+    if (![null, undefined].includes(cfgStyle.value.scaleMax)) {
+        return cfgStyle.value.scaleMax;
     } else {
         return Math.max(
             ...safeDatasetCopy.value.map((s) =>
@@ -735,7 +741,7 @@ watchEffect(() => {
         const labels = await useTimeLabels({
             values: downsampled.value.map((d) => d.period),
             maxDatapoints: downsampled.value.length,
-            formatter: FINAL_CONFIG.value.style.dataLabel.datetimeFormatter,
+            formatter: cfgLabel.value.datetimeFormatter,
             start: 0,
             end: downsampled.value.length,
         });
@@ -772,13 +778,10 @@ const mutableDataset = computed(() => {
                     ratioToMax(absoluteValue + absoluteMin.value),
             id: `plot_${uid.value}_${i}`,
             color: isBar.value
-                ? FINAL_CONFIG.value.style.bar.color
-                : FINAL_CONFIG.value.style.area.useGradient
-                  ? shiftHue(
-                        FINAL_CONFIG.value.style.line.color,
-                        0.05 * (1 - i / len.value),
-                    )
-                  : FINAL_CONFIG.value.style.line.color,
+                ? cfgBar.value.color
+                : cfgArea.value.useGradient
+                  ? shiftHue(cfgLine.value.color, 0.05 * (1 - i / len.value))
+                  : cfgLine.value.color,
             width,
         };
     });
@@ -880,11 +883,11 @@ const dataLabel = computed(() => {
     if (!isDataset.value) {
         return 0;
     }
-    if (FINAL_CONFIG.value.style.dataLabel.valueType === 'latest') {
+    if (cfgLabel.value.valueType === 'latest') {
         return dataLabelValues.value.latest;
-    } else if (FINAL_CONFIG.value.style.dataLabel.valueType === 'sum') {
+    } else if (cfgLabel.value.valueType === 'sum') {
         return dataLabelValues.value.sum;
-    } else if (FINAL_CONFIG.value.style.dataLabel.valueType === 'average') {
+    } else if (cfgLabel.value.valueType === 'average') {
         return dataLabelValues.value.average;
     } else {
         return 0;
@@ -907,13 +910,13 @@ function selectDatapoint(datapoint, index) {
 
 const hasDashedSegments = computed(() => {
     return (
-        Array.isArray(FINAL_CONFIG.value.style.line.dashIndices) &&
-        FINAL_CONFIG.value.style.line.dashIndices.length > 0
+        Array.isArray(cfgLine.value.dashIndices) &&
+        cfgLine.value.dashIndices.length > 0
     );
 });
 
 const lineCutNullValues = computed(() => {
-    return FINAL_CONFIG.value.style.line.cutNullValues;
+    return cfgLine.value.cutNullValues;
 });
 
 function canShowPlotValue(value) {
@@ -949,8 +952,7 @@ function shouldShowPlotCircle(plot, plotIndex) {
         return false;
     }
     return (
-        (FINAL_CONFIG.value.style.plot.show &&
-            isSelectedPlot(plot, plotIndex)) ||
+        (cfgStyle.value.plot.show && isSelectedPlot(plot, plotIndex)) ||
         isPlotAlone(mutableDataset.value, plotIndex)
     );
 }
@@ -959,15 +961,15 @@ function getPlotRadius(plot, plotIndex) {
     return Math.max(
         1,
         isSelectedPlot(plot, plotIndex)
-            ? FINAL_CONFIG.value.style.plot.radius
-            : FINAL_CONFIG.value.style.plot.radius * 0.7,
+            ? cfgStyle.value.plot.radius
+            : cfgStyle.value.plot.radius * 0.7,
     );
 }
 
 function getPlotStroke(plot, plotIndex) {
     return isSelectedPlot(plot, plotIndex)
-        ? FINAL_CONFIG.value.style.plot.stroke
-        : FINAL_CONFIG.value.style.backgroundColor;
+        ? cfgStyle.value.plot.stroke
+        : cfgStyle.value.backgroundColor;
 }
 
 const lineDataset = computed(() => {
@@ -1007,7 +1009,7 @@ const dashedSmoothSegments = computed(() => {
 
     return createSmoothPathWithCutsSegments(
         lineDataset.value,
-        FINAL_CONFIG.value.style.line.dashIndices,
+        cfgLine.value.dashIndices,
     );
 });
 
@@ -1018,15 +1020,15 @@ const dashedStraightSegments = computed(() => {
 
     return createStraightPathWithCutsSegments(
         lineDataset.value,
-        FINAL_CONFIG.value.style.line.dashIndices,
+        cfgLine.value.dashIndices,
     );
 });
 
 const lineAreaPaths = computed(() => {
-    if (isBar.value || !FINAL_CONFIG.value.style.area.show) return [];
+    if (isBar.value || !cfgArea.value.show) return [];
     if (!hasEnoughLineValues.value) return [];
 
-    if (FINAL_CONFIG.value.style.line.smooth) {
+    if (cfgLine.value.smooth) {
         return createSmoothAreaSegments(
             lineDataset.value,
             drawingArea.value.bottom,
@@ -1051,7 +1053,7 @@ const gradientSvgPathData = computed(() => {
     if (isBar.value || !FINAL_CONFIG.value.gradientPath.show) return '';
     if (FINAL_CONFIG.value.temperatureColors.show) return '';
 
-    const pathData = FINAL_CONFIG.value.style.line.smooth
+    const pathData = cfgLine.value.smooth
         ? smoothLinePath.value
         : straightLinePath.value;
 
@@ -1271,7 +1273,7 @@ const a11yTable = computed(() => {
         ref="sparklineChart"
         class="vue-data-ui-component vue-ui-sparkline"
         :id="uid"
-        :style="`width:100%;font-family:${FINAL_CONFIG.style.fontFamily};`"
+        :style="`width:100%;font-family:${cfgStyle.fontFamily};`"
     >
         <p :id="`chart-instructions-${uid}`" class="sr-only">
             {{ FINAL_CONFIG.a11y.translations.keyboardNavigation }}
@@ -1303,19 +1305,15 @@ const a11yTable = computed(() => {
         <div
             data-cy="title"
             ref="chartTitle"
-            v-if="FINAL_CONFIG.style.title.show && showInfo"
+            v-if="cfgStyle.title.show && showInfo"
             class="vue-ui-sparkline-title"
-            :style="`display:flex;align-items:center;width:100%;color:${FINAL_CONFIG.style.title.color};background:${FINAL_CONFIG.style.backgroundColor};justify-content:${FINAL_CONFIG.style.title.textAlign === 'left' ? 'flex-start' : FINAL_CONFIG.style.title.textAlign === 'right' ? 'flex-end' : 'center'};height:${FINAL_CONFIG.style.title.fontSize * 2}px;font-size:${FINAL_CONFIG.style.title.fontSize}px;font-weight:${FINAL_CONFIG.style.title.bold ? 'bold' : 'normal'};`"
+            :style="`display:flex;align-items:center;width:100%;color:${cfgStyle.title.color};background:${cfgStyle.backgroundColor};justify-content:${cfgStyle.title.textAlign === 'left' ? 'flex-start' : cfgStyle.title.textAlign === 'right' ? 'flex-end' : 'center'};height:${cfgStyle.title.fontSize * 2}px;font-size:${cfgStyle.title.fontSize}px;font-weight:${cfgStyle.title.bold ? 'bold' : 'normal'};`"
         >
             <span
                 data-cy="sparkline-period-label"
-                :style="`padding:${FINAL_CONFIG.style.title.textAlign === 'left' ? '0 0 0 12px' : FINAL_CONFIG.style.title.textAlign === 'right' ? '0 12px 0 0' : '0'}`"
+                :style="`padding:${cfgStyle.title.textAlign === 'left' ? '0 0 0 12px' : cfgStyle.title.textAlign === 'right' ? '0 12px 0 0' : '0'}`"
             >
-                {{
-                    selectedPlot
-                        ? selectedPlot.period
-                        : FINAL_CONFIG.style.title.text
-                }}
+                {{ selectedPlot ? selectedPlot.period : cfgStyle.title.text }}
             </span>
         </div>
 
@@ -1326,7 +1324,7 @@ const a11yTable = computed(() => {
                 :xmlns="XMLNS"
                 data-cy="sparkline-svg"
                 :viewBox="`0 0 ${svg.width} ${svg.height}`"
-                :style="`background:${FINAL_CONFIG.style.backgroundColor};overflow:visible;direction:ltr`"
+                :style="`background:${cfgStyle.backgroundColor};overflow:visible;direction:ltr`"
                 tabindex="0"
                 :aria-describedby="`chart-instructions-${uid}`"
                 @mouseleave="previousSelectedPlot = undefined"
@@ -1363,20 +1361,14 @@ const a11yTable = computed(() => {
                             [
                                 '0%',
                                 setOpacity(
-                                    shiftHue(
-                                        FINAL_CONFIG.style.area.color,
-                                        0.05,
-                                    ),
-                                    FINAL_CONFIG.style.area.opacity,
+                                    shiftHue(cfgArea.color, 0.05),
+                                    cfgArea.opacity,
                                 ),
                                 1,
                             ],
                             [
                                 '100%',
-                                setOpacity(
-                                    FINAL_CONFIG.style.area.color,
-                                    FINAL_CONFIG.style.area.opacity,
-                                ),
+                                setOpacity(cfgArea.color, cfgArea.opacity),
                                 1,
                             ],
                         ]"
@@ -1387,12 +1379,8 @@ const a11yTable = computed(() => {
                         y2="100%"
                         :id="`sparkline_bar_gradient_pos_${uid}`"
                         :stops="[
-                            ['0%', FINAL_CONFIG.style.bar.color, 1],
-                            [
-                                '100%',
-                                shiftHue(FINAL_CONFIG.style.bar.color, 0.05),
-                                1,
-                            ],
+                            ['0%', cfgBar.color, 1],
+                            ['100%', shiftHue(cfgBar.color, 0.05), 1],
                         ]"
                     />
                     <DefGrad
@@ -1401,12 +1389,8 @@ const a11yTable = computed(() => {
                         y2="100%"
                         :id="`sparkline_bar_gradient_neg_${uid}`"
                         :stops="[
-                            [
-                                '0%',
-                                shiftHue(FINAL_CONFIG.style.bar.color, 0.05),
-                                1,
-                            ],
-                            ['100%', FINAL_CONFIG.style.bar.color, 1],
+                            ['0%', shiftHue(cfgBar.color, 0.05), 1],
+                            ['100%', cfgBar.color, 1],
                         ]"
                     />
 
@@ -1458,13 +1442,7 @@ const a11yTable = computed(() => {
                 </defs>
 
                 <!-- AREA -->
-                <g
-                    v-if="
-                        FINAL_CONFIG.style.area.show &&
-                        !isBar &&
-                        lineAreaPaths.length
-                    "
-                >
+                <g v-if="cfgArea.show && !isBar && lineAreaPaths.length">
                     <path
                         v-for="(
                             lineAreaPath, lineAreaPathIndex
@@ -1472,18 +1450,15 @@ const a11yTable = computed(() => {
                         :key="`sparkline_area_${lineAreaPathIndex}_${uid}`"
                         class="vue-ui-sparkline-area"
                         :data-cy="
-                            FINAL_CONFIG.style.line.smooth
+                            cfgLine.smooth
                                 ? 'sparkline-smooth-area'
                                 : 'sparkline-angle-area'
                         "
                         :d="lineAreaPath"
                         :fill="
-                            FINAL_CONFIG.style.area.useGradient
+                            cfgArea.useGradient
                                 ? `url(#sparkline_gradient_${uid})`
-                                : setOpacity(
-                                      FINAL_CONFIG.style.area.color,
-                                      FINAL_CONFIG.style.area.opacity,
-                                  )
+                                : setOpacity(cfgArea.color, cfgArea.opacity)
                         "
                         stroke-linecap="round"
                         stroke-linejoin="round"
@@ -1493,13 +1468,13 @@ const a11yTable = computed(() => {
                     />
                 </g>
 
-                <template v-if="FINAL_CONFIG.style.line.smooth && !isBar">
+                <template v-if="cfgLine.smooth && !isBar">
                     <path
                         :id="pulsePathId"
                         :d="`M ${smoothLinePath || '0,0'}`"
                         fill="none"
                         stroke="transparent"
-                        :stroke-width="FINAL_CONFIG.style.line.strokeWidth"
+                        :stroke-width="cfgLine.strokeWidth"
                         stroke-linecap="round"
                         stroke-linejoin="round"
                     />
@@ -1514,16 +1489,14 @@ const a11yTable = computed(() => {
                             :stroke="
                                 !!temperatureColors
                                     ? `url(#temperature_grad_sparkline_${uid})`
-                                    : FINAL_CONFIG.style.line.color
+                                    : cfgLine.color
                             "
                             fill="none"
-                            :stroke-width="FINAL_CONFIG.style.line.strokeWidth"
+                            :stroke-width="cfgLine.strokeWidth"
                             stroke-linecap="round"
                             stroke-linejoin="round"
                             :stroke-dasharray="
-                                segment.dashed
-                                    ? FINAL_CONFIG.style.line.dashArray
-                                    : 0
+                                segment.dashed ? cfgLine.dashArray : 0
                             "
                             :style="{
                                 transition: loading ? undefined : 'all 0.2s',
@@ -1539,10 +1512,10 @@ const a11yTable = computed(() => {
                         :stroke="
                             !!temperatureColors
                                 ? `url(#temperature_grad_sparkline_${uid})`
-                                : FINAL_CONFIG.style.line.color
+                                : cfgLine.color
                         "
                         fill="none"
-                        :stroke-width="FINAL_CONFIG.style.line.strokeWidth"
+                        :stroke-width="cfgLine.strokeWidth"
                         stroke-linecap="round"
                         stroke-linejoin="round"
                         :style="{
@@ -1551,13 +1524,13 @@ const a11yTable = computed(() => {
                     />
                 </template>
 
-                <template v-if="!FINAL_CONFIG.style.line.smooth && !isBar">
+                <template v-if="!cfgLine.smooth && !isBar">
                     <path
                         :id="pulsePathId"
                         :d="`M ${straightLinePath || '0,0'}`"
                         fill="none"
                         stroke="transparent"
-                        :stroke-width="FINAL_CONFIG.style.line.strokeWidth"
+                        :stroke-width="cfgLine.strokeWidth"
                         stroke-linecap="round"
                         stroke-linejoin="round"
                     />
@@ -1572,16 +1545,14 @@ const a11yTable = computed(() => {
                             :stroke="
                                 !!temperatureColors
                                     ? `url(#temperature_grad_sparkline_${uid})`
-                                    : FINAL_CONFIG.style.line.color
+                                    : cfgLine.color
                             "
                             fill="none"
-                            :stroke-width="FINAL_CONFIG.style.line.strokeWidth"
+                            :stroke-width="cfgLine.strokeWidth"
                             stroke-linecap="round"
                             stroke-linejoin="round"
                             :stroke-dasharray="
-                                segment.dashed
-                                    ? FINAL_CONFIG.style.line.dashArray * 2
-                                    : 0
+                                segment.dashed ? cfgLine.dashArray * 2 : 0
                             "
                             :style="{
                                 transition: loading ? undefined : 'all 0.2s',
@@ -1597,10 +1568,10 @@ const a11yTable = computed(() => {
                         :stroke="
                             !!temperatureColors
                                 ? `url(#temperature_grad_sparkline_${uid})`
-                                : FINAL_CONFIG.style.line.color
+                                : cfgLine.color
                         "
                         fill="none"
-                        :stroke-width="FINAL_CONFIG.style.line.strokeWidth"
+                        :stroke-width="cfgLine.strokeWidth"
                         stroke-linecap="round"
                         stroke-linejoin="round"
                         :style="{
@@ -1617,7 +1588,7 @@ const a11yTable = computed(() => {
                         !isBar &&
                         !temperatureColors
                     "
-                    :strokeWidth="FINAL_CONFIG.style.line.strokeWidth"
+                    :strokeWidth="cfgLine.strokeWidth"
                     :highColor="FINAL_CONFIG.gradientPath.colors.high"
                     :lowColor="FINAL_CONFIG.gradientPath.colors.low"
                     :segments="FINAL_CONFIG.gradientPath.segments"
@@ -1668,13 +1639,13 @@ const a11yTable = computed(() => {
                                 ? `url(#sparkline_bar_gradient_pos_${uid})`
                                 : `url(#sparkline_bar_gradient_neg_${uid})`
                         "
-                        :rx="FINAL_CONFIG.style.bar.borderRadius"
+                        :rx="cfgBar.borderRadius"
                     />
                     <!-- VERTICAL INDICATORS -->
                     <line
                         data-cy="selection-indicator"
                         v-if="
-                            FINAL_CONFIG.style.verticalIndicator.show &&
+                            cfgStyle.verticalIndicator.show &&
                             ((selectedPlot && plot.id === selectedPlot.id) ||
                                 currentSelectedIndex === i)
                         "
@@ -1682,17 +1653,11 @@ const a11yTable = computed(() => {
                         :x2="plot.x"
                         :y1="drawingArea.top - 6"
                         :y2="drawingArea.bottom"
-                        :stroke="
-                            FINAL_CONFIG.style.verticalIndicator.color ||
-                            plot.color
-                        "
-                        :stroke-width="
-                            FINAL_CONFIG.style.verticalIndicator.strokeWidth
-                        "
+                        :stroke="cfgStyle.verticalIndicator.color || plot.color"
+                        :stroke-width="cfgStyle.verticalIndicator.strokeWidth"
                         stroke-linecap="round"
                         :stroke-dasharray="
-                            FINAL_CONFIG.style.verticalIndicator
-                                .strokeDasharray || 0
+                            cfgStyle.verticalIndicator.strokeDasharray || 0
                         "
                     />
                 </g>
@@ -1705,11 +1670,9 @@ const a11yTable = computed(() => {
                     :x2="drawingArea.start + drawingArea.width"
                     :y1="forceValidValue(absoluteZero, drawingArea.bottom)"
                     :y2="forceValidValue(absoluteZero, drawingArea.bottom)"
-                    :stroke="FINAL_CONFIG.style.zeroLine.color"
-                    :stroke-dasharray="
-                        FINAL_CONFIG.style.zeroLine.strokeWidth * 2
-                    "
-                    :stroke-width="FINAL_CONFIG.style.zeroLine.strokeWidth"
+                    :stroke="cfgStyle.zeroLine.color"
+                    :stroke-dasharray="cfgStyle.zeroLine.strokeWidth * 2"
+                    :stroke-width="cfgStyle.zeroLine.strokeWidth"
                     stroke-linecap="round"
                 />
 
@@ -1726,55 +1689,49 @@ const a11yTable = computed(() => {
                         :r="getPlotRadius(plot, plotIndex)"
                         :fill="getPlotFillColor(plot)"
                         :stroke="getPlotStroke(plot, plotIndex)"
-                        :stroke-width="FINAL_CONFIG.style.plot.strokeWidth"
+                        :stroke-width="cfgStyle.plot.strokeWidth"
                     />
                 </g>
 
                 <!-- DATALABEL -->
                 <text
-                    v-if="showInfo && FINAL_CONFIG.style.dataLabel.show"
+                    v-if="showInfo && cfgLabel.show"
                     data-cy="sparkline-datalabel"
                     :x="
-                        FINAL_CONFIG.style.dataLabel.position === 'left'
-                            ? 12 + FINAL_CONFIG.style.dataLabel.offsetX
-                            : drawingArea.width +
-                              12 +
-                              FINAL_CONFIG.style.dataLabel.offsetX
+                        cfgLabel.position === 'left'
+                            ? 12 + cfgLabel.offsetX
+                            : drawingArea.width + 12 + cfgLabel.offsetX
                     "
                     :y="
                         svg.height / 2 +
-                        FINAL_CONFIG.style.dataLabel.fontSize / 2.5 +
-                        FINAL_CONFIG.style.dataLabel.offsetY
+                        cfgLabel.fontSize / 2.5 +
+                        cfgLabel.offsetY
                     "
-                    :font-size="FINAL_CONFIG.style.dataLabel.fontSize"
-                    :font-weight="
-                        FINAL_CONFIG.style.dataLabel.bold ? 'bold' : 'normal'
-                    "
-                    :fill="FINAL_CONFIG.style.dataLabel.color"
+                    :font-size="cfgLabel.fontSize"
+                    :font-weight="cfgLabel.bold ? 'bold' : 'normal'"
+                    :fill="cfgLabel.color"
                 >
                     {{
                         selectedPlot
                             ? applyDataLabel(
-                                  FINAL_CONFIG.style.dataLabel.formatter,
+                                  cfgLabel.formatter,
                                   selectedPlot.absoluteValue,
                                   dl({
-                                      p: FINAL_CONFIG.style.dataLabel.prefix,
+                                      p: cfgLabel.prefix,
                                       v: selectedPlot.absoluteValue,
-                                      s: FINAL_CONFIG.style.dataLabel.suffix,
-                                      r: FINAL_CONFIG.style.dataLabel
-                                          .roundingValue,
+                                      s: cfgLabel.suffix,
+                                      r: cfgLabel.roundingValue,
                                   }),
                                   { datapoint: selectedPlot },
                               )
                             : applyDataLabel(
-                                  FINAL_CONFIG.style.dataLabel.formatter,
+                                  cfgLabel.formatter,
                                   dataLabel,
                                   dl({
-                                      p: FINAL_CONFIG.style.dataLabel.prefix,
+                                      p: cfgLabel.prefix,
                                       v: dataLabel,
-                                      s: FINAL_CONFIG.style.dataLabel.suffix,
-                                      r: FINAL_CONFIG.style.dataLabel
-                                          .roundingValue,
+                                      s: cfgLabel.suffix,
+                                      r: cfgLabel.roundingValue,
                                   }),
                               )
                     }}
@@ -1831,35 +1788,32 @@ const a11yTable = computed(() => {
         </div>
 
         <SparkTooltip
-            v-if="selectedPlot && FINAL_CONFIG.style.tooltip.show"
+            v-if="selectedPlot && cfgTooltip.show"
             :x="selectedPlot.x"
             :y="selectedPlot.y"
             :prevX="previousSelectedPlot.x"
             :prevY="previousSelectedPlot.y"
-            :offsetY="
-                FINAL_CONFIG.style.plot.radius * 3 +
-                FINAL_CONFIG.style.tooltip.offsetY
-            "
+            :offsetY="cfgStyle.plot.radius * 3 + cfgTooltip.offsetY"
             :svgRef="svgRef"
-            :background="FINAL_CONFIG.style.tooltip.backgroundColor"
-            :color="FINAL_CONFIG.style.tooltip.color"
-            :fontSize="FINAL_CONFIG.style.tooltip.fontSize"
-            :borderWidth="FINAL_CONFIG.style.tooltip.borderWidth"
-            :borderColor="FINAL_CONFIG.style.tooltip.borderColor"
-            :borderRadius="FINAL_CONFIG.style.tooltip.borderRadius"
-            :backgroundOpacity="FINAL_CONFIG.style.tooltip.backgroundOpacity"
+            :background="cfgTooltip.backgroundColor"
+            :color="cfgTooltip.color"
+            :fontSize="cfgTooltip.fontSize"
+            :borderWidth="cfgTooltip.borderWidth"
+            :borderColor="cfgTooltip.borderColor"
+            :borderRadius="cfgTooltip.borderRadius"
+            :backgroundOpacity="cfgTooltip.backgroundOpacity"
         >
             <slot name="tooltip" v-bind="{ ...selectedPlot }">
                 {{ selectedPlot.period }}:
                 {{
                     applyDataLabel(
-                        FINAL_CONFIG.style.dataLabel.formatter,
+                        cfgLabel.formatter,
                         selectedPlot.absoluteValue,
                         dl({
-                            p: FINAL_CONFIG.style.dataLabel.prefix,
+                            p: cfgLabel.prefix,
                             v: selectedPlot.absoluteValue,
-                            s: FINAL_CONFIG.style.dataLabel.suffix,
-                            r: FINAL_CONFIG.style.dataLabel.roundingValue,
+                            s: cfgLabel.suffix,
+                            r: cfgLabel.roundingValue,
                         }),
                         { datapoint: selectedPlot },
                     )
