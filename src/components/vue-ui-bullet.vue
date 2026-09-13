@@ -91,6 +91,10 @@ const isDataset = computed({
 const FINAL_CONFIG = ref(prepareConfig());
 
 const debug = computed(() => FINAL_CONFIG.value.debug);
+const cfgTarget = computed(() => FINAL_CONFIG.value.style.chart.target);
+const cfgSegments = computed(() => FINAL_CONFIG.value.style.chart.segments);
+const cfgChart = computed(() => FINAL_CONFIG.value.style.chart);
+const cfgUserOptions = computed(() => FINAL_CONFIG.value.userOptions);
 
 const hasSegments = computed(() => {
     if (!FINAL_DATASET.value.segments) {
@@ -148,7 +152,7 @@ const hasSegments = computed(() => {
 });
 
 const padding = computed(() => {
-    const { top, right, bottom, left } = FINAL_CONFIG.value.style.chart.padding;
+    const { top, right, bottom, left } = cfgChart.value.padding;
     return {
         top,
         right,
@@ -197,19 +201,13 @@ function prepareChart() {
         const handleResize = throttle(() => {
             const { width, height } = useResponsive({
                 chart: bulletChart.value,
-                title: FINAL_CONFIG.value.style.chart.title.text
-                    ? chartTitle.value
-                    : null,
-                legend: FINAL_CONFIG.value.style.chart.legend.show
-                    ? chartLegend.value
-                    : null,
+                title: cfgChart.value.title.text ? chartTitle.value : null,
+                legend: cfgChart.value.legend.show ? chartLegend.value : null,
                 source: source.value,
                 padding: padding.value,
             });
 
-            const legendOffset = FINAL_CONFIG.value.style.chart.legend.show
-                ? 24
-                : 0;
+            const legendOffset = cfgChart.value.legend.show ? 24 : 0;
             const offsetY = legendOffset || 12;
 
             requestAnimationFrame(() => {
@@ -230,7 +228,7 @@ function prepareChart() {
         resizeObserver.value.observe(observedEl.value);
     }
 
-    if (FINAL_CONFIG.value.style.chart.animation.show && !loading.value) {
+    if (cfgChart.value.animation.show && !loading.value) {
         useAnimation(FINAL_DATASET.value.value || 0);
     }
 }
@@ -349,12 +347,12 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } =
     useUserOptionState({ config: FINAL_CONFIG.value });
 const { svgRef } = useChartAccessibility({
-    config: FINAL_CONFIG.value.style.chart.title,
+    config: cfgChart.value.title,
 });
 
 const defaultSizes = ref({
-    width: FINAL_CONFIG.value.style.chart.width,
-    height: FINAL_CONFIG.value.style.chart.height,
+    width: cfgChart.value.width,
+    height: cfgChart.value.height,
 });
 
 const WIDTH = computed(() => defaultSizes.value.width);
@@ -368,8 +366,8 @@ watch(
         }
         userOptionsVisible.value =
             !FINAL_CONFIG.value.userOptions.showOnChartHover;
-        defaultSizes.value.width = FINAL_CONFIG.value.style.chart.width;
-        defaultSizes.value.height = FINAL_CONFIG.value.style.chart.height;
+        defaultSizes.value.width = cfgChart.value.width;
+        defaultSizes.value.height = cfgChart.value.height;
         prepareChart();
         titleStep.value += 1;
     },
@@ -379,10 +377,10 @@ watch(
 const svg = computed(() => {
     const height = HEIGHT.value;
     const width = WIDTH.value;
-    const left = FINAL_CONFIG.value.style.chart.padding.left;
-    const right = width - FINAL_CONFIG.value.style.chart.padding.right;
-    const top = FINAL_CONFIG.value.style.chart.padding.top;
-    const bottom = height - FINAL_CONFIG.value.style.chart.padding.bottom;
+    const left = cfgChart.value.padding.left;
+    const right = width - cfgChart.value.padding.right;
+    const top = cfgChart.value.padding.top;
+    const bottom = height - cfgChart.value.padding.bottom;
     return {
         height: Math.max(0.001, height),
         width: Math.max(0.001, width),
@@ -401,7 +399,7 @@ const segmentColors = computed(() => {
     for (let i = 0; i < FINAL_DATASET.value.segments.length; i += 1) {
         arr.push(
             lightenHexColor(
-                FINAL_CONFIG.value.style.chart.segments.baseColor,
+                cfgSegments.value.baseColor,
                 i / FINAL_DATASET.value.segments.length,
             ),
         );
@@ -425,7 +423,7 @@ watch(
         if (v.hasOwnProperty('value')) {
             manualLoading.value = false;
         }
-        if (FINAL_CONFIG.value.style.chart.animation.show && !loading.value) {
+        if (cfgChart.value.animation.show && !loading.value) {
             useAnimation(v.value || 0);
         } else {
             activeValue.value = v.value || 0;
@@ -435,7 +433,7 @@ watch(
 );
 
 function getActiveValue() {
-    if (FINAL_CONFIG.value.style.chart.animation.show && !loading.value) {
+    if (cfgChart.value.animation.show && !loading.value) {
         return minMax.value.min;
     } else {
         return FINAL_DATASET.value.value || 0;
@@ -447,7 +445,7 @@ const raf = ref(null);
 function useAnimation(targetValue) {
     const chunk =
         Math.abs(targetValue - activeValue.value) /
-        FINAL_CONFIG.value.style.chart.animation.animationFrames;
+        cfgChart.value.animation.animationFrames;
     function animate() {
         if (activeValue.value < targetValue) {
             activeValue.value = Math.min(
@@ -478,7 +476,7 @@ const segments = computed(() => {
     const scale = calculateNiceScale(
         minMax.value.min,
         minMax.value.max,
-        FINAL_CONFIG.value.style.chart.segments.ticks.divisions,
+        cfgSegments.value.ticks.divisions,
     );
     const absMin = scale.min >= 0 ? 0 : Math.abs(scale.min);
 
@@ -487,7 +485,7 @@ const segments = computed(() => {
             svg.value.left +
             ((FINAL_DATASET.value.target + absMin) / (scale.max + absMin)) *
                 svg.value.chartWidth -
-            FINAL_CONFIG.value.style.chart.target.width / 2,
+            cfgTarget.value.width / 2,
     };
     const value = {
         width:
@@ -499,9 +497,9 @@ const segments = computed(() => {
             value: t,
             y:
                 svg.value.bottom +
-                FINAL_CONFIG.value.style.chart.segments.dataLabels.fontSize +
+                cfgSegments.value.dataLabels.fontSize +
                 3 +
-                FINAL_CONFIG.value.style.chart.segments.dataLabels.offsetY,
+                cfgSegments.value.dataLabels.offsetY,
             x:
                 svg.value.left +
                 ((t + absMin) / (scale.max + absMin)) * svg.value.chartWidth,
@@ -543,23 +541,23 @@ const legendSet = computed(() => {
     }
     return segments.value.chunks.map((segment) => {
         const formattedFrom = applyDataLabel(
-            FINAL_CONFIG.value.style.chart.segments.dataLabels.formatter,
+            cfgSegments.value.dataLabels.formatter,
             segment.from,
             dataLabel({
-                p: FINAL_CONFIG.value.style.chart.segments.dataLabels.prefix,
+                p: cfgSegments.value.dataLabels.prefix,
                 v: segment.from,
-                s: FINAL_CONFIG.value.style.chart.segments.dataLabels.suffix,
-                r: FINAL_CONFIG.value.style.chart.segments.dataLabels.rounding,
+                s: cfgSegments.value.dataLabels.suffix,
+                r: cfgSegments.value.dataLabels.rounding,
             }),
         );
         const formattedTo = applyDataLabel(
-            FINAL_CONFIG.value.style.chart.segments.dataLabels.formatter,
+            cfgSegments.value.dataLabels.formatter,
             segment.to,
             dataLabel({
-                p: FINAL_CONFIG.value.style.chart.segments.dataLabels.prefix,
+                p: cfgSegments.value.dataLabels.prefix,
                 v: segment.to,
-                s: FINAL_CONFIG.value.style.chart.segments.dataLabels.suffix,
-                r: FINAL_CONFIG.value.style.chart.segments.dataLabels.rounding,
+                s: cfgSegments.value.dataLabels.suffix,
+                r: cfgSegments.value.dataLabels.rounding,
             }),
         );
 
@@ -578,24 +576,21 @@ const legendConfig = computed(() => {
     return {
         cy: 'bullet-div-legend',
         backgroundColor: 'transparent',
-        color: FINAL_CONFIG.value.style.chart.legend.color,
-        fontSize: FINAL_CONFIG.value.style.chart.legend.fontSize,
+        color: cfgChart.value.legend.color,
+        fontSize: cfgChart.value.legend.fontSize,
         paddingBottom: 6,
-        fontWeight: FINAL_CONFIG.value.style.chart.legend.bold ? 'bold' : '',
+        fontWeight: cfgChart.value.legend.bold ? 'bold' : '',
     };
 });
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `bullet_${uid.value}`,
-    fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-bullet',
+    fileName: cfgChart.value.title.text || 'vue-ui-bullet',
     options: FINAL_CONFIG.value.userOptions.print,
 });
 
 const hasOptionsNoTitle = computed(() => {
-    return (
-        FINAL_CONFIG.value.userOptions.show &&
-        !FINAL_CONFIG.value.style.chart.title.text
-    );
+    return FINAL_CONFIG.value.userOptions.show && !cfgChart.value.title.text;
 });
 
 const isFullscreen = ref(false);
@@ -626,7 +621,7 @@ async function getImage({ scale = 2 } = {}) {
     return {
         imageUri,
         base64,
-        title: FINAL_CONFIG.value.style.chart.title.text,
+        title: cfgChart.value.title.text,
         width,
         height,
         aspectRatio,
@@ -640,9 +635,9 @@ const svgLegendItems = computed(() => {
     }));
 });
 
-const svgBg = computed(() => FINAL_CONFIG.value.style.chart.backgroundColor);
-const svgLegend = computed(() => FINAL_CONFIG.value.style.chart.legend);
-const svgTitle = computed(() => FINAL_CONFIG.value.style.chart.title);
+const svgBg = computed(() => cfgChart.value.backgroundColor);
+const svgLegend = computed(() => cfgChart.value.legend);
+const svgTitle = computed(() => cfgChart.value.title);
 
 const { isCallbackImaging, isCallbackSvg, generateSvg, onGenerateImage } =
     useChartExport({
@@ -690,19 +685,19 @@ defineExpose({
     <div
         ref="bulletChart"
         :class="`vue-data-ui-component vue-ui-bullet ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`"
-        :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor};${FINAL_CONFIG.responsive ? 'height:100%' : ''}`"
+        :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%;background:${cfgChart.backgroundColor};${FINAL_CONFIG.responsive ? 'height:100%' : ''}`"
         :id="`bullet_${uid}`"
         @mouseenter="() => setUserOptionsVisibility(true)"
         @mouseleave="() => setUserOptionsVisibility(false)"
     >
         <PenAndPaper
-            v-if="FINAL_CONFIG.userOptions.buttons.annotator"
+            v-if="cfgUserOptions.buttons.annotator"
             :svgRef="svgRef"
-            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
-            :color="FINAL_CONFIG.style.chart.color"
+            :backgroundColor="cfgChart.backgroundColor"
+            :color="cfgChart.color"
             :active="isAnnotator"
             :isCursorPointer="isCursorPointer"
-            :palette="FINAL_CONFIG.userOptions.annotatorPalette"
+            :palette="cfgUserOptions.annotatorPalette"
             @close="toggleAnnotator"
         >
             <template #annotator-action-close>
@@ -734,7 +729,7 @@ defineExpose({
 
         <div
             ref="chartTitle"
-            v-if="FINAL_CONFIG.style.chart.title.text"
+            v-if="cfgChart.title.text"
             :style="`width:100%;background:transparent;`"
         >
             <Title
@@ -743,11 +738,11 @@ defineExpose({
                 :config="{
                     title: {
                         cy: 'bullet-div-title',
-                        ...FINAL_CONFIG.style.chart.title,
+                        ...cfgChart.title,
                     },
                     subtitle: {
                         cy: 'bullet-div-subtitle',
-                        ...FINAL_CONFIG.style.chart.title.subtitle,
+                        ...cfgChart.title.subtitle,
                     },
                 }"
             />
@@ -758,32 +753,32 @@ defineExpose({
         <UserOptions
             ref="details"
             v-if="
-                FINAL_CONFIG.userOptions.show &&
+                cfgUserOptions.show &&
                 isDataset &&
                 (keepUserOptionState ? true : userOptionsVisible)
             "
-            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
-            :color="FINAL_CONFIG.style.chart.color"
+            :backgroundColor="cfgChart.backgroundColor"
+            :color="cfgChart.color"
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uid"
             :hasTooltip="false"
-            :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
-            :hasImg="FINAL_CONFIG.userOptions.buttons.img"
-            :hasSvg="FINAL_CONFIG.userOptions.buttons.svg"
+            :hasPdf="cfgUserOptions.buttons.pdf"
+            :hasImg="cfgUserOptions.buttons.img"
+            :hasSvg="cfgUserOptions.buttons.svg"
             :hasXls="false"
             :hasTable="false"
             :hasLabel="false"
-            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
-            :hasAltCopy="FINAL_CONFIG.userOptions.buttons.altCopy"
+            :hasFullscreen="cfgUserOptions.buttons.fullscreen"
+            :hasAltCopy="cfgUserOptions.buttons.altCopy"
             :isFullscreen="isFullscreen"
             :chartElement="bulletChart"
-            :position="FINAL_CONFIG.userOptions.position"
-            :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
-            :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator"
+            :position="cfgUserOptions.position"
+            :titles="{ ...cfgUserOptions.buttonTitles }"
+            :hasAnnotator="cfgUserOptions.buttons.annotator"
             :isAnnotation="isAnnotator"
-            :callbacks="FINAL_CONFIG.userOptions.callbacks"
-            :printScale="FINAL_CONFIG.userOptions.print.scale"
+            :callbacks="cfgUserOptions.callbacks"
+            :printScale="cfgUserOptions.print.scale"
             :isCursorPointer="isCursorPointer"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
@@ -853,14 +848,14 @@ defineExpose({
                 'vue-ui-bullet-svg': true,
             }"
             :viewBox="`0 0 ${svg.width} ${svg.height}`"
-            :style="`width: 100%; overflow: visible; background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
+            :style="`width: 100%; overflow: visible; background:transparent;color:${cfgChart.color}`"
             :aria-labelledby="`bullet-svg-title-${uid}`"
             :aria-describedby="`bullet-svg-desc-${uid}`"
         >
             <PackageVersion />
 
             <title :id="`bullet-svg-title-${uid}`">
-                {{ FINAL_CONFIG.style.chart.title.text || 'Bullet chart' }}
+                {{ cfgChart.title.text || 'Bullet chart' }}
             </title>
 
             <desc :id="`bullet-svg-desc-${uid}`">
@@ -892,7 +887,7 @@ defineExpose({
                     :width="segment.width"
                     :fill="segment.color"
                     :stroke-width="1"
-                    :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                    :stroke="cfgChart.backgroundColor"
                     :style="{
                         transition:
                             'x 0.3s ease-in-out, width 0.3s ease-in-out',
@@ -901,31 +896,20 @@ defineExpose({
                 <!-- TARGET BELOW-->
                 <rect
                     data-cy="vue-ui-bullet-target-below"
-                    v-if="
-                        !FINAL_CONFIG.style.chart.target.onTop &&
-                        FINAL_CONFIG.style.chart.target.show
-                    "
+                    v-if="!cfgTarget.onTop && cfgTarget.show"
                     :x="segments.target.x"
                     :y="
                         svg.top +
                         (svg.chartHeight -
-                            svg.chartHeight *
-                                FINAL_CONFIG.style.chart.target.heightRatio) /
+                            svg.chartHeight * cfgTarget.heightRatio) /
                             2
                     "
-                    :height="
-                        svg.chartHeight *
-                        FINAL_CONFIG.style.chart.target.heightRatio
-                    "
-                    :width="FINAL_CONFIG.style.chart.target.width"
-                    :rx="
-                        FINAL_CONFIG.style.chart.target.rounded
-                            ? FINAL_CONFIG.style.chart.target.width / 2
-                            : 0
-                    "
-                    :fill="FINAL_CONFIG.style.chart.target.color"
-                    :stroke="FINAL_CONFIG.style.chart.target.stroke"
-                    :stroke-width="FINAL_CONFIG.style.chart.target.strokeWidth"
+                    :height="svg.chartHeight * cfgTarget.heightRatio"
+                    :width="cfgTarget.width"
+                    :rx="cfgTarget.rounded ? cfgTarget.width / 2 : 0"
+                    :fill="cfgTarget.color"
+                    :stroke="cfgTarget.stroke"
+                    :stroke-width="cfgTarget.strokeWidth"
                 />
                 <!-- VALUE BAR -->
                 <rect
@@ -934,55 +918,37 @@ defineExpose({
                     :y="
                         svg.top +
                         (svg.chartHeight -
-                            svg.chartHeight *
-                                FINAL_CONFIG.style.chart.valueBar.heightRatio) /
+                            svg.chartHeight * cfgChart.valueBar.heightRatio) /
                             2
                     "
-                    :height="
-                        svg.chartHeight *
-                        FINAL_CONFIG.style.chart.valueBar.heightRatio
-                    "
+                    :height="svg.chartHeight * cfgChart.valueBar.heightRatio"
                     :width="segments.value.width"
-                    :fill="FINAL_CONFIG.style.chart.valueBar.color"
-                    :stroke="FINAL_CONFIG.style.chart.valueBar.stroke"
-                    :stroke-width="
-                        FINAL_CONFIG.style.chart.valueBar.strokeWidth
-                    "
+                    :fill="cfgChart.valueBar.color"
+                    :stroke="cfgChart.valueBar.stroke"
+                    :stroke-width="cfgChart.valueBar.strokeWidth"
                 />
                 <!-- VALUE LABEL -->
                 <text
                     data-cy="vue-ui-bullet-value-label"
-                    v-if="FINAL_CONFIG.style.chart.valueBar.label.show"
+                    v-if="cfgChart.valueBar.label.show"
                     :x="svg.left + segments.value.width"
-                    :y="
-                        svg.top -
-                        6 +
-                        FINAL_CONFIG.style.chart.valueBar.label.offsetY
-                    "
-                    :font-size="
-                        FINAL_CONFIG.style.chart.valueBar.label.fontSize
-                    "
+                    :y="svg.top - 6 + cfgChart.valueBar.label.offsetY"
+                    :font-size="cfgChart.valueBar.label.fontSize"
                     :font-weight="
-                        FINAL_CONFIG.style.chart.valueBar.label.bold
-                            ? 'bold'
-                            : 'normal'
+                        cfgChart.valueBar.label.bold ? 'bold' : 'normal'
                     "
-                    :fill="FINAL_CONFIG.style.chart.valueBar.label.color"
+                    :fill="cfgChart.valueBar.label.color"
                     text-anchor="middle"
                 >
                     {{
                         applyDataLabel(
-                            FINAL_CONFIG.style.chart.segments.dataLabels
-                                .formatter,
+                            cfgSegments.dataLabels.formatter,
                             activeValue,
                             dataLabel({
-                                p: FINAL_CONFIG.style.chart.segments.dataLabels
-                                    .prefix,
+                                p: cfgSegments.dataLabels.prefix,
                                 v: activeValue,
-                                s: FINAL_CONFIG.style.chart.segments.dataLabels
-                                    .suffix,
-                                r: FINAL_CONFIG.style.chart.segments.dataLabels
-                                    .rounding,
+                                s: cfgSegments.dataLabels.suffix,
+                                r: cfgSegments.dataLabels.rounding,
                             }),
                         )
                     }}
@@ -990,79 +956,52 @@ defineExpose({
                 <!-- TARGET ON TOP-->
                 <rect
                     data-cy="vue-ui-bullet-target-top"
-                    v-if="
-                        FINAL_CONFIG.style.chart.target.onTop &&
-                        FINAL_CONFIG.style.chart.target.show
-                    "
+                    v-if="cfgTarget.onTop && cfgTarget.show"
                     :x="segments.target.x"
                     :y="
                         svg.top +
                         (svg.chartHeight -
-                            svg.chartHeight *
-                                FINAL_CONFIG.style.chart.target.heightRatio) /
+                            svg.chartHeight * cfgTarget.heightRatio) /
                             2
                     "
-                    :height="
-                        svg.chartHeight *
-                        FINAL_CONFIG.style.chart.target.heightRatio
-                    "
-                    :width="FINAL_CONFIG.style.chart.target.width"
-                    :rx="
-                        FINAL_CONFIG.style.chart.target.rounded
-                            ? FINAL_CONFIG.style.chart.target.width / 2
-                            : 0
-                    "
-                    :fill="FINAL_CONFIG.style.chart.target.color"
-                    :stroke="FINAL_CONFIG.style.chart.target.stroke"
-                    :stroke-width="FINAL_CONFIG.style.chart.target.strokeWidth"
+                    :height="svg.chartHeight * cfgTarget.heightRatio"
+                    :width="cfgTarget.width"
+                    :rx="cfgTarget.rounded ? cfgTarget.width / 2 : 0"
+                    :fill="cfgTarget.color"
+                    :stroke="cfgTarget.stroke"
+                    :stroke-width="cfgTarget.strokeWidth"
                     :style="{ transition: 'x 0.3s ease-in-out' }"
                 />
                 <!-- TICK LABELS -->
-                <g v-if="FINAL_CONFIG.style.chart.segments.dataLabels.show">
+                <g v-if="cfgSegments.dataLabels.show">
                     <text
                         data-cy="vue-ui-bullet-tick-label"
                         v-for="tick in segments.ticks"
                         :x="tick.x"
                         :y="tick.y"
                         text-anchor="middle"
-                        :fill="
-                            FINAL_CONFIG.style.chart.segments.dataLabels.color
-                        "
-                        :font-size="
-                            FINAL_CONFIG.style.chart.segments.dataLabels
-                                .fontSize + 'px'
-                        "
+                        :fill="cfgSegments.dataLabels.color"
+                        :font-size="cfgSegments.dataLabels.fontSize + 'px'"
                         :font-weight="
-                            FINAL_CONFIG.style.chart.segments.dataLabels.bold
-                                ? 'bold'
-                                : 'normal'
+                            cfgSegments.dataLabels.bold ? 'bold' : 'normal'
                         "
                     >
                         {{
                             applyDataLabel(
-                                FINAL_CONFIG.style.chart.segments.dataLabels
-                                    .formatter,
+                                cfgSegments.dataLabels.formatter,
                                 tick.value,
                                 dataLabel({
-                                    p: FINAL_CONFIG.style.chart.segments
-                                        .dataLabels.prefix,
+                                    p: cfgSegments.dataLabels.prefix,
                                     v: tick.value,
-                                    s: FINAL_CONFIG.style.chart.segments
-                                        .dataLabels.suffix,
-                                    r: FINAL_CONFIG.style.chart.segments
-                                        .dataLabels.rounding,
+                                    s: cfgSegments.dataLabels.suffix,
+                                    r: cfgSegments.dataLabels.rounding,
                                 }),
                             )
                         }}
                     </text>
                 </g>
                 <!-- TICK MARKERS -->
-                <g
-                    v-if="
-                        FINAL_CONFIG.style.chart.segments.dataLabels.show &&
-                        FINAL_CONFIG.style.chart.segments.ticks.show
-                    "
-                >
+                <g v-if="cfgSegments.dataLabels.show && cfgSegments.ticks.show">
                     <line
                         data-cy="vue-ui-bullet-tick-marker"
                         v-for="marker in segments.ticks"
@@ -1070,7 +1009,7 @@ defineExpose({
                         :x2="marker.x"
                         :y1="svg.bottom"
                         :y2="svg.bottom + 3"
-                        :stroke="FINAL_CONFIG.style.chart.segments.ticks.stroke"
+                        :stroke="cfgSegments.ticks.stroke"
                         :stroke-width="1"
                         stroke-linecap="round"
                     />
@@ -1103,12 +1042,9 @@ defineExpose({
 
         <!-- LEGEND -->
         <Teleport
-            v-if="
-                readyTeleport &&
-                (FINAL_CONFIG.style.chart.legend.show || $slots.legend)
-            "
+            v-if="readyTeleport && (cfgChart.legend.show || $slots.legend)"
             :to="
-                FINAL_CONFIG.style.chart.legend.position === 'top'
+                cfgChart.legend.position === 'top'
                     ? `#legend-top-${uid}`
                     : `#legend-bottom-${uid}`
             "
@@ -1116,7 +1052,7 @@ defineExpose({
             <div ref="chartLegend">
                 <slot name="legend" v-bind:legend="legendSet">
                     <Legend
-                        v-if="FINAL_CONFIG.style.chart.legend.show"
+                        v-if="cfgChart.legend.show"
                         :clickable="false"
                         :legendSet="legendSet"
                         :config="legendConfig"
