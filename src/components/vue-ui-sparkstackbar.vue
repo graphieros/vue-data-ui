@@ -78,6 +78,10 @@ const selectedIndex = ref(null); // a11y
 const legendItemRefs = ref([]); // a11y
 
 const FINAL_CONFIG = ref(prepareConfig());
+const cfgBar = computed(() => FINAL_CONFIG.value.style.bar);
+const cfgLegend = computed(() => FINAL_CONFIG.value.style.legend);
+const cfgTooltip = computed(() => FINAL_CONFIG.value.style.tooltip);
+const cfgStyle = computed(() => FINAL_CONFIG.value.style);
 
 const debug = computed(() => FINAL_CONFIG.value.debug);
 
@@ -142,7 +146,7 @@ const { loading, FINAL_DATASET } = useLoading({
 });
 
 const { svgRef } = useChartAccessibility({
-    config: FINAL_CONFIG.value.style.title,
+    config: cfgStyle.value.title,
 });
 
 function prepareConfig() {
@@ -212,7 +216,7 @@ const safeDatasetCopy = ref(
     FINAL_DATASET.value.map((d, i) => {
         return {
             ...d,
-            value: FINAL_CONFIG.value.style.animation.show ? 0 : d.value || 0,
+            value: cfgStyle.value.animation.show ? 0 : d.value || 0,
             color: d.color
                 ? convertColorToHex(d.color)
                 : customPalette.value[i] ||
@@ -225,15 +229,12 @@ const safeDatasetCopy = ref(
 const isAnimating = ref(true);
 
 function animateChart() {
-    if (
-        !FINAL_CONFIG.value.style.animation.show ||
-        prefersReducedMotion.value
-    ) {
+    if (!cfgStyle.value.animation.show || prefersReducedMotion.value) {
         isAnimating.value = false;
         return;
     }
 
-    const chunks = FINAL_CONFIG.value.style.animation.animationFrames;
+    const chunks = cfgStyle.value.animation.animationFrames;
     const targets = FINAL_DATASET.value.map((d) => d.value || 0);
     const step = targets.map((v) => v / chunks);
     const total = targets.reduce((a, b) => a + b, 0);
@@ -352,7 +353,7 @@ const absoluteDataset = computed(() => {
             proportionLabel: dataLabel({
                 v: dProportion * 100,
                 s: '%',
-                r: FINAL_CONFIG.value.style.legend.percentage.rounding,
+                r: cfgLegend.value.percentage.rounding,
             }),
         };
     });
@@ -488,7 +489,7 @@ function useTooltip({ datapoint, seriesIndex, triggerMode = 'pointer' }) {
         });
     }
 
-    if (!FINAL_CONFIG.value.style.tooltip.show) {
+    if (!cfgTooltip.value.show) {
         return;
     }
 
@@ -501,7 +502,7 @@ function useTooltip({ datapoint, seriesIndex, triggerMode = 'pointer' }) {
     };
     isTooltip.value = true;
     selectedIndex.value = datapoint.seriesIndex;
-    const customFormat = FINAL_CONFIG.value.style.tooltip.customFormat;
+    const customFormat = cfgTooltip.value.customFormat;
 
     if (isFunction(customFormat)) {
         try {
@@ -523,32 +524,32 @@ function useTooltip({ datapoint, seriesIndex, triggerMode = 'pointer' }) {
 
     if (!useCustomFormat.value) {
         let html = '';
-        const showGradient = FINAL_CONFIG.value.style.bar.gradient.show;
+        const showGradient = cfgBar.value.gradient.show;
         const tooltipGradientId = `tooltip_grad_${seriesIndex}_${uid.value}`;
         const tooltipGradientColor = setOpacity(
             shiftHue(datapoint.color, 0.05),
-            100 - FINAL_CONFIG.value.style.bar.gradient.intensity,
+            100 - cfgBar.value.gradient.intensity,
         );
         const markerUnderlayer = showGradient
-            ? `<rect x="0" y="0" width="10" height="10" rx="${legendMarkerRadius.value}" fill="${FINAL_CONFIG.value.style.bar.gradient.underlayerColor}"/>`
+            ? `<rect x="0" y="0" width="10" height="10" rx="${legendMarkerRadius.value}" fill="${cfgBar.value.gradient.underlayerColor}"/>`
             : '';
         const markerGradient = showGradient
             ? `<defs><radialGradient id="${tooltipGradientId}"><stop offset="0%" stop-color="${tooltipGradientColor}"/><stop offset="100%" stop-color="${datapoint.color}"/></radialGradient></defs>`
             : '';
 
-        html += `<div data-cy="donut-tooltip-name" style="width:100%;text-align:center;border-bottom:1px solid ${FINAL_CONFIG.value.style.tooltip.borderColor};padding-bottom:6px;margin-bottom:3px;">${datapoint.name}</div>`;
+        html += `<div data-cy="donut-tooltip-name" style="width:100%;text-align:center;border-bottom:1px solid ${cfgTooltip.value.borderColor};padding-bottom:6px;margin-bottom:3px;">${datapoint.name}</div>`;
         html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><svg viewBox="0 0 10 10" height="14" width="14">${markerGradient}${markerUnderlayer}<rect x="0" y="0" width="10" height="10" rx="${legendMarkerRadius.value}" fill="${showGradient ? `url(#${tooltipGradientId})` : datapoint.color}"/></svg>`;
 
         html += `<b>${datapoint.proportionLabel}</b>`;
 
         html += `<span>(${applyDataLabel(
-            FINAL_CONFIG.value.style.legend.value.formatter,
+            cfgLegend.value.value.formatter,
             datapoint.value,
             dataLabel({
-                p: FINAL_CONFIG.value.style.legend.value.prefix,
+                p: cfgLegend.value.value.prefix,
                 v: datapoint.value,
-                s: FINAL_CONFIG.value.style.legend.value.suffix,
-                r: FINAL_CONFIG.value.style.legend.value.rounding,
+                s: cfgLegend.value.value.suffix,
+                r: cfgLegend.value.value.rounding,
             }),
             {
                 datapoint,
@@ -562,9 +563,9 @@ function useTooltip({ datapoint, seriesIndex, triggerMode = 'pointer' }) {
 
 const barRadius = computed(() => {
     const radius =
-        FINAL_CONFIG.value.style.bar.borderRadius == null
+        cfgBar.value.borderRadius == null
             ? svg.value.height / 2
-            : FINAL_CONFIG.value.style.bar.borderRadius;
+            : cfgBar.value.borderRadius;
     return Math.min(Math.max(radius, 0), svg.value.height / 2);
 });
 
@@ -790,13 +791,13 @@ const a11yTable = computed(() => {
                     ? ' - '
                     : serie.proportionLabel,
                 applyDataLabel(
-                    FINAL_CONFIG.value.style.legend.value.formatter,
+                    cfgLegend.value.value.formatter,
                     serie.value,
                     dataLabel({
-                        p: FINAL_CONFIG.value.style.legend.value.prefix,
+                        p: cfgLegend.value.value.prefix,
                         v: serie.value,
-                        s: FINAL_CONFIG.value.style.legend.value.suffix,
-                        r: FINAL_CONFIG.value.style.legend.value.rounding,
+                        s: cfgLegend.value.value.suffix,
+                        r: cfgLegend.value.value.rounding,
                     }),
                     {
                         datapoint: serie,
@@ -818,7 +819,7 @@ defineExpose({
     <div
         class="vue-data-ui-component vue-ui-spark-stackbar"
         ref="sparkstackbarChart"
-        :style="`width:100%; background:${FINAL_CONFIG.style.backgroundColor}`"
+        :style="`width:100%; background:${cfgStyle.backgroundColor}`"
     >
         <div :id="`chart-instructions-${uid}`" class="sr-only">
             <p>{{ FINAL_CONFIG.a11y.translations.keyboardNavigation }}</p>
@@ -835,21 +836,21 @@ defineExpose({
 
         <!-- TITLE -->
         <div
-            v-if="FINAL_CONFIG.style.title.text"
-            :style="`width:calc(100% - 12px);background:transparent;margin:0 auto;margin:${FINAL_CONFIG.style.title.margin};padding: 0 6px;text-align:${FINAL_CONFIG.style.title.textAlign}`"
+            v-if="cfgStyle.title.text"
+            :style="`width:calc(100% - 12px);background:transparent;margin:0 auto;margin:${cfgStyle.title.margin};padding: 0 6px;text-align:${cfgStyle.title.textAlign}`"
         >
             <div
                 class="atom-title"
-                :style="`font-size:${FINAL_CONFIG.style.title.fontSize}px;color:${FINAL_CONFIG.style.title.color};font-weight:${FINAL_CONFIG.style.title.bold ? 'bold' : 'normal'}`"
+                :style="`font-size:${cfgStyle.title.fontSize}px;color:${cfgStyle.title.color};font-weight:${cfgStyle.title.bold ? 'bold' : 'normal'}`"
             >
-                {{ FINAL_CONFIG.style.title.text }}
+                {{ cfgStyle.title.text }}
             </div>
             <div
                 class="atom-subtitle"
-                v-if="FINAL_CONFIG.style.title.subtitle.text"
-                :style="`font-size:${FINAL_CONFIG.style.title.subtitle.fontSize}px;color:${FINAL_CONFIG.style.title.subtitle.color};font-weight:${FINAL_CONFIG.style.title.subtitle.bold ? 'bold' : 'normal'}`"
+                v-if="cfgStyle.title.subtitle.text"
+                :style="`font-size:${cfgStyle.title.subtitle.fontSize}px;color:${cfgStyle.title.subtitle.color};font-weight:${cfgStyle.title.subtitle.bold ? 'bold' : 'normal'}`"
             >
-                {{ FINAL_CONFIG.style.title.subtitle.text }}
+                {{ cfgStyle.title.subtitle.text }}
             </div>
         </div>
         <!-- CHART -->
@@ -880,9 +881,7 @@ defineExpose({
                                 '50%',
                                 setOpacity(
                                     shiftHue(rect.color, 0.05),
-                                    100 -
-                                        FINAL_CONFIG.style.bar.gradient
-                                            .intensity,
+                                    100 - cfgBar.gradient.intensity,
                                 ),
                                 1,
                             ],
@@ -910,15 +909,13 @@ defineExpose({
                             :y="0"
                             :width="rect.width"
                             :height="svg.height"
-                            :fill="
-                                FINAL_CONFIG.style.bar.gradient.underlayerColor
-                            "
+                            :fill="cfgBar.gradient.underlayerColor"
                             :class="{ animated: !isAnimating && !loading }"
                             :style="{
                                 opacity:
                                     isTooltip &&
                                     selectedIndex !== null &&
-                                    FINAL_CONFIG.style.tooltip.show
+                                    cfgTooltip.show
                                         ? selectedIndex === rect.seriesIndex
                                             ? 1
                                             : 0.5
@@ -934,7 +931,7 @@ defineExpose({
                             :width="rect.width"
                             :height="svg.height"
                             :fill="
-                                FINAL_CONFIG.style.bar.gradient.show
+                                cfgBar.gradient.show
                                     ? `url(#stack_gradient_${i}_${uid})`
                                     : rect.color
                             "
@@ -943,7 +940,7 @@ defineExpose({
                                 opacity:
                                     isTooltip &&
                                     selectedIndex !== null &&
-                                    FINAL_CONFIG.style.tooltip.show
+                                    cfgTooltip.show
                                         ? selectedIndex === rect.seriesIndex
                                             ? 1
                                             : 0.5
@@ -959,7 +956,7 @@ defineExpose({
                             y="0"
                             width="1"
                             :height="svg.height"
-                            :fill="FINAL_CONFIG.style.backgroundColor"
+                            :fill="cfgStyle.backgroundColor"
                             pointer-events="none"
                             :class="{ animated: !isAnimating && !loading }"
                         />
@@ -1001,7 +998,7 @@ defineExpose({
                         :height="svg.height - 1"
                         :rx="Math.max(0, barRadius - 0.5)"
                         fill="none"
-                        :stroke="FINAL_CONFIG.style.backgroundColor"
+                        :stroke="cfgStyle.backgroundColor"
                         stroke-width="1"
                         pointer-events="none"
                     />
@@ -1035,24 +1032,22 @@ defineExpose({
         </div>
 
         <div
-            v-if="FINAL_CONFIG.style.legend.show"
+            v-if="cfgLegend.show"
             data-cy="sparkstackbar-legend"
-            :style="`background:transparent;margin:0 auto;margin:${FINAL_CONFIG.style.legend.margin};justify-content:${FINAL_CONFIG.style.legend.textAlign === 'left' ? 'flex-start' : FINAL_CONFIG.style.legend.textAlign === 'right' ? 'flex-end' : 'center'}`"
+            :style="`background:transparent;margin:0 auto;margin:${cfgLegend.margin};justify-content:${cfgLegend.textAlign === 'left' ? 'flex-start' : cfgLegend.textAlign === 'right' ? 'flex-end' : 'center'}`"
             class="vue-ui-sparkstackbar-legend"
             aria-label="legend"
             role="toolbar"
         >
             <BaseLegendToggle
                 v-if="
-                    FINAL_CONFIG.style.legend.selectAllToggle.show &&
+                    cfgLegend.selectAllToggle.show &&
                     absoluteDataset.length > 2 &&
                     !loading
                 "
-                :backgroundColor="
-                    FINAL_CONFIG.style.legend.selectAllToggle.backgroundColor
-                "
-                :color="FINAL_CONFIG.style.legend.selectAllToggle.color"
-                :fontSize="FINAL_CONFIG.style.legend.fontSize"
+                :backgroundColor="cfgLegend.selectAllToggle.backgroundColor"
+                :color="cfgLegend.selectAllToggle.color"
+                :fontSize="cfgLegend.fontSize"
                 :checked="segregated.length > 0"
                 :isCursorPointer="isCursorPointer"
                 @toggle="toggleLegend"
@@ -1064,7 +1059,7 @@ defineExpose({
                 v-for="(rect, i) in absoluteDataset"
                 :aria-pressed="segregated.includes(i)"
                 :aria-label="`${rect.name}, ${segregated.includes(i) ? 'hidden' : 'visible'}, ${rect.proportionLabel}`"
-                :style="`font-size:${FINAL_CONFIG.style.legend.fontSize}px;cursor:${isCursorPointer ? 'pointer' : 'default'}`"
+                :style="`font-size:${cfgLegend.fontSize}px;cursor:${isCursorPointer ? 'pointer' : 'default'}`"
                 :class="{
                     'vue-ui-sparkstackbar-legend-item': true,
                     'vue-ui-sparkstackbar-legend-item-unselected':
@@ -1088,8 +1083,8 @@ defineExpose({
                     "
                 >
                     <svg
-                        :height="`${FINAL_CONFIG.style.legend.fontSize}px`"
-                        :width="`${FINAL_CONFIG.style.legend.fontSize}px`"
+                        :height="`${cfgLegend.fontSize}px`"
+                        :width="`${cfgLegend.fontSize}px`"
                         viewBox="0 0 10 10"
                     >
                         <defs>
@@ -1104,8 +1099,7 @@ defineExpose({
                                             : setOpacity(
                                                   shiftHue(rect.color, 0.05),
                                                   100 -
-                                                      FINAL_CONFIG.style.bar
-                                                          .gradient.intensity,
+                                                      cfgBar.gradient.intensity,
                                               ),
                                         1,
                                     ],
@@ -1114,15 +1108,13 @@ defineExpose({
                             />
                         </defs>
                         <rect
-                            v-if="FINAL_CONFIG.style.bar.gradient.show"
+                            v-if="cfgBar.gradient.show"
                             x="0"
                             y="0"
                             width="10"
                             height="10"
                             :rx="legendMarkerRadius"
-                            :fill="
-                                FINAL_CONFIG.style.bar.gradient.underlayerColor
-                            "
+                            :fill="cfgBar.gradient.underlayerColor"
                         />
                         <rect
                             x="0"
@@ -1131,7 +1123,7 @@ defineExpose({
                             height="10"
                             :rx="legendMarkerRadius"
                             :fill="
-                                FINAL_CONFIG.style.bar.gradient.show
+                                cfgBar.gradient.show
                                     ? `url(#legend_grad_${i}-${uid})`
                                     : rect.color
                             "
@@ -1139,14 +1131,14 @@ defineExpose({
                     </svg>
                     <template v-if="!loading">
                         <span
-                            :style="`color:${FINAL_CONFIG.style.legend.name.color}; font-weight:${FINAL_CONFIG.style.legend.name.bold ? 'bold' : 'normal'}`"
+                            :style="`color:${cfgLegend.name.color}; font-weight:${cfgLegend.name.bold ? 'bold' : 'normal'}`"
                         >
                             {{ rect.name }}
                         </span>
                         <template v-if="!isAnimating">
                             <span
-                                v-if="FINAL_CONFIG.style.legend.percentage.show"
-                                :style="`font-weight:${FINAL_CONFIG.style.legend.percentage.bold ? 'bold' : 'normal'};color:${FINAL_CONFIG.style.legend.percentage.color}`"
+                                v-if="cfgLegend.percentage.show"
+                                :style="`font-weight:${cfgLegend.percentage.bold ? 'bold' : 'normal'};color:${cfgLegend.percentage.color}`"
                             >
                                 {{
                                     segregated.includes(i)
@@ -1155,22 +1147,18 @@ defineExpose({
                                 }}
                             </span>
                             <span
-                                v-if="FINAL_CONFIG.style.legend.value.show"
-                                :style="`font-weight:${FINAL_CONFIG.style.legend.value.bold ? 'bold' : 'normal'};color:${FINAL_CONFIG.style.legend.value.color}`"
+                                v-if="cfgLegend.value.show"
+                                :style="`font-weight:${cfgLegend.value.bold ? 'bold' : 'normal'};color:${cfgLegend.value.color}`"
                             >
                                 ({{
                                     applyDataLabel(
-                                        FINAL_CONFIG.style.legend.value
-                                            .formatter,
+                                        cfgLegend.value.formatter,
                                         rect.value,
                                         dataLabel({
-                                            p: FINAL_CONFIG.style.legend.value
-                                                .prefix,
+                                            p: cfgLegend.value.prefix,
                                             v: rect.value,
-                                            s: FINAL_CONFIG.style.legend.value
-                                                .suffix,
-                                            r: FINAL_CONFIG.style.legend.value
-                                                .rounding,
+                                            s: cfgLegend.value.suffix,
+                                            r: cfgLegend.value.rounding,
                                         }),
                                         { datapoint: rect, seriesIndex: i },
                                     )
@@ -1183,28 +1171,26 @@ defineExpose({
         </div>
 
         <Tooltip
-            :teleportTo="FINAL_CONFIG.style.tooltip.teleportTo"
-            :show="isTooltip && FINAL_CONFIG.style.tooltip.show"
+            :teleportTo="cfgTooltip.teleportTo"
+            :show="isTooltip && cfgTooltip.show"
             :parent="sparkstackbarChart"
-            :backgroundColor="FINAL_CONFIG.style.tooltip.backgroundColor"
-            :color="FINAL_CONFIG.style.tooltip.color"
-            :fontSize="FINAL_CONFIG.style.tooltip.fontSize"
-            :borderRadius="FINAL_CONFIG.style.tooltip.borderRadius"
-            :borderColor="FINAL_CONFIG.style.tooltip.borderColor"
-            :borderWidth="FINAL_CONFIG.style.tooltip.borderWidth"
-            :backgroundOpacity="FINAL_CONFIG.style.tooltip.backgroundOpacity"
-            :position="FINAL_CONFIG.style.tooltip.position"
+            :backgroundColor="cfgTooltip.backgroundColor"
+            :color="cfgTooltip.color"
+            :fontSize="cfgTooltip.fontSize"
+            :borderRadius="cfgTooltip.borderRadius"
+            :borderColor="cfgTooltip.borderColor"
+            :borderWidth="cfgTooltip.borderWidth"
+            :backgroundOpacity="cfgTooltip.backgroundOpacity"
+            :position="cfgTooltip.position"
             :content="tooltipContent"
             :isCustom="useCustomFormat"
-            :offsetX="FINAL_CONFIG.style.tooltip.offsetX"
-            :offsetY="-124 + FINAL_CONFIG.style.tooltip.offsetY"
+            :offsetX="cfgTooltip.offsetX"
+            :offsetY="-124 + cfgTooltip.offsetY"
             :blockShiftY="true"
-            :smooth="FINAL_CONFIG.style.tooltip.smooth"
-            :backdropFilter="FINAL_CONFIG.style.tooltip.backdropFilter"
-            :smoothForce="FINAL_CONFIG.style.tooltip.smoothForce"
-            :smoothSnapThreshold="
-                FINAL_CONFIG.style.tooltip.smoothSnapThreshold
-            "
+            :smooth="cfgTooltip.smooth"
+            :backdropFilter="cfgTooltip.backdropFilter"
+            :smoothForce="cfgTooltip.smoothForce"
+            :smoothSnapThreshold="cfgTooltip.smoothSnapThreshold"
             :isA11yMode="tooltipTriggerMode === 'keyboard'"
             :a11yPosition="tooltipA11yPosition"
         >
