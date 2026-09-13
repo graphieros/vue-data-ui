@@ -108,6 +108,10 @@ const a11yAnnouncement = ref('');
 
 const FINAL_CONFIG = ref(prepareConfig());
 
+const style = computed(() => FINAL_CONFIG.value.style);
+const chart = computed(() => FINAL_CONFIG.value.style.chart);
+const cfgUserOptions = computed(() => FINAL_CONFIG.value.userOptions);
+
 useHints({
     config: () => FINAL_CONFIG.value,
     dataset: () => props.dataset,
@@ -270,7 +274,7 @@ watch(
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `3d_bar_${uid.value}`,
-    fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-3d-bar',
+    fileName: chart.value.title.text || 'vue-ui-3d-bar',
     options: FINAL_CONFIG.value.userOptions.print,
 });
 
@@ -297,22 +301,19 @@ const hasStack = computed(() => {
     return FINAL_DATASET.value.series && FINAL_DATASET.value.series.length;
 });
 
-const WIDTH = ref(
-    FINAL_CONFIG.value.style.chart.box.dimensions.width *
-        (hasStack.value ? 2 : 1),
-);
-const HEIGHT = ref(FINAL_CONFIG.value.style.chart.box.dimensions.height);
+const WIDTH = ref(chart.value.box.dimensions.width * (hasStack.value ? 2 : 1));
+const HEIGHT = ref(chart.value.box.dimensions.height);
 
 const svg = computed(() => {
     return {
         height: HEIGHT.value,
         width: WIDTH.value,
         absoluteWidth: WIDTH.value,
-        top: FINAL_CONFIG.value.style.chart.box.dimensions.top,
-        bottom: FINAL_CONFIG.value.style.chart.box.dimensions.bottom,
-        left: FINAL_CONFIG.value.style.chart.box.dimensions.left,
-        right: FINAL_CONFIG.value.style.chart.box.dimensions.right,
-        perspective: FINAL_CONFIG.value.style.chart.box.dimensions.perspective,
+        top: chart.value.box.dimensions.top,
+        bottom: chart.value.box.dimensions.bottom,
+        left: chart.value.box.dimensions.left,
+        right: chart.value.box.dimensions.right,
+        perspective: chart.value.box.dimensions.perspective,
     };
 });
 
@@ -359,30 +360,29 @@ const stack = computed(() => {
 });
 
 const box = computed(() => {
-    const CENTER_X = svg.value.width / 2;
+    const CX = svg.value.width / 2;
+    const S = svg.value;
 
     return {
-        right: `M${CENTER_X},${svg.value.top} ${svg.value.width - svg.value.right}, ${svg.value.top + svg.value.perspective} ${svg.value.width - svg.value.right},${svg.value.height - svg.value.bottom - svg.value.perspective} ${CENTER_X},${svg.value.height - svg.value.bottom}`,
-        left: `M${CENTER_X},${svg.value.top} ${svg.value.left},${svg.value.top + svg.value.perspective} ${svg.value.left},${svg.value.height - svg.value.bottom - svg.value.perspective} ${CENTER_X},${svg.value.height - svg.value.bottom}`,
-        side: `M${CENTER_X},${svg.value.height - svg.value.bottom} ${CENTER_X},${svg.value.top + svg.value.perspective * 2}`,
-        topSides: `M${svg.value.left},${svg.value.top + svg.value.perspective} ${CENTER_X},${svg.value.top + svg.value.perspective * 2} ${svg.value.width - svg.value.right},${svg.value.top + svg.value.perspective}`,
-        tubeTop: `M${svg.value.left},${svg.value.top + svg.value.perspective} C ${svg.value.left},${svg.value.top - svg.value.perspective / 3} ${svg.value.width - svg.value.right},${svg.value.top - svg.value.perspective / 3} ${svg.value.width - svg.value.right},${svg.value.top + svg.value.perspective} C ${svg.value.width - svg.value.right},${svg.value.top + svg.value.perspective * 2.3} ${svg.value.left},${svg.value.top + svg.value.perspective * 2.3} ${svg.value.left},${svg.value.top + svg.value.perspective}`,
-        tubeLeft: `M${svg.value.left},${svg.value.top + svg.value.perspective} ${svg.value.left},${svg.value.height - svg.value.bottom - svg.value.perspective}`,
-        tubeRight: `M${svg.value.width - svg.value.right},${svg.value.top + svg.value.perspective} ${svg.value.width - svg.value.right},${svg.value.height - svg.value.bottom - svg.value.perspective}`,
-        tubeBottom: `M${svg.value.width - svg.value.right},${svg.value.height - svg.value.bottom - svg.value.perspective} C ${svg.value.width - svg.value.right},${svg.value.height} ${svg.value.left},${svg.value.height} ${svg.value.left},${svg.value.height - svg.value.bottom - svg.value.perspective}`,
+        right: `M${CX},${S.top} ${S.width - S.right}, ${S.top + S.perspective} ${S.width - S.right},${S.height - S.bottom - S.perspective} ${CX},${S.height - S.bottom}`,
+        left: `M${CX},${S.top} ${S.left},${S.top + S.perspective} ${S.left},${S.height - S.bottom - S.perspective} ${CX},${S.height - S.bottom}`,
+        side: `M${CX},${S.height - S.bottom} ${CX},${S.top + S.perspective * 2}`,
+        topSides: `M${S.left},${S.top + S.perspective} ${CX},${S.top + S.perspective * 2} ${S.width - S.right},${S.top + S.perspective}`,
+        tubeTop: `M${S.left},${S.top + S.perspective} C ${S.left},${S.top - S.perspective / 3} ${S.width - S.right},${S.top - S.perspective / 3} ${S.width - S.right},${S.top + S.perspective} C ${S.width - S.right},${S.top + S.perspective * 2.3} ${S.left},${S.top + S.perspective * 2.3} ${S.left},${S.top + S.perspective}`,
+        tubeLeft: `M${S.left},${S.top + S.perspective} ${S.left},${S.height - S.bottom - S.perspective}`,
+        tubeRight: `M${S.width - S.right},${S.top + S.perspective} ${S.width - S.right},${S.height - S.bottom - S.perspective}`,
+        tubeBottom: `M${S.width - S.right},${S.height - S.bottom - S.perspective} C ${S.width - S.right},${S.height} ${S.left},${S.height} ${S.left},${S.height - S.bottom - S.perspective}`,
     };
 });
 
 const activeValue = ref(
-    FINAL_CONFIG.value.style.chart.animation.use
-        ? 0
-        : FINAL_DATASET.value.percentage,
+    chart.value.animation.use ? 0 : FINAL_DATASET.value.percentage,
 );
 
 function animateOnLoad() {
     let acceleration = 0;
-    let speed = FINAL_CONFIG.value.style.chart.animation.speed;
-    let incr = 0.005 * FINAL_CONFIG.value.style.chart.animation.acceleration;
+    let speed = chart.value.animation.speed;
+    let incr = 0.005 * chart.value.animation.acceleration;
     function animate() {
         activeValue.value += speed + acceleration;
         acceleration += incr;
@@ -393,7 +393,7 @@ function animateOnLoad() {
         }
     }
 
-    if (FINAL_CONFIG.value.style.chart.animation.use) {
+    if (chart.value.animation.use) {
         activeValue.value = 0;
         animate();
     }
@@ -469,9 +469,7 @@ function prepareChart() {
         const handleResize = throttle(() => {
             const { width, height } = useResponsive({
                 chart: bar3dChart.value,
-                title: FINAL_CONFIG.value.style.chart.title.text
-                    ? chartTitle.value
-                    : null,
+                title: chart.value.title.text ? chartTitle.value : null,
                 source: source.value,
             });
 
@@ -784,8 +782,8 @@ function generateCsv(callback = null) {
             ];
         });
         const tableXls = [
-            [FINAL_CONFIG.value.style.chart.title.text],
-            [FINAL_CONFIG.value.style.chart.title.subtitle.text],
+            [chart.value.title.text],
+            [chart.value.title.subtitle.text],
             [[''], ['val'], ['%']],
         ].concat(labels);
 
@@ -793,9 +791,7 @@ function generateCsv(callback = null) {
         if (!callback) {
             downloadCsv({
                 csvContent,
-                title:
-                    FINAL_CONFIG.value.style.chart.title.text ||
-                    'vue-ui-3d-bar',
+                title: chart.value.title.text || 'vue-ui-3d-bar',
             });
         } else {
             callback(csvContent);
@@ -837,9 +833,9 @@ const dataTable = computed(() => {
     const head = [
         `__SUM__`,
         dataLabel({
-            p: FINAL_CONFIG.value.style.chart.legend.prefix,
+            p: chart.value.legend.prefix,
             v: total,
-            s: FINAL_CONFIG.value.style.chart.legend.suffix,
+            s: chart.value.legend.suffix,
             r: FINAL_CONFIG.value.table.td.roundingValue,
         }),
         '100%',
@@ -854,9 +850,9 @@ const dataTable = computed(() => {
                 name: headerItem.name,
             },
             dataLabel({
-                p: FINAL_CONFIG.value.style.chart.legend.prefix,
+                p: chart.value.legend.prefix,
                 v: rawValue,
-                s: FINAL_CONFIG.value.style.chart.legend.suffix,
+                s: chart.value.legend.suffix,
                 r: FINAL_CONFIG.value.table.td.roundingValue,
             }),
             isNaN(rawValue / total)
@@ -927,7 +923,7 @@ async function getImage({ scale = 2 } = {}) {
     return {
         imageUri,
         base64,
-        title: FINAL_CONFIG.value.style.chart.title.text,
+        title: chart.value.title.text,
         width,
         height,
         aspectRatio,
@@ -940,7 +936,7 @@ const tableComponent = computed(() => {
     const open = mutableConfig.value.showTable;
     return {
         component: useDialog ? BaseDraggableDialog : Accordion,
-        title: `${FINAL_CONFIG.value.style.chart.title.text}${FINAL_CONFIG.value.style.chart.title.subtitle.text ? `: ${FINAL_CONFIG.value.style.chart.title.subtitle.text}` : ''}`,
+        title: `${chart.value.title.text}${chart.value.title.subtitle.text ? `: ${chart.value.title.subtitle.text}` : ''}`,
         props: useDialog
             ? {
                   backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
@@ -957,14 +953,12 @@ const tableComponent = computed(() => {
                       open,
                       maxHeight: 10000,
                       body: {
-                          backgroundColor:
-                              FINAL_CONFIG.value.style.chart.backgroundColor,
-                          color: FINAL_CONFIG.value.style.chart.color,
+                          backgroundColor: chart.value.backgroundColor,
+                          color: chart.value.color,
                       },
                       head: {
-                          backgroundColor:
-                              FINAL_CONFIG.value.style.chart.backgroundColor,
-                          color: FINAL_CONFIG.value.style.chart.color,
+                          backgroundColor: chart.value.backgroundColor,
+                          color: chart.value.color,
                       },
                   },
               },
@@ -1039,15 +1033,15 @@ function clearAccessibilitySelection() {
 function buildAccessibilityAnnouncement(bar) {
     if (!bar) return '';
     const valueLabel = dataLabel({
-        p: FINAL_CONFIG.value.style.chart.legend.prefix,
+        p: chart.value.legend.prefix,
         v: bar.value,
-        s: FINAL_CONFIG.value.style.chart.legend.suffix,
-        r: FINAL_CONFIG.value.style.chart.legend.roundingValue,
+        s: chart.value.legend.suffix,
+        r: chart.value.legend.roundingValue,
     });
     const percentageLabel = dataLabel({
         v: bar.proportion * 100,
         s: '%',
-        r: FINAL_CONFIG.value.style.chart.legend.roundingPercentage,
+        r: chart.value.legend.roundingPercentage,
     });
     return `${bar.name}: ${valueLabel}, ${percentageLabel}`;
 }
@@ -1157,7 +1151,7 @@ defineExpose({
     <div
         ref="bar3dChart"
         :class="`vue-data-ui-component vue-ui-3d-bar`"
-        :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor}`"
+        :style="`font-family:${style.fontFamily};width:100%; text-align:center;background:${chart.backgroundColor}`"
         :id="`3d_bar_${uid}`"
         @mouseenter="() => setUserOptionsVisibility(true)"
         @mouseleave="() => setUserOptionsVisibility(false)"
@@ -1180,13 +1174,13 @@ defineExpose({
         />
 
         <PenAndPaper
-            v-if="FINAL_CONFIG.userOptions.buttons.annotator"
+            v-if="cfgUserOptions.buttons.annotator"
             :svgRef="svgRef"
-            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
-            :color="FINAL_CONFIG.style.chart.color"
+            :backgroundColor="chart.backgroundColor"
+            :color="chart.color"
             :active="isAnnotator"
             :isCursorPointer="isCursorPointer"
-            :palette="FINAL_CONFIG.userOptions.annotatorPalette"
+            :palette="cfgUserOptions.annotatorPalette"
             @close="toggleAnnotator"
         >
             <template #annotator-action-close>
@@ -1211,7 +1205,7 @@ defineExpose({
 
         <div
             ref="chartTitle"
-            v-if="FINAL_CONFIG.style.chart.title.text"
+            v-if="chart.title.text"
             :style="`width:100%;background:transparent`"
         >
             <!-- TITLE AS DIV -->
@@ -1220,11 +1214,11 @@ defineExpose({
                 :config="{
                     title: {
                         cy: '3dBar-div-title',
-                        ...FINAL_CONFIG.style.chart.title,
+                        ...chart.title,
                     },
                     subtitle: {
                         cy: '3dBar-div-subtitle',
-                        ...FINAL_CONFIG.style.chart.title.subtitle,
+                        ...chart.title.subtitle,
                     },
                 }"
             />
@@ -1234,29 +1228,29 @@ defineExpose({
         <UserOptions
             ref="userOptionsRef"
             v-if="
-                FINAL_CONFIG.userOptions.show &&
+                cfgUserOptions.show &&
                 isDataset &&
                 (keepUserOptionState ? true : userOptionsVisible)
             "
-            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
-            :color="FINAL_CONFIG.style.chart.color"
+            :backgroundColor="chart.backgroundColor"
+            :color="chart.color"
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uid"
-            :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
-            :hasTable="!!hasStack && FINAL_CONFIG.userOptions.buttons.table"
-            :hasXls="!!hasStack && FINAL_CONFIG.userOptions.buttons.csv"
-            :hasImg="FINAL_CONFIG.userOptions.buttons.img"
-            :hasSvg="FINAL_CONFIG.userOptions.buttons.svg"
-            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
-            :hasAltCopy="FINAL_CONFIG.userOptions.buttons.altCopy"
-            :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
+            :hasPdf="cfgUserOptions.buttons.pdf"
+            :hasTable="!!hasStack && cfgUserOptions.buttons.table"
+            :hasXls="!!hasStack && cfgUserOptions.buttons.csv"
+            :hasImg="cfgUserOptions.buttons.img"
+            :hasSvg="cfgUserOptions.buttons.svg"
+            :hasFullscreen="cfgUserOptions.buttons.fullscreen"
+            :hasAltCopy="cfgUserOptions.buttons.altCopy"
+            :titles="{ ...cfgUserOptions.buttonTitles }"
             :chartElement="bar3dChart"
-            :position="FINAL_CONFIG.userOptions.position"
-            :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator"
+            :position="cfgUserOptions.position"
+            :hasAnnotator="cfgUserOptions.buttons.annotator"
             :isAnnotation="isAnnotator"
-            :callbacks="FINAL_CONFIG.userOptions.callbacks"
-            :printScale="FINAL_CONFIG.userOptions.print.scale"
+            :callbacks="cfgUserOptions.callbacks"
+            :printScale="cfgUserOptions.print.scale"
             :tableDialog="FINAL_CONFIG.table.useDialog"
             :isCursorPointer="isCursorPointer"
             @toggleFullscreen="toggleFullscreen"
@@ -1336,7 +1330,7 @@ defineExpose({
                 }"
                 data-cy="3d-bar-svg"
                 :viewBox="`0 0 ${svg.absoluteWidth} ${svg.height}`"
-                :style="`max-width:100%; overflow: visible; background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
+                :style="`max-width:100%; overflow: visible; background:transparent;color:${chart.color}`"
                 tabindex="0"
                 :aria-describedby="`chart-instructions-${uid}`"
                 @focus="onSvgFocus"
@@ -1365,15 +1359,8 @@ defineExpose({
                         t="radial"
                         :id="`gradient_top${uid}`"
                         :stops="[
-                            [
-                                '0%',
-                                setOpacity(
-                                    FINAL_CONFIG.style.chart.backgroundColor,
-                                    0,
-                                ),
-                                1,
-                            ],
-                            ['100%', FINAL_CONFIG.style.chart.bar.color, 1],
+                            ['0%', setOpacity(chart.backgroundColor, 0), 1],
+                            ['100%', chart.bar.color, 1],
                         ]"
                     />
                     <DefGrad
@@ -1383,10 +1370,7 @@ defineExpose({
                             [
                                 '0%',
                                 setOpacity(
-                                    lightenHexColor(
-                                        FINAL_CONFIG.style.chart.bar.color,
-                                        0.5,
-                                    ),
+                                    lightenHexColor(chart.bar.color, 0.5),
                                     80,
                                 ),
                                 1,
@@ -1394,10 +1378,7 @@ defineExpose({
                             [
                                 '100%',
                                 setOpacity(
-                                    darkenHexColor(
-                                        FINAL_CONFIG.style.chart.bar.color,
-                                        0.1,
-                                    ),
+                                    darkenHexColor(chart.bar.color, 0.1),
                                     80,
                                 ),
                                 1,
@@ -1408,44 +1389,16 @@ defineExpose({
                         t="radial"
                         :id="`gradient_left${uid}`"
                         :stops="[
-                            [
-                                '0%',
-                                setOpacity(
-                                    FINAL_CONFIG.style.chart.backgroundColor,
-                                    0,
-                                ),
-                                1,
-                            ],
-                            [
-                                '100%',
-                                setOpacity(
-                                    FINAL_CONFIG.style.chart.bar.color,
-                                    20,
-                                ),
-                                1,
-                            ],
+                            ['0%', setOpacity(chart.backgroundColor, 0), 1],
+                            ['100%', setOpacity(chart.bar.color, 20), 1],
                         ]"
                     />
                     <DefGrad
                         t="radial"
                         :id="`gradient_right${uid}`"
                         :stops="[
-                            [
-                                '0%',
-                                setOpacity(
-                                    FINAL_CONFIG.style.chart.backgroundColor,
-                                    0,
-                                ),
-                                1,
-                            ],
-                            [
-                                '100%',
-                                setOpacity(
-                                    FINAL_CONFIG.style.chart.bar.color,
-                                    20,
-                                ),
-                                1,
-                            ],
+                            ['0%', setOpacity(chart.backgroundColor, 0), 1],
+                            ['100%', setOpacity(chart.bar.color, 20), 1],
                         ]"
                     />
                     <DefGrad
@@ -1456,14 +1409,11 @@ defineExpose({
                         x2="100%"
                         y2="0%"
                         :stops="[
-                            ['0%', FINAL_CONFIG.style.chart.bar.color, 1],
+                            ['0%', chart.bar.color, 1],
                             [
                                 '10%',
                                 setOpacity(
-                                    darkenHexColor(
-                                        FINAL_CONFIG.style.chart.bar.color,
-                                        0.7,
-                                    ),
+                                    darkenHexColor(chart.bar.color, 0.7),
                                     100,
                                 ),
                                 1,
@@ -1471,29 +1421,16 @@ defineExpose({
                             [
                                 '25%',
                                 setOpacity(
-                                    darkenHexColor(
-                                        FINAL_CONFIG.style.chart.bar.color,
-                                        0.5,
-                                    ),
+                                    darkenHexColor(chart.bar.color, 0.5),
                                     100,
                                 ),
                                 1,
                             ],
-                            [
-                                '75%',
-                                setOpacity(
-                                    FINAL_CONFIG.style.chart.bar.color,
-                                    80,
-                                ),
-                                1,
-                            ],
+                            ['75%', setOpacity(chart.bar.color, 80), 1],
                             [
                                 '100%',
                                 setOpacity(
-                                    lightenHexColor(
-                                        FINAL_CONFIG.style.chart.bar.color,
-                                        0.7,
-                                    ),
+                                    lightenHexColor(chart.bar.color, 0.7),
                                     100,
                                 ),
                                 1,
@@ -1565,29 +1502,22 @@ defineExpose({
                 <text
                     data-cy="vue-ui-3d-bar-simple-datalabel"
                     v-if="
-                        FINAL_CONFIG.style.chart.dataLabel.show &&
+                        chart.dataLabel.show &&
                         ![null, undefined].includes(FINAL_DATASET.percentage) &&
                         [null, undefined].includes(FINAL_DATASET.series)
                     "
                     :x="svg.width / 2"
-                    :y="
-                        svg.top -
-                        FINAL_CONFIG.style.chart.dataLabel.fontSize / 2
-                    "
-                    :font-size="FINAL_CONFIG.style.chart.dataLabel.fontSize"
-                    :font-weight="
-                        FINAL_CONFIG.style.chart.dataLabel.bold
-                            ? 'bold'
-                            : 'normal'
-                    "
-                    :fill="FINAL_CONFIG.style.chart.dataLabel.color"
+                    :y="svg.top - chart.dataLabel.fontSize / 2"
+                    :font-size="chart.dataLabel.fontSize"
+                    :font-weight="chart.dataLabel.bold ? 'bold' : 'normal'"
+                    :fill="chart.dataLabel.color"
                     text-anchor="middle"
                 >
                     {{
                         dataLabel({
                             v: activeValue,
                             s: '%',
-                            r: FINAL_CONFIG.style.chart.dataLabel.rounding,
+                            r: chart.dataLabel.rounding,
                         })
                     }}
                 </text>
@@ -1637,7 +1567,7 @@ defineExpose({
                         :cy="svg.top - 12"
                         r="10"
                         fill="none"
-                        :stroke="FINAL_CONFIG.style.chart.color"
+                        :stroke="chart.color"
                         stroke-width="2"
                         vector-effect="non-scaling-stroke"
                         :opacity="isFocus ? 0.5 : 0"
@@ -1645,76 +1575,55 @@ defineExpose({
 
                     <path
                         :d="`M${CX - 6},${svg.top - 18} ${CX + 6},${svg.top - 6}`"
-                        :stroke="FINAL_CONFIG.style.chart.color"
+                        :stroke="chart.color"
                         stroke-linecap="round"
                         stroke-width="2"
                         vector-effect="non-scaling-stroke"
                     />
                     <path
                         :d="`M${CX + 6},${svg.top - 18} ${CX - 6},${svg.top - 6}`"
-                        :stroke="FINAL_CONFIG.style.chart.color"
+                        :stroke="chart.color"
                         stroke-linecap="round"
                         stroke-width="2"
                         vector-effect="non-scaling-stroke"
                     />
                 </g>
 
-                <g
-                    v-if="
-                        !FINAL_CONFIG.style.shape ||
-                        FINAL_CONFIG.style.shape === 'bar'
-                    "
-                >
+                <g v-if="!style.shape || style.shape === 'bar'">
                     <!-- BOX SKELETON -->
                     <g v-if="!hasStack">
                         <path
-                            :stroke-dasharray="
-                                FINAL_CONFIG.style.chart.box.strokeDasharray
-                            "
+                            :stroke-dasharray="chart.box.strokeDasharray"
                             :d="box.right"
-                            :stroke="FINAL_CONFIG.style.chart.box.stroke"
-                            :stroke-width="
-                                FINAL_CONFIG.style.chart.box.strokeWidth
-                            "
+                            :stroke="chart.box.stroke"
+                            :stroke-width="chart.box.strokeWidth"
                             stroke-linejoin="round"
                             stroke-linecap="round"
                             fill="none"
                         />
                         <path
-                            :stroke-dasharray="
-                                FINAL_CONFIG.style.chart.box.strokeDasharray
-                            "
+                            :stroke-dasharray="chart.box.strokeDasharray"
                             :d="box.left"
-                            :stroke="FINAL_CONFIG.style.chart.box.stroke"
-                            :stroke-width="
-                                FINAL_CONFIG.style.chart.box.strokeWidth
-                            "
+                            :stroke="chart.box.stroke"
+                            :stroke-width="chart.box.strokeWidth"
                             stroke-linejoin="round"
                             stroke-linecap="round"
                             fill="none"
                         />
                         <path
-                            :stroke-dasharray="
-                                FINAL_CONFIG.style.chart.box.strokeDasharray
-                            "
+                            :stroke-dasharray="chart.box.strokeDasharray"
                             :d="box.side"
-                            :stroke="FINAL_CONFIG.style.chart.box.stroke"
-                            :stroke-width="
-                                FINAL_CONFIG.style.chart.box.strokeWidth
-                            "
+                            :stroke="chart.box.stroke"
+                            :stroke-width="chart.box.strokeWidth"
                             stroke-linejoin="round"
                             stroke-linecap="round"
                             fill="none"
                         />
                         <path
-                            :stroke-dasharray="
-                                FINAL_CONFIG.style.chart.box.strokeDasharray
-                            "
+                            :stroke-dasharray="chart.box.strokeDasharray"
                             :d="box.topSides"
-                            :stroke="FINAL_CONFIG.style.chart.box.stroke"
-                            :stroke-width="
-                                FINAL_CONFIG.style.chart.box.strokeWidth
-                            "
+                            :stroke="chart.box.stroke"
+                            :stroke-width="chart.box.strokeWidth"
                             stroke-linejoin="round"
                             stroke-linecap="round"
                             fill="none"
@@ -1725,30 +1634,24 @@ defineExpose({
                     <g v-if="!hasStack">
                         <path
                             :d="fill.right"
-                            :stroke="FINAL_CONFIG.style.chart.bar.stroke"
-                            :stroke-width="
-                                FINAL_CONFIG.style.chart.bar.strokeWidth
-                            "
+                            :stroke="chart.bar.stroke"
+                            :stroke-width="chart.bar.strokeWidth"
                             stroke-linejoin="round"
                             stroke-linecap="round"
                             :fill="`url(#gradient_right${uid})`"
                         />
                         <path
                             :d="fill.left"
-                            :stroke="FINAL_CONFIG.style.chart.bar.stroke"
-                            :stroke-width="
-                                FINAL_CONFIG.style.chart.bar.strokeWidth
-                            "
+                            :stroke="chart.bar.stroke"
+                            :stroke-width="chart.bar.strokeWidth"
                             stroke-linejoin="round"
                             stroke-linecap="round"
                             :fill="`url(#gradient_left${uid})`"
                         />
                         <path
                             :d="fill.top"
-                            :stroke="FINAL_CONFIG.style.chart.bar.stroke"
-                            :stroke-width="
-                                FINAL_CONFIG.style.chart.bar.strokeWidth
-                            "
+                            :stroke="chart.bar.stroke"
+                            :stroke-width="chart.bar.strokeWidth"
                             stroke-linejoin="round"
                             stroke-linecap="round"
                             :fill="`url(#gradient_top${uid})`"
@@ -1807,9 +1710,7 @@ defineExpose({
                             <path
                                 v-if="i !== stack.length - 1"
                                 :d="bar.fill.liningTopShade"
-                                :stroke="
-                                    FINAL_CONFIG.style.chart.bar.shadeColor
-                                "
+                                :stroke="chart.bar.shadeColor"
                                 stroke-width="0.5"
                                 stroke-linecap="round"
                                 fill="none"
@@ -1819,11 +1720,11 @@ defineExpose({
                         <!-- LEGEND (parallelogram) -->
                         <g
                             v-for="(bar, i) in stack"
-                            :style="`opacity:${selectedSerie ? (selectedSerie === bar.id ? 1 : 0) : bar.proportion * 100 > FINAL_CONFIG.style.chart.legend.hideUnderPercentage ? 1 : 0}`"
+                            :style="`opacity:${selectedSerie ? (selectedSerie === bar.id ? 1 : 0) : bar.proportion * 100 > chart.legend.hideUnderPercentage ? 1 : 0}`"
                             @click="emits('selectDatapoint', bar)"
                         >
                             <path
-                                :stroke="FINAL_CONFIG.style.chart.color"
+                                :stroke="chart.color"
                                 stroke-dasharray="1"
                                 stroke-width="0.5"
                                 stroke-linecap="round"
@@ -1836,9 +1737,7 @@ defineExpose({
                                 :cy="bar.fill.sidePointer.y"
                                 :r="2"
                                 :fill="bar.color"
-                                :stroke="
-                                    FINAL_CONFIG.style.chart.backgroundColor
-                                "
+                                :stroke="chart.backgroundColor"
                             />
 
                             <rect
@@ -1846,12 +1745,10 @@ defineExpose({
                                 :x="bar.fill.sidePointer.xText"
                                 :y="
                                     bar.fill.sidePointer.y -
-                                    FINAL_CONFIG.style.chart.legend.fontSize / 2
+                                    chart.legend.fontSize / 2
                                 "
                                 :width="svg.width / 3"
-                                :height="
-                                    FINAL_CONFIG.style.chart.legend.fontSize
-                                "
+                                :height="chart.legend.fontSize"
                                 fill="#6A6A6A80"
                                 rx="3"
                             />
@@ -1860,36 +1757,28 @@ defineExpose({
                                 :x="bar.fill.sidePointer.xText"
                                 :y="
                                     bar.fill.sidePointer.y -
-                                    FINAL_CONFIG.style.chart.legend.fontSize
+                                    chart.legend.fontSize
                                 "
                                 :width="svg.absoluteWidth / 3"
-                                :height="
-                                    FINAL_CONFIG.style.chart.legend.fontSize * 2
-                                "
+                                :height="chart.legend.fontSize * 2"
                                 style="overflow: visible; position: relative"
                                 v-if="!loading"
                             >
                                 <div
-                                    v-if="
-                                        FINAL_CONFIG.style.chart.legend
-                                            .showDefault
-                                    "
-                                    :style="`height: 100%; width: 100%; display: flex; flex-direction: row; flex-wrap: wrap; align-items:center;justify-content: flex-start; font-size:${FINAL_CONFIG.style.chart.legend.fontSize}px; text-align:left; line-height: ${FINAL_CONFIG.style.chart.legend.fontSize}px; color:${FINAL_CONFIG.style.chart.legend.color}; font-weight:${FINAL_CONFIG.style.chart.legend.bold ? 'bold' : 'normal'}`"
+                                    v-if="chart.legend.showDefault"
+                                    :style="`height: 100%; width: 100%; display: flex; flex-direction: row; flex-wrap: wrap; align-items:center;justify-content: flex-start; font-size:${chart.legend.fontSize}px; text-align:left; line-height: ${chart.legend.fontSize}px; color:${chart.legend.color}; font-weight:${chart.legend.bold ? 'bold' : 'normal'}`"
                                 >
                                     {{
                                         applyDataLabel(
-                                            FINAL_CONFIG.style.chart.dataLabel
-                                                .formatter,
+                                            chart.dataLabel.formatter,
                                             bar.value,
-                                            `${bar.name}: ${dataLabel({ v: bar.proportion * 100, s: '%', r: FINAL_CONFIG.style.chart.legend.roundingPercentage })} (${dataLabel(
+                                            `${bar.name}: ${dataLabel({ v: bar.proportion * 100, s: '%', r: chart.legend.roundingPercentage })} (${dataLabel(
                                                 {
-                                                    p: FINAL_CONFIG.style.chart
-                                                        .legend.prefix,
+                                                    p: chart.legend.prefix,
                                                     v: bar.value,
-                                                    s: FINAL_CONFIG.style.chart
-                                                        .legend.suffix,
-                                                    r: FINAL_CONFIG.style.chart
-                                                        .legend.roundingValue,
+                                                    s: chart.legend.suffix,
+                                                    r: chart.legend
+                                                        .roundingValue,
                                                 },
                                             )})`,
                                             {
@@ -1952,9 +1841,7 @@ defineExpose({
                                     :data-cy="`donut-arc-${j}`"
                                     :d="arc.arcSlice"
                                     :fill="`${arc.color}`"
-                                    :stroke="
-                                        FINAL_CONFIG.style.chart.backgroundColor
-                                    "
+                                    :stroke="chart.backgroundColor"
                                     :stroke-width="1"
                                 />
 
@@ -1979,25 +1866,19 @@ defineExpose({
                                                     .x
                                             "
                                             :y="calcMarkerOffsetY(arc, 12, 12)"
-                                            :fill="
-                                                FINAL_CONFIG.style.chart.legend
-                                                    .color
-                                            "
+                                            :fill="chart.legend.color"
                                             :font-size="
-                                                FINAL_CONFIG.style.chart.legend
-                                                    .fontSize / 1.5
+                                                chart.legend.fontSize / 1.5
                                             "
                                             :font-weight="
-                                                FINAL_CONFIG.style.chart.legend
-                                                    .bold
+                                                chart.legend.bold
                                                     ? 'bold'
                                                     : 'normal'
                                             "
                                         >
                                             {{
                                                 applyDataLabel(
-                                                    FINAL_CONFIG.style.chart
-                                                        .dataLabel.formatter,
+                                                    chart.dataLabel.formatter,
                                                     arc.value,
                                                     `${displayArcPercentage(arc, bar.fill.donut)} (${dataLabel(
                                                         {
@@ -2032,21 +1913,14 @@ defineExpose({
                                             "
                                             :y="
                                                 calcMarkerOffsetY(arc, 12, 12) +
-                                                FINAL_CONFIG.style.chart.legend
-                                                    .fontSize /
-                                                    1.5
+                                                chart.legend.fontSize / 1.5
                                             "
-                                            :fill="
-                                                FINAL_CONFIG.style.chart.legend
-                                                    .color
-                                            "
+                                            :fill="chart.legend.color"
                                             :font-size="
-                                                FINAL_CONFIG.style.chart.legend
-                                                    .fontSize / 1.5
+                                                chart.legend.fontSize / 1.5
                                             "
                                             :font-weight="
-                                                FINAL_CONFIG.style.chart.legend
-                                                    .bold
+                                                chart.legend.bold
                                                     ? 'bold'
                                                     : 'normal'
                                             "
@@ -2065,9 +1939,7 @@ defineExpose({
                                     :data-cy="`donut-arc-${j}`"
                                     :d="arc.arcSlice"
                                     :fill="`${arc.color}`"
-                                    :stroke="
-                                        FINAL_CONFIG.style.chart.backgroundColor
-                                    "
+                                    :stroke="chart.backgroundColor"
                                     :stroke-width="0.5"
                                 />
                             </g>
@@ -2075,57 +1947,41 @@ defineExpose({
                     </g>
                 </g>
 
-                <g v-if="FINAL_CONFIG.style.shape === 'tube'">
+                <g v-if="style.shape === 'tube'">
                     <g v-if="!hasStack">
                         <!-- TUBE SKELETON -->
                         <path
-                            :stroke-dasharray="
-                                FINAL_CONFIG.style.chart.box.strokeDasharray
-                            "
+                            :stroke-dasharray="chart.box.strokeDasharray"
                             :d="box.tubeTop"
-                            :stroke="FINAL_CONFIG.style.chart.box.stroke"
-                            :stroke-width="
-                                FINAL_CONFIG.style.chart.box.strokeWidth
-                            "
+                            :stroke="chart.box.stroke"
+                            :stroke-width="chart.box.strokeWidth"
                             stroke-linejoin="round"
                             stroke-linecap="round"
                             fill="none"
                         />
                         <path
-                            :stroke-dasharray="
-                                FINAL_CONFIG.style.chart.box.strokeDasharray
-                            "
+                            :stroke-dasharray="chart.box.strokeDasharray"
                             :d="box.tubeLeft"
-                            :stroke="FINAL_CONFIG.style.chart.box.stroke"
-                            :stroke-width="
-                                FINAL_CONFIG.style.chart.box.strokeWidth
-                            "
+                            :stroke="chart.box.stroke"
+                            :stroke-width="chart.box.strokeWidth"
                             stroke-linejoin="round"
                             stroke-linecap="round"
                             fill="none"
                         />
                         <path
-                            :stroke-dasharray="
-                                FINAL_CONFIG.style.chart.box.strokeDasharray
-                            "
+                            :stroke-dasharray="chart.box.strokeDasharray"
                             :d="box.tubeRight"
-                            :stroke="FINAL_CONFIG.style.chart.box.stroke"
-                            :stroke-width="
-                                FINAL_CONFIG.style.chart.box.strokeWidth
-                            "
+                            :stroke="chart.box.stroke"
+                            :stroke-width="chart.box.strokeWidth"
                             stroke-linejoin="round"
                             stroke-linecap="round"
                             fill="none"
                         />
                         <path
-                            :stroke-dasharray="
-                                FINAL_CONFIG.style.chart.box.strokeDasharray
-                            "
+                            :stroke-dasharray="chart.box.strokeDasharray"
                             :d="box.tubeBottom"
-                            :stroke="FINAL_CONFIG.style.chart.box.stroke"
-                            :stroke-width="
-                                FINAL_CONFIG.style.chart.box.strokeWidth
-                            "
+                            :stroke="chart.box.stroke"
+                            :stroke-width="chart.box.strokeWidth"
                             stroke-linejoin="round"
                             stroke-linecap="round"
                             fill="none"
@@ -2133,20 +1989,16 @@ defineExpose({
                         <!-- FILL TUBE -->
                         <path
                             :d="fill.tubeTop"
-                            :stroke="FINAL_CONFIG.style.chart.bar.stroke"
-                            :stroke-width="
-                                FINAL_CONFIG.style.chart.bar.strokeWidth
-                            "
+                            :stroke="chart.bar.stroke"
+                            :stroke-width="chart.bar.strokeWidth"
                             stroke-linejoin="round"
                             stroke-linecap="round"
                             :fill="`url(#gradient_tube_top${uid})`"
                         />
                         <path
                             :d="fill.tubeBody"
-                            :stroke="FINAL_CONFIG.style.chart.bar.stroke"
-                            :stroke-width="
-                                FINAL_CONFIG.style.chart.bar.strokeWidth
-                            "
+                            :stroke="chart.bar.stroke"
+                            :stroke-width="chart.bar.strokeWidth"
                             stroke-linejoin="round"
                             stroke-linecap="round"
                             :fill="`url(#gradient_tube_body${uid})`"
@@ -2270,11 +2122,11 @@ defineExpose({
                         <!-- LEGEND (tube) -->
                         <g
                             v-for="(bar, i) in stack"
-                            :style="`opacity:${selectedSerie ? (selectedSerie === bar.id ? 1 : 0) : bar.proportion * 100 > FINAL_CONFIG.style.chart.legend.hideUnderPercentage ? 1 : 0}`"
+                            :style="`opacity:${selectedSerie ? (selectedSerie === bar.id ? 1 : 0) : bar.proportion * 100 > chart.legend.hideUnderPercentage ? 1 : 0}`"
                             @click="emits('selectDatapoint', bar)"
                         >
                             <path
-                                :stroke="FINAL_CONFIG.style.chart.color"
+                                :stroke="chart.color"
                                 stroke-dasharray="1"
                                 stroke-width="0.5"
                                 stroke-linecap="round"
@@ -2287,9 +2139,7 @@ defineExpose({
                                 :cy="bar.fill.sidePointer.y"
                                 :r="2"
                                 :fill="bar.color"
-                                :stroke="
-                                    FINAL_CONFIG.style.chart.backgroundColor
-                                "
+                                :stroke="chart.backgroundColor"
                             />
 
                             <rect
@@ -2297,12 +2147,10 @@ defineExpose({
                                 :x="bar.fill.sidePointer.xText"
                                 :y="
                                     bar.fill.sidePointer.y -
-                                    FINAL_CONFIG.style.chart.legend.fontSize / 2
+                                    chart.legend.fontSize / 2
                                 "
                                 :width="svg.width / 3"
-                                :height="
-                                    FINAL_CONFIG.style.chart.legend.fontSize
-                                "
+                                :height="chart.legend.fontSize"
                                 fill="#6A6A6A80"
                                 rx="3"
                             />
@@ -2311,36 +2159,28 @@ defineExpose({
                                 :x="bar.fill.sidePointer.xText"
                                 :y="
                                     bar.fill.sidePointer.y -
-                                    FINAL_CONFIG.style.chart.legend.fontSize
+                                    chart.legend.fontSize
                                 "
                                 :width="svg.absoluteWidth / 3"
-                                :height="
-                                    FINAL_CONFIG.style.chart.legend.fontSize * 2
-                                "
+                                :height="chart.legend.fontSize * 2"
                                 style="overflow: visible; position: relative"
                                 v-if="!loading"
                             >
                                 <div
-                                    v-if="
-                                        FINAL_CONFIG.style.chart.legend
-                                            .showDefault
-                                    "
-                                    :style="`height: 100%; width: 100%; display: flex; flex-direction: row; flex-wrap: wrap; align-items:center;justify-content: flex-start; font-size:${FINAL_CONFIG.style.chart.legend.fontSize}px; text-align:left; line-height: ${FINAL_CONFIG.style.chart.legend.fontSize}px; color:${FINAL_CONFIG.style.chart.legend.color};font-weight:${FINAL_CONFIG.style.chart.legend.bold ? 'bold' : 'normal'}`"
+                                    v-if="chart.legend.showDefault"
+                                    :style="`height: 100%; width: 100%; display: flex; flex-direction: row; flex-wrap: wrap; align-items:center;justify-content: flex-start; font-size:${chart.legend.fontSize}px; text-align:left; line-height: ${chart.legend.fontSize}px; color:${chart.legend.color};font-weight:${chart.legend.bold ? 'bold' : 'normal'}`"
                                 >
                                     {{
                                         applyDataLabel(
-                                            FINAL_CONFIG.style.chart.dataLabel
-                                                .formatter,
+                                            chart.dataLabel.formatter,
                                             bar.value,
-                                            `${bar.name}: ${dataLabel({ v: bar.proportion * 100, s: '%', r: FINAL_CONFIG.style.chart.legend.roundingPercentage })} (${dataLabel(
+                                            `${bar.name}: ${dataLabel({ v: bar.proportion * 100, s: '%', r: chart.legend.roundingPercentage })} (${dataLabel(
                                                 {
-                                                    p: FINAL_CONFIG.style.chart
-                                                        .legend.prefix,
+                                                    p: chart.legend.prefix,
                                                     v: bar.value,
-                                                    s: FINAL_CONFIG.style.chart
-                                                        .legend.suffix,
-                                                    r: FINAL_CONFIG.style.chart
-                                                        .legend.roundingValue,
+                                                    s: chart.legend.suffix,
+                                                    r: chart.legend
+                                                        .roundingValue,
                                                 },
                                             )})`,
                                             {
@@ -2403,9 +2243,7 @@ defineExpose({
                                     :data-cy="`donut-arc-${j}`"
                                     :d="arc.arcSlice"
                                     :fill="`${arc.color}`"
-                                    :stroke="
-                                        FINAL_CONFIG.style.chart.backgroundColor
-                                    "
+                                    :stroke="chart.backgroundColor"
                                     :stroke-width="1"
                                 />
 
@@ -2430,25 +2268,19 @@ defineExpose({
                                                     .x
                                             "
                                             :y="calcMarkerOffsetY(arc, 12, 12)"
-                                            :fill="
-                                                FINAL_CONFIG.style.chart.legend
-                                                    .color
-                                            "
+                                            :fill="chart.legend.color"
                                             :font-size="
-                                                FINAL_CONFIG.style.chart.legend
-                                                    .fontSize / 1.5
+                                                chart.legend.fontSize / 1.5
                                             "
                                             :font-weight="
-                                                FINAL_CONFIG.style.chart.legend
-                                                    .bold
+                                                chart.legend.bold
                                                     ? 'bold'
                                                     : 'normal'
                                             "
                                         >
                                             {{
                                                 applyDataLabel(
-                                                    FINAL_CONFIG.style.chart
-                                                        .dataLabel.formatter,
+                                                    chart.dataLabel.formatter,
                                                     arc.value,
                                                     `${displayArcPercentage(arc, bar.fill.donut)} (${dataLabel(
                                                         {
@@ -2483,21 +2315,14 @@ defineExpose({
                                             "
                                             :y="
                                                 calcMarkerOffsetY(arc, 12, 12) +
-                                                FINAL_CONFIG.style.chart.legend
-                                                    .fontSize /
-                                                    1.5
+                                                chart.legend.fontSize / 1.5
                                             "
-                                            :fill="
-                                                FINAL_CONFIG.style.chart.legend
-                                                    .color
-                                            "
+                                            :fill="chart.legend.color"
                                             :font-size="
-                                                FINAL_CONFIG.style.chart.legend
-                                                    .fontSize / 1.5
+                                                chart.legend.fontSize / 1.5
                                             "
                                             :font-weight="
-                                                FINAL_CONFIG.style.chart.legend
-                                                    .bold
+                                                chart.legend.bold
                                                     ? 'bold'
                                                     : 'normal'
                                             "
@@ -2516,9 +2341,7 @@ defineExpose({
                                     :data-cy="`donut-arc-${j}`"
                                     :d="arc.arcSlice"
                                     :fill="`${arc.color}`"
-                                    :stroke="
-                                        FINAL_CONFIG.style.chart.backgroundColor
-                                    "
+                                    :stroke="chart.backgroundColor"
                                     :stroke-width="0.5"
                                 />
                             </g>
@@ -2556,9 +2379,7 @@ defineExpose({
         </div>
 
         <component
-            v-if="
-                isDataset && hasStack && FINAL_CONFIG.userOptions.buttons.table
-            "
+            v-if="isDataset && hasStack && cfgUserOptions.buttons.table"
             :is="tableComponent.component"
             v-bind="tableComponent.props"
             ref="tableUnit"
@@ -2571,7 +2392,7 @@ defineExpose({
                 <button
                     tabindex="0"
                     class="vue-ui-user-options-button"
-                    @click="generateCsv(FINAL_CONFIG.userOptions.callbacks.csv)"
+                    @click="generateCsv(cfgUserOptions.callbacks.csv)"
                 >
                     <BaseIcon
                         name="fileCsv"
