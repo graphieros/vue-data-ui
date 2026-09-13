@@ -150,6 +150,23 @@ const emit = defineEmits(['selectLegend', 'selectX', 'copyAlt']);
 const slots = useSlots();
 
 const FINAL_CONFIG = ref(prepareConfig());
+const cfgUserOptions = computed(() => FINAL_CONFIG.value.userOptions);
+const cfgTooltip = computed(() => FINAL_CONFIG.value.style.chart.tooltip);
+const cfgGridVertical = computed(
+    () => FINAL_CONFIG.value.style.chart.grid.y.verticalLines,
+);
+const cfgGridHorizontal = computed(
+    () => FINAL_CONFIG.value.style.chart.grid.x.horizontalLines,
+);
+const cfgYAxisLabels = computed(
+    () => FINAL_CONFIG.value.style.chart.grid.y.axisLabels,
+);
+const cfgXAxisLabels = computed(
+    () => FINAL_CONFIG.value.style.chart.grid.x.timeLabels,
+);
+const cfgGrid = computed(() => FINAL_CONFIG.value.style.chart.grid);
+const cfgLabels = computed(() => FINAL_CONFIG.value.style.chart.dataLabels);
+const cfgChart = computed(() => FINAL_CONFIG.value.style.chart);
 
 useHints({
     config: () => FINAL_CONFIG.value,
@@ -177,7 +194,7 @@ useHints({
 });
 
 const chartAriaLabel = computed(() => {
-    const title = FINAL_CONFIG.value.style.chart.title.text || 'XY chart';
+    const title = cfgChart.value.title.text || 'XY chart';
     const visiblePoints = slicer.value.end - slicer.value.start;
     const visibleSeries = formattedDataset.value.filter(
         (ds) => !segregated.value.includes(ds.absoluteIndex),
@@ -191,11 +208,11 @@ const activePointA11yText = computed(() => {
 
     const absoluteIndex = activeTooltipIndex.value + slicer.value.start;
 
-    const label = FINAL_CONFIG.value.style.chart.grid.x.timeLabels.values.slice(
+    const label = cfgXAxisLabels.value.values.slice(
         slicer.value.start,
         slicer.value.end,
     )[activeTooltipIndex.value]
-        ? FINAL_CONFIG.value.style.chart.tooltip.useDefaultTimeFormat
+        ? cfgTooltip.value.useDefaultTimeFormat
             ? timeLabels.value.slice(slicer.value.start, slicer.value.end)[
                   activeTooltipIndex.value
               ]?.text
@@ -215,9 +232,7 @@ const activePointA11yText = computed(() => {
     return `${label}. ${values}.`;
 });
 
-const isCursorPointer = computed(
-    () => FINAL_CONFIG.value.userOptions.useCursorPointer,
-);
+const isCursorPointer = computed(() => cfgUserOptions.value.useCursorPointer);
 
 const debug = computed(() => FINAL_CONFIG.value.debug);
 
@@ -307,7 +322,7 @@ const { loading, FINAL_DATASET } = useLoading({
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } =
     useUserOptionState({ config: FINAL_CONFIG.value });
 const { svgRef: canvas } = useChartAccessibility({
-    config: FINAL_CONFIG.value.style.chart.title,
+    config: cfgChart.value.title,
 });
 
 function onChartEnter() {
@@ -381,8 +396,7 @@ watch(
         if (!loading.value) {
             FINAL_CONFIG.value = prepareConfig();
         }
-        userOptionsVisible.value =
-            !FINAL_CONFIG.value.userOptions.showOnChartHover;
+        userOptionsVisible.value = !cfgUserOptions.value.showOnChartHover;
         prepareChart();
         titleStep.value += 1;
         tableStep.value += 1;
@@ -390,11 +404,9 @@ watch(
 
         // Reset mutable config
         mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
-        mutableConfig.value.showDataLabels =
-            FINAL_CONFIG.value.style.chart.dataLabels.show;
-        mutableConfig.value.stacked = FINAL_CONFIG.value.style.chart.stacked;
-        mutableConfig.value.showTooltip =
-            FINAL_CONFIG.value.style.chart.tooltip.show;
+        mutableConfig.value.showDataLabels = cfgLabels.value.show;
+        mutableConfig.value.stacked = cfgChart.value.stacked;
+        mutableConfig.value.showTooltip = cfgTooltip.value.show;
     },
     { deep: true },
 );
@@ -422,19 +434,19 @@ watch(
     { deep: true },
 );
 
-const aspectRatio = ref(FINAL_CONFIG.value.style.chart.aspectRatio);
+const aspectRatio = ref(cfgChart.value.aspectRatio);
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `xy_canvas_${uid.value}`,
-    fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-xy-canvas',
-    options: FINAL_CONFIG.value.userOptions.print,
+    fileName: cfgChart.value.title.text || 'vue-ui-xy-canvas',
+    options: cfgUserOptions.value.print,
 });
 
 const mutableConfig = ref({
     showTable: FINAL_CONFIG.value.table.show,
-    showDataLabels: FINAL_CONFIG.value.style.chart.dataLabels.show,
-    stacked: FINAL_CONFIG.value.style.chart.stacked,
-    showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show,
+    showDataLabels: cfgLabels.value.show,
+    stacked: cfgChart.value.stacked,
+    showTooltip: cfgTooltip.value.show,
 });
 
 function toggleFullscreen(state) {
@@ -473,7 +485,7 @@ const bottomMeasureAnimationFrameId = ref(0);
 
 function computeTimeLabelsBottomExtraPixels() {
     if (!ctx.value) return 0;
-    if (!FINAL_CONFIG.value.style.chart.grid.x.timeLabels.show) return 0;
+    if (!cfgXAxisLabels.value.show) return 0;
 
     const values = timeLabels.value || [];
     const start = slicer.value.start ?? 0;
@@ -483,11 +495,10 @@ function computeTimeLabelsBottomExtraPixels() {
     if (!windowLen) return 0;
 
     const fontSize = Math.round(
-        (w.value / 40) *
-            FINAL_CONFIG.value.style.chart.grid.x.timeLabels.fontSizeRatio,
+        (w.value / 40) * cfgXAxisLabels.value.fontSizeRatio,
     );
 
-    const font = `${FINAL_CONFIG.value.style.chart.grid.x.timeLabels.bold ? 'bold ' : ''}${fontSize}px ${FINAL_CONFIG.value.style.fontFamily}`;
+    const font = `${cfgXAxisLabels.value.bold ? 'bold ' : ''}${fontSize}px ${FINAL_CONFIG.value.style.fontFamily}`;
     ctx.value.save();
     ctx.value.font = font;
 
@@ -500,8 +511,7 @@ function computeTimeLabelsBottomExtraPixels() {
 
     ctx.value.restore();
 
-    const rotationDeg =
-        FINAL_CONFIG.value.style.chart.grid.x.timeLabels.rotation || 0;
+    const rotationDeg = cfgXAxisLabels.value.rotation || 0;
     const rotationRad = (rotationDeg * Math.PI) / 180;
 
     // Approximate unrotated text height (canvas does not give reliable height)
@@ -515,8 +525,7 @@ function computeTimeLabelsBottomExtraPixels() {
 
     // In drawTimeLabels(), labels are drawn at:
     // y = drawingArea.bottom + (w / offsetY)
-    const offsetY =
-        FINAL_CONFIG.value.style.chart.grid.x.timeLabels.offsetY || 1;
+    const offsetY = cfgXAxisLabels.value.offsetY || 1;
     const baselineShift = w.value / offsetY;
 
     // Small safety padding to avoid clipping
@@ -550,13 +559,11 @@ const drawingArea = computed(() => {
     const width =
         w.value -
         w.value *
-            (FINAL_CONFIG.value.style.chart.paddingProportions.left +
-                FINAL_CONFIG.value.style.chart.paddingProportions.right);
+            (cfgChart.value.paddingProportions.left +
+                cfgChart.value.paddingProportions.right);
 
-    const baseTop =
-        h.value * FINAL_CONFIG.value.style.chart.paddingProportions.top;
-    const baseBottom =
-        h.value * FINAL_CONFIG.value.style.chart.paddingProportions.bottom;
+    const baseTop = h.value * cfgChart.value.paddingProportions.top;
+    const baseBottom = h.value * cfgChart.value.paddingProportions.bottom;
 
     const extraBottom = measuredBottomExtraPixels.value;
 
@@ -566,11 +573,9 @@ const drawingArea = computed(() => {
     return {
         canvasWidth: w.value,
         canvasHeight: h.value,
-        left: w.value * FINAL_CONFIG.value.style.chart.paddingProportions.left,
+        left: w.value * cfgChart.value.paddingProportions.left,
         top: baseTop,
-        right:
-            w.value -
-            w.value * FINAL_CONFIG.value.style.chart.paddingProportions.right,
+        right: w.value - w.value * cfgChart.value.paddingProportions.right,
         bottom,
         width,
         height,
@@ -634,8 +639,8 @@ function createDatapointCoordinates({
 
 const absoluteExtremes = computed(() => {
     const min =
-        FINAL_CONFIG.value.style.chart.scale.min !== null
-            ? FINAL_CONFIG.value.style.chart.scale.min
+        cfgChart.value.scale.min !== null
+            ? cfgChart.value.scale.min
             : Math.min(
                   ...dsCopy.value
                       .filter(
@@ -647,8 +652,8 @@ const absoluteExtremes = computed(() => {
                       ),
               );
     const max =
-        FINAL_CONFIG.value.style.chart.scale.max !== null
-            ? FINAL_CONFIG.value.style.chart.scale.max
+        cfgChart.value.scale.max !== null
+            ? cfgChart.value.scale.max
             : Math.max(
                   ...dsCopy.value
                       .filter(
@@ -662,7 +667,7 @@ const absoluteExtremes = computed(() => {
     const scale = calculateNiceScale(
         min < 0 ? min : 0,
         max === min ? (min + 1 < 0 ? 0 : min + 1) : max < 0 ? 0 : max,
-        FINAL_CONFIG.value.style.chart.scale.ticks,
+        cfgChart.value.scale.ticks,
     );
 
     const absoluteMin = scale.min < 0 ? Math.abs(scale.min) : 0;
@@ -700,7 +705,7 @@ const tootlipDataset = computed(() => {
                 </svg>
                 <span>${ds.name ? ds.name + ': ' : ''}</span>
                 <span>${applyDataLabel(
-                    FINAL_CONFIG.value.style.chart.dataLabels.formatter,
+                    cfgLabels.value.formatter,
                     ds.series[tooltipIndex.value] ?? '-',
                     dataLabel({
                         p: ds.prefix || '',
@@ -716,7 +721,7 @@ const tootlipDataset = computed(() => {
 });
 
 const cutNullValues = computed(() => {
-    return FINAL_CONFIG.value.style.chart.line.cutNullValues;
+    return cfgChart.value.line.cutNullValues;
 });
 
 const dsCopy = computed(() => {
@@ -739,7 +744,7 @@ const dsCopy = computed(() => {
 });
 
 const minimap = computed(() => {
-    if (!FINAL_CONFIG.value.style.chart.zoom.minimap.show) return [];
+    if (!cfgChart.value.zoom.minimap.show) return [];
     const _source = dsCopy.value.filter(
         (ds) => !segregated.value.includes(ds.absoluteIndex),
     );
@@ -760,7 +765,7 @@ const minimap = computed(() => {
 });
 
 const allMinimaps = computed(() => {
-    if (!FINAL_CONFIG.value.style.chart.zoom.minimap.show) return [];
+    if (!cfgChart.value.zoom.minimap.show) return [];
     const _source = dsCopy.value.map((ds) => {
         return {
             ...ds,
@@ -812,8 +817,7 @@ const formattedDataset = computed(() => {
                 valueMax: max,
             };
 
-            const scaleSteps =
-                ds.scaleSteps || FINAL_CONFIG.value.style.chart.scale.ticks;
+            const scaleSteps = ds.scaleSteps || cfgChart.value.scale.ticks;
 
             let localScale;
 
@@ -836,8 +840,7 @@ const formattedDataset = computed(() => {
                 : 0;
 
             const gap = mutableConfig.value.stacked
-                ? drawingArea.value.height /
-                  FINAL_CONFIG.value.style.chart.stackGap
+                ? drawingArea.value.height / cfgChart.value.stackGap
                 : 0;
 
             const individualHeight = mutableConfig.value.stacked
@@ -941,7 +944,7 @@ async function refreshSlicer() {
 
 const isPrecog = computed(() => {
     return (
-        FINAL_CONFIG.value.style.chart.zoom.preview.enable &&
+        cfgChart.value.zoom.preview.enable &&
         (slicerPrecog.value.start !== slicer.value.start ||
             slicerPrecog.value.end !== slicer.value.end)
     );
@@ -955,7 +958,7 @@ async function setupSlicer() {
     if (isSettingUp.value) return;
     isSettingUp.value = true;
     try {
-        const { startIndex, endIndex } = FINAL_CONFIG.value.style.chart.zoom;
+        const { startIndex, endIndex } = cfgChart.value.zoom;
         const max = Math.max(...dsCopy.value.map((dp) => dp.series.length));
 
         const start = startIndex != null ? startIndex : 0;
@@ -1009,8 +1012,8 @@ function validSlicerEnd(v) {
         return max;
     }
     if (v < 0 || v < slicer.value.start) {
-        if (FINAL_CONFIG.value.style.chart.zoom.startIndex !== null) {
-            return FINAL_CONFIG.value.style.chart.zoom.startIndex + 1;
+        if (cfgChart.value.zoom.startIndex !== null) {
+            return cfgChart.value.zoom.startIndex + 1;
         } else {
             return 1;
         }
@@ -1089,7 +1092,7 @@ function setupChart() {
     if (!ctx.value) return;
 
     ctx.value.clearRect(0, 0, 10000, 10000);
-    ctx.value.fillStyle = FINAL_CONFIG.value.style.chart.backgroundColor;
+    ctx.value.fillStyle = cfgChart.value.backgroundColor;
     ctx.value.fillRect(
         0,
         0,
@@ -1102,10 +1105,9 @@ function setupChart() {
     if (!mutableConfig.value.stacked) {
         // VERTICAL LINES
         if (
-            FINAL_CONFIG.value.style.chart.grid.y.verticalLines.show &&
+            cfgGridVertical.value.show &&
             slicer.value.end - slicer.value.start <
-                FINAL_CONFIG.value.style.chart.grid.y.verticalLines
-                    .hideUnderXLength
+                cfgGridVertical.value.hideUnderXLength
         ) {
             for (
                 let i = 0;
@@ -1129,24 +1131,21 @@ function setupChart() {
                         },
                     ],
                     {
-                        color: FINAL_CONFIG.value.style.chart.grid.y
-                            .verticalLines.color,
+                        color: cfgGridVertical.value.color,
                     },
                 );
             }
         } else if (
-            FINAL_CONFIG.value.style.chart.grid.y.verticalLines.show &&
+            cfgGridVertical.value.show &&
             slicer.value.end - slicer.value.start >=
-                FINAL_CONFIG.value.style.chart.grid.y.verticalLines
-                    .hideUnderXLength
+                cfgGridVertical.value.hideUnderXLength
         ) {
             for (let i = slicer.value.start; i < slicer.value.end; i += 1) {
                 if (
                     i %
                         Math.floor(
                             (slicer.value.end - slicer.value.start) /
-                                FINAL_CONFIG.value.style.chart.grid.x.timeLabels
-                                    .modulo,
+                                cfgXAxisLabels.value.modulo,
                         ) ===
                     0
                 ) {
@@ -1171,8 +1170,7 @@ function setupChart() {
                             },
                         ],
                         {
-                            color: FINAL_CONFIG.value.style.chart.grid.y
-                                .verticalLines.color,
+                            color: cfgGridVertical.value.color,
                         },
                     );
                 }
@@ -1181,10 +1179,8 @@ function setupChart() {
         // UNSTACKED
 
         // HORIZONTAL LINES
-        if (FINAL_CONFIG.value.style.chart.grid.x.horizontalLines.show) {
-            if (
-                FINAL_CONFIG.value.style.chart.grid.x.horizontalLines.alternate
-            ) {
+        if (cfgGridHorizontal.value.show) {
+            if (cfgGridHorizontal.value.alternate) {
                 absoluteExtremes.value.yLabels.forEach((entry, i) => {
                     if (i < absoluteExtremes.value.yLabels.length - 1) {
                         rect(
@@ -1206,11 +1202,10 @@ function setupChart() {
                                     i % 2 === 0
                                         ? 'transparent'
                                         : setOpacity(
-                                              FINAL_CONFIG.value.style.chart
-                                                  .grid.x.horizontalLines.color,
-                                              FINAL_CONFIG.value.style.chart
-                                                  .grid.x.horizontalLines
-                                                  .opacity,
+                                              cfgChart.value.grid.x
+                                                  .horizontalLines.color,
+                                              cfgChart.value.grid.x
+                                                  .horizontalLines.opacity,
                                           ),
                                 strokeColor: 'transparent',
                             },
@@ -1226,8 +1221,7 @@ function setupChart() {
                             { x: drawingArea.value.right, y: entry.y },
                         ],
                         {
-                            color: FINAL_CONFIG.value.style.chart.grid.x
-                                .horizontalLines.color,
+                            color: cfgGridHorizontal.value.color,
                         },
                     );
                 });
@@ -1235,7 +1229,7 @@ function setupChart() {
         }
 
         // AXES LINES
-        if (FINAL_CONFIG.value.style.chart.grid.y.showAxis) {
+        if (cfgGrid.value.y.showAxis) {
             line(
                 ctx.value,
                 [
@@ -1243,13 +1237,12 @@ function setupChart() {
                     { x: drawingArea.value.left, y: drawingArea.value.bottom },
                 ],
                 {
-                    color: FINAL_CONFIG.value.style.chart.grid.y.axisColor,
-                    lineWidth:
-                        FINAL_CONFIG.value.style.chart.grid.y.axisThickness,
+                    color: cfgGrid.value.y.axisColor,
+                    lineWidth: cfgGrid.value.y.axisThickness,
                 },
             );
         }
-        if (FINAL_CONFIG.value.style.chart.grid.x.showAxis) {
+        if (cfgGrid.value.x.showAxis) {
             line(
                 ctx.value,
                 [
@@ -1257,15 +1250,14 @@ function setupChart() {
                     { x: drawingArea.value.right, y: drawingArea.value.bottom },
                 ],
                 {
-                    color: FINAL_CONFIG.value.style.chart.grid.x.axisColor,
-                    lineWidth:
-                        FINAL_CONFIG.value.style.chart.grid.x.axisThickness,
+                    color: cfgGrid.value.x.axisColor,
+                    lineWidth: cfgGrid.value.x.axisThickness,
                 },
             );
         }
 
         // ZERO LINE
-        if (FINAL_CONFIG.value.style.chart.grid.zeroLine.show) {
+        if (cfgGrid.value.zeroLine.show) {
             line(
                 ctx.value,
                 [
@@ -1279,11 +1271,8 @@ function setupChart() {
                     },
                 ],
                 {
-                    color: FINAL_CONFIG.value.style.chart.grid.zeroLine.color,
-                    lineDash: FINAL_CONFIG.value.style.chart.grid.zeroLine
-                        .dashed
-                        ? [10, 10]
-                        : [0, 0],
+                    color: cfgGrid.value.zeroLine.color,
+                    lineDash: cfgGrid.value.zeroLine.dashed ? [10, 10] : [0, 0],
                 },
             );
         }
@@ -1292,10 +1281,9 @@ function setupChart() {
         // VERTICAL LINES
 
         if (
-            FINAL_CONFIG.value.style.chart.grid.y.verticalLines.show &&
+            cfgGridVertical.value.show &&
             slicer.value.end - slicer.value.start <
-                FINAL_CONFIG.value.style.chart.grid.y.verticalLines
-                    .hideUnderXLength
+                cfgGridVertical.value.hideUnderXLength
         ) {
             formattedDataset.value.forEach((ds) => {
                 for (
@@ -1323,17 +1311,15 @@ function setupChart() {
                             },
                         ],
                         {
-                            color: FINAL_CONFIG.value.style.chart.grid.y
-                                .verticalLines.color,
+                            color: cfgGridVertical.value.color,
                         },
                     );
                 }
             });
         } else if (
-            FINAL_CONFIG.value.style.chart.grid.y.verticalLines.show &&
+            cfgGridVertical.value.show &&
             slicer.value.end - slicer.value.start >=
-                FINAL_CONFIG.value.style.chart.grid.y.verticalLines
-                    .hideUnderXLength
+                cfgGridVertical.value.hideUnderXLength
         ) {
             formattedDataset.value.forEach((ds) => {
                 for (let k = slicer.value.start; k < slicer.value.end; k += 1) {
@@ -1341,8 +1327,7 @@ function setupChart() {
                         k %
                             Math.floor(
                                 (slicer.value.end - slicer.value.start) /
-                                    FINAL_CONFIG.value.style.chart.grid.x
-                                        .timeLabels.modulo,
+                                    cfgGridHorizontal.value.modulo,
                             ) ===
                         0
                     ) {
@@ -1370,8 +1355,7 @@ function setupChart() {
                                 },
                             ],
                             {
-                                color: FINAL_CONFIG.value.style.chart.grid.y
-                                    .verticalLines.color,
+                                color: cfgGridVertical.value.color,
                             },
                         );
                     }
@@ -1380,10 +1364,8 @@ function setupChart() {
         }
 
         // HORIZONTAL LINES
-        if (FINAL_CONFIG.value.style.chart.grid.x.horizontalLines.show) {
-            if (
-                FINAL_CONFIG.value.style.chart.grid.x.horizontalLines.alternate
-            ) {
+        if (cfgGridHorizontal.value.show) {
+            if (cfgGridHorizontal.value.alternate) {
                 formattedDataset.value.forEach((ds) => {
                     ds.localYLabels.forEach((entry, k) => {
                         if (k < ds.localYLabels.length - 1) {
@@ -1406,12 +1388,10 @@ function setupChart() {
                                         k % 2 === 0
                                             ? 'transparent'
                                             : setOpacity(
-                                                  FINAL_CONFIG.value.style.chart
-                                                      .grid.x.horizontalLines
-                                                      .color,
-                                                  FINAL_CONFIG.value.style.chart
-                                                      .grid.x.horizontalLines
-                                                      .opacity,
+                                                  cfgChart.value.grid.x
+                                                      .horizontalLines.color,
+                                                  cfgChart.value.grid.x
+                                                      .horizontalLines.opacity,
                                               ),
                                     strokeColor: 'transparent',
                                 },
@@ -1431,8 +1411,7 @@ function setupChart() {
                                     { x: drawingArea.value.right, y: entry.y },
                                 ],
                                 {
-                                    color: FINAL_CONFIG.value.style.chart.grid.x
-                                        .horizontalLines.color,
+                                    color: cfgGridHorizontal.value.color,
                                 },
                             );
                         });
@@ -1441,7 +1420,7 @@ function setupChart() {
         }
 
         // ZERO LINE
-        if (FINAL_CONFIG.value.style.chart.grid.zeroLine.show) {
+        if (cfgGrid.value.zeroLine.show) {
             formattedDataset.value.forEach((ds) => {
                 line(
                     ctx.value,
@@ -1450,10 +1429,8 @@ function setupChart() {
                         { x: drawingArea.value.right, y: ds.localZero },
                     ],
                     {
-                        color: FINAL_CONFIG.value.style.chart.grid.zeroLine
-                            .color,
-                        lineDash: FINAL_CONFIG.value.style.chart.grid.zeroLine
-                            .dashed
+                        color: cfgGrid.value.zeroLine.color,
+                        lineDash: cfgGrid.value.zeroLine.dashed
                             ? [10, 10]
                             : [0, 0],
                     },
@@ -1462,7 +1439,7 @@ function setupChart() {
         }
 
         // AXES LABELS
-        if (FINAL_CONFIG.value.style.chart.grid.y.axisLabels.show) {
+        if (cfgYAxisLabels.value.show) {
             formattedDataset.value.forEach((ds) => {
                 // INDIVIDUAL Y AXES
                 line(
@@ -1517,44 +1494,34 @@ function setupChart() {
                     align: 'center',
                     rotation: -90,
                     color: ds.color,
-                    font: `${Math.round((w.value / 40) * FINAL_CONFIG.value.style.chart.grid.y.axisLabels.fontSizeRatio)}px ${FINAL_CONFIG.value.style.fontFamily}`,
+                    font: `${Math.round((w.value / 40) * cfgYAxisLabels.value.fontSizeRatio)}px ${FINAL_CONFIG.value.style.fontFamily}`,
                 },
             );
         });
     }
 
     // AXES NAMES
-    if (FINAL_CONFIG.value.style.chart.grid.y.axisName) {
+    if (cfgGrid.value.y.axisName) {
         text(
             ctx.value,
-            FINAL_CONFIG.value.style.chart.grid.y.axisName,
-            w.value -
-                (w.value / 40) *
-                    FINAL_CONFIG.value.style.chart.grid.y.axisLabels
-                        .fontSizeRatio *
-                    1.2,
+            cfgGrid.value.y.axisName,
+            w.value - (w.value / 40) * cfgYAxisLabels.value.fontSizeRatio * 1.2,
             drawingArea.value.bottom - drawingArea.value.height / 2,
             {
-                font: `${FINAL_CONFIG.value.style.chart.grid.y.axisLabels.bold ? 'bold ' : ''}${Math.round((w.value / 40) * FINAL_CONFIG.value.style.chart.grid.y.axisLabels.fontSizeRatio)}px ${FINAL_CONFIG.value.style.fontFamily}`,
-                color: FINAL_CONFIG.value.style.chart.color,
+                font: `${cfgYAxisLabels.value.bold ? 'bold ' : ''}${Math.round((w.value / 40) * cfgYAxisLabels.value.fontSizeRatio)}px ${FINAL_CONFIG.value.style.fontFamily}`,
+                color: cfgChart.value.color,
                 align: 'center',
                 rotation: 90,
             },
         );
     }
 
-    if (FINAL_CONFIG.value.style.chart.grid.x.axisName) {
-        text(
-            ctx.value,
-            FINAL_CONFIG.value.style.chart.grid.x.axisName,
-            w.value / 2,
-            h.value,
-            {
-                font: `${FINAL_CONFIG.value.style.chart.grid.y.axisLabels.bold ? 'bold ' : ''}${Math.round((w.value / 40) * FINAL_CONFIG.value.style.chart.grid.y.axisLabels.fontSizeRatio)}px ${FINAL_CONFIG.value.style.fontFamily}`,
-                color: FINAL_CONFIG.value.style.chart.color,
-                align: 'center',
-            },
-        );
+    if (cfgGrid.value.x.axisName) {
+        text(ctx.value, cfgGrid.value.x.axisName, w.value / 2, h.value, {
+            font: `${cfgYAxisLabels.value.bold ? 'bold ' : ''}${Math.round((w.value / 40) * cfgYAxisLabels.value.fontSizeRatio)}px ${FINAL_CONFIG.value.style.fontFamily}`,
+            color: cfgChart.value.color,
+            align: 'center',
+        });
     }
 }
 
@@ -1563,16 +1530,15 @@ function drawPlots(ds) {
         const radius =
             (tooltipIndex.value === i || selectedMinimapIndex.value === i
                 ? w.value / 150
-                : FINAL_CONFIG.value.style.chart.line.plots.show ||
-                    ds.type === 'plot'
+                : cfgChart.value.line.plots.show || ds.type === 'plot'
                   ? w.value / 200
-                  : 0) * FINAL_CONFIG.value.style.chart.line.plots.radiusRatio;
+                  : 0) * cfgChart.value.line.plots.radiusRatio;
         circle(
             ctx.value,
             { x: ds.coordinatesLine[i].x, y: ds.coordinatesLine[i].y },
             radius,
             {
-                color: FINAL_CONFIG.value.style.chart.backgroundColor,
+                color: cfgChart.value.backgroundColor,
                 fillStyle: ds.color,
                 strokeColor: 'transparent',
             },
@@ -1589,35 +1555,21 @@ function drawYAxisSelectedDatapoints() {
             text(
                 ctx.value,
                 applyDataLabel(
-                    FINAL_CONFIG.value.style.chart.dataLabels.formatter,
+                    cfgLabels.value.formatter,
                     getYandValueAtIndex(ds).value,
                     dataLabel({
-                        p:
-                            ds.prefix ||
-                            FINAL_CONFIG.value.style.chart.grid.y.axisLabels
-                                .prefix ||
-                            '',
+                        p: ds.prefix || cfgYAxisLabels.value.prefix || '',
                         v: getYandValueAtIndex(ds).value,
-                        s:
-                            ds.suffix ||
-                            FINAL_CONFIG.value.style.chart.grid.y.axisLabels
-                                .suffix ||
-                            '',
-                        r:
-                            ds.rounding ||
-                            FINAL_CONFIG.value.style.chart.grid.y.axisLabels
-                                .rounding ||
-                            0,
+                        s: ds.suffix || cfgYAxisLabels.value.suffix || '',
+                        r: ds.rounding || cfgYAxisLabels.value.rounding || 0,
                     }),
                     { datapoint: getYandValueAtIndex(ds), seriesIndex: null },
                 ),
-                drawingArea.value.left -
-                    8 +
-                    FINAL_CONFIG.value.style.chart.grid.y.axisLabels.offsetX,
+                drawingArea.value.left - 8 + cfgYAxisLabels.value.offsetX,
                 getYandValueAtIndex(ds).y,
                 {
                     align: 'right',
-                    font: `${FINAL_CONFIG.value.style.chart.grid.y.axisLabels.bold ? 'bold ' : ''}${Math.round((w.value / 40) * FINAL_CONFIG.value.style.chart.grid.y.axisLabels.fontSizeRatio)}px ${FINAL_CONFIG.value.style.fontFamily}`,
+                    font: `${cfgYAxisLabels.value.bold ? 'bold ' : ''}${Math.round((w.value / 40) * cfgYAxisLabels.value.fontSizeRatio)}px ${FINAL_CONFIG.value.style.fontFamily}`,
                     color: ds.color,
                 },
             );
@@ -1626,37 +1578,28 @@ function drawYAxisSelectedDatapoints() {
 }
 
 function drawYAxisScaleLabels() {
-    if (FINAL_CONFIG.value.style.chart.grid.y.axisLabels.show) {
+    if (cfgYAxisLabels.value.show) {
         if (!mutableConfig.value.stacked) {
             absoluteExtremes.value.yLabels.forEach((label, i) => {
                 text(
                     ctx.value,
                     applyDataLabel(
-                        FINAL_CONFIG.value.style.chart.dataLabels.formatter,
+                        cfgLabels.value.formatter,
                         label.value,
                         dataLabel({
-                            p:
-                                FINAL_CONFIG.value.style.chart.grid.y.axisLabels
-                                    .prefix || '',
+                            p: cfgYAxisLabels.value.prefix || '',
                             v: label.value,
-                            s:
-                                FINAL_CONFIG.value.style.chart.grid.y.axisLabels
-                                    .suffix || '',
-                            r:
-                                FINAL_CONFIG.value.style.chart.grid.y.axisLabels
-                                    .rounding || 0,
+                            s: cfgYAxisLabels.value.suffix || '',
+                            r: cfgYAxisLabels.value.rounding || 0,
                         }),
                         { datapoint: label, seriesIndex: i },
                     ),
-                    label.x +
-                        FINAL_CONFIG.value.style.chart.grid.y.axisLabels
-                            .offsetX,
+                    label.x + cfgYAxisLabels.value.offsetX,
                     label.y,
                     {
                         align: 'right',
-                        font: `${FINAL_CONFIG.value.style.chart.grid.y.axisLabels.bold ? 'bold ' : ''}${Math.round((w.value / 40) * FINAL_CONFIG.value.style.chart.grid.y.axisLabels.fontSizeRatio)}px ${FINAL_CONFIG.value.style.fontFamily}`,
-                        color: FINAL_CONFIG.value.style.chart.grid.y.axisLabels
-                            .color,
+                        font: `${cfgYAxisLabels.value.bold ? 'bold ' : ''}${Math.round((w.value / 40) * cfgYAxisLabels.value.fontSizeRatio)}px ${FINAL_CONFIG.value.style.fontFamily}`,
+                        color: cfgYAxisLabels.value.color,
                         globalAlpha:
                             formattedDataset.value.some(
                                 (ds) => ds.showYMarker,
@@ -1676,35 +1619,30 @@ function drawYAxisScaleLabels() {
                     text(
                         ctx.value,
                         applyDataLabel(
-                            FINAL_CONFIG.value.style.chart.dataLabels.formatter,
+                            cfgLabels.value.formatter,
                             entry.value,
                             dataLabel({
                                 p:
                                     ds.prefix ||
-                                    FINAL_CONFIG.value.style.chart.grid.y
-                                        .axisLabels.prefix ||
+                                    cfgGrid.value.y.axisLabels.prefix ||
                                     '',
                                 v: entry.value,
                                 s:
                                     ds.suffix ||
-                                    FINAL_CONFIG.value.style.chart.grid.y
-                                        .axisLabels.suffix ||
+                                    cfgGrid.value.y.axisLabels.suffix ||
                                     '',
                                 r:
                                     ds.rounding ||
-                                    FINAL_CONFIG.value.style.chart.grid.y
-                                        .axisLabels.rounding ||
+                                    cfgGrid.value.y.axisLabels.rounding ||
                                     0,
                             }),
                             { datapoint: entry, seriesIndex: i },
                         ),
-                        entry.x +
-                            FINAL_CONFIG.value.style.chart.grid.y.axisLabels
-                                .offsetX,
+                        entry.x + cfgYAxisLabels.value.offsetX,
                         entry.y,
                         {
                             align: 'right',
-                            font: `${FINAL_CONFIG.value.style.chart.grid.y.axisLabels.bold ? 'bold ' : ''}${Math.round((w.value / 40) * FINAL_CONFIG.value.style.chart.grid.y.axisLabels.fontSizeRatio)}px ${FINAL_CONFIG.value.style.fontFamily}`,
+                            font: `${cfgYAxisLabels.value.bold ? 'bold ' : ''}${Math.round((w.value / 40) * cfgYAxisLabels.value.fontSizeRatio)}px ${FINAL_CONFIG.value.style.fontFamily}`,
                             color: ds.color,
                             globalAlpha:
                                 ds.showYMarker &&
@@ -1727,7 +1665,7 @@ function drawDataLabels(ds) {
         text(
             ctx.value,
             applyDataLabel(
-                FINAL_CONFIG.value.style.chart.dataLabels.formatter,
+                cfgLabels.value.formatter,
                 ds.coordinatesLine[i].value,
                 dataLabel({
                     p: ds.prefix || '',
@@ -1738,15 +1676,14 @@ function drawDataLabels(ds) {
                 { datapoint: ds.coordinatesLine[i], seriesIndex: i },
             ),
             ds.coordinatesLine[i].x,
-            ds.coordinatesLine[i].y +
-                FINAL_CONFIG.value.style.chart.dataLabels.offsetY,
+            ds.coordinatesLine[i].y + cfgLabels.value.offsetY,
             {
                 align: 'center',
-                font: `${FINAL_CONFIG.value.style.chart.dataLabels.bold ? 'bold ' : ''}${Math.round((w.value / 40) * FINAL_CONFIG.value.style.chart.dataLabels.fontSizeRatio)}px ${FINAL_CONFIG.value.style.fontFamily}`,
-                color: FINAL_CONFIG.value.style.chart.dataLabels.useSerieColor
+                font: `${cfgLabels.value.bold ? 'bold ' : ''}${Math.round((w.value / 40) * cfgLabels.value.fontSizeRatio)}px ${FINAL_CONFIG.value.style.fontFamily}`,
+                color: cfgLabels.value.useSerieColor
                     ? ds.color
-                    : FINAL_CONFIG.value.style.chart.dataLabels.color,
-                strokeColor: FINAL_CONFIG.value.style.chart.backgroundColor,
+                    : cfgLabels.value.color,
+                strokeColor: cfgChart.value.backgroundColor,
                 lineWidth: 0.5,
             },
         );
@@ -1761,11 +1698,9 @@ watchEffect(() => {
 
     (async () => {
         const labels = await useTimeLabels({
-            values: FINAL_CONFIG.value.style.chart.grid.x.timeLabels.values,
+            values: cfgXAxisLabels.value.values,
             maxDatapoints: maxSeries.value,
-            formatter:
-                FINAL_CONFIG.value.style.chart.grid.x.timeLabels
-                    .datetimeFormatter,
+            formatter: cfgXAxisLabels.value.datetimeFormatter,
             start: 0,
             end: maxSeries.value,
         });
@@ -1779,14 +1714,11 @@ watchEffect(() => {
 watchEffect(
     () => {
         // Track all reactive inputs that influence time label geometry
-        const show = FINAL_CONFIG.value.style.chart.grid.x.timeLabels.show;
-        const rotation =
-            FINAL_CONFIG.value.style.chart.grid.x.timeLabels.rotation;
-        const offsetY =
-            FINAL_CONFIG.value.style.chart.grid.x.timeLabels.offsetY;
-        const fontSizeRatio =
-            FINAL_CONFIG.value.style.chart.grid.x.timeLabels.fontSizeRatio;
-        const bold = FINAL_CONFIG.value.style.chart.grid.x.timeLabels.bold;
+        const show = cfgXAxisLabels.value.show;
+        const rotation = cfgXAxisLabels.value.rotation;
+        const offsetY = cfgXAxisLabels.value.offsetY;
+        const fontSizeRatio = cfgXAxisLabels.value.fontSizeRatio;
+        const bold = cfgXAxisLabels.value.bold;
 
         const start = slicer.value.start;
         const end = slicer.value.end;
@@ -1825,8 +1757,7 @@ const localeData = ref({
 let localeRequestId = 0;
 watchEffect(() => {
     const requestId = ++localeRequestId;
-    const xl =
-        FINAL_CONFIG.value.style.chart.grid.x.timeLabels.datetimeFormatter;
+    const xl = cfgXAxisLabels.value.datetimeFormatter;
 
     (async () => {
         const resolved = await useLocale(xl.locale).catch(() =>
@@ -1839,8 +1770,7 @@ watchEffect(() => {
 });
 
 const preciseTimeFormatter = computed(() => {
-    const xl =
-        FINAL_CONFIG.value.style.chart.grid.x.timeLabels.datetimeFormatter;
+    const xl = cfgXAxisLabels.value.datetimeFormatter;
 
     const dt = useDateTime({
         useUTC: xl.useUTC,
@@ -1849,7 +1779,7 @@ const preciseTimeFormatter = computed(() => {
     });
 
     return (absIndex, fmt) => {
-        const values = FINAL_CONFIG.value.style.chart.grid.x.timeLabels.values;
+        const values = cfgXAxisLabels.value.values;
         const ts = values?.[absIndex];
         if (ts == null) return '';
         return dt.formatDate(new Date(ts), fmt);
@@ -1857,25 +1787,17 @@ const preciseTimeFormatter = computed(() => {
 });
 
 const preciseAllTimeLabels = computed(() => {
-    const values =
-        FINAL_CONFIG.value.style.chart.grid.x.timeLabels.values || [];
+    const values = cfgXAxisLabels.value.values || [];
     return values.map((_, i) => ({
-        text: preciseTimeFormatter.value(
-            i,
-            FINAL_CONFIG.value.style.chart.zoom.timeFormat,
-        ),
+        text: preciseTimeFormatter.value(i, cfgChart.value.zoom.timeFormat),
         absoluteIndex: i,
     }));
 });
 
 const preciseAllTimeLabelsTooltip = computed(() => {
-    const values =
-        FINAL_CONFIG.value.style.chart.grid.x.timeLabels.values || [];
+    const values = cfgXAxisLabels.value.values || [];
     return values.map((_, i) => ({
-        text: preciseTimeFormatter.value(
-            i,
-            FINAL_CONFIG.value.style.chart.tooltip.timeFormat,
-        ),
+        text: preciseTimeFormatter.value(i, cfgTooltip.value.timeFormat),
         absoluteIndex: i,
     }));
 });
@@ -1884,20 +1806,18 @@ function drawTimeLabels() {
     for (let i = slicer.value.start; i < slicer.value.end; i += 1) {
         if (
             slicer.value.end - slicer.value.start <
-                FINAL_CONFIG.value.style.chart.grid.x.timeLabels.modulo ||
+                cfgXAxisLabels.value.modulo ||
             (slicer.value.end - slicer.value.start >=
-                FINAL_CONFIG.value.style.chart.grid.x.timeLabels.modulo &&
+                cfgXAxisLabels.value.modulo &&
                 (i %
                     Math.floor(
                         (slicer.value.end - slicer.value.start) /
-                            FINAL_CONFIG.value.style.chart.grid.x.timeLabels
-                                .modulo,
+                            cfgXAxisLabels.value.modulo,
                     ) ===
                     0 ||
                     ((i === tooltipIndex.value + slicer.value.start ||
                         i === selectedMinimapIndex.value) &&
-                        FINAL_CONFIG.value.style.chart.grid.x.timeLabels
-                            .showMarker)))
+                        cfgXAxisLabels.value.showMarker)))
         ) {
             text(
                 ctx.value,
@@ -1906,24 +1826,18 @@ function drawTimeLabels() {
                     drawingArea.value.slot * (i - slicer.value.start) +
                     drawingArea.value.slot / 2,
                 drawingArea.value.bottom +
-                    w.value /
-                        FINAL_CONFIG.value.style.chart.grid.x.timeLabels
-                            .offsetY,
+                    w.value / cfgXAxisLabels.value.offsetY,
                 {
                     align:
-                        FINAL_CONFIG.value.style.chart.grid.x.timeLabels
-                            .rotation === 0
+                        cfgXAxisLabels.value.rotation === 0
                             ? 'center'
-                            : FINAL_CONFIG.value.style.chart.grid.x.timeLabels
-                                    .rotation > 0
+                            : cfgXAxisLabels.value.rotation > 0
                               ? 'left'
                               : 'right',
-                    font: `${FINAL_CONFIG.value.style.chart.grid.x.timeLabels.bold ? 'bold ' : ''}${Math.round((w.value / 40) * FINAL_CONFIG.value.style.chart.grid.x.timeLabels.fontSizeRatio)}px ${FINAL_CONFIG.value.style.fontFamily}`,
-                    color: FINAL_CONFIG.value.style.chart.grid.x.timeLabels
-                        .showMarker
+                    font: `${cfgXAxisLabels.value.bold ? 'bold ' : ''}${Math.round((w.value / 40) * cfgXAxisLabels.value.fontSizeRatio)}px ${FINAL_CONFIG.value.style.fontFamily}`,
+                    color: cfgXAxisLabels.value.showMarker
                         ? setOpacity(
-                              FINAL_CONFIG.value.style.chart.grid.x.timeLabels
-                                  .color,
+                              cfgXAxisLabels.value.color,
                               tooltipIndex.value !== null ||
                                   selectedMinimapIndex.value !== null
                                   ? tooltipIndex.value + slicer.value.start ===
@@ -1932,11 +1846,8 @@ function drawTimeLabels() {
                                       : 20
                                   : 100,
                           )
-                        : FINAL_CONFIG.value.style.chart.grid.x.timeLabels
-                              .color,
-                    rotation:
-                        FINAL_CONFIG.value.style.chart.grid.x.timeLabels
-                            .rotation,
+                        : cfgXAxisLabels.value.color,
+                    rotation: cfgXAxisLabels.value.rotation,
                 },
             );
         }
@@ -1965,10 +1876,8 @@ function drawVerticalSelector() {
             },
         ],
         {
-            color: FINAL_CONFIG.value.style.chart.selector.color,
-            lineDash: FINAL_CONFIG.value.style.chart.selector.dashed
-                ? [8, 8]
-                : [0, 0],
+            color: cfgChart.value.selector.color,
+            lineDash: cfgChart.value.selector.dashed ? [8, 8] : [0, 0],
             lineWidth: 2,
             linceCap: 'round',
         },
@@ -1984,10 +1893,8 @@ function drawHorizontalSelector() {
             { x: drawingArea.value.right, y: mouseY.value },
         ],
         {
-            color: FINAL_CONFIG.value.style.chart.selector.color,
-            lineDash: FINAL_CONFIG.value.style.chart.selector.dashed
-                ? [8, 8]
-                : [0, 0],
+            color: cfgChart.value.selector.color,
+            lineDash: cfgChart.value.selector.dashed ? [8, 8] : [0, 0],
             lineWidth: 2,
             linceCap: 'round',
         },
@@ -2082,7 +1989,7 @@ function drawBars() {
                     },
                 ],
                 {
-                    strokeColor: FINAL_CONFIG.value.style.chart.backgroundColor,
+                    strokeColor: cfgChart.value.backgroundColor,
                     gradient: {
                         type: 'linear',
                         start: {
@@ -2099,8 +2006,7 @@ function drawBars() {
                             { offset: 0, color: ds.color },
                             {
                                 offset: 1,
-                                color: FINAL_CONFIG.value.style.chart.bar
-                                    .gradient.show
+                                color: cfgChart.value.bar.gradient.show
                                     ? lightenHexColor(ds.color, 0.5)
                                     : ds.color,
                             },
@@ -2114,7 +2020,7 @@ function drawBars() {
                     text(
                         ctx.value,
                         applyDataLabel(
-                            FINAL_CONFIG.value.style.chart.dataLabels.formatter,
+                            cfgLabels.value.formatter,
                             ds.coordinatesLine[k].value,
                             dataLabel({
                                 p: ds.prefix || '',
@@ -2149,17 +2055,14 @@ function drawBars() {
                                 ? ds.localZero
                                 : absoluteExtremes.value.zero
                             : ds.coordinatesLine[k].y) +
-                            FINAL_CONFIG.value.style.chart.dataLabels.offsetY,
+                            cfgLabels.value.offsetY,
                         {
                             align: 'center',
-                            font: `${Math.round((w.value / 40) * FINAL_CONFIG.value.style.chart.dataLabels.fontSizeRatio)}px ${FINAL_CONFIG.value.style.fontFamily}`,
-                            color: FINAL_CONFIG.value.style.chart.dataLabels
-                                .useSerieColor
+                            font: `${Math.round((w.value / 40) * cfgLabels.value.fontSizeRatio)}px ${FINAL_CONFIG.value.style.fontFamily}`,
+                            color: cfgLabels.value.useSerieColor
                                 ? ds.color
-                                : FINAL_CONFIG.value.style.chart.dataLabels
-                                      .color,
-                            strokeColor:
-                                FINAL_CONFIG.value.style.chart.backgroundColor,
+                                : cfgLabels.value.color,
+                            strokeColor: cfgChart.value.backgroundColor,
                             lineWidth: 0.8,
                         },
                     );
@@ -2269,7 +2172,7 @@ function drawLineOrArea(ds) {
                 polygon(ctx.value, poly, {
                     fillColor: setOpacity(
                         ds.color,
-                        FINAL_CONFIG.value.style.chart.area.opacity,
+                        cfgChart.value.area.opacity,
                     ),
                     strokeColor: 'transparent',
                 });
@@ -2277,11 +2180,10 @@ function drawLineOrArea(ds) {
 
             // Dots for plots surrounded by null values
             const baseRadius =
-                (w.value / 200) *
-                FINAL_CONFIG.value.style.chart.line.plots.radiusRatio;
+                (w.value / 200) * cfgChart.value.line.plots.radiusRatio;
             for (const pt of singles) {
                 circle(ctx.value, { x: pt.x, y: pt.y }, baseRadius, {
-                    color: FINAL_CONFIG.value.style.chart.backgroundColor,
+                    color: cfgChart.value.backgroundColor,
                     fillStyle: ds.color,
                     strokeColor: 'transparent',
                 });
@@ -2290,10 +2192,7 @@ function drawLineOrArea(ds) {
             const start = { x: ds.coordinatesLine[0].x, y: baselineY };
             const end = { x: ds.coordinatesLine.at(-1).x, y: baselineY };
             polygon(ctx.value, [start, ...ds.coordinatesLine, end], {
-                fillColor: setOpacity(
-                    ds.color,
-                    FINAL_CONFIG.value.style.chart.area.opacity,
-                ),
+                fillColor: setOpacity(ds.color, cfgChart.value.area.opacity),
                 strokeColor: 'transparent',
             });
         }
@@ -2318,8 +2217,7 @@ function drawXBaseLineStacked() {
                 },
             ],
             {
-                color: FINAL_CONFIG.value.style.chart.grid.x.horizontalLines
-                    .color,
+                color: cfgGridHorizontal.value.color,
                 lineWidth: 1,
             },
         );
@@ -2349,12 +2247,12 @@ function drawPrecogRect() {
             { x: left + relStart * unit, y: top + height },
         ],
         {
-            fillColor: FINAL_CONFIG.value.style.chart.zoom.preview.fill,
-            strokeColor: FINAL_CONFIG.value.style.chart.zoom.preview.stroke,
+            fillColor: cfgChart.value.zoom.preview.fill,
+            strokeColor: cfgChart.value.zoom.preview.stroke,
             lineDash: Array(4).fill(
-                FINAL_CONFIG.value.style.chart.zoom.preview.strokeDasharray,
+                cfgChart.value.zoom.preview.strokeDasharray,
             ),
-            lineWidth: FINAL_CONFIG.value.style.chart.zoom.preview.strokeWidth,
+            lineWidth: cfgChart.value.zoom.preview.strokeWidth,
         },
     );
 }
@@ -2366,13 +2264,13 @@ function draw() {
 
     if (datasetHasChanged.value) {
         (tooltipIndex.value !== null || selectedMinimapIndex.value !== null) &&
-            FINAL_CONFIG.value.style.chart.selector.show &&
+            cfgChart.value.selector.show &&
             drawVerticalSelector();
 
         drawBars();
 
         mutableConfig.value.stacked &&
-            FINAL_CONFIG.value.style.chart.grid.x.showAxis &&
+            cfgGrid.value.x.showAxis &&
             drawXBaseLineStacked();
 
         lineAndPlotTypes.value.forEach((ds) => {
@@ -2399,7 +2297,7 @@ function draw() {
         }
 
         (tooltipIndex.value !== null || selectedMinimapIndex.value !== null) &&
-            FINAL_CONFIG.value.style.chart.selector.show &&
+            cfgChart.value.selector.show &&
             drawVerticalSelector();
 
         // PLOT HIGHLIGHTS
@@ -2419,12 +2317,9 @@ function draw() {
                     circle(
                         ctx.value,
                         { x: point.x, y: point.y },
-                        (w.value / 150) *
-                            FINAL_CONFIG.value.style.chart.line.plots
-                                .radiusRatio,
+                        (w.value / 150) * cfgChart.value.line.plots.radiusRatio,
                         {
-                            color: FINAL_CONFIG.value.style.chart
-                                .backgroundColor,
+                            color: cfgChart.value.backgroundColor,
                             fillStyle: ds.color,
                             strokeColor: 'transparent',
                         },
@@ -2435,16 +2330,16 @@ function draw() {
     }
 
     // TIME LABELS & SELECTORS
-    FINAL_CONFIG.value.style.chart.grid.x.timeLabels.show && drawTimeLabels();
-    FINAL_CONFIG.value.style.chart.selector.show &&
-        FINAL_CONFIG.value.style.chart.selector.showHorizontalSelector &&
+    cfgXAxisLabels.value.show && drawTimeLabels();
+    cfgChart.value.selector.show &&
+        cfgChart.value.selector.showHorizontalSelector &&
         drawHorizontalSelector();
 
     drawYAxisScaleLabels();
     drawYAxisSelectedDatapoints();
 
     if (
-        FINAL_CONFIG.value.style.chart.zoom.preview.enable &&
+        cfgChart.value.zoom.preview.enable &&
         (slicer.value.start !== slicerPrecog.value.start ||
             slicer.value.end !== slicerPrecog.value.end)
     ) {
@@ -2512,7 +2407,7 @@ function handleMousemove(e) {
     if (!tooltipHasChanged.value) return;
 
     let html = '';
-    const customFormat = FINAL_CONFIG.value.style.chart.tooltip.customFormat;
+    const customFormat = cfgTooltip.value.customFormat;
 
     const datapoint = formattedDataset.value.map((ds) => ({
         shape: ds.shape || null,
@@ -2523,19 +2418,16 @@ function handleMousemove(e) {
     }));
 
     dataTooltipSlot.value = {
-        timeLabel:
-            FINAL_CONFIG.value.style.chart.grid.x.timeLabels.values.slice(
-                slicer.value.start,
-                slicer.value.end,
-            )[tooltipIndex.value]
-                ? FINAL_CONFIG.value.style.chart.tooltip.useDefaultTimeFormat
-                    ? timeLabels.value.slice(
-                          slicer.value.start,
-                          slicer.value.end,
-                      )[tooltipIndex.value]?.text
-                    : preciseAllTimeLabelsTooltip.value[tooltipIndex.value]
-                          ?.text
-                : '',
+        timeLabel: cfgXAxisLabels.value.values.slice(
+            slicer.value.start,
+            slicer.value.end,
+        )[tooltipIndex.value]
+            ? cfgTooltip.value.useDefaultTimeFormat
+                ? timeLabels.value.slice(slicer.value.start, slicer.value.end)[
+                      tooltipIndex.value
+                  ]?.text
+                : preciseAllTimeLabelsTooltip.value[tooltipIndex.value]?.text
+            : '',
         datapoint,
         seriesIndex: tooltipIndex.value,
         series: formattedDataset.value,
@@ -2563,14 +2455,14 @@ function handleMousemove(e) {
         });
     } else {
         if (
-            FINAL_CONFIG.value.style.chart.grid.x.timeLabels.values.slice(
+            cfgXAxisLabels.value.values.slice(
                 slicer.value.start,
                 slicer.value.end,
             )[tooltipIndex.value]
         ) {
-            html += `<div style="padding-bottom: 6px; margin-bottom: 4px; border-bottom: 1px solid ${FINAL_CONFIG.value.style.chart.tooltip.borderColor}; width:100%">${FINAL_CONFIG.value.style.chart.tooltip.useDefaultTimeFormat ? timeLabels.value.slice(slicer.value.start, slicer.value.end)[tooltipIndex.value]?.text : preciseAllTimeLabelsTooltip.value[tooltipIndex.value]?.text}</div>`;
+            html += `<div style="padding-bottom: 6px; margin-bottom: 4px; border-bottom: 1px solid ${cfgTooltip.value.borderColor}; width:100%">${cfgTooltip.value.useDefaultTimeFormat ? timeLabels.value.slice(slicer.value.start, slicer.value.end)[tooltipIndex.value]?.text : preciseAllTimeLabelsTooltip.value[tooltipIndex.value]?.text}</div>`;
         } else {
-            html += `<div style="padding-bottom: 6px; margin-bottom: 4px; border-bottom: 1px solid ${FINAL_CONFIG.value.style.chart.tooltip.borderColor}; width:100%">${timeLabels.value[tooltipIndex.value + slicer.value.start]?.text ?? ''}</div>`;
+            html += `<div style="padding-bottom: 6px; margin-bottom: 4px; border-bottom: 1px solid ${cfgTooltip.value.borderColor}; width:100%">${timeLabels.value[tooltipIndex.value + slicer.value.start]?.text ?? ''}</div>`;
         }
         html += tootlipDataset.value.join('');
         tooltipContent.value = html;
@@ -2590,7 +2482,7 @@ function getTooltipDatapointAtIndex(index) {
 
 function buildTooltipContentForIndex(index) {
     let html = '';
-    const customFormat = FINAL_CONFIG.value.style.chart.tooltip.customFormat;
+    const customFormat = cfgTooltip.value.customFormat;
     const datapoint = getTooltipDatapointAtIndex(index);
 
     selectX({ seriesIndex: index, datapoint });
@@ -2615,14 +2507,13 @@ function buildTooltipContentForIndex(index) {
     }
 
     if (
-        FINAL_CONFIG.value.style.chart.grid.x.timeLabels.values.slice(
-            slicer.value.start,
-            slicer.value.end,
-        )[index]
+        cfgXAxisLabels.value.values.slice(slicer.value.start, slicer.value.end)[
+            index
+        ]
     ) {
-        html += `<div style="padding-bottom: 6px; margin-bottom: 4px; border-bottom: 1px solid ${FINAL_CONFIG.value.style.chart.tooltip.borderColor}; width:100%">${FINAL_CONFIG.value.style.chart.tooltip.useDefaultTimeFormat ? timeLabels.value.slice(slicer.value.start, slicer.value.end)[index]?.text : preciseAllTimeLabelsTooltip.value[index]?.text}</div>`;
+        html += `<div style="padding-bottom: 6px; margin-bottom: 4px; border-bottom: 1px solid ${cfgTooltip.value.borderColor}; width:100%">${cfgTooltip.value.useDefaultTimeFormat ? timeLabels.value.slice(slicer.value.start, slicer.value.end)[index]?.text : preciseAllTimeLabelsTooltip.value[index]?.text}</div>`;
     } else {
-        html += `<div style="padding-bottom: 6px; margin-bottom: 4px; border-bottom: 1px solid ${FINAL_CONFIG.value.style.chart.tooltip.borderColor}; width:100%">${timeLabels.value[index + slicer.value.start]?.text ?? ''}</div>`;
+        html += `<div style="padding-bottom: 6px; margin-bottom: 4px; border-bottom: 1px solid ${cfgTooltip.value.borderColor}; width:100%">${timeLabels.value[index + slicer.value.start]?.text ?? ''}</div>`;
     }
 
     html += tootlipDataset.value.join('');
@@ -2845,15 +2736,10 @@ function prepareChart() {
         const handleResize = throttle(() => {
             const { width, height } = useResponsive({
                 chart: xy.value,
-                title: FINAL_CONFIG.value.style.chart.title.text
-                    ? chartTitle.value
-                    : null,
-                legend: FINAL_CONFIG.value.style.chart.legend.show
-                    ? chartLegend.value
-                    : null,
+                title: cfgChart.value.title.text ? chartTitle.value : null,
+                legend: cfgChart.value.legend.show ? chartLegend.value : null,
                 slicer:
-                    FINAL_CONFIG.value.style.chart.zoom.show &&
-                    maxSeries.value > 6
+                    cfgChart.value.zoom.show && maxSeries.value > 6
                         ? chartSlicer.value?.$el
                         : null,
                 source: source.value,
@@ -2984,11 +2870,11 @@ const legendSet = computed(() => {
 const legendConfig = computed(() => {
     return {
         cy: 'donut-div-legend',
-        backgroundColor: FINAL_CONFIG.value.style.chart.legend.backgroundColor,
-        color: FINAL_CONFIG.value.style.chart.legend.color,
-        fontSize: FINAL_CONFIG.value.style.chart.legend.fontSize,
+        backgroundColor: cfgChart.value.legend.backgroundColor,
+        color: cfgChart.value.legend.color,
+        fontSize: cfgChart.value.legend.fontSize,
         paddingBottom: 12,
-        fontWeight: FINAL_CONFIG.value.style.chart.legend.bold ? 'bold' : '',
+        fontWeight: cfgChart.value.legend.bold ? 'bold' : '',
     };
 });
 
@@ -3008,7 +2894,7 @@ const dataTable = computed(() => {
 
         body.push(
             [
-                FINAL_CONFIG.value.style.chart.grid.x.timeLabels.values.slice(
+                cfgXAxisLabels.value.values.slice(
                     slicer.value.start,
                     slicer.value.end,
                 )[i]
@@ -3071,9 +2957,7 @@ const tableCsv = computed(() => {
 
     for (let i = slicer.value.start; i < slicer.value.end; i += 1) {
         const row = [
-            FINAL_CONFIG.value.style.chart.grid.x.timeLabels.values[i]
-                ? timeLabels.value[i].text
-                : i + 1,
+            cfgXAxisLabels.value.values[i] ? timeLabels.value[i].text : i + 1,
         ];
         formattedDataset.value.forEach((s) => {
             row.push(
@@ -3092,8 +2976,8 @@ const tableCsv = computed(() => {
 
 function generateCsv(callback = null) {
     const title = [
-        [FINAL_CONFIG.value.style.chart.title.text],
-        [FINAL_CONFIG.value.style.chart.title.subtitle.text],
+        [cfgChart.value.title.text],
+        [cfgChart.value.title.subtitle.text],
         [''],
     ];
     const head = ['', ...tableCsv.value.head.map((h) => h.label)];
@@ -3104,8 +2988,7 @@ function generateCsv(callback = null) {
     if (!callback) {
         downloadCsv({
             csvContent,
-            title:
-                FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-xy-canvas',
+            title: cfgChart.value.title.text || 'vue-ui-xy-canvas',
         });
     } else {
         callback(csvContent);
@@ -3159,7 +3042,7 @@ async function getImage({ scale = 2 } = {}) {
     return {
         imageUri,
         base64,
-        title: FINAL_CONFIG.value.style.chart.title.text,
+        title: cfgChart.value.title.text,
         ...imageDimensions,
     };
 }
@@ -3170,7 +3053,7 @@ const tableComponent = computed(() => {
     const open = mutableConfig.value.showTable;
     return {
         component: useDialog ? BaseDraggableDialog : Accordion,
-        title: `${FINAL_CONFIG.value.style.chart.title.text}${FINAL_CONFIG.value.style.chart.title.subtitle.text ? `: ${FINAL_CONFIG.value.style.chart.title.subtitle.text}` : ''}`,
+        title: `${cfgChart.value.title.text}${cfgChart.value.title.subtitle.text ? `: ${cfgChart.value.title.subtitle.text}` : ''}`,
         props: useDialog
             ? {
                   backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
@@ -3188,14 +3071,12 @@ const tableComponent = computed(() => {
                       open,
                       maxHeight: 10000,
                       body: {
-                          backgroundColor:
-                              FINAL_CONFIG.value.style.chart.backgroundColor,
-                          color: FINAL_CONFIG.value.style.chart.color,
+                          backgroundColor: cfgChart.value.backgroundColor,
+                          color: cfgChart.value.color,
                       },
                       head: {
-                          backgroundColor:
-                              FINAL_CONFIG.value.style.chart.backgroundColor,
-                          color: FINAL_CONFIG.value.style.chart.color,
+                          backgroundColor: cfgChart.value.backgroundColor,
+                          color: cfgChart.value.color,
                       },
                   },
               },
@@ -3242,14 +3123,14 @@ async function copyAlt() {
         config: FINAL_CONFIG.value,
         dataset: formattedDataset.value,
     });
-    if (!FINAL_CONFIG.value.userOptions.callbacks.altCopy) {
+    if (!cfgUserOptions.value.callbacks.altCopy) {
         console.warn(
             'Vue Data UI - A callback must be set for `altCopy` in userOptions.',
         );
         return;
     }
     await Promise.resolve(
-        FINAL_CONFIG.value.userOptions.callbacks.altCopy({
+        cfgUserOptions.value.callbacks.altCopy({
             config: FINAL_CONFIG.value,
             dataset: formattedDataset.value,
         }),
@@ -3317,7 +3198,7 @@ defineExpose({
             ref="userOptionsRef"
             :key="`user_option_${step}`"
             v-if="
-                FINAL_CONFIG.userOptions.show &&
+                cfgUserOptions.show &&
                 isDataset &&
                 (keepUserOptionState ? true : userOptionsVisible)
             "
@@ -3326,33 +3207,27 @@ defineExpose({
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uid"
-            :hasTooltip="
-                FINAL_CONFIG.userOptions.buttons.tooltip &&
-                FINAL_CONFIG.style.chart.tooltip.show
-            "
-            :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
-            :hasImg="FINAL_CONFIG.userOptions.buttons.img"
-            :hasXls="FINAL_CONFIG.userOptions.buttons.csv"
-            :hasLabel="FINAL_CONFIG.userOptions.buttons.labels"
-            :hasStack="
-                dataset.length > 1 && FINAL_CONFIG.userOptions.buttons.stack
-            "
-            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
-            :hasAltCopy="FINAL_CONFIG.userOptions.buttons.altCopy"
+            :hasTooltip="cfgUserOptions.buttons.tooltip && cfgTooltip.show"
+            :hasPdf="cfgUserOptions.buttons.pdf"
+            :hasImg="cfgUserOptions.buttons.img"
+            :hasXls="cfgUserOptions.buttons.csv"
+            :hasLabel="cfgUserOptions.buttons.labels"
+            :hasStack="dataset.length > 1 && cfgUserOptions.buttons.stack"
+            :hasFullscreen="cfgUserOptions.buttons.fullscreen"
+            :hasAltCopy="cfgUserOptions.buttons.altCopy"
             :hasTable="
-                slicer.end - slicer.start <= 730 &&
-                FINAL_CONFIG.userOptions.buttons.table
+                slicer.end - slicer.start <= 730 && cfgUserOptions.buttons.table
             "
             :isFullscreen="isFullscreen"
             :isTooltip="mutableConfig.showTooltip"
             :isStacked="mutableConfig.stacked"
-            :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
+            :titles="{ ...cfgUserOptions.buttonTitles }"
             :chartElement="xy"
-            :position="FINAL_CONFIG.userOptions.position"
-            :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator"
+            :position="cfgUserOptions.position"
+            :hasAnnotator="cfgUserOptions.buttons.annotator"
             :isAnnotation="isAnnotator"
-            :callbacks="FINAL_CONFIG.userOptions.callbacks"
-            :printScale="FINAL_CONFIG.userOptions.print.scale"
+            :callbacks="cfgUserOptions.callbacks"
+            :printScale="cfgUserOptions.print.scale"
             :tableDialog="FINAL_CONFIG.table.useDialog"
             :isCursorPointer="isCursorPointer"
             @toggleFullscreen="toggleFullscreen"
@@ -3473,36 +3348,26 @@ defineExpose({
 
             <!-- TOOLTIP -->
             <Tooltip
-                :teleportTo="FINAL_CONFIG.style.chart.tooltip.teleportTo"
+                :teleportTo="cfgTooltip.teleportTo"
                 :show="mutableConfig.showTooltip && isTooltip"
-                :backgroundColor="
-                    FINAL_CONFIG.style.chart.tooltip.backgroundColor
-                "
-                :color="FINAL_CONFIG.style.chart.tooltip.color"
-                :fontSize="FINAL_CONFIG.style.chart.tooltip.fontSize"
-                :borderRadius="FINAL_CONFIG.style.chart.tooltip.borderRadius"
-                :borderColor="FINAL_CONFIG.style.chart.tooltip.borderColor"
-                :borderWidth="FINAL_CONFIG.style.chart.tooltip.borderWidth"
-                :position="FINAL_CONFIG.style.chart.tooltip.position"
-                :offsetX="FINAL_CONFIG.style.chart.tooltip.offsetX"
-                :offsetY="FINAL_CONFIG.style.chart.tooltip.offsetY"
+                :backgroundColor="cfgTooltip.backgroundColor"
+                :color="cfgTooltip.color"
+                :fontSize="cfgTooltip.fontSize"
+                :borderRadius="cfgTooltip.borderRadius"
+                :borderColor="cfgTooltip.borderColor"
+                :borderWidth="cfgTooltip.borderWidth"
+                :position="cfgTooltip.position"
+                :offsetX="cfgTooltip.offsetX"
+                :offsetY="cfgTooltip.offsetY"
                 :parent="$refs.xy"
                 :content="tooltipContent"
                 :isFullscreen="isFullscreen"
-                :backgroundOpacity="
-                    FINAL_CONFIG.style.chart.tooltip.backgroundOpacity
-                "
-                :isCustom="
-                    isFunction(FINAL_CONFIG.style.chart.tooltip.customFormat)
-                "
-                :smooth="FINAL_CONFIG.style.chart.tooltip.smooth"
-                :backdropFilter="
-                    FINAL_CONFIG.style.chart.tooltip.backdropFilter
-                "
-                :smoothForce="FINAL_CONFIG.style.chart.tooltip.smoothForce"
-                :smoothSnapThreshold="
-                    FINAL_CONFIG.style.chart.tooltip.smoothSnapThreshold
-                "
+                :backgroundOpacity="cfgTooltip.backgroundOpacity"
+                :isCustom="isFunction(cfgTooltip.customFormat)"
+                :smooth="cfgTooltip.smooth"
+                :backdropFilter="cfgTooltip.backdropFilter"
+                :smoothForce="cfgTooltip.smoothForce"
+                :smoothSnapThreshold="cfgTooltip.smoothSnapThreshold"
                 :isA11yMode="isKeyboardTooltipMode"
                 :a11yPosition="tooltipA11yPosition"
             >
@@ -3733,7 +3598,7 @@ defineExpose({
         </div>
 
         <component
-            v-if="isDataset && FINAL_CONFIG.userOptions.buttons.table"
+            v-if="isDataset && cfgUserOptions.buttons.table"
             :is="tableComponent.component"
             v-bind="tableComponent.props"
             ref="tableUnit"
@@ -3746,7 +3611,7 @@ defineExpose({
                 <button
                     tabindex="0"
                     class="vue-ui-user-options-button"
-                    @click="generateCsv(FINAL_CONFIG.userOptions.callbacks.csv)"
+                    @click="generateCsv(cfgUserOptions.callbacks.csv)"
                     :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }"
                 >
                     <BaseIcon
@@ -3787,10 +3652,7 @@ defineExpose({
         </component>
 
         <NonSvgPenAndPaper
-            v-if="
-                FINAL_CONFIG.userOptions.buttons.annotator &&
-                formattedDataset.length
-            "
+            v-if="cfgUserOptions.buttons.annotator && formattedDataset.length"
             :parent="xy"
             :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
             :color="FINAL_CONFIG.style.chart.color"
