@@ -127,6 +127,13 @@ const tooltipTriggerMode = ref('pointer'); // a11y
 const isFocus = ref(false); // a11y
 
 const FINAL_CONFIG = ref(prepareConfig());
+const cfgUserOptions = computed(() => FINAL_CONFIG.value.userOptions);
+const cfgTooltip = computed(() => FINAL_CONFIG.value.style.chart.tooltip);
+const cfgLegend = computed(() => FINAL_CONFIG.value.style.chart.legend);
+const cfgRect = computed(() => FINAL_CONFIG.value.style.chart.layout.rect);
+const cfgGrid = computed(() => FINAL_CONFIG.value.style.chart.layout.grid);
+const cfgLayout = computed(() => FINAL_CONFIG.value.style.chart.layout);
+const cfgChart = computed(() => FINAL_CONFIG.value.style.chart);
 
 const { transitionEnabled } = useTransitions({
     config: () => FINAL_CONFIG.value.transitions,
@@ -224,7 +231,7 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } =
     useUserOptionState({ config: FINAL_CONFIG.value });
 const { svgRef } = useChartAccessibility({
-    config: FINAL_CONFIG.value.style.chart.title,
+    config: cfgChart.value.title,
 });
 
 function prepareConfig() {
@@ -274,8 +281,7 @@ watch(
 
         // Reset mutable config
         mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
-        mutableConfig.value.showTooltip =
-            FINAL_CONFIG.value.style.chart.tooltip.show;
+        mutableConfig.value.showTooltip = cfgTooltip.value.show;
     },
     { deep: true },
 );
@@ -321,12 +327,8 @@ function prepareChart() {
         const handleResize = throttle(() => {
             const { width, height } = useResponsive({
                 chart: waffleChart.value,
-                title: FINAL_CONFIG.value.style.chart.title.text
-                    ? chartTitle.value
-                    : null,
-                legend: FINAL_CONFIG.value.style.chart.legend.show
-                    ? chartLegend.value
-                    : null,
+                title: cfgChart.value.title.text ? chartTitle.value : null,
+                legend: cfgLegend.value.show ? chartLegend.value : null,
                 source: source.value,
                 noTitle: noTitle.value,
             });
@@ -368,15 +370,12 @@ onBeforeUnmount(() => {
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `vue-ui-waffle_${uid.value}`,
-    fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-waffle',
+    fileName: cfgChart.value.title.text || 'vue-ui-waffle',
     options: FINAL_CONFIG.value.userOptions.print,
 });
 
 const hasOptionsNoTitle = computed(() => {
-    return (
-        FINAL_CONFIG.value.userOptions.show &&
-        !FINAL_CONFIG.value.style.chart.title.text
-    );
+    return FINAL_CONFIG.value.userOptions.show && !cfgChart.value.title.text;
 });
 
 const customPalette = computed(() => {
@@ -385,7 +384,7 @@ const customPalette = computed(() => {
 
 const mutableConfig = ref({
     showTable: FINAL_CONFIG.value.table.show,
-    showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show,
+    showTooltip: cfgTooltip.value.show,
 });
 
 // v3 - Essential to make shifting between loading config and final config work
@@ -394,7 +393,7 @@ watch(
     () => {
         mutableConfig.value = {
             showTable: FINAL_CONFIG.value.table.show,
-            showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show,
+            showTooltip: cfgTooltip.value.show,
         };
     },
     { immediate: true },
@@ -415,41 +414,29 @@ const drawingArea = ref({
 const rectDimension = computed(() => {
     return (
         (drawingArea.value.width -
-            FINAL_CONFIG.value.style.chart.layout.grid.size *
-                FINAL_CONFIG.value.style.chart.layout.grid.spaceBetween) /
-        FINAL_CONFIG.value.style.chart.layout.grid.size
+            cfgGrid.value.size * cfgGrid.value.spaceBetween) /
+        cfgGrid.value.size
     );
 });
 
 const rectDimensionY = computed(() => {
     return (
         (drawingArea.value.height -
-            FINAL_CONFIG.value.style.chart.layout.grid.size *
-                FINAL_CONFIG.value.style.chart.layout.grid.spaceBetween) /
-        FINAL_CONFIG.value.style.chart.layout.grid.size
+            cfgGrid.value.size * cfgGrid.value.spaceBetween) /
+        cfgGrid.value.size
     );
 });
 
 const absoluteRectDimension = computed(() => {
-    return Math.max(
-        0.0001,
-        drawingArea.value.width /
-            FINAL_CONFIG.value.style.chart.layout.grid.size,
-    );
+    return Math.max(0.0001, drawingArea.value.width / cfgGrid.value.size);
 });
 
 const absoluteRectDimensionY = computed(() => {
-    return Math.max(
-        0.0001,
-        drawingArea.value.height /
-            FINAL_CONFIG.value.style.chart.layout.grid.size,
-    );
+    return Math.max(0.0001, drawingArea.value.height / cfgGrid.value.size);
 });
 
 function calculateSquareCounts(numbers) {
-    const totalSquares =
-        FINAL_CONFIG.value.style.chart.layout.grid.size *
-        FINAL_CONFIG.value.style.chart.layout.grid.size;
+    const totalSquares = cfgGrid.value.size * cfgGrid.value.size;
     const totalSum = numbers.reduce((a, b) => a + b, 0);
     const exactSquareCounts = numbers.map(
         (num) => (num / totalSum) * totalSquares,
@@ -541,9 +528,7 @@ const immutableSquareCounts = computed(() => {
     return calculateSquareCounts(numbers);
 });
 
-const totalGridSquares = computed(() =>
-    Math.pow(FINAL_CONFIG.value.style.chart.layout.grid.size, 2),
-);
+const totalGridSquares = computed(() => Math.pow(cfgGrid.value.size, 2));
 
 const waffleSet = computed(() => {
     if (debug.value) {
@@ -647,43 +632,24 @@ const rects = computed(() => {
         .map((s, i) => {
             return {
                 ...s,
-                isAbsoluteFirst:
-                    i % FINAL_CONFIG.value.style.chart.layout.grid.size === 0,
+                isAbsoluteFirst: i % cfgGrid.value.size === 0,
             };
         });
 });
 
 const positions = computed(() => {
     const grid = [];
-    for (
-        let i = 0;
-        i < FINAL_CONFIG.value.style.chart.layout.grid.size;
-        i += 1
-    ) {
-        for (
-            let j = 0;
-            j < FINAL_CONFIG.value.style.chart.layout.grid.size;
-            j += 1
-        ) {
+    for (let i = 0; i < cfgGrid.value.size; i += 1) {
+        for (let j = 0; j < cfgGrid.value.size; j += 1) {
             grid.push({
                 isStartOfLine: j === 0,
-                position: FINAL_CONFIG.value.style.chart.layout.grid.vertical
-                    ? i
-                    : j,
+                position: cfgGrid.value.vertical ? i : j,
                 x:
-                    (FINAL_CONFIG.value.style.chart.layout.grid.vertical
-                        ? i
-                        : j) *
-                    (rectDimension.value +
-                        FINAL_CONFIG.value.style.chart.layout.grid
-                            .spaceBetween),
+                    (cfgGrid.value.vertical ? i : j) *
+                    (rectDimension.value + cfgGrid.value.spaceBetween),
                 y:
-                    (FINAL_CONFIG.value.style.chart.layout.grid.vertical
-                        ? j
-                        : i) *
-                        (rectDimensionY.value +
-                            FINAL_CONFIG.value.style.chart.layout.grid
-                                .spaceBetween) +
+                    (cfgGrid.value.vertical ? j : i) *
+                        (rectDimensionY.value + cfgGrid.value.spaceBetween) +
                     drawingArea.value.top,
             });
         }
@@ -999,16 +965,13 @@ const legendSet = computed(() => {
         })
         .map((el, i) => {
             const valueDisplay = applyDataLabel(
-                FINAL_CONFIG.value.style.chart.layout.labels.dataLabels
-                    .formatter,
+                cfgLayout.value.labels.dataLabels.formatter,
                 el.value,
                 dataLabel({
-                    p: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels
-                        .prefix,
+                    p: cfgLayout.value.labels.dataLabels.prefix,
                     v: el.value,
-                    s: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels
-                        .suffix,
-                    r: FINAL_CONFIG.value.style.chart.legend.roundingValue,
+                    s: cfgLayout.value.labels.dataLabels.suffix,
+                    r: cfgLegend.value.roundingValue,
                 }),
                 { datapoint: el, index: i },
             );
@@ -1018,17 +981,15 @@ const legendSet = computed(() => {
                 : dataLabel({
                       v: (el.value / total.value) * 100,
                       s: '%',
-                      r: FINAL_CONFIG.value.style.chart.legend
-                          .roundingPercentage,
+                      r: cfgLegend.value.roundingPercentage,
                   });
 
             const display = buildLabel({
                 val: valueDisplay,
                 percentage: percentageDisplay,
-                showVal: FINAL_CONFIG.value.style.chart.legend.showValue,
-                showPercentage:
-                    FINAL_CONFIG.value.style.chart.legend.showPercentage,
-                config: FINAL_CONFIG.value.style.chart.legend,
+                showVal: cfgLegend.value.showValue,
+                showPercentage: cfgLegend.value.showPercentage,
+                config: cfgLegend.value,
             });
 
             return {
@@ -1036,7 +997,7 @@ const legendSet = computed(() => {
                 opacity: segregated.value.includes(el.uid) ? 0.5 : 1,
                 segregate: () => segregate(el.uid),
                 isSegregated: segregated.value.includes(el.uid),
-                display: `${el.name}${FINAL_CONFIG.value.style.chart.legend.showPercentage || FINAL_CONFIG.value.style.chart.legend.showValue ? ': ' : ''}${display}`,
+                display: `${el.name}${cfgLegend.value.showPercentage || cfgLegend.value.showValue ? ': ' : ''}${display}`,
             };
         });
 });
@@ -1044,11 +1005,11 @@ const legendSet = computed(() => {
 const legendConfig = computed(() => {
     return {
         cy: 'waffle-div-legend',
-        backgroundColor: FINAL_CONFIG.value.style.chart.legend.backgroundColor,
-        color: FINAL_CONFIG.value.style.chart.legend.color,
-        fontSize: FINAL_CONFIG.value.style.chart.legend.fontSize,
+        backgroundColor: cfgLegend.value.backgroundColor,
+        color: cfgLegend.value.color,
+        fontSize: cfgLegend.value.fontSize,
         paddingBottom: 12,
-        fontWeight: FINAL_CONFIG.value.style.chart.legend.bold ? 'bold' : '',
+        fontWeight: cfgLegend.value.bold ? 'bold' : '',
     };
 });
 
@@ -1156,7 +1117,7 @@ function useTooltip(index, triggerMode = 'pointer') {
     isTooltip.value = true;
     selectedSerie.value = selected.serieIndex;
 
-    const customFormat = FINAL_CONFIG.value.style.chart.tooltip.customFormat;
+    const customFormat = cfgTooltip.value.customFormat;
 
     if (
         isFunction(customFormat) &&
@@ -1178,25 +1139,21 @@ function useTooltip(index, triggerMode = 'pointer') {
     } else {
         let html = '';
 
-        html += `<div data-cy="waffle-tooltip-name" style="width:100%;text-align:center;border-bottom:1px solid ${FINAL_CONFIG.value.style.chart.tooltip.borderColor};padding-bottom:6px;margin-bottom:3px;">${selected.name}</div>`;
+        html += `<div data-cy="waffle-tooltip-name" style="width:100%;text-align:center;border-bottom:1px solid ${cfgTooltip.value.borderColor};padding-bottom:6px;margin-bottom:3px;">${selected.name}</div>`;
         html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><svg viewBox="0 0 60 60" height="14" width="14"><rect data-cy="waffle-tooltip-marker" x="0" y="0" height="60" width="60" stroke="none" rx="1" fill="${selected.color}" />${slots.pattern ? `<rect x="0" y="0" height="60" width="60" stroke="none" rx="1" stroke="none" fill="url(#pattern_${uid.value}_${selected.absoluteIndex})"/>` : ''}</svg>`;
 
         html += `<b>${buildLabel({
-            config: FINAL_CONFIG.value.style.chart.tooltip,
-            showVal: FINAL_CONFIG.value.style.chart.tooltip.showValue,
-            showPercentage:
-                FINAL_CONFIG.value.style.chart.tooltip.showPercentage,
+            config: cfgTooltip.value,
+            showVal: cfgTooltip.value.showValue,
+            showPercentage: cfgTooltip.value.showPercentage,
             val: `<span data-cy="waffle-tooltip-value">${applyDataLabel(
-                FINAL_CONFIG.value.style.chart.layout.labels.dataLabels
-                    .formatter,
+                cfgLayout.value.labels.dataLabels.formatter,
                 selected.value,
                 dataLabel({
-                    p: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels
-                        .prefix,
+                    p: cfgLayout.value.labels.dataLabels.prefix,
                     v: selected.value,
-                    s: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels
-                        .suffix,
-                    r: FINAL_CONFIG.value.style.chart.tooltip.roundingValue,
+                    s: cfgLayout.value.labels.dataLabels.suffix,
+                    r: cfgTooltip.value.roundingValue,
                 }),
                 {
                     datapoint: selected,
@@ -1209,7 +1166,7 @@ function useTooltip(index, triggerMode = 'pointer') {
                     ? (1 / FINAL_DATASET.value.length) * 100
                     : (selected.value / total.value) * 100,
                 s: '%',
-                r: FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage,
+                r: cfgTooltip.value.roundingPercentage,
             })}</span>`,
         })}</b></div>`;
 
@@ -1248,9 +1205,7 @@ function getRectStyle(index) {
         return { opacity: 1 };
     } else {
         return {
-            opacity:
-                FINAL_CONFIG.value.style.chart.layout.rect.selection
-                    .unselectedOpacity,
+            opacity: cfgRect.value.selection.unselectedOpacity,
         };
     }
 }
@@ -1376,8 +1331,8 @@ function getBoundaryPolygons(cells) {
 }
 
 function getSerieCells(serieIndex) {
-    const size = FINAL_CONFIG.value.style.chart.layout.grid.size;
-    const isVertical = FINAL_CONFIG.value.style.chart.layout.grid.vertical;
+    const size = cfgGrid.value.size;
+    const isVertical = cfgGrid.value.vertical;
     const cells = [];
     rects.value.forEach((rect, index) => {
         if (rect.serieIndex !== serieIndex) return;
@@ -1419,7 +1374,7 @@ function polygonsToPath(polygons) {
 }
 
 const selectionWrapPolygons = computed(() => {
-    const selection = FINAL_CONFIG.value.style.chart.layout.rect.selection;
+    const selection = cfgRect.value.selection;
     if (
         !selection?.wrap?.show ||
         [null, undefined].includes(selectedSerie.value)
@@ -1430,7 +1385,7 @@ const selectionWrapPolygons = computed(() => {
 });
 
 const mergedSeriePaths = computed(() => {
-    if (!FINAL_CONFIG.value.style.chart.layout.rect.merged) {
+    if (!cfgRect.value.merged) {
         return [];
     }
     const series = new Map();
@@ -1453,69 +1408,59 @@ const mergedSeriePaths = computed(() => {
 });
 
 function showDataLabel(i, position) {
-    if (!FINAL_CONFIG.value.style.chart.layout.labels.captions.show) {
+    if (!cfgLayout.value.labels.captions.show) {
         return false;
     }
     return (
         rects.value.length &&
         !isAnimating.value &&
-        !FINAL_CONFIG.value.style.chart.layout.grid.vertical &&
+        !cfgGrid.value.vertical &&
         ((rects.value[i].isFirst &&
-            position.position <
-                FINAL_CONFIG.value.style.chart.layout.grid.size - 2) ||
+            position.position < cfgGrid.value.size - 2) ||
             (rects.value[i].isAbsoluteFirst &&
-                i % FINAL_CONFIG.value.style.chart.layout.grid.size === 0 &&
+                i % cfgGrid.value.size === 0 &&
                 rects.value[i].absoluteStartIndex))
     );
 }
 
 function getCaption(i, position = null) {
     const valueLabel = applyDataLabel(
-        FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.formatter,
+        cfgLayout.value.labels.dataLabels.formatter,
         rects.value[i].value,
         dataLabel({
-            p: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.prefix,
+            p: cfgLayout.value.labels.dataLabels.prefix,
             v: rects.value[i].value,
-            s: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.suffix,
-            r: FINAL_CONFIG.value.style.chart.layout.labels.captions
-                .roundingValue,
+            s: cfgLayout.value.labels.dataLabels.suffix,
+            r: cfgLayout.value.labels.captions.roundingValue,
         }),
         { datapoint: rects.value[i], position },
     );
     const percentageLabel = dataLabel({
         v: rects.value[i].proportion * 100,
         s: '%',
-        r: FINAL_CONFIG.value.style.chart.layout.labels.captions
-            .roundingPercentage,
+        r: cfgLayout.value.labels.captions.roundingPercentage,
     });
     const nameLabel =
-        (FINAL_CONFIG.value.style.chart.layout.labels.captions
-            .serieNameAbbreviation
+        (cfgLayout.value.labels.captions.serieNameAbbreviation
             ? abbreviate({
                   source: rects.value[i].name,
-                  length: FINAL_CONFIG.value.style.chart.layout.labels.captions
+                  length: cfgLayout.value.labels.captions
                       .serieNameMaxAbbreviationSize,
               })
             : rects.value[i].name) +
-        (FINAL_CONFIG.value.style.chart.layout.labels.captions.showPercentage ||
-        FINAL_CONFIG.value.style.chart.layout.labels.captions.showValue
+        (cfgLayout.value.labels.captions.showPercentage ||
+        cfgLayout.value.labels.captions.showValue
             ? ':'
             : '');
 
-    const name = FINAL_CONFIG.value.style.chart.layout.labels.captions
-        .showSerieName
-        ? nameLabel
-        : '';
+    const name = cfgLayout.value.labels.captions.showSerieName ? nameLabel : '';
 
     const display = buildLabel({
         val: valueLabel,
         percentage: percentageLabel,
-        showVal:
-            FINAL_CONFIG.value.style.chart.layout.labels.captions.showValue,
-        showPercentage:
-            FINAL_CONFIG.value.style.chart.layout.labels.captions
-                .showPercentage,
-        config: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels,
+        showVal: cfgLayout.value.labels.captions.showValue,
+        showPercentage: cfgLayout.value.labels.captions.showPercentage,
+        config: cfgLayout.value.labels.dataLabels,
     });
 
     return `${name} ${display}`;
@@ -1535,8 +1480,8 @@ function generateCsv(callback = null) {
             ];
         });
         const tableXls = [
-            [FINAL_CONFIG.value.style.chart.title.text],
-            [FINAL_CONFIG.value.style.chart.title.subtitle.text],
+            [cfgChart.value.title.text],
+            [cfgChart.value.title.subtitle.text],
             [[''], ['val'], ['%']],
         ].concat(labels);
 
@@ -1545,9 +1490,7 @@ function generateCsv(callback = null) {
         if (!callback) {
             downloadCsv({
                 csvContent,
-                title:
-                    FINAL_CONFIG.value.style.chart.title.text ||
-                    'vue-ui-waffle',
+                title: cfgChart.value.title.text || 'vue-ui-waffle',
             });
         } else {
             callback(csvContent);
@@ -1559,14 +1502,12 @@ const dataTable = computed(() => {
     const head = [
         `__SUM__`,
         applyDataLabel(
-            FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.formatter,
+            cfgLayout.value.labels.dataLabels.formatter,
             total.value,
             dataLabel({
-                p: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels
-                    .prefix,
+                p: cfgLayout.value.labels.dataLabels.prefix,
                 v: total.value,
-                s: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels
-                    .suffix,
+                s: cfgLayout.value.labels.dataLabels.suffix,
                 r: FINAL_CONFIG.value.table.td.roundingValue,
             }),
         ),
@@ -1580,15 +1521,12 @@ const dataTable = computed(() => {
                 name: h.name,
             },
             applyDataLabel(
-                FINAL_CONFIG.value.style.chart.layout.labels.dataLabels
-                    .formatter,
+                cfgLayout.value.labels.dataLabels.formatter,
                 table.value.body[i],
                 dataLabel({
-                    p: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels
-                        .prefix,
+                    p: cfgLayout.value.labels.dataLabels.prefix,
                     v: table.value.body[i],
-                    s: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels
-                        .suffix,
+                    s: cfgLayout.value.labels.dataLabels.suffix,
                     r: FINAL_CONFIG.value.table.td.roundingValue,
                 }),
             ),
@@ -1663,7 +1601,7 @@ async function getImage({ scale = 2 } = {}) {
     return {
         imageUri,
         base64,
-        title: FINAL_CONFIG.value.style.chart.title.text,
+        title: cfgChart.value.title.text,
         width,
         height,
         aspectRatio,
@@ -1676,7 +1614,7 @@ const tableComponent = computed(() => {
     const open = mutableConfig.value.showTable;
     return {
         component: useDialog ? BaseDraggableDialog : Accordion,
-        title: `${FINAL_CONFIG.value.style.chart.title.text}${FINAL_CONFIG.value.style.chart.title.subtitle.text ? `: ${FINAL_CONFIG.value.style.chart.title.subtitle.text}` : ''}`,
+        title: `${cfgChart.value.title.text}${cfgChart.value.title.subtitle.text ? `: ${cfgChart.value.title.subtitle.text}` : ''}`,
         props: useDialog
             ? {
                   backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
@@ -1694,14 +1632,12 @@ const tableComponent = computed(() => {
                       open,
                       maxHeight: 10000,
                       body: {
-                          backgroundColor:
-                              FINAL_CONFIG.value.style.chart.backgroundColor,
-                          color: FINAL_CONFIG.value.style.chart.color,
+                          backgroundColor: cfgChart.value.backgroundColor,
+                          color: cfgChart.value.color,
                       },
                       head: {
-                          backgroundColor:
-                              FINAL_CONFIG.value.style.chart.backgroundColor,
-                          color: FINAL_CONFIG.value.style.chart.color,
+                          backgroundColor: cfgChart.value.backgroundColor,
+                          color: cfgChart.value.color,
                       },
                   },
               },
@@ -1736,15 +1672,14 @@ const svgLegendItems = computed(() => {
     }));
 });
 
-const svgBg = computed(() => FINAL_CONFIG.value.style.chart.backgroundColor);
-const svgLegend = computed(() => FINAL_CONFIG.value.style.chart.legend);
-const svgTitle = computed(() => FINAL_CONFIG.value.style.chart.title);
+const svgBg = computed(() => cfgChart.value.backgroundColor);
+const svgTitle = computed(() => cfgChart.value.title);
 
 const { isCallbackImaging, isCallbackSvg, generateSvg, onGenerateImage } =
     useChartExport({
         svg: svgRef,
         title: svgTitle,
-        legend: svgLegend,
+        legend: cfgLegend,
         legendItems: svgLegendItems,
         backgroundColor: svgBg,
         getSvgCallback: () => FINAL_CONFIG.value.userOptions.callbacks.svg,
@@ -1874,13 +1809,11 @@ function setKeyboardTooltipPositionFromSeriesIndex(seriesIndex) {
             return {
                 x:
                     position.x +
-                    FINAL_CONFIG.value.style.chart.layout.grid.spaceBetween /
-                        2 +
+                    cfgGrid.value.spaceBetween / 2 +
                     absoluteRectDimension.value / 2,
                 y:
                     position.y +
-                    FINAL_CONFIG.value.style.chart.layout.grid.spaceBetween /
-                        2 +
+                    cfgGrid.value.spaceBetween / 2 +
                     absoluteRectDimensionY.value / 2,
             };
         })
@@ -1932,7 +1865,7 @@ defineExpose({
         :class="`vue-data-ui-component vue-ui-waffle ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`"
         ref="waffleChart"
         :id="`vue-ui-waffle_${uid}`"
-        :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor};${FINAL_CONFIG.responsive ? 'height: 100%' : ''}`"
+        :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${cfgChart.backgroundColor};${FINAL_CONFIG.responsive ? 'height: 100%' : ''}`"
         @mouseenter="() => setUserOptionsVisibility(true)"
         @mouseleave="() => setUserOptionsVisibility(false)"
     >
@@ -1951,13 +1884,13 @@ defineExpose({
         />
 
         <PenAndPaper
-            v-if="FINAL_CONFIG.userOptions.buttons.annotator"
+            v-if="cfgUserOptions.buttons.annotator"
             :svgRef="svgRef"
-            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
-            :color="FINAL_CONFIG.style.chart.color"
+            :backgroundColor="cfgChart.backgroundColor"
+            :color="cfgChart.color"
             :active="isAnnotator"
             :isCursorPointer="isCursorPointer"
-            :palette="FINAL_CONFIG.userOptions.annotatorPalette"
+            :palette="cfgUserOptions.annotatorPalette"
             @close="toggleAnnotator"
         >
             <template #annotator-action-close>
@@ -1990,7 +1923,7 @@ defineExpose({
         <!-- TITLE AS DIV -->
         <div
             ref="chartTitle"
-            v-if="FINAL_CONFIG.style.chart.title.text"
+            v-if="cfgChart.title.text"
             :style="`width:100%;background:transparent;padding-bottom:12px`"
         >
             <Title
@@ -1998,11 +1931,11 @@ defineExpose({
                 :config="{
                     title: {
                         cy: 'waffle-title',
-                        ...FINAL_CONFIG.style.chart.title,
+                        ...cfgChart.title,
                     },
                     subtitle: {
                         cy: 'waffle-subtitle',
-                        ...FINAL_CONFIG.style.chart.title.subtitle,
+                        ...cfgChart.title.subtitle,
                     },
                 }"
             />
@@ -2015,35 +1948,32 @@ defineExpose({
             ref="userOptionsRef"
             :key="`user_options_${step}`"
             v-if="
-                FINAL_CONFIG.userOptions.show &&
+                cfgUserOptions.show &&
                 isDataset &&
                 (keepUserOptionState ? true : userOptionsVisible)
             "
-            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
-            :color="FINAL_CONFIG.style.chart.color"
+            :backgroundColor="cfgChart.backgroundColor"
+            :color="cfgChart.color"
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uid"
-            :hasTooltip="
-                FINAL_CONFIG.userOptions.buttons.tooltip &&
-                FINAL_CONFIG.style.chart.tooltip.show
-            "
-            :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
-            :hasImg="FINAL_CONFIG.userOptions.buttons.img"
-            :hasSvg="FINAL_CONFIG.userOptions.buttons.svg"
-            :hasXls="FINAL_CONFIG.userOptions.buttons.csv"
-            :hasTable="FINAL_CONFIG.userOptions.buttons.table"
-            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
-            :hasAltCopy="FINAL_CONFIG.userOptions.buttons.altCopy"
+            :hasTooltip="cfgUserOptions.buttons.tooltip && cfgTooltip.show"
+            :hasPdf="cfgUserOptions.buttons.pdf"
+            :hasImg="cfgUserOptions.buttons.img"
+            :hasSvg="cfgUserOptions.buttons.svg"
+            :hasXls="cfgUserOptions.buttons.csv"
+            :hasTable="cfgUserOptions.buttons.table"
+            :hasFullscreen="cfgUserOptions.buttons.fullscreen"
+            :hasAltCopy="cfgUserOptions.buttons.altCopy"
             :isFullscreen="isFullscreen"
             :isTooltip="mutableConfig.showTooltip"
-            :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
+            :titles="{ ...cfgUserOptions.buttonTitles }"
             :chartElement="waffleChart"
-            :position="FINAL_CONFIG.userOptions.position"
-            :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator"
+            :position="cfgUserOptions.position"
+            :hasAnnotator="cfgUserOptions.buttons.annotator"
             :isAnnotation="isAnnotator"
-            :callbacks="FINAL_CONFIG.userOptions.callbacks"
-            :printScale="FINAL_CONFIG.userOptions.print.scale"
+            :callbacks="cfgUserOptions.callbacks"
+            :printScale="cfgUserOptions.print.scale"
             :tableDialog="FINAL_CONFIG.table.useDialog"
             :isCursorPointer="isCursorPointer"
             @toggleFullscreen="toggleFullscreen"
@@ -2131,7 +2061,7 @@ defineExpose({
                 data-cy="waffle-svg"
                 tabindex="0"
                 :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`"
-                :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
+                :style="`max-width:100%;overflow:visible;background:transparent;color:${cfgChart.color}`"
                 @focus="onSvgFocus"
                 @blur="onSvgBlur"
                 @keydown="onSvgKeydown"
@@ -2155,9 +2085,7 @@ defineExpose({
                                 '0%',
                                 setOpacity(
                                     shiftHue(rect.color, 0.05),
-                                    100 -
-                                        FINAL_CONFIG.style.chart.layout.rect
-                                            .gradientIntensity,
+                                    100 - cfgRect.gradientIntensity,
                                 ),
                                 1,
                             ],
@@ -2242,9 +2170,7 @@ defineExpose({
                         </defs>
                     </g>
 
-                    <template
-                        v-if="FINAL_CONFIG.style.chart.layout.rect.merged"
-                    >
+                    <template v-if="cfgRect.merged">
                         <path
                             v-for="serie in mergedSeriePaths"
                             :key="`merged-underlayer-${serie.serieIndex}`"
@@ -2252,12 +2178,8 @@ defineExpose({
                             :d="serie.d"
                             fill="white"
                             fill-rule="evenodd"
-                            :stroke="
-                                FINAL_CONFIG.style.chart.layout.rect.stroke
-                            "
-                            :stroke-width="
-                                FINAL_CONFIG.style.chart.layout.rect.strokeWidth
-                            "
+                            :stroke="cfgRect.stroke"
+                            :stroke-width="cfgRect.strokeWidth"
                             stroke-linejoin="round"
                             :filter="getBlurFilter(serie.serieIndex)"
                             :style="getRectStyle(serie.serieIndex)"
@@ -2271,20 +2193,14 @@ defineExpose({
                             data-cy="datapoint-rect"
                             :d="serie.d"
                             :fill="
-                                FINAL_CONFIG.style.chart.layout.rect
-                                    .useGradient &&
-                                FINAL_CONFIG.style.chart.layout.rect
-                                    .gradientIntensity > 0
+                                cfgRect.useGradient &&
+                                cfgRect.gradientIntensity > 0
                                     ? `url(#gradient_${uid}_${serie.gradientIndex})`
                                     : serie.color
                             "
                             fill-rule="evenodd"
-                            :stroke="
-                                FINAL_CONFIG.style.chart.layout.rect.stroke
-                            "
-                            :stroke-width="
-                                FINAL_CONFIG.style.chart.layout.rect.strokeWidth
-                            "
+                            :stroke="cfgRect.stroke"
+                            :stroke-width="cfgRect.strokeWidth"
                             stroke-linejoin="round"
                             :filter="getBlurFilter(serie.serieIndex)"
                             :style="getRectStyle(serie.serieIndex)"
@@ -2312,35 +2228,16 @@ defineExpose({
                         <rect
                             data-cy="datapoint-underlayer"
                             v-for="(position, i) in positions"
-                            :rx="
-                                FINAL_CONFIG.style.chart.layout.rect.rounded
-                                    ? FINAL_CONFIG.style.chart.layout.rect
-                                          .rounding
-                                    : 0
-                            "
-                            :x="
-                                position.x +
-                                FINAL_CONFIG.style.chart.layout.grid
-                                    .spaceBetween /
-                                    2
-                            "
-                            :y="
-                                position.y +
-                                FINAL_CONFIG.style.chart.layout.grid
-                                    .spaceBetween /
-                                    2
-                            "
+                            :rx="cfgRect.rounded ? cfgRect.rounding : 0"
+                            :x="position.x + cfgGrid.spaceBetween / 2"
+                            :y="position.y + cfgGrid.spaceBetween / 2"
                             :height="
                                 rectDimensionY <= 0 ? 0.0001 : rectDimensionY
                             "
                             :width="rectDimension <= 0 ? 0.0001 : rectDimension"
                             fill="white"
-                            :stroke="
-                                FINAL_CONFIG.style.chart.layout.rect.stroke
-                            "
-                            :stroke-width="
-                                FINAL_CONFIG.style.chart.layout.rect.strokeWidth
-                            "
+                            :stroke="cfgRect.stroke"
+                            :stroke-width="cfgRect.strokeWidth"
                             :filter="getBlurFilter(rects[i].serieIndex)"
                             :style="getRectStyle(rects[i].serieIndex)"
                             :class="{
@@ -2350,42 +2247,21 @@ defineExpose({
                         <rect
                             data-cy="datapoint-rect"
                             v-for="(position, i) in positions"
-                            :rx="
-                                FINAL_CONFIG.style.chart.layout.rect.rounded
-                                    ? FINAL_CONFIG.style.chart.layout.rect
-                                          .rounding
-                                    : 0
-                            "
-                            :x="
-                                position.x +
-                                FINAL_CONFIG.style.chart.layout.grid
-                                    .spaceBetween /
-                                    2
-                            "
-                            :y="
-                                position.y +
-                                FINAL_CONFIG.style.chart.layout.grid
-                                    .spaceBetween /
-                                    2
-                            "
+                            :rx="cfgRect.rounded ? cfgRect.rounding : 0"
+                            :x="position.x + cfgGrid.spaceBetween / 2"
+                            :y="position.y + cfgGrid.spaceBetween / 2"
                             :height="
                                 rectDimensionY <= 0 ? 0.0001 : rectDimensionY
                             "
                             :width="rectDimension <= 0 ? 0.0001 : rectDimension"
                             :fill="
-                                FINAL_CONFIG.style.chart.layout.rect
-                                    .useGradient &&
-                                FINAL_CONFIG.style.chart.layout.rect
-                                    .gradientIntensity > 0
+                                cfgRect.useGradient &&
+                                cfgRect.gradientIntensity > 0
                                     ? `url(#gradient_${uid}_${i})`
                                     : rects[i].color
                             "
-                            :stroke="
-                                FINAL_CONFIG.style.chart.layout.rect.stroke
-                            "
-                            :stroke-width="
-                                FINAL_CONFIG.style.chart.layout.rect.strokeWidth
-                            "
+                            :stroke="cfgRect.stroke"
+                            :stroke-width="cfgRect.strokeWidth"
                             :filter="getBlurFilter(rects[i].serieIndex)"
                             :style="getRectStyle(rects[i].serieIndex)"
                             :class="{
@@ -2395,24 +2271,9 @@ defineExpose({
                         <g v-if="$slots.pattern">
                             <rect
                                 v-for="(position, i) in positions"
-                                :rx="
-                                    FINAL_CONFIG.style.chart.layout.rect.rounded
-                                        ? FINAL_CONFIG.style.chart.layout.rect
-                                              .rounding
-                                        : 0
-                                "
-                                :x="
-                                    position.x +
-                                    FINAL_CONFIG.style.chart.layout.grid
-                                        .spaceBetween /
-                                        2
-                                "
-                                :y="
-                                    position.y +
-                                    FINAL_CONFIG.style.chart.layout.grid
-                                        .spaceBetween /
-                                        2
-                                "
+                                :rx="cfgRect.rounded ? cfgRect.rounding : 0"
+                                :x="position.x + cfgGrid.spaceBetween / 2"
+                                :y="position.y + cfgGrid.spaceBetween / 2"
                                 :height="
                                     rectDimensionY <= 0
                                         ? 0.0001
@@ -2461,18 +2322,9 @@ defineExpose({
                     data-cy="selected-series-wrap"
                     :points="points"
                     fill="none"
-                    :stroke="
-                        FINAL_CONFIG.style.chart.layout.rect.selection.wrap
-                            .stroke
-                    "
-                    :stroke-width="
-                        FINAL_CONFIG.style.chart.layout.rect.selection.wrap
-                            .strokeWidth
-                    "
-                    :stroke-linejoin="
-                        FINAL_CONFIG.style.chart.layout.rect.selection.wrap
-                            .strokeLinejoin
-                    "
+                    :stroke="cfgRect.selection.wrap.stroke"
+                    :stroke-width="cfgRect.selection.wrap.strokeWidth"
+                    :stroke-linejoin="cfgRect.selection.wrap.strokeLinejoin"
                     pointer-events="none"
                 />
 
@@ -2485,39 +2337,25 @@ defineExpose({
                         v-text="getCaption(i, position)"
                         :x="
                             position.x +
-                            FINAL_CONFIG.style.chart.layout.labels.captions
-                                .offsetX +
-                            FINAL_CONFIG.style.chart.layout.grid.spaceBetween /
-                                2 +
+                            cfgLayout.labels.captions.offsetX +
+                            cfgGrid.spaceBetween / 2 +
                             6
                         "
                         :y="
                             position.y +
-                            FINAL_CONFIG.style.chart.layout.labels.captions
-                                .offsetY +
-                            FINAL_CONFIG.style.chart.layout.grid.spaceBetween /
-                                2 +
+                            cfgLayout.labels.captions.offsetY +
+                            cfgGrid.spaceBetween / 2 +
                             absoluteRectDimensionY / 2 +
-                            FINAL_CONFIG.style.chart.layout.labels.captions
-                                .fontSize /
-                                3
+                            cfgLayout.labels.captions.fontSize / 3
                         "
-                        :font-size="
-                            FINAL_CONFIG.style.chart.layout.labels.captions
-                                .fontSize
-                        "
+                        :font-size="cfgLayout.labels.captions.fontSize"
                         :fill="adaptColorToBackground(rects[i].color)"
                         :filter="getBlurFilter(rects[i].serieIndex)"
                         :class="{ 'vue-data-ui-transition': transitionEnabled }"
                     />
                 </template>
 
-                <template
-                    v-if="
-                        FINAL_CONFIG.style.chart.layout.rect.merged &&
-                        !FINAL_CONFIG.useCustomCells
-                    "
-                >
+                <template v-if="cfgRect.merged && !FINAL_CONFIG.useCustomCells">
                     <path
                         v-for="serie in mergedSeriePaths"
                         :key="`tooltip-trap-${serie.serieIndex}`"
@@ -2537,16 +2375,8 @@ defineExpose({
                         data-cy="tooltip-trap"
                         v-for="(position, i) in positions"
                         :key="`tooltip-trap-${i}`"
-                        :x="
-                            position.x +
-                            FINAL_CONFIG.style.chart.layout.grid.spaceBetween /
-                                2
-                        "
-                        :y="
-                            position.y +
-                            FINAL_CONFIG.style.chart.layout.grid.spaceBetween /
-                                2
-                        "
+                        :x="position.x + cfgGrid.spaceBetween / 2"
+                        :y="position.y + cfgGrid.spaceBetween / 2"
                         :height="absoluteRectDimensionY"
                         :width="absoluteRectDimension"
                         fill="transparent"
@@ -2600,12 +2430,9 @@ defineExpose({
 
         <!-- LEGEND -->
         <Teleport
-            v-if="
-                readyTeleport &&
-                (FINAL_CONFIG.style.chart.legend.show || $slots.legend)
-            "
+            v-if="readyTeleport && (cfgLegend.show || $slots.legend)"
             :to="
-                FINAL_CONFIG.style.chart.legend.position === 'top'
+                cfgLegend.position === 'top'
                     ? `#legend-top-${uid}`
                     : `#legend-bottom-${uid}`
             "
@@ -2613,7 +2440,7 @@ defineExpose({
             <div ref="chartLegend">
                 <slot name="legend" v-bind:legend="legendSet">
                     <Legend
-                        v-if="FINAL_CONFIG.style.chart.legend.show"
+                        v-if="cfgLegend.show"
                         :key="`legend_${legendStep}`"
                         :legendSet="legendSet"
                         :config="legendConfig"
@@ -2647,21 +2474,14 @@ defineExpose({
                             <BaseLegendToggle
                                 v-if="
                                     legendSet.length > 2 &&
-                                    FINAL_CONFIG.style.chart.legend
-                                        .selectAllToggle.show &&
+                                    cfgLegend.selectAllToggle.show &&
                                     !loading
                                 "
                                 :backgroundColor="
-                                    FINAL_CONFIG.style.chart.legend
-                                        .selectAllToggle.backgroundColor
+                                    cfgLegend.selectAllToggle.backgroundColor
                                 "
-                                :color="
-                                    FINAL_CONFIG.style.chart.legend
-                                        .selectAllToggle.color
-                                "
-                                :fontSize="
-                                    FINAL_CONFIG.style.chart.legend.fontSize
-                                "
+                                :color="cfgLegend.selectAllToggle.color"
+                                :fontSize="cfgLegend.fontSize"
                                 :checked="segregated.length > 0"
                                 :isCursorPointer="isCursorPointer"
                                 @toggle="toggleLegend"
@@ -2678,38 +2498,33 @@ defineExpose({
 
         <!-- TOOLTIP -->
         <Tooltip
-            :teleportTo="FINAL_CONFIG.style.chart.tooltip.teleportTo"
+            :teleportTo="cfgTooltip.teleportTo"
             :show="
                 mutableConfig.showTooltip &&
                 isTooltip &&
                 segregated.length < props.dataset.length
             "
-            :backgroundColor="FINAL_CONFIG.style.chart.tooltip.backgroundColor"
-            :color="FINAL_CONFIG.style.chart.tooltip.color"
-            :borderRadius="FINAL_CONFIG.style.chart.tooltip.borderRadius"
-            :borderColor="FINAL_CONFIG.style.chart.tooltip.borderColor"
-            :borderWidth="FINAL_CONFIG.style.chart.tooltip.borderWidth"
-            :backgroundOpacity="
-                FINAL_CONFIG.style.chart.tooltip.backgroundOpacity
-            "
-            :position="FINAL_CONFIG.style.chart.tooltip.position"
-            :offsetX="FINAL_CONFIG.style.chart.tooltip.offsetX"
-            :offsetY="FINAL_CONFIG.style.chart.tooltip.offsetY"
+            :backgroundColor="cfgTooltip.backgroundColor"
+            :color="cfgTooltip.color"
+            :borderRadius="cfgTooltip.borderRadius"
+            :borderColor="cfgTooltip.borderColor"
+            :borderWidth="cfgTooltip.borderWidth"
+            :backgroundOpacity="cfgTooltip.backgroundOpacity"
+            :position="cfgTooltip.position"
+            :offsetX="cfgTooltip.offsetX"
+            :offsetY="cfgTooltip.offsetY"
             :parent="waffleChart"
             :content="tooltipContent"
             :isCustom="
-                FINAL_CONFIG.style.chart.tooltip.customFormat &&
-                typeof FINAL_CONFIG.style.chart.tooltip.customFormat ===
-                    'function'
+                cfgTooltip.customFormat &&
+                typeof cfgTooltip.customFormat === 'function'
             "
-            :fontSize="FINAL_CONFIG.style.chart.tooltip.fontSize"
+            :fontSize="cfgTooltip.fontSize"
             :isFullscreen="isFullscreen"
-            :smooth="FINAL_CONFIG.style.chart.tooltip.smooth"
-            :backdropFilter="FINAL_CONFIG.style.chart.tooltip.backdropFilter"
-            :smoothForce="FINAL_CONFIG.style.chart.tooltip.smoothForce"
-            :smoothSnapThreshold="
-                FINAL_CONFIG.style.chart.tooltip.smoothSnapThreshold
-            "
+            :smooth="cfgTooltip.smooth"
+            :backdropFilter="cfgTooltip.backdropFilter"
+            :smoothForce="cfgTooltip.smoothForce"
+            :smoothSnapThreshold="cfgTooltip.smoothSnapThreshold"
             :isA11yMode="tooltipTriggerMode === 'keyboard'"
             :a11yPosition="tooltipA11yPosition"
         >
@@ -2731,7 +2546,7 @@ defineExpose({
         </Tooltip>
 
         <component
-            v-if="isDataset && FINAL_CONFIG.userOptions.buttons.table"
+            v-if="isDataset && cfgUserOptions.buttons.table"
             :is="tableComponent.component"
             v-bind="tableComponent.props"
             ref="tableUnit"
@@ -2744,7 +2559,7 @@ defineExpose({
                 <button
                     tabindex="0"
                     class="vue-ui-user-options-button"
-                    @click="generateCsv(FINAL_CONFIG.userOptions.callbacks.csv)"
+                    @click="generateCsv(cfgUserOptions.callbacks.csv)"
                     :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }"
                 >
                     <BaseIcon
