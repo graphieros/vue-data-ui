@@ -76,6 +76,12 @@ const FINAL_CONFIG = computed({
     },
 });
 
+const cfgUserOptions = computed(() => FINAL_CONFIG.value.userOptions);
+const cfgSparkline = computed(() => FINAL_CONFIG.value.sparkline);
+const cfgThead = computed(() => FINAL_CONFIG.value.thead);
+const cfgTbody = computed(() => FINAL_CONFIG.value.tbody);
+const cfgTitle = computed(() => FINAL_CONFIG.value.title);
+
 onMounted(() => {
     if (slots['chart-background'] && FINAL_CONFIG.value.debug) {
         console.warn(
@@ -172,7 +178,7 @@ watch(
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `table_${uid.value}`,
-    fileName: FINAL_CONFIG.value.title.text || 'vue-ui-table-sparkline',
+    fileName: cfgTitle.value.text || 'vue-ui-table-sparkline',
     options: FINAL_CONFIG.value.userOptions.print,
 });
 
@@ -593,8 +599,7 @@ function generateCsv(callback = null) {
         if (!callback) {
             downloadCsv({
                 csvContent,
-                title:
-                    FINAL_CONFIG.value.title.text || 'vue-ui-table-sparkline',
+                title: cfgTitle.value.text || 'vue-ui-table-sparkline',
             });
         } else {
             callback(csvContent);
@@ -709,34 +714,32 @@ defineExpose({
         @mouseleave="() => setUserOptionsVisibility(false)"
     >
         <div
-            v-if="FINAL_CONFIG.title.text"
+            v-if="cfgTitle.text"
             class="vue-ui-table-sparkline-caption"
-            :style="{ backgroundColor: FINAL_CONFIG.title.backgroundColor }"
+            :style="{ backgroundColor: cfgTitle.backgroundColor }"
         >
             <div
                 class="atom-title"
                 :style="{
-                    fontSize: `${FINAL_CONFIG.title.fontSize}px`,
-                    fontWeight: FINAL_CONFIG.title.bold ? 'bold' : 'normal',
-                    color: FINAL_CONFIG.title.color,
-                    textAlign: FINAL_CONFIG.title.textAlign,
+                    fontSize: `${cfgTitle.fontSize}px`,
+                    fontWeight: cfgTitle.bold ? 'bold' : 'normal',
+                    color: cfgTitle.color,
+                    textAlign: cfgTitle.textAlign,
                 }"
             >
-                {{ FINAL_CONFIG.title.text }}
+                {{ cfgTitle.text }}
             </div>
             <div
                 class="atom-subtitle"
-                v-if="FINAL_CONFIG.title.subtitle.text"
+                v-if="cfgTitle.subtitle.text"
                 :style="{
-                    fontSize: `${FINAL_CONFIG.title.subtitle.fontSize}px`,
-                    fontWeight: FINAL_CONFIG.title.subtitle.bold
-                        ? 'bold'
-                        : 'normal',
-                    color: FINAL_CONFIG.title.subtitle.color,
-                    textAlign: FINAL_CONFIG.title.textAlign,
+                    fontSize: `${cfgTitle.subtitle.fontSize}px`,
+                    fontWeight: cfgTitle.subtitle.bold ? 'bold' : 'normal',
+                    color: cfgTitle.subtitle.color,
+                    textAlign: cfgTitle.textAlign,
                 }"
             >
-                {{ FINAL_CONFIG.title.subtitle.text }}
+                {{ cfgTitle.subtitle.text }}
             </div>
         </div>
         <div
@@ -760,20 +763,17 @@ defineExpose({
                         class="vue-ui-data-table__thead-row"
                         v-click-outside="resetOnClickOutside"
                         :style="{
-                            backgroundColor: FINAL_CONFIG.thead.backgroundColor,
-                            color: FINAL_CONFIG.thead.color,
+                            backgroundColor: cfgThead.backgroundColor,
+                            color: cfgThead.color,
                         }"
                     >
                         <th
                             role="cell"
                             :style="{
-                                backgroundColor:
-                                    FINAL_CONFIG.thead.backgroundColor,
-                                border: FINAL_CONFIG.thead.outline,
-                                textAlign: FINAL_CONFIG.thead.textAlign,
-                                fontWeight: FINAL_CONFIG.thead.bold
-                                    ? 'bold'
-                                    : 'normal',
+                                backgroundColor: cfgThead.backgroundColor,
+                                border: cfgThead.outline,
+                                textAlign: cfgThead.textAlign,
+                                fontWeight: cfgThead.bold ? 'bold' : 'normal',
                             }"
                             class="sticky-col-first"
                         >
@@ -783,8 +783,7 @@ defineExpose({
                                     flexDirection: 'row',
                                     alignItems: 'center',
                                     gap: '3px',
-                                    justifyContent:
-                                        FINAL_CONFIG.thead.textAlign,
+                                    justifyContent: cfgThead.textAlign,
                                 }"
                             >
                                 <span>{{
@@ -820,7 +819,7 @@ defineExpose({
                                         <BaseIcon
                                             :size="12"
                                             name="arrowBottom"
-                                            :stroke="FINAL_CONFIG.thead.color"
+                                            :stroke="cfgThead.color"
                                             :style="{
                                                 opacity:
                                                     currentAdditionalSort ===
@@ -850,7 +849,7 @@ defineExpose({
                                         <BaseIcon
                                             :size="12"
                                             name="arrowTop"
-                                            :stroke="FINAL_CONFIG.thead.color"
+                                            :stroke="cfgThead.color"
                                             :style="{
                                                 opacity:
                                                     currentAdditionalSort ===
@@ -870,19 +869,17 @@ defineExpose({
                             role="cell"
                             v-for="(th, i) in colNames"
                             :style="{
-                                background: FINAL_CONFIG.thead.backgroundColor,
-                                border: FINAL_CONFIG.thead.outline,
-                                textAlign: FINAL_CONFIG.thead.textAlign,
-                                fontWeight: FINAL_CONFIG.thead.bold
-                                    ? 'bold'
-                                    : 'normal',
+                                background: cfgThead.backgroundColor,
+                                border: cfgThead.outline,
+                                textAlign: cfgThead.textAlign,
+                                fontWeight: cfgThead.bold ? 'bold' : 'normal',
                                 minWidth:
                                     i === colNames.length - 1
-                                        ? `${FINAL_CONFIG.sparkline.dimensions.width}px`
+                                        ? `${cfgSparkline.dimensions.width}px`
                                         : '48px',
                                 paddingRight:
                                     i === colNames.length - 1 &&
-                                    FINAL_CONFIG.userOptions.show
+                                    cfgUserOptions.show
                                         ? '36px'
                                         : '',
                             }"
@@ -898,8 +895,7 @@ defineExpose({
                                     flexDirection: 'row',
                                     alignItems: 'center',
                                     gap: '3px',
-                                    justifyContent:
-                                        FINAL_CONFIG.thead.textAlign,
+                                    justifyContent: cfgThead.textAlign,
                                 }"
                             >
                                 <span>{{ th.value }}</span>
@@ -930,7 +926,7 @@ defineExpose({
                                         <BaseIcon
                                             :size="12"
                                             name="arrowBottom"
-                                            :stroke="FINAL_CONFIG.thead.color"
+                                            :stroke="cfgThead.color"
                                             :style="{
                                                 opacity: getArrowOpacity(
                                                     i,
@@ -954,7 +950,7 @@ defineExpose({
                                         <BaseIcon
                                             :size="12"
                                             name="arrowTop"
-                                            :stroke="FINAL_CONFIG.thead.color"
+                                            :stroke="cfgThead.color"
                                             :style="{
                                                 opacity: getArrowOpacity(
                                                     i,
@@ -970,38 +966,32 @@ defineExpose({
                                 ref="details"
                                 :key="`user_option_${step}`"
                                 v-if="
-                                    FINAL_CONFIG.userOptions.show &&
+                                    cfgUserOptions.show &&
                                     i === colNames.length - 1 &&
                                     (keepUserOptionState
                                         ? true
                                         : userOptionsVisible)
                                 "
-                                :backgroundColor="
-                                    FINAL_CONFIG.thead.backgroundColor
-                                "
-                                :color="FINAL_CONFIG.thead.color"
+                                :backgroundColor="cfgThead.backgroundColor"
+                                :color="cfgThead.color"
                                 :isPrinting="isPrinting"
                                 :isImaging="isImaging"
                                 :uid="uid"
-                                :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
-                                :hasXls="FINAL_CONFIG.userOptions.buttons.csv"
-                                :hasImg="FINAL_CONFIG.userOptions.buttons.img"
+                                :hasPdf="cfgUserOptions.buttons.pdf"
+                                :hasXls="cfgUserOptions.buttons.csv"
+                                :hasImg="cfgUserOptions.buttons.img"
                                 :hasFullscreen="
-                                    FINAL_CONFIG.userOptions.buttons.fullscreen
+                                    cfgUserOptions.buttons.fullscreen
                                 "
-                                :hasAltCopy="
-                                    FINAL_CONFIG.userOptions.buttons.altCopy
-                                "
+                                :hasAltCopy="cfgUserOptions.buttons.altCopy"
                                 :isFullscreen="isFullscreen"
                                 :titles="{
-                                    ...FINAL_CONFIG.userOptions.buttonTitles,
+                                    ...cfgUserOptions.buttonTitles,
                                 }"
                                 :chartElement="tableContainer"
-                                :position="FINAL_CONFIG.userOptions.position"
-                                :callbacks="FINAL_CONFIG.userOptions.callbacks"
-                                :printScale="
-                                    FINAL_CONFIG.userOptions.print.scale
-                                "
+                                :position="cfgUserOptions.position"
+                                :callbacks="cfgUserOptions.callbacks"
+                                :printScale="cfgUserOptions.print.scale"
                                 :isCursorPointer="isCursorPointer"
                                 @toggleFullscreen="toggleFullscreen"
                                 @generatePdf="generatePdf"
@@ -1081,8 +1071,8 @@ defineExpose({
                         role="row"
                         v-for="(tr, i) in mutableDataset"
                         :style="{
-                            backgroundColor: FINAL_CONFIG.tbody.backgroundColor,
-                            color: FINAL_CONFIG.tbody.color,
+                            backgroundColor: cfgTbody.backgroundColor,
+                            color: cfgTbody.color,
                         }"
                         :class="{
                             'vue-ui-data-table__tbody__row': true,
@@ -1093,14 +1083,11 @@ defineExpose({
                         <td
                             role="cell"
                             :style="{
-                                backgroundColor:
-                                    FINAL_CONFIG.tbody.backgroundColor,
-                                border: FINAL_CONFIG.tbody.outline,
-                                fontSize: `${FINAL_CONFIG.tbody.fontSize}px`,
-                                fontWeight: FINAL_CONFIG.tbody.bold
-                                    ? 'bold'
-                                    : 'normal',
-                                textAlign: FINAL_CONFIG.tbody.textAlign,
+                                backgroundColor: cfgTbody.backgroundColor,
+                                border: cfgTbody.outline,
+                                fontSize: `${cfgTbody.fontSize}px`,
+                                fontWeight: cfgTbody.bold ? 'bold' : 'normal',
+                                textAlign: cfgTbody.textAlign,
                             }"
                             :data-cell="FINAL_CONFIG.translations.serie"
                             class="vue-ui-data-table__tbody__td sticky-col-first"
@@ -1112,12 +1099,11 @@ defineExpose({
                                     flexDirection: 'row',
                                     alignItems: 'center',
                                     gap: '6px',
-                                    justifyContent:
-                                        FINAL_CONFIG.tbody.textAlign,
+                                    justifyContent: cfgTbody.textAlign,
                                 }"
                             >
                                 <span
-                                    v-if="FINAL_CONFIG.tbody.showColorMarker"
+                                    v-if="cfgTbody.showColorMarker"
                                     :style="{ color: tr.color }"
                                     >⬤</span
                                 >
@@ -1130,20 +1116,16 @@ defineExpose({
                             v-for="(_, j) in maxSeries"
                             ref="TD"
                             :style="{
-                                border: FINAL_CONFIG.tbody.outline,
-                                fontSize: `${FINAL_CONFIG.tbody.fontSize}px`,
-                                fontWeight: FINAL_CONFIG.tbody.bold
-                                    ? 'bold'
-                                    : 'normal',
-                                textAlign: FINAL_CONFIG.tbody.textAlign,
+                                border: cfgTbody.outline,
+                                fontSize: `${cfgTbody.fontSize}px`,
+                                fontWeight: cfgTbody.bold ? 'bold' : 'normal',
+                                textAlign: cfgTbody.textAlign,
                                 background:
                                     selectedDataIndex !== undefined &&
                                     j === selectedDataIndex
-                                        ? FINAL_CONFIG.tbody.selectedColor
-                                              .useSerieColor
+                                        ? cfgTbody.selectedColor.useSerieColor
                                             ? `${tr.color.length > 7 ? tr.color.slice(0, -2) : tr.color}33`
-                                            : FINAL_CONFIG.tbody.selectedColor
-                                                  .fallback
+                                            : cfgTbody.selectedColor.fallback
                                         : '',
                             }"
                             :data-cell="colNames[j] ? colNames[j].value : ''"
@@ -1170,12 +1152,10 @@ defineExpose({
                             role="cell"
                             v-if="FINAL_CONFIG.showTotal"
                             :style="{
-                                border: FINAL_CONFIG.tbody.outline,
-                                fontSize: `${FINAL_CONFIG.tbody.fontSize}px`,
-                                fontWeight: FINAL_CONFIG.tbody.bold
-                                    ? 'bold'
-                                    : 'normal',
-                                textAlign: FINAL_CONFIG.tbody.textAlign,
+                                border: cfgTbody.outline,
+                                fontSize: `${cfgTbody.fontSize}px`,
+                                fontWeight: cfgTbody.bold ? 'bold' : 'normal',
+                                textAlign: cfgTbody.textAlign,
                             }"
                             :data-cell="FINAL_CONFIG.translations.total"
                             class="vue-ui-data-table__tbody__td"
@@ -1193,12 +1173,10 @@ defineExpose({
                             role="cell"
                             v-if="FINAL_CONFIG.showAverage"
                             :style="{
-                                border: FINAL_CONFIG.tbody.outline,
-                                fontSize: `${FINAL_CONFIG.tbody.fontSize}px`,
-                                fontWeight: FINAL_CONFIG.tbody.bold
-                                    ? 'bold'
-                                    : 'normal',
-                                textAlign: FINAL_CONFIG.tbody.textAlign,
+                                border: cfgTbody.outline,
+                                fontSize: `${cfgTbody.fontSize}px`,
+                                fontWeight: cfgTbody.bold ? 'bold' : 'normal',
+                                textAlign: cfgTbody.textAlign,
                             }"
                             :data-cell="FINAL_CONFIG.translations.average"
                             class="vue-ui-data-table__tbody__td"
@@ -1216,12 +1194,10 @@ defineExpose({
                             role="cell"
                             v-if="FINAL_CONFIG.showMedian"
                             :style="{
-                                border: FINAL_CONFIG.tbody.outline,
-                                fontSize: `${FINAL_CONFIG.tbody.fontSize}px`,
-                                fontWeight: FINAL_CONFIG.tbody.bold
-                                    ? 'bold'
-                                    : 'normal',
-                                textAlign: FINAL_CONFIG.tbody.textAlign,
+                                border: cfgTbody.outline,
+                                fontSize: `${cfgTbody.fontSize}px`,
+                                fontWeight: cfgTbody.bold ? 'bold' : 'normal',
+                                textAlign: cfgTbody.textAlign,
                             }"
                             :data-cell="FINAL_CONFIG.translations.median"
                             class="vue-ui-data-table__tbody__td"
@@ -1239,14 +1215,11 @@ defineExpose({
                             v-if="FINAL_CONFIG.showSparklines"
                             :data-cell="FINAL_CONFIG.translations.chart"
                             :style="{
-                                border: FINAL_CONFIG.tbody.outline,
-                                fontSize: `${FINAL_CONFIG.tbody.fontSize}px`,
-                                fontWeight: FINAL_CONFIG.tbody.bold
-                                    ? 'bold'
-                                    : 'normal',
-                                textAlign: FINAL_CONFIG.tbody.textAlign,
-                                backgroundColor:
-                                    FINAL_CONFIG.tbody.backgroundColor,
+                                border: cfgTbody.outline,
+                                fontSize: `${cfgTbody.fontSize}px`,
+                                fontWeight: cfgTbody.bold ? 'bold' : 'normal',
+                                textAlign: cfgTbody.textAlign,
+                                backgroundColor: cfgTbody.backgroundColor,
                                 padding: '0',
                             }"
                             class="vue-ui-data-table__tbody__td sticky-col"
@@ -1260,25 +1233,23 @@ defineExpose({
                                         })
                                 "
                                 :height-ratio="
-                                    FINAL_CONFIG.sparkline.dimensions
-                                        .heightRatio
+                                    cfgSparkline.dimensions.heightRatio
                                 "
                                 :forced-padding="30"
                                 :dataset="tr.sparklineDataset"
                                 :showInfo="false"
                                 :selectedIndex="selectedDataIndex"
                                 :config="{
-                                    type: FINAL_CONFIG.sparkline.type,
+                                    type: cfgSparkline.type,
                                     style: {
                                         backgroundColor: 'transparent',
                                         animation: {
                                             show:
-                                                FINAL_CONFIG.sparkline.animation
-                                                    .show &&
+                                                cfgSparkline.animation.show &&
                                                 !isPrinting &&
                                                 !isImaging,
                                             animationFrames:
-                                                FINAL_CONFIG.sparkline.animation
+                                                cfgSparkline.animation
                                                     .animationFrames,
                                         },
                                         padding: {
@@ -1286,35 +1257,29 @@ defineExpose({
                                         },
                                         line: {
                                             color: tr.color,
-                                            smooth: FINAL_CONFIG.sparkline
-                                                .smooth,
+                                            smooth: cfgSparkline.smooth,
                                             cutNullValues:
-                                                FINAL_CONFIG.sparkline
-                                                    .cutNullValues,
+                                                cfgSparkline.cutNullValues,
                                             strokeWidth:
-                                                FINAL_CONFIG.sparkline
-                                                    .strokeWidth,
+                                                cfgSparkline.strokeWidth,
                                         },
                                         bar: {
                                             color: tr.color,
                                         },
                                         area: {
                                             color: tr.color,
-                                            opacity: FINAL_CONFIG.sparkline
-                                                .showArea
+                                            opacity: cfgSparkline.showArea
                                                 ? 16
                                                 : 0,
                                             useGradient:
-                                                FINAL_CONFIG.sparkline
-                                                    .useGradient,
+                                                cfgSparkline.useGradient,
                                         },
                                         verticalIndicator: {
                                             color: tr.color,
                                         },
                                         plot: {
                                             radius: 9,
-                                            stroke: FINAL_CONFIG.tbody
-                                                .backgroundColor,
+                                            stroke: cfgTbody.backgroundColor,
                                             strokeWidth: 3,
                                         },
                                     },
