@@ -59,6 +59,8 @@ const props = defineProps({
 const uid = ref(createUid());
 
 const FINAL_CONFIG = ref(prepareConfig());
+const cfgLabel = computed(() => FINAL_CONFIG.value.style.dataLabel);
+const cfgStyle = computed(() => FINAL_CONFIG.value.style);
 
 useHints({
     config: () => FINAL_CONFIG.value,
@@ -68,9 +70,7 @@ useHints({
 });
 
 const shouldAnimate = computed(() => {
-    return (
-        FINAL_CONFIG.value.style.animation.show && !prefersReducedMotion.value
-    );
+    return cfgStyle.value.animation.show && !prefersReducedMotion.value;
 });
 
 const skeletonConfig = computed(() => {
@@ -123,7 +123,7 @@ const bounds = computed(() => {
 });
 
 const animationTick = computed(() => {
-    return bounds.value.diff / FINAL_CONFIG.value.style.animation.speedMs;
+    return bounds.value.diff / cfgStyle.value.animation.speedMs;
 });
 
 const { svgRef } = useChartAccessibility({
@@ -199,9 +199,9 @@ watch(
 
 const svg = computed(() => {
     return {
-        height: FINAL_CONFIG.value.style.height,
+        height: cfgStyle.value.height,
         width: 128,
-        base: FINAL_CONFIG.value.style.basePosition,
+        base: cfgStyle.value.basePosition,
     };
 });
 
@@ -283,8 +283,8 @@ const valueRatio = computed(() => {
 
 const currentColor = computed(() => {
     return interpolateColorHex(
-        FINAL_CONFIG.value.style.colors.min,
-        FINAL_CONFIG.value.style.colors.max,
+        cfgStyle.value.colors.min,
+        cfgStyle.value.colors.max,
         bounds.value.min,
         bounds.value.max,
         activeRating.value,
@@ -292,16 +292,16 @@ const currentColor = computed(() => {
 });
 
 const labelColor = computed(() => {
-    if (!FINAL_CONFIG.value.style.dataLabel.autoColor) {
-        return FINAL_CONFIG.value.style.dataLabel.color;
+    if (!cfgLabel.value.autoColor) {
+        return cfgLabel.value.color;
     } else {
         return currentColor.value;
     }
 });
 
 const trackColor = computed(() => {
-    if (!FINAL_CONFIG.value.style.track.autoColor) {
-        return FINAL_CONFIG.value.style.track.color;
+    if (!cfgStyle.value.track.autoColor) {
+        return cfgStyle.value.track.color;
     } else {
         return currentColor.value;
     }
@@ -317,17 +317,17 @@ onBeforeUnmount(() => {
 <template>
     <div
         class="vue-data-ui-component vue-ui-sparkgauge"
-        :style="`font-family:${FINAL_CONFIG.style.fontFamily};width: 100%; background:${FINAL_CONFIG.style.background}`"
+        :style="`font-family:${cfgStyle.fontFamily};width: 100%; background:${cfgStyle.background}`"
     >
         <!-- TITLE TOP -->
         <div
             v-if="
-                FINAL_CONFIG.style.title.show &&
+                cfgStyle.title.show &&
                 nameLabel &&
-                FINAL_CONFIG.style.title.position === 'top'
+                cfgStyle.title.position === 'top'
             "
             class="vue-data-ui-sparkgauge-label"
-            :style="`font-size:${FINAL_CONFIG.style.title.fontSize}px;text-align:${FINAL_CONFIG.style.title.textAlign};font-weight:${FINAL_CONFIG.style.title.bold ? 'bold' : 'normal'};color:${FINAL_CONFIG.style.title.color}`"
+            :style="`font-size:${cfgStyle.title.fontSize}px;text-align:${cfgStyle.title.textAlign};font-weight:${cfgStyle.title.bold ? 'bold' : 'normal'};color:${cfgStyle.title.color}`"
         >
             {{ nameLabel }}
         </div>
@@ -362,17 +362,17 @@ onBeforeUnmount(() => {
                     x2="110%"
                     y2="100%"
                     :stops="[
-                        ['0%', FINAL_CONFIG.style.colors.min, 1],
-                        ['100%', FINAL_CONFIG.style.colors.max, 1],
+                        ['0%', cfgStyle.colors.min, 1],
+                        ['100%', cfgStyle.colors.max, 1],
                     ]"
                 />
             </defs>
             <!-- GUTTER -->
             <path
                 :d="`M${10} ${svg.base} A 1 1 0 1 1 ${118} ${svg.base}`"
-                :stroke="FINAL_CONFIG.style.gutter.color"
+                :stroke="cfgStyle.gutter.color"
                 :stroke-width="8"
-                :stroke-linecap="FINAL_CONFIG.style.gutter.strokeLinecap"
+                :stroke-linecap="cfgStyle.gutter.strokeLinecap"
                 fill="none"
             />
             <!-- TRACK -->
@@ -380,37 +380,31 @@ onBeforeUnmount(() => {
                 v-if="valueRatio !== 0"
                 :d="`M${10} ${svg.base} A 1 1 0 1 1 ${118} ${svg.base}`"
                 :stroke="
-                    FINAL_CONFIG.style.colors.showGradient
+                    cfgStyle.colors.showGradient
                         ? `url(#gradient_${uid})`
                         : trackColor
                 "
                 :stroke-width="8"
-                :stroke-linecap="FINAL_CONFIG.style.track.strokeLinecap"
+                :stroke-linecap="cfgStyle.track.strokeLinecap"
                 fill="none"
                 :stroke-dasharray="169.5"
                 :stroke-dashoffset="169.5 - 169.5 * valueRatio"
                 :class="{
-                    'vue-ui-sparkgauge-track':
-                        FINAL_CONFIG.style.animation.show,
+                    'vue-ui-sparkgauge-track': cfgStyle.animation.show,
                 }"
                 :style="
-                    FINAL_CONFIG.style.animation.show
-                        ? `animation: vue-ui-sparkgauge-animation ${FINAL_CONFIG.style.animation.speedMs}ms ease-in;`
+                    cfgStyle.animation.show
+                        ? `animation: vue-ui-sparkgauge-animation ${cfgStyle.animation.speedMs}ms ease-in;`
                         : ''
                 "
             />
             <!-- DATALABEL -->
             <rect
                 v-if="loading"
-                :x="svg.width / 2 - FINAL_CONFIG.style.dataLabel.fontSize / 2"
-                :y="
-                    svg.base +
-                    6 +
-                    FINAL_CONFIG.style.dataLabel.offsetY -
-                    FINAL_CONFIG.style.dataLabel.fontSize
-                "
-                :width="FINAL_CONFIG.style.dataLabel.fontSize"
-                :height="FINAL_CONFIG.style.dataLabel.fontSize"
+                :x="svg.width / 2 - cfgLabel.fontSize / 2"
+                :y="svg.base + 6 + cfgLabel.offsetY - cfgLabel.fontSize"
+                :width="cfgLabel.fontSize"
+                :height="cfgLabel.fontSize"
                 fill="#6A6A6A50"
                 :rx="3"
             />
@@ -418,22 +412,20 @@ onBeforeUnmount(() => {
                 v-else
                 text-anchor="middle"
                 :x="svg.width / 2"
-                :y="svg.base + 6 + FINAL_CONFIG.style.dataLabel.offsetY"
-                :font-size="FINAL_CONFIG.style.dataLabel.fontSize"
+                :y="svg.base + 6 + cfgLabel.offsetY"
+                :font-size="cfgLabel.fontSize"
                 :fill="labelColor"
-                :font-weight="
-                    FINAL_CONFIG.style.dataLabel.bold ? 'bold' : 'normal'
-                "
+                :font-weight="cfgLabel.bold ? 'bold' : 'normal'"
             >
                 {{
                     applyDataLabel(
-                        FINAL_CONFIG.style.dataLabel.formatter,
+                        cfgLabel.formatter,
                         checkNaN(activeRating),
                         dataLabel({
-                            p: FINAL_CONFIG.style.dataLabel.prefix,
+                            p: cfgLabel.prefix,
                             v: checkNaN(activeRating),
-                            s: FINAL_CONFIG.style.dataLabel.suffix,
-                            r: FINAL_CONFIG.style.dataLabel.rounding,
+                            s: cfgLabel.suffix,
+                            r: cfgLabel.rounding,
                         }),
                         {
                             datapoint: checkNaN(activeRating),
@@ -447,12 +439,12 @@ onBeforeUnmount(() => {
         <!-- TITLE BOTTOM -->
         <div
             v-if="
-                FINAL_CONFIG.style.title.show &&
+                cfgStyle.title.show &&
                 nameLabel &&
-                FINAL_CONFIG.style.title.position === 'bottom'
+                cfgStyle.title.position === 'bottom'
             "
             class="vue-data-ui-sparkgauge-label"
-            :style="`font-size:${FINAL_CONFIG.style.title.fontSize}px;text-align:${FINAL_CONFIG.style.title.textAlign};font-weight:${FINAL_CONFIG.style.title.bold ? 'bold' : 'normal'};font-weight:${FINAL_CONFIG.style.title.bold ? 'bold' : 'normal'};color:${FINAL_CONFIG.style.title.color}`"
+            :style="`font-size:${cfgStyle.title.fontSize}px;text-align:${cfgStyle.title.textAlign};font-weight:${cfgStyle.title.bold ? 'bold' : 'normal'};font-weight:${cfgStyle.title.bold ? 'bold' : 'normal'};color:${cfgStyle.title.color}`"
         >
             {{ nameLabel }}
         </div>
