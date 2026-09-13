@@ -128,6 +128,12 @@ const tooltipTriggerMode = ref('pointer'); // a11y
 const isFocus = ref(false); // a11y
 
 const FINAL_CONFIG = ref(prepareConfig());
+const cfgUserOptions = computed(() => FINAL_CONFIG.value.userOptions);
+const cfgTooltip = computed(() => FINAL_CONFIG.value.style.chart.tooltip);
+const cfgLegend = computed(() => FINAL_CONFIG.value.style.chart.legend);
+const cfgLabels = computed(() => FINAL_CONFIG.value.style.chart.layout.labels);
+const cfgLayout = computed(() => FINAL_CONFIG.value.style.chart.layout);
+const cfgChart = computed(() => FINAL_CONFIG.value.style.chart);
 
 useHints({
     config: () => FINAL_CONFIG.value,
@@ -227,7 +233,7 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } =
     useUserOptionState({ config: FINAL_CONFIG.value });
 const { svgRef } = useChartAccessibility({
-    config: FINAL_CONFIG.value.style.chart.title,
+    config: cfgChart.value.title,
 });
 
 function prepareConfig() {
@@ -276,25 +282,20 @@ watch(
 
         // Reset mutable config
         mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
-        mutableConfig.value.showTooltip =
-            FINAL_CONFIG.value.style.chart.tooltip.show;
-        mutableConfig.value.showZoom =
-            FINAL_CONFIG.value.style.chart.zoom?.show ?? false;
+        mutableConfig.value.showTooltip = cfgTooltip.value.show;
+        mutableConfig.value.showZoom = cfgChart.value.zoom?.show ?? false;
     },
     { deep: true },
 );
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `treemap_${uid.value}`,
-    fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-treemap',
+    fileName: cfgChart.value.title.text || 'vue-ui-treemap',
     options: FINAL_CONFIG.value.userOptions.print,
 });
 
 const hasOptionsNoTitle = computed(() => {
-    return (
-        FINAL_CONFIG.value.userOptions.show &&
-        !FINAL_CONFIG.value.style.chart.title.text
-    );
+    return FINAL_CONFIG.value.userOptions.show && !cfgChart.value.title.text;
 });
 
 const customPalette = computed(() => {
@@ -303,8 +304,8 @@ const customPalette = computed(() => {
 
 const mutableConfig = ref({
     showTable: FINAL_CONFIG.value.table.show,
-    showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show,
-    showZoom: FINAL_CONFIG.value.style.chart.zoom?.show ?? false,
+    showTooltip: cfgTooltip.value.show,
+    showZoom: cfgChart.value.zoom?.show ?? false,
 });
 
 // v3 - Essential to make shifting between loading config and final config work
@@ -313,16 +314,16 @@ watch(
     () => {
         mutableConfig.value = {
             showTable: FINAL_CONFIG.value.table.show,
-            showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show,
-            showZoom: FINAL_CONFIG.value.style.chart.zoom?.show ?? false,
+            showTooltip: cfgTooltip.value.show,
+            showZoom: cfgChart.value.zoom?.show ?? false,
         };
     },
     { immediate: true },
 );
 
 const chartDimensions = ref({
-    height: FINAL_CONFIG.value.style.chart.height,
-    width: FINAL_CONFIG.value.style.chart.width,
+    height: cfgChart.value.height,
+    width: cfgChart.value.width,
 });
 
 function pxToSvgY(px) {
@@ -350,7 +351,7 @@ function getBreadcrumbOffsetSvg() {
 }
 
 const svg = computed(() => {
-    const padding = FINAL_CONFIG.value.style.chart.padding;
+    const padding = cfgChart.value.padding;
     const totalWidth = chartDimensions.value.width;
     const totalHeight = chartDimensions.value.height;
 
@@ -533,12 +534,8 @@ function prepareChart() {
         const handleResize = throttle(() => {
             const { width, height } = useResponsive({
                 chart: treemapChart.value,
-                title: FINAL_CONFIG.value.style.chart.title.text
-                    ? chartTitle.value
-                    : null,
-                legend: FINAL_CONFIG.value.style.chart.legend.show
-                    ? chartLegend.value
-                    : null,
+                title: cfgChart.value.title.text ? chartTitle.value : null,
+                legend: cfgLegend.value.show ? chartLegend.value : null,
                 source: source.value,
                 noTitle: noTitle.value,
             });
@@ -596,7 +593,7 @@ const total = computed(() =>
 const orderedDataset = computed({
     get() {
         let ds = [...datasetCopy.value];
-        if (FINAL_CONFIG.value.style.chart.layout.sorted) {
+        if (cfgLayout.value.sorted) {
             ds = [...datasetCopy.value].sort((a, b) => b.value - a.value);
         }
         return ds.map((d) => {
@@ -616,8 +613,7 @@ function calcRectProportion(rect, totalValue) {
 
 function calcRectOpacity(color, rect, totalValue) {
     const ratio =
-        FINAL_CONFIG.value.style.chart.layout.rects.colorRatio -
-        calcRectProportion(rect, totalValue);
+        cfgLayout.value.rects.colorRatio - calcRectProportion(rect, totalValue);
     return lightenHexColor(color, ratio < 0 ? 0 : ratio);
 }
 
@@ -724,15 +720,13 @@ function getInnerTreemapBounds(rect) {
 
 function shouldShowNodeLabel(rect) {
     return (
-        FINAL_CONFIG.value.style.chart.layout.labels.hideUnderProportion ===
-            0 || shouldShowLabelByProportion(rect)
+        cfgLabels.value.hideUnderProportion === 0 ||
+        shouldShowLabelByProportion(rect)
     );
 }
 
 function shouldShowLabelByProportion(rect) {
-    const hideUnderProportion = Number(
-        FINAL_CONFIG.value.style.chart.layout.labels.hideUnderProportion,
-    );
+    const hideUnderProportion = Number(cfgLabels.value.hideUnderProportion);
     if (!Number.isFinite(hideUnderProportion) || hideUnderProportion <= 0) {
         return true;
     }
@@ -868,8 +862,8 @@ const squarified = computed(() => squarifiedRaw.value);
 function getStrokeWidth(rect) {
     const base =
         selectedRect.value && selectedRect.value.id === rect.id
-            ? FINAL_CONFIG.value.style.chart.layout.rects.selected.strokeWidth
-            : FINAL_CONFIG.value.style.chart.layout.rects.strokeWidth;
+            ? cfgLayout.value.rects.selected.strokeWidth
+            : cfgLayout.value.rects.strokeWidth;
     return base * inverseScale.value;
 }
 
@@ -967,7 +961,7 @@ function getWidth({ x0, x1 }) {
 }
 
 function getLabelFontBounds() {
-    const cfg = FINAL_CONFIG.value.style.chart.layout.labels;
+    const cfg = cfgLabels.value;
     const minFontSize = Number(cfg.minFontSize);
     const maxFontSize = Number(cfg.fontSize);
 
@@ -1017,13 +1011,13 @@ function getTreemapTextBoxForFontSize(rect, fontSize) {
 
 function getFormattedLabelValue(rect, seriesIndex) {
     return applyDataLabel(
-        FINAL_CONFIG.value.style.chart.layout.labels.formatter,
+        cfgLabels.value.formatter,
         rect.value,
         dataLabel({
-            p: FINAL_CONFIG.value.style.chart.layout.labels.prefix,
+            p: cfgLabels.value.prefix,
             v: rect.value,
-            s: FINAL_CONFIG.value.style.chart.layout.labels.suffix,
-            r: FINAL_CONFIG.value.style.chart.tooltip.roundingValue,
+            s: cfgLabels.value.suffix,
+            r: cfgTooltip.value.roundingValue,
         }),
         { datapoint: rect, seriesIndex },
     );
@@ -1298,25 +1292,21 @@ const legendSet = computed(() => {
                 isSegregated: segregated.value.includes(el.id),
                 segregate: () => segregate(el),
                 opacity: segregated.value.includes(el.id) ? 0.5 : 1,
-                display: `${el.name}${FINAL_CONFIG.value.style.chart.legend.showPercentage || FINAL_CONFIG.value.style.chart.legend.showValue ? ': ' : ''}${
-                    !FINAL_CONFIG.value.style.chart.legend.showValue
+                display: `${el.name}${cfgLegend.value.showPercentage || cfgLegend.value.showValue ? ': ' : ''}${
+                    !cfgLegend.value.showValue
                         ? ''
                         : applyDataLabel(
-                              FINAL_CONFIG.value.style.chart.layout.labels
-                                  .formatter,
+                              cfgLabels.value.formatter,
                               el.value,
                               dataLabel({
-                                  p: FINAL_CONFIG.value.style.chart.layout
-                                      .labels.prefix,
+                                  p: cfgLabels.value.prefix,
                                   v: el.value,
-                                  s: FINAL_CONFIG.value.style.chart.layout
-                                      .labels.suffix,
-                                  r: FINAL_CONFIG.value.style.chart.legend
-                                      .roundingValue,
+                                  s: cfgLabels.value.suffix,
+                                  r: cfgLegend.value.roundingValue,
                               }),
                               { datapoint: el },
                           )
-                }${!FINAL_CONFIG.value.style.chart.legend.showPercentage ? '' : !segregated.value.includes(el.id) ? `${FINAL_CONFIG.value.style.chart.legend.showValue ? ' (' : ''}${isNaN(el.value / total.value) ? '-' : ((el.value / total.value) * 100).toFixed(FINAL_CONFIG.value.style.chart.legend.roundingPercentage)}%${FINAL_CONFIG.value.style.chart.legend.showValue ? ')' : ''}` : `${FINAL_CONFIG.value.style.chart.legend.showValue ? ' (' : ''}- %${FINAL_CONFIG.value.style.chart.legend.showValue ? ')' : ''}`}`,
+                }${!cfgLegend.value.showPercentage ? '' : !segregated.value.includes(el.id) ? `${cfgLegend.value.showValue ? ' (' : ''}${isNaN(el.value / total.value) ? '-' : ((el.value / total.value) * 100).toFixed(cfgLegend.value.roundingPercentage)}%${cfgLegend.value.showValue ? ')' : ''}` : `${cfgLegend.value.showValue ? ' (' : ''}- %${cfgLegend.value.showValue ? ')' : ''}`}`,
             };
         });
 });
@@ -1324,11 +1314,11 @@ const legendSet = computed(() => {
 const legendConfig = computed(() => {
     return {
         cy: 'treemap-div-legend',
-        backgroundColor: FINAL_CONFIG.value.style.chart.legend.backgroundColor,
-        color: FINAL_CONFIG.value.style.chart.legend.color,
-        fontSize: FINAL_CONFIG.value.style.chart.legend.fontSize,
+        backgroundColor: cfgLegend.value.backgroundColor,
+        color: cfgLegend.value.color,
+        fontSize: cfgLegend.value.fontSize,
         paddingBottom: 12,
-        fontWeight: FINAL_CONFIG.value.style.chart.legend.bold ? 'bold' : '',
+        fontWeight: cfgLegend.value.bold ? 'bold' : '',
     };
 });
 
@@ -1432,7 +1422,7 @@ function useTooltip({ datapoint, seriesIndex, triggerMode = 'pointer' }) {
         series: datasetCopy.value,
     };
 
-    const customFormat = FINAL_CONFIG.value.style.chart.tooltip.customFormat;
+    const customFormat = cfgTooltip.value.customFormat;
 
     if (
         isFunction(customFormat) &&
@@ -1454,18 +1444,18 @@ function useTooltip({ datapoint, seriesIndex, triggerMode = 'pointer' }) {
     } else {
         let html = '';
 
-        html += `<div data-cy="treemap-tooltip-name" style="width:100%;text-align:center;border-bottom:1px solid ${FINAL_CONFIG.value.style.chart.tooltip.borderColor};padding-bottom:6px;margin-bottom:3px;">${datapoint.name}</div>`;
+        html += `<div data-cy="treemap-tooltip-name" style="width:100%;text-align:center;border-bottom:1px solid ${cfgTooltip.value.borderColor};padding-bottom:6px;margin-bottom:3px;">${datapoint.name}</div>`;
 
         html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><svg viewBox="0 0 12 12" height="14" width="14"><rect data-cy="treemap-tooltip-marker" x="0" y="0" height="12" width="12" stroke="none" fill="${datapoint.color}"/></svg>`;
 
         html += `<b data-cy="treemap-tooltip-value">${applyDataLabel(
-            FINAL_CONFIG.value.style.chart.layout.labels.formatter,
+            cfgLabels.value.formatter,
             datapoint.value,
             dataLabel({
-                p: FINAL_CONFIG.value.style.chart.layout.labels.prefix,
+                p: cfgLabels.value.prefix,
                 v: datapoint.value,
-                s: FINAL_CONFIG.value.style.chart.layout.labels.suffix,
-                r: FINAL_CONFIG.value.style.chart.tooltip.roundingValue,
+                s: cfgLabels.value.suffix,
+                r: cfgTooltip.value.roundingValue,
             }),
             { datapoint, seriesIndex },
         )}</b>`;
@@ -1500,8 +1490,8 @@ function generateCsv(callback = null) {
             ];
         });
         const tableXls = [
-            [FINAL_CONFIG.value.style.chart.title.text],
-            [FINAL_CONFIG.value.style.chart.title.subtitle.text],
+            [cfgChart.value.title.text],
+            [cfgChart.value.title.subtitle.text],
             [[''], ['val'], ['%']],
         ].concat(labels);
 
@@ -1510,9 +1500,7 @@ function generateCsv(callback = null) {
         if (!callback) {
             downloadCsv({
                 csvContent,
-                title:
-                    FINAL_CONFIG.value.style.chart.title.text ||
-                    'vue-ui-treemap',
+                title: cfgChart.value.title.text || 'vue-ui-treemap',
             });
         } else {
             callback(csvContent);
@@ -1529,12 +1517,12 @@ const dataTable = computed(() => {
 
     const body = table.value.head.map((h, i) => {
         const label = applyDataLabel(
-            FINAL_CONFIG.value.style.chart.layout.labels.formatter,
+            cfgLabels.value.formatter,
             table.value.body[i],
             dataLabel({
-                p: FINAL_CONFIG.value.style.chart.layout.labels.prefix,
+                p: cfgLabels.value.prefix,
                 v: table.value.body[i],
-                s: FINAL_CONFIG.value.style.chart.layout.labels.suffix,
+                s: cfgLabels.value.suffix,
                 r: FINAL_CONFIG.value.table.td.roundingValue,
             }),
         );
@@ -1633,8 +1621,7 @@ const inverseScale = computed(() => 1 / scale.value);
 const labelZoomFactor = computed(() => {
     return Math.min(
         1,
-        FINAL_CONFIG.value.style.chart.layout.labels.fontSizeZoomFactor /
-            Math.max(scale.value, 0.0001),
+        cfgLabels.value.fontSizeZoomFactor / Math.max(scale.value, 0.0001),
     );
 });
 
@@ -1722,7 +1709,7 @@ async function getImage({ scale = 2 } = {}) {
     return {
         imageUri,
         base64,
-        title: FINAL_CONFIG.value.style.chart.title.text,
+        title: cfgChart.value.title.text,
         width,
         height,
         aspectRatio,
@@ -1735,7 +1722,7 @@ const tableComponent = computed(() => {
     const open = mutableConfig.value.showTable;
     return {
         component: useDialog ? BaseDraggableDialog : Accordion,
-        title: `${FINAL_CONFIG.value.style.chart.title.text}${FINAL_CONFIG.value.style.chart.title.subtitle.text ? `: ${FINAL_CONFIG.value.style.chart.title.subtitle.text}` : ''}`,
+        title: `${cfgChart.value.title.text}${cfgChart.value.title.subtitle.text ? `: ${cfgChart.value.title.subtitle.text}` : ''}`,
         props: useDialog
             ? {
                   backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
@@ -1753,14 +1740,12 @@ const tableComponent = computed(() => {
                       open,
                       maxHeight: 10000,
                       body: {
-                          backgroundColor:
-                              FINAL_CONFIG.value.style.chart.backgroundColor,
-                          color: FINAL_CONFIG.value.style.chart.color,
+                          backgroundColor: cfgChart.value.backgroundColor,
+                          color: cfgChart.value.color,
                       },
                       head: {
-                          backgroundColor:
-                              FINAL_CONFIG.value.style.chart.backgroundColor,
-                          color: FINAL_CONFIG.value.style.chart.color,
+                          backgroundColor: cfgChart.value.backgroundColor,
+                          color: cfgChart.value.color,
                       },
                   },
               },
@@ -1795,15 +1780,14 @@ const svgLegendItems = computed(() => {
     }));
 });
 
-const svgBg = computed(() => FINAL_CONFIG.value.style.chart.backgroundColor);
-const svgLegend = computed(() => FINAL_CONFIG.value.style.chart.legend);
-const svgTitle = computed(() => FINAL_CONFIG.value.style.chart.title);
+const svgBg = computed(() => cfgChart.value.backgroundColor);
+const svgTitle = computed(() => cfgChart.value.title);
 
 const { isCallbackImaging, isCallbackSvg, generateSvg, onGenerateImage } =
     useChartExport({
         svg: svgRef,
         title: svgTitle,
-        legend: svgLegend,
+        legend: cfgLegend,
         legendItems: svgLegendItems,
         backgroundColor: svgBg,
         getSvgCallback: () => FINAL_CONFIG.value.userOptions.callbacks.svg,
@@ -1824,9 +1808,7 @@ function getLabelMetrics(rect, seriesIndex) {
 }
 
 function getLabelTextColor(rect) {
-    return adaptColorToBackground(
-        rect.color ?? FINAL_CONFIG.value.style.chart.backgroundColor,
-    );
+    return adaptColorToBackground(rect.color ?? cfgChart.value.backgroundColor);
 }
 
 function getLabelLineMaxZoomFactor({ availableHeight, lineHeight, lineIndex }) {
@@ -1849,11 +1831,7 @@ function getLabelLineMaxZoomFactor({ availableHeight, lineHeight, lineIndex }) {
 }
 
 function shouldAlwaysShowAllLabelLines() {
-    return (
-        Number(
-            FINAL_CONFIG.value.style.chart.layout.labels.hideUnderProportion,
-        ) === 0
-    );
+    return Number(cfgLabels.value.hideUnderProportion) === 0;
 }
 
 function getTreemapLabelZoomTransform(label) {
@@ -1869,7 +1847,7 @@ function getTreemapLabelZoomTransform(label) {
 function buildTreemapLabel({ rect, seriesIndex }) {
     if (
         !rect ||
-        !FINAL_CONFIG.value.style.chart.layout.labels.showDefaultLabels ||
+        !cfgLabels.value.showDefaultLabels ||
         !shouldShowNodeLabel(rect)
     ) {
         return null;
@@ -1943,7 +1921,7 @@ const treemapLabels = computed(() => {
     if (
         slots.rect ||
         loading.value ||
-        !FINAL_CONFIG.value.style.chart.layout.labels.showDefaultLabels ||
+        !cfgLabels.value.showDefaultLabels ||
         allSegregated.value
     ) {
         return [];
@@ -1987,7 +1965,7 @@ function measureTreemapTextWidth(text, fontSize, fontWeight = 400) {
 }
 
 function getSafeRadius(rect) {
-    const r = FINAL_CONFIG.value.style.chart.layout.rects.borderRadius;
+    const r = cfgLayout.value.rects.borderRadius;
     const w = getWidth(rect);
     const h = getHeight(rect);
     return Math.min(r, Math.min(w, h) / 6);
@@ -2150,7 +2128,7 @@ const a11yTable = computed(() => {
     return { headers, rows };
 });
 
-const textColor = computed(() => FINAL_CONFIG.value.style.chart.color);
+const textColor = computed(() => cfgChart.value.color);
 
 defineExpose({
     getData,
@@ -2175,7 +2153,7 @@ defineExpose({
     <div
         ref="treemapChart"
         :class="`vue-data-ui-component vue-ui-treemap ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${FINAL_CONFIG.useCssAnimation ? '' : 'vue-ui-dna'}`"
-        :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; ${FINAL_CONFIG.responsive ? 'height: 100%;' : ''} text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor}`"
+        :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; ${FINAL_CONFIG.responsive ? 'height: 100%;' : ''} text-align:center;background:${cfgChart.backgroundColor}`"
         :id="`treemap_${uid}`"
         @mouseenter="() => setUserOptionsVisibility(true)"
         @mouseleave="() => setUserOptionsVisibility(false)"
@@ -2195,13 +2173,13 @@ defineExpose({
         />
 
         <PenAndPaper
-            v-if="FINAL_CONFIG.userOptions.buttons.annotator"
+            v-if="cfgUserOptions.buttons.annotator"
             :svgRef="svgRef"
-            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
-            :color="FINAL_CONFIG.style.chart.color"
+            :backgroundColor="cfgChart.backgroundColor"
+            :color="cfgChart.color"
             :active="isAnnotator"
             :isCursorPointer="isCursorPointer"
-            :palette="FINAL_CONFIG.userOptions.annotatorPalette"
+            :palette="cfgUserOptions.annotatorPalette"
             @close="toggleAnnotator"
         >
             <template #annotator-action-close>
@@ -2234,19 +2212,19 @@ defineExpose({
         <!-- TITLE -->
         <div
             ref="chartTitle"
-            v-if="FINAL_CONFIG.style.chart.title.text"
-            :style="`width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor};padding-bottom:6px`"
+            v-if="cfgChart.title.text"
+            :style="`width:100%;background:${cfgChart.backgroundColor};padding-bottom:6px`"
         >
             <Title
                 :key="`title_${titleStep}`"
                 :config="{
                     title: {
                         cy: 'treemap-div-title',
-                        ...FINAL_CONFIG.style.chart.title,
+                        ...cfgChart.title,
                     },
                     subtitle: {
                         cy: 'treemap-div-subtitle',
-                        ...FINAL_CONFIG.style.chart.title.subtitle,
+                        ...cfgChart.title.subtitle,
                     },
                 }"
             />
@@ -2259,38 +2237,35 @@ defineExpose({
             ref="userOptionsRef"
             :key="`user_option_${step}`"
             v-if="
-                FINAL_CONFIG.userOptions.show &&
+                cfgUserOptions.show &&
                 isDataset &&
                 (keepUserOptionState ? true : userOptionsVisible)
             "
-            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
-            :color="FINAL_CONFIG.style.chart.color"
+            :backgroundColor="cfgChart.backgroundColor"
+            :color="cfgChart.color"
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uid"
-            :hasTooltip="
-                FINAL_CONFIG.userOptions.buttons.tooltip &&
-                FINAL_CONFIG.style.chart.tooltip.show
-            "
-            :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
-            :hasXls="FINAL_CONFIG.userOptions.buttons.csv"
-            :hasImg="FINAL_CONFIG.userOptions.buttons.img"
-            :hasSvg="FINAL_CONFIG.userOptions.buttons.svg"
-            :hasTable="FINAL_CONFIG.userOptions.buttons.table"
-            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
-            :hasAltCopy="FINAL_CONFIG.userOptions.buttons.altCopy"
+            :hasTooltip="cfgUserOptions.buttons.tooltip && cfgTooltip.show"
+            :hasPdf="cfgUserOptions.buttons.pdf"
+            :hasXls="cfgUserOptions.buttons.csv"
+            :hasImg="cfgUserOptions.buttons.img"
+            :hasSvg="cfgUserOptions.buttons.svg"
+            :hasTable="cfgUserOptions.buttons.table"
+            :hasFullscreen="cfgUserOptions.buttons.fullscreen"
+            :hasAltCopy="cfgUserOptions.buttons.altCopy"
             :isFullscreen="isFullscreen"
             :isTooltip="mutableConfig.showTooltip"
-            :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
+            :titles="{ ...cfgUserOptions.buttonTitles }"
             :chartElement="treemapChart"
-            :position="FINAL_CONFIG.userOptions.position"
-            :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator"
+            :position="cfgUserOptions.position"
+            :hasAnnotator="cfgUserOptions.buttons.annotator"
             :isAnnotation="isAnnotator"
-            :callbacks="FINAL_CONFIG.userOptions.callbacks"
-            :printScale="FINAL_CONFIG.userOptions.print.scale"
+            :callbacks="cfgUserOptions.callbacks"
+            :printScale="cfgUserOptions.print.scale"
             :tableDialog="FINAL_CONFIG.table.useDialog"
             :isCursorPointer="isCursorPointer"
-            :hasZoom="FINAL_CONFIG.userOptions.buttons.zoom"
+            :hasZoom="cfgUserOptions.buttons.zoom"
             :isZoom="mutableConfig.showZoom"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
@@ -2393,7 +2368,7 @@ defineExpose({
                 class="vue-ui-treemap-crumb"
                 :data-last-crumb="i === breadcrumbs.length - 1"
                 :style="{
-                    color: FINAL_CONFIG.style.chart.color,
+                    color: cfgChart.color,
                     cursor: isCursorPointer ? 'pointer' : 'default',
                 }"
                 @mouseenter="activateHomeIcon(i)"
@@ -2425,7 +2400,7 @@ defineExpose({
                                                 ? 'homeFilled'
                                                 : 'home'
                                         "
-                                        :stroke="FINAL_CONFIG.style.chart.color"
+                                        :stroke="cfgChart.color"
                                     />
                                 </div>
                             </template>
@@ -2461,7 +2436,7 @@ defineExpose({
                 }"
                 data-cy="treemap-svg"
                 :viewBox="`${viewBox.x} ${viewBox.y} ${viewBox.width <= 0 ? 10 : viewBox.width} ${viewBox.height <= 0 ? 10 : viewBox.height}`"
-                :style="`max-width:100%; overflow:${shouldClipPanZoom ? 'hidden' : 'visible'}; background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
+                :style="`max-width:100%; overflow:${shouldClipPanZoom ? 'hidden' : 'visible'}; background:transparent;color:${cfgChart.color}`"
                 tabindex="0"
                 @focus="onSvgFocus"
                 @blur="onSvgBlur"
@@ -2475,11 +2450,7 @@ defineExpose({
                 <PackageVersion />
 
                 <g v-for="(rect, _i) in squarified" :key="`tgrad_${rect.id}`">
-                    <defs
-                        v-if="
-                            FINAL_CONFIG.style.chart.layout.rects.gradient.show
-                        "
-                    >
+                    <defs v-if="cfgLayout.rects.gradient.show">
                         <DefGrad
                             t="radial"
                             :id="`tgrad_${rect.id}`"
@@ -2490,8 +2461,8 @@ defineExpose({
                                     '100%',
                                     lightenHexColor(
                                         rect.color,
-                                        FINAL_CONFIG.style.chart.layout.rects
-                                            .gradient.intensity / 100,
+                                        cfgLayout.rects.gradient.intensity /
+                                            100,
                                     ),
                                     1,
                                 ],
@@ -2514,17 +2485,12 @@ defineExpose({
                             :width="getWidth(rect)"
                             :fill="
                                 isSafari
-                                    ? (rect.color ??
-                                      FINAL_CONFIG.style.chart.backgroundColor)
-                                    : FINAL_CONFIG.style.chart.layout.rects
-                                            .gradient.show
+                                    ? (rect.color ?? cfgChart.backgroundColor)
+                                    : cfgLayout.rects.gradient.show
                                       ? allSegregated
-                                          ? FINAL_CONFIG.style.chart
-                                                .backgroundColor
+                                          ? cfgChart.backgroundColor
                                           : `url(#tgrad_${rect.id})`
-                                      : (rect.color ??
-                                        FINAL_CONFIG.style.chart
-                                            .backgroundColor)
+                                      : (rect.color ?? cfgChart.backgroundColor)
                             "
                             :rx="
                                 scale > 1
@@ -2533,10 +2499,8 @@ defineExpose({
                             "
                             :stroke="
                                 selectedRect && selectedRect.id === rect.id
-                                    ? FINAL_CONFIG.style.chart.layout.rects
-                                          .selected.stroke
-                                    : FINAL_CONFIG.style.chart.layout.rects
-                                          .stroke
+                                    ? cfgLayout.rects.selected.stroke
+                                    : cfgLayout.rects.stroke
                             "
                             :stroke-width="getStrokeWidth(rect)"
                             @click.stop="onRectClick(rect, i)"
@@ -2551,7 +2515,7 @@ defineExpose({
                             @mouseleave="
                                 onTrapLeave({ datapoint: rect, seriesIndex: i })
                             "
-                            :style="`opacity:${selectedRect ? (selectedRect.id === rect.id ? 1 : FINAL_CONFIG.style.chart.layout.rects.selected.unselectedOpacity) : 1}`"
+                            :style="`opacity:${selectedRect ? (selectedRect.id === rect.id ? 1 : cfgLayout.rects.selected.unselectedOpacity) : 1}`"
                             :class="[
                                 'vue-ui-treemap-rect',
                                 transitionEnabled
@@ -2702,16 +2666,12 @@ defineExpose({
                         role="button"
                         class="vue-data-ui-refresh-button"
                         :style="{
-                            background:
-                                FINAL_CONFIG.style.chart.backgroundColor,
+                            background: cfgChart.backgroundColor,
                             cursor: isCursorPointer ? 'pointer' : 'default',
                         }"
                         @click="resetZoom(true)"
                     >
-                        <BaseIcon
-                            name="refresh"
-                            :stroke="FINAL_CONFIG.style.chart.color"
-                        />
+                        <BaseIcon name="refresh" :stroke="cfgChart.color" />
                     </button>
                 </slot>
             </div>
@@ -2749,12 +2709,9 @@ defineExpose({
 
         <!-- LEGEND -->
         <Teleport
-            v-if="
-                readyTeleport &&
-                (FINAL_CONFIG.style.chart.legend.show || $slots.legend)
-            "
+            v-if="readyTeleport && (cfgLegend.show || $slots.legend)"
             :to="
-                FINAL_CONFIG.style.chart.legend.position === 'top'
+                cfgLegend.position === 'top'
                     ? `#legend-top-${uid}`
                     : `#legend-bottom-${uid}`
             "
@@ -2762,7 +2719,7 @@ defineExpose({
             <div ref="chartLegend">
                 <slot name="legend" v-bind:legend="legendSet">
                     <Legend
-                        v-if="FINAL_CONFIG.style.chart.legend.show"
+                        v-if="cfgLegend.show"
                         :key="`legend_${legendStep}`"
                         :legendSet="legendSet"
                         :config="legendConfig"
@@ -2785,21 +2742,14 @@ defineExpose({
                             <BaseLegendToggle
                                 v-if="
                                     legendSet.length > 2 &&
-                                    FINAL_CONFIG.style.chart.legend
-                                        .selectAllToggle.show &&
+                                    cfgLegend.selectAllToggle.show &&
                                     !loading
                                 "
                                 :backgroundColor="
-                                    FINAL_CONFIG.style.chart.legend
-                                        .selectAllToggle.backgroundColor
+                                    cfgLegend.selectAllToggle.backgroundColor
                                 "
-                                :color="
-                                    FINAL_CONFIG.style.chart.legend
-                                        .selectAllToggle.color
-                                "
-                                :fontSize="
-                                    FINAL_CONFIG.style.chart.legend.fontSize
-                                "
+                                :color="cfgLegend.selectAllToggle.color"
+                                :fontSize="cfgLegend.fontSize"
                                 :checked="segregated.length > 0"
                                 :isCursorPointer="isCursorPointer"
                                 @toggle="toggleLegend"
@@ -2816,32 +2766,26 @@ defineExpose({
 
         <!-- TOOLTIP -->
         <Tooltip
-            :teleportTo="FINAL_CONFIG.style.chart.tooltip.teleportTo"
+            :teleportTo="cfgTooltip.teleportTo"
             :show="mutableConfig.showTooltip && isTooltip"
-            :backgroundColor="FINAL_CONFIG.style.chart.tooltip.backgroundColor"
-            :color="FINAL_CONFIG.style.chart.tooltip.color"
-            :fontSize="FINAL_CONFIG.style.chart.tooltip.fontSize"
-            :borderRadius="FINAL_CONFIG.style.chart.tooltip.borderRadius"
-            :borderColor="FINAL_CONFIG.style.chart.tooltip.borderColor"
-            :borderWidth="FINAL_CONFIG.style.chart.tooltip.borderWidth"
-            :backgroundOpacity="
-                FINAL_CONFIG.style.chart.tooltip.backgroundOpacity
-            "
-            :position="FINAL_CONFIG.style.chart.tooltip.position"
-            :offsetX="FINAL_CONFIG.style.chart.tooltip.offsetX"
-            :offsetY="FINAL_CONFIG.style.chart.tooltip.offsetY"
+            :backgroundColor="cfgTooltip.backgroundColor"
+            :color="cfgTooltip.color"
+            :fontSize="cfgTooltip.fontSize"
+            :borderRadius="cfgTooltip.borderRadius"
+            :borderColor="cfgTooltip.borderColor"
+            :borderWidth="cfgTooltip.borderWidth"
+            :backgroundOpacity="cfgTooltip.backgroundOpacity"
+            :position="cfgTooltip.position"
+            :offsetX="cfgTooltip.offsetX"
+            :offsetY="cfgTooltip.offsetY"
             :parent="treemapChart"
             :content="tooltipContent"
             :isFullscreen="isFullscreen"
-            :isCustom="
-                isFunction(FINAL_CONFIG.style.chart.tooltip.customFormat)
-            "
-            :smooth="FINAL_CONFIG.style.chart.tooltip.smooth"
-            :backdropFilter="FINAL_CONFIG.style.chart.tooltip.backdropFilter"
-            :smoothForce="FINAL_CONFIG.style.chart.tooltip.smoothForce"
-            :smoothSnapThreshold="
-                FINAL_CONFIG.style.chart.tooltip.smoothSnapThreshold
-            "
+            :isCustom="isFunction(cfgTooltip.customFormat)"
+            :smooth="cfgTooltip.smooth"
+            :backdropFilter="cfgTooltip.backdropFilter"
+            :smoothForce="cfgTooltip.smoothForce"
+            :smoothSnapThreshold="cfgTooltip.smoothSnapThreshold"
             :isA11yMode="tooltipTriggerMode === 'keyboard'"
             :a11yPosition="tooltipA11yPosition"
         >
@@ -2863,7 +2807,7 @@ defineExpose({
         </Tooltip>
 
         <component
-            v-if="isDataset && FINAL_CONFIG.userOptions.buttons.table"
+            v-if="isDataset && cfgUserOptions.buttons.table"
             :is="tableComponent.component"
             v-bind="tableComponent.props"
             ref="tableUnit"
@@ -2876,7 +2820,7 @@ defineExpose({
                 <button
                     tabindex="0"
                     class="vue-ui-user-options-button"
-                    @click="generateCsv(FINAL_CONFIG.userOptions.callbacks.csv)"
+                    @click="generateCsv(cfgUserOptions.callbacks.csv)"
                     :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }"
                 >
                     <BaseIcon
