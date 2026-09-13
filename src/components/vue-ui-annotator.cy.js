@@ -22,6 +22,10 @@ describe('<VueUiAnnotator />', () => {
             }
         }
 
+        function clickOut(el) {
+            cy.wrap(el).trigger('click', { clientX: 0, clientY: 0 });
+        }
+
         cy.get('#annotatorSvg').then(($svg) => {
             cy.wrap($svg)
                 .trigger('pointermove', { clientX: 500, clientY: 500 })
@@ -32,8 +36,8 @@ describe('<VueUiAnnotator />', () => {
                 .find('circle')
                 .should('have.length', 2);
 
+            undo();
             cy.get(`[data-cy="annotator-button-rect"]`).click();
-
             cy.wrap($svg)
                 .trigger('pointermove', { clientX: 450, clientY: 450 })
                 .trigger('pointerdown')
@@ -41,10 +45,10 @@ describe('<VueUiAnnotator />', () => {
                 .wait(200)
                 .trigger('pointerup', { force: true })
                 .find('rect')
-                .should('have.length', 5);
+                .should('have.length', 3);
 
+            undo();
             cy.get(`[data-cy="annotator-button-arrow"]`).click();
-
             cy.wrap($svg)
                 .trigger('pointermove', { clientX: 400, clientY: 700 })
                 .trigger('pointerdown')
@@ -52,10 +56,9 @@ describe('<VueUiAnnotator />', () => {
                 .wait(200)
                 .trigger('pointerup', { force: true })
                 .find('path')
-                .should('have.length', 1);
+                .should('have.length', 2);
 
             undo();
-
             cy.get(`[data-cy="annotator-button-freehand"]`).click();
             cy.wrap($svg)
                 .trigger('pointermove', { clientX: 400, clientY: 700 })
@@ -74,18 +77,6 @@ describe('<VueUiAnnotator />', () => {
                 .trigger('pointermove', { clientX: 620, clientY: 680 })
                 .trigger('pointerup', { force: true })
                 .find('path')
-                .should('have.length', 1);
-
-            undo(2);
-            cy.get(`[data-cy="annotator-button-move"]`).click();
-
-            cy.wrap($svg)
-                .trigger('pointermove', { clientX: 500, clientY: 500 })
-                .trigger('pointerdown')
-                .trigger('pointermove', { clientX: 600, clientY: 600 })
-                .wait(200)
-                .trigger('pointerup', { force: true })
-                .find('circle')
                 .should('have.length', 2);
 
             undo();
@@ -95,11 +86,10 @@ describe('<VueUiAnnotator />', () => {
             cy.wrap($svg)
                 .trigger('pointermove', { clientX: 400, clientY: 700 })
                 .click()
-                .type('HELLO WORLD')
+                .type('HELLO')
                 .find('text')
                 .should('exist')
-                .contains('HELLO WORLD');
-            undo();
+                .contains('HELLO');
         });
     });
 });

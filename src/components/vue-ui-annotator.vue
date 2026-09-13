@@ -10,16 +10,16 @@
                         maxHeight: 1000,
                         useCursorPointer: isCursorPointer,
                         head: {
-                            backgroundColor: FINAL_CONFIG.style.backgroundColor,
-                            color: FINAL_CONFIG.style.color,
-                            iconColor: FINAL_CONFIG.style.color,
+                            backgroundColor: style.backgroundColor,
+                            color: style.color,
+                            iconColor: style.color,
                             iconSize: 20,
                             icon: isSummaryOpen ? 'close' : 'annotator',
                             padding: '6px',
                         },
                         body: {
-                            backgroundColor: FINAL_CONFIG.style.backgroundColor,
-                            color: FINAL_CONFIG.style.color,
+                            backgroundColor: style.backgroundColor,
+                            color: style.color,
                         },
                     }"
                     @toggle="toggleSummary"
@@ -56,20 +56,15 @@
                             :disabled="shapes.length === 0"
                             :style="{
                                 background: isMoveMode
-                                    ? FINAL_CONFIG.style.buttons.controls
-                                          .selected.backgroundColor
-                                    : FINAL_CONFIG.style.buttons.controls
-                                          .backgroundColor,
+                                    ? buttons.controls.selected.backgroundColor
+                                    : buttons.controls.backgroundColor,
                                 border: isMoveMode
-                                    ? FINAL_CONFIG.style.buttons.controls
-                                          .selected.border
-                                    : FINAL_CONFIG.style.buttons.controls
-                                          .border,
+                                    ? buttons.controls.selected.border
+                                    : buttons.controls.border,
                                 color: isMoveMode
-                                    ? FINAL_CONFIG.style.buttons.controls
-                                          .selected.color
-                                    : FINAL_CONFIG.style.buttons.controls.color,
-                                borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`,
+                                    ? buttons.controls.selected.color
+                                    : buttons.controls.color,
+                                borderRadius: `${buttons.borderRadius}px`,
                                 cursor: isCursorPointer ? 'pointer' : 'default',
                             }"
                             :class="{
@@ -89,12 +84,12 @@
                                 showCaret = false;
                             "
                             @mouseenter="
-                                FINAL_CONFIG.style.showTooltips &&
+                                style.showTooltips &&
                                 showToolTipFor('move', $event, 'top')
                             "
                             @mouseleave="hideTooltip"
                             @focus="
-                                FINAL_CONFIG.style.showTooltips &&
+                                style.showTooltips &&
                                 showToolTipFor('move', $event, 'top')
                             "
                             @blur="hideTooltip"
@@ -107,16 +102,14 @@
                                     name="move"
                                     :stroke="
                                         isMoveMode
-                                            ? FINAL_CONFIG.style.buttons
-                                                  .controls.selected.color
-                                            : FINAL_CONFIG.style.buttons
-                                                  .controls.color
+                                            ? buttons.controls.selected.color
+                                            : buttons.controls.color
                                     "
                                 />
                             </slot>
 
                             <TeleportedTooltip
-                                v-if="FINAL_CONFIG.style.showTooltips"
+                                v-if="style.showTooltips"
                                 :show="showTooltip && tooltipKey === 'move'"
                                 :x="tooltipPos.x"
                                 :y="tooltipPos.y - 6"
@@ -133,20 +126,15 @@
                             :disabled="shapes.length === 0"
                             :style="{
                                 background: isResizeMode
-                                    ? FINAL_CONFIG.style.buttons.controls
-                                          .selected.backgroundColor
-                                    : FINAL_CONFIG.style.buttons.controls
-                                          .backgroundColor,
+                                    ? buttons.controls.selected.backgroundColor
+                                    : buttons.controls.backgroundColor,
                                 border: isResizeMode
-                                    ? FINAL_CONFIG.style.buttons.controls
-                                          .selected.border
-                                    : FINAL_CONFIG.style.buttons.controls
-                                          .border,
+                                    ? buttons.controls.selected.border
+                                    : buttons.controls.border,
                                 color: isResizeMode
-                                    ? FINAL_CONFIG.style.buttons.controls
-                                          .selected.color
-                                    : FINAL_CONFIG.style.buttons.controls.color,
-                                borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`,
+                                    ? buttons.controls.selected.color
+                                    : buttons.controls.color,
+                                borderRadius: `${buttons.borderRadius}px`,
                                 cursor: isCursorPointer ? 'pointer' : 'default',
                             }"
                             :class="{
@@ -167,12 +155,12 @@
                                 showCaret = false;
                             "
                             @mouseenter="
-                                FINAL_CONFIG.style.showTooltips &&
+                                style.showTooltips &&
                                 showToolTipFor('resize', $event, 'top')
                             "
                             @mouseleave="hideTooltip"
                             @focus="
-                                FINAL_CONFIG.style.showTooltips &&
+                                style.showTooltips &&
                                 showToolTipFor('resize', $event, 'top')
                             "
                             @blur="hideTooltip"
@@ -185,16 +173,14 @@
                                     name="resize"
                                     :stroke="
                                         isResizeMode
-                                            ? FINAL_CONFIG.style.buttons
-                                                  .controls.selected.color
-                                            : FINAL_CONFIG.style.buttons
-                                                  .controls.color
+                                            ? buttons.controls.selected.color
+                                            : buttons.controls.color
                                     "
                                 />
                             </slot>
 
                             <TeleportedTooltip
-                                v-if="FINAL_CONFIG.style.showTooltips"
+                                v-if="style.showTooltips"
                                 :show="showTooltip && tooltipKey === 'resize'"
                                 :x="tooltipPos.x"
                                 :y="tooltipPos.y - 6"
@@ -211,20 +197,15 @@
                             :disabled="shapes.length === 0"
                             :style="{
                                 background: isDeleteMode
-                                    ? FINAL_CONFIG.style.buttons.controls
-                                          .selected.backgroundColor
-                                    : FINAL_CONFIG.style.buttons.controls
-                                          .backgroundColor,
+                                    ? buttons.controls.selected.backgroundColor
+                                    : buttons.controls.backgroundColor,
                                 border: isDeleteMode
-                                    ? FINAL_CONFIG.style.buttons.controls
-                                          .selected.border
-                                    : FINAL_CONFIG.style.buttons.controls
-                                          .border,
+                                    ? buttons.controls.selected.border
+                                    : buttons.controls.border,
                                 color: isDeleteMode
-                                    ? FINAL_CONFIG.style.buttons.controls
-                                          .selected.color
-                                    : FINAL_CONFIG.style.buttons.controls.color,
-                                borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`,
+                                    ? buttons.controls.selected.color
+                                    : buttons.controls.color,
+                                borderRadius: `${buttons.borderRadius}px`,
                                 cursor: isCursorPointer ? 'pointer' : 'default',
                             }"
                             :class="{
@@ -244,12 +225,12 @@
                                 showCaret = false;
                             "
                             @mouseenter="
-                                FINAL_CONFIG.style.showTooltips &&
+                                style.showTooltips &&
                                 showToolTipFor('delete', $event, 'top')
                             "
                             @mouseleave="hideTooltip"
                             @focus="
-                                FINAL_CONFIG.style.showTooltips &&
+                                style.showTooltips &&
                                 showToolTipFor('delete', $event, 'top')
                             "
                             @blur="hideTooltip"
@@ -262,16 +243,14 @@
                                     name="trash"
                                     :stroke="
                                         isDeleteMode
-                                            ? FINAL_CONFIG.style.buttons
-                                                  .controls.selected.color
-                                            : FINAL_CONFIG.style.buttons
-                                                  .controls.color
+                                            ? buttons.controls.selected.color
+                                            : buttons.controls.color
                                     "
                                 />
                             </slot>
 
                             <TeleportedTooltip
-                                v-if="FINAL_CONFIG.style.showTooltips"
+                                v-if="style.showTooltips"
                                 :show="showTooltip && tooltipKey === 'delete'"
                                 :x="tooltipPos.x"
                                 :y="tooltipPos.y - 6"
@@ -288,20 +267,15 @@
                             :disabled="!canSelect"
                             :style="{
                                 background: isSelectMode
-                                    ? FINAL_CONFIG.style.buttons.controls
-                                          .selected.backgroundColor
-                                    : FINAL_CONFIG.style.buttons.controls
-                                          .backgroundColor,
+                                    ? buttons.controls.selected.backgroundColor
+                                    : buttons.controls.backgroundColor,
                                 border: isSelectMode
-                                    ? FINAL_CONFIG.style.buttons.controls
-                                          .selected.border
-                                    : FINAL_CONFIG.style.buttons.controls
-                                          .border,
+                                    ? buttons.controls.selected.border
+                                    : buttons.controls.border,
                                 color: isSelectMode
-                                    ? FINAL_CONFIG.style.buttons.controls
-                                          .selected.color
-                                    : FINAL_CONFIG.style.buttons.controls.color,
-                                borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`,
+                                    ? buttons.controls.selected.color
+                                    : buttons.controls.color,
+                                borderRadius: `${buttons.borderRadius}px`,
                                 cursor: isCursorPointer ? 'pointer' : 'default',
                             }"
                             :class="{
@@ -322,12 +296,12 @@
                                 showCaret = false;
                             "
                             @mouseenter="
-                                FINAL_CONFIG.style.showTooltips &&
+                                style.showTooltips &&
                                 showToolTipFor('selectAndGroup', $event, 'top')
                             "
                             @mouseleave="hideTooltip"
                             @focus="
-                                FINAL_CONFIG.style.showTooltips &&
+                                style.showTooltips &&
                                 showToolTipFor('selectAndGroup', $event, 'top')
                             "
                             @blur="hideTooltip"
@@ -340,16 +314,14 @@
                                     name="selectAndGroup"
                                     :stroke="
                                         isSelectMode
-                                            ? FINAL_CONFIG.style.buttons
-                                                  .controls.selected.color
-                                            : FINAL_CONFIG.style.buttons
-                                                  .controls.color
+                                            ? buttons.controls.selected.color
+                                            : buttons.controls.color
                                     "
                                 />
                             </slot>
 
                             <TeleportedTooltip
-                                v-if="FINAL_CONFIG.style.showTooltips"
+                                v-if="style.showTooltips"
                                 :show="
                                     showTooltip &&
                                     tooltipKey === 'selectAndGroup'
@@ -368,14 +340,10 @@
                         <button
                             :disabled="shapes.length === 0"
                             :style="{
-                                background:
-                                    FINAL_CONFIG.style.buttons.controls
-                                        .backgroundColor,
-                                border: FINAL_CONFIG.style.buttons.controls
-                                    .border,
-                                color: FINAL_CONFIG.style.buttons.controls
-                                    .color,
-                                borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`,
+                                background: buttons.controls.backgroundColor,
+                                border: buttons.controls.border,
+                                color: buttons.controls.color,
+                                borderRadius: `${buttons.borderRadius}px`,
                                 cursor: isCursorPointer ? 'pointer' : 'default',
                             }"
                             :class="{ 'button-tool': true, tooltip: true }"
@@ -391,12 +359,12 @@
                                 bringShapeTo('front');
                             "
                             @mouseenter="
-                                FINAL_CONFIG.style.showTooltips &&
+                                style.showTooltips &&
                                 showToolTipFor('bringToFront', $event, 'top')
                             "
                             @mouseleave="hideTooltip"
                             @focus="
-                                FINAL_CONFIG.style.showTooltips &&
+                                style.showTooltips &&
                                 showToolTipFor('bringToFront', $event, 'top')
                             "
                             @blur="hideTooltip"
@@ -404,15 +372,12 @@
                             <slot name="icon-bring-to-front">
                                 <BaseIcon
                                     name="bringToFront"
-                                    :stroke="
-                                        FINAL_CONFIG.style.buttons.controls
-                                            .color
-                                    "
+                                    :stroke="buttons.controls.color"
                                 />
                             </slot>
 
                             <TeleportedTooltip
-                                v-if="FINAL_CONFIG.style.showTooltips"
+                                v-if="style.showTooltips"
                                 :show="
                                     showTooltip && tooltipKey === 'bringToFront'
                                 "
@@ -432,14 +397,10 @@
                         <button
                             :disabled="shapes.length === 0"
                             :style="{
-                                background:
-                                    FINAL_CONFIG.style.buttons.controls
-                                        .backgroundColor,
-                                border: FINAL_CONFIG.style.buttons.controls
-                                    .border,
-                                color: FINAL_CONFIG.style.buttons.controls
-                                    .color,
-                                borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`,
+                                background: buttons.controls.backgroundColor,
+                                border: buttons.controls.border,
+                                color: buttons.controls.color,
+                                borderRadius: `${buttons.borderRadius}px`,
                                 cursor: isCursorPointer ? 'pointer' : 'default',
                             }"
                             :class="{ 'button-tool': true, tooltip: true }"
@@ -455,12 +416,12 @@
                                 bringShapeTo('back');
                             "
                             @mouseenter="
-                                FINAL_CONFIG.style.showTooltips &&
+                                style.showTooltips &&
                                 showToolTipFor('bringToBack', $event, 'top')
                             "
                             @mouseleave="hideTooltip"
                             @focus="
-                                FINAL_CONFIG.style.showTooltips &&
+                                style.showTooltips &&
                                 showToolTipFor('bringToBack', $event, 'top')
                             "
                             @blur="hideTooltip"
@@ -468,15 +429,12 @@
                             <slot name="icon-bring-to-back">
                                 <BaseIcon
                                     name="bringToBack"
-                                    :stroke="
-                                        FINAL_CONFIG.style.buttons.controls
-                                            .color
-                                    "
+                                    :stroke="buttons.controls.color"
                                 />
                             </slot>
 
                             <TeleportedTooltip
-                                v-if="FINAL_CONFIG.style.showTooltips"
+                                v-if="style.showTooltips"
                                 :show="
                                     showTooltip && tooltipKey === 'bringToBack'
                                 "
@@ -497,14 +455,10 @@
                                 shapes.length === 0 || activeShape === 'line'
                             "
                             :style="{
-                                background:
-                                    FINAL_CONFIG.style.buttons.controls
-                                        .backgroundColor,
-                                border: FINAL_CONFIG.style.buttons.controls
-                                    .border,
-                                color: FINAL_CONFIG.style.buttons.controls
-                                    .color,
-                                borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`,
+                                background: buttons.controls.backgroundColor,
+                                border: buttons.controls.border,
+                                color: buttons.controls.color,
+                                borderRadius: `${buttons.borderRadius}px`,
                                 cursor: isCursorPointer ? 'pointer' : 'default',
                             }"
                             :class="{ 'button-tool': true, tooltip: true }"
@@ -521,12 +475,12 @@
                                 copyPaste();
                             "
                             @mouseenter="
-                                FINAL_CONFIG.style.showTooltips &&
+                                style.showTooltips &&
                                 showToolTipFor('duplicate', $event, 'top')
                             "
                             @mouseleave="hideTooltip"
                             @focus="
-                                FINAL_CONFIG.style.showTooltips &&
+                                style.showTooltips &&
                                 showToolTipFor('duplicate', $event, 'top')
                             "
                             @blur="hideTooltip"
@@ -534,16 +488,13 @@
                             <slot name="icon-copy">
                                 <BaseIcon
                                     name="copy"
-                                    :stroke="
-                                        FINAL_CONFIG.style.buttons.controls
-                                            .color
-                                    "
+                                    :stroke="buttons.controls.color"
                                     :size="18"
                                 />
                             </slot>
 
                             <TeleportedTooltip
-                                v-if="FINAL_CONFIG.style.showTooltips"
+                                v-if="style.showTooltips"
                                 :show="
                                     showTooltip && tooltipKey === 'duplicate'
                                 "
@@ -561,14 +512,10 @@
                             data-cy="annotator-button-undo"
                             :disabled="HISTORY_SIZE.undo === 0"
                             :style="{
-                                background:
-                                    FINAL_CONFIG.style.buttons.controls
-                                        .backgroundColor,
-                                border: FINAL_CONFIG.style.buttons.controls
-                                    .border,
-                                color: FINAL_CONFIG.style.buttons.controls
-                                    .color,
-                                borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`,
+                                background: buttons.controls.backgroundColor,
+                                border: buttons.controls.border,
+                                color: buttons.controls.color,
+                                borderRadius: `${buttons.borderRadius}px`,
                                 cursor: isCursorPointer ? 'pointer' : 'default',
                             }"
                             :class="{
@@ -589,12 +536,12 @@
                                 undoLastShape();
                             "
                             @mouseenter="
-                                FINAL_CONFIG.style.showTooltips &&
+                                style.showTooltips &&
                                 showToolTipFor('undoLast', $event, 'top')
                             "
                             @mouseleave="hideTooltip"
                             @focus="
-                                FINAL_CONFIG.style.showTooltips &&
+                                style.showTooltips &&
                                 showToolTipFor('undoLast', $event, 'top')
                             "
                             @blur="hideTooltip"
@@ -602,16 +549,13 @@
                             <slot name="icon-undo">
                                 <BaseIcon
                                     name="refresh"
-                                    :stroke="
-                                        FINAL_CONFIG.style.buttons.controls
-                                            .color
-                                    "
+                                    :stroke="buttons.controls.color"
                                     :size="20"
                                 />
                             </slot>
 
                             <TeleportedTooltip
-                                v-if="FINAL_CONFIG.style.showTooltips"
+                                v-if="style.showTooltips"
                                 :show="showTooltip && tooltipKey === 'undoLast'"
                                 :x="tooltipPos.x"
                                 :y="tooltipPos.y - 6"
@@ -629,14 +573,10 @@
                             data-cy="annotator-button-redo"
                             :disabled="HISTORY_SIZE.redo === 0"
                             :style="{
-                                background:
-                                    FINAL_CONFIG.style.buttons.controls
-                                        .backgroundColor,
-                                border: FINAL_CONFIG.style.buttons.controls
-                                    .border,
-                                color: FINAL_CONFIG.style.buttons.controls
-                                    .color,
-                                borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`,
+                                background: buttons.controls.backgroundColor,
+                                border: buttons.controls.border,
+                                color: buttons.controls.color,
+                                borderRadius: `${buttons.borderRadius}px`,
                                 cursor: isCursorPointer ? 'pointer' : 'default',
                             }"
                             :class="{
@@ -657,12 +597,12 @@
                                 redoLastShape();
                             "
                             @mouseenter="
-                                FINAL_CONFIG.style.showTooltips &&
+                                style.showTooltips &&
                                 showToolTipFor('redoLast', $event, 'top')
                             "
                             @mouseleave="hideTooltip"
                             @focus="
-                                FINAL_CONFIG.style.showTooltips &&
+                                style.showTooltips &&
                                 showToolTipFor('redoLast', $event, 'top')
                             "
                             @blur="hideTooltip"
@@ -670,10 +610,7 @@
                             <slot name="icon-redo">
                                 <BaseIcon
                                     name="refresh"
-                                    :stroke="
-                                        FINAL_CONFIG.style.buttons.controls
-                                            .color
-                                    "
+                                    :stroke="buttons.controls.color"
                                     :size="20"
                                     :style="{
                                         transform:
@@ -683,7 +620,7 @@
                             </slot>
 
                             <TeleportedTooltip
-                                v-if="FINAL_CONFIG.style.showTooltips"
+                                v-if="style.showTooltips"
                                 :show="showTooltip && tooltipKey === 'redoLast'"
                                 :x="tooltipPos.x"
                                 :y="tooltipPos.y - 6"
@@ -698,27 +635,23 @@
 
                         <!-- PRINT -->
                         <button
-                            v-if="FINAL_CONFIG.style.showPrint"
+                            v-if="style.showPrint"
                             :style="{
-                                background:
-                                    FINAL_CONFIG.style.buttons.controls
-                                        .backgroundColor,
-                                border: FINAL_CONFIG.style.buttons.controls
-                                    .border,
-                                color: FINAL_CONFIG.style.buttons.controls
-                                    .color,
-                                borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`,
+                                background: buttons.controls.backgroundColor,
+                                border: buttons.controls.border,
+                                color: buttons.controls.color,
+                                borderRadius: `${buttons.borderRadius}px`,
                                 cursor: isCursorPointer ? 'pointer' : 'default',
                             }"
                             :class="{ 'button-tool': true, tooltip: true }"
                             @click="print"
                             @mouseenter="
-                                FINAL_CONFIG.style.showTooltips &&
+                                style.showTooltips &&
                                 showToolTipFor('printPdf', $event, 'top')
                             "
                             @mouseleave="hideTooltip"
                             @focus="
-                                FINAL_CONFIG.style.showTooltips &&
+                                style.showTooltips &&
                                 showToolTipFor('printPdf', $event, 'top')
                             "
                             @blur="hideTooltip"
@@ -726,15 +659,12 @@
                             <slot name="icon-print">
                                 <BaseIcon
                                     name="printer"
-                                    :stroke="
-                                        FINAL_CONFIG.style.buttons.controls
-                                            .color
-                                    "
+                                    :stroke="buttons.controls.color"
                                 />
                             </slot>
 
                             <TeleportedTooltip
-                                v-if="FINAL_CONFIG.style.showTooltips"
+                                v-if="style.showTooltips"
                                 :show="showTooltip && tooltipKey === 'printPdf'"
                                 :x="tooltipPos.x"
                                 :y="tooltipPos.y - 6"
@@ -747,27 +677,23 @@
 
                         <!-- IMAGE -->
                         <button
-                            v-if="FINAL_CONFIG.style.showImage"
+                            v-if="style.showImage"
                             :style="{
-                                background:
-                                    FINAL_CONFIG.style.buttons.controls
-                                        .backgroundColor,
-                                border: FINAL_CONFIG.style.buttons.controls
-                                    .border,
-                                color: FINAL_CONFIG.style.buttons.controls
-                                    .color,
-                                borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`,
+                                background: buttons.controls.backgroundColor,
+                                border: buttons.controls.border,
+                                color: buttons.controls.color,
+                                borderRadius: `${buttons.borderRadius}px`,
                                 cursor: isCursorPointer ? 'pointer' : 'default',
                             }"
                             :class="{ 'button-tool': true, tooltip: true }"
                             @click="generateImage"
                             @mouseenter="
-                                FINAL_CONFIG.style.showTooltips &&
+                                style.showTooltips &&
                                 showToolTipFor('printImage', $event, 'top')
                             "
                             @mouseleave="hideTooltip"
                             @focus="
-                                FINAL_CONFIG.style.showTooltips &&
+                                style.showTooltips &&
                                 showToolTipFor('printImage', $event, 'top')
                             "
                             @blur="hideTooltip"
@@ -775,16 +701,13 @@
                             <slot name="icon-export-image">
                                 <BaseIcon
                                     name="image"
-                                    :stroke="
-                                        FINAL_CONFIG.style.buttons.controls
-                                            .color
-                                    "
+                                    :stroke="buttons.controls.color"
                                     :size="20"
                                 />
                             </slot>
 
                             <TeleportedTooltip
-                                v-if="FINAL_CONFIG.style.showTooltips"
+                                v-if="style.showTooltips"
                                 :show="
                                     showTooltip && tooltipKey === 'printImage'
                                 "
@@ -799,27 +722,23 @@
 
                         <!-- SAVE -->
                         <button
-                            v-if="FINAL_CONFIG.style.showSave"
+                            v-if="style.showSave"
                             :style="{
-                                background:
-                                    FINAL_CONFIG.style.buttons.controls
-                                        .backgroundColor,
-                                border: FINAL_CONFIG.style.buttons.controls
-                                    .border,
-                                color: FINAL_CONFIG.style.buttons.controls
-                                    .color,
-                                borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`,
+                                background: buttons.controls.backgroundColor,
+                                border: buttons.controls.border,
+                                color: buttons.controls.color,
+                                borderRadius: `${buttons.borderRadius}px`,
                                 cursor: isCursorPointer ? 'pointer' : 'default',
                             }"
                             :class="{ 'button-tool': true, tooltip: true }"
                             @click="save"
                             @mouseenter="
-                                FINAL_CONFIG.style.showTooltips &&
+                                style.showTooltips &&
                                 showToolTipFor('saveAction', $event, 'top')
                             "
                             @mouseleave="hideTooltip"
                             @focus="
-                                FINAL_CONFIG.style.showTooltips &&
+                                style.showTooltips &&
                                 showToolTipFor('saveAction', $event, 'top')
                             "
                             @blur="hideTooltip"
@@ -827,15 +746,12 @@
                             <slot name="icon-save">
                                 <BaseIcon
                                     name="save"
-                                    :stroke="
-                                        FINAL_CONFIG.style.buttons.controls
-                                            .color
-                                    "
+                                    :stroke="buttons.controls.color"
                                 />
                             </slot>
 
                             <TeleportedTooltip
-                                v-if="FINAL_CONFIG.style.showTooltips"
+                                v-if="style.showTooltips"
                                 :show="
                                     showTooltip && tooltipKey === 'saveAction'
                                 "
@@ -862,23 +778,18 @@
                             :style="{
                                 background:
                                     activeShape === 'circle'
-                                        ? FINAL_CONFIG.style.buttons.shapes
-                                              .selected.backgroundColor
-                                        : FINAL_CONFIG.style.buttons.shapes
-                                              .backgroundColor,
+                                        ? buttons.shapes.selected
+                                              .backgroundColor
+                                        : buttons.shapes.backgroundColor,
                                 border:
                                     activeShape === 'circle'
-                                        ? FINAL_CONFIG.style.buttons.shapes
-                                              .selected.border
-                                        : FINAL_CONFIG.style.buttons.shapes
-                                              .border,
+                                        ? buttons.shapes.selected.border
+                                        : buttons.shapes.border,
                                 color:
                                     activeShape === 'circle'
-                                        ? FINAL_CONFIG.style.buttons.shapes
-                                              .selected.color
-                                        : FINAL_CONFIG.style.buttons.shapes
-                                              .color,
-                                borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`,
+                                        ? buttons.shapes.selected.color
+                                        : buttons.shapes.color,
+                                borderRadius: `${buttons.borderRadius}px`,
                                 cursor: isCursorPointer ? 'pointer' : 'default',
                             }"
                             @click="
@@ -886,12 +797,12 @@
                                 isSelectMode = false;
                             "
                             @mouseenter="
-                                FINAL_CONFIG.style.showTooltips &&
+                                style.showTooltips &&
                                 showToolTipFor('setCircle', $event, 'top')
                             "
                             @mouseleave="hideTooltip"
                             @focus="
-                                FINAL_CONFIG.style.showTooltips &&
+                                style.showTooltips &&
                                 showToolTipFor('setCircle', $event, 'top')
                             "
                             @blur="hideTooltip"
@@ -920,7 +831,7 @@
                             </slot>
 
                             <TeleportedTooltip
-                                v-if="FINAL_CONFIG.style.showTooltips"
+                                v-if="style.showTooltips"
                                 :show="
                                     showTooltip && tooltipKey === 'setCircle'
                                 "
@@ -948,8 +859,7 @@
                                         appearance: 'auto',
                                         '-webkit-appearance': 'auto',
                                         accentColor:
-                                            FINAL_CONFIG.style.color +
-                                            ' !important',
+                                            style.color + ' !important',
                                     }"
                                 />
                             </label>
@@ -966,23 +876,18 @@
                             :style="{
                                 background:
                                     activeShape === 'rect'
-                                        ? FINAL_CONFIG.style.buttons.shapes
-                                              .selected.backgroundColor
-                                        : FINAL_CONFIG.style.buttons.shapes
-                                              .backgroundColor,
+                                        ? buttons.shapes.selected
+                                              .backgroundColor
+                                        : buttons.shapes.backgroundColor,
                                 border:
                                     activeShape === 'rect'
-                                        ? FINAL_CONFIG.style.buttons.shapes
-                                              .selected.border
-                                        : FINAL_CONFIG.style.buttons.shapes
-                                              .border,
+                                        ? buttons.shapes.selected.border
+                                        : buttons.shapes.border,
                                 color:
                                     activeShape === 'rect'
-                                        ? FINAL_CONFIG.style.buttons.shapes
-                                              .selected.color
-                                        : FINAL_CONFIG.style.buttons.shapes
-                                              .color,
-                                borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`,
+                                        ? buttons.shapes.selected.color
+                                        : buttons.shapes.color,
+                                borderRadius: `${buttons.borderRadius}px`,
                                 cursor: isCursorPointer ? 'pointer' : 'default',
                             }"
                             @click="
@@ -990,12 +895,12 @@
                                 isSelectMode = false;
                             "
                             @mouseenter="
-                                FINAL_CONFIG.style.showTooltips &&
+                                style.showTooltips &&
                                 showToolTipFor('setRect', $event, 'top')
                             "
                             @mouseleave="hideTooltip"
                             @focus="
-                                FINAL_CONFIG.style.showTooltips &&
+                                style.showTooltips &&
                                 showToolTipFor('setRect', $event, 'top')
                             "
                             @blur="hideTooltip"
@@ -1029,7 +934,7 @@
                             </slot>
 
                             <TeleportedTooltip
-                                v-if="FINAL_CONFIG.style.showTooltips"
+                                v-if="style.showTooltips"
                                 :show="showTooltip && tooltipKey === 'setRect'"
                                 :x="tooltipPos.x"
                                 :y="tooltipPos.y - 6"
@@ -1053,8 +958,7 @@
                                         appearance: 'auto',
                                         '-webkit-appearance': 'auto',
                                         accentColor:
-                                            FINAL_CONFIG.style.color +
-                                            ' !important',
+                                            style.color + ' !important',
                                     }"
                                 />
                             </label>
@@ -1072,23 +976,18 @@
                             :style="{
                                 background:
                                     activeShape === 'arrow'
-                                        ? FINAL_CONFIG.style.buttons.shapes
-                                              .selected.backgroundColor
-                                        : FINAL_CONFIG.style.buttons.shapes
-                                              .backgroundColor,
+                                        ? buttons.shapes.selected
+                                              .backgroundColor
+                                        : buttons.shapes.backgroundColor,
                                 border:
                                     activeShape === 'arrow'
-                                        ? FINAL_CONFIG.style.buttons.shapes
-                                              .selected.border
-                                        : FINAL_CONFIG.style.buttons.shapes
-                                              .border,
+                                        ? buttons.shapes.selected.border
+                                        : buttons.shapes.border,
                                 color:
                                     activeShape === 'arrow'
-                                        ? FINAL_CONFIG.style.buttons.shapes
-                                              .selected.color
-                                        : FINAL_CONFIG.style.buttons.shapes
-                                              .color,
-                                borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`,
+                                        ? buttons.shapes.selected.color
+                                        : buttons.shapes.color,
+                                borderRadius: `${buttons.borderRadius}px`,
                                 cursor: isCursorPointer ? 'pointer' : 'default',
                             }"
                             @click="
@@ -1096,12 +995,12 @@
                                 isSelectMode = false;
                             "
                             @mouseenter="
-                                FINAL_CONFIG.style.showTooltips &&
+                                style.showTooltips &&
                                 showToolTipFor('setArrow', $event, 'top')
                             "
                             @mouseleave="hideTooltip"
                             @focus="
-                                FINAL_CONFIG.style.showTooltips &&
+                                style.showTooltips &&
                                 showToolTipFor('setArrow', $event, 'top')
                             "
                             @blur="hideTooltip"
@@ -1126,7 +1025,7 @@
                             </slot>
 
                             <TeleportedTooltip
-                                v-if="FINAL_CONFIG.style.showTooltips"
+                                v-if="style.showTooltips"
                                 :show="showTooltip && tooltipKey === 'setArrow'"
                                 :x="tooltipPos.x"
                                 :y="tooltipPos.y - 6"
@@ -1151,23 +1050,18 @@
                             :style="{
                                 background:
                                     activeShape === 'line'
-                                        ? FINAL_CONFIG.style.buttons.shapes
-                                              .selected.backgroundColor
-                                        : FINAL_CONFIG.style.buttons.shapes
-                                              .backgroundColor,
+                                        ? buttons.shapes.selected
+                                              .backgroundColor
+                                        : buttons.shapes.backgroundColor,
                                 border:
                                     activeShape === 'line'
-                                        ? FINAL_CONFIG.style.buttons.shapes
-                                              .selected.border
-                                        : FINAL_CONFIG.style.buttons.shapes
-                                              .border,
+                                        ? buttons.shapes.selected.border
+                                        : buttons.shapes.border,
                                 color:
                                     activeShape === 'line'
-                                        ? FINAL_CONFIG.style.buttons.shapes
-                                              .selected.color
-                                        : FINAL_CONFIG.style.buttons.shapes
-                                              .color,
-                                borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`,
+                                        ? buttons.shapes.selected.color
+                                        : buttons.shapes.color,
+                                borderRadius: `${buttons.borderRadius}px`,
                                 cursor: isCursorPointer ? 'pointer' : 'default',
                             }"
                             @click="
@@ -1175,12 +1069,12 @@
                                 isSelectMode = false;
                             "
                             @mouseenter="
-                                FINAL_CONFIG.style.showTooltips &&
+                                style.showTooltips &&
                                 showToolTipFor('setFreehand', $event, 'top')
                             "
                             @mouseleave="hideTooltip"
                             @focus="
-                                FINAL_CONFIG.style.showTooltips &&
+                                style.showTooltips &&
                                 showToolTipFor('setFreehand', $event, 'top')
                             "
                             @blur="hideTooltip"
@@ -1207,7 +1101,7 @@
                             </slot>
 
                             <TeleportedTooltip
-                                v-if="FINAL_CONFIG.style.showTooltips"
+                                v-if="style.showTooltips"
                                 :show="
                                     showTooltip && tooltipKey === 'setFreehand'
                                 "
@@ -1287,8 +1181,7 @@
                                             appearance: 'auto',
                                             '-webkit-appearance': 'auto',
                                             accentColor:
-                                                FINAL_CONFIG.style.color +
-                                                ' !important',
+                                                style.color + ' !important',
                                         }"
                                     />
                                 </label>
@@ -1305,19 +1198,15 @@
                             }"
                             :style="{
                                 background: isTextMode
-                                    ? FINAL_CONFIG.style.buttons.shapes.selected
-                                          .backgroundColor
-                                    : FINAL_CONFIG.style.buttons.shapes
-                                          .backgroundColor,
+                                    ? buttons.shapes.selected.backgroundColor
+                                    : buttons.shapes.backgroundColor,
                                 border: isTextMode
-                                    ? FINAL_CONFIG.style.buttons.shapes.selected
-                                          .border
-                                    : FINAL_CONFIG.style.buttons.shapes.border,
+                                    ? buttons.shapes.selected.border
+                                    : buttons.shapes.border,
                                 color: isTextMode
-                                    ? FINAL_CONFIG.style.buttons.shapes.selected
-                                          .color
-                                    : FINAL_CONFIG.style.buttons.shapes.color,
-                                borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`,
+                                    ? buttons.shapes.selected.color
+                                    : buttons.shapes.color,
+                                borderRadius: `${buttons.borderRadius}px`,
                                 cursor: isCursorPointer ? 'pointer' : 'default',
                             }"
                             @click="
@@ -1331,12 +1220,12 @@
                                 activeShape = undefined;
                             "
                             @mouseenter="
-                                FINAL_CONFIG.style.showTooltips &&
+                                style.showTooltips &&
                                 showToolTipFor('setText', $event, 'top')
                             "
                             @mouseleave="hideTooltip"
                             @focus="
-                                FINAL_CONFIG.style.showTooltips &&
+                                style.showTooltips &&
                                 showToolTipFor('setText', $event, 'top')
                             "
                             @blur="hideTooltip"
@@ -1349,16 +1238,14 @@
                                     name="text"
                                     :stroke="
                                         isTextMode
-                                            ? FINAL_CONFIG.style.buttons.shapes
-                                                  .selected.color
-                                            : FINAL_CONFIG.style.buttons.shapes
-                                                  .color
+                                            ? buttons.shapes.selected.color
+                                            : buttons.shapes.color
                                     "
                                 />
                             </slot>
 
                             <TeleportedTooltip
-                                v-if="FINAL_CONFIG.style.showTooltips"
+                                v-if="style.showTooltips"
                                 :show="showTooltip && tooltipKey === 'setText'"
                                 :x="tooltipPos.x"
                                 :y="tooltipPos.y - 6"
@@ -1409,23 +1296,18 @@
                                 :style="{
                                     background:
                                         textAlign === 'start'
-                                            ? FINAL_CONFIG.style.buttons.shapes
-                                                  .selected.backgroundColor
-                                            : FINAL_CONFIG.style.buttons.shapes
-                                                  .backgroundColor,
+                                            ? buttons.shapes.selected
+                                                  .backgroundColor
+                                            : buttons.shapes.backgroundColor,
                                     border:
                                         textAlign === 'start'
-                                            ? FINAL_CONFIG.style.buttons.shapes
-                                                  .selected.border
-                                            : FINAL_CONFIG.style.buttons.shapes
-                                                  .border,
+                                            ? buttons.shapes.selected.border
+                                            : buttons.shapes.border,
                                     color:
                                         textAlign === 'start'
-                                            ? FINAL_CONFIG.style.buttons.shapes
-                                                  .selected.color
-                                            : FINAL_CONFIG.style.buttons.shapes
-                                                  .color,
-                                    borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`,
+                                            ? buttons.shapes.selected.color
+                                            : buttons.shapes.color,
+                                    borderRadius: `${buttons.borderRadius}px`,
                                     cursor: isCursorPointer
                                         ? 'pointer'
                                         : 'default',
@@ -1441,7 +1323,7 @@
                                     setSelectedTextAlignTo('start');
                                 "
                                 @mouseenter="
-                                    FINAL_CONFIG.style.showTooltips &&
+                                    style.showTooltips &&
                                     showToolTipFor(
                                         'setAlignStart',
                                         $event,
@@ -1450,7 +1332,7 @@
                                 "
                                 @mouseleave="hideTooltip"
                                 @focus="
-                                    FINAL_CONFIG.style.showTooltips &&
+                                    style.showTooltips &&
                                     showToolTipFor(
                                         'setAlignStart',
                                         $event,
@@ -1481,7 +1363,7 @@
                                 </slot>
 
                                 <TeleportedTooltip
-                                    v-if="FINAL_CONFIG.style.showTooltips"
+                                    v-if="style.showTooltips"
                                     :show="
                                         showTooltip &&
                                         tooltipKey === 'setAlignStart'
@@ -1511,23 +1393,18 @@
                                 :style="{
                                     background:
                                         textAlign === 'middle'
-                                            ? FINAL_CONFIG.style.buttons.shapes
-                                                  .selected.backgroundColor
-                                            : FINAL_CONFIG.style.buttons.shapes
-                                                  .backgroundColor,
+                                            ? buttons.shapes.selected
+                                                  .backgroundColor
+                                            : buttons.shapes.backgroundColor,
                                     border:
                                         textAlign === 'middle'
-                                            ? FINAL_CONFIG.style.buttons.shapes
-                                                  .selected.border
-                                            : FINAL_CONFIG.style.buttons.shapes
-                                                  .border,
+                                            ? buttons.shapes.selected.border
+                                            : buttons.shapes.border,
                                     color:
                                         textAlign === 'middle'
-                                            ? FINAL_CONFIG.style.buttons.shapes
-                                                  .selected.color
-                                            : FINAL_CONFIG.style.buttons.shapes
-                                                  .color,
-                                    borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`,
+                                            ? buttons.shapes.selected.color
+                                            : buttons.shapes.color,
+                                    borderRadius: `${buttons.borderRadius}px`,
                                     cursor: isCursorPointer
                                         ? 'pointer'
                                         : 'default',
@@ -1544,7 +1421,7 @@
                                     setSelectedTextAlignTo('middle');
                                 "
                                 @mouseenter="
-                                    FINAL_CONFIG.style.showTooltips &&
+                                    style.showTooltips &&
                                     showToolTipFor(
                                         'setAlignMiddle',
                                         $event,
@@ -1553,7 +1430,7 @@
                                 "
                                 @mouseleave="hideTooltip"
                                 @focus="
-                                    FINAL_CONFIG.style.showTooltips &&
+                                    style.showTooltips &&
                                     showToolTipFor(
                                         'setAlignMiddle',
                                         $event,
@@ -1584,7 +1461,7 @@
                                 </slot>
 
                                 <TeleportedTooltip
-                                    v-if="FINAL_CONFIG.style.showTooltips"
+                                    v-if="style.showTooltips"
                                     :show="
                                         showTooltip &&
                                         tooltipKey === 'setAlignMiddle'
@@ -1614,23 +1491,18 @@
                                 :style="{
                                     background:
                                         textAlign === 'end'
-                                            ? FINAL_CONFIG.style.buttons.shapes
-                                                  .selected.backgroundColor
-                                            : FINAL_CONFIG.style.buttons.shapes
-                                                  .backgroundColor,
+                                            ? buttons.shapes.selected
+                                                  .backgroundColor
+                                            : buttons.shapes.backgroundColor,
                                     border:
                                         textAlign === 'end'
-                                            ? FINAL_CONFIG.style.buttons.shapes
-                                                  .selected.border
-                                            : FINAL_CONFIG.style.buttons.shapes
-                                                  .border,
+                                            ? buttons.shapes.selected.border
+                                            : buttons.shapes.border,
                                     color:
                                         textAlign === 'end'
-                                            ? FINAL_CONFIG.style.buttons.shapes
-                                                  .selected.color
-                                            : FINAL_CONFIG.style.buttons.shapes
-                                                  .color,
-                                    borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`,
+                                            ? buttons.shapes.selected.color
+                                            : buttons.shapes.color,
+                                    borderRadius: `${buttons.borderRadius}px`,
                                     cursor: isCursorPointer
                                         ? 'pointer'
                                         : 'default',
@@ -1647,12 +1519,12 @@
                                     setSelectedTextAlignTo('end');
                                 "
                                 @mouseenter="
-                                    FINAL_CONFIG.style.showTooltips &&
+                                    style.showTooltips &&
                                     showToolTipFor('setAlignEnd', $event, 'top')
                                 "
                                 @mouseleave="hideTooltip"
                                 @focus="
-                                    FINAL_CONFIG.style.showTooltips &&
+                                    style.showTooltips &&
                                     showToolTipFor('setAlignEnd', $event, 'top')
                                 "
                                 @blur="hideTooltip"
@@ -1679,7 +1551,7 @@
                                 </slot>
 
                                 <TeleportedTooltip
-                                    v-if="FINAL_CONFIG.style.showTooltips"
+                                    v-if="style.showTooltips"
                                     :show="
                                         showTooltip &&
                                         tooltipKey === 'setAlignEnd'
@@ -1707,21 +1579,16 @@
                                 }"
                                 :style="{
                                     background: isBulletTextMode
-                                        ? FINAL_CONFIG.style.buttons.shapes
-                                              .selected.backgroundColor
-                                        : FINAL_CONFIG.style.buttons.shapes
-                                              .backgroundColor,
+                                        ? buttons.shapes.selected
+                                              .backgroundColor
+                                        : buttons.shapes.backgroundColor,
                                     border: isBulletTextMode
-                                        ? FINAL_CONFIG.style.buttons.shapes
-                                              .selected.border
-                                        : FINAL_CONFIG.style.buttons.shapes
-                                              .border,
+                                        ? buttons.shapes.selected.border
+                                        : buttons.shapes.border,
                                     color: isBulletTextMode
-                                        ? FINAL_CONFIG.style.buttons.shapes
-                                              .selected.color
-                                        : FINAL_CONFIG.style.buttons.shapes
-                                              .color,
-                                    borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`,
+                                        ? buttons.shapes.selected.color
+                                        : buttons.shapes.color,
+                                    borderRadius: `${buttons.borderRadius}px`,
                                     cursor: isCursorPointer
                                         ? 'pointer'
                                         : 'default',
@@ -1739,7 +1606,7 @@
                                     setCurrentStyleOfSelectedText();
                                 "
                                 @mouseenter="
-                                    FINAL_CONFIG.style.showTooltips &&
+                                    style.showTooltips &&
                                     showToolTipFor(
                                         'setBulletMode',
                                         $event,
@@ -1748,7 +1615,7 @@
                                 "
                                 @mouseleave="hideTooltip"
                                 @focus="
-                                    FINAL_CONFIG.style.showTooltips &&
+                                    style.showTooltips &&
                                     showToolTipFor(
                                         'setBulletMode',
                                         $event,
@@ -1782,7 +1649,7 @@
                                 </slot>
 
                                 <TeleportedTooltip
-                                    v-if="FINAL_CONFIG.style.showTooltips"
+                                    v-if="style.showTooltips"
                                     :show="
                                         showTooltip &&
                                         tooltipKey === 'setBulletMode'
@@ -1810,21 +1677,16 @@
                                 }"
                                 :style="{
                                     background: isBold
-                                        ? FINAL_CONFIG.style.buttons.shapes
-                                              .selected.backgroundColor
-                                        : FINAL_CONFIG.style.buttons.shapes
-                                              .backgroundColor,
+                                        ? buttons.shapes.selected
+                                              .backgroundColor
+                                        : buttons.shapes.backgroundColor,
                                     border: isBold
-                                        ? FINAL_CONFIG.style.buttons.shapes
-                                              .selected.border
-                                        : FINAL_CONFIG.style.buttons.shapes
-                                              .border,
+                                        ? buttons.shapes.selected.border
+                                        : buttons.shapes.border,
                                     color: isBold
-                                        ? FINAL_CONFIG.style.buttons.shapes
-                                              .selected.color
-                                        : FINAL_CONFIG.style.buttons.shapes
-                                              .color,
-                                    borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`,
+                                        ? buttons.shapes.selected.color
+                                        : buttons.shapes.color,
+                                    borderRadius: `${buttons.borderRadius}px`,
                                     cursor: isCursorPointer
                                         ? 'pointer'
                                         : 'default',
@@ -1840,12 +1702,12 @@
                                     setCurrentStyleOfSelectedText();
                                 "
                                 @mouseenter="
-                                    FINAL_CONFIG.style.showTooltips &&
+                                    style.showTooltips &&
                                     showToolTipFor('setBold', $event, 'top')
                                 "
                                 @mouseleave="hideTooltip"
                                 @focus="
-                                    FINAL_CONFIG.style.showTooltips &&
+                                    style.showTooltips &&
                                     showToolTipFor('setBold', $event, 'top')
                                 "
                                 @blur="hideTooltip"
@@ -1875,7 +1737,7 @@
                                 </slot>
 
                                 <TeleportedTooltip
-                                    v-if="FINAL_CONFIG.style.showTooltips"
+                                    v-if="style.showTooltips"
                                     :show="
                                         showTooltip && tooltipKey === 'setBold'
                                     "
@@ -1902,21 +1764,16 @@
                                 }"
                                 :style="{
                                     background: isItalic
-                                        ? FINAL_CONFIG.style.buttons.shapes
-                                              .selected.backgroundColor
-                                        : FINAL_CONFIG.style.buttons.shapes
-                                              .backgroundColor,
+                                        ? buttons.shapes.selected
+                                              .backgroundColor
+                                        : buttons.shapes.backgroundColor,
                                     border: isItalic
-                                        ? FINAL_CONFIG.style.buttons.shapes
-                                              .selected.border
-                                        : FINAL_CONFIG.style.buttons.shapes
-                                              .border,
+                                        ? buttons.shapes.selected.border
+                                        : buttons.shapes.border,
                                     color: isItalic
-                                        ? FINAL_CONFIG.style.buttons.shapes
-                                              .selected.color
-                                        : FINAL_CONFIG.style.buttons.shapes
-                                              .color,
-                                    borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`,
+                                        ? buttons.shapes.selected.color
+                                        : buttons.shapes.color,
+                                    borderRadius: `${buttons.borderRadius}px`,
                                     cursor: isCursorPointer
                                         ? 'pointer'
                                         : 'default',
@@ -1932,12 +1789,12 @@
                                     setCurrentStyleOfSelectedText();
                                 "
                                 @mouseenter="
-                                    FINAL_CONFIG.style.showTooltips &&
+                                    style.showTooltips &&
                                     showToolTipFor('setItalic', $event, 'top')
                                 "
                                 @mouseleave="hideTooltip"
                                 @focus="
-                                    FINAL_CONFIG.style.showTooltips &&
+                                    style.showTooltips &&
                                     showToolTipFor('setItalic', $event, 'top')
                                 "
                                 @blur="hideTooltip"
@@ -1965,7 +1822,7 @@
                                 </slot>
 
                                 <TeleportedTooltip
-                                    v-if="FINAL_CONFIG.style.showTooltips"
+                                    v-if="style.showTooltips"
                                     :show="
                                         showTooltip &&
                                         tooltipKey === 'setItalic'
@@ -1993,21 +1850,16 @@
                                 }"
                                 :style="{
                                     background: isUnderline
-                                        ? FINAL_CONFIG.style.buttons.shapes
-                                              .selected.backgroundColor
-                                        : FINAL_CONFIG.style.buttons.shapes
-                                              .backgroundColor,
+                                        ? buttons.shapes.selected
+                                              .backgroundColor
+                                        : buttons.shapes.backgroundColor,
                                     border: isUnderline
-                                        ? FINAL_CONFIG.style.buttons.shapes
-                                              .selected.border
-                                        : FINAL_CONFIG.style.buttons.shapes
-                                              .border,
+                                        ? buttons.shapes.selected.border
+                                        : buttons.shapes.border,
                                     color: isUnderline
-                                        ? FINAL_CONFIG.style.buttons.shapes
-                                              .selected.color
-                                        : FINAL_CONFIG.style.buttons.shapes
-                                              .color,
-                                    borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`,
+                                        ? buttons.shapes.selected.color
+                                        : buttons.shapes.color,
+                                    borderRadius: `${buttons.borderRadius}px`,
                                     cursor: isCursorPointer
                                         ? 'pointer'
                                         : 'default',
@@ -2023,7 +1875,7 @@
                                     setCurrentStyleOfSelectedText();
                                 "
                                 @mouseenter="
-                                    FINAL_CONFIG.style.showTooltips &&
+                                    style.showTooltips &&
                                     showToolTipFor(
                                         'setUnderline',
                                         $event,
@@ -2032,7 +1884,7 @@
                                 "
                                 @mouseleave="hideTooltip"
                                 @focus="
-                                    FINAL_CONFIG.style.showTooltips &&
+                                    style.showTooltips &&
                                     showToolTipFor(
                                         'setUnderline',
                                         $event,
@@ -2062,7 +1914,7 @@
                                 </slot>
 
                                 <TeleportedTooltip
-                                    v-if="FINAL_CONFIG.style.showTooltips"
+                                    v-if="style.showTooltips"
                                     :show="
                                         showTooltip &&
                                         tooltipKey === 'setUnderline'
@@ -2099,26 +1951,22 @@
                                     borderRadius: '6px',
                                 }"
                                 @mouseenter="
-                                    FINAL_CONFIG.style.showTooltips &&
+                                    style.showTooltips &&
                                     showToolTipFor('setColor', $event, 'top')
                                 "
                                 @mouseleave="hideTooltip"
                                 @focus="
-                                    FINAL_CONFIG.style.showTooltips &&
+                                    style.showTooltips &&
                                     showToolTipFor('setColor', $event, 'top')
                                 "
                                 @blur="hideTooltip"
                             >
                                 <ColorPicker
                                     v-model:value="selectedColor"
-                                    :backgroundColor="
-                                        FINAL_CONFIG.style.backgroundColor
-                                    "
-                                    :buttonBorderColor="
-                                        FINAL_CONFIG.style.color
-                                    "
+                                    :backgroundColor="style.backgroundColor"
+                                    :buttonBorderColor="style.color"
                                     :isCursorPointer="isCursorPointer"
-                                    :palette="FINAL_CONFIG.style.palette"
+                                    :palette="style.palette"
                                     teleported
                                     @update:value="
                                         setColorOfSelectedShape($event)
@@ -2138,7 +1986,7 @@
                                 </ColorPicker>
                             </button>
                             <TeleportedTooltip
-                                v-if="FINAL_CONFIG.style.showTooltips"
+                                v-if="style.showTooltips"
                                 :show="showTooltip && tooltipKey === 'setColor'"
                                 :x="tooltipPos.x"
                                 :y="tooltipPos.y - 6"
@@ -2175,8 +2023,7 @@
                                     :style="{
                                         width: '100%',
                                         accentColor:
-                                            FINAL_CONFIG.style.color +
-                                            ' !important',
+                                            style.color + ' !important',
                                     }"
                                 />
                             </label>
@@ -2463,6 +2310,8 @@ const FINAL_CONFIG = computed(() => {
 });
 
 const selectedColor = ref(FINAL_CONFIG.value.style.paletteColor);
+const buttons = computed(() => FINAL_CONFIG.value.style.buttons);
+const style = computed(() => FINAL_CONFIG.value.style);
 
 useHints({
     config: () => FINAL_CONFIG.value,
@@ -2474,7 +2323,7 @@ useHints({
 const isCursorPointer = computed(() => FINAL_CONFIG.value.useCursorPointer);
 
 const tooltipStyleObject = computed(() => {
-    const s = FINAL_CONFIG.value.style.tooltips;
+    const s = style.value.tooltips;
     return {
         backgroundColor: s.backgroundColor,
         color: s.color,
@@ -2577,9 +2426,8 @@ function includeResizeHandles(shape) {
     }
 
     const handleRadius = 7;
-    const stroke = FINAL_CONFIG.value.style.color || 'grey';
-    const background =
-        FINAL_CONFIG.value.style.backgroundColor || 'rgba(255,255,255,0.95)';
+    const stroke = style.value.color || 'grey';
+    const background = style.value.backgroundColor || 'rgba(255,255,255,0.95)';
 
     const circleHandle = ({ handle, x, y, cursor = 'nwse-resize' }) => `
         <circle
@@ -3763,7 +3611,7 @@ function updateTextCaretOverlay() {
             x: lineStartX + prefixWidth,
             y1: baselineY - shape.fontSize * 0.85,
             y2: baselineY + shape.fontSize * 0.15,
-            color: shape.color || FINAL_CONFIG.value.style.color,
+            color: shape.color || style.value.color,
         };
     });
 }
@@ -5162,11 +5010,8 @@ function print() {
 
             walkTheDOM(wrapper, (node) => {
                 if (node && node.nodeType === 1) {
-                    node.setAttribute(
-                        'font-family',
-                        FINAL_CONFIG.value.style.fontFamily,
-                    );
-                    node.style.fontFamily = FINAL_CONFIG.value.style.fontFamily;
+                    node.setAttribute('font-family', style.value.fontFamily);
+                    node.style.fontFamily = style.value.fontFamily;
                 }
             });
         }
