@@ -69,6 +69,9 @@ const keyboardIndex = ref(null); // a11y
 const interactionMode = ref('pointer'); // a11y
 
 const FINAL_CONFIG = ref(prepareConfig());
+const cfgLabels = computed(() => FINAL_CONFIG.value.style.labels);
+const cfgBars = computed(() => FINAL_CONFIG.value.style.bars);
+const cfgStyle = computed(() => FINAL_CONFIG.value.style);
 
 useHints({
     config: () => FINAL_CONFIG.value,
@@ -124,11 +127,11 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
     }),
 });
 
-const WIDTH = ref(FINAL_CONFIG.value.style.layout.width);
-const HEIGHT = ref(FINAL_CONFIG.value.style.layout.height);
+const WIDTH = ref(cfgStyle.value.layout.width);
+const HEIGHT = ref(cfgStyle.value.layout.height);
 
 const { svgRef } = useChartAccessibility({
-    config: FINAL_CONFIG.value.style.title,
+    config: cfgStyle.value.title,
 });
 
 function prepareConfig() {
@@ -193,19 +196,15 @@ function prepareChart() {
         const handleResize = throttle(() => {
             const { width, height } = useResponsive({
                 chart: histogramChart.value,
-                title: FINAL_CONFIG.value.style.title.text
-                    ? chartTitle.value
-                    : null,
+                title: cfgStyle.value.title.text ? chartTitle.value : null,
                 source: source.value,
             });
 
-            const _timeLabelHeight = FINAL_CONFIG.value.style.labels.timeLabel
-                .show
-                ? FINAL_CONFIG.value.style.labels.timeLabel.fontSize * 2
+            const _timeLabelHeight = cfgLabels.value.timeLabel.show
+                ? cfgLabels.value.timeLabel.fontSize * 2
                 : 0;
-            const _valueLabelHeight = FINAL_CONFIG.value.style.labels.valueLabel
-                .show
-                ? FINAL_CONFIG.value.style.labels.valueLabel.fontSize * 2
+            const _valueLabelHeight = cfgLabels.value.valueLabel.show
+                ? cfgLabels.value.valueLabel.fontSize * 2
                 : 0;
 
             requestAnimationFrame(() => {
@@ -239,32 +238,31 @@ watch(
 );
 
 const drawingArea = computed(() => {
-    const _timeLabelHeight = FINAL_CONFIG.value.style.labels.timeLabel.show
-        ? FINAL_CONFIG.value.style.labels.timeLabel.fontSize * 2
+    const _timeLabelHeight = cfgLabels.value.timeLabel.show
+        ? cfgLabels.value.timeLabel.fontSize * 2
         : 0;
-    const _valueLabelHeight = FINAL_CONFIG.value.style.labels.valueLabel.show
-        ? FINAL_CONFIG.value.style.labels.valueLabel.fontSize * 2
+    const _valueLabelHeight = cfgLabels.value.valueLabel.show
+        ? cfgLabels.value.valueLabel.fontSize * 2
         : 0;
 
     const height = HEIGHT.value + _timeLabelHeight + _valueLabelHeight;
     const width = WIDTH.value;
-    const top = FINAL_CONFIG.value.style.layout.padding.top;
-    const bottom = height - FINAL_CONFIG.value.style.layout.padding.bottom;
-    const left = FINAL_CONFIG.value.style.layout.padding.left;
-    const right = width - FINAL_CONFIG.value.style.layout.padding.right;
+    const top = cfgStyle.value.layout.padding.top;
+    const bottom = height - cfgStyle.value.layout.padding.bottom;
+    const left = cfgStyle.value.layout.padding.left;
+    const right = width - cfgStyle.value.layout.padding.right;
     const centerY =
-        top +
-        (height - top - FINAL_CONFIG.value.style.layout.padding.bottom) / 2;
+        top + (height - top - cfgStyle.value.layout.padding.bottom) / 2;
     const drawingHeight =
         height -
-        FINAL_CONFIG.value.style.layout.padding.top -
-        FINAL_CONFIG.value.style.layout.padding.bottom -
+        cfgStyle.value.layout.padding.top -
+        cfgStyle.value.layout.padding.bottom -
         _timeLabelHeight -
         _valueLabelHeight;
     const drawingWidth =
         width -
-        FINAL_CONFIG.value.style.layout.padding.left -
-        FINAL_CONFIG.value.style.layout.padding.right;
+        cfgStyle.value.layout.padding.left -
+        cfgStyle.value.layout.padding.right;
     return {
         bottom,
         centerY,
@@ -294,7 +292,7 @@ const computedDataset = computed(() => {
         const height = drawingArea.value.drawingHeight * proportion;
         const unitWidth =
             drawingArea.value.drawingWidth / FINAL_DATASET.value.length;
-        const gap = unitWidth * (FINAL_CONFIG.value.style.bars.gap / 100);
+        const gap = unitWidth * (cfgBars.value.gap / 100);
         const width = unitWidth - gap;
         const y = drawingArea.value.centerY - height / 2;
         const x = drawingArea.value.left + (gap / 2 + i * unitWidth);
@@ -306,19 +304,13 @@ const computedDataset = computed(() => {
         const color = dp.color
             ? dp.color
             : dp.value >= 0
-              ? setOpacity(
-                    FINAL_CONFIG.value.style.bars.colors.positive,
-                    intensity,
-                )
-              : setOpacity(
-                    FINAL_CONFIG.value.style.bars.colors.negative,
-                    intensity,
-                );
+              ? setOpacity(cfgBars.value.colors.positive, intensity)
+              : setOpacity(cfgBars.value.colors.negative, intensity);
         const stroke = dp.color
             ? dp.color
             : dp.value >= 0
-              ? FINAL_CONFIG.value.style.bars.colors.positive
-              : FINAL_CONFIG.value.style.bars.colors.negative;
+              ? cfgBars.value.colors.positive
+              : cfgBars.value.colors.negative;
         const gradient = dp.color
             ? `url(#gradient_datapoint_${i}_${uid.value})`
             : dp.value >= 0
@@ -345,13 +337,13 @@ const computedDataset = computed(() => {
 
 function getTopLabel(datapoint, index) {
     return applyDataLabel(
-        FINAL_CONFIG.value.style.labels.value.formatter,
+        cfgLabels.value.value.formatter,
         datapoint.value,
         dataLabel({
-            p: FINAL_CONFIG.value.style.labels.value.prefix,
+            p: cfgLabels.value.value.prefix,
             v: datapoint.value,
-            s: FINAL_CONFIG.value.style.labels.value.suffix,
-            r: FINAL_CONFIG.value.style.labels.value.rounding,
+            s: cfgLabels.value.value.suffix,
+            r: cfgLabels.value.value.rounding,
         }),
         { datapoint, seriesIndex: index },
     );
@@ -402,7 +394,7 @@ function onChartMouseLeave() {
 }
 
 const animation = computed(() => {
-    return `${FINAL_CONFIG.value.style.animation.speedMs}ms`;
+    return `${cfgStyle.value.animation.speedMs}ms`;
 });
 
 const unitWidth = computed(
@@ -418,15 +410,15 @@ onMounted(async () => {
     await nextTick();
     fitText(
         '.vue-ui-sparkhistogram-top-label',
-        FINAL_CONFIG.value.style.labels.value.minFontSize,
+        cfgLabels.value.value.minFontSize,
     );
     fitText(
         '.vue-ui-sparkhistogram-bottom-label',
-        FINAL_CONFIG.value.style.labels.valueLabel.minFontSize,
+        cfgLabels.value.valueLabel.minFontSize,
     );
     fitText(
         '.vue-ui-sparkhistogram-time-label',
-        FINAL_CONFIG.value.style.labels.timeLabel.minFontSize,
+        cfgLabels.value.timeLabel.minFontSize,
     );
 });
 
@@ -434,15 +426,15 @@ watch([WIDTH, HEIGHT, () => FINAL_DATASET.value], async () => {
     await nextTick();
     fitText(
         '.vue-ui-sparkhistogram-top-label',
-        FINAL_CONFIG.value.style.labels.value.minFontSize,
+        cfgLabels.value.value.minFontSize,
     );
     fitText(
         '.vue-ui-sparkhistogram-bottom-label',
-        FINAL_CONFIG.value.style.labels.valueLabel.minFontSize,
+        cfgLabels.value.valueLabel.minFontSize,
     );
     fitText(
         '.vue-ui-sparkhistogram-time-label',
-        FINAL_CONFIG.value.style.labels.timeLabel.minFontSize,
+        cfgLabels.value.timeLabel.minFontSize,
     );
 });
 
@@ -552,7 +544,7 @@ const a11yTable = computed(() => {
     <div
         class="vue-data-ui-component vue-ui-spark-histogram"
         ref="histogramChart"
-        :style="`width:100%;background:${FINAL_CONFIG.style.backgroundColor};font-family:${FINAL_CONFIG.style.fontFamily}`"
+        :style="`width:100%;background:${cfgStyle.backgroundColor};font-family:${cfgStyle.fontFamily}`"
         @mouseleave="onChartMouseLeave"
     >
         <div :id="`chart-instructions-${uid}`" class="sr-only">
@@ -571,26 +563,26 @@ const a11yTable = computed(() => {
         <!-- TITLE -->
         <div
             ref="chartTitle"
-            v-if="FINAL_CONFIG.style.title.text"
-            :style="`width:calc(100% - 12px);background:transparent;margin:0 auto;margin:${FINAL_CONFIG.style.title.margin};padding: 0 6px;text-align:${FINAL_CONFIG.style.title.textAlign}`"
+            v-if="cfgStyle.title.text"
+            :style="`width:calc(100% - 12px);background:transparent;margin:0 auto;margin:${cfgStyle.title.margin};padding: 0 6px;text-align:${cfgStyle.title.textAlign}`"
         >
             <div
                 data-cy="title"
-                :style="`font-size:${FINAL_CONFIG.style.title.fontSize}px;color:${FINAL_CONFIG.style.title.color};font-weight:${FINAL_CONFIG.style.title.bold ? 'bold' : 'normal'}`"
+                :style="`font-size:${cfgStyle.title.fontSize}px;color:${cfgStyle.title.color};font-weight:${cfgStyle.title.bold ? 'bold' : 'normal'}`"
             >
-                {{ FINAL_CONFIG.style.title.text }}
+                {{ cfgStyle.title.text }}
                 <span data-cy="title-selection" v-if="selectedIndex !== null"
                     >-
                     {{ computedDataset[selectedIndex].timeLabel || '' }}
                     {{
                         applyDataLabel(
-                            FINAL_CONFIG.style.labels.value.formatter,
+                            cfgLabels.value.formatter,
                             computedDataset[selectedIndex].value,
                             dataLabel({
-                                p: FINAL_CONFIG.style.labels.value.prefix,
+                                p: cfgLabels.value.prefix,
                                 v: computedDataset[selectedIndex].value,
-                                s: FINAL_CONFIG.style.labels.value.suffix,
-                                r: FINAL_CONFIG.style.labels.value.rounding,
+                                s: cfgLabels.value.suffix,
+                                r: cfgLabels.value.rounding,
                             }),
                             {
                                 datapoint: computedDataset[selectedIndex],
@@ -614,10 +606,10 @@ const a11yTable = computed(() => {
             </div>
             <div
                 data-cy="subtitle"
-                v-if="FINAL_CONFIG.style.title.subtitle.text"
-                :style="`font-size:${FINAL_CONFIG.style.title.subtitle.fontSize}px;color:${FINAL_CONFIG.style.title.subtitle.color};font-weight:${FINAL_CONFIG.style.title.subtitle.bold ? 'bold' : 'normal'}`"
+                v-if="cfgStyle.title.subtitle.text"
+                :style="`font-size:${cfgStyle.title.subtitle.fontSize}px;color:${cfgStyle.title.subtitle.color};font-weight:${cfgStyle.title.subtitle.bold ? 'bold' : 'normal'}`"
             >
-                {{ FINAL_CONFIG.style.title.subtitle.text }}
+                {{ cfgStyle.title.subtitle.text }}
             </div>
         </div>
 
@@ -665,10 +657,7 @@ const a11yTable = computed(() => {
                             [
                                 '0%',
                                 setOpacity(
-                                    shiftHue(
-                                        FINAL_CONFIG.style.bars.colors.positive,
-                                        0.05,
-                                    ),
+                                    shiftHue(cfgBars.colors.positive, 0.05),
                                     posGrad.intensity,
                                 ),
                                 1,
@@ -676,7 +665,7 @@ const a11yTable = computed(() => {
                             [
                                 '100%',
                                 setOpacity(
-                                    FINAL_CONFIG.style.bars.colors.positive,
+                                    cfgBars.colors.positive,
                                     posGrad.intensity,
                                 ),
                                 1,
@@ -697,10 +686,7 @@ const a11yTable = computed(() => {
                             [
                                 '0%',
                                 setOpacity(
-                                    shiftHue(
-                                        FINAL_CONFIG.style.bars.colors.negative,
-                                        0.05,
-                                    ),
+                                    shiftHue(cfgBars.colors.negative, 0.05),
                                     negGrad.intensity,
                                 ),
                                 1,
@@ -708,7 +694,7 @@ const a11yTable = computed(() => {
                             [
                                 '100%',
                                 setOpacity(
-                                    FINAL_CONFIG.style.bars.colors.negative,
+                                    cfgBars.colors.negative,
                                     negGrad.intensity,
                                 ),
                                 1,
@@ -745,24 +731,17 @@ const a11yTable = computed(() => {
                         data-cy="tooltip-trap"
                         :height="drawingArea.height"
                         :width="rect.unitWidth"
-                        :fill="FINAL_CONFIG.style.selector.fill"
+                        :fill="cfgStyle.selector.fill"
                         :x="rect.trapX"
                         :y="0"
-                        :stroke="FINAL_CONFIG.style.selector.stroke"
-                        :stroke-width="FINAL_CONFIG.style.selector.strokeWidth"
-                        :rx="FINAL_CONFIG.style.selector.borderRadius"
-                        :stroke-dasharray="
-                            FINAL_CONFIG.style.selector.strokeDasharray
-                        "
+                        :stroke="cfgStyle.selector.stroke"
+                        :stroke-width="cfgStyle.selector.strokeWidth"
+                        :rx="cfgStyle.selector.borderRadius"
+                        :stroke-dasharray="cfgStyle.selector.strokeDasharray"
                     />
                 </g>
 
-                <g
-                    v-if="
-                        !FINAL_CONFIG.style.bars.shape ||
-                        FINAL_CONFIG.style.bars.shape === 'square'
-                    "
-                >
+                <g v-if="!cfgBars.shape || cfgBars.shape === 'square'">
                     <rect
                         v-for="(rect, i) in computedDataset"
                         data-cy="datapoint-rect"
@@ -771,16 +750,16 @@ const a11yTable = computed(() => {
                         :height="rect.height"
                         :width="rect.width"
                         :fill="
-                            FINAL_CONFIG.style.bars.colors.gradient.show
+                            cfgBars.colors.gradient.show
                                 ? rect.gradient
                                 : rect.color
                         "
                         :stroke="rect.stroke"
-                        :stroke-width="FINAL_CONFIG.style.bars.strokeWidth"
-                        :rx="`${(FINAL_CONFIG.style.bars.borderRadius * rect.proportion) / 12}%`"
+                        :stroke-width="cfgBars.strokeWidth"
+                        :rx="`${(cfgBars.borderRadius * rect.proportion) / 12}%`"
                         :class="{
                             'vue-ui-sparkhistogram-shape':
-                                FINAL_CONFIG.style.animation.show,
+                                cfgStyle.animation.show,
                         }"
                     />
                 </g>
@@ -792,15 +771,15 @@ const a11yTable = computed(() => {
                             y: rect.y + rect.height / 2,
                         }"
                         :color="
-                            FINAL_CONFIG.style.bars.colors.gradient.show
+                            cfgBars.colors.gradient.show
                                 ? rect.gradient
                                 : rect.color
                         "
-                        :shape="FINAL_CONFIG.style.bars.shape"
+                        :shape="cfgBars.shape"
                         :radius="Math.min(rect.height * 0.4, rect.width * 0.4)"
                         :class="{
                             'vue-ui-sparkhistogram-shape':
-                                FINAL_CONFIG.style.animation.show,
+                                cfgStyle.animation.show,
                         }"
                     />
                 </g>
@@ -808,25 +787,21 @@ const a11yTable = computed(() => {
                 <template v-if="!loading">
                     <g v-for="(val, i) in computedDataset">
                         <text
-                            v-if="FINAL_CONFIG.style.labels.value.show"
+                            v-if="cfgLabels.value.show"
                             class="vue-ui-sparkhistogram-top-label"
                             data-cy="datapoint-label-value"
                             text-anchor="middle"
                             :x="val.textAnchor"
                             :y="
                                 val.y -
-                                FINAL_CONFIG.style.labels.value.fontSize / 3 +
-                                FINAL_CONFIG.style.labels.value.offsetY
+                                cfgLabels.value.fontSize / 3 +
+                                cfgLabels.value.offsetY
                             "
-                            :font-size="
-                                FINAL_CONFIG.style.labels.value.fontSize
-                            "
+                            :font-size="cfgLabels.value.fontSize"
                             :font-weight="
-                                FINAL_CONFIG.style.labels.value.bold
-                                    ? 'bold'
-                                    : 'normal'
+                                cfgLabels.value.bold ? 'bold' : 'normal'
                             "
-                            :fill="FINAL_CONFIG.style.labels.value.color"
+                            :fill="cfgLabels.value.color"
                         >
                             {{ getTopLabel(val, i) }}
                         </text>
@@ -836,21 +811,16 @@ const a11yTable = computed(() => {
                         <text
                             class="vue-ui-sparkhistogram-bottom-label"
                             data-cy="datapoint-label-valueLabel"
-                            v-if="
-                                label.valueLabel &&
-                                FINAL_CONFIG.style.labels.valueLabel.show
-                            "
+                            v-if="label.valueLabel && cfgLabels.valueLabel.show"
                             :x="label.textAnchor"
                             :y="
                                 label.y +
                                 label.height +
-                                FINAL_CONFIG.style.labels.valueLabel.fontSize
+                                cfgLabels.valueLabel.fontSize
                             "
-                            :font-size="
-                                FINAL_CONFIG.style.labels.valueLabel.fontSize
-                            "
+                            :font-size="cfgLabels.valueLabel.fontSize"
                             text-anchor="middle"
-                            :fill="FINAL_CONFIG.style.labels.valueLabel.color"
+                            :fill="cfgLabels.valueLabel.color"
                         >
                             {{ label.valueLabel }}
                         </text>
@@ -860,16 +830,11 @@ const a11yTable = computed(() => {
                         <text
                             class="vue-ui-sparkhistogram-time-label"
                             data-cy="datapoint-label-time"
-                            v-if="
-                                time.timeLabel &&
-                                FINAL_CONFIG.style.labels.timeLabel.show
-                            "
+                            v-if="time.timeLabel && cfgLabels.timeLabel.show"
                             :x="time.textAnchor"
                             :y="drawingArea.height"
-                            :font-size="
-                                FINAL_CONFIG.style.labels.timeLabel.fontSize
-                            "
-                            :fill="FINAL_CONFIG.style.labels.timeLabel.color"
+                            :font-size="cfgLabels.timeLabel.fontSize"
+                            :fill="cfgLabels.timeLabel.color"
                             text-anchor="middle"
                         >
                             {{ time.timeLabel }}
