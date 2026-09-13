@@ -6,23 +6,23 @@
         <div
             class="vue-ui-table-export-hub"
             :style="{ top: exportButtonTop + 'px' }"
-            v-if="FINAL_CONFIG.style.exportMenu.show"
+            v-if="cfgExportMenu.show"
         >
             <button
                 @click="isExportRequest = !isExportRequest"
                 v-html="icons.export"
-                :style="`background:${FINAL_CONFIG.style.exportMenu.backgroundColor};color:${FINAL_CONFIG.style.exportMenu.color};cursor:${isCursorPointer ? 'pointer' : 'default'}`"
+                :style="`background:${cfgExportMenu.backgroundColor};color:${cfgExportMenu.color};cursor:${isCursorPointer ? 'pointer' : 'default'}`"
             />
             <div
                 class="vue-ui-table-export-hub-dropdown"
                 :data-is-open="isExportRequest || 'false'"
-                :style="`background:${FINAL_CONFIG.style.exportMenu.backgroundColor};color:${FINAL_CONFIG.style.exportMenu.color}`"
+                :style="`background:${cfgExportMenu.backgroundColor};color:${cfgExportMenu.color}`"
             >
                 <b class="vue-ui-table-export-hub-title"> Export </b>
                 <button
                     class="close-dropdown"
                     @click="isExportRequest = false"
-                    :style="`background:${FINAL_CONFIG.style.closeButtons.backgroundColor};color:${FINAL_CONFIG.style.closeButtons.color};border-radius:${FINAL_CONFIG.style.closeButtons.borderRadius}`"
+                    :style="`background:${cfgCloseBtns.backgroundColor};color:${cfgCloseBtns.color};border-radius:${cfgCloseBtns.borderRadius}`"
                 >
                     ✖
                 </button>
@@ -35,7 +35,7 @@
                         <button
                             id="exportAll"
                             @click="createXls('all')"
-                            :style="`background:${FINAL_CONFIG.style.exportMenu.buttons.backgroundColor};color:${FINAL_CONFIG.style.exportMenu.buttons.color};cursor:${isCursorPointer ? 'pointer' : 'default'}`"
+                            :style="`background:${cfgExportMenu.buttons.backgroundColor};color:${cfgExportMenu.buttons.color};cursor:${isCursorPointer ? 'pointer' : 'default'}`"
                         >
                             <div v-html="icons.fileDownload" />
                             <span>{{
@@ -50,7 +50,7 @@
                         <button
                             id="exportPage"
                             @click="createXls('page')"
-                            :style="`background:${FINAL_CONFIG.style.exportMenu.buttons.backgroundColor};color:${FINAL_CONFIG.style.exportMenu.buttons.color};cursor:${isCursorPointer ? 'pointer' : 'default'}`"
+                            :style="`background:${cfgExportMenu.buttons.backgroundColor};color:${cfgExportMenu.buttons.color};cursor:${isCursorPointer ? 'pointer' : 'default'}`"
                         >
                             <div v-html="icons.fileDownload" />
                             <span>{{
@@ -86,7 +86,7 @@
                         >
                             <BaseIcon
                                 name="close"
-                                :stroke="FINAL_CONFIG.style.exportMenu.color"
+                                :stroke="cfgExportMenu.color"
                                 :size="18"
                             />
                         </button>
@@ -103,43 +103,36 @@
                 <caption
                     class="vue-ui-table__caption"
                     ref="tableCaption"
-                    v-if="FINAL_CONFIG.style.title.text"
+                    v-if="cfgTitle.text"
                     :style="{
-                        textAlign: FINAL_CONFIG.style.title.textAlign,
-                        paddingLeft:
-                            FINAL_CONFIG.style.title.paddingLeft + 'px',
-                        paddingRight:
-                            FINAL_CONFIG.style.title.paddingRight + 'px',
-                        backgroundColor:
-                            FINAL_CONFIG.style.title.backgroundColor,
-                        boxShadow: `${FINAL_CONFIG.style.title.backgroundColor} -1px 0px 0px 0px`,
+                        textAlign: cfgTitle.textAlign,
+                        paddingLeft: cfgTitle.paddingLeft + 'px',
+                        paddingRight: cfgTitle.paddingRight + 'px',
+                        backgroundColor: cfgTitle.backgroundColor,
+                        boxShadow: `${cfgTitle.backgroundColor} -1px 0px 0px 0px`,
                     }"
                 >
                     <span
                         :style="{
-                            fontSize: FINAL_CONFIG.style.title.fontSize + 'px',
-                            fontWeight: FINAL_CONFIG.style.title.bold
-                                ? 'bold'
-                                : 'normal',
-                            color: FINAL_CONFIG.style.title.color,
+                            fontSize: cfgTitle.fontSize + 'px',
+                            fontWeight: cfgTitle.bold ? 'bold' : 'normal',
+                            color: cfgTitle.color,
                         }"
                     >
-                        {{ FINAL_CONFIG.style.title.text }}
+                        {{ cfgTitle.text }}
                     </span>
-                    <template v-if="FINAL_CONFIG.style.title.subtitle.text">
+                    <template v-if="cfgTitle.subtitle.text">
                         <br />
                         <span
                             :style="{
-                                fontSize:
-                                    FINAL_CONFIG.style.title.subtitle.fontSize,
-                                fontWeight: FINAL_CONFIG.style.title.subtitle
-                                    .bold
+                                fontSize: cfgTitle.subtitle.fontSize,
+                                fontWeight: cfgTitle.subtitle.bold
                                     ? 'bold'
                                     : 'normal',
-                                color: FINAL_CONFIG.style.title.subtitle.color,
+                                color: cfgTitle.subtitle.color,
                             }"
                         >
-                            {{ FINAL_CONFIG.style.title.subtitle.text }}
+                            {{ cfgTitle.subtitle.text }}
                         </span>
                     </template>
                 </caption>
@@ -148,8 +141,8 @@
                     id="tableHead"
                     class="vue-ui-table__head"
                     :style="{
-                        background: FINAL_CONFIG.style.th.backgroundColor,
-                        boxShadow: `-1px 0 0 ${FINAL_CONFIG.style.th.backgroundColor}`,
+                        background: cfgTh.backgroundColor,
+                        boxShadow: `-1px 0 0 ${cfgTh.backgroundColor}`,
                         top: exportButtonTop - 3 + 'px',
                     }"
                 >
@@ -159,7 +152,7 @@
                         <th
                             v-for="(th, i) in tableHead"
                             :key="`thead_${i}`"
-                            :style="`overflow: visible;background:${FINAL_CONFIG.style.th.backgroundColor};color:${FINAL_CONFIG.style.th.color};outline:${FINAL_CONFIG.style.th.outline}`"
+                            :style="`overflow: visible;background:${cfgTh.backgroundColor};color:${cfgTh.color};outline:${cfgTh.outline}`"
                             :class="{ 'th-has-nan': hasNaN[i] }"
                         >
                             <span
@@ -189,7 +182,7 @@
                                     'th-numeric': true,
                                     'th-has-nan': hasNaN[i],
                                 }"
-                                :style="`background:${FINAL_CONFIG.style.th.backgroundColor};color:${FINAL_CONFIG.style.th.color};outline:${FINAL_CONFIG.style.th.outline}`"
+                                :style="`background:${cfgTh.backgroundColor};color:${cfgTh.color};outline:${cfgTh.outline}`"
                             >
                                 <span
                                     v-if="th.sum && !hasNaN[i]"
@@ -258,7 +251,7 @@
                                     'th-numeric': true,
                                     'th-has-nan': hasNaN[i],
                                 }"
-                                :style="`background:${FINAL_CONFIG.style.th.backgroundColor};color:${FINAL_CONFIG.style.th.color};outline:${FINAL_CONFIG.style.th.outline}`"
+                                :style="`background:${cfgTh.backgroundColor};color:${cfgTh.color};outline:${cfgTh.outline}`"
                             >
                                 <span v-if="th.average && !hasNaN[i]">
                                     ~
@@ -283,7 +276,7 @@
                                 v-for="(th, i) in tableHead"
                                 :key="`thead_${i}`"
                                 :class="{ 'th-has-nan': hasNaN[i] }"
-                                :style="`background:${FINAL_CONFIG.style.th.backgroundColor};color:${FINAL_CONFIG.style.th.color};outline:${FINAL_CONFIG.style.th.outline}`"
+                                :style="`background:${cfgTh.backgroundColor};color:${cfgTh.color};outline:${cfgTh.outline}`"
                             >
                                 <div class="th-filter">
                                     <!-- DATE -->
@@ -313,7 +306,7 @@
                                                                 i,
                                                             );
                                                         "
-                                                        :style="`background:${FINAL_CONFIG.style.inputs.backgroundColor};color:${FINAL_CONFIG.style.inputs.color};border:${FINAL_CONFIG.style.inputs.border}`"
+                                                        :style="`background:${cfgInputs.backgroundColor};color:${cfgInputs.color};border:${cfgInputs.border}`"
                                                     />
                                                 </div>
                                                 <div class="date-fieldset">
@@ -333,7 +326,7 @@
                                                                 i,
                                                             );
                                                         "
-                                                        :style="`background:${FINAL_CONFIG.style.inputs.backgroundColor};color:${FINAL_CONFIG.style.inputs.color};border:${FINAL_CONFIG.style.inputs.border}`"
+                                                        :style="`background:${cfgInputs.backgroundColor};color:${cfgInputs.color};border:${cfgInputs.border}`"
                                                     />
                                                 </div>
                                             </div>
@@ -347,7 +340,7 @@
                                                             constants.ASC,
                                                         ].includes(sorts[i]),
                                                     }"
-                                                    :style="`cursor:${isCursorPointer ? 'pointer' : 'default'}; background:${[constants.DESC, constants.ASC].includes(sorts[i]) ? '' : FINAL_CONFIG.style.th.buttons.filter.inactive.backgroundColor};color:${[constants.DESC, constants.ASC].includes(sorts[i]) ? '' : FINAL_CONFIG.style.th.buttons.filter.inactive.color}`"
+                                                    :style="`cursor:${isCursorPointer ? 'pointer' : 'default'}; background:${[constants.DESC, constants.ASC].includes(sorts[i]) ? '' : cfgTh.buttons.filter.inactive.backgroundColor};color:${[constants.DESC, constants.ASC].includes(sorts[i]) ? '' : cfgTh.buttons.filter.inactive.color}`"
                                                 >
                                                     <span
                                                         v-if="
@@ -418,7 +411,7 @@
                                         v-model="searches[i]"
                                         @input="debounce(filterBody, 400)"
                                         :name="`search_${i}`"
-                                        :style="`background:${FINAL_CONFIG.style.inputs.backgroundColor};color:${FINAL_CONFIG.style.inputs.color};border:${FINAL_CONFIG.style.inputs.border}`"
+                                        :style="`background:${cfgInputs.backgroundColor};color:${cfgInputs.color};border:${cfgInputs.border}`"
                                     />
                                     <!-- SORT -->
                                     <button
@@ -434,7 +427,7 @@
                                                 constants.ASC,
                                             ].includes(sorts[i]),
                                         }"
-                                        :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${[constants.DESC, constants.ASC].includes(sorts[i]) ? '' : FINAL_CONFIG.style.th.buttons.filter.inactive.backgroundColor};color:${[constants.DESC, constants.ASC].includes(sorts[i]) ? '' : FINAL_CONFIG.style.th.buttons.filter.inactive.color}`"
+                                        :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${[constants.DESC, constants.ASC].includes(sorts[i]) ? '' : cfgTh.buttons.filter.inactive.backgroundColor};color:${[constants.DESC, constants.ASC].includes(sorts[i]) ? '' : cfgTh.buttons.filter.inactive.color}`"
                                     >
                                         <span
                                             v-if="sorts[i] === constants.ASC"
@@ -475,7 +468,7 @@
                                                     getDropdownOptions(i)
                                                         .length,
                                         }"
-                                        :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${multiselects[i] && multiselects[i].length !== getDropdownOptions(i).length ? '' : FINAL_CONFIG.style.th.buttons.filter.inactive.backgroundColor};color:${multiselects[i] && multiselects[i].length !== getDropdownOptions(i).length ? '' : FINAL_CONFIG.style.th.buttons.filter.inactive.color}`"
+                                        :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${multiselects[i] && multiselects[i].length !== getDropdownOptions(i).length ? '' : cfgTh.buttons.filter.inactive.backgroundColor};color:${multiselects[i] && multiselects[i].length !== getDropdownOptions(i).length ? '' : cfgTh.buttons.filter.inactive.color}`"
                                     />
 
                                     <!-- SHOW CHART -->
@@ -489,7 +482,7 @@
                                         :class="{
                                             'th-button-active': showChart,
                                         }"
-                                        :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${showChart ? '' : FINAL_CONFIG.style.th.buttons.filter.inactive.backgroundColor};color:${showChart ? '' : FINAL_CONFIG.style.th.buttons.filter.inactive.color}`"
+                                        :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${showChart ? '' : cfgTh.buttons.filter.inactive.backgroundColor};color:${showChart ? '' : cfgTh.buttons.filter.inactive.color}`"
                                     />
 
                                     <div
@@ -514,7 +507,7 @@
                                             :min="immutableRangeFilters[i].min"
                                             v-model.number="rangeFilters[i].min"
                                             @input="debounce(filterBody, 400)"
-                                            :style="`background:${FINAL_CONFIG.style.inputs.backgroundColor};color:${FINAL_CONFIG.style.inputs.color};border:${FINAL_CONFIG.style.inputs.border}`"
+                                            :style="`background:${cfgInputs.backgroundColor};color:${cfgInputs.color};border:${cfgInputs.border}`"
                                         />
                                         <input
                                             type="number"
@@ -523,7 +516,7 @@
                                             :min="immutableRangeFilters[i].min"
                                             v-model.number="rangeFilters[i].max"
                                             @input="debounce(filterBody, 400)"
-                                            :style="`background:${FINAL_CONFIG.style.inputs.backgroundColor};color:${FINAL_CONFIG.style.inputs.color};border:${FINAL_CONFIG.style.inputs.border}`"
+                                            :style="`background:${cfgInputs.backgroundColor};color:${cfgInputs.color};border:${cfgInputs.border}`"
                                         />
                                         <label :for="`rangeMax${i}`"
                                             ><span style="color: grey">ᒪ</span>
@@ -555,14 +548,14 @@
                                         v-if="th.isMultiselect"
                                         data-is-open="false"
                                         :id="`th_dropdown_${i}`"
-                                        :style="`background:${FINAL_CONFIG.style.dropdowns.backgroundColor};color:${FINAL_CONFIG.style.dropdowns.color}`"
+                                        :style="`background:${cfgDropdowns.backgroundColor};color:${cfgDropdowns.color}`"
                                     >
                                         <button
                                             class="close-dropdown"
                                             @click="
                                                 toggleMultiselect(i, th, $event)
                                             "
-                                            :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${FINAL_CONFIG.style.closeButtons.backgroundColor};color:${FINAL_CONFIG.style.closeButtons.color}`"
+                                            :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${cfgCloseBtns.backgroundColor};color:${cfgCloseBtns.color}`"
                                         >
                                             ✖
                                         </button>
@@ -591,23 +584,22 @@
                                                         i,
                                                     )
                                                 "
-                                                :style="`color:${FINAL_CONFIG.style.dropdowns.icons.selected.color};margin-right:5px`"
+                                                :style="`color:${cfgDropdowns.icons.selected.color};margin-right:5px`"
                                                 class="th-icon-green"
                                             >
                                                 {{
-                                                    FINAL_CONFIG.style.dropdowns
-                                                        .icons.selected.unicode
+                                                    cfgDropdowns.icons.selected
+                                                        .unicode
                                                 }}
                                             </span>
                                             <span
                                                 v-else
-                                                :style="`color:${FINAL_CONFIG.style.dropdowns.icons.unselected.color};margin-right:5px`"
+                                                :style="`color:${cfgDropdowns.icons.unselected.color};margin-right:5px`"
                                                 class="th-icon-red"
                                             >
                                                 {{
-                                                    FINAL_CONFIG.style.dropdowns
-                                                        .icons.unselected
-                                                        .unicode
+                                                    cfgDropdowns.icons
+                                                        .unselected.unicode
                                                 }}
                                             </span>
                                             <span>
@@ -630,7 +622,7 @@
                                 'vue-ui-table-col-selector': !hasNaN[i],
                                 'th-has-nan': hasNaN[i],
                             }"
-                            :style="`background:${i === selectedColumn && !hasNaN[i] ? FINAL_CONFIG.style.th.selected.backgroundColor : FINAL_CONFIG.style.th.backgroundColor};color:${i === selectedColumn && !hasNaN[i] ? FINAL_CONFIG.style.th.selected.color : FINAL_CONFIG.style.th.color};outline:${FINAL_CONFIG.style.th.outline}`"
+                            :style="`background:${i === selectedColumn && !hasNaN[i] ? cfgTh.selected.backgroundColor : cfgTh.backgroundColor};color:${i === selectedColumn && !hasNaN[i] ? cfgTh.selected.color : cfgTh.color};outline:${cfgTh.outline}`"
                         >
                             <div
                                 v-if="!hasNaN[i]"
@@ -666,13 +658,13 @@
                         :key="`tbody_${i}`"
                         :data-row="i % 2 === 0 ? 'odd' : 'even'"
                         :class="`tr_${uid}`"
-                        :style="`${i % 2 === 0 ? `background:${FINAL_CONFIG.style.rows.odd.backgroundColor};color:${FINAL_CONFIG.style.rows.odd.color}` : `background:${FINAL_CONFIG.style.rows.even.backgroundColor};color:${FINAL_CONFIG.style.rows.even.color}`}`"
+                        :style="`${i % 2 === 0 ? `background:${cfgRows.odd.backgroundColor};color:${cfgRows.odd.color}` : `background:${cfgRows.even.backgroundColor};color:${cfgRows.even.color}`}`"
                     >
                         <td
                             class="vue-ui-table-td-iteration"
                             :data-row="i % 2 === 0 ? 'odd' : 'even'"
                             :style="{
-                                outline: FINAL_CONFIG.style.rows.outline,
+                                outline: cfgRows.outline,
                             }"
                         >
                             {{ tr.absoluteIndex + 1 }}
@@ -684,8 +676,8 @@
                             :style="
                                 isNumeric(td) ||
                                 dataset.header[j].type === constants.DATE
-                                    ? `text-align:right;font-variant-numeric: tabular-nums;outline:${FINAL_CONFIG.style.rows.outline}`
-                                    : `outline:${FINAL_CONFIG.style.rows.outline}`
+                                    ? `text-align:right;font-variant-numeric: tabular-nums;outline:${cfgRows.outline}`
+                                    : `outline:${cfgRows.outline}`
                             "
                             @click="
                                 selectTd({
@@ -836,7 +828,7 @@
                     currentSelectionSpan.col !== undefined &&
                     currentSelectionSpan.rows.length,
             }"
-            :style="`background:${FINAL_CONFIG.style.infoBar.backgroundColor};color:${FINAL_CONFIG.style.infoBar.color}`"
+            :style="`background:${cfgStyle.infoBar.backgroundColor};color:${cfgStyle.infoBar.color}`"
         >
             <template
                 v-if="
@@ -936,7 +928,7 @@
                 <button
                     @click="resetSelection"
                     class="td-selector-info-reset"
-                    :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${FINAL_CONFIG.style.closeButtons.backgroundColor};color:${FINAL_CONFIG.style.closeButtons.color};border-radius:${FINAL_CONFIG.style.closeButtons.borderRadius}`"
+                    :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${cfgCloseBtns.backgroundColor};color:${cfgCloseBtns.color};border-radius:${cfgCloseBtns.borderRadius}`"
                 >
                     ✖
                 </button>
@@ -959,7 +951,7 @@
                     resetSelection();
                     onPageChange();
                 "
-                :style="`background:${FINAL_CONFIG.style.inputs.backgroundColor};color:${FINAL_CONFIG.style.inputs.color};border:${FINAL_CONFIG.style.inputs.border}`"
+                :style="`background:${cfgInputs.backgroundColor};color:${cfgInputs.color};border:${cfgInputs.border}`"
             >
                 <template v-for="(option, i) in paginatorOptions">
                     <option
@@ -984,7 +976,7 @@
         <div
             class="vue-ui-table-navigation-indicator"
             v-if="pages.length > 1 && pages.length <= 10"
-            :style="`background:${FINAL_CONFIG.style.pagination.navigationIndicator.backgroundColor};width:calc(${(currentPage / (pages.length - 1)) * 100}%)`"
+            :style="`background:${cfgPagination.navigationIndicator.backgroundColor};width:calc(${(currentPage / (pages.length - 1)) * 100}%)`"
         />
         <div class="vue-ui-table-pagination format-num" v-if="pages.length > 1">
             <!-- PREVIOUS PAGE -->
@@ -993,7 +985,7 @@
                 @click.stop="navigate('previous')"
                 v-html="icons.chevronLeft"
                 :disabled="currentPage === 0"
-                :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${FINAL_CONFIG.style.pagination.buttons.backgroundColor};color:${FINAL_CONFIG.style.pagination.buttons.color};opacity:${currentPage === 0 ? FINAL_CONFIG.style.pagination.buttons.opacityDisabled : 1}`"
+                :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${cfgPagination.buttons.backgroundColor};color:${cfgPagination.buttons.color};opacity:${currentPage === 0 ? cfgPagination.buttons.opacityDisabled : 1}`"
             />
             <template v-if="pages.length > 3">
                 <!-- FIRST PAGE -->
@@ -1001,7 +993,7 @@
                     class="vue-ui-table-navigation"
                     @click.stop="navigate(1)"
                     :disabled="currentPage === 0"
-                    :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${FINAL_CONFIG.style.pagination.buttons.backgroundColor};color:${FINAL_CONFIG.style.pagination.buttons.color};opacity:${currentPage === 0 ? FINAL_CONFIG.style.pagination.buttons.opacityDisabled : 1}`"
+                    :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${cfgPagination.buttons.backgroundColor};color:${cfgPagination.buttons.color};opacity:${currentPage === 0 ? cfgPagination.buttons.opacityDisabled : 1}`"
                 >
                     1
                 </button>
@@ -1024,7 +1016,7 @@
                         :max="pages.length - 1"
                         @input="updateCurrentPage($event)"
                         :value="currentPage"
-                        :style="`background:${FINAL_CONFIG.style.inputs.backgroundColor};color:${FINAL_CONFIG.style.inputs.color};border:${FINAL_CONFIG.style.inputs.border};accent-color:${FINAL_CONFIG.style.inputs.accentColor}`"
+                        :style="`background:${cfgInputs.backgroundColor};color:${cfgInputs.color};border:${cfgInputs.border};accent-color:${cfgInputs.accentColor}`"
                     />
                 </div>
                 <span v-else>
@@ -1036,7 +1028,7 @@
                     class="vue-ui-table-navigation"
                     @click.stop="navigate(pages.length)"
                     :disabled="currentPage === pages.length - 1"
-                    :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${FINAL_CONFIG.style.pagination.buttons.backgroundColor};color:${FINAL_CONFIG.style.pagination.buttons.color};opacity:${currentPage === pages.length - 1 ? FINAL_CONFIG.style.pagination.buttons.opacityDisabled : 1}`"
+                    :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${cfgPagination.buttons.backgroundColor};color:${cfgPagination.buttons.color};opacity:${currentPage === pages.length - 1 ? cfgPagination.buttons.opacityDisabled : 1}`"
                 >
                     {{ pages.length }}
                 </button>
@@ -1051,16 +1043,16 @@
                 @click.stop="navigate('next')"
                 v-html="icons.chevronRight"
                 :disabled="currentPage === pages.length - 1"
-                :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${FINAL_CONFIG.style.pagination.buttons.backgroundColor};color:${FINAL_CONFIG.style.pagination.buttons.color};opacity:${currentPage === pages.length - 1 ? FINAL_CONFIG.style.pagination.buttons.opacityDisabled : 1}`"
+                :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${cfgPagination.buttons.backgroundColor};color:${cfgPagination.buttons.color};opacity:${currentPage === pages.length - 1 ? cfgPagination.buttons.opacityDisabled : 1}`"
             />
         </div>
 
         <!-- CHART MODAL -->
         <BaseDraggableDialog
             ref="chartModal"
-            :backgroundColor="FINAL_CONFIG.style.chart.modal.backgroundColor"
-            :headerColor="FINAL_CONFIG.style.chart.modal.color"
-            :color="FINAL_CONFIG.style.chart.modal.color"
+            :backgroundColor="cfgChart.modal.backgroundColor"
+            :headerColor="cfgChart.modal.color"
+            :color="cfgChart.modal.color"
             :forcedHeight="500"
             :isCursorPointer="isCursorPointer"
             withPadding
@@ -1080,7 +1072,7 @@
                                 chart.type === constants.DONUT ||
                                 showDonutOptions,
                         }"
-                        :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${chart.type === constants.DONUT || showDonutOptions ? FINAL_CONFIG.style.chart.modal.buttons.selected.backgroundColor : FINAL_CONFIG.style.chart.modal.buttons.unselected.backgroundColor};color:${chart.type === constants.DONUT || showDonutOptions ? FINAL_CONFIG.style.chart.modal.buttons.selected.color : FINAL_CONFIG.style.chart.modal.buttons.unselected.color}`"
+                        :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${chart.type === constants.DONUT || showDonutOptions ? cfgChart.modal.buttons.selected.backgroundColor : cfgChart.modal.buttons.unselected.backgroundColor};color:${chart.type === constants.DONUT || showDonutOptions ? cfgChart.modal.buttons.selected.color : cfgChart.modal.buttons.unselected.color}`"
                     />
                     <button
                         @click="
@@ -1093,7 +1085,7 @@
                                 chart.type === constants.LINE &&
                                 !showDonutOptions,
                         }"
-                        :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${chart.type === constants.LINE && !showDonutOptions ? FINAL_CONFIG.style.chart.modal.buttons.selected.backgroundColor : FINAL_CONFIG.style.chart.modal.buttons.unselected.backgroundColor};color:${chart.type === constants.LINE && !showDonutOptions ? FINAL_CONFIG.style.chart.modal.buttons.selected.color : FINAL_CONFIG.style.chart.modal.buttons.unselected.color}`"
+                        :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${chart.type === constants.LINE && !showDonutOptions ? cfgChart.modal.buttons.selected.backgroundColor : cfgChart.modal.buttons.unselected.backgroundColor};color:${chart.type === constants.LINE && !showDonutOptions ? cfgChart.modal.buttons.selected.color : cfgChart.modal.buttons.unselected.color}`"
                     />
                     <button
                         @click="
@@ -1106,7 +1098,7 @@
                                 chart.type === constants.BAR &&
                                 !showDonutOptions,
                         }"
-                        :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${chart.type === constants.BAR && !showDonutOptions ? FINAL_CONFIG.style.chart.modal.buttons.selected.backgroundColor : FINAL_CONFIG.style.chart.modal.buttons.unselected.backgroundColor};color:${chart.type === constants.BAR && !showDonutOptions ? FINAL_CONFIG.style.chart.modal.buttons.selected.color : FINAL_CONFIG.style.chart.modal.buttons.unselected.color}`"
+                        :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${chart.type === constants.BAR && !showDonutOptions ? cfgChart.modal.buttons.selected.backgroundColor : cfgChart.modal.buttons.unselected.backgroundColor};color:${chart.type === constants.BAR && !showDonutOptions ? cfgChart.modal.buttons.selected.color : cfgChart.modal.buttons.unselected.color}`"
                     />
                 </div>
             </template>
@@ -1118,7 +1110,7 @@
                         v-if="
                             showDonutOptions && availableDonutCategories.length
                         "
-                        :style="`background:${FINAL_CONFIG.style.chart.modal.backgroundColor};color:${FINAL_CONFIG.style.chart.modal.color}`"
+                        :style="`background:${cfgChart.modal.backgroundColor};color:${cfgChart.modal.color}`"
                     >
                         <fieldset class="vue-ui-table-fieldset">
                             <legend>
@@ -1148,7 +1140,7 @@
                                                 selectedDonutCategory =
                                                     availableDonutCategories[i]
                                             "
-                                            :style="`background:${FINAL_CONFIG.style.inputs.backgroundColor};color:${FINAL_CONFIG.style.inputs.color};border:${FINAL_CONFIG.style.inputs.border};accent-color:${FINAL_CONFIG.style.inputs.accentColor}`"
+                                            :style="`background:${cfgInputs.backgroundColor};color:${cfgInputs.color};border:${cfgInputs.border};accent-color:${cfgInputs.accentColor}`"
                                         />
                                         <label :for="option.name">
                                             {{ option.name }}
@@ -1160,7 +1152,7 @@
                                 class="vue-ui-table-generate-donut"
                                 :disabled="!selectedDonutCategory"
                                 @click="applyDonutOption"
-                                :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${FINAL_CONFIG.style.chart.modal.buttons.selected.backgroundColor};color:${FINAL_CONFIG.style.chart.modal.buttons.selected.color}`"
+                                :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${cfgChart.modal.buttons.selected.backgroundColor};color:${cfgChart.modal.buttons.selected.color}`"
                             >
                                 <div
                                     style="margin-bottom: -3px"
@@ -1182,7 +1174,7 @@
                         <label
                             v-if="chartTimeLabelOptions.length > 1"
                             :style="{
-                                color: FINAL_CONFIG.style.chart.modal.color,
+                                color: cfgChart.modal.color,
                             }"
                         >
                             {{ FINAL_CONFIG.translations.xAxisLabels }}
@@ -1209,7 +1201,7 @@
                         <div
                             v-if="currentSelectionSpan.rows.length >= 2"
                             class="chart-trend"
-                            :style="`color:${FINAL_CONFIG.style.chart.modal.color}`"
+                            :style="`color:${cfgChart.modal.color}`"
                         >
                             <span>---</span> Trend:
                             {{
@@ -1439,6 +1431,17 @@ const FINAL_CONFIG = computed(() => {
     return convertConfigColors(reconcilied);
 });
 
+const cfgExportMenu = computed(() => FINAL_CONFIG.value.style.exportMenu);
+const cfgTitle = computed(() => FINAL_CONFIG.value.style.title);
+const cfgTh = computed(() => FINAL_CONFIG.value.style.th);
+const cfgInputs = computed(() => FINAL_CONFIG.value.style.inputs);
+const cfgDropdowns = computed(() => FINAL_CONFIG.value.style.dropdowns);
+const cfgCloseBtns = computed(() => FINAL_CONFIG.value.style.closeButtons);
+const cfgRows = computed(() => FINAL_CONFIG.value.style.rows);
+const cfgPagination = computed(() => FINAL_CONFIG.value.style.pagination);
+const cfgChart = computed(() => FINAL_CONFIG.value.style.chart);
+const cfgStyle = computed(() => FINAL_CONFIG.value.style);
+
 useHints({
     config: () => FINAL_CONFIG.value,
     dataset: () => props.dataset,
@@ -1448,19 +1451,19 @@ useHints({
 
 const isCursorPointer = computed(() => FINAL_CONFIG.value.useCursorPointer);
 const colorCancelInactive = computed(
-    () => FINAL_CONFIG.value.style.th.buttons.cancel.inactive.backgroundColor,
+    () => cfgTh.value.buttons.cancel.inactive.backgroundColor,
 );
 const textColorCancelInactive = computed(
-    () => FINAL_CONFIG.value.style.th.buttons.cancel.inactive.color,
+    () => cfgTh.value.buttons.cancel.inactive.color,
 );
 const colorCancelActive = computed(
-    () => FINAL_CONFIG.value.style.th.buttons.cancel.active.backgroundColor,
+    () => cfgTh.value.buttons.cancel.active.backgroundColor,
 );
 const colorButtonSortActive = computed(
-    () => FINAL_CONFIG.value.style.th.buttons.filter.active.backgroundColor,
+    () => cfgTh.value.buttons.filter.active.backgroundColor,
 );
 const colorButtonSortActiveColorText = computed(
-    () => FINAL_CONFIG.value.style.th.buttons.filter.active.color,
+    () => cfgTh.value.buttons.filter.active.color,
 );
 
 const colorCancelActiveLight = computed(() =>
@@ -1644,9 +1647,9 @@ const chartData = computed(() => {
             series: currentSelectionSpan.value.rows.map((r) => r.value),
             type: 'line',
             useProgression: true,
-            smooth: FINAL_CONFIG.value.style.chart.layout.line.smooth,
-            color: FINAL_CONFIG.value.style.chart.layout.line.stroke,
-            useArea: FINAL_CONFIG.value.style.chart.layout.line.useArea,
+            smooth: cfgChart.value.layout.line.smooth,
+            color: cfgChart.value.layout.line.stroke,
+            useArea: cfgChart.value.layout.line.useArea,
         },
     ];
     const xyDatasetBar = [
@@ -1655,11 +1658,11 @@ const chartData = computed(() => {
             series: currentSelectionSpan.value.rows.map((r) => r.value),
             type: 'bar',
             useProgression: true,
-            color: FINAL_CONFIG.value.style.chart.layout.bar.fill,
+            color: cfgChart.value.layout.bar.fill,
         },
     ];
 
-    const bg = FINAL_CONFIG.value.style.chart.modal.backgroundColor;
+    const bg = cfgChart.value.modal.backgroundColor;
     const textColor = adaptColorToBackground(bg);
     const rounding =
         props.dataset.header[currentSelectionSpan.value.col].decimals;
@@ -1685,13 +1688,10 @@ const chartData = computed(() => {
                         show: chartTimeLabels.value.length,
                         values: chartTimeLabels.value,
                         datetimeFormatter:
-                            FINAL_CONFIG.value.style.chart.layout
-                                .datetimeFormatter,
+                            cfgChart.value.layout.datetimeFormatter,
                         showOnlyAtModulo:
-                            FINAL_CONFIG.value.style.chart.layout.timeLabels
-                                .showOnlyAtModulo,
-                        modulo: FINAL_CONFIG.value.style.chart.layout.timeLabels
-                            .modulo,
+                            cfgChart.value.layout.timeLabels.showOnlyAtModulo,
+                        modulo: cfgChart.value.layout.timeLabels.modulo,
                     },
                 },
             },
@@ -1725,8 +1725,8 @@ const chartData = computed(() => {
                 },
             },
             zoom: {
-                show: FINAL_CONFIG.value.style.chart.layout.zoom.show,
-                autoFit: FINAL_CONFIG.value.style.chart.layout.zoom.autoFit,
+                show: cfgChart.value.layout.zoom.show,
+                autoFit: cfgChart.value.layout.zoom.autoFit,
                 focusOnDrag: true,
                 minimap: {
                     show: true,
@@ -1741,18 +1741,16 @@ const chartData = computed(() => {
             },
             dot: {
                 useSerieColor: false,
-                fill: FINAL_CONFIG.value.style.chart.layout.line.plot.fill,
-                strokeWidth:
-                    FINAL_CONFIG.value.style.chart.layout.line.plot.strokeWidth,
+                fill: cfgChart.value.layout.line.plot.fill,
+                strokeWidth: cfgChart.value.layout.line.plot.strokeWidth,
             },
         },
         bar: {
             useGradient: false,
             border: {
                 useSerieColor: false,
-                stroke: FINAL_CONFIG.value.style.chart.layout.bar.stroke,
-                strokeWidth:
-                    FINAL_CONFIG.value.style.chart.layout.bar.strokeWidth,
+                stroke: cfgChart.value.layout.bar.stroke,
+                strokeWidth: cfgChart.value.layout.bar.strokeWidth,
             },
             labels: {
                 show: true,
@@ -1962,13 +1960,11 @@ function resetSelection() {
     Array.from(rows).forEach((tr) => {
         Array.from(tr.getElementsByTagName('td')).forEach((td) => {
             if (td.dataset.row === 'even') {
-                td.style.background =
-                    FINAL_CONFIG.value.style.rows.even.backgroundColor;
-                td.style.color = FINAL_CONFIG.value.style.rows.even.color;
+                td.style.background = cfgRows.value.even.backgroundColor;
+                td.style.color = cfgRows.value.even.color;
             } else {
-                td.style.background =
-                    FINAL_CONFIG.value.style.rows.odd.backgroundColor;
-                td.style.color = FINAL_CONFIG.value.style.rows.odd.color;
+                td.style.background = cfgRows.value.odd.backgroundColor;
+                td.style.color = cfgRows.value.odd.color;
             }
         });
     });
@@ -2540,26 +2536,22 @@ function selectTd({ td, rowIndex, colIndex, headerType, event }) {
         event.currentTarget.classList.remove(cssClass.value.CELL);
         Array.from(tr.children).forEach((td, i) => {
             if (td.dataset.row === 'even') {
-                td.style.background =
-                    FINAL_CONFIG.value.style.rows.even.backgroundColor;
-                td.style.color = FINAL_CONFIG.value.style.rows.even.olor;
+                td.style.background = cfgRows.value.even.backgroundColor;
+                td.style.color = cfgRows.value.even.olor;
             } else {
-                td.style.background =
-                    FINAL_CONFIG.value.style.rows.odd.backgroundColor;
-                td.style.color = FINAL_CONFIG.value.style.rows.odd.color;
+                td.style.background = cfgRows.value.odd.backgroundColor;
+                td.style.color = cfgRows.value.odd.color;
             }
         });
 
         if (event.currentTarget.dataset.row === 'even') {
             event.currentTarget.style.background =
-                FINAL_CONFIG.value.style.rows.even.backgroundColor;
-            event.currentTarget.style.color =
-                FINAL_CONFIG.value.style.rows.even.color;
+                cfgRows.value.even.backgroundColor;
+            event.currentTarget.style.color = cfgRows.value.even.color;
         } else {
             event.currentTarget.style.background =
-                FINAL_CONFIG.value.style.rows.odd.backgroundColor;
-            event.currentTarget.style.color =
-                FINAL_CONFIG.value.style.rows.odd.color;
+                cfgRows.value.odd.backgroundColor;
+            event.currentTarget.style.color = cfgRows.value.odd.color;
         }
     } else {
         tr.dataset.selected = 'true';
@@ -2570,27 +2562,25 @@ function selectTd({ td, rowIndex, colIndex, headerType, event }) {
         Array.from(tr.children).forEach((td, i) => {
             if (td.dataset.row === 'even') {
                 td.style.background =
-                    FINAL_CONFIG.value.style.rows.even.selectedNeighbors.backgroundColor;
-                td.style.color =
-                    FINAL_CONFIG.value.style.rows.even.selectedNeighbors.color;
+                    cfgRows.value.even.selectedNeighbors.backgroundColor;
+                td.style.color = cfgRows.value.even.selectedNeighbors.color;
             } else {
                 td.style.background =
-                    FINAL_CONFIG.value.style.rows.odd.selectedNeighbors.backgroundColor;
-                td.style.color =
-                    FINAL_CONFIG.value.style.rows.odd.selectedNeighbors.color;
+                    cfgRows.value.odd.selectedNeighbors.backgroundColor;
+                td.style.color = cfgRows.value.odd.selectedNeighbors.color;
             }
         });
 
         if (event.currentTarget.dataset.row === 'odd') {
             event.currentTarget.style.background =
-                FINAL_CONFIG.value.style.rows.odd.selectedCell.backgroundColor;
+                cfgRows.value.odd.selectedCell.backgroundColor;
             event.currentTarget.style.color =
-                FINAL_CONFIG.value.style.rows.odd.selectedCell.color;
+                cfgRows.value.odd.selectedCell.color;
         } else {
             event.currentTarget.style.background =
-                FINAL_CONFIG.value.style.rows.even.selectedCell.backgroundColor;
+                cfgRows.value.even.selectedCell.backgroundColor;
             event.currentTarget.style.color =
-                FINAL_CONFIG.value.style.rows.even.selectedCell.color;
+                cfgRows.value.even.selectedCell.color;
         }
     }
     currentSelectionSpan.value.rows = currentSelectionSpan.value.rows.sort(
@@ -2758,7 +2748,7 @@ onMounted(() => {
             e.preventDefault();
         }
     });
-    filename.value = FINAL_CONFIG.value.style.exportMenu.filename;
+    filename.value = cfgExportMenu.value.filename;
     chartTimeLabelSourceModel.value = dateHeaders.value[0]?.name ?? '';
 });
 
