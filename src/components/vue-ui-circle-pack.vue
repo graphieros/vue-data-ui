@@ -112,6 +112,9 @@ const tooltipTriggerMode = ref('pointer'); // a11y
 const isFocus = ref(false); // a11y
 
 const FINAL_CONFIG = ref(prepareConfig());
+const cfgLabels = computed(() => FINAL_CONFIG.value.style.chart.circles.labels);
+const cfgCircles = computed(() => FINAL_CONFIG.value.style.chart.circles);
+const cfgChart = computed(() => FINAL_CONFIG.value.style.chart);
 
 useHints({
     config: () => FINAL_CONFIG.value,
@@ -193,7 +196,7 @@ const { loading, FINAL_DATASET } = useLoading({
 });
 
 const { svgRef } = useChartAccessibility({
-    config: FINAL_CONFIG.value.style.chart.title,
+    config: cfgChart.value.title,
 });
 
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } =
@@ -243,31 +246,26 @@ watch(
 
         // Reset mutable config
         mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
-        mutableConfig.value.showTooltip =
-            FINAL_CONFIG.value.style.chart.tooltip.show;
-        mutableConfig.value.showZoom =
-            FINAL_CONFIG.value.style.chart.zoom?.show ?? false;
+        mutableConfig.value.showTooltip = cfgChart.value.tooltip.show;
+        mutableConfig.value.showZoom = cfgChart.value.zoom?.show ?? false;
     },
     { deep: true },
 );
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `vue-ui-circle-pack_${uid.value}`,
-    fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-circle-pack',
+    fileName: cfgChart.value.title.text || 'vue-ui-circle-pack',
     options: FINAL_CONFIG.value.userOptions.print,
 });
 
 const hasOptionsNoTitle = computed(() => {
-    return (
-        FINAL_CONFIG.value.userOptions.show &&
-        !FINAL_CONFIG.value.style.chart.title.text
-    );
+    return FINAL_CONFIG.value.userOptions.show && !cfgChart.value.title.text;
 });
 
 const mutableConfig = ref({
     showTable: FINAL_CONFIG.value.table.show,
-    showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show,
-    showZoom: FINAL_CONFIG.value.style.chart.zoom?.show ?? false,
+    showTooltip: cfgChart.value.tooltip.show,
+    showZoom: cfgChart.value.zoom?.show ?? false,
 });
 
 // v3 - Essential to make shifting between loading config and final config work
@@ -276,8 +274,8 @@ watch(
     () => {
         mutableConfig.value = {
             showTable: FINAL_CONFIG.value.table.show,
-            showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show,
-            showZoom: FINAL_CONFIG.value.style.chart.zoom?.show ?? false,
+            showTooltip: cfgChart.value.tooltip.show,
+            showZoom: cfgChart.value.zoom?.show ?? false,
         };
     },
     { immediate: true },
@@ -568,9 +566,9 @@ function isDescendantOf(circle, possibleParent) {
 
 function canShowCircleLabel(circle) {
     if (circle.hasChildren) {
-        return FINAL_CONFIG.value.style.chart.circles.labels.parents.show;
+        return cfgLabels.value.parents.show;
     }
-    return FINAL_CONFIG.value.style.chart.circles.labels.children.show;
+    return cfgLabels.value.children.show;
 }
 
 function setupResponsiveObserver() {
@@ -579,9 +577,7 @@ function setupResponsiveObserver() {
     const handleResize = throttle(() => {
         const { width, height } = useResponsive({
             chart: circlePackChart.value,
-            title: FINAL_CONFIG.value.style.chart.title.text
-                ? chartTitle.value
-                : null,
+            title: cfgChart.value.title.text ? chartTitle.value : null,
             legend: null,
             source: source.value,
             noTitle: noTitle.value,
@@ -718,7 +714,7 @@ function onTrapEnter(datapoint, seriesIndex, triggerMode = 'pointer') {
         series: flattenedDataset.value,
     };
     isTooltip.value = true;
-    const customFormat = FINAL_CONFIG.value.style.chart.tooltip.customFormat;
+    const customFormat = cfgChart.value.tooltip.customFormat;
     useCustomFormat.value = false;
 
     if (isFunction(customFormat)) {
@@ -744,12 +740,12 @@ function onTrapEnter(datapoint, seriesIndex, triggerMode = 'pointer') {
 
         html += `
             <div style="display:flex;align-items:center;gap:4px;">
-                <svg viewBox="0 0 10 10" height="${FINAL_CONFIG.value.style.chart.tooltip.fontSize}" width="${FINAL_CONFIG.value.style.chart.tooltip.fontSize}">
+                <svg viewBox="0 0 10 10" height="${cfgChart.value.tooltip.fontSize}" width="${cfgChart.value.tooltip.fontSize}">
                     <circle
                         cx="5"
                         cy="5"
                         r="5"
-                        fill="${FINAL_CONFIG.value.style.chart.circles.gradient.show ? `url(#${datapoint.id})` : datapoint.color}"
+                        fill="${cfgCircles.value.gradient.show ? `url(#${datapoint.id})` : datapoint.color}"
                     />
                 </svg>
                 <span>${datapoint.name}: <b>${getCircleLabel(datapoint)}</b></span>
@@ -762,13 +758,13 @@ function onTrapEnter(datapoint, seriesIndex, triggerMode = 'pointer') {
 
 function getCircleLabel(circle) {
     return applyDataLabel(
-        FINAL_CONFIG.value.style.chart.circles.labels.value.formatter,
+        cfgLabels.value.value.formatter,
         circle.value,
         dataLabel({
-            p: FINAL_CONFIG.value.style.chart.circles.labels.value.prefix,
+            p: cfgLabels.value.value.prefix,
             v: circle.value,
-            s: FINAL_CONFIG.value.style.chart.circles.labels.value.suffix,
-            r: FINAL_CONFIG.value.style.chart.circles.labels.value.rounding,
+            s: cfgLabels.value.value.suffix,
+            r: cfgLabels.value.value.rounding,
         }),
     );
 }
@@ -806,7 +802,7 @@ const { viewBox, resetZoom, isZoom, setInitialViewBox } = usePanZoom(
         width: Math.max(10, SIZE.value.w),
         height: Math.max(10, SIZE.value.h),
     },
-    FINAL_CONFIG.value.style.chart.zoom?.speed ?? 1,
+    cfgChart.value.zoom?.speed ?? 1,
     active,
 );
 
@@ -854,7 +850,7 @@ function clampRectangleToViewBox(rectangle, sourceViewBox, scale = 1) {
 
 function getParentTooltipTextLines(circle) {
     const lines = [circle.name];
-    if (FINAL_CONFIG.value.style.chart.circles.labels.value.show) {
+    if (cfgLabels.value.value.show) {
         lines.push(getCircleLabel(circle));
     }
     return lines.filter(Boolean);
@@ -1001,16 +997,13 @@ function createParentTooltipItems(sourceViewBox, options = {}) {
         !circles.value.length ||
         !SIZE.value.w ||
         !SIZE.value.h ||
-        !FINAL_CONFIG.value.style.chart.parentTooltips.show
+        !cfgChart.value.parentTooltips.show
     ) {
         return [];
     }
 
     const fontSize =
-        Math.max(
-            8,
-            FINAL_CONFIG.value.style.chart.parentTooltips.fontSizeRatio * 10,
-        ) * scale;
+        Math.max(8, cfgChart.value.parentTooltips.fontSizeRatio * 10) * scale;
     const lineHeight = fontSize * 1.25;
     const paddingX = fontSize * 0.75;
     const paddingY = fontSize * 0.55;
@@ -1273,8 +1266,8 @@ function generateCsv(callback = null) {
         });
 
         const tableXls = [
-            [FINAL_CONFIG.value.style.chart.title.text],
-            [FINAL_CONFIG.value.style.chart.title.subtitle.text],
+            [cfgChart.value.title.text],
+            [cfgChart.value.title.subtitle.text],
             [
                 [FINAL_CONFIG.value.table.columnNames.datapoint],
                 ['Parent'],
@@ -1288,9 +1281,7 @@ function generateCsv(callback = null) {
         if (!callback) {
             downloadCsv({
                 csvContent,
-                title:
-                    FINAL_CONFIG.value.style.chart.title.text ||
-                    'vue-ui-circle-pack',
+                title: cfgChart.value.title.text || 'vue-ui-circle-pack',
             });
         } else {
             callback(csvContent);
@@ -1308,10 +1299,10 @@ const dataTable = computed(() => {
 
     const body = table.value.hierarchy.map((row) => {
         const label = dataLabel({
-            p: FINAL_CONFIG.value.style.chart.circles.labels.value.prefix,
+            p: cfgLabels.value.value.prefix,
             v: row.value,
-            s: FINAL_CONFIG.value.style.chart.circles.labels.value.suffix,
-            r: FINAL_CONFIG.value.style.chart.circles.labels.value.rounding,
+            s: cfgLabels.value.value.suffix,
+            r: cfgLabels.value.value.rounding,
         });
 
         return [
@@ -1383,7 +1374,7 @@ async function getImage({ scale = 2 } = {}) {
     return {
         imageUri,
         base64,
-        title: FINAL_CONFIG.value.style.chart.title.text,
+        title: cfgChart.value.title.text,
         width,
         height,
         aspectRatio,
@@ -1396,7 +1387,7 @@ const tableComponent = computed(() => {
     const open = mutableConfig.value.showTable;
     return {
         component: useDialog ? BaseDraggableDialog : Accordion,
-        title: `${FINAL_CONFIG.value.style.chart.title.text}${FINAL_CONFIG.value.style.chart.title.subtitle.text ? `: ${FINAL_CONFIG.value.style.chart.title.subtitle.text}` : ''}`,
+        title: `${cfgChart.value.title.text}${cfgChart.value.title.subtitle.text ? `: ${cfgChart.value.title.subtitle.text}` : ''}`,
         props: useDialog
             ? {
                   backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
@@ -1414,14 +1405,12 @@ const tableComponent = computed(() => {
                       open,
                       maxHeight: 10000,
                       body: {
-                          backgroundColor:
-                              FINAL_CONFIG.value.style.chart.backgroundColor,
-                          color: FINAL_CONFIG.value.style.chart.color,
+                          backgroundColor: cfgChart.value.backgroundColor,
+                          color: cfgChart.value.color,
                       },
                       head: {
-                          backgroundColor:
-                              FINAL_CONFIG.value.style.chart.backgroundColor,
-                          color: FINAL_CONFIG.value.style.chart.color,
+                          backgroundColor: cfgChart.value.backgroundColor,
+                          color: cfgChart.value.color,
                       },
                   },
               },
@@ -1449,8 +1438,8 @@ function closeTable() {
     }
 }
 
-const svgBg = computed(() => FINAL_CONFIG.value.style.chart.backgroundColor);
-const svgTitle = computed(() => FINAL_CONFIG.value.style.chart.title);
+const svgBg = computed(() => cfgChart.value.backgroundColor);
+const svgTitle = computed(() => cfgChart.value.title);
 
 const { isCallbackImaging, isCallbackSvg, generateSvg, onGenerateImage } =
     useChartExport({
@@ -1588,7 +1577,7 @@ const a11yTable = computed(() => {
     return { headers, rows };
 });
 
-const textColor = computed(() => FINAL_CONFIG.value.style.chart.color);
+const textColor = computed(() => cfgChart.value.color);
 
 defineExpose({
     getData,
@@ -1611,7 +1600,7 @@ defineExpose({
         :id="`vue-ui-circle-pack_${uid}`"
         :class="`vue-data-ui-component vue-ui-circle-pack ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${loading ? 'loading' : ''}`"
         ref="circlePackChart"
-        :style="`font-family:${FINAL_CONFIG.style.fontFamily};text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor};`"
+        :style="`font-family:${FINAL_CONFIG.style.fontFamily};text-align:center;background:${cfgChart.backgroundColor};`"
         @mouseenter="() => setUserOptionsVisibility(true)"
         @mouseleave="() => setUserOptionsVisibility(false)"
     >
@@ -1631,8 +1620,8 @@ defineExpose({
         <PenAndPaper
             v-if="FINAL_CONFIG.userOptions.buttons.annotator"
             :svgRef="svgRef"
-            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
-            :color="FINAL_CONFIG.style.chart.color"
+            :backgroundColor="cfgChart.backgroundColor"
+            :color="cfgChart.color"
             :active="isAnnotator"
             :scale="maxRadius / 100"
             :isCursorPointer="isCursorPointer"
@@ -1670,7 +1659,7 @@ defineExpose({
 
         <div
             ref="chartTitle"
-            v-if="FINAL_CONFIG.style.chart.title.text"
+            v-if="cfgChart.title.text"
             :style="`width:100%;background:transparent;padding-bottom:12px`"
         >
             <Title
@@ -1678,11 +1667,11 @@ defineExpose({
                 :config="{
                     title: {
                         cy: 'donut-div-title',
-                        ...FINAL_CONFIG.style.chart.title,
+                        ...cfgChart.title,
                     },
                     subtitle: {
                         cy: 'donut-div-subtitle',
-                        ...FINAL_CONFIG.style.chart.title.subtitle,
+                        ...cfgChart.title.subtitle,
                     },
                 }"
             />
@@ -1696,8 +1685,8 @@ defineExpose({
                 isDataset &&
                 (keepUserOptionState ? true : userOptionsVisible)
             "
-            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
-            :color="FINAL_CONFIG.style.chart.color"
+            :backgroundColor="cfgChart.backgroundColor"
+            :color="cfgChart.color"
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uid"
@@ -1818,7 +1807,7 @@ defineExpose({
                     'not-responsive': !FINAL_CONFIG.responsive,
                     'vue-data-ui-no-transition': !transitionEnabled,
                 }"
-                :style="`display:block;${FINAL_CONFIG.responsive ? 'width:100%;height:auto' : 'height:100%;'};overflow:${mutableConfig.showZoom ? 'hidden' : 'visible'};background:transparent;color:${FINAL_CONFIG.style.chart.color};background:${FINAL_CONFIG.style.chart.backgroundColor};`"
+                :style="`display:block;${FINAL_CONFIG.responsive ? 'width:100%;height:auto' : 'height:100%;'};overflow:${mutableConfig.showZoom ? 'hidden' : 'visible'};background:transparent;color:${cfgChart.color};background:${cfgChart.backgroundColor};`"
                 tabindex="0"
                 @focus="onSvgFocus"
                 @blur="onSvgBlur"
@@ -1849,8 +1838,7 @@ defineExpose({
                                     '10%',
                                     lightenHexColor(
                                         circle.color,
-                                        FINAL_CONFIG.style.chart.circles
-                                            .gradient.intensity / 100,
+                                        cfgCircles.gradient.intensity / 100,
                                     ),
                                     1,
                                 ],
@@ -1880,15 +1868,13 @@ defineExpose({
                         :y="circle.y - circle.r"
                         :width="circle.r * 2"
                         :height="circle.r * 2"
-                        :stroke="FINAL_CONFIG.style.chart.circles.stroke"
+                        :stroke="cfgCircles.stroke"
                         vector-effect="non-scaling-stroke"
                         :stroke-width="
-                            (FINAL_CONFIG.style.chart.circles.strokeWidth *
-                                (maxRadius || 1)) /
-                            100
+                            (cfgCircles.strokeWidth * (maxRadius || 1)) / 100
                         "
                         :fill="
-                            FINAL_CONFIG.style.chart.circles.gradient.show
+                            cfgCircles.gradient.show
                                 ? `url(#${circle.id})`
                                 : circle.color
                         "
@@ -1905,12 +1891,10 @@ defineExpose({
                         :y="circle.y - circle.r"
                         :width="circle.r * 2"
                         :height="circle.r * 2"
-                        :stroke="FINAL_CONFIG.style.chart.circles.stroke"
+                        :stroke="cfgCircles.stroke"
                         vector-effect="non-scaling-stroke"
                         :stroke-width="
-                            (FINAL_CONFIG.style.chart.circles.strokeWidth *
-                                (maxRadius || 1)) /
-                            100
+                            (cfgCircles.strokeWidth * (maxRadius || 1)) / 100
                         "
                         :fill="`url(#pattern_${uid}_${circle.id})`"
                         :rx="circle.r"
@@ -1932,7 +1916,7 @@ defineExpose({
                         :fill="
                             selectedDatapoint &&
                             selectedDatapoint.id === circle.id
-                                ? FINAL_CONFIG.style.chart.circles.gradient.show
+                                ? cfgCircles.gradient.show
                                     ? `url(#${circle.id})`
                                     : circle.color
                                 : 'transparent'
@@ -1942,7 +1926,7 @@ defineExpose({
                             filter:
                                 selectedDatapoint &&
                                 selectedDatapoint.id === circle.id
-                                    ? `drop-shadow(0px 0px 6px ${FINAL_CONFIG.style.chart.circles.selectedShadowColor})`
+                                    ? `drop-shadow(0px 0px 6px ${cfgCircles.selectedShadowColor})`
                                     : 'none',
                             opacity: selectedDatapoint ? 1 : 0,
                             pointerEvents: 'none',
@@ -1966,18 +1950,14 @@ defineExpose({
                             fontSize: {
                                 name:
                                     (circle.r / 3) *
-                                    FINAL_CONFIG.style.chart.circles.labels.name
-                                        .fontSizeRatio,
+                                    cfgLabels.name.fontSizeRatio,
                                 value:
                                     getValueFontSize(circle) *
-                                    FINAL_CONFIG.style.chart.circles.labels
-                                        .value.fontSizeRatio,
+                                    cfgLabels.value.fontSizeRatio,
                             },
-                            color: !FINAL_CONFIG.style.chart.circles.labels.name
-                                .color
+                            color: !cfgLabels.name.color
                                 ? adaptColorToBackground(circle.color)
-                                : FINAL_CONFIG.style.chart.circles.labels.name
-                                      .color,
+                                : cfgLabels.name.color,
                         }"
                     />
 
@@ -1986,8 +1966,7 @@ defineExpose({
                         <text
                             data-cy="label-name"
                             v-if="
-                                FINAL_CONFIG.style.chart.circles.labels.name
-                                    .show &&
+                                cfgLabels.name.show &&
                                 circle.name &&
                                 canShowCircleLabel(circle)
                             "
@@ -1999,30 +1978,19 @@ defineExpose({
                             }"
                             :transform="`translate(${circle.x}, ${
                                 circle.y +
-                                calcOffsetY(
-                                    circle.r,
-                                    FINAL_CONFIG.style.chart.circles.labels.name
-                                        .offsetY,
-                                ) -
+                                calcOffsetY(circle.r, cfgLabels.name.offsetY) -
                                 circle.r / 10
                             })`"
                             :font-size="
-                                (circle.r / 3) *
-                                FINAL_CONFIG.style.chart.circles.labels.name
-                                    .fontSizeRatio
+                                (circle.r / 3) * cfgLabels.name.fontSizeRatio
                             "
                             :fill="
-                                FINAL_CONFIG.style.chart.circles.labels.name
-                                    .color === 'auto'
+                                cfgLabels.name.color === 'auto'
                                     ? adaptColorToBackground(circle.color)
-                                    : FINAL_CONFIG.style.chart.circles.labels
-                                          .name.color
+                                    : cfgLabels.name.color
                             "
                             :font-weight="
-                                FINAL_CONFIG.style.chart.circles.labels.name
-                                    .bold
-                                    ? 'bold'
-                                    : 'normal'
+                                cfgLabels.name.bold ? 'bold' : 'normal'
                             "
                             text-anchor="middle"
                         >
@@ -2036,8 +2004,8 @@ defineExpose({
                                 'vue-data-ui-transition': transitionEnabled,
                             }"
                             v-if="
-                                FINAL_CONFIG.style.chart.circles.labels.value
-                                    .show && canShowCircleLabel(circle)
+                                cfgLabels.value.show &&
+                                canShowCircleLabel(circle)
                             "
                             :style="{
                                 pointerEvents: 'none',
@@ -2045,30 +2013,20 @@ defineExpose({
                             }"
                             :transform="`translate(${circle.x}, ${
                                 circle.y +
-                                calcOffsetY(
-                                    circle.r,
-                                    FINAL_CONFIG.style.chart.circles.labels
-                                        .value.offsetY,
-                                ) +
+                                calcOffsetY(circle.r, cfgLabels.value.offsetY) +
                                 circle.r / 2.5
                             })`"
                             :font-size="
                                 getValueFontSize(circle) *
-                                FINAL_CONFIG.style.chart.circles.labels.value
-                                    .fontSizeRatio
+                                cfgLabels.value.fontSizeRatio
                             "
                             :fill="
-                                FINAL_CONFIG.style.chart.circles.labels.value
-                                    .color === 'auto'
+                                cfgLabels.value.color === 'auto'
                                     ? adaptColorToBackground(circle.color)
-                                    : FINAL_CONFIG.style.chart.circles.labels
-                                          .value.color
+                                    : cfgLabels.value.color
                             "
                             :font-weight="
-                                FINAL_CONFIG.style.chart.circles.labels.value
-                                    .bold
-                                    ? 'bold'
-                                    : 'normal'
+                                cfgLabels.value.bold ? 'bold' : 'normal'
                             "
                             text-anchor="middle"
                         >
@@ -2095,7 +2053,7 @@ defineExpose({
                 <g
                     v-if="
                         parentTooltipItems.length &&
-                        FINAL_CONFIG.style.chart.parentTooltips.show
+                        cfgChart.parentTooltips.show
                     "
                     data-cy="parent-svg-tooltips"
                     :style="{ pointerEvents: 'none' }"
@@ -2110,26 +2068,19 @@ defineExpose({
                                 'vue-data-ui-transition': transitionEnabled,
                             }"
                             :stroke="
-                                FINAL_CONFIG.style.chart.parentTooltips.link
-                                    .useSerieColor
+                                cfgChart.parentTooltips.link.useSerieColor
                                     ? tooltip.color
-                                    : FINAL_CONFIG.style.chart.parentTooltips
-                                          .link.stroke
+                                    : cfgChart.parentTooltips.link.stroke
                             "
                             vector-effect="non-scaling-stroke"
                             :stroke-width="
-                                FINAL_CONFIG.style.chart.parentTooltips.link
-                                    .strokeWidth
+                                cfgChart.parentTooltips.link.strokeWidth
                             "
                             stroke-linecap="round"
                             :stroke-dasharray="
-                                FINAL_CONFIG.style.chart.parentTooltips.link
-                                    .strokeDasharray
+                                cfgChart.parentTooltips.link.strokeDasharray
                             "
-                            :opacity="
-                                FINAL_CONFIG.style.chart.parentTooltips.link
-                                    .opacity
-                            "
+                            :opacity="cfgChart.parentTooltips.link.opacity"
                             :d="`M${tooltip.anchorX}, ${tooltip.anchorY} ${tooltip.lineX}, ${tooltip.lineY}`"
                         />
                         <rect
@@ -2144,37 +2095,23 @@ defineExpose({
                                 Math.max(
                                     3 * tooltip.scale,
                                     tooltip.fontSize / 2.5,
-                                ) *
-                                FINAL_CONFIG.style.chart.parentTooltips
-                                    .borderRadiusRatio
+                                ) * cfgChart.parentTooltips.borderRadiusRatio
                             "
                             :ry="
                                 Math.max(
                                     3 * tooltip.scale,
                                     tooltip.fontSize / 2.5,
-                                ) *
-                                FINAL_CONFIG.style.chart.parentTooltips
-                                    .borderRadiusRatio
+                                ) * cfgChart.parentTooltips.borderRadiusRatio
                             "
-                            :fill="
-                                FINAL_CONFIG.style.chart.parentTooltips
-                                    .backgroundColor
-                            "
+                            :fill="cfgChart.parentTooltips.backgroundColor"
                             :stroke="
-                                FINAL_CONFIG.style.chart.parentTooltips
-                                    .useSerieColor
+                                cfgChart.parentTooltips.useSerieColor
                                     ? tooltip.color
-                                    : FINAL_CONFIG.style.chart.parentTooltips
-                                          .stroke
+                                    : cfgChart.parentTooltips.stroke
                             "
                             vector-effect="non-scaling-stroke"
-                            :stroke-width="
-                                FINAL_CONFIG.style.chart.parentTooltips
-                                    .strokeWidth
-                            "
-                            :filter="
-                                FINAL_CONFIG.style.chart.parentTooltips.filter
-                            "
+                            :stroke-width="cfgChart.parentTooltips.strokeWidth"
+                            :filter="cfgChart.parentTooltips.filter"
                         />
 
                         <slot name="parent-tooltip" v-bind="{ ...tooltip }">
@@ -2204,10 +2141,7 @@ defineExpose({
                                 }"
                                 :transform="`translate(${tooltip.x + tooltip.paddingX + tooltip.fontSize}, ${tooltip.y + tooltip.paddingY + tooltip.fontSize})`"
                                 :font-size="tooltip.fontSize"
-                                :fill="
-                                    FINAL_CONFIG.style.chart.parentTooltips
-                                        .color
-                                "
+                                :fill="cfgChart.parentTooltips.color"
                                 :font-family="FINAL_CONFIG.style.fontFamily"
                                 text-anchor="start"
                             >
@@ -2277,15 +2211,12 @@ defineExpose({
                     role="button"
                     class="vue-data-ui-refresh-button"
                     :style="{
-                        background: FINAL_CONFIG.style.chart.backgroundColor,
+                        background: cfgChart.backgroundColor,
                         cursor: isCursorPointer ? 'pointer' : 'default',
                     }"
                     @click="resetZoom(true)"
                 >
-                    <BaseIcon
-                        name="refresh"
-                        :stroke="FINAL_CONFIG.style.chart.color"
-                    />
+                    <BaseIcon name="refresh" :stroke="cfgChart.color" />
                 </button>
             </slot>
         </div>
@@ -2296,30 +2227,26 @@ defineExpose({
 
         <!-- TOOLTIP -->
         <Tooltip
-            :teleportTo="FINAL_CONFIG.style.chart.tooltip.teleportTo"
+            :teleportTo="cfgChart.tooltip.teleportTo"
             :show="mutableConfig.showTooltip && isTooltip"
-            :backgroundColor="FINAL_CONFIG.style.chart.tooltip.backgroundColor"
-            :color="FINAL_CONFIG.style.chart.tooltip.color"
-            :fontSize="FINAL_CONFIG.style.chart.tooltip.fontSize"
-            :borderRadius="FINAL_CONFIG.style.chart.tooltip.borderRadius"
-            :borderColor="FINAL_CONFIG.style.chart.tooltip.borderColor"
-            :borderWidth="FINAL_CONFIG.style.chart.tooltip.borderWidth"
-            :backgroundOpacity="
-                FINAL_CONFIG.style.chart.tooltip.backgroundOpacity
-            "
-            :position="FINAL_CONFIG.style.chart.tooltip.position"
-            :offsetX="FINAL_CONFIG.style.chart.tooltip.offsetX"
-            :offsetY="FINAL_CONFIG.style.chart.tooltip.offsetY"
+            :backgroundColor="cfgChart.tooltip.backgroundColor"
+            :color="cfgChart.tooltip.color"
+            :fontSize="cfgChart.tooltip.fontSize"
+            :borderRadius="cfgChart.tooltip.borderRadius"
+            :borderColor="cfgChart.tooltip.borderColor"
+            :borderWidth="cfgChart.tooltip.borderWidth"
+            :backgroundOpacity="cfgChart.tooltip.backgroundOpacity"
+            :position="cfgChart.tooltip.position"
+            :offsetX="cfgChart.tooltip.offsetX"
+            :offsetY="cfgChart.tooltip.offsetY"
             :parent="circlePackChart"
             :content="tooltipContent"
             :isCustom="useCustomFormat"
             :isFullscreen="isFullscreen"
-            :smooth="FINAL_CONFIG.style.chart.tooltip.smooth"
-            :backdropFilter="FINAL_CONFIG.style.chart.tooltip.backdropFilter"
-            :smoothForce="FINAL_CONFIG.style.chart.tooltip.smoothForce"
-            :smoothSnapThreshold="
-                FINAL_CONFIG.style.chart.tooltip.smoothSnapThrehsold
-            "
+            :smooth="cfgChart.tooltip.smooth"
+            :backdropFilter="cfgChart.tooltip.backdropFilter"
+            :smoothForce="cfgChart.tooltip.smoothForce"
+            :smoothSnapThreshold="cfgChart.tooltip.smoothSnapThrehsold"
             :isA11yMode="tooltipTriggerMode === 'keyboard'"
             :a11yPosition="tooltipA11yPosition"
         >
