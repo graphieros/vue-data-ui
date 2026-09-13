@@ -50,6 +50,9 @@ const FINAL_CONFIG = computed({
     },
 });
 
+const cfgRating = computed(() => FINAL_CONFIG.value.style.rating);
+const cfgStyle = computed(() => FINAL_CONFIG.value.style);
+
 onMounted(() => {
     if (slots['chart-background'] && FINAL_CONFIG.value.debug) {
         console.warn(
@@ -153,14 +156,14 @@ function prepareChart() {
 function getInactiveFill(value, isImage = false) {
     if (value > hoveredValue.value || isReadonly.value) {
         return isImage
-            ? FINAL_CONFIG.value.style.image.inactiveOpacity
-            : FINAL_CONFIG.value.style.star.inactiveColor;
+            ? cfgStyle.value.image.inactiveOpacity
+            : cfgStyle.value.star.inactiveColor;
     } else {
         return isImage
             ? 1
-            : FINAL_CONFIG.value.style.star.useGradient
+            : cfgStyle.value.star.useGradient
               ? `url(#star_gradient_under_${uid.value})`
-              : FINAL_CONFIG.value.style.star.activeColor;
+              : cfgStyle.value.star.activeColor;
     }
 }
 
@@ -199,7 +202,7 @@ defineExpose({
 
 <template>
     <div
-        :style="`background:${FINAL_CONFIG.style.backgroundColor};font-family:${FINAL_CONFIG.style.fontFamily};width:100%`"
+        :style="`background:${cfgStyle.backgroundColor};font-family:${cfgStyle.fontFamily};width:100%`"
         class="vue-data-ui-component vue-ui-rating"
         @mouseover="isTooltip = true"
         @mouseleave="
@@ -210,40 +213,37 @@ defineExpose({
         <!-- TITLE -->
         <div
             class="vue-ui-rating-title"
-            v-if="FINAL_CONFIG.style.title.text"
+            v-if="cfgStyle.title.text"
             style="width: 100%"
         >
             <div
                 data-cy="rating-title"
-                :style="`color:${FINAL_CONFIG.style.title.color};font-weight:${FINAL_CONFIG.style.title.bold ? 'bold' : 'normal'};text-align:${FINAL_CONFIG.style.title.textAlign};margin-bottom:${FINAL_CONFIG.style.title.offsetY}px;font-size:${FINAL_CONFIG.style.title.fontSize}px`"
+                :style="`color:${cfgStyle.title.color};font-weight:${cfgStyle.title.bold ? 'bold' : 'normal'};text-align:${cfgStyle.title.textAlign};margin-bottom:${cfgStyle.title.offsetY}px;font-size:${cfgStyle.title.fontSize}px`"
             >
-                {{ FINAL_CONFIG.style.title.text }}
+                {{ cfgStyle.title.text }}
             </div>
             <div
                 data-cy="rating-subtitle"
-                v-if="FINAL_CONFIG.style.title.subtitle.text"
-                :style="`color:${FINAL_CONFIG.style.title.subtitle.color};font-size:${FINAL_CONFIG.style.title.subtitle.fontSize}px;text-align:${FINAL_CONFIG.style.title.textAlign};margin-bottom:${FINAL_CONFIG.style.title.subtitle.offsetY}px;font-weight:${FINAL_CONFIG.style.title.subtitle.bold ? 'bold' : 'normal'}`"
+                v-if="cfgStyle.title.subtitle.text"
+                :style="`color:${cfgStyle.title.subtitle.color};font-size:${cfgStyle.title.subtitle.fontSize}px;text-align:${cfgStyle.title.textAlign};margin-bottom:${cfgStyle.title.subtitle.offsetY}px;font-weight:${cfgStyle.title.subtitle.bold ? 'bold' : 'normal'}`"
             >
-                {{ FINAL_CONFIG.style.title.subtitle.text }}
+                {{ cfgStyle.title.subtitle.text }}
             </div>
         </div>
 
         <!-- RATING POSITION TOP -->
         <div
             data-cy="rating-position-top"
-            v-if="
-                FINAL_CONFIG.style.rating.show &&
-                FINAL_CONFIG.style.rating.position === 'top'
-            "
-            :style="`width:100%;text-align:center;margin-bottom:${FINAL_CONFIG.style.rating.offsetY}px;font-size:${FINAL_CONFIG.style.rating.fontSize}px;font-weight:${FINAL_CONFIG.style.rating.bold ? 'bold' : 'normal'};margin-left:${FINAL_CONFIG.style.rating.offsetX}px`"
+            v-if="cfgRating.show && cfgRating.position === 'top'"
+            :style="`width:100%;text-align:center;margin-bottom:${cfgRating.offsetY}px;font-size:${cfgRating.fontSize}px;font-weight:${cfgRating.bold ? 'bold' : 'normal'};margin-left:${cfgRating.offsetX}px`"
         >
             {{
                 applyDataLabel(
-                    FINAL_CONFIG.style.rating.formatter,
+                    cfgRating.formatter,
                     currentRating,
                     dataLabel({
                         v: currentRating,
-                        r: FINAL_CONFIG.style.rating.roundingValue,
+                        r: cfgRating.roundingValue,
                     }),
                     FINAL_CONFIG,
                 )
@@ -253,24 +253,21 @@ defineExpose({
         <!-- RATING SECTION -->
         <div
             class="vue-ui-rating-wrapper"
-            :style="`height:${FINAL_CONFIG.style.itemSize}px;width:100%;display:flex;align-items:center;justify-content:center`"
+            :style="`height:${cfgStyle.itemSize}px;width:100%;display:flex;align-items:center;justify-content:center`"
         >
             <!-- RATING POSITION LEFT -->
             <div
                 data-cy="rating-position-left"
-                v-if="
-                    FINAL_CONFIG.style.rating.show &&
-                    FINAL_CONFIG.style.rating.position === 'left'
-                "
-                :style="`width:fit-content;text-align:center;margin-bottom:${FINAL_CONFIG.style.rating.offsetY}px;font-size:${FINAL_CONFIG.style.rating.fontSize}px;font-weight:${FINAL_CONFIG.style.rating.bold ? 'bold' : 'normal'};padding-right:${FINAL_CONFIG.style.rating.offsetX}px`"
+                v-if="cfgRating.show && cfgRating.position === 'left'"
+                :style="`width:fit-content;text-align:center;margin-bottom:${cfgRating.offsetY}px;font-size:${cfgRating.fontSize}px;font-weight:${cfgRating.bold ? 'bold' : 'normal'};padding-right:${cfgRating.offsetX}px`"
             >
                 {{
                     applyDataLabel(
-                        FINAL_CONFIG.style.rating.formatter,
+                        cfgRating.formatter,
                         currentRating,
                         dataLabel({
                             v: currentRating,
-                            r: FINAL_CONFIG.style.rating.roundingValue,
+                            r: cfgRating.roundingValue,
                         }),
                         FINAL_CONFIG,
                     )
@@ -281,7 +278,7 @@ defineExpose({
             <template v-for="(value, i) in units">
                 <div
                     class="vue-ui-rating-unit-container"
-                    :style="`position:relative;height:${FINAL_CONFIG.style.itemSize}px;width:${FINAL_CONFIG.style.itemSize}px`"
+                    :style="`position:relative;height:${cfgStyle.itemSize}px;width:${cfgStyle.itemSize}px`"
                 >
                     <!-- LAYER SLOTS -->
                     <div
@@ -302,7 +299,7 @@ defineExpose({
                                 name="layer-under"
                                 v-bind="{
                                     value,
-                                    size: FINAL_CONFIG.style.itemSize,
+                                    size: cfgStyle.itemSize,
                                     hoveredValue,
                                     focusedValue,
                                 }"
@@ -322,7 +319,7 @@ defineExpose({
                                 name="layer-above"
                                 v-bind="{
                                     value,
-                                    size: FINAL_CONFIG.style.itemSize,
+                                    size: cfgStyle.itemSize,
                                     hoveredValue,
                                     focusedValue,
                                 }"
@@ -335,11 +332,11 @@ defineExpose({
                         <img
                             :data-cy="`rating-image-${i}`"
                             v-if="isImage"
-                            :src="FINAL_CONFIG.style.image.src"
-                            :height="FINAL_CONFIG.style.itemSize"
-                            :width="FINAL_CONFIG.style.itemSize"
+                            :src="cfgStyle.image.src"
+                            :height="cfgStyle.itemSize"
+                            :width="cfgStyle.itemSize"
                             class="vue-ui-rating-unit"
-                            :style="`position:absolute;top:0;left:0;opacity:${!isNaN(hoveredValue) ? getInactiveFill(value, true) : FINAL_CONFIG.style.image.inactiveOpacity}`"
+                            :style="`position:absolute;top:0;left:0;opacity:${!isNaN(hoveredValue) ? getInactiveFill(value, true) : cfgStyle.image.inactiveOpacity}`"
                         />
 
                         <!-- STAR FIRST LAYER -->
@@ -347,8 +344,8 @@ defineExpose({
                             :xmlns="XMLNS"
                             v-else
                             viewBox="0 0 100 100"
-                            :height="FINAL_CONFIG.style.itemSize"
-                            :width="FINAL_CONFIG.style.itemSize"
+                            :height="cfgStyle.itemSize"
+                            :width="cfgStyle.itemSize"
                             class="vue-ui-rating-unit"
                         >
                             <defs>
@@ -364,17 +361,12 @@ defineExpose({
                                         [
                                             '0%',
                                             shiftHue(
-                                                FINAL_CONFIG.style.star
-                                                    .activeColor,
+                                                cfgStyle.star.activeColor,
                                                 0.05,
                                             ),
                                             1,
                                         ],
-                                        [
-                                            '100%',
-                                            FINAL_CONFIG.style.star.activeColor,
-                                            1,
-                                        ],
+                                        ['100%', cfgStyle.star.activeColor, 1],
                                     ]"
                                 />
                             </defs>
@@ -384,25 +376,22 @@ defineExpose({
                                     createStar({
                                         plot: { x: 50, y: 50 },
                                         radius: 30,
-                                        apexes: FINAL_CONFIG.style.star.apexes,
+                                        apexes: cfgStyle.star.apexes,
                                     })
                                 "
                                 :fill="
                                     !isNaN(hoveredValue)
                                         ? getInactiveFill(value)
-                                        : FINAL_CONFIG.style.star.inactiveColor
+                                        : cfgStyle.star.inactiveColor
                                 "
                                 :stroke="
-                                    FINAL_CONFIG.style.star.borderColor
-                                        ? FINAL_CONFIG.style.star.borderColor
+                                    cfgStyle.star.borderColor
+                                        ? cfgStyle.star.borderColor
                                         : hoveredValue
                                           ? getInactiveFill(value)
-                                          : FINAL_CONFIG.style.star
-                                                .inactiveColor
+                                          : cfgStyle.star.inactiveColor
                                 "
-                                :stroke-width="
-                                    FINAL_CONFIG.style.star.borderWidth
-                                "
+                                :stroke-width="cfgStyle.star.borderWidth"
                                 stroke-linecap="round"
                                 stroke-linejoin="round"
                             />
@@ -412,13 +401,13 @@ defineExpose({
                         <img
                             :data-cy="`rating-image-overlay-${i}`"
                             v-if="isImage"
-                            :src="FINAL_CONFIG.style.image.src"
-                            :alt="`${FINAL_CONFIG.style.image.alt} ${value}`"
-                            :height="FINAL_CONFIG.style.itemSize"
-                            :width="FINAL_CONFIG.style.itemSize"
+                            :src="cfgStyle.image.src"
+                            :alt="`${cfgStyle.image.alt} ${value}`"
+                            :height="cfgStyle.itemSize"
+                            :width="cfgStyle.itemSize"
                             :id="`active_${uid}_${value}`"
                             class="vue-ui-rating-unit"
-                            :style="`position:absolute;top:0;left:0;clip:rect(0px,${calcShapeFill(i, true) * FINAL_CONFIG.style.itemSize}px,${FINAL_CONFIG.style.itemSize}px,0px`"
+                            :style="`position:absolute;top:0;left:0;clip:rect(0px,${calcShapeFill(i, true) * cfgStyle.itemSize}px,${cfgStyle.itemSize}px,0px`"
                         />
 
                         <!-- STAR SECOND LAYER -->
@@ -427,7 +416,7 @@ defineExpose({
                             :data-cy="`rating-shape-overlay-${i}`"
                             v-else
                             :viewBox="`0 0 ${calcShapeFill(i)} 100`"
-                            :height="FINAL_CONFIG.style.itemSize"
+                            :height="cfgStyle.itemSize"
                             class="vue-ui-rating-unit"
                             :id="`active_${uid}_${value}`"
                             style="position: absolute; top: 0; left: 0"
@@ -445,17 +434,12 @@ defineExpose({
                                         [
                                             '0%',
                                             shiftHue(
-                                                FINAL_CONFIG.style.star
-                                                    .activeColor,
+                                                cfgStyle.star.activeColor,
                                                 0.05,
                                             ),
                                             1,
                                         ],
-                                        [
-                                            '100%',
-                                            FINAL_CONFIG.style.star.activeColor,
-                                            1,
-                                        ],
+                                        ['100%', cfgStyle.star.activeColor, 1],
                                     ]"
                                 />
                             </defs>
@@ -465,15 +449,15 @@ defineExpose({
                                     createStar({
                                         plot: { x: 50, y: 50 },
                                         radius: 30,
-                                        apexes: FINAL_CONFIG.style.star.apexes,
+                                        apexes: cfgStyle.star.apexes,
                                     })
                                 "
                                 :fill="
-                                    FINAL_CONFIG.style.star.useGradient
+                                    cfgStyle.star.useGradient
                                         ? `url(#star_gradient_over_${uid})`
-                                        : FINAL_CONFIG.style.star.activeColor
+                                        : cfgStyle.star.activeColor
                                 "
-                                :stroke="FINAL_CONFIG.style.star.activeColor"
+                                :stroke="cfgStyle.star.activeColor"
                             />
                         </svg>
                     </template>
@@ -482,7 +466,7 @@ defineExpose({
                     <svg
                         :xmlns="XMLNS"
                         :viewBox="`0 0 100 100`"
-                        :height="FINAL_CONFIG.style.itemSize"
+                        :height="cfgStyle.itemSize"
                         class="vue-ui-rating-unit"
                         :style="`position:absolute;top:0;left:0;${isReadonly ? '' : isCursorPointer ? 'cursor:pointer' : ''}`"
                     >
@@ -520,33 +504,30 @@ defineExpose({
                     </svg>
                     <template
                         v-if="
-                            FINAL_CONFIG.style.tooltip.show &&
-                            hasBreakdown &&
-                            isReadonly
+                            cfgStyle.tooltip.show && hasBreakdown && isReadonly
                         "
                     >
                         <div
                             class="vue-ui-rating-tooltip"
-                            :style="`border:1px solid ${FINAL_CONFIG.style.tooltip.borderColor};position:absolute;top:${-48 + FINAL_CONFIG.style.tooltip.offsetY}px;left:50%;transform:translateX(-50%);width:fit-content;text-align:center;background:${FINAL_CONFIG.style.tooltip.backgroundColor};display:${hoveredValue === value ? 'block' : 'none'};padding:2px 12px;border-radius:${FINAL_CONFIG.style.tooltip.borderRadius}px;box-shadow:${FINAL_CONFIG.style.tooltip.boxShadow}`"
+                            :style="`border:1px solid ${cfgStyle.tooltip.borderColor};position:absolute;top:${-48 + cfgStyle.tooltip.offsetY}px;left:50%;transform:translateX(-50%);width:fit-content;text-align:center;background:${cfgStyle.tooltip.backgroundColor};display:${hoveredValue === value ? 'block' : 'none'};padding:2px 12px;border-radius:${cfgStyle.tooltip.borderRadius}px;box-shadow:${cfgStyle.tooltip.boxShadow}`"
                         >
                             <div
                                 :data-cy="`rating-tooltip-${i}`"
-                                :style="`width:100%;display:flex;flex-direction:row;gap:6px;position:relative;text-align:center;color:${FINAL_CONFIG.style.tooltip.color}`"
+                                :style="`width:100%;display:flex;flex-direction:row;gap:6px;position:relative;text-align:center;color:${cfgStyle.tooltip.color}`"
                             >
                                 <span
-                                    :style="`font-size:${FINAL_CONFIG.style.tooltip.fontSize}px`"
+                                    :style="`font-size:${cfgStyle.tooltip.fontSize}px`"
                                     >{{ value }}:</span
                                 ><span
-                                    :style="`font-weight:${FINAL_CONFIG.style.tooltip.bold ? 'bold' : 'normal'};font-size:${FINAL_CONFIG.style.tooltip.fontSize}px`"
+                                    :style="`font-weight:${cfgStyle.tooltip.bold ? 'bold' : 'normal'};font-size:${cfgStyle.tooltip.fontSize}px`"
                                 >
                                     {{
                                         applyDataLabel(
-                                            FINAL_CONFIG.style.tooltip
-                                                .formatter,
+                                            cfgStyle.tooltip.formatter,
                                             props.dataset.rating[value],
                                             dataLabel({
                                                 v: props.dataset.rating[value],
-                                                r: FINAL_CONFIG.style.tooltip
+                                                r: cfgStyle.tooltip
                                                     .roundingValue,
                                             }),
                                             FINAL_CONFIG,
@@ -554,7 +535,7 @@ defineExpose({
                                     }}
                                 </span>
                                 <div
-                                    :style="`font-family:Arial !important;position:absolute;top:calc(100% - 4px);left:50%;transform:translateX(-50%);color:${FINAL_CONFIG.style.tooltip.borderColor}`"
+                                    :style="`font-family:Arial !important;position:absolute;top:calc(100% - 4px);left:50%;transform:translateX(-50%);color:${cfgStyle.tooltip.borderColor}`"
                                 >
                                     ▼
                                 </div>
@@ -567,19 +548,16 @@ defineExpose({
             <!-- RATING POSITION RIGHT -->
             <div
                 data-cy="rating-position-right"
-                v-if="
-                    FINAL_CONFIG.style.rating.show &&
-                    FINAL_CONFIG.style.rating.position === 'right'
-                "
-                :style="`width:fit-content;text-align:center;margin-bottom:${FINAL_CONFIG.style.rating.offsetY}px;font-size:${FINAL_CONFIG.style.rating.fontSize}px;font-weight:${FINAL_CONFIG.style.rating.bold ? 'bold' : 'normal'};padding-left:${FINAL_CONFIG.style.rating.offsetX}px`"
+                v-if="cfgRating.show && cfgRating.position === 'right'"
+                :style="`width:fit-content;text-align:center;margin-bottom:${cfgRating.offsetY}px;font-size:${cfgRating.fontSize}px;font-weight:${cfgRating.bold ? 'bold' : 'normal'};padding-left:${cfgRating.offsetX}px`"
             >
                 {{
                     applyDataLabel(
-                        FINAL_CONFIG.style.rating.formatter,
+                        cfgRating.formatter,
                         currentRating,
                         dataLabel({
                             v: currentRating,
-                            r: FINAL_CONFIG.style.rating.roundingValue,
+                            r: cfgRating.roundingValue,
                         }),
                         FINAL_CONFIG,
                     )
@@ -590,19 +568,16 @@ defineExpose({
         <!-- RATING POSITION BOTTOM -->
         <div
             data-cy="rating-position-bottom"
-            v-if="
-                FINAL_CONFIG.style.rating.show &&
-                FINAL_CONFIG.style.rating.position === 'bottom'
-            "
-            :style="`width:100%;text-align:center;margin-top:${FINAL_CONFIG.style.rating.offsetY}px;font-size:${FINAL_CONFIG.style.rating.fontSize}px;font-weight:${FINAL_CONFIG.style.rating.bold ? 'bold' : 'normal'};margin-left:${FINAL_CONFIG.style.rating.offsetX}px`"
+            v-if="cfgRating.show && cfgRating.position === 'bottom'"
+            :style="`width:100%;text-align:center;margin-top:${cfgRating.offsetY}px;font-size:${cfgRating.fontSize}px;font-weight:${cfgRating.bold ? 'bold' : 'normal'};margin-left:${cfgRating.offsetX}px`"
         >
             {{
                 applyDataLabel(
-                    FINAL_CONFIG.style.rating.formatter,
+                    cfgRating.formatter,
                     currentRating,
                     dataLabel({
                         v: currentRating,
-                        r: FINAL_CONFIG.style.rating.roundingValue,
+                        r: cfgRating.roundingValue,
                     }),
                     FINAL_CONFIG,
                 )
