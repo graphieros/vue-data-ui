@@ -82,6 +82,9 @@ const resizeObserver = ref(null);
 const observedEl = ref(null);
 
 const FINAL_CONFIG = ref(prepareConfig());
+const cfgUserOptions = computed(() => FINAL_CONFIG.value.userOptions);
+const cfgLayout = computed(() => FINAL_CONFIG.value.style.chart.layout);
+const cfgChart = computed(() => FINAL_CONFIG.value.style.chart);
 
 useHints({
     config: () => FINAL_CONFIG.value,
@@ -130,7 +133,7 @@ const { loading, FINAL_DATASET } = useLoading({
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } =
     useUserOptionState({ config: FINAL_CONFIG.value });
 const { svgRef } = useChartAccessibility({
-    config: FINAL_CONFIG.value.style.chart.title,
+    config: cfgChart.value.title,
 });
 
 function prepareConfig() {
@@ -166,8 +169,8 @@ watch(
         FINAL_CONFIG.value = prepareConfig();
         userOptionsVisible.value =
             !FINAL_CONFIG.value.userOptions.showOnChartHover;
-        WIDTH.value = FINAL_CONFIG.value.style.chart.width;
-        HEIGHT.value = FINAL_CONFIG.value.style.chart.height;
+        WIDTH.value = cfgChart.value.width;
+        HEIGHT.value = cfgChart.value.height;
         prepareChart();
         titleStep.value += 1;
     },
@@ -176,19 +179,16 @@ watch(
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: uid.value,
-    fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-tiremarks',
+    fileName: cfgChart.value.title.text || 'vue-ui-tiremarks',
     options: FINAL_CONFIG.value.userOptions.print,
 });
 
 const hasOptionsNoTitle = computed(() => {
-    return (
-        FINAL_CONFIG.value.userOptions.show &&
-        !FINAL_CONFIG.value.style.chart.title.text
-    );
+    return FINAL_CONFIG.value.userOptions.show && !cfgChart.value.title.text;
 });
 
 const activeValue = ref(
-    FINAL_CONFIG.value.style.chart.animation.use && !prefersReducedMotion.value
+    cfgChart.value.animation.use && !prefersReducedMotion.value
         ? 0
         : checkNaN(FINAL_DATASET.value.percentage),
 );
@@ -196,10 +196,7 @@ const activeValue = ref(
 watch(
     () => FINAL_DATASET.value,
     (v) => {
-        if (
-            FINAL_CONFIG.value.style.chart.animation.use &&
-            !prefersReducedMotion.value
-        ) {
+        if (cfgChart.value.animation.use && !prefersReducedMotion.value) {
             useAnimation(v.percentage);
         } else {
             activeValue.value = v.percentage || 0;
@@ -213,7 +210,7 @@ onMounted(() => {
 });
 
 function useAnimation(targetValue) {
-    let speed = FINAL_CONFIG.value.style.chart.animation.speed;
+    let speed = cfgChart.value.animation.speed;
     const chunk = Math.abs(targetValue - activeValue.value) / (speed * 120);
 
     function animate() {
@@ -251,9 +248,7 @@ function prepareChart() {
         const handleResize = throttle(() => {
             const { width, height } = useResponsive({
                 chart: tiremarksChart.value,
-                title: FINAL_CONFIG.value.style.chart.title.text
-                    ? chartTitle.value
-                    : null,
+                title: cfgChart.value.title.text ? chartTitle.value : null,
                 source: source.value,
             });
 
@@ -279,11 +274,11 @@ function prepareChart() {
 }
 
 const isVertical = computed(() => {
-    return FINAL_CONFIG.value.style.chart.layout.display === 'vertical';
+    return cfgLayout.value.display === 'vertical';
 });
 
 const padding = computed(() => {
-    const showLabel = FINAL_CONFIG.value.style.chart.percentage.show;
+    const showLabel = cfgChart.value.percentage.show;
 
     const paddingRef = {
         top: showLabel ? 48 : 12,
@@ -295,15 +290,13 @@ const padding = computed(() => {
     if (isVertical.value) {
         return {
             top:
-                FINAL_CONFIG.value.style.chart.percentage.verticalPosition ===
-                'top'
+                cfgChart.value.percentage.verticalPosition === 'top'
                     ? paddingRef.top
                     : 3,
             left: 3,
             right: 3,
             bottom:
-                FINAL_CONFIG.value.style.chart.percentage.verticalPosition ===
-                'bottom'
+                cfgChart.value.percentage.verticalPosition === 'bottom'
                     ? paddingRef.bottom
                     : 3,
         };
@@ -312,13 +305,11 @@ const padding = computed(() => {
             top: 0,
             bottom: 0,
             left:
-                FINAL_CONFIG.value.style.chart.percentage.horizontalPosition ===
-                'left'
+                cfgChart.value.percentage.horizontalPosition === 'left'
                     ? paddingRef.left
                     : 16,
             right:
-                FINAL_CONFIG.value.style.chart.percentage.horizontalPosition ===
-                'right'
+                cfgChart.value.percentage.horizontalPosition === 'right'
                     ? paddingRef.right
                     : 10,
         };
@@ -330,8 +321,8 @@ const totalPadding = computed(() => {
     return Object.values(padding.value).reduce((a, b) => a + b, 0);
 });
 
-const WIDTH = ref(FINAL_CONFIG.value.style.chart.width);
-const HEIGHT = ref(FINAL_CONFIG.value.style.chart.height);
+const WIDTH = ref(cfgChart.value.width);
+const HEIGHT = ref(cfgChart.value.height);
 
 const svg = computed(() => {
     return {
@@ -345,8 +336,7 @@ const labelSkeleton = computed(() => {
         horizontal: {
             x:
                 tireLabel.value.x +
-                (FINAL_CONFIG.value.style.chart.percentage
-                    .horizontalPosition === 'left'
+                (cfgChart.value.percentage.horizontalPosition === 'left'
                     ? 6
                     : 3),
             y: svg.value.height / 2 - tireLabel.value.fontSize / 2,
@@ -355,7 +345,7 @@ const labelSkeleton = computed(() => {
             x: svg.value.width / 2 - 20,
             y: tireLabel.value.y - tireLabel.value.fontSize / 2,
         },
-    }[FINAL_CONFIG.value.style.chart.layout.display];
+    }[cfgLayout.value.display];
 });
 
 const tickSize = computed(() => {
@@ -376,18 +366,15 @@ const ticks = computed(() => {
     const arr = [];
     const marks = 100;
     for (let i = 0; i < marks; i += 1) {
-        const color = FINAL_CONFIG.value.style.chart.layout.ticks.gradient.show
+        const color = cfgLayout.value.ticks.gradient.show
             ? shiftHue(
-                  FINAL_CONFIG.value.style.chart.layout.activeColor,
+                  cfgLayout.value.activeColor,
                   (i / marks) *
-                      (FINAL_CONFIG.value.style.chart.layout.ticks.gradient
-                          .shiftHueIntensity /
-                          100),
+                      (cfgLayout.value.ticks.gradient.shiftHueIntensity / 100),
               )
-            : FINAL_CONFIG.value.style.chart.layout.activeColor;
+            : cfgLayout.value.activeColor;
         if (isVertical.value) {
-            const verticalCrescendo = FINAL_CONFIG.value.style.chart.layout
-                .crescendo
+            const verticalCrescendo = cfgLayout.value.crescendo
                 ? ((marks - i) *
                       (svg.value.width -
                           padding.value.left -
@@ -410,12 +397,8 @@ const ticks = computed(() => {
                 i * tickSize.value.mark -
                 i * tickSize.value.space -
                 tickSize.value.mark;
-            const v_space_x =
-                (v_x2 - v_x1) /
-                FINAL_CONFIG.value.style.chart.layout.curveAngleX;
-            const v_space_y =
-                FINAL_CONFIG.value.style.chart.layout.curveAngleY *
-                ((1 + i) / marks);
+            const v_space_x = (v_x2 - v_x1) / cfgLayout.value.curveAngleX;
+            const v_space_y = cfgLayout.value.curveAngleY * ((1 + i) / marks);
             arr.push({
                 x1: v_x1,
                 x2: v_x2,
@@ -425,8 +408,7 @@ const ticks = computed(() => {
                 color,
             });
         } else {
-            const horizontalCrescendo = FINAL_CONFIG.value.style.chart.layout
-                .crescendo
+            const horizontalCrescendo = cfgLayout.value.crescendo
                 ? ((marks - i) *
                       (svg.value.height -
                           padding.value.top -
@@ -446,12 +428,8 @@ const ticks = computed(() => {
                 padding.value.bottom -
                 4 -
                 horizontalCrescendo;
-            const h_space_x =
-                FINAL_CONFIG.value.style.chart.layout.curveAngleY *
-                ((1 + i) / marks);
-            const h_space_y =
-                (h_y2 - h_y1) /
-                FINAL_CONFIG.value.style.chart.layout.curveAngleX;
+            const h_space_x = cfgLayout.value.curveAngleY * ((1 + i) / marks);
+            const h_space_y = (h_y2 - h_y1) / cfgLayout.value.curveAngleX;
             arr.push({
                 x1: h_x1,
                 x2: h_x2,
@@ -467,36 +445,24 @@ const ticks = computed(() => {
 
 const tireLabel = computed(() => {
     let x, y, textAnchor;
-    const fontSizeOffset =
-        FINAL_CONFIG.value.style.chart.percentage.fontSize / 3;
+    const fontSizeOffset = cfgChart.value.percentage.fontSize / 3;
 
     if (isVertical.value) {
-        if (
-            FINAL_CONFIG.value.style.chart.percentage.verticalPosition === 'top'
-        ) {
+        if (cfgChart.value.percentage.verticalPosition === 'top') {
             x = svg.value.width / 2;
             y = padding.value.top / 2;
             textAnchor = 'middle';
-        } else if (
-            FINAL_CONFIG.value.style.chart.percentage.verticalPosition ===
-            'bottom'
-        ) {
+        } else if (cfgChart.value.percentage.verticalPosition === 'bottom') {
             x = svg.value.width / 2;
             y = svg.value.height - padding.value.bottom / 2 + fontSizeOffset;
             textAnchor = 'middle';
         }
     } else {
-        if (
-            FINAL_CONFIG.value.style.chart.percentage.horizontalPosition ===
-            'left'
-        ) {
+        if (cfgChart.value.percentage.horizontalPosition === 'left') {
             x = 4;
             y = svg.value.height / 2 + fontSizeOffset;
             textAnchor = 'start';
-        } else if (
-            FINAL_CONFIG.value.style.chart.percentage.horizontalPosition ===
-            'right'
-        ) {
+        } else if (cfgChart.value.percentage.horizontalPosition === 'right') {
             x = svg.value.width - padding.value.right + 8;
             y = svg.value.height / 2 + fontSizeOffset;
             textAnchor = 'start';
@@ -507,9 +473,9 @@ const tireLabel = computed(() => {
         x,
         y,
         textAnchor,
-        bold: FINAL_CONFIG.value.style.chart.percentage.bold,
-        fontSize: FINAL_CONFIG.value.style.chart.percentage.fontSize,
-        fill: FINAL_CONFIG.value.style.chart.percentage.color,
+        bold: cfgChart.value.percentage.bold,
+        fontSize: cfgChart.value.percentage.fontSize,
+        fill: cfgChart.value.percentage.color,
     };
 });
 
@@ -537,15 +503,15 @@ async function getImage({ scale = 2 } = {}) {
     return {
         imageUri,
         base64,
-        title: FINAL_CONFIG.value.style.chart.title.text,
+        title: cfgChart.value.title.text,
         width,
         height,
         aspectRatio,
     };
 }
 
-const svgBg = computed(() => FINAL_CONFIG.value.style.chart.backgroundColor);
-const svgTitle = computed(() => FINAL_CONFIG.value.style.chart.title);
+const svgBg = computed(() => cfgChart.value.backgroundColor);
+const svgTitle = computed(() => cfgChart.value.title);
 
 const { isCallbackImaging, isCallbackSvg, generateSvg, onGenerateImage } =
     useChartExport({
@@ -582,18 +548,18 @@ const svgDescId = computed(() => `${uid.value}-desc`);
 
 const percentageText = computed(() => {
     return applyDataLabel(
-        FINAL_CONFIG.value.style.chart.percentage.formatter,
+        cfgChart.value.percentage.formatter,
         activeValue.value,
         dataLabel({
             v: activeValue.value,
             s: '%',
-            r: FINAL_CONFIG.value.style.chart.percentage.rounding,
+            r: cfgChart.value.percentage.rounding,
         }),
     );
 });
 
 const accessibleTitleText = computed(() => {
-    return FINAL_CONFIG.value.style.chart.title.text || '';
+    return cfgChart.value.title.text || '';
 });
 
 const accessibleDescriptionText = computed(() => {
@@ -615,19 +581,19 @@ defineExpose({
     <div
         ref="tiremarksChart"
         :class="`vue-data-ui-component vue-ui-tiremarks ${FINAL_CONFIG.useCssAnimation ? '' : 'vue-ui-dna'}`"
-        :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor}`"
+        :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${cfgChart.backgroundColor}`"
         :id="uid"
         @mouseenter="() => setUserOptionsVisibility(true)"
         @mouseleave="() => setUserOptionsVisibility(false)"
     >
         <PenAndPaper
-            v-if="FINAL_CONFIG.userOptions.buttons.annotator"
+            v-if="cfgUserOptions.buttons.annotator"
             :svgRef="svgRef"
-            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
-            :color="FINAL_CONFIG.style.chart.color"
+            :backgroundColor="cfgChart.backgroundColor"
+            :color="cfgChart.color"
             :active="isAnnotator"
             :isCursorPointer="isCursorPointer"
-            :palette="FINAL_CONFIG.userOptions.annotatorPalette"
+            :palette="cfgUserOptions.annotatorPalette"
             @close="toggleAnnotator"
         >
             <template #annotator-action-close>
@@ -659,7 +625,7 @@ defineExpose({
 
         <div
             ref="chartTitle"
-            v-if="FINAL_CONFIG.style.chart.title.text"
+            v-if="cfgChart.title.text"
             :style="`width:100%;background:transparent;padding-bottom:12px`"
         >
             <Title
@@ -667,11 +633,11 @@ defineExpose({
                 :config="{
                     title: {
                         cy: 'wheel-title',
-                        ...FINAL_CONFIG.style.chart.title,
+                        ...cfgChart.title,
                     },
                     subtitle: {
                         cy: 'wheel-subtitle',
-                        ...FINAL_CONFIG.style.chart.title.subtitle,
+                        ...cfgChart.title.subtitle,
                     },
                 }"
             />
@@ -681,29 +647,29 @@ defineExpose({
             ref="details"
             :key="`user_options_${step}`"
             v-if="
-                FINAL_CONFIG.userOptions.show &&
+                cfgUserOptions.show &&
                 isDataset &&
                 (keepUserOptionState ? true : userOptionsVisible)
             "
-            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
-            :color="FINAL_CONFIG.style.chart.color"
+            :backgroundColor="cfgChart.backgroundColor"
+            :color="cfgChart.color"
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uid"
-            :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
-            :hasImg="FINAL_CONFIG.userOptions.buttons.img"
-            :hasSvg="FINAL_CONFIG.userOptions.buttons.svg"
-            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
-            :hasAltCopy="FINAL_CONFIG.userOptions.buttons.altCopy"
+            :hasPdf="cfgUserOptions.buttons.pdf"
+            :hasImg="cfgUserOptions.buttons.img"
+            :hasSvg="cfgUserOptions.buttons.svg"
+            :hasFullscreen="cfgUserOptions.buttons.fullscreen"
+            :hasAltCopy="cfgUserOptions.buttons.altCopy"
             :hasXls="false"
             :isFullscreen="isFullscreen"
-            :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
+            :titles="{ ...cfgUserOptions.buttonTitles }"
             :chartElement="tiremarksChart"
-            :position="FINAL_CONFIG.userOptions.position"
-            :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator"
+            :position="cfgUserOptions.position"
+            :hasAnnotator="cfgUserOptions.buttons.annotator"
             :isAnnotation="isAnnotator"
-            :callbacks="FINAL_CONFIG.userOptions.callbacks"
-            :printScale="FINAL_CONFIG.userOptions.print.scale"
+            :callbacks="cfgUserOptions.callbacks"
+            :printScale="cfgUserOptions.print.scale"
             :isCursorPointer="isCursorPointer"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
@@ -772,7 +738,7 @@ defineExpose({
                 'vue-data-ui-fulscreen--off': !isFullscreen,
             }"
             :viewBox="`0 0 ${WIDTH} ${HEIGHT}`"
-            :style="`max-width:100%; overflow: visible; background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
+            :style="`max-width:100%; overflow: visible; background:transparent;color:${cfgChart.color}`"
             role="img"
             :aria-labelledby="svgTitleId"
             :aria-describedby="svgDescId"
@@ -796,21 +762,19 @@ defineExpose({
                 <slot name="chart-background" />
             </foreignObject>
 
-            <g v-if="FINAL_CONFIG.style.chart.layout.curved">
+            <g v-if="cfgLayout.curved">
                 <path
                     v-for="(tick, i) in ticks"
                     :d="tick.curve"
                     :stroke-width="tickSize.mark"
                     :stroke="
-                        activeValue >= i
-                            ? tick.color
-                            : FINAL_CONFIG.style.chart.layout.inactiveColor
+                        activeValue >= i ? tick.color : cfgLayout.inactiveColor
                     "
                     stroke-linecap="round"
                     fill="none"
                     :class="{
                         'vue-ui-tick-animated':
-                            FINAL_CONFIG.style.chart.animation.use &&
+                            cfgChart.animation.use &&
                             !prefersReducedMotion &&
                             i <= activeValue,
                     }"
@@ -826,15 +790,13 @@ defineExpose({
                     :y2="tick.y2"
                     :stroke-width="tickSize.mark"
                     :stroke="
-                        activeValue >= i
-                            ? tick.color
-                            : FINAL_CONFIG.style.chart.layout.inactiveColor
+                        activeValue >= i ? tick.color : cfgLayout.inactiveColor
                     "
                     stroke-linecap="round"
                 />
             </g>
             <g
-                v-if="FINAL_CONFIG.style.chart.percentage.show"
+                v-if="cfgChart.percentage.show"
                 role="status"
                 aria-live="polite"
                 :aria-label="loading ? '...' : `${percentageText}`"
@@ -856,16 +818,16 @@ defineExpose({
                     :y="tireLabel.y"
                     :font-size="tireLabel.fontSize"
                     :fill="
-                        FINAL_CONFIG.style.chart.layout.ticks.gradient.show &&
-                        FINAL_CONFIG.style.chart.percentage.useGradientColor
+                        cfgLayout.ticks.gradient.show &&
+                        cfgChart.percentage.useGradientColor
                             ? shiftHue(
-                                  FINAL_CONFIG.style.chart.layout.activeColor,
+                                  cfgLayout.activeColor,
                                   (activeValue / 100) *
-                                      (FINAL_CONFIG.style.chart.layout.ticks
-                                          .gradient.shiftHueIntensity /
+                                      (cfgLayout.ticks.gradient
+                                          .shiftHueIntensity /
                                           100),
                               )
-                            : FINAL_CONFIG.style.chart.percentage.color
+                            : cfgChart.percentage.color
                     "
                     :font-weight="tireLabel.bold ? 'bold' : 'normal'"
                     :text-anchor="tireLabel.textAnchor"
