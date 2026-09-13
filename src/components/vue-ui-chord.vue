@@ -118,6 +118,9 @@ const activeA11yIndex = ref(null); // a11y
 const isFocus = ref(false); // a11y
 
 const FINAL_CONFIG = ref(prepareConfig());
+const cfgArcs = computed(() => FINAL_CONFIG.value.style.chart.arcs);
+const cfgRibbons = computed(() => FINAL_CONFIG.value.style.chart.ribbons);
+const cfgChart = computed(() => FINAL_CONFIG.value.style.chart);
 
 useHints({
     config: () => FINAL_CONFIG.value,
@@ -201,12 +204,12 @@ const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } =
     useUserOptionState({ config: FINAL_CONFIG.value });
 
 const { svgRef } = useChartAccessibility({
-    config: FINAL_CONFIG.value.style.chart.title,
+    config: cfgChart.value.title,
 });
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `chord_${uid.value}`,
-    fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-chord',
+    fileName: cfgChart.value.title.text || 'vue-ui-chord',
     options: FINAL_CONFIG.value.userOptions.print,
 });
 
@@ -360,12 +363,8 @@ function prepareChart() {
                 heightLegend,
             } = useResponsive({
                 chart: chordChart.value,
-                title: FINAL_CONFIG.value.style.chart.title.text
-                    ? chartTitle.value
-                    : null,
-                legend: FINAL_CONFIG.value.style.chart.legend.show
-                    ? chartLegend.value
-                    : null,
+                title: cfgChart.value.title.text ? chartTitle.value : null,
+                legend: cfgChart.value.legend.show ? chartLegend.value : null,
                 source: source.value,
                 noTitle: noTitle.value,
             });
@@ -440,10 +439,7 @@ const svg = ref({
 });
 
 const hasOptionsNoTitle = computed(() => {
-    return (
-        FINAL_CONFIG.value.userOptions.show &&
-        !FINAL_CONFIG.value.style.chart.title.text
-    );
+    return FINAL_CONFIG.value.userOptions.show && !cfgChart.value.title.text;
 });
 
 const customPalette = computed(() => {
@@ -452,19 +448,13 @@ const customPalette = computed(() => {
 
 const radii = computed(() => {
     return {
-        inner:
-            svg.value.width *
-            0.3 *
-            FINAL_CONFIG.value.style.chart.arcs.innerRadiusRatio,
-        outer:
-            svg.value.width *
-            0.34 *
-            FINAL_CONFIG.value.style.chart.arcs.outerRadiusRatio,
+        inner: svg.value.width * 0.3 * cfgArcs.value.innerRadiusRatio,
+        outer: svg.value.width * 0.34 * cfgArcs.value.outerRadiusRatio,
     };
 });
 
 const paddingAngle = computed(() => {
-    return FINAL_CONFIG.value.style.chart.arcs.padAngle / 100;
+    return cfgArcs.value.padAngle / 100;
 });
 
 const formattedDataset = computed(() => {
@@ -572,11 +562,8 @@ const chordData = computed(() => {
 });
 
 const rawValueLabels = computed(() => {
-    const R =
-        radii.value.outer +
-        FINAL_CONFIG.value.style.chart.ribbons.labels.offset +
-        12;
-    const fontSize = FINAL_CONFIG.value.style.chart.ribbons.labels.fontSize;
+    const R = radii.value.outer + cfgRibbons.value.labels.offset + 12;
+    const fontSize = cfgRibbons.value.labels.fontSize;
     const charWidth = fontSize * 0.6;
     const out = [];
 
@@ -666,10 +653,7 @@ const separatedValueLabels = computed(() => {
         .map((d) => ({ ...d }))
         .sort((a, b) => a.theta - b.theta);
 
-    const pad =
-        (FINAL_CONFIG.value.style.chart.ribbons.labels.minSeparationDeg *
-            Math.PI) /
-        180;
+    const pad = (cfgRibbons.value.labels.minSeparationDeg * Math.PI) / 180;
     let changed = true;
     let loops = 0;
 
@@ -772,15 +756,9 @@ function labelSide(theta) {
 function labelTransform(angle) {
     const a = angle - Math.PI / 2;
     const x =
-        Math.cos(a) *
-        (radii.value.outer +
-            FINAL_CONFIG.value.style.chart.arcs.labels.offset +
-            24);
+        Math.cos(a) * (radii.value.outer + cfgArcs.value.labels.offset + 24);
     const y =
-        Math.sin(a) *
-        (radii.value.outer +
-            FINAL_CONFIG.value.style.chart.arcs.labels.offset +
-            24);
+        Math.sin(a) * (radii.value.outer + cfgArcs.value.labels.offset + 24);
     return `translate(${x},${y})`;
 }
 
@@ -829,13 +807,13 @@ function onUp() {
 
 function getLabel(v) {
     return applyDataLabel(
-        FINAL_CONFIG.value.style.chart.ribbons.labels.formatter,
+        cfgRibbons.value.labels.formatter,
         v,
         dataLabel({
-            p: FINAL_CONFIG.value.style.chart.ribbons.labels.prefix,
+            p: cfgRibbons.value.labels.prefix,
             v,
-            s: FINAL_CONFIG.value.style.chart.ribbons.labels.suffix,
-            r: FINAL_CONFIG.value.style.chart.ribbons.labels.rounding,
+            s: cfgRibbons.value.labels.suffix,
+            r: cfgRibbons.value.labels.rounding,
         }),
     );
 }
@@ -1039,11 +1017,11 @@ const legendSet = computed(() => {
 const legendConfig = computed(() => {
     return {
         cy: 'chord-div-legend',
-        backgroundColor: FINAL_CONFIG.value.style.chart.legend.backgroundColor,
-        color: FINAL_CONFIG.value.style.chart.legend.color,
-        fontSize: FINAL_CONFIG.value.style.chart.legend.fontSize,
+        backgroundColor: cfgChart.value.legend.backgroundColor,
+        color: cfgChart.value.legend.color,
+        fontSize: cfgChart.value.legend.fontSize,
         paddingBottom: 12,
-        fontWeight: FINAL_CONFIG.value.style.chart.legend.bold ? 'bold' : '',
+        fontWeight: cfgChart.value.legend.bold ? 'bold' : '',
     };
 });
 
@@ -1094,8 +1072,8 @@ function generateCsv(callback = null) {
         });
 
         const tableXls = [
-            [FINAL_CONFIG.value.style.chart.title.text],
-            [FINAL_CONFIG.value.style.chart.title.subtitle.text],
+            [cfgChart.value.title.text],
+            [cfgChart.value.title.subtitle.text],
             [[''], ...formattedDataset.value.labels.map((l, i) => [l || i])],
         ].concat(rows);
 
@@ -1104,8 +1082,7 @@ function generateCsv(callback = null) {
         if (!callback) {
             downloadCsv({
                 csvContent,
-                title:
-                    FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-chord',
+                title: cfgChart.value.title.text || 'vue-ui-chord',
             });
         } else {
             callback(csvContent);
@@ -1126,7 +1103,7 @@ async function getImage({ scale = 2 } = {}) {
     return {
         imageUri,
         base64,
-        title: FINAL_CONFIG.value.style.chart.title.text,
+        title: cfgChart.value.title.text,
         width,
         height,
         aspectRatio,
@@ -1135,13 +1112,12 @@ async function getImage({ scale = 2 } = {}) {
 
 function getArcLabel(group, index) {
     return `${formattedDataset.value.labels[index]}${
-        FINAL_CONFIG.value.style.chart.arcs.labels.showPercentage
+        cfgArcs.value.labels.showPercentage
             ? dataLabel({
                   p: ' (',
                   v: isNaN(group.proportion) ? 0 : group.proportion * 100,
                   s: '%)',
-                  r: FINAL_CONFIG.value.style.chart.arcs.labels
-                      .roundingPercentage,
+                  r: cfgArcs.value.labels.roundingPercentage,
               })
             : ''
     }`;
@@ -1153,7 +1129,7 @@ const tableComponent = computed(() => {
     const open = mutableConfig.value.showTable;
     return {
         component: useDialog ? BaseDraggableDialog : Accordion,
-        title: `${FINAL_CONFIG.value.style.chart.title.text}${FINAL_CONFIG.value.style.chart.title.subtitle.text ? `: ${FINAL_CONFIG.value.style.chart.title.subtitle.text}` : ''}`,
+        title: `${cfgChart.value.title.text}${cfgChart.value.title.subtitle.text ? `: ${cfgChart.value.title.subtitle.text}` : ''}`,
         props: useDialog
             ? {
                   backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
@@ -1171,14 +1147,12 @@ const tableComponent = computed(() => {
                       open,
                       maxHeight: 10000,
                       body: {
-                          backgroundColor:
-                              FINAL_CONFIG.value.style.chart.backgroundColor,
-                          color: FINAL_CONFIG.value.style.chart.color,
+                          backgroundColor: cfgChart.value.backgroundColor,
+                          color: cfgChart.value.color,
                       },
                       head: {
-                          backgroundColor:
-                              FINAL_CONFIG.value.style.chart.backgroundColor,
-                          color: FINAL_CONFIG.value.style.chart.color,
+                          backgroundColor: cfgChart.value.backgroundColor,
+                          color: cfgChart.value.color,
                       },
                   },
               },
@@ -1206,9 +1180,9 @@ function closeTable() {
     }
 }
 
-const svgBg = computed(() => FINAL_CONFIG.value.style.chart.backgroundColor);
-const svgLegend = computed(() => FINAL_CONFIG.value.style.chart.legend);
-const svgTitle = computed(() => FINAL_CONFIG.value.style.chart.title);
+const svgBg = computed(() => cfgChart.value.backgroundColor);
+const svgLegend = computed(() => cfgChart.value.legend);
+const svgTitle = computed(() => cfgChart.value.title);
 
 const { isCallbackImaging, isCallbackSvg, generateSvg, onGenerateImage } =
     useChartExport({
@@ -1453,7 +1427,7 @@ defineExpose({
             'vue-data-ui-wrapper-fullscreen': isFullscreen,
             'vue-data-ui-responsive': FINAL_CONFIG.responsive,
         }"
-        :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor}`"
+        :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${cfgChart.backgroundColor}`"
         :id="`chord_${uid}`"
         @mouseenter="() => setUserOptionsVisibility(true)"
         @mouseleave="() => setUserOptionsVisibility(false)"
@@ -1473,8 +1447,8 @@ defineExpose({
 
         <PenAndPaper
             v-if="FINAL_CONFIG.userOptions.buttons.annotator && svgRef"
-            :color="FINAL_CONFIG.style.chart.color"
-            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
+            :color="cfgChart.color"
+            :backgroundColor="cfgChart.backgroundColor"
             :active="isAnnotator"
             :svgRef="svgRef"
             :isCursorPointer="isCursorPointer"
@@ -1512,7 +1486,7 @@ defineExpose({
 
         <div
             ref="chartTitle"
-            v-if="FINAL_CONFIG.style.chart.title.text"
+            v-if="cfgChart.title.text"
             :style="`width:100%;background:transparent;padding-bottom:24px`"
         >
             <Title
@@ -1520,11 +1494,11 @@ defineExpose({
                 :config="{
                     title: {
                         cy: 'chord-div-title',
-                        ...FINAL_CONFIG.style.chart.title,
+                        ...cfgChart.title,
                     },
                     subtitle: {
                         cy: 'chord-div-subtitle',
-                        ...FINAL_CONFIG.style.chart.title.subtitle,
+                        ...cfgChart.title.subtitle,
                     },
                 }"
             />
@@ -1540,8 +1514,8 @@ defineExpose({
                 isDataset &&
                 (keepUserOptionState ? true : userOptionsVisible)
             "
-            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
-            :color="FINAL_CONFIG.style.chart.color"
+            :backgroundColor="cfgChart.backgroundColor"
+            :color="cfgChart.color"
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uid"
@@ -1666,7 +1640,7 @@ defineExpose({
                 <slot name="chart-background" />
             </foreignObject>
 
-            <defs v-if="FINAL_CONFIG.style.chart.arcs.labels.curved">
+            <defs v-if="cfgArcs.labels.curved">
                 <path
                     v-for="(g, i) in chordData.groups"
                     :key="`labelPath-${i}`"
@@ -1676,7 +1650,7 @@ defineExpose({
                             g.startAngle,
                             g.endAngle,
                             (radii.inner + radii.outer) / 2 +
-                                FINAL_CONFIG.style.chart.arcs.labels.offset,
+                                cfgArcs.labels.offset,
                         )
                     "
                     fill="none"
@@ -1716,10 +1690,8 @@ defineExpose({
                             )
                         "
                         :fill="formattedDataset.colors[i]"
-                        :stroke="FINAL_CONFIG.style.chart.arcs.stroke"
-                        :stroke-width="
-                            FINAL_CONFIG.style.chart.arcs.strokeWidth
-                        "
+                        :stroke="cfgArcs.stroke"
+                        :stroke-width="cfgArcs.strokeWidth"
                         stroke-linecap="round"
                         stroke-linejoin="round"
                         :style="{
@@ -1746,10 +1718,8 @@ defineExpose({
                             )
                         "
                         :fill="`url(#${g.pattern})`"
-                        :stroke="FINAL_CONFIG.style.chart.arcs.stroke"
-                        :stroke-width="
-                            FINAL_CONFIG.style.chart.arcs.strokeWidth
-                        "
+                        :stroke="cfgArcs.stroke"
+                        :stroke-width="cfgArcs.strokeWidth"
                         stroke-linecap="round"
                         stroke-linejoin="round"
                         :style="{
@@ -1780,11 +1750,9 @@ defineExpose({
                                 'vue-ui-chord-ribbon': true,
                             }"
                             :d="ribbonPath(c.source, c.target)"
-                            :fill="FINAL_CONFIG.style.chart.backgroundColor"
+                            :fill="cfgChart.backgroundColor"
                             :style="{
-                                opacity:
-                                    FINAL_CONFIG.style.chart.ribbons
-                                        .underlayerOpacity,
+                                opacity: cfgRibbons.underlayerOpacity,
                             }"
                         />
 
@@ -1795,10 +1763,8 @@ defineExpose({
                             }"
                             :d="ribbonPath(c.source, c.target)"
                             :fill="formattedDataset.colors[c.source.index]"
-                            :stroke="FINAL_CONFIG.style.chart.ribbons.stroke"
-                            :stroke-width="
-                                FINAL_CONFIG.style.chart.ribbons.strokeWidth
-                            "
+                            :stroke="cfgRibbons.stroke"
+                            :stroke-width="cfgRibbons.strokeWidth"
                             stroke-linecap="round"
                             stroke-linejoin="round"
                             :style="{ opacity: getRibbonOpacity(c) }"
@@ -1844,10 +1810,8 @@ defineExpose({
                             }"
                             :d="ribbonPath(c.source, c.target)"
                             :fill="`url(#pattern_${uid}_${c.source.index})`"
-                            :stroke="FINAL_CONFIG.style.chart.ribbons.stroke"
-                            :stroke-width="
-                                FINAL_CONFIG.style.chart.ribbons.strokeWidth
-                            "
+                            :stroke="cfgRibbons.stroke"
+                            :stroke-width="cfgRibbons.strokeWidth"
                             stroke-linecap="round"
                             stroke-linejoin="round"
                             :style="{
@@ -1862,10 +1826,8 @@ defineExpose({
                         v-if="selectedRibbon"
                         :d="selectedRibbon.path"
                         :fill="selectedRibbon.color"
-                        :stroke="FINAL_CONFIG.style.chart.ribbons.stroke"
-                        :stroke-width="
-                            FINAL_CONFIG.style.chart.ribbons.strokeWidth
-                        "
+                        :stroke="cfgRibbons.stroke"
+                        :stroke-width="cfgRibbons.strokeWidth"
                         stroke-linecap="round"
                         stroke-linejoin="round"
                         :class="{ 'vue-ui-chord-ribbon': true }"
@@ -1877,10 +1839,8 @@ defineExpose({
                         v-if="selectedRibbon && $slots.pattern"
                         :d="selectedRibbon.path"
                         :fill="`url(#${selectedRibbon.source.pattern})`"
-                        :stroke="FINAL_CONFIG.style.chart.ribbons.stroke"
-                        :stroke-width="
-                            FINAL_CONFIG.style.chart.ribbons.strokeWidth
-                        "
+                        :stroke="cfgRibbons.stroke"
+                        :stroke-width="cfgRibbons.strokeWidth"
                         stroke-linecap="round"
                         stroke-linejoin="round"
                         :class="{ 'vue-ui-chord-ribbon': true }"
@@ -1894,7 +1854,7 @@ defineExpose({
                 <g
                     v-if="
                         (selectedGroup || selectedRibbon || selectedLegendId) &&
-                        FINAL_CONFIG.style.chart.ribbons.labels.show
+                        cfgRibbons.labels.show
                     "
                 >
                     <template v-for="lbl in separatedValueLabels" :key="lbl.id">
@@ -1904,22 +1864,15 @@ defineExpose({
                             :y1="lbl.midBaseY"
                             :x2="
                                 Math.cos(lbl.theta - Math.PI / 2) *
-                                (radii.outer +
-                                    FINAL_CONFIG.style.chart.ribbons.labels
-                                        .offset +
-                                    12)
+                                (radii.outer + cfgRibbons.labels.offset + 12)
                             "
                             :y2="
                                 Math.sin(lbl.theta - Math.PI / 2) *
-                                (radii.outer +
-                                    FINAL_CONFIG.style.chart.ribbons.labels
-                                        .offset +
-                                    12)
+                                (radii.outer + cfgRibbons.labels.offset + 12)
                             "
-                            :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                            :stroke="cfgChart.backgroundColor"
                             :stroke-width="
-                                FINAL_CONFIG.style.chart.ribbons.labels
-                                    .connector.strokeWidth * 3
+                                cfgRibbons.labels.connector.strokeWidth * 3
                             "
                             pointer-events="none"
                         />
@@ -1929,60 +1882,32 @@ defineExpose({
                             :y1="lbl.midBaseY"
                             :x2="
                                 Math.cos(lbl.theta - Math.PI / 2) *
-                                (radii.outer +
-                                    FINAL_CONFIG.style.chart.ribbons.labels
-                                        .offset +
-                                    12)
+                                (radii.outer + cfgRibbons.labels.offset + 12)
                             "
                             :y2="
                                 Math.sin(lbl.theta - Math.PI / 2) *
-                                (radii.outer +
-                                    FINAL_CONFIG.style.chart.ribbons.labels
-                                        .offset +
-                                    12)
+                                (radii.outer + cfgRibbons.labels.offset + 12)
                             "
-                            :stroke="
-                                FINAL_CONFIG.style.chart.ribbons.labels
-                                    .connector.stroke
-                            "
+                            :stroke="cfgRibbons.labels.connector.stroke"
                             :stroke-width="
-                                FINAL_CONFIG.style.chart.ribbons.labels
-                                    .connector.strokeWidth
+                                cfgRibbons.labels.connector.strokeWidth
                             "
                             pointer-events="none"
                         />
                         <!-- DOT -->
                         <circle
-                            v-if="
-                                FINAL_CONFIG.style.chart.ribbons.labels.marker
-                                    .show
-                            "
+                            v-if="cfgRibbons.labels.marker.show"
                             :cx="
                                 Math.cos(lbl.theta - Math.PI / 2) *
-                                (radii.outer +
-                                    FINAL_CONFIG.style.chart.ribbons.labels
-                                        .offset +
-                                    12)
+                                (radii.outer + cfgRibbons.labels.offset + 12)
                             "
                             :cy="
                                 Math.sin(lbl.theta - Math.PI / 2) *
-                                (radii.outer +
-                                    FINAL_CONFIG.style.chart.ribbons.labels
-                                        .offset +
-                                    12)
+                                (radii.outer + cfgRibbons.labels.offset + 12)
                             "
-                            :r="
-                                FINAL_CONFIG.style.chart.ribbons.labels.marker
-                                    .radius
-                            "
-                            :stroke="
-                                FINAL_CONFIG.style.chart.ribbons.labels.marker
-                                    .stroke
-                            "
-                            :stroke-width="
-                                FINAL_CONFIG.style.chart.ribbons.labels.marker
-                                    .strokeWidth
-                            "
+                            :r="cfgRibbons.labels.marker.radius"
+                            :stroke="cfgRibbons.labels.marker.stroke"
+                            :stroke-width="cfgRibbons.labels.marker.strokeWidth"
                             :fill="lbl.groupColor"
                             pointer-events="none"
                         />
@@ -1990,25 +1915,19 @@ defineExpose({
                         <text
                             :transform="`
                             translate(
-                                ${Math.cos(lbl.theta - Math.PI / 2) * (radii.outer + FINAL_CONFIG.style.chart.ribbons.labels.offset + 24)},
-                                ${Math.sin(lbl.theta - Math.PI / 2) * (radii.outer + FINAL_CONFIG.style.chart.ribbons.labels.offset + 24)}
+                                ${Math.cos(lbl.theta - Math.PI / 2) * (radii.outer + cfgRibbons.labels.offset + 24)},
+                                ${Math.sin(lbl.theta - Math.PI / 2) * (radii.outer + cfgRibbons.labels.offset + 24)}
                             ) rotate(${-rotation})
                             `"
                             :fill="
-                                FINAL_CONFIG.style.chart.ribbons.labels
-                                    .useSerieColor
+                                cfgRibbons.labels.useSerieColor
                                     ? lbl.groupColor
-                                    : FINAL_CONFIG.style.chart.ribbons.labels
-                                          .color
+                                    : cfgRibbons.labels.color
                             "
                             :text-anchor="labelSide(lbl.theta)"
-                            :font-size="
-                                FINAL_CONFIG.style.chart.ribbons.labels.fontSize
-                            "
+                            :font-size="cfgRibbons.labels.fontSize"
                             :font-weight="
-                                FINAL_CONFIG.style.chart.ribbons.labels.bold
-                                    ? 'bold'
-                                    : 'normal'
+                                cfgRibbons.labels.bold ? 'bold' : 'normal'
                             "
                             dy=".35em"
                             pointer-events="none"
@@ -2019,29 +1938,22 @@ defineExpose({
                 </g>
 
                 <!-- Group Labels -->
-                <g v-if="FINAL_CONFIG.style.chart.arcs.labels.show">
-                    <template
-                        v-if="FINAL_CONFIG.style.chart.arcs.labels.curved"
-                    >
+                <g v-if="cfgArcs.labels.show">
+                    <template v-if="cfgArcs.labels.curved">
                         <text
                             class="vue-ui-chord-label-curved"
                             v-for="(g, i) in chordData.groups"
                             :key="`curved-label-${i}`"
-                            :font-size="
-                                FINAL_CONFIG.style.chart.arcs.labels.fontSize
-                            "
+                            :font-size="cfgArcs.labels.fontSize"
                             :font-weight="
-                                FINAL_CONFIG.style.chart.arcs.labels.bold
-                                    ? 'bold'
-                                    : 'normal'
+                                cfgArcs.labels.bold ? 'bold' : 'normal'
                             "
                             :fill="
-                                FINAL_CONFIG.style.chart.arcs.labels
-                                    .adaptColorToBackground
+                                cfgArcs.labels.adaptColorToBackground
                                     ? adaptColorToBackground(
                                           formattedDataset.colors[i],
                                       )
-                                    : FINAL_CONFIG.style.chart.arcs.labels.color
+                                    : cfgArcs.labels.color
                             "
                         >
                             <textPath
@@ -2051,16 +1963,15 @@ defineExpose({
                             >
                                 {{ formattedDataset.labels[i]
                                 }}{{
-                                    FINAL_CONFIG.style.chart.arcs.labels
-                                        .showPercentage
+                                    cfgArcs.labels.showPercentage
                                         ? dataLabel({
                                               p: ' (',
                                               v: isNaN(g.proportion)
                                                   ? 0
                                                   : g.proportion * 100,
                                               s: '%)',
-                                              r: FINAL_CONFIG.style.chart.arcs
-                                                  .labels.roundingPercentage,
+                                              r: cfgArcs.labels
+                                                  .roundingPercentage,
                                           })
                                         : ''
                                 }}
@@ -2086,23 +1997,16 @@ defineExpose({
                             :text-anchor="
                                 rotatedMidAngle(g) > Math.PI ? 'end' : 'start'
                             "
-                            :font-size="
-                                FINAL_CONFIG.style.chart.arcs.labels.fontSize
-                            "
+                            :font-size="cfgArcs.labels.fontSize"
                             :font-weight="
-                                FINAL_CONFIG.style.chart.arcs.labels.bold
-                                    ? 'bold'
-                                    : 'normal'
+                                cfgArcs.labels.bold ? 'bold' : 'normal'
                             "
-                            :fill="FINAL_CONFIG.style.chart.arcs.labels.color"
+                            :fill="cfgArcs.labels.color"
                             v-html="
                                 createTSpansFromLineBreaksOnY({
                                     content: wrapText(getArcLabel(g, i)),
-                                    fontSize:
-                                        FINAL_CONFIG.style.chart.arcs.labels
-                                            .fontSize,
-                                    fill: FINAL_CONFIG.style.chart.arcs.labels
-                                        .color,
+                                    fontSize: cfgArcs.labels.fontSize,
+                                    fill: cfgArcs.labels.color,
                                     x: 0,
                                     y: 0,
                                 })
@@ -2153,12 +2057,9 @@ defineExpose({
 
         <!-- LEGEND -->
         <Teleport
-            v-if="
-                readyTeleport &&
-                (FINAL_CONFIG.style.chart.legend.show || $slots.legend)
-            "
+            v-if="readyTeleport && (cfgChart.legend.show || $slots.legend)"
             :to="
-                FINAL_CONFIG.style.chart.legend.position === 'top'
+                cfgChart.legend.position === 'top'
                     ? `#legend-top-${uid}`
                     : `#legend-bottom-${uid}`
             "
@@ -2166,7 +2067,7 @@ defineExpose({
             <div ref="chartLegend">
                 <slot name="legend" v-bind:legend="legendSet">
                     <Legend
-                        v-if="FINAL_CONFIG.style.chart.legend.show"
+                        v-if="cfgChart.legend.show"
                         :key="`legend_${legendStep}`"
                         :legendSet="legendSet"
                         :config="legendConfig"
@@ -2223,15 +2124,12 @@ defineExpose({
                     role="button"
                     class="vue-data-ui-refresh-button"
                     :style="{
-                        background: FINAL_CONFIG.style.chart.backgroundColor,
+                        background: cfgChart.backgroundColor,
                         cursor: isCursorPointer ? 'pointer' : 'default',
                     }"
                     @click="resetRotation"
                 >
-                    <BaseIcon
-                        name="refresh"
-                        :stroke="FINAL_CONFIG.style.chart.color"
-                    />
+                    <BaseIcon name="refresh" :stroke="cfgChart.color" />
                 </button>
             </slot>
         </div>
