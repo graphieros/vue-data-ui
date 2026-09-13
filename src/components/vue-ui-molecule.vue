@@ -119,6 +119,9 @@ const tableUnit = ref(null);
 const userOptionsRef = ref(null);
 
 const FINAL_CONFIG = ref(prepareConfig());
+const cfgTooltip = computed(() => FINAL_CONFIG.value.style.chart.tooltip);
+const cfgChart = computed(() => FINAL_CONFIG.value.style.chart);
+const cfgUserOptions = computed(() => FINAL_CONFIG.value.userOptions);
 
 useHints({
     config: () => FINAL_CONFIG.value,
@@ -241,7 +244,7 @@ const { loading, FINAL_DATASET } = useLoading({
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } =
     useUserOptionState({ config: FINAL_CONFIG.value });
 const { svgRef } = useChartAccessibility({
-    config: FINAL_CONFIG.value.style.chart.title,
+    config: cfgChart.value.title,
 });
 
 function prepareConfig() {
@@ -288,9 +291,8 @@ watch(
 
         // Reset mutable config
         mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
-        mutableConfig.value.showTooltip =
-            FINAL_CONFIG.value.style.chart.tooltip.show;
-        mutableConfig.value.showZoom = FINAL_CONFIG.value.style.chart.zoom.show;
+        mutableConfig.value.showTooltip = cfgTooltip.value.show;
+        mutableConfig.value.showZoom = cfgChart.value.zoom.show;
     },
     { deep: true },
 );
@@ -318,15 +320,12 @@ watch(
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `cluster_${uid.value}`,
-    fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-molecule',
+    fileName: cfgChart.value.title.text || 'vue-ui-molecule',
     options: FINAL_CONFIG.value.userOptions.print,
 });
 
 const hasOptionsNoTitle = computed(() => {
-    return (
-        FINAL_CONFIG.value.userOptions.show &&
-        !FINAL_CONFIG.value.style.chart.title.text
-    );
+    return FINAL_CONFIG.value.userOptions.show && !cfgChart.value.title.text;
 });
 
 const customPalette = computed(() => {
@@ -336,8 +335,8 @@ const customPalette = computed(() => {
 const mutableConfig = ref({
     showTable: FINAL_CONFIG.value.table.show,
     showDataLabels: true,
-    showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show,
-    showZoom: FINAL_CONFIG.value.style.chart.zoom.show,
+    showTooltip: cfgTooltip.value.show,
+    showZoom: cfgChart.value.zoom.show,
 });
 
 watch(
@@ -346,8 +345,8 @@ watch(
         mutableConfig.value = {
             showTable: FINAL_CONFIG.value.table.show,
             showDataLabels: true,
-            showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show,
-            showZoom: FINAL_CONFIG.value.style.chart.zoom.show,
+            showTooltip: cfgTooltip.value.show,
+            showZoom: cfgChart.value.zoom.show,
         };
     },
     { immediate: true },
@@ -426,7 +425,7 @@ function processNodes(
         node.circleRadius = circleRadius;
         node.color = finalColor;
         node.strokeWidth = Math.min(
-            FINAL_CONFIG.value.style.chart.links.strokeWidth / (depth + 1),
+            cfgChart.value.links.strokeWidth / (depth + 1),
             circleRadius / 2,
         );
         node.uid = createUid();
@@ -498,7 +497,7 @@ function createTooltipContent(node) {
         config: FINAL_CONFIG.value,
     };
 
-    const customFormat = FINAL_CONFIG.value.style.chart.tooltip.customFormat;
+    const customFormat = cfgTooltip.value.customFormat;
 
     if (
         isFunction(customFormat) &&
@@ -522,7 +521,7 @@ function createTooltipContent(node) {
 
         html += `<div style="display:flex;align-items:center;gap:3px"><div style="color:${node.color}">⬤</div><div>${node.name}</div></div>`;
         if (node.details) {
-            html += `<div style="width:100%;border-top:1px solid ${FINAL_CONFIG.value.style.chart.tooltip.borderColor};margin-top: 2px">${node.details}</div>`;
+            html += `<div style="width:100%;border-top:1px solid ${cfgTooltip.value.borderColor};margin-top: 2px">${node.details}</div>`;
         }
 
         tooltipContent.value = `<div style="font-family:inherit">${html}</div>`;
@@ -644,8 +643,8 @@ function generateCsv(callback = null) {
             return [[b[0].name], [b[1]], [b[2]]];
         });
         const tableXls = [
-            [FINAL_CONFIG.value.style.chart.title.text],
-            [FINAL_CONFIG.value.style.chart.title.subtitle.text],
+            [cfgChart.value.title.text],
+            [cfgChart.value.title.subtitle.text],
             [[...dataTable.value.head]],
         ].concat(labels);
 
@@ -654,9 +653,7 @@ function generateCsv(callback = null) {
         if (!callback) {
             downloadCsv({
                 csvContent,
-                title:
-                    FINAL_CONFIG.value.style.chart.title.text ||
-                    'vue-ui-molecule',
+                title: cfgChart.value.title.text || 'vue-ui-molecule',
             });
         } else {
             callback(csvContent);
@@ -707,7 +704,7 @@ const { viewBox, resetZoom, isZoom, setInitialViewBox } = usePanZoom(
         width: Math.max(10, svg.value.width),
         height: Math.max(10, svg.value.height),
     },
-    FINAL_CONFIG.value.style.chart.zoom.speed,
+    cfgChart.value.zoom.speed,
     active,
 );
 
@@ -734,7 +731,7 @@ async function getImage({ scale = 2 } = {}) {
     return {
         imageUri,
         base64,
-        title: FINAL_CONFIG.value.style.chart.title.text,
+        title: cfgChart.value.title.text,
         width,
         height,
         aspectRatio,
@@ -747,7 +744,7 @@ const tableComponent = computed(() => {
     const open = mutableConfig.value.showTable;
     return {
         component: useDialog ? BaseDraggableDialog : Accordion,
-        title: `${FINAL_CONFIG.value.style.chart.title.text}${FINAL_CONFIG.value.style.chart.title.subtitle.text ? `: ${FINAL_CONFIG.value.style.chart.title.subtitle.text}` : ''}`,
+        title: `${cfgChart.value.title.text}${cfgChart.value.title.subtitle.text ? `: ${cfgChart.value.title.subtitle.text}` : ''}`,
         props: useDialog
             ? {
                   backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
@@ -765,14 +762,12 @@ const tableComponent = computed(() => {
                       open,
                       maxHeight: 10000,
                       body: {
-                          backgroundColor:
-                              FINAL_CONFIG.value.style.chart.backgroundColor,
-                          color: FINAL_CONFIG.value.style.chart.color,
+                          backgroundColor: cfgChart.value.backgroundColor,
+                          color: cfgChart.value.color,
                       },
                       head: {
-                          backgroundColor:
-                              FINAL_CONFIG.value.style.chart.backgroundColor,
-                          color: FINAL_CONFIG.value.style.chart.color,
+                          backgroundColor: cfgChart.value.backgroundColor,
+                          color: cfgChart.value.color,
                       },
                   },
               },
@@ -800,8 +795,8 @@ function closeTable() {
     }
 }
 
-const svgBg = computed(() => FINAL_CONFIG.value.style.chart.backgroundColor);
-const svgTitle = computed(() => FINAL_CONFIG.value.style.chart.title);
+const svgBg = computed(() => cfgChart.value.backgroundColor);
+const svgTitle = computed(() => cfgChart.value.title);
 
 const { isCallbackImaging, isCallbackSvg, generateSvg, onGenerateImage } =
     useChartExport({
@@ -833,7 +828,7 @@ async function copyAlt() {
     );
 }
 
-const textColor = computed(() => FINAL_CONFIG.value.style.chart.color);
+const textColor = computed(() => cfgChart.value.color);
 
 defineExpose({
     getData,
@@ -856,7 +851,7 @@ defineExpose({
     <div
         ref="moleculeChart"
         :class="`vue-data-ui-component vue-ui-molecule ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`"
-        :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor}`"
+        :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${cfgChart.backgroundColor}`"
         :id="`cluster_${uid}`"
         @mouseleave="
             hoveredNode = null;
@@ -866,10 +861,10 @@ defineExpose({
         @mouseenter="() => setUserOptionsVisibility(true)"
     >
         <PenAndPaper
-            v-if="FINAL_CONFIG.userOptions.buttons.annotator && !!svgRef"
+            v-if="cfgUserOptions.buttons.annotator && !!svgRef"
             :svgRef="svgRef"
-            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
-            :color="FINAL_CONFIG.style.chart.color"
+            :backgroundColor="cfgChart.backgroundColor"
+            :color="cfgChart.color"
             :active="isAnnotator"
             :isCursorPointer="isCursorPointer"
             @close="toggleAnnotator"
@@ -902,7 +897,7 @@ defineExpose({
         />
 
         <div
-            v-if="FINAL_CONFIG.style.chart.title.text"
+            v-if="cfgChart.title.text"
             :style="`width:100%;background:transparent;`"
         >
             <Title
@@ -910,11 +905,11 @@ defineExpose({
                 :config="{
                     title: {
                         cy: 'molecule-div-title',
-                        ...FINAL_CONFIG.style.chart.title,
+                        ...cfgChart.title,
                     },
                     subtitle: {
                         cy: 'molecule-div-subtitle',
-                        ...FINAL_CONFIG.style.chart.title.subtitle,
+                        ...cfgChart.title.subtitle,
                     },
                 }"
             />
@@ -924,37 +919,34 @@ defineExpose({
             ref="userOptionsRef"
             :key="`user_options_${step}`"
             v-if="
-                FINAL_CONFIG.userOptions.show &&
+                cfgUserOptions.show &&
                 isDataset &&
                 (keepUserOptionState ? true : userOptionsVisible)
             "
-            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
-            :color="FINAL_CONFIG.style.chart.color"
+            :backgroundColor="cfgChart.backgroundColor"
+            :color="cfgChart.color"
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uid"
-            :hasTooltip="
-                FINAL_CONFIG.userOptions.buttons.tooltip &&
-                FINAL_CONFIG.style.chart.tooltip.show
-            "
-            :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
-            :hasXls="FINAL_CONFIG.userOptions.buttons.csv"
-            :hasImg="FINAL_CONFIG.userOptions.buttons.img"
-            :hasSvg="FINAL_CONFIG.userOptions.buttons.svg"
-            :hasTable="FINAL_CONFIG.userOptions.buttons.table"
-            :hasLabel="FINAL_CONFIG.userOptions.buttons.labels"
-            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
-            :hasAltCopy="FINAL_CONFIG.userOptions.buttons.altCopy"
+            :hasTooltip="cfgUserOptions.buttons.tooltip && cfgTooltip.show"
+            :hasPdf="cfgUserOptions.buttons.pdf"
+            :hasXls="cfgUserOptions.buttons.csv"
+            :hasImg="cfgUserOptions.buttons.img"
+            :hasSvg="cfgUserOptions.buttons.svg"
+            :hasTable="cfgUserOptions.buttons.table"
+            :hasLabel="cfgUserOptions.buttons.labels"
+            :hasFullscreen="cfgUserOptions.buttons.fullscreen"
+            :hasAltCopy="cfgUserOptions.buttons.altCopy"
             :isTooltip="mutableConfig.showTooltip"
-            :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
+            :titles="{ ...cfgUserOptions.buttonTitles }"
             :chartElement="moleculeChart"
-            :position="FINAL_CONFIG.userOptions.position"
-            :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator"
+            :position="cfgUserOptions.position"
+            :hasAnnotator="cfgUserOptions.buttons.annotator"
             :isAnnotation="isAnnotator"
-            :callbacks="FINAL_CONFIG.userOptions.callbacks"
-            :printScale="FINAL_CONFIG.userOptions.print.scale"
+            :callbacks="cfgUserOptions.callbacks"
+            :printScale="cfgUserOptions.print.scale"
             :tableDialog="FINAL_CONFIG.table.useDialog"
-            :hasZoom="FINAL_CONFIG.userOptions.buttons.zoom"
+            :hasZoom="cfgUserOptions.buttons.zoom"
             :isZoom="mutableConfig.showZoom"
             :isCursorPointer="isCursorPointer"
             @toggleFullscreen="toggleFullscreen"
@@ -1049,7 +1041,7 @@ defineExpose({
                 'vue-data-ui-fullscreen--on': isFullscreen,
                 'vue-data-ui-fulscreen--off': !isFullscreen,
             }"
-            :style="`overflow: hidden; background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
+            :style="`overflow: hidden; background:transparent;color:${cfgChart.color}`"
         >
             <PackageVersion />
 
@@ -1087,16 +1079,16 @@ defineExpose({
 
             <RecursiveLinks
                 :dataset="convertedDataset"
-                :color="FINAL_CONFIG.style.chart.links.stroke"
-                :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
-                :useChildColor="FINAL_CONFIG.style.chart.links.useChildColor"
+                :color="cfgChart.links.stroke"
+                :backgroundColor="cfgChart.backgroundColor"
+                :useChildColor="cfgChart.links.useChildColor"
             />
 
             <RecursiveCircles
                 :dataset="convertedDataset"
                 :hoveredUid="hoveredUid"
-                :stroke="FINAL_CONFIG.style.chart.nodes.stroke"
-                :strokeHovered="FINAL_CONFIG.style.chart.nodes.strokeHovered"
+                :stroke="cfgChart.nodes.stroke"
+                :strokeHovered="cfgChart.nodes.strokeHovered"
                 @click="selectNode"
                 @hover="hover"
             >
@@ -1110,7 +1102,7 @@ defineExpose({
             <RecursiveLabels
                 v-if="mutableConfig.showDataLabels && !loading"
                 :dataset="convertedDataset"
-                :color="FINAL_CONFIG.style.chart.color"
+                :color="cfgChart.color"
                 :hoveredUid="hoveredUid"
             />
             <slot
@@ -1147,15 +1139,12 @@ defineExpose({
                     role="button"
                     class="vue-data-ui-refresh-button"
                     :style="{
-                        background: FINAL_CONFIG.style.chart.backgroundColor,
+                        background: cfgChart.backgroundColor,
                         cursor: isCursorPointer ? 'pointer' : 'default',
                     }"
                     @click="resetZoom(true)"
                 >
-                    <BaseIcon
-                        name="refresh"
-                        :stroke="FINAL_CONFIG.style.chart.color"
-                    />
+                    <BaseIcon name="refresh" :stroke="cfgChart.color" />
                 </button>
             </slot>
         </div>
@@ -1165,34 +1154,29 @@ defineExpose({
         </div>
 
         <Tooltip
-            :teleportTo="FINAL_CONFIG.style.chart.tooltip.teleportTo"
+            :teleportTo="cfgTooltip.teleportTo"
             :show="mutableConfig.showTooltip && isTooltip"
-            :backgroundColor="FINAL_CONFIG.style.chart.tooltip.backgroundColor"
-            :color="FINAL_CONFIG.style.chart.tooltip.color"
-            :borderRadius="FINAL_CONFIG.style.chart.tooltip.borderRadius"
-            :borderColor="FINAL_CONFIG.style.chart.tooltip.borderColor"
-            :borderWidth="FINAL_CONFIG.style.chart.tooltip.borderWidth"
-            :fontSize="FINAL_CONFIG.style.chart.tooltip.fontSize"
-            :backgroundOpacity="
-                FINAL_CONFIG.style.chart.tooltip.backgroundOpacity
-            "
-            :position="FINAL_CONFIG.style.chart.tooltip.position"
-            :offsetX="FINAL_CONFIG.style.chart.tooltip.offsetX"
-            :offsetY="FINAL_CONFIG.style.chart.tooltip.offsetY"
+            :backgroundColor="cfgTooltip.backgroundColor"
+            :color="cfgTooltip.color"
+            :borderRadius="cfgTooltip.borderRadius"
+            :borderColor="cfgTooltip.borderColor"
+            :borderWidth="cfgTooltip.borderWidth"
+            :fontSize="cfgTooltip.fontSize"
+            :backgroundOpacity="cfgTooltip.backgroundOpacity"
+            :position="cfgTooltip.position"
+            :offsetX="cfgTooltip.offsetX"
+            :offsetY="cfgTooltip.offsetY"
             :parent="moleculeChart"
             :content="tooltipContent"
             :isFullscreen="isFullscreen"
             :isCustom="
-                FINAL_CONFIG.style.chart.tooltip.customFormat &&
-                typeof FINAL_CONFIG.style.chart.tooltip.customFormat ===
-                    'function'
+                cfgTooltip.customFormat &&
+                typeof cfgTooltip.customFormat === 'function'
             "
-            :smooth="FINAL_CONFIG.style.chart.tooltip.smooth"
-            :backdropFilter="FINAL_CONFIG.style.chart.tooltip.backdropFilter"
-            :smoothForce="FINAL_CONFIG.style.chart.tooltip.smoothForce"
-            :smoothSnapThreshold="
-                FINAL_CONFIG.style.chart.tooltip.smoothSnapThreshold
-            "
+            :smooth="cfgTooltip.smooth"
+            :backdropFilter="cfgTooltip.backdropFilter"
+            :smoothForce="cfgTooltip.smoothForce"
+            :smoothSnapThreshold="cfgTooltip.smoothSnapThreshold"
         >
             <template #tooltip-before>
                 <slot
@@ -1212,7 +1196,7 @@ defineExpose({
         </Tooltip>
 
         <component
-            v-if="isDataset && FINAL_CONFIG.userOptions.buttons.table"
+            v-if="isDataset && cfgUserOptions.buttons.table"
             :is="tableComponent.component"
             v-bind="tableComponent.props"
             ref="tableUnit"
@@ -1225,7 +1209,7 @@ defineExpose({
                 <button
                     tabindex="0"
                     class="vue-ui-user-options-button"
-                    @click="generateCsv(FINAL_CONFIG.userOptions.callbacks.csv)"
+                    @click="generateCsv(cfgUserOptions.callbacks.csv)"
                     :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }"
                 >
                     <BaseIcon
