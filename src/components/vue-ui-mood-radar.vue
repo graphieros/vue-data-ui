@@ -102,6 +102,12 @@ const isDataset = computed(() => {
 });
 
 const FINAL_CONFIG = ref(prepareConfig());
+const cfgUserOptions = computed(() => FINAL_CONFIG.value.userOptions);
+const cfgSmileys = computed(
+    () => FINAL_CONFIG.value.style.chart.layout.smileys,
+);
+const cfgLayout = computed(() => FINAL_CONFIG.value.style.chart.layout);
+const cfgChart = computed(() => FINAL_CONFIG.value.style.chart);
 
 useHints({
     config: () => FINAL_CONFIG.value,
@@ -200,12 +206,8 @@ function prepareChart() {
         const handleResize = throttle(() => {
             const { width, height } = useResponsive({
                 chart: moodRadarChart.value,
-                title: FINAL_CONFIG.value.style.chart.title.text
-                    ? chartTitle.value
-                    : null,
-                legend: FINAL_CONFIG.value.style.chart.legend.show
-                    ? chartLegend.value
-                    : null,
+                title: cfgChart.value.title.text ? chartTitle.value : null,
+                legend: cfgChart.value.legend.show ? chartLegend.value : null,
                 noTitle: noTitle.value,
                 source: source.value,
             });
@@ -232,7 +234,7 @@ function prepareChart() {
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } =
     useUserOptionState({ config: FINAL_CONFIG.value });
 const { svgRef } = useChartAccessibility({
-    config: FINAL_CONFIG.value.style.chart.title,
+    config: cfgChart.value.title,
 });
 
 function prepareConfig() {
@@ -281,15 +283,12 @@ watch(
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: uid.value,
-    fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-mood-radar',
+    fileName: cfgChart.value.title.text || 'vue-ui-mood-radar',
     options: FINAL_CONFIG.value.userOptions.print,
 });
 
 const hasOptionsNoTitle = computed(() => {
-    return (
-        FINAL_CONFIG.value.userOptions.show &&
-        !FINAL_CONFIG.value.style.chart.title.text
-    );
+    return FINAL_CONFIG.value.userOptions.show && !cfgChart.value.title.text;
 });
 
 const mutableConfig = ref({
@@ -367,9 +366,7 @@ const convertedDataset = computed(() => {
                 key,
                 value,
                 proportion: value / grandTotal.value,
-                color: FINAL_CONFIG.value.style.chart.layout.smileys.colors[
-                    key
-                ],
+                color: cfgSmileys.value.colors[key],
             };
         })
         .map((el) => {
@@ -385,14 +382,13 @@ const legendSet = computed(() => {
     return convertedDataset.value.map((ds, i) => ({
         ...ds,
         display: `${applyDataLabel(
-            FINAL_CONFIG.value.style.chart.layout.dataLabel.formatter,
+            cfgLayout.value.dataLabel.formatter,
             ds.value,
             dataLabel({
-                p: FINAL_CONFIG.value.style.chart.layout.dataLabel.prefix,
+                p: cfgLayout.value.dataLabel.prefix,
                 v: ds.value,
-                s: FINAL_CONFIG.value.style.chart.layout.dataLabel.suffix,
-                r: FINAL_CONFIG.value.style.chart.layout.dataLabel
-                    .roundingValue,
+                s: cfgLayout.value.dataLabel.suffix,
+                r: cfgLayout.value.dataLabel.roundingValue,
             }),
         )}${
             loading.value
@@ -400,8 +396,7 @@ const legendSet = computed(() => {
                 : ` (${dataLabel({
                       v: ds.proportion * 100,
                       s: '%',
-                      r: FINAL_CONFIG.value.style.chart.legend
-                          .roundingPercentage,
+                      r: cfgChart.value.legend.roundingPercentage,
                   })})`
         }`,
     }));
@@ -440,11 +435,11 @@ const radar = computed(() => {
 const legendConfig = computed(() => {
     return {
         cy: 'mood-radar-legend',
-        backgroundColor: FINAL_CONFIG.value.style.chart.legend.backgroundColor,
-        color: FINAL_CONFIG.value.style.chart.legend.color,
-        fontSize: FINAL_CONFIG.value.style.chart.legend.fontSize,
+        backgroundColor: cfgChart.value.legend.backgroundColor,
+        color: cfgChart.value.legend.color,
+        fontSize: cfgChart.value.legend.fontSize,
         paddingBottom: 12,
-        fontWeight: FINAL_CONFIG.value.style.chart.legend.bold ? 'bold' : '',
+        fontWeight: cfgChart.value.legend.bold ? 'bold' : '',
     };
 });
 
@@ -516,8 +511,8 @@ function generateCsv(callback = null) {
             ];
         });
         const tableXls = [
-            [FINAL_CONFIG.value.style.chart.title.text],
-            [FINAL_CONFIG.value.style.chart.title.subtitle.text],
+            [cfgChart.value.title.text],
+            [cfgChart.value.title.subtitle.text],
             [[''], ['val'], ['%']],
         ].concat(labels);
         const csvContent = createCsvContent(tableXls);
@@ -525,9 +520,7 @@ function generateCsv(callback = null) {
         if (!callback) {
             downloadCsv({
                 csvContent,
-                title:
-                    FINAL_CONFIG.value.style.chart.title.text ||
-                    'vue-ui-mood-radar',
+                title: cfgChart.value.title.text || 'vue-ui-mood-radar',
             });
         } else {
             callback(csvContent);
@@ -620,7 +613,7 @@ async function getImage({ scale = 2 } = {}) {
     return {
         imageUri,
         base64,
-        title: FINAL_CONFIG.value.style.chart.title.text,
+        title: cfgChart.value.title.text,
         width,
         height,
         aspectRatio,
@@ -633,7 +626,7 @@ const tableComponent = computed(() => {
     const open = mutableConfig.value.showTable;
     return {
         component: useDialog ? BaseDraggableDialog : Accordion,
-        title: `${FINAL_CONFIG.value.style.chart.title.text}${FINAL_CONFIG.value.style.chart.title.subtitle.text ? `: ${FINAL_CONFIG.value.style.chart.title.subtitle.text}` : ''}`,
+        title: `${cfgChart.value.title.text}${cfgChart.value.title.subtitle.text ? `: ${cfgChart.value.title.subtitle.text}` : ''}`,
         props: useDialog
             ? {
                   backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
@@ -651,14 +644,12 @@ const tableComponent = computed(() => {
                       open,
                       maxHeight: 10000,
                       body: {
-                          backgroundColor:
-                              FINAL_CONFIG.value.style.chart.backgroundColor,
-                          color: FINAL_CONFIG.value.style.chart.color,
+                          backgroundColor: cfgChart.value.backgroundColor,
+                          color: cfgChart.value.color,
                       },
                       head: {
-                          backgroundColor:
-                              FINAL_CONFIG.value.style.chart.backgroundColor,
-                          color: FINAL_CONFIG.value.style.chart.color,
+                          backgroundColor: cfgChart.value.backgroundColor,
+                          color: cfgChart.value.color,
                       },
                   },
               },
@@ -694,9 +685,9 @@ const svgLegendItems = computed(() => {
     }));
 });
 
-const svgBg = computed(() => FINAL_CONFIG.value.style.chart.backgroundColor);
-const svgLegend = computed(() => FINAL_CONFIG.value.style.chart.legend);
-const svgTitle = computed(() => FINAL_CONFIG.value.style.chart.title);
+const svgBg = computed(() => cfgChart.value.backgroundColor);
+const svgLegend = computed(() => cfgChart.value.legend);
+const svgTitle = computed(() => cfgChart.value.title);
 
 const { isCallbackImaging, isCallbackSvg, generateSvg, onGenerateImage } =
     useChartExport({
@@ -752,13 +743,13 @@ function getLegendItemByKey(key) {
 
 function getFormattedValue(value, seriesIndex, datapoint) {
     return applyDataLabel(
-        FINAL_CONFIG.value.style.chart.layout.dataLabel.formatter,
+        cfgLayout.value.dataLabel.formatter,
         value,
         dataLabel({
-            p: FINAL_CONFIG.value.style.chart.layout.dataLabel.prefix,
+            p: cfgLayout.value.dataLabel.prefix,
             v: value,
-            s: FINAL_CONFIG.value.style.chart.layout.dataLabel.suffix,
-            r: FINAL_CONFIG.value.style.chart.layout.dataLabel.roundingValue,
+            s: cfgLayout.value.dataLabel.suffix,
+            r: cfgLayout.value.dataLabel.roundingValue,
         }),
         { datapoint, seriesIndex },
     );
@@ -768,7 +759,7 @@ function getFormattedPercentage(value) {
     return dataLabel({
         v: grandTotal.value ? (value / grandTotal.value) * 100 : 0,
         s: '%',
-        r: FINAL_CONFIG.value.style.chart.layout.dataLabel.roundingPercentage,
+        r: cfgLayout.value.dataLabel.roundingPercentage,
     });
 }
 
@@ -893,7 +884,7 @@ defineExpose({
         :class="`vue-data-ui-component vue-ui-mood-radar ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${FINAL_CONFIG.useCssAnimation ? '' : 'vue-ui-dna'}`"
         ref="moodRadarChart"
         :id="`${uid}`"
-        :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor}`"
+        :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${cfgChart.backgroundColor}`"
         @mouseenter="showOptions"
         @mouseleave="hideOptions"
     >
@@ -911,13 +902,13 @@ defineExpose({
         />
 
         <PenAndPaper
-            v-if="FINAL_CONFIG.userOptions.buttons.annotator"
+            v-if="cfgUserOptions.buttons.annotator"
             :svgRef="svgRef"
-            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
-            :color="FINAL_CONFIG.style.chart.color"
+            :backgroundColor="cfgChart.backgroundColor"
+            :color="cfgChart.color"
             :active="isAnnotator"
             :isCursorPointer="isCursorPointer"
-            :palette="FINAL_CONFIG.userOptions.annotatorPalette"
+            :palette="cfgUserOptions.annotatorPalette"
             @close="toggleAnnotator"
         >
             <template #annotator-action-close>
@@ -949,18 +940,18 @@ defineExpose({
 
         <div
             ref="chartTitle"
-            v-if="FINAL_CONFIG.style.chart.title.text"
+            v-if="cfgChart.title.text"
             :style="`width:100%;background:transparent`"
         >
             <Title
                 :config="{
                     title: {
                         cy: 'mood-radar-title',
-                        ...FINAL_CONFIG.style.chart.title,
+                        ...cfgChart.title,
                     },
                     subtitle: {
                         cy: 'mood-radar-subtitle',
-                        ...FINAL_CONFIG.style.chart.title.subtitle,
+                        ...cfgChart.title.subtitle,
                     },
                 }"
             />
@@ -972,30 +963,30 @@ defineExpose({
         <UserOptions
             ref="userOptionsRef"
             v-if="
-                FINAL_CONFIG.userOptions.show &&
+                cfgUserOptions.show &&
                 isDataset &&
                 (keepUserOptionState ? true : userOptionsVisible)
             "
-            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
-            :color="FINAL_CONFIG.style.chart.color"
+            :backgroundColor="cfgChart.backgroundColor"
+            :color="cfgChart.color"
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uid"
-            :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
-            :hasXls="FINAL_CONFIG.userOptions.buttons.csv"
-            :hasImg="FINAL_CONFIG.userOptions.buttons.img"
-            :hasSvg="FINAL_CONFIG.userOptions.buttons.svg"
-            :hasTable="FINAL_CONFIG.userOptions.buttons.table"
-            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
-            :hasAltCopy="FINAL_CONFIG.userOptions.buttons.altCopy"
+            :hasPdf="cfgUserOptions.buttons.pdf"
+            :hasXls="cfgUserOptions.buttons.csv"
+            :hasImg="cfgUserOptions.buttons.img"
+            :hasSvg="cfgUserOptions.buttons.svg"
+            :hasTable="cfgUserOptions.buttons.table"
+            :hasFullscreen="cfgUserOptions.buttons.fullscreen"
+            :hasAltCopy="cfgUserOptions.buttons.altCopy"
             :isFullscreen="isFullscreen"
-            :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
+            :titles="{ ...cfgUserOptions.buttonTitles }"
             :chartElement="moodRadarChart"
-            :position="FINAL_CONFIG.userOptions.position"
-            :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator"
+            :position="cfgUserOptions.position"
+            :hasAnnotator="cfgUserOptions.buttons.annotator"
             :isAnnotation="isAnnotator"
-            :callbacks="FINAL_CONFIG.userOptions.callbacks"
-            :printScale="FINAL_CONFIG.userOptions.print.scale"
+            :callbacks="cfgUserOptions.callbacks"
+            :printScale="cfgUserOptions.print.scale"
             :tableDialog="FINAL_CONFIG.table.useDialog"
             :isCursorPointer="isCursorPointer"
             @toggleFullscreen="toggleFullscreen"
@@ -1075,7 +1066,7 @@ defineExpose({
                     'vue-data-ui-fullscreen--on': isFullscreen,
                     'vue-data-ui-fulscreen--off': !isFullscreen,
                 }"
-                :style="`overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
+                :style="`overflow:visible;background:transparent;color:${cfgChart.color}`"
                 tabindex="0"
                 @focus="onSvgFocus"
                 @blur="onSvgBlur"
@@ -1111,10 +1102,8 @@ defineExpose({
                             [
                                 '0%',
                                 setOpacity(
-                                    FINAL_CONFIG.style.chart.layout.dataPolygon
-                                        .color,
-                                    FINAL_CONFIG.style.chart.layout.dataPolygon
-                                        .opacity,
+                                    cfgLayout.dataPolygon.color,
+                                    cfgLayout.dataPolygon.opacity,
                                 ),
                                 1,
                             ],
@@ -1122,14 +1111,11 @@ defineExpose({
                                 '100%',
                                 setOpacity(
                                     shiftHue(
-                                        FINAL_CONFIG.style.chart.layout
-                                            .dataPolygon.color,
-                                        FINAL_CONFIG.style.chart.layout
-                                            .dataPolygon.gradient.intensity /
-                                            100,
+                                        cfgLayout.dataPolygon.color,
+                                        cfgLayout.dataPolygon.gradient
+                                            .intensity / 100,
                                     ),
-                                    FINAL_CONFIG.style.chart.layout.dataPolygon
-                                        .opacity,
+                                    cfgLayout.dataPolygon.opacity,
                                 ),
                                 1,
                             ],
@@ -1146,22 +1132,16 @@ defineExpose({
                     :y1="svg.height / 2"
                     :x2="line.x"
                     :y2="line.y"
-                    :stroke="FINAL_CONFIG.style.chart.layout.grid.stroke"
-                    :stroke-width="
-                        FINAL_CONFIG.style.chart.layout.grid.strokeWidth
-                    "
+                    :stroke="cfgLayout.grid.stroke"
+                    :stroke-width="cfgLayout.grid.strokeWidth"
                 />
                 <!-- OUTER POLYGON -->
                 <path
                     data-cy="grid-polygon"
                     :d="outerPolygon.path"
                     fill="none"
-                    :stroke="
-                        FINAL_CONFIG.style.chart.layout.outerPolygon.stroke
-                    "
-                    :stroke-width="
-                        FINAL_CONFIG.style.chart.layout.outerPolygon.strokeWidth
-                    "
+                    :stroke="cfgLayout.outerPolygon.stroke"
+                    :stroke-width="cfgLayout.outerPolygon.strokeWidth"
                     stroke-linejoin="round"
                     stroke-linecap="round"
                 />
@@ -1171,9 +1151,7 @@ defineExpose({
                     <path
                         data-cy="icon-5"
                         fill="none"
-                        :stroke="
-                            FINAL_CONFIG.style.chart.layout.smileys.colors['5']
-                        "
+                        :stroke="cfgSmileys.colors['5']"
                         stroke-width="1"
                         stroke-linecap="round"
                         d="M119 25A1 1 0 00137 25 1 1 0 00119 25M123 26C124 33 132 33 133 26L123 26M123 22A1 1 0 00126 22 1 1 0 00123 22M130 22A1 1 0 00133 22 1 1 0 00130 22"
@@ -1188,11 +1166,7 @@ defineExpose({
                         :aria-label="getTrapAriaLabel('5')"
                         :fill="
                             selectedKey === '5'
-                                ? setOpacity(
-                                      FINAL_CONFIG.style.chart.layout.smileys
-                                          .colors['5'],
-                                      20,
-                                  )
+                                ? setOpacity(cfgSmileys.colors['5'], 20)
                                 : 'transparent'
                         "
                         @mouseenter="onTrapEnter('5')"
@@ -1206,9 +1180,7 @@ defineExpose({
                     <path
                         data-cy="icon-4"
                         fill="none"
-                        :stroke="
-                            FINAL_CONFIG.style.chart.layout.smileys.colors['4']
-                        "
+                        :stroke="cfgSmileys.colors['4']"
                         stroke-width="1"
                         stroke-linecap="round"
                         d="M218 95A1 1 0 00236 95 1 1 0 00218 95M222 97C225 99 229 99 232 97M222 92A1 1 0 00225 92 1 1 0 00222 92M229 92A1 1 0 00232 92 1 1 0 00229 92"
@@ -1222,11 +1194,7 @@ defineExpose({
                         :aria-label="getTrapAriaLabel('4')"
                         :fill="
                             selectedKey === '4'
-                                ? setOpacity(
-                                      FINAL_CONFIG.style.chart.layout.smileys
-                                          .colors['4'],
-                                      20,
-                                  )
+                                ? setOpacity(cfgSmileys.colors['4'], 20)
                                 : 'transparent'
                         "
                         @mouseenter="onTrapEnter('4')"
@@ -1240,9 +1208,7 @@ defineExpose({
                     <path
                         data-cy="icon-3"
                         fill="none"
-                        :stroke="
-                            FINAL_CONFIG.style.chart.layout.smileys.colors['3']
-                        "
+                        :stroke="cfgSmileys.colors['3']"
                         stroke-width="1"
                         stroke-linecap="round"
                         d="M181 213A1 1 0 00199 213 1 1 0 00181 213M185 210A1 1 0 00188 210 1 1 0 00185 210M192 210A1 1 0 00195 210 1 1 0 00192 210M185 215 195 215"
@@ -1256,11 +1222,7 @@ defineExpose({
                         :aria-label="getTrapAriaLabel('3')"
                         :fill="
                             selectedKey === '3'
-                                ? setOpacity(
-                                      FINAL_CONFIG.style.chart.layout.smileys
-                                          .colors['3'],
-                                      20,
-                                  )
+                                ? setOpacity(cfgSmileys.colors['3'], 20)
                                 : 'transparent'
                         "
                         @mouseenter="onTrapEnter('3')"
@@ -1274,9 +1236,7 @@ defineExpose({
                     <path
                         data-cy="icon-2"
                         fill="none"
-                        :stroke="
-                            FINAL_CONFIG.style.chart.layout.smileys.colors['2']
-                        "
+                        :stroke="cfgSmileys.colors['2']"
                         stroke-width="1"
                         stroke-linecap="round"
                         d="M56 213A1 1 0 0074 213 1 1 0 0056 213M60 216C63 214 67 214 70 216M60 210A1 1 0 0063 210 1 1 0 0060 210M67 210A1 1 0 0070 210 1 1 0 0067 210"
@@ -1290,11 +1250,7 @@ defineExpose({
                         :aria-label="getTrapAriaLabel('2')"
                         :fill="
                             selectedKey === '2'
-                                ? setOpacity(
-                                      FINAL_CONFIG.style.chart.layout.smileys
-                                          .colors['2'],
-                                      20,
-                                  )
+                                ? setOpacity(cfgSmileys.colors['2'], 20)
                                 : 'transparent'
                         "
                         @mouseenter="onTrapEnter('2')"
@@ -1308,9 +1264,7 @@ defineExpose({
                     <path
                         data-cy="icon-1"
                         fill="none"
-                        :stroke="
-                            FINAL_CONFIG.style.chart.layout.smileys.colors['1']
-                        "
+                        :stroke="cfgSmileys.colors['1']"
                         stroke-width="1"
                         stroke-linecap="round"
                         d="M20 96A1 1 0 0038 96 1 1 0 0020 96M24 100C25 95 33 95 34 100L24 100M24 93A1 1 0 0027 93 1 1 0 0024 93M31 93A1 1 0 0034 93 1 1 0 0031 93"
@@ -1324,11 +1278,7 @@ defineExpose({
                         :aria-label="getTrapAriaLabel('1')"
                         :fill="
                             selectedKey === '1'
-                                ? setOpacity(
-                                      FINAL_CONFIG.style.chart.layout.smileys
-                                          .colors['1'],
-                                      20,
-                                  )
+                                ? setOpacity(cfgSmileys.colors['1'], 20)
                                 : 'transparent'
                         "
                         @mouseenter="onTrapEnter('1')"
@@ -1340,21 +1290,16 @@ defineExpose({
                 <path
                     data-cy="datapoint-polygon"
                     :d="makePath(radar.map((r) => r.plots))"
-                    :stroke="FINAL_CONFIG.style.chart.layout.dataPolygon.stroke"
-                    :stroke-width="
-                        FINAL_CONFIG.style.chart.layout.dataPolygon.strokeWidth
-                    "
+                    :stroke="cfgLayout.dataPolygon.stroke"
+                    :stroke-width="cfgLayout.dataPolygon.strokeWidth"
                     stroke-linecap="round"
                     stroke-linejoin="round"
                     :fill="
-                        FINAL_CONFIG.style.chart.layout.dataPolygon.gradient
-                            .show
+                        cfgLayout.dataPolygon.gradient.show
                             ? `url(#mood_radar_gradient_${uid})`
                             : setOpacity(
-                                  FINAL_CONFIG.style.chart.layout.dataPolygon
-                                      .color,
-                                  FINAL_CONFIG.style.chart.layout.dataPolygon
-                                      .opacity,
+                                  cfgLayout.dataPolygon.color,
+                                  cfgLayout.dataPolygon.opacity,
                               )
                     "
                 />
@@ -1370,36 +1315,24 @@ defineExpose({
                         :y1="plot.y"
                         :x2="svg.width / 2"
                         :y2="svg.height / 2"
-                        :stroke="
-                            FINAL_CONFIG.style.chart.layout.smileys.colors[
-                                plot.key
-                            ]
-                        "
+                        :stroke="cfgSmileys.colors[plot.key]"
                     />
                     <circle
                         data-cy="datapoint-selection-circle"
                         :cx="plot.x"
                         :cy="plot.y"
-                        :fill="
-                            FINAL_CONFIG.style.chart.layout.smileys.colors[
-                                plot.key
-                            ]
-                        "
+                        :fill="cfgSmileys.colors[plot.key]"
                         r="3"
-                        :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                        :stroke="cfgChart.backgroundColor"
                         :stroke-width="0.5"
                     />
                     <circle
                         data-cy="datapoint-selection-circle"
                         :cx="svg.width / 2"
                         :cy="svg.height / 2"
-                        :fill="
-                            FINAL_CONFIG.style.chart.layout.smileys.colors[
-                                plot.key
-                            ]
-                        "
+                        :fill="cfgSmileys.colors[plot.key]"
                         r="3"
-                        :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                        :stroke="cfgChart.backgroundColor"
                         :stroke-width="0.5"
                     />
                     <text
@@ -1410,28 +1343,22 @@ defineExpose({
                                 ? (svg.height / 2) * 1.13
                                 : (svg.height / 2) * 0.9375
                         "
-                        :fill="FINAL_CONFIG.style.chart.layout.dataLabel.color"
+                        :fill="cfgLayout.dataLabel.color"
                         font-size="12"
                         text-anchor="middle"
                         :font-weight="
-                            FINAL_CONFIG.style.chart.layout.dataLabel.bold
-                                ? 'bold'
-                                : 'normal'
+                            cfgLayout.dataLabel.bold ? 'bold' : 'normal'
                         "
                     >
                         {{
                             applyDataLabel(
-                                FINAL_CONFIG.style.chart.layout.dataLabel
-                                    .formatter,
+                                cfgLayout.dataLabel.formatter,
                                 plot.value,
                                 dataLabel({
-                                    p: FINAL_CONFIG.style.chart.layout.dataLabel
-                                        .prefix,
+                                    p: cfgLayout.dataLabel.prefix,
                                     v: plot.value,
-                                    s: FINAL_CONFIG.style.chart.layout.dataLabel
-                                        .suffix,
-                                    r: FINAL_CONFIG.style.chart.layout.dataLabel
-                                        .roundingValue,
+                                    s: cfgLayout.dataLabel.suffix,
+                                    r: cfgLayout.dataLabel.roundingValue,
                                 }),
                                 { datapoint: plot, seriesIndex: i },
                             )
@@ -1445,7 +1372,7 @@ defineExpose({
                                 ? (svg.height / 2) * 1.273
                                 : (svg.height / 2) * 0.7968
                         "
-                        :fill="FINAL_CONFIG.style.chart.layout.dataLabel.color"
+                        :fill="cfgLayout.dataLabel.color"
                         font-size="12"
                         text-anchor="middle"
                     >
@@ -1453,8 +1380,7 @@ defineExpose({
                             dataLabel({
                                 v: (plot.value / grandTotal) * 100,
                                 s: '%',
-                                r: FINAL_CONFIG.style.chart.layout.dataLabel
-                                    .roundingPercentage,
+                                r: cfgLayout.dataLabel.roundingPercentage,
                             })
                         }})
                     </text>
@@ -1503,12 +1429,9 @@ defineExpose({
 
         <!-- LEGEND -->
         <Teleport
-            v-if="
-                readyTeleport &&
-                (FINAL_CONFIG.style.chart.legend.show || $slots.legend)
-            "
+            v-if="readyTeleport && (cfgChart.legend.show || $slots.legend)"
             :to="
-                FINAL_CONFIG.style.chart.legend.position === 'top'
+                cfgChart.legend.position === 'top'
                     ? `#legend-top-${uid}`
                     : `#legend-bottom-${uid}`
             "
@@ -1516,7 +1439,7 @@ defineExpose({
             <div ref="chartLegend">
                 <slot name="legend" v-bind:legend="convertedDataset">
                     <Legend
-                        v-if="FINAL_CONFIG.style.chart.legend.show"
+                        v-if="cfgChart.legend.show"
                         :legendSet="legendSet"
                         :config="legendConfig"
                         :key="`legend_${legendStep}`"
@@ -1543,52 +1466,36 @@ defineExpose({
                                     :strokeWidth="1"
                                     v-if="legend.key == 1"
                                     name="moodSad"
-                                    :stroke="
-                                        FINAL_CONFIG.style.chart.layout.smileys
-                                            .colors[legend.key]
-                                    "
+                                    :stroke="cfgSmileys.colors[legend.key]"
                                 />
                                 <BaseIcon
                                     :strokeWidth="1"
                                     v-if="legend.key == 2"
                                     name="moodFlat"
-                                    :stroke="
-                                        FINAL_CONFIG.style.chart.layout.smileys
-                                            .colors[legend.key]
-                                    "
+                                    :stroke="cfgSmileys.colors[legend.key]"
                                 />
                                 <BaseIcon
                                     :strokeWidth="1"
                                     v-if="legend.key == 3"
                                     name="moodNeutral"
-                                    :stroke="
-                                        FINAL_CONFIG.style.chart.layout.smileys
-                                            .colors[legend.key]
-                                    "
+                                    :stroke="cfgSmileys.colors[legend.key]"
                                 />
                                 <BaseIcon
                                     :strokeWidth="1"
                                     v-if="legend.key == 4"
                                     name="smiley"
-                                    :stroke="
-                                        FINAL_CONFIG.style.chart.layout.smileys
-                                            .colors[legend.key]
-                                    "
+                                    :stroke="cfgSmileys.colors[legend.key]"
                                 />
                                 <BaseIcon
                                     :strokeWidth="1"
                                     v-if="legend.key == 5"
                                     name="moodHappy"
-                                    :stroke="
-                                        FINAL_CONFIG.style.chart.layout.smileys
-                                            .colors[legend.key]
-                                    "
+                                    :stroke="cfgSmileys.colors[legend.key]"
                                 />
                                 <span
                                     v-if="!loading"
                                     :style="{
-                                        fontWeight: FINAL_CONFIG.style.chart
-                                            .legend.bold
+                                        fontWeight: cfgChart.legend.bold
                                             ? 'bold'
                                             : 'normal',
                                     }"
@@ -1606,7 +1513,7 @@ defineExpose({
         </div>
 
         <component
-            v-if="isDataset && FINAL_CONFIG.userOptions.buttons.table"
+            v-if="isDataset && cfgUserOptions.buttons.table"
             :is="tableComponent.component"
             v-bind="tableComponent.props"
             ref="tableUnit"
@@ -1619,7 +1526,7 @@ defineExpose({
                 <button
                     tabindex="0"
                     class="vue-ui-user-options-button"
-                    @click="generateCsv(FINAL_CONFIG.userOptions.callbacks.csv)"
+                    @click="generateCsv(cfgUserOptions.callbacks.csv)"
                     :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }"
                 >
                     <BaseIcon
