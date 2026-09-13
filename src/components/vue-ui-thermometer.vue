@@ -92,6 +92,9 @@ onMounted(() => {
 });
 
 const FINAL_CONFIG = ref(prepareConfig());
+const cfgUserOptions = computed(() => FINAL_CONFIG.value.userOptions);
+const cfgGrad = computed(() => FINAL_CONFIG.value.style.chart.graduations);
+const cfgChart = computed(() => FINAL_CONFIG.value.style.chart);
 
 useHints({
     config: () => FINAL_CONFIG.value,
@@ -100,9 +103,9 @@ useHints({
     rules: [COMMON_RULES.noHint],
 });
 
-const baseWidth = ref(FINAL_CONFIG.value.style.chart.thermometer.width);
-const HEIGHT = ref(FINAL_CONFIG.value.style.chart.height);
-const WIDTH = ref(FINAL_CONFIG.value.style.chart.width);
+const baseWidth = ref(cfgChart.value.thermometer.width);
+const HEIGHT = ref(cfgChart.value.height);
+const WIDTH = ref(cfgChart.value.width);
 
 const isCursorPointer = computed(
     () => FINAL_CONFIG.value.userOptions.useCursorPointer,
@@ -241,9 +244,9 @@ watch(
         FINAL_CONFIG.value = prepareConfig();
         userOptionsVisible.value =
             !FINAL_CONFIG.value.userOptions.showOnChartHover;
-        baseWidth.value = FINAL_CONFIG.value.style.chart.thermometer.width;
-        HEIGHT.value = FINAL_CONFIG.value.style.chart.height;
-        WIDTH.value = FINAL_CONFIG.value.style.chart.width;
+        baseWidth.value = cfgChart.value.thermometer.width;
+        HEIGHT.value = cfgChart.value.height;
+        WIDTH.value = cfgChart.value.width;
         prepareChart();
         titleStep.value += 1;
     },
@@ -309,16 +312,16 @@ function toHex(value) {
 const drawingArea = computed(() => {
     const width = Math.max(0.1, WIDTH.value);
     const height = Math.max(0.1, HEIGHT.value);
-    const padding = FINAL_CONFIG.value.style.chart.padding;
+    const padding = cfgChart.value.padding;
     return {
         width: width,
-        left: width / 2 - FINAL_CONFIG.value.style.chart.thermometer.width / 2,
-        right: width / 2 + FINAL_CONFIG.value.style.chart.thermometer.width / 2,
+        left: width / 2 - cfgChart.value.thermometer.width / 2,
+        right: width / 2 + cfgChart.value.thermometer.width / 2,
         top: padding.top,
         bottom: height - padding.bottom - padding.top,
         height: height,
         thermoHeight: height - padding.top - padding.bottom,
-        thermoWidth: FINAL_CONFIG.value.style.chart.thermometer.width,
+        thermoWidth: cfgChart.value.thermometer.width,
     };
 });
 
@@ -365,7 +368,7 @@ const cssHeight = computed(() => {
 const cssSpeed = computed(() => {
     return prefersReducedMotion.value
         ? '0ms'
-        : `${FINAL_CONFIG.value.style.chart.animation.speedMs}ms`;
+        : `${cfgChart.value.animation.speedMs}ms`;
 });
 
 const colors = computed(() => {
@@ -452,19 +455,19 @@ async function getImage({ scale = 2 } = {}) {
 }
 
 const label_size = computed({
-    get: () => FINAL_CONFIG.value.style.chart.label.fontSize,
+    get: () => cfgChart.value.label.fontSize,
     set: (v) => v,
 });
 
 const { autoSizeLabels } = useAutoSizeLabelsInsideViewbox({
     svgRef,
-    fontSize: FINAL_CONFIG.value.style.chart.label.fontSize,
-    minFontSize: FINAL_CONFIG.value.style.chart.label.minFontSize,
+    fontSize: cfgChart.value.label.fontSize,
+    minFontSize: cfgChart.value.label.minFontSize,
     sizeRef: label_size,
     labelClass: '.vue-ui-thermometer-label',
 });
 
-const svgBg = computed(() => FINAL_CONFIG.value.style.chart.backgroundColor);
+const svgBg = computed(() => cfgChart.value.backgroundColor);
 const svgTitle = computed(() => FINAL_CONFIG.value.style.title);
 
 const { isCallbackImaging, isCallbackSvg, generateSvg, onGenerateImage } =
@@ -502,13 +505,13 @@ const svgDescId = computed(() => `${uid.value}-desc`);
 
 const formattedValue = computed(() => {
     return applyDataLabel(
-        FINAL_CONFIG.value.style.chart.label.formatter,
+        cfgChart.value.label.formatter,
         FINAL_DATASET.value.value,
         dataLabel({
-            p: FINAL_CONFIG.value.style.chart.label.prefix,
+            p: cfgChart.value.label.prefix,
             v: FINAL_DATASET.value.value,
-            s: FINAL_CONFIG.value.style.chart.label.suffix,
-            r: FINAL_CONFIG.value.style.chart.label.rounding,
+            s: cfgChart.value.label.suffix,
+            r: cfgChart.value.label.rounding,
         }),
         { datapoint: FINAL_DATASET.value },
     );
@@ -542,19 +545,19 @@ defineExpose({
     <div
         ref="thermoChart"
         :class="`vue-data-ui-component vue-ui-thermometer ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`"
-        :style="`width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor};color:${FINAL_CONFIG.style.chart.color};font-family:${FINAL_CONFIG.style.fontFamily}`"
+        :style="`width:100%;background:${cfgChart.backgroundColor};color:${cfgChart.color};font-family:${FINAL_CONFIG.style.fontFamily}`"
         :id="`thermometer__${uid}`"
         @mouseenter="() => setUserOptionsVisibility(true)"
         @mouseleave="() => setUserOptionsVisibility(false)"
     >
         <PenAndPaper
-            v-if="FINAL_CONFIG.userOptions.buttons.annotator"
+            v-if="cfgUserOptions.buttons.annotator"
             :svgRef="svgRef"
-            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
-            :color="FINAL_CONFIG.style.chart.color"
+            :backgroundColor="cfgChart.backgroundColor"
+            :color="cfgChart.color"
             :active="isAnnotator"
             :isCursorPointer="isCursorPointer"
-            :palette="FINAL_CONFIG.userOptions.annotatorPalette"
+            :palette="cfgUserOptions.annotatorPalette"
             @close="toggleAnnotator"
         >
             <template #annotator-action-close>
@@ -610,29 +613,29 @@ defineExpose({
             ref="details"
             :key="`user_options_${step}`"
             v-if="
-                FINAL_CONFIG.userOptions.show &&
+                cfgUserOptions.show &&
                 isDataset &&
                 (keepUserOptionState ? true : userOptionsVisible)
             "
-            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
-            :color="FINAL_CONFIG.style.chart.color"
+            :backgroundColor="cfgChart.backgroundColor"
+            :color="cfgChart.color"
             :isImaging="isImaging"
             :isPrinting="isPrinting"
             :uid="uid"
-            :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
-            :hasImg="FINAL_CONFIG.userOptions.buttons.img"
-            :hasSvg="FINAL_CONFIG.userOptions.buttons.svg"
-            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
-            :hasAltCopy="FINAL_CONFIG.userOptions.buttons.altCopy"
+            :hasPdf="cfgUserOptions.buttons.pdf"
+            :hasImg="cfgUserOptions.buttons.img"
+            :hasSvg="cfgUserOptions.buttons.svg"
+            :hasFullscreen="cfgUserOptions.buttons.fullscreen"
+            :hasAltCopy="cfgUserOptions.buttons.altCopy"
             :hasXls="false"
             :isFullscreen="isFullscreen"
-            :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
+            :titles="{ ...cfgUserOptions.buttonTitles }"
             :chartElement="thermoChart"
-            :position="FINAL_CONFIG.userOptions.position"
-            :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator"
+            :position="cfgUserOptions.position"
+            :hasAnnotator="cfgUserOptions.buttons.annotator"
             :isAnnotation="isAnnotator"
-            :callbacks="FINAL_CONFIG.userOptions.callbacks"
-            :printScale="FINAL_CONFIG.userOptions.print.scale"
+            :callbacks="cfgUserOptions.callbacks"
+            :printScale="cfgUserOptions.print.scale"
             :isCursorPointer="isCursorPointer"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
@@ -754,9 +757,7 @@ defineExpose({
                             '50%',
                             setOpacity(
                                 graduation.color,
-                                100 -
-                                    FINAL_CONFIG.style.chart.graduations
-                                        .gradient.intensity,
+                                100 - cfgGrad.gradient.intensity,
                             ),
                             1,
                         ],
@@ -785,7 +786,7 @@ defineExpose({
                         :height="graduation.height"
                         :width="drawingArea.thermoWidth"
                         :fill="
-                            FINAL_CONFIG.style.chart.graduations.gradient.show
+                            cfgGrad.gradient.show
                                 ? `url(#vueUiThermometerGradient_${i}_${uid})`
                                 : graduation.color
                         "
@@ -796,88 +797,58 @@ defineExpose({
                     <line
                         data-cy="graduation-left"
                         v-if="
-                            FINAL_CONFIG.style.chart.graduations.show &&
-                            ['both', 'left'].includes(
-                                FINAL_CONFIG.style.chart.graduations.sides,
-                            )
+                            cfgGrad.show &&
+                            ['both', 'left'].includes(cfgGrad.sides)
                         "
                         :x1="graduation.x"
                         :x2="graduation.x + 10"
                         :y1="graduation.y"
                         :y2="graduation.y"
-                        :stroke-width="
-                            FINAL_CONFIG.style.chart.graduations.strokeWidth
-                        "
-                        :stroke="FINAL_CONFIG.style.chart.graduations.stroke"
+                        :stroke-width="cfgGrad.strokeWidth"
+                        :stroke="cfgGrad.stroke"
                         stroke-linecap="round"
                     />
-                    <template
-                        v-if="
-                            FINAL_CONFIG.style.chart.graduations
-                                .showIntermediate
-                        "
-                    >
+                    <template v-if="cfgGrad.showIntermediate">
                         <line
                             data-cy="graduation-left-intermediary"
                             v-if="
-                                FINAL_CONFIG.style.chart.graduations.show &&
-                                ['both', 'left'].includes(
-                                    FINAL_CONFIG.style.chart.graduations.sides,
-                                )
+                                cfgGrad.show &&
+                                ['both', 'left'].includes(cfgGrad.sides)
                             "
                             :x1="graduation.x"
                             :x2="graduation.x + 5"
                             :y1="graduation.halfY"
                             :y2="graduation.halfY"
-                            :stroke-width="
-                                FINAL_CONFIG.style.chart.graduations
-                                    .strokeWidth / 2
-                            "
-                            :stroke="
-                                FINAL_CONFIG.style.chart.graduations.stroke
-                            "
+                            :stroke-width="cfgGrad.strokeWidth / 2"
+                            :stroke="cfgGrad.stroke"
                             stroke-linecap="round"
                         />
                         <line
                             data-cy="graduation-left-intermediary"
                             v-if="
-                                FINAL_CONFIG.style.chart.graduations.show &&
-                                ['both', 'left'].includes(
-                                    FINAL_CONFIG.style.chart.graduations.sides,
-                                )
+                                cfgGrad.show &&
+                                ['both', 'left'].includes(cfgGrad.sides)
                             "
                             :x1="graduation.x"
                             :x2="graduation.x + 2.5"
                             :y1="graduation.qYLess"
                             :y2="graduation.qYLess"
-                            :stroke-width="
-                                FINAL_CONFIG.style.chart.graduations
-                                    .strokeWidth / 2
-                            "
-                            :stroke="
-                                FINAL_CONFIG.style.chart.graduations.stroke
-                            "
+                            :stroke-width="cfgGrad.strokeWidth / 2"
+                            :stroke="cfgGrad.stroke"
                             stroke-linecap="round"
                         />
                         <line
                             data-cy="graduation-left-intermediary"
                             v-if="
-                                FINAL_CONFIG.style.chart.graduations.show &&
-                                ['both', 'left'].includes(
-                                    FINAL_CONFIG.style.chart.graduations.sides,
-                                )
+                                cfgGrad.show &&
+                                ['both', 'left'].includes(cfgGrad.sides)
                             "
                             :x1="graduation.x"
                             :x2="graduation.x + 2.5"
                             :y1="graduation.qYMore"
                             :y2="graduation.qYMore"
-                            :stroke-width="
-                                FINAL_CONFIG.style.chart.graduations
-                                    .strokeWidth / 2
-                            "
-                            :stroke="
-                                FINAL_CONFIG.style.chart.graduations.stroke
-                            "
+                            :stroke-width="cfgGrad.strokeWidth / 2"
+                            :stroke="cfgGrad.stroke"
                             stroke-linecap="round"
                         />
                     </template>
@@ -886,88 +857,58 @@ defineExpose({
                     <line
                         data-cy="graduation-right"
                         v-if="
-                            FINAL_CONFIG.style.chart.graduations.show &&
-                            ['both', 'right'].includes(
-                                FINAL_CONFIG.style.chart.graduations.sides,
-                            )
+                            cfgGrad.show &&
+                            ['both', 'right'].includes(cfgGrad.sides)
                         "
                         :x1="drawingArea.right"
                         :x2="drawingArea.right - 10"
                         :y1="graduation.y"
                         :y2="graduation.y"
-                        :stroke-width="
-                            FINAL_CONFIG.style.chart.graduations.strokeWidth
-                        "
-                        :stroke="FINAL_CONFIG.style.chart.graduations.stroke"
+                        :stroke-width="cfgGrad.strokeWidth"
+                        :stroke="cfgGrad.stroke"
                         stroke-linecap="round"
                     />
-                    <template
-                        v-if="
-                            FINAL_CONFIG.style.chart.graduations
-                                .showIntermediate
-                        "
-                    >
+                    <template v-if="cfgGrad.showIntermediate">
                         <line
                             data-cy="graduation-right-intermediary"
                             v-if="
-                                FINAL_CONFIG.style.chart.graduations.show &&
-                                ['both', 'right'].includes(
-                                    FINAL_CONFIG.style.chart.graduations.sides,
-                                )
+                                cfgGrad.show &&
+                                ['both', 'right'].includes(cfgGrad.sides)
                             "
                             :x1="drawingArea.right"
                             :x2="drawingArea.right - 5"
                             :y1="graduation.halfY"
                             :y2="graduation.halfY"
-                            :stroke-width="
-                                FINAL_CONFIG.style.chart.graduations
-                                    .strokeWidth / 2
-                            "
-                            :stroke="
-                                FINAL_CONFIG.style.chart.graduations.stroke
-                            "
+                            :stroke-width="cfgGrad.strokeWidth / 2"
+                            :stroke="cfgGrad.stroke"
                             stroke-linecap="round"
                         />
                         <line
                             data-cy="graduation-right-intermediary"
                             v-if="
-                                FINAL_CONFIG.style.chart.graduations.show &&
-                                ['both', 'right'].includes(
-                                    FINAL_CONFIG.style.chart.graduations.sides,
-                                )
+                                cfgGrad.show &&
+                                ['both', 'right'].includes(cfgGrad.sides)
                             "
                             :x1="drawingArea.right"
                             :x2="drawingArea.right - 2.5"
                             :y1="graduation.qYLess"
                             :y2="graduation.qYLess"
-                            :stroke-width="
-                                FINAL_CONFIG.style.chart.graduations
-                                    .strokeWidth / 2
-                            "
-                            :stroke="
-                                FINAL_CONFIG.style.chart.graduations.stroke
-                            "
+                            :stroke-width="cfgGrad.strokeWidth / 2"
+                            :stroke="cfgGrad.stroke"
                             stroke-linecap="round"
                         />
                         <line
                             data-cy="graduation-right-intermediary"
                             v-if="
-                                FINAL_CONFIG.style.chart.graduations.show &&
-                                ['both', 'right'].includes(
-                                    FINAL_CONFIG.style.chart.graduations.sides,
-                                )
+                                cfgGrad.show &&
+                                ['both', 'right'].includes(cfgGrad.sides)
                             "
                             :x1="drawingArea.right"
                             :x2="drawingArea.right - 2.5"
                             :y1="graduation.qYMore"
                             :y2="graduation.qYMore"
-                            :stroke-width="
-                                FINAL_CONFIG.style.chart.graduations
-                                    .strokeWidth / 2
-                            "
-                            :stroke="
-                                FINAL_CONFIG.style.chart.graduations.stroke
-                            "
+                            :stroke-width="cfgGrad.strokeWidth / 2"
+                            :stroke="cfgGrad.stroke"
                             stroke-linecap="round"
                         />
                     </template>
@@ -976,7 +917,7 @@ defineExpose({
                     data-cy="temperature-rect"
                     :class="{
                         'vue-ui-thermometer-temperature':
-                            FINAL_CONFIG.style.chart.animation.use,
+                            cfgChart.animation.use,
                     }"
                     :x="drawingArea.left"
                     :y="drawingArea.top"
@@ -986,7 +927,7 @@ defineExpose({
                 />
             </g>
             <g
-                v-if="FINAL_CONFIG.style.chart.label.show"
+                v-if="cfgChart.label.show"
                 role="status"
                 aria-live="polite"
                 :aria-label="loading ? 'Loading data' : formattedValue"
@@ -1006,17 +947,15 @@ defineExpose({
                     aria-hidden="true"
                     :class="{
                         'vue-ui-thermometer-temperature-value':
-                            FINAL_CONFIG.style.chart.animation.use,
+                            cfgChart.animation.use,
                         'vue-ui-thermometer-label': true,
                     }"
                     :y="temperature + drawingArea.top + label_size / 3"
                     :x="drawingArea.left - 10"
                     text-anchor="end"
-                    :fill="FINAL_CONFIG.style.chart.label.color"
+                    :fill="cfgChart.label.color"
                     :font-size="label_size"
-                    :font-weight="
-                        FINAL_CONFIG.style.chart.label.bold ? 'bold' : 'normal'
-                    "
+                    :font-weight="cfgChart.label.bold ? 'bold' : 'normal'"
                 >
                     {{ formattedValue }}
                 </text>
