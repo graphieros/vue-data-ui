@@ -85,6 +85,12 @@ const noTitle = ref(null);
 const titleStep = ref(0);
 
 const FINAL_CONFIG = ref(prepareConfig());
+const cfgUserOptions = computed(() => FINAL_CONFIG.value.userOptions);
+const cfgTicks = computed(
+    () => FINAL_CONFIG.value.style.chart.layout.wheel.ticks,
+);
+const cfgWheel = computed(() => FINAL_CONFIG.value.style.chart.layout.wheel);
+const cfgChart = computed(() => FINAL_CONFIG.value.style.chart);
 
 useHints({
     config: () => FINAL_CONFIG.value,
@@ -137,7 +143,7 @@ const { loading, FINAL_DATASET } = useLoading({
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } =
     useUserOptionState({ config: FINAL_CONFIG.value });
 const { svgRef } = useChartAccessibility({
-    config: FINAL_CONFIG.value.style.chart.title,
+    config: cfgChart.value.title,
 });
 
 function prepareConfig() {
@@ -181,15 +187,12 @@ watch(
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: uid.value,
-    fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-wheel',
+    fileName: cfgChart.value.title.text || 'vue-ui-wheel',
     options: FINAL_CONFIG.value.userOptions.print,
 });
 
 const hasOptionsNoTitle = computed(() => {
-    return (
-        FINAL_CONFIG.value.userOptions.show &&
-        !FINAL_CONFIG.value.style.chart.title.text
-    );
+    return FINAL_CONFIG.value.userOptions.show && !cfgChart.value.title.text;
 });
 
 const svg = ref({
@@ -198,15 +201,13 @@ const svg = ref({
     width: 360,
 });
 
-const baseLabelFontSize = ref(
-    FINAL_CONFIG.value.style.chart.layout.percentage.fontSize,
-);
+const baseLabelFontSize = ref(cfgChart.value.layout.percentage.fontSize);
 
 const wheel = computed(() => {
     return {
         radius:
             ((Math.min(svg.value.width, svg.value.height) * 0.9) / 2) *
-            FINAL_CONFIG.value.style.chart.layout.wheel.radiusRatio,
+            cfgWheel.value.radiusRatio,
         centerX: svg.value.width / 2,
         centerY: svg.value.height / 2,
     };
@@ -229,7 +230,7 @@ function calcTickStart(angle, distance = 1) {
 }
 
 const activeValue = ref(
-    FINAL_CONFIG.value.style.chart.animation.use && !prefersReducedMotion.value
+    cfgChart.value.animation.use && !prefersReducedMotion.value
         ? 0
         : FINAL_DATASET.value.percentage || 0,
 );
@@ -237,10 +238,7 @@ const activeValue = ref(
 watch(
     () => FINAL_DATASET.value,
     (v) => {
-        if (
-            FINAL_CONFIG.value.style.chart.animation.use &&
-            !prefersReducedMotion.value
-        ) {
+        if (cfgChart.value.animation.use && !prefersReducedMotion.value) {
             useAnimation(v.percentage);
         } else {
             activeValue.value = v.percentage || 0;
@@ -271,9 +269,7 @@ function prepareChart() {
         const handleResize = throttle(() => {
             const { width, height } = useResponsive({
                 chart: wheelChart.value,
-                title: FINAL_CONFIG.value.style.chart.title.text
-                    ? chartTitle.value
-                    : null,
+                title: cfgChart.value.title.text ? chartTitle.value : null,
                 source: source.value,
                 noTitle: noTitle.value,
             });
@@ -282,8 +278,7 @@ function prepareChart() {
                 svg.value.width = width;
                 svg.value.height = height;
                 baseLabelFontSize.value =
-                    (FINAL_CONFIG.value.style.chart.layout.percentage.fontSize /
-                        360) *
+                    (cfgChart.value.layout.percentage.fontSize / 360) *
                     Math.min(width, height);
             });
         });
@@ -301,10 +296,7 @@ function prepareChart() {
     }
 
     useAnimation(FINAL_DATASET.value.percentage || 0);
-    if (
-        FINAL_CONFIG.value.style.chart.animation.use &&
-        !prefersReducedMotion.value
-    ) {
+    if (cfgChart.value.animation.use && !prefersReducedMotion.value) {
     } else {
         activeValue.value = FINAL_DATASET.value.percentage || 0;
     }
@@ -336,10 +328,7 @@ function shadeColor(hex, t) {
     const b = parseInt(c.substring(4, 6), 16);
     const shadeRatio = Math.min(
         1,
-        Math.max(
-            0,
-            FINAL_CONFIG.value.style.chart.layout.wheel.ticks.shadeColorRatio3d,
-        ),
+        Math.max(0, cfgTicks.value.shadeColorRatio3d),
     );
     const k = 1 - shadeRatio * t;
     const rr = Math.max(0, Math.min(255, Math.round(r * k)));
@@ -393,14 +382,11 @@ function buildTicks3D({
             (2 * outerR * Math.sin(ax) || 1);
         const isActive = getActive ? getActive(i) : true;
 
-        const c = FINAL_CONFIG.value.style.chart.layout.wheel.ticks.gradient
-            .show
+        const c = cfgTicks.value.gradient.show
             ? shiftHue(
                   activeColor,
                   ((i * percentageToTickAmount.value) / tickAmount.value) *
-                      (FINAL_CONFIG.value.style.chart.layout.wheel.ticks
-                          .gradient.shiftHueIntensity /
-                          100),
+                      (cfgTicks.value.gradient.shiftHueIntensity / 100),
               )
             : activeColor;
 
@@ -423,27 +409,21 @@ const ticks3D = computed(() => {
     if (!FINAL_CONFIG.value.layout === '3d') return null;
 
     const count = tickAmount.value;
-    const activeColor = FINAL_CONFIG.value.style.chart.layout.wheel.ticks
-        .gradient.show
-        ? shiftHue(
-              FINAL_CONFIG.value.style.chart.layout.wheel.ticks.activeColor,
-              0,
-          )
-        : FINAL_CONFIG.value.style.chart.layout.wheel.ticks.activeColor;
+    const activeColor = cfgTicks.value.gradient.show
+        ? shiftHue(cfgTicks.value.activeColor, 0)
+        : cfgTicks.value.activeColor;
 
-    const inactiveColor =
-        FINAL_CONFIG.value.style.chart.layout.wheel.ticks.inactiveColor;
-    const baseStroke =
-        FINAL_CONFIG.value.style.chart.layout.wheel.ticks.strokeWidth;
+    const inactiveColor = cfgTicks.value.inactiveColor;
+    const baseStroke = cfgTicks.value.strokeWidth;
 
     return buildTicks3D({
         cx: wheel.value.centerX,
         cy: wheel.value.centerY,
         radius: wheel.value.radius,
-        innerRatio: FINAL_CONFIG.value.style.chart.layout.wheel.ticks.sizeRatio,
+        innerRatio: cfgTicks.value.sizeRatio,
         count,
         startDeg: -90,
-        axDeg: FINAL_CONFIG.value.style.chart.layout.wheel.tiltAngle3d,
+        axDeg: cfgWheel.value.tiltAngle3d,
         f: Math.min(svg.value.width, svg.value.height) * 1.45,
         baseStroke,
         activeColor,
@@ -488,7 +468,7 @@ const vb3D = computed(() => {
     if (FINAL_CONFIG.value.layout !== '3d') return null;
 
     const f = Math.min(svg.value.width, svg.value.height) * 1.45;
-    const ax = FINAL_CONFIG.value.style.chart.layout.wheel.tiltAngle3d;
+    const ax = cfgWheel.value.tiltAngle3d;
 
     const outerR = wheel.value.radius;
     const { pts, avgScale } = (() => {
@@ -517,17 +497,13 @@ const vb3D = computed(() => {
     }
 
     const tickStroke =
-        (FINAL_CONFIG.value.style.chart.layout.wheel.ticks.strokeWidth / 360) *
+        (cfgTicks.value.strokeWidth / 360) *
         Math.min(svg.value.width, svg.value.height);
 
-    const innerStroke =
-        FINAL_CONFIG.value.style.chart.layout.innerCircle.strokeWidth || 0;
+    const innerStroke = cfgChart.value.layout.innerCircle.strokeWidth || 0;
 
     const strokePad = 0.5 * Math.max(tickStroke, innerStroke * (avgScale || 1));
-    const depthPad = Math.max(
-        0,
-        Number(FINAL_CONFIG.value.style.chart.layout.wheel.ticks.depth3d) || 0,
-    );
+    const depthPad = Math.max(0, Number(cfgTicks.value.depth3d) || 0);
 
     const pad = strokePad;
 
@@ -546,17 +522,16 @@ function ellipse(r) {
         cy: wheel.value.centerY,
         r,
         startDeg: -90,
-        axDeg: FINAL_CONFIG.value.style.chart.layout.wheel.tiltAngle3d,
+        axDeg: cfgWheel.value.tiltAngle3d,
         f,
     });
 
-    const swBase =
-        FINAL_CONFIG.value.style.chart.layout.innerCircle.strokeWidth || 1;
+    const swBase = cfgChart.value.layout.innerCircle.strokeWidth || 1;
     const strokeWidth = swBase * avgScale; // compensate perspective
 
     return {
         d,
-        stroke: FINAL_CONFIG.value.style.chart.layout.innerCircle.stroke,
+        stroke: cfgChart.value.layout.innerCircle.stroke,
         strokeWidth,
     };
 }
@@ -567,7 +542,7 @@ const inner3D = computed(() => {
             0,
             wheel.value.radius *
                 0.8 *
-                FINAL_CONFIG.value.style.chart.layout.innerCircle.radiusRatio,
+                cfgChart.value.layout.innerCircle.radiusRatio,
         ),
     );
 });
@@ -601,14 +576,7 @@ function buildArcTicks3D({
 
     for (let i = 0; i < count; i += 1) {
         const a0 = (startDeg * Math.PI) / 180 + step * i;
-        const a1 =
-            a0 +
-            step *
-                Math.min(
-                    1,
-                    FINAL_CONFIG.value.style.chart.layout.wheel.ticks
-                        .spacingRatio3d,
-                );
+        const a1 = a0 + step * Math.min(1, cfgTicks.value.spacingRatio3d);
         const o0 = projectRingPoint({
             cx,
             cy: cy + Y,
@@ -644,14 +612,11 @@ function buildArcTicks3D({
         const zAvg = (o0.z + o1.z + i0.z + i1.z) / 4;
         const isActive = getActive ? getActive(i) : true;
         const base = isActive
-            ? FINAL_CONFIG.value.style.chart.layout.wheel.ticks.gradient.show
+            ? cfgTicks.value.gradient.show
                 ? shiftHue(
-                      FINAL_CONFIG.value.style.chart.layout.wheel.ticks
-                          .activeColor,
+                      cfgTicks.value.activeColor,
                       ((i * (100 / count)) / 100) *
-                          (FINAL_CONFIG.value.style.chart.layout.wheel.ticks
-                              .gradient.shiftHueIntensity /
-                              100),
+                          (cfgTicks.value.gradient.shiftHueIntensity / 100),
                   )
                 : activeColor
             : inactiveColor;
@@ -679,23 +644,20 @@ const arcTicks3D = computed(() => {
             cx: wheel.value.centerX,
             cy: wheel.value.centerY,
             radius: wheel.value.radius,
-            innerRatio:
-                FINAL_CONFIG.value.style.chart.layout.wheel.ticks.sizeRatio,
+            innerRatio: cfgTicks.value.sizeRatio,
             count,
             startDeg: -90,
-            axDeg: FINAL_CONFIG.value.style.chart.layout.wheel.tiltAngle3d,
+            axDeg: cfgWheel.value.tiltAngle3d,
             f: Math.min(svg.value.width, svg.value.height) * 1.45,
-            activeColor:
-                FINAL_CONFIG.value.style.chart.layout.wheel.ticks.activeColor,
-            inactiveColor:
-                FINAL_CONFIG.value.style.chart.layout.wheel.ticks.inactiveColor,
+            activeColor: cfgTicks.value.activeColor,
+            inactiveColor: cfgTicks.value.inactiveColor,
             getActive: (i) => activeValue.value > i * (100 / count),
             Y,
         });
 });
 
 function useAnimation(targetValue) {
-    let speed = FINAL_CONFIG.value.style.chart.animation.speed;
+    let speed = cfgChart.value.animation.speed;
     const chunk = Math.abs(targetValue - activeValue.value) / (speed * 120);
 
     function animate() {
@@ -719,25 +681,13 @@ function useAnimation(targetValue) {
 }
 
 const tickAmount = computed(() => {
-    if (
-        debug.value &&
-        FINAL_CONFIG.value.style.chart.layout.wheel.ticks.quantity < 12
-    ) {
+    if (debug.value && cfgTicks.value.quantity < 12) {
         console.warn(`VueUiWheel - The min number of ticks is 12`);
     }
-    if (
-        debug.value &&
-        FINAL_CONFIG.value.style.chart.layout.wheel.ticks.quantity > 200
-    ) {
+    if (debug.value && cfgTicks.value.quantity > 200) {
         console.warn(`VueUiWheel - The max number of ticks is 200`);
     }
-    return Math.max(
-        12,
-        Math.min(
-            FINAL_CONFIG.value.style.chart.layout.wheel.ticks.quantity,
-            200,
-        ),
-    );
+    return Math.max(12, Math.min(cfgTicks.value.quantity, 200));
 });
 
 const percentageToTickAmount = computed(() => 100 / tickAmount.value);
@@ -747,29 +697,25 @@ const ticks = computed(() => {
     for (let i = 0; i < tickAmount.value; i += 1) {
         const color =
             activeValue.value > i * percentageToTickAmount.value
-                ? FINAL_CONFIG.value.style.chart.layout.wheel.ticks.activeColor
-                : FINAL_CONFIG.value.style.chart.layout.wheel.ticks
-                      .inactiveColor;
+                ? cfgTicks.value.activeColor
+                : cfgTicks.value.inactiveColor;
         const { x: x1, y: y1 } = calcTickStart(
             (svg.value.size / tickAmount.value) * i,
         );
         const { x: x2, y: y2 } = calcTickStart(
             (svg.value.size / tickAmount.value) * i,
-            FINAL_CONFIG.value.style.chart.layout.wheel.ticks.sizeRatio,
+            cfgTicks.value.sizeRatio,
         );
         tickArray.push({
             x1,
             y1,
             x2,
             y2,
-            color: FINAL_CONFIG.value.style.chart.layout.wheel.ticks.gradient
-                .show
+            color: cfgTicks.value.gradient.show
                 ? shiftHue(
                       color,
                       ((i * percentageToTickAmount.value) / tickAmount.value) *
-                          (FINAL_CONFIG.value.style.chart.layout.wheel.ticks
-                              .gradient.shiftHueIntensity /
-                              100),
+                          (cfgTicks.value.gradient.shiftHueIntensity / 100),
                   )
                 : color,
         });
@@ -797,8 +743,7 @@ const arcTicks = computed(() => {
         1,
         360,
         105.25,
-        wheel.value.radius *
-            (1 - FINAL_CONFIG.value.style.chart.layout.wheel.ticks.sizeRatio),
+        wheel.value.radius * (1 - cfgTicks.value.sizeRatio),
     );
 });
 
@@ -826,7 +771,7 @@ async function getImage({ scale = 2 } = {}) {
     return {
         imageUri,
         base64,
-        title: FINAL_CONFIG.value.style.chart.title.text,
+        title: cfgChart.value.title.text,
         width,
         height,
         aspectRatio,
@@ -834,28 +779,23 @@ async function getImage({ scale = 2 } = {}) {
 }
 
 const tickWidthStart = computed(() => {
-    return FINAL_CONFIG.value.style.chart.layout.wheel.ticks.strokeWidth * 2;
+    return cfgTicks.value.strokeWidth * 2;
 });
 
 const tickWidthMid = computed(() => {
-    return (
-        FINAL_CONFIG.value.style.chart.layout.wheel.ticks.strokeWidth * 2 * 0.75
-    );
+    return cfgTicks.value.strokeWidth * 2 * 0.75;
 });
 
 const tickWidthEnd = computed(() => {
-    return FINAL_CONFIG.value.style.chart.layout.wheel.ticks.strokeWidth;
+    return cfgTicks.value.strokeWidth;
 });
 
 const depth3d = computed(() => {
-    return Math.max(
-        1,
-        Math.min(20, FINAL_CONFIG.value.style.chart.layout.wheel.ticks.depth3d),
-    );
+    return Math.max(1, Math.min(20, cfgTicks.value.depth3d));
 });
 
-const svgBg = computed(() => FINAL_CONFIG.value.style.chart.backgroundColor);
-const svgTitle = computed(() => FINAL_CONFIG.value.style.chart.title);
+const svgBg = computed(() => cfgChart.value.backgroundColor);
+const svgTitle = computed(() => cfgChart.value.title);
 
 const { isCallbackImaging, isCallbackSvg, generateSvg, onGenerateImage } =
     useChartExport({
@@ -893,18 +833,18 @@ const svgDescId = computed(() => `${uid.value}-desc`);
 
 const percentageText = computed(() => {
     return applyDataLabel(
-        FINAL_CONFIG.value.style.chart.layout.percentage.formatter,
+        cfgChart.value.layout.percentage.formatter,
         checkNaN(activeValue.value),
         dataLabel({
             v: checkNaN(activeValue.value),
             s: '%',
-            r: FINAL_CONFIG.value.style.chart.layout.percentage.rounding,
+            r: cfgChart.value.layout.percentage.rounding,
         }),
     );
 });
 
 const accessibleTitleText = computed(() => {
-    return FINAL_CONFIG.value.style.chart.title.text || '';
+    return cfgChart.value.title.text || '';
 });
 
 const accessibleDescriptionText = computed(() => {
@@ -931,18 +871,18 @@ defineExpose({
         }"
         ref="wheelChart"
         :id="uid"
-        :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor};${FINAL_CONFIG.responsive ? 'height:100%' : ''}`"
+        :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${cfgChart.backgroundColor};${FINAL_CONFIG.responsive ? 'height:100%' : ''}`"
         @mouseenter="() => setUserOptionsVisibility(true)"
         @mouseleave="() => setUserOptionsVisibility(false)"
     >
         <PenAndPaper
-            v-if="FINAL_CONFIG.userOptions.buttons.annotator"
+            v-if="cfgUserOptions.buttons.annotator"
             :svgRef="svgRef"
-            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
-            :color="FINAL_CONFIG.style.chart.color"
+            :backgroundColor="cfgChart.backgroundColor"
+            :color="cfgChart.color"
             :active="isAnnotator"
             :isCursorPointer="isCursorPointer"
-            :palette="FINAL_CONFIG.userOptions.annotatorPalette"
+            :palette="cfgUserOptions.annotatorPalette"
             @close="toggleAnnotator"
         >
             <template #annotator-action-close>
@@ -974,7 +914,7 @@ defineExpose({
 
         <div
             ref="chartTitle"
-            v-if="FINAL_CONFIG.style.chart.title.text"
+            v-if="cfgChart.title.text"
             :style="`width:100%;background:transparent;padding-bottom:12px`"
         >
             <Title
@@ -982,11 +922,11 @@ defineExpose({
                 :config="{
                     title: {
                         cy: 'wheel-title',
-                        ...FINAL_CONFIG.style.chart.title,
+                        ...cfgChart.title,
                     },
                     subtitle: {
                         cy: 'wheel-subtitle',
-                        ...FINAL_CONFIG.style.chart.title.subtitle,
+                        ...cfgChart.title.subtitle,
                     },
                 }"
             />
@@ -996,29 +936,29 @@ defineExpose({
             ref="details"
             :key="`user_options_${step}`"
             v-if="
-                FINAL_CONFIG.userOptions.show &&
+                cfgUserOptions.show &&
                 isDataset &&
                 (keepUserOptionState ? true : userOptionsVisible)
             "
-            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
-            :color="FINAL_CONFIG.style.chart.color"
+            :backgroundColor="cfgChart.backgroundColor"
+            :color="cfgChart.color"
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uid"
-            :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
-            :hasImg="FINAL_CONFIG.userOptions.buttons.img"
-            :hasSvg="FINAL_CONFIG.userOptions.buttons.svg"
-            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
-            :hasAltCopy="FINAL_CONFIG.userOptions.buttons.altCopy"
+            :hasPdf="cfgUserOptions.buttons.pdf"
+            :hasImg="cfgUserOptions.buttons.img"
+            :hasSvg="cfgUserOptions.buttons.svg"
+            :hasFullscreen="cfgUserOptions.buttons.fullscreen"
+            :hasAltCopy="cfgUserOptions.buttons.altCopy"
             :hasXls="false"
             :isFullscreen="isFullscreen"
-            :position="FINAL_CONFIG.userOptions.position"
-            :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
-            :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator"
+            :position="cfgUserOptions.position"
+            :titles="{ ...cfgUserOptions.buttonTitles }"
+            :hasAnnotator="cfgUserOptions.buttons.annotator"
             :isAnnotation="isAnnotator"
             :chartElement="wheelChart"
-            :callbacks="FINAL_CONFIG.userOptions.callbacks"
-            :printScale="FINAL_CONFIG.userOptions.print.scale"
+            :callbacks="cfgUserOptions.callbacks"
+            :printScale="cfgUserOptions.print.scale"
             :isCursorPointer="isCursorPointer"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
@@ -1093,7 +1033,7 @@ defineExpose({
                     ? `${vb3D?.x - 10 ?? 0} ${vb3D?.y ?? 0} ${vb3D?.w + 20 ?? Math.max(10, svg.width)} ${vb3D?.h ?? Math.max(10, svg.height)}`
                     : `0 0 ${Math.max(10, svg.width)} ${Math.max(10, svg.height)}`
             "
-            :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
+            :style="`max-width:100%;overflow:visible;background:transparent;color:${cfgChart.color}`"
             role="img"
             :aria-labelledby="svgTitleId"
             :aria-describedby="svgDescId"
@@ -1138,10 +1078,8 @@ defineExpose({
                 class="vue-ui-wheel-inner-circle"
                 v-if="FINAL_CONFIG.layout === '3d' && inner3D"
                 :d="inner3D.d"
-                :stroke="FINAL_CONFIG.style.chart.layout.innerCircle.stroke"
-                :stroke-width="
-                    FINAL_CONFIG.style.chart.layout.innerCircle.strokeWidth
-                "
+                :stroke="cfgChart.layout.innerCircle.stroke"
+                :stroke-width="cfgChart.layout.innerCircle.strokeWidth"
                 fill="none"
             />
 
@@ -1149,32 +1087,24 @@ defineExpose({
             <circle
                 data-cy="inner-circle"
                 class="vue-ui-wheel-inner-circle"
-                v-else-if="FINAL_CONFIG.style.chart.layout.innerCircle.show"
+                v-else-if="cfgChart.layout.innerCircle.show"
                 :cx="wheel.centerX"
                 :cy="wheel.centerY"
                 :r="
                     Math.max(
                         0,
                         wheel.radius *
-                            FINAL_CONFIG.style.chart.layout.innerCircle
-                                .radiusRatio *
+                            cfgChart.layout.innerCircle.radiusRatio *
                             0.8,
                     )
                 "
-                :stroke="FINAL_CONFIG.style.chart.layout.innerCircle.stroke"
-                :stroke-width="
-                    FINAL_CONFIG.style.chart.layout.innerCircle.strokeWidth
-                "
+                :stroke="cfgChart.layout.innerCircle.stroke"
+                :stroke-width="cfgChart.layout.innerCircle.strokeWidth"
                 fill="none"
             />
 
             <template v-if="FINAL_CONFIG.layout === '3d'">
-                <g
-                    v-if="
-                        FINAL_CONFIG.style.chart.layout.wheel.ticks.type ===
-                        'classic'
-                    "
-                >
+                <g v-if="cfgTicks.type === 'classic'">
                     <g v-for="n in depth3d">
                         <line
                             v-for="t in ticks3D || []"
@@ -1185,22 +1115,17 @@ defineExpose({
                             :y2="t.y2 - n"
                             :stroke="lightenHexColor(t.color, (0.25 * n) / 5)"
                             :stroke-width="
-                                (FINAL_CONFIG.style.chart.layout.wheel.ticks
-                                    .strokeWidth /
-                                    360) *
+                                (cfgTicks.strokeWidth / 360) *
                                 Math.min(svg.width, svg.height)
                             "
                             :stroke-linecap="
-                                FINAL_CONFIG.style.chart.layout.wheel.ticks
-                                    .rounded
-                                    ? 'round'
-                                    : 'butt'
+                                cfgTicks.rounded ? 'round' : 'butt'
                             "
                             stroke-linecap="round"
                             :class="{
                                 'vue-ui-wheel-tick': true,
                                 'vue-ui-tick-animated':
-                                    FINAL_CONFIG.style.chart.animation.use &&
+                                    cfgChart.animation.use &&
                                     !prefersReducedMotion &&
                                     t.i * percentageToTickAmount <= activeValue,
                             }"
@@ -1215,21 +1140,15 @@ defineExpose({
                         :y2="t.y2 - depth3d"
                         :stroke="t.color"
                         :stroke-width="
-                            (FINAL_CONFIG.style.chart.layout.wheel.ticks
-                                .strokeWidth /
-                                360) *
+                            (cfgTicks.strokeWidth / 360) *
                             Math.min(svg.width, svg.height)
                         "
-                        :stroke-linecap="
-                            FINAL_CONFIG.style.chart.layout.wheel.ticks.rounded
-                                ? 'round'
-                                : 'butt'
-                        "
+                        :stroke-linecap="cfgTicks.rounded ? 'round' : 'butt'"
                         stroke-linecap="round"
                         :class="{
                             'vue-ui-wheel-tick': true,
                             'vue-ui-tick-animated':
-                                FINAL_CONFIG.style.chart.animation.use &&
+                                cfgChart.animation.use &&
                                 !prefersReducedMotion &&
                                 t.i * percentageToTickAmount <= activeValue,
                         }"
@@ -1241,18 +1160,9 @@ defineExpose({
                             v-for="w in arcTicks3D(-n) || []"
                             :key="w.i"
                             :d="w.d"
-                            :fill="
-                                FINAL_CONFIG.style.chart.layout.wheel.ticks
-                                    .inactiveColor
-                            "
-                            :stroke="
-                                FINAL_CONFIG.style.chart.layout.wheel.ticks
-                                    .stroke
-                            "
-                            :stroke-width="
-                                FINAL_CONFIG.style.chart.layout.wheel.ticks
-                                    .strokeWidth
-                            "
+                            :fill="cfgTicks.inactiveColor"
+                            :stroke="cfgTicks.stroke"
+                            :stroke-width="cfgTicks.strokeWidth"
                             stroke-linecap="round"
                             stroke-linejoin="round"
                             class="vue-ui-wheel-tick"
@@ -1262,20 +1172,14 @@ defineExpose({
                             :key="w.i"
                             :d="w.d"
                             :fill="lightenHexColor(w.fill, (0.5 * n) / depth3d)"
-                            :stroke="
-                                FINAL_CONFIG.style.chart.layout.wheel.ticks
-                                    .stroke
-                            "
-                            :stroke-width="
-                                FINAL_CONFIG.style.chart.layout.wheel.ticks
-                                    .strokeWidth
-                            "
+                            :stroke="cfgTicks.stroke"
+                            :stroke-width="cfgTicks.strokeWidth"
                             stroke-linecap="round"
                             stroke-linejoin="round"
                             :class="{
                                 'vue-ui-wheel-tick': true,
                                 'vue-ui-tick-animated-3d':
-                                    FINAL_CONFIG.style.chart.animation.use &&
+                                    cfgChart.animation.use &&
                                     !prefersReducedMotion &&
                                     w.i * percentageToTickAmount <= activeValue,
                             }"
@@ -1287,20 +1191,14 @@ defineExpose({
                             :key="w.i"
                             :d="w.d"
                             :fill="w.fill"
-                            :stroke="
-                                FINAL_CONFIG.style.chart.layout.wheel.ticks
-                                    .stroke
-                            "
-                            :stroke-width="
-                                FINAL_CONFIG.style.chart.layout.wheel.ticks
-                                    .strokeWidth
-                            "
+                            :stroke="cfgTicks.stroke"
+                            :stroke-width="cfgTicks.strokeWidth"
                             stroke-linecap="round"
                             stroke-linejoin="round"
                             :class="{
                                 'vue-ui-wheel-tick': true,
                                 'vue-ui-tick-animated-3d':
-                                    FINAL_CONFIG.style.chart.animation.use &&
+                                    cfgChart.animation.use &&
                                     !prefersReducedMotion &&
                                     w.i * percentageToTickAmount <= activeValue,
                             }"
@@ -1310,12 +1208,7 @@ defineExpose({
             </template>
 
             <template v-else>
-                <template
-                    v-if="
-                        FINAL_CONFIG.style.chart.layout.wheel.ticks.type ===
-                        'classic'
-                    "
-                >
+                <template v-if="cfgTicks.type === 'classic'">
                     <line
                         data-cy="wheel-tick"
                         v-for="(tick, i) in ticks"
@@ -1325,20 +1218,14 @@ defineExpose({
                         :y2="tick.y2"
                         :stroke="tick.color"
                         :stroke-width="
-                            (FINAL_CONFIG.style.chart.layout.wheel.ticks
-                                .strokeWidth /
-                                360) *
+                            (cfgTicks.strokeWidth / 360) *
                             Math.min(svg.width, svg.height)
                         "
-                        :stroke-linecap="
-                            FINAL_CONFIG.style.chart.layout.wheel.ticks.rounded
-                                ? 'round'
-                                : 'butt'
-                        "
+                        :stroke-linecap="cfgTicks.rounded ? 'round' : 'butt'"
                         :class="{
                             'vue-ui-wheel-tick': true,
                             'vue-ui-tick-animated':
-                                FINAL_CONFIG.style.chart.animation.use &&
+                                cfgChart.animation.use &&
                                 !prefersReducedMotion &&
                                 i * percentageToTickAmount <= activeValue,
                         }"
@@ -1353,23 +1240,18 @@ defineExpose({
                         :class="{
                             'vue-ui-wheel-tick': true,
                             'vue-ui-tick-animated':
-                                FINAL_CONFIG.style.chart.animation.use &&
+                                cfgChart.animation.use &&
                                 !prefersReducedMotion &&
                                 i * percentageToTickAmount <= activeValue,
                         }"
-                        :stroke="
-                            FINAL_CONFIG.style.chart.layout.wheel.ticks.stroke
-                        "
-                        :stroke-width="
-                            FINAL_CONFIG.style.chart.layout.wheel.ticks
-                                .strokeWidth
-                        "
+                        :stroke="cfgTicks.stroke"
+                        :stroke-width="cfgTicks.strokeWidth"
                     />
                 </template>
             </template>
 
             <g
-                v-if="FINAL_CONFIG.style.chart.layout.percentage.show"
+                v-if="cfgChart.layout.percentage.show"
                 role="status"
                 aria-live="polite"
                 :aria-label="loading ? '...' : percentageText"
@@ -1387,41 +1269,30 @@ defineExpose({
                     v-else
                     data-cy="data-label"
                     aria-hidden="true"
-                    :x="
-                        wheel.centerX +
-                        FINAL_CONFIG.style.chart.layout.percentage.offsetX
-                    "
+                    :x="wheel.centerX + cfgChart.layout.percentage.offsetX"
                     :y="
                         wheel.centerY +
                         baseLabelFontSize / 3 +
-                        FINAL_CONFIG.style.chart.layout.percentage.offsetY
+                        cfgChart.layout.percentage.offsetY
                     "
                     :font-size="baseLabelFontSize"
                     :fill="
-                        FINAL_CONFIG.style.chart.layout.wheel.ticks.gradient
-                            .show
+                        cfgTicks.gradient.show
                             ? shiftHue(
-                                  FINAL_CONFIG.style.chart.layout.wheel.ticks
-                                      .activeColor,
+                                  cfgTicks.activeColor,
                                   (activeValue / 100) *
-                                      (FINAL_CONFIG.style.chart.layout.wheel
-                                          .ticks.gradient.shiftHueIntensity /
+                                      (cfgTicks.gradient.shiftHueIntensity /
                                           100),
                               )
-                            : FINAL_CONFIG.style.chart.layout.wheel.ticks
-                                  .activeColor
+                            : cfgTicks.activeColor
                     "
                     text-anchor="middle"
                     :font-weight="
-                        FINAL_CONFIG.style.chart.layout.percentage.bold
-                            ? 'bold'
-                            : 'normal'
+                        cfgChart.layout.percentage.bold ? 'bold' : 'normal'
                     "
                     style="font-variant-numeric: tabluar-nums"
-                    :stroke="FINAL_CONFIG.style.chart.layout.percentage.stroke"
-                    :stroke-width="
-                        FINAL_CONFIG.style.chart.layout.percentage.strokeWidth
-                    "
+                    :stroke="cfgChart.layout.percentage.stroke"
+                    :stroke-width="cfgChart.layout.percentage.strokeWidth"
                     stroke-linecap="round"
                     stroke-linejoin="round"
                     paint-order="stroke fill"
