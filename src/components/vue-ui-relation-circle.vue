@@ -89,6 +89,9 @@ const activePlotIndex = ref(null); // a11y
 const isFocus = ref(false); // a11y
 
 const FINAL_CONFIG = ref(prepareConfig());
+const cfgUserOptions = computed(() => FINAL_CONFIG.value.userOptions);
+const cfgLabels = computed(() => FINAL_CONFIG.value.style.weightLabels);
+const cfgStyle = computed(() => FINAL_CONFIG.value.style);
 
 useHints({
     config: () => FINAL_CONFIG.value,
@@ -140,7 +143,7 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } =
     useUserOptionState({ config: FINAL_CONFIG.value });
 const { svgRef } = useChartAccessibility({
-    config: FINAL_CONFIG.value.style.title,
+    config: cfgStyle.value.title,
 });
 
 function prepareConfig() {
@@ -181,12 +184,12 @@ watch(
         FINAL_CONFIG.value = prepareConfig();
         userOptionsVisible.value =
             !FINAL_CONFIG.value.userOptions.showOnChartHover;
-        size.value = FINAL_CONFIG.value.style.size;
-        dataLabelSize.value = FINAL_CONFIG.value.style.weightLabels.size;
-        plotRadius.value = FINAL_CONFIG.value.style.plot.radius;
-        labelFontSize.value = FINAL_CONFIG.value.style.labels.fontSize;
-        svg.value.height = FINAL_CONFIG.value.style.size;
-        svg.value.width = FINAL_CONFIG.value.style.size;
+        size.value = cfgStyle.value.size;
+        dataLabelSize.value = cfgLabels.value.size;
+        plotRadius.value = cfgStyle.value.plot.radius;
+        labelFontSize.value = cfgStyle.value.labels.fontSize;
+        svg.value.height = cfgStyle.value.size;
+        svg.value.width = cfgStyle.value.size;
         prepareChart();
         titleStep.value += 1;
     },
@@ -205,15 +208,12 @@ watch(
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `relation_circle_${uid.value}`,
-    fileName: FINAL_CONFIG.value.style.title.text || 'vue-ui-relation-circle',
+    fileName: cfgStyle.value.title.text || 'vue-ui-relation-circle',
     options: FINAL_CONFIG.value.userOptions.print,
 });
 
 const hasOptionsNoTitle = computed(() => {
-    return (
-        FINAL_CONFIG.value.userOptions.show &&
-        !FINAL_CONFIG.value.style.title.text
-    );
+    return FINAL_CONFIG.value.userOptions.show && !cfgStyle.value.title.text;
 });
 
 const customPalette = computed(() => {
@@ -227,18 +227,16 @@ const selectedRelations = ref([]);
 const selectedRotation = ref(0);
 
 const limitedDataset = computed(() => {
-    return FINAL_DATASET.value
-        .slice(0, FINAL_CONFIG.value.style.limit)
-        .map((el) => {
-            const relations = Array.isArray(el.relations) ? el.relations : [];
-            return {
-                ...el,
-                weights: Array.isArray(el.weights)
-                    ? el.weights
-                    : new Array(relations.length).fill(1),
-                relations,
-            };
-        });
+    return FINAL_DATASET.value.slice(0, cfgStyle.value.limit).map((el) => {
+        const relations = Array.isArray(el.relations) ? el.relations : [];
+        return {
+            ...el,
+            weights: Array.isArray(el.weights)
+                ? el.weights
+                : new Array(relations.length).fill(1),
+            relations,
+        };
+    });
 });
 
 watch(limitedDataset, () => {
@@ -248,19 +246,19 @@ watch(limitedDataset, () => {
     createRelations();
 });
 
-const size = ref(FINAL_CONFIG.value.style.size);
-const dataLabelSize = ref(FINAL_CONFIG.value.style.weightLabels.size);
-const plotRadius = ref(FINAL_CONFIG.value.style.plot.radius);
-const labelFontSize = ref(FINAL_CONFIG.value.style.labels.fontSize);
+const size = ref(cfgStyle.value.size);
+const dataLabelSize = ref(cfgLabels.value.size);
+const plotRadius = ref(cfgStyle.value.plot.radius);
+const labelFontSize = ref(cfgStyle.value.labels.fontSize);
 
 const svg = ref({
-    height: FINAL_CONFIG.value.style.size,
-    width: FINAL_CONFIG.value.style.size,
+    height: cfgStyle.value.size,
+    width: cfgStyle.value.size,
 });
 
 const radius = computed({
     get() {
-        return size.value * FINAL_CONFIG.value.style.circle.radiusProportion;
+        return size.value * cfgStyle.value.circle.radiusProportion;
     },
     set(v) {
         return v;
@@ -268,11 +266,11 @@ const radius = computed({
 });
 
 const isCurved = computed(() => {
-    return FINAL_CONFIG.value.style.links.curved;
+    return cfgStyle.value.links.curved;
 });
 
 const animationSpeed = computed(() => {
-    return `${FINAL_CONFIG.value.style.animation.speedMs}ms`;
+    return `${cfgStyle.value.animation.speedMs}ms`;
 });
 
 const radiusDash = computed(() => {
@@ -328,9 +326,7 @@ function prepareChart() {
         const handleResize = throttle(() => {
             const { width, height } = useResponsive({
                 chart: relationCircleChart.value,
-                title: FINAL_CONFIG.value.style.title.text
-                    ? chartTitle.value
-                    : null,
+                title: cfgStyle.value.title.text ? chartTitle.value : null,
                 source: source.value,
                 noTitle: noTitle.value,
             });
@@ -340,8 +336,7 @@ function prepareChart() {
                 svg.value.width = Math.max(0.1, width);
                 svg.value.height = Math.max(0.1, height - 12);
                 radius.value =
-                    size.value *
-                    FINAL_CONFIG.value.style.circle.radiusProportion;
+                    size.value * cfgStyle.value.circle.radiusProportion;
                 circles.value = [];
                 relations.value = [];
                 createPlots();
@@ -351,33 +346,31 @@ function prepareChart() {
                 if (FINAL_CONFIG.value.responsiveProportionalSizing) {
                     dataLabelSize.value = translateSize({
                         relator: size.value,
-                        adjuster: FINAL_CONFIG.value.style.size,
-                        source: FINAL_CONFIG.value.style.weightLabels.size,
+                        adjuster: cfgStyle.value.size,
+                        source: cfgLabels.value.size,
                         threshold: 6,
                         fallback: 6,
                     });
 
                     plotRadius.value = translateSize({
                         relator: size.value,
-                        adjuster: FINAL_CONFIG.value.style.size,
-                        source: FINAL_CONFIG.value.style.plot.radius,
+                        adjuster: cfgStyle.value.size,
+                        source: cfgStyle.value.plot.radius,
                         threshold: 1,
                         fallback: 1,
                     });
 
                     labelFontSize.value = translateSize({
                         relator: size.value,
-                        adjuster: FINAL_CONFIG.value.style.size,
-                        source: FINAL_CONFIG.value.style.labels.fontSize,
+                        adjuster: cfgStyle.value.size,
+                        source: cfgStyle.value.labels.fontSize,
                         threshold: 6,
                         fallback: 6,
                     });
                 } else {
-                    dataLabelSize.value =
-                        FINAL_CONFIG.value.style.weightLabels.size;
-                    plotRadius.value = FINAL_CONFIG.value.style.plot.radius;
-                    labelFontSize.value =
-                        FINAL_CONFIG.value.style.labels.fontSize;
+                    dataLabelSize.value = cfgLabels.value.size;
+                    plotRadius.value = cfgStyle.value.plot.radius;
+                    labelFontSize.value = cfgStyle.value.labels.fontSize;
                 }
             });
         });
@@ -414,8 +407,8 @@ onBeforeUnmount(() => {
 
 const { autoSizeLabels } = useAutoSizeLabelsInsideViewbox({
     svgRef,
-    fontSize: FINAL_CONFIG.value.style.labels.fontSize,
-    minFontSize: FINAL_CONFIG.value.style.labels.minFontSize,
+    fontSize: cfgStyle.value.labels.fontSize,
+    minFontSize: cfgStyle.value.labels.minFontSize,
     sizeRef: labelFontSize,
     labelClass: '.vue-ui-relation-circle-legend',
 });
@@ -459,7 +452,7 @@ function createPlots() {
         const y =
             radius.value * Math.sin(angle) +
             svg.value.height / 2 +
-            FINAL_CONFIG.value.style.circle.offsetY;
+            cfgStyle.value.circle.offsetY;
         circles.value.push({
             x,
             y,
@@ -523,7 +516,7 @@ function getBezierMidpoint(relation) {
     const P1 = { x: relation.x1, y: relation.y1 };
     const P2 = {
         x: svg.value.width / 2,
-        y: svg.value.height / 2 + FINAL_CONFIG.value.style.circle.offsetY,
+        y: svg.value.height / 2 + cfgStyle.value.circle.offsetY,
     };
     const t = 0.5;
     const x =
@@ -682,9 +675,7 @@ function onTrapClick(plot, index) {
 }
 
 function calcLinkWidth(plot) {
-    const w =
-        (plot.weight / maxWeight.value) *
-        FINAL_CONFIG.value.style.links.maxWidth;
+    const w = (plot.weight / maxWeight.value) * cfgStyle.value.links.maxWidth;
     return Math.max(0.3, w);
 }
 
@@ -712,15 +703,15 @@ async function getImage({ scale = 2 } = {}) {
     return {
         imageUri,
         base64,
-        title: FINAL_CONFIG.value.style.title.text,
+        title: cfgStyle.value.title.text,
         width,
         height,
         aspectRatio,
     };
 }
 
-const svgBg = computed(() => FINAL_CONFIG.value.style.backgroundColor);
-const svgTitle = computed(() => FINAL_CONFIG.value.style.title);
+const svgBg = computed(() => cfgStyle.value.backgroundColor);
+const svgTitle = computed(() => cfgStyle.value.title);
 
 const { isCallbackImaging, isCallbackSvg, generateSvg, onGenerateImage } =
     useChartExport({
@@ -885,7 +876,7 @@ defineExpose({
     <div
         ref="relationCircleChart"
         class="vue-data-ui-component vue-ui-relation-circle"
-        :style="`width:100%;background:${FINAL_CONFIG.style.backgroundColor};text-align:center;${FINAL_CONFIG.responsive ? 'height: 100%' : ''}`"
+        :style="`width:100%;background:${cfgStyle.backgroundColor};text-align:center;${FINAL_CONFIG.responsive ? 'height: 100%' : ''}`"
         :id="`relation_circle_${uid}`"
         @mouseenter="() => setUserOptionsVisibility(true)"
         @mouseleave="() => setUserOptionsVisibility(false)"
@@ -904,13 +895,13 @@ defineExpose({
         />
 
         <PenAndPaper
-            v-if="FINAL_CONFIG.userOptions.buttons.annotator"
+            v-if="cfgUserOptions.buttons.annotator"
             :svgRef="svgRef"
-            :backgroundColor="FINAL_CONFIG.style.backgroundColor"
-            :color="FINAL_CONFIG.style.color"
+            :backgroundColor="cfgStyle.backgroundColor"
+            :color="cfgStyle.color"
             :active="isAnnotator"
             :isCursorPointer="isCursorPointer"
-            :palette="FINAL_CONFIG.userOptions.annotatorPalette"
+            :palette="cfgUserOptions.annotatorPalette"
             @close="toggleAnnotator"
         >
             <template #annotator-action-close>
@@ -942,7 +933,7 @@ defineExpose({
 
         <div
             ref="chartTitle"
-            v-if="FINAL_CONFIG.style.title.text"
+            v-if="cfgStyle.title.text"
             :style="`width:100%;background:transparent`"
         >
             <Title
@@ -950,11 +941,11 @@ defineExpose({
                 :config="{
                     title: {
                         cy: 'relation-div-title',
-                        ...FINAL_CONFIG.style.title,
+                        ...cfgStyle.title,
                     },
                     subtitle: {
                         cy: 'relation-div-subtitle',
-                        ...FINAL_CONFIG.style.title.subtitle,
+                        ...cfgStyle.title.subtitle,
                     },
                 }"
             />
@@ -964,29 +955,29 @@ defineExpose({
             ref="details"
             :key="`user_options_${step}`"
             v-if="
-                FINAL_CONFIG.userOptions.show &&
+                cfgUserOptions.show &&
                 isDataset &&
                 (keepUserOptionState ? true : userOptionsVisible)
             "
-            :backgroundColor="FINAL_CONFIG.style.backgroundColor"
-            :color="FINAL_CONFIG.style.color"
+            :backgroundColor="cfgStyle.backgroundColor"
+            :color="cfgStyle.color"
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uid"
-            :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
-            :hasImg="FINAL_CONFIG.userOptions.buttons.img"
-            :hasSvg="FINAL_CONFIG.userOptions.buttons.svg"
-            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
-            :hasAltCopy="FINAL_CONFIG.userOptions.buttons.altCopy"
+            :hasPdf="cfgUserOptions.buttons.pdf"
+            :hasImg="cfgUserOptions.buttons.img"
+            :hasSvg="cfgUserOptions.buttons.svg"
+            :hasFullscreen="cfgUserOptions.buttons.fullscreen"
+            :hasAltCopy="cfgUserOptions.buttons.altCopy"
             :hasXls="false"
             :isFullscreen="isFullscreen"
-            :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
+            :titles="{ ...cfgUserOptions.buttonTitles }"
             :chartElement="relationCircleChart"
-            :position="FINAL_CONFIG.userOptions.position"
-            :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator"
+            :position="cfgUserOptions.position"
+            :hasAnnotator="cfgUserOptions.buttons.annotator"
             :isAnnotation="isAnnotator"
-            :callbacks="FINAL_CONFIG.userOptions.callbacks"
-            :printScale="FINAL_CONFIG.userOptions.print.scale"
+            :callbacks="cfgUserOptions.callbacks"
+            :printScale="cfgUserOptions.print.scale"
             :isCursorPointer="isCursorPointer"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
@@ -1086,11 +1077,11 @@ defineExpose({
                     :cx="(svg.width <= 0 ? 0.0001 : svg.width) / 2"
                     :cy="
                         (svg.height <= 0 ? 0.0001 : svg.height) / 2 +
-                        FINAL_CONFIG.style.circle.offsetY
+                        cfgStyle.circle.offsetY
                     "
                     :r="radius <= 0 ? 0.0001 : radius"
-                    :stroke="FINAL_CONFIG.style.circle.stroke"
-                    :stroke-width="FINAL_CONFIG.style.circle.strokeWidth"
+                    :stroke="cfgStyle.circle.stroke"
+                    :stroke-width="cfgStyle.circle.strokeWidth"
                     fill="transparent"
                     class="main-circle"
                 />
@@ -1102,7 +1093,7 @@ defineExpose({
                         :style="getLineOpacityAndWidth(relation)"
                         :stroke="getLineColor(relation)"
                         class="relation"
-                        :d="`M${relation.x1},${relation.y1} C${relation.x1},${relation.y1} ${svg.width / 2},${svg.height / 2 + FINAL_CONFIG.style.circle.offsetY} ${relation.x2},${relation.y2}`"
+                        :d="`M${relation.x1},${relation.y1} C${relation.x1},${relation.y1} ${svg.width / 2},${svg.height / 2 + cfgStyle.circle.offsetY} ${relation.x2},${relation.y2}`"
                         fill="none"
                         :class="{
                             'vue-ui-relation-circle-selected':
@@ -1133,7 +1124,7 @@ defineExpose({
                             :cy="relation.midPointBezier.y"
                             :fill="getLineColor(relation)"
                             :r="dataLabelSize"
-                            :stroke="FINAL_CONFIG.style.backgroundColor"
+                            :stroke="cfgStyle.backgroundColor"
                             stroke-width="1"
                         />
                         <text
@@ -1148,16 +1139,13 @@ defineExpose({
                         >
                             {{
                                 applyDataLabel(
-                                    FINAL_CONFIG.style.weightLabels.formatter,
+                                    cfgLabels.formatter,
                                     relation.weight,
                                     dataLabel({
-                                        p: FINAL_CONFIG.style.weightLabels
-                                            .prefix,
+                                        p: cfgLabels.prefix,
                                         v: relation.weight,
-                                        s: FINAL_CONFIG.style.weightLabels
-                                            .suffix,
-                                        r: FINAL_CONFIG.style.weightLabels
-                                            .rounding,
+                                        s: cfgLabels.suffix,
+                                        r: cfgLabels.rounding,
                                     }),
                                     { ...relation },
                                 )
@@ -1202,20 +1190,20 @@ defineExpose({
                             v-if="
                                 showLabel(relation) &&
                                 !$slots.dataLabel &&
-                                FINAL_CONFIG.style.weightLabels.show
+                                cfgLabels.show
                             "
                             :cx="relation.midPointLine.x"
                             :cy="relation.midPointLine.y"
                             :fill="getLineColor(relation)"
                             :r="dataLabelSize"
-                            :stroke="FINAL_CONFIG.style.backgroundColor"
+                            :stroke="cfgStyle.backgroundColor"
                             stroke-width="1"
                         />
                         <text
                             v-if="
                                 showLabel(relation) &&
                                 !$slots.dataLabel &&
-                                FINAL_CONFIG.style.weightLabels.show
+                                cfgLabels.show
                             "
                             :x="relation.midPointLine.x"
                             :y="relation.midPointLine.y + dataLabelSize / 3"
@@ -1227,16 +1215,13 @@ defineExpose({
                         >
                             {{
                                 applyDataLabel(
-                                    FINAL_CONFIG.style.weightLabels.formatter,
+                                    cfgLabels.formatter,
                                     relation.weight,
                                     dataLabel({
-                                        p: FINAL_CONFIG.style.weightLabels
-                                            .prefix,
+                                        p: cfgLabels.prefix,
                                         v: relation.weight,
-                                        s: FINAL_CONFIG.style.weightLabels
-                                            .suffix,
-                                        r: FINAL_CONFIG.style.weightLabels
-                                            .rounding,
+                                        s: cfgLabels.suffix,
+                                        r: cfgLabels.rounding,
                                     }),
                                     { ...relation },
                                 )
@@ -1256,9 +1241,9 @@ defineExpose({
                     class="vue-ui-relation-circle-legend"
                     transform-origin="start"
                     :font-weight="selectedPlot.id === plot.id ? '900' : '400'"
-                    :style="`font-family:${FINAL_CONFIG.style.fontFamily};${getTextOpacity(plot)};cursor:${isCursorPointer ? 'pointer' : 'default'}`"
+                    :style="`font-family:${cfgStyle.fontFamily};${getTextOpacity(plot)};cursor:${isCursorPointer ? 'pointer' : 'default'}`"
                     :font-size="labelFontSize"
-                    :fill="FINAL_CONFIG.style.labels.color"
+                    :fill="cfgStyle.labels.color"
                     :text-decoration="
                         i === hoverIndex || i === activePlotIndex
                             ? 'underline'
@@ -1272,13 +1257,13 @@ defineExpose({
                     <template v-else>
                         {{ plot.label }} ({{
                             applyDataLabel(
-                                FINAL_CONFIG.style.weightLabels.formatter,
+                                cfgLabels.formatter,
                                 plot.totalWeight,
                                 dataLabel({
-                                    p: FINAL_CONFIG.style.weightLabels.prefix,
+                                    p: cfgLabels.prefix,
                                     v: plot.totalWeight,
-                                    s: FINAL_CONFIG.style.weightLabels.suffix,
-                                    r: FINAL_CONFIG.style.weightLabels.rounding,
+                                    s: cfgLabels.suffix,
+                                    r: cfgLabels.rounding,
                                 }),
                                 { ...plot },
                             )
@@ -1295,11 +1280,11 @@ defineExpose({
                     :style="`${getCircleOpacity(plot)}; transition: r 0.2s ease-in-out; cursor:${isCursorPointer ? 'pointer' : 'default'}`"
                     class="vue-ui-relation-circle-plot"
                     :fill="
-                        FINAL_CONFIG.style.plot.useSerieColor
+                        cfgStyle.plot.useSerieColor
                             ? plot.color
-                            : FINAL_CONFIG.style.plot.color
+                            : cfgStyle.plot.color
                     "
-                    :stroke="FINAL_CONFIG.style.backgroundColor"
+                    :stroke="cfgStyle.backgroundColor"
                     stroke-width="1"
                     :r="
                         plotRadius *
