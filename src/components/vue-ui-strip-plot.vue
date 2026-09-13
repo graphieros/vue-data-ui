@@ -133,6 +133,12 @@ const tooltipA11yPosition = ref({ x: 0, y: 0 }); // a11y
 const isFocus = ref(false); // a11y
 
 const FINAL_CONFIG = ref(prepareConfig());
+const cfgUserOptions = computed(() => FINAL_CONFIG.value.userOptions);
+const cfgTooltip = computed(() => FINAL_CONFIG.value.style.chart.tooltip);
+const cfgLabels = computed(() => FINAL_CONFIG.value.style.chart.labels);
+const cfgViolin = computed(() => FINAL_CONFIG.value.style.chart.violin);
+const cfgGrid = computed(() => FINAL_CONFIG.value.style.chart.grid);
+const cfgChart = computed(() => FINAL_CONFIG.value.style.chart);
 
 useHints({
     config: () => FINAL_CONFIG.value,
@@ -268,7 +274,7 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } =
     useUserOptionState({ config: FINAL_CONFIG.value });
 const { svgRef } = useChartAccessibility({
-    config: FINAL_CONFIG.value.style.chart.title,
+    config: cfgChart.value.title,
 });
 
 function prepareConfig() {
@@ -321,14 +327,13 @@ watch(
 
         // Reset mutable config
         mutableConfig.value.dataLabels.show =
-            FINAL_CONFIG.value.style.chart.labels.bestPlotLabel.show;
+            cfgLabels.value.bestPlotLabel.show;
         mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
-        mutableConfig.value.showTooltip =
-            FINAL_CONFIG.value.style.chart.tooltip.show;
+        mutableConfig.value.showTooltip = cfgTooltip.value.show;
 
-        WIDTH.value = FINAL_CONFIG.value.style.chart.width;
-        HEIGHT.value = FINAL_CONFIG.value.style.chart.height;
-        plotRadius.value = FINAL_CONFIG.value.style.chart.plots.radius;
+        WIDTH.value = cfgChart.value.width;
+        HEIGHT.value = cfgChart.value.height;
+        plotRadius.value = cfgChart.value.plots.radius;
     },
     { deep: true },
 );
@@ -404,9 +409,7 @@ function prepareChart() {
         const handleResize = throttle(() => {
             const { width, height } = useResponsive({
                 chart: stripPlotChart.value,
-                title: FINAL_CONFIG.value.style.chart.title.text
-                    ? chartTitle.value
-                    : null,
+                title: cfgChart.value.title.text ? chartTitle.value : null,
                 source: source.value,
                 noTitle: noTitle.value,
             });
@@ -421,13 +424,12 @@ function prepareChart() {
                     plotRadius.value = translateSize({
                         relator: Math.min(height, width),
                         adjuster: 600,
-                        source: FINAL_CONFIG.value.style.chart.plots.radius,
+                        source: cfgChart.value.plots.radius,
                         threshold: 6,
                         fallback: 6,
                     });
                 } else {
-                    plotRadius.value =
-                        FINAL_CONFIG.value.style.chart.plots.radius;
+                    plotRadius.value = cfgChart.value.plots.radius;
                 }
             });
         });
@@ -461,15 +463,12 @@ onBeforeUnmount(() => {
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `strip-plot_${uid.value}`,
-    fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-strip-plot',
+    fileName: cfgChart.value.title.text || 'vue-ui-strip-plot',
     options: FINAL_CONFIG.value.userOptions.print,
 });
 
 const hasOptionsNoTitle = computed(() => {
-    return (
-        FINAL_CONFIG.value.userOptions.show &&
-        !FINAL_CONFIG.value.style.chart.title.text
-    );
+    return FINAL_CONFIG.value.userOptions.show && !cfgChart.value.title.text;
 });
 
 const customPalette = computed(() => {
@@ -479,24 +478,24 @@ const customPalette = computed(() => {
 const animationActive = ref(FINAL_CONFIG.value.useCssAnimation);
 
 const padding = ref({
-    top: FINAL_CONFIG.value.style.chart.padding.top,
-    bottom: FINAL_CONFIG.value.style.chart.padding.bottom,
-    left: FINAL_CONFIG.value.style.chart.padding.left,
-    right: FINAL_CONFIG.value.style.chart.padding.right,
+    top: cfgChart.value.padding.top,
+    bottom: cfgChart.value.padding.bottom,
+    left: cfgChart.value.padding.left,
+    right: cfgChart.value.padding.right,
 });
 
-const WIDTH = ref(FINAL_CONFIG.value.style.chart.width);
-const HEIGHT = ref(FINAL_CONFIG.value.style.chart.height);
+const WIDTH = ref(cfgChart.value.width);
+const HEIGHT = ref(cfgChart.value.height);
 
-const absoluteHeight = ref(FINAL_CONFIG.value.style.chart.height);
-const plotRadius = ref(FINAL_CONFIG.value.style.chart.plots.radius);
+const absoluteHeight = ref(cfgChart.value.height);
+const plotRadius = ref(cfgChart.value.plots.radius);
 
 const mutableConfig = ref({
     showTable: FINAL_CONFIG.value.table.show,
     dataLabels: {
-        show: FINAL_CONFIG.value.style.chart.labels.bestPlotLabel.show,
+        show: cfgLabels.value.bestPlotLabel.show,
     },
-    showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show,
+    showTooltip: cfgTooltip.value.show,
 });
 
 // v3 - Essential to make shifting between loading config and final config work
@@ -506,13 +505,13 @@ watch(
         mutableConfig.value = {
             showTable: FINAL_CONFIG.value.table.show,
             dataLabels: {
-                show: FINAL_CONFIG.value.style.chart.labels.bestPlotLabel.show,
+                show: cfgLabels.value.bestPlotLabel.show,
             },
-            showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show,
+            showTooltip: cfgTooltip.value.show,
         };
-        WIDTH.value = FINAL_CONFIG.value.style.chart.width;
-        HEIGHT.value = FINAL_CONFIG.value.style.chart.height;
-        plotRadius.value = FINAL_CONFIG.value.style.chart.plots.radius;
+        WIDTH.value = cfgChart.value.width;
+        HEIGHT.value = cfgChart.value.height;
+        plotRadius.value = cfgChart.value.plots.radius;
     },
     { immediate: true },
 );
@@ -532,7 +531,7 @@ function getViolinMaxWidth() {
             (drawingArea.value.stripWidth / 2 -
                 adjustedPlotRadius.value * 1.8) *
                 0.86,
-        ) * Math.min(1, FINAL_CONFIG.value.style.chart.violin.widthRatio)
+        ) * Math.min(1, cfgViolin.value.widthRatio)
     );
 }
 
@@ -577,9 +576,9 @@ const offsetY = computed(() => {
     if (xAxisLabel.value) {
         h =
             xAxisLabel.value.getBBox().height +
-            FINAL_CONFIG.value.style.chart.labels.axis.fontSize / 3 +
+            cfgLabels.value.axis.fontSize / 3 +
             12 +
-            FINAL_CONFIG.value.style.chart.labels.axis.xLabelOffsetY;
+            cfgLabels.value.axis.xLabelOffsetY;
     }
     let tlH = 0;
     if (timeLabelsEls.value) {
@@ -591,16 +590,13 @@ const offsetY = computed(() => {
 const drawingArea = computed(() => {
     const offsetX = getOffsetX();
     const left =
-        padding.value.left +
-        offsetX +
-        FINAL_CONFIG.value.style.chart.labels.axis.yLabelOffsetX +
-        5;
+        padding.value.left + offsetX + cfgLabels.value.axis.yLabelOffsetX + 5;
     const right = WIDTH.value - padding.value.right;
     const width = Math.max(0, right - left);
     const top =
         padding.value.top +
-        FINAL_CONFIG.value.style.chart.plots.radius +
-        FINAL_CONFIG.value.style.chart.labels.bestPlotLabel.fontSize;
+        cfgChart.value.plots.radius +
+        cfgLabels.value.bestPlotLabel.fontSize;
     const bottom = HEIGHT.value - padding.value.bottom - offsetY.value;
     const height = Math.max(0, bottom - top);
     const seriesCount = Array.isArray(FINAL_DATASET.value)
@@ -690,12 +686,9 @@ const extremes = computed(() => {
 });
 
 const scale = computed(() => {
-    const min = FINAL_CONFIG.value.style.chart.grid.scaleMin;
-    const max = FINAL_CONFIG.value.style.chart.grid.scaleMax;
-    const scaleSteps = Math.max(
-        2,
-        FINAL_CONFIG.value.style.chart.grid.scaleSteps,
-    );
+    const min = cfgGrid.value.scaleMin;
+    const max = cfgGrid.value.scaleMax;
+    const scaleSteps = Math.max(2, cfgGrid.value.scaleSteps);
     const autoMin = extremes.value.min < 0 ? extremes.value.min : 0;
     const autoMax = extremes.value.max;
 
@@ -756,10 +749,7 @@ const drawableDataset = computed(() => {
 });
 
 const isViolinBoxPlot = computed(() => {
-    return (
-        chartType.value === 'violin' &&
-        !!FINAL_CONFIG.value.style.chart.violin?.boxPlot?.show
-    );
+    return chartType.value === 'violin' && !!cfgViolin.value?.boxPlot?.show;
 });
 
 function quantile(sortedValues, q) {
@@ -800,18 +790,13 @@ const boxPlotSummaries = computed(() => {
                     getViolinMaxWidth() * 0.32,
                     drawingArea.value.stripWidth * 0.12,
                 ),
-            ) *
-            Math.min(
-                1.5,
-                FINAL_CONFIG.value.style.chart.violin.boxPlot.widthRatio,
-            );
+            ) * Math.min(1.5, cfgViolin.value.boxPlot.widthRatio);
 
         return {
             id: ds.id,
-            boxPlotColor: FINAL_CONFIG.value.style.chart.violin.boxPlot
-                .useSerieColor
+            boxPlotColor: cfgViolin.value.boxPlot.useSerieColor
                 ? ds.color
-                : FINAL_CONFIG.value.style.chart.violin.boxPlot.color,
+                : cfgViolin.value.boxPlot.color,
             color: ds.color,
             name: ds.name,
             count: values.length,
@@ -837,20 +822,20 @@ const boxPlotSummaries = computed(() => {
 
 const boxPlotTableColumns = computed(() => [
     FINAL_CONFIG.value.table.columnNames.series,
-    FINAL_CONFIG.value.style.chart.violin.tooltipLabels.lowerAdjacent,
-    FINAL_CONFIG.value.style.chart.violin.tooltipLabels.q1,
-    FINAL_CONFIG.value.style.chart.violin.tooltipLabels.median,
-    FINAL_CONFIG.value.style.chart.violin.tooltipLabels.q3,
-    FINAL_CONFIG.value.style.chart.violin.tooltipLabels.upperAdjacent,
-    FINAL_CONFIG.value.style.chart.violin.tooltipLabels.iqr,
-    FINAL_CONFIG.value.style.chart.violin.tooltipLabels.count,
+    cfgViolin.value.tooltipLabels.lowerAdjacent,
+    cfgViolin.value.tooltipLabels.q1,
+    cfgViolin.value.tooltipLabels.median,
+    cfgViolin.value.tooltipLabels.q3,
+    cfgViolin.value.tooltipLabels.upperAdjacent,
+    cfgViolin.value.tooltipLabels.iqr,
+    cfgViolin.value.tooltipLabels.count,
 ]);
 
 function formatTableValue(value) {
     return dataLabel({
-        p: FINAL_CONFIG.value.style.chart.labels.prefix,
+        p: cfgLabels.value.prefix,
         v: value,
-        s: FINAL_CONFIG.value.style.chart.labels.suffix,
+        s: cfgLabels.value.suffix,
         r: FINAL_CONFIG.value.table.td.roundingValue,
     });
 }
@@ -905,12 +890,12 @@ const violinShapes = computed(() => {
     return drawableDataset.value.map((ds, seriesIndex) => {
         return {
             id: ds.id,
-            color: FINAL_CONFIG.value.style.chart.violin.useSerieColor
+            color: cfgViolin.value.useSerieColor
                 ? ds.color
-                : FINAL_CONFIG.value.style.chart.violin.stroke,
-            fill: FINAL_CONFIG.value.style.chart.violin.useSerieColor
+                : cfgViolin.value.stroke,
+            fill: cfgViolin.value.useSerieColor
                 ? ds.color
-                : FINAL_CONFIG.value.style.chart.violin.fill,
+                : cfgViolin.value.fill,
             path: createViolinPath(ds.plots, seriesIndex),
             connectors: createViolinConnectors(ds.plots, seriesIndex),
         };
@@ -1175,13 +1160,13 @@ function onTrapClick({ datapoint, seriesIndex }) {
 
 function formatTooltipValue(value, context = {}) {
     return applyDataLabel(
-        FINAL_CONFIG.value.style.chart.labels.formatter,
+        cfgLabels.value.formatter,
         value,
         dataLabel({
-            p: FINAL_CONFIG.value.style.chart.labels.prefix,
+            p: cfgLabels.value.prefix,
             v: value,
-            s: FINAL_CONFIG.value.style.chart.labels.suffix,
-            r: FINAL_CONFIG.value.style.chart.tooltip.roundingValue,
+            s: cfgLabels.value.suffix,
+            r: cfgTooltip.value.roundingValue,
         }),
         context,
     );
@@ -1202,7 +1187,7 @@ function useTooltip({ datapoint, seriesIndex, triggerMode = 'pointer' }) {
     isTooltip.value = true;
     selectedDatapoint.value = datapoint;
 
-    const customFormat = FINAL_CONFIG.value.style.chart.tooltip.customFormat;
+    const customFormat = cfgTooltip.value.customFormat;
 
     if (
         isFunction(customFormat) &&
@@ -1224,7 +1209,7 @@ function useTooltip({ datapoint, seriesIndex, triggerMode = 'pointer' }) {
     } else {
         let html = '';
 
-        html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><svg viewBox="0 0 12 12" height="14" width="14"><circle data-cy="donut-tooltip-marker" cx="6" cy="6" r="6" stroke="none" fill="${FINAL_CONFIG.value.style.chart.plots.gradient.show ? `url(#${datapoint.parentId})` : datapoint.color}"/></svg>${datapoint.name}</div>`;
+        html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><svg viewBox="0 0 12 12" height="14" width="14"><circle data-cy="donut-tooltip-marker" cx="6" cy="6" r="6" stroke="none" fill="${cfgChart.value.plots.gradient.show ? `url(#${datapoint.parentId})` : datapoint.color}"/></svg>${datapoint.name}</div>`;
         html += `<div>${formatTooltipValue(datapoint.value, { datapoint, seriesIndex })}</div>`;
 
         tooltipContent.value = `<div>${html}</div>`;
@@ -1249,7 +1234,7 @@ function useBoxPlotTooltip({ boxPlot, seriesIndex, triggerMode = 'pointer' }) {
         series: immutableDataset.value,
     };
 
-    const customFormat = FINAL_CONFIG.value.style.chart.tooltip.customFormat;
+    const customFormat = cfgTooltip.value.customFormat;
 
     if (isFunction(customFormat)) {
         try {
@@ -1270,21 +1255,12 @@ function useBoxPlotTooltip({ boxPlot, seriesIndex, triggerMode = 'pointer' }) {
     }
 
     const rows = [
-        [
-            FINAL_CONFIG.value.style.chart.violin.tooltipLabels.upperAdjacent,
-            boxPlot.upperAdjacent,
-        ],
-        [FINAL_CONFIG.value.style.chart.violin.tooltipLabels.q3, boxPlot.q3],
-        [
-            FINAL_CONFIG.value.style.chart.violin.tooltipLabels.median,
-            boxPlot.median,
-        ],
-        [FINAL_CONFIG.value.style.chart.violin.tooltipLabels.q1, boxPlot.q1],
-        [
-            FINAL_CONFIG.value.style.chart.violin.tooltipLabels.lowerAdjacent,
-            boxPlot.lowerAdjacent,
-        ],
-        [FINAL_CONFIG.value.style.chart.violin.tooltipLabels.iqr, boxPlot.iqr],
+        [cfgViolin.value.tooltipLabels.upperAdjacent, boxPlot.upperAdjacent],
+        [cfgViolin.value.tooltipLabels.q3, boxPlot.q3],
+        [cfgViolin.value.tooltipLabels.median, boxPlot.median],
+        [cfgViolin.value.tooltipLabels.q1, boxPlot.q1],
+        [cfgViolin.value.tooltipLabels.lowerAdjacent, boxPlot.lowerAdjacent],
+        [cfgViolin.value.tooltipLabels.iqr, boxPlot.iqr],
     ];
 
     const marker = `<svg viewBox="0 0 12 12" height="14" width="14"><rect x="1" y="1" width="10" height="10" rx="2" stroke="none" fill="${boxPlot.color}"/></svg>`;
@@ -1298,7 +1274,7 @@ function useBoxPlotTooltip({ boxPlot, seriesIndex, triggerMode = 'pointer' }) {
         `<div style="min-width:160px;">` +
         `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;margin-bottom:6px;">${marker}${boxPlot.name}</div>` +
         body +
-        `<div style="display:flex;flex-direction:row;gap:12px;align-items:center;justify-content:space-between;margin-top:6px;"><span>${FINAL_CONFIG.value.style.chart.violin.tooltipLabels.count}</span><b>${boxPlot.count}</b></div>` +
+        `<div style="display:flex;flex-direction:row;gap:12px;align-items:center;justify-content:space-between;margin-top:6px;"><span>${cfgViolin.value.tooltipLabels.count}</span><b>${boxPlot.count}</b></div>` +
         `</div>`;
 }
 
@@ -1348,8 +1324,8 @@ function generateCsv(callback = null) {
         }
 
         const tableXls = [
-            [FINAL_CONFIG.value.style.chart.title.text],
-            [FINAL_CONFIG.value.style.chart.title.subtitle.text],
+            [cfgChart.value.title.text],
+            [cfgChart.value.title.subtitle.text],
             columns.map((column) => [column]),
         ].concat(rows);
 
@@ -1358,9 +1334,7 @@ function generateCsv(callback = null) {
         if (!callback) {
             downloadCsv({
                 csvContent,
-                title:
-                    FINAL_CONFIG.value.style.chart.title.text ||
-                    'vue-ui-strip-plot',
+                title: cfgChart.value.title.text || 'vue-ui-strip-plot',
             });
         } else {
             callback(csvContent);
@@ -1415,9 +1389,9 @@ const dataTable = computed(() => {
     ];
     const body = table.value.head.map((h, i) => {
         const label = dataLabel({
-            p: FINAL_CONFIG.value.style.chart.labels.prefix,
+            p: cfgLabels.value.prefix,
             v: table.value.body[i],
-            s: FINAL_CONFIG.value.style.chart.labels.suffix,
+            s: cfgLabels.value.suffix,
             r: FINAL_CONFIG.value.table.td.roundingValue,
         });
         return [
@@ -1496,7 +1470,7 @@ async function getImage({ scale = 2 } = {}) {
     return {
         imageUri,
         base64,
-        title: FINAL_CONFIG.value.style.chart.title.text,
+        title: cfgChart.value.title.text,
         width,
         height,
         aspectRatio,
@@ -1524,8 +1498,7 @@ useTimeLabelCollision({
     width: WIDTH,
     height: HEIGHT,
     targetClass: '.vue-ui-strip-plot-category-name',
-    rotation:
-        FINAL_CONFIG.value.style.chart.labels.xAxisLabels.autoRotate.angle,
+    rotation: cfgLabels.value.xAxisLabels.autoRotate.angle,
 });
 
 const tableComponent = computed(() => {
@@ -1534,7 +1507,7 @@ const tableComponent = computed(() => {
     const open = mutableConfig.value.showTable;
     return {
         component: useDialog ? BaseDraggableDialog : Accordion,
-        title: `${FINAL_CONFIG.value.style.chart.title.text}${FINAL_CONFIG.value.style.chart.title.subtitle.text ? `: ${FINAL_CONFIG.value.style.chart.title.subtitle.text}` : ''}`,
+        title: `${cfgChart.value.title.text}${cfgChart.value.title.subtitle.text ? `: ${cfgChart.value.title.subtitle.text}` : ''}`,
         props: useDialog
             ? {
                   backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
@@ -1552,14 +1525,12 @@ const tableComponent = computed(() => {
                       open,
                       maxHeight: 10000,
                       body: {
-                          backgroundColor:
-                              FINAL_CONFIG.value.style.chart.backgroundColor,
-                          color: FINAL_CONFIG.value.style.chart.color,
+                          backgroundColor: cfgChart.value.backgroundColor,
+                          color: cfgChart.value.color,
                       },
                       head: {
-                          backgroundColor:
-                              FINAL_CONFIG.value.style.chart.backgroundColor,
-                          color: FINAL_CONFIG.value.style.chart.color,
+                          backgroundColor: cfgChart.value.backgroundColor,
+                          color: cfgChart.value.color,
                       },
                   },
               },
@@ -1587,8 +1558,8 @@ function closeTable() {
     }
 }
 
-const svgBg = computed(() => FINAL_CONFIG.value.style.chart.backgroundColor);
-const svgTitle = computed(() => FINAL_CONFIG.value.style.chart.title);
+const svgBg = computed(() => cfgChart.value.backgroundColor);
+const svgTitle = computed(() => cfgChart.value.title);
 
 const { isCallbackImaging, isCallbackSvg, generateSvg, onGenerateImage } =
     useChartExport({
@@ -1796,7 +1767,7 @@ defineExpose({
     <div
         ref="stripPlotChart"
         :class="`vue-data-ui-component vue-ui-strip-plot ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${FINAL_CONFIG.useCssAnimation ? '' : 'vue-ui-dna'}`"
-        :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor};${FINAL_CONFIG.responsive ? 'height:100%' : ''}`"
+        :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${cfgChart.backgroundColor};${FINAL_CONFIG.responsive ? 'height:100%' : ''}`"
         :id="`strip-plot_${uid}`"
         @mouseenter="() => setUserOptionsVisibility(true)"
         @mouseleave="() => setUserOptionsVisibility(false)"
@@ -1815,13 +1786,13 @@ defineExpose({
         />
 
         <PenAndPaper
-            v-if="FINAL_CONFIG.userOptions.buttons.annotator"
+            v-if="cfgUserOptions.buttons.annotator"
             :svgRef="svgRef"
-            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
-            :color="FINAL_CONFIG.style.chart.color"
+            :backgroundColor="cfgChart.backgroundColor"
+            :color="cfgChart.color"
             :active="isAnnotator"
             :isCursorPointer="isCursorPointer"
-            :palette="FINAL_CONFIG.userOptions.annotatorPalette"
+            :palette="cfgUserOptions.annotatorPalette"
             @close="toggleAnnotator"
         >
             <template #annotator-action-close>
@@ -1853,7 +1824,7 @@ defineExpose({
 
         <div
             ref="chartTitle"
-            v-if="FINAL_CONFIG.style.chart.title.text"
+            v-if="cfgChart.title.text"
             :style="`width:100%;background:transparent;padding-bottom:24px`"
         >
             <Title
@@ -1861,11 +1832,11 @@ defineExpose({
                 :config="{
                     title: {
                         cy: 'donut-div-title',
-                        ...FINAL_CONFIG.style.chart.title,
+                        ...cfgChart.title,
                     },
                     subtitle: {
                         cy: 'donut-div-subtitle',
-                        ...FINAL_CONFIG.style.chart.title.subtitle,
+                        ...cfgChart.title.subtitle,
                     },
                 }"
             />
@@ -1875,39 +1846,35 @@ defineExpose({
             ref="userOptionsRef"
             :key="`user_option_${step}`"
             v-if="
-                FINAL_CONFIG.userOptions.show &&
+                cfgUserOptions.show &&
                 isDataset &&
                 (keepUserOptionState ? true : userOptionsVisible)
             "
-            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
-            :color="FINAL_CONFIG.style.chart.color"
+            :backgroundColor="cfgChart.backgroundColor"
+            :color="cfgChart.color"
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uid"
-            :hasTooltip="
-                FINAL_CONFIG.userOptions.buttons.tooltip &&
-                FINAL_CONFIG.style.chart.tooltip.show
-            "
-            :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
-            :hasXls="FINAL_CONFIG.userOptions.buttons.csv"
-            :hasImg="FINAL_CONFIG.userOptions.buttons.img"
-            :hasSvg="FINAL_CONFIG.userOptions.buttons.svg"
-            :hasTable="FINAL_CONFIG.userOptions.buttons.table"
+            :hasTooltip="cfgUserOptions.buttons.tooltip && cfgTooltip.show"
+            :hasPdf="cfgUserOptions.buttons.pdf"
+            :hasXls="cfgUserOptions.buttons.csv"
+            :hasImg="cfgUserOptions.buttons.img"
+            :hasSvg="cfgUserOptions.buttons.svg"
+            :hasTable="cfgUserOptions.buttons.table"
             :hasLabel="
-                FINAL_CONFIG.userOptions.buttons.labels &&
-                FINAL_CONFIG.type !== 'violin'
+                cfgUserOptions.buttons.labels && FINAL_CONFIG.type !== 'violin'
             "
-            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
-            :hasAltCopy="FINAL_CONFIG.userOptions.buttons.altCopy"
+            :hasFullscreen="cfgUserOptions.buttons.fullscreen"
+            :hasAltCopy="cfgUserOptions.buttons.altCopy"
             :isTooltip="mutableConfig.showTooltip"
             :isFullscreen="isFullscreen"
-            :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
+            :titles="{ ...cfgUserOptions.buttonTitles }"
             :chartElement="stripPlotChart"
-            :position="FINAL_CONFIG.userOptions.position"
-            :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator"
+            :position="cfgUserOptions.position"
+            :hasAnnotator="cfgUserOptions.buttons.annotator"
             :isAnnotation="isAnnotator"
-            :callbacks="FINAL_CONFIG.userOptions.callbacks"
-            :printScale="FINAL_CONFIG.userOptions.print.scale"
+            :callbacks="cfgUserOptions.callbacks"
+            :printScale="cfgUserOptions.print.scale"
             :tableDialog="FINAL_CONFIG.table.useDialog"
             :isCursorPointer="isCursorPointer"
             @toggleFullscreen="toggleFullscreen"
@@ -1995,7 +1962,7 @@ defineExpose({
                     'vue-data-ui-no-transition': !transitionEnabled,
                 }"
                 :viewBox="`0 0 ${WIDTH} ${HEIGHT}`"
-                :style="`max-width:100%; overflow: visible; background:transparent;color:${FINAL_CONFIG.style.chart.color};`"
+                :style="`max-width:100%; overflow: visible; background:transparent;color:${cfgChart.color};`"
                 :aria-describedby="`chart-instructions-${uid}`"
                 tabindex="0"
                 @focus="onSvgFocus"
@@ -2019,9 +1986,9 @@ defineExpose({
                 </foreignObject>
 
                 <!-- GRID -->
-                <g v-if="FINAL_CONFIG.style.chart.grid.show">
+                <g v-if="cfgGrid.show">
                     <!-- H GRID -->
-                    <g v-if="FINAL_CONFIG.style.chart.grid.horizontalGrid.show">
+                    <g v-if="cfgGrid.horizontalGrid.show">
                         <line
                             data-cy="grid-horizontal"
                             v-for="l in yLines"
@@ -2029,23 +1996,16 @@ defineExpose({
                             :x2="l.x2"
                             :y1="l.y"
                             :y2="l.y"
-                            :stroke="
-                                FINAL_CONFIG.style.chart.grid.horizontalGrid
-                                    .stroke
-                            "
-                            :stroke-width="
-                                FINAL_CONFIG.style.chart.grid.horizontalGrid
-                                    .strokeWidth
-                            "
+                            :stroke="cfgGrid.horizontalGrid.stroke"
+                            :stroke-width="cfgGrid.horizontalGrid.strokeWidth"
                             :stroke-dasharray="
-                                FINAL_CONFIG.style.chart.grid.horizontalGrid
-                                    .strokeDasharray
+                                cfgGrid.horizontalGrid.strokeDasharray
                             "
                             stroke-linecap="round"
                         />
                     </g>
                     <!-- V GRID -->
-                    <g v-if="FINAL_CONFIG.style.chart.grid.verticalGrid.show">
+                    <g v-if="cfgGrid.verticalGrid.show">
                         <line
                             data-cy="grid-vertical"
                             v-for="(l, i) in mutableDataset"
@@ -2059,17 +2019,10 @@ defineExpose({
                             "
                             :y1="drawingArea.top"
                             :y2="drawingArea.bottom"
-                            :stroke="
-                                FINAL_CONFIG.style.chart.grid.verticalGrid
-                                    .stroke
-                            "
-                            :stroke-width="
-                                FINAL_CONFIG.style.chart.grid.verticalGrid
-                                    .strokeWidth
-                            "
+                            :stroke="cfgGrid.verticalGrid.stroke"
+                            :stroke-width="cfgGrid.verticalGrid.strokeWidth"
                             :stroke-dasharray="
-                                FINAL_CONFIG.style.chart.grid.verticalGrid
-                                    .strokeDasharray
+                                cfgGrid.verticalGrid.strokeDasharray
                             "
                             stroke-linecap="round"
                         />
@@ -2081,10 +2034,8 @@ defineExpose({
                         :x2="drawingArea.left"
                         :y1="drawingArea.top"
                         :y2="drawingArea.bottom"
-                        :stroke="FINAL_CONFIG.style.chart.grid.stroke"
-                        :stroke-width="
-                            FINAL_CONFIG.style.chart.grid.strokeWidth
-                        "
+                        :stroke="cfgGrid.stroke"
+                        :stroke-width="cfgGrid.strokeWidth"
                         stroke-linecap="round"
                     />
                     <!-- X AXIS -->
@@ -2094,42 +2045,32 @@ defineExpose({
                         :x2="drawingArea.right"
                         :y1="drawingArea.bottom"
                         :y2="drawingArea.bottom"
-                        :stroke="FINAL_CONFIG.style.chart.grid.stroke"
-                        :stroke-width="
-                            FINAL_CONFIG.style.chart.grid.strokeWidth
-                        "
+                        :stroke="cfgGrid.stroke"
+                        :stroke-width="cfgGrid.strokeWidth"
                         stroke-linecap="round"
                     />
                 </g>
                 <!-- Y SCALE LABELS -->
-                <g
-                    v-if="FINAL_CONFIG.style.chart.labels.yAxisLabels.show"
-                    ref="scaleLabels"
-                >
+                <g v-if="cfgLabels.yAxisLabels.show" ref="scaleLabels">
                     <text
                         data-cy="axis-y-label"
                         :class="{ 'vue-data-ui-transition': transitionEnabled }"
                         v-for="(label, i) in yLines"
                         :key="`sl_${i}`"
-                        :transform="`translate(${label.x1 + FINAL_CONFIG.style.chart.labels.yAxisLabels.offsetX - 5}, ${label.y + FINAL_CONFIG.style.chart.labels.yAxisLabels.fontSize / 3})`"
-                        :fill="
-                            FINAL_CONFIG.style.chart.labels.yAxisLabels.color
-                        "
-                        :font-size="
-                            FINAL_CONFIG.style.chart.labels.yAxisLabels.fontSize
-                        "
+                        :transform="`translate(${label.x1 + cfgLabels.yAxisLabels.offsetX - 5}, ${label.y + cfgLabels.yAxisLabels.fontSize / 3})`"
+                        :fill="cfgLabels.yAxisLabels.color"
+                        :font-size="cfgLabels.yAxisLabels.fontSize"
                         text-anchor="end"
                     >
                         {{
                             applyDataLabel(
-                                FINAL_CONFIG.style.chart.labels.formatter,
+                                cfgLabels.formatter,
                                 label.value,
                                 dataLabel({
-                                    p: FINAL_CONFIG.style.chart.labels.prefix,
+                                    p: cfgLabels.prefix,
                                     v: label.value,
-                                    s: FINAL_CONFIG.style.chart.labels.suffix,
-                                    r: FINAL_CONFIG.style.chart.labels
-                                        .yAxisLabels.rounding,
+                                    s: cfgLabels.suffix,
+                                    r: cfgLabels.yAxisLabels.rounding,
                                 }),
                                 { datapoint: label, seriesIndex: i },
                             )
@@ -2138,31 +2079,20 @@ defineExpose({
                 </g>
 
                 <!-- "TIME" LABELS -->
-                <g
-                    v-if="FINAL_CONFIG.style.chart.labels.xAxisLabels.show"
-                    ref="timeLabelsEls"
-                >
+                <g v-if="cfgLabels.xAxisLabels.show" ref="timeLabelsEls">
                     <g v-for="(label, i) in seriesNames">
                         <!-- SINGLE LINE -->
                         <text
                             class="vue-ui-strip-plot-category-name"
                             v-if="!String(label).includes('\n')"
                             data-cy="axis-x-label"
-                            :transform="`translate(${drawingArea.left + (i + 1) * drawingArea.stripWidth - drawingArea.stripWidth / 2}, ${drawingArea.bottom + FINAL_CONFIG.style.chart.labels.xAxisLabels.fontSize * 2 + FINAL_CONFIG.style.chart.labels.xAxisLabels.offsetY}), rotate(${FINAL_CONFIG.style.chart.labels.xAxisLabels.rotation})`"
-                            :font-size="
-                                FINAL_CONFIG.style.chart.labels.xAxisLabels
-                                    .fontSize
-                            "
-                            :fill="
-                                FINAL_CONFIG.style.chart.labels.xAxisLabels
-                                    .color
-                            "
+                            :transform="`translate(${drawingArea.left + (i + 1) * drawingArea.stripWidth - drawingArea.stripWidth / 2}, ${drawingArea.bottom + cfgLabels.xAxisLabels.fontSize * 2 + cfgLabels.xAxisLabels.offsetY}), rotate(${cfgLabels.xAxisLabels.rotation})`"
+                            :font-size="cfgLabels.xAxisLabels.fontSize"
+                            :fill="cfgLabels.xAxisLabels.color"
                             :text-anchor="
-                                FINAL_CONFIG.style.chart.labels.xAxisLabels
-                                    .rotation > 0
+                                cfgLabels.xAxisLabels.rotation > 0
                                     ? 'start'
-                                    : FINAL_CONFIG.style.chart.labels
-                                            .xAxisLabels.rotation < 0
+                                    : cfgLabels.xAxisLabels.rotation < 0
                                       ? 'end'
                                       : 'middle'
                             "
@@ -2175,32 +2105,21 @@ defineExpose({
                             v-else
                             class="vue-ui-strip-plot-category-name"
                             data-cy="axis-x-label"
-                            :transform="`translate(${drawingArea.left + (i + 1) * drawingArea.stripWidth - drawingArea.stripWidth / 2}, ${drawingArea.bottom + FINAL_CONFIG.style.chart.labels.xAxisLabels.fontSize * 2 + FINAL_CONFIG.style.chart.labels.xAxisLabels.offsetY}), rotate(${FINAL_CONFIG.style.chart.labels.xAxisLabels.rotation})`"
-                            :font-size="
-                                FINAL_CONFIG.style.chart.labels.xAxisLabels
-                                    .fontSize
-                            "
-                            :fill="
-                                FINAL_CONFIG.style.chart.labels.xAxisLabels
-                                    .color
-                            "
+                            :transform="`translate(${drawingArea.left + (i + 1) * drawingArea.stripWidth - drawingArea.stripWidth / 2}, ${drawingArea.bottom + cfgLabels.xAxisLabels.fontSize * 2 + cfgLabels.xAxisLabels.offsetY}), rotate(${cfgLabels.xAxisLabels.rotation})`"
+                            :font-size="cfgLabels.xAxisLabels.fontSize"
+                            :fill="cfgLabels.xAxisLabels.color"
                             :text-anchor="
-                                FINAL_CONFIG.style.chart.labels.xAxisLabels
-                                    .rotation > 0
+                                cfgLabels.xAxisLabels.rotation > 0
                                     ? 'start'
-                                    : FINAL_CONFIG.style.chart.labels
-                                            .xAxisLabels.rotation < 0
+                                    : cfgLabels.xAxisLabels.rotation < 0
                                       ? 'end'
                                       : 'middle'
                             "
                             v-html="
                                 createTSpansFromLineBreaksOnX({
                                     content: wrapText(String(label)),
-                                    fontSize:
-                                        FINAL_CONFIG.style.chart.labels
-                                            .xAxisLabels.fontSize,
-                                    fill: FINAL_CONFIG.style.chart.labels
-                                        .xAxisLabels.color,
+                                    fontSize: cfgLabels.xAxisLabels.fontSize,
+                                    fill: cfgLabels.xAxisLabels.color,
                                     x: 0,
                                     y: 0,
                                 })
@@ -2213,29 +2132,26 @@ defineExpose({
                 <text
                     ref="yAxisLabel"
                     data-cy="axis-y-name"
-                    v-if="FINAL_CONFIG.style.chart.labels.axis.yLabel"
-                    :fill="FINAL_CONFIG.style.chart.labels.axis.color"
-                    :font-size="FINAL_CONFIG.style.chart.labels.axis.fontSize"
-                    :transform="`translate(${FINAL_CONFIG.style.chart.labels.axis.fontSize}, ${drawingArea.top + drawingArea.height / 2}) rotate(-90)`"
+                    v-if="cfgLabels.axis.yLabel"
+                    :fill="cfgLabels.axis.color"
+                    :font-size="cfgLabels.axis.fontSize"
+                    :transform="`translate(${cfgLabels.axis.fontSize}, ${drawingArea.top + drawingArea.height / 2}) rotate(-90)`"
                     text-anchor="middle"
                 >
-                    {{ FINAL_CONFIG.style.chart.labels.axis.yLabel }}
+                    {{ cfgLabels.axis.yLabel }}
                 </text>
                 <!-- X AXIS NAME -->
                 <text
                     ref="xAxisLabel"
                     data-cy="axis-x-name"
-                    v-if="FINAL_CONFIG.style.chart.labels.axis.xLabel"
-                    :fill="FINAL_CONFIG.style.chart.labels.axis.color"
-                    :font-size="FINAL_CONFIG.style.chart.labels.axis.fontSize"
+                    v-if="cfgLabels.axis.xLabel"
+                    :fill="cfgLabels.axis.color"
+                    :font-size="cfgLabels.axis.fontSize"
                     :x="drawingArea.left + drawingArea.width / 2"
-                    :y="
-                        HEIGHT -
-                        FINAL_CONFIG.style.chart.labels.axis.fontSize / 3
-                    "
+                    :y="HEIGHT - cfgLabels.axis.fontSize / 3"
                     text-anchor="middle"
                 >
-                    {{ FINAL_CONFIG.style.chart.labels.axis.xLabel }}
+                    {{ cfgLabels.axis.xLabel }}
                 </text>
 
                 <template v-if="selectedDatapoint">
@@ -2286,8 +2202,7 @@ defineExpose({
                                 '10%',
                                 lightenHexColor(
                                     ds.color,
-                                    FINAL_CONFIG.style.chart.plots.gradient
-                                        .intensity / 100,
+                                    cfgChart.plots.gradient.intensity / 100,
                                 ),
                                 1,
                             ],
@@ -2305,13 +2220,9 @@ defineExpose({
                         :d="violin.path"
                         :fill="violin.fill"
                         :stroke="violin.color"
-                        :fill-opacity="FINAL_CONFIG.style.chart.violin.opacity"
-                        :stroke-opacity="
-                            FINAL_CONFIG.style.chart.violin.strokeOpacity
-                        "
-                        :stroke-width="
-                            FINAL_CONFIG.style.chart.violin.strokeWidth
-                        "
+                        :fill-opacity="cfgViolin.opacity"
+                        :stroke-opacity="cfgViolin.strokeOpacity"
+                        :stroke-width="cfgViolin.strokeWidth"
                         :style="{
                             pointerEvents: isViolinBoxPlot ? 'auto' : 'none',
                             cursor:
@@ -2339,12 +2250,8 @@ defineExpose({
                         :y1="connector.y1"
                         :y2="connector.y2"
                         :stroke="violin.color"
-                        :stroke-opacity="
-                            FINAL_CONFIG.style.chart.violin.strokeOpacity
-                        "
-                        :stroke-width="
-                            FINAL_CONFIG.style.chart.violin.strokeWidth
-                        "
+                        :stroke-opacity="cfgViolin.strokeOpacity"
+                        :stroke-width="cfgViolin.strokeWidth"
                         stroke-linecap="round"
                         style="pointer-events: none"
                     />
@@ -2371,12 +2278,7 @@ defineExpose({
                         :y1="boxPlot.upperY"
                         :y2="boxPlot.lowerY"
                         :stroke="darkenHexColor(boxPlot.boxPlotColor, 0.2)"
-                        :stroke-width="
-                            Math.max(
-                                1,
-                                FINAL_CONFIG.style.chart.violin.strokeWidth,
-                            )
-                        "
+                        :stroke-width="Math.max(1, cfgViolin.strokeWidth)"
                         stroke-linecap="round"
                     />
                     <rect
@@ -2388,12 +2290,7 @@ defineExpose({
                         "
                         :fill="boxPlot.boxPlotColor"
                         :stroke="darkenHexColor(boxPlot.boxPlotColor, 0.2)"
-                        :stroke-width="
-                            Math.max(
-                                1,
-                                FINAL_CONFIG.style.chart.violin.strokeWidth,
-                            )
-                        "
+                        :stroke-width="Math.max(1, cfgViolin.strokeWidth)"
                         :rx="boxPlot.boxWidth / 20"
                     />
 
@@ -2405,14 +2302,10 @@ defineExpose({
                             (boxPlot.boxWidth / 3) *
                             Math.min(
                                 1,
-                                FINAL_CONFIG.style.chart.violin.boxPlot
-                                    .medianCircleRadiusRatio,
+                                cfgViolin.boxPlot.medianCircleRadiusRatio,
                             )
                         "
-                        :fill="
-                            FINAL_CONFIG.style.chart.violin.boxPlot
-                                .medianCircleFill
-                        "
+                        :fill="cfgViolin.boxPlot.medianCircleFill"
                         :stroke="darkenHexColor(boxPlot.boxPlotColor, 0.2)"
                     />
                 </g>
@@ -2433,17 +2326,15 @@ defineExpose({
                                     ? adjustedPlotRadius * 1.5
                                     : adjustedPlotRadius
                             "
-                            :shape="FINAL_CONFIG.style.chart.plots.shape"
-                            :stroke="FINAL_CONFIG.style.chart.plots.stroke"
-                            :strokeWidth="
-                                FINAL_CONFIG.style.chart.plots.strokeWidth
-                            "
+                            :shape="cfgChart.plots.shape"
+                            :stroke="cfgChart.plots.stroke"
+                            :strokeWidth="cfgChart.plots.strokeWidth"
                             :color="
-                                FINAL_CONFIG.style.chart.plots.gradient.show
+                                cfgChart.plots.gradient.show
                                     ? `url(#${ds.id})`
                                     : ds.color
                             "
-                            :style="`transition: all 0.2s ease-in-out; opacity:${selectedDatapoint ? (selectedDatapoint.id === plot.id ? 1 : 0.2) : FINAL_CONFIG.style.chart.plots.opacity};${animationActive ? `transition-delay:${i * 50}ms` : ''}`"
+                            :style="`transition: all 0.2s ease-in-out; opacity:${selectedDatapoint ? (selectedDatapoint.id === plot.id ? 1 : 0.2) : cfgChart.plots.opacity};${animationActive ? `transition-delay:${i * 50}ms` : ''}`"
                             :class="{
                                 'vue-ui-strip-plot-animated':
                                     FINAL_CONFIG.useCssAnimation &&
@@ -2483,8 +2374,7 @@ defineExpose({
                                 :x="plot.x"
                                 :y="
                                     plot.y +
-                                    FINAL_CONFIG.style.chart.labels
-                                        .bestPlotLabel.offsetY -
+                                    cfgLabels.bestPlotLabel.offsetY -
                                     adjustedPlotRadius *
                                         (selectedDatapoint &&
                                         selectedDatapoint.id === plot.id &&
@@ -2492,32 +2382,23 @@ defineExpose({
                                             ? 2
                                             : 1.5)
                                 "
-                                :font-size="
-                                    FINAL_CONFIG.style.chart.labels
-                                        .bestPlotLabel.fontSize
-                                "
-                                :fill="
-                                    FINAL_CONFIG.style.chart.labels
-                                        .bestPlotLabel.color
-                                "
+                                :font-size="cfgLabels.bestPlotLabel.fontSize"
+                                :fill="cfgLabels.bestPlotLabel.color"
                                 text-anchor="middle"
                                 :style="`opacity:${FINAL_CONFIG.useCssAnimation ? (animationActive ? 0 : 1) : 1};transition:opacity 0.2s ease-in;`"
                             >
                                 {{ plot.name }}
                                 {{
-                                    FINAL_CONFIG.style.chart.labels
-                                        .bestPlotLabel.showValue
+                                    cfgLabels.bestPlotLabel.showValue
                                         ? applyDataLabel(
-                                              FINAL_CONFIG.style.chart.labels
-                                                  .formatter,
+                                              cfgLabels.formatter,
                                               plot.value,
                                               dataLabel({
-                                                  p: `(${FINAL_CONFIG.style.chart.labels.prefix}`,
+                                                  p: `(${cfgLabels.prefix}`,
                                                   v: plot.value,
-                                                  s: `${FINAL_CONFIG.style.chart.labels.suffix})`,
-                                                  r: FINAL_CONFIG.style.chart
-                                                      .labels.bestPlotLabel
-                                                      .rounding,
+                                                  s: `${cfgLabels.suffix})`,
+                                                  r: cfgChart.labels
+                                                      .bestPlotLabel.rounding,
                                               }),
                                               {
                                                   datapoint: plot,
@@ -2576,32 +2457,26 @@ defineExpose({
         </div>
 
         <Tooltip
-            :teleportTo="FINAL_CONFIG.style.chart.tooltip.teleportTo"
+            :teleportTo="cfgTooltip.teleportTo"
             :show="mutableConfig.showTooltip && isTooltip"
-            :backgroundColor="FINAL_CONFIG.style.chart.tooltip.backgroundColor"
-            :color="FINAL_CONFIG.style.chart.tooltip.color"
-            :borderRadius="FINAL_CONFIG.style.chart.tooltip.borderRadius"
-            :borderColor="FINAL_CONFIG.style.chart.tooltip.borderColor"
-            :borderWidth="FINAL_CONFIG.style.chart.tooltip.borderWidth"
-            :fontSize="FINAL_CONFIG.style.chart.tooltip.fontSize"
-            :backgroundOpacity="
-                FINAL_CONFIG.style.chart.tooltip.backgroundOpacity
-            "
-            :position="FINAL_CONFIG.style.chart.tooltip.position"
-            :offsetX="FINAL_CONFIG.style.chart.tooltip.offsetX"
-            :offsetY="FINAL_CONFIG.style.chart.tooltip.offsetY"
+            :backgroundColor="cfgTooltip.backgroundColor"
+            :color="cfgTooltip.color"
+            :borderRadius="cfgTooltip.borderRadius"
+            :borderColor="cfgTooltip.borderColor"
+            :borderWidth="cfgTooltip.borderWidth"
+            :fontSize="cfgTooltip.fontSize"
+            :backgroundOpacity="cfgTooltip.backgroundOpacity"
+            :position="cfgTooltip.position"
+            :offsetX="cfgTooltip.offsetX"
+            :offsetY="cfgTooltip.offsetY"
             :parent="stripPlotChart"
             :content="tooltipContent"
             :isFullscreen="isFullscreen"
-            :isCustom="
-                isFunction(FINAL_CONFIG.style.chart.tooltip.customFormat)
-            "
-            :smooth="FINAL_CONFIG.style.chart.tooltip.smooth"
-            :backdropFilter="FINAL_CONFIG.style.chart.tooltip.backdropFilter"
-            :smoothForce="FINAL_CONFIG.style.chart.tooltip.smoothForce"
-            :smoothSnapThreshold="
-                FINAL_CONFIG.style.chart.tooltip.smoothSnapThreshold
-            "
+            :isCustom="isFunction(cfgTooltip.customFormat)"
+            :smooth="cfgTooltip.smooth"
+            :backdropFilter="cfgTooltip.backdropFilter"
+            :smoothForce="cfgTooltip.smoothForce"
+            :smoothSnapThreshold="cfgTooltip.smoothSnapThreshold"
             :isA11yMode="tooltipTriggerMode === 'keyboard'"
             :a11yPosition="tooltipA11yPosition"
         >
@@ -2623,7 +2498,7 @@ defineExpose({
         </Tooltip>
 
         <component
-            v-if="isDataset && FINAL_CONFIG.userOptions.buttons.table"
+            v-if="isDataset && cfgUserOptions.buttons.table"
             :is="tableComponent.component"
             v-bind="tableComponent.props"
             ref="tableUnit"
@@ -2636,7 +2511,7 @@ defineExpose({
                 <button
                     tabindex="0"
                     class="vue-ui-user-options-button"
-                    @click="generateCsv(FINAL_CONFIG.userOptions.callbacks.csv)"
+                    @click="generateCsv(cfgUserOptions.callbacks.csv)"
                     :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }"
                 >
                     <BaseIcon
