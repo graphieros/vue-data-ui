@@ -173,6 +173,16 @@ function prepareConfig() {
 }
 
 const FINAL_CONFIG = ref(prepareConfig());
+const cfgUserOptions = computed(() => FINAL_CONFIG.value.userOptions);
+const cfgAreas = computed(() => FINAL_CONFIG.value.style.chart.areas);
+const cfgSelector = computed(() => FINAL_CONFIG.value.style.chart.selector);
+const cfgXAxisLabels = computed(
+    () => FINAL_CONFIG.value.style.chart.xAxis.labels,
+);
+const cfgYAxisLabels = computed(
+    () => FINAL_CONFIG.value.style.chart.yAxis.labels,
+);
+const cfgChart = computed(() => FINAL_CONFIG.value.style.chart);
 
 useHints({
     config: () => FINAL_CONFIG.value,
@@ -399,17 +409,14 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
 });
 
 const rowHeight = ref(
-    Math.min(
-        FINAL_CONFIG.value.style.chart.areas.height,
-        FINAL_CONFIG.value.style.chart.areas.rowHeight,
-    ),
+    Math.min(cfgAreas.value.height, cfgAreas.value.rowHeight),
 );
 
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } =
     useUserOptionState({ config: FINAL_CONFIG.value });
 
 const { svgRef } = useChartAccessibility({
-    config: FINAL_CONFIG.value.style.chart.title,
+    config: cfgChart.value.title,
 });
 
 const debug = computed(() => FINAL_CONFIG.value.debug);
@@ -463,10 +470,7 @@ function prepareChart() {
 
     rowCount.value = ds.length;
 
-    rowHeight.value = Math.min(
-        FINAL_CONFIG.value.style.chart.areas.height,
-        FINAL_CONFIG.value.style.chart.areas.rowHeight,
-    );
+    rowHeight.value = Math.min(cfgAreas.value.height, cfgAreas.value.rowHeight);
 
     // v3
     if (!objectIsEmpty(props.dataset)) {
@@ -477,15 +481,11 @@ function prepareChart() {
         const handleResize = throttle(() => {
             const { width, height } = useResponsive({
                 chart: ridgelineChart.value,
-                title: FINAL_CONFIG.value.style.chart.title.text
-                    ? chartTitle.value
-                    : null,
-                legend: FINAL_CONFIG.value.style.chart.legend.show
-                    ? chartLegend.value
-                    : null,
+                title: cfgChart.value.title.text ? chartTitle.value : null,
+                legend: cfgChart.value.legend.show ? chartLegend.value : null,
                 source: source.value,
                 noTitle: noTitle.value,
-                padding: FINAL_CONFIG.value.style.chart.padding,
+                padding: cfgChart.value.padding,
             });
 
             requestAnimationFrame(() => {
@@ -518,15 +518,12 @@ onBeforeUnmount(() => {
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `vue-ui-ridgeline_${uid.value}`,
-    fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-ridgeline',
+    fileName: cfgChart.value.title.text || 'vue-ui-ridgeline',
     options: FINAL_CONFIG.value.userOptions.print,
 });
 
 const hasOptionsNoTitle = computed(() => {
-    return (
-        FINAL_CONFIG.value.userOptions.show &&
-        !FINAL_CONFIG.value.style.chart.title.text
-    );
+    return FINAL_CONFIG.value.userOptions.show && !cfgChart.value.title.text;
 });
 
 const customPalette = computed(() => {
@@ -581,8 +578,8 @@ watch(
         userOptionsVisible.value =
             !FINAL_CONFIG.value.userOptions.showOnChartHover;
         rowHeight.value = Math.min(
-            FINAL_CONFIG.value.style.chart.areas.height,
-            FINAL_CONFIG.value.style.chart.areas.rowHeight,
+            cfgAreas.value.height,
+            cfgAreas.value.rowHeight,
         );
         mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
         titleStep.value += 1;
@@ -592,10 +589,7 @@ watch(
 );
 
 const overlapRatio = computed(() => {
-    return (
-        FINAL_CONFIG.value.style.chart.areas.height /
-        FINAL_CONFIG.value.style.chart.areas.rowHeight
-    );
+    return cfgAreas.value.height / cfgAreas.value.rowHeight;
 });
 
 function toggleLegend() {
@@ -655,10 +649,7 @@ const formattedDataset = computed(() => {
     if (!isDataset.value) return [];
     return (FINAL_DATASET.value || []).map((ds) => ({
         ...ds,
-        labelLen: measureSvgTextWidth(
-            ds.name,
-            FINAL_CONFIG.value.style.chart.yAxis.labels.fontSize,
-        ),
+        labelLen: measureSvgTextWidth(ds.name, cfgYAxisLabels.value.fontSize),
         uid: createUid(),
         datapoints: ds.datapoints.map((dp, j) => {
             const color = dp.color
@@ -674,15 +665,15 @@ const formattedDataset = computed(() => {
 
 const baseHeight = computed(() => {
     return (
-        FINAL_CONFIG.value.style.chart.padding.top +
+        cfgChart.value.padding.top +
         rowHeight.value * (FINAL_DATASET.value || []).length +
         rowHeight.value * overlapRatio.value +
-        FINAL_CONFIG.value.style.chart.padding.bottom
+        cfgChart.value.padding.bottom
     );
 });
 
 const svg = computed(() => {
-    const padding = FINAL_CONFIG.value.style.chart.padding;
+    const padding = cfgChart.value.padding;
     return {
         width: baseWidth.value,
         height: baseHeight.value,
@@ -719,8 +710,7 @@ const drawingArea = computed(() => {
         top: svg.value.padding.top,
         left: svg.value.padding.left,
         right: svg.value.width - svg.value.padding.right,
-        bottom:
-            svg.value.height - FINAL_CONFIG.value.style.chart.padding.bottom,
+        bottom: svg.value.height - cfgChart.value.padding.bottom,
         width:
             svg.value.width -
             (svg.value.padding.left + svg.value.padding.right),
@@ -743,12 +733,11 @@ watchEffect(() => {
 
     (async () => {
         const labels = await useTimeLabels({
-            values: FINAL_CONFIG.value.style.chart.xAxis.labels.values,
+            values: cfgXAxisLabels.value.values,
             maxDatapoints: maxDpLen.value,
-            formatter:
-                FINAL_CONFIG.value.style.chart.xAxis.labels.datetimeFormatter,
+            formatter: cfgXAxisLabels.value.datetimeFormatter,
             start: 0,
-            end: FINAL_CONFIG.value.style.chart.xAxis.labels.values.length,
+            end: cfgXAxisLabels.value.values.length,
         });
 
         if (requestId === timeLabelsRequestId) {
@@ -765,7 +754,7 @@ const xAxisTrapsAndLabels = computed(() => {
         svg.value.padding.left +
         maxLabelLen +
         16 +
-        FINAL_CONFIG.value.style.chart.yAxis.labels.offsetX;
+        cfgYAxisLabels.value.offsetX;
     const slotSize = (drawingArea.value.width - startX) / maxDpLen.value;
 
     const arr = [];
@@ -775,7 +764,7 @@ const xAxisTrapsAndLabels = computed(() => {
             selectorX: startX + slotSize * i,
             x: startX + slotSize * i - slotSize / 2,
             y: drawingArea.value.top,
-            label: FINAL_CONFIG.value.style.chart.xAxis.labels.values[i]
+            label: cfgXAxisLabels.value.values[i]
                 ? (timeLabels.value[i]?.text ?? '')
                 : '',
             index: i,
@@ -871,7 +860,7 @@ const drawableDataset = computed(() => {
         svg.value.padding.left +
         maxLabelLen +
         16 +
-        FINAL_CONFIG.value.style.chart.yAxis.labels.offsetX;
+        cfgYAxisLabels.value.offsetX;
     const slotSize = (drawingArea.value.width - startX) / maxDpLen.value;
     const absoluteMin = Math.abs(Math.min(minVal, 0));
     const absoluteMax = maxVal + absoluteMin;
@@ -890,14 +879,10 @@ const drawableDataset = computed(() => {
         return {
             ...ds,
             label: {
-                x:
-                    startX -
-                    FINAL_CONFIG.value.style.chart.yAxis.labels.fontSize,
+                x: startX - cfgYAxisLabels.value.fontSize,
                 y:
-                    (FINAL_CONFIG.value.style.chart.yAxis.labels.centered
-                        ? zero - rh / 2
-                        : zero) +
-                    FINAL_CONFIG.value.style.chart.yAxis.labels.offsetY,
+                    (cfgYAxisLabels.value.centered ? zero - rh / 2 : zero) +
+                    cfgYAxisLabels.value.offsetY,
             },
             datapoints: ds.datapoints
                 .map((dp) => {
@@ -939,7 +924,7 @@ const drawableDataset = computed(() => {
                     const straightPathRidge = `M ${createStraightPath(plots)}`;
 
                     const pathLength = getPathLengthFromCoordinates(
-                        FINAL_CONFIG.value.style.chart.areas.smooth
+                        cfgAreas.value.smooth
                             ? smoothPathRidge
                             : straightPathRidge,
                     );
@@ -991,11 +976,11 @@ const legendSet = computed(() => {
 const legendConfig = computed(() => {
     return {
         cy: 'donut-div-legend',
-        backgroundColor: FINAL_CONFIG.value.style.chart.legend.backgroundColor,
-        color: FINAL_CONFIG.value.style.chart.legend.color,
-        fontSize: FINAL_CONFIG.value.style.chart.legend.fontSize,
+        backgroundColor: cfgChart.value.legend.backgroundColor,
+        color: cfgChart.value.legend.color,
+        fontSize: cfgChart.value.legend.fontSize,
         paddingBottom: 12,
-        fontWeight: FINAL_CONFIG.value.style.chart.legend.bold ? 'bold' : '',
+        fontWeight: cfgChart.value.legend.bold ? 'bold' : '',
     };
 });
 
@@ -1011,7 +996,7 @@ const xyDataset = ref([]);
 function createXyDatasetForDialog(ds) {
     emit('selectDatapoint', ds);
 
-    if (!FINAL_CONFIG.value.style.chart.dialog.show) return;
+    if (!cfgChart.value.dialog.show) return;
 
     xyDataset.value = ds.datapoints.map((dp) => {
         return {
@@ -1019,7 +1004,7 @@ function createXyDatasetForDialog(ds) {
             color: dp.color,
             type: 'line',
             useArea: true,
-            smooth: FINAL_CONFIG.value.style.chart.areas.smooth,
+            smooth: cfgAreas.value.smooth,
             series: dp.values,
         };
     });
@@ -1027,48 +1012,41 @@ function createXyDatasetForDialog(ds) {
     selectedDatapoint.value = ds;
 
     xyConfig.value = deepEmptyObjectToNull({
-        ...FINAL_CONFIG.value.style.chart.dialog.xyChart,
+        ...cfgChart.value.dialog.xyChart,
         responsive: true, // Overriding
         chart: {
-            ...FINAL_CONFIG.value.style.chart.dialog.xyChart.chart,
+            ...cfgChart.value.dialog.xyChart.chart,
             grid: {
-                ...FINAL_CONFIG.value.style.chart.dialog.xyChart.chart.grid,
+                ...cfgChart.value.dialog.xyChart.chart.grid,
                 labels: {
-                    ...FINAL_CONFIG.value.style.chart.dialog.xyChart.chart.grid
-                        .labels,
+                    ...cfgChart.value.dialog.xyChart.chart.grid.labels,
                     xAxisLabels: {
-                        ...FINAL_CONFIG.value.style.chart.dialog.xyChart.chart
-                            .grid.labels.xAxisLabels,
-                        values: FINAL_CONFIG.value.style.chart.xAxis.labels
-                            .values, // Overriding
+                        ...cfgChart.value.dialog.xyChart.chart.grid.labels
+                            .xAxisLabels,
+                        values: cfgXAxisLabels.value.values, // Overriding
                         autoRotate: {
                             enable: true,
-                            angle: FINAL_CONFIG.value.style.chart.dialog.xyChart
-                                .chart.grid.labels.xAxisLabels.autoRotate.angle,
+                            angle: cfgChart.value.dialog.xyChart.chart.grid
+                                .labels.xAxisLabels.autoRotate.angle,
                         }, // overriding
                         datetimeFormatter:
-                            FINAL_CONFIG.value.style.chart.xAxis.labels
-                                .datetimeFormatter, // Overriding
+                            cfgXAxisLabels.value.datetimeFormatter, // Overriding
                     },
                 },
             },
             tooltip: {
-                ...FINAL_CONFIG.value.style.chart.dialog.xyChart.chart.tooltip,
-                showTimeLabel:
-                    FINAL_CONFIG.value.style.chart.xAxis.labels.values.length >
-                    0, // Overriding
+                ...cfgChart.value.dialog.xyChart.chart.tooltip,
+                showTimeLabel: cfgXAxisLabels.value.values.length > 0, // Overriding
             },
             userOptions: {
-                ...FINAL_CONFIG.value.style.chart.dialog.xyChart.chart
-                    .userOptions,
+                ...cfgChart.value.dialog.xyChart.chart.userOptions,
                 buttons: {
-                    ...FINAL_CONFIG.value.style.chart.dialog.xyChart.chart
-                        .userOptions.buttons,
+                    ...cfgChart.value.dialog.xyChart.chart.userOptions.buttons,
                     altCopy: FINAL_CONFIG.value.userOptions.buttons.altCopy,
                 },
                 callbacks: {
-                    ...FINAL_CONFIG.value.style.chart.dialog.xyChart.chart
-                        .userOptions.callbacks,
+                    ...cfgChart.value.dialog.xyChart.chart.userOptions
+                        .callbacks,
                     altCopy: () => {},
                 },
                 useCursorPointer:
@@ -1166,17 +1144,15 @@ function generateCsv(callback = null) {
             }),
         ];
         const tableXls = [
-            [FINAL_CONFIG.value.style.chart.title.text],
-            [FINAL_CONFIG.value.style.chart.title.subtitle.text],
+            [cfgChart.value.title.text],
+            [cfgChart.value.title.subtitle.text],
         ].concat(labels);
         const csvContent = createCsvContent(tableXls);
 
         if (!callback) {
             downloadCsv({
                 csvContent,
-                title:
-                    FINAL_CONFIG.value.style.chart.title.text ||
-                    'vue-ui-ridgeline',
+                title: cfgChart.value.title.text || 'vue-ui-ridgeline',
             });
         } else {
             callback(csvContent);
@@ -1201,7 +1177,7 @@ async function getImage({ scale = 2 } = {}) {
     return {
         imageUri,
         base64,
-        title: FINAL_CONFIG.value.style.chart.title.text,
+        title: cfgChart.value.title.text,
         width,
         height,
         aspectRatio,
@@ -1228,7 +1204,7 @@ useTimeLabelCollision({
     width: WIDTH,
     height: HEIGHT,
     targetClass: '.vue-ui-ridgeline-x-axis-label',
-    angle: FINAL_CONFIG.value.style.chart.xAxis.labels.autoRotate.angle,
+    angle: cfgXAxisLabels.value.autoRotate.angle,
 });
 
 const tableComponent = computed(() => {
@@ -1237,7 +1213,7 @@ const tableComponent = computed(() => {
     const open = mutableConfig.value.showTable;
     return {
         component: useDialog ? BaseDraggableDialog : Accordion,
-        title: `${FINAL_CONFIG.value.style.chart.title.text}${FINAL_CONFIG.value.style.chart.title.subtitle.text ? `: ${FINAL_CONFIG.value.style.chart.title.subtitle.text}` : ''}`,
+        title: `${cfgChart.value.title.text}${cfgChart.value.title.subtitle.text ? `: ${cfgChart.value.title.subtitle.text}` : ''}`,
         props: useDialog
             ? {
                   backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
@@ -1255,14 +1231,12 @@ const tableComponent = computed(() => {
                       open,
                       maxHeight: 10000,
                       body: {
-                          backgroundColor:
-                              FINAL_CONFIG.value.style.chart.backgroundColor,
-                          color: FINAL_CONFIG.value.style.chart.color,
+                          backgroundColor: cfgChart.value.backgroundColor,
+                          color: cfgChart.value.color,
                       },
                       head: {
-                          backgroundColor:
-                              FINAL_CONFIG.value.style.chart.backgroundColor,
-                          color: FINAL_CONFIG.value.style.chart.color,
+                          backgroundColor: cfgChart.value.backgroundColor,
+                          color: cfgChart.value.color,
                       },
                   },
               },
@@ -1290,12 +1264,12 @@ function closeTable() {
     }
 }
 
-const svgBg = computed(() => FINAL_CONFIG.value.style.chart.backgroundColor);
+const svgBg = computed(() => cfgChart.value.backgroundColor);
 const svgLegend = computed(() => ({
-    ...FINAL_CONFIG.value.style.chart.legend,
+    ...cfgChart.value.legend,
     position: 'bottom',
 }));
-const svgTitle = computed(() => FINAL_CONFIG.value.style.chart.title);
+const svgTitle = computed(() => cfgChart.value.title);
 
 const { isCallbackImaging, isCallbackSvg, generateSvg, onGenerateImage } =
     useChartExport({
@@ -1486,7 +1460,7 @@ defineExpose({
             fontFamily: FINAL_CONFIG.style.fontFamily,
             width: '100%',
             textAlign: 'center',
-            background: FINAL_CONFIG.style.chart.backgroundColor,
+            background: cfgChart.backgroundColor,
             height: FINAL_CONFIG.responsive ? '100%' : undefined,
         }"
         @mouseenter="() => setUserOptionsVisibility(true)"
@@ -1506,9 +1480,9 @@ defineExpose({
         />
 
         <PenAndPaper
-            v-if="FINAL_CONFIG.userOptions.buttons.annotator && svgRef"
-            :color="FINAL_CONFIG.style.chart.color"
-            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
+            v-if="cfgUserOptions.buttons.annotator && svgRef"
+            :color="cfgChart.color"
+            :backgroundColor="cfgChart.backgroundColor"
             :active="isAnnotator"
             :svgRef="svgRef"
             :isCursorPointer="isCursorPointer"
@@ -1547,7 +1521,7 @@ defineExpose({
         <!-- TITLE -->
         <div
             ref="chartTitle"
-            v-if="FINAL_CONFIG.style.chart.title.text"
+            v-if="cfgChart.title.text"
             :style="`width:100%;background:transparent;padding-bottom:24px`"
         >
             <Title
@@ -1555,11 +1529,11 @@ defineExpose({
                 :config="{
                     title: {
                         cy: 'ridgeline-div-title',
-                        ...FINAL_CONFIG.style.chart.title,
+                        ...cfgChart.title,
                     },
                     subtitle: {
                         cy: 'ridgeline-div-subtitle',
-                        ...FINAL_CONFIG.style.chart.title.subtitle,
+                        ...cfgChart.title.subtitle,
                     },
                 }"
             />
@@ -1570,32 +1544,32 @@ defineExpose({
             ref="userOptionsRef"
             :key="`user_option_${step}`"
             v-if="
-                FINAL_CONFIG.userOptions.show &&
+                cfgUserOptions.show &&
                 isDataset &&
                 (keepUserOptionState ? true : userOptionsVisible)
             "
-            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
-            :color="FINAL_CONFIG.style.chart.color"
+            :backgroundColor="cfgChart.backgroundColor"
+            :color="cfgChart.color"
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uid"
             :hasTooltip="false"
-            :callbacks="FINAL_CONFIG.userOptions.callbacks"
-            :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
-            :hasImg="FINAL_CONFIG.userOptions.buttons.img"
-            :hasSvg="FINAL_CONFIG.userOptions.buttons.svg"
-            :hasXls="FINAL_CONFIG.userOptions.buttons.csv"
-            :hasTable="FINAL_CONFIG.userOptions.buttons.table"
+            :callbacks="cfgUserOptions.callbacks"
+            :hasPdf="cfgUserOptions.buttons.pdf"
+            :hasImg="cfgUserOptions.buttons.img"
+            :hasSvg="cfgUserOptions.buttons.svg"
+            :hasXls="cfgUserOptions.buttons.csv"
+            :hasTable="cfgUserOptions.buttons.table"
             :hasLabel="false"
-            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
-            :hasAltCopy="FINAL_CONFIG.userOptions.buttons.altCopy"
+            :hasFullscreen="cfgUserOptions.buttons.fullscreen"
+            :hasAltCopy="cfgUserOptions.buttons.altCopy"
             :isFullscreen="isFullscreen"
-            :printScale="FINAL_CONFIG.userOptions.print.scale"
+            :printScale="cfgUserOptions.print.scale"
             :chartElement="ridgelineChart"
-            :position="FINAL_CONFIG.userOptions.position"
+            :position="cfgUserOptions.position"
             :isTooltip="false"
-            :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
-            :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator"
+            :titles="{ ...cfgUserOptions.buttonTitles }"
+            :hasAnnotator="cfgUserOptions.buttons.annotator"
             :isAnnotation="isAnnotator"
             :tableDialog="FINAL_CONFIG.table.useDialog"
             :style="{
@@ -1679,7 +1653,7 @@ defineExpose({
                     'vue-data-ui-fulscreen--off': !isFullscreen,
                 }"
                 :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${drawingArea.fullHeight <= 0 ? 10 : drawingArea.fullHeight}`"
-                :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color};${FINAL_CONFIG.responsive ? `height: ${parentHeight}px; width: 100%;` : ''}`"
+                :style="`max-width:100%;overflow:visible;background:transparent;color:${cfgChart.color};${FINAL_CONFIG.responsive ? `height: ${parentHeight}px; width: 100%;` : ''}`"
                 tabindex="0"
                 @focus="onSvgFocus"
                 @blur="onSvgBlur"
@@ -1745,17 +1719,17 @@ defineExpose({
                             :fill="
                                 $slots.pattern
                                     ? `url(#pattern_${uid}_${dp.uid})`
-                                    : FINAL_CONFIG.style.chart.backgroundColor
+                                    : cfgChart.backgroundColor
                             "
                             stroke="none"
                             stroke-linecap="round"
                             :d="
-                                FINAL_CONFIG.style.chart.areas.smooth
+                                cfgAreas.smooth
                                     ? dp.smoothPath
                                     : dp.straightPath
                             "
                             :style="{
-                                opacity: FINAL_CONFIG.style.chart.areas.opacity,
+                                opacity: cfgAreas.opacity,
                             }"
                         />
 
@@ -1763,17 +1737,13 @@ defineExpose({
                         <path
                             fill="none"
                             :stroke="
-                                FINAL_CONFIG.style.chart.areas.stroke
-                                    .useSerieColor
+                                cfgAreas.stroke.useSerieColor
                                     ? dp.color
-                                    : FINAL_CONFIG.style.chart.areas.stroke
-                                          .color
+                                    : cfgAreas.stroke.color
                             "
-                            :stroke-width="
-                                FINAL_CONFIG.style.chart.areas.strokeWidth
-                            "
+                            :stroke-width="cfgAreas.strokeWidth"
                             :d="
-                                FINAL_CONFIG.style.chart.areas.smooth
+                                cfgAreas.smooth
                                     ? dp.smoothPathRidge
                                     : dp.straightPathRidge
                             "
@@ -1788,16 +1758,15 @@ defineExpose({
                         />
                         <path
                             :fill="
-                                !FINAL_CONFIG.style.chart.areas.useGradient
+                                !cfgAreas.useGradient
                                     ? dp.color
-                                    : FINAL_CONFIG.style.chart.areas
-                                            .useCommonColor
+                                    : cfgAreas.useCommonColor
                                       ? `url(#gradient-${dp.id}-${uid})`
                                       : `url(#gradient-single-${uid}-${dp.uid})`
                             "
                             stroke="none"
                             :d="
-                                FINAL_CONFIG.style.chart.areas.smooth
+                                cfgAreas.smooth
                                     ? dp.smoothPath
                                     : dp.straightPath
                             "
@@ -1813,29 +1782,23 @@ defineExpose({
 
                         <!-- ZERO LINE -->
                         <path
-                            v-if="FINAL_CONFIG.style.chart.zeroLine.show"
+                            v-if="cfgChart.zeroLine.show"
                             :stroke="
-                                FINAL_CONFIG.style.chart.zeroLine.useSerieColor
+                                cfgChart.zeroLine.useSerieColor
                                     ? dp.color
-                                    : FINAL_CONFIG.style.chart.zeroLine.stroke
+                                    : cfgChart.zeroLine.stroke
                             "
                             :stroke-dasharray="
-                                FINAL_CONFIG.style.chart.zeroLine
-                                    .strokeDasharray
+                                cfgChart.zeroLine.strokeDasharray
                             "
-                            :stroke-width="
-                                FINAL_CONFIG.style.chart.zeroLine.strokeWidth
-                            "
+                            :stroke-width="cfgChart.zeroLine.strokeWidth"
                             :d="dp.zeroPath"
                             stroke-linecap="round"
                         />
 
                         <!-- MAX POINT INDICATOR -->
                         <template
-                            v-if="
-                                FINAL_CONFIG.style.chart.areas.maxPoint.show &&
-                                dp.plots.length > 1
-                            "
+                            v-if="cfgAreas.maxPoint.show && dp.plots.length > 1"
                         >
                             <template v-for="plot in dp.plots">
                                 <line
@@ -1845,20 +1808,17 @@ defineExpose({
                                     :x2="plot.x"
                                     :y2="plot.zero"
                                     :stroke="
-                                        FINAL_CONFIG.style.chart.areas.maxPoint
+                                        cfgAreas.maxPoint
                                             .adaptStrokeToBackground
                                             ? adaptColorToBackground(dp.color)
-                                            : FINAL_CONFIG.style.chart.areas
-                                                  .maxPoint.stroke
+                                            : cfgAreas.maxPoint.stroke
                                     "
                                     :stroke-width="
-                                        FINAL_CONFIG.style.chart.areas.maxPoint
-                                            .strokeWidth
+                                        cfgAreas.maxPoint.strokeWidth
                                     "
                                     stroke-linecap="round"
                                     :stroke-dasharray="
-                                        FINAL_CONFIG.style.chart.areas.maxPoint
-                                            .strokeDasharray
+                                        cfgAreas.maxPoint.strokeDasharray
                                     "
                                 />
                             </template>
@@ -1869,22 +1829,13 @@ defineExpose({
                             <circle
                                 :cx="dp.plots[0].x"
                                 :cy="dp.plots[0].y"
-                                :stroke="
-                                    FINAL_CONFIG.style.chart.selector.dot.stroke
-                                "
-                                :stroke-width="
-                                    FINAL_CONFIG.style.chart.selector.dot
-                                        .strokeWidth
-                                "
-                                :r="
-                                    FINAL_CONFIG.style.chart.selector.dot.radius
-                                "
+                                :stroke="cfgSelector.dot.stroke"
+                                :stroke-width="cfgSelector.dot.strokeWidth"
+                                :r="cfgSelector.dot.radius"
                                 :fill="
-                                    FINAL_CONFIG.style.chart.selector.dot
-                                        .useDatapointColor
+                                    cfgSelector.dot.useDatapointColor
                                         ? dp.color
-                                        : FINAL_CONFIG.style.chart.selector.dot
-                                              .fill
+                                        : cfgSelector.dot.fill
                                 "
                                 :style="{
                                     pointerEvents: 'none',
@@ -1898,24 +1849,17 @@ defineExpose({
                         :x="ds.label.x"
                         :y="ds.label.y"
                         text-anchor="end"
-                        :font-size="
-                            FINAL_CONFIG.style.chart.yAxis.labels.fontSize
-                        "
-                        :font-weight="
-                            FINAL_CONFIG.style.chart.yAxis.labels.bold
-                                ? 'bold'
-                                : 'normal'
-                        "
-                        :fill="FINAL_CONFIG.style.chart.yAxis.labels.color"
+                        :font-size="cfgYAxisLabels.fontSize"
+                        :font-weight="cfgYAxisLabels.bold ? 'bold' : 'normal'"
+                        :fill="cfgYAxisLabels.color"
                         :style="{
                             cursor:
-                                FINAL_CONFIG.style.chart.dialog.show &&
-                                isCursorPointer
+                                cfgChart.dialog.show && isCursorPointer
                                     ? 'pointer'
                                     : 'default',
                         }"
                         :text-decoration="
-                            FINAL_CONFIG.style.chart.dialog.show &&
+                            cfgChart.dialog.show &&
                             (selectedYAxisLabelIndex === i ||
                                 (!!selectedDatapoint &&
                                     ds.uid === selectedDatapoint.uid) ||
@@ -1933,23 +1877,17 @@ defineExpose({
                 </g>
 
                 <!-- X AXIS LABELS -->
-                <g
-                    v-if="FINAL_CONFIG.style.chart.xAxis.labels.values.length"
-                    ref="timeLabelsEls"
-                >
+                <g v-if="cfgXAxisLabels.values.length" ref="timeLabelsEls">
                     <template v-for="(xLabel, i) in xAxisTrapsAndLabels">
                         <slot
                             name="time-label"
                             v-bind="{
                                 show:
                                     (xLabel &&
-                                        !FINAL_CONFIG.style.chart.xAxis.labels
-                                            .showOnlyFirstAndLast &&
-                                        !FINAL_CONFIG.style.chart.xAxis.labels
-                                            .showOnlyAtModulo) ||
+                                        !cfgXAxisLabels.showOnlyFirstAndLast &&
+                                        !cfgXAxisLabels.showOnlyAtModulo) ||
                                     (xLabel &&
-                                        FINAL_CONFIG.style.chart.xAxis.labels
-                                            .showOnlyFirstAndLast &&
+                                        cfgXAxisLabels.showOnlyFirstAndLast &&
                                         (i === 0 ||
                                             i ===
                                                 xAxisTrapsAndLabels.length -
@@ -1958,54 +1896,40 @@ defineExpose({
                                         selectedX &&
                                         selectedX.index === i) ||
                                     (xLabel &&
-                                        !FINAL_CONFIG.style.chart.xAxis.labels
-                                            .showOnlyFirstAndLast &&
-                                        FINAL_CONFIG.style.chart.xAxis.labels
-                                            .showOnlyAtModulo &&
+                                        !cfgXAxisLabels.showOnlyFirstAndLast &&
+                                        cfgXAxisLabels.showOnlyAtModulo &&
                                         i %
                                             Math.max(
                                                 1,
                                                 Math.floor(
                                                     Number(
-                                                        FINAL_CONFIG.style.chart
-                                                            .xAxis.labels
+                                                        cfgChart.xAxis.labels
                                                             .modulo,
                                                     ) || 1,
                                                 ),
                                             ) ===
                                             0),
-                                fontSize:
-                                    FINAL_CONFIG.style.chart.xAxis.labels
-                                        .fontSize,
+                                fontSize: cfgXAxisLabels.fontSize,
                                 content: xLabel.label,
                                 textAnchor:
-                                    FINAL_CONFIG.style.chart.xAxis.labels
-                                        .rotation > 0
+                                    cfgXAxisLabels.rotation > 0
                                         ? 'start'
-                                        : FINAL_CONFIG.style.chart.xAxis.labels
-                                                .rotation < 0
+                                        : cfgXAxisLabels.rotation < 0
                                           ? 'end'
                                           : 'middle',
-                                fill: FINAL_CONFIG.style.chart.xAxis.labels
-                                    .color,
-                                transform: `translate(${xLabel.selectorX}, ${drawingArea.top + xLabel.height + FINAL_CONFIG.style.chart.xAxis.labels.offsetY}), rotate(${FINAL_CONFIG.style.chart.xAxis.labels.rotation})`,
+                                fill: cfgXAxisLabels.color,
+                                transform: `translate(${xLabel.selectorX}, ${drawingArea.top + xLabel.height + cfgXAxisLabels.offsetY}), rotate(${cfgXAxisLabels.rotation})`,
                                 x: xLabel.selectorX,
-                                y:
-                                    drawingArea.bottom +
-                                    FINAL_CONFIG.style.chart.xAxis.labels
-                                        .offsetY,
+                                y: drawingArea.bottom + cfgXAxisLabels.offsetY,
                             }"
                         >
                             <g
                                 v-if="
                                     (xLabel &&
-                                        !FINAL_CONFIG.style.chart.xAxis.labels
-                                            .showOnlyFirstAndLast &&
-                                        !FINAL_CONFIG.style.chart.xAxis.labels
-                                            .showOnlyAtModulo) ||
+                                        !cfgXAxisLabels.showOnlyFirstAndLast &&
+                                        !cfgXAxisLabels.showOnlyAtModulo) ||
                                     (xLabel &&
-                                        FINAL_CONFIG.style.chart.xAxis.labels
-                                            .showOnlyFirstAndLast &&
+                                        cfgXAxisLabels.showOnlyFirstAndLast &&
                                         (i === 0 ||
                                             i ===
                                                 xAxisTrapsAndLabels.length -
@@ -2014,17 +1938,14 @@ defineExpose({
                                         selectedX &&
                                         selectedX.index === i) ||
                                     (xLabel &&
-                                        !FINAL_CONFIG.style.chart.xAxis.labels
-                                            .showOnlyFirstAndLast &&
-                                        FINAL_CONFIG.style.chart.xAxis.labels
-                                            .showOnlyAtModulo &&
+                                        !cfgXAxisLabels.showOnlyFirstAndLast &&
+                                        cfgXAxisLabels.showOnlyAtModulo &&
                                         i %
                                             Math.max(
                                                 1,
                                                 Math.floor(
                                                     Number(
-                                                        FINAL_CONFIG.style.chart
-                                                            .xAxis.labels
+                                                        cfgChart.xAxis.labels
                                                             .modulo,
                                                     ) || 1,
                                                 ),
@@ -2036,34 +1957,21 @@ defineExpose({
                                 <text
                                     class="vue-ui-ridgeline-x-axis-label"
                                     v-if="!String(xLabel.label).includes('\n')"
-                                    :font-size="
-                                        FINAL_CONFIG.style.chart.xAxis.labels
-                                            .fontSize
-                                    "
-                                    :fill="
-                                        FINAL_CONFIG.style.chart.xAxis.labels
-                                            .color
-                                    "
-                                    :stroke="
-                                        FINAL_CONFIG.style.chart.backgroundColor
-                                    "
+                                    :font-size="cfgXAxisLabels.fontSize"
+                                    :fill="cfgXAxisLabels.color"
+                                    :stroke="cfgChart.backgroundColor"
                                     stroke-width="3"
                                     stroke-linecap="round"
                                     stroke-linejoin="round"
                                     paint-order="stroke fill"
                                     :font-weight="
-                                        FINAL_CONFIG.style.chart.xAxis.labels
-                                            .bold
-                                            ? 'bold'
-                                            : 'normal'
+                                        cfgXAxisLabels.bold ? 'bold' : 'normal'
                                     "
-                                    :transform="`translate(${xLabel.selectorX}, ${drawingArea.bottom + FINAL_CONFIG.style.chart.xAxis.labels.offsetY}), rotate(${FINAL_CONFIG.style.chart.xAxis.labels.rotation})`"
+                                    :transform="`translate(${xLabel.selectorX}, ${drawingArea.bottom + cfgXAxisLabels.offsetY}), rotate(${cfgXAxisLabels.rotation})`"
                                     :text-anchor="
-                                        FINAL_CONFIG.style.chart.xAxis.labels
-                                            .rotation > 0
+                                        cfgXAxisLabels.rotation > 0
                                             ? 'start'
-                                            : FINAL_CONFIG.style.chart.xAxis
-                                                    .labels.rotation < 0
+                                            : cfgChart.xAxis.labels.rotation < 0
                                               ? 'end'
                                               : 'middle'
                                     "
@@ -2082,27 +1990,16 @@ defineExpose({
                                 <text
                                     class="vue-ui-ridgeline-x-axis-label"
                                     v-else
-                                    :font-size="
-                                        FINAL_CONFIG.style.chart.xAxis.labels
-                                            .fontSize
-                                    "
-                                    :fill="
-                                        FINAL_CONFIG.style.chart.xAxis.labels
-                                            .color
-                                    "
+                                    :font-size="cfgXAxisLabels.fontSize"
+                                    :fill="cfgXAxisLabels.color"
                                     :font-weight="
-                                        FINAL_CONFIG.style.chart.xAxis.labels
-                                            .bold
-                                            ? 'bold'
-                                            : 'normal'
+                                        cfgXAxisLabels.bold ? 'bold' : 'normal'
                                     "
-                                    :transform="`translate(${xLabel.selectorX}, ${drawingArea.bottom + FINAL_CONFIG.style.chart.xAxis.labels.offsetY}), rotate(${FINAL_CONFIG.style.chart.xAxis.labels.rotation})`"
+                                    :transform="`translate(${xLabel.selectorX}, ${drawingArea.bottom + cfgXAxisLabels.offsetY}), rotate(${cfgXAxisLabels.rotation})`"
                                     :text-anchor="
-                                        FINAL_CONFIG.style.chart.xAxis.labels
-                                            .rotation > 0
+                                        cfgXAxisLabels.rotation > 0
                                             ? 'start'
-                                            : FINAL_CONFIG.style.chart.xAxis
-                                                    .labels.rotation < 0
+                                            : cfgChart.xAxis.labels.rotation < 0
                                               ? 'end'
                                               : 'middle'
                                     "
@@ -2117,12 +2014,9 @@ defineExpose({
                                         createTSpansFromLineBreaksOnX({
                                             content: String(xLabel.label),
                                             fontSize:
-                                                FINAL_CONFIG.style.chart.xAxis
-                                                    .labels.fontSize,
-                                            fill: FINAL_CONFIG.style.chart.xAxis
-                                                .labels.color,
-                                            stroke: FINAL_CONFIG.style.chart
-                                                .backgroundColor,
+                                                cfgChart.xAxis.labels.fontSize,
+                                            fill: cfgChart.xAxis.labels.color,
+                                            stroke: cfgChart.backgroundColor,
                                             x: 0,
                                             y: 0,
                                         })
@@ -2150,32 +2044,20 @@ defineExpose({
 
                     <!-- SELECTOR -->
                     <line
-                        v-if="
-                            FINAL_CONFIG.style.chart.selector.show &&
-                            !!selectedX
-                        "
+                        v-if="cfgSelector.show && !!selectedX"
                         :x1="selectedX.selectorX"
                         :x2="selectedX.selectorX"
                         :y1="selectedX.y"
                         :y2="selectedX.y + selectedX.height - rowHeight / 2"
-                        :stroke="FINAL_CONFIG.style.chart.selector.stroke"
-                        :stroke-width="
-                            FINAL_CONFIG.style.chart.selector.strokeWidth
-                        "
-                        :stroke-dasharray="
-                            FINAL_CONFIG.style.chart.selector.strokeDasharray
-                        "
+                        :stroke="cfgSelector.stroke"
+                        :stroke-width="cfgSelector.strokeWidth"
+                        :stroke-dasharray="cfgSelector.strokeDasharray"
                         stroke-linecap="round"
                         :style="{ pointerEvents: 'none' }"
                     />
 
                     <!-- SELECTED X -->
-                    <template
-                        v-if="
-                            !!selectedX ||
-                            FINAL_CONFIG.style.chart.selector.labels.showLast
-                        "
-                    >
+                    <template v-if="!!selectedX || cfgSelector.labels.showLast">
                         <template v-for="ds in drawableDataset">
                             <template v-for="dp in ds.datapoints">
                                 <template v-for="(plot, k) in dp.plots">
@@ -2186,29 +2068,20 @@ defineExpose({
                                                 selectedX.index === k) ||
                                             (!selectedX &&
                                                 k === dp.plots.length - 1 &&
-                                                FINAL_CONFIG.style.chart
-                                                    .selector.labels.showLast)
+                                                cfgChart.selector.labels
+                                                    .showLast)
                                         "
                                         :cx="plot.x"
                                         :cy="plot.y"
-                                        :stroke="
-                                            FINAL_CONFIG.style.chart.selector
-                                                .dot.stroke
-                                        "
+                                        :stroke="cfgSelector.dot.stroke"
                                         :stroke-width="
-                                            FINAL_CONFIG.style.chart.selector
-                                                .dot.strokeWidth
+                                            cfgSelector.dot.strokeWidth
                                         "
-                                        :r="
-                                            FINAL_CONFIG.style.chart.selector
-                                                .dot.radius
-                                        "
+                                        :r="cfgSelector.dot.radius"
                                         :fill="
-                                            FINAL_CONFIG.style.chart.selector
-                                                .dot.useDatapointColor
+                                            cfgSelector.dot.useDatapointColor
                                                 ? dp.color
-                                                : FINAL_CONFIG.style.chart
-                                                      .selector.dot.fill
+                                                : cfgChart.selector.dot.fill
                                         "
                                         :style="{
                                             pointerEvents: 'none',
@@ -2221,15 +2094,14 @@ defineExpose({
                                                 selectedX.index === k) ||
                                             (!selectedX &&
                                                 k === dp.plots.length - 1 &&
-                                                FINAL_CONFIG.style.chart
-                                                    .selector.labels.showLast)
+                                                cfgChart.selector.labels
+                                                    .showLast)
                                         "
                                         :x="
                                             isTextOverflowingRight(
                                                 plot.x,
                                                 applyDataLabel(
-                                                    FINAL_CONFIG.style.chart
-                                                        .selector.labels
+                                                    cfgChart.selector.labels
                                                         .formatter,
                                                     plot.value,
                                                     dataLabel({
@@ -2245,26 +2117,21 @@ defineExpose({
                                                             .labels.rounding,
                                                     }),
                                                 ),
-                                                FINAL_CONFIG.style.chart
-                                                    .selector.labels.fontSize,
+                                                cfgChart.selector.labels
+                                                    .fontSize,
                                             )
                                                 ? plot.x -
-                                                  FINAL_CONFIG.style.chart
-                                                      .selector.labels
+                                                  cfgChart.selector.labels
                                                       .fontSize /
                                                       2
                                                 : plot.x +
-                                                  FINAL_CONFIG.style.chart
-                                                      .selector.labels
+                                                  cfgChart.selector.labels
                                                       .fontSize /
                                                       2
                                         "
                                         :y="plot.y"
                                         dominant-baseline="middle"
-                                        :stroke="
-                                            FINAL_CONFIG.style.chart
-                                                .backgroundColor
-                                        "
+                                        :stroke="cfgChart.backgroundColor"
                                         stroke-linecap="round"
                                         stroke-linejoin="round"
                                         stroke-width="3"
@@ -2273,8 +2140,7 @@ defineExpose({
                                             isTextOverflowingRight(
                                                 plot.x,
                                                 applyDataLabel(
-                                                    FINAL_CONFIG.style.chart
-                                                        .selector.labels
+                                                    cfgChart.selector.labels
                                                         .formatter,
                                                     plot.value,
                                                     dataLabel({
@@ -2290,37 +2156,30 @@ defineExpose({
                                                             .labels.rounding,
                                                     }),
                                                 ),
-                                                FINAL_CONFIG.style.chart
-                                                    .selector.labels.fontSize,
+                                                cfgChart.selector.labels
+                                                    .fontSize,
                                             )
                                                 ? 'end'
                                                 : 'start'
                                         "
-                                        :font-size="
-                                            FINAL_CONFIG.style.chart.selector
-                                                .labels.fontSize
-                                        "
-                                        :fill="
-                                            FINAL_CONFIG.style.chart.selector
-                                                .labels.color
-                                        "
+                                        :font-size="cfgSelector.labels.fontSize"
+                                        :fill="cfgSelector.labels.color"
                                         :style="{
                                             pointerEvents: 'none',
                                         }"
                                     >
                                         {{
                                             applyDataLabel(
-                                                FINAL_CONFIG.style.chart
-                                                    .selector.labels.formatter,
+                                                cfgChart.selector.labels
+                                                    .formatter,
                                                 plot.value,
                                                 dataLabel({
-                                                    p: FINAL_CONFIG.style.chart
-                                                        .xAxis.labels.prefix,
+                                                    p: cfgChart.xAxis.labels
+                                                        .prefix,
                                                     v: plot.value,
-                                                    s: FINAL_CONFIG.style.chart
-                                                        .xAxis.labels.suffix,
-                                                    r: FINAL_CONFIG.style.chart
-                                                        .selector.labels
+                                                    s: cfgChart.xAxis.labels
+                                                        .suffix,
+                                                    r: cfgChart.selector.labels
                                                         .rounding,
                                                 }),
                                             )
@@ -2375,7 +2234,7 @@ defineExpose({
         <div ref="chartLegend">
             <slot name="legend" v-bind:legend="legendSet">
                 <Legend
-                    v-if="FINAL_CONFIG.style.chart.legend.show"
+                    v-if="cfgChart.legend.show"
                     :key="`legend_${legendStep}`"
                     :legendSet="legendSet"
                     :config="legendConfig"
@@ -2410,19 +2269,14 @@ defineExpose({
                         <BaseLegendToggle
                             v-if="
                                 legendSet.length > 2 &&
-                                FINAL_CONFIG.style.chart.legend.selectAllToggle
-                                    .show &&
+                                cfgChart.legend.selectAllToggle.show &&
                                 !loading
                             "
                             :backgroundColor="
-                                FINAL_CONFIG.style.chart.legend.selectAllToggle
-                                    .backgroundColor
+                                cfgChart.legend.selectAllToggle.backgroundColor
                             "
-                            :color="
-                                FINAL_CONFIG.style.chart.legend.selectAllToggle
-                                    .color
-                            "
-                            :fontSize="FINAL_CONFIG.style.chart.legend.fontSize"
+                            :color="cfgChart.legend.selectAllToggle.color"
+                            :fontSize="cfgChart.legend.fontSize"
                             :checked="segregated.length > 0"
                             :isCursorPointer="isCursorPointer"
                             @toggle="toggleLegend"
@@ -2437,7 +2291,7 @@ defineExpose({
         </div>
 
         <component
-            v-if="isDataset && FINAL_CONFIG.userOptions.buttons.table"
+            v-if="isDataset && cfgUserOptions.buttons.table"
             :is="tableComponent.component"
             v-bind="tableComponent.props"
             ref="tableUnit"
@@ -2450,7 +2304,7 @@ defineExpose({
                 <button
                     tabindex="0"
                     class="vue-ui-user-options-button"
-                    @click="generateCsv(FINAL_CONFIG.userOptions.callbacks.csv)"
+                    @click="generateCsv(cfgUserOptions.callbacks.csv)"
                     :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }"
                 >
                     <BaseIcon
@@ -2481,15 +2335,12 @@ defineExpose({
                             td.name
                                 ? td.name
                                 : applyDataLabel(
-                                      FINAL_CONFIG.style.chart.selector.labels
-                                          .formatter,
+                                      cfgSelector.labels.formatter,
                                       td,
                                       dataLabel({
-                                          p: FINAL_CONFIG.style.chart.xAxis
-                                              .labels.prefix,
+                                          p: cfgChart.xAxis.labels.prefix,
                                           v: td,
-                                          s: FINAL_CONFIG.style.chart.xAxis
-                                              .labels.suffix,
+                                          s: cfgChart.xAxis.labels.suffix,
                                           r: FINAL_CONFIG.table.td
                                               .roundingValue,
                                       }),
@@ -2501,13 +2352,13 @@ defineExpose({
         </component>
 
         <BaseDraggableDialog
-            v-if="FINAL_CONFIG.style.chart.dialog.show"
+            v-if="cfgChart.dialog.show"
             ref="dialog"
             @close="selectedDatapoint = null"
-            :backgroundColor="FINAL_CONFIG.style.chart.dialog.backgroundColor"
-            :color="FINAL_CONFIG.style.chart.dialog.color"
-            :headerBg="FINAL_CONFIG.style.chart.dialog.header.backgroundColor"
-            :headerColor="FINAL_CONFIG.style.chart.dialog.header.color"
+            :backgroundColor="cfgChart.dialog.backgroundColor"
+            :color="cfgChart.dialog.color"
+            :headerBg="cfgChart.dialog.header.backgroundColor"
+            :headerColor="cfgChart.dialog.header.color"
             :isFullscreen="isFullscreen"
             :fullscreenParent="ridgelineChart"
             :isCursorPointer="isCursorPointer"
