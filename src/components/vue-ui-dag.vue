@@ -100,6 +100,10 @@ const tooltipTriggerMode = ref('pointer');
 const isFocus = ref(false);
 
 const FINAL_CONFIG = ref(prepareConfig());
+const cfgNodes = computed(() => FINAL_CONFIG.value.style.chart.nodes);
+const cfgEdges = computed(() => FINAL_CONFIG.value.style.chart.edges);
+const cfgMidpoints = computed(() => FINAL_CONFIG.value.style.chart.midpoints);
+const cfgChart = computed(() => FINAL_CONFIG.value.style.chart);
 
 useHints({
     config: () => FINAL_CONFIG.value,
@@ -133,7 +137,7 @@ const isTooltip = ref(false);
 const isAnnotator = ref(false);
 
 const { svgRef } = useChartAccessibility({
-    config: FINAL_CONFIG.value.style.chart.title,
+    config: cfgChart.value.title,
 });
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } =
     useUserOptionState({ config: FINAL_CONFIG.value });
@@ -250,10 +254,10 @@ watch(
         userOptionsVisible.value =
             !FINAL_CONFIG.value.userOptions.showOnChartHover;
         titleStep.value += 1;
-        direction.value = FINAL_CONFIG.value.style.chart.layout.rankDirection;
-        WIDTH.value = FINAL_CONFIG.value.style.chart.width;
-        HEIGHT.value = FINAL_CONFIG.value.style.chart.height;
-        panZoomActive.value = FINAL_CONFIG.value.style.chart.zoom.active;
+        direction.value = cfgChart.value.layout.rankDirection;
+        WIDTH.value = cfgChart.value.width;
+        HEIGHT.value = cfgChart.value.height;
+        panZoomActive.value = cfgChart.value.zoom.active;
         await nextTick();
         setupResponsive();
     },
@@ -262,12 +266,12 @@ watch(
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `dag_${uid.value}`,
-    fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-dag',
+    fileName: cfgChart.value.title.text || 'vue-ui-dag',
     options: FINAL_CONFIG.value.userOptions.print,
 });
 
-const svgBg = computed(() => FINAL_CONFIG.value.style.chart.backgroundColor);
-const svgTitle = computed(() => FINAL_CONFIG.value.style.chart.title);
+const svgBg = computed(() => cfgChart.value.backgroundColor);
+const svgTitle = computed(() => cfgChart.value.title);
 
 const { isCallbackImaging, isCallbackSvg, generateSvg, onGenerateImage } =
     useChartExport({
@@ -380,10 +384,10 @@ const initialNodes = computed(() =>
             ...node,
             backgroundColor: node.backgroundColor
                 ? convertColorToHex(node.backgroundColor)
-                : FINAL_CONFIG.value.style.chart.nodes.backgroundColor,
+                : cfgNodes.value.backgroundColor,
             color: node.color
                 ? convertColorToHex(node.color)
-                : FINAL_CONFIG.value.style.chart.nodes.labels.color,
+                : cfgNodes.value.labels.color,
         };
     }),
 );
@@ -392,7 +396,7 @@ const initialEdges = computed(() => FINAL_DATASET.value.edges);
 
 const dagConfiguration = computed(() => {
     return {
-        ...FINAL_CONFIG.value.style.chart.layout,
+        ...cfgChart.value.layout,
         rankDirection: direction.value,
     };
 });
@@ -410,7 +414,7 @@ function getNodeById(id) {
 
 const edgeColors = computed(() => {
     if (!layoutData.value) return [];
-    const defaultColor = FINAL_CONFIG.value.style.chart.edges.stroke;
+    const defaultColor = cfgEdges.value.stroke;
     const colors = new Set();
     layoutData.value.edges.forEach((edge) => {
         colors.add({
@@ -443,7 +447,7 @@ const userViewBox = computed(() => {
     };
 });
 
-const panZoomActive = ref(FINAL_CONFIG.value.style.chart.zoom.active);
+const panZoomActive = ref(cfgChart.value.zoom.active);
 
 const {
     viewBox: panZoomViewBox,
@@ -711,9 +715,7 @@ async function showMidpointTooltip(edge) {
     tooltipEdge.value = edge;
     isTooltip.value = true;
 
-    if (
-        FINAL_CONFIG.value.style.chart.midpoints.selectedEdge.animated === true
-    ) {
+    if (cfgMidpoints.value.selectedEdge.animated === true) {
         hoveredEdgeId.value = edge.id;
         startEdgeAnimations();
     }
@@ -727,9 +729,7 @@ function hideMidpointTooltip() {
     tooltipEdge.value = null;
     emit('onMidpointLeave');
 
-    if (
-        FINAL_CONFIG.value.style.chart.midpoints.selectedEdge.animated === true
-    ) {
+    if (cfgMidpoints.value.selectedEdge.animated === true) {
         hoveredEdgeId.value = null;
         startEdgeAnimations();
     }
@@ -737,7 +737,7 @@ function hideMidpointTooltip() {
 
 async function showNodeTooltip(node) {
     emit('onNodeClick', node);
-    if (!FINAL_CONFIG.value.style.chart.nodes.tooltip.showOnClick) return;
+    if (!cfgNodes.value.tooltip.showOnClick) return;
 
     const svg = svgRef.value;
     if (!svg) return;
@@ -749,8 +749,8 @@ async function showNodeTooltip(node) {
     if (!ctm) return;
 
     const screenPoint = pt.matrixTransform(ctm);
-    const nodeWidthSvg = FINAL_CONFIG.value.style.chart.layout.nodeWidth;
-    const nodeHeightSvg = FINAL_CONFIG.value.style.chart.layout.nodeHeight;
+    const nodeWidthSvg = cfgChart.value.layout.nodeWidth;
+    const nodeHeightSvg = cfgChart.value.layout.nodeHeight;
 
     const scaleX = ctm.a;
     const scaleY = ctm.d;
@@ -864,10 +864,8 @@ function setupResponsive() {
 
         const { width, height } = useResponsive({
             chart: dagChart.value,
-            title: FINAL_CONFIG.value.style.chart.title.text
-                ? chartTitle.value
-                : null,
-            legend: FINAL_CONFIG.value.style.chart.controls.show
+            title: cfgChart.value.title.text ? chartTitle.value : null,
+            legend: cfgChart.value.controls.show
                 ? zoomControls.value?.$el
                 : null,
             source: source.value,
@@ -989,7 +987,7 @@ function startEdgeAnimations() {
     const edges = layoutData.value?.edges ?? [];
     if (!edges.length) return;
 
-    const animationDefaults = FINAL_CONFIG.value.style.chart.edges.animations;
+    const animationDefaults = cfgEdges.value.animations;
 
     const referenceDistance =
         Number(animationDefaults.referenceDistance) > 0
@@ -998,8 +996,7 @@ function startEdgeAnimations() {
 
     edges.forEach((edge) => {
         const isMidpointSelectedAnimated =
-            FINAL_CONFIG.value.style.chart.midpoints.selectedEdge.animated ===
-                true &&
+            cfgMidpoints.value.selectedEdge.animated === true &&
             hoveredEdgeId.value != null &&
             edge.id === hoveredEdgeId.value;
 
@@ -1100,7 +1097,7 @@ async function getImage({ scale = 2 } = {}) {
     return {
         imageUri,
         base64,
-        title: FINAL_CONFIG.value.style.chart.title.text ?? 'vue-ui-dag',
+        title: cfgChart.value.title.text ?? 'vue-ui-dag',
         width,
         height,
         aspectRatio,
@@ -1108,17 +1105,16 @@ async function getImage({ scale = 2 } = {}) {
 }
 
 const backgroundPatternGridSpacing = computed(() => {
-    const nodeHeight = Number(FINAL_CONFIG.value.style.chart.layout.nodeHeight);
+    const nodeHeight = Number(cfgChart.value.layout.nodeHeight);
     return Number.isFinite(nodeHeight) && nodeHeight > 0
-        ? nodeHeight /
-              FINAL_CONFIG.value.style.chart.backgroundPattern.spacingRatio
+        ? nodeHeight / cfgChart.value.backgroundPattern.spacingRatio
         : 12;
 });
 
 const backgroundPatternDotRadius = computed(() => {
     return (
         backgroundPatternGridSpacing.value *
-        (FINAL_CONFIG.value.style.chart.backgroundPattern.dotRadiusRatio / 100)
+        (cfgChart.value.backgroundPattern.dotRadiusRatio / 100)
     );
 });
 
@@ -1138,10 +1134,8 @@ function setHoveredNode(nodeId) {
     hoveredNodeId.value = nodeId;
 
     if (
-        FINAL_CONFIG.value.style.chart.nodes.selected.downstreamEdges
-            .animated === true ||
-        FINAL_CONFIG.value.style.chart.nodes.selected.upstreamEdges.animated ===
-            true
+        cfgNodes.value.selected.downstreamEdges.animated === true ||
+        cfgNodes.value.selected.upstreamEdges.animated === true
     ) {
         // restart only when actual hovered node changes
         startEdgeAnimations();
@@ -1172,10 +1166,8 @@ function scheduleClearHoveredNode(nodeId) {
         if (hoveredNodeId.value === nodeId) {
             hoveredNodeId.value = null;
             if (
-                FINAL_CONFIG.value.style.chart.nodes.selected.downstreamEdges
-                    .animated === true ||
-                FINAL_CONFIG.value.style.chart.nodes.selected.upstreamEdges
-                    .animated === true
+                cfgNodes.value.selected.downstreamEdges.animated === true ||
+                cfgNodes.value.selected.upstreamEdges.animated === true
             ) {
                 startEdgeAnimations();
             }
@@ -1194,46 +1186,35 @@ function setEdge(edge) {
         tooltipEdge.value?.id === edge.id ||
         isKeyboardSelectedMidpoint;
 
-    let stroke =
-        edge.original.color ?? FINAL_CONFIG.value.style.chart.edges.stroke;
+    let stroke = edge.original.color ?? cfgEdges.value.stroke;
 
-    if (
-        isActive &&
-        FINAL_CONFIG.value.style.chart.midpoints.selectedEdge.stroke != null
-    ) {
-        stroke = FINAL_CONFIG.value.style.chart.midpoints.selectedEdge.stroke;
+    if (isActive && cfgMidpoints.value.selectedEdge.stroke != null) {
+        stroke = cfgMidpoints.value.selectedEdge.stroke;
     } else if (
         isHighlightedFrom &&
-        FINAL_CONFIG.value.style.chart.nodes.selected.downstreamEdges.stroke !=
-            null
+        cfgNodes.value.selected.downstreamEdges.stroke != null
     ) {
-        stroke =
-            FINAL_CONFIG.value.style.chart.nodes.selected.downstreamEdges
-                .stroke;
+        stroke = cfgNodes.value.selected.downstreamEdges.stroke;
     } else if (
         isHighlightedTo &&
-        FINAL_CONFIG.value.style.chart.nodes.selected.upstreamEdges.stroke !=
-            null
+        cfgNodes.value.selected.upstreamEdges.stroke != null
     ) {
-        stroke =
-            FINAL_CONFIG.value.style.chart.nodes.selected.upstreamEdges.stroke;
+        stroke = cfgNodes.value.selected.upstreamEdges.stroke;
     }
 
     if (
         isHighlightedFrom &&
-        FINAL_CONFIG.value.style.chart.nodes.selected.downstreamEdges
-            .animated === true
+        cfgNodes.value.selected.downstreamEdges.animated === true
     ) {
         edge.animated = true;
     } else if (
         isHighlightedTo &&
-        FINAL_CONFIG.value.style.chart.nodes.selected.upstreamEdges.animated ===
-            true
+        cfgNodes.value.selected.upstreamEdges.animated === true
     ) {
         edge.animated = true;
     } else if (
         isKeyboardSelectedMidpoint &&
-        FINAL_CONFIG.value.style.chart.midpoints.selectedEdge.animated === true
+        cfgMidpoints.value.selectedEdge.animated === true
     ) {
         edge.animated = true;
     } else {
@@ -1246,7 +1227,7 @@ function setEdge(edge) {
         fill: 'none',
         stroke,
         'stroke-width':
-            FINAL_CONFIG.value.style.chart.edges.strokeWidth *
+            cfgEdges.value.strokeWidth *
             (isActive || edge.from === hoveredNodeId.value ? 2 : 1),
         'stroke-linecap': 'round',
         'stroke-linejoin': 'round',
@@ -1267,29 +1248,26 @@ function setNode(node) {
     const isHighlighted = isHovered || isKeyboardSelected;
 
     const fill =
-        isHighlighted &&
-        FINAL_CONFIG.value.style.chart.nodes.selected.backgroundColor != null
-            ? FINAL_CONFIG.value.style.chart.nodes.selected.backgroundColor
+        isHighlighted && cfgNodes.value.selected.backgroundColor != null
+            ? cfgNodes.value.selected.backgroundColor
             : node.original.backgroundColor;
 
     const stroke =
-        isHighlighted &&
-        FINAL_CONFIG.value.style.chart.nodes.selected.stroke != null
-            ? FINAL_CONFIG.value.style.chart.nodes.selected.stroke
-            : FINAL_CONFIG.value.style.chart.nodes.stroke;
+        isHighlighted && cfgNodes.value.selected.stroke != null
+            ? cfgNodes.value.selected.stroke
+            : cfgNodes.value.stroke;
 
     const strokeWidth =
-        isHighlighted &&
-        FINAL_CONFIG.value.style.chart.nodes.selected.strokeWidth != null
-            ? FINAL_CONFIG.value.style.chart.nodes.selected.strokeWidth
-            : FINAL_CONFIG.value.style.chart.nodes.strokeWidth;
+        isHighlighted && cfgNodes.value.selected.strokeWidth != null
+            ? cfgNodes.value.selected.strokeWidth
+            : cfgNodes.value.strokeWidth;
 
     return {
         x: node.x - node.width / 2,
         y: node.y - node.height / 2,
         width: node.width,
         height: node.height,
-        rx: FINAL_CONFIG.value.style.chart.nodes.borderRadius,
+        rx: cfgNodes.value.borderRadius,
         fill,
         stroke,
         'stroke-width': strokeWidth,
@@ -1307,42 +1285,33 @@ function setMidpoint(edge) {
         tooltipEdge.value?.id === edge.id ||
         isKeyboardSelected;
 
-    let stroke =
-        edge.original.color ?? FINAL_CONFIG.value.style.chart.edges.stroke;
+    let stroke = edge.original.color ?? cfgEdges.value.stroke;
 
-    if (
-        isActive &&
-        FINAL_CONFIG.value.style.chart.midpoints.selectedEdge.stroke != null
-    ) {
-        stroke = FINAL_CONFIG.value.style.chart.midpoints.selectedEdge.stroke;
+    if (isActive && cfgMidpoints.value.selectedEdge.stroke != null) {
+        stroke = cfgMidpoints.value.selectedEdge.stroke;
     } else if (
         isHighlightedFrom &&
-        FINAL_CONFIG.value.style.chart.nodes.selected.downstreamEdges.stroke !=
-            null
+        cfgNodes.value.selected.downstreamEdges.stroke != null
     ) {
-        stroke =
-            FINAL_CONFIG.value.style.chart.nodes.selected.downstreamEdges
-                .stroke;
+        stroke = cfgNodes.value.selected.downstreamEdges.stroke;
     } else if (
         isHighlightedTo &&
-        FINAL_CONFIG.value.style.chart.nodes.selected.upstreamEdges.stroke !=
-            null
+        cfgNodes.value.selected.upstreamEdges.stroke != null
     ) {
-        stroke =
-            FINAL_CONFIG.value.style.chart.nodes.selected.upstreamEdges.stroke;
+        stroke = cfgNodes.value.selected.upstreamEdges.stroke;
     }
 
     return {
         cx: edge?.midpoint?.x,
         cy: edge?.midpoint?.y,
-        r: FINAL_CONFIG.value.style.chart.midpoints.radius,
+        r: cfgMidpoints.value.radius,
         fill: isKeyboardSelected
-            ? (FINAL_CONFIG.value.style.chart.midpoints.selectedEdge.stroke ??
-              FINAL_CONFIG.value.style.chart.midpoints.fill)
-            : FINAL_CONFIG.value.style.chart.midpoints.fill,
+            ? (cfgMidpoints.value.selectedEdge.stroke ??
+              cfgMidpoints.value.fill)
+            : cfgMidpoints.value.fill,
         stroke,
         'stroke-width':
-            FINAL_CONFIG.value.style.chart.edges.strokeWidth *
+            cfgEdges.value.strokeWidth *
             (isActive || edge.from === hoveredNodeId.value ? 2 : 1),
     };
 }
@@ -1358,31 +1327,20 @@ function arrowColor(edge) {
         tooltipEdge.value?.id === edge.id ||
         isKeyboardSelectedMidpoint;
 
-    let stroke =
-        edge.color ??
-        edge.original?.color ??
-        FINAL_CONFIG.value.style.chart.edges.stroke;
+    let stroke = edge.color ?? edge.original?.color ?? cfgEdges.value.stroke;
 
-    if (
-        isActive &&
-        FINAL_CONFIG.value.style.chart.midpoints.selectedEdge.stroke != null
-    ) {
-        stroke = FINAL_CONFIG.value.style.chart.midpoints.selectedEdge.stroke;
+    if (isActive && cfgMidpoints.value.selectedEdge.stroke != null) {
+        stroke = cfgMidpoints.value.selectedEdge.stroke;
     } else if (
         isHighlightedFrom &&
-        FINAL_CONFIG.value.style.chart.nodes.selected.downstreamEdges.stroke !=
-            null
+        cfgNodes.value.selected.downstreamEdges.stroke != null
     ) {
-        stroke =
-            FINAL_CONFIG.value.style.chart.nodes.selected.downstreamEdges
-                .stroke;
+        stroke = cfgNodes.value.selected.downstreamEdges.stroke;
     } else if (
         isHighlightedTo &&
-        FINAL_CONFIG.value.style.chart.nodes.selected.upstreamEdges.stroke !=
-            null
+        cfgNodes.value.selected.upstreamEdges.stroke != null
     ) {
-        stroke =
-            FINAL_CONFIG.value.style.chart.nodes.selected.upstreamEdges.stroke;
+        stroke = cfgNodes.value.selected.upstreamEdges.stroke;
     }
 
     return stroke;
@@ -1432,7 +1390,7 @@ const a11yNodes = computed(() => {
 });
 
 const a11yMidpoints = computed(() => {
-    if (!FINAL_CONFIG.value.style.chart.midpoints.show) return [];
+    if (!cfgMidpoints.value.show) return [];
 
     const edges = layoutData.value?.edges ?? [];
 
@@ -1539,10 +1497,7 @@ function setActiveA11yItem(item) {
         hoveredNodeId.value = null;
         hoveredEdgeId.value = item.id;
 
-        if (
-            FINAL_CONFIG.value.style.chart.midpoints.selectedEdge.animated ===
-            true
-        ) {
+        if (cfgMidpoints.value.selectedEdge.animated === true) {
             startEdgeAnimations();
         }
     }
@@ -1559,10 +1514,7 @@ function clearA11ySelection() {
 
     if (!isTooltip.value) {
         hoveredEdgeId.value = null;
-        if (
-            FINAL_CONFIG.value.style.chart.midpoints.selectedEdge.animated ===
-            true
-        ) {
+        if (cfgMidpoints.value.selectedEdge.animated === true) {
             startEdgeAnimations();
         }
     }
@@ -1731,7 +1683,7 @@ defineExpose({
         ref="dagChart"
         :style="{
             fontFamily: FINAL_CONFIG.style.fontFamily,
-            backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
+            backgroundColor: cfgChart.backgroundColor,
             padding: '0.5rem',
         }"
         @mouseenter="onChartEnter"
@@ -1757,8 +1709,8 @@ defineExpose({
         <PenAndPaper
             v-if="FINAL_CONFIG.userOptions.buttons.annotator"
             :svgRef="svgRef"
-            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
-            :color="FINAL_CONFIG.style.chart.color"
+            :backgroundColor="cfgChart.backgroundColor"
+            :color="cfgChart.color"
             :active="isAnnotator"
             :isCursorPointer="isCursorPointer"
             :palette="FINAL_CONFIG.userOptions.annotatorPalette"
@@ -1792,8 +1744,8 @@ defineExpose({
                 isDataset &&
                 (keepUserOptionState ? true : userOptionsVisible)
             "
-            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
-            :color="FINAL_CONFIG.style.chart.color"
+            :backgroundColor="cfgChart.backgroundColor"
+            :color="cfgChart.color"
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uid"
@@ -1886,7 +1838,7 @@ defineExpose({
         <!-- TITLE -->
         <div
             ref="chartTitle"
-            v-if="FINAL_CONFIG.style.chart.title.text"
+            v-if="cfgChart.title.text"
             :style="`width:100%;background:transparent;`"
         >
             <Title
@@ -1894,11 +1846,11 @@ defineExpose({
                 :config="{
                     title: {
                         cy: 'dag-title',
-                        ...FINAL_CONFIG.style.chart.title,
+                        ...cfgChart.title,
                     },
                     subtitle: {
                         cy: 'dag-subtitle',
-                        ...FINAL_CONFIG.style.chart.title.subtitle,
+                        ...cfgChart.title.subtitle,
                     },
                 }"
             />
@@ -1907,9 +1859,9 @@ defineExpose({
         <BaseZoomControls
             ref="zoomControls"
             v-if="
-                FINAL_CONFIG.style.chart.controls.position === 'top' &&
+                cfgChart.controls.position === 'top' &&
                 !loading &&
-                FINAL_CONFIG.style.chart.controls.show
+                cfgChart.controls.show
             "
             :config="FINAL_CONFIG"
             :scale="scale"
@@ -1932,7 +1884,7 @@ defineExpose({
                 :viewBox="svgViewBox"
                 :xmlns="XMLNS"
                 :style="{
-                    backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
+                    backgroundColor: cfgChart.backgroundColor,
                     height: '100%',
                     width: '100%',
                 }"
@@ -1944,7 +1896,7 @@ defineExpose({
             >
                 <PackageVersion />
 
-                <defs v-if="FINAL_CONFIG.style.chart.backgroundPattern.show">
+                <defs v-if="cfgChart.backgroundPattern.show">
                     <pattern
                         :id="`dag_bg_pattern_${uid}`"
                         patternUnits="userSpaceOnUse"
@@ -1956,25 +1908,21 @@ defineExpose({
                             v-bind="{
                                 x: backgroundPatternGridSpacing / 2,
                                 y: backgroundPatternGridSpacing / 2,
-                                color: FINAL_CONFIG.style.chart
-                                    .backgroundPattern.dotColor,
+                                color: cfgChart.backgroundPattern.dotColor,
                             }"
                         >
                             <circle
                                 :cx="backgroundPatternGridSpacing / 2"
                                 :cy="backgroundPatternGridSpacing / 2"
                                 :r="backgroundPatternDotRadius"
-                                :fill="
-                                    FINAL_CONFIG.style.chart.backgroundPattern
-                                        .dotColor
-                                "
+                                :fill="cfgChart.backgroundPattern.dotColor"
                             />
                         </slot>
                     </pattern>
                 </defs>
 
                 <rect
-                    v-if="FINAL_CONFIG.style.chart.backgroundPattern.show"
+                    v-if="cfgChart.backgroundPattern.show"
                     :x="panZoomViewBox?.x ?? 0"
                     :y="panZoomViewBox?.y ?? 0"
                     :width="panZoomViewBox?.width ?? 0"
@@ -1982,8 +1930,7 @@ defineExpose({
                     :fill="`url(#dag_bg_pattern_${uid})`"
                     :style="{
                         pointerEvents: 'none',
-                        opacity:
-                            FINAL_CONFIG.style.chart.backgroundPattern.opacity,
+                        opacity: cfgChart.backgroundPattern.opacity,
                     }"
                 />
 
@@ -2052,7 +1999,7 @@ defineExpose({
                         <circle
                             data-cy-midpoint
                             class="vue-ui-dag-edge-midpoint"
-                            v-if="FINAL_CONFIG.style.chart.midpoints.show"
+                            v-if="cfgMidpoints.show"
                             :data-a11y-midpoint-id="edge.id"
                             v-bind="setMidpoint(edge)"
                             :aria-label="`${getNodeById(edge.from)?.label ?? edge.from} to ${getNodeById(edge.to)?.label ?? edge.to}`"
@@ -2075,8 +2022,8 @@ defineExpose({
                         :key="node.id"
                         class="vue-ui-dag-node"
                         @click.stop="
-                            FINAL_CONFIG.style.chart.nodes.tooltip
-                                .showOnClick && showNodeTooltip(node)
+                            cfgNodes.tooltip.showOnClick &&
+                            showNodeTooltip(node)
                         "
                         @mouseenter="onNodePointerEnter(node.id)"
                         @mouseleave="scheduleClearHoveredNode(node.id)"
@@ -2089,8 +2036,8 @@ defineExpose({
                                 :aria-label="`${node.label ?? node.id}`"
                                 :style="{
                                     cursor:
-                                        FINAL_CONFIG.style.chart.nodes.tooltip
-                                            .showOnClick && isCursorPointer
+                                        cfgNodes.tooltip.showOnClick &&
+                                        isCursorPointer
                                             ? 'pointer'
                                             : 'default',
                                     transition:
@@ -2125,7 +2072,7 @@ defineExpose({
                         fill="none"
                         stroke="transparent"
                         :stroke-width="
-                            FINAL_CONFIG.style.chart.edges.strokeWidth *
+                            cfgEdges.strokeWidth *
                             (edge.from === hoveredNodeId ||
                             edge.id === tooltipEdge?.id
                                 ? 1.3
@@ -2153,8 +2100,8 @@ defineExpose({
                         v-for="node in layoutData.nodes"
                         :key="node.id"
                         @click.stop="
-                            FINAL_CONFIG.style.chart.nodes.tooltip
-                                .showOnClick && showNodeTooltip(node)
+                            cfgNodes.tooltip.showOnClick &&
+                            showNodeTooltip(node)
                         "
                         @mouseenter="setHoveredNode(node.id)"
                         @mouseleave="scheduleClearHoveredNode(node.id)"
@@ -2164,29 +2111,17 @@ defineExpose({
                             <text
                                 v-if="$slots['node-label']"
                                 :x="node.x"
-                                :y="
-                                    node.y +
-                                    FINAL_CONFIG.style.chart.nodes.labels
-                                        .fontSize /
-                                        3
-                                "
+                                :y="node.y + cfgNodes.labels.fontSize / 3"
                                 text-anchor="middle"
-                                :font-size="
-                                    FINAL_CONFIG.style.chart.nodes.labels
-                                        .fontSize
-                                "
+                                :font-size="cfgNodes.labels.fontSize"
                                 :fill="
                                     hoveredNodeId === node.id &&
-                                    FINAL_CONFIG.style.chart.nodes.selected
-                                        .labelColor != null
-                                        ? FINAL_CONFIG.style.chart.nodes
-                                              .selected.labelColor
+                                    cfgNodes.selected.labelColor != null
+                                        ? cfgNodes.selected.labelColor
                                         : node.original.color
                                 "
                                 :font-weight="
-                                    FINAL_CONFIG.style.chart.nodes.labels.bold
-                                        ? 'bold'
-                                        : 'normal'
+                                    cfgNodes.labels.bold ? 'bold' : 'normal'
                                 "
                                 style="transition: fill 0.2s ease-in-out"
                             >
@@ -2205,49 +2140,32 @@ defineExpose({
                                     !$slots['free-node-label'] && !$slots.node
                                 "
                                 :x="node.x"
-                                :y="
-                                    node.y +
-                                    FINAL_CONFIG.style.chart.nodes.labels
-                                        .fontSize /
-                                        3
-                                "
+                                :y="node.y + cfgNodes.labels.fontSize / 3"
                                 text-anchor="middle"
-                                :font-size="
-                                    FINAL_CONFIG.style.chart.nodes.labels
-                                        .fontSize
-                                "
+                                :font-size="cfgNodes.labels.fontSize"
                                 :fill="
                                     (hoveredNodeId === node.id ||
                                         isNodeA11yActive(node.id)) &&
-                                    FINAL_CONFIG.style.chart.nodes.selected
-                                        .labelColor != null
-                                        ? FINAL_CONFIG.style.chart.nodes
-                                              .selected.labelColor
+                                    cfgNodes.selected.labelColor != null
+                                        ? cfgNodes.selected.labelColor
                                         : node.original.color
                                 "
                                 :font-weight="
-                                    FINAL_CONFIG.style.chart.nodes.labels.bold
-                                        ? 'bold'
-                                        : 'normal'
+                                    cfgNodes.labels.bold ? 'bold' : 'normal'
                                 "
                                 style="transition: fill 0.2s ease-in-out"
                                 v-html="
                                     createTSpansFromLineBreaksOnY({
                                         content: node.label,
-                                        fontSize:
-                                            FINAL_CONFIG.style.chart.nodes
-                                                .labels.fontSize,
-                                        fontWeight: FINAL_CONFIG.style.chart
-                                            .nodes.labels.bold
+                                        fontSize: cfgNodes.labels.fontSize,
+                                        fontWeight: cfgChart.nodes.labels.bold
                                             ? 'bold'
                                             : 'normal',
                                         fill:
                                             (hoveredNodeId === node.id ||
                                                 isNodeA11yActive(node.id)) &&
-                                            FINAL_CONFIG.style.chart.nodes
-                                                .selected.labelColor != null
-                                                ? FINAL_CONFIG.style.chart.nodes
-                                                      .selected.labelColor
+                                            cfgNodes.selected.labelColor != null
+                                                ? cfgNodes.selected.labelColor
                                                 : node.original.color,
                                         x: node.x,
                                         y: node.y,
@@ -2320,13 +2238,11 @@ defineExpose({
                     class="vue-ui-dag-tooltip"
                     :style="{
                         ...tooltipStyle,
-                        maxWidth:
-                            FINAL_CONFIG.style.chart.midpoints.tooltip.maxWidth,
+                        maxWidth: cfgMidpoints.tooltip.maxWidth,
                         '--vue-data-ui-dag-tooltip-background':
-                            FINAL_CONFIG.style.chart.midpoints.tooltip
-                                .backgroundColor,
+                            cfgMidpoints.tooltip.backgroundColor,
                         '--vue-data-ui-dag-tooltip-color':
-                            FINAL_CONFIG.style.chart.midpoints.tooltip.color,
+                            cfgMidpoints.tooltip.color,
                     }"
                     :data-position="tooltipPlacement"
                 >
@@ -2361,15 +2277,13 @@ defineExpose({
                     ref="nodeTooltipRef"
                     class="vue-ui-dag-node-tooltip"
                     :style="{
-                        maxWidth:
-                            FINAL_CONFIG.style.chart.nodes.tooltip.maxWidth,
+                        maxWidth: cfgNodes.tooltip.maxWidth,
                         left: nodeTooltipStyle.left,
                         top: nodeTooltipStyle.top,
                         '--vue-data-ui-dag-node-tooltip-background':
-                            FINAL_CONFIG.style.chart.nodes.tooltip
-                                .backgroundColor,
+                            cfgNodes.tooltip.backgroundColor,
                         '--vue-data-ui-dag-node-tooltip-color':
-                            FINAL_CONFIG.style.chart.nodes.tooltip.color,
+                            cfgNodes.tooltip.color,
                     }"
                     :data-position="nodeTooltipPlacement"
                 >
@@ -2388,9 +2302,9 @@ defineExpose({
         <BaseZoomControls
             ref="zoomControls"
             v-if="
-                FINAL_CONFIG.style.chart.controls.position === 'bottom' &&
+                cfgChart.controls.position === 'bottom' &&
                 !loading &&
-                FINAL_CONFIG.style.chart.controls.show
+                cfgChart.controls.show
             "
             :config="FINAL_CONFIG"
             :scale="scale"
