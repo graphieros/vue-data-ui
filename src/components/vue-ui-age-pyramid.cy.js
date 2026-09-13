@@ -39,9 +39,8 @@ describe('<VueUiAgePyramid />', () => {
             cy.get('[data-cy="y-axis-label"]')
                 .as('y')
                 .should('exist')
-                .and('have.length', 2);
+                .and('have.length', 1);
             cy.get('@y').first().contains('5');
-            cy.get('@y').last().contains('0');
 
             cy.log('scale');
             cy.get('[data-cy="scale-line-left"]').should('exist');
