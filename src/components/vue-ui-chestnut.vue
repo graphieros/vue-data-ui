@@ -103,6 +103,13 @@ const accessibilityCursor = ref({
 });
 
 const FINAL_CONFIG = ref(prepareConfig());
+const cfgRoots = computed(() => FINAL_CONFIG.value.style.chart.layout.roots);
+const cfgBranches = computed(
+    () => FINAL_CONFIG.value.style.chart.layout.branches,
+);
+const cfgNuts = computed(() => FINAL_CONFIG.value.style.chart.layout.nuts);
+const cfgLayout = computed(() => FINAL_CONFIG.value.style.chart.layout);
+const cfgChart = computed(() => FINAL_CONFIG.value.style.chart);
 
 useHints({
     config: () => FINAL_CONFIG.value,
@@ -263,7 +270,7 @@ const { loading, FINAL_DATASET } = useLoading({
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } =
     useUserOptionState({ config: FINAL_CONFIG.value });
 const { svgRef } = useChartAccessibility({
-    config: FINAL_CONFIG.value.style.chart.layout.title,
+    config: cfgLayout.value.title,
 });
 
 function prepareConfig() {
@@ -315,8 +322,7 @@ watch(
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `vue-ui-chestnut_${uid.value}`,
-    fileName:
-        FINAL_CONFIG.value.style.chart.layout.title.text || 'vue-ui-chestnut',
+    fileName: cfgLayout.value.title.text || 'vue-ui-chestnut',
     options: FINAL_CONFIG.value.userOptions.print,
 });
 
@@ -573,13 +579,13 @@ const roots = computed(() => {
 });
 
 const canopea = computed(() => {
-    if (FINAL_CONFIG.value.style.chart.layout.branches.widthRatio <= 0) {
+    if (cfgBranches.value.widthRatio <= 0) {
         return 0.1;
     }
-    if (FINAL_CONFIG.value.style.chart.layout.branches.widthRatio > 1.8) {
+    if (cfgBranches.value.widthRatio > 1.8) {
         return 1.8;
     }
-    return FINAL_CONFIG.value.style.chart.layout.branches.widthRatio;
+    return cfgBranches.value.widthRatio;
 });
 
 const seeds = computed(() => {
@@ -810,7 +816,7 @@ function pickNut(branch) {
         selectedBranch.value = branch;
         openNut.value = makeDonut(
             { series: branch.breakdown, base: 1 },
-            branch.x2 + 24 + FINAL_CONFIG.value.style.chart.layout.nuts.offsetX,
+            branch.x2 + 24 + cfgNuts.value.offsetX,
             branch.y1 + svg.value.branchSize / 2,
             80,
             80,
@@ -896,8 +902,7 @@ function placeLegendTopOrBottom() {
 function isArcBigEnough(arc) {
     return (
         arc.proportion * 100 >
-        FINAL_CONFIG.value.style.chart.layout.nuts.selected.labels.dataLabels
-            .hideUnderValue
+        cfgNuts.value.selected.labels.dataLabels.hideUnderValue
     );
 }
 
@@ -951,8 +956,8 @@ const table = computed(() => {
 function generateCsv(callback = null) {
     nextTick(() => {
         const title = [
-            [FINAL_CONFIG.value.style.chart.layout.title.text],
-            [FINAL_CONFIG.value.style.chart.layout.title.subtitle.text],
+            [cfgLayout.value.title.text],
+            [cfgLayout.value.title.subtitle.text],
             [''],
             ['Grand total', treeTotal.value],
             [''],
@@ -1000,9 +1005,7 @@ function generateCsv(callback = null) {
         if (!callback) {
             downloadCsv({
                 csvContent,
-                title:
-                    FINAL_CONFIG.value.style.chart.layout.title.text ||
-                    'vue-ui-chestnut',
+                title: cfgLayout.value.title.text || 'vue-ui-chestnut',
             });
         } else {
             callback(csvContent);
@@ -1038,7 +1041,7 @@ async function getImage({ scale = 2 } = {}) {
     return {
         imageUri,
         base64,
-        title: FINAL_CONFIG.value.style.chart.layout.title.text,
+        title: cfgLayout.value.title.text,
         width,
         height,
         aspectRatio,
@@ -1067,7 +1070,7 @@ const tableComponent = computed(() => {
     const open = mutableConfig.value.showTable;
     return {
         component: useDialog ? BaseDraggableDialog : Accordion,
-        title: `${FINAL_CONFIG.value.style.chart.layout.title.text}${FINAL_CONFIG.value.style.chart.layout.title.subtitle.text ? `: ${FINAL_CONFIG.value.style.chart.layout.title.subtitle.text}` : ''}`,
+        title: `${cfgLayout.value.title.text}${cfgLayout.value.title.subtitle.text ? `: ${cfgLayout.value.title.subtitle.text}` : ''}`,
         props: useDialog
             ? {
                   backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
@@ -1085,14 +1088,12 @@ const tableComponent = computed(() => {
                       open,
                       maxHeight: 10000,
                       body: {
-                          backgroundColor:
-                              FINAL_CONFIG.value.style.chart.backgroundColor,
-                          color: FINAL_CONFIG.value.style.chart.color,
+                          backgroundColor: cfgChart.value.backgroundColor,
+                          color: cfgChart.value.color,
                       },
                       head: {
-                          backgroundColor:
-                              FINAL_CONFIG.value.style.chart.backgroundColor,
-                          color: FINAL_CONFIG.value.style.chart.color,
+                          backgroundColor: cfgChart.value.backgroundColor,
+                          color: cfgChart.value.color,
                       },
                   },
               },
@@ -1128,21 +1129,19 @@ const legendSet = computed(() => {
         return {
             ...root,
             display: `${root.name}: ${applyDataLabel(
-                FINAL_CONFIG.value.style.chart.layout.roots.labels.formatter,
+                cfgRoots.value.labels.formatter,
                 root.total,
                 dataLabel({
-                    p: FINAL_CONFIG.value.style.chart.layout.legend.prefix,
+                    p: cfgLayout.value.legend.prefix,
                     v: root.total,
-                    s: FINAL_CONFIG.value.style.chart.layout.legend.suffix,
-                    r: FINAL_CONFIG.value.style.chart.layout.legend
-                        .roundingValue,
+                    s: cfgLayout.value.legend.suffix,
+                    r: cfgLayout.value.legend.roundingValue,
                 }),
                 { datapoint: root },
             )} (${dataLabel({
                 v: (root.total / treeTotal.value) * 100,
                 s: '%',
-                r: FINAL_CONFIG.value.style.chart.layout.legend
-                    .roundingPercentage,
+                r: cfgLayout.value.legend.roundingPercentage,
             })})`,
         };
     });
@@ -1156,16 +1155,16 @@ const svgLegendItems = computed(() => {
     }));
 });
 
-const svgBg = computed(() => FINAL_CONFIG.value.style.chart.backgroundColor);
+const svgBg = computed(() => cfgChart.value.backgroundColor);
 
 const svgLegend = computed(() => ({
-    ...FINAL_CONFIG.value.style.chart.layout.legend,
+    ...cfgLayout.value.legend,
     textAlign: 'center',
     show: true,
     position: 'bottom',
 }));
 
-const svgTitle = computed(() => FINAL_CONFIG.value.style.chart.layout.title);
+const svgTitle = computed(() => cfgLayout.value.title);
 
 const { isCallbackImaging, isCallbackSvg, generateSvg, onGenerateImage } =
     useChartExport({
@@ -1206,16 +1205,16 @@ function getRootAnnouncement(root) {
     if (!root) return '';
 
     const valueLabel = dataLabel({
-        p: FINAL_CONFIG.value.style.chart.layout.legend.prefix,
+        p: cfgLayout.value.legend.prefix,
         v: root.total,
-        s: FINAL_CONFIG.value.style.chart.layout.legend.suffix,
-        r: FINAL_CONFIG.value.style.chart.layout.legend.roundingValue,
+        s: cfgLayout.value.legend.suffix,
+        r: cfgLayout.value.legend.roundingValue,
     });
 
     const percentageLabel = dataLabel({
         v: (root.total / treeTotal.value) * 100,
         s: '%',
-        r: FINAL_CONFIG.value.style.chart.layout.legend.roundingPercentage,
+        r: cfgLayout.value.legend.roundingPercentage,
     });
 
     return `Root ${root.name}. Value ${valueLabel}. ${percentageLabel} of total.`;
@@ -1225,19 +1224,16 @@ function getBranchAnnouncement(branch) {
     if (!branch) return '';
 
     const valueLabel = dataLabel({
-        p: FINAL_CONFIG.value.style.chart.layout.branches.labels.dataLabels
-            .prefix,
+        p: cfgBranches.value.labels.dataLabels.prefix,
         v: branch.value,
-        s: FINAL_CONFIG.value.style.chart.layout.branches.labels.dataLabels
-            .suffix,
-        r: FINAL_CONFIG.value.style.chart.layout.branches.labels.dataLabels
-            .roundingValue,
+        s: cfgBranches.value.labels.dataLabels.suffix,
+        r: cfgBranches.value.labels.dataLabels.roundingValue,
     });
 
     const percentageToRoot = dataLabel({
         v: branch.proportionToRoot * 100,
         s: '%',
-        r: FINAL_CONFIG.value.style.chart.layout.legend.roundingPercentage,
+        r: cfgLayout.value.legend.roundingPercentage,
     });
 
     return `Branch ${branch.name}. Root ${branch.rootName}. Value ${valueLabel}. ${percentageToRoot} of root ${branch.rootName}.`;
@@ -1247,18 +1243,16 @@ function getNutAnnouncement(nut) {
     if (!nut) return '';
 
     const valueLabel = dataLabel({
-        p: FINAL_CONFIG.value.style.chart.layout.legend.prefix,
+        p: cfgLayout.value.legend.prefix,
         v: nut.value,
-        s: FINAL_CONFIG.value.style.chart.layout.legend.suffix,
-        r: FINAL_CONFIG.value.style.chart.layout.nuts.selected.labels
-            .roundingValue,
+        s: cfgLayout.value.legend.suffix,
+        r: cfgNuts.value.selected.labels.roundingValue,
     });
 
     const percentageToBranch = dataLabel({
         v: nut.proportionToBranch * 100,
         s: '%',
-        r: FINAL_CONFIG.value.style.chart.layout.nuts.selected.labels
-            .roundingPercentage,
+        r: cfgNuts.value.selected.labels.roundingPercentage,
     });
 
     return `Nut ${nut.name}. Branch ${nut.branchName}. Root ${nut.rootName}. Value ${valueLabel}. ${percentageToBranch} of branch ${nut.branchName}.`;
@@ -1600,7 +1594,7 @@ defineExpose({
         :class="`vue-data-ui-component vue-ui-chestnut ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`"
         ref="chestnutChart"
         :id="`vue-ui-chestnut_${uid}`"
-        :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor}`"
+        :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${cfgChart.backgroundColor}`"
         @mouseenter="() => setUserOptionsVisibility(true)"
         @mouseleave="() => setUserOptionsVisibility(false)"
     >
@@ -1625,8 +1619,8 @@ defineExpose({
         <PenAndPaper
             v-if="FINAL_CONFIG.userOptions.buttons.annotator"
             :svgRef="svgRef"
-            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
-            :color="FINAL_CONFIG.style.chart.color"
+            :backgroundColor="cfgChart.backgroundColor"
+            :color="cfgChart.color"
             :active="isAnnotator"
             :isCursorPointer="isCursorPointer"
             :palette="FINAL_CONFIG.userOptions.annotatorPalette"
@@ -1668,8 +1662,8 @@ defineExpose({
                 isDataset &&
                 (keepUserOptionState ? true : userOptionsVisible)
             "
-            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
-            :color="FINAL_CONFIG.style.chart.color"
+            :backgroundColor="cfgChart.backgroundColor"
+            :color="cfgChart.color"
             :isImaging="isImaging"
             :isPrinting="isPrinting"
             :uid="uid"
@@ -1768,7 +1762,7 @@ defineExpose({
                 }"
                 v-if="svg.height > 0"
                 :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`"
-                :style="`overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
+                :style="`overflow:visible;background:transparent;color:${cfgChart.color}`"
                 tabindex="0"
                 @focus="onSvgFocus"
                 @blur="onSvgBlur"
@@ -1794,22 +1788,16 @@ defineExpose({
                 <g v-if="!selectedNut">
                     <text
                         data-cy="chestnut-title"
-                        v-if="FINAL_CONFIG.style.chart.layout.title.text"
+                        v-if="cfgLayout.title.text"
                         text-anchor="middle"
-                        :fill="FINAL_CONFIG.style.chart.layout.title.color"
-                        :font-weight="
-                            FINAL_CONFIG.style.chart.layout.title.bold
-                                ? 'bold'
-                                : 'normal'
-                        "
-                        :font-size="
-                            FINAL_CONFIG.style.chart.layout.title.fontSize
-                        "
+                        :fill="cfgLayout.title.color"
+                        :font-weight="cfgLayout.title.bold ? 'bold' : 'normal'"
+                        :font-size="cfgLayout.title.fontSize"
                         :x="svg.width / 2"
                         :y="
                             12 +
-                            FINAL_CONFIG.style.chart.layout.title.fontSize +
-                            FINAL_CONFIG.style.chart.layout.title.offsetY
+                            cfgLayout.title.fontSize +
+                            cfgLayout.title.offsetY
                         "
                         @click="
                             () => {
@@ -1819,33 +1807,22 @@ defineExpose({
                             }
                         "
                     >
-                        {{ FINAL_CONFIG.style.chart.layout.title.text }}
+                        {{ cfgLayout.title.text }}
                     </text>
                     <text
                         data-cy="chestnut-subtitle"
-                        v-if="
-                            FINAL_CONFIG.style.chart.layout.title.subtitle.text
-                        "
+                        v-if="cfgLayout.title.subtitle.text"
                         text-anchor="middle"
-                        :fill="
-                            FINAL_CONFIG.style.chart.layout.title.subtitle.color
-                        "
+                        :fill="cfgLayout.title.subtitle.color"
                         :font-weight="
-                            FINAL_CONFIG.style.chart.layout.title.subtitle.bold
-                                ? 'bold'
-                                : 'normal'
+                            cfgLayout.title.subtitle.bold ? 'bold' : 'normal'
                         "
-                        :font-size="
-                            FINAL_CONFIG.style.chart.layout.title.subtitle
-                                .fontSize
-                        "
+                        :font-size="cfgLayout.title.subtitle.fontSize"
                         :x="svg.width / 2"
                         :y="
                             48 +
-                            FINAL_CONFIG.style.chart.layout.title.subtitle
-                                .fontSize +
-                            FINAL_CONFIG.style.chart.layout.title.subtitle
-                                .offsetY
+                            cfgLayout.title.subtitle.fontSize +
+                            cfgLayout.title.subtitle.offsetY
                         "
                         @click="
                             () => {
@@ -1855,9 +1832,7 @@ defineExpose({
                             }
                         "
                     >
-                        {{
-                            FINAL_CONFIG.style.chart.layout.title.subtitle.text
-                        }}
+                        {{ cfgLayout.title.subtitle.text }}
                     </text>
                 </g>
 
@@ -1878,9 +1853,7 @@ defineExpose({
                                 '0%',
                                 setOpacity(
                                     shiftHue(d.color, 0.05),
-                                    100 -
-                                        FINAL_CONFIG.style.chart.layout.roots
-                                            .gradientIntensity,
+                                    100 - cfgRoots.gradientIntensity,
                                 ),
                                 1,
                             ],
@@ -1902,9 +1875,7 @@ defineExpose({
                                 '100%',
                                 setOpacity(
                                     shiftHue(d.color, 0.02),
-                                    100 -
-                                        FINAL_CONFIG.style.chart.layout.branches
-                                            .gradientIntensity,
+                                    100 - cfgBranches.gradientIntensity,
                                 ),
                                 1,
                             ],
@@ -1925,8 +1896,7 @@ defineExpose({
                                 '80%',
                                 setOpacity(
                                     '#FFFFFF',
-                                    FINAL_CONFIG.style.chart.layout.nuts
-                                        .selected.gradientIntensity,
+                                    cfgNuts.selected.gradientIntensity,
                                 ),
                                 1,
                             ],
@@ -1947,8 +1917,7 @@ defineExpose({
                                 '80%',
                                 setOpacity(
                                     '#FFFFFF',
-                                    FINAL_CONFIG.style.chart.layout.nuts
-                                        .gradientIntensity,
+                                    cfgNuts.gradientIntensity,
                                 ),
                                 1,
                             ],
@@ -1967,26 +1936,17 @@ defineExpose({
                         :stops="[
                             [
                                 '0%',
-                                setOpacity(
-                                    FINAL_CONFIG.style.chart.backgroundColor,
-                                    100,
-                                ),
+                                setOpacity(cfgChart.backgroundColor, 100),
                                 1,
                             ],
                             [
                                 '80%',
-                                setOpacity(
-                                    FINAL_CONFIG.style.chart.backgroundColor,
-                                    60,
-                                ),
+                                setOpacity(cfgChart.backgroundColor, 60),
                                 1,
                             ],
                             [
                                 '100%',
-                                setOpacity(
-                                    FINAL_CONFIG.style.chart.backgroundColor,
-                                    0,
-                                ),
+                                setOpacity(cfgChart.backgroundColor, 0),
                                 1,
                             ],
                         ]"
@@ -1994,22 +1954,15 @@ defineExpose({
                 </defs>
 
                 <!-- GRAND TOTAL -->
-                <g v-if="FINAL_CONFIG.style.chart.layout.grandTotal.show">
+                <g v-if="cfgLayout.grandTotal.show">
                     <text
                         :x="drawableArea.seedX"
-                        :y="
-                            32 +
-                            FINAL_CONFIG.style.chart.layout.grandTotal.offsetY
-                        "
-                        :font-size="
-                            FINAL_CONFIG.style.chart.layout.grandTotal.fontSize
-                        "
+                        :y="32 + cfgLayout.grandTotal.offsetY"
+                        :font-size="cfgLayout.grandTotal.fontSize"
                         :font-weight="
-                            FINAL_CONFIG.style.chart.layout.grandTotal.bold
-                                ? 'bold'
-                                : 'normal'
+                            cfgLayout.grandTotal.bold ? 'bold' : 'normal'
                         "
-                        :fill="FINAL_CONFIG.style.chart.layout.grandTotal.color"
+                        :fill="cfgLayout.grandTotal.color"
                         text-anchor="middle"
                         @click="
                             () => {
@@ -2019,25 +1972,20 @@ defineExpose({
                             }
                         "
                     >
-                        {{ FINAL_CONFIG.style.chart.layout.grandTotal.text }}
+                        {{ cfgLayout.grandTotal.text }}
                     </text>
                     <text
                         :x="drawableArea.seedX"
                         :y="
                             38 +
-                            FINAL_CONFIG.style.chart.layout.grandTotal
-                                .fontSize +
-                            FINAL_CONFIG.style.chart.layout.grandTotal.offsetY
+                            cfgLayout.grandTotal.fontSize +
+                            cfgLayout.grandTotal.offsetY
                         "
-                        :font-size="
-                            FINAL_CONFIG.style.chart.layout.grandTotal.fontSize
-                        "
+                        :font-size="cfgLayout.grandTotal.fontSize"
                         :font-weight="
-                            FINAL_CONFIG.style.chart.layout.grandTotal.bold
-                                ? 'bold'
-                                : 'normal'
+                            cfgLayout.grandTotal.bold ? 'bold' : 'normal'
                         "
-                        :fill="FINAL_CONFIG.style.chart.layout.grandTotal.color"
+                        :fill="cfgLayout.grandTotal.color"
                         text-anchor="middle"
                         @click="
                             () => {
@@ -2049,17 +1997,13 @@ defineExpose({
                     >
                         {{
                             applyDataLabel(
-                                FINAL_CONFIG.style.chart.layout.grandTotal
-                                    .formatter,
+                                cfgLayout.grandTotal.formatter,
                                 treeTotal,
                                 dataLabel({
-                                    p: FINAL_CONFIG.style.chart.layout
-                                        .grandTotal.prefix,
+                                    p: cfgLayout.grandTotal.prefix,
                                     v: treeTotal,
-                                    s: FINAL_CONFIG.style.chart.layout
-                                        .grandTotal.suffix,
-                                    r: FINAL_CONFIG.style.chart.layout
-                                        .grandTotal.roundingValue,
+                                    s: cfgLayout.grandTotal.suffix,
+                                    r: cfgLayout.grandTotal.roundingValue,
                                 }),
                             )
                         }}
@@ -2078,8 +2022,7 @@ defineExpose({
                                     '100%',
                                     setOpacity(
                                         branch.color,
-                                        FINAL_CONFIG.style.chart.layout.links
-                                            .opacity,
+                                        cfgLayout.links.opacity,
                                     ),
                                     1,
                                 ],
@@ -2089,10 +2032,7 @@ defineExpose({
                     <path
                         :d="getLinkPath(branch)"
                         :stroke="
-                            setOpacity(
-                                branch.color,
-                                FINAL_CONFIG.style.chart.layout.links.opacity,
-                            )
+                            setOpacity(branch.color, cfgLayout.links.opacity)
                         "
                         :fill="`url(#link_grad_${branch.id})`"
                         stroke-linecap="round"
@@ -2114,9 +2054,7 @@ defineExpose({
                     :cx="root.x"
                     :cy="root.y"
                     :r="root.r"
-                    :fill="
-                        FINAL_CONFIG.style.chart.layout.roots.underlayerColor
-                    "
+                    :fill="cfgRoots.underlayerColor"
                     stroke="none"
                     :style="`cursor:${isCursorPointer ? 'pointer' : 'default'}; opacity:${isFocused(root) ? 1 : 0.05}`"
                 />
@@ -2128,40 +2066,28 @@ defineExpose({
                     :cy="root.y"
                     :r="root.r"
                     :fill="
-                        FINAL_CONFIG.style.chart.layout.roots.useGradient
+                        cfgRoots.useGradient
                             ? `url(#root_gradient_${uid}_${root.rootIndex})`
                             : root.color
                     "
-                    :stroke="FINAL_CONFIG.style.chart.layout.roots.stroke"
-                    :stroke-width="
-                        FINAL_CONFIG.style.chart.layout.roots.strokeWidth
-                    "
+                    :stroke="cfgRoots.stroke"
+                    :stroke-width="cfgRoots.strokeWidth"
                     :style="`cursor:${isCursorPointer ? 'pointer' : 'default'}; opacity:${isFocused(root) ? 1 : 0.05}`"
                     @click="pickRoot(root)"
                 />
-                <g v-if="FINAL_CONFIG.style.chart.layout.roots.labels.show">
+                <g v-if="cfgRoots.labels.show">
                     <!-- ROOT TOTAL -->
                     <text
                         v-for="(root, i) in roots"
                         :data-cy="`chestnut-root-label-${i}`"
                         :x="root.x"
-                        :y="
-                            root.y +
-                            FINAL_CONFIG.style.chart.layout.roots.labels
-                                .fontSize /
-                                2.6
-                        "
+                        :y="root.y + cfgRoots.labels.fontSize / 2.6"
                         text-anchor="middle"
-                        :font-size="
-                            FINAL_CONFIG.style.chart.layout.roots.labels
-                                .fontSize
-                        "
+                        :font-size="cfgRoots.labels.fontSize"
                         :fill="
-                            FINAL_CONFIG.style.chart.layout.roots.labels
-                                .adaptColorToBackground
+                            cfgRoots.labels.adaptColorToBackground
                                 ? adaptColorToBackground(root.color)
-                                : FINAL_CONFIG.style.chart.layout.roots.labels
-                                      .color
+                                : cfgRoots.labels.color
                         "
                         font-weight="bold"
                         :style="`cursor:${isCursorPointer ? 'pointer' : 'default'}; opacity:${isFocused(root) ? 1 : 0.05}`"
@@ -2169,17 +2095,13 @@ defineExpose({
                     >
                         {{
                             applyDataLabel(
-                                FINAL_CONFIG.style.chart.layout.roots.labels
-                                    .formatter,
+                                cfgRoots.labels.formatter,
                                 root.total,
                                 dataLabel({
-                                    p: FINAL_CONFIG.style.chart.layout.roots
-                                        .labels.prefix,
+                                    p: cfgRoots.labels.prefix,
                                     v: root.total,
-                                    s: FINAL_CONFIG.style.chart.layout.roots
-                                        .labels.suffix,
-                                    r: FINAL_CONFIG.style.chart.layout.roots
-                                        .labels.roundingValue,
+                                    s: cfgRoots.labels.suffix,
+                                    r: cfgRoots.labels.roundingValue,
                                 }),
                                 { datapoint: root },
                             )
@@ -2202,17 +2124,10 @@ defineExpose({
                                 :x="root.x"
                                 :y="root.y + root.r + 24"
                                 text-anchor="middle"
-                                :fill="
-                                    FINAL_CONFIG.style.chart.layout.roots.labels
-                                        .name.color
-                                "
-                                :font-size="
-                                    FINAL_CONFIG.style.chart.layout.roots.labels
-                                        .name.fontSize
-                                "
+                                :fill="cfgRoots.labels.name.color"
+                                :font-size="cfgRoots.labels.name.fontSize"
                                 :font-weight="
-                                    FINAL_CONFIG.style.chart.layout.roots.labels
-                                        .name.bold
+                                    cfgRoots.labels.name.bold
                                         ? 'bold'
                                         : 'normal'
                                 "
@@ -2238,10 +2153,8 @@ defineExpose({
                     :y="branch.y1"
                     :height="svg.branchSize"
                     :width="branch.x2 - branch.x1"
-                    :fill="
-                        FINAL_CONFIG.style.chart.layout.branches.underlayerColor
-                    "
-                    :rx="FINAL_CONFIG.style.chart.layout.branches.borderRadius"
+                    :fill="cfgBranches.underlayerColor"
+                    :rx="cfgBranches.borderRadius"
                     stroke="none"
                     :style="`opacity:${isFocused(branch) ? 1 : 0.05}`"
                     @click="pickBranch(branch)"
@@ -2255,57 +2168,44 @@ defineExpose({
                     :height="svg.branchSize"
                     :width="branch.x2 - branch.x1"
                     :fill="
-                        FINAL_CONFIG.style.chart.layout.branches.useGradient
+                        cfgBranches.useGradient
                             ? `url(#branch_gradient_${uid}_${branch.rootIndex})`
                             : branch.color
                     "
-                    :rx="FINAL_CONFIG.style.chart.layout.branches.borderRadius"
-                    :stroke="FINAL_CONFIG.style.chart.layout.branches.stroke"
-                    :stroke-width="
-                        FINAL_CONFIG.style.chart.layout.branches.strokeWidth
-                    "
+                    :rx="cfgBranches.borderRadius"
+                    :stroke="cfgBranches.stroke"
+                    :stroke-width="cfgBranches.strokeWidth"
                     :style="`cursor:${isCursorPointer ? 'pointer' : 'default'}; opacity:${isFocused(branch) ? 1 : 0.05}`"
                     @click="pickBranch(branch)"
                 />
-                <g
-                    v-if="
-                        FINAL_CONFIG.style.chart.layout.branches.labels
-                            .dataLabels.show
-                    "
-                >
+                <g v-if="cfgBranches.labels.dataLabels.show">
                     <g v-for="branch in branches">
                         <!-- BRANCH TOTAL -->
                         <text
                             v-if="
                                 branch.proportionToRoot * 100 >
-                                FINAL_CONFIG.style.chart.layout.branches.labels
-                                    .dataLabels.hideUnderValue
+                                cfgBranches.labels.dataLabels.hideUnderValue
                             "
                             :x="branch.x1 + 6"
                             :y="branch.y1 + svg.branchSize / 1.5"
                             text-anchor="start"
                             :fill="adaptColorToBackground(branch.color)"
-                            :font-size="
-                                FINAL_CONFIG.style.chart.layout.branches.labels
-                                    .dataLabels.fontSize
-                            "
+                            :font-size="cfgBranches.labels.dataLabels.fontSize"
                             font-weight="bold"
                             :style="`cursor:${isCursorPointer ? 'pointer' : 'default'}; opacity:${isFocused(branch) ? 1 : 0.05}`"
                             @click="pickBranch(branch)"
                         >
                             {{
                                 applyDataLabel(
-                                    FINAL_CONFIG.style.chart.layout.branches
-                                        .labels.dataLabels.formatter,
+                                    cfgBranches.labels.dataLabels.formatter,
                                     branch.value,
                                     dataLabel({
-                                        p: FINAL_CONFIG.style.chart.layout
-                                            .branches.labels.dataLabels.prefix,
+                                        p: cfgLayout.branches.labels.dataLabels
+                                            .prefix,
                                         v: branch.value,
-                                        s: FINAL_CONFIG.style.chart.layout
-                                            .branches.labels.dataLabels.suffix,
-                                        r: FINAL_CONFIG.style.chart.layout
-                                            .branches.labels.dataLabels
+                                        s: cfgLayout.branches.labels.dataLabels
+                                            .suffix,
+                                        r: cfgLayout.branches.labels.dataLabels
                                             .roundingValue,
                                     }),
                                     { datapoint: branch },
@@ -2321,9 +2221,7 @@ defineExpose({
                     <path
                         v-for="(arc, i) in makeDonut(
                             { series: branch.breakdown, base: 1 },
-                            branch.x2 +
-                                24 +
-                                FINAL_CONFIG.style.chart.layout.nuts.offsetX,
+                            branch.x2 + 24 + cfgNuts.offsetX,
                             branch.y1 + svg.branchSize / 2,
                             svg.branchSize / 3,
                             svg.branchSize / 3,
@@ -2341,15 +2239,11 @@ defineExpose({
                         :data-cy="`chestnut-trap-${b}`"
                         :aria-label="`Open details for branch ${branch.name} in root ${branch.rootName}`"
                         :fill="
-                            FINAL_CONFIG.style.chart.layout.nuts.useGradient
+                            cfgNuts.useGradient
                                 ? `url(#nut_${uid})`
                                 : 'transparent'
                         "
-                        :cx="
-                            branch.x2 +
-                            24 +
-                            FINAL_CONFIG.style.chart.layout.nuts.offsetX
-                        "
+                        :cx="branch.x2 + 24 + cfgNuts.offsetX"
                         :cy="branch.y1 + svg.branchSize / 2"
                         :r="svg.branchSize / 2 + 2"
                         @click="pickNut(branch)"
@@ -2357,34 +2251,16 @@ defineExpose({
                     />
                 </g>
 
-                <g
-                    v-if="
-                        FINAL_CONFIG.style.chart.layout.branches.labels.show &&
-                        !selectedBranch
-                    "
-                >
+                <g v-if="cfgBranches.labels.show && !selectedBranch">
                     <text
                         v-for="branch in branches"
-                        :x="
-                            branch.x2 +
-                            svg.branchSize +
-                            24 +
-                            FINAL_CONFIG.style.chart.layout.nuts.offsetX
-                        "
+                        :x="branch.x2 + svg.branchSize + 24 + cfgNuts.offsetX"
                         :y="branch.y1 + svg.branchSize / 2 + 5"
-                        :font-size="
-                            FINAL_CONFIG.style.chart.layout.branches.labels
-                                .fontSize
-                        "
+                        :font-size="cfgBranches.labels.fontSize"
                         :font-weight="
-                            FINAL_CONFIG.style.chart.layout.branches.labels.bold
-                                ? 'bold'
-                                : 'normal'
+                            cfgBranches.labels.bold ? 'bold' : 'normal'
                         "
-                        :fill="
-                            FINAL_CONFIG.style.chart.layout.branches.labels
-                                .color
-                        "
+                        :fill="cfgBranches.labels.color"
                         text-anchor="start"
                         :style="`opacity:${isFocused(branch) ? 1 : 0.1}`"
                     >
@@ -2398,13 +2274,8 @@ defineExpose({
                     :x2="256 + svg.padding.left"
                     :y1="drawableArea.top"
                     :y2="drawableArea.bottom"
-                    :stroke="
-                        FINAL_CONFIG.style.chart.layout.verticalSeparator.stroke
-                    "
-                    :stroke-width="
-                        FINAL_CONFIG.style.chart.layout.verticalSeparator
-                            .strokeWidth
-                    "
+                    :stroke="cfgLayout.verticalSeparator.stroke"
+                    :stroke-width="cfgLayout.verticalSeparator.strokeWidth"
                 />
 
                 <!-- ROOT LEGEND -->
@@ -2446,7 +2317,7 @@ defineExpose({
                         >
                             <div
                                 v-for="root in roots"
-                                :style="`display:flex;align-items:center;gap:3px;flex-direction:row;font-size:${FINAL_CONFIG.style.chart.layout.legend.fontSize}px;`"
+                                :style="`display:flex;align-items:center;gap:3px;flex-direction:row;font-size:${cfgLayout.legend.fontSize}px;`"
                             >
                                 <svg viewBox="0 0 20 20" height="16" width="16">
                                     <circle
@@ -2462,17 +2333,16 @@ defineExpose({
                                     <b>
                                         {{
                                             applyDataLabel(
-                                                FINAL_CONFIG.style.chart.layout
-                                                    .roots.labels.formatter,
+                                                cfgLayout.roots.labels
+                                                    .formatter,
                                                 root.total,
                                                 dataLabel({
-                                                    p: FINAL_CONFIG.style.chart
-                                                        .layout.legend.prefix,
+                                                    p: cfgChart.layout.legend
+                                                        .prefix,
                                                     v: root.total,
-                                                    s: FINAL_CONFIG.style.chart
-                                                        .layout.legend.suffix,
-                                                    r: FINAL_CONFIG.style.chart
-                                                        .layout.legend
+                                                    s: cfgChart.layout.legend
+                                                        .suffix,
+                                                    r: cfgChart.layout.legend
                                                         .roundingValue,
                                                 }),
                                                 { datapoint: root },
@@ -2483,8 +2353,8 @@ defineExpose({
                                         dataLabel({
                                             v: (root.total / treeTotal) * 100,
                                             s: '%',
-                                            r: FINAL_CONFIG.style.chart.layout
-                                                .legend.roundingPercentage,
+                                            r: cfgLayout.legend
+                                                .roundingPercentage,
                                         })
                                     }})
                                 </template>
@@ -2534,7 +2404,7 @@ defineExpose({
                             >
                                 <div
                                     v-for="(nut, i) in selectedNut.breakdown"
-                                    :style="`display:flex;align-items:center;gap:6px;flex-direction:row;font-size:${FINAL_CONFIG.style.chart.layout.legend.fontSize}px;`"
+                                    :style="`display:flex;align-items:center;gap:6px;flex-direction:row;font-size:${cfgLayout.legend.fontSize}px;`"
                                 >
                                     <svg
                                         viewBox="0 0 20 20"
@@ -2552,28 +2422,21 @@ defineExpose({
                                     <span
                                         >{{ nut.name }}:
                                         <b
-                                            >{{
-                                                FINAL_CONFIG.style.chart.layout
-                                                    .legend.prefix
-                                            }}
+                                            >{{ cfgLayout.legend.prefix }}
                                             {{
                                                 nut.value.toFixed(
-                                                    FINAL_CONFIG.style.chart
-                                                        .layout.nuts.selected
-                                                        .labels.roundingValue,
+                                                    cfgChart.layout.nuts
+                                                        .selected.labels
+                                                        .roundingValue,
                                                 )
                                             }}
-                                            {{
-                                                FINAL_CONFIG.style.chart.layout
-                                                    .legend.suffix
-                                            }}</b
+                                            {{ cfgLayout.legend.suffix }}</b
                                         >
                                         ({{
                                             (
                                                 nut.proportionToBranch * 100
                                             ).toFixed(
-                                                FINAL_CONFIG.style.chart.layout
-                                                    .nuts.selected.labels
+                                                cfgLayout.nuts.selected.labels
                                                     .roundingPercentage,
                                             )
                                         }}%)</span
@@ -2583,18 +2446,13 @@ defineExpose({
                         </div>
                     </foreignObject>
                     <circle
-                        :cx="
-                            selectedNut.x2 +
-                            24 +
-                            FINAL_CONFIG.style.chart.layout.nuts.offsetX
-                        "
+                        :cx="selectedNut.x2 + 24 + cfgNuts.offsetX"
                         :cy="selectedNut.y1 + svg.branchSize / 2"
                         :r="256"
                         :fill="`url(#nut_underlayer_${uid})`"
                         @click="leaveNut"
                         :class="
-                            FINAL_CONFIG.style.chart.layout.nuts.selected
-                                .useMotion
+                            cfgNuts.selected.useMotion
                                 ? 'vue-ui-chestnut-animated'
                                 : ''
                         "
@@ -2610,8 +2468,7 @@ defineExpose({
                                         x:
                                             selectedNut.x2 +
                                             24 +
-                                            FINAL_CONFIG.style.chart.layout.nuts
-                                                .offsetX,
+                                            cfgNuts.offsetX,
                                         y: selectedNut.y1 + svg.branchSize / 2,
                                     },
                                     16,
@@ -2627,26 +2484,20 @@ defineExpose({
                             stroke-linejoin="round"
                             fill="none"
                             :class="
-                                FINAL_CONFIG.style.chart.layout.nuts.selected
-                                    .useMotion
+                                cfgNuts.selected.useMotion
                                     ? 'vue-ui-chestnut-animated'
                                     : ''
                             "
                         />
                     </g>
                     <circle
-                        :cx="
-                            selectedNut.x2 +
-                            24 +
-                            FINAL_CONFIG.style.chart.layout.nuts.offsetX
-                        "
+                        :cx="selectedNut.x2 + 24 + cfgNuts.offsetX"
                         :cy="selectedNut.y1 + svg.branchSize / 2"
                         :r="118"
-                        :fill="FINAL_CONFIG.style.chart.backgroundColor"
+                        :fill="cfgChart.backgroundColor"
                         @click="leaveNut"
                         :class="
-                            FINAL_CONFIG.style.chart.layout.nuts.selected
-                                .useMotion
+                            cfgNuts.selected.useMotion
                                 ? 'vue-ui-chestnut-animated'
                                 : ''
                         "
@@ -2659,74 +2510,51 @@ defineExpose({
                         fill="none"
                         @click="leaveNut"
                         :class="
-                            FINAL_CONFIG.style.chart.layout.nuts.selected
-                                .useMotion
+                            cfgNuts.selected.useMotion
                                 ? 'vue-ui-chestnut-animated'
                                 : ''
                         "
                     />
                     <!-- NUT PICK CORE -->
                     <circle
-                        :cx="
-                            selectedNut.x2 +
-                            24 +
-                            FINAL_CONFIG.style.chart.layout.nuts.offsetX
-                        "
+                        :cx="selectedNut.x2 + 24 + cfgNuts.offsetX"
                         :cy="selectedNut.y1 + svg.branchSize / 2"
                         :r="110"
                         :fill="`url(#nutpick_${uid})`"
                         @click="leaveNut"
                         :class="
-                            FINAL_CONFIG.style.chart.layout.nuts.selected
-                                .useMotion
+                            cfgNuts.selected.useMotion
                                 ? 'vue-ui-chestnut-animated'
                                 : ''
                         "
                     />
                     <circle
-                        :cx="
-                            selectedNut.x2 +
-                            24 +
-                            FINAL_CONFIG.style.chart.layout.nuts.offsetX
-                        "
+                        :cx="selectedNut.x2 + 24 + cfgNuts.offsetX"
                         :cy="selectedNut.y1 + svg.branchSize / 2"
                         :r="64"
-                        :fill="FINAL_CONFIG.style.chart.backgroundColor"
+                        :fill="cfgChart.backgroundColor"
                         @click="leaveNut"
                         :class="
-                            FINAL_CONFIG.style.chart.layout.nuts.selected
-                                .useMotion
+                            cfgNuts.selected.useMotion
                                 ? 'vue-ui-chestnut-animated'
                                 : ''
                         "
                     />
 
                     <text
-                        :x="
-                            selectedNut.x2 +
-                            24 +
-                            FINAL_CONFIG.style.chart.layout.nuts.offsetX
-                        "
+                        :x="selectedNut.x2 + 24 + cfgNuts.offsetX"
                         :y="selectedNut.y1 + 8"
-                        :fill="
-                            FINAL_CONFIG.style.chart.layout.nuts.selected.labels
-                                .core.total.color
-                        "
-                        :font-size="
-                            FINAL_CONFIG.style.chart.layout.nuts.selected.labels
-                                .core.total.fontSize
-                        "
+                        :fill="cfgNuts.selected.labels.core.total.color"
+                        :font-size="cfgNuts.selected.labels.core.total.fontSize"
                         :font-weight="
-                            FINAL_CONFIG.style.chart.layout.nuts.selected.labels
-                                .core.total.bold
+                            cfgNuts.selected.labels.core.total.bold
                                 ? 'bold'
                                 : 'normal'
                         "
                         text-anchor="middle"
                         @click="leaveNut"
                         :class="
-                            FINAL_CONFIG.style.chart.layout.nuts.selected
-                                .useMotion
+                            cfgNuts.selected.useMotion
                                 ? 'vue-ui-chestnut-animated'
                                 : ''
                         "
@@ -2734,48 +2562,34 @@ defineExpose({
                         {{ FINAL_CONFIG.translations.total }}
                     </text>
                     <text
-                        :x="
-                            selectedNut.x2 +
-                            24 +
-                            FINAL_CONFIG.style.chart.layout.nuts.offsetX
-                        "
+                        :x="selectedNut.x2 + 24 + cfgNuts.offsetX"
                         :y="selectedNut.y1 + 36"
-                        :fill="
-                            FINAL_CONFIG.style.chart.layout.nuts.selected.labels
-                                .core.value.color
-                        "
-                        :font-size="
-                            FINAL_CONFIG.style.chart.layout.nuts.selected.labels
-                                .core.value.fontSize
-                        "
+                        :fill="cfgNuts.selected.labels.core.value.color"
+                        :font-size="cfgNuts.selected.labels.core.value.fontSize"
                         :font-weight="
-                            FINAL_CONFIG.style.chart.layout.nuts.selected.labels
-                                .core.value.bold
+                            cfgNuts.selected.labels.core.value.bold
                                 ? 'bold'
                                 : 'normal'
                         "
                         text-anchor="middle"
                         @click="leaveNut"
                         :class="
-                            FINAL_CONFIG.style.chart.layout.nuts.selected
-                                .useMotion
+                            cfgNuts.selected.useMotion
                                 ? 'vue-ui-chestnut-animated'
                                 : ''
                         "
                     >
                         {{
                             applyDataLabel(
-                                FINAL_CONFIG.style.chart.layout.nuts.selected
-                                    .labels.dataLabels.formatter,
+                                cfgNuts.selected.labels.dataLabels.formatter,
                                 selectedNut.value,
                                 dataLabel({
-                                    p: FINAL_CONFIG.style.chart.layout.nuts
-                                        .selected.labels.core.value.prefix,
+                                    p: cfgNuts.selected.labels.core.value
+                                        .prefix,
                                     v: selectedNut.value,
-                                    s: FINAL_CONFIG.style.chart.layout.nuts
-                                        .selected.labels.core.value.suffix,
-                                    r: FINAL_CONFIG.style.chart.layout.nuts
-                                        .selected.roundingValue,
+                                    s: cfgNuts.selected.labels.core.value
+                                        .suffix,
+                                    r: cfgNuts.selected.roundingValue,
                                 }),
                                 { datapoint: selectedNut },
                             )
@@ -2790,19 +2604,15 @@ defineExpose({
                             :text-anchor="calcMarkerOffsetX(arc).anchor"
                             :y="
                                 calcMarkerOffsetY(arc) -
-                                FINAL_CONFIG.style.chart.layout.nuts.selected
-                                    .labels.dataLabels.fontSize /
-                                    6
+                                cfgNuts.selected.labels.dataLabels.fontSize / 6
                             "
                             :fill="arc.color"
                             :font-size="
-                                FINAL_CONFIG.style.chart.layout.nuts.selected
-                                    .labels.dataLabels.fontSize / 2
+                                cfgNuts.selected.labels.dataLabels.fontSize / 2
                             "
-                            :style="`font-weight:${FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.bold ? 'bold' : ''}`"
+                            :style="`font-weight:${cfgNuts.selected.labels.dataLabels.bold ? 'bold' : ''}`"
                             :class="
-                                FINAL_CONFIG.style.chart.layout.nuts.selected
-                                    .useMotion
+                                cfgNuts.selected.useMotion
                                     ? 'vue-ui-chestnut-animated'
                                     : ''
                             "
@@ -2814,18 +2624,13 @@ defineExpose({
                             :x="calcMarkerOffsetX(arc, true).x"
                             :text-anchor="calcMarkerOffsetX(arc, true).anchor"
                             :y="calcMarkerOffsetY(arc)"
-                            :fill="
-                                FINAL_CONFIG.style.chart.layout.nuts.selected
-                                    .labels.dataLabels.color
-                            "
+                            :fill="cfgNuts.selected.labels.dataLabels.color"
                             :font-size="
-                                FINAL_CONFIG.style.chart.layout.nuts.selected
-                                    .labels.dataLabels.fontSize
+                                cfgNuts.selected.labels.dataLabels.fontSize
                             "
-                            :style="`font-weight:${FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.bold ? 'bold' : ''}`"
+                            :style="`font-weight:${cfgNuts.selected.labels.dataLabels.bold ? 'bold' : ''}`"
                             :class="
-                                FINAL_CONFIG.style.chart.layout.nuts.selected
-                                    .useMotion
+                                cfgNuts.selected.useMotion
                                     ? 'vue-ui-chestnut-animated'
                                     : ''
                             "
@@ -2840,21 +2645,15 @@ defineExpose({
                             :text-anchor="calcMarkerOffsetX(arc).anchor"
                             :y="
                                 calcMarkerOffsetY(arc) +
-                                FINAL_CONFIG.style.chart.layout.nuts.selected
-                                    .labels.dataLabels.fontSize
+                                cfgNuts.selected.labels.dataLabels.fontSize
                             "
-                            :fill="
-                                FINAL_CONFIG.style.chart.layout.nuts.selected
-                                    .labels.dataLabels.color
-                            "
+                            :fill="cfgNuts.selected.labels.dataLabels.color"
                             :font-size="
-                                FINAL_CONFIG.style.chart.layout.nuts.selected
-                                    .labels.dataLabels.fontSize
+                                cfgNuts.selected.labels.dataLabels.fontSize
                             "
-                            :style="`font-weight:${FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.bold ? 'bold' : ''}`"
+                            :style="`font-weight:${cfgNuts.selected.labels.dataLabels.bold ? 'bold' : ''}`"
                             :class="
-                                FINAL_CONFIG.style.chart.layout.nuts.selected
-                                    .useMotion
+                                cfgNuts.selected.useMotion
                                     ? 'vue-ui-chestnut-animated'
                                     : ''
                             "
@@ -2866,8 +2665,8 @@ defineExpose({
                                             selectedNut.value) *
                                         100,
                                     s: '%',
-                                    r: FINAL_CONFIG.style.chart.layout.nuts
-                                        .selected.labels.roundingPercentage,
+                                    r: cfgNuts.selected.labels
+                                        .roundingPercentage,
                                 })
                             }}
 
@@ -2876,17 +2675,16 @@ defineExpose({
 
                             {{
                                 applyDataLabel(
-                                    FINAL_CONFIG.style.chart.layout.nuts
-                                        .selected.labels.dataLabels.formatter,
+                                    cfgNuts.selected.labels.dataLabels
+                                        .formatter,
                                     selectedNut.breakdown[i].value,
                                     dataLabel({
-                                        p: FINAL_CONFIG.style.chart.layout.nuts
-                                            .selected.labels.dataLabels.prefix,
+                                        p: cfgNuts.selected.labels.dataLabels
+                                            .prefix,
                                         v: selectedNut.breakdown[i].value,
-                                        s: FINAL_CONFIG.style.chart.layout.nuts
-                                            .selected.labels.dataLabels.suffix,
-                                        r: FINAL_CONFIG.style.chart.layout.nuts
-                                            .selected.roundingValue,
+                                        s: cfgNuts.selected.labels.dataLabels
+                                            .suffix,
+                                        r: cfgNuts.selected.roundingValue,
                                     }),
                                     { datapoint: openNut, seriesIndex: i },
                                 )
@@ -2898,22 +2696,15 @@ defineExpose({
                             :text-anchor="calcMarkerOffsetX(arc).anchor"
                             :y="
                                 calcMarkerOffsetY(arc) +
-                                FINAL_CONFIG.style.chart.layout.nuts.selected
-                                    .labels.dataLabels.fontSize *
-                                    2
+                                cfgNuts.selected.labels.dataLabels.fontSize * 2
                             "
-                            :fill="
-                                FINAL_CONFIG.style.chart.layout.nuts.selected
-                                    .labels.dataLabels.color
-                            "
+                            :fill="cfgNuts.selected.labels.dataLabels.color"
                             :font-size="
-                                FINAL_CONFIG.style.chart.layout.nuts.selected
-                                    .labels.dataLabels.fontSize
+                                cfgNuts.selected.labels.dataLabels.fontSize
                             "
-                            :style="`font-weight:${FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.bold ? 'bold' : ''}`"
+                            :style="`font-weight:${cfgNuts.selected.labels.dataLabels.bold ? 'bold' : ''}`"
                             :class="
-                                FINAL_CONFIG.style.chart.layout.nuts.selected
-                                    .useMotion
+                                cfgNuts.selected.useMotion
                                     ? 'vue-ui-chestnut-animated'
                                     : ''
                             "
@@ -2924,8 +2715,8 @@ defineExpose({
                                         selectedNut.breakdown[i]
                                             .proportionToRoot * 100,
                                     s: '%',
-                                    r: FINAL_CONFIG.style.chart.layout.nuts
-                                        .selected.labels.roundingPercentage,
+                                    r: cfgNuts.selected.labels
+                                        .roundingPercentage,
                                 })
                             }}
                             {{ FINAL_CONFIG.translations.of }}
@@ -2937,22 +2728,15 @@ defineExpose({
                             :text-anchor="calcMarkerOffsetX(arc).anchor"
                             :y="
                                 calcMarkerOffsetY(arc) +
-                                FINAL_CONFIG.style.chart.layout.nuts.selected
-                                    .labels.dataLabels.fontSize *
-                                    3
+                                cfgNuts.selected.labels.dataLabels.fontSize * 3
                             "
-                            :fill="
-                                FINAL_CONFIG.style.chart.layout.nuts.selected
-                                    .labels.dataLabels.color
-                            "
+                            :fill="cfgNuts.selected.labels.dataLabels.color"
                             :font-size="
-                                FINAL_CONFIG.style.chart.layout.nuts.selected
-                                    .labels.dataLabels.fontSize
+                                cfgNuts.selected.labels.dataLabels.fontSize
                             "
-                            :style="`font-weight:${FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.bold ? 'bold' : ''}`"
+                            :style="`font-weight:${cfgNuts.selected.labels.dataLabels.bold ? 'bold' : ''}`"
                             :class="
-                                FINAL_CONFIG.style.chart.layout.nuts.selected
-                                    .useMotion
+                                cfgNuts.selected.useMotion
                                     ? 'vue-ui-chestnut-animated'
                                     : ''
                             "
@@ -2963,8 +2747,8 @@ defineExpose({
                                         selectedNut.breakdown[i]
                                             .proportionToTree * 100,
                                     s: '%',
-                                    r: FINAL_CONFIG.style.chart.layout.nuts
-                                        .selected.labels.roundingPercentage,
+                                    r: cfgNuts.selected.labels
+                                        .roundingPercentage,
                                 })
                             }}
                             {{ FINAL_CONFIG.translations.proportionToTree }}
@@ -2984,14 +2768,8 @@ defineExpose({
                         :y="branch.y1 + svg.branchSize + 24"
                         font-weight="bold"
                         text-anchor="start"
-                        :font-size="
-                            FINAL_CONFIG.style.chart.layout.branches.labels
-                                .dataLabels.fontSize
-                        "
-                        :fill="
-                            FINAL_CONFIG.style.chart.layout.branches.labels
-                                .color
-                        "
+                        :font-size="cfgBranches.labels.dataLabels.fontSize"
+                        :fill="cfgBranches.labels.color"
                         @click="
                             () => {
                                 resetTree();
@@ -3003,17 +2781,14 @@ defineExpose({
                         {{ branch.name }}:
                         {{
                             applyDataLabel(
-                                FINAL_CONFIG.style.chart.layout.branches.labels
-                                    .dataLabels.formatter,
+                                cfgBranches.labels.dataLabels.formatter,
                                 branch.value,
                                 dataLabel({
-                                    p: FINAL_CONFIG.style.chart.layout.branches
-                                        .labels.dataLabels.prefix,
+                                    p: cfgBranches.labels.dataLabels.prefix,
                                     v: branch.value,
-                                    s: FINAL_CONFIG.style.chart.layout.branches
-                                        .labels.dataLabels.suffix,
-                                    r: FINAL_CONFIG.style.chart.layout.branches
-                                        .labels.dataLabels.roundingValue,
+                                    s: cfgBranches.labels.dataLabels.suffix,
+                                    r: cfgBranches.labels.dataLabels
+                                        .roundingValue,
                                 }),
                                 { datapoint: branch },
                             )
@@ -3028,14 +2803,8 @@ defineExpose({
                         :x="branch.x1 + 6"
                         :y="branch.y1 + svg.branchSize + 48"
                         text-anchor="start"
-                        :font-size="
-                            FINAL_CONFIG.style.chart.layout.branches.labels
-                                .dataLabels.fontSize
-                        "
-                        :fill="
-                            FINAL_CONFIG.style.chart.layout.branches.labels
-                                .color
-                        "
+                        :font-size="cfgBranches.labels.dataLabels.fontSize"
+                        :fill="cfgBranches.labels.color"
                         @click="
                             () => {
                                 resetTree();
@@ -3048,8 +2817,8 @@ defineExpose({
                             dataLabel({
                                 v: branch.proportionToRoot * 100,
                                 s: '%',
-                                r: FINAL_CONFIG.style.chart.layout.branches
-                                    .labels.dataLabels.roundingPercentage,
+                                r: cfgBranches.labels.dataLabels
+                                    .roundingPercentage,
                             })
                         }}
                         {{ FINAL_CONFIG.translations.of }}
@@ -3064,14 +2833,8 @@ defineExpose({
                         :x="branch.x1 + 6"
                         :y="branch.y1 + svg.branchSize + 72"
                         text-anchor="start"
-                        :font-size="
-                            FINAL_CONFIG.style.chart.layout.branches.labels
-                                .dataLabels.fontSize
-                        "
-                        :fill="
-                            FINAL_CONFIG.style.chart.layout.branches.labels
-                                .color
-                        "
+                        :font-size="cfgBranches.labels.dataLabels.fontSize"
+                        :fill="cfgBranches.labels.color"
                         @click="
                             () => {
                                 resetTree();
@@ -3084,8 +2847,8 @@ defineExpose({
                             dataLabel({
                                 v: (branch.value / treeTotal) * 100,
                                 s: '%',
-                                r: FINAL_CONFIG.style.chart.layout.branches
-                                    .labels.dataLabels.roundingPercentage,
+                                r: cfgBranches.labels.dataLabels
+                                    .roundingPercentage,
                             })
                         }}
                         {{ FINAL_CONFIG.translations.proportionToTree }}
@@ -3187,17 +2950,12 @@ defineExpose({
                                     class="vue-ui-data-table__caption"
                                 >
                                     {{
-                                        FINAL_CONFIG.style.chart.layout.title
-                                            .text
+                                        cfgLayout.title.text
                                     }}
                                     <span
-                                        v-if="
-                                            FINAL_CONFIG.style.chart.layout
-                                                .title.subtitle.text
-                                        "
+                                        v-if="cfgLayout.title.subtitle.text"
                                         >{{
-                                            FINAL_CONFIG.style.chart.layout
-                                                .title.subtitle.text
+                                            cfgLayout.title.subtitle.text
                                         }}</span
                                     >
                                 </caption>
