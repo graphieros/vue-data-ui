@@ -122,6 +122,8 @@ function prepareConfig() {
 }
 
 const FINAL_CONFIG = ref(prepareConfig());
+const cfgPlots = computed(() => FINAL_CONFIG.value.style.chart.layout.plots);
+const cfgChart = computed(() => FINAL_CONFIG.value.style.chart);
 
 useHints({
     config: () => FINAL_CONFIG.value,
@@ -151,7 +153,7 @@ function hideOptions() {
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `hill_${id.value}`,
-    fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-hill',
+    fileName: cfgChart.value.title.text || 'vue-ui-hill',
     options: FINAL_CONFIG.value.userOptions.print,
 });
 
@@ -315,7 +317,7 @@ function dispatch(name, payload) {
     }
 }
 
-const chart = computed(() => FINAL_CONFIG.value.style.chart);
+const chart = computed(() => cfgChart.value);
 const layout = computed(() => chart.value.layout);
 const hill = computed(() => layout.value.hill);
 const plots = computed(() => layout.value.plots);
@@ -1901,22 +1903,20 @@ function isPositionIndicatorVisible(datapoint) {
 
 function formatPosition(datapoint) {
     return applyDataLabel(
-        FINAL_CONFIG.value.style.chart.layout.plots.dragMarker.positionIndicator
-            .value.formatter,
+        cfgPlots.value.dragMarker.positionIndicator.value.formatter,
         datapoint.position,
         dataLabel({
             p: '',
             v: datapoint.position * 100,
             s: '%',
-            r: FINAL_CONFIG.value.style.chart.layout.plots.dragMarker
-                .positionIndicator.value.rounding,
+            r: cfgPlots.value.dragMarker.positionIndicator.value.rounding,
         }),
     );
 }
 
-const svgBg = computed(() => FINAL_CONFIG.value.style.chart.backgroundColor);
-const svgLegend = computed(() => FINAL_CONFIG.value.style.chart.legend);
-const svgTitle = computed(() => FINAL_CONFIG.value.style.chart.title);
+const svgBg = computed(() => cfgChart.value.backgroundColor);
+const svgLegend = computed(() => cfgChart.value.legend);
+const svgTitle = computed(() => cfgChart.value.title);
 
 const { isCallbackImaging, isCallbackSvg, generateSvg, onGenerateImage } =
     useChartExport({
@@ -1939,8 +1939,8 @@ function generateCsv(callback = null) {
         ]);
 
         const tableXls = [
-            [FINAL_CONFIG.value.style.chart.title.text],
-            [FINAL_CONFIG.value.style.chart.title.subtitle.text],
+            [cfgChart.value.title.text],
+            [cfgChart.value.title.subtitle.text],
             [['Name'], ['Position'], ['Percentage'], ['Phase']],
         ].concat(rows);
 
@@ -1949,8 +1949,7 @@ function generateCsv(callback = null) {
         if (!callback) {
             downloadCsv({
                 csvContent,
-                title:
-                    FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-hill',
+                title: cfgChart.value.title.text || 'vue-ui-hill',
             });
         } else {
             callback(csvContent);
@@ -1958,9 +1957,7 @@ function generateCsv(callback = null) {
     });
 }
 
-const showStackbar = computed(
-    () => FINAL_CONFIG.value.style.chart.layout.stackbar.show,
-);
+const showStackbar = computed(() => cfgChart.value.layout.stackbar.show);
 
 const globalStatus = computed(() => {
     const totalScore = laidOutDataset.value.length;
@@ -2080,7 +2077,7 @@ async function getImage({ scale = 2 } = {}) {
     return {
         imageUri,
         base64,
-        title: FINAL_CONFIG.value.style.chart.title.text,
+        title: cfgChart.value.title.text,
         width,
         height,
         aspectRatio,
@@ -2120,7 +2117,7 @@ defineExpose({
     >
         <div
             ref="chartTitle"
-            v-if="FINAL_CONFIG.style.chart.title.text"
+            v-if="cfgChart.title.text"
             :style="`width:100%;background:transparent;padding-bottom:24px`"
         >
             <!-- TITLE AS DIV -->
@@ -2129,11 +2126,11 @@ defineExpose({
                 :config="{
                     title: {
                         cy: 'hill-div-title',
-                        ...FINAL_CONFIG.style.chart.title,
+                        ...cfgChart.title,
                     },
                     subtitle: {
                         cy: 'hill-div-subtitle',
-                        ...FINAL_CONFIG.style.chart.title.subtitle,
+                        ...cfgChart.title.subtitle,
                     },
                 }"
             />
@@ -2141,8 +2138,8 @@ defineExpose({
 
         <PenAndPaper
             v-if="FINAL_CONFIG.userOptions.buttons.annotator && svgRef"
-            :color="FINAL_CONFIG.style.chart.color"
-            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
+            :color="cfgChart.color"
+            :backgroundColor="cfgChart.backgroundColor"
             :active="isAnnotator"
             :svgRef="svgRef"
             :isCursorPointer="isCursorPointer"
@@ -2175,8 +2172,8 @@ defineExpose({
             :is-editable="isEditable"
             :is-fullscreen="isFullscreen"
             :position="hillActionsPosition"
-            :color="FINAL_CONFIG.style.chart.color"
-            :background-color="FINAL_CONFIG.style.chart.backgroundColor"
+            :color="cfgChart.color"
+            :background-color="cfgChart.backgroundColor"
             :translations="toolbar.buttons.translations"
             :is-cursor-pointer="isCursorPointer"
             @update="beginEditing"
@@ -2219,8 +2216,8 @@ defineExpose({
                 FINAL_CONFIG.userOptions.show &&
                 (keepUserOptionState ? true : userOptionsVisible)
             "
-            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
-            :color="FINAL_CONFIG.style.chart.color"
+            :backgroundColor="cfgChart.backgroundColor"
+            :color="cfgChart.color"
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="id"
@@ -2307,7 +2304,7 @@ defineExpose({
             ref="svgRef"
             :style="{
                 background: 'transparent',
-                color: FINAL_CONFIG.style.chart.color,
+                color: cfgChart.color,
                 fontFamily: FINAL_CONFIG.style.fontFamily,
             }"
             :class="{
@@ -2384,12 +2381,7 @@ defineExpose({
             />
 
             <!-- POSITION INFO -->
-            <template
-                v-if="
-                    FINAL_CONFIG.style.chart.layout.plots.dragMarker
-                        .positionIndicator.show
-                "
-            >
+            <template v-if="cfgPlots.dragMarker.positionIndicator.show">
                 <g
                     v-for="datapoint in orderedLaidOutDataset"
                     :key="`position-indicator-${datapoint.id}`"
@@ -2404,19 +2396,19 @@ defineExpose({
                         <path
                             :d="`M${datapoint.x},${datapoint.y} ${datapoint.x},${geometry.baseY}`"
                             :stroke="
-                                FINAL_CONFIG.style.chart.layout.plots.dragMarker
-                                    .positionIndicator.useSerieColor
+                                cfgPlots.dragMarker.positionIndicator
+                                    .useSerieColor
                                     ? datapoint.color
-                                    : FINAL_CONFIG.style.chart.layout.plots
-                                          .dragMarker.positionIndicator.color
+                                    : cfgPlots.dragMarker.positionIndicator
+                                          .color
                             "
                             :stroke-width="
-                                FINAL_CONFIG.style.chart.layout.plots.dragMarker
-                                    .positionIndicator.strokeWidth
+                                cfgPlots.dragMarker.positionIndicator
+                                    .strokeWidth
                             "
                             :stroke-dasharray="
-                                FINAL_CONFIG.style.chart.layout.plots.dragMarker
-                                    .positionIndicator.strokeDasharray
+                                cfgPlots.dragMarker.positionIndicator
+                                    .strokeDasharray
                             "
                             stroke-linecap="round"
                             vector-effect="non-scaling-stroke"
@@ -2429,29 +2421,29 @@ defineExpose({
 
                         <circle
                             v-if="
-                                FINAL_CONFIG.style.chart.layout.plots.dragMarker
-                                    .positionIndicator.circle.show
+                                cfgPlots.dragMarker.positionIndicator.circle
+                                    .show
                             "
                             :cx="datapoint.x"
                             :cy="geometry.baseY"
                             :r="
-                                FINAL_CONFIG.style.chart.layout.plots.dragMarker
-                                    .positionIndicator.circle.radius
+                                cfgPlots.dragMarker.positionIndicator.circle
+                                    .radius
                             "
                             :fill="
-                                FINAL_CONFIG.style.chart.layout.plots.dragMarker
-                                    .positionIndicator.useSerieColor
+                                cfgPlots.dragMarker.positionIndicator
+                                    .useSerieColor
                                     ? datapoint.color
-                                    : FINAL_CONFIG.style.chart.layout.plots
-                                          .dragMarker.positionIndicator.color
+                                    : cfgPlots.dragMarker.positionIndicator
+                                          .color
                             "
                             :stroke="
-                                FINAL_CONFIG.style.chart.layout.plots.dragMarker
-                                    .positionIndicator.circle.stroke
+                                cfgPlots.dragMarker.positionIndicator.circle
+                                    .stroke
                             "
                             :stroke-width="
-                                FINAL_CONFIG.style.chart.layout.plots.dragMarker
-                                    .positionIndicator.circle.strokeWidth
+                                cfgPlots.dragMarker.positionIndicator.circle
+                                    .strokeWidth
                             "
                             vector-effect="non-scaling-stroke"
                             paint-order="stroke fill"
@@ -2464,33 +2456,31 @@ defineExpose({
 
                         <text
                             v-if="
-                                FINAL_CONFIG.style.chart.layout.plots.dragMarker
-                                    .positionIndicator.value.show
+                                cfgPlots.dragMarker.positionIndicator.value.show
                             "
                             paint-order="stroke fill"
                             vector-effect="non-scaling-stroke"
                             text-anchor="middle"
                             :transform="`translate(${datapoint.x}, ${
                                 geometry.baseY +
-                                FINAL_CONFIG.style.chart.layout.plots.radius +
-                                FINAL_CONFIG.style.chart.layout.plots.dragMarker
-                                    .positionIndicator.value.offsetY +
-                                FINAL_CONFIG.style.chart.layout.plots.dragMarker
-                                    .positionIndicator.value.fontSize
+                                cfgPlots.radius +
+                                cfgPlots.dragMarker.positionIndicator.value
+                                    .offsetY +
+                                cfgPlots.dragMarker.positionIndicator.value
+                                    .fontSize
                             })`"
                             :font-size="
-                                FINAL_CONFIG.style.chart.layout.plots.dragMarker
-                                    .positionIndicator.value.fontSize
+                                cfgPlots.dragMarker.positionIndicator.value
+                                    .fontSize
                             "
                             :fill="
-                                FINAL_CONFIG.style.chart.layout.plots.dragMarker
-                                    .positionIndicator.value.useSerieColor
+                                cfgPlots.dragMarker.positionIndicator.value
+                                    .useSerieColor
                                     ? datapoint.color
-                                    : FINAL_CONFIG.style.chart.layout.plots
-                                          .dragMarker.positionIndicator.value
-                                          .color
+                                    : cfgPlots.dragMarker.positionIndicator
+                                          .value.color
                             "
-                            :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                            :stroke="cfgChart.backgroundColor"
                             stroke-width="1"
                             :class="{
                                 'vue-data-ui-transition':
@@ -2762,7 +2752,7 @@ defineExpose({
                     style="user-select: none"
                     paint-order="stroke fill"
                     vector-effect="non-scaling-stroke"
-                    :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                    :stroke="cfgChart.backgroundColor"
                     stroke-width="3"
                 >
                     +{{ marker.hiddenCount }}
@@ -2943,15 +2933,9 @@ defineExpose({
         >
             <div
                 class="vue-ui-hill__stack-overflow-menu-title"
-                v-if="
-                    FINAL_CONFIG.style.chart.layout.plots.stacking.overflow.menu
-                        .title
-                "
+                v-if="cfgPlots.stacking.overflow.menu.title"
             >
-                {{
-                    FINAL_CONFIG.style.chart.layout.plots.stacking.overflow.menu
-                        .title
-                }}
+                {{ cfgPlots.stacking.overflow.menu.title }}
             </div>
 
             <button
@@ -3013,7 +2997,7 @@ defineExpose({
             <slot name="loading" v-if="FINAL_CONFIG.loading">
                 <BaseIcon
                     name="spinner2"
-                    :stroke="FINAL_CONFIG.style.chart.color"
+                    :stroke="cfgChart.color"
                     :is-spin="true"
                 />
             </slot>
