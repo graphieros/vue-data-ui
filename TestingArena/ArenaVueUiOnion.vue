@@ -277,11 +277,6 @@ const model = createModel([
         max: 6,
     }),
     CHECKBOX('style.chart.tooltip.showPercentage', { def: true }),
-    NUMBER('style.chart.tooltip.roundingPercentage', {
-        def: 0,
-        min: 0,
-        max: 6,
-    }),
     RANGE('style.chart.tooltip.backgroundOpacity', {
         def: 100,
         min: 0,
