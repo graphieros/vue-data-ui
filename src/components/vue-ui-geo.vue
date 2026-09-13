@@ -125,6 +125,9 @@ function prepareConfig() {
 }
 
 const FINAL_CONFIG = ref(prepareConfig());
+const cfgLabels = computed(() => FINAL_CONFIG.value.style.chart.points.labels);
+const cfgPoints = computed(() => FINAL_CONFIG.value.style.chart.points);
+const cfgChart = computed(() => FINAL_CONFIG.value.style.chart);
 
 useHints({
     config: () => FINAL_CONFIG.value,
@@ -150,7 +153,7 @@ const { userOptionsVisible, keepUserOptionState } = useUserOptionState({
     config: FINAL_CONFIG.value,
 });
 const { svgRef } = useChartAccessibility({
-    config: FINAL_CONFIG.value.style.chart.title,
+    config: cfgChart.value.title,
 });
 
 const skeletonConfig = computed(() => {
@@ -257,17 +260,17 @@ const { loading, FINAL_DATASET } = useLoading({
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `vue-ui-geo_${uid.value}`,
-    fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-geo',
+    fileName: cfgChart.value.title.text || 'vue-ui-geo',
     options: FINAL_CONFIG.value.userOptions.print,
 });
 
 const activeZoomControlsElement = computed(() => {
-    if (!FINAL_CONFIG.value.style.chart.controls.show) return null;
+    if (!cfgChart.value.controls.show) return null;
 
-    if (FINAL_CONFIG.value.style.chart.controls.position === 'top') {
+    if (cfgChart.value.controls.position === 'top') {
         return zoomControlsTop.value?.$el ?? null;
     }
-    if (FINAL_CONFIG.value.style.chart.controls.position === 'bottom') {
+    if (cfgChart.value.controls.position === 'bottom') {
         return zoomControlsBottom.value?.$el ?? null;
     }
     return null;
@@ -295,11 +298,9 @@ watch(
             teardownResponsive();
 
             WIDTH.value =
-                Number(FINAL_CONFIG.value.style.chart.dimensions.width) ||
-                WIDTH.value;
+                Number(cfgChart.value.dimensions.width) || WIDTH.value;
             HEIGHT.value =
-                Number(FINAL_CONFIG.value.style.chart.dimensions.height) ||
-                HEIGHT.value;
+                Number(cfgChart.value.dimensions.height) || HEIGHT.value;
 
             await nextTick();
             didInitialFit.value = false;
@@ -327,9 +328,7 @@ function prepareChart() {
         const { width, height } = useResponsive({
             chart: geoChart.value,
             noTitle: hasOptionsNoTitle.value ? noTitle.value : null,
-            title: FINAL_CONFIG.value.style.chart.title.text
-                ? chartTitle.value
-                : null,
+            title: cfgChart.value.title.text ? chartTitle.value : null,
             legend: activeZoomControlsElement.value,
             source: source.value,
         });
@@ -348,27 +347,23 @@ function prepareChart() {
 }
 
 const hasOptionsNoTitle = computed(() => {
-    return (
-        FINAL_CONFIG.value.userOptions.show &&
-        !FINAL_CONFIG.value.style.chart.title.text
-    );
+    return FINAL_CONFIG.value.userOptions.show && !cfgChart.value.title.text;
 });
 
 const mutableConfig = ref({
-    showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show,
+    showTooltip: cfgChart.value.tooltip.show,
 });
 
-const panZoomActive = ref(FINAL_CONFIG.value.style.chart.zoom.active);
+const panZoomActive = ref(cfgChart.value.zoom.active);
 
 watch(
     () => props.config,
     () => {
         FINAL_CONFIG.value = prepareConfig();
-        mutableConfig.value.showTooltip =
-            FINAL_CONFIG.value.style.chart.tooltip.show;
-        panZoomActive.value = FINAL_CONFIG.value.style.chart.zoom.active;
-        WIDTH.value = FINAL_CONFIG.value.style.chart.dimensions.width;
-        HEIGHT.value = FINAL_CONFIG.value.style.chart.dimensions.height;
+        mutableConfig.value.showTooltip = cfgChart.value.tooltip.show;
+        panZoomActive.value = cfgChart.value.zoom.active;
+        WIDTH.value = cfgChart.value.dimensions.width;
+        HEIGHT.value = cfgChart.value.dimensions.height;
         prepareChart();
         titleStep.value += 1;
         step.value += 1;
@@ -406,8 +401,8 @@ const DEFAULT_PROJECTIONS = {
     winkelTripel: { width: 1000, height: 1000 },
 };
 
-const WIDTH = ref(FINAL_CONFIG.value.style.chart.dimensions.width);
-const HEIGHT = ref(FINAL_CONFIG.value.style.chart.dimensions.height);
+const WIDTH = ref(cfgChart.value.dimensions.width);
+const HEIGHT = ref(cfgChart.value.dimensions.height);
 
 const projectionPlaneSizes = computed(() => {
     const defaults =
@@ -987,21 +982,21 @@ const geoJsonPoints = computed(() => {
 
         const radius = Number.isFinite(Number(radiusRaw))
             ? Number(radiusRaw)
-            : Number(FINAL_CONFIG.value.style.chart.points.radius);
+            : Number(cfgPoints.value.radius);
 
         const fill =
             fillRaw != null && String(fillRaw).trim()
                 ? convertColorToHex(String(fillRaw).trim())
-                : FINAL_CONFIG.value.style.chart.points.fill;
+                : cfgPoints.value.fill;
 
         const stroke =
             strokeRaw != null && String(strokeRaw).trim()
                 ? convertColorToHex(String(strokeRaw).trim())
-                : FINAL_CONFIG.value.style.chart.points.stroke;
+                : cfgPoints.value.stroke;
 
         const strokeWidth = Number.isFinite(Number(strokeWidthRaw))
             ? Number(strokeWidthRaw)
-            : Number(FINAL_CONFIG.value.style.chart.points.strokeWidth);
+            : Number(cfgPoints.value.strokeWidth);
 
         return { radius, fill, stroke, strokeWidth };
     }
@@ -1374,8 +1369,7 @@ function normalizePointsDataset(datasetValue) {
                     coordinates,
                     color: properties.color ?? null,
                     radius: properties.radius ?? null,
-                    hoverRadiusRatio:
-                        FINAL_CONFIG.value.style.chart.points.hoverRadiusRatio,
+                    hoverRadiusRatio: cfgPoints.value.hoverRadiusRatio,
                     description: properties.description ?? null,
                     original: feature,
                     index,
@@ -1429,8 +1423,7 @@ function normalizePointsDataset(datasetValue) {
                     coordinates: [longitude, latitude],
                     color,
                     radius,
-                    hoverRadiusRatio:
-                        FINAL_CONFIG.value.style.chart.points.hoverRadiusRatio,
+                    hoverRadiusRatio: cfgPoints.value.hoverRadiusRatio,
                     description,
                     original: row,
                     index,
@@ -1460,8 +1453,7 @@ function normalizePointsDataset(datasetValue) {
                     coordinates: [longitude, latitude],
                     color: value.color ?? null,
                     radius: value.radius ?? null,
-                    hoverRadiusRatio:
-                        FINAL_CONFIG.value.style.chart.points.hoverRadiusRatio,
+                    hoverRadiusRatio: cfgPoints.value.hoverRadiusRatio,
                     description: value.description ?? null,
                     original: value,
                     index,
@@ -1489,10 +1481,10 @@ const projectedPoints = computed(() => {
                 y,
                 fill: point.color
                     ? convertColorToHex(point.color)
-                    : FINAL_CONFIG.value.style.chart.points.fill,
+                    : cfgPoints.value.fill,
                 radius: Number.isFinite(Number(point.radius))
                     ? Number(point.radius)
-                    : FINAL_CONFIG.value.style.chart.points.radius,
+                    : cfgPoints.value.radius,
             };
         })
         .filter(Boolean);
@@ -1555,7 +1547,7 @@ function formatPointTooltip(point) {
     };
 
     useCustomFormat.value = false;
-    const customFormat = FINAL_CONFIG.value.style.chart.tooltip.customFormat;
+    const customFormat = cfgChart.value.tooltip.customFormat;
 
     if (isFunction(customFormat)) {
         try {
@@ -1581,7 +1573,7 @@ function formatPointTooltip(point) {
 
 function formatTerritoryTooltip(territory) {
     useCustomFormat.value = false;
-    const customFormat = FINAL_CONFIG.value.style.chart.tooltip.customFormat;
+    const customFormat = cfgChart.value.tooltip.customFormat;
 
     if (isFunction(customFormat)) {
         try {
@@ -1620,10 +1612,7 @@ function onTerritoryEnter(territory) {
     const title =
         typeof territory?.name === 'string' ? territory.name.trim() : '';
 
-    if (
-        !title &&
-        !FINAL_CONFIG.value.style.chart.territory.hover.enabledWhenEmpty
-    ) {
+    if (!title && !cfgChart.value.territory.hover.enabledWhenEmpty) {
         highlightedTerritoryKey.value = null;
         hideTooltip();
         return;
@@ -1712,8 +1701,7 @@ function onPointClick(point) {
     }
 }
 
-const territoryStyle = computed(() => FINAL_CONFIG.value.style.chart.territory);
-const pointStyle = computed(() => FINAL_CONFIG.value.style.chart.points);
+const territoryStyle = computed(() => cfgChart.value.territory);
 
 function onGeoJsonPointEnter(geoJsonPoint) {
     const title =
@@ -1758,8 +1746,8 @@ function toggleTooltip() {
     mutableConfig.value.showTooltip = !mutableConfig.value.showTooltip;
 }
 
-const svgBg = computed(() => FINAL_CONFIG.value.style.chart.backgroundColor);
-const svgTitle = computed(() => FINAL_CONFIG.value.style.chart.title);
+const svgBg = computed(() => cfgChart.value.backgroundColor);
+const svgTitle = computed(() => cfgChart.value.title);
 
 const { isCallbackImaging, isCallbackSvg, generateSvg, onGenerateImage } =
     useChartExport({
@@ -1788,7 +1776,7 @@ async function getImage({ scale = 2 } = {}) {
     return {
         imageUri,
         base64,
-        title: FINAL_CONFIG.value.style.chart.title.text,
+        title: cfgChart.value.title.text,
         width,
         height,
         aspectRatio,
@@ -2163,7 +2151,7 @@ defineExpose({
         :style="{
             fontFamily: FINAL_CONFIG.style.fontFamily,
             width: '100%',
-            backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
+            backgroundColor: cfgChart.backgroundColor,
             height: isResponsiveActive ? `${HEIGHT}px` : undefined,
         }"
     >
@@ -2189,7 +2177,7 @@ defineExpose({
 
         <div
             ref="chartTitle"
-            v-if="FINAL_CONFIG.style.chart.title.text"
+            v-if="cfgChart.title.text"
             :style="`width:100%;background:transparent;padding-bottom:12px`"
         >
             <Title
@@ -2197,11 +2185,11 @@ defineExpose({
                 :config="{
                     title: {
                         cy: 'geo-title',
-                        ...FINAL_CONFIG.style.chart.title,
+                        ...cfgChart.title,
                     },
                     subtitle: {
                         cy: 'geo-subtitle',
-                        ...FINAL_CONFIG.style.chart.title.subtitle,
+                        ...cfgChart.title.subtitle,
                     },
                 }"
             />
@@ -2210,8 +2198,8 @@ defineExpose({
         <PenAndPaper
             v-if="FINAL_CONFIG.userOptions.buttons.annotator"
             :svgRef="svgRef"
-            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
-            :color="FINAL_CONFIG.style.chart.color"
+            :backgroundColor="cfgChart.backgroundColor"
+            :color="cfgChart.color"
             :active="isAnnotator"
             :isCursorPointer="isCursorPointer"
             :palette="FINAL_CONFIG.userOptions.annotatorPalette"
@@ -2244,8 +2232,8 @@ defineExpose({
                 FINAL_CONFIG.userOptions.show &&
                 (keepUserOptionState ? true : userOptionsVisible)
             "
-            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
-            :color="FINAL_CONFIG.style.chart.color"
+            :backgroundColor="cfgChart.backgroundColor"
+            :color="cfgChart.color"
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uid"
@@ -2253,7 +2241,7 @@ defineExpose({
             :hasTable="false"
             :hasTooltip="
                 FINAL_CONFIG.userOptions.buttons.tooltip &&
-                FINAL_CONFIG.style.chart.tooltip.show
+                cfgChart.tooltip.show
             "
             :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
             :hasImg="FINAL_CONFIG.userOptions.buttons.img"
@@ -2345,8 +2333,8 @@ defineExpose({
         <BaseZoomControls
             ref="zoomControlsTop"
             v-if="
-                FINAL_CONFIG.style.chart.controls.position === 'top' &&
-                FINAL_CONFIG.style.chart.controls.show &&
+                cfgChart.controls.position === 'top' &&
+                cfgChart.controls.show &&
                 !loading
             "
             :config="FINAL_CONFIG"
@@ -2370,7 +2358,7 @@ defineExpose({
                     display: 'block',
                     width: '100%',
                     height: isResponsiveActive ? `${HEIGHT}px` : 'auto',
-                    background: FINAL_CONFIG.style.chart.backgroundColor,
+                    background: cfgChart.backgroundColor,
                     touchAction: panZoomActive ? 'none' : 'auto',
                     cursor: panZoomActive
                         ? isInteracting
@@ -2491,8 +2479,8 @@ defineExpose({
                                         : point.radius
                                 "
                                 :fill="point.fill"
-                                :stroke="pointStyle.stroke"
-                                :stroke-width="pointStyle.strokeWidth"
+                                :stroke="cfgPoints.stroke"
+                                :stroke-width="cfgPoints.strokeWidth"
                                 vector-effect="non-scaling-stroke"
                                 @mouseenter="
                                     onPointEnter(point, pointKeyboardIndex)
@@ -2504,25 +2492,19 @@ defineExpose({
 
                         <text
                             class="vue-ui-geo-point-label"
-                            v-if="FINAL_CONFIG.style.chart.points.labels.show"
+                            v-if="cfgLabels.show"
                             :x="point.x"
                             :y="
                                 point.y +
                                 (highlightedPointKey === point.uid
                                     ? point.radius * point.hoverRadiusRatio
                                     : point.radius) +
-                                FINAL_CONFIG.style.chart.points.labels.offsetY +
-                                1 *
-                                    FINAL_CONFIG.style.chart.points.labels
-                                        .fontSizeRatio
+                                cfgLabels.offsetY +
+                                1 * cfgLabels.fontSizeRatio
                             "
                             text-anchor="middle"
-                            :fill="FINAL_CONFIG.style.chart.points.labels.color"
-                            :font-size="
-                                1 *
-                                FINAL_CONFIG.style.chart.points.labels
-                                    .fontSizeRatio
-                            "
+                            :fill="cfgLabels.color"
+                            :font-size="1 * cfgLabels.fontSizeRatio"
                         >
                             {{ point.name }}
                         </text>
@@ -2580,8 +2562,8 @@ defineExpose({
         <BaseZoomControls
             ref="zoomControlsBottom"
             v-if="
-                FINAL_CONFIG.style.chart.controls.position === 'bottom' &&
-                FINAL_CONFIG.style.chart.controls.show &&
+                cfgChart.controls.position === 'bottom' &&
+                cfgChart.controls.show &&
                 !loading
             "
             :config="FINAL_CONFIG"
@@ -2594,30 +2576,26 @@ defineExpose({
         />
 
         <Tooltip
-            :teleportTo="FINAL_CONFIG.style.chart.tooltip.teleportTo"
+            :teleportTo="cfgChart.tooltip.teleportTo"
             :show="mutableConfig.showTooltip && isTooltipVisible"
-            :backgroundColor="FINAL_CONFIG.style.chart.tooltip.backgroundColor"
-            :color="FINAL_CONFIG.style.chart.tooltip.color"
-            :fontSize="FINAL_CONFIG.style.chart.tooltip.fontSize"
-            :borderRadius="FINAL_CONFIG.style.chart.tooltip.borderRadius"
-            :borderColor="FINAL_CONFIG.style.chart.tooltip.borderColor"
-            :borderWidth="FINAL_CONFIG.style.chart.tooltip.borderWidth"
-            :backgroundOpacity="
-                FINAL_CONFIG.style.chart.tooltip.backgroundOpacity
-            "
-            :position="FINAL_CONFIG.style.chart.tooltip.position"
-            :offsetX="FINAL_CONFIG.style.chart.tooltip.offsetX"
-            :offsetY="FINAL_CONFIG.style.chart.tooltip.offsetY"
+            :backgroundColor="cfgChart.tooltip.backgroundColor"
+            :color="cfgChart.tooltip.color"
+            :fontSize="cfgChart.tooltip.fontSize"
+            :borderRadius="cfgChart.tooltip.borderRadius"
+            :borderColor="cfgChart.tooltip.borderColor"
+            :borderWidth="cfgChart.tooltip.borderWidth"
+            :backgroundOpacity="cfgChart.tooltip.backgroundOpacity"
+            :position="cfgChart.tooltip.position"
+            :offsetX="cfgChart.tooltip.offsetX"
+            :offsetY="cfgChart.tooltip.offsetY"
             :parent="geoChart"
             :content="tooltipContent"
             :isCustom="useCustomFormat"
             :isFullscreen="isFullscreen"
-            :smooth="FINAL_CONFIG.style.chart.tooltip.smooth"
-            :backdropFilter="FINAL_CONFIG.style.chart.tooltip.backdropFilter"
-            :smoothForce="FINAL_CONFIG.style.chart.tooltip.smoothForce"
-            :smoothSnapThreshold="
-                FINAL_CONFIG.style.chart.tooltip.smoothSnapThreshold
-            "
+            :smooth="cfgChart.tooltip.smooth"
+            :backdropFilter="cfgChart.tooltip.backdropFilter"
+            :smoothForce="cfgChart.tooltip.smoothForce"
+            :smoothSnapThreshold="cfgChart.tooltip.smoothSnapThreshold"
             :isA11yMode="tooltipTriggerMode === 'keyboard'"
             :a11yPosition="tooltipA11yPosition"
         >
