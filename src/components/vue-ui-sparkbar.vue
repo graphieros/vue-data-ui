@@ -70,6 +70,9 @@ const slots = useSlots();
 const uid = ref(createUid());
 
 const FINAL_CONFIG = ref(prepareConfig());
+const cfgBars = computed(() => FINAL_CONFIG.value.style.bar);
+const cfgLabels = computed(() => FINAL_CONFIG.value.style.labels);
+const cfgStyle = computed(() => FINAL_CONFIG.value.style);
 
 const debug = computed(() => FINAL_CONFIG.value.debug);
 
@@ -174,7 +177,7 @@ const safeDatasetCopy = ref(
     FINAL_DATASET.value.map((d) => {
         return {
             ...d,
-            value: FINAL_CONFIG.value.style.animation.show ? 0 : d.value || 0,
+            value: cfgStyle.value.animation.show ? 0 : d.value || 0,
             formatter: d.formatter || null,
         };
     }),
@@ -194,11 +197,8 @@ onMounted(async () => {
 });
 
 function useAnimation() {
-    if (
-        FINAL_CONFIG.value.style.animation.show &&
-        !prefersReducedMotion.value
-    ) {
-        const chunks = FINAL_CONFIG.value.style.animation.animationFrames;
+    if (cfgStyle.value.animation.show && !prefersReducedMotion.value) {
+        const chunks = cfgStyle.value.animation.animationFrames;
         const chunkSet = FINAL_DATASET.value.map((d, i) => d.value / chunks);
         const total = FINAL_DATASET.value
             .map((d) => d.value || 0)
@@ -238,8 +238,7 @@ watch(
             return {
                 ...d,
                 value:
-                    FINAL_CONFIG.value.style.animation.show &&
-                    !prefersReducedMotion.value
+                    cfgStyle.value.animation.show && !prefersReducedMotion.value
                         ? 0
                         : d.value || 0,
                 formatter: d.formatter || null,
@@ -295,19 +294,19 @@ function ratioToMax(val) {
 }
 
 function ratioTo(bar) {
-    if (FINAL_CONFIG.value.style.layout.independant) {
+    if (cfgStyle.value.layout.independant) {
         if (bar.target) {
             return bar.value / bar.target;
         }
-        if (FINAL_CONFIG.value.style.layout.percentage) {
+        if (cfgStyle.value.layout.percentage) {
             if (bar.value > 100) {
                 return 1;
             }
             return bar.value / 100;
-        } else if (FINAL_CONFIG.value.style.layout.target === 0) {
+        } else if (cfgStyle.value.layout.target === 0) {
             return 1;
         } else {
-            return bar.value / FINAL_CONFIG.value.style.layout.target;
+            return bar.value / cfgStyle.value.layout.target;
         }
     } else {
         return ratioToMax(bar.value);
@@ -315,10 +314,10 @@ function ratioTo(bar) {
 }
 
 function getTarget(bar) {
-    if (FINAL_CONFIG.value.style.layout.independant) {
-        return bar.target || FINAL_CONFIG.value.style.layout.target;
+    if (cfgStyle.value.layout.independant) {
+        return bar.target || cfgStyle.value.layout.target;
     }
-    return FINAL_CONFIG.value.style.layout.target;
+    return cfgStyle.value.layout.target;
 }
 
 const emits = defineEmits(['selectDatapoint']);
@@ -352,12 +351,9 @@ function onTrapLeave(datapoint, index) {
 }
 
 const barRadius = computed(() => {
-    return FINAL_CONFIG.value.style.bar.borderRadius == null
+    return cfgBars.value.borderRadius == null
         ? svg.value.height / 2
-        : Math.min(
-              svg.value.height / 2,
-              FINAL_CONFIG.value.style.bar.borderRadius,
-          );
+        : Math.min(svg.value.height / 2, cfgBars.value.borderRadius);
 });
 </script>
 
@@ -367,14 +363,14 @@ const barRadius = computed(() => {
         :style="{
             width: '100%',
             position: 'relative',
-            fontFamily: FINAL_CONFIG.style.fontFamily,
+            fontFamily: cfgStyle.fontFamily,
             background:
                 props.backgroundOpacity !== null
                     ? setOpacity(
-                          FINAL_CONFIG.style.backgroundColor,
+                          cfgStyle.backgroundColor,
                           props.backgroundOpacity,
                       )
-                    : FINAL_CONFIG.style.backgroundColor,
+                    : cfgStyle.backgroundColor,
         }"
     >
         <!-- CUSTOM TITLE -->
@@ -384,8 +380,8 @@ const barRadius = computed(() => {
             v-bind="{
                 title: {
                     ...title,
-                    title: FINAL_CONFIG.style.title.text,
-                    subtitle: FINAL_CONFIG.style.title.subtitle.text,
+                    title: cfgStyle.title.text,
+                    subtitle: cfgStyle.title.subtitle.text,
                 },
             }"
         />
@@ -394,46 +390,44 @@ const barRadius = computed(() => {
         <div
             data-cy="sparkbar-title-wrapper"
             class="vue-ui-sparkbar-title-container"
-            v-if="!$slots['title'] && FINAL_CONFIG.style.title.text"
+            v-if="!$slots['title'] && cfgStyle.title.text"
             :style="{
-                background: FINAL_CONFIG.style.title.backgroundColor,
-                margin: FINAL_CONFIG.style.title.margin,
-                textAlign: FINAL_CONFIG.style.title.textAlign,
+                background: cfgStyle.title.backgroundColor,
+                margin: cfgStyle.title.margin,
+                textAlign: cfgStyle.title.textAlign,
             }"
         >
             <div
                 class="vue-ui-sparkbar-title"
                 data-cy="sparkbar-title"
                 :style="{
-                    fontSize: FINAL_CONFIG.style.title.fontSize + 'px',
-                    color: FINAL_CONFIG.style.title.color,
-                    fontWeight: FINAL_CONFIG.style.title.bold
-                        ? 'bold'
-                        : 'normal',
+                    fontSize: cfgStyle.title.fontSize + 'px',
+                    color: cfgStyle.title.color,
+                    fontWeight: cfgStyle.title.bold ? 'bold' : 'normal',
                 }"
             >
-                {{ FINAL_CONFIG.style.title.text }}
+                {{ cfgStyle.title.text }}
             </div>
 
             <div
                 class="vue-ui-sparkbar-subtitle"
                 data-cy="sparkbar-subtitle"
-                v-if="FINAL_CONFIG.style.title.subtitle.text"
+                v-if="cfgStyle.title.subtitle.text"
                 :style="{
-                    fontSize: FINAL_CONFIG.style.title.subtitle.fontSize + 'px',
-                    color: FINAL_CONFIG.style.title.subtitle.color,
-                    fontWeight: FINAL_CONFIG.style.title.subtitle.bold
+                    fontSize: cfgStyle.title.subtitle.fontSize + 'px',
+                    color: cfgStyle.title.subtitle.color,
+                    fontWeight: cfgStyle.title.subtitle.bold
                         ? 'bold'
                         : 'normal',
                 }"
             >
-                {{ FINAL_CONFIG.style.title.subtitle.text }}
+                {{ cfgStyle.title.subtitle.text }}
             </div>
         </div>
         <template v-for="(bar, i) in drawableDataset">
             <div
                 data-cy="datapoint-wrapper"
-                :style="`display:flex !important;${['left', 'right'].includes(FINAL_CONFIG.style.labels.name.position) ? `flex-direction: ${FINAL_CONFIG.style.labels.name.position === 'right' ? 'row-reverse' : 'row'} !important` : 'flex-direction:column !important'};gap:${FINAL_CONFIG.style.gap}px !important;align-items:center;${FINAL_DATASET.length > 0 && i !== FINAL_DATASET.length - 1 ? 'margin-bottom:6px' : ''}`"
+                :style="`display:flex !important;${['left', 'right'].includes(cfgLabels.name.position) ? `flex-direction: ${cfgLabels.name.position === 'right' ? 'row-reverse' : 'row'} !important` : 'flex-direction:column !important'};gap:${cfgStyle.gap}px !important;align-items:center;${FINAL_DATASET.length > 0 && i !== FINAL_DATASET.length - 1 ? 'margin-bottom:6px' : ''}`"
                 @click="selectDatapoint(bar, i)"
                 @mouseenter="onTrapEnter(bar, i)"
                 @mouseleave="onTrapLeave(bar, i)"
@@ -478,21 +472,17 @@ const barRadius = computed(() => {
                     :style="{
                         display: 'flex',
                         justifyContent: ['right', 'top-right'].includes(
-                            FINAL_CONFIG.style.labels.name.position,
+                            cfgLabels.name.position,
                         )
                             ? 'flex-end'
-                            : ['top-center'].includes(
-                                    FINAL_CONFIG.style.labels.name.position,
-                                )
+                            : ['top-center'].includes(cfgLabels.name.position)
                               ? 'center'
                               : 'flex-start',
                         alignItems: 'center',
-                        width: FINAL_CONFIG.style.labels.name.width,
-                        color: FINAL_CONFIG.style.labels.name.color,
-                        fontSize: FINAL_CONFIG.style.labels.fontSize + 'px',
-                        fontWeight: FINAL_CONFIG.style.labels.name.bold
-                            ? 'bold'
-                            : 'normal',
+                        width: cfgLabels.name.width,
+                        color: cfgLabels.name.color,
+                        fontSize: cfgLabels.fontSize + 'px',
+                        fontWeight: cfgLabels.name.bold ? 'bold' : 'normal',
                         flexWrap: 'wrap',
                     }"
                 >
@@ -501,11 +491,8 @@ const barRadius = computed(() => {
                             class="vue-ui-sparkbar-skeleton-name"
                             :style="{
                                 width: '60px',
-                                height:
-                                    FINAL_CONFIG.style.labels.fontSize + 'px',
-                                borderRadius:
-                                    FINAL_CONFIG.style.labels.fontSize / 4 +
-                                    'px',
+                                height: cfgLabels.fontSize + 'px',
+                                borderRadius: cfgLabels.fontSize / 4 + 'px',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'space-between',
@@ -516,9 +503,7 @@ const barRadius = computed(() => {
                                 :style="{
                                     height: '100%',
                                     width: '40px',
-                                    borderRadius:
-                                        FINAL_CONFIG.style.labels.fontSize / 4 +
-                                        'px',
+                                    borderRadius: cfgLabels.fontSize / 4 + 'px',
                                     backgroundColor: '#6A6A6A80',
                                 }"
                             />
@@ -526,9 +511,7 @@ const barRadius = computed(() => {
                                 :style="{
                                     height: '100%',
                                     width: '15px',
-                                    borderRadius:
-                                        FINAL_CONFIG.style.labels.fontSize / 4 +
-                                        'px',
+                                    borderRadius: cfgLabels.fontSize / 4 + 'px',
                                     backgroundColor: '#6A6A6A80',
                                 }"
                             />
@@ -541,8 +524,8 @@ const barRadius = computed(() => {
                         }}</span>
                         <span
                             :data-cy="`sparkbar-value-${i}`"
-                            v-if="FINAL_CONFIG.style.labels.value.show"
-                            :style="`font-weight:${FINAL_CONFIG.style.labels.value.bold ? 'bold' : 'normal'}`"
+                            v-if="cfgLabels.value.show"
+                            :style="`font-weight:${cfgLabels.value.bold ? 'bold' : 'normal'}`"
                             class="vue-ui-sparkbar-datapoint-name"
                             >:
                             {{
@@ -561,12 +544,10 @@ const barRadius = computed(() => {
                         </span>
                         <span
                             :data-cy="`sparkbar-target-value-${i}`"
-                            v-if="FINAL_CONFIG.style.layout.showTargetValue"
+                            v-if="cfgStyle.layout.showTargetValue"
                             class="vue-ui-sparkbar-datapoint-value"
                         >
-                            {{
-                                ' ' + FINAL_CONFIG.style.layout.targetValueText
-                            }}
+                            {{ ' ' + cfgStyle.layout.targetValueText }}
                             {{
                                 applyDataLabel(
                                     bar.formatter,
@@ -607,9 +588,7 @@ const barRadius = computed(() => {
                                     '0%',
                                     setOpacity(
                                         shiftHue(bar.color, 0.03),
-                                        100 -
-                                            FINAL_CONFIG.style.bar.gradient
-                                                .intensity,
+                                        100 - cfgBars.gradient.intensity,
                                     ),
                                     1,
                                 ],
@@ -624,8 +603,8 @@ const barRadius = computed(() => {
                         :y="0"
                         :fill="
                             setOpacity(
-                                FINAL_CONFIG.style.gutter.backgroundColor,
-                                FINAL_CONFIG.style.gutter.opacity,
+                                cfgStyle.gutter.backgroundColor,
+                                cfgStyle.gutter.opacity,
                             )
                         "
                         :rx="barRadius"
@@ -635,7 +614,7 @@ const barRadius = computed(() => {
                         :width="svg.width * ratioTo(bar)"
                         :x="0"
                         :y="0"
-                        :fill="FINAL_CONFIG.style.bar.gradient.underlayerColor"
+                        :fill="cfgBars.gradient.underlayerColor"
                         :rx="barRadius"
                     />
                     <rect
@@ -644,7 +623,7 @@ const barRadius = computed(() => {
                         :x="0"
                         :y="0"
                         :fill="
-                            FINAL_CONFIG.style.bar.gradient.show
+                            cfgBars.gradient.show
                                 ? `url(#sparkbar_gradient_${i}_${uid})`
                                 : bar.color
                         "
