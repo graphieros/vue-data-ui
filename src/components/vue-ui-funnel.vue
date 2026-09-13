@@ -145,6 +145,10 @@ const FINAL_CONFIG = computed({
 
 const debug = computed(() => FINAL_CONFIG.value.debug);
 
+const cfgBars = computed(() => FINAL_CONFIG.value.style.chart.bars);
+const cfgCircles = computed(() => FINAL_CONFIG.value.style.chart.circles);
+const cfgChart = computed(() => FINAL_CONFIG.value.style.chart);
+
 function prepareChart() {
     if (objectIsEmpty(props.dataset)) {
         error({
@@ -174,9 +178,7 @@ function prepareChart() {
         const handleResize = throttle(() => {
             const { width, height } = useResponsive({
                 chart: funnelChart.value,
-                title: FINAL_CONFIG.value.style.chart.title.text
-                    ? chartTitle.value
-                    : null,
+                title: cfgChart.value.title.text ? chartTitle.value : null,
                 source: source.value,
                 noTitle: noTitle.value,
             });
@@ -190,8 +192,7 @@ function prepareChart() {
                     fontSizes.value.circles = translateSize({
                         relator: Math.min(width, height),
                         adjuster: 600,
-                        source: FINAL_CONFIG.value.style.chart.circles
-                            .dataLabels.fontSize,
+                        source: cfgCircles.value.dataLabels.fontSize,
                         threshold: 10,
                         fallback: 10,
                     });
@@ -199,8 +200,7 @@ function prepareChart() {
                     fontSizes.value.names = translateSize({
                         relator: Math.min(width, height),
                         adjuster: 600,
-                        source: FINAL_CONFIG.value.style.chart.bars.dataLabels
-                            .name.fontSize,
+                        source: cfgBars.value.dataLabels.name.fontSize,
                         threshold: 10,
                         fallback: 10,
                     });
@@ -208,18 +208,17 @@ function prepareChart() {
                     fontSizes.value.values = translateSize({
                         relator: Math.min(width, height),
                         adjuster: 600,
-                        source: FINAL_CONFIG.value.style.chart.bars.dataLabels
-                            .value.fontSize,
+                        source: cfgBars.value.dataLabels.value.fontSize,
                         threshold: 10,
                         fallback: 10,
                     });
                 } else {
                     fontSizes.value.circles =
-                        FINAL_CONFIG.value.style.chart.circles.dataLabels.fontSize;
+                        cfgCircles.value.dataLabels.fontSize;
                     fontSizes.value.names =
-                        FINAL_CONFIG.value.style.chart.bars.dataLabels.name.fontSize;
+                        cfgBars.value.dataLabels.name.fontSize;
                     fontSizes.value.values =
-                        FINAL_CONFIG.value.style.chart.bars.dataLabels.value.fontSize;
+                        cfgBars.value.dataLabels.value.fontSize;
                 }
             });
         });
@@ -261,7 +260,7 @@ const isCursorPointer = computed(
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } =
     useUserOptionState({ config: FINAL_CONFIG.value });
 const { svgRef } = useChartAccessibility({
-    config: FINAL_CONFIG.value.style.chart.title,
+    config: cfgChart.value.title,
 });
 
 watch(
@@ -273,12 +272,9 @@ watch(
         prepareChart();
         titleStep.value += 1;
         tableStep.value += 1;
-        fontSizes.value.circles =
-            FINAL_CONFIG.value.style.chart.circles.dataLabels.fontSize;
-        fontSizes.value.names =
-            FINAL_CONFIG.value.style.chart.bars.dataLabels.name.fontSize;
-        fontSizes.value.values =
-            FINAL_CONFIG.value.style.chart.bars.dataLabels.value.fontSize;
+        fontSizes.value.circles = cfgCircles.value.dataLabels.fontSize;
+        fontSizes.value.names = cfgBars.value.dataLabels.name.fontSize;
+        fontSizes.value.values = cfgBars.value.dataLabels.value.fontSize;
 
         // Reset mutable config
         mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
@@ -288,15 +284,12 @@ watch(
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `funnel_${uid.value}`,
-    fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-funnel',
+    fileName: cfgChart.value.title.text || 'vue-ui-funnel',
     options: FINAL_CONFIG.value.userOptions.print,
 });
 
 const hasOptionsNoTitle = computed(() => {
-    return (
-        FINAL_CONFIG.value.userOptions.show &&
-        !FINAL_CONFIG.value.style.chart.title.text
-    );
+    return FINAL_CONFIG.value.userOptions.show && !cfgChart.value.title.text;
 });
 
 const mutableConfig = ref({
@@ -304,16 +297,16 @@ const mutableConfig = ref({
 });
 
 const fontSizes = ref({
-    circles: FINAL_CONFIG.value.style.chart.circles.dataLabels.fontSize,
-    names: FINAL_CONFIG.value.style.chart.bars.dataLabels.name.fontSize,
-    values: FINAL_CONFIG.value.style.chart.bars.dataLabels.value.fontSize,
+    circles: cfgCircles.value.dataLabels.fontSize,
+    names: cfgBars.value.dataLabels.name.fontSize,
+    values: cfgBars.value.dataLabels.value.fontSize,
 });
 
 const svg = computed({
     get: () => {
         return {
-            height: FINAL_CONFIG.value.style.chart.height,
-            width: FINAL_CONFIG.value.style.chart.width,
+            height: cfgChart.value.height,
+            width: cfgChart.value.width,
         };
     },
     set: (v) => {
@@ -329,7 +322,7 @@ const formattedDataset = computed(() => {
             color: ds.color
                 ? convertColorToHex(ds.color)
                 : lightenHexColor(
-                      FINAL_CONFIG.value.style.chart.bars.defaultColor,
+                      cfgBars.value.defaultColor,
                       i / props.dataset.length,
                   ),
         };
@@ -341,22 +334,15 @@ setTimeout(() => {
 }, formattedDataset.value.length * 150);
 
 function setDrawingArea() {
-    const left = FINAL_CONFIG.value.style.chart.padding.left;
-    const top = FINAL_CONFIG.value.style.chart.padding.top;
+    const left = cfgChart.value.padding.left;
+    const top = cfgChart.value.padding.top;
     return {
         left,
         top,
-        right: svg.value.width - FINAL_CONFIG.value.style.chart.padding.right,
-        bottom:
-            svg.value.height - FINAL_CONFIG.value.style.chart.padding.bottom,
-        width:
-            svg.value.width -
-            left -
-            FINAL_CONFIG.value.style.chart.padding.right,
-        height:
-            svg.value.height -
-            top -
-            FINAL_CONFIG.value.style.chart.padding.bottom,
+        right: svg.value.width - cfgChart.value.padding.right,
+        bottom: svg.value.height - cfgChart.value.padding.bottom,
+        width: svg.value.width - left - cfgChart.value.padding.right,
+        height: svg.value.height - top - cfgChart.value.padding.bottom,
     };
 }
 
@@ -367,14 +353,11 @@ const barHeight = computed(() => {
 });
 
 const gap = computed(() => {
-    return barHeight.value * FINAL_CONFIG.value.style.chart.bars.gapRatio;
+    return barHeight.value * cfgBars.value.gapRatio;
 });
 
 const spacingRatio = computed(() => {
-    return (
-        drawingArea.value.width *
-        FINAL_CONFIG.value.style.chart.barCircleSpacingRatio
-    );
+    return drawingArea.value.width * cfgChart.value.barCircleSpacingRatio;
 });
 
 const datapoints = computed(() => {
@@ -459,18 +442,18 @@ const dataTable = computed(() => {
 
     const body = table.value.head.map((h, i) => {
         const labelValue = applyDataLabel(
-            FINAL_CONFIG.value.style.chart.bars.dataLabels.value.formatter,
+            cfgBars.value.dataLabels.value.formatter,
             table.value.body[i],
             dataLabel({
-                p: FINAL_CONFIG.value.style.chart.bars.dataLabels.value.prefix,
+                p: cfgBars.value.dataLabels.value.prefix,
                 v: table.value.body[i],
-                s: FINAL_CONFIG.value.style.chart.bars.dataLabels.value.suffix,
+                s: cfgBars.value.dataLabels.value.suffix,
                 r: FINAL_CONFIG.value.table.td.roundingValue,
             }),
             { datapoint: datapoints.value[i] },
         );
         const labelPercentage = applyDataLabel(
-            FINAL_CONFIG.value.style.chart.circles.dataLabels.formatter,
+            cfgCircles.value.dataLabels.formatter,
             datapoints.value[i].proportion * 100,
             dataLabel({
                 v: datapoints.value[i].proportion * 100,
@@ -521,8 +504,8 @@ function generateCsv(callback = null) {
             ];
         });
         const tableXls = [
-            [FINAL_CONFIG.value.style.chart.title.text],
-            [FINAL_CONFIG.value.style.chart.title.subtitle.text],
+            [cfgChart.value.title.text],
+            [cfgChart.value.title.subtitle.text],
             [
                 [FINAL_CONFIG.value.table.columnNames.series],
                 [FINAL_CONFIG.value.table.columnNames.value],
@@ -535,9 +518,7 @@ function generateCsv(callback = null) {
         if (!callback) {
             downloadCsv({
                 csvContent,
-                title:
-                    FINAL_CONFIG.value.style.chart.title.text ||
-                    'vue-ui-funnel',
+                title: cfgChart.value.title.text || 'vue-ui-funnel',
             });
         } else {
             callback(csvContent);
@@ -562,7 +543,7 @@ async function getImage({ scale = 2 } = {}) {
     return {
         imageUri,
         base64,
-        title: FINAL_CONFIG.value.style.chart.title.text,
+        title: cfgChart.value.title.text,
         width,
         height,
         aspectRatio,
@@ -575,7 +556,7 @@ const tableComponent = computed(() => {
     const open = mutableConfig.value.showTable;
     return {
         component: useDialog ? BaseDraggableDialog : Accordion,
-        title: `${FINAL_CONFIG.value.style.chart.title.text}${FINAL_CONFIG.value.style.chart.title.subtitle.text ? `: ${FINAL_CONFIG.value.style.chart.title.subtitle.text}` : ''}`,
+        title: `${cfgChart.value.title.text}${cfgChart.value.title.subtitle.text ? `: ${cfgChart.value.title.subtitle.text}` : ''}`,
         props: useDialog
             ? {
                   backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
@@ -592,14 +573,12 @@ const tableComponent = computed(() => {
                       open,
                       maxHeight: 10000,
                       body: {
-                          backgroundColor:
-                              FINAL_CONFIG.value.style.chart.backgroundColor,
-                          color: FINAL_CONFIG.value.style.chart.color,
+                          backgroundColor: cfgChart.value.backgroundColor,
+                          color: cfgChart.value.color,
                       },
                       head: {
-                          backgroundColor:
-                              FINAL_CONFIG.value.style.chart.backgroundColor,
-                          color: FINAL_CONFIG.value.style.chart.color,
+                          backgroundColor: cfgChart.value.backgroundColor,
+                          color: cfgChart.value.color,
                       },
                   },
               },
@@ -627,8 +606,8 @@ function closeTable() {
     }
 }
 
-const svgBg = computed(() => FINAL_CONFIG.value.style.chart.backgroundColor);
-const svgTitle = computed(() => FINAL_CONFIG.value.style.chart.title);
+const svgBg = computed(() => cfgChart.value.backgroundColor);
+const svgTitle = computed(() => cfgChart.value.title);
 
 const { isCallbackImaging, isCallbackSvg, generateSvg, onGenerateImage } =
     useChartExport({
@@ -678,7 +657,7 @@ defineExpose({
     <div
         ref="funnelChart"
         :class="`vue-data-ui-component vue-ui-funnel ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${FINAL_CONFIG.useCssAnimation ? '' : 'vue-ui-dna'}`"
-        :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; ${FINAL_CONFIG.responsive ? 'height:100%;' : ''} text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor}`"
+        :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; ${FINAL_CONFIG.responsive ? 'height:100%;' : ''} text-align:center;background:${cfgChart.backgroundColor}`"
         :id="`funnel_${uid}`"
         @mouseenter="() => setUserOptionsVisibility(true)"
         @mouseleave="() => setUserOptionsVisibility(false)"
@@ -686,8 +665,8 @@ defineExpose({
         <PenAndPaper
             v-if="FINAL_CONFIG.userOptions.buttons.annotator"
             :svgRef="svgRef"
-            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
-            :color="FINAL_CONFIG.style.chart.color"
+            :backgroundColor="cfgChart.backgroundColor"
+            :color="cfgChart.color"
             :active="isAnnotator"
             :isCursorPointer="isCursorPointer"
             :palette="FINAL_CONFIG.userOptions.annotatorPalette"
@@ -722,7 +701,7 @@ defineExpose({
 
         <div
             ref="chartTitle"
-            v-if="FINAL_CONFIG.style.chart.title.text"
+            v-if="cfgChart.title.text"
             :style="`width:100%;background:transparent;padding-bottom:24px`"
         >
             <Title
@@ -730,11 +709,11 @@ defineExpose({
                 :config="{
                     title: {
                         cy: 'funnel-div-title',
-                        ...FINAL_CONFIG.style.chart.title,
+                        ...cfgChart.title,
                     },
                     subtitle: {
                         cy: 'funnel-div-subtitle',
-                        ...FINAL_CONFIG.style.chart.title.subtitle,
+                        ...cfgChart.title.subtitle,
                     },
                 }"
             />
@@ -748,8 +727,8 @@ defineExpose({
                 isDataset &&
                 (keepUserOptionState ? true : userOptionsVisible)
             "
-            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
-            :color="FINAL_CONFIG.style.chart.color"
+            :backgroundColor="cfgChart.backgroundColor"
+            :color="cfgChart.color"
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uid"
@@ -848,7 +827,7 @@ defineExpose({
             }"
             data-cy="funnel-svg"
             :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`"
-            :style="`max-width:100%; overflow: visible; background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
+            :style="`max-width:100%; overflow: visible; background:transparent;color:${cfgChart.color}`"
         >
             <PackageVersion />
 
@@ -875,21 +854,19 @@ defineExpose({
                     y1="0%"
                     y2="0%"
                     :stops="[
-                        ['0%', FINAL_CONFIG.style.chart.backgroundColor, 0],
-                        ['20%', FINAL_CONFIG.style.chart.area.color, 1],
-                        ['100%', FINAL_CONFIG.style.chart.area.color, 1],
+                        ['0%', cfgChart.backgroundColor, 0],
+                        ['20%', cfgChart.area.color, 1],
+                        ['100%', cfgChart.area.color, 1],
                     ]"
                 />
             </defs>
 
             <line
                 data-cy="circle-links"
-                v-if="FINAL_CONFIG.style.chart.circleLinks.show"
+                v-if="cfgChart.circleLinks.show"
                 v-bind="circlesLink"
-                :stroke="FINAL_CONFIG.style.chart.circleLinks.color"
-                :stroke-width="
-                    12 * FINAL_CONFIG.style.chart.circleLinks.widthRatio
-                "
+                :stroke="cfgChart.circleLinks.color"
+                :stroke-width="12 * cfgChart.circleLinks.widthRatio"
                 stroke-linecap="round"
                 :class="{
                     animated:
@@ -911,8 +888,8 @@ defineExpose({
                 data-cy="datapoint-circle"
                 v-for="({ cx, cy, r, fill }, i) in datapoints"
                 v-bind="{ cx, cy, r, fill }"
-                :stroke="FINAL_CONFIG.style.chart.circles.stroke"
-                :stroke-width="FINAL_CONFIG.style.chart.circles.strokeWidth"
+                :stroke="cfgCircles.stroke"
+                :stroke-width="cfgCircles.strokeWidth"
                 :class="{
                     animated:
                         FINAL_CONFIG.useCssAnimation &&
@@ -931,21 +908,16 @@ defineExpose({
                 :y="
                     datapoint.cy +
                     fontSizes.circles / 3 +
-                    FINAL_CONFIG.style.chart.circles.dataLabels.offsetY
+                    cfgCircles.dataLabels.offsetY
                 "
                 text-anchor="middle"
                 :font-size="fontSizes.circles"
                 :fill="
-                    FINAL_CONFIG.style.chart.circles.dataLabels
-                        .adaptColorToBackground
+                    cfgCircles.dataLabels.adaptColorToBackground
                         ? adaptColorToBackground(datapoint.color)
-                        : FINAL_CONFIG.style.chart.circles.dataLabels.color
+                        : cfgCircles.dataLabels.color
                 "
-                :font-weight="
-                    FINAL_CONFIG.style.chart.circles.dataLabels.bold
-                        ? 'bold'
-                        : 'normal'
-                "
+                :font-weight="cfgCircles.dataLabels.bold ? 'bold' : 'normal'"
                 :class="{
                     animated:
                         FINAL_CONFIG.useCssAnimation &&
@@ -958,13 +930,12 @@ defineExpose({
             >
                 {{
                     applyDataLabel(
-                        FINAL_CONFIG.style.chart.circles.dataLabels.formatter,
+                        cfgCircles.dataLabels.formatter,
                         datapoint.proportion * 100,
                         dataLabel({
                             v: datapoint.proportion * 100,
                             s: '%',
-                            r: FINAL_CONFIG.style.chart.circles.dataLabels
-                                .rounding,
+                            r: cfgCircles.dataLabels.rounding,
                         }),
                         { datapoint },
                     )
@@ -973,7 +944,7 @@ defineExpose({
 
             <polygon
                 data-cy="funnel-area"
-                v-if="FINAL_CONFIG.style.chart.area.show"
+                v-if="cfgChart.area.show"
                 :points="funnelArea"
                 :fill="`url(#funnel_area_${uid})`"
                 :class="{
@@ -993,9 +964,9 @@ defineExpose({
                 data-cy="datapoint-bar"
                 v-for="({ x, y, height, width, fill }, i) in datapoints"
                 v-bind="{ x, y, height, width, fill }"
-                :stroke="FINAL_CONFIG.style.chart.bars.stroke"
-                :stroke-width="FINAL_CONFIG.style.chart.bars.strokeWidth"
-                :rx="FINAL_CONFIG.style.chart.bars.borderRadius"
+                :stroke="cfgBars.stroke"
+                :stroke-width="cfgBars.strokeWidth"
+                :rx="cfgBars.borderRadius"
                 :class="{
                     animated:
                         FINAL_CONFIG.useCssAnimation &&
@@ -1013,21 +984,19 @@ defineExpose({
                     :x="
                         datapoint.x +
                         datapoint.width +
-                        FINAL_CONFIG.style.chart.bars.dataLabels.name.offsetX +
+                        cfgBars.dataLabels.name.offsetX +
                         12
                     "
                     :y="
                         datapoint.cy -
                         fontSizes.names / 2 +
-                        FINAL_CONFIG.style.chart.bars.dataLabels.name.offsetY
+                        cfgBars.dataLabels.name.offsetY
                     "
                     text-anchor="start"
                     :font-size="fontSizes.names"
-                    :fill="FINAL_CONFIG.style.chart.bars.dataLabels.name.color"
+                    :fill="cfgBars.dataLabels.name.color"
                     :font-weight="
-                        FINAL_CONFIG.style.chart.bars.dataLabels.name.bold
-                            ? 'bold'
-                            : 'normal'
+                        cfgBars.dataLabels.name.bold ? 'bold' : 'normal'
                     "
                     :class="{
                         animated:
@@ -1046,21 +1015,19 @@ defineExpose({
                     :x="
                         datapoint.x +
                         datapoint.width +
-                        FINAL_CONFIG.style.chart.bars.dataLabels.value.offsetX +
+                        cfgBars.dataLabels.value.offsetX +
                         12
                     "
                     :y="
                         datapoint.cy +
                         fontSizes.values +
-                        FINAL_CONFIG.style.chart.bars.dataLabels.value.offsetY
+                        cfgBars.dataLabels.value.offsetY
                     "
                     text-anchor="start"
                     :font-size="fontSizes.values"
-                    :fill="FINAL_CONFIG.style.chart.bars.dataLabels.value.color"
+                    :fill="cfgBars.dataLabels.value.color"
                     :font-weight="
-                        FINAL_CONFIG.style.chart.bars.dataLabels.value.bold
-                            ? 'bold'
-                            : 'normal'
+                        cfgBars.dataLabels.value.bold ? 'bold' : 'normal'
                     "
                     :class="{
                         animated:
@@ -1074,17 +1041,13 @@ defineExpose({
                 >
                     {{
                         applyDataLabel(
-                            FINAL_CONFIG.style.chart.bars.dataLabels.value
-                                .formatter,
+                            cfgBars.dataLabels.value.formatter,
                             datapoint.value,
                             dataLabel({
-                                p: FINAL_CONFIG.style.chart.bars.dataLabels
-                                    .value.prefix,
+                                p: cfgBars.dataLabels.value.prefix,
                                 v: datapoint.value,
-                                s: FINAL_CONFIG.style.chart.bars.dataLabels
-                                    .value.suffix,
-                                r: FINAL_CONFIG.style.chart.bars.dataLabels
-                                    .value.rounding,
+                                s: cfgBars.dataLabels.value.suffix,
+                                r: cfgBars.dataLabels.value.rounding,
                             }),
                             { datapoint },
                         )
@@ -1120,7 +1083,7 @@ defineExpose({
             :config="{
                 type: 'verticalBar',
                 style: {
-                    backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
+                    backgroundColor: cfgChart.backgroundColor,
                     verticalBar: {
                         axis: {
                             color: '#CCCCCC',
