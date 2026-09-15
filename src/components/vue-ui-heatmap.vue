@@ -575,12 +575,28 @@ watchEffect(() => {
         }
     })();
 });
+
+function getHeatmapColor(value, min, max) {
+    if (min === max) {
+        return cfgCells.value.colors.hot;
+    }
+
+    return interpolateColorHex(
+        cfgCells.value.colors.cold,
+        cfgCells.value.colors.hot,
+        min,
+        max,
+        value,
+    );
+}
+
 const dataLabels = computed(() => {
     const yLabels = yAxisTimeLabels.value.map((y) => y.text);
     const xLabels = xAxisTimeLabels.value.map((x) => x.text);
     const _yTotals = FINAL_DATASET.value.map((ds) =>
         ds.values.reduce((a, b) => a + b, 0),
     );
+
     const maxYTotal = Math.max(..._yTotals);
     const minYTotal = Math.min(..._yTotals);
 
@@ -602,16 +618,11 @@ const dataLabels = computed(() => {
             const proportion = isNaN(rowTotal / maxYTotal)
                 ? 0
                 : rowTotal / maxYTotal;
+
             return {
                 total: rowTotal,
                 proportion,
-                color: interpolateColorHex(
-                    cfgCells.value.colors.cold,
-                    cfgCells.value.colors.hot,
-                    minYTotal,
-                    maxYTotal,
-                    rowTotal,
-                ),
+                color: getHeatmapColor(rowTotal, minYTotal, maxYTotal),
             };
         }),
         xTotals: _xTotals.map((columnTotal) => {
@@ -621,13 +632,7 @@ const dataLabels = computed(() => {
             return {
                 total: columnTotal,
                 proportion,
-                color: interpolateColorHex(
-                    cfgCells.value.colors.cold,
-                    cfgCells.value.colors.hot,
-                    minXTotal,
-                    maxXTotal,
-                    columnTotal,
-                ),
+                color: getHeatmapColor(columnTotal, minXTotal, maxXTotal),
             };
         }),
         yLabels,
@@ -658,12 +663,10 @@ const mutableDataset = computed(() => {
                 if (v >= average.value) {
                     return {
                         side: 'up',
-                        color: interpolateColorHex(
-                            cfgCells.value.colors.cold,
-                            cfgCells.value.colors.hot,
+                        color: getHeatmapColor(
+                            v,
                             minValue.value,
                             maxValue.value,
-                            v,
                         ),
                         ratio:
                             Math.abs(
@@ -693,12 +696,10 @@ const mutableDataset = computed(() => {
                                 : Math.abs(
                                       1 - Math.abs(v) / Math.abs(average.value),
                                   ),
-                        color: interpolateColorHex(
-                            cfgCells.value.colors.cold,
-                            cfgCells.value.colors.hot,
+                        color: getHeatmapColor(
+                            v,
                             minValue.value,
                             maxValue.value,
-                            v,
                         ),
                         value: v,
                         yAxisName: dataLabels.value.yLabels[d],
@@ -807,7 +808,7 @@ function useTooltip(
         });
     } else {
         html += `<div data-cy="heatmap-tootlip-name">${yAxisName} ${xAxisName ? (yAxisName ? ` - ${xAxisName}` : `${xAxisName}`) : ''}</div>`;
-        html += `<div data-cy="heatmap-tooltip-value" style="margin-top:6px;padding-top:6px;border-top:1px solid ${FINAL_CONFIG.value.style.tooltip.borderColor};font-weight:bold;display:flex;flex-direction:row;gap:12px;align-items:center;justify-content:center"><span style="color:${interpolateColorHex(cfgCells.value.colors.cold, cfgCells.value.colors.hot, minValue.value, maxValue.value, value)}">⬤</span><span>${
+        html += `<div data-cy="heatmap-tooltip-value" style="margin-top:6px;padding-top:6px;border-top:1px solid ${FINAL_CONFIG.value.style.tooltip.borderColor};font-weight:bold;display:flex;flex-direction:row;gap:12px;align-items:center;justify-content:center"><span style="color:${getHeatmapColor(value, minValue.value, maxValue.value)}">⬤</span><span>${
             isNaN(value)
                 ? '-'
                 : applyDataLabel(
