@@ -5484,6 +5484,8 @@ declare module 'vue-data-ui' {
                 };
                 cells?: {
                     // height?: number; // v3 deprecated
+                    scaleMax?: number | null;
+                    scaleMin?: number | null;
                     columnTotal?: {
                         value?: {
                             show?: boolean;

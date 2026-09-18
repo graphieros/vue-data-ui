@@ -21,7 +21,7 @@ const { CHECKBOX, NUMBER, RANGE, TEXT, COLOR, SELECT, createModel } =
 function makeDs() {
     const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     const arr = [];
-    const dsLen = 52;
+    const dsLen = 8;
     const serieLen = days.length;
     for (let i = 0; i < serieLen; i += 1) {
         const values = [];
@@ -128,6 +128,8 @@ const model = createModel([
         max: 12,
     }),
 
+    NUMBER('style.layout.cells.scaleMin', { def: 0, min: -100, max: 1000 }),
+    NUMBER('style.layout.cells.scaleMax', { def: 20, min: -100, max: 1000 }),
     NUMBER('style.layout.cells.height', { def: 36, min: 12, max: 64 }),
     CHECKBOX('style.layout.cells.value.show', { def: true }),
     NUMBER('style.layout.cells.value.fontSize', { def: 18, min: 8, max: 48 }),

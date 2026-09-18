@@ -2791,6 +2791,8 @@ export function useConfig(options = {}) {
                 },
                 cells: {
                     // height: 36, // v3 deprecated
+                    scaleMax: null,
+                    scaleMin: null,
                     rowTotal: {
                         value: {
                             show: false,

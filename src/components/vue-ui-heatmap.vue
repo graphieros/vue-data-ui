@@ -523,6 +523,18 @@ const minValue = computed(() => {
     return Math.min(...FINAL_DATASET.value.flatMap((el) => el.values));
 });
 
+const colorScaleMax = computed(() => {
+    return cfgCells.value.scaleMax !== null
+        ? cfgCells.value.scaleMax
+        : maxValue.value;
+});
+
+const colorScaleMin = computed(() => {
+    return cfgCells.value.scaleMin !== null
+        ? cfgCells.value.scaleMin
+        : minValue.value;
+});
+
 const average = computed(() => {
     const allValues = FINAL_DATASET.value.flatMap((el) => el.values);
     const sum = allValues.reduce((a, b) => a + b, 0);
@@ -581,58 +593,103 @@ function getHeatmapColor(value, min, max) {
         return cfgCells.value.colors.hot;
     }
 
+    const clampedValue = Math.min(Math.max(value, min), max);
+
     return interpolateColorHex(
         cfgCells.value.colors.cold,
         cfgCells.value.colors.hot,
         min,
         max,
-        value,
+        clampedValue,
     );
+}
+
+function getLegendIndicatorTop(value) {
+    if ([undefined, null].includes(value)) {
+        return 0;
+    }
+
+    const min = colorScaleMin.value;
+    const max = colorScaleMax.value;
+
+    if (min === max) {
+        return 0;
+    }
+
+    const ratio = (value - min) / (max - min);
+    const clampedRatio = Math.min(Math.max(ratio, 0), 1);
+
+    return (1 - clampedRatio) * 100;
 }
 
 const dataLabels = computed(() => {
     const yLabels = yAxisTimeLabels.value.map((y) => y.text);
     const xLabels = xAxisTimeLabels.value.map((x) => x.text);
+    const hasCustomColorScale =
+        cfgCells.value.scaleMin !== null || cfgCells.value.scaleMax !== null;
+
     const _yTotals = FINAL_DATASET.value.map((ds) =>
         ds.values.reduce((a, b) => a + b, 0),
+    );
+    const yCellCounts = FINAL_DATASET.value.map((ds) =>
+        Math.max(1, ds.values.length),
     );
 
     const maxYTotal = Math.max(..._yTotals);
     const minYTotal = Math.min(..._yTotals);
 
     const _xTotals = [];
+    const xCellCounts = [];
 
     for (let i = 0; i < maxX.value; i += 1) {
-        _xTotals.push(
-            FINAL_DATASET.value
-                .map((ds) => ds.values[i] || 0)
-                .reduce((a, b) => a + b, 0),
-        );
+        let columnTotal = 0;
+        let columnCellCount = 0;
+
+        FINAL_DATASET.value.forEach((ds) => {
+            if (i < ds.values.length) {
+                columnTotal += ds.values[i] || 0;
+                columnCellCount += 1;
+            }
+        });
+
+        _xTotals.push(columnTotal);
+        xCellCounts.push(Math.max(1, columnCellCount));
     }
 
     const maxXTotal = Math.max(..._xTotals);
     const minXTotal = Math.min(..._xTotals);
 
     return {
-        yTotals: _yTotals.map((rowTotal) => {
+        yTotals: _yTotals.map((rowTotal, rowIndex) => {
             const proportion = isNaN(rowTotal / maxYTotal)
                 ? 0
                 : rowTotal / maxYTotal;
+            const cellCount = yCellCounts[rowIndex];
+            const totalScaleMin = colorScaleMin.value * cellCount;
+            const totalScaleMax = colorScaleMax.value * cellCount;
 
             return {
                 total: rowTotal,
                 proportion,
-                color: getHeatmapColor(rowTotal, minYTotal, maxYTotal),
+                color: hasCustomColorScale
+                    ? getHeatmapColor(rowTotal, totalScaleMin, totalScaleMax)
+                    : getHeatmapColor(rowTotal, minYTotal, maxYTotal),
             };
         }),
-        xTotals: _xTotals.map((columnTotal) => {
+        xTotals: _xTotals.map((columnTotal, columnIndex) => {
             const proportion = isNaN(columnTotal / maxXTotal)
                 ? 0
                 : columnTotal / maxXTotal;
+            const cellCount = xCellCounts[columnIndex];
+            const totalScaleMin = colorScaleMin.value * cellCount;
+            const totalScaleMax = colorScaleMax.value * cellCount;
+
             return {
                 total: columnTotal,
                 proportion,
-                color: getHeatmapColor(columnTotal, minXTotal, maxXTotal),
+                color: hasCustomColorScale
+                    ? getHeatmapColor(columnTotal, totalScaleMin, totalScaleMax)
+                    : getHeatmapColor(columnTotal, minXTotal, maxXTotal),
             };
         }),
         yLabels,
@@ -665,8 +722,8 @@ const mutableDataset = computed(() => {
                         side: 'up',
                         color: getHeatmapColor(
                             v,
-                            minValue.value,
-                            maxValue.value,
+                            colorScaleMin.value,
+                            colorScaleMax.value,
                         ),
                         ratio:
                             Math.abs(
@@ -698,8 +755,8 @@ const mutableDataset = computed(() => {
                                   ),
                         color: getHeatmapColor(
                             v,
-                            minValue.value,
-                            maxValue.value,
+                            colorScaleMin.value,
+                            colorScaleMax.value,
                         ),
                         value: v,
                         yAxisName: dataLabels.value.yLabels[d],
@@ -808,7 +865,7 @@ function useTooltip(
         });
     } else {
         html += `<div data-cy="heatmap-tootlip-name">${yAxisName} ${xAxisName ? (yAxisName ? ` - ${xAxisName}` : `${xAxisName}`) : ''}</div>`;
-        html += `<div data-cy="heatmap-tooltip-value" style="margin-top:6px;padding-top:6px;border-top:1px solid ${FINAL_CONFIG.value.style.tooltip.borderColor};font-weight:bold;display:flex;flex-direction:row;gap:12px;align-items:center;justify-content:center"><span style="color:${getHeatmapColor(value, minValue.value, maxValue.value)}">⬤</span><span>${
+        html += `<div data-cy="heatmap-tooltip-value" style="margin-top:6px;padding-top:6px;border-top:1px solid ${FINAL_CONFIG.value.style.tooltip.borderColor};font-weight:bold;display:flex;flex-direction:row;gap:12px;align-items:center;justify-content:center"><span style="color:${getHeatmapColor(value, colorScaleMin.value, colorScaleMax.value)}">⬤</span><span>${
             isNaN(value)
                 ? '-'
                 : applyDataLabel(
@@ -2077,10 +2134,10 @@ defineExpose({
                     {{
                         applyDataLabel(
                             cfgCells.value.formatter,
-                            checkNaN(maxValue),
+                            checkNaN(colorScaleMax),
                             dataLabel({
                                 p: cfgLabels.prefix,
-                                v: checkNaN(maxValue),
+                                v: checkNaN(colorScaleMax),
                                 s: cfgLabels.suffix,
                                 r: FINAL_CONFIG.style.legend.roundingValue,
                             }),
@@ -2123,7 +2180,7 @@ defineExpose({
                                     : adaptColorToBackground(
                                           dataTooltipSlot.datapoint.color,
                                       ),
-                                top: `${[undefined, null].includes(hoveredValue) ? 0 : (1 - hoveredValue / maxValue) * 100}%`,
+                                top: `${getLegendIndicatorTop(hoveredValue)}%`,
                                 transition: 'all 0.2s ease-in-out',
                                 '--background-color':
                                     FINAL_CONFIG.style.backgroundColor,
@@ -2173,10 +2230,10 @@ defineExpose({
                     {{
                         applyDataLabel(
                             cfgCells.value.formatter,
-                            checkNaN(minValue),
+                            checkNaN(colorScaleMin),
                             dataLabel({
                                 p: cfgLabels.prefix,
-                                v: checkNaN(minValue),
+                                v: checkNaN(colorScaleMin),
                                 s: cfgLabels.suffix,
                                 r: FINAL_CONFIG.style.legend.roundingValue,
                             }),
