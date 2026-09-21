@@ -43,6 +43,7 @@ import {
     createTSpansFromLineBreaksOnX,
     createUid,
     dataLabel,
+    deepClone,
     downloadCsv,
     error,
     forceValidValue,
@@ -1611,12 +1612,11 @@ const effectiveModulo = computed(() => {
     });
 });
 
-const displayedTimeLabels = computed(() => {
+function getDisplayedTimeLabels(selectedIndex = null) {
     const cfg = gridLabels.value.xAxisLabels;
     const vis = timeLabels.value || [];
     const all = allTimeLabels.value || [];
     const start = slicer.value.start ?? 0;
-    const sel = selectedSerieIndex.value;
     const maxS = maxSeries.value;
     const visTexts = vis.map((l) => l?.text ?? '');
     const allTexts = all.map((l) => l?.text ?? '');
@@ -1628,7 +1628,7 @@ const displayedTimeLabels = computed(() => {
         visTexts,
         allTexts,
         start,
-        sel,
+        selectedIndex,
         maxS,
     );
 
@@ -1652,10 +1652,21 @@ const displayedTimeLabels = computed(() => {
             text: visTexts[i] ?? '',
         };
     });
+}
+
+const displayedTimeLabels = computed(() => {
+    return getDisplayedTimeLabels(selectedSerieIndex.value);
 });
 
-const displayedTimeLabelsKey = computed(() => {
-    return (displayedTimeLabels.value || [])
+// Hover state must not participate in layout measurement. Otherwise clearing
+// selectedSerieIndex on mouseleave can change the measured label bounds and
+// feed back into drawingArea, causing a visible geometry redraw.
+const layoutDisplayedTimeLabels = computed(() => {
+    return getDisplayedTimeLabels(null);
+});
+
+const layoutDisplayedTimeLabelsKey = computed(() => {
+    return (layoutDisplayedTimeLabels.value || [])
         .map((l) => l?.text ?? '')
         .join('|');
 });
@@ -1669,7 +1680,7 @@ onMounted(() => {
     // Re-measure when async labels arrive or layout inputs change
     watch(
         [
-            () => displayedTimeLabelsKey.value,
+            () => layoutDisplayedTimeLabelsKey.value,
             () => gridLabels.value.xAxisLabels.rotation,
             () => fontSizes.value.xAxis,
             () => width.value,
@@ -6247,11 +6258,39 @@ watch(
     { deep: true },
 );
 
+function stringifyStructuralConfig(cfg) {
+    const clonedConfig = deepClone(cfg);
+    if (clonedConfig?.chart) {
+        delete clonedConfig.chart.tooltip;
+    }
+    return JSON.stringify(clonedConfig);
+}
+
+let previousStructuralConfig = stringifyStructuralConfig(props.config);
+
 watch(
     () => props.config,
-    (_) => {
+    (newConfig, oldConfig) => {
+        const nextStructuralConfig = stringifyStructuralConfig(newConfig);
+
+        const requiresChartPreparation =
+            nextStructuralConfig !== previousStructuralConfig;
+
+        previousStructuralConfig = nextStructuralConfig;
+
+        const preparedConfig = prepareConfig();
+
+        if (!requiresChartPreparation) {
+            FINAL_CONFIG.value.chart.tooltip = preparedConfig.chart.tooltip;
+
+            mutableConfig.value.showTooltip =
+                FINAL_CONFIG.value.chart.tooltip.show;
+
+            return;
+        }
+
         if (!loading.value) {
-            FINAL_CONFIG.value = prepareConfig();
+            FINAL_CONFIG.value = preparedConfig;
         }
 
         prepareChart();

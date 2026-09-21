@@ -38,6 +38,7 @@ import {
     translateSize,
     treeShake,
     interpolateHexColors,
+    deepClone,
 } from '../lib';
 import { throttle } from '../canvas-lib';
 import { COMMON_RULES, useHints } from '../useHints';
@@ -434,11 +435,41 @@ const { svgRef } = useChartAccessibility({
     config: cfgChart.value.title,
 });
 
+function stringifyStructuralConfig(cfg) {
+    const clonedConfig = deepClone(cfg);
+    if (clonedConfig?.style?.chart) {
+        delete clonedConfig.style.chart.tooltip;
+        // Add more properties here if they should not recompute the svg
+    }
+    return JSON.stringify(clonedConfig);
+}
+
+let previousStructuralConfig = stringifyStructuralConfig(props.config);
+
 watch(
     () => props.config,
-    (_newCfg) => {
+    (newConfig, oldConfig) => {
+        const nextStructuralConfig = stringifyStructuralConfig(newConfig);
+
+        const requiresChartPreparation =
+            nextStructuralConfig !== previousStructuralConfig;
+
+        previousStructuralConfig = nextStructuralConfig;
+
+        const preparedConfig = prepareConfig();
+
+        if (!requiresChartPreparation) {
+            FINAL_CONFIG.value.style.chart.tooltip =
+                preparedConfig.style.chart.tooltip;
+
+            mutableConfig.value.showTooltip =
+                FINAL_CONFIG.value.style.chart.tooltip.show;
+
+            return;
+        }
+
         if (!loading.value) {
-            FINAL_CONFIG.value = prepareConfig();
+            FINAL_CONFIG.value = preparedConfig;
         }
         userOptionsVisible.value =
             !FINAL_CONFIG.value.userOptions.showOnChartHover;

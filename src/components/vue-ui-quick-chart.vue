@@ -35,6 +35,7 @@ import {
     XMLNS,
     treeShake,
     objectIsEmpty,
+    deepClone,
 } from '../lib';
 import { throttle } from '../canvas-lib';
 import { COMMON_RULES, useHints } from '../useHints';
@@ -290,11 +291,39 @@ function prepareConfig() {
     return finalConfig;
 }
 
+function stringifyStructuralConfig(cfg) {
+    const clonedConfig = deepClone(cfg);
+    if (clonedConfig?.tooltipPosition) {
+        delete clonedConfig.tooltipPosition;
+        // Add more properties here if they should not recompute the svg
+    }
+    return JSON.stringify(clonedConfig);
+}
+
+let previousStructuralConfig = stringifyStructuralConfig(props.config);
+
 watch(
     () => props.config,
-    (_newCfg) => {
+    (newConfig, oldConfig) => {
+        const nextStructuralConfig = stringifyStructuralConfig(newConfig);
+
+        const requiresChartPreparation =
+            nextStructuralConfig !== previousStructuralConfig;
+
+        previousStructuralConfig = nextStructuralConfig;
+
+        const preparedConfig = prepareConfig();
+
+        if (!requiresChartPreparation) {
+            FINAL_CONFIG.value.tooltipPosition = preparedConfig.tooltipPosition;
+
+            mutableConfig.value.showTooltip = FINAL_CONFIG.value.showTooltip;
+
+            return;
+        }
+
         if (!loading.value) {
-            FINAL_CONFIG.value = prepareConfig();
+            FINAL_CONFIG.value = preparedConfig;
         }
         defaultSizes.value.width = FINAL_CONFIG.value.width;
         defaultSizes.value.height = FINAL_CONFIG.value.height;

@@ -14,6 +14,7 @@ import {
     convertCustomPalette,
     createUid,
     dataLabel,
+    deepClone,
     error,
     getMissingDatasetAttributes,
     isFunction,
@@ -181,10 +182,35 @@ function prepareConfig() {
     };
 }
 
+function stringifyStructuralConfig(cfg) {
+    const clonedConfig = deepClone(cfg);
+    if (clonedConfig?.style) {
+        delete clonedConfig.style.tooltip;
+        // Add more properties here if they should not recompute the svg
+    }
+    return JSON.stringify(clonedConfig);
+}
+
+let previousStructuralConfig = stringifyStructuralConfig(props.config);
+
 watch(
     () => props.config,
-    (_newCfg) => {
-        FINAL_CONFIG.value = prepareConfig();
+    (newConfig, oldConfig) => {
+        const nextStructuralConfig = stringifyStructuralConfig(newConfig);
+
+        const requiresChartPreparation =
+            nextStructuralConfig !== previousStructuralConfig;
+
+        previousStructuralConfig = nextStructuralConfig;
+
+        const preparedConfig = prepareConfig();
+
+        if (!requiresChartPreparation) {
+            FINAL_CONFIG.value.style.tooltip = preparedConfig.style.tooltip;
+            return;
+        }
+
+        FINAL_CONFIG.value = preparedConfig;
         prepareChart();
     },
     { deep: true },

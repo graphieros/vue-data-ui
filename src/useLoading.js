@@ -1,4 +1,4 @@
-import { ref, watchEffect, unref, computed } from 'vue';
+import { computed, ref, unref, watch } from 'vue';
 
 export function useLoading({
     config,
@@ -29,11 +29,22 @@ export function useLoading({
 
     const FINAL_DATASET = ref(unref(dataset));
 
-    watchEffect(() => {
-        FINAL_DATASET.value = loading.value ? skeletonDataset : unref(dataset);
-        FINAL_CONFIG.value = loading.value ? skeletonConfig : prepareConfig();
-        callback && callback();
-    });
+    const sources = [loading, () => unref(dataset)];
+
+    watch(
+        sources,
+        ([isLoading, currentDataset]) => {
+            FINAL_DATASET.value = isLoading ? skeletonDataset : currentDataset;
+
+            FINAL_CONFIG.value = isLoading ? skeletonConfig : prepareConfig();
+
+            callback && callback();
+        },
+        {
+            immediate: true,
+            deep: true,
+        },
+    );
 
     return {
         loading,

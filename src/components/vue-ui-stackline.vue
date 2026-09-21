@@ -27,6 +27,7 @@ import {
     createStraightPath,
     createUid,
     dataLabel,
+    deepClone,
     downloadCsv,
     error,
     forceValidValue,
@@ -438,14 +439,48 @@ const canHideSmallPercentages = computed(() => {
     return cfgLines.value.dataLabels.hideUnderPercentage !== null;
 });
 
+function stringifyStructuralConfig(cfg) {
+    const clonedConfig = deepClone(cfg);
+    if (clonedConfig?.style?.chart) {
+        delete clonedConfig.style.chart.tooltip;
+        // Add more properties here if they should not recompute the svg
+    }
+    return JSON.stringify(clonedConfig);
+}
+
+let previousStructuralConfig = stringifyStructuralConfig(props.config);
+
 watch(
     () => props.config,
-    (_newCfg) => {
+    (newConfig, oldConfig) => {
+        const nextStructuralConfig = stringifyStructuralConfig(newConfig);
+
+        const requiresChartPreparation =
+            nextStructuralConfig !== previousStructuralConfig;
+
+        previousStructuralConfig = nextStructuralConfig;
+
+        const preparedConfig = prepareConfig();
+
+        if (!requiresChartPreparation) {
+            FINAL_CONFIG.value.style.chart.tooltip =
+                preparedConfig.style.chart.tooltip;
+
+            mutableConfig.value.showTooltip =
+                FINAL_CONFIG.value.style.chart.tooltip.show;
+
+            return;
+        }
+
         if (!loading.value) {
-            FINAL_CONFIG.value = prepareConfig();
+            FINAL_CONFIG.value = preparedConfig;
         }
         userOptionsVisible.value =
             !FINAL_CONFIG.value.userOptions.showOnChartHover;
+        mutableConfig.value.dataLabels.show = cfgLines.value.dataLabels.show;
+        mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
+        mutableConfig.value.showTooltip = cfgTooltip.value.show;
+
         prepareChart({
             resetSlicer: !cfgChart.value.zoom.keepState,
         });
@@ -453,10 +488,6 @@ watch(
         tableStep.value += 1;
         legendStep.value += 1;
 
-        // Reset mutable config
-        mutableConfig.value.dataLabels.show = cfgLines.value.dataLabels.show;
-        mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
-        mutableConfig.value.showTooltip = cfgTooltip.value.show;
         defaultSizes.value.width = cfgChart.value.width;
         defaultSizes.value.height = cfgChart.value.height;
         defaultSizes.value.paddingRatio = {
@@ -1330,17 +1361,15 @@ const effectiveModulo = computed(() => {
     });
 });
 
-const displayedTimeLabels = computed(() => {
+function getDisplayedTimeLabels(selectedIndex) {
     const cfg = cfgTimeLabels.value;
 
     const vis = timeLabels.value || [];
     const all = allTimeLabels.value || [];
     const start = slicer.value.start ?? 0;
-    const sel = selectedSerieIndex.value;
     const maxS = maxSeries.value;
 
     const visTexts = vis.map((label) => label?.text ?? '');
-
     const allTexts = all.map((label) => label?.text ?? '');
 
     const displayed = buildDisplayedTimeLabels(
@@ -1350,7 +1379,7 @@ const displayedTimeLabels = computed(() => {
         visTexts,
         allTexts,
         start,
-        sel,
+        selectedIndex,
         maxS,
     );
 
@@ -1374,6 +1403,17 @@ const displayedTimeLabels = computed(() => {
             text: visTexts[i] ?? '',
         };
     });
+}
+
+const displayedTimeLabels = computed(() => {
+    return getDisplayedTimeLabels(selectedSerieIndex.value);
+});
+
+// Hover state must not participate in chart layout measurement.
+// Otherwise clearing selectedSerieIndex on mouseleave can change the measured
+// time-label height, which changes offsetY/drawingArea and redraws the chart.
+const layoutDisplayedTimeLabels = computed(() => {
+    return getDisplayedTimeLabels(null);
 });
 
 watchEffect(
@@ -1383,7 +1423,8 @@ watchEffect(
         const timeLabelsRotation = cfgTimeLabels.value.rotation;
         const timeLabelsOffsetY = cfgTimeLabels.value.offsetY;
 
-        const renderedTimeLabelTexts = (displayedTimeLabels.value || [])
+        // Layout measurement intentionally excludes the hovered series index.
+        const renderedTimeLabelTexts = (layoutDisplayedTimeLabels.value || [])
             .map((label) => label?.text ?? '')
             .join('|');
 
