@@ -17795,23 +17795,23 @@ declare module 'vue-data-ui' {
     /**
      * Vue Data UI utility
      * ---
-     * Compute the cumulative median of a sequence, optionally echoing or zero-filling invalid inputs.
+     * Compute the cumulative average of a sequence, optionally echoing or zero-filling invalid inputs.
      * ---
      * @example
      * ```js
      * // Simple usage
      * const arr = [1, 2, 3, 4, 5];
-     * const medians = getCumulativeMedian({ values: arr });
+     * const average = getCumulativeAverage({ values: arr });
      *
      * // Ignore invalid values entirely
      * const arrWithInvalid = [1, null, 2, Infinity, undefined];
-     * const mediansNoInvalid = getCumulativeMedian({
+     * const averageNoInvalid = getCumulativeAverage({
      *   values: arrWithInvalid,
      *   config: { keepInvalid: false }
      * });
      *
      * // Convert invalid values to zero
-     * const mediansZeroed = getCumulativeMedian({
+     * const averageZeroed = getCumulativeAverage({
      *   values: arrWithInvalid,
      *   config: { convertInvalidToZero: true }
      * });
@@ -17823,7 +17823,7 @@ declare module 'vue-data-ui' {
      * @param {CumulativeConfig} [params.config]
      *   Configuration flags to control handling of invalid inputs.
      * @returns {Array<number|*>}
-     *   An array where each slot is either the cumulative median up to that point,
+     *   An array where each slot is either the cumulative average up to that point,
      *   or the original invalid value if `keepInvalid` is `true`.
      */
     export function getCumulativeAverage<T = unknown>(params: {
