@@ -121,7 +121,6 @@ const childLabels = ref(null);
 const segregated = ref([]);
 const sorts = ref({ none: 0, asc: 1, desc: 2 });
 const sortIndex = ref(0);
-const isSortNeutral = ref(false);
 const dataLabelFontMetricsRevision = ref(0);
 let dataLabelMeasureCanvas = null;
 let dataLabelMeasureContext = null;
@@ -345,7 +344,7 @@ watch(
         titleStep.value += 1;
         legendStep.value += 1;
         mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
-        mutableConfig.value.sortDesc = cfgBars.value.sort === 'desc';
+        sortIndex.value = sorts.value[cfgBars.value.sort] ?? 0;
         mutableConfig.value.showTooltip = cfgTooltip.value.show;
         WIDTH.value = cfgChart.value.width;
         HEIGHT.value = cfgChart.value.height;
@@ -446,13 +445,11 @@ onBeforeUnmount(() => {
 
 const mutableConfig = ref({
     showTable: FINAL_CONFIG.value.table.show,
-    sortDesc: cfgBars.value.sort === 'desc',
     showTooltip: cfgTooltip.value.show,
 });
 
-const isSortDown = computed(() => {
-    return mutableConfig.value.sortDesc;
-});
+const isSortNeutral = computed(() => sortIndex.value === 0);
+const isSortDown = computed(() => sortIndex.value === 2);
 
 const immutableDataset = computed(() => {
     FINAL_DATASET.value.forEach((ds, i) => {
@@ -1328,9 +1325,7 @@ onMounted(() => {
         });
     }
 
-    sortIndex.value = sorts.value[cfgBars.value.sort];
-    mutableConfig.value.sortDesc = sortIndex.value === 2;
-    isSortNeutral.value = sortIndex.value === 0;
+    sortIndex.value = sorts.value[cfgBars.value.sort] ?? 0;
 });
 
 function incrementSort() {
@@ -1342,8 +1337,6 @@ function incrementSort() {
 
 function toggleSort() {
     incrementSort();
-    mutableConfig.value.sortDesc = sortIndex.value === 2;
-    isSortNeutral.value = sortIndex.value === 0;
 }
 
 function toggleTooltip() {
@@ -1900,10 +1893,25 @@ defineExpose({
             </template>
         </UserOptions>
 
+        <!-- CUSTOM LEGEND SLOT : TOP -->
+        <slot
+            v-if="
+                $slots.legend &&
+                cfgChart.legend.show &&
+                cfgChart.legend.position === 'top'
+            "
+            name="legend"
+            v-bind:legend="immutableDataset"
+        />
+
         <!-- LEGEND AS DIV : TOP -->
         <div
             ref="chartLegend"
-            v-if="cfgChart.legend.show && cfgChart.legend.position === 'top'"
+            v-if="
+                !$slots.legend &&
+                cfgChart.legend.show &&
+                cfgChart.legend.position === 'top'
+            "
         >
             <Legend
                 :key="`legend_top_${legendStep}`"
@@ -2515,10 +2523,25 @@ defineExpose({
             />
         </div>
 
+        <!-- CUSTOM LEGEND SLOT : BOTTOM -->
+        <slot
+            v-if="
+                $slots.legend &&
+                cfgChart.legend.show &&
+                cfgChart.legend.position === 'bottom'
+            "
+            name="legend"
+            v-bind:legend="immutableDataset"
+        />
+
         <!-- LEGEND AS DIV : BOTTOM -->
         <div
             ref="chartLegend"
-            v-if="cfgChart.legend.show && cfgChart.legend.position === 'bottom'"
+            v-if="
+                !$slots.legend &&
+                cfgChart.legend.show &&
+                cfgChart.legend.position === 'bottom'
+            "
         >
             <Legend
                 :key="`legend_bottom_${legendStep}`"
@@ -2568,8 +2591,6 @@ defineExpose({
                 </template>
             </Legend>
         </div>
-
-        <slot name="legend" v-bind:legend="immutableDataset"></slot>
 
         <div v-if="$slots.source" ref="source" dir="auto">
             <slot name="source" />
