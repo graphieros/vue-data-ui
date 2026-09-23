@@ -799,6 +799,42 @@ const mutableDataset = computed(() => {
     });
 });
 
+const cells = computed(() => {
+    return mutableDataset.value.flatMap((serie, rowIndex) => {
+        return serie.temperatures.map((cell, columnIndex) => {
+            const selectionX =
+                drawingArea.value.left +
+                drawingArea.value.cellSize.width * columnIndex;
+            const selectionY =
+                drawingArea.value.top +
+                drawingArea.value.cellSize.height * rowIndex;
+
+            return {
+                datapoint: cell,
+                rowIndex,
+                columnIndex,
+                x:
+                    selectionX +
+                    cellGap.value / 2 +
+                    drawingArea.value.sumCellXHeight,
+                y: selectionY + cellGap.value / 2,
+                width: drawingArea.value.cellSize.width - cellGap.value,
+                height: drawingArea.value.cellSize.height - cellGap.value,
+                labelX:
+                    selectionX +
+                    drawingArea.value.cellSize.width / 2 +
+                    drawingArea.value.sumCellXHeight,
+                labelY:
+                    selectionY +
+                    drawingArea.value.cellSize.height / 2 +
+                    cfgCells.value.value.fontSize / 3,
+                selectionX,
+                selectionY,
+            };
+        });
+    });
+});
+
 const rows = computed(() => FINAL_DATASET.value.length);
 const rotateFlags = reactive(Array(rows.value * maxX.value || 1).fill(false));
 const rotateAll = computed(() => rotateFlags.some((f) => f));
@@ -1802,123 +1838,98 @@ defineExpose({
 
                 <!-- DATAPOINTS -->
                 <g ref="datapoints">
-                    <template v-for="(serie, i) in mutableDataset">
-                        <g v-for="(cell, j) in serie.temperatures">
-                            <rect
-                                data-cy="cell-underlayer"
-                                :x="
-                                    drawingArea.left +
-                                    drawingArea.cellSize.width * j +
-                                    cellGap / 2 +
-                                    drawingArea.sumCellXHeight
-                                "
-                                :y="
-                                    drawingArea.top +
-                                    drawingArea.cellSize.height * i +
-                                    cellGap / 2
-                                "
-                                :width="drawingArea.cellSize.width - cellGap"
-                                :height="drawingArea.cellSize.height - cellGap"
-                                :fill="cfgCells.colors.underlayer"
-                                :stroke="FINAL_CONFIG.style.backgroundColor"
-                                :stroke-width="cellGap"
-                            />
-                            <rect
-                                data-cy="cell"
-                                :data-a11y-cell-id="cell.id"
-                                :x="
-                                    drawingArea.left +
-                                    drawingArea.cellSize.width * j +
-                                    cellGap / 2 +
-                                    drawingArea.sumCellXHeight
-                                "
-                                :y="
-                                    drawingArea.top +
-                                    drawingArea.cellSize.height * i +
-                                    cellGap / 2
-                                "
-                                :width="drawingArea.cellSize.width - cellGap"
-                                :height="drawingArea.cellSize.height - cellGap"
-                                :fill="cell.color"
-                                :stroke="FINAL_CONFIG.style.backgroundColor"
-                                :stroke-width="cellGap"
-                                :aria-label="`${cell.yAxisName}${cell.xAxisName ? ` - ${cell.xAxisName}` : ''}: ${isNaN(cell.value) ? '-' : cell.value}`"
-                                @mouseover="
-                                    useTooltip(
-                                        cell,
-                                        i,
-                                        drawingArea.left +
-                                            drawingArea.cellSize.width * j,
-                                        drawingArea.top +
-                                            drawingArea.cellSize.height * i,
-                                        'pointer',
-                                        getFlatIndexFromGridPosition(i, j),
+                    <g v-for="cell in cells">
+                        <rect
+                            data-cy="cell-underlayer"
+                            :x="cell.x"
+                            :y="cell.y"
+                            :width="cell.width"
+                            :height="cell.height"
+                            :fill="cfgCells.colors.underlayer"
+                            :stroke="FINAL_CONFIG.style.backgroundColor"
+                            :stroke-width="cellGap"
+                        />
+                        <rect
+                            data-cy="cell"
+                            :data-a11y-cell-id="cell.datapoint.id"
+                            :x="cell.x"
+                            :y="cell.y"
+                            :width="cell.width"
+                            :height="cell.height"
+                            :fill="cell.datapoint.color"
+                            :stroke="FINAL_CONFIG.style.backgroundColor"
+                            :stroke-width="cellGap"
+                            :aria-label="`${cell.datapoint.yAxisName}${cell.datapoint.xAxisName ? ` - ${cell.datapoint.xAxisName}` : ''}: ${isNaN(cell.datapoint.value) ? '-' : cell.datapoint.value}`"
+                            @mouseover="
+                                useTooltip(
+                                    cell.datapoint,
+                                    cell.rowIndex,
+                                    cell.selectionX,
+                                    cell.selectionY,
+                                    'pointer',
+                                    getFlatIndexFromGridPosition(
+                                        cell.rowIndex,
+                                        cell.columnIndex,
+                                    ),
+                                )
+                            "
+                            @mouseout="
+                                () =>
+                                    onTrapLeave({
+                                        datapoint: cell.datapoint,
+                                        seriesIndex: cell.rowIndex,
+                                    })
+                            "
+                            @click="
+                                () =>
+                                    selectDatapoint(
+                                        cell.datapoint,
+                                        cell.rowIndex,
                                     )
-                                "
-                                @mouseout="
-                                    () =>
-                                        onTrapLeave({
-                                            datapoint: cell,
-                                            seriesIndex: i,
-                                        })
-                                "
-                                @click="() => selectDatapoint(cell, i)"
-                            />
-                            <text
-                                data-cy="cell-label"
-                                v-if="cfgCells.value.show"
-                                text-anchor="middle"
-                                :font-size="cfgCells.value.fontSize"
-                                :font-weight="
-                                    cfgCells.value.bold ? 'bold' : 'normal'
-                                "
-                                :fill="adaptColorToBackground(cell.color)"
-                                :x="
-                                    drawingArea.left +
-                                    drawingArea.cellSize.width * j +
-                                    drawingArea.cellSize.width / 2 +
-                                    drawingArea.sumCellXHeight
-                                "
-                                :y="
-                                    drawingArea.top +
-                                    drawingArea.cellSize.height * i +
-                                    drawingArea.cellSize.height / 2 +
-                                    cfgCells.value.fontSize / 3
-                                "
-                                v-fit-text="{
-                                    cellWidth:
-                                        drawingArea.cellSize.width - cellGap,
-                                    cellHeight:
-                                        drawingArea.cellSize.height - cellGap,
-                                    maxFontSize: cfgCells.value.fontSize,
-                                    minFontSize: 10,
-                                    index: i * maxX + j,
-                                    reportHide,
-                                    reportRotation,
-                                    hideAll,
-                                    rotateAll,
-                                }"
-                                :style="{
-                                    pointerEvents: 'none',
-                                    userSelect: 'none',
-                                }"
-                            >
-                                {{
-                                    applyDataLabel(
-                                        cfgCells.value.formatter,
-                                        cell.value,
-                                        dataLabel({
-                                            p: cfgLabels.prefix,
-                                            v: cell.value,
-                                            s: cfgLabels.suffix,
-                                            r: cfgCells.value.roundingValue,
-                                        }),
-                                        { datapoint: cell },
-                                    )
-                                }}
-                            </text>
-                        </g>
-                    </template>
+                            "
+                        />
+                        <text
+                            data-cy="cell-label"
+                            v-if="cfgCells.value.show"
+                            text-anchor="middle"
+                            :font-size="cfgCells.value.fontSize"
+                            :font-weight="
+                                cfgCells.value.bold ? 'bold' : 'normal'
+                            "
+                            :fill="adaptColorToBackground(cell.datapoint.color)"
+                            :x="cell.labelX"
+                            :y="cell.labelY"
+                            v-fit-text="{
+                                cellWidth: cell.width,
+                                cellHeight: cell.height,
+                                maxFontSize: cfgCells.value.fontSize,
+                                minFontSize: 10,
+                                index: cell.rowIndex * maxX + cell.columnIndex,
+                                reportHide,
+                                reportRotation,
+                                hideAll,
+                                rotateAll,
+                            }"
+                            :style="{
+                                pointerEvents: 'none',
+                                userSelect: 'none',
+                            }"
+                        >
+                            {{
+                                applyDataLabel(
+                                    cfgCells.value.formatter,
+                                    cell.datapoint.value,
+                                    dataLabel({
+                                        p: cfgLabels.prefix,
+                                        v: cell.datapoint.value,
+                                        s: cfgLabels.suffix,
+                                        r: cfgCells.value.roundingValue,
+                                    }),
+                                    { datapoint: cell.datapoint },
+                                )
+                            }}
+                        </text>
+                    </g>
                 </g>
 
                 <!-- Y AXIS SUM RECTS -->
@@ -2135,6 +2146,7 @@ defineExpose({
                     :svg="{
                         ...svg,
                         drawingArea,
+                        cells,
                         isPrintingImg:
                             isPrinting || isImaging || isCallbackImaging,
                         isPrintingSvg: isCallbackSvg,

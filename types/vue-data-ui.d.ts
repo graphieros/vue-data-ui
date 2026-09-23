@@ -5622,15 +5622,7 @@ declare module 'vue-data-ui' {
         getData(): Promise<
             Array<{
                 name: string;
-                temperatures: Array<{
-                    color: string;
-                    id: string;
-                    ratio: number;
-                    side: 'up' | 'down';
-                    value: number;
-                    xAxisName: number | string;
-                    yAxisName: number | string;
-                }>;
+                temperatures: VueUiHeatmapDatapoint[];
                 values: Array<string | number>;
             }>
         >;
@@ -5643,6 +5635,20 @@ declare module 'vue-data-ui' {
         toggleTooltip(): void;
         toggleAnnotator(): void;
         toggleFullscreen(): void;
+    };
+
+    export type VueUiHeatmapCell = {
+        datapoint: VueUiHeatmapDatapoint;
+        rowIndex: number;
+        columnIndex: number;
+        x: number;
+        y: number;
+        width: number;
+        height: number;
+        labelX: number;
+        labelY: number;
+        selectionX: number;
+        selectionY: number;
     };
 
     export type VueUiHeatmapSvgSlotProps = {
@@ -5662,6 +5668,7 @@ declare module 'vue-data-ui' {
             isPrintingImg: boolean;
             isPrintingSvg: boolean;
             width: number;
+            cells: VueUiHeatmapCell[];
         };
     };
 

@@ -7,6 +7,15 @@ const props = defineProps<{
 </script>
 
 <template>
+    <rect
+        v-for="cell in svg.cells"
+        :x="cell.x"
+        :y="cell.y"
+        :height="cell.height / 2"
+        :width="cell.width / 2"
+        fill="red"
+        style="pointer-events: none"
+    />
     <g style="pointer-events: none">
         <circle
             :cx="svg.width / 2"

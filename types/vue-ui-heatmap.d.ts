@@ -23,6 +23,7 @@ import type {
     VueUiHeatmapEmits,
     VueUiHeatmapEmitSelectDatapoint,
     VueUiHeatmapEmitCopyAlt,
+    VueUiHeatmapCell,
 } from 'vue-data-ui';
 
 export type {
@@ -48,6 +49,7 @@ export type {
     VueUiHeatmapEmits,
     VueUiHeatmapEmitSelectDatapoint,
     VueUiHeatmapEmitCopyAlt,
+    VueUiHeatmapCell,
 };
 
 declare const VueUiHeatmapBase: DefineComponent<
