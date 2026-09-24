@@ -3489,6 +3489,201 @@ export function createSmoothPathWithCuts(points) {
     return fullPath.trim();
 }
 
+export function createStepperSegmentsByEdgeStarts(points, dashedEdgeStarts) {
+    if (!Array.isArray(points) || points.length < 2) return [];
+
+    const dashedStarts =
+        dashedEdgeStarts instanceof Set
+            ? dashedEdgeStarts
+            : new Set(dashedEdgeStarts || []);
+
+    const isValidPoint = (point) =>
+        point &&
+        point.value !== null &&
+        point.value !== undefined &&
+        Number.isFinite(point.x) &&
+        Number.isFinite(point.y);
+
+    const coordOf = (point) => `${checkNaN(point.x)},${checkNaN(point.y)}`;
+
+    const result = [];
+    let currentPath = [];
+    let currentDashed = false;
+    let previousEdgeEnd = null;
+
+    const flush = () => {
+        if (currentPath.length >= 3) {
+            result.push({
+                path: currentPath.join(' '),
+                dashed: currentDashed,
+            });
+        }
+        currentPath = [];
+        previousEdgeEnd = null;
+    };
+
+    for (let i = 1; i < points.length; i += 1) {
+        const previousPoint = points[i - 1];
+        const point = points[i];
+
+        if (!isValidPoint(previousPoint) || !isValidPoint(point)) {
+            flush();
+            continue;
+        }
+
+        const segmentDashed = dashedStarts.has(i - 1);
+        const startCoord = coordOf(previousPoint);
+        const horizontalCoord = `${checkNaN(point.x)},${checkNaN(previousPoint.y)}`;
+        const endCoord = coordOf(point);
+
+        if (
+            currentPath.length &&
+            previousEdgeEnd === i - 1 &&
+            segmentDashed === currentDashed
+        ) {
+            currentPath.push(`L${horizontalCoord}`, `L${endCoord}`);
+            previousEdgeEnd = i;
+            continue;
+        }
+
+        flush();
+        currentDashed = segmentDashed;
+        currentPath = [startCoord, `L${horizontalCoord}`, `L${endCoord}`];
+        previousEdgeEnd = i;
+    }
+
+    flush();
+    return result;
+}
+
+export function createStraightSegmentsByEdgeStarts(points, dashedEdgeStarts) {
+    if (!Array.isArray(points) || points.length < 2) return [];
+
+    const dashedStarts =
+        dashedEdgeStarts instanceof Set
+            ? dashedEdgeStarts
+            : new Set(dashedEdgeStarts || []);
+    const result = [];
+    let currentCoords = [];
+    let currentDashed = false;
+
+    const coordOf = (point) => `${checkNaN(point.x)},${checkNaN(point.y)}`;
+
+    const flush = () => {
+        if (currentCoords.length >= 2) {
+            result.push({
+                path: currentCoords
+                    .map((coord, index) => (index === 0 ? coord : `L${coord}`))
+                    .join(' '),
+                dashed: currentDashed,
+            });
+        }
+        currentCoords = [];
+    };
+
+    currentCoords = [coordOf(points[0])];
+
+    for (let i = 1; i < points.length; i += 1) {
+        const previousPoint = points[i - 1];
+        const point = points[i];
+        const segmentDashed = dashedStarts.has(i - 1);
+        const coord = coordOf(point);
+
+        if (currentCoords.length === 1) {
+            currentDashed = segmentDashed;
+            currentCoords.push(coord);
+            continue;
+        }
+
+        if (segmentDashed !== currentDashed) {
+            const previousCoord = coordOf(previousPoint);
+            flush();
+            currentDashed = segmentDashed;
+            currentCoords = [previousCoord, coord];
+        } else {
+            currentCoords.push(coord);
+        }
+    }
+
+    flush();
+    return result;
+}
+
+export function createSmoothSegmentsByEdgeStarts(points, dashedEdgeStarts) {
+    if (!Array.isArray(points) || points.length < 2) return [];
+
+    const dashedStarts =
+        dashedEdgeStarts instanceof Set
+            ? dashedEdgeStarts
+            : new Set(dashedEdgeStarts || []);
+    const n = points.length - 1;
+    const slopes = [];
+    const tangents = [];
+    const commands = [];
+
+    for (let i = 0; i < n; i += 1) {
+        const dx = points[i + 1].x - points[i].x;
+        const dy = points[i + 1].y - points[i].y;
+        slopes[i] = dy / dx;
+    }
+
+    tangents[0] = slopes[0];
+    tangents[n] = slopes[n - 1];
+
+    for (let i = 1; i < n; i += 1) {
+        if (slopes[i - 1] * slopes[i] <= 0) {
+            tangents[i] = 0;
+        } else {
+            tangents[i] =
+                (2 * slopes[i - 1] * slopes[i]) / (slopes[i - 1] + slopes[i]);
+        }
+    }
+
+    for (let i = 0; i < n; i += 1) {
+        const x1 = points[i].x;
+        const y1 = points[i].y;
+        const x2 = points[i + 1].x;
+        const y2 = points[i + 1].y;
+        const m1 = tangents[i];
+        const m2 = tangents[i + 1];
+        const controlX1 = x1 + (x2 - x1) / 3;
+        const controlY1 = y1 + (m1 * (x2 - x1)) / 3;
+        const controlX2 = x2 - (x2 - x1) / 3;
+        const controlY2 = y2 - (m2 * (x2 - x1)) / 3;
+
+        commands[i] =
+            `C${checkNaN(controlX1)},${checkNaN(controlY1)} ` +
+            `${checkNaN(controlX2)},${checkNaN(controlY2)} ` +
+            `${checkNaN(x2)},${checkNaN(y2)}`;
+    }
+
+    const result = [];
+    let runStart = 0;
+    let currentDashed = dashedStarts.has(0);
+
+    const pushRun = (startEdge, endEdge, dashed) => {
+        const startPoint = points[startEdge];
+        result.push({
+            path: `${checkNaN(startPoint.x)},${checkNaN(startPoint.y)} ${commands
+                .slice(startEdge, endEdge + 1)
+                .join(' ')}`.trim(),
+            dashed,
+        });
+    };
+
+    for (let i = 1; i < n; i += 1) {
+        const segmentDashed = dashedStarts.has(i);
+        if (segmentDashed !== currentDashed) {
+            pushRun(runStart, i - 1, currentDashed);
+            runStart = i;
+            currentDashed = segmentDashed;
+        }
+    }
+
+    pushRun(runStart, n - 1, currentDashed);
+    return result;
+}
+
 function isValidPoint(p) {
     return (
         p != null &&
@@ -4147,6 +4342,7 @@ export function lerp(start, end, progress) {
  * Build SVG polygons representing the filled area(s) between two lines.
  * - Works with straight, smoothed (monotone cubic), or stepped lines.
  * - Samples both lines on a common X grid (pixel step).
+ * - Includes exact segment boundaries in the shared X grid so cuts stay straight.
  * - Optionally merges consecutive intervals with the same nature
  *   into larger polygons (fewer path nodes).
  *
@@ -4199,36 +4395,53 @@ export function buildInterLineAreas(opts) {
     const isNum = (n) => Number.isFinite(n);
 
     function getSegments(points) {
-        if (!cutNullValues)
-            return [points.filter((p) => p && isNum(p.x) && isNum(p.y))];
+        if (!cutNullValues) {
+            const segment = points
+                .filter((p) => p && isNum(p.x) && isNum(p.y))
+                .map((p) => ({ x: p.x, y: p.y }));
+
+            return segment.length > 1 ? [segment] : [];
+        }
+
         const segs = [];
         let curr = [];
+
         for (const p of points) {
-            const ok = p && isNum(p.x) && isNum(p.y) && !(p.value == null);
+            const ok = p && isNum(p.x) && isNum(p.y) && p.value != null;
+
             if (ok) {
                 curr.push({ x: p.x, y: p.y });
             } else {
-                if (curr.length > 1) segs.push(curr);
+                if (curr.length > 1) {
+                    segs.push(curr);
+                }
                 curr = [];
             }
         }
-        if (curr.length > 1) segs.push(curr);
+
+        if (curr.length > 1) {
+            segs.push(curr);
+        }
+
         return segs;
     }
 
     function computeTangents(seg) {
         const n = seg.length - 1;
-        const dx = new Array(n),
-            dy = new Array(n),
-            slopes = new Array(n),
-            m = new Array(seg.length);
+        const dx = new Array(n);
+        const dy = new Array(n);
+        const slopes = new Array(n);
+        const m = new Array(seg.length);
+
         for (let i = 0; i < n; i += 1) {
             dx[i] = seg[i + 1].x - seg[i].x;
             dy[i] = seg[i + 1].y - seg[i].y;
             slopes[i] = dy[i] / dx[i];
         }
+
         m[0] = slopes[0];
         m[n] = slopes[n - 1];
+
         for (let i = 1; i < n; i += 1) {
             if (slopes[i - 1] * slopes[i] <= 0) {
                 m[i] = 0;
@@ -4238,59 +4451,121 @@ export function buildInterLineAreas(opts) {
                     (slopes[i - 1] + slopes[i]);
             }
         }
+
         return m;
     }
 
     function evalMonotone(p0, p1, m0, m1, x) {
-        const x0 = p0.x,
-            x1 = p1.x,
-            y0 = p0.y,
-            y1 = p1.y;
+        const x0 = p0.x;
+        const x1 = p1.x;
+        const y0 = p0.y;
+        const y1 = p1.y;
         const h = x1 - x0;
-        if (h === 0) return y0;
-        const t = (x - x0) / h,
-            t2 = t * t,
-            t3 = t2 * t;
+
+        if (h === 0) {
+            return y0;
+        }
+
+        const t = (x - x0) / h;
+        const t2 = t * t;
+        const t3 = t2 * t;
+
         const h00 = 2 * t3 - 3 * t2 + 1;
         const h10 = t3 - 2 * t2 + t;
         const h01 = -2 * t3 + 3 * t2;
         const h11 = t3 - t2;
+
         return h00 * y0 + h10 * (m0 * h) + h01 * y1 + h11 * (m1 * h);
     }
 
-    // Sample a polyline or smoothed line on a uniform X grid
-    function sampleLine(points, smooth) {
-        const segments = getSegments(points);
-        if (!segments.length) return [];
+    const segmentsA = getSegments(lineA);
+    const segmentsB = getSegments(lineB);
 
-        // global bounds
-        let xmin = Infinity,
-            xmax = -Infinity;
-        for (const seg of segments) {
+    if (!segmentsA.length || !segmentsB.length) {
+        return [];
+    }
+
+    /**
+     * Build one X grid shared by both lines.
+     *
+     * In addition to the regular pixel sampling, every source vertex is
+     * inserted into the grid. This is important for null cuts: if a segment
+     * ends at x=123.4, both lines are evaluated exactly at x=123.4, so the
+     * resulting polygon closes vertically instead of at two different Xs.
+     */
+    function buildSharedXGrid() {
+        let xmin = Infinity;
+        let xmax = -Infinity;
+
+        const allSegments = [...segmentsA, ...segmentsB];
+
+        for (const seg of allSegments) {
+            if (!seg.length) {
+                continue;
+            }
+
             xmin = Math.min(xmin, seg[0].x);
             xmax = Math.max(xmax, seg[seg.length - 1].x);
         }
-        if (!isNum(xmin) || !isNum(xmax) || xmax <= xmin) return [];
+
+        if (!isNum(xmin) || !isNum(xmax) || xmax <= xmin) {
+            return [];
+        }
 
         const step = Math.max(1, sampleStepPx);
-        const xs = [];
-        for (let x = xmin; x <= xmax; x += step) xs.push(x);
-        if (xs[xs.length - 1] < xmax) xs.push(xmax);
+        const xs = new Set();
 
+        for (let x = xmin; x <= xmax; x += step) {
+            xs.add(x);
+        }
+
+        xs.add(xmin);
+        xs.add(xmax);
+
+        // Preserve exact vertices from both lines.
+        // In particular, this preserves the exact start/end X of each
+        // segment created around null values.
+        for (const seg of allSegments) {
+            for (const point of seg) {
+                if (isNum(point.x)) {
+                    xs.add(point.x);
+                }
+            }
+        }
+
+        return [...xs].sort((a, b) => a - b);
+    }
+
+    const sharedXs = buildSharedXGrid();
+
+    if (sharedXs.length < 2) {
+        return [];
+    }
+
+    /**
+     * Sample a polyline or smoothed line on the supplied shared X grid.
+     */
+    function sampleLine(segments, smooth, xs) {
         const out = [];
+
         for (const x of xs) {
             let y = null;
             let covered = false;
 
             for (const seg of segments) {
                 const last = seg.length - 1;
-                if (x < seg[0].x - 1e-9 || x > seg[last].x + 1e-9) continue;
 
-                // locate local segment
+                if (x < seg[0].x - 1e-9 || x > seg[last].x + 1e-9) {
+                    continue;
+                }
+
                 for (let i = 0; i < last; i += 1) {
-                    const p0 = seg[i],
-                        p1 = seg[i + 1];
-                    if (x + 1e-9 < p0.x || x - 1e-9 > p1.x) continue;
+                    const p0 = seg[i];
+                    const p1 = seg[i + 1];
+
+                    if (x + 1e-9 < p0.x || x - 1e-9 > p1.x) {
+                        continue;
+                    }
 
                     if (!smooth) {
                         const t = (x - p0.x) / (p1.x - p0.x || 1);
@@ -4299,39 +4574,57 @@ export function buildInterLineAreas(opts) {
                         const m =
                             seg.__tangents ||
                             (seg.__tangents = computeTangents(seg));
+
                         y = evalMonotone(p0, p1, m[i], m[i + 1], x);
                     }
+
                     covered = true;
                     break;
                 }
-                if (covered) break;
+
+                if (covered) {
+                    break;
+                }
             }
 
             if (y == null) {
-                out.push({ x, y: null, hole: true });
+                out.push({
+                    x,
+                    y: null,
+                    hole: true,
+                });
             } else {
-                out.push({ x, y, hole: false });
+                out.push({
+                    x,
+                    y,
+                    hole: false,
+                });
             }
         }
+
         return out;
     }
 
-    // Refine by inserting exact crossing points so top only changes at sample boundaries
-    function refineWithCrossings(sA, sB) {
-        const A = [],
-            B = [];
-        const N = Math.min(sA.length, sB.length);
-        for (let i = 0; i < N - 1; i += 1) {
-            const A0 = sA[i],
-                A1 = sA[i + 1];
-            const B0 = sB[i],
-                B1 = sB[i + 1];
+    function lerp(a, b, t) {
+        return a + t * (b - a);
+    }
 
-            // propagate current sample
+    // Refine by inserting exact crossing points so top only changes
+    // at sample boundaries.
+    function refineWithCrossings(sA, sB) {
+        const A = [];
+        const B = [];
+        const N = Math.min(sA.length, sB.length);
+
+        for (let i = 0; i < N - 1; i += 1) {
+            const A0 = sA[i];
+            const A1 = sA[i + 1];
+            const B0 = sB[i];
+            const B1 = sB[i + 1];
+
             A.push(A0);
             B.push(B0);
 
-            // skip if any hole on this interval
             if (
                 A0.hole ||
                 A1.hole ||
@@ -4351,30 +4644,41 @@ export function buildInterLineAreas(opts) {
             if ((d0 > 0 && d1 < 0) || (d0 < 0 && d1 > 0)) {
                 const t = d0 / (d0 - d1);
                 const xc = lerp(A0.x, A1.x, t);
-                const yc = lerp(A0.y, A1.y, t); // equal for both
-                const crossA = { x: xc, y: yc, hole: false };
-                const crossB = { x: xc, y: yc, hole: false };
-                A.push(crossA);
-                B.push(crossB);
+                const yc = lerp(A0.y, A1.y, t);
+
+                A.push({
+                    x: xc,
+                    y: yc,
+                    hole: false,
+                });
+
+                B.push({
+                    x: xc,
+                    y: yc,
+                    hole: false,
+                });
             }
         }
-        // add the last samples
+
         if (N > 0) {
             A.push(sA[N - 1]);
             B.push(sB[N - 1]);
         }
+
         return { A, B };
     }
 
-    // Build small per-interval polygons (no merge)
+    // Build small per-interval polygons (no merge).
     function buildPerIntervalPolys(sA, sB) {
         const out = [];
         const N = Math.min(sA.length, sB.length);
+
         for (let i = 0; i < N - 1; i += 1) {
-            const A0 = sA[i],
-                A1 = sA[i + 1];
-            const B0 = sB[i],
-                B1 = sB[i + 1];
+            const A0 = sA[i];
+            const A1 = sA[i + 1];
+            const B0 = sB[i];
+            const B1 = sB[i + 1];
+
             if (
                 A0.hole ||
                 A1.hole ||
@@ -4384,13 +4688,14 @@ export function buildInterLineAreas(opts) {
                 A1.y == null ||
                 B0.y == null ||
                 B1.y == null
-            )
+            ) {
                 continue;
+            }
 
             const d0 = A0.y - B0.y;
             const d1 = A1.y - B1.y;
 
-            // after refinement, a sign change cannot happen across an interval
+            // After refinement, a sign change cannot happen across an interval.
             const top0 = d0 <= 0 ? A0 : B0;
             const top1 = d1 <= 0 ? A1 : B1;
             const bot1 = d1 <= 0 ? B1 : A1;
@@ -4402,27 +4707,34 @@ export function buildInterLineAreas(opts) {
                 `L${top1.x},${top1.y}`,
                 `L${bot1.x},${bot1.y}`,
                 `L${bot0.x},${bot0.y}`,
-                `Z`,
+                'Z',
             ].join(' ');
+
             out.push({ d, color });
         }
+
         return out;
     }
 
-    // Build merged polygons for consecutive same-top runs
+    // Build merged polygons for consecutive same-top runs.
     function buildMergedPolys(sA, sB) {
         const out = [];
         const N = Math.min(sA.length, sB.length);
-        if (N < 2) return out;
+
+        if (N < 2) {
+            return out;
+        }
 
         let i = 0;
+
         while (i < N - 1) {
-            // skip holes
+            // Skip holes.
             while (i < N - 1) {
-                const A0 = sA[i],
-                    B0 = sB[i],
-                    A1 = sA[i + 1],
-                    B1 = sB[i + 1];
+                const A0 = sA[i];
+                const B0 = sB[i];
+                const A1 = sA[i + 1];
+                const B1 = sB[i + 1];
+
                 if (
                     !A0.hole &&
                     !B0.hole &&
@@ -4432,22 +4744,30 @@ export function buildInterLineAreas(opts) {
                     B0.y != null &&
                     A1.y != null &&
                     B1.y != null
-                )
+                ) {
                     break;
+                }
+
                 i += 1;
             }
-            if (i >= N - 1) break;
+
+            if (i >= N - 1) {
+                break;
+            }
 
             const start = i;
-            const sign = Math.sign(sB[i].y - sA[i].y || 0) || 1; // default "A above" when equal
+            const sign = Math.sign(sB[i].y - sA[i].y || 0) || 1;
 
-            // extend run while top stays same and no holes
+            // Extend the run while the same line stays on top
+            // and neither line contains a hole.
             i += 1;
+
             while (i < N - 1) {
-                const A0 = sA[i],
-                    B0 = sB[i],
-                    A1 = sA[i + 1],
-                    B1 = sB[i + 1];
+                const A0 = sA[i];
+                const B0 = sB[i];
+                const A1 = sA[i + 1];
+                const B1 = sB[i + 1];
+
                 if (
                     A0.hole ||
                     B0.hole ||
@@ -4457,40 +4777,60 @@ export function buildInterLineAreas(opts) {
                     B0.y == null ||
                     A1.y == null ||
                     B1.y == null
-                )
+                ) {
                     break;
+                }
+
                 const s = Math.sign(B0.y - A0.y || 0) || 1;
-                if (s !== sign) break;
+
+                if (s !== sign) {
+                    break;
+                }
+
                 i += 1;
             }
-            const end = i + 0; // inclusive end index for vertices
 
-            // collect polygon points
+            const end = i;
             const top = sign >= 0 ? sA : sB;
             const bot = sign >= 0 ? sB : sA;
             const color = sign >= 0 ? colorLineA : colorLineB;
 
             const topPts = [];
+
             for (let k = start; k <= end; k += 1) {
                 topPts.push(`${top[k].x},${top[k].y}`);
             }
 
             const botPts = [];
+
             for (let k = end; k >= start; k -= 1) {
                 botPts.push(`${bot[k].x},${bot[k].y}`);
             }
 
-            const d = `M${topPts[0]} L${topPts.slice(1).join(' L')} L${botPts.join(' L')} Z`;
+            const d =
+                `M${topPts[0]} ` +
+                `L${topPts.slice(1).join(' L')} ` +
+                `L${botPts.join(' L')} Z`;
+
             out.push({ d, color });
         }
 
         return out;
     }
 
-    const sampledA = sampleLine(lineA, stepperA ? false : smoothA);
-    const sampledB = sampleLine(lineB, stepperB ? false : smoothB);
+    const sampledA = sampleLine(
+        segmentsA,
+        stepperA ? false : smoothA,
+        sharedXs,
+    );
 
-    // insert crossing points so top is constant between consecutive samples
+    const sampledB = sampleLine(
+        segmentsB,
+        stepperB ? false : smoothB,
+        sharedXs,
+    );
+
+    // Insert crossing points so top is constant between consecutive samples.
     const { A: refinedA, B: refinedB } = refineWithCrossings(
         sampledA,
         sampledB,
@@ -4951,6 +5291,30 @@ export function sleep(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+export function mapSampledSeriesToSourceIndices(sourceSeries, sampledSeries) {
+    if (!Array.isArray(sourceSeries) || !Array.isArray(sampledSeries))
+        return [];
+
+    const indices = [];
+    let sourceCursor = 0;
+
+    for (const sampledValue of sampledSeries) {
+        let sourceIndex = -1;
+
+        for (let i = sourceCursor; i < sourceSeries.length; i += 1) {
+            if (Object.is(sourceSeries[i], sampledValue)) {
+                sourceIndex = i;
+                sourceCursor = i + 1;
+                break;
+            }
+        }
+
+        indices.push(sourceIndex);
+    }
+
+    return indices;
+}
+
 const lib = {
     XMLNS,
     abbreviate,
@@ -4963,10 +5327,10 @@ const lib = {
     buildDisplayedTimeLabels,
     buildInterLineAreas,
     cacheLastResult,
+    calcAverage,
     calcLinearProgression,
     calcMarkerOffsetX,
     calcMarkerOffsetY,
-    calcAverage,
     calcMedian,
     calcNutArrowPath,
     calcTrend,
@@ -4988,25 +5352,28 @@ const lib = {
     convertOklchToRgb,
     createAreaWithCuts,
     createCatmullRomPath,
+    createColorWheel,
     createCsvContent,
     createHalfCircleArc,
     createIndividualArea,
     createIndividualAreaWithCuts,
     createPolarAreas,
     createPolygonPath,
-    createColorWheel,
     createShadesOfGrey,
     createSmoothAreaSegments,
     createSmoothPath,
     createSmoothPathVertical,
     createSmoothPathWithCuts,
     createSmoothPathWithCutsSegments,
+    createSmoothSegmentsByEdgeStarts,
     createSpiralPath,
     createStar,
     createStepperPath,
+    createStepperSegmentsByEdgeStarts,
     createStraightPath,
     createStraightPathWithCuts,
     createStraightPathWithCutsSegments,
+    createStraightSegmentsByEdgeStarts,
     createTSpans,
     createTSpansFromLineBreaksOnX,
     createTSpansFromLineBreaksOnY,
@@ -5055,6 +5422,7 @@ const lib = {
     lightenHexColor,
     makeDonut,
     makePath,
+    mapSampledSeriesToSourceIndices,
     matrixTimes,
     mergePointsByProximity,
     normalizeHueDegrees,

@@ -1279,6 +1279,9 @@ export function useConfig(options = {}) {
             useGradient: true,
             strokeWidth: 3,
             cutNullValues: false,
+            nullDashes: {
+                show: false,
+            },
             interLine: {
                 pairs: [],
                 colors: [],

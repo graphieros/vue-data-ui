@@ -27,18 +27,20 @@ import {
     convertColorToHex,
     convertCustomPalette,
     createCsvContent,
-    createIndividualArea,
     createIndividualAreaWithCuts,
     createPolygonPath,
-    createStepperPath,
     createSmoothAreaSegments,
     createSmoothPath,
     createSmoothPathWithCuts,
     createSmoothPathWithCutsSegments,
+    createSmoothSegmentsByEdgeStarts,
     createStar,
+    createStepperPath,
+    createStepperSegmentsByEdgeStarts,
     createStraightPath,
     createStraightPathWithCuts,
     createStraightPathWithCutsSegments,
+    createStraightSegmentsByEdgeStarts,
     createTSpans,
     createTSpansFromLineBreaksOnX,
     createUid,
@@ -49,10 +51,13 @@ import {
     forceValidValue,
     functionReturnsString,
     getEffectiveTimeLabelModulo,
+    getImageDimensions,
     hasDeepProperty,
     isFunction,
     isSafeValue,
+    isValidNumber,
     largestTriangleThreeBucketsArray,
+    mapSampledSeriesToSourceIndices,
     objectIsEmpty,
     palette,
     placeXYTag,
@@ -63,8 +68,6 @@ import {
     themePalettes,
     translateSize,
     treeShake,
-    isValidNumber,
-    getImageDimensions,
 } from '../lib';
 import {
     canShowValue,
@@ -1102,9 +1105,16 @@ const safeDataset = computed(() => {
                 : []
             : lttb(datapoint.series);
 
+        const sourceIndices = isContinuousScale.value
+            ? []
+            : mapSampledSeriesToSourceIndices(datapoint.series, sourceSeries);
+
         return {
             ...datapoint,
             slotAbsoluteIndex: i,
+            sourceIndices: isContinuousScale.value
+                ? undefined
+                : sourceIndices.slice(slicer.value.start, slicer.value.end),
             series: isContinuousScale.value
                 ? sourceSeries
                       .map((point, index) =>
@@ -4114,6 +4124,13 @@ const barSet = computed(() => {
     });
 });
 
+function normalizeStepperStrokePath(path) {
+    return String(path || '')
+        .split(';')
+        .filter(Boolean)
+        .join(' M');
+}
+
 const lineSet = computed(() => {
     const totalSeries = activeDisplaySeriesCount.value;
     const gap = gridLabels.value.yAxis.gap;
@@ -4144,10 +4161,27 @@ const lineSet = computed(() => {
 
         const comments = getSlicedComments(datapoint.comments);
 
+        const getSourceIndex = (plot, localIndex) => {
+            if (isContinuousScale.value && Number.isFinite(plot?.index)) {
+                return plot.index;
+            }
+
+            const mappedIndex = datapoint.sourceIndices?.[localIndex];
+            if (Number.isFinite(mappedIndex) && mappedIndex >= 0) {
+                return mappedIndex;
+            }
+
+            const sliceStart = Number(slicer.value.start);
+            return Number.isFinite(sliceStart)
+                ? Math.trunc(sliceStart) + localIndex
+                : localIndex;
+        };
+
         const plots = datapoint.series.map((plot, j) => {
             if (isContinuousScale.value && (plot.x == null || plot.y == null)) {
                 return {
                     index: j,
+                    sourceIndex: getSourceIndex(plot, j),
                     x: null,
                     y: null,
                     value: null,
@@ -4167,6 +4201,7 @@ const lineSet = computed(() => {
 
             return {
                 index: j,
+                sourceIndex: getSourceIndex(plot, j),
                 x: checkNaN(getPointX(plot, j)),
                 datasetXValue: getDatasetXValue(plot),
                 y: checkNaN(
@@ -4188,6 +4223,7 @@ const lineSet = computed(() => {
             ) {
                 return {
                     index: j,
+                    sourceIndex: getSourceIndex(plot, j),
                     x: null,
                     y: null,
                     datasetXValue: getDatasetXValue(plot),
@@ -4199,6 +4235,7 @@ const lineSet = computed(() => {
             if (![undefined, null].includes(datapoint.absoluteValues[j])) {
                 return {
                     index: j,
+                    sourceIndex: getSourceIndex(plot, j),
                     x: checkNaN(getPointX(plot, j)),
                     datasetXValue: getDatasetXValue(plot),
                     y: checkNaN(
@@ -4214,6 +4251,7 @@ const lineSet = computed(() => {
             } else {
                 return {
                     index: j,
+                    sourceIndex: getSourceIndex(plot, j),
                     x: checkNaN(getPointX(plot, j)),
                     y: zeroPosition,
                     value: datapoint.absoluteValues[j],
@@ -4222,57 +4260,166 @@ const lineSet = computed(() => {
             }
         });
 
+        const cutNullValues = FINAL_CONFIG.value.line.cutNullValues;
+        const showNullDashes =
+            !cutNullValues && FINAL_CONFIG.value.line.nullDashes?.show === true;
+
+        const linePlots = cutNullValues
+            ? plots
+            : plots.filter((p) => p.value !== null);
+        const autoScaleLinePlots = cutNullValues
+            ? autoScalePlots
+            : autoScalePlots.filter((p) => p.value !== null);
+
+        const userDashedPointIndices = Array.isArray(datapoint.dashIndices)
+            ? datapoint.dashIndices
+                  .map((index) => Math.trunc(Number(index)))
+                  .filter(Number.isFinite)
+            : [];
+        const userDashedPointIndexSet = new Set(userDashedPointIndices);
+
+        const dashedPathPlots = datapoint.autoScaling
+            ? autoScaleLinePlots
+            : linePlots;
+
+        const visibleDashIndices = (
+            datapoint.autoScaling ? autoScalePlots : plots
+        ).reduce((indices, plot, localIndex) => {
+            if (userDashedPointIndexSet.has(plot.sourceIndex)) {
+                indices.push(localIndex);
+            }
+            return indices;
+        }, []);
+
+        function edgeContainsDashedPoint(previousPlot, plot) {
+            const previousSourceIndex = previousPlot?.sourceIndex;
+            const sourceIndex = plot?.sourceIndex;
+
+            if (
+                !Number.isFinite(previousSourceIndex) ||
+                !Number.isFinite(sourceIndex)
+            ) {
+                return false;
+            }
+
+            const minIndex = Math.min(previousSourceIndex, sourceIndex);
+            const maxIndex = Math.max(previousSourceIndex, sourceIndex);
+
+            for (const dashedIndex of userDashedPointIndices) {
+                if (dashedIndex >= minIndex && dashedIndex <= maxIndex) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        function getUserDashedEdgeStarts(renderedPlots) {
+            const dashedStarts = new Set();
+
+            for (let i = 1; i < renderedPlots.length; i += 1) {
+                if (
+                    edgeContainsDashedPoint(
+                        renderedPlots[i - 1],
+                        renderedPlots[i],
+                    )
+                ) {
+                    dashedStarts.add(i - 1);
+                }
+            }
+
+            return dashedStarts;
+        }
+
+        function getNullDashedEdgeStarts(renderedPlots) {
+            const dashedStarts = new Set();
+
+            if (!showNullDashes) return dashedStarts;
+
+            for (let i = 1; i < renderedPlots.length; i += 1) {
+                const previousSourceIndex = renderedPlots[i - 1]?.sourceIndex;
+                const sourceIndex = renderedPlots[i]?.sourceIndex;
+
+                if (
+                    Number.isFinite(previousSourceIndex) &&
+                    Number.isFinite(sourceIndex) &&
+                    Math.abs(sourceIndex - previousSourceIndex) > 1
+                ) {
+                    dashedStarts.add(i - 1);
+                }
+            }
+
+            return dashedStarts;
+        }
+
+        const userDashedEdgeStarts = getUserDashedEdgeStarts(dashedPathPlots);
+        const nullDashedEdgeStarts = getNullDashedEdgeStarts(dashedPathPlots);
+        const dashedEdgeStarts = new Set([
+            ...userDashedEdgeStarts,
+            ...nullDashedEdgeStarts,
+        ]);
+
+        const hasUserDashedSegments = cutNullValues
+            ? visibleDashIndices.length > 0
+            : userDashedEdgeStarts.size > 0;
+        const hasNullDashedSegments =
+            showNullDashes && nullDashedEdgeStarts.size > 0;
         const hasDashedSegments =
-            datapoint.dashIndices &&
-            Array.isArray(datapoint.dashIndices) &&
-            datapoint?.dashIndices?.length > 0;
+            hasUserDashedSegments || hasNullDashedSegments;
 
-        const curve = FINAL_CONFIG.value.line.cutNullValues
+        const curve = cutNullValues
             ? createSmoothPathWithCuts(plots)
-            : createSmoothPath(plots.filter((p) => p.value !== null));
+            : createSmoothPath(linePlots);
 
-        const autoScaleCurve = FINAL_CONFIG.value.line.cutNullValues
+        const autoScaleCurve = cutNullValues
             ? createSmoothPathWithCuts(autoScalePlots)
-            : createSmoothPath(autoScalePlots.filter((p) => p.value !== null));
+            : createSmoothPath(autoScaleLinePlots);
 
-        const straight = FINAL_CONFIG.value.line.cutNullValues
+        const straight = cutNullValues
             ? createStraightPathWithCuts(plots)
-            : createStraightPath(plots.filter((p) => p.value !== null));
+            : createStraightPath(linePlots);
 
-        const autoScaleStraight = FINAL_CONFIG.value.line.cutNullValues
+        const autoScaleStraight = cutNullValues
             ? createStraightPathWithCuts(autoScalePlots)
-            : createStraightPath(
-                  autoScalePlots.filter((p) => p.value !== null),
-              );
+            : createStraightPath(autoScaleLinePlots);
 
-        const stepper = createStepperPath(
-            FINAL_CONFIG.value.line.cutNullValues
-                ? plots
-                : plots.filter((p) => p.value !== null),
+        const stepper = normalizeStepperStrokePath(
+            createStepperPath(linePlots),
+        );
+        const autoScaleStepper = normalizeStepperStrokePath(
+            createStepperPath(autoScaleLinePlots),
         );
 
-        const autoScaleStepper = createStepperPath(
-            FINAL_CONFIG.value.line.cutNullValues
-                ? autoScalePlots
-                : autoScalePlots.filter((p) => p.value !== null),
-        );
+        const dashedStraight = !hasDashedSegments
+            ? []
+            : cutNullValues
+              ? createStraightPathWithCutsSegments(
+                    dashedPathPlots,
+                    visibleDashIndices,
+                )
+              : createStraightSegmentsByEdgeStarts(
+                    dashedPathPlots,
+                    dashedEdgeStarts,
+                );
+        const dashedSmooth = !hasDashedSegments
+            ? []
+            : cutNullValues
+              ? createSmoothPathWithCutsSegments(
+                    dashedPathPlots,
+                    visibleDashIndices,
+                )
+              : createSmoothSegmentsByEdgeStarts(
+                    dashedPathPlots,
+                    dashedEdgeStarts,
+                );
 
-        const dashedStraight = hasDashedSegments
-            ? createStraightPathWithCutsSegments(
-                  FINAL_CONFIG.value.line.cutNullValues
-                      ? plots
-                      : plots.filter((p) => p.value !== null),
-                  datapoint.dashIndices.map((_) => _ - slicer.value.start),
-              )
-            : [];
-        const dashedSmooth = hasDashedSegments
-            ? createSmoothPathWithCutsSegments(
-                  FINAL_CONFIG.value.line.cutNullValues
-                      ? plots
-                      : plots.filter((p) => p.value !== null),
-                  datapoint.dashIndices.map((_) => _ - slicer.value.start),
-              )
-            : [];
+        const dashedStepper =
+            datapoint.useStepper && hasDashedSegments
+                ? createStepperSegmentsByEdgeStarts(
+                      dashedPathPlots,
+                      dashedEdgeStarts,
+                  )
+                : [];
 
         const scaleGroup = createScaleGroupEntry({
             datapoint,
@@ -4305,11 +4452,6 @@ const lineSet = computed(() => {
         );
 
         const stepperAreaPlots = datapoint.autoScaling ? autoScalePlots : plots;
-
-        const stepperAreaPlotsWithNullPolicy = FINAL_CONFIG.value.line
-            .cutNullValues
-            ? stepperAreaPlots
-            : stepperAreaPlots.filter((p) => p.value !== null);
 
         const visibleValues = datapoint.absoluteValues.filter(
             (value) => ![null, undefined, NaN].includes(value),
@@ -4347,57 +4489,32 @@ const lineSet = computed(() => {
             plots: datapoint.autoScaling ? autoScalePlots : plots,
             dashedStraight,
             dashedSmooth,
+            dashedStepper,
             hasDashedSegments,
             area: !datapoint.useArea
                 ? ''
                 : datapoint.useStepper
-                  ? createStepperPath(
-                        stepperAreaPlotsWithNullPolicy,
-                        adustedAreaZeroPosition,
-                    )
+                  ? createStepperPath(stepperAreaPlots, adustedAreaZeroPosition)
                   : mutableConfig.value.useIndividualScale
-                    ? FINAL_CONFIG.value.line.cutNullValues
-                        ? createIndividualAreaWithCuts(
-                              datapoint.autoScaling ? autoScalePlots : plots,
-                              adustedAreaZeroPosition,
-                          )
-                        : createIndividualArea(
-                              datapoint.autoScaling
-                                  ? autoScalePlots.filter(
-                                        (p) => p.value !== null,
-                                    )
-                                  : plots.filter((p) => p.value !== null),
-                              adustedAreaZeroPosition,
-                          )
-                    : FINAL_CONFIG.value.line.cutNullValues
-                      ? createIndividualAreaWithCuts(
-                            plots,
-                            adustedAreaZeroPosition,
-                        )
-                      : createIndividualArea(
-                            plots.filter((p) => p.value !== null),
-                            adustedAreaZeroPosition,
-                        ),
+                    ? createIndividualAreaWithCuts(
+                          datapoint.autoScaling ? autoScalePlots : plots,
+                          adustedAreaZeroPosition,
+                      )
+                    : createIndividualAreaWithCuts(
+                          plots,
+                          adustedAreaZeroPosition,
+                      ),
             curveAreas: !datapoint.useArea
                 ? []
                 : datapoint.useStepper
-                  ? createStepperPath(
-                        stepperAreaPlotsWithNullPolicy,
-                        adustedAreaZeroPosition,
-                    )
+                  ? createStepperPath(stepperAreaPlots, adustedAreaZeroPosition)
                         .split(';')
                         .filter(Boolean)
                         .map((d) => `M${d}Z`)
                   : createSmoothAreaSegments(
-                        datapoint.autoScaling
-                            ? FINAL_CONFIG.value.line.cutNullValues
-                                ? autoScalePlots
-                                : autoScalePlots.filter((p) => p.value !== null)
-                            : FINAL_CONFIG.value.line.cutNullValues
-                              ? plots
-                              : plots.filter((p) => p.value !== null),
+                        datapoint.autoScaling ? autoScalePlots : plots,
                         adustedAreaZeroPosition,
-                        FINAL_CONFIG.value.line.cutNullValues,
+                        true,
                     ),
             straight: datapoint.useStepper
                 ? datapoint.autoScaling
@@ -4719,7 +4836,7 @@ const interLineAreas = computed(() => {
             colorLineA,
             colorLineB,
             sampleStepPx: 2,
-            cutNullValues: FINAL_CONFIG.value.line.cutNullValues,
+            cutNullValues: true,
         });
 
         areas.forEach((a, j) => {
@@ -8131,7 +8248,34 @@ defineExpose({
                             :style="`opacity:${selectedScale ? (selectedScale === serie.groupId ? 1 : 0.2) : 1};transition:opacity 0.2s ease-in-out`"
                         >
                             <template v-if="serie.hasDashedSegments">
-                                <template v-if="serie.smooth">
+                                <template v-if="serie.useStepper">
+                                    <path
+                                        v-for="(
+                                            seg, segIndex
+                                        ) in serie.dashedStepper"
+                                        :key="`line_coating_stepper_segment_${serie.id}_${segIndex}`"
+                                        data-cy="datapoint-line-coating-stepper-segment"
+                                        fill="none"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        :d="`M ${seg.path}`"
+                                        :stroke="cfgChart.backgroundColor"
+                                        :stroke-width="
+                                            FINAL_CONFIG.line.strokeWidth + 1
+                                        "
+                                        :stroke-dasharray="
+                                            serie.dashed || seg.dashed
+                                                ? FINAL_CONFIG.line
+                                                      .strokeWidth * 2
+                                                : 0
+                                        "
+                                        :style="{
+                                            transition: getLinePathTransition(),
+                                        }"
+                                    />
+                                </template>
+
+                                <template v-else-if="serie.smooth">
                                     <path
                                         v-for="(
                                             seg, segIndex
@@ -8147,7 +8291,7 @@ defineExpose({
                                             FINAL_CONFIG.line.strokeWidth + 1
                                         "
                                         :stroke-dasharray="
-                                            seg.dashed
+                                            serie.dashed || seg.dashed
                                                 ? FINAL_CONFIG.line
                                                       .strokeWidth * 2
                                                 : 0
@@ -8174,7 +8318,7 @@ defineExpose({
                                             FINAL_CONFIG.line.strokeWidth + 1
                                         "
                                         :stroke-dasharray="
-                                            seg.dashed
+                                            serie.dashed || seg.dashed
                                                 ? FINAL_CONFIG.line
                                                       .strokeWidth * 2
                                                 : 0
@@ -8375,7 +8519,38 @@ defineExpose({
                             />
 
                             <template v-else-if="serie.hasDashedSegments">
-                                <template v-if="serie.smooth">
+                                <template v-if="serie.useStepper">
+                                    <path
+                                        v-for="(
+                                            seg, segIndex
+                                        ) in serie.dashedStepper"
+                                        :key="`line_stepper_segment_${serie.id}_${segIndex}`"
+                                        fill="none"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        :d="`M ${seg.path}`"
+                                        :stroke="
+                                            serie.temperatureColors &&
+                                            !serie.isFlatTemperatureLine
+                                                ? `url(#temperature_grad_line_${i}_${uniqueId})`
+                                                : serie.color
+                                        "
+                                        :stroke-width="
+                                            FINAL_CONFIG.line.strokeWidth
+                                        "
+                                        :stroke-dasharray="
+                                            serie.dashed || seg.dashed
+                                                ? FINAL_CONFIG.line
+                                                      .strokeWidth * 2
+                                                : 0
+                                        "
+                                        :style="{
+                                            transition: getLinePathTransition(),
+                                        }"
+                                    />
+                                </template>
+
+                                <template v-else-if="serie.smooth">
                                     <path
                                         v-for="(
                                             seg, segIndex
@@ -8395,7 +8570,7 @@ defineExpose({
                                             FINAL_CONFIG.line.strokeWidth
                                         "
                                         :stroke-dasharray="
-                                            seg.dashed
+                                            serie.dashed || seg.dashed
                                                 ? FINAL_CONFIG.line
                                                       .strokeWidth * 2
                                                 : 0
@@ -8425,7 +8600,7 @@ defineExpose({
                                             FINAL_CONFIG.line.strokeWidth
                                         "
                                         :stroke-dasharray="
-                                            seg.dashed
+                                            serie.dashed || seg.dashed
                                                 ? FINAL_CONFIG.line
                                                       .strokeWidth * 2
                                                 : 0

@@ -16,8 +16,8 @@ import {
     assignStackRatios,
     autoFontSize,
     buildInterLineAreas,
-    calcLinearProgression,
     calcAverage,
+    calcLinearProgression,
     calcMedian,
     calcPolygonPoints,
     calcStarPoints,
@@ -39,19 +39,22 @@ import {
     createArc,
     createAreaWithCuts,
     createCatmullRomPath,
+    createColorWheel,
     createHalfCircleArc,
     createIndividualArea,
     createIndividualAreaWithCuts,
     createPolarAreas,
     createPolygonPath,
-    createColorWheel,
     createSmoothAreaSegments,
     createSmoothPath,
     createSmoothPathWithCuts,
+    createSmoothSegmentsByEdgeStarts,
     createSpiralPath,
     createStar,
     createStepperPath,
+    createStepperSegmentsByEdgeStarts,
     createStraightPathWithCuts,
+    createStraightSegmentsByEdgeStarts,
     createTSpans,
     createTSpansFromLineBreaksOnX,
     createTSpansFromLineBreaksOnY,
@@ -88,6 +91,7 @@ import {
     lightenHexColor,
     makeDonut,
     makePath,
+    mapSampledSeriesToSourceIndices,
     matrixTimes,
     niceNum,
     normalizeHueDegrees,
@@ -4846,8 +4850,8 @@ describe('buildInterLineAreas', () => {
             merge: false,
         });
 
-        expect(withCuts).toHaveLength(10);
-        expect(withoutCuts).toHaveLength(15);
+        expect(withCuts).toHaveLength(12);
+        expect(withoutCuts).toHaveLength(18);
         expect(withCuts.some(({ d }) => d.includes('M10,0 L12,0'))).toBe(false);
         expect(withoutCuts.some(({ d }) => d.includes('M10,0 L12,0'))).toBe(
             true,
@@ -5395,5 +5399,1154 @@ describe('easeInOutCubic', () => {
         expect(easeInOutCubic(3)).toEqual(33);
         expect(easeInOutCubic(4)).toEqual(109);
         expect(easeInOutCubic(5)).toEqual(257);
+    });
+});
+
+describe('createSmoothSegmentsByEdgeStarts', () => {
+    test('returns an empty array when points is not an array', () => {
+        expect(createSmoothSegmentsByEdgeStarts(null, [])).toEqual([]);
+        expect(createSmoothSegmentsByEdgeStarts(undefined, [])).toEqual([]);
+        expect(createSmoothSegmentsByEdgeStarts({}, [])).toEqual([]);
+    });
+
+    test('returns an empty array when there are fewer than two points', () => {
+        expect(createSmoothSegmentsByEdgeStarts([], [])).toEqual([]);
+        expect(createSmoothSegmentsByEdgeStarts([{ x: 0, y: 0 }], [])).toEqual(
+            [],
+        );
+    });
+
+    test('returns one solid segment when no dashed edge is provided', () => {
+        const points = [
+            { x: 0, y: 0 },
+            { x: 3, y: 3 },
+            { x: 6, y: 6 },
+        ];
+
+        expect(createSmoothSegmentsByEdgeStarts(points, [])).toEqual([
+            {
+                path: '0,0 C1,1 2,2 3,3 C4,4 5,5 6,6',
+                dashed: false,
+            },
+        ]);
+    });
+
+    test('accepts an omitted dashedEdgeStarts argument', () => {
+        const points = [
+            { x: 0, y: 0 },
+            { x: 3, y: 3 },
+        ];
+
+        expect(createSmoothSegmentsByEdgeStarts(points)).toEqual([
+            {
+                path: '0,0 C1,1 2,2 3,3',
+                dashed: false,
+            },
+        ]);
+    });
+
+    test('accepts dashed edge starts as an array', () => {
+        const points = [
+            { x: 0, y: 0 },
+            { x: 3, y: 3 },
+            { x: 6, y: 6 },
+        ];
+
+        expect(createSmoothSegmentsByEdgeStarts(points, [1])).toEqual([
+            {
+                path: '0,0 C1,1 2,2 3,3',
+                dashed: false,
+            },
+            {
+                path: '3,3 C4,4 5,5 6,6',
+                dashed: true,
+            },
+        ]);
+    });
+
+    test('accepts dashed edge starts as a Set', () => {
+        const points = [
+            { x: 0, y: 0 },
+            { x: 3, y: 3 },
+            { x: 6, y: 6 },
+        ];
+
+        expect(createSmoothSegmentsByEdgeStarts(points, new Set([1]))).toEqual([
+            {
+                path: '0,0 C1,1 2,2 3,3',
+                dashed: false,
+            },
+            {
+                path: '3,3 C4,4 5,5 6,6',
+                dashed: true,
+            },
+        ]);
+    });
+
+    test('returns one dashed segment when all edges are dashed', () => {
+        const points = [
+            { x: 0, y: 0 },
+            { x: 3, y: 3 },
+            { x: 6, y: 6 },
+        ];
+
+        expect(createSmoothSegmentsByEdgeStarts(points, [0, 1])).toEqual([
+            {
+                path: '0,0 C1,1 2,2 3,3 C4,4 5,5 6,6',
+                dashed: true,
+            },
+        ]);
+    });
+
+    test('creates separate runs when dashed state changes', () => {
+        const points = [
+            { x: 0, y: 0 },
+            { x: 3, y: 3 },
+            { x: 6, y: 6 },
+            { x: 9, y: 9 },
+        ];
+
+        expect(createSmoothSegmentsByEdgeStarts(points, [0, 2])).toEqual([
+            {
+                path: '0,0 C1,1 2,2 3,3',
+                dashed: true,
+            },
+            {
+                path: '3,3 C4,4 5,5 6,6',
+                dashed: false,
+            },
+            {
+                path: '6,6 C7,7 8,8 9,9',
+                dashed: true,
+            },
+        ]);
+    });
+
+    test('merges consecutive dashed edges into a single run', () => {
+        const points = [
+            { x: 0, y: 0 },
+            { x: 3, y: 3 },
+            { x: 6, y: 6 },
+            { x: 9, y: 9 },
+        ];
+
+        expect(createSmoothSegmentsByEdgeStarts(points, [1, 2])).toEqual([
+            {
+                path: '0,0 C1,1 2,2 3,3',
+                dashed: false,
+            },
+            {
+                path: '3,3 C4,4 5,5 6,6 C7,7 8,8 9,9',
+                dashed: true,
+            },
+        ]);
+    });
+
+    test('merges consecutive solid edges into a single run', () => {
+        const points = [
+            { x: 0, y: 0 },
+            { x: 3, y: 3 },
+            { x: 6, y: 6 },
+            { x: 9, y: 9 },
+        ];
+
+        expect(createSmoothSegmentsByEdgeStarts(points, [0])).toEqual([
+            {
+                path: '0,0 C1,1 2,2 3,3',
+                dashed: true,
+            },
+            {
+                path: '3,3 C4,4 5,5 6,6 C7,7 8,8 9,9',
+                dashed: false,
+            },
+        ]);
+    });
+
+    test('uses monotone tangents when the slope changes direction', () => {
+        const points = [
+            { x: 0, y: 0 },
+            { x: 3, y: 3 },
+            { x: 6, y: 0 },
+        ];
+
+        expect(createSmoothSegmentsByEdgeStarts(points, [])).toEqual([
+            {
+                path: '0,0 C1,1 2,3 3,3 C4,3 5,1 6,0',
+                dashed: false,
+            },
+        ]);
+    });
+
+    test('keeps the same smooth geometry when an edge is split into a dashed run', () => {
+        const points = [
+            { x: 0, y: 0 },
+            { x: 3, y: 3 },
+            { x: 6, y: 0 },
+        ];
+
+        expect(createSmoothSegmentsByEdgeStarts(points, [1])).toEqual([
+            {
+                path: '0,0 C1,1 2,3 3,3',
+                dashed: false,
+            },
+            {
+                path: '3,3 C4,3 5,1 6,0',
+                dashed: true,
+            },
+        ]);
+    });
+
+    test('ignores dashed edge indices that do not correspond to an edge', () => {
+        const points = [
+            { x: 0, y: 0 },
+            { x: 3, y: 3 },
+            { x: 6, y: 6 },
+        ];
+
+        expect(createSmoothSegmentsByEdgeStarts(points, [-1, 2, 10])).toEqual([
+            {
+                path: '0,0 C1,1 2,2 3,3 C4,4 5,5 6,6',
+                dashed: false,
+            },
+        ]);
+    });
+});
+
+describe('createStepperSegmentsByEdgeStarts', () => {
+    test('returns an empty array when points is not an array', () => {
+        expect(createStepperSegmentsByEdgeStarts(null, [])).toEqual([]);
+        expect(createStepperSegmentsByEdgeStarts(undefined, [])).toEqual([]);
+        expect(createStepperSegmentsByEdgeStarts({}, [])).toEqual([]);
+    });
+
+    test('returns an empty array when there are fewer than two points', () => {
+        expect(createStepperSegmentsByEdgeStarts([], [])).toEqual([]);
+        expect(
+            createStepperSegmentsByEdgeStarts([{ x: 0, y: 10, value: 10 }], []),
+        ).toEqual([]);
+    });
+
+    test('creates a solid stepper segment when no dashed edge is provided', () => {
+        const points = [
+            { x: 0, y: 10, value: 10 },
+            { x: 10, y: 20, value: 20 },
+        ];
+
+        expect(createStepperSegmentsByEdgeStarts(points, [])).toEqual([
+            {
+                path: '0,10 L10,10 L10,20',
+                dashed: false,
+            },
+        ]);
+    });
+
+    test('creates the expected horizontal then vertical step shape', () => {
+        const points = [
+            { x: 5, y: 20, value: 20 },
+            { x: 15, y: 5, value: 5 },
+        ];
+
+        expect(createStepperSegmentsByEdgeStarts(points, [])).toEqual([
+            {
+                path: '5,20 L15,20 L15,5',
+                dashed: false,
+            },
+        ]);
+    });
+
+    test('accepts an omitted dashedEdgeStarts argument', () => {
+        const points = [
+            { x: 0, y: 10, value: 10 },
+            { x: 10, y: 20, value: 20 },
+        ];
+
+        expect(createStepperSegmentsByEdgeStarts(points)).toEqual([
+            {
+                path: '0,10 L10,10 L10,20',
+                dashed: false,
+            },
+        ]);
+    });
+
+    test('accepts dashed edge starts as an array', () => {
+        const points = [
+            { x: 0, y: 10, value: 10 },
+            { x: 10, y: 20, value: 20 },
+            { x: 20, y: 30, value: 30 },
+        ];
+
+        expect(createStepperSegmentsByEdgeStarts(points, [1])).toEqual([
+            {
+                path: '0,10 L10,10 L10,20',
+                dashed: false,
+            },
+            {
+                path: '10,20 L20,20 L20,30',
+                dashed: true,
+            },
+        ]);
+    });
+
+    test('accepts dashed edge starts as a Set', () => {
+        const points = [
+            { x: 0, y: 10, value: 10 },
+            { x: 10, y: 20, value: 20 },
+            { x: 20, y: 30, value: 30 },
+        ];
+
+        expect(createStepperSegmentsByEdgeStarts(points, new Set([1]))).toEqual(
+            [
+                {
+                    path: '0,10 L10,10 L10,20',
+                    dashed: false,
+                },
+                {
+                    path: '10,20 L20,20 L20,30',
+                    dashed: true,
+                },
+            ],
+        );
+    });
+
+    test('merges consecutive solid edges into a single path', () => {
+        const points = [
+            { x: 0, y: 10, value: 10 },
+            { x: 10, y: 20, value: 20 },
+            { x: 20, y: 15, value: 15 },
+            { x: 30, y: 30, value: 30 },
+        ];
+
+        expect(createStepperSegmentsByEdgeStarts(points, [])).toEqual([
+            {
+                path: [
+                    '0,10',
+                    'L10,10',
+                    'L10,20',
+                    'L20,20',
+                    'L20,15',
+                    'L30,15',
+                    'L30,30',
+                ].join(' '),
+                dashed: false,
+            },
+        ]);
+    });
+
+    test('merges consecutive dashed edges into a single path', () => {
+        const points = [
+            { x: 0, y: 10, value: 10 },
+            { x: 10, y: 20, value: 20 },
+            { x: 20, y: 15, value: 15 },
+            { x: 30, y: 30, value: 30 },
+        ];
+
+        expect(createStepperSegmentsByEdgeStarts(points, [0, 1, 2])).toEqual([
+            {
+                path: [
+                    '0,10',
+                    'L10,10',
+                    'L10,20',
+                    'L20,20',
+                    'L20,15',
+                    'L30,15',
+                    'L30,30',
+                ].join(' '),
+                dashed: true,
+            },
+        ]);
+    });
+
+    test('creates separate runs when the dashed state changes', () => {
+        const points = [
+            { x: 0, y: 10, value: 10 },
+            { x: 10, y: 20, value: 20 },
+            { x: 20, y: 15, value: 15 },
+            { x: 30, y: 30, value: 30 },
+        ];
+
+        expect(createStepperSegmentsByEdgeStarts(points, [0, 2])).toEqual([
+            {
+                path: '0,10 L10,10 L10,20',
+                dashed: true,
+            },
+            {
+                path: '10,20 L20,20 L20,15',
+                dashed: false,
+            },
+            {
+                path: '20,15 L30,15 L30,30',
+                dashed: true,
+            },
+        ]);
+    });
+
+    test('starts a new run after the dashed state changes back to solid', () => {
+        const points = [
+            { x: 0, y: 10, value: 10 },
+            { x: 10, y: 20, value: 20 },
+            { x: 20, y: 15, value: 15 },
+            { x: 30, y: 30, value: 30 },
+            { x: 40, y: 25, value: 25 },
+        ];
+
+        expect(createStepperSegmentsByEdgeStarts(points, [1, 2])).toEqual([
+            {
+                path: '0,10 L10,10 L10,20',
+                dashed: false,
+            },
+            {
+                path: ['10,20', 'L20,20', 'L20,15', 'L30,15', 'L30,30'].join(
+                    ' ',
+                ),
+                dashed: true,
+            },
+            {
+                path: '30,30 L40,30 L40,25',
+                dashed: false,
+            },
+        ]);
+    });
+
+    test('cuts the stepper path at null values', () => {
+        const points = [
+            { x: 0, y: 10, value: 10 },
+            { x: 10, y: 20, value: 20 },
+            { x: 20, y: 20, value: null },
+            { x: 30, y: 30, value: 30 },
+            { x: 40, y: 15, value: 15 },
+        ];
+
+        expect(createStepperSegmentsByEdgeStarts(points, [])).toEqual([
+            {
+                path: '0,10 L10,10 L10,20',
+                dashed: false,
+            },
+            {
+                path: '30,30 L40,30 L40,15',
+                dashed: false,
+            },
+        ]);
+    });
+
+    test('cuts the stepper path at undefined values', () => {
+        const points = [
+            { x: 0, y: 10, value: 10 },
+            { x: 10, y: 20, value: 20 },
+            { x: 20, y: 20, value: undefined },
+            { x: 30, y: 30, value: 30 },
+            { x: 40, y: 15, value: 15 },
+        ];
+
+        expect(createStepperSegmentsByEdgeStarts(points, [])).toEqual([
+            {
+                path: '0,10 L10,10 L10,20',
+                dashed: false,
+            },
+            {
+                path: '30,30 L40,30 L40,15',
+                dashed: false,
+            },
+        ]);
+    });
+
+    test('does not connect points across consecutive null values', () => {
+        const points = [
+            { x: 0, y: 10, value: 10 },
+            { x: 10, y: 20, value: 20 },
+            { x: 20, y: 0, value: null },
+            { x: 30, y: 0, value: null },
+            { x: 40, y: 30, value: 30 },
+            { x: 50, y: 40, value: 40 },
+        ];
+
+        expect(createStepperSegmentsByEdgeStarts(points, [])).toEqual([
+            {
+                path: '0,10 L10,10 L10,20',
+                dashed: false,
+            },
+            {
+                path: '40,30 L50,30 L50,40',
+                dashed: false,
+            },
+        ]);
+    });
+
+    test('does not generate a segment for an isolated valid point between null values', () => {
+        const points = [
+            { x: 0, y: 10, value: null },
+            { x: 10, y: 20, value: 20 },
+            { x: 20, y: 30, value: null },
+        ];
+
+        expect(createStepperSegmentsByEdgeStarts(points, [])).toEqual([]);
+    });
+
+    test('treats a point without a value property as invalid', () => {
+        const points = [
+            { x: 0, y: 10, value: 10 },
+            { x: 10, y: 20 },
+            { x: 20, y: 30, value: 30 },
+        ];
+
+        expect(createStepperSegmentsByEdgeStarts(points, [])).toEqual([]);
+    });
+
+    test('cuts the path when x is not finite', () => {
+        const points = [
+            { x: 0, y: 10, value: 10 },
+            { x: 10, y: 20, value: 20 },
+            { x: NaN, y: 30, value: 30 },
+            { x: 30, y: 40, value: 40 },
+            { x: 40, y: 50, value: 50 },
+        ];
+
+        expect(createStepperSegmentsByEdgeStarts(points, [])).toEqual([
+            {
+                path: '0,10 L10,10 L10,20',
+                dashed: false,
+            },
+            {
+                path: '30,40 L40,40 L40,50',
+                dashed: false,
+            },
+        ]);
+    });
+
+    test('cuts the path when y is not finite', () => {
+        const points = [
+            { x: 0, y: 10, value: 10 },
+            { x: 10, y: 20, value: 20 },
+            { x: 20, y: Infinity, value: 30 },
+            { x: 30, y: 40, value: 40 },
+            { x: 40, y: 50, value: 50 },
+        ];
+
+        expect(createStepperSegmentsByEdgeStarts(points, [])).toEqual([
+            {
+                path: '0,10 L10,10 L10,20',
+                dashed: false,
+            },
+            {
+                path: '30,40 L40,40 L40,50',
+                dashed: false,
+            },
+        ]);
+    });
+
+    test('preserves the correct dashed state on each side of a null gap', () => {
+        const points = [
+            { x: 0, y: 10, value: 10 },
+            { x: 10, y: 20, value: 20 },
+            { x: 20, y: 0, value: null },
+            { x: 30, y: 30, value: 30 },
+            { x: 40, y: 15, value: 15 },
+        ];
+
+        expect(createStepperSegmentsByEdgeStarts(points, [0, 3])).toEqual([
+            {
+                path: '0,10 L10,10 L10,20',
+                dashed: true,
+            },
+            {
+                path: '30,30 L40,30 L40,15',
+                dashed: true,
+            },
+        ]);
+    });
+
+    test('ignores dashed edge indices that do not correspond to a valid edge', () => {
+        const points = [
+            { x: 0, y: 10, value: 10 },
+            { x: 10, y: 20, value: 20 },
+            { x: 20, y: 30, value: 30 },
+        ];
+
+        expect(createStepperSegmentsByEdgeStarts(points, [-1, 2, 10])).toEqual([
+            {
+                path: ['0,10', 'L10,10', 'L10,20', 'L20,20', 'L20,30'].join(
+                    ' ',
+                ),
+                dashed: false,
+            },
+        ]);
+    });
+
+    test('uses edge-start indices rather than point indices', () => {
+        const points = [
+            { x: 0, y: 10, value: 10 },
+            { x: 10, y: 20, value: 20 },
+            { x: 20, y: 30, value: 30 },
+            { x: 30, y: 40, value: 40 },
+        ];
+
+        expect(createStepperSegmentsByEdgeStarts(points, [1])).toEqual([
+            {
+                path: '0,10 L10,10 L10,20',
+                dashed: false,
+            },
+            {
+                path: '10,20 L20,20 L20,30',
+                dashed: true,
+            },
+            {
+                path: '20,30 L30,30 L30,40',
+                dashed: false,
+            },
+        ]);
+    });
+});
+
+describe('createStraightSegmentsByEdgeStarts', () => {
+    test('returns an empty array when points is not an array', () => {
+        expect(createStraightSegmentsByEdgeStarts(null, [])).toEqual([]);
+        expect(createStraightSegmentsByEdgeStarts(undefined, [])).toEqual([]);
+        expect(createStraightSegmentsByEdgeStarts({}, [])).toEqual([]);
+    });
+
+    test('returns an empty array when there are fewer than two points', () => {
+        expect(createStraightSegmentsByEdgeStarts([], [])).toEqual([]);
+        expect(
+            createStraightSegmentsByEdgeStarts([{ x: 0, y: 10 }], []),
+        ).toEqual([]);
+    });
+
+    test('creates one solid segment when no dashed edge is provided', () => {
+        const points = [
+            { x: 0, y: 10 },
+            { x: 10, y: 20 },
+            { x: 20, y: 30 },
+        ];
+
+        expect(createStraightSegmentsByEdgeStarts(points, [])).toEqual([
+            {
+                path: '0,10 L10,20 L20,30',
+                dashed: false,
+            },
+        ]);
+    });
+
+    test('accepts an omitted dashedEdgeStarts argument', () => {
+        const points = [
+            { x: 0, y: 10 },
+            { x: 10, y: 20 },
+        ];
+
+        expect(createStraightSegmentsByEdgeStarts(points)).toEqual([
+            {
+                path: '0,10 L10,20',
+                dashed: false,
+            },
+        ]);
+    });
+
+    test('creates one dashed segment when the only edge is dashed', () => {
+        const points = [
+            { x: 0, y: 10 },
+            { x: 10, y: 20 },
+        ];
+
+        expect(createStraightSegmentsByEdgeStarts(points, [0])).toEqual([
+            {
+                path: '0,10 L10,20',
+                dashed: true,
+            },
+        ]);
+    });
+
+    test('accepts dashed edge starts as an array', () => {
+        const points = [
+            { x: 0, y: 10 },
+            { x: 10, y: 20 },
+            { x: 20, y: 30 },
+        ];
+
+        expect(createStraightSegmentsByEdgeStarts(points, [1])).toEqual([
+            {
+                path: '0,10 L10,20',
+                dashed: false,
+            },
+            {
+                path: '10,20 L20,30',
+                dashed: true,
+            },
+        ]);
+    });
+
+    test('accepts dashed edge starts as a Set', () => {
+        const points = [
+            { x: 0, y: 10 },
+            { x: 10, y: 20 },
+            { x: 20, y: 30 },
+        ];
+
+        expect(
+            createStraightSegmentsByEdgeStarts(points, new Set([1])),
+        ).toEqual([
+            {
+                path: '0,10 L10,20',
+                dashed: false,
+            },
+            {
+                path: '10,20 L20,30',
+                dashed: true,
+            },
+        ]);
+    });
+
+    test('returns one dashed run when all edges are dashed', () => {
+        const points = [
+            { x: 0, y: 10 },
+            { x: 10, y: 20 },
+            { x: 20, y: 30 },
+            { x: 30, y: 40 },
+        ];
+
+        expect(createStraightSegmentsByEdgeStarts(points, [0, 1, 2])).toEqual([
+            {
+                path: '0,10 L10,20 L20,30 L30,40',
+                dashed: true,
+            },
+        ]);
+    });
+
+    test('merges consecutive solid edges into one run', () => {
+        const points = [
+            { x: 0, y: 10 },
+            { x: 10, y: 20 },
+            { x: 20, y: 30 },
+            { x: 30, y: 40 },
+        ];
+
+        expect(createStraightSegmentsByEdgeStarts(points, [2])).toEqual([
+            {
+                path: '0,10 L10,20 L20,30',
+                dashed: false,
+            },
+            {
+                path: '20,30 L30,40',
+                dashed: true,
+            },
+        ]);
+    });
+
+    test('merges consecutive dashed edges into one run', () => {
+        const points = [
+            { x: 0, y: 10 },
+            { x: 10, y: 20 },
+            { x: 20, y: 30 },
+            { x: 30, y: 40 },
+        ];
+
+        expect(createStraightSegmentsByEdgeStarts(points, [1, 2])).toEqual([
+            {
+                path: '0,10 L10,20',
+                dashed: false,
+            },
+            {
+                path: '10,20 L20,30 L30,40',
+                dashed: true,
+            },
+        ]);
+    });
+
+    test('creates separate runs whenever dashed state changes', () => {
+        const points = [
+            { x: 0, y: 10 },
+            { x: 10, y: 20 },
+            { x: 20, y: 30 },
+            { x: 30, y: 40 },
+        ];
+
+        expect(createStraightSegmentsByEdgeStarts(points, [0, 2])).toEqual([
+            {
+                path: '0,10 L10,20',
+                dashed: true,
+            },
+            {
+                path: '10,20 L20,30',
+                dashed: false,
+            },
+            {
+                path: '20,30 L30,40',
+                dashed: true,
+            },
+        ]);
+    });
+
+    test('creates alternating solid and dashed runs correctly', () => {
+        const points = [
+            { x: 0, y: 0 },
+            { x: 10, y: 10 },
+            { x: 20, y: 20 },
+            { x: 30, y: 30 },
+            { x: 40, y: 40 },
+            { x: 50, y: 50 },
+        ];
+
+        expect(createStraightSegmentsByEdgeStarts(points, [1, 3])).toEqual([
+            {
+                path: '0,0 L10,10',
+                dashed: false,
+            },
+            {
+                path: '10,10 L20,20',
+                dashed: true,
+            },
+            {
+                path: '20,20 L30,30',
+                dashed: false,
+            },
+            {
+                path: '30,30 L40,40',
+                dashed: true,
+            },
+            {
+                path: '40,40 L50,50',
+                dashed: false,
+            },
+        ]);
+    });
+
+    test('duplicates the boundary point when starting a new run', () => {
+        const points = [
+            { x: 0, y: 10 },
+            { x: 10, y: 20 },
+            { x: 20, y: 30 },
+        ];
+
+        const result = createStraightSegmentsByEdgeStarts(points, [1]);
+
+        expect(result).toEqual([
+            {
+                path: '0,10 L10,20',
+                dashed: false,
+            },
+            {
+                path: '10,20 L20,30',
+                dashed: true,
+            },
+        ]);
+
+        expect(result[0].path.endsWith('10,20')).toBe(true);
+        expect(result[1].path.startsWith('10,20')).toBe(true);
+    });
+
+    test('uses edge-start indices rather than destination point indices', () => {
+        const points = [
+            { x: 0, y: 10 },
+            { x: 10, y: 20 },
+            { x: 20, y: 30 },
+            { x: 30, y: 40 },
+        ];
+
+        expect(createStraightSegmentsByEdgeStarts(points, [1])).toEqual([
+            {
+                path: '0,10 L10,20',
+                dashed: false,
+            },
+            {
+                path: '10,20 L20,30',
+                dashed: true,
+            },
+            {
+                path: '20,30 L30,40',
+                dashed: false,
+            },
+        ]);
+    });
+
+    test('correctly dashes the first edge only', () => {
+        const points = [
+            { x: 0, y: 10 },
+            { x: 10, y: 20 },
+            { x: 20, y: 30 },
+            { x: 30, y: 40 },
+        ];
+
+        expect(createStraightSegmentsByEdgeStarts(points, [0])).toEqual([
+            {
+                path: '0,10 L10,20',
+                dashed: true,
+            },
+            {
+                path: '10,20 L20,30 L30,40',
+                dashed: false,
+            },
+        ]);
+    });
+
+    test('correctly dashes the last edge only', () => {
+        const points = [
+            { x: 0, y: 10 },
+            { x: 10, y: 20 },
+            { x: 20, y: 30 },
+            { x: 30, y: 40 },
+        ];
+
+        expect(createStraightSegmentsByEdgeStarts(points, [2])).toEqual([
+            {
+                path: '0,10 L10,20 L20,30',
+                dashed: false,
+            },
+            {
+                path: '20,30 L30,40',
+                dashed: true,
+            },
+        ]);
+    });
+
+    test('ignores dashed edge indices outside the available edge range', () => {
+        const points = [
+            { x: 0, y: 10 },
+            { x: 10, y: 20 },
+            { x: 20, y: 30 },
+        ];
+
+        expect(createStraightSegmentsByEdgeStarts(points, [-1, 2, 10])).toEqual(
+            [
+                {
+                    path: '0,10 L10,20 L20,30',
+                    dashed: false,
+                },
+            ],
+        );
+    });
+
+    test('ignores duplicate dashed edge indices', () => {
+        const points = [
+            { x: 0, y: 10 },
+            { x: 10, y: 20 },
+            { x: 20, y: 30 },
+        ];
+
+        expect(createStraightSegmentsByEdgeStarts(points, [1, 1, 1])).toEqual([
+            {
+                path: '0,10 L10,20',
+                dashed: false,
+            },
+            {
+                path: '10,20 L20,30',
+                dashed: true,
+            },
+        ]);
+    });
+
+    test('supports negative coordinates', () => {
+        const points = [
+            { x: -20, y: -10 },
+            { x: -10, y: 0 },
+            { x: 0, y: 10 },
+        ];
+
+        expect(createStraightSegmentsByEdgeStarts(points, [0])).toEqual([
+            {
+                path: '-20,-10 L-10,0',
+                dashed: true,
+            },
+            {
+                path: '-10,0 L0,10',
+                dashed: false,
+            },
+        ]);
+    });
+
+    test('supports decimal coordinates', () => {
+        const points = [
+            { x: 0.5, y: 10.25 },
+            { x: 12.75, y: 20.5 },
+        ];
+
+        expect(createStraightSegmentsByEdgeStarts(points, [])).toEqual([
+            {
+                path: '0.5,10.25 L12.75,20.5',
+                dashed: false,
+            },
+        ]);
+    });
+});
+
+describe('mapSampledSeriesToSourceIndices', () => {
+    test('returns an empty array when sourceSeries is not an array', () => {
+        expect(mapSampledSeriesToSourceIndices(null, [])).toEqual([]);
+        expect(mapSampledSeriesToSourceIndices(undefined, [])).toEqual([]);
+        expect(mapSampledSeriesToSourceIndices({}, [])).toEqual([]);
+    });
+
+    test('returns an empty array when sampledSeries is not an array', () => {
+        expect(mapSampledSeriesToSourceIndices([], null)).toEqual([]);
+        expect(mapSampledSeriesToSourceIndices([], undefined)).toEqual([]);
+        expect(mapSampledSeriesToSourceIndices([], {})).toEqual([]);
+    });
+
+    test('returns an empty array when sampledSeries is empty', () => {
+        expect(mapSampledSeriesToSourceIndices([10, 20, 30], [])).toEqual([]);
+    });
+
+    test('maps sampled primitive values to their source indices', () => {
+        const sourceSeries = [10, 20, 30, 40, 50];
+        const sampledSeries = [10, 30, 50];
+
+        expect(
+            mapSampledSeriesToSourceIndices(sourceSeries, sampledSeries),
+        ).toEqual([0, 2, 4]);
+    });
+
+    test('maps all values when sampledSeries is identical to sourceSeries', () => {
+        const sourceSeries = [10, 20, 30];
+
+        expect(
+            mapSampledSeriesToSourceIndices(sourceSeries, sourceSeries),
+        ).toEqual([0, 1, 2]);
+    });
+
+    test('returns -1 for sampled values that do not exist in sourceSeries', () => {
+        const sourceSeries = [10, 20, 30];
+        const sampledSeries = [10, 99, 30];
+
+        expect(
+            mapSampledSeriesToSourceIndices(sourceSeries, sampledSeries),
+        ).toEqual([0, -1, 2]);
+    });
+
+    test('continues searching from the current source cursor after an unmatched value', () => {
+        const sourceSeries = [10, 20, 30, 40];
+        const sampledSeries = [20, 999, 40];
+
+        expect(
+            mapSampledSeriesToSourceIndices(sourceSeries, sampledSeries),
+        ).toEqual([1, -1, 3]);
+    });
+
+    test('maps duplicate primitive values in source order', () => {
+        const sourceSeries = [10, 20, 20, 20, 30];
+        const sampledSeries = [20, 20, 30];
+
+        expect(
+            mapSampledSeriesToSourceIndices(sourceSeries, sampledSeries),
+        ).toEqual([1, 2, 4]);
+    });
+
+    test('does not reuse an earlier duplicate source value', () => {
+        const sourceSeries = [10, 20, 20];
+        const sampledSeries = [20, 20, 20];
+
+        expect(
+            mapSampledSeriesToSourceIndices(sourceSeries, sampledSeries),
+        ).toEqual([1, 2, -1]);
+    });
+
+    test('preserves source order when matching repeated values', () => {
+        const sourceSeries = [1, 2, 1, 2, 1];
+        const sampledSeries = [1, 2, 1];
+
+        expect(
+            mapSampledSeriesToSourceIndices(sourceSeries, sampledSeries),
+        ).toEqual([0, 1, 2]);
+    });
+
+    test('does not search backwards in sourceSeries', () => {
+        const sourceSeries = [10, 20, 30];
+        const sampledSeries = [30, 10];
+
+        expect(
+            mapSampledSeriesToSourceIndices(sourceSeries, sampledSeries),
+        ).toEqual([2, -1]);
+    });
+
+    test('matches NaN values because Object.is is used', () => {
+        const sourceSeries = [10, NaN, 30];
+        const sampledSeries = [NaN];
+
+        expect(
+            mapSampledSeriesToSourceIndices(sourceSeries, sampledSeries),
+        ).toEqual([1]);
+    });
+
+    test('distinguishes positive zero and negative zero because Object.is is used', () => {
+        const sourceSeries = [0, -0, 10];
+
+        expect(mapSampledSeriesToSourceIndices(sourceSeries, [-0])).toEqual([
+            1,
+        ]);
+
+        expect(mapSampledSeriesToSourceIndices(sourceSeries, [0])).toEqual([0]);
+    });
+
+    test('matches null and undefined values', () => {
+        const sourceSeries = [10, null, undefined, 20];
+        const sampledSeries = [null, undefined];
+
+        expect(
+            mapSampledSeriesToSourceIndices(sourceSeries, sampledSeries),
+        ).toEqual([1, 2]);
+    });
+
+    test('matches strings and booleans using Object.is semantics', () => {
+        const sourceSeries = ['a', true, false, 'b'];
+        const sampledSeries = [true, false, 'b'];
+
+        expect(
+            mapSampledSeriesToSourceIndices(sourceSeries, sampledSeries),
+        ).toEqual([1, 2, 3]);
+    });
+
+    test('matches objects only when they are the same reference', () => {
+        const first = { value: 10 };
+        const second = { value: 20 };
+
+        const sourceSeries = [first, second];
+        const sampledSeries = [second];
+
+        expect(
+            mapSampledSeriesToSourceIndices(sourceSeries, sampledSeries),
+        ).toEqual([1]);
+    });
+
+    test('does not match structurally equal objects with different references', () => {
+        const sourceSeries = [{ value: 10 }, { value: 20 }];
+
+        const sampledSeries = [{ value: 10 }];
+
+        expect(
+            mapSampledSeriesToSourceIndices(sourceSeries, sampledSeries),
+        ).toEqual([-1]);
+    });
+
+    test('maps repeated object references in source order', () => {
+        const point = { value: 10 };
+
+        const sourceSeries = [point, { value: 20 }, point];
+
+        const sampledSeries = [point, point];
+
+        expect(
+            mapSampledSeriesToSourceIndices(sourceSeries, sampledSeries),
+        ).toEqual([0, 2]);
+    });
+
+    test('returns -1 once no matching source occurrence remains', () => {
+        const point = { value: 10 };
+
+        const sourceSeries = [point, point];
+        const sampledSeries = [point, point, point];
+
+        expect(
+            mapSampledSeriesToSourceIndices(sourceSeries, sampledSeries),
+        ).toEqual([0, 1, -1]);
+    });
+
+    test('handles a source series shorter than the sampled series', () => {
+        const sourceSeries = [10, 20];
+        const sampledSeries = [10, 20, 30, 40];
+
+        expect(
+            mapSampledSeriesToSourceIndices(sourceSeries, sampledSeries),
+        ).toEqual([0, 1, -1, -1]);
+    });
+
+    test('returns only -1 values when sourceSeries is empty', () => {
+        expect(mapSampledSeriesToSourceIndices([], [10, 20, 30])).toEqual([
+            -1, -1, -1,
+        ]);
     });
 });

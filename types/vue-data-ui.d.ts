@@ -6075,6 +6075,9 @@ declare module 'vue-data-ui' {
             useGradient?: boolean;
             strokeWidth?: number;
             cutNullValues?: boolean;
+            nullDashes?: {
+                show?: boolean;
+            };
             interLine?: {
                 pairs?: [string, string][];
                 colors?: [string | undefined, string | undefined][];
