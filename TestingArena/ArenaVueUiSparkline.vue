@@ -111,7 +111,8 @@ const model = createModel([
 
     CHECKBOX('temperatureColors.show', { def: true }),
 
-    CHECKBOX('style.line.cutNullValues', { def: true }),
+    CHECKBOX('style.line.cutNullValues', { def: false }),
+    CHECKBOX('style.line.nullDashes.show', { def: true }),
     CHECKBOX('style.line.pulse.show', { def: true }),
     CHECKBOX('style.line.pulse.radius', { def: 2 }),
     COLOR('style.line.pulse.color', { def: '#FF0000' }),

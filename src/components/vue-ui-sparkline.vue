@@ -22,9 +22,11 @@ import {
     createSmoothAreaSegments,
     createSmoothPathWithCuts,
     createSmoothPathWithCutsSegments,
+    createSmoothSegmentsByEdgeStarts,
     createStraightPath,
     createStraightPathWithCuts,
     createStraightPathWithCutsSegments,
+    createStraightSegmentsByEdgeStarts,
     createUid,
     dataLabel as dl,
     error,
@@ -771,6 +773,7 @@ const mutableDataset = computed(() => {
                     : s.period,
             plotValue: absoluteValue + absoluteMin.value,
             toMax: ratioToMax(absoluteValue + absoluteMin.value),
+            sourceIndex: i,
             x: drawingArea.value.start + i * width,
             y:
                 drawingArea.value.bottom -
@@ -908,13 +911,6 @@ function selectDatapoint(datapoint, index) {
     emits('selectDatapoint', { datapoint, index });
 }
 
-const hasDashedSegments = computed(() => {
-    return (
-        Array.isArray(cfgLine.value.dashIndices) &&
-        cfgLine.value.dashIndices.length > 0
-    );
-});
-
 const lineCutNullValues = computed(() => {
     return cfgLine.value.cutNullValues;
 });
@@ -978,6 +974,111 @@ const lineDataset = computed(() => {
         : mutableDataset.value.filter((plot) => plot.value !== null);
 });
 
+const explicitDashIndices = computed(() => {
+    return Array.isArray(cfgLine.value.dashIndices)
+        ? cfgLine.value.dashIndices
+              .map((index) => Math.trunc(Number(index)))
+              .filter(Number.isFinite)
+        : [];
+});
+
+const explicitDashIndexSet = computed(() => {
+    return new Set(explicitDashIndices.value);
+});
+
+function edgeContainsDashedPoint(previousPlot, plot) {
+    const previousSourceIndex = previousPlot?.sourceIndex;
+    const sourceIndex = plot?.sourceIndex;
+
+    if (
+        !Number.isFinite(previousSourceIndex) ||
+        !Number.isFinite(sourceIndex)
+    ) {
+        return false;
+    }
+
+    const minIndex = Math.min(previousSourceIndex, sourceIndex);
+    const maxIndex = Math.max(previousSourceIndex, sourceIndex);
+
+    for (const dashedIndex of explicitDashIndices.value) {
+        if (dashedIndex >= minIndex && dashedIndex <= maxIndex) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+function getUserDashedEdgeStarts(dataset) {
+    const dashedStarts = new Set();
+
+    for (let i = 1; i < dataset.length; i += 1) {
+        if (edgeContainsDashedPoint(dataset[i - 1], dataset[i])) {
+            dashedStarts.add(i - 1);
+        }
+    }
+
+    return dashedStarts;
+}
+
+function getNullDashedEdgeStarts(dataset) {
+    const dashedStarts = new Set();
+
+    if (lineCutNullValues.value || !cfgLine.value.nullDashes?.show) {
+        return dashedStarts;
+    }
+
+    for (let i = 1; i < dataset.length; i += 1) {
+        const previousSourceIndex = dataset[i - 1]?.sourceIndex;
+        const sourceIndex = dataset[i]?.sourceIndex;
+
+        if (
+            Number.isFinite(previousSourceIndex) &&
+            Number.isFinite(sourceIndex) &&
+            Math.abs(sourceIndex - previousSourceIndex) > 1
+        ) {
+            dashedStarts.add(i - 1);
+        }
+    }
+
+    return dashedStarts;
+}
+
+const userDashedEdgeStarts = computed(() => {
+    if (lineCutNullValues.value) return new Set();
+    return getUserDashedEdgeStarts(lineDataset.value);
+});
+
+const nullDashedEdgeStarts = computed(() => {
+    return getNullDashedEdgeStarts(lineDataset.value);
+});
+
+const dashedEdgeStarts = computed(() => {
+    return new Set([
+        ...userDashedEdgeStarts.value,
+        ...nullDashedEdgeStarts.value,
+    ]);
+});
+
+const visibleDashIndices = computed(() => {
+    if (!lineCutNullValues.value) return [];
+
+    return mutableDataset.value.reduce((indices, plot, localIndex) => {
+        if (explicitDashIndexSet.value.has(plot.sourceIndex)) {
+            indices.push(localIndex);
+        }
+        return indices;
+    }, []);
+});
+
+const hasDashedSegments = computed(() => {
+    if (lineCutNullValues.value) {
+        return visibleDashIndices.value.length > 0;
+    }
+
+    return dashedEdgeStarts.value.size > 0;
+});
+
 const lineValidDataset = computed(() => {
     return mutableDataset.value.filter((plot) => plot.value !== null);
 });
@@ -1007,10 +1108,15 @@ const dashedSmoothSegments = computed(() => {
         return [];
     }
 
-    return createSmoothPathWithCutsSegments(
-        lineDataset.value,
-        cfgLine.value.dashIndices,
-    );
+    return lineCutNullValues.value
+        ? createSmoothPathWithCutsSegments(
+              mutableDataset.value,
+              visibleDashIndices.value,
+          )
+        : createSmoothSegmentsByEdgeStarts(
+              lineDataset.value,
+              dashedEdgeStarts.value,
+          );
 });
 
 const dashedStraightSegments = computed(() => {
@@ -1018,10 +1124,15 @@ const dashedStraightSegments = computed(() => {
         return [];
     }
 
-    return createStraightPathWithCutsSegments(
-        lineDataset.value,
-        cfgLine.value.dashIndices,
-    );
+    return lineCutNullValues.value
+        ? createStraightPathWithCutsSegments(
+              mutableDataset.value,
+              visibleDashIndices.value,
+          )
+        : createStraightSegmentsByEdgeStarts(
+              lineDataset.value,
+              dashedEdgeStarts.value,
+          );
 });
 
 const lineAreaPaths = computed(() => {

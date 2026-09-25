@@ -9534,6 +9534,9 @@ declare module 'vue-data-ui' {
                 cutNullValues?: boolean;
                 dashIndices?: number[];
                 dashArray?: number;
+                nullDashes?: {
+                    show?: boolean;
+                };
                 pulse?: {
                     show?: boolean;
                     loop?: boolean;

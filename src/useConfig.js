@@ -3368,6 +3368,9 @@ export function useConfig(options = {}) {
                 strokeWidth: 3,
                 smooth: false,
                 cutNullValues: false,
+                nullDashes: {
+                    show: false,
+                },
                 dashIndices: [],
                 dashArray: 4,
                 pulse: {

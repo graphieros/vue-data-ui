@@ -152,6 +152,7 @@ describe('<VueUiSparkline />', () => {
                         'id',
                         'period',
                         'plotValue',
+                        'sourceIndex',
                         'toMax',
                         'width',
                         'x',
