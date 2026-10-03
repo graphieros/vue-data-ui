@@ -1405,9 +1405,18 @@ const parsedScaleMin = computed(() => {
 // - default: fill down to 0 (zero.value)
 // - if scaleMin is explicitly set: fill down to the bottom of the chart (forced minimum)
 const globalAreaBaselineY = computed(() => {
-    return parsedScaleMin.value !== null
-        ? drawingArea.value.bottom
-        : zero.value;
+    const scaleMin = niceScale.value.min;
+    const scaleMax = niceScale.value.max;
+
+    const baselineValue =
+        scaleMin <= 0 && scaleMax >= 0 ? 0 : scaleMin > 0 ? scaleMin : scaleMax;
+
+    return getYFromScaleValue({
+        value: baselineValue,
+        scaleMin,
+        scaleMax,
+        individualHeight: drawingArea.value.height,
+    });
 });
 
 const parsedScaleMax = computed(() => {
