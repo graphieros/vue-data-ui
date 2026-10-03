@@ -98,6 +98,17 @@ const testPreconfig = computed<VueUiDonutEvolutionConfig>(() => {
                     focusOnDrag: false,
                     focusRangeRatio: 0.2,
                     maxWidth: null,
+                    dragToZoom: {
+                        show: true,
+                        selection: {
+                            fill: '#FF0000',
+                            stroke: '#FF0000',
+                            fillOpacity: 0.2,
+                            strokeOpacity: 0.5,
+                            strokeWidth: 2,
+                            strokeDasharray: '2 2',
+                        },
+                    },
                 },
                 donuts: {
                     hover: {

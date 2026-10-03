@@ -10,11 +10,14 @@ import ConfigKnobs from './ConfigKnobs.vue';
 import { useConfigurationControls } from './createConfigModel';
 import { useConfig } from '../src/useConfig';
 import useThemeOptions from './useThemeOptions';
+import { useArena } from '../src/useArena.js';
 
 const { vue_ui_quick_chart: DEFAULT_CONFIG } = useConfig();
 
 const { CHECKBOX, NUMBER, RANGE, TEXT, COLOR, SELECT, createModel } =
     useConfigurationControls(DEFAULT_CONFIG);
+
+const { local, build, vduiLocal, vduiBuild } = useArena();
 
 function makeDs(m, n = 100) {
     const arr = [];
@@ -148,7 +151,7 @@ function alterDataset() {
     datasets.value.shortArray.push(Math.random() * 50);
 }
 
-const selectedSerie = ref('shortArray');
+const selectedSerie = ref('longObject');
 
 const model = createModel([
     CHECKBOX('devHints.enable', { def: true }),
@@ -374,6 +377,10 @@ onMounted(() => {
     setTimeout(() => {
         dataset.value = datasets.value[selectedSerie.value];
     }, 2000);
+
+    setTimeout(() => {
+        local.value.setZoomState({ start: 2 });
+    }, 5000);
 });
 
 function selectLegend(legend) {
@@ -383,6 +390,8 @@ function selectLegend(legend) {
 function selectDatapoint(datapoint) {
     console.log({ datapoint });
 }
+
+const zoomState = ref(null);
 </script>
 
 <template>
@@ -473,6 +482,8 @@ function selectDatapoint(datapoint) {
 
         <template #local>
             <LocalVueUiQuickChart
+                ref="local"
+                v-model:zoom-state="zoomState"
                 :dataset="isPropsToggled ? alternateDataset : dataset"
                 :config="isPropsToggled ? alternateConfig : config"
                 :key="`local_${step}`"
@@ -500,6 +511,8 @@ function selectDatapoint(datapoint) {
 
         <template #VDUI-local>
             <LocalVueDataUi
+                v-model:zoom-state="zoomState"
+                ref="vduiLocal"
                 component="VueUiQuickChart"
                 :dataset="isPropsToggled ? alternateDataset : dataset"
                 :config="isPropsToggled ? alternateConfig : config"

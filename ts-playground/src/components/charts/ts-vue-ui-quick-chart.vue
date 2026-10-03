@@ -251,6 +251,17 @@ const testPreconfig = computed<VueUiQuickChartConfig>(() => {
         zoomFocusOnDrag: false,
         zoomFocusRangeRatio: 0.2,
         zoomMaxWidth: null,
+        dragToZoom: {
+            show: true,
+            selection: {
+                fill: '#FF0000',
+                stroke: '#FF0000',
+                fillOpacity: 0.2,
+                strokeOpacity: 0.5,
+                strokeWidth: 2,
+                strokeDasharray: '2 2',
+            },
+        },
     };
 });
 

@@ -60,6 +60,9 @@ onMounted(() => {
     setTimeout(() => {
         dataset.value = generateRandomCandlestickData({ count: 100 });
     }, 100);
+    setTimeout(() => {
+        local.value.setZoomState({ start: 20, end: 80 });
+    }, 5000);
 });
 
 const alternateDataset = ref([
@@ -506,6 +509,8 @@ function freestyle({ drawingArea, data }) {
         />
     `;
 }
+
+const zoomState = ref(null);
 </script>
 
 <template>
@@ -610,6 +615,7 @@ function freestyle({ drawingArea, data }) {
 
         <template #local>
             <LocalVueUiCandlestick
+                v-model:zoom-state="zoomState"
                 :selectedXIndex="selectedX"
                 @selectX="selectX"
                 :dataset="dataset"
@@ -644,6 +650,7 @@ function freestyle({ drawingArea, data }) {
 
         <template #VDUI-local>
             <LocalVueDataUi
+                v-model:zoom-state="zoomState"
                 :selectedXIndex="selectedX"
                 @selectX="selectX"
                 component="VueUiCandlestick"

@@ -108,6 +108,10 @@ onMounted(() => {
             },
         ];
     }, 2000);
+
+    setTimeout(() => {
+        local.value.setZoomState({ start: 10 });
+    }, 5000);
 });
 
 async function getData() {
@@ -509,6 +513,8 @@ function selectX({ datapoint, index, indexLabel }) {
 //         }
 //     }, 4000)
 // })
+
+const zoomState = ref(null);
 </script>
 
 <template>
@@ -596,6 +602,7 @@ function selectX({ datapoint, index, indexLabel }) {
 
         <template #local>
             <LocalVueUiXyCanvas
+                v-model:zoom-state="zoomState"
                 @selectX="selectX"
                 :selectedXIndex="selectedX"
                 :dataset="dataset"
@@ -609,6 +616,7 @@ function selectX({ datapoint, index, indexLabel }) {
 
         <template #VDUI-local>
             <LocalVueDataUi
+                v-model:zoom-state="zoomState"
                 @selectX="selectX"
                 :selectedXIndex="selectedX"
                 component="VueUiXyCanvas"

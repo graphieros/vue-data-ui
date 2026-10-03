@@ -41,6 +41,12 @@ const { CHECKBOX, NUMBER, RANGE, TEXT, COLOR, SELECT, createModel } =
 //     return arr
 // }
 
+onMounted(() => {
+    setTimeout(() => {
+        local.value.setZoomState({ start: 12 });
+    }, 5000);
+});
+
 function createDs(n, m = 100) {
     const arr = [];
     for (let i = 0; i < n; i += 1) {
@@ -1390,6 +1396,8 @@ watchEffect(async () => {
         },
     });
 });
+
+const zoomState = ref(null);
 </script>
 
 <template>
@@ -1622,6 +1630,7 @@ watchEffect(async () => {
 
         <template #local>
             <LocalVueUiXy
+                v-model:zoom-state="zoomState"
                 :dataset="isPropsToggled ? alternateDataset : dataset"
                 :config="isPropsToggled ? alternateConfig : config"
                 :selectedXIndex="selectedIndex"
@@ -1711,6 +1720,7 @@ watchEffect(async () => {
 
         <template #VDUI-local>
             <LocalVueDataUi
+                v-model:zoom-state="zoomState"
                 component="VueUiXy"
                 :dataset="isPropsToggled ? alternateDataset : dataset"
                 :config="isPropsToggled ? alternateConfig : config"

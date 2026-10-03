@@ -2,13 +2,14 @@
 /**
  * This playground showcases all the slots and their implementations for <VueUiSparkline>
  */
-import { computed } from 'vue';
+import { computed, onMounted, ref, useTemplateRef } from 'vue';
 import {
     VueUiSparkline,
     type VueUiSparklineConfig,
     type VueUiSparklineDatasetItem,
     type VueUiSparklineEmitHoverIndex,
     type VueUiSparklineEmitSelectDatapoint,
+    type VueUiZoomState,
 } from 'vue-data-ui/vue-ui-sparkline';
 
 import 'vue-data-ui/style.css';
@@ -90,6 +91,7 @@ const dataset = computed<VueUiSparklineDatasetItem[]>(() => {
 
 const config = computed<VueUiSparklineConfig>(() => {
     return {
+        useCursorPointer: true,
         devHints: { enable: true },
         skeletonConfig: null,
         skeletonDataset: null,
@@ -134,7 +136,7 @@ const config = computed<VueUiSparklineConfig>(() => {
         style: {
             chartWidth: 290,
             animation: {
-                show: true,
+                show: false,
                 animationFrames: 360,
             },
             padding: {
@@ -242,6 +244,23 @@ const config = computed<VueUiSparklineConfig>(() => {
                 opacity: 30,
                 color: '#1f77b4',
             },
+            zoom: {
+                show: true,
+                selection: {
+                    fill: '#FF0000',
+                    stroke: 'transparent',
+                    fillOpacity: 0.2,
+                    strokeOpacity: 0,
+                    strokeWidth: 1,
+                    strokeDasharray: 0,
+                },
+                resetButton: {
+                    show: true,
+                    title: 'TITLE',
+                    ariaLabel: 'ARIA LABEL',
+                    color: '#1A1A1A',
+                },
+            },
         },
     };
 });
@@ -257,6 +276,16 @@ function selectDatapoint(payload: VueUiSparklineEmitSelectDatapoint) {
 function log(n: unknown) {
     console.log(n);
 }
+
+const zoomState = ref<VueUiZoomState>(null);
+
+const chartA = useTemplateRef('chartA');
+
+// onMounted(() => {
+//     setTimeout(() => {
+//         chartA.value?.setZoomState({ start: 10 });
+//     }, 2000);
+// });
 </script>
 
 <template>
@@ -264,6 +293,13 @@ function log(n: unknown) {
         <VueUiSparkline
             :dataset
             :config
+            v-model:zoom-state="zoomState"
+            ref="chartA"
+        />
+        <VueUiSparkline
+            :dataset
+            :config
+            v-model:zoom-state="zoomState"
             @hoverIndex="hoverIndex"
             @selectDatapoint="selectDatapoint"
         >

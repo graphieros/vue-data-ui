@@ -70,6 +70,12 @@ const dataset = ref([
     },
 ]);
 
+onMounted(() => {
+    setTimeout(() => {
+        local.value.setZoomState({ start: 2 });
+    }, 5000);
+});
+
 // onMounted(() => {
 //     dataset.value = undefined;
 //     setTimeout(() => {
@@ -462,6 +468,8 @@ const model = createModel([
     NUMBER('table.td.roundingValue', { def: 2, min: 0, max: 6 }),
     CHECKBOX('table.show', { def: false }),
     CHECKBOX('table.useDialog', { def: true }),
+
+    CHECKBOX('style.chart.zoom.dragToZoom.show', { def: true }),
 ]);
 
 const { themeOptions, currentTheme } = useThemeOptions();
@@ -641,6 +649,8 @@ const resp = ref(null);
 //         }, 1000)
 //     }
 // })
+
+const zoomState = ref(null);
 </script>
 
 <template>
@@ -750,6 +760,7 @@ const resp = ref(null);
 
         <template #local>
             <LocalVueUiStackbar
+                v-model:zoom-state="zoomState"
                 @selectX="selectX"
                 :selectedXIndex="selectedX"
                 :dataset="dataset"
@@ -790,6 +801,7 @@ const resp = ref(null);
 
         <template #VDUI-local>
             <LocalVueDataUi
+                v-model:zoom-state="zoomState"
                 @selectX="selectX"
                 :selectedXIndex="selectedX"
                 component="VueUiStackbar"

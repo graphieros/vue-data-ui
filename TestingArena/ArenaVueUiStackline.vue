@@ -42,6 +42,12 @@ function generateDayTimestamps(length) {
     return result;
 }
 
+onMounted(() => {
+    setTimeout(() => {
+        local.value.setZoomState({ start: 5, end: 45 });
+    }, 5000);
+});
+
 // const dataset = ref([
 //     {
 //         name: 'Series A',
@@ -492,6 +498,8 @@ const model = createModel([
     NUMBER('table.td.roundingValue', { def: 2, min: 0, max: 6 }),
     CHECKBOX('table.show', { def: false }),
     CHECKBOX('table.useDialog', { def: true }),
+
+    CHECKBOX('style.chart.zoom.dragToZoom.show', { def: true }),
 ]);
 
 const { themeOptions, currentTheme } = useThemeOptions();
@@ -612,6 +620,8 @@ const config = computed(() => {
 function selectX({ dataset, index, indexLabel }) {
     // console.log({ dataset, index, indexLabel });
 }
+
+const zoomState = ref(null);
 </script>
 
 <template>
@@ -656,6 +666,7 @@ function selectX({ dataset, index, indexLabel }) {
 
         <template #local>
             <LocalVueUiStackline
+                v-model:zoom-state="zoomState"
                 :dataset="dataset"
                 :config="config"
                 ref="local"
@@ -678,6 +689,7 @@ function selectX({ dataset, index, indexLabel }) {
 
         <template #VDUI-local>
             <LocalVueDataUi
+                v-model:zoom-state="zoomState"
                 component="VueUiStackline"
                 :dataset="dataset"
                 :config="config"

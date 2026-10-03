@@ -35,6 +35,36 @@ onMounted(() => {
             { period: 1743465600000, value: 3 },
             { period: 1746057600000, value: 2 },
             { period: 1748736000000, value: 1 },
+            { period: 1748736000000, value: 1 },
+            { period: 1748736000000, value: 1 },
+            { period: 1748736000000, value: 1 },
+            { period: 1748736000000, value: 1 },
+            { period: 1748736000000, value: 1 },
+            { period: 1748736000000, value: 1 },
+            { period: 1748736000000, value: 1 },
+            { period: 1748736000000, value: 1 },
+            { period: 1748736000000, value: -10 },
+            { period: 1748736000000, value: 1 },
+            { period: 1748736000000, value: 1 },
+            { period: 1748736000000, value: 1 },
+            { period: 1748736000000, value: 1 },
+            { period: 1748736000000, value: 1 },
+            { period: 1748736000000, value: 1 },
+            { period: 1748736000000, value: 1 },
+            { period: 1748736000000, value: 1 },
+            { period: 1748736000000, value: 1 },
+            { period: 1748736000000, value: 1 },
+            { period: 1748736000000, value: 1 },
+            { period: 1748736000000, value: 1 },
+            { period: 1748736000000, value: 1 },
+            { period: 1748736000000, value: 1 },
+            { period: 1748736000000, value: 1 },
+            { period: 1748736000000, value: 1 },
+            { period: 1748736000000, value: 1 },
+            { period: 1748736000000, value: 1 },
+            { period: 1748736000000, value: 1 },
+            { period: 1748736000000, value: 1 },
+            { period: 1748736000000, value: 1 },
         ];
     }, 2000);
 });
@@ -128,7 +158,7 @@ const model = createModel([
     NUMBER('style.padding.left', { def: 0, min: 0, max: 100 }),
 
     NUMBER('style.chartWidth', { def: 400, min: 100, max: 500 }),
-    CHECKBOX('style.animation.show', { def: true }),
+    CHECKBOX('style.animation.show', { def: false }),
     NUMBER('style.animation.animationFrames', { def: 360, min: 0, max: 1000 }),
     COLOR('style.backgroundColor', { def: '#FFFFFF' }),
     TEXT('style.fontFamily', { def: 'inherit' }),
@@ -198,6 +228,33 @@ const model = createModel([
     NUMBER('style.tooltip.borderWidth', { def: 1, min: 0, max: 12 }),
     COLOR('style.tooltip.borderColor', { def: '#FF0000' }),
     NUMBER('style.tooltip.backgroundOpacity', { def: 50, min: 0, max: 100 }),
+
+    CHECKBOX('style.zoom.show', { def: true }),
+    COLOR('style.zoom.selection.fill', { def: '#FF0000' }),
+    COLOR('style.zoom.selection.stroke', { def: '#00FF00' }),
+    NUMBER('style.zoom.selection.fillOpacity', {
+        def: 0.1,
+        min: 0,
+        max: 1,
+        step: 0.1,
+    }),
+    NUMBER('style.zoom.selection.strokeOpacity', {
+        def: 0.5,
+        min: 0,
+        max: 1,
+        step: 0.1,
+    }),
+    NUMBER('style.zoom.selection.strokeWidth', {
+        def: 1,
+        min: 0,
+        max: 3,
+        step: 0.5,
+    }),
+    TEXT('style.zoom.selection.strokeDasharray', { def: '' }),
+    CHECKBOX('style.zoom.resetButton.show', { def: true }),
+    TEXT('style.zoom.resetButton.title', { def: 'TITLE' }),
+    TEXT('style.zoom.resetButton.ariaLabel', { def: 'ARIA LABEL' }),
+    COLOR('style.zoom.resetButton.color', { def: '#1A1A1A' }),
 ]);
 
 const { themeOptions, currentTheme } = useThemeOptions();
@@ -256,6 +313,8 @@ const step = ref(0);
 function log(n) {
     console.log(n);
 }
+
+const zoomState = ref(null);
 </script>
 
 <template>
@@ -319,6 +378,7 @@ function log(n) {
 
         <template #local>
             <LocalVueUiSparkline
+                v-model:zoom-state="zoomState"
                 :dataset="isPropsToggled ? alternateDataset : dataset"
                 :config="isPropsToggled ? alternateConfig : config"
                 :key="`local_${step}`"
@@ -371,6 +431,7 @@ function log(n) {
 
         <template #VDUI-local>
             <LocalVueDataUi
+                v-model:zoom-state="zoomState"
                 component="VueUiSparkline"
                 :dataset="isPropsToggled ? alternateDataset : dataset"
                 :config="isPropsToggled ? alternateConfig : config"

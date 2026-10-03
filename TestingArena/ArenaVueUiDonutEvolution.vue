@@ -46,6 +46,9 @@ onMounted(() => {
             },
         ];
     }, 2000);
+    setTimeout(() => {
+        local.value.setZoomState({ start: 2, end: 4 });
+    }, 5000);
 });
 
 const monthValues = computed(() => {
@@ -379,6 +382,8 @@ onMounted(async () => {
         // }, 5000)
     }
 });
+
+const zoomState = ref(null);
 </script>
 
 <template>
@@ -424,6 +429,7 @@ onMounted(async () => {
 
         <template #local>
             <LocalVueUiDonutEvolution
+                v-model:zoom-state="zoomState"
                 :dataset="dataset"
                 :config="config"
                 :key="`local_${step}`"
@@ -493,6 +499,7 @@ onMounted(async () => {
 
         <template #VDUI-local>
             <LocalVueDataUi
+                v-model:zoom-state="zoomState"
                 component="VueUiDonutEvolution"
                 :dataset="dataset"
                 :config="config"
