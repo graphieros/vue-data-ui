@@ -1,8 +1,18 @@
 <script setup>
-import { onMounted, ref, computed, toRefs, watch, shallowReactive } from 'vue';
-import { defineAsyncComponent } from 'vue';
+import {
+    computed,
+    defineAsyncComponent,
+    onMounted,
+    ref,
+    useAttrs,
+    watch,
+} from 'vue';
 
 import BaseIcon from '../atoms/BaseIcon.vue';
+
+defineOptions({
+    inheritAttrs: false,
+});
 
 const props = defineProps({
     component: { type: String },
@@ -10,7 +20,7 @@ const props = defineProps({
     config: { type: Object },
 });
 
-const { component, dataset, config } = toRefs(props);
+const attrs = useAttrs();
 
 const components = {
     VueUi3dBar: defineAsyncComponent(() => import('./vue-ui-3d-bar.vue')),
@@ -144,497 +154,169 @@ const components = {
     VueUiLabel: defineAsyncComponent(() => import('./vue-ui-label.vue')),
 };
 
-const componentProps = {
-    VueUi3dBar: ['config', 'dataset'],
-    VueUiAgePyramid: ['config', 'dataset'],
-    VueUiAnnotator: ['config', 'dataset'],
-    VueUiCandlestick: ['config', 'dataset'],
-    VueUiChestnut: ['config', 'dataset'],
-    VueUiDashboard: ['config', 'dataset'],
-    VueUiDigits: ['config', 'dataset'],
-    VueUiDonut: ['config', 'dataset'],
-    VueUiDonutEvolution: ['config', 'dataset'],
-    VueUiGalaxy: ['config', 'dataset'],
-    VueUiGauge: ['config', 'dataset'],
-    VueUiHeatmap: ['config', 'dataset'],
-    VueUiKpi: ['config', 'dataset'],
-    VueUiMiniLoader: ['config'],
-    VueUiMolecule: ['config', 'dataset'],
-    VueUiMoodRadar: ['config', 'dataset'],
-    VueUiNestedDonuts: ['config', 'dataset'],
-    VueUiOnion: ['config', 'dataset'],
-    VueUiQuadrant: ['config', 'dataset'],
-    VueUiRadar: ['config', 'dataset'],
-    VueUiRating: ['config', 'dataset'],
-    VueUiRelationCircle: ['config', 'dataset'],
-    VueUiRings: ['config', 'dataset'],
-    VueUiScatter: ['config', 'dataset'],
-    VueUiSkeleton: ['config'],
-    VueUiSmiley: ['config', 'dataset'],
-    VueUiSparkbar: ['config', 'dataset'],
-    VueUiSparkgauge: ['config', 'dataset'],
-    VueUiSparkHistogram: ['config', 'dataset'],
-    VueUiSparkline: ['config', 'dataset'],
-    VueUiSparkStackbar: ['config', 'dataset'],
-    VueUiTable: ['config', 'dataset'],
-    VueUiTableSparkline: ['config', 'dataset'],
-    VueUiThermometer: ['config', 'dataset'],
-    VueUiTiremarks: ['config', 'dataset'],
-    VueUiTreemap: ['config', 'dataset'],
-    VueUiVerticalBar: ['config', 'dataset'], // delete in v4
-    VueUiHorizontalBar: ['config', 'dataset'], // v3 renaming
-    VueUiWaffle: ['config', 'dataset'],
-    VueUiWheel: ['config', 'dataset'],
-    VueUiXy: ['config', 'dataset'],
-    VueUiTableHeatmap: ['config', 'dataset'],
-    VueUiAccordion: ['config'],
-    VueUiQuickChart: ['config', 'dataset'],
-    VueUiCursor: ['config'],
-    VueUiSparkTrend: ['config', 'dataset'],
-    VueUiStripPlot: ['config', 'dataset'],
-    VueUiDumbbell: ['config', 'dataset'],
-    VueUiWordCloud: ['config', 'dataset'],
-    VueUiXyCanvas: ['config', 'dataset'],
-    VueUiFlow: ['config', 'dataset'],
-    VueUiParallelCoordinatePlot: ['config', 'dataset'],
-    VueUiTimer: ['config'],
-    VueUiCarouselTable: ['config', 'dataset'],
-    VueUiGizmo: ['config', 'dataset'],
-    VueUiStackbar: ['config', 'dataset'],
-    VueUiStackline: ['config', 'dataset'],
-    VueUiBullet: ['config', 'dataset'],
-    VueUiFunnel: ['config', 'dataset'],
-    VueUiHistoryPlot: ['config', 'dataset'],
-    VueUiCirclePack: ['config', 'dataset'],
-    VueUiWorld: ['config', 'dataset'],
-    VueUiRidgeline: ['config', 'dataset'],
-    VueUiChord: ['config', 'dataset'],
-    VueUiDag: ['config', 'dataset'],
-    VueUiGeo: ['config', 'dataset'],
-    VueUiBump: ['config', 'dataset'],
-    VueUiHill: ['config', 'dataset'],
-    VueUiLabel: ['config', 'dataset'],
-};
+const CONFIG_ONLY_COMPONENTS = new Set([
+    'VueUiMiniLoader',
+    'VueUiSkeleton',
+    'VueUiAccordion',
+    'VueUiCursor',
+    'VueUiTimer',
+]);
 
-const emit = defineEmits([
+const EXPOSED_METHODS = [
+    'autoSize',
     'cancel',
-    'change',
+    'close',
     'copyAlt',
-    'drag',
-    'dragEnd',
-    'datapointEnter',
-    'datapointLeave',
-    'dragStart',
-    'edit',
     'focusLocation',
+    'generateCsv',
+    'generateImage',
+    'generatePdf',
+    'generateSvg',
+    'getItemsPositions',
     'hideSeries',
-    'hoverIndex',
     'lap',
-    'onMidpointEnter',
-    'onMidpointLeave',
-    'onNodeClick',
     'pause',
-    'play',
-    'postImage',
-    'rate',
+    'pauseAnimation',
+    'recalculateHeight',
     'reset',
     'resetZoom',
     'restart',
+    'restoreOrder',
+    'resumeAnimation',
     'save',
-    'saveAnnotations',
-    'selectBranch',
-    'selectDatapoint',
     'selectGroup',
-    'selectLegend',
-    'selectNut',
-    'selectPlot',
+    'selectNode',
     'selectRibbon',
-    'selectRoot',
-    'selectSide',
-    'selectX',
+    'setZoomState',
+    'shoot',
     'showSeries',
     'start',
+    'switchOrientation',
+    'toggleAnimation',
     'toggleAnnotator',
+    'toggleLabels',
     'toggleLock',
-    'toggleOpenState',
+    'toggleReadonly',
+    'toggleSort',
+    'toggleStack',
     'toggleTable',
     'toggleTooltip',
     'toggleZoom',
-    'zoomEnd',
-    'zoomReset',
-    'zoomStart',
-]);
+    'zoomIn',
+    'zoomOut',
+];
 
-const isError = computed(() => !components[props.component]);
-const currentComponent = computed(() => components[props.component] || null);
 const currentComponentRef = ref(null);
 
-const relevantProps = computed(() => {
-    const requiredProps = componentProps[props.component] || [];
-    const relevantProps = {};
-    if (requiredProps.includes('config')) relevantProps.config = config.value;
-    if (requiredProps.includes('dataset'))
-        relevantProps.dataset = dataset.value;
-    return relevantProps;
-});
+const isError = computed(() => !components[props.component]);
 
-const generatePdf = ref(() => null);
-const generateCsv = ref(() => null);
-const generateImage = ref(() => null);
-const generateSvg = ref(() => null);
-const getItemsPositions = ref(() => null);
-const toggleReadonly = ref(() => null);
-const shoot = ref(() => null);
-const close = ref(() => null);
-const restoreOrder = ref(() => null);
-const recalculateHeight = ref(() => null);
-const toggleLock = ref(() => null);
-const toggleTable = ref(() => null);
-const toggleLabels = ref(() => null);
-const toggleSort = ref(() => null);
-const toggleStack = ref(() => null);
-const toggleTooltip = ref(() => null);
-const start = ref(() => null);
-const pause = ref(() => null);
-const reset = ref(() => null);
-const restart = ref(() => null);
-const lap = ref(() => null);
-const toggleAnimation = ref(() => null);
-const pauseAnimation = ref(() => null);
-const resumeAnimation = ref(() => null);
-const toggleAnnotator = ref(() => null);
-const selectNode = ref(() => null);
-const selectGroup = ref(() => null);
-const selectRibbon = ref(() => null);
-const autoSize = ref(() => null);
-const resetZoom = ref(() => null);
-const showSeries = ref(() => null);
-const hideSeries = ref(() => null);
-const toggleZoom = ref(() => null);
-const onNodeClick = ref(() => null);
-const onMidpointEnter = ref(() => null);
-const onMidpointLeave = ref(() => null);
-const zoomIn = ref(() => null);
-const zoomOut = ref(() => null);
-const switchOrientation = ref(() => null);
-const focusLocation = ref(() => null);
-const copyAlt = ref(() => null);
-const edit = ref(() => null);
-const save = ref(() => null);
-const cancel = ref(() => null);
-const dragStart = ref(() => null);
-const dragEnd = ref(() => null);
-const drag = ref(() => null);
-const datapointEnter = ref(() => null);
-const datapointLeave = ref(() => null);
+const currentComponent = computed(() => components[props.component] || null);
 
-onMounted(() => {
-    if (isError.value) {
-        console.error(
-            `\n\nVue Data UI exception:\nThe provided component "${props.component}" does not exist. Check the spelling.\n\nAvailable components:\n\n${Object.keys(
-                components,
-            )
-                .map((key) => `. ${key}\n`)
-                .join('')}`,
-        );
+function getComponentBindings() {
+    const bindings = {
+        ...attrs,
+        config: props.config,
+    };
+
+    if (!CONFIG_ONLY_COMPONENTS.has(props.component)) {
+        bindings.dataset = props.dataset;
     }
-});
 
-watch(currentComponentRef, async (newRef) => {
-    if (newRef) {
-        if (newRef.generatePdf) {
-            generatePdf.value = newRef.generatePdf;
-        }
-        if (newRef.generateImage) {
-            generateImage.value = newRef.generateImage;
-        }
-        if (newRef.generateSvg) {
-            generateSvg.value = newRef.generateSvg;
-        }
-        if (newRef.generateCsv) {
-            generateCsv.value = newRef.generateCsv;
-        }
-        if (newRef.getItemsPositions) {
-            getItemsPositions.value = newRef.getItemsPositions;
-        }
-        if (newRef.toggleReadonly) {
-            toggleReadonly.value = newRef.toggleReadonly;
-        }
-        if (newRef.shoot) {
-            shoot.value = newRef.shoot;
-        }
-        if (newRef.close) {
-            close.value = newRef.close;
-        }
-        if (newRef.restoreOrder) {
-            restoreOrder.value = newRef.restoreOrder;
-        }
-        if (newRef.recalculateHeight) {
-            recalculateHeight.value = newRef.recalculateHeight;
-        }
-        if (newRef.toggleLock) {
-            toggleLock.value = newRef.toggleLock;
-        }
-        if (newRef.toggleTable) {
-            toggleTable.value = newRef.toggleTable;
-        }
-        if (newRef.toggleLabels) {
-            toggleLabels.value = newRef.toggleLabels;
-        }
-        if (newRef.toggleSort) {
-            toggleSort.value = newRef.toggleSort;
-        }
-        if (newRef.toggleStack) {
-            toggleStack.value = newRef.toggleStack;
-        }
-        if (newRef.toggleTooltip) {
-            toggleTooltip.value = newRef.toggleTooltip;
-        }
-        if (newRef.start) {
-            start.value = newRef.start;
-        }
-        if (newRef.pause) {
-            pause.value = newRef.pause;
-        }
-        if (newRef.reset) {
-            reset.value = newRef.reset;
-        }
-        if (newRef.restart) {
-            restart.value = newRef.restart;
-        }
-        if (newRef.lap) {
-            lap.value = newRef.lap;
-        }
-        if (newRef.toggleAnimation) {
-            toggleAnimation.value = newRef.toggleAnimation;
-        }
-        if (newRef.pauseAnimation) {
-            pauseAnimation.value = newRef.pauseAnimation;
-        }
-        if (newRef.resumeAnimation) {
-            resumeAnimation.value = newRef.resumeAnimation;
-        }
-        if (newRef.toggleAnnotator) {
-            toggleAnnotator.value = newRef.toggleAnnotator;
-        }
-        if (newRef.selectNode) {
-            selectNode.value = newRef.selectNode;
-        }
-        if (newRef.selectGroup) {
-            selectGroup.value = newRef.selectGroup;
-        }
-        if (newRef.selectRibbon) {
-            selectRibbon.value = newRef.selectRibbon;
-        }
-        if (newRef.autoSize) {
-            autoSize.value = newRef.autoSize;
-        }
-        if (newRef.resetZoom) {
-            resetZoom.value = newRef.resetZoom;
-        }
-        if (newRef.showSeries) {
-            showSeries.value = newRef.showSeries;
-        }
-        if (newRef.hideSeries) {
-            hideSeries.value = newRef.hideSeries;
-        }
-        if (newRef.toggleZoom) {
-            toggleZoom.value = newRef.toggleZoom;
-        }
-        if (newRef.onNodeClick) {
-            onNodeClick.value = newRef.onNodeClick;
-        }
-        if (newRef.onMidpointEnter) {
-            onMidpointEnter.value = newRef.onMidpointEnter;
-        }
-        if (newRef.onMidpointLeave) {
-            onMidpointLeave.value = newRef.onMidpointLeave;
-        }
-        if (newRef.zoomIn) {
-            zoomIn.value = newRef.zoomIn;
-        }
-        if (newRef.zoomOut) {
-            zoomOut.value = newRef.zoomOut;
-        }
-        if (newRef.switchOrientation) {
-            switchOrientation.value = newRef.switchOrientation;
-        }
-        if (newRef.focusLocation) {
-            focusLocation.value = newRef.focusLocation;
-        }
-        if (newRef.copyAlt) {
-            copyAlt.value = newRef.copyAlt;
-        }
-        if (newRef.edit) {
-            edit.value = newRef.edit;
-        }
-        if (newRef.save) {
-            save.value = newRef.save;
-        }
-        if (newRef.cancel) {
-            cancel.value = newRef.cancel;
-        }
-        if (newRef.dragStart) {
-            dragStart.value = newRef.dragStart;
-        }
-        if (newRef.dragEnd) {
-            dragEnd.value = newRef.dragEnd;
-        }
-        if (newRef.drag) {
-            drag.value = newRef.drag;
-        }
-        if (newRef.datapointEnter) {
-            datapointEnter.value = newRef.datapointEnter;
-        }
-        if (newRef.datapointLeave) {
-            datapointLeave.value = newRef.datapointLeave;
-        }
-    }
-});
+    return bindings;
+}
 
-const getEventHandlers = () => {
-    const eventNames = [
-        'selectLegend',
-        'selectDatapoint',
-        'toggleOpenState',
-        'saveAnnotations',
-        'selectRoot',
-        'selectBranch',
-        'selectNut',
-        'change',
-        'selectPlot',
-        'selectSide',
-        'rate',
-        'postImage',
-        'hoverIndex',
-        'selectX',
-        'toggleLock',
-        'toggleTooltip',
-        'start',
-        'pause',
-        'reset',
-        'restart',
-        'lap',
-        'toggleAnimation',
-        'pauseAnimation',
-        'resumeAnimation',
-        'toggleAnnotator',
-        'selectNode',
-        'selectGroup',
-        'selectRibbon',
-        'autoSize',
-        'toggleTable',
-        'resetZoom',
-        'showSeries',
-        'hideSeries',
-        'toggleZoom',
-        'onNodeClick',
-        'onMidpointEnter',
-        'onMidpointLeave',
-        'zoomIn',
-        'zoomOut',
-        'switchOrientation',
-        'focusLocation',
-        'zoomStart',
-        'zoomEnd',
-        'zoomReset',
-        'copyAlt',
-        'edit',
-        'save',
-        'cancel',
-        'dragStart',
-        'dragEnd',
-        'drag',
-        'datapointEnter',
-        'datapointLeave',
-    ];
-    const handlers = {};
-    eventNames.forEach((event) => {
-        handlers[event] = (...args) => emit(event, ...args);
-    });
-    return handlers;
-};
-
-const QUEUE = shallowReactive([]);
+/**
+ * Methods that may be called before the async child component
+ * has finished mounting.
+ */
+const queue = [];
 
 function enqueue(method, args) {
     return new Promise((resolve, reject) => {
-        QUEUE.push({ method, args, resolve, reject });
+        queue.push({
+            method,
+            args,
+            resolve,
+            reject,
+        });
     });
 }
 
-watch(currentComponentRef, (comp) => {
-    if (!comp) return;
-    while (QUEUE.length) {
-        const { method, args, resolve, reject } = QUEUE.shift();
-        const fn = comp[method];
-        if (typeof fn === 'function') {
-            Promise.resolve()
-                .then(() => fn(...args))
-                .then(resolve)
-                .catch(reject);
-        } else {
-            reject(
-                new Error(`Method ${method} not found on ${props.component}`),
-            );
+function methodNotFoundError(method) {
+    return new Error(`Method "${method}" not found on ${props.component}`);
+}
+
+function invokeMethod(method, args) {
+    const instance = currentComponentRef.value;
+    if (!instance) return null;
+    const fn = instance[method];
+    if (typeof fn !== 'function') return null;
+    return fn.apply(instance, args);
+}
+
+function invokeOrQueue(method, args) {
+    const instance = currentComponentRef.value;
+    if (!instance) return enqueue(method, args);
+    const fn = instance[method];
+    if (typeof fn !== 'function') {
+        return Promise.reject(methodNotFoundError(method));
+    }
+    return fn.apply(instance, args);
+}
+
+watch(currentComponentRef, (instance) => {
+    if (!instance) return;
+    while (queue.length) {
+        const { method, args, resolve, reject } = queue.shift();
+        const fn = instance[method];
+        if (typeof fn !== 'function') {
+            reject(methodNotFoundError(method));
+            continue;
         }
+        Promise.resolve()
+            .then(() => fn.apply(instance, args))
+            .then(resolve)
+            .catch(reject);
     }
 });
 
+const exposedMethods = Object.fromEntries(
+    EXPOSED_METHODS.map((method) => [
+        method,
+        (...args) => invokeMethod(method, args),
+    ]),
+);
+
 defineExpose({
     getData(...args) {
-        if (currentComponentRef.value?.getData) {
-            return currentComponentRef.value.getData(...args);
-        }
-        return enqueue('getData', args);
+        return invokeOrQueue('getData', args);
     },
+
     getImage(options = {}) {
         const { scale = 2 } = options;
-        if (currentComponentRef.value?.getImage) {
-            return currentComponentRef.value.getImage({ scale });
-        }
-        return enqueue('getImage', [{ scale }]);
+
+        return invokeOrQueue('getImage', [
+            {
+                scale,
+            },
+        ]);
     },
-    autoSize,
-    generatePdf,
-    generateCsv,
-    generateImage,
-    generateSvg,
-    getItemsPositions,
-    toggleReadonly,
-    shoot,
-    close,
-    restoreOrder,
-    recalculateHeight,
-    toggleLock,
-    toggleTable,
-    toggleLabels,
-    toggleSort,
-    toggleStack,
-    toggleTooltip,
-    start,
-    pause,
-    reset,
-    restart,
-    lap,
-    pauseAnimation,
-    resumeAnimation,
-    toggleAnimation,
-    toggleAnnotator,
-    selectNode,
-    selectGroup,
-    selectRibbon,
-    resetZoom,
-    showSeries,
-    hideSeries,
-    toggleZoom,
-    zoomIn,
-    zoomOut,
-    switchOrientation,
-    focusLocation,
-    copyAlt,
-    save,
-    cancel,
+
+    ...exposedMethods,
+});
+
+onMounted(() => {
+    if (!isError.value) {
+        return;
+    }
+
+    console.error(
+        `\n\nVue Data UI exception:\nThe provided component "${props.component}" does not exist. Check the spelling.\n\nAvailable components:\n\n${Object.keys(
+            components,
+        )
+            .map((key) => `. ${key}\n`)
+            .join('')}`,
+    );
 });
 
 const notSupported = computed(() => {
@@ -669,31 +351,32 @@ const notSupported = computed(() => {
     >
         <div style="width: 36px">
             <BaseIcon
-                name="moodFlat"
                 v-if="notSupported.status === 'unknown'"
+                name="moodFlat"
                 stroke="#FF0000"
             />
+
             <BaseIcon
-                name="circleExclamation"
                 v-if="notSupported.status === 'notSupported'"
+                name="circleExclamation"
                 stroke="#FF9000"
             />
         </div>
+
         {{ notSupported.message }}
     </div>
 
     <component
+        v-else
         :is="currentComponent"
         ref="currentComponentRef"
-        v-else
-        v-bind="relevantProps"
-        v-on="getEventHandlers()"
+        v-bind="getComponentBindings()"
     >
         <template
             v-for="(_slotContent, slotName) in $slots"
             v-slot:[slotName]="slotProps"
         >
-            <slot :name="slotName" v-bind="slotProps"></slot>
+            <slot :name="slotName" v-bind="slotProps" />
         </template>
     </component>
 </template>

@@ -148,6 +148,7 @@ describe('<VueUiSparkline />', () => {
                         wrapper.emitted('selectDatapoint')[0][0].datapoint,
                     ).to.have.keys(
                         'absoluteValue',
+                        'barX',
                         'color',
                         'id',
                         'period',

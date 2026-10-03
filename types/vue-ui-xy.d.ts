@@ -40,6 +40,7 @@ import type {
     VueUiXyEmitSelectLegend,
     VueUiXyEmitZoom,
     VueUiXyEmitCopyAlt,
+    VueUiZoomState,
 } from 'vue-data-ui';
 
 export type {
@@ -82,6 +83,7 @@ export type {
     VueUiXyEmitSelectLegend,
     VueUiXyEmitZoom,
     VueUiXyEmitCopyAlt,
+    VueUiZoomState,
 };
 
 declare const VueUiXyBase: DefineComponent<

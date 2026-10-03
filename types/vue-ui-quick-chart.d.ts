@@ -27,6 +27,8 @@ import type {
     VueUiQuickChartEmitSelectDatapoint,
     VueUiQuickChartEmitCopyAlt,
     VueUiQuickChartLegendSource,
+    VueUiZoomState,
+    VueUiEmitZoom,
 } from 'vue-data-ui';
 
 export type {
@@ -56,6 +58,8 @@ export type {
     VueUiQuickChartEmitSelectDatapoint,
     VueUiQuickChartEmitCopyAlt,
     VueUiQuickChartLegendSource,
+    VueUiZoomState,
+    VueUiEmitZoom,
 };
 
 declare const VueUiQuickChartBase: DefineComponent<

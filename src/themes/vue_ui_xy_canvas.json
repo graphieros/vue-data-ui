@@ -8,7 +8,8 @@
             "chart": {
                 "zoom": {
                     "minimap": {
-                        "show": true
+                        "show": true,
+                        "frameColor": "transparent"
                     }
                 },
                 "legend": {
@@ -33,11 +34,22 @@
                 "zoom": {
                     "color": "#4A4A4A",
                     "highlightColor": "#9A9A9A",
+                    "preview": {
+                        "fill": "#8A8A8A20",
+                        "stroke": "#8A8A8A70"
+                    },
                     "minimap": {
                         "show": true,
                         "selectedColor": "#8A8A8A",
                         "lineColor": "#424242",
-                        "indicatorColor": "#CCCCCC"
+                        "indicatorColor": "#CCCCCC",
+                        "frameColor": "transparent"
+                    },
+                    "dragToZoom": {
+                        "selection": {
+                            "fill": "#8A8A8A",
+                            "stroke": "#8A8A8A"
+                        }
                     }
                 },
                 "selector": {
@@ -116,10 +128,20 @@
                 "zoom": {
                     "color": "#4A4A4A",
                     "highlightColor": "#9A9A9A",
+                    "preview": {
+                        "fill": "#8A8A8A20",
+                        "stroke": "#8A8A8A70"
+                    },
                     "minimap": {
                         "selectedColor": "#8A8A8A",
                         "lineColor": "#424242",
                         "indicatorColor": "#CCCCCC"
+                    },
+                    "dragToZoom": {
+                        "selection": {
+                            "fill": "#8A8A8A",
+                            "stroke": "#8A8A8A"
+                        }
                     }
                 },
                 "selector": {
@@ -191,7 +213,22 @@
                 "color": "#424242",
                 "zoom": {
                     "color": "#5D4037",
-                    "highlightColor": "#FF8A65"
+                    "highlightColor": "#FF8A65",
+                    "preview": {
+                        "fill": "#FF8A6520",
+                        "stroke": "#FF8A6570"
+                    },
+                    "minimap": {
+                        "selectedColor": "#FF8A65",
+                        "lineColor": "#424242",
+                        "indicatorColor": "#FF8A65"
+                    },
+                    "dragToZoom": {
+                        "selection": {
+                            "fill": "#FF8A65",
+                            "stroke": "#FF8A65"
+                        }
+                    }
                 },
                 "selector": {
                     "color": "#5D4037"
@@ -262,7 +299,22 @@
                 "color": "#BDBDBD",
                 "zoom": {
                     "color": "#5D4037",
-                    "highlightColor": "#FF8A65"
+                    "highlightColor": "#FF8A65",
+                    "preview": {
+                        "fill": "#FF8A6520",
+                        "stroke": "#FF8A6570"
+                    },
+                    "minimap": {
+                        "selectedColor": "#FF8A65",
+                        "lineColor": "#FF6B6B",
+                        "indicatorColor": "#FF8A65"
+                    },
+                    "dragToZoom": {
+                        "selection": {
+                            "fill": "#FF8A65",
+                            "stroke": "#FF8A65"
+                        }
+                    }
                 },
                 "selector": {
                     "color": "#BDBDBD"
@@ -333,7 +385,20 @@
                 "color": "#99AA99",
                 "zoom": {
                     "color": "#5F6A5F",
-                    "highlightColor": "#66CC66"
+                    "highlightColor": "#66CC66",
+                    "preview": {
+                        "fill": "#66CC6620",
+                        "stroke": "#66CC6670"
+                    },
+                    "minimap": {
+                        "indicatorColor": "#5F6A5F"
+                    },
+                    "dragToZoom": {
+                        "selection": {
+                            "fill": "#66CC66",
+                            "stroke": "#66CC66"
+                        }
+                    }
                 },
                 "selector": {
                     "color": "#66CC66"
@@ -404,7 +469,21 @@
                 "color": "#8A9892",
                 "zoom": {
                     "color": "#E0CFC3",
-                    "highlightColor": "#8F837A"
+                    "highlightColor": "#8F837A",
+                    "preview": {
+                        "fill": "#8F837A20",
+                        "stroke": "#8F837A70"
+                    },
+                    "minimap": {
+                        "selectedColor": "#8F837A",
+                        "indicatorColor": "#8A9892"
+                    },
+                    "dragToZoom": {
+                        "selection": {
+                            "fill": "#8F837A",
+                            "stroke": "#8F837A"
+                        }
+                    }
                 },
                 "selector": {
                     "color": "#8F837A"
@@ -474,7 +553,21 @@
                 "color": "#50606C",
                 "zoom": {
                     "color": "#92B0AB",
-                    "highlightColor": "#50606C"
+                    "highlightColor": "#50606C",
+                    "preview": {
+                        "fill": "#50606C20",
+                        "stroke": "#50606C70"
+                    },
+                    "minimap": {
+                        "selectedColor": "#50606C",
+                        "indicatorColor": "#50606C"
+                    },
+                    "dragToZoom": {
+                        "selection": {
+                            "fill": "#50606C",
+                            "stroke": "#50606C"
+                        }
+                    }
                 },
                 "selector": {
                     "color": "#7DA9B5"

@@ -5,7 +5,8 @@
         "showLegend": false,
         "xyShowGrid": false,
         "zoomMinimap": {
-            "show": true
+            "show": true,
+            "frameColor": "transparent"
         }
     },
     "minimalDark": {
@@ -23,10 +24,17 @@
         "zoomColor": "#4A4A4A",
         "zoomHighlightColor": "#9A9A9A",
         "zoomMinimap": {
+            "frameColor": "transparent",
             "show": true,
             "lineColor": "#424242",
             "selectedColor": "#8A8A8A",
             "indicatorColor": "#CCCCCC"
+        },
+        "dragToZoom": {
+            "selection": {
+                "fill": "#8A8A8A",
+                "stroke": "#8A8A8A"
+            }
         },
         "tooltipBorderColor": "#3A3A3A",
         "tooltipBackgroundOpacity": 70
@@ -47,6 +55,12 @@
             "selectedColor": "#8A8A8A",
             "indicatorColor": "#CCCCCC"
         },
+        "dragToZoom": {
+            "selection": {
+                "fill": "#8A8A8A",
+                "stroke": "#8A8A8A"
+            }
+        },
         "tooltipBorderColor": "#5A5A5A",
         "tooltipBackgroundOpacity": 70
     },
@@ -64,6 +78,12 @@
         "zoomMinimap": {
             "lineColor": "#424242",
             "selectedColor": "#FF8A65"
+        },
+        "dragToZoom": {
+            "selection": {
+                "fill": "#FF8A65",
+                "stroke": "#FF8A65"
+            }
         },
         "tooltipBorderColor": "#FF8A65",
         "tooltipBackgroundOpacity": 30
@@ -84,6 +104,12 @@
             "selectedColor": "#FF8A65",
             "indicatorColor": "#FF8A65"
         },
+        "dragToZoom": {
+            "selection": {
+                "fill": "#FF8A65",
+                "stroke": "#FF8A65"
+            }
+        },
         "tooltipBorderColor": "#FF8A65",
         "tooltipBackgroundOpacity": 30
     },
@@ -98,7 +124,16 @@
         "xyHighlighterColor": "#66CC66",
         "zoomColor": "#5F6A5F",
         "zoomHighlightColor": "#66CC66",
-        "tooltipBorderColor": "#66CC66"
+        "tooltipBorderColor": "#66CC66",
+        "zoomMinimap": {
+            "indicatorColor": "#5F6A5F"
+        },
+        "dragToZoom": {
+            "selection": {
+                "fill": "#66CC66",
+                "stroke": "#66CC66"
+            }
+        }
     },
     "zen": {
         "backgroundColor": "#fbfafa",
@@ -110,7 +145,17 @@
         "xyGridStroke": "transparent",
         "xyHighlighterColor": "#8F837A",
         "zoomColor": "#E0CFC3",
-        "zoomHighlightColor": "#8F837A"
+        "zoomHighlightColor": "#8F837A",
+        "zoomMinimap": {
+            "selectedColor": "#8F837A",
+            "indicatorColor": "#8A9892"
+        },
+        "dragToZoom": {
+            "selection": {
+                "fill": "#8F837A",
+                "stroke": "#8F837A"
+            }
+        }
     },
     "concrete": {
         "backgroundColor": "#f6f6fb",
@@ -122,6 +167,16 @@
         "xyGridStroke": "#CCD6D3",
         "xyHighlighterColor": "#7DA9B5",
         "zoomColor": "#92B0AB",
-        "zoomHighlightColor": "#50606C"
+        "zoomHighlightColor": "#50606C",
+        "zoomMinimap": {
+            "selectedColor": "#50606C",
+            "indicatorColor": "#50606C"
+        },
+        "dragToZoom": {
+            "selection": {
+                "fill": "#50606C",
+                "stroke": "#50606C"
+            }
+        }
     }
 }

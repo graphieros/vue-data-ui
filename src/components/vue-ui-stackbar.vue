@@ -111,6 +111,10 @@ const props = defineProps({
         type: Number,
         default: undefined,
     },
+    zoomState: {
+        type: Object,
+        default: null,
+    },
 });
 
 const emit = defineEmits([
@@ -118,6 +122,10 @@ const emit = defineEmits([
     'selectLegend',
     'selectTimeLabel',
     'selectX',
+    'zoomStart',
+    'zoomEnd',
+    'zoomReset',
+    'update:zoomState',
     'copyAlt',
 ]);
 
@@ -993,6 +1001,34 @@ const slicerPrecog = ref({
     end: Math.max(...FINAL_DATASET.value.map((ds) => ds.series.length)),
 });
 
+const isChartZoomSelecting = ref(false);
+const isChartZoomPointerFocused = ref(false);
+const chartZoomStartCoord = ref(null);
+const chartZoomCurrentCoord = ref(null);
+const chartZoomPointerId = ref(null);
+const ignoreNextChartClick = ref(false);
+const lastChartZoomTap = ref({
+    time: 0,
+    x: 0,
+    y: 0,
+    pointerType: null,
+});
+
+const dragToZoomConfig = computed(() => cfgChart.value.zoom?.dragToZoom);
+
+const isChartZoomEnabled = computed(() => {
+    return (
+        dragToZoomConfig.value.show &&
+        isDataset.value &&
+        slicerReady.value &&
+        maxSeries.value > 1 &&
+        !loading.value
+    );
+});
+
+let queuedSlicerFrame = null;
+let queuedSlicerUpdate = {};
+
 const isPrecog = computed(() => {
     return (
         cfgChart.value.zoom.preview.enable &&
@@ -1003,6 +1039,74 @@ const isPrecog = computed(() => {
 
 function setPrecog(side, val) {
     slicerPrecog.value[side] = val;
+}
+
+function normalizeZoomState(state, fallback = slicer.value) {
+    if (!state || typeof state !== 'object') return null;
+    const hasStart = state.start !== undefined && state.start !== null;
+    const hasEnd = state.end !== undefined && state.end !== null;
+    if (!hasStart && !hasEnd) return null;
+    const start = hasStart ? Number(state.start) : Number(fallback.start);
+    const end = hasEnd ? Number(state.end) : Number(fallback.end);
+    if (!Number.isFinite(start) || !Number.isFinite(end)) {
+        return null;
+    }
+    return {
+        start,
+        end,
+    };
+}
+
+function emitZoomState(state) {
+    const normalized = normalizeZoomState(state);
+    if (!normalized) return;
+
+    emit('update:zoomState', normalized);
+}
+
+function clearQueuedSlicerFrame() {
+    if (queuedSlicerFrame) {
+        cancelAnimationFrame(queuedSlicerFrame);
+        queuedSlicerFrame = null;
+    }
+
+    queuedSlicerUpdate = {};
+}
+
+function applyZoomState(state) {
+    const normalized = normalizeZoomState(state);
+    if (!normalized) return null;
+
+    const { start, end } = normalized;
+
+    if (
+        start !== Number(slicer.value.start) ||
+        end !== Number(slicer.value.end)
+    ) {
+        clearQueuedSlicerFrame();
+
+        slicer.value = { start, end };
+        slicerPrecog.value = { start, end };
+
+        normalizeSlicerWindow();
+    }
+
+    // Always return the final committed range. The silent model-driven path
+    // can ignore this value, while the public imperative API can publish it
+    // so other instances sharing v-model:zoom-state are synchronized.
+    return {
+        start: Number(slicer.value.start),
+        end: Number(slicer.value.end),
+    };
+}
+
+function setZoomState(state) {
+    const applied = applyZoomState(state);
+    if (!applied) return null;
+
+    emit('update:zoomState', applied);
+
+    return applied;
 }
 
 function normalizeSlicerWindow() {
@@ -1021,8 +1125,7 @@ function normalizeSlicerWindow() {
     slicerPrecog.value.end = e;
 
     if (chartSlicer.value) {
-        chartSlicer.value.setStartValue(s);
-        chartSlicer.value.setEndValue(e);
+        chartSlicer.value.setRangeValues(s, e);
     }
 }
 
@@ -1035,9 +1138,11 @@ function nextPaint() {
 
 onBeforeUnmount(() => {
     if (refreshRAF.value) cancelAnimationFrame(refreshRAF.value);
+    clearQueuedSlicerFrame();
+    cancelChartZoomSelection();
 });
 
-async function refreshSlicer({ force = false } = {}) {
+async function refreshSlicer({ force = false, publish = false } = {}) {
     if (
         cfgChart.value.zoom.keepState &&
         !force &&
@@ -1048,7 +1153,9 @@ async function refreshSlicer({ force = false } = {}) {
         return;
     }
 
-    setupSlicer();
+    const applyControlledZoom = !force;
+
+    setupSlicer(applyControlledZoom);
 
     await nextTick();
 
@@ -1058,7 +1165,17 @@ async function refreshSlicer({ force = false } = {}) {
 
     refreshRAF.value = requestAnimationFrame(async () => {
         await nextPaint();
-        setupSlicer();
+
+        setupSlicer(applyControlledZoom);
+        refreshRAF.value = null;
+
+        if (publish) {
+            emitZoomState({
+                start: Number(slicer.value.start),
+                end: Number(slicer.value.end),
+            });
+            emit('zoomReset');
+        }
     });
 }
 
@@ -2481,26 +2598,25 @@ const { isCallbackImaging, isCallbackSvg, generateSvg, onGenerateImage } =
         generateImage,
     });
 
-function validSlicerEnd(v) {
+function validSlicerEnd(v, start = slicer.value.start) {
     const _max = maxSeries.value;
+    const effectiveStart = Number(start);
 
     if (v > _max) {
         return _max;
     }
-    if (v < 0 || v < slicer.value.start) {
-        if (cfgChart.value.zoom.startIndex !== null) {
-            return slicer.value.start + 1;
-        } else {
-            return 1;
-        }
+
+    if (v < 0 || v <= effectiveStart) {
+        return Math.min(effectiveStart + 1, _max);
     }
+
     return v;
 }
 
 const isSettingUp = ref(false);
 const slicerReady = ref(false);
 
-function setupSlicer() {
+function setupSlicer(applyControlledZoom = true) {
     if (isSettingUp.value) return;
 
     isSettingUp.value = true;
@@ -2518,7 +2634,7 @@ function setupSlicer() {
 
         const end =
             endIndex != null
-                ? Math.min(validSlicerEnd(endIndex + 1), max)
+                ? Math.min(validSlicerEnd(endIndex + 1, start), max)
                 : max;
 
         suppressChild.value = true;
@@ -2531,6 +2647,10 @@ function setupSlicer() {
         normalizeSlicerWindow();
 
         slicerReady.value = true;
+
+        if (applyControlledZoom && props.zoomState) {
+            applyZoomState(props.zoomState);
+        }
     } finally {
         queueMicrotask(() => {
             suppressChild.value = false;
@@ -2542,21 +2662,92 @@ function setupSlicer() {
 
 const suppressChild = ref(false);
 
+watch(
+    [() => props.zoomState, slicerReady],
+    ([state, ready]) => {
+        if (!ready || !state) return;
+
+        // Mirrored state is applied silently. The originating chart already
+        // committed this exact range before emitting update:zoomState, so its
+        // own reflected v-model update is a no-op here.
+        applyZoomState(state);
+    },
+    {
+        deep: true,
+        immediate: true,
+    },
+);
+
+function queueSlicerUpdate(update) {
+    queuedSlicerUpdate = {
+        ...queuedSlicerUpdate,
+        ...update,
+    };
+
+    if (queuedSlicerFrame) {
+        cancelAnimationFrame(queuedSlicerFrame);
+    }
+
+    queuedSlicerFrame = requestAnimationFrame(() => {
+        const nextSlicer = {
+            ...slicer.value,
+            ...queuedSlicerUpdate,
+        };
+
+        queuedSlicerUpdate = {};
+        queuedSlicerFrame = null;
+
+        slicer.value = nextSlicer;
+        slicerPrecog.value = { ...nextSlicer };
+
+        normalizeSlicerWindow();
+
+        // Publish only the complete, normalized range. SlicerPreview emits
+        // start and end separately while dragging the whole selection.
+        emitZoomState({
+            start: Number(slicer.value.start),
+            end: Number(slicer.value.end),
+        });
+    });
+}
+
 function onSlicerStart(v) {
     if (isSettingUp.value || suppressChild.value) return;
-    if (v === slicer.value.start) return;
-    slicer.value.start = v;
-    slicerPrecog.value.start = v;
-    normalizeSlicerWindow();
+
+    const start = Number(v);
+    if (!Number.isFinite(start)) return;
+
+    emit('zoomStart', {
+        index: start,
+        isZoom: start !== 0,
+    });
+
+    if (start === slicer.value.start) return;
+
+    queueSlicerUpdate({ start });
 }
 
 function onSlicerEnd(v) {
     if (isSettingUp.value || suppressChild.value) return;
-    const end = validSlicerEnd(v);
-    if (end === slicer.value.end) return;
-    slicer.value.end = end;
-    slicerPrecog.value.end = end;
-    normalizeSlicerWindow();
+
+    const pendingStart =
+        queuedSlicerUpdate.start !== undefined
+            ? queuedSlicerUpdate.start
+            : slicer.value.start;
+
+    const end = validSlicerEnd(Number(v), pendingStart);
+    if (!Number.isFinite(end)) return;
+
+    emit('zoomEnd', {
+        index: end,
+        isZoom: end !== maxSeries.value,
+    });
+
+    if (end === slicer.value.end && queuedSlicerUpdate.start === undefined) {
+        return;
+    }
+
+    queueSlicerUpdate({ end });
 }
 
 function selectX({ seriesIndex, datapoint }) {
@@ -2657,6 +2848,7 @@ function onSvgFocus() {
 }
 
 function onSvgBlur() {
+    isChartZoomPointerFocused.value = false;
     activeTooltipIndex.value = null;
     isTooltip.value = false;
     trapIndex.value = null;
@@ -2664,9 +2856,401 @@ function onSvgBlur() {
     isFocus.value = false;
 }
 
+function clientToSvgCoords(event) {
+    const svgEl = svgRef.value;
+    if (!svgEl) return null;
+
+    if (svgEl.createSVGPoint && svgEl.getScreenCTM) {
+        const point = svgEl.createSVGPoint();
+        point.x = event.clientX;
+        point.y = event.clientY;
+
+        const ctm = svgEl.getScreenCTM();
+
+        if (ctm) {
+            const transformed = point.matrixTransform(ctm.inverse());
+
+            return {
+                x: transformed.x,
+                y: transformed.y,
+            };
+        }
+    }
+
+    const rect = svgEl.getBoundingClientRect();
+    const viewBox = svgEl.viewBox?.baseVal || {
+        x: 0,
+        y: 0,
+        width: rect.width,
+        height: rect.height,
+    };
+
+    const scale = Math.min(
+        rect.width / viewBox.width,
+        rect.height / viewBox.height,
+    );
+
+    if (!Number.isFinite(scale) || scale <= 0) return null;
+
+    const drawnWidth = viewBox.width * scale;
+    const drawnHeight = viewBox.height * scale;
+    const offsetX = (rect.width - drawnWidth) / 2;
+    const offsetY = (rect.height - drawnHeight) / 2;
+
+    return {
+        x: (event.clientX - rect.left - offsetX) / scale + viewBox.x,
+        y: (event.clientY - rect.top - offsetY) / scale + viewBox.y,
+    };
+}
+
+const isChartZoomVerticalAxis = computed(
+    () => FINAL_CONFIG.value.orientation === 'horizontal',
+);
+
+const chartZoomSelectionRect = computed(() => {
+    if (
+        !isChartZoomSelecting.value ||
+        chartZoomStartCoord.value == null ||
+        chartZoomCurrentCoord.value == null
+    ) {
+        return null;
+    }
+
+    const start = Math.min(
+        chartZoomStartCoord.value,
+        chartZoomCurrentCoord.value,
+    );
+    const size = Math.abs(
+        chartZoomCurrentCoord.value - chartZoomStartCoord.value,
+    );
+
+    if (isChartZoomVerticalAxis.value) {
+        return {
+            x: drawingArea.value.left,
+            y: start,
+            width: drawingArea.value.width,
+            height: size,
+        };
+    }
+
+    return {
+        x: start,
+        y: drawingArea.value.top,
+        width: size,
+        height: drawingArea.value.height,
+    };
+});
+
+const isChartZoomed = computed(() => {
+    if (!slicerReady.value) return false;
+
+    return (
+        Number(slicer.value.start) !== 0 ||
+        Number(slicer.value.end) !== Number(maxSeries.value)
+    );
+});
+
+function getChartZoomAxisStart() {
+    return isChartZoomVerticalAxis.value
+        ? drawingArea.value.top
+        : drawingArea.value.left;
+}
+
+function getChartZoomAxisEnd() {
+    return isChartZoomVerticalAxis.value
+        ? drawingArea.value.bottom
+        : drawingArea.value.right;
+}
+
+function getChartZoomAxisLength() {
+    return isChartZoomVerticalAxis.value
+        ? drawingArea.value.height
+        : drawingArea.value.width;
+}
+
+function getChartZoomPointerCoord(point) {
+    return isChartZoomVerticalAxis.value ? point.y : point.x;
+}
+
+function clampChartZoomCoord(coord) {
+    return Math.min(
+        Math.max(coord, getChartZoomAxisStart()),
+        getChartZoomAxisEnd(),
+    );
+}
+
+function clearChartHoverSelection() {
+    trapIndex.value = null;
+    selectedMinimapIndex.value = null;
+    activeTooltipIndex.value = null;
+    tooltipTriggerMode.value = 'pointer';
+    isTooltip.value = false;
+}
+
+function cancelChartZoomSelection(event) {
+    const pointerId =
+        event?.pointerId != null ? event.pointerId : chartZoomPointerId.value;
+
+    if (pointerId != null && svgRef.value?.hasPointerCapture?.(pointerId)) {
+        svgRef.value.releasePointerCapture(pointerId);
+    }
+
+    isChartZoomSelecting.value = false;
+    chartZoomStartCoord.value = null;
+    chartZoomCurrentCoord.value = null;
+    chartZoomPointerId.value = null;
+}
+
+function suppressNextChartClick() {
+    ignoreNextChartClick.value = true;
+
+    setTimeout(() => {
+        ignoreNextChartClick.value = false;
+    }, 0);
+}
+
+function onChartZoomClickCapture(event) {
+    if (!ignoreNextChartClick.value) return;
+
+    ignoreNextChartClick.value = false;
+    event.preventDefault();
+    event.stopPropagation();
+}
+
+function resetChartZoomFromDoubleTap(event) {
+    if (!isChartZoomEnabled.value || !isChartZoomed.value || !event) {
+        return false;
+    }
+
+    const now = Date.now();
+    const pointerType = event.pointerType || 'mouse';
+    const last = lastChartZoomTap.value;
+    const maxDelay = pointerType === 'touch' ? 450 : 350;
+    const maxDistance = pointerType === 'touch' ? 28 : 10;
+
+    const distance = Math.hypot(event.clientX - last.x, event.clientY - last.y);
+
+    const isDoubleTap =
+        last.time > 0 &&
+        last.pointerType === pointerType &&
+        now - last.time <= maxDelay &&
+        distance <= maxDistance;
+
+    if (!isDoubleTap) {
+        lastChartZoomTap.value = {
+            time: now,
+            x: event.clientX,
+            y: event.clientY,
+            pointerType,
+        };
+
+        return false;
+    }
+
+    lastChartZoomTap.value = {
+        time: 0,
+        x: 0,
+        y: 0,
+        pointerType: null,
+    };
+
+    suppressNextChartClick();
+    cancelChartZoomSelection(event);
+
+    void refreshSlicer({
+        force: true,
+        publish: true,
+    });
+
+    return true;
+}
+
+function getChartZoomLocalIndex(coord) {
+    const count = Math.max(
+        0,
+        Number(slicer.value.end) - Number(slicer.value.start),
+    );
+
+    if (count <= 0 || barSlot.value <= 0) return null;
+
+    const rawIndex = Math.floor(
+        (clampChartZoomCoord(coord) - getChartZoomAxisStart()) / barSlot.value,
+    );
+
+    return Math.max(0, Math.min(count - 1, rawIndex));
+}
+
+function getChartZoomStateFromSelection(startCoord, endCoord) {
+    const localStart = getChartZoomLocalIndex(startCoord);
+    const localEnd = getChartZoomLocalIndex(endCoord);
+
+    if (localStart == null || localEnd == null) return null;
+
+    const first = Math.min(localStart, localEnd);
+    const last = Math.max(localStart, localEnd);
+
+    if (last <= first) return null;
+
+    return {
+        start: Number(slicer.value.start) + first,
+        end: Number(slicer.value.start) + last + 1,
+    };
+}
+
+function commitChartZoom(state) {
+    const applied = setZoomState(state);
+    if (!applied) return null;
+
+    emit('zoomStart', {
+        index: applied.start,
+        isZoom: applied.start !== 0,
+    });
+
+    emit('zoomEnd', {
+        index: applied.end,
+        isZoom: applied.end !== maxSeries.value,
+    });
+
+    return applied;
+}
+
+function onChartZoomPointerDown(event) {
+    if (!isChartZoomEnabled.value || isAnnotator.value) return;
+    if (event.button !== undefined && event.button !== 0) return;
+
+    if (
+        chartZoomPointerId.value != null &&
+        event.pointerId !== chartZoomPointerId.value
+    ) {
+        return;
+    }
+
+    const point = clientToSvgCoords(event);
+    if (!point) return;
+
+    const { left, right, top, bottom } = drawingArea.value;
+
+    if (
+        point.x < left ||
+        point.x > right ||
+        point.y < top ||
+        point.y > bottom
+    ) {
+        return;
+    }
+
+    const count = Number(slicer.value.end) - Number(slicer.value.start);
+
+    if (count <= 1) return;
+
+    isChartZoomPointerFocused.value = true;
+    svgRef.value?.focus?.({ preventScroll: true });
+
+    clearChartHoverSelection();
+
+    const coord = clampChartZoomCoord(getChartZoomPointerCoord(point));
+
+    chartZoomPointerId.value = event.pointerId;
+    isChartZoomSelecting.value = true;
+    chartZoomStartCoord.value = coord;
+    chartZoomCurrentCoord.value = coord;
+}
+
+function onChartZoomPointerMove(event) {
+    if (!isChartZoomEnabled.value || !isChartZoomSelecting.value) {
+        return;
+    }
+
+    if (
+        chartZoomPointerId.value != null &&
+        event.pointerId !== chartZoomPointerId.value
+    ) {
+        return;
+    }
+
+    const point = clientToSvgCoords(event);
+    if (!point) return;
+
+    chartZoomCurrentCoord.value = clampChartZoomCoord(
+        getChartZoomPointerCoord(point),
+    );
+
+    if (
+        chartZoomStartCoord.value != null &&
+        Math.abs(chartZoomCurrentCoord.value - chartZoomStartCoord.value) >=
+            2 &&
+        !svgRef.value?.hasPointerCapture?.(event.pointerId)
+    ) {
+        svgRef.value?.setPointerCapture?.(event.pointerId);
+    }
+}
+
+function onChartZoomPointerUp(event) {
+    if (!isChartZoomEnabled.value || !isChartZoomSelecting.value) {
+        return;
+    }
+
+    if (
+        chartZoomPointerId.value != null &&
+        event.pointerId !== chartZoomPointerId.value
+    ) {
+        return;
+    }
+
+    const point = clientToSvgCoords(event);
+
+    if (point) {
+        chartZoomCurrentCoord.value = clampChartZoomCoord(
+            getChartZoomPointerCoord(point),
+        );
+    }
+
+    const startCoord = chartZoomStartCoord.value;
+    const endCoord = chartZoomCurrentCoord.value;
+
+    const selectionSize =
+        startCoord == null || endCoord == null
+            ? 0
+            : Math.abs(endCoord - startCoord);
+
+    const minimumSelectionSize = Math.max(4, getChartZoomAxisLength() * 0.01);
+
+    if (selectionSize < minimumSelectionSize) {
+        if (resetChartZoomFromDoubleTap(event)) return;
+
+        cancelChartZoomSelection(event);
+        return;
+    }
+
+    const nextZoomState = getChartZoomStateFromSelection(startCoord, endCoord);
+
+    if (!nextZoomState) {
+        cancelChartZoomSelection(event);
+        return;
+    }
+
+    cancelChartZoomSelection(event);
+
+    const applied = commitChartZoom(nextZoomState);
+
+    if (applied) {
+        lastChartZoomTap.value = {
+            time: 0,
+            x: 0,
+            y: 0,
+            pointerType: null,
+        };
+
+        clearChartHoverSelection();
+        suppressNextChartClick();
+    }
+}
+
 function onSvgKeydown(event) {
     if (!svgRef.value || isAnnotator.value) return;
     if (document.activeElement !== svgRef.value) return;
+
+    isChartZoomPointerFocused.value = false;
     if (allSegregated.value) return;
     if (!slicer.value.end && slicer.value.end !== 0) return;
 
@@ -2696,6 +3280,20 @@ function onSvgKeydown(event) {
     event.stopPropagation();
 
     if (isEscapeKey) {
+        if (
+            isChartZoomEnabled.value &&
+            (isChartZoomed.value || isChartZoomSelecting.value)
+        ) {
+            cancelChartZoomSelection();
+
+            void refreshSlicer({
+                force: true,
+                publish: true,
+            });
+
+            return;
+        }
+
         activeTooltipIndex.value = null;
         isTooltip.value = false;
         trapIndex.value = null;
@@ -2799,6 +3397,8 @@ defineExpose({
     toggleAnnotator,
     toggleFullscreen,
     copyAlt,
+    resetZoom: () => refreshSlicer({ force: true, publish: true }),
+    setZoomState,
 });
 </script>
 
@@ -3002,12 +3602,37 @@ defineExpose({
                     'vue-data-ui-fullscreen--on': isFullscreen,
                     'vue-data-ui-fulscreen--off': !isFullscreen,
                     'vue-data-ui-no-transition': !transitionEnabled,
+                    'vue-ui-stackbar-chart-zoom-pointer-focus':
+                        isChartZoomEnabled && isChartZoomPointerFocused,
                 }"
-                :style="`max-width:100%;overflow:visible;background:transparent;color:${cfgChart.color}`"
+                :style="{
+                    maxWidth: '100%',
+                    overflow: 'visible',
+                    background: 'transparent',
+                    color: cfgChart.color,
+                    cursor: !isChartZoomEnabled
+                        ? undefined
+                        : isChartZoomSelecting
+                          ? isChartZoomVerticalAxis
+                              ? 'row-resize'
+                              : 'col-resize'
+                          : 'crosshair',
+                    touchAction: !isChartZoomEnabled
+                        ? undefined
+                        : isChartZoomVerticalAxis
+                          ? 'pan-x'
+                          : 'pan-y',
+                    userSelect: isChartZoomEnabled ? 'none' : undefined,
+                }"
                 tabindex="0"
                 @focus="onSvgFocus"
                 @blur="onSvgBlur"
                 @keydown="onSvgKeydown"
+                @pointerdown="onChartZoomPointerDown"
+                @pointermove="onChartZoomPointerMove"
+                @pointerup="onChartZoomPointerUp"
+                @pointercancel="cancelChartZoomSelection"
+                @click.capture="onChartZoomClickCapture"
             >
                 <PackageVersion />
 
@@ -3946,6 +4571,27 @@ defineExpose({
                     />
                 </template>
 
+                <!-- ON-CHART ZOOM SELECTION -->
+                <rect
+                    v-if="chartZoomSelectionRect"
+                    data-cy="stackbar-zoom-selection"
+                    :x="chartZoomSelectionRect.x"
+                    :y="chartZoomSelectionRect.y"
+                    :width="chartZoomSelectionRect.width"
+                    :height="chartZoomSelectionRect.height"
+                    :fill="dragToZoomConfig.selection.fill"
+                    :fill-opacity="dragToZoomConfig.selection.fillOpacity"
+                    :stroke="dragToZoomConfig.selection.stroke"
+                    :stroke-opacity="dragToZoomConfig.selection.strokeOpacity"
+                    :stroke-width="dragToZoomConfig.selection.strokeWidth"
+                    :stroke-dasharray="
+                        dragToZoomConfig.selection.strokeDasharray
+                    "
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    pointer-events="none"
+                />
+
                 <!-- ZOOM PREVIEW -->
                 <rect
                     v-if="isPrecog"
@@ -4090,7 +4736,7 @@ defineExpose({
             @update:end="onSlicerEnd"
             @update:start="onSlicerStart"
             @trapMouse="selectMinimapIndex"
-            @reset="() => refreshSlicer({ force: true })"
+            @reset="() => refreshSlicer({ force: true, publish: true })"
             @futureEnd="(v) => setPrecog('end', v)"
             @futureStart="(v) => setPrecog('start', v)"
         >
@@ -4358,6 +5004,11 @@ svg:focus {
 
 svg:focus-visible {
     outline: 2px solid currentColor;
+}
+
+svg.vue-ui-stackbar-chart-zoom-pointer-focus:focus,
+svg.vue-ui-stackbar-chart-zoom-pointer-focus:focus-visible {
+    outline: none;
 }
 
 .sr-only {

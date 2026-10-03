@@ -113,7 +113,10 @@ import {
     translateSize,
     treeShake,
     wrapText,
+    deepClone,
 } from '../src/lib';
+
+import { computed, isProxy, isReactive, reactive, ref, shallowRef } from 'vue';
 
 describe('calcTrend', () => {
     test('returns 0 if dataset has insufficient length', () => {
@@ -6548,5 +6551,733 @@ describe('mapSampledSeriesToSourceIndices', () => {
         expect(mapSampledSeriesToSourceIndices([], [10, 20, 30])).toEqual([
             -1, -1, -1,
         ]);
+    });
+});
+
+describe('deepClone', () => {
+    describe('primitive values', () => {
+        test('returns null as-is', () => {
+            expect(deepClone(null)).toBeNull();
+        });
+
+        test('returns undefined as-is', () => {
+            expect(deepClone(undefined)).toBeUndefined();
+        });
+
+        test('returns strings as-is', () => {
+            expect(deepClone('we are still here')).toBe('we are still here');
+        });
+
+        test('returns numbers as-is', () => {
+            expect(deepClone(42)).toBe(42);
+        });
+
+        test('returns NaN as-is', () => {
+            expect(deepClone(NaN)).toBeNaN();
+        });
+
+        test('returns Infinity as-is', () => {
+            expect(deepClone(Infinity)).toBe(Infinity);
+        });
+
+        test('returns booleans as-is', () => {
+            expect(deepClone(true)).toBe(true);
+            expect(deepClone(false)).toBe(false);
+        });
+
+        test('returns bigint values as-is', () => {
+            expect(deepClone(123n)).toBe(123n);
+        });
+
+        test('returns symbols as-is', () => {
+            const symbol = Symbol('test');
+
+            expect(deepClone(symbol)).toBe(symbol);
+        });
+
+        test('returns functions as-is', () => {
+            const fn = () => 'we are still here';
+
+            expect(deepClone(fn)).toBe(fn);
+        });
+    });
+
+    describe('plain objects', () => {
+        test('clones a plain object', () => {
+            const source = {
+                A: 'A',
+                B: 2,
+            };
+
+            const cloned = deepClone(source);
+
+            expect(cloned).toEqual(source);
+            expect(cloned).not.toBe(source);
+        });
+
+        test('deeply clones nested objects', () => {
+            const source = {
+                user: {
+                    profile: {
+                        A: 'A',
+                    },
+                },
+            };
+
+            const cloned = deepClone(source);
+
+            expect(cloned).toEqual(source);
+            expect(cloned).not.toBe(source);
+            expect(cloned.user).not.toBe(source.user);
+            expect(cloned.user.profile).not.toBe(source.user.profile);
+        });
+
+        test('does not mutate the source object', () => {
+            const source = {
+                nested: {
+                    value: 1,
+                },
+            };
+
+            const cloned = deepClone(source);
+
+            cloned.nested.value = 2;
+
+            expect(source.nested.value).toBe(1);
+            expect(cloned.nested.value).toBe(2);
+        });
+
+        test('only clones enumerable own string properties', () => {
+            const prototype = {
+                inherited: 'inherited',
+            };
+
+            const source = Object.create(prototype);
+
+            source.own = 'own';
+
+            Object.defineProperty(source, 'hidden', {
+                enumerable: false,
+                value: 'hidden',
+            });
+
+            const cloned = deepClone(source);
+
+            expect(cloned).toEqual({
+                own: 'own',
+            });
+
+            expect('inherited' in cloned).toBe(false);
+            expect('hidden' in cloned).toBe(false);
+        });
+
+        test('does not clone symbol properties', () => {
+            const symbol = Symbol('secret');
+
+            const source = {
+                value: 1979,
+                [symbol]: 'secret',
+            };
+
+            const cloned = deepClone(source);
+
+            expect(cloned.value).toBe(1979);
+            expect(cloned[symbol]).toBeUndefined();
+        });
+
+        test('evaluates enumerable getters and clones their returned value', () => {
+            const source = {
+                get nested() {
+                    return {
+                        value: 1979,
+                    };
+                },
+            };
+
+            const cloned = deepClone(source);
+
+            expect(cloned).toEqual({
+                nested: {
+                    value: 1979,
+                },
+            });
+
+            expect(cloned.nested).not.toBe(source.nested);
+        });
+    });
+
+    describe('arrays', () => {
+        test('clones an array', () => {
+            const source = [1, 2, 3];
+
+            const cloned = deepClone(source);
+
+            expect(cloned).toEqual(source);
+            expect(cloned).not.toBe(source);
+        });
+
+        test('deeply clones array items', () => {
+            const source = [
+                {
+                    value: 1,
+                },
+                {
+                    value: 2,
+                },
+            ];
+
+            const cloned = deepClone(source);
+
+            expect(cloned).toEqual(source);
+            expect(cloned[0]).not.toBe(source[0]);
+            expect(cloned[1]).not.toBe(source[1]);
+        });
+
+        test('clones nested arrays', () => {
+            const source = [
+                [1, 2],
+                [3, 4],
+            ];
+
+            const cloned = deepClone(source);
+
+            expect(cloned).toEqual(source);
+            expect(cloned[0]).not.toBe(source[0]);
+            expect(cloned[1]).not.toBe(source[1]);
+        });
+
+        test('preserves shared object references inside arrays', () => {
+            const shared = { value: 1979 };
+            const source = [shared, shared];
+            const cloned = deepClone(source);
+            expect(cloned[0]).not.toBe(shared);
+            expect(cloned[0]).toBe(cloned[1]);
+        });
+    });
+
+    describe('Date', () => {
+        test('clones Date instances', () => {
+            const source = new Date('2042-01-01T12:00:00.000Z');
+            const cloned = deepClone(source);
+            expect(cloned).toBeInstanceOf(Date);
+            expect(cloned).not.toBe(source);
+            expect(cloned.getTime()).toBe(source.getTime());
+        });
+
+        test('cloned Date can be modified independently', () => {
+            const source = new Date('2042-01-01T12:00:00.000Z');
+            const cloned = deepClone(source);
+            cloned.setFullYear(2030);
+            expect(source.getFullYear()).not.toBe(2030);
+        });
+    });
+
+    describe('RegExp', () => {
+        test('clones RegExp instances', () => {
+            const source = /fukkit/giu;
+            const cloned = deepClone(source);
+            expect(cloned).toBeInstanceOf(RegExp);
+            expect(cloned).not.toBe(source);
+            expect(cloned.source).toBe(source.source);
+            expect(cloned.flags).toBe(source.flags);
+        });
+    });
+
+    describe('Map', () => {
+        test('clones a Map', () => {
+            const source = new Map([
+                ['a', 1],
+                ['b', 2],
+            ]);
+
+            const cloned = deepClone(source);
+
+            expect(cloned).toBeInstanceOf(Map);
+            expect(cloned).not.toBe(source);
+            expect([...cloned.entries()]).toEqual([
+                ['a', 1],
+                ['b', 2],
+            ]);
+        });
+
+        test('deeply clones Map values', () => {
+            const value = {
+                nested: {
+                    value: 1979,
+                },
+            };
+            const source = new Map([['item', value]]);
+            const cloned = deepClone(source);
+            const clonedValue = cloned.get('item');
+            expect(clonedValue).toEqual(value);
+            expect(clonedValue).not.toBe(value);
+            expect(clonedValue.nested).not.toBe(value.nested);
+        });
+
+        test('deeply clones Map object keys', () => {
+            const key = {
+                id: 1,
+            };
+
+            const source = new Map([[key, 'value']]);
+            const cloned = deepClone(source);
+            const clonedKey = [...cloned.keys()][0];
+            expect(clonedKey).toEqual(key);
+            expect(clonedKey).not.toBe(key);
+            expect(cloned.get(clonedKey)).toBe('value');
+            expect(cloned.has(key)).toBe(false);
+        });
+
+        test('preserves shared references between Map keys and values', () => {
+            const shared = {
+                value: 1979,
+            };
+
+            const source = new Map([[shared, shared]]);
+            const cloned = deepClone(source);
+            const [clonedKey, clonedValue] = [...cloned.entries()][0];
+            expect(clonedKey).not.toBe(shared);
+            expect(clonedKey).toBe(clonedValue);
+        });
+
+        test('supports a Map containing itself', () => {
+            const source = new Map();
+            source.set('self', source);
+            const cloned = deepClone(source);
+            expect(cloned).not.toBe(source);
+            expect(cloned.get('self')).toBe(cloned);
+        });
+
+        test('supports a Map using itself as a key', () => {
+            const source = new Map();
+            source.set(source, 'self');
+            const cloned = deepClone(source);
+            expect(cloned).not.toBe(source);
+            expect(cloned.get(cloned)).toBe('self');
+        });
+    });
+
+    describe('Set', () => {
+        test('clones a Set', () => {
+            const source = new Set([1, 2, 3]);
+            const cloned = deepClone(source);
+            expect(cloned).toBeInstanceOf(Set);
+            expect(cloned).not.toBe(source);
+            expect([...cloned]).toEqual([1, 2, 3]);
+        });
+
+        test('deeply clones Set values', () => {
+            const value = {
+                nested: {
+                    value: 1979,
+                },
+            };
+            const source = new Set([value]);
+            const cloned = deepClone(source);
+            const clonedValue = [...cloned][0];
+            expect(clonedValue).toEqual(value);
+            expect(clonedValue).not.toBe(value);
+            expect(clonedValue.nested).not.toBe(value.nested);
+        });
+
+        test('supports a Set containing itself', () => {
+            const source = new Set();
+            source.add(source);
+            const cloned = deepClone(source);
+            expect(cloned).not.toBe(source);
+            expect(cloned.has(cloned)).toBe(true);
+            expect(cloned.has(source)).toBe(false);
+        });
+    });
+
+    describe('shared references', () => {
+        test('preserves shared references', () => {
+            const shared = {
+                value: 1979,
+            };
+            const source = {
+                first: shared,
+                second: shared,
+            };
+            const cloned = deepClone(source);
+            expect(cloned.first).not.toBe(shared);
+            expect(cloned.first).toBe(cloned.second);
+        });
+
+        test('preserves shared references across nested structures', () => {
+            const shared = {
+                value: 1979,
+            };
+            const source = {
+                object: shared,
+                array: [shared],
+                map: new Map([['value', shared]]),
+                set: new Set([shared]),
+            };
+            const cloned = deepClone(source);
+            expect(cloned.object).toBe(cloned.array[0]);
+            expect(cloned.object).toBe(cloned.map.get('value'));
+            expect([...cloned.set][0]).toBe(cloned.object);
+        });
+    });
+
+    describe('circular references', () => {
+        test('clones an object that references itself', () => {
+            const source = {
+                name: 'root',
+            };
+
+            source.self = source;
+            const cloned = deepClone(source);
+            expect(cloned).not.toBe(source);
+            expect(cloned.name).toBe('root');
+            expect(cloned.self).toBe(cloned);
+        });
+
+        test('clones mutually circular objects', () => {
+            const first = { name: 'A' };
+            const second = { name: 'B' };
+            first.other = second;
+            second.other = first;
+            const cloned = deepClone(first);
+            expect(cloned).not.toBe(first);
+            expect(cloned.other).not.toBe(second);
+            expect(cloned.name).toBe('A');
+            expect(cloned.other.name).toBe('B');
+            expect(cloned.other.other).toBe(cloned);
+        });
+
+        test('clones a circular array', () => {
+            const source = [];
+            source.push(source);
+            const cloned = deepClone(source);
+            expect(cloned).not.toBe(source);
+            expect(cloned[0]).toBe(cloned);
+        });
+
+        test('clones circular references across object and array boundaries', () => {
+            const source = { children: [] };
+            source.children.push(source);
+            const cloned = deepClone(source);
+            expect(cloned.children).not.toBe(source.children);
+            expect(cloned.children[0]).toBe(cloned);
+        });
+
+        test('clones circular references involving Map', () => {
+            const source = { map: new Map() };
+            source.map.set('owner', source);
+            const cloned = deepClone(source);
+            expect(cloned.map.get('owner')).toBe(cloned);
+        });
+
+        test('clones circular references involving Set', () => {
+            const source = { set: new Set() };
+            source.set.add(source);
+            const cloned = deepClone(source);
+            expect(cloned.set.has(cloned)).toBe(true);
+        });
+    });
+
+    describe('Vue refs', () => {
+        test('unwraps a ref containing a primitive', () => {
+            const source = ref(1979);
+            const cloned = deepClone(source);
+            expect(cloned).toBe(1979);
+        });
+
+        test('unwraps and deeply clones a ref containing an object', () => {
+            const value = {
+                nested: {
+                    value: 1979,
+                },
+            };
+            const source = ref(value);
+            const cloned = deepClone(source);
+            expect(cloned).toEqual(value);
+            expect(cloned).not.toBe(value);
+            expect(cloned.nested).not.toBe(value.nested);
+        });
+
+        test('unwraps refs nested inside objects', () => {
+            const source = {
+                A: ref('A'),
+                B: ref(2),
+            };
+
+            const cloned = deepClone(source);
+
+            expect(cloned).toEqual({
+                A: 'A',
+                B: 2,
+            });
+        });
+
+        test('unwraps refs nested inside arrays', () => {
+            const source = [
+                ref(1),
+                ref(2),
+                ref({
+                    value: 3,
+                }),
+            ];
+
+            const cloned = deepClone(source);
+
+            expect(cloned).toEqual([
+                1,
+                2,
+                {
+                    value: 3,
+                },
+            ]);
+        });
+
+        test('unwraps a shallowRef', () => {
+            const value = {
+                nested: {
+                    value: 1979,
+                },
+            };
+            const source = shallowRef(value);
+            const cloned = deepClone(source);
+            expect(cloned).toEqual(value);
+            expect(cloned).not.toBe(value);
+            expect(cloned.nested).not.toBe(value.nested);
+        });
+
+        test('does not clone Vue ref internals', () => {
+            const source = ref({ value: 1979 });
+            const cloned = deepClone(source);
+            expect(cloned).toEqual({ value: 1979 });
+            expect(cloned.dep).toBeUndefined();
+            expect(cloned.__v_isRef).toBeUndefined();
+        });
+    });
+
+    describe('Vue computed refs', () => {
+        test('unwraps a computed primitive value', () => {
+            const count = ref(1);
+            const doubled = computed(() => count.value * 2);
+            expect(deepClone(doubled)).toBe(2);
+        });
+
+        test('unwraps and clones a computed object', () => {
+            const count = ref(1979);
+            const source = computed(() => ({
+                count: count.value,
+                nested: {
+                    enabled: true,
+                },
+            }));
+            const cloned = deepClone(source);
+            expect(cloned).toEqual({
+                count: 1979,
+                nested: {
+                    enabled: true,
+                },
+            });
+            expect(cloned).not.toBe(source.value);
+            expect(cloned.nested).not.toBe(source.value.nested);
+        });
+
+        test('unwraps computed refs nested inside objects', () => {
+            const A = ref('A');
+            const B = ref('B');
+            const AB = computed(() => `${A.value} ${B.value}`);
+            const source = { AB };
+            expect(deepClone(source)).toEqual({ AB: 'A B' });
+        });
+
+        test('does not clone ComputedRefImpl internals', () => {
+            const count = ref(1);
+            const source = computed(() => count.value * 2);
+            const cloned = deepClone({ computedValue: source });
+            expect(cloned).toEqual({ computedValue: 2 });
+            expect(() => JSON.stringify(cloned)).not.toThrow();
+        });
+
+        test('produces JSON-safe output from ordinary computed config values', () => {
+            const labels = computed(() => ['January', 'February']);
+            const source = {
+                chart: {
+                    labels,
+                },
+            };
+            const cloned = deepClone(source);
+            expect(cloned).toEqual({
+                chart: {
+                    labels: ['January', 'February'],
+                },
+            });
+            expect(() => JSON.stringify(cloned)).not.toThrow();
+        });
+    });
+
+    describe('Vue reactive objects', () => {
+        test('clones a reactive object as a plain object', () => {
+            const source = reactive({
+                name: 'A',
+                nested: {
+                    value: 2,
+                },
+            });
+            const cloned = deepClone(source);
+            expect(cloned).toEqual({
+                name: 'A',
+                nested: {
+                    value: 2,
+                },
+            });
+            expect(cloned).not.toBe(source);
+            expect(isReactive(cloned)).toBe(false);
+            expect(isProxy(cloned)).toBe(false);
+        });
+
+        test('deeply clones nested reactive objects', () => {
+            const source = reactive({
+                nested: {
+                    value: 1979,
+                },
+            });
+            const cloned = deepClone(source);
+            expect(cloned.nested).not.toBe(source.nested);
+            expect(cloned.nested).toEqual({ value: 1979 });
+        });
+
+        test('handles refs contained inside reactive objects', () => {
+            const count = ref(1979);
+            const source = reactive({ count });
+            const cloned = deepClone(source);
+            expect(cloned).toEqual({ count: 1979 });
+        });
+
+        test('handles computed values contained inside reactive objects', () => {
+            const count = ref(1);
+            const doubled = computed(() => count.value * 2);
+            const source = reactive({ doubled });
+            const cloned = deepClone(source);
+            expect(cloned).toEqual({ doubled: 2 });
+            expect(() => JSON.stringify(cloned)).not.toThrow();
+        });
+
+        test('preserves circular references in reactive objects', () => {
+            const raw = { name: 'fukkit' };
+            raw.self = raw;
+            const source = reactive(raw);
+            const cloned = deepClone(source);
+            expect(cloned).not.toBe(source);
+            expect(cloned.name).toBe('fukkit');
+            expect(cloned.self).toBe(cloned);
+        });
+    });
+
+    describe('mixed structures', () => {
+        test('clones a complex mixed structure', () => {
+            const shared = { value: 2 };
+            const count = ref(1);
+            const source = reactive({
+                title: 'Chart',
+                enabled: true,
+                count,
+                doubled: computed(() => count.value * 2),
+                createdAt: new Date('2042-01-01T12:00:00.000Z'),
+                matcher: /chart/gi,
+                values: [1, 2, shared],
+                metadata: {
+                    shared,
+                },
+                map: new Map([['shared', shared]]),
+                set: new Set([shared]),
+            });
+            const cloned = deepClone(source);
+            expect(cloned.title).toBe('Chart');
+            expect(cloned.enabled).toBe(true);
+            expect(cloned.count).toBe(1);
+            expect(cloned.doubled).toBe(2);
+            expect(cloned.createdAt).toBeInstanceOf(Date);
+            expect(cloned.createdAt).not.toBe(source.createdAt);
+            expect(cloned.matcher).toBeInstanceOf(RegExp);
+            expect(cloned.matcher.source).toBe('chart');
+            expect(cloned.matcher.flags).toBe('gi');
+            expect(cloned.values[2]).toBe(cloned.metadata.shared);
+            expect(cloned.map.get('shared')).toBe(cloned.metadata.shared);
+            expect([...cloned.set][0]).toBe(cloned.metadata.shared);
+        });
+
+        test('handles circular mixed structures', () => {
+            const source = {
+                array: [],
+                map: new Map(),
+                set: new Set(),
+            };
+            source.array.push(source);
+            source.map.set('root', source);
+            source.set.add(source);
+            const cloned = deepClone(source);
+            expect(cloned.array[0]).toBe(cloned);
+            expect(cloned.map.get('root')).toBe(cloned);
+            expect(cloned.set.has(cloned)).toBe(true);
+        });
+    });
+
+    describe('structural config serialization regression', () => {
+        test('can JSON.stringify a cloned config containing computed refs', () => {
+            const tooltipEnabled = ref(true);
+            const source = {
+                chart: {
+                    tooltip: {
+                        show: tooltipEnabled,
+                    },
+                    title: {
+                        text: computed(() => 'FUKKIT'),
+                    },
+                },
+            };
+            const cloned = deepClone(source);
+            expect(() => JSON.stringify(cloned)).not.toThrow();
+            expect(JSON.parse(JSON.stringify(cloned))).toEqual({
+                chart: {
+                    tooltip: {
+                        show: true,
+                    },
+                    title: {
+                        text: 'FUKKIT',
+                    },
+                },
+            });
+        });
+
+        test('can JSON.stringify a cloned config containing reactive and computed values', () => {
+            const locale = ref('en');
+            const source = reactive({
+                chart: {
+                    locale,
+                    labels: computed(() => ['A', 'B', 'C']),
+                },
+            });
+            const cloned = deepClone(source);
+            expect(() => JSON.stringify(cloned)).not.toThrow();
+            expect(JSON.parse(JSON.stringify(cloned))).toEqual({
+                chart: {
+                    locale: 'en',
+                    labels: ['A', 'B', 'C'],
+                },
+            });
+        });
+    });
+
+    // TODO
+    describe('known edge cases', () => {
+        test.todo(
+            'preserves shared identity when the same Date instance appears multiple times',
+        );
+
+        test.todo(
+            'preserves shared identity when the same RegExp instance appears multiple times',
+        );
+
+        test.todo(
+            'handles a ref whose value directly references the ref itself',
+        );
     });
 });

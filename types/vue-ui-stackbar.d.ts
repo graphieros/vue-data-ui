@@ -28,6 +28,8 @@ import type {
     VueUiStackbarEmitSelectTimeLabel,
     VueUiStackbarEmitSelectX,
     VueUiStackbarEmitCopyAlt,
+    VueUiZoomState,
+    VueUiEmitZoom,
 } from 'vue-data-ui';
 
 export type {
@@ -58,6 +60,8 @@ export type {
     VueUiStackbarEmitSelectTimeLabel,
     VueUiStackbarEmitSelectX,
     VueUiStackbarEmitCopyAlt,
+    VueUiZoomState,
+    VueUiEmitZoom,
 };
 
 declare const VueUiStackbarBase: DefineComponent<

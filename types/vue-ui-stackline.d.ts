@@ -26,6 +26,8 @@ import type {
     VueUiStacklineEmitSelectTimeLabel,
     VueUiStacklineEmitSelectX,
     VueUiStacklineEmitCopyAlt,
+    VueUiZoomState,
+    VueUiEmitZoom,
 } from 'vue-data-ui';
 
 export type {
@@ -54,6 +56,8 @@ export type {
     VueUiStacklineEmitSelectTimeLabel,
     VueUiStacklineEmitSelectX,
     VueUiStacklineEmitCopyAlt,
+    VueUiZoomState,
+    VueUiEmitZoom,
 };
 
 declare const VueUiStacklineBase: DefineComponent<

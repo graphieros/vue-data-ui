@@ -24,6 +24,8 @@ import type {
     VueUiCandlestickEmits,
     VueUiCandlestickEmitSelectX,
     VueUiCandlestickEmitCopyAlt,
+    VueUiEmitZoom,
+    VueUiZoomState,
 } from 'vue-data-ui';
 
 export type {
@@ -50,6 +52,8 @@ export type {
     VueUiCandlestickEmits,
     VueUiCandlestickEmitSelectX,
     VueUiCandlestickEmitCopyAlt,
+    VueUiEmitZoom,
+    VueUiZoomState,
 };
 
 declare const VueUiCandlestickBase: DefineComponent<

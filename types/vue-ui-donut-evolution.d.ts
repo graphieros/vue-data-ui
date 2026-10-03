@@ -25,6 +25,8 @@ import type {
     VueUiDonutEvolutionEmitSelectLegend,
     VueUiDonutEvolutionEmitCopyAlt,
     VueUiDonutEvolutionSeries,
+    VueUiZoomState,
+    VueUiEmitZoom,
 } from 'vue-data-ui';
 
 export type {
@@ -52,6 +54,8 @@ export type {
     VueUiDonutEvolutionEmitSelectLegend,
     VueUiDonutEvolutionEmitCopyAlt,
     VueUiDonutEvolutionSeries,
+    VueUiZoomState,
+    VueUiEmitZoom,
 };
 
 declare const VueUiDonutEvolutionBase: DefineComponent<

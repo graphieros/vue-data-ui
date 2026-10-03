@@ -3191,45 +3191,69 @@ export function placeXYTag({ svgElement, x, y, element, position }) {
     };
 }
 
-export function deepClone(value) {
+export function deepClone(value, seen = new WeakMap()) {
+    if (isRef(value)) {
+        return deepClone(value.value, seen);
+    }
+
     if (value === null || typeof value !== 'object') {
         return value;
     }
 
-    if (value instanceof Date) {
-        return new Date(value.getTime());
+    const rawValue = toRaw(value);
+
+    if (seen.has(rawValue)) {
+        return seen.get(rawValue);
     }
 
-    if (value instanceof RegExp) {
-        return new RegExp(value.source, value.flags);
+    if (rawValue instanceof Date) {
+        return new Date(rawValue.getTime());
     }
 
-    if (value instanceof Map) {
+    if (rawValue instanceof RegExp) {
+        return new RegExp(rawValue.source, rawValue.flags);
+    }
+
+    if (rawValue instanceof Map) {
         const result = new Map();
-        for (const [key, val] of value.entries()) {
-            result.set(key, deepClone(val));
+        seen.set(rawValue, result);
+
+        for (const [key, val] of rawValue.entries()) {
+            result.set(deepClone(key, seen), deepClone(val, seen));
         }
+
         return result;
     }
 
-    if (value instanceof Set) {
+    if (rawValue instanceof Set) {
         const result = new Set();
-        for (const val of value.values()) {
-            result.add(deepClone(val));
+        seen.set(rawValue, result);
+
+        for (const val of rawValue.values()) {
+            result.add(deepClone(val, seen));
         }
+
         return result;
     }
 
-    if (Array.isArray(value)) {
-        return value.map((item) => deepClone(item));
+    if (Array.isArray(rawValue)) {
+        const result = [];
+        seen.set(rawValue, result);
+
+        for (const item of rawValue) {
+            result.push(deepClone(item, seen));
+        }
+
+        return result;
     }
 
     const result = {};
-    for (const key in value) {
-        if (Object.prototype.hasOwnProperty.call(value, key)) {
-            result[key] = deepClone(value[key]);
-        }
+    seen.set(rawValue, result);
+
+    for (const key of Object.keys(rawValue)) {
+        result[key] = deepClone(rawValue[key], seen);
     }
+
     return result;
 }
 

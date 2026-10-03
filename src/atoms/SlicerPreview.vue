@@ -1139,6 +1139,53 @@ function setEndValue(eOrVal) {
     });
 }
 
+/**
+ * Applies a zoom range programmatically without emitting update:start or
+ * update:end and without changing the current pointer | drag interaction state.
+ *
+ * Silent sink for externally controlled zoom state:
+ * user interaction flows out through update:start | update:end, while mirrored
+ * state flows-in through setRangeValues.
+ */
+function setRangeValues(rawStart, rawEnd) {
+    const nextStart = coerceInput(rawStart);
+    const nextEnd = coerceInput(rawEnd);
+
+    if (!Number.isFinite(nextStart) || !Number.isFinite(nextEnd)) return;
+
+    cancelAnimationFrame(rafStart);
+    cancelAnimationFrame(rafEnd);
+
+    const min = Number(props.min);
+    const max = Number(props.max);
+    const gap = minimumGap.value;
+
+    let boundedStart = sanitizeRangeValue(
+        Math.max(min, Math.min(nextStart, max)),
+    );
+    let boundedEnd = sanitizeRangeValue(Math.max(min, Math.min(nextEnd, max)));
+
+    boundedStart = Math.min(boundedStart, max - gap);
+    boundedEnd = Math.max(boundedEnd, boundedStart + gap);
+    boundedEnd = Math.min(boundedEnd, max);
+
+    if (boundedEnd <= boundedStart) {
+        boundedStart = min;
+        boundedEnd = max;
+    }
+
+    startValue.value = boundedStart;
+    endValue.value = boundedEnd;
+
+    if (rangeStart.value) {
+        rangeStart.value.value = String(boundedStart);
+    }
+
+    if (rangeEnd.value) {
+        rangeEnd.value.value = String(boundedEnd);
+    }
+}
+
 onBeforeUnmount(() => {
     cancelAnimationFrame(rafStart);
     cancelAnimationFrame(rafEnd);
@@ -1795,12 +1842,34 @@ function updateHandleDragFromLocalX(side, localX) {
     }
 }
 
+function resetHandleDrag(shouldCommit = false) {
+    const didDrag = dragStarted.value;
+
+    activeHandle.value = null;
+    activeHandlePointerId.value = null;
+    dragStarted.value = false;
+    dragStartClientX.value = 0;
+    dragPointerOffsetX.value = 0;
+
+    if (shouldCommit && didDrag) {
+        commitImmediately();
+    }
+}
+
 function onHandlePointerMove(side, event) {
     if (
         activeHandle.value !== side ||
         activeHandlePointerId.value !== event.pointerId ||
         !minimapWrapper.value
     ) {
+        return;
+    }
+
+    // A mouse pointer cannot still be dragging when its primary button is up.
+    // This recovers from a missed pointerup/pointercancel/lostpointercapture and
+    // prevents a stale handle state from turning a later hover into a drag.
+    if (event.pointerType === 'mouse' && (event.buttons & 1) === 0) {
+        resetHandleDrag(true);
         return;
     }
 
@@ -1832,28 +1901,34 @@ function stopHandleDrag(side, event) {
     }
 
     const target = event.currentTarget;
-    if (target?.hasPointerCapture?.(event.pointerId)) {
-        target.releasePointerCapture(event.pointerId);
+    const pointerId = event.pointerId;
+
+    resetHandleDrag(true);
+
+    if (target?.hasPointerCapture?.(pointerId)) {
+        target.releasePointerCapture(pointerId);
+    }
+}
+
+function handleLostPointerCapture(side, event) {
+    if (
+        activeHandle.value !== side ||
+        activeHandlePointerId.value !== event.pointerId
+    ) {
+        return;
     }
 
-    const didDrag = dragStarted.value;
-
-    activeHandle.value = null;
-    activeHandlePointerId.value = null;
-    dragStarted.value = false;
-    dragStartClientX.value = 0;
-    dragPointerOffsetX.value = 0;
-
-    if (didDrag) {
-        commitImmediately();
-    }
+    resetHandleDrag(true);
 }
 
 function beginHandleDrag(side, event) {
     if (!hasMinimap.value || !props.minimapCompact || !minimapWrapper.value)
         return;
 
-    // One "physical" pointer owns one handle for the entire gesture
+    // Compact handles are dragged with the primary mouse button only.
+    if (event.pointerType === 'mouse' && event.button !== 0) return;
+
+    // One "physical" pointer owns one handle for the entire gesture.
     if (activeHandlePointerId.value !== null) return;
 
     event.preventDefault();
@@ -1876,6 +1951,12 @@ function beginHandleDrag(side, event) {
 
     event.currentTarget?.setPointerCapture?.(event.pointerId);
 }
+
+watch(useMini, (enabled) => {
+    if (!enabled && activeHandlePointerId.value !== null) {
+        resetHandleDrag(true);
+    }
+});
 
 const leftBoundaryMiniIndex = computed(() => startMini.value);
 const rightBoundaryMiniIndex = computed(() =>
@@ -1958,6 +2039,7 @@ const compactHandleRightBoundaryX = computed(() => {
 defineExpose({
     setStartValue,
     setEndValue,
+    setRangeValues,
 });
 </script>
 
@@ -2409,6 +2491,9 @@ defineExpose({
                                 @pointercancel.stop.prevent="
                                     stopHandleDrag('start', $event)
                                 "
+                                @lostpointercapture="
+                                    handleLostPointerCapture('start', $event)
+                                "
                                 @click.stop.prevent
                             >
                                 <rect
@@ -2497,6 +2582,9 @@ defineExpose({
                                 "
                                 @pointercancel.stop.prevent="
                                     stopHandleDrag('end', $event)
+                                "
+                                @lostpointercapture="
+                                    handleLostPointerCapture('end', $event)
                                 "
                                 @click.stop.prevent
                             >

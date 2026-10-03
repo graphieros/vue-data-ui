@@ -305,6 +305,17 @@ export function useConfig(options = {}) {
         focusRangeRatio: 0.2,
         maxWidth: null,
         keepState: false,
+        dragToZoom: {
+            show: false,
+            selection: {
+                fill: COLOR_BLUE,
+                stroke: COLOR_GREY,
+                fillOpacity: 0.2,
+                strokeOpacity: 0.5,
+                strokeWidth: 1,
+                strokeDasharray: 0,
+            },
+        },
     };
 
     const MINIMAP_BASE = {
@@ -3314,6 +3325,7 @@ export function useConfig(options = {}) {
     };
 
     const vue_ui_sparkline = {
+        useCursorPointer: false,
         devHints: DEV_HINTS,
         skeletonConfig: null,
         skeletonDataset: null,
@@ -3355,7 +3367,7 @@ export function useConfig(options = {}) {
         style: {
             chartWidth: 290,
             animation: {
-                show: true,
+                show: false,
                 animationFrames: 360,
             },
             padding: PADDING([12, 12, 3, 0]),
@@ -3365,7 +3377,7 @@ export function useConfig(options = {}) {
             scaleMax: null,
             line: {
                 color: COLOR_BLUE,
-                strokeWidth: 3,
+                strokeWidth: 2,
                 smooth: false,
                 cutNullValues: false,
                 nullDashes: {
@@ -3447,6 +3459,23 @@ export function useConfig(options = {}) {
                 useGradient: true,
                 opacity: 30,
                 color: COLOR_BLUE,
+            },
+            zoom: {
+                show: false,
+                selection: {
+                    fill: COLOR_BLACK,
+                    stroke: 'transparent',
+                    fillOpacity: 0.1,
+                    strokeOpacity: 0.5,
+                    strokeWidth: 1,
+                    strokeDasharray: 0,
+                },
+                resetButton: {
+                    show: true,
+                    title: 'Reset zoom · double-click chart or press Esc',
+                    ariaLabel: 'Reset zoom',
+                    color: COLOR_BLACK,
+                },
             },
         },
     };
@@ -3978,6 +4007,17 @@ export function useConfig(options = {}) {
         zoomFocusOnDrag: false,
         zoomFocusRangeRatio: 0.2,
         zoomMaxWidth: null,
+        dragToZoom: {
+            show: false,
+            selection: {
+                fill: COLOR_BLUE,
+                stroke: COLOR_GREY,
+                fillOpacity: 0.2,
+                strokeOpacity: 0.5,
+                strokeWidth: 1,
+                strokeDasharray: 0,
+            },
+        },
     };
 
     const vue_ui_age_pyramid = {
@@ -5650,6 +5690,11 @@ export function useConfig(options = {}) {
             stack: true,
             annotator: true,
         }),
+        events: {
+            datapointEnter: null,
+            datapointLeave: null,
+            datapointClick: null,
+        },
         style: {
             fontFamily: 'Arial', // A defined font must be provided as 'inherit' fails with canvas
             chart: {

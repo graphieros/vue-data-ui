@@ -13,6 +13,8 @@ import type {
     VueUiSparklineEmits,
     VueUiSparklineEmitHoverIndex,
     VueUiSparklineEmitSelectDatapoint,
+    VueUiSparklineExpose,
+    VueUiZoomState,
 } from 'vue-data-ui';
 
 export type {
@@ -28,6 +30,8 @@ export type {
     VueUiSparklineEmits,
     VueUiSparklineEmitHoverIndex,
     VueUiSparklineEmitSelectDatapoint,
+    VueUiSparklineExpose,
+    VueUiZoomState,
 };
 
 declare const VueUiSparklineBase: DefineComponent<
@@ -42,7 +46,7 @@ declare const VueUiSparklineBase: DefineComponent<
 >;
 
 export const VueUiSparkline: typeof VueUiSparklineBase & {
-    new (): {
+    new (): VueUiSparklineExpose & {
         $slots: {
             before?: (props: VueUiSparklineBeforeSlotProps) => VNodeChild;
             ['chart-background']?: () => VNodeChild;

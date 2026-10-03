@@ -214,6 +214,7 @@ declare module 'vue-data-ui' {
     export type VueUiDonutEvent = ChartEvent<VueUiDonutDatapoint>;
     export type VueUiRadarEvent = ChartEvent<VueUiRadarDatapoint>;
     export type VueUiXyEvent = ChartEvent<VueUiXyDatasetItem[]>;
+    export type VueUiXyCanvasEvent = ChartEvent<VueUiXyCanvasDatasetItem[]>;
     export type VueUiRingsEvent = ChartEvent<VueUiRingsDatapoint>;
     export type VueUiOnionEvent = ChartEvent<VueUiOnionDatapoint>;
     export type VueUiWorldEvent = ChartEvent<VueUiWorldDatapoint>;
@@ -512,6 +513,18 @@ declare module 'vue-data-ui' {
         handleType?: '' | 'empty' | 'chevron' | 'grab' | 'arrow';
     };
 
+    export type ZoomOnChart = {
+        show?: boolean;
+        selection?: {
+            fill?: string;
+            stroke?: string;
+            fillOpacity?: number;
+            strokeOpacity?: number;
+            strokeWidth?: number;
+            strokeDasharray?: number | string;
+        };
+    };
+
     export type ChartZoom = {
         show?: boolean;
         autoFit?: boolean;
@@ -527,6 +540,7 @@ declare module 'vue-data-ui' {
         focusOnDrag?: boolean;
         focusRangeRatio?: number;
         maxWidth?: number | null;
+        dragToZoom?: ZoomOnChart;
     };
 
     export type Theme =
@@ -630,6 +644,16 @@ declare module 'vue-data-ui' {
         ['annotator-action-delete']?: (
             props: VueUiAnnotatorActionDeleteSlotProps,
         ) => VNodeChild;
+    };
+
+    export type VueUiZoomState = {
+        start?: number;
+        end?: number;
+    } | null;
+
+    export type VueUiEmitZoom = {
+        index: number;
+        isZoom: boolean;
     };
 
     export type VueUiTreemapDatasetItem = {
@@ -2684,6 +2708,8 @@ declare module 'vue-data-ui' {
         toggleFullscreen(): void;
         showSeries(name: string): void;
         hideSeries(name: string): void;
+        setZoomState(state: VueUiZoomState): void;
+        resetZoom(): void;
     };
 
     export type VueUiDonutEvolutionSvgSlotProps = {
@@ -2725,6 +2751,7 @@ declare module 'vue-data-ui' {
     export type VueUiDonutEvolutionProps = {
         config?: VueUiDonutEvolutionConfig;
         dataset: VueUiDonutEvolutionDatasetItem[];
+        zoomState?: VueUiZoomState; // synced
     };
 
     export type VueUiDonutEvolutionEmitSelectLegend =
@@ -2738,6 +2765,10 @@ declare module 'vue-data-ui' {
     export type VueUiDonutEvolutionEmits = {
         selectLegend: (payload: VueUiDonutEvolutionEmitSelectLegend) => void;
         copyAlt: (payload: VueUiDonutEvolutionEmitCopyAlt) => void;
+        zoomStart: (payload: VueUiEmitZoom) => void;
+        zoomEnd: (payload: VueUiEmitZoom) => void;
+        zoomReset: () => void;
+        'update:zoomState': (state: VueUiZoomState) => void;
     };
 
     const VueUiDonutEvolutionBase: DefineComponent<
@@ -4940,6 +4971,8 @@ declare module 'vue-data-ui' {
         toggleAnnotator(): void;
         toggleTooltip(): void;
         toggleFullscreen(): void;
+        setZoomState(state: VueUiZoomState): void;
+        resetZoom(): void;
     };
 
     export type VueUiCandlestickSvgSlotProps = {
@@ -4977,6 +5010,7 @@ declare module 'vue-data-ui' {
         config?: VueUiCandlestickConfig;
         dataset: OHLC[];
         selectedXIndex?: number | null;
+        zoomState?: VueUiZoomState; // synced
     };
 
     export type VueUiCandlestickEmitSelectX = {
@@ -4992,6 +5026,10 @@ declare module 'vue-data-ui' {
     export type VueUiCandlestickEmits = {
         selectX: (payload: VueUiCandlestickEmitSelectX) => void;
         copyAlt: (payload: VueUiCandlestickEmitCopyAlt) => void;
+        zoomStart: (payload: VueUiEmitZoom) => void;
+        zoomEnd: (payload: VueUiEmitZoom) => void;
+        zoomReset: () => void;
+        'update:zoomState': (state: VueUiZoomState) => void;
     };
 
     const VueUiCandlestickBase: DefineComponent<
@@ -6272,12 +6310,14 @@ declare module 'vue-data-ui' {
         showSeries(name: string): void;
         hideSeries(name: string): void;
         resetZoom(): void;
+        setZoomState(state: VueUiZoomState): void;
     };
 
     export type VueUiXyProps = {
         config?: VueUiXyConfig;
         dataset: VueUiXyDatasetItem[];
         selectedXIndex?: number | null;
+        zoomState?: VueUiZoomState; // synced
     };
 
     const VueUiXyBase: DefineComponent<
@@ -6444,10 +6484,7 @@ declare module 'vue-data-ui' {
         type: 'line' | 'bar' | 'plot';
     }>;
 
-    export type VueUiXyEmitZoom = {
-        index: number;
-        isZoom: boolean;
-    };
+    export type VueUiXyEmitZoom = VueUiEmitZoom;
 
     export type VueUiXyEmitCopyAlt = {
         config: VueUiXyConfig & {
@@ -6471,6 +6508,7 @@ declare module 'vue-data-ui' {
         zoomEnd: (payload: VueUiXyEmitZoom) => void;
         zoomReset: () => void;
         copyAlt: (payload: VueUiXyEmitCopyAlt) => void;
+        'update:zoomState': (state: VueUiZoomState) => void;
     };
 
     export const VueUiXy: typeof VueUiXyBase & {
@@ -9478,6 +9516,7 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiSparklineConfig = {
+        useCursorPointer?: boolean;
         devHints?: DevHints;
         loading?: boolean; // v3
         debug?: boolean; // v3
@@ -9618,11 +9657,29 @@ declare module 'vue-data-ui' {
                 opacity?: number;
                 color?: string;
             };
+            zoom?: {
+                show?: boolean;
+                selection?: {
+                    fill?: string;
+                    stroke?: string;
+                    fillOpacity?: number;
+                    strokeOpacity?: number;
+                    strokeWidth?: number;
+                    strokeDasharray?: number | string;
+                };
+                resetButton?: {
+                    show?: boolean;
+                    title?: string;
+                    ariaLabel?: string;
+                    color?: string;
+                };
+            };
         };
     };
 
     export type VueUiSparklineFormattedDatapoint = {
         absoluteValue: number | null;
+        barX: number | null;
         color: string;
         id: string;
         period: string;
@@ -9670,6 +9727,11 @@ declare module 'vue-data-ui' {
     export type VueUiSparklineProps = {
         config?: VueUiSparklineConfig;
         dataset: VueUiSparklineDatasetItem[];
+        selectedIndex?: number;
+        showInfo?: boolean;
+        heightRatio?: number;
+        forcedPadding?: number;
+        zoomState?: VueUiZoomState;
     };
 
     export type VueUiSparklineEmitHoverIndex = {
@@ -9684,6 +9746,14 @@ declare module 'vue-data-ui' {
     export type VueUiSparklineEmits = {
         hoverIndex: (payload: VueUiSparklineEmitHoverIndex) => void;
         selectDatapoint: (payload: VueUiSparklineEmitSelectDatapoint) => void;
+        zoom: (payload: { start: number; end: number }) => void;
+        zoomReset: () => void;
+        'update:zoomState': (state: VueUiZoomState) => void;
+    };
+
+    export type VueUiSparklineExpose = {
+        setZoomState(state: VueUiZoomState): void;
+        resetZoom(): void;
     };
 
     const VueUiSparklineBase: DefineComponent<
@@ -9698,7 +9768,7 @@ declare module 'vue-data-ui' {
     >;
 
     export const VueUiSparkline: typeof VueUiSparklineBase & {
-        new (): {
+        new (): VueUiSparklineExpose & {
             $slots: {
                 before?: (props: VueUiSparklineBeforeSlotProps) => VNodeChild;
                 ['chart-background']?: () => VNodeChild;
@@ -10657,6 +10727,7 @@ declare module 'vue-data-ui' {
         zoomFocusOnDrag?: boolean;
         zoomFocusRangeRatio?: number;
         zoomMaxWidth?: number | null;
+        dragToZoom?: ZoomOnChart;
         userOptionsPosition?: 'right' | 'left';
         userOptionsButtons?: {
             tooltip?: boolean;
@@ -10732,6 +10803,8 @@ declare module 'vue-data-ui' {
         toggleAnnotator(): void;
         toggleFullscreen(): void;
         toggleTooltip(): void;
+        setZoomState(state: VueUiZoomState): void;
+        resetZoom(): void;
     };
 
     export type VueUiQuickChartFormattedDataset = {
@@ -10931,6 +11004,7 @@ declare module 'vue-data-ui' {
     export type VueUiQuickChartProps = {
         config?: VueUiQuickChartConfig;
         dataset: VueUiQuickChartDataset;
+        zoomState?: VueUiZoomState; // synced (for line & bar types)
     };
 
     export type VueUiQuickChartEmitSelectLegend = VueUiQuickChartLegendSource[];
@@ -10946,6 +11020,10 @@ declare module 'vue-data-ui' {
         selectLegend: (payload: VueUiQuickChartEmitSelectLegend) => void;
         selectDatapoint: (payload: VueUiQuickChartEmitSelectDatapoint) => void;
         copyAlt: (payload: VueUiQuickChartEmitCopyAlt) => void;
+        zoomStart: (payload: VueUiEmitZoom) => void;
+        zoomEnd: (payload: VueUiEmitZoom) => void;
+        zoomReset: () => void;
+        'update:zoomState': (state: VueUiZoomState) => void;
     };
 
     const VueUiQuickChartBase: DefineComponent<
@@ -12029,6 +12107,11 @@ declare module 'vue-data-ui' {
             VueUiXyCanvasDatapoint[],
             VueUiXyCanvasConfig
         >;
+        events?: {
+            datapointEnter?: VueUiXyCanvasEvent;
+            datapointLeave?: VueUiXyCanvasEvent;
+            datapointClick?: VueUiXyCanvasEvent;
+        };
         style?: {
             fontFamily?: string;
             chart?: {
@@ -12229,6 +12312,8 @@ declare module 'vue-data-ui' {
         toggleFullscreen(): void;
         showSeries(name: string): void;
         hideSeries(name: string): void;
+        setZoomState(state: VueUiZoomState): void;
+        resetZoom(): void;
     };
 
     export type VueUiXyCanvasTooltipSlotProps = {
@@ -12263,6 +12348,8 @@ declare module 'vue-data-ui' {
     export type VueUiXyCanvasProps = {
         dataset: VueUiXyCanvasDatasetItem[];
         config?: VueUiXyCanvasConfig;
+        selectedXIndex?: number | null;
+        zoomState?: VueUiZoomState; // synced
     };
 
     export type VueUiXyCanvasEmitSelectLegend = VueUiXyCanvasDatapoint[];
@@ -12282,6 +12369,10 @@ declare module 'vue-data-ui' {
         selectLegend: (payload: VueUiXyCanvasEmitSelectLegend) => void;
         selectX: (payload: VueUiXyCanvasEmitSelectX) => void;
         copyAlt: (payload: VueUiXyCanvasEmitCopyAlt) => void;
+        zoomStart: (payload: VueUiEmitZoom) => void;
+        zoomEnd: (payload: VueUiEmitZoom) => void;
+        zoomReset: () => void;
+        'update:zoomState': (state: VueUiZoomState) => void;
     };
 
     const VueUiXyCanvasBase: DefineComponent<
@@ -13541,6 +13632,8 @@ declare module 'vue-data-ui' {
         toggleFullscreen(): void;
         showSeries(name: string): void;
         hideSeries(name: string): void;
+        setZoomState(state: VueUiZoomState): void;
+        resetZoom(): void;
     };
 
     export type VueUiStackbarFormattedDatasetItem = {
@@ -13643,6 +13736,7 @@ declare module 'vue-data-ui' {
         config?: VueUiStackbarConfig;
         dataset: VueUiStackbarDatasetItem[];
         selectedXIndex?: number | null;
+        zoomState?: VueUiZoomState; // synced
     };
 
     export type VueUiStackbarEmitSelectLegend =
@@ -13679,6 +13773,10 @@ declare module 'vue-data-ui' {
         selectTimeLabel: (payload: VueUiStackbarEmitSelectTimeLabel) => void;
         selectX: (payload: VueUiStackbarEmitSelectX) => void;
         copyAlt: (payload: VueUiStackbarEmitCopyAlt) => void;
+        zoomStart: (payload: VueUiEmitZoom) => void;
+        zoomEnd: (payload: VueUiEmitZoom) => void;
+        zoomReset: () => void;
+        'update:zoomState': (state: VueUiZoomState) => void;
     };
 
     const VueUiStackbarBase: DefineComponent<
@@ -13997,6 +14095,8 @@ declare module 'vue-data-ui' {
         toggleLabels(): void;
         toggleTooltip(): void;
         toggleFullscreen(): void;
+        setZoomState(state: VueUiZoomState): void;
+        resetZoom(): void;
     };
 
     export type VueUiStacklineFormattedDatasetItem = {
@@ -14090,6 +14190,7 @@ declare module 'vue-data-ui' {
         config?: VueUiStacklineConfig;
         dataset: VueUiStacklineDatasetItem[];
         selectedXIndex?: number | null;
+        zoomState?: VueUiZoomState; // synced
     };
 
     export type VueUiStacklineEmitSelectLegend =
@@ -14126,6 +14227,10 @@ declare module 'vue-data-ui' {
         selectTimeLabel: (payload: VueUiStacklineEmitSelectTimeLabel) => void;
         selectX: (payload: VueUiStacklineEmitSelectX) => void;
         copyAlt: (payload: VueUiStacklineEmitCopyAlt) => void;
+        zoomStart: (payload: VueUiEmitZoom) => void;
+        zoomEnd: (payload: VueUiEmitZoom) => void;
+        zoomReset: () => void;
+        'update:zoomState': (state: VueUiZoomState) => void;
     };
 
     const VueUiStacklineBase: DefineComponent<

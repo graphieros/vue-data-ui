@@ -102,6 +102,10 @@ const props = defineProps({
         type: Number,
         default: undefined,
     },
+    zoomState: {
+        type: Object,
+        default: null,
+    },
 });
 
 const uid = ref(createUid());
@@ -147,7 +151,15 @@ const isDataset = computed(
     () => Array.isArray(FINAL_DATASET.value) && FINAL_DATASET.value.length > 0,
 );
 
-const emit = defineEmits(['selectLegend', 'selectX', 'copyAlt']);
+const emit = defineEmits([
+    'selectLegend',
+    'selectX',
+    'zoomStart',
+    'zoomEnd',
+    'zoomReset',
+    'update:zoomState',
+    'copyAlt',
+]);
 const slots = useSlots();
 
 const FINAL_CONFIG = ref(prepareConfig());
@@ -950,26 +962,140 @@ const slicer = ref({
 
 const slicerPrecog = ref({ start: 0, end: maxSeries.value });
 
+const isChartZoomSelecting = ref(false);
+const isChartZoomPointerFocused = ref(false);
+const chartEventHoveredIndex = ref(null);
+const ignoreNextCanvasClick = ref(false);
+const chartZoomStartX = ref(null);
+const chartZoomCurrentX = ref(null);
+const chartZoomPointerId = ref(null);
+const lastChartZoomTap = ref({
+    time: 0,
+    x: 0,
+    y: 0,
+    pointerType: null,
+});
+
+const dragToZoomConfig = computed(() => cfgChart.value.zoom?.dragToZoom);
+
+const isChartZoomEnabled = computed(() => {
+    return (
+        dragToZoomConfig.value.show &&
+        isDataset.value &&
+        slicerReady.value &&
+        maxSeries.value > 1 &&
+        !loading.value
+    );
+});
+
 const refreshRAF = ref(null);
+let queuedSlicerFrame = null;
+let queuedSlicerUpdate = {};
+
 function nextPaint() {
     return new Promise((r) =>
         requestAnimationFrame(() => requestAnimationFrame(() => r())),
     );
 }
 
+function normalizeZoomState(state, fallback = slicer.value) {
+    if (!state || typeof state !== 'object') return null;
+    const hasStart = state.start !== undefined && state.start !== null;
+    const hasEnd = state.end !== undefined && state.end !== null;
+    if (!hasStart && !hasEnd) return null;
+    const start = hasStart ? Number(state.start) : Number(fallback.start);
+    const end = hasEnd ? Number(state.end) : Number(fallback.end);
+    if (!Number.isFinite(start) || !Number.isFinite(end)) {
+        return null;
+    }
+    return {
+        start,
+        end,
+    };
+}
+
+function emitZoomState(state) {
+    const normalized = normalizeZoomState(state);
+    if (!normalized) return;
+
+    emit('update:zoomState', normalized);
+}
+
+function clearQueuedSlicerFrame() {
+    if (queuedSlicerFrame) {
+        cancelAnimationFrame(queuedSlicerFrame);
+        queuedSlicerFrame = null;
+    }
+
+    queuedSlicerUpdate = {};
+}
+
+function applyZoomState(state) {
+    const normalized = normalizeZoomState(state);
+    if (!normalized) return null;
+
+    const { start, end } = normalized;
+
+    if (
+        start !== Number(slicer.value.start) ||
+        end !== Number(slicer.value.end)
+    ) {
+        clearQueuedSlicerFrame();
+
+        slicer.value = { start, end };
+        slicerPrecog.value = { start, end };
+
+        normalizeSlicerWindow();
+    }
+
+    // Always return the final committed range. Prop-driven synchronization
+    // remains silent, while the public imperative API can publish this state
+    // so sibling instances sharing v-model:zoom-state receive it.
+    return {
+        start: Number(slicer.value.start),
+        end: Number(slicer.value.end),
+    };
+}
+
+function setZoomState(state) {
+    const applied = applyZoomState(state);
+    if (!applied) return null;
+
+    emit('update:zoomState', applied);
+
+    return applied;
+}
+
 onBeforeUnmount(() => {
     if (refreshRAF.value) cancelAnimationFrame(refreshRAF.value);
+    clearQueuedSlicerFrame();
+    cancelChartZoomSelection();
 });
 
-async function refreshSlicer() {
-    setupSlicer();
+async function refreshSlicer({ force = false, publish = false } = {}) {
+    const applyControlledZoom = !force;
 
-    // Now this is basically sweeping shit under the rug so it works:
+    await setupSlicer(applyControlledZoom);
+
     await nextTick();
-    if (refreshRAF.value) cancelAnimationFrame(refreshRAF.value);
+
+    if (refreshRAF.value) {
+        cancelAnimationFrame(refreshRAF.value);
+    }
+
     refreshRAF.value = requestAnimationFrame(async () => {
         await nextPaint();
-        setupSlicer();
+
+        await setupSlicer(applyControlledZoom);
+        refreshRAF.value = null;
+
+        if (publish) {
+            emitZoomState({
+                start: Number(slicer.value.start),
+                end: Number(slicer.value.end),
+            });
+            emit('zoomReset');
+        }
     });
 }
 
@@ -985,70 +1111,139 @@ function setPrecog(side, val) {
     slicerPrecog.value[side] = val;
 }
 
-async function setupSlicer() {
+async function setupSlicer(applyControlledZoom = true) {
     if (isSettingUp.value) return;
+
     isSettingUp.value = true;
+
     try {
         const { startIndex, endIndex } = cfgChart.value.zoom;
         const max = Math.max(...dsCopy.value.map((dp) => dp.series.length));
 
         const start = startIndex != null ? startIndex : 0;
+
         const end =
             endIndex != null
-                ? Math.min(validSlicerEnd(endIndex + 1), max)
+                ? Math.min(validSlicerEnd(endIndex + 1, start), max)
                 : max;
 
         suppressChild.value = true;
-        slicer.value.start = start;
-        slicer.value.end = end;
-        slicerPrecog.value.start = start;
-        slicerPrecog.value.end = end;
+
+        slicer.value = { start, end };
+        slicerPrecog.value = { start, end };
 
         normalizeSlicerWindow();
 
         slicerReady.value = true;
+
         await nextTick();
+
         if (chartSlicer.value) {
-            chartSlicer.value.setStartValue(slicer.value.start);
-            chartSlicer.value.setEndValue(slicer.value.end);
+            chartSlicer.value.setRangeValues(
+                slicer.value.start,
+                slicer.value.end,
+            );
+        }
+
+        if (applyControlledZoom && props.zoomState) {
+            applyZoomState(props.zoomState);
         }
     } finally {
         queueMicrotask(() => {
             suppressChild.value = false;
         });
+
         isSettingUp.value = false;
     }
 }
 
+function queueSlicerUpdate(update) {
+    queuedSlicerUpdate = {
+        ...queuedSlicerUpdate,
+        ...update,
+    };
+
+    if (queuedSlicerFrame) {
+        cancelAnimationFrame(queuedSlicerFrame);
+    }
+
+    queuedSlicerFrame = requestAnimationFrame(() => {
+        const nextSlicer = {
+            ...slicer.value,
+            ...queuedSlicerUpdate,
+        };
+
+        queuedSlicerUpdate = {};
+        queuedSlicerFrame = null;
+
+        slicer.value = nextSlicer;
+        slicerPrecog.value = { ...nextSlicer };
+
+        normalizeSlicerWindow();
+
+        /**
+         * Publish only the FULLY merged normalized range.
+         * This is critical for selection dragging because SlicerPreview emits update:start and
+         * update:end back-to-back, and both updates must be represented by one authoritative zoom state.
+         */
+        emitZoomState({
+            start: Number(slicer.value.start),
+            end: Number(slicer.value.end),
+        });
+    });
+}
+
 function onSlicerStart(v) {
     if (isSettingUp.value || suppressChild.value) return;
-    if (v === slicer.value.start) return;
-    slicer.value.start = v;
-    slicerPrecog.value.start = v;
-    normalizeSlicerWindow();
+
+    const start = Number(v);
+    if (!Number.isFinite(start)) return;
+
+    emit('zoomStart', {
+        index: start,
+        isZoom: start !== 0,
+    });
+
+    if (start === slicer.value.start) return;
+
+    queueSlicerUpdate({ start });
 }
 
 function onSlicerEnd(v) {
     if (isSettingUp.value || suppressChild.value) return;
-    const end = validSlicerEnd(v);
-    if (end === slicer.value.end) return;
-    slicer.value.end = end;
-    slicerPrecog.value.end = end;
-    normalizeSlicerWindow();
+
+    const pendingStart =
+        queuedSlicerUpdate.start !== undefined
+            ? queuedSlicerUpdate.start
+            : slicer.value.start;
+
+    const end = validSlicerEnd(Number(v), pendingStart);
+    if (!Number.isFinite(end)) return;
+
+    emit('zoomEnd', {
+        index: end,
+        isZoom: end !== maxSeries.value,
+    });
+
+    if (end === slicer.value.end && queuedSlicerUpdate.start === undefined) {
+        return;
+    }
+
+    queueSlicerUpdate({ end });
 }
 
-function validSlicerEnd(v) {
+function validSlicerEnd(v, start = slicer.value.start) {
     const max = maxSeries.value;
+    const effectiveStart = Number(start);
+
     if (v > max) {
         return max;
     }
-    if (v < 0 || v < slicer.value.start) {
-        if (cfgChart.value.zoom.startIndex !== null) {
-            return cfgChart.value.zoom.startIndex + 1;
-        } else {
-            return 1;
-        }
+
+    if (v < 0 || v <= effectiveStart) {
+        return Math.min(effectiveStart + 1, max);
     }
+
     return v;
 }
 
@@ -1067,14 +1262,29 @@ function normalizeSlicerWindow() {
     }
 
     slicer.value = { start: s, end: e };
-    slicerPrecog.value.start = s;
-    slicerPrecog.value.end = e;
+    slicerPrecog.value = { start: s, end: e };
 
     if (chartSlicer.value) {
-        chartSlicer.value.setStartValue(s);
-        chartSlicer.value.setEndValue(e);
+        chartSlicer.value.setRangeValues(s, e);
     }
 }
+
+watch(
+    [() => props.zoomState, slicerReady],
+    ([state, ready]) => {
+        if (!ready || !state) return;
+
+        /**
+         * When this is the instance from which originated the v-model update, applyZoomState exits
+         * immediately because the committed slicer already matches the model.
+         */
+        applyZoomState(state);
+    },
+    {
+        deep: true,
+        immediate: true,
+    },
+);
 
 const lineAndPlotTypes = computed(() => {
     return formattedDataset.value.filter((ds) => {
@@ -2406,8 +2616,393 @@ function getYandValueAtIndex(datapoint) {
     return { y, value };
 }
 
+const chartZoomSelectionRect = computed(() => {
+    if (
+        !isChartZoomSelecting.value ||
+        chartZoomStartX.value == null ||
+        chartZoomCurrentX.value == null
+    ) {
+        return null;
+    }
+
+    return {
+        x: Math.min(chartZoomStartX.value, chartZoomCurrentX.value),
+        y: drawingArea.value.top,
+        width: Math.abs(chartZoomCurrentX.value - chartZoomStartX.value),
+        height: drawingArea.value.height,
+    };
+});
+
+const isChartZoomed = computed(() => {
+    if (!slicerReady.value) return false;
+
+    return (
+        Number(slicer.value.start) !== 0 ||
+        Number(slicer.value.end) !== Number(maxSeries.value)
+    );
+});
+
+function clientToCanvasCoords(event) {
+    if (!canvas.value) return null;
+
+    const rect = canvas.value.getBoundingClientRect();
+
+    if (!rect.width || !rect.height) return null;
+
+    return {
+        x:
+            (event.clientX - rect.left) *
+            (drawingArea.value.canvasWidth / rect.width),
+        y:
+            (event.clientY - rect.top) *
+            (drawingArea.value.canvasHeight / rect.height),
+    };
+}
+
+function clampChartZoomX(x) {
+    return Math.min(
+        Math.max(x, drawingArea.value.left),
+        drawingArea.value.right,
+    );
+}
+
+function getEventDatapointAtIndex(index) {
+    return formattedDataset.value.map((ds) => {
+        const value = ds.series[index];
+        return {
+            ...ds,
+            name: ds.name,
+            value: [null, undefined, NaN].includes(value) ? null : value,
+            color: ds.color,
+            type: ds.type,
+        };
+    });
+}
+
+function triggerDatapointEvent(eventName, index) {
+    if (
+        index === null ||
+        index === undefined ||
+        index < 0 ||
+        index >= slicer.value.end - slicer.value.start
+    ) {
+        return;
+    }
+    const callback = FINAL_CONFIG.value.events?.[eventName];
+    if (!isFunction(callback)) return;
+    callback({
+        datapoint: getEventDatapointAtIndex(index),
+        seriesIndex: index + slicer.value.start,
+    });
+}
+
+function setChartEventHoveredIndex(index) {
+    if (chartEventHoveredIndex.value === index) return;
+    chartEventHoveredIndex.value = index;
+    triggerDatapointEvent('datapointEnter', index);
+}
+
+function clearChartEventHoveredIndex() {
+    const index = chartEventHoveredIndex.value;
+    if (index !== null && index !== undefined) {
+        triggerDatapointEvent('datapointLeave', index);
+    }
+    chartEventHoveredIndex.value = null;
+}
+
+function suppressNextCanvasClick() {
+    ignoreNextCanvasClick.value = true;
+    setTimeout(() => {
+        ignoreNextCanvasClick.value = false;
+    }, 0);
+}
+
+function getCanvasIndexFromPoint(point) {
+    if (!point || !drawingArea.value?.slot) return null;
+    const { left, right, top, bottom, slot } = drawingArea.value;
+    if (
+        point.x < left ||
+        point.x > right ||
+        point.y < top ||
+        point.y > bottom
+    ) {
+        return null;
+    }
+    const index = Math.floor((point.x - left) / slot);
+    const visibleLength = slicer.value.end - slicer.value.start;
+    if (index < 0 || index >= visibleLength) return null;
+    return index;
+}
+
+function handleCanvasClick(event) {
+    if (ignoreNextCanvasClick.value) {
+        ignoreNextCanvasClick.value = false;
+        return;
+    }
+    const index = getCanvasIndexFromPoint(clientToCanvasCoords(event));
+    if (index === null) return;
+    triggerDatapointEvent('datapointClick', index);
+}
+
+function clearChartZoomHover() {
+    clearChartEventHoveredIndex();
+    clearA11yTooltip();
+    selectedMinimapIndex.value = null;
+}
+
+function cancelChartZoomSelection(event) {
+    const pointerId =
+        event?.pointerId != null ? event.pointerId : chartZoomPointerId.value;
+
+    if (pointerId != null && canvas.value?.hasPointerCapture?.(pointerId)) {
+        canvas.value.releasePointerCapture(pointerId);
+    }
+
+    isChartZoomSelecting.value = false;
+    chartZoomStartX.value = null;
+    chartZoomCurrentX.value = null;
+    chartZoomPointerId.value = null;
+}
+
+function resetChartZoomFromDoubleTap(event) {
+    if (!isChartZoomEnabled.value || !isChartZoomed.value || !event) {
+        return false;
+    }
+
+    const now = Date.now();
+    const pointerType = event.pointerType || 'mouse';
+    const last = lastChartZoomTap.value;
+    const maxDelay = pointerType === 'touch' ? 450 : 350;
+    const maxDistance = pointerType === 'touch' ? 28 : 10;
+
+    const distance = Math.hypot(event.clientX - last.x, event.clientY - last.y);
+
+    const isDoubleTap =
+        last.time > 0 &&
+        last.pointerType === pointerType &&
+        now - last.time <= maxDelay &&
+        distance <= maxDistance;
+
+    if (!isDoubleTap) {
+        lastChartZoomTap.value = {
+            time: now,
+            x: event.clientX,
+            y: event.clientY,
+            pointerType,
+        };
+
+        return false;
+    }
+
+    lastChartZoomTap.value = {
+        time: 0,
+        x: 0,
+        y: 0,
+        pointerType: null,
+    };
+
+    suppressNextCanvasClick();
+    cancelChartZoomSelection(event);
+
+    void refreshSlicer({
+        force: true,
+        publish: true,
+    });
+
+    return true;
+}
+
+function getChartZoomLocalIndex(canvasX) {
+    const visibleCount = Number(slicer.value.end) - Number(slicer.value.start);
+
+    if (
+        visibleCount <= 0 ||
+        !Number.isFinite(drawingArea.value.slot) ||
+        drawingArea.value.slot <= 0
+    ) {
+        return null;
+    }
+
+    const rawIndex = Math.floor(
+        (clampChartZoomX(canvasX) - drawingArea.value.left) /
+            drawingArea.value.slot,
+    );
+
+    return Math.max(0, Math.min(visibleCount - 1, rawIndex));
+}
+
+function getChartZoomStateFromSelection(left, right) {
+    const localStart = getChartZoomLocalIndex(left);
+    const localEnd = getChartZoomLocalIndex(right);
+
+    if (localStart == null || localEnd == null) return null;
+
+    const first = Math.min(localStart, localEnd);
+    const last = Math.max(localStart, localEnd);
+
+    // Do not commit a one-datapoint selection.
+    if (last <= first) return null;
+
+    return {
+        start: Number(slicer.value.start) + first,
+        end: Number(slicer.value.start) + last + 1,
+    };
+}
+
+function commitChartZoom(state) {
+    const applied = setZoomState(state);
+    if (!applied) return null;
+
+    emit('zoomStart', {
+        index: applied.start,
+        isZoom: applied.start !== 0,
+    });
+
+    emit('zoomEnd', {
+        index: applied.end,
+        isZoom: applied.end !== maxSeries.value,
+    });
+
+    return applied;
+}
+
+function onChartZoomPointerDown(event) {
+    if (!isChartZoomEnabled.value || isAnnotator.value) return;
+    if (event.button !== undefined && event.button !== 0) return;
+
+    if (
+        chartZoomPointerId.value != null &&
+        event.pointerId !== chartZoomPointerId.value
+    ) {
+        return;
+    }
+
+    const point = clientToCanvasCoords(event);
+    if (!point) return;
+
+    const { left, right, top, bottom } = drawingArea.value;
+
+    if (
+        point.x < left ||
+        point.x > right ||
+        point.y < top ||
+        point.y > bottom
+    ) {
+        return;
+    }
+
+    const visibleCount = Number(slicer.value.end) - Number(slicer.value.start);
+
+    if (visibleCount <= 1) return;
+
+    isChartZoomPointerFocused.value = true;
+    canvas.value?.focus?.({ preventScroll: true });
+
+    clearChartZoomHover();
+
+    const x = clampChartZoomX(point.x);
+
+    chartZoomPointerId.value = event.pointerId;
+    isChartZoomSelecting.value = true;
+    chartZoomStartX.value = x;
+    chartZoomCurrentX.value = x;
+}
+
+function onChartZoomPointerMove(event) {
+    if (!isChartZoomEnabled.value || !isChartZoomSelecting.value) {
+        return;
+    }
+
+    if (
+        chartZoomPointerId.value != null &&
+        event.pointerId !== chartZoomPointerId.value
+    ) {
+        return;
+    }
+
+    const point = clientToCanvasCoords(event);
+    if (!point) return;
+
+    chartZoomCurrentX.value = clampChartZoomX(point.x);
+
+    if (
+        chartZoomStartX.value != null &&
+        Math.abs(chartZoomCurrentX.value - chartZoomStartX.value) >= 2 &&
+        !canvas.value?.hasPointerCapture?.(event.pointerId)
+    ) {
+        canvas.value?.setPointerCapture?.(event.pointerId);
+    }
+}
+
+function onChartZoomPointerUp(event) {
+    if (!isChartZoomEnabled.value || !isChartZoomSelecting.value) {
+        return;
+    }
+
+    if (
+        chartZoomPointerId.value != null &&
+        event.pointerId !== chartZoomPointerId.value
+    ) {
+        return;
+    }
+
+    const point = clientToCanvasCoords(event);
+
+    if (point) {
+        chartZoomCurrentX.value = clampChartZoomX(point.x);
+    }
+
+    const startX = chartZoomStartX.value;
+    const endX = chartZoomCurrentX.value;
+
+    const selectionWidth =
+        startX == null || endX == null ? 0 : Math.abs(endX - startX);
+
+    const minimumSelectionWidth = Math.max(4, drawingArea.value.width * 0.01);
+
+    if (selectionWidth < minimumSelectionWidth) {
+        if (resetChartZoomFromDoubleTap(event)) return;
+
+        cancelChartZoomSelection(event);
+        return;
+    }
+
+    const left = Math.min(startX, endX);
+    const right = Math.max(startX, endX);
+
+    const nextZoomState = getChartZoomStateFromSelection(left, right);
+
+    if (!nextZoomState) {
+        cancelChartZoomSelection(event);
+        return;
+    }
+
+    cancelChartZoomSelection(event);
+
+    const applied = commitChartZoom(nextZoomState);
+
+    if (applied) {
+        lastChartZoomTap.value = {
+            time: 0,
+            x: 0,
+            y: 0,
+            pointerType: null,
+        };
+
+        clearChartZoomHover();
+        suppressNextCanvasClick();
+    }
+}
+
 function handleMousemove(e) {
-    if (!isDataset.value || !canvas.value || allSegregated.value) return;
+    if (
+        !isDataset.value ||
+        !canvas.value ||
+        allSegregated.value ||
+        isChartZoomSelecting.value
+    ) {
+        return;
+    }
 
     const { left, top } = canvas.value.getBoundingClientRect();
     const mouseX = e.clientX - left;
@@ -2424,12 +3019,16 @@ function handleMousemove(e) {
         mouseX * 2 < drawingArea.value.left ||
         mouseX * 2 > drawingArea.value.right
     ) {
+        clearChartEventHoveredIndex();
         clearA11yTooltip();
         return;
     }
 
     const effectiveMouseX = mouseX * 2 - drawingArea.value.left;
     const index = Math.floor(effectiveMouseX / drawingArea.value.slot);
+
+    setChartEventHoveredIndex(index);
+
     tooltipIndex.value = index;
     activeTooltipIndex.value = index;
     isTooltip.value = true;
@@ -2570,10 +3169,17 @@ function setKeyboardTooltipPositionFromIndex(index) {
     };
 }
 
-function setTooltipFromIndex(index, { fromKeyboard = false } = {}) {
+function setTooltipFromIndex(
+    index,
+    { fromKeyboard = false, triggerEvent = true } = {},
+) {
     if (!isDataset.value || allSegregated.value) return;
     if (index === null || index === undefined) return;
     if (index < 0 || index >= slicer.value.end - slicer.value.start) return;
+
+    if (triggerEvent) {
+        setChartEventHoveredIndex(index);
+    }
 
     tooltipIndex.value = index;
     activeTooltipIndex.value = index;
@@ -2604,6 +3210,7 @@ function onCanvasFocus() {
 }
 
 function onCanvasBlur() {
+    isChartZoomPointerFocused.value = false;
     isFocus.value = false;
     clearA11yTooltip();
 }
@@ -2611,6 +3218,30 @@ function onCanvasBlur() {
 function onCanvasKeydown(event) {
     if (!canvas.value || isAnnotator.value) return;
     if (document.activeElement !== canvas.value) return;
+
+    isChartZoomPointerFocused.value = false;
+
+    if (event.key === 'Escape') {
+        if (
+            isChartZoomEnabled.value &&
+            (isChartZoomed.value || isChartZoomSelecting.value)
+        ) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            cancelChartZoomSelection();
+
+            void refreshSlicer({
+                force: true,
+                publish: true,
+            });
+
+            return;
+        }
+
+        clearA11yTooltip();
+        return;
+    }
 
     const isLeftArrow = event.key === 'ArrowLeft';
     const isRightArrow = event.key === 'ArrowRight';
@@ -2670,7 +3301,10 @@ watch(
         if (targetIndex < 0 || v >= slicer.value.end) {
             clearA11yTooltip();
         } else {
-            setTooltipFromIndex(targetIndex, { fromKeyboard: false });
+            setTooltipFromIndex(targetIndex, {
+                fromKeyboard: false,
+                triggerEvent: false,
+            });
         }
     },
     { immediate: true },
@@ -2729,6 +3363,7 @@ watch(
 );
 
 function handleMouseLeave() {
+    clearChartEventHoveredIndex();
     clearA11yTooltip();
 }
 
@@ -3183,6 +3818,8 @@ defineExpose({
     toggleAnnotator,
     toggleFullscreen,
     copyAlt,
+    resetZoom: () => refreshSlicer({ force: true, publish: true }),
+    setZoomState,
 });
 </script>
 
@@ -3344,18 +3981,71 @@ defineExpose({
             <canvas
                 data-cy="canvas"
                 ref="canvas"
+                :class="{
+                    'vue-ui-xy-canvas-chart-zoom-pointer-focus':
+                        isChartZoomEnabled && isChartZoomPointerFocused,
+                }"
                 :aria-label="chartAriaLabel"
                 :aria-describedby="`chart-instructions-${uid}`"
                 role="img"
                 aria-live="polite"
                 tabindex="0"
-                style="width: 100%; height: 100%"
+                :style="{
+                    width: '100%',
+                    height: '100%',
+                    cursor: !isChartZoomEnabled
+                        ? undefined
+                        : isChartZoomSelecting
+                          ? 'col-resize'
+                          : 'crosshair',
+                    touchAction: isChartZoomEnabled ? 'pan-y' : undefined,
+                    userSelect: isChartZoomEnabled ? 'none' : undefined,
+                }"
                 @mousemove="handleMousemove($event)"
                 @mouseleave="handleMouseLeave"
+                @click="handleCanvasClick"
+                @pointerdown="onChartZoomPointerDown"
+                @pointermove="onChartZoomPointerMove"
+                @pointerup="onChartZoomPointerUp"
+                @pointercancel="cancelChartZoomSelection"
                 @focus="onCanvasFocus"
                 @blur="onCanvasBlur"
                 @keydown="onCanvasKeydown"
             />
+
+            <svg
+                v-if="chartZoomSelectionRect"
+                data-cy="xy-canvas-zoom-selection-overlay"
+                :viewBox="`0 0 ${drawingArea.canvasWidth} ${drawingArea.canvasHeight}`"
+                preserveAspectRatio="none"
+                aria-hidden="true"
+                style="
+                    position: absolute;
+                    inset: 0;
+                    width: 100%;
+                    height: 100%;
+                    pointer-events: none;
+                    overflow: visible;
+                "
+            >
+                <rect
+                    data-cy="xy-canvas-zoom-selection"
+                    :x="chartZoomSelectionRect.x"
+                    :y="chartZoomSelectionRect.y"
+                    :width="chartZoomSelectionRect.width"
+                    :height="chartZoomSelectionRect.height"
+                    :fill="dragToZoomConfig.selection.fill"
+                    :fill-opacity="dragToZoomConfig.selection.fillOpacity"
+                    :stroke="dragToZoomConfig.selection.stroke"
+                    :stroke-opacity="dragToZoomConfig.selection.strokeOpacity"
+                    :stroke-width="dragToZoomConfig.selection.strokeWidth"
+                    :stroke-dasharray="
+                        dragToZoomConfig.selection.strokeDasharray
+                    "
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                />
+            </svg>
 
             <div
                 v-if="$slots.hint"
@@ -3542,7 +4232,7 @@ defineExpose({
             :handleWidth="FINAL_CONFIG.style.chart.zoom.minimap.handleWidth"
             @futureEnd="(v) => setPrecog('end', v)"
             @futureStart="(v) => setPrecog('start', v)"
-            @reset="refreshSlicer"
+            @reset="() => refreshSlicer({ force: true, publish: true })"
             @trapMouse="selectMinimapIndex"
             @update:end="onSlicerEnd"
             @update:start="onSlicerStart"
@@ -3729,6 +4419,11 @@ canvas:focus {
 canvas:focus-visible {
     outline: 2px solid currentColor;
     outline-offset: 4px;
+}
+
+canvas.vue-ui-xy-canvas-chart-zoom-pointer-focus:focus,
+canvas.vue-ui-xy-canvas-chart-zoom-pointer-focus:focus-visible {
+    outline: none;
 }
 
 .sr-only {

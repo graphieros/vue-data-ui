@@ -115,6 +115,10 @@ const props = defineProps({
         type: Number,
         default: undefined,
     },
+    zoomState: {
+        type: Object,
+        default: null,
+    },
 });
 
 const emit = defineEmits([
@@ -122,6 +126,10 @@ const emit = defineEmits([
     'selectLegend',
     'selectTimeLabel',
     'selectX',
+    'zoomStart',
+    'zoomEnd',
+    'zoomReset',
+    'update:zoomState',
     'copyAlt',
 ]);
 
@@ -938,6 +946,44 @@ const slicerPrecog = ref({
     end: Math.max(...FINAL_DATASET.value.map((ds) => ds.series.length)),
 });
 
+const isChartZoomSelecting = ref(false);
+const isChartZoomPointerFocused = ref(false);
+
+const isChartZoomTransitioning = ref(false);
+const chartZoomVisualTransform = ref('matrix(1, 0, 0, 1, 0, 0)');
+const chartZoomVisualTransitionEnabled = ref(false);
+const CHART_ZOOM_TRANSITION_DURATION = 280;
+
+let chartZoomTransitionFrame = 0;
+let chartZoomTransitionFrame2 = 0;
+let chartZoomTransitionTimeout = 0;
+let chartZoomTransitionToken = 0;
+
+const chartZoomStartX = ref(null);
+const chartZoomCurrentX = ref(null);
+const chartZoomPointerId = ref(null);
+const ignoreNextChartClick = ref(false);
+const lastChartZoomTap = ref({
+    time: 0,
+    x: 0,
+    y: 0,
+    pointerType: null,
+});
+
+const dragToZoomConfig = computed(() => cfgChart.value.zoom?.dragToZoom);
+
+const isChartZoomEnabled = computed(() => {
+    return (
+        dragToZoomConfig.value.show &&
+        isDataset.value &&
+        slicerReady.value &&
+        !loading.value
+    );
+});
+
+let queuedSlicerFrame = null;
+let queuedSlicerUpdate = {};
+
 function absIndex(relIndex) {
     return (slicer.value.start ?? 0) + (relIndex ?? 0);
 }
@@ -959,6 +1005,330 @@ function setPrecog(side, val) {
     slicerPrecog.value[side] = val;
 }
 
+function normalizeZoomState(state, fallback = slicer.value) {
+    if (!state || typeof state !== 'object') return null;
+    const hasStart = state.start !== undefined && state.start !== null;
+    const hasEnd = state.end !== undefined && state.end !== null;
+    if (!hasStart && !hasEnd) return null;
+    const start = hasStart ? Number(state.start) : Number(fallback.start);
+    const end = hasEnd ? Number(state.end) : Number(fallback.end);
+    if (!Number.isFinite(start) || !Number.isFinite(end)) {
+        return null;
+    }
+    return {
+        start,
+        end,
+    };
+}
+
+function emitZoomState(state) {
+    const normalized = normalizeZoomState(state);
+    if (!normalized) return;
+
+    emit('update:zoomState', normalized);
+}
+
+function clearQueuedSlicerFrame() {
+    if (queuedSlicerFrame) {
+        cancelAnimationFrame(queuedSlicerFrame);
+        queuedSlicerFrame = null;
+    }
+
+    queuedSlicerUpdate = {};
+}
+
+function getCommittedChartZoomRange(source = slicer.value) {
+    return {
+        start: Number(source.start),
+        end: Number(source.end),
+    };
+}
+
+function getChartZoomXForIndex(index, range) {
+    const left = Number(drawingArea.value?.left) || 0;
+    const width = Math.max(0, Number(drawingArea.value?.width) || 0);
+    const start = Number(range?.start);
+    const end = Number(range?.end);
+    const count = end - start;
+
+    if (
+        !Number.isFinite(index) ||
+        !Number.isFinite(start) ||
+        !Number.isFinite(end) ||
+        count <= 0
+    ) {
+        return left;
+    }
+
+    if (count <= 1) {
+        return left + width / 2;
+    }
+
+    return left + ((index - start) / (count - 1)) * width;
+}
+
+function captureChartZoomYScale() {
+    if (cfgLines.value.distributed) return null;
+
+    const ticks = (yLabels.value || []).filter(
+        (tick) => Number.isFinite(tick?.value) && Number.isFinite(tick?.y),
+    );
+
+    if (ticks.length < 2) return null;
+
+    const minTick = ticks.reduce((min, tick) =>
+        tick.value < min.value ? tick : min,
+    );
+    const maxTick = ticks.reduce((max, tick) =>
+        tick.value > max.value ? tick : max,
+    );
+
+    if (maxTick.value === minTick.value || maxTick.y === minTick.y) {
+        return null;
+    }
+
+    return {
+        minValue: minTick.value,
+        maxValue: maxTick.value,
+        minY: minTick.y,
+        maxY: maxTick.y,
+    };
+}
+
+function getChartZoomYForValue(value, scale) {
+    if (!scale || !Number.isFinite(value)) {
+        return Number(drawingArea.value?.bottom) || 0;
+    }
+
+    const valueRange = scale.maxValue - scale.minValue;
+    if (!Number.isFinite(valueRange) || valueRange === 0) {
+        return scale.minY;
+    }
+
+    const ratio = (value - scale.minValue) / valueRange;
+    return scale.minY + (scale.maxY - scale.minY) * ratio;
+}
+
+function getChartZoomVisualMatrix({
+    previousRange,
+    targetRange,
+    previousYScale,
+    targetYScale,
+}) {
+    const xValue0 = Number(targetRange.start);
+    const xValue1 = Number(targetRange.end) - 1;
+
+    let scaleX = 1;
+    let translateX = 0;
+
+    if (
+        Number.isFinite(xValue0) &&
+        Number.isFinite(xValue1) &&
+        xValue1 > xValue0
+    ) {
+        const targetX0 = getChartZoomXForIndex(xValue0, targetRange);
+        const targetX1 = getChartZoomXForIndex(xValue1, targetRange);
+        const previousX0 = getChartZoomXForIndex(xValue0, previousRange);
+        const previousX1 = getChartZoomXForIndex(xValue1, previousRange);
+
+        const targetDelta = targetX1 - targetX0;
+        if (Number.isFinite(targetDelta) && Math.abs(targetDelta) > 1e-9) {
+            scaleX = (previousX1 - previousX0) / targetDelta;
+            translateX = previousX0 - scaleX * targetX0;
+        }
+    }
+
+    let scaleY = 1;
+    let translateY = 0;
+
+    if (previousYScale && targetYScale) {
+        const yValue0 = targetYScale.minValue;
+        const yValue1 = targetYScale.maxValue;
+
+        const targetY0 = getChartZoomYForValue(yValue0, targetYScale);
+        const targetY1 = getChartZoomYForValue(yValue1, targetYScale);
+        const previousY0 = getChartZoomYForValue(yValue0, previousYScale);
+        const previousY1 = getChartZoomYForValue(yValue1, previousYScale);
+
+        const targetDelta = targetY1 - targetY0;
+        if (Number.isFinite(targetDelta) && Math.abs(targetDelta) > 1e-9) {
+            scaleY = (previousY1 - previousY0) / targetDelta;
+            translateY = previousY0 - scaleY * targetY0;
+        }
+    }
+
+    if (![scaleX, translateX, scaleY, translateY].every(Number.isFinite)) {
+        return 'matrix(1, 0, 0, 1, 0, 0)';
+    }
+
+    return `matrix(${scaleX}, 0, 0, ${scaleY}, ${translateX}, ${translateY})`;
+}
+
+function stopChartZoomVisualTransition({ resetTransform = true } = {}) {
+    chartZoomTransitionToken += 1;
+
+    if (chartZoomTransitionFrame) {
+        cancelAnimationFrame(chartZoomTransitionFrame);
+        chartZoomTransitionFrame = 0;
+    }
+
+    if (chartZoomTransitionFrame2) {
+        cancelAnimationFrame(chartZoomTransitionFrame2);
+        chartZoomTransitionFrame2 = 0;
+    }
+
+    if (chartZoomTransitionTimeout) {
+        clearTimeout(chartZoomTransitionTimeout);
+        chartZoomTransitionTimeout = 0;
+    }
+
+    chartZoomVisualTransitionEnabled.value = false;
+    isChartZoomTransitioning.value = false;
+
+    if (resetTransform) {
+        chartZoomVisualTransform.value = 'matrix(1, 0, 0, 1, 0, 0)';
+    }
+}
+
+function canRunChartZoomVisualTransition(previousRange, targetRange) {
+    if (
+        !svgRef.value ||
+        loading.value ||
+        !isDataset.value ||
+        !previousRange ||
+        !targetRange
+    ) {
+        return false;
+    }
+
+    if (
+        typeof window !== 'undefined' &&
+        window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches
+    ) {
+        return false;
+    }
+
+    return (
+        Number.isFinite(previousRange.start) &&
+        Number.isFinite(previousRange.end) &&
+        Number.isFinite(targetRange.start) &&
+        Number.isFinite(targetRange.end) &&
+        previousRange.end > previousRange.start &&
+        targetRange.end > targetRange.start
+    );
+}
+
+function startChartZoomVisualTransition(previousRange, previousYScale) {
+    const targetRange = getCommittedChartZoomRange();
+
+    if (!canRunChartZoomVisualTransition(previousRange, targetRange)) {
+        stopChartZoomVisualTransition();
+        return false;
+    }
+
+    const targetYScale = captureChartZoomYScale();
+    const initialTransform = getChartZoomVisualMatrix({
+        previousRange,
+        targetRange,
+        previousYScale,
+        targetYScale,
+    });
+
+    if (initialTransform === 'matrix(1, 0, 0, 1, 0, 0)') {
+        stopChartZoomVisualTransition();
+        return false;
+    }
+
+    stopChartZoomVisualTransition();
+
+    const token = ++chartZoomTransitionToken;
+
+    isChartZoomTransitioning.value = true;
+    chartZoomVisualTransitionEnabled.value = false;
+    chartZoomVisualTransform.value = initialTransform;
+
+    chartZoomTransitionFrame = requestAnimationFrame(() => {
+        chartZoomTransitionFrame = 0;
+
+        chartZoomTransitionFrame2 = requestAnimationFrame(() => {
+            chartZoomTransitionFrame2 = 0;
+            if (token !== chartZoomTransitionToken) return;
+
+            chartZoomVisualTransitionEnabled.value = true;
+            chartZoomVisualTransform.value = 'matrix(1, 0, 0, 1, 0, 0)';
+
+            chartZoomTransitionTimeout = setTimeout(() => {
+                chartZoomTransitionTimeout = 0;
+                if (token !== chartZoomTransitionToken) return;
+
+                chartZoomVisualTransitionEnabled.value = false;
+                isChartZoomTransitioning.value = false;
+            }, CHART_ZOOM_TRANSITION_DURATION);
+        });
+    });
+
+    return true;
+}
+
+const chartZoomGeometryStyle = computed(() => ({
+    transform: chartZoomVisualTransform.value,
+    transformOrigin: '0 0',
+    transformBox: 'view-box',
+    transition: chartZoomVisualTransitionEnabled.value
+        ? `transform ${CHART_ZOOM_TRANSITION_DURATION}ms cubic-bezier(0.4, 0, 0.2, 1)`
+        : 'none',
+    willChange: isChartZoomTransitioning.value ? 'transform' : undefined,
+}));
+
+const chartZoomClipPath = computed(() =>
+    isChartZoomTransitioning.value
+        ? `url(#vue_ui_stackline_zoom_clip_${uid.value})`
+        : undefined,
+);
+
+function applyZoomState(state, { transition = false } = {}) {
+    const normalized = normalizeZoomState(state);
+    if (!normalized) return null;
+
+    const { start, end } = normalized;
+
+    if (
+        start !== Number(slicer.value.start) ||
+        end !== Number(slicer.value.end)
+    ) {
+        const previousRange = getCommittedChartZoomRange();
+        const previousYScale = captureChartZoomYScale();
+
+        clearQueuedSlicerFrame();
+
+        slicer.value = { start, end };
+        slicerPrecog.value = { start, end };
+
+        normalizeSlicerWindow();
+
+        if (transition) {
+            startChartZoomVisualTransition(previousRange, previousYScale);
+        }
+    }
+
+    // Always return the final committed range. The silent model-driven path
+    // can ignore this value, while the public imperative API can publish it
+    // so other instances sharing v-model:zoom-state are synchronized.
+    return {
+        start: Number(slicer.value.start),
+        end: Number(slicer.value.end),
+    };
+}
+
+function setZoomState(state, { transition = true } = {}) {
+    const applied = applyZoomState(state, { transition });
+    if (!applied) return null;
+
+    emit('update:zoomState', applied);
+
+    return applied;
+}
+
 function normalizeSlicerWindow() {
     const maxLen = maxSeries.value;
     let s = Math.max(0, Math.min(slicer.value.start ?? 0, maxLen - 1));
@@ -975,8 +1345,7 @@ function normalizeSlicerWindow() {
     slicerPrecog.value.end = e;
 
     if (chartSlicer.value) {
-        chartSlicer.value.setStartValue(s);
-        chartSlicer.value.setEndValue(e);
+        chartSlicer.value.setRangeValues(s, e);
     }
 }
 
@@ -989,9 +1358,16 @@ function nextPaint() {
 
 onBeforeUnmount(() => {
     if (refreshRAF.value) cancelAnimationFrame(refreshRAF.value);
+    clearQueuedSlicerFrame();
+    cancelChartZoomSelection();
+    stopChartZoomVisualTransition();
 });
 
-async function refreshSlicer({ force = false } = {}) {
+async function refreshSlicer({
+    force = false,
+    publish = false,
+    transition = force && publish,
+} = {}) {
     if (
         cfgChart.value.zoom.keepState &&
         !force &&
@@ -1002,7 +1378,15 @@ async function refreshSlicer({ force = false } = {}) {
         return;
     }
 
-    setupSlicer();
+    const applyControlledZoom = !force;
+    const previousRange = transition ? getCommittedChartZoomRange() : null;
+    const previousYScale = transition ? captureChartZoomYScale() : null;
+
+    setupSlicer(applyControlledZoom);
+
+    if (transition) {
+        startChartZoomVisualTransition(previousRange, previousYScale);
+    }
 
     await nextTick();
 
@@ -1012,7 +1396,17 @@ async function refreshSlicer({ force = false } = {}) {
 
     refreshRAF.value = requestAnimationFrame(async () => {
         await nextPaint();
-        setupSlicer();
+
+        setupSlicer(applyControlledZoom);
+        refreshRAF.value = null;
+
+        if (publish) {
+            emitZoomState({
+                start: Number(slicer.value.start),
+                end: Number(slicer.value.end),
+            });
+            emit('zoomReset');
+        }
     });
 }
 
@@ -1824,23 +2218,22 @@ const dataTooltipSlot = computed(() => {
 const isSettingUp = ref(false);
 const slicerReady = ref(false);
 
-function validSlicerEnd(v) {
+function validSlicerEnd(v, start = slicer.value.start) {
     const _max = maxSeries.value;
+    const effectiveStart = Number(start);
 
     if (v > _max) {
         return _max;
     }
-    if (v < 0 || v < slicer.value.start) {
-        if (cfgChart.value.zoom.startIndex !== null) {
-            return slicer.value.start + 1;
-        } else {
-            return 1;
-        }
+
+    if (v < 0 || v <= effectiveStart) {
+        return Math.min(effectiveStart + 1, _max);
     }
+
     return v;
 }
 
-function setupSlicer() {
+function setupSlicer(applyControlledZoom = true) {
     if (isSettingUp.value) return;
 
     isSettingUp.value = true;
@@ -1858,7 +2251,7 @@ function setupSlicer() {
 
         const end =
             endIndex != null
-                ? Math.min(validSlicerEnd(endIndex + 1), max)
+                ? Math.min(validSlicerEnd(endIndex + 1, start), max)
                 : max;
 
         suppressChild.value = true;
@@ -1871,6 +2264,10 @@ function setupSlicer() {
         normalizeSlicerWindow();
 
         slicerReady.value = true;
+
+        if (applyControlledZoom && props.zoomState) {
+            applyZoomState(props.zoomState);
+        }
     } finally {
         queueMicrotask(() => {
             suppressChild.value = false;
@@ -1880,21 +2277,79 @@ function setupSlicer() {
     }
 }
 
+function queueSlicerUpdate(update) {
+    queuedSlicerUpdate = {
+        ...queuedSlicerUpdate,
+        ...update,
+    };
+
+    if (queuedSlicerFrame) {
+        cancelAnimationFrame(queuedSlicerFrame);
+    }
+
+    queuedSlicerFrame = requestAnimationFrame(() => {
+        const nextSlicer = {
+            ...slicer.value,
+            ...queuedSlicerUpdate,
+        };
+
+        queuedSlicerUpdate = {};
+        queuedSlicerFrame = null;
+
+        slicer.value = nextSlicer;
+        slicerPrecog.value = { ...nextSlicer };
+
+        normalizeSlicerWindow();
+
+        /**
+         * Publish only the FULLY merged normalized range.
+         * This is critical for selection dragging because SlicerPreview emits update:start and
+         * update:end back-to-back, and both updates must be represented by one authoritative zoom state.
+         */
+        emitZoomState({
+            start: Number(slicer.value.start),
+            end: Number(slicer.value.end),
+        });
+    });
+}
+
 function onSlicerStart(v) {
     if (isSettingUp.value || suppressChild.value) return;
-    if (v === slicer.value.start) return;
-    slicer.value.start = v;
-    slicerPrecog.value.start = v;
-    normalizeSlicerWindow();
+
+    const start = Number(v);
+    if (!Number.isFinite(start)) return;
+
+    emit('zoomStart', {
+        index: start,
+        isZoom: start !== 0,
+    });
+
+    if (start === slicer.value.start) return;
+
+    queueSlicerUpdate({ start });
 }
 
 function onSlicerEnd(v) {
     if (isSettingUp.value || suppressChild.value) return;
-    const end = validSlicerEnd(v);
-    if (end === slicer.value.end) return;
-    slicer.value.end = end;
-    slicerPrecog.value.end = end;
-    normalizeSlicerWindow();
+
+    const pendingStart =
+        queuedSlicerUpdate.start !== undefined
+            ? queuedSlicerUpdate.start
+            : slicer.value.start;
+
+    const end = validSlicerEnd(Number(v), pendingStart);
+    if (!Number.isFinite(end)) return;
+
+    emit('zoomEnd', {
+        index: end,
+        isZoom: end !== maxSeries.value,
+    });
+
+    if (end === slicer.value.end && queuedSlicerUpdate.start === undefined) {
+        return;
+    }
+
+    queueSlicerUpdate({ end });
 }
 
 const boundsX = computed(() => ({
@@ -1943,6 +2398,23 @@ watch(
 );
 
 const suppressChild = ref(false);
+
+watch(
+    [() => props.zoomState, slicerReady],
+    ([state, ready]) => {
+        if (!ready || !state) return;
+
+        /**
+         * When this is the instance from which originated the v-model update, applyZoomState exits
+         * immediately because the committed slicer already matches the model.
+         */
+        applyZoomState(state, { transition: true });
+    },
+    {
+        deep: true,
+        immediate: true,
+    },
+);
 
 const WIDTH = computed(() => defaultSizes.value.width);
 const HEIGHT = computed(() => defaultSizes.value.height);
@@ -2004,6 +2476,302 @@ function clientToSvgCoords(evt) {
     return { x, y, ok: true };
 }
 
+const chartZoomSelectionRect = computed(() => {
+    if (
+        !isChartZoomSelecting.value ||
+        chartZoomStartX.value == null ||
+        chartZoomCurrentX.value == null
+    ) {
+        return null;
+    }
+
+    return {
+        x: Math.min(chartZoomStartX.value, chartZoomCurrentX.value),
+        y: drawingArea.value.top,
+        width: Math.abs(chartZoomCurrentX.value - chartZoomStartX.value),
+        height: drawingArea.value.height,
+    };
+});
+
+const isChartZoomed = computed(() => {
+    if (!slicerReady.value) return false;
+
+    return (
+        Number(slicer.value.start) !== 0 ||
+        Number(slicer.value.end) !== Number(maxSeries.value)
+    );
+});
+
+function clampChartZoomX(x) {
+    return Math.min(
+        Math.max(x, drawingArea.value.left),
+        drawingArea.value.right,
+    );
+}
+
+function clearChartHoverSelection() {
+    if (RAF_MOUSE_MOVE) {
+        cancelAnimationFrame(RAF_MOUSE_MOVE);
+        RAF_MOUSE_MOVE = 0;
+    }
+
+    hoveredIndex.value = null;
+    selectedMinimapIndex.value = null;
+    activeTooltipIndex.value = null;
+    selectedSerieIndex.value = null;
+    toggleTooltipVisibility(false, null);
+}
+
+function cancelChartZoomSelection(event) {
+    const pointerId =
+        event?.pointerId != null ? event.pointerId : chartZoomPointerId.value;
+
+    if (pointerId != null && svgRef.value?.hasPointerCapture?.(pointerId)) {
+        svgRef.value.releasePointerCapture(pointerId);
+    }
+
+    isChartZoomSelecting.value = false;
+    chartZoomStartX.value = null;
+    chartZoomCurrentX.value = null;
+    chartZoomPointerId.value = null;
+}
+
+function suppressNextChartClick() {
+    ignoreNextChartClick.value = true;
+
+    setTimeout(() => {
+        ignoreNextChartClick.value = false;
+    }, 0);
+}
+
+function resetChartZoomFromDoubleTap(event) {
+    if (!isChartZoomEnabled.value || !isChartZoomed.value || !event) {
+        return false;
+    }
+
+    const now = Date.now();
+    const pointerType = event.pointerType || 'mouse';
+    const last = lastChartZoomTap.value;
+    const maxDelay = pointerType === 'touch' ? 450 : 350;
+    const maxDistance = pointerType === 'touch' ? 28 : 10;
+
+    const distance = Math.hypot(event.clientX - last.x, event.clientY - last.y);
+
+    const isDoubleTap =
+        last.time > 0 &&
+        last.pointerType === pointerType &&
+        now - last.time <= maxDelay &&
+        distance <= maxDistance;
+
+    if (!isDoubleTap) {
+        lastChartZoomTap.value = {
+            time: now,
+            x: event.clientX,
+            y: event.clientY,
+            pointerType,
+        };
+
+        return false;
+    }
+
+    lastChartZoomTap.value = {
+        time: 0,
+        x: 0,
+        y: 0,
+        pointerType: null,
+    };
+
+    suppressNextChartClick();
+    cancelChartZoomSelection(event);
+
+    void refreshSlicer({
+        force: true,
+        publish: true,
+    });
+
+    return true;
+}
+
+function getChartZoomIndexFromSvgX(svgX) {
+    if (WINDOW_LEN.value <= 0) return null;
+
+    if (WINDOW_LEN.value === 1 || STEP_X.value <= 0) {
+        return 0;
+    }
+
+    const raw = (clampChartZoomX(svgX) - drawingArea.value.left) / STEP_X.value;
+
+    return Math.max(0, Math.min(WINDOW_LEN.value - 1, Math.round(raw)));
+}
+
+function getChartZoomStateFromSelection(left, right) {
+    const localStart = getChartZoomIndexFromSvgX(left);
+    const localEnd = getChartZoomIndexFromSvgX(right);
+
+    if (localStart == null || localEnd == null) return null;
+
+    const first = Math.min(localStart, localEnd);
+    const last = Math.max(localStart, localEnd);
+
+    // Same behavior as Sparkline / VueUiXy: selecting only one datapoint
+    // does not create a new zoom window.
+    if (last <= first) return null;
+
+    return {
+        start: Number(slicer.value.start) + first,
+        end: Number(slicer.value.start) + last + 1,
+    };
+}
+
+function commitChartZoom(state) {
+    const applied = setZoomState(state, { transition: true });
+    if (!applied) return null;
+
+    emit('zoomStart', {
+        index: applied.start,
+        isZoom: applied.start !== 0,
+    });
+
+    emit('zoomEnd', {
+        index: applied.end,
+        isZoom: applied.end !== maxSeries.value,
+    });
+
+    return applied;
+}
+
+function setChartZoomPointerFocus() {
+    isChartZoomPointerFocused.value = true;
+    svgRef.value?.classList?.add('vue-ui-stackline-chart-zoom-pointer-focus');
+}
+
+function clearChartZoomPointerFocus() {
+    isChartZoomPointerFocused.value = false;
+    svgRef.value?.classList?.remove(
+        'vue-ui-stackline-chart-zoom-pointer-focus',
+    );
+}
+
+function onChartZoomPointerDown(event) {
+    if (!isChartZoomEnabled.value || isAnnotator.value) return;
+    if (event.button !== undefined && event.button !== 0) return;
+
+    if (
+        chartZoomPointerId.value != null &&
+        event.pointerId !== chartZoomPointerId.value
+    ) {
+        return;
+    }
+
+    const svgPoint = clientToSvgCoords(event);
+    if (!svgPoint) return;
+
+    const { left, right, top, bottom } = drawingArea.value;
+
+    if (
+        svgPoint.x < left ||
+        svgPoint.x > right ||
+        svgPoint.y < top ||
+        svgPoint.y > bottom
+    ) {
+        return;
+    }
+
+    if (WINDOW_LEN.value <= 1) return;
+
+    setChartZoomPointerFocus();
+    svgRef.value?.focus?.({ preventScroll: true });
+
+    clearChartHoverSelection();
+
+    chartZoomPointerId.value = event.pointerId;
+    isChartZoomSelecting.value = true;
+    chartZoomStartX.value = clampChartZoomX(svgPoint.x);
+    chartZoomCurrentX.value = clampChartZoomX(svgPoint.x);
+}
+
+function onChartZoomPointerMove(event) {
+    if (!isChartZoomEnabled.value || !isChartZoomSelecting.value) return;
+
+    if (
+        chartZoomPointerId.value != null &&
+        event.pointerId !== chartZoomPointerId.value
+    ) {
+        return;
+    }
+
+    const svgPoint = clientToSvgCoords(event);
+    if (!svgPoint) return;
+
+    chartZoomCurrentX.value = clampChartZoomX(svgPoint.x);
+
+    if (
+        chartZoomStartX.value != null &&
+        Math.abs(chartZoomCurrentX.value - chartZoomStartX.value) >= 2 &&
+        !svgRef.value?.hasPointerCapture?.(event.pointerId)
+    ) {
+        svgRef.value?.setPointerCapture?.(event.pointerId);
+    }
+}
+
+function onChartZoomPointerUp(event) {
+    if (!isChartZoomEnabled.value || !isChartZoomSelecting.value) return;
+
+    if (
+        chartZoomPointerId.value != null &&
+        event.pointerId !== chartZoomPointerId.value
+    ) {
+        return;
+    }
+
+    const svgPoint = clientToSvgCoords(event);
+
+    if (svgPoint) {
+        chartZoomCurrentX.value = clampChartZoomX(svgPoint.x);
+    }
+
+    const startX = chartZoomStartX.value;
+    const endX = chartZoomCurrentX.value;
+
+    const selectionWidth =
+        startX == null || endX == null ? 0 : Math.abs(endX - startX);
+
+    const minimumSelectionWidth = Math.max(4, drawingArea.value.width * 0.01);
+
+    if (selectionWidth < minimumSelectionWidth) {
+        if (resetChartZoomFromDoubleTap(event)) return;
+
+        cancelChartZoomSelection(event);
+        return;
+    }
+
+    const left = Math.min(startX, endX);
+    const right = Math.max(startX, endX);
+
+    const nextZoomState = getChartZoomStateFromSelection(left, right);
+
+    if (!nextZoomState) {
+        cancelChartZoomSelection(event);
+        return;
+    }
+
+    cancelChartZoomSelection(event);
+
+    const applied = commitChartZoom(nextZoomState);
+
+    if (applied) {
+        lastChartZoomTap.value = {
+            time: 0,
+            x: 0,
+            y: 0,
+            pointerType: null,
+        };
+
+        clearChartHoverSelection();
+        suppressNextChartClick();
+    }
+}
+
 let RAF_MOUSE_MOVE = 0;
 const WINDOW_LEN = computed(() =>
     Math.max(1, slicer.value.end - slicer.value.start),
@@ -2037,7 +2805,7 @@ function highlighterRectAt(i) {
 }
 
 function onSvgMouseMove(e) {
-    if (isAnnotator.value) return;
+    if (isAnnotator.value || isChartZoomSelecting.value) return;
     if (RAF_MOUSE_MOVE) cancelAnimationFrame(RAF_MOUSE_MOVE);
 
     RAF_MOUSE_MOVE = requestAnimationFrame(() => {
@@ -2079,6 +2847,13 @@ function onSvgMouseMove(e) {
 }
 
 function onSvgClick(e) {
+    if (ignoreNextChartClick.value) {
+        ignoreNextChartClick.value = false;
+        return;
+    }
+
+    if (isChartZoomSelecting.value) return;
+
     const svgPt = clientToSvgCoords(e);
     if (!svgPt || !svgRef.value) return;
 
@@ -3188,6 +3963,7 @@ function onSvgFocus() {
 }
 
 function onSvgBlur() {
+    clearChartZoomPointerFocus();
     activeTooltipIndex.value = null;
     tooltipTriggerMode.value = 'pointer';
     isTooltip.value = false;
@@ -3199,6 +3975,9 @@ function onSvgBlur() {
 function onSvgKeydown(event) {
     if (!svgRef.value || isAnnotator.value) return;
     if (document.activeElement !== svgRef.value) return;
+
+    clearChartZoomPointerFocus();
+
     if (allSegregated.value) return;
     if (!WINDOW_LEN.value) return;
 
@@ -3214,6 +3993,20 @@ function onSvgKeydown(event) {
     event.stopPropagation();
 
     if (isEscapeKey) {
+        if (
+            isChartZoomEnabled.value &&
+            (isChartZoomed.value || isChartZoomSelecting.value)
+        ) {
+            cancelChartZoomSelection();
+
+            void refreshSlicer({
+                force: true,
+                publish: true,
+            });
+
+            return;
+        }
+
         activeTooltipIndex.value = null;
         tooltipTriggerMode.value = 'pointer';
         isTooltip.value = false;
@@ -3309,6 +4102,8 @@ defineExpose({
     toggleAnnotator,
     toggleFullscreen,
     copyAlt,
+    resetZoom: () => refreshSlicer({ force: true, publish: true }),
+    setZoomState,
 });
 </script>
 
@@ -3522,8 +4317,22 @@ defineExpose({
                     'vue-data-ui-fullscreen--on': isFullscreen,
                     'vue-data-ui-fulscreen--off': !isFullscreen,
                     'vue-data-ui-no-transition': !transitionEnabled,
+                    'vue-ui-stackline-chart-zoom-pointer-focus':
+                        isChartZoomEnabled && isChartZoomPointerFocused,
                 }"
-                :style="`max-width:100%;overflow:visible;background:transparent;color:${cfgChart.color}`"
+                :style="{
+                    maxWidth: '100%',
+                    overflow: 'visible',
+                    background: 'transparent',
+                    color: cfgChart.color,
+                    cursor: !isChartZoomEnabled
+                        ? undefined
+                        : isChartZoomSelecting
+                          ? 'col-resize'
+                          : 'crosshair',
+                    touchAction: isChartZoomEnabled ? 'pan-y' : undefined,
+                    userSelect: isChartZoomEnabled ? 'none' : undefined,
+                }"
                 role="img"
                 aria-live="polite"
                 tabindex="0"
@@ -3531,11 +4340,26 @@ defineExpose({
                 @mousemove="onSvgMouseMove"
                 @mouseleave="onSvgMouseLeave"
                 @click="onSvgClick"
+                @pointerdown="onChartZoomPointerDown"
+                @pointermove="onChartZoomPointerMove"
+                @pointerup="onChartZoomPointerUp"
+                @pointercancel="cancelChartZoomSelection"
                 @focus="onSvgFocus"
                 @blur="onSvgBlur"
                 @keydown="onSvgKeydown"
             >
                 <PackageVersion />
+
+                <defs>
+                    <clipPath :id="`vue_ui_stackline_zoom_clip_${uid}`">
+                        <rect
+                            :x="drawingArea.left"
+                            :y="drawingArea.top"
+                            :width="Math.max(0, drawingArea.width)"
+                            :height="Math.max(0, drawingArea.height)"
+                        />
+                    </clipPath>
+                </defs>
 
                 <template v-for="dp in stackedDataset">
                     <defs v-if="$slots.pattern">
@@ -3704,35 +4528,58 @@ defineExpose({
                 />
 
                 <!-- AREAS & LINES -->
-                <template v-for="ds in formattedDataset">
-                    <path
-                        v-if="cfgLines.useArea && !ds.standalone"
-                        :d="cfgLines.smooth ? ds.smoothArea : ds.straightArea"
-                        :fill="
-                            $slots.pattern
-                                ? `url(#pattern_${uid}_${ds.absoluteIndex})`
-                                : cfgLines.gradient.show
-                                  ? `url(#gradient_${ds.id})`
-                                  : ds.color
-                        "
-                        :opacity="cfgLines.areaOpacity"
-                        :class="{ 'vue-data-ui-transition': transitionEnabled }"
-                    />
-                </template>
-                <template v-for="ds in formattedDataset">
-                    <path
-                        :d="cfgLines.smooth ? ds.smoothPath : ds.straightPath"
-                        :stroke="
-                            cfgLines.path.useSerieColor
-                                ? ds.color
-                                : cfgLines.path.stroke
-                        "
-                        :stroke-width="cfgLines.strokeWidth"
-                        fill="none"
-                        stroke-linecap="round"
-                        :class="{ 'vue-data-ui-transition': transitionEnabled }"
-                    />
-                </template>
+                <g :clip-path="chartZoomClipPath">
+                    <g
+                        class="vue-ui-stackline-zoom-geometry"
+                        :class="{
+                            'vue-ui-stackline-zoom-geometry--transitioning':
+                                isChartZoomTransitioning,
+                        }"
+                        :style="chartZoomGeometryStyle"
+                    >
+                        <template v-for="ds in formattedDataset">
+                            <path
+                                v-if="cfgLines.useArea && !ds.standalone"
+                                :d="
+                                    cfgLines.smooth
+                                        ? ds.smoothArea
+                                        : ds.straightArea
+                                "
+                                :fill="
+                                    $slots.pattern
+                                        ? `url(#pattern_${uid}_${ds.absoluteIndex})`
+                                        : cfgLines.gradient.show
+                                          ? `url(#gradient_${ds.id})`
+                                          : ds.color
+                                "
+                                :opacity="cfgLines.areaOpacity"
+                                :class="{
+                                    'vue-data-ui-transition': transitionEnabled,
+                                }"
+                            />
+                        </template>
+                        <template v-for="ds in formattedDataset">
+                            <path
+                                :d="
+                                    cfgLines.smooth
+                                        ? ds.smoothPath
+                                        : ds.straightPath
+                                "
+                                :stroke="
+                                    cfgLines.path.useSerieColor
+                                        ? ds.color
+                                        : cfgLines.path.stroke
+                                "
+                                :stroke-width="cfgLines.strokeWidth"
+                                fill="none"
+                                stroke-linecap="round"
+                                :class="{
+                                    'vue-data-ui-transition': transitionEnabled,
+                                }"
+                            />
+                        </template>
+                    </g>
+                </g>
 
                 <!-- SCALE LABELS -->
                 <template
@@ -3992,142 +4839,164 @@ defineExpose({
                 </template>
 
                 <!-- PLOTS -->
-                <template
-                    v-for="ds in formattedDataset"
-                    :key="`shp_sel_${ds.id}`"
-                >
+                <g :clip-path="chartZoomClipPath">
                     <g
-                        v-if="
-                            userHovers &&
-                            slicer.end - slicer.start >
-                                cfgLines.dot.hideAboveMaxSerieLength
-                        "
+                        class="vue-ui-stackline-zoom-geometry"
+                        :class="{
+                            'vue-ui-stackline-zoom-geometry--transitioning':
+                                isChartZoomTransitioning,
+                        }"
+                        :style="chartZoomGeometryStyle"
                     >
-                        <template v-if="selectedSerieIndex != null">
-                            <template
+                        <template
+                            v-for="ds in formattedDataset"
+                            :key="`shp_sel_${ds.id}`"
+                        >
+                            <g
                                 v-if="
-                                    ds.rel.includes(selectedSerieIndex) &&
-                                    ds.fullSeries?.[
-                                        slicer.start + selectedSerieIndex
-                                    ] != null &&
-                                    !Number.isNaN(
-                                        ds.fullSeries?.[
-                                            slicer.start + selectedSerieIndex
-                                        ],
-                                    )
+                                    userHovers &&
+                                    slicer.end - slicer.start >
+                                        cfgLines.dot.hideAboveMaxSerieLength
                                 "
                             >
-                                <Shape
-                                    :shape="
-                                        [
-                                            'triangle',
-                                            'square',
-                                            'diamond',
-                                            'pentagon',
-                                            'hexagon',
-                                            'star',
-                                        ].includes(ds.shape)
-                                            ? ds.shape
-                                            : 'circle'
-                                    "
-                                    :color="
-                                        cfgLines.dot.useSerieColor
-                                            ? ds.color
-                                            : cfgLines.dot.fill
-                                    "
-                                    :plot="{
-                                        x: checkNaN(
-                                            ds.points[
-                                                ds.rel.indexOf(
-                                                    selectedSerieIndex,
-                                                )
-                                            ].x,
-                                        ),
-                                        y: checkNaN(
-                                            ds.points[
-                                                ds.rel.indexOf(
-                                                    selectedSerieIndex,
-                                                )
-                                            ].y,
-                                        ),
-                                    }"
-                                    :radius="cfgLines.dot.radius * 1.3"
-                                    :stroke="
-                                        cfgLines.dot.useSerieColor
-                                            ? cfgLines.dot.stroke
-                                            : ds.color
-                                    "
-                                    :strokeWidth="cfgLines.dot.strokeWidth"
-                                    :still="loading"
-                                    :class="{
-                                        'vue-data-ui-transition':
-                                            transitionEnabled,
-                                    }"
-                                />
+                                <template v-if="selectedSerieIndex != null">
+                                    <template
+                                        v-if="
+                                            ds.rel.includes(
+                                                selectedSerieIndex,
+                                            ) &&
+                                            ds.fullSeries?.[
+                                                slicer.start +
+                                                    selectedSerieIndex
+                                            ] != null &&
+                                            !Number.isNaN(
+                                                ds.fullSeries?.[
+                                                    slicer.start +
+                                                        selectedSerieIndex
+                                                ],
+                                            )
+                                        "
+                                    >
+                                        <Shape
+                                            :shape="
+                                                [
+                                                    'triangle',
+                                                    'square',
+                                                    'diamond',
+                                                    'pentagon',
+                                                    'hexagon',
+                                                    'star',
+                                                ].includes(ds.shape)
+                                                    ? ds.shape
+                                                    : 'circle'
+                                            "
+                                            :color="
+                                                cfgLines.dot.useSerieColor
+                                                    ? ds.color
+                                                    : cfgLines.dot.fill
+                                            "
+                                            :plot="{
+                                                x: checkNaN(
+                                                    ds.points[
+                                                        ds.rel.indexOf(
+                                                            selectedSerieIndex,
+                                                        )
+                                                    ].x,
+                                                ),
+                                                y: checkNaN(
+                                                    ds.points[
+                                                        ds.rel.indexOf(
+                                                            selectedSerieIndex,
+                                                        )
+                                                    ].y,
+                                                ),
+                                            }"
+                                            :radius="cfgLines.dot.radius * 1.3"
+                                            :stroke="
+                                                cfgLines.dot.useSerieColor
+                                                    ? cfgLines.dot.stroke
+                                                    : ds.color
+                                            "
+                                            :strokeWidth="
+                                                cfgLines.dot.strokeWidth
+                                            "
+                                            :still="loading"
+                                            :class="{
+                                                'vue-data-ui-transition':
+                                                    transitionEnabled,
+                                            }"
+                                        />
+                                    </template>
+                                </template>
+                            </g>
+                        </template>
+
+                        <template
+                            v-for="ds in formattedDataset"
+                            :key="`shp_${ds.id}`"
+                        >
+                            <template
+                                v-if="
+                                    slicer.end - slicer.start <
+                                    cfgLines.dot.hideAboveMaxSerieLength
+                                "
+                            >
+                                <g
+                                    v-for="(plot, k) in ds.points"
+                                    :key="`shp_${ds.id}_${slicer.start + k}`"
+                                >
+                                    <Shape
+                                        v-if="
+                                            ds.fullSeries?.[
+                                                slicer.start + ds.rel[k]
+                                            ] != null &&
+                                            !Number.isNaN(
+                                                ds.fullSeries?.[
+                                                    slicer.start + ds.rel[k]
+                                                ],
+                                            )
+                                        "
+                                        :shape="
+                                            [
+                                                'triangle',
+                                                'square',
+                                                'diamond',
+                                                'pentagon',
+                                                'hexagon',
+                                                'star',
+                                            ].includes(ds.shape)
+                                                ? ds.shape
+                                                : 'circle'
+                                        "
+                                        :color="
+                                            cfgLines.dot.useSerieColor
+                                                ? ds.color
+                                                : cfgLines.dot.fill
+                                        "
+                                        :plot="{ x: plot.x, y: plot.y }"
+                                        :radius="
+                                            userHovers &&
+                                            selectedSerieIndex === ds.rel[k]
+                                                ? cfgLines.dot.radius * 1.3
+                                                : cfgLines.dot.radius
+                                        "
+                                        :stroke="
+                                            cfgLines.dot.useSerieColor
+                                                ? cfgLines.dot.stroke
+                                                : ds.color
+                                        "
+                                        :strokeWidth="cfgLines.dot.strokeWidth"
+                                        :still="loading"
+                                        :class="{
+                                            'vue-data-ui-transition':
+                                                transitionEnabled,
+                                        }"
+                                    />
+                                </g>
                             </template>
                         </template>
                     </g>
-                </template>
-
-                <template v-for="ds in formattedDataset" :key="`shp_${ds.id}`">
-                    <template
-                        v-if="
-                            slicer.end - slicer.start <
-                            cfgLines.dot.hideAboveMaxSerieLength
-                        "
-                    >
-                        <g
-                            v-for="(plot, k) in ds.points"
-                            :key="`shp_${ds.id}_${slicer.start + k}`"
-                        >
-                            <Shape
-                                v-if="
-                                    ds.fullSeries?.[slicer.start + ds.rel[k]] !=
-                                        null &&
-                                    !Number.isNaN(
-                                        ds.fullSeries?.[
-                                            slicer.start + ds.rel[k]
-                                        ],
-                                    )
-                                "
-                                :shape="
-                                    [
-                                        'triangle',
-                                        'square',
-                                        'diamond',
-                                        'pentagon',
-                                        'hexagon',
-                                        'star',
-                                    ].includes(ds.shape)
-                                        ? ds.shape
-                                        : 'circle'
-                                "
-                                :color="
-                                    cfgLines.dot.useSerieColor
-                                        ? ds.color
-                                        : cfgLines.dot.fill
-                                "
-                                :plot="{ x: plot.x, y: plot.y }"
-                                :radius="
-                                    userHovers &&
-                                    selectedSerieIndex === ds.rel[k]
-                                        ? cfgLines.dot.radius * 1.3
-                                        : cfgLines.dot.radius
-                                "
-                                :stroke="
-                                    cfgLines.dot.useSerieColor
-                                        ? cfgLines.dot.stroke
-                                        : ds.color
-                                "
-                                :strokeWidth="cfgLines.dot.strokeWidth"
-                                :still="loading"
-                                :class="{
-                                    'vue-data-ui-transition': transitionEnabled,
-                                }"
-                            />
-                        </g>
-                    </template>
-                </template>
+                </g>
 
                 <!-- SERIES DATALABELS -->
                 <template
@@ -4226,6 +5095,27 @@ defineExpose({
                         </template>
                     </g>
                 </template>
+
+                <!-- ON-CHART ZOOM SELECTION -->
+                <rect
+                    v-if="chartZoomSelectionRect"
+                    data-cy="stackline-zoom-selection"
+                    :x="chartZoomSelectionRect.x"
+                    :y="chartZoomSelectionRect.y"
+                    :width="chartZoomSelectionRect.width"
+                    :height="chartZoomSelectionRect.height"
+                    :fill="dragToZoomConfig.selection.fill"
+                    :fill-opacity="dragToZoomConfig.selection.fillOpacity"
+                    :stroke="dragToZoomConfig.selection.stroke"
+                    :stroke-opacity="dragToZoomConfig.selection.strokeOpacity"
+                    :stroke-width="dragToZoomConfig.selection.strokeWidth"
+                    :stroke-dasharray="
+                        dragToZoomConfig.selection.strokeDasharray
+                    "
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    pointer-events="none"
+                />
 
                 <!-- ZOOM PREVIEW -->
                 <rect
@@ -4495,7 +5385,7 @@ defineExpose({
             @update:end="onSlicerEnd"
             @update:start="onSlicerStart"
             @trapMouse="selectMinimapIndex"
-            @reset="() => refreshSlicer({ force: true })"
+            @reset="() => refreshSlicer({ force: true, publish: true })"
             @futureEnd="(v) => setPrecog('end', v)"
             @futureStart="(v) => setPrecog('start', v)"
         >
@@ -4583,6 +5473,24 @@ svg:focus {
 
 svg:focus-visible {
     outline: 2px solid currentColor;
+}
+
+svg.vue-ui-stackline-chart-zoom-pointer-focus:focus,
+svg.vue-ui-stackline-chart-zoom-pointer-focus:focus-visible {
+    outline: none !important;
+}
+
+.vue-ui-stackline-zoom-geometry :deep(path),
+.vue-ui-stackline-zoom-geometry :deep(line),
+.vue-ui-stackline-zoom-geometry :deep(rect),
+.vue-ui-stackline-zoom-geometry :deep(circle),
+.vue-ui-stackline-zoom-geometry :deep(polygon) {
+    vector-effect: non-scaling-stroke;
+}
+
+.vue-ui-stackline-zoom-geometry--transitioning :deep(*) {
+    transition: none !important;
+    animation: none !important;
 }
 
 .vue-data-ui-transition {

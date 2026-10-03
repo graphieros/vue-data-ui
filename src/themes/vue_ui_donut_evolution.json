@@ -41,7 +41,13 @@
                 "color": "#CCCCCC",
                 "zoom": {
                     "color": "#4A4A4A",
-                    "highlightColor": "#9A9A9A"
+                    "highlightColor": "#9A9A9A",
+                    "dragToZoom": {
+                        "selection": {
+                            "fill": "#8A8A8A",
+                            "stroke": "#8A8A8A"
+                        }
+                    }
                 },
                 "dialog": {
                     "backgroundColor": "#1A1A1A",
@@ -177,7 +183,13 @@
                 "color": "#CCCCCC",
                 "zoom": {
                     "color": "#4A4A4A",
-                    "highlightColor": "#9A9A9A"
+                    "highlightColor": "#9A9A9A",
+                    "dragToZoom": {
+                        "selection": {
+                            "fill": "#8A8A8A",
+                            "stroke": "#8A8A8A"
+                        }
+                    }
                 },
                 "dialog": {
                     "backgroundColor": "#1A1A1A",
@@ -307,7 +319,13 @@
                 "color": "#424242",
                 "zoom": {
                     "color": "#5D4037",
-                    "highlightColor": "#FF8A65"
+                    "highlightColor": "#FF8A65",
+                    "dragToZoom": {
+                        "selection": {
+                            "fill": "#FF8A65",
+                            "stroke": "#FF8A65"
+                        }
+                    }
                 },
                 "dialog": {
                     "backgroundColor": "#FFF8E1",
@@ -438,7 +456,13 @@
                 "color": "#BDBDBD",
                 "zoom": {
                     "color": "#5D4037",
-                    "highlightColor": "#FF8A65"
+                    "highlightColor": "#FF8A65",
+                    "dragToZoom": {
+                        "selection": {
+                            "fill": "#FF8A65",
+                            "stroke": "#FF8A65"
+                        }
+                    }
                 },
                 "dialog": {
                     "backgroundColor": "#1E1E1E",
@@ -569,7 +593,13 @@
                 "color": "#99AA99",
                 "zoom": {
                     "color": "#5F6A5F",
-                    "highlightColor": "#66CC66"
+                    "highlightColor": "#66CC66",
+                    "dragToZoom": {
+                        "selection": {
+                            "fill": "#66CC66",
+                            "stroke": "#66CC66"
+                        }
+                    }
                 },
                 "dialog": {
                     "backgroundColor": "#1A1A1A",
@@ -699,7 +729,13 @@
                 "color": "#8A9892",
                 "zoom": {
                     "color": "#E0CFC3",
-                    "highlightColor": "#8F837A"
+                    "highlightColor": "#8F837A",
+                    "dragToZoom": {
+                        "selection": {
+                            "fill": "#8F837A",
+                            "stroke": "#8F837A"
+                        }
+                    }
                 },
                 "dialog": {
                     "backgroundColor": "#fbfafa",
@@ -827,7 +863,13 @@
                 "color": "#50606C",
                 "zoom": {
                     "color": "#92B0AB",
-                    "highlightColor": "#50606C"
+                    "highlightColor": "#50606C",
+                    "dragToZoom": {
+                        "selection": {
+                            "fill": "#50606C",
+                            "stroke": "#50606C"
+                        }
+                    }
                 },
                 "dialog": {
                     "backgroundColor": "#f6f6fb",

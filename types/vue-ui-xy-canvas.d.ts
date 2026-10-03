@@ -22,6 +22,7 @@ import type {
     VueUiXyCanvasEmitSelectLegend,
     VueUiXyCanvasEmitSelectX,
     VueUiXyCanvasEmitCopyAlt,
+    VueUiXyCanvasEvent,
 } from 'vue-data-ui';
 
 export type {
@@ -46,6 +47,7 @@ export type {
     VueUiXyCanvasEmitSelectLegend,
     VueUiXyCanvasEmitSelectX,
     VueUiXyCanvasEmitCopyAlt,
+    VueUiXyCanvasEvent,
 };
 
 declare const VueUiXyCanvasBase: DefineComponent<
