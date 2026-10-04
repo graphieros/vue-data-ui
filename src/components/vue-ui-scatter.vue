@@ -174,6 +174,9 @@ const { transitionEnabled } = useTransitions({
 const isCursorPointer = computed(
     () => FINAL_CONFIG.value.userOptions.useCursorPointer,
 );
+const hasDatapointClickEvent = computed(() =>
+    isFunction(FINAL_CONFIG.value.events?.datapointClick),
+);
 
 function mockData(n = 100, r = 0.8, opts = {}) {
     const { meanX = 0, sdX = 1, meanY = 0, sdY = 1, seed } = opts;
@@ -1239,6 +1242,7 @@ const marginalLines = computed(() => {
 const selectedPlotId = ref(undefined);
 const selectedPlot = ref(null);
 const selectedPlots = ref([]);
+const isPerformancePlotHovered = ref(false);
 const dataTooltipSlot = ref(null);
 const selectedGroupId = ref(undefined);
 
@@ -1859,6 +1863,8 @@ function onTrapMoveFactory() {
             });
         });
 
+        isPerformancePlotHovered.value = Boolean(best);
+
         if (best) {
             if (selectedPlotId.value !== best.id) {
                 selectedPlotId.value = best.id;
@@ -1880,6 +1886,7 @@ function onTrapMoveFactory() {
 const onPathMouseMove = onTrapMoveFactory();
 
 function onPathMouseLeave() {
+    isPerformancePlotHovered.value = false;
     if (selectedPlotId.value) {
         const prev = selectedPlot.value;
         selectedPlotId.value = undefined;
@@ -3139,7 +3146,7 @@ defineExpose({
 
                 <!-- PLOTS (PERFORMANCE MODE : ONE PATH PER SERIES) -->
                 <template v-if="FINAL_CONFIG.usePerformanceMode">
-                    <g :clip-path="`url(#clip_path_${uid})`">
+                    <g>
                         <path
                             data-cy="performance-path"
                             v-for="sp in seriesPaths"
@@ -3155,24 +3162,14 @@ defineExpose({
                     </g>
 
                     <!-- SINGLE SELECTED PLOT -->
-                    <g
-                        v-if="selectedPlot && cfgPlots.selectors.show"
-                        style="pointer-events: none"
-                    >
+                    <g v-if="selectedPlot" style="pointer-events: none">
                         <Shape
                             data-cy="performance-selected-plot"
                             :shape="selectedPlot.shape || 'circle'"
                             :color="selectedPlot.color"
                             :plot="{ x: selectedPlot.x, y: selectedPlot.y }"
                             :radius="
-                                Math.max(
-                                    4 *
-                                        SHAPES_RADIUS_SCALE[
-                                            selectedPlot.shape || 'circle'
-                                        ],
-                                    selectedPlot.weight *
-                                        cfgPlots.hoverRadiusRatio,
-                                )
+                                selectedPlot.weight * cfgPlots.hoverRadiusRatio
                             "
                             :stroke="cfgPlots.stroke"
                             :strokeWidth="cfgPlots.strokeWidth"
@@ -3187,6 +3184,13 @@ defineExpose({
                         :width="Math.max(0.0001, drawingArea.width)"
                         :height="Math.max(0.0001, drawingArea.height)"
                         fill="transparent"
+                        :style="{
+                            cursor:
+                                isPerformancePlotHovered &&
+                                hasDatapointClickEvent
+                                    ? 'pointer'
+                                    : 'default',
+                        }"
                         @mousemove="onPathMouseMove"
                         @mouseleave="onPathMouseLeave"
                         @click="onPathClick"
