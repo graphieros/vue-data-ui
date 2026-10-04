@@ -965,8 +965,11 @@ function updateDrag(pointer, event = null) {
     ) {
         return;
     }
-    if (event?.cancelable) {
-        event.preventDefault();
+    if (event) {
+        if (event.cancelable) {
+            event.preventDefault();
+        }
+        event.stopPropagation();
     }
     const offset = {
         x: dragState.startOffset.x + (pointer.x - dragState.startPointer.x),
@@ -1045,8 +1048,11 @@ function finishDrag(event = null) {
     if (!isDragging.value) {
         return;
     }
-    if (event?.cancelable) {
-        event.preventDefault();
+    if (event) {
+        if (event.cancelable) {
+            event.preventDefault();
+        }
+        event.stopPropagation();
     }
     const label = labelRef.value;
     const svg = parentSvg.value;
@@ -1131,9 +1137,6 @@ function finishDrag(event = null) {
     dragState.lastRequestedOffset = null;
 
     requestAnimationFrame(() => {
-        if (finishedInputType !== 'keyboard') {
-            moveToLastLayer();
-        }
         emit('dragEnd', getPositionPayload(finalCoordinates));
         if (finishedInputType === 'keyboard') {
             announceKeyboardPosition(finalCoordinates);
@@ -1180,7 +1183,6 @@ function emitInteraction(eventName) {
 }
 
 function handleMouseEnter() {
-    moveToLastLayer();
     emitInteraction('mouseenter');
 }
 
@@ -1211,7 +1213,6 @@ function clearPointerGroupFocus() {
 }
 
 function handleClick() {
-    moveToLastLayer();
     clearPointerGroupFocus();
     emitInteraction('click');
 }
@@ -1255,7 +1256,7 @@ function handleLabelKeydown(event) {
     }
     event.preventDefault();
     event.stopPropagation();
-    /* Keep keyboard focus stable; pointer clicks still retain the z-order move. */
+    /* Keep keyboard focus stable. */
     emitInteraction('click');
 }
 
@@ -1273,18 +1274,6 @@ function handleFocusOut(event) {
         return;
     }
     emitInteraction('blur');
-}
-
-function moveToLastLayer() {
-    if (isDragging.value || !wrapperRef.value) {
-        return;
-    }
-    const wrapper = wrapperRef.value;
-    const layer = wrapper.parentElement;
-    if (!layer || layer.lastElementChild === wrapper) {
-        return;
-    }
-    layer.appendChild(wrapper);
 }
 
 function getSvgBounds(svg) {
@@ -3262,6 +3251,7 @@ onBeforeUnmount(() => {
                 aria-keyshortcuts="ArrowUp ArrowDown ArrowLeft ArrowRight"
                 @keydown="handleDragHandleKeydown"
                 @click.stop
+                @pointerdown.stop
                 @mousedown.stop.prevent="startMouseDrag"
                 @touchstart.stop.prevent="startTouchDrag"
             >
