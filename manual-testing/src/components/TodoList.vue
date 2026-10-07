@@ -596,7 +596,19 @@ const stats = computed(() => {
                                         false,
                                     ),
                                     showOnlyAtModulo: true,
-                                    modulo: 7,
+                                    modulo: Math.max(
+                                        1,
+                                        Math.round(
+                                            getUniqueCreatedDays(
+                                                done.value,
+                                                false,
+                                            ).length / 6,
+                                        ),
+                                    ),
+                                    rotation: -45,
+                                    autoRotate: {
+                                        enable: false,
+                                    },
                                 },
                                 yAxis: {
                                     commonScaleSteps: 5,
@@ -615,6 +627,9 @@ const stats = computed(() => {
                             minimap: {
                                 show: true,
                                 frameColor: 'transparent',
+                            },
+                            dragToZoom: {
+                                show: true,
                             },
                         },
                     },
