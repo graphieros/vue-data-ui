@@ -125,7 +125,7 @@
         "prettier": "3.8.1",
         "remove-attr": "^0.0.13",
         "sass": "^1.57.1",
-        "simple-git": "^3.36.0",
+        "simple-git": "^4.0.2",
         "typescript": "^6.0.2",
         "vite": "^8.3.0",
         "vitest": "^5.0.0",
