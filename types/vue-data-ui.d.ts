@@ -224,6 +224,7 @@ declare module 'vue-data-ui' {
     export type VueUiWaffleEvent = ChartEvent<VueUiWaffleDatapoint>;
     export type VueUiScatterEvent = ChartEvent<VueUiScatterDatapoint>;
     export type VueUiTreemapEvent = ChartEvent<VueUiTreemapDatapoint>;
+    export type VueUiHeatmapEvent = ChartEvent<VueUiHeatmapDatapoint>;
     export type VueUiDumbbellEvent = ChartEvent<VueUiDumbbellDatapoint>;
     export type VueUiMoleculeEvent = ChartEvent<VueUiMoleculeDatapoint>;
     export type VueUiQuadrantEvent = ChartEvent<VueUiQuadrantDatapoint>;
@@ -5506,6 +5507,11 @@ declare module 'vue-data-ui' {
         responsive?: boolean; // v3
         theme?: Theme;
         a11y?: A11YConfig;
+        events?: {
+            datapointEnter?: VueUiHeatmapEvent;
+            datapointLeave?: VueUiHeatmapEvent;
+            datapointClick?: VueUiHeatmapEvent;
+        };
         style?: {
             backgroundColor?: string;
             color?: string;
@@ -5643,6 +5649,10 @@ declare module 'vue-data-ui' {
         value: number | null;
         xAxisName: string | undefined;
         yAxisName: string | undefined;
+        x: number;
+        y: number;
+        width: number;
+        height: number;
     };
 
     export type VueUiHeatmapRow = {

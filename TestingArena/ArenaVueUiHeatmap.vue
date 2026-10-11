@@ -141,7 +141,9 @@ const model = createModel([
     }),
     COLOR('style.layout.cells.value.color', { def: '#1A1A1A' }),
 
-    COLOR('style.layout.cells.colors.hot', { def: '#dc3912' }),
+    COLOR('style.layout.cells.colors.hot', {
+        def: 'oklch(0.792 0.153 166.95)',
+    }),
     COLOR('style.layout.cells.colors.cold', { def: '#3366cc' }),
     COLOR('style.layout.cells.colors.underlayer', { def: '#FFFFFF' }),
 

@@ -884,8 +884,19 @@ function useTooltip(
     triggerMode = 'pointer',
     flatIndex = null,
 ) {
+    const w = drawingArea.value.cellSize.width - cellGap.value;
+    const dp = {
+        ...datapoint,
+        x: x + w,
+        y,
+        width: drawingArea.value.cellSize.width - cellGap.value,
+        height: drawingArea.value.cellSize.height - cellGap.value,
+    };
     if (FINAL_CONFIG.value.events.datapointEnter) {
-        FINAL_CONFIG.value.events.datapointEnter({ datapoint, seriesIndex });
+        FINAL_CONFIG.value.events.datapointEnter({
+            datapoint: dp,
+            seriesIndex,
+        });
     }
 
     if (!mutableConfig.value.showTooltip) return;
@@ -1971,7 +1982,7 @@ defineExpose({
                             class="vue-ui-heatmap-row-name"
                             :font-size="cfgLabels.yAxis.fontSize"
                             :fill="cfgLabels.yAxis.color"
-                            :x="leftLabelsWidth"
+                            :x="leftLabelsWidth + cfgLabels.yAxis.offsetX"
                             :y="
                                 drawingArea.top +
                                 drawingArea.cellSize.height * i +
@@ -2036,7 +2047,7 @@ defineExpose({
                             :font-weight="
                                 cfgLabels.xAxis.bold ? 'bold' : 'normal'
                             "
-                            :transform="`translate(${drawingArea.left + drawingArea.cellSize.width / 2 + (drawingArea.width / dataLabels.xLabels.length) * i + cfgLabels.xAxis.offsetX + drawingArea.sumCellXHeight}, ${drawingArea.topLabelsHeight}), rotate(${cfgLabels.xAxis.rotation})`"
+                            :transform="`translate(${drawingArea.left + drawingArea.cellSize.width / 2 + (drawingArea.width / dataLabels.xLabels.length) * i + cfgLabels.xAxis.offsetX + drawingArea.sumCellXHeight}, ${drawingArea.topLabelsHeight + cfgLabels.xAxis.offsetY}), rotate(${cfgLabels.xAxis.rotation})`"
                         >
                             {{ label }}
                         </text>
