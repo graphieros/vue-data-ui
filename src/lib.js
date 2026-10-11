@@ -1170,7 +1170,16 @@ export function convertConfigColors(config, seen = new WeakSet()) {
     for (const key in obj) {
         const v = isRef(obj[key]) ? unref(obj[key]) : obj[key];
 
-        if (key === 'color' || key === 'backgroundColor') {
+        if (
+            key === 'backgroundColor' ||
+            key === 'cold' ||
+            key === 'color' ||
+            key === 'emptyFill' ||
+            key === 'fill' ||
+            key === 'handleFill' ||
+            key === 'hot' ||
+            key === 'medianCircleFill'
+        ) {
             if (typeof v === 'string') obj[key] = normalizeColor(v);
             continue;
         }
