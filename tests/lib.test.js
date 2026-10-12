@@ -1482,6 +1482,21 @@ describe('createSpiralPath', () => {
 });
 
 describe('createTSpans', () => {
+    test('creates an empty tspan for invalid content', () => {
+        expect(
+            createTSpans({
+                content: null,
+                fontSize: 20,
+                fill: '#FF0000',
+                maxWords: 5,
+                x: 0,
+                y: 0,
+            }),
+        ).toStrictEqual(
+            '<tspan x="0" y="0" fill="#FF0000" stroke="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" paint-order="stroke fill"></tspan>',
+        );
+    });
+
     test('creates tspans from text content', () => {
         expect(
             createTSpans({
@@ -3889,6 +3904,18 @@ describe('getCumulativeMedian', () => {
 });
 
 describe('createTSpansFromLineBreaksOnX', () => {
+    test('creates an empty tspan for invalid content', () => {
+        const result = createTSpansFromLineBreaksOnX({
+            content: null,
+            fontSize: 10,
+            fill: 'red',
+            x: '0',
+            y: '0',
+        });
+        const expected = `<tspan x="0" y="0" fill="red" stroke="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" paint-order="stroke fill"></tspan>`;
+        expect(result).toBe(expected);
+    });
+
     test('creates a single <tspan> for content without line breaks', () => {
         const result = createTSpansFromLineBreaksOnX({
             content: 'Hello World',
@@ -3978,6 +4005,17 @@ describe('createTSpansFromLineBreaksOnX', () => {
 });
 
 describe('createTSpansFromLineBreaksOnY', () => {
+    test('creates an empty tspan for invalid content', () => {
+        const result = createTSpansFromLineBreaksOnY({
+            content: null,
+            fontSize: 10,
+            fill: 'red',
+            x: 5,
+        });
+        const expected = `<tspan x="5" dy="0" fill="red" stroke="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" paint-order="stroke fill"></tspan>`;
+        expect(result).toBe(expected);
+    });
+
     test('single-line content produces one tspan with dy=0', () => {
         const result = createTSpansFromLineBreaksOnY({
             content: 'Hello',

@@ -2444,7 +2444,7 @@ export function createTSpansFromLineBreaksOnX({
     translateY = false,
     stroke = 'none',
 }) {
-    const lines = content.split('\n');
+    const lines = (content ?? '').split('\n');
     const lineCount = lines.length;
 
     const totalHeight = lineCount * fontSize;
@@ -2479,7 +2479,7 @@ export function createTSpansFromLineBreaksOnY({
     autoOffset = false,
     stroke = 'none',
 }) {
-    const lines = content.split('\n');
+    const lines = (content ?? '').split('\n');
 
     const offset = !autoOffset ? 0 : ((lines.length - 1) * fontSize) / 2;
 
@@ -2511,7 +2511,7 @@ export function createTSpans({
         return chunks;
     }
     let tspans = '';
-    const chunks = chunk(content, maxWords);
+    const chunks = chunk(content ?? '', maxWords);
 
     chunks.forEach((c, i) => {
         const tspan = `<tspan x="${x}" y="${y + i * fontSize}" fill="${fill}" stroke="${stroke}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" paint-order="stroke fill">${c}</tspan>`;
