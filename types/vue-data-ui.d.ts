@@ -196,7 +196,6 @@ declare module 'vue-data-ui' {
         [key: string]: any;
     };
 
-    /** Keep the named export exactly as before (now with loader/component props). */
     export const VueDataUi: DefineComponent<VueDataUiProps, VueDataUiExpose>;
 
     export type ChartEvent<T> =
