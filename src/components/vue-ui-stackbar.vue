@@ -1912,6 +1912,155 @@ const formattedDataset = computed(() => {
         });
 });
 
+/**
+ * A stack must only have its outer corners rounded. Compute one enclosing
+ * rectangle per visible category, based on the actual geometry of its
+ * currently visible sections. Clipping the square sections to
+ * this rounded boundary keeps all segment joins flat.
+ */
+const stackClipRects = computed(() => {
+    if (!(Number(cfgBars.value.borderRadius) > 0)) return [];
+
+    const bars = formattedDataset.value;
+    if (!bars.length) return [];
+
+    const isVertical = FINAL_CONFIG.value.orientation === 'vertical';
+    const thickness = Math.max(
+        0,
+        barSlot.value * (1 - cfgBars.value.gapRatio / 2),
+    );
+    if (!Number.isFinite(thickness) || thickness <= 0) return [];
+
+    const visibleCount = Math.max(0, slicer.value.end - slicer.value.start);
+
+    return Array.from({ length: visibleCount }, (_, index) => {
+        let start = Infinity;
+        let end = -Infinity;
+        let crossAxisPosition = NaN;
+
+        for (const bar of bars) {
+            const value = Number(bar.series[index]);
+            if (!Number.isFinite(value) || value === 0) continue;
+
+            const segmentStart = Number(
+                isVertical ? bar.y[index] : bar.horizontal_x[index],
+            );
+            const segmentLength = Number(
+                isVertical ? bar.height[index] : bar.horizontal_width[index],
+            );
+            const crossAxis = Number(
+                isVertical ? bar.x[index] : bar.horizontal_y[index],
+            );
+
+            if (
+                !Number.isFinite(segmentStart) ||
+                !Number.isFinite(segmentLength) ||
+                segmentLength <= 0 ||
+                !Number.isFinite(crossAxis)
+            ) {
+                continue;
+            }
+
+            start = Math.min(start, segmentStart);
+            end = Math.max(end, segmentStart + segmentLength);
+            crossAxisPosition = crossAxis;
+        }
+
+        if (!Number.isFinite(start) || !Number.isFinite(end)) return null;
+
+        const x = isVertical ? crossAxisPosition : start;
+        const y = isVertical ? start : crossAxisPosition;
+        const width = isVertical ? thickness : end - start;
+        const height = isVertical ? end - start : thickness;
+        const radius = Math.min(
+            Number(cfgBars.value.borderRadius),
+            width / 2,
+            height / 2,
+        );
+
+        return { x, y, width, height, rx: radius };
+    });
+});
+
+function getStackClipPath(index) {
+    if (!stackClipRects.value[index]) return undefined;
+    return `url(#stackbar-outer-clip-${uid.value}-${slicer.value.start + index})`;
+}
+
+/**
+ * Build one rounded outline per full minimap stack. The minimap always renders
+ * vertical bars, irrespective of the main chart orientation. Its segments
+ * remain square and share the same clip path, so internal joins stay flat.
+ * Use the exact dimensions passed to the SlicerPreview slot (rather than
+ * the main chart's drawingArea) to keep the clip aligned while zooming.
+ */
+function getMinimapStackClipRects({ minimapH, unitW }) {
+    const radius = Number(cfgBars.value.borderRadius);
+    if (
+        !(radius > 0) ||
+        !Number.isFinite(minimapH) ||
+        !Number.isFinite(unitW) ||
+        minimapH <= 0 ||
+        unitW <= 0
+    ) {
+        return [];
+    }
+
+    const series = formattedDataset.value.map((dp) => ({
+        y: dp.yMinimap({ minimapH }),
+        height: dp.heightMinimap({ minimapH }),
+    }));
+
+    const fullBarWidth = unitW * (1 - cfgBars.value.gapRatio / 2);
+    const offset = unitW * (cfgBars.value.gapRatio / 4);
+
+    return Array.from({ length: maxSeries.value }, (_, j) => {
+        // The first and last minimap rectangles are half-width
+        const width =
+            j === 0 || j === maxSeries.value - 1
+                ? fullBarWidth / 2
+                : fullBarWidth;
+        const x = j === 0 ? 0 : j * unitW + offset - unitW / 2;
+
+        let top = Infinity;
+        let bottom = -Infinity;
+
+        for (const segment of series) {
+            const rawY = Number(segment.y[j]);
+            const height = Number(segment.height[j]);
+            if (
+                !Number.isFinite(rawY) ||
+                !Number.isFinite(height) ||
+                height <= 0
+            ) {
+                continue;
+            }
+
+            // Match the clamping of the individual minimap rectangles
+            const y = Math.max(0, Math.min(minimapH, rawY));
+            top = Math.min(top, y);
+            bottom = Math.max(bottom, y + height);
+        }
+
+        if (
+            !Number.isFinite(top) ||
+            !Number.isFinite(bottom) ||
+            !(bottom > top) ||
+            !(width > 0)
+        ) {
+            return null;
+        }
+
+        return {
+            x,
+            y: top,
+            width,
+            height: bottom - top,
+            rx: Math.min(radius, width / 2, (bottom - top) / 2),
+        };
+    });
+}
+
 const totalLabels = computed(() => {
     return displayTotals.value.map((t, i) => {
         return {
@@ -3676,6 +3825,28 @@ defineExpose({
                     />
                 </defs>
 
+                <!-- Round only the stack exterior corners -->
+                <defs v-if="stackClipRects.length">
+                    <template
+                        v-for="(bounds, j) in stackClipRects"
+                        :key="`stackbar-outer-clip-${j}`"
+                    >
+                        <clipPath
+                            v-if="bounds"
+                            :id="`stackbar-outer-clip-${uid}-${slicer.start + j}`"
+                            clipPathUnits="userSpaceOnUse"
+                        >
+                            <rect
+                                :x="bounds.x"
+                                :y="bounds.y"
+                                :width="bounds.width"
+                                :height="bounds.height"
+                                :rx="bounds.rx"
+                            />
+                        </clipPath>
+                    </template>
+                </defs>
+
                 <!-- FRAME -->
                 <rect
                     data-cy="frame"
@@ -3801,11 +3972,8 @@ defineExpose({
                             :height="
                                 dp.height[j] < 0 ? 0.0001 : dp.height[j] || 0
                             "
-                            :rx="
-                                cfgBars.borderRadius > dp.height[j] / 2
-                                    ? (dp.height[j] < 0 ? 0 : dp.height[j]) / 2
-                                    : cfgBars.borderRadius
-                            "
+                            :rx="0"
+                            :clip-path="getStackClipPath(j)"
                             :width="barSlot * (1 - cfgBars.gapRatio / 2)"
                             :fill="
                                 cfgBars.gradient.show
@@ -3815,7 +3983,7 @@ defineExpose({
                             :stroke="cfgChart.backgroundColor"
                             :stroke-width="cfgBars.strokeWidth"
                             stroke-linecap="round"
-                            stroke-linejoin="round"
+                            stroke-linejoin="miter"
                             :class="{
                                 'vue-data-ui-bar-transition': isLoaded,
                             }"
@@ -3831,19 +3999,14 @@ defineExpose({
                                         ? 0.0001
                                         : dp.height[j] || 0
                                 "
-                                :rx="
-                                    cfgBars.borderRadius > dp.height[j] / 2
-                                        ? (dp.height[j] < 0
-                                              ? 0
-                                              : dp.height[j]) / 2
-                                        : cfgBars.borderRadius
-                                "
+                                :rx="0"
+                                :clip-path="getStackClipPath(j)"
                                 :width="barSlot * (1 - cfgBars.gapRatio / 2)"
                                 :fill="`url(#pattern_${uid}_${dp.absoluteIndex})`"
                                 :stroke="cfgChart.backgroundColor"
                                 :stroke-width="cfgBars.strokeWidth"
                                 stroke-linecap="round"
-                                stroke-linejoin="round"
+                                stroke-linejoin="miter"
                                 :class="{
                                     'vue-data-ui-bar-transition': isLoaded,
                                 }"
@@ -3865,11 +4028,8 @@ defineExpose({
                                         : dp.horizontal_width[j],
                                 )
                             "
-                            :rx="
-                                cfgBars.borderRadius > dp.height[j] / 2
-                                    ? (dp.height[j] < 0 ? 0 : dp.height[j]) / 2
-                                    : cfgBars.borderRadius
-                            "
+                            :rx="0"
+                            :clip-path="getStackClipPath(j)"
                             :height="barSlot * (1 - cfgBars.gapRatio / 2)"
                             :fill="
                                 cfgBars.gradient.show
@@ -3879,7 +4039,7 @@ defineExpose({
                             :stroke="cfgChart.backgroundColor"
                             :stroke-width="cfgBars.strokeWidth"
                             stroke-linecap="round"
-                            stroke-linejoin="round"
+                            stroke-linejoin="miter"
                             :class="{
                                 'vue-data-ui-bar-transition': isLoaded,
                             }"
@@ -3901,19 +4061,14 @@ defineExpose({
                                             : dp.horizontal_width[j],
                                     )
                                 "
-                                :rx="
-                                    cfgBars.borderRadius > dp.height[j] / 2
-                                        ? (dp.height[j] < 0
-                                              ? 0
-                                              : dp.height[j]) / 2
-                                        : cfgBars.borderRadius
-                                "
+                                :rx="0"
+                                :clip-path="getStackClipPath(j)"
                                 :height="barSlot * (1 - cfgBars.gapRatio / 2)"
                                 :fill="`url(#pattern_${uid}_${dp.absoluteIndex})`"
                                 :stroke="cfgChart.backgroundColor"
                                 :stroke-width="cfgBars.strokeWidth"
                                 stroke-linecap="round"
-                                stroke-linejoin="round"
+                                stroke-linejoin="miter"
                                 :class="{
                                     'vue-data-ui-bar-transition': isLoaded,
                                 }"
@@ -4745,6 +4900,30 @@ defineExpose({
             </template>
 
             <template #slotMap="{ width: minimapW, height: minimapH, unitW }">
+                <!-- Rounded corners clipping -->
+                <defs v-if="Number(cfgBars.borderRadius) > 0">
+                    <template
+                        v-for="(bounds, j) in getMinimapStackClipRects({
+                            minimapH,
+                            unitW,
+                        })"
+                        :key="`stackbar-minimap-outer-clip-${j}`"
+                    >
+                        <clipPath
+                            v-if="bounds"
+                            :id="`stackbar-minimap-outer-clip-${uid}-${j}`"
+                            clipPathUnits="userSpaceOnUse"
+                        >
+                            <rect
+                                :x="bounds.x"
+                                :y="bounds.y"
+                                :width="bounds.width"
+                                :height="bounds.height"
+                                :rx="bounds.rx"
+                            />
+                        </clipPath>
+                    </template>
+                </defs>
                 <g v-for="dp in formattedDataset" :key="dp.id">
                     <template
                         v-for="(x, j) in dp.xMinimap({ left: 0, unitW })"
@@ -4779,8 +4958,13 @@ defineExpose({
                             :stroke="cfgChart.backgroundColor"
                             :stroke-width="0.5"
                             rx="0"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
+                            :clip-path="
+                                Number(cfgBars.borderRadius) > 0
+                                    ? `url(#stackbar-minimap-outer-clip-${uid}-${j})`
+                                    : undefined
+                            "
+                            stroke-linecap="butt"
+                            stroke-linejoin="miter"
                             :style="{
                                 opacity:
                                     j >= slicerPrecog.start &&
