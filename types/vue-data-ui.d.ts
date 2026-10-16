@@ -5,7 +5,6 @@ declare module 'vue-data-ui' {
         VNodeChild,
         Component,
         ComputedRef,
-        MaybeRefOrGetter,
     } from 'vue';
 
     export type VueUiUnknownObj = {
@@ -158,6 +157,7 @@ declare module 'vue-data-ui' {
 
     export type VueDataUiExpose = {
         getData?: (...args: any[]) => Promise<any> | any;
+        getWaterfallSteps?: () => VueUiStackbarWaterfallComputedStep[];
         getImage?: (options?: { scale?: number }) => Promise<any>;
         generateCsv?: () => void;
         generateImage?: () => void;
@@ -234,7 +234,14 @@ declare module 'vue-data-ui' {
     export type VueUiCirclePackEvent = ChartEvent<VueUiCirclePackDatapoint>;
     export type VueUiSparklineEvent = ChartEvent<VueUiSparklineDatasetItem>;
     export type VueUiAgePyramidEvent = ChartEvent<VueUiAgePyramidDatapoint>;
-    export type VueUiStackbarEvent = ChartEvent<VueUiStackbarDatapointItem[]>;
+    export type VueUiStackbarEvent =
+        | null
+        | ((payload: {
+              datapoint: VueUiStackbarInteractionDatapoint[];
+              seriesIndex: number;
+              // Present for waterfall clicks
+              waterfall?: VueUiStackbarWaterfallComputedStep;
+          }) => void);
     export type VueUiStacklineEvent = ChartEvent<VueUiStacklineDatapointItem[]>;
     export type VueUiCandlestickEvent = ChartEvent<VueUiCandlestickDatapoint>;
     export type VueUiRidgelineEvent = ChartEvent<VueUiRidgelineDatapointEvent>;
@@ -13382,12 +13389,45 @@ declare module 'vue-data-ui' {
         };
     };
 
-    export type VueUiStackbarDatasetItem = {
-        [key: string]: any; // To be recovered through the #svg slot
+    export type VueUiStackbarWaterfallSegment = {
+        key?: string | number;
+        id?: string | number;
+        name?: string;
+        label?: string;
+        value: number;
+        color?: string;
+    };
+
+    export type VueUiStackbarWaterfallKind = 'total' | 'subtotal' | 'change';
+
+    export type VueUiStackbarDatasetItemWaterfallSeries = {
+        name?: string;
+        label?: string;
+        type?: VueUiStackbarWaterfallKind;
+        color?: string;
+        series?: VueUiStackbarWaterfallSegment[];
+    };
+
+    export type VueUiStackbarStandardDatasetItem = {
+        [key: string]: any;
         name: string;
         series: Array<number | null>;
         color?: string;
+        type?: never;
     };
+
+    export type VueUiStackbarWaterfallDatasetItem = {
+        [key: string]: any;
+        name: string;
+        type: 'waterfall';
+        startValue?: number;
+        series: VueUiStackbarDatasetItemWaterfallSeries[];
+        color?: string;
+    };
+
+    export type VueUiStackbarDatasetItem =
+        | VueUiStackbarStandardDatasetItem
+        | VueUiStackbarWaterfallDatasetItem;
 
     export type VueUiStackbarDatapointItem = {
         name: string;
@@ -13397,7 +13437,54 @@ declare module 'vue-data-ui' {
         id: string;
     };
 
-    export type VueUiStackbarSeriesItem = VueUiStackbarDatasetItem & {
+    export type VueUiStackbarWaterfallComputedSegment = {
+        key: string;
+        name: string;
+        label: string;
+        value: number;
+        start: number;
+        end: number;
+        color: string;
+    };
+
+    export type VueUiStackbarWaterfallComputedStep = {
+        index: number;
+        name: string;
+        kind: VueUiStackbarWaterfallKind;
+        isTotal: boolean;
+        previousBalance: number;
+        start: number;
+        end: number;
+        balance: number;
+        change: number;
+        hasMixedSigns: boolean;
+        positiveExtent: number;
+        negativeExtent: number;
+        segments: VueUiStackbarWaterfallComputedSegment[];
+        color: string | null;
+    };
+
+    export type VueUiStackbarInteractionDatapoint = {
+        name: string;
+        value: number | null;
+        proportion: number | null;
+        color: string;
+        id: string;
+        absoluteIndex?: number;
+        timeLabel?: {
+            text: string;
+            absoluteIndex?: number;
+        };
+        // Available when the active dataset is a waterfall
+        start?: number;
+        end?: number;
+        kind?: VueUiStackbarWaterfallKind;
+        balance?: number;
+        change?: number;
+        stepName?: string;
+    };
+
+    export type VueUiStackbarSeriesItem = VueUiStackbarStandardDatasetItem & {
         id: string;
         color: string;
         absoluteIndex: number;
@@ -13457,6 +13544,89 @@ declare module 'vue-data-ui' {
                     backgroundColor?: string;
                     position?: 'bottom' | 'top';
                 };
+                // waterfall config applied when a dataset series has a 'waterfall' type
+                waterfall?: {
+                    bars?: {
+                        gapRatio?: number;
+                        borderRadius?: number;
+                        strokeWidth?: number;
+                        stroke?: string;
+                        gradient?: {
+                            show?: boolean;
+                            intensity?: number;
+                        };
+                    };
+                    colors?: {
+                        useSeriesColor?: boolean;
+                        positive?: string;
+                        negative?: string;
+                        total?: string;
+                        subtotal?: string;
+                        neutral?: string;
+                    };
+                    connectors?: {
+                        show?: boolean;
+                        stroke?: string;
+                        strokeWidth?: number;
+                        strokeDasharray?: string | number;
+                        adaptToRadius?: boolean;
+                        inset?: number;
+                    };
+                    categoryLabels?: {
+                        show?: boolean;
+                        fontSize?: number;
+                        color?: string;
+                        bold?: boolean;
+                        rotation?: number;
+                        offsetY?: number;
+                    };
+                    segmentLabels?: {
+                        show?: boolean;
+                        fontSize?: number;
+                        bold?: boolean;
+                        color?: string;
+                        adaptColorToBackground?: boolean;
+                        minHeight?: number;
+                        minWidth?: number;
+                        showZero?: boolean;
+                        prefix?: string;
+                        suffix?: string;
+                        rounding?: number;
+                        formatter?: Formatter;
+                    };
+                    stepLabels?: {
+                        show?: boolean;
+                        fontSize?: number;
+                        color?: string;
+                        bold?: boolean;
+                        prefix?: string;
+                        suffix?: string;
+                        rounding?: number;
+                        offset?: number;
+                        showPlusSign?: boolean;
+                        showZero?: boolean;
+                        useBalanceForTotals?: boolean;
+                        formatter?: Formatter;
+                    };
+                    tooltip?: {
+                        showBalance?: boolean;
+                        showChange?: boolean;
+                        showStart?: boolean;
+                        balanceTranslation?: string;
+                        changeTranslation?: string;
+                        startTranslation?: string;
+                        totalTranslation?: string;
+                        subtotalTranslation?: string;
+                        rounding?: number;
+                    };
+                    table?: {
+                        showKind?: boolean;
+                        showBalance?: boolean;
+                        kindTranslation?: string;
+                        balanceTranslation?: string;
+                        changeTranslation?: string;
+                    };
+                };
                 zoom?: ChartZoom & {
                     preview?: {
                         enable?: boolean;
@@ -13471,11 +13641,7 @@ declare module 'vue-data-ui' {
                         | null
                         | ((
                               params: MinimalCustomFormatParams<
-                                  Array<
-                                      VueUiStackbarDatapointItem & {
-                                          absoluteIndex: number;
-                                      }
-                                  >
+                                  VueUiStackbarInteractionDatapoint[]
                               >,
                           ) => string);
                 };
@@ -13488,8 +13654,8 @@ declare module 'vue-data-ui' {
                         | null
                         | ((
                               params: VueUiTooltipParams<
-                                  VueUiStackbarDatapointItem[],
-                                  VueUiStackbarSeriesItem[],
+                                  VueUiStackbarInteractionDatapoint[],
+                                  VueUiStackbarFormattedDatasetItem[],
                                   VueUiStackbarConfig
                               >,
                           ) => string);
@@ -13612,23 +13778,8 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiStackbarExpose = {
-        getData(): Promise<
-            Array<{
-                absoluteIndex: number;
-                color: string;
-                height: number[];
-                horizontal_width: number[];
-                horizontal_x: number[];
-                horizontal_y: number[];
-                id: string;
-                name: string;
-                proportions: number[];
-                series: number[];
-                signedSeries: number[];
-                x: number[];
-                y: number[];
-            }>
-        >;
+        getData(): VueUiStackbarFormattedDatasetItem[];
+        getWaterfallSteps(): VueUiStackbarWaterfallComputedStep[];
         getImage(options?: { scale?: number }): GetImagePromise;
         generateCsv(): void;
         generateImage(): void;
@@ -13643,32 +13794,33 @@ declare module 'vue-data-ui' {
         hideSeries(name: string): void;
         setZoomState(state: VueUiZoomState): void;
         resetZoom(): void;
+        copyAlt(): Promise<void>;
     };
 
     export type VueUiStackbarFormattedDatasetItem = {
         absoluteIndex: number;
+        datasetKey: string;
         color: string;
+        id: string;
+        name: string;
+        series: number[];
+        signedSeries: Array<-1 | 0 | 1>;
+        proportions: number[];
+        x: number[];
+        y: number[];
         height: number[];
-        heightMinimap: ({ minimapH }: { minimapH: number }) => number[];
         horizontal_width: number[];
         horizontal_x: number[];
         horizontal_y: number[];
-        id: string;
-        name: string;
-        proportions: number[];
-        series: number[];
-        signedSeries: Array<0 | 1>;
-        x: number[];
-        xMinimap: ({
-            left,
-            unitW,
-        }: {
-            left: number;
-            unitW: number;
-        }) => number[];
-        y: number[];
-        yMinimap: ({ minimapH }: { minimapH: number }) => number[];
         rectKeys: string[];
+        minimapRectKeys: string[];
+        xMinimap: (params: { left: number; unitW: number }) => number[];
+        yMinimap: (params: { minimapH: number }) => number[];
+        heightMinimap: (params: { minimapH: number }) => number[];
+        // Waterfall-only segment positions and colors. null = no segment
+        waterfallSegments?: Array<VueUiStackbarWaterfallComputedSegment | null>;
+        waterfallColors?: string[];
+        minimapWaterfallColors?: string[];
     };
 
     export type VueUiStackbarTimeLabelSlotProps = {
@@ -13706,27 +13858,22 @@ declare module 'vue-data-ui' {
         };
     };
 
-    export type VueUiStackbarTooltipDatapoint = {
-        absoluteIndex: number;
-        color: string;
-        id: string;
-        name: string;
-        proportion: number | null;
-        timeLabel: { text: string; absoluteIndex: number } | undefined;
-        value: number | null;
-    };
+    export type VueUiStackbarTooltipDatapoint =
+        VueUiStackbarInteractionDatapoint;
 
     export type VueUiStackbarTooltipSlotProps = {
         config: VueUiStackbarConfig;
         datapoint: VueUiStackbarTooltipDatapoint[];
         series: VueUiStackbarFormattedDatasetItem[];
         seriesIndex: number;
-        timeLabel: string;
+        timeLabel: string | null;
+        waterfall: VueUiStackbarWaterfallComputedStep | null;
     };
 
     export type VueUiStackbarLegendItem = {
         absoluteIndex: number;
         color: string;
+        datasetKey?: string; // Stable key for legend groups in waterfall datasets
         id: string;
         isSegregated: boolean;
         name: string;
@@ -13734,7 +13881,7 @@ declare module 'vue-data-ui' {
         segregate: () => void;
         series: number[];
         shape: Shape;
-        signedSeries: Array<0 | 1>;
+        signedSeries: Array<-1 | 0 | 1>;
     };
 
     export type VueUiStackbarLegendSlotProps = {
@@ -13752,23 +13899,29 @@ declare module 'vue-data-ui' {
         VueUiStackbarFormattedDatasetItem[];
 
     export type VueUiStackbarEmitSelectDatapoint = {
-        datapoint: VueUiStackbarDatapointItem[];
+        datapoint: VueUiStackbarInteractionDatapoint[];
         period: {
             absoluteIndex: number;
             text: string;
         };
+        // Added to waterfall events
+        seriesIndex?: number;
+        waterfall?: VueUiStackbarWaterfallComputedStep;
     };
 
     export type VueUiStackbarEmitSelectTimeLabel = {
-        datapoint: VueUiStackbarDatapointItem[];
+        datapoint: VueUiStackbarInteractionDatapoint[];
         absoluteIndex: number;
         label: string;
+        // Added to waterfall category selections
+        waterfall?: VueUiStackbarWaterfallComputedStep;
     };
 
     export type VueUiStackbarEmitSelectX = {
         dataset: VueUiStackbarTooltipDatapoint[] | null;
         index: number | null;
-        indexLabel: number | null | undefined;
+        // For waterfall categories this is a string label
+        indexLabel: number | string | null | undefined;
     };
 
     export type VueUiStackbarEmitCopyAlt = {
@@ -13853,7 +14006,7 @@ declare module 'vue-data-ui' {
         standalone: boolean;
     };
 
-    export type VueUiStacklineDatasetItem = VueUiStackbarDatasetItem & {
+    export type VueUiStacklineDatasetItem = VueUiStackbarStandardDatasetItem & {
         shape?: Shape;
         standalone?: boolean; // If true, series will not be part of stacked series
     };

@@ -65,7 +65,7 @@ describe('<VueUiDigits />', () => {
                 .should('exist')
                 .and('be.visible')
                 .invoke('attr', 'fill')
-                .should('eq', '#CCCCCC');
+                .should('eq', '#CCCCCCff');
         });
     });
 
@@ -83,7 +83,7 @@ describe('<VueUiDigits />', () => {
                 .should('exist')
                 .and('be.visible')
                 .invoke('attr', 'fill')
-                .should('eq', '#CCCCCC');
+                .should('eq', '#CCCCCCff');
             cy.get('[data-cy="digit-b"]')
                 .should('exist')
                 .and('be.visible')
@@ -98,22 +98,22 @@ describe('<VueUiDigits />', () => {
                 .should('exist')
                 .and('be.visible')
                 .invoke('attr', 'fill')
-                .should('eq', '#CCCCCC');
+                .should('eq', '#CCCCCCff');
             cy.get('[data-cy="digit-e"]')
                 .should('exist')
                 .and('be.visible')
                 .invoke('attr', 'fill')
-                .should('eq', '#CCCCCC');
+                .should('eq', '#CCCCCCff');
             cy.get('[data-cy="digit-f"]')
                 .should('exist')
                 .and('be.visible')
                 .invoke('attr', 'fill')
-                .should('eq', '#CCCCCC');
+                .should('eq', '#CCCCCCff');
             cy.get('[data-cy="digit-g"]')
                 .should('exist')
                 .and('be.visible')
                 .invoke('attr', 'fill')
-                .should('eq', '#CCCCCC');
+                .should('eq', '#CCCCCCff');
         });
     });
 
@@ -141,7 +141,7 @@ describe('<VueUiDigits />', () => {
                 .should('exist')
                 .and('be.visible')
                 .invoke('attr', 'fill')
-                .should('eq', '#CCCCCC');
+                .should('eq', '#CCCCCCff');
             cy.get('[data-cy="digit-d"]')
                 .should('exist')
                 .and('be.visible')
@@ -156,7 +156,7 @@ describe('<VueUiDigits />', () => {
                 .should('exist')
                 .and('be.visible')
                 .invoke('attr', 'fill')
-                .should('eq', '#CCCCCC');
+                .should('eq', '#CCCCCCff');
             cy.get('[data-cy="digit-g"]')
                 .should('exist')
                 .and('be.visible')
@@ -199,12 +199,12 @@ describe('<VueUiDigits />', () => {
                 .should('exist')
                 .and('be.visible')
                 .invoke('attr', 'fill')
-                .should('eq', '#CCCCCC');
+                .should('eq', '#CCCCCCff');
             cy.get('[data-cy="digit-f"]')
                 .should('exist')
                 .and('be.visible')
                 .invoke('attr', 'fill')
-                .should('eq', '#CCCCCC');
+                .should('eq', '#CCCCCCff');
             cy.get('[data-cy="digit-g"]')
                 .should('exist')
                 .and('be.visible')
@@ -227,7 +227,7 @@ describe('<VueUiDigits />', () => {
                 .should('exist')
                 .and('be.visible')
                 .invoke('attr', 'fill')
-                .should('eq', '#CCCCCC');
+                .should('eq', '#CCCCCCff');
             cy.get('[data-cy="digit-b"]')
                 .should('exist')
                 .and('be.visible')
@@ -242,12 +242,12 @@ describe('<VueUiDigits />', () => {
                 .should('exist')
                 .and('be.visible')
                 .invoke('attr', 'fill')
-                .should('eq', '#CCCCCC');
+                .should('eq', '#CCCCCCff');
             cy.get('[data-cy="digit-e"]')
                 .should('exist')
                 .and('be.visible')
                 .invoke('attr', 'fill')
-                .should('eq', '#CCCCCC');
+                .should('eq', '#CCCCCCff');
             cy.get('[data-cy="digit-f"]')
                 .should('exist')
                 .and('be.visible')
@@ -280,7 +280,7 @@ describe('<VueUiDigits />', () => {
                 .should('exist')
                 .and('be.visible')
                 .invoke('attr', 'fill')
-                .should('eq', '#CCCCCC');
+                .should('eq', '#CCCCCCff');
             cy.get('[data-cy="digit-c"]')
                 .should('exist')
                 .and('be.visible')
@@ -295,7 +295,7 @@ describe('<VueUiDigits />', () => {
                 .should('exist')
                 .and('be.visible')
                 .invoke('attr', 'fill')
-                .should('eq', '#CCCCCC');
+                .should('eq', '#CCCCCCff');
             cy.get('[data-cy="digit-f"]')
                 .should('exist')
                 .and('be.visible')
@@ -328,7 +328,7 @@ describe('<VueUiDigits />', () => {
                 .should('exist')
                 .and('be.visible')
                 .invoke('attr', 'fill')
-                .should('eq', '#CCCCCC');
+                .should('eq', '#CCCCCCff');
             cy.get('[data-cy="digit-c"]')
                 .should('exist')
                 .and('be.visible')
@@ -386,22 +386,22 @@ describe('<VueUiDigits />', () => {
                 .should('exist')
                 .and('be.visible')
                 .invoke('attr', 'fill')
-                .should('eq', '#CCCCCC');
+                .should('eq', '#CCCCCCff');
             cy.get('[data-cy="digit-e"]')
                 .should('exist')
                 .and('be.visible')
                 .invoke('attr', 'fill')
-                .should('eq', '#CCCCCC');
+                .should('eq', '#CCCCCCff');
             cy.get('[data-cy="digit-f"]')
                 .should('exist')
                 .and('be.visible')
                 .invoke('attr', 'fill')
-                .should('eq', '#CCCCCC');
+                .should('eq', '#CCCCCCff');
             cy.get('[data-cy="digit-g"]')
                 .should('exist')
                 .and('be.visible')
                 .invoke('attr', 'fill')
-                .should('eq', '#CCCCCC');
+                .should('eq', '#CCCCCCff');
         });
     });
 
@@ -487,7 +487,7 @@ describe('<VueUiDigits />', () => {
                 .should('exist')
                 .and('be.visible')
                 .invoke('attr', 'fill')
-                .should('eq', '#CCCCCC');
+                .should('eq', '#CCCCCCff');
             cy.get('[data-cy="digit-f"]')
                 .should('exist')
                 .and('be.visible')

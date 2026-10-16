@@ -55,26 +55,156 @@ function makeDs(n) {
 
 const dataset = ref([
     {
-        name: 'Series 1',
-        series: makeDs(24),
-        marked: true,
-    },
-    {
-        name: 'Series 2',
-        series: makeDs(24),
-        marked: true,
-    },
-    {
-        name: 'Series 3',
-        series: makeDs(24),
+        name: 'Revenue breakdown',
+        type: 'waterfall',
+        series: [
+            {
+                name: 'Initial revenue',
+                type: 'total',
+                series: [
+                    { name: 'Product A', value: 250, color: '#FF8000' },
+                    { name: 'Product B', value: 150, color: '#A3D22D' },
+                    { name: 'Product C', value: 100, color: '#327F9C' },
+                ],
+            },
+            {
+                name: 'Growth',
+                type: 'change',
+                series: [
+                    { name: 'Product A', value: 80 },
+                    { name: 'Product B', value: 40 },
+                    { name: 'Product C', value: 30 },
+                ],
+            },
+            {
+                name: 'Expenses',
+                type: 'change',
+                series: [
+                    { name: 'Product A', value: -60 },
+                    { name: 'Product B', value: -40 },
+                ],
+            },
+            {
+                name: 'Final revenue',
+                type: 'total',
+                series: [
+                    { name: 'Product A', value: 270 },
+                    { name: 'Product B', value: 150 },
+                    { name: 'Product C', value: 130 },
+                ],
+            },
+        ],
     },
 ]);
 
-onMounted(() => {
-    setTimeout(() => {
-        local.value.setZoomState({ start: 2 });
-    }, 5000);
-});
+// const dataset = ref([
+//     {
+//         name: 'Long waterfall zoom test',
+//         type: 'waterfall',
+//         startValue: 0,
+//         series: [
+//             {
+//                 name: 'Opening balance',
+//                 type: 'total',
+//                 series: [
+//                     { name: 'Product A', value: 200, color: '#FF8000' },
+//                     { name: 'Product B', value: 150, color: '#A3D22D' },
+//                     { name: 'Product C', value: 100, color: '#327F9C' },
+//                 ],
+//             },
+
+//             ...Array.from({ length: 120 }, (_, index) => {
+//                 const i = index + 1;
+
+//                 const step = {
+//                     name: `Period ${String(i).padStart(3, '0')}`,
+//                     type: 'change',
+//                     series: [
+//                         {
+//                             name: 'Product A',
+//                             value: ((i * 17) % 111) - 55,
+//                         },
+//                         {
+//                             name: 'Product B',
+//                             value: ((i * 29 + 20) % 91) - 45,
+//                         },
+//                         {
+//                             name: 'Product C',
+//                             value: ((i * 11 + 4) % 61) - 30,
+//                         },
+//                     ],
+//                 };
+
+//                 // Add totals and subtotals at regular intervals.
+//                 if (i === 60) {
+//                     return [
+//                         step,
+//                         {
+//                             name: 'Midpoint total',
+//                             type: 'total',
+//                         },
+//                     ];
+//                 }
+
+//                 // Explicit total with a new absolute breakdown.
+//                 if (i === 100) {
+//                     return [
+//                         step,
+//                         {
+//                             name: 'Revised total',
+//                             type: 'total',
+//                             series: [
+//                                 { name: 'Product A', value: 200 },
+//                                 { name: 'Product B', value: 130 },
+//                                 { name: 'Product C', value: 120 },
+//                             ],
+//                         },
+//                     ];
+//                 }
+
+//                 if (i % 20 === 0) {
+//                     return [
+//                         step,
+//                         {
+//                             name: `Subtotal ${i}`,
+//                             type: 'subtotal',
+//                         },
+//                     ];
+//                 }
+
+//                 return [step];
+//             }).flat(),
+
+//             {
+//                 name: 'Closing balance',
+//                 type: 'total',
+//             },
+//         ],
+//     },
+// ]);
+
+// const dataset = ref([
+//     {
+//         name: 'Series 1',
+//         series: makeDs(24),
+//         marked: true,
+//     },
+//     {
+//         name: 'Series 2',
+//         series: makeDs(24),
+//         marked: true,
+//     },
+//     {
+//         name: 'Series 3',
+//         series: makeDs(24),
+//     },
+// ]);
+
+// onMounted(() => {
+//     setTimeout(() => {
+//         local.value.setZoomState({ start: 2 });
+//     }, 5000);
+// });
 
 // onMounted(() => {
 //     dataset.value = undefined;

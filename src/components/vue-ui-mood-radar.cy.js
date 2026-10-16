@@ -49,7 +49,10 @@ describe('<VueUiMoodRadar />', () => {
                     .should('exist')
                     .and('be.visible')
                     .invoke('attr', 'stroke')
-                    .should('eq', config.style.chart.layout.smileys.colors[i]);
+                    .should(
+                        'eq',
+                        `${config.style.chart.layout.smileys.colors[i]}ff`,
+                    );
             }
 
             cy.log('traps');

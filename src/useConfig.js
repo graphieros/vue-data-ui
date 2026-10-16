@@ -838,6 +838,99 @@ export function useConfig(options = {}) {
                     ...LEGEND,
                     position: 'bottom',
                 },
+                waterfall: {
+                    bars: {
+                        gapRatio: 0.5,
+                        borderRadius: 0,
+                        strokeWidth: 1,
+                        stroke: COLOR_BACKGROUND,
+                        gradient: { show: true, intensity: 20 },
+                    },
+                    colors: {
+                        useSeriesColor: true,
+                        positive: '#36A783',
+                        negative: '#E76F51',
+                        total: '#4C7899',
+                        subtotal: '#8192B0',
+                        neutral: '#A3A3A3',
+                    },
+                    connectors: {
+                        show: true,
+                        stroke: '#8B8B8B',
+                        strokeWidth: 1,
+                        strokeDasharray: '3 3',
+                        // The radius inset makes connectors touch the straight edge of
+                        // rounded stacks rather than stopping in the empty corner region.
+                        adaptToRadius: false,
+                        inset: 0,
+                    },
+                    // time labels equivalent for waterfall
+                    categoryLabels: {
+                        show: true,
+                        fontSize: FONT._14,
+                        color: COLOR_BLACK,
+                        bold: false,
+                        rotation: 0,
+                        offsetY: 0,
+                    },
+                    // values inside segment rects
+                    segmentLabels: {
+                        show: true,
+                        fontSize: FONT._14,
+                        bold: false,
+                        color: COLOR_BLACK,
+                        adaptColorToBackground: true,
+                        minHeight: 14,
+                        minWidth: 26,
+                        showZero: false,
+                        prefix: '',
+                        suffix: '',
+                        rounding: 0,
+                        formatter: null,
+                    },
+                    // totals above / below steps
+                    stepLabels: {
+                        show: true,
+                        fontSize: FONT._14,
+                        color: COLOR_BLACK,
+                        bold: false,
+                        prefix: '',
+                        suffix: '',
+                        rounding: 0,
+                        offset: 0,
+                        showPlusSign: false,
+                        showZero: true,
+                        /**
+                         * true:
+                         *   - total/subtotal: display resulting balance
+                         *   - change: display step change
+                         *
+                         * false:
+                         *   - total/subtotal: display diff with previous balance
+                         *   - change: also display step change
+                         */
+                        useBalanceForTotals: true,
+                        formatter: null,
+                    },
+                    tooltip: {
+                        showBalance: true,
+                        showChange: true,
+                        showStart: false,
+                        balanceTranslation: 'Balance',
+                        changeTranslation: 'Change',
+                        startTranslation: 'Previous balance',
+                        totalTranslation: 'Total',
+                        subtotalTranslation: 'Subtotal',
+                        rounding: 0,
+                    },
+                    table: {
+                        showKind: true,
+                        showBalance: true,
+                        kindTranslation: 'Type',
+                        balanceTranslation: 'Balance',
+                        changeTranslation: 'Change',
+                    },
+                },
                 zoom: {
                     ...ZOOM,
                     minimap: MINIMAP_BASE,

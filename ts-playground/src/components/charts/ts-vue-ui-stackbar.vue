@@ -56,6 +56,52 @@ const dataset = computed<VueUiStackbarDatasetItem[]>(() => {
     ];
 });
 
+const datasetWaterfall = computed<VueUiStackbarDatasetItem[]>(() => {
+    return [
+        {
+            name: 'Revenue breakdown',
+            type: 'waterfall',
+            series: [
+                {
+                    name: 'Initial revenue',
+                    type: 'total',
+                    series: [
+                        { name: 'Product A', value: 250, color: '#FF8000' },
+                        { name: 'Product B', value: 150, color: '#A3D22D' },
+                        { name: 'Product C', value: 100, color: '#327F9C' },
+                    ],
+                },
+                {
+                    name: 'Growth',
+                    type: 'change',
+                    series: [
+                        { name: 'Product A', value: 80 },
+                        { name: 'Product B', value: 40 },
+                        { name: 'Product C', value: 30 },
+                    ],
+                },
+                {
+                    name: 'Expenses',
+                    type: 'change',
+                    series: [
+                        { name: 'Product A', value: -60 },
+                        { name: 'Product B', value: -40 },
+                    ],
+                },
+                {
+                    name: 'Final revenue',
+                    type: 'total',
+                    series: [
+                        { name: 'Product A', value: 270 },
+                        { name: 'Product B', value: 150 },
+                        { name: 'Product C', value: 130 },
+                    ],
+                },
+            ],
+        },
+    ];
+});
+
 const testPreconfig = computed<VueUiStackbarConfig>(() => {
     return {
         devHints: { enable: true },
@@ -206,6 +252,99 @@ const testPreconfig = computed<VueUiStackbarConfig>(() => {
                         color: '#2D353C',
                     },
                     position: 'bottom',
+                },
+                waterfall: {
+                    bars: {
+                        gapRatio: 0.5,
+                        borderRadius: 6,
+                        strokeWidth: 1,
+                        stroke: '#FFFFFF',
+                        gradient: { show: true, intensity: 20 },
+                    },
+                    colors: {
+                        useSeriesColor: true,
+                        positive: '#36A783',
+                        negative: '#E76F51',
+                        total: '#4C7899',
+                        subtotal: '#8192B0',
+                        neutral: '#A3A3A3',
+                    },
+                    connectors: {
+                        show: true,
+                        stroke: '#8B8B8B',
+                        strokeWidth: 1,
+                        strokeDasharray: '3 3',
+                        // The radius inset makes connectors touch the straight edge of
+                        // rounded stacks rather than stopping in the empty corner region.
+                        adaptToRadius: false,
+                        inset: 0,
+                    },
+                    // time labels equivalent for waterfall
+                    categoryLabels: {
+                        show: true,
+                        fontSize: 14,
+                        color: '#1A1A1A',
+                        bold: true,
+                        rotation: 0,
+                        offsetY: 0,
+                    },
+                    // values inside segment rects
+                    segmentLabels: {
+                        show: true,
+                        fontSize: 14,
+                        bold: false,
+                        color: '#1A1A1A',
+                        adaptColorToBackground: true,
+                        minHeight: 14,
+                        minWidth: 26,
+                        showZero: false,
+                        prefix: '',
+                        suffix: '',
+                        rounding: 0,
+                        formatter: null,
+                    },
+                    // totals above / below steps
+                    stepLabels: {
+                        show: true,
+                        fontSize: 14,
+                        color: '#1A1A1A',
+                        bold: false,
+                        prefix: '',
+                        suffix: '',
+                        rounding: 0,
+                        offset: 0,
+                        showPlusSign: false,
+                        showZero: true,
+                        /**
+                         * true:
+                         *   - total/subtotal: display resulting balance
+                         *   - change: display step change
+                         *
+                         * false:
+                         *   - total/subtotal: display diff with previous balance
+                         *   - change: also display step change
+                         */
+                        useBalanceForTotals: true,
+                        formatter: null,
+                    },
+                    tooltip: {
+                        showBalance: true,
+                        showChange: true,
+                        showStart: false,
+                        balanceTranslation: 'Balance',
+                        changeTranslation: 'Change',
+                        startTranslation: 'Previous balance',
+                        totalTranslation: 'Total',
+                        subtotalTranslation: 'Subtotal',
+                        rounding: 0,
+                    },
+                    table: {
+                        showKind: true,
+                        showBalance: true,
+                        kindTranslation: 'Type',
+                        balanceTranslation: 'Balance',
+                        changeTranslation: 'Change',
+                    },
                 },
                 zoom: {
                     show: true,
@@ -655,5 +794,205 @@ function copyAlt(payload: VueUiStackbarEmitCopyAlt) {
             <template #custom-menu-before> BEFORE </template>
             <template #custom-menu-after> AFTER </template>
         </VueUiStackbar>
+
+        <div style="margin-top: 2rem">
+            <VueUiStackbar
+                :dataset="datasetWaterfall"
+                :config
+                @selectLegend="selectLegend"
+                @selectDatapoint="selectDatapoint"
+                @selectTimeLabel="selectTimeLabel"
+                @selectX="selectX"
+                @copyAlt="copyAlt"
+            >
+                <template #annotator-action-close>
+                    <span style="color: chocolate">X</span>
+                </template>
+
+                <template #annotator-action-color="{ color }">
+                    <!-- text color, either black or white depending on the selected palette color -->
+                    <CommonAnnotatorActionColor :color />
+                </template>
+
+                <template #annotator-action-draw="{ mode }">
+                    <CommonAnnotatorActionDraw :mode />
+                </template>
+
+                <template #annotator-action-undo="{ disabled }">
+                    <CommonAnnotatorActionUndo :disabled />
+                </template>
+
+                <template #annotator-action-redo="{ disabled }">
+                    <CommonAnnotatorActionRedo :disabled />
+                </template>
+
+                <template #annotator-action-delete="{ disabled }">
+                    <CommonAnnotatorActionDelete :disabled />
+                </template>
+
+                <template #menuIcon="{ isOpen, color }">
+                    <CommonMenuIcon :isOpen :color />
+                </template>
+
+                <template #optionTooltip>
+                    <code
+                        style="
+                            color: chocolate;
+                            font-size: 0.7rem;
+                            pointer-events: none;
+                        "
+                        >#optionTooltip</code
+                    >
+                </template>
+
+                <template #optionPdf>
+                    <code
+                        style="
+                            color: chocolate;
+                            font-size: 0.7rem;
+                            pointer-events: none;
+                        "
+                        >#optionPdf</code
+                    >
+                </template>
+
+                <template #optionCsv>
+                    <code
+                        style="
+                            color: chocolate;
+                            font-size: 0.7rem;
+                            pointer-events: none;
+                        "
+                        >#optionCsv</code
+                    >
+                </template>
+
+                <template #optionImg>
+                    <code
+                        style="
+                            color: chocolate;
+                            font-size: 0.7rem;
+                            pointer-events: none;
+                        "
+                        >#optionImg</code
+                    >
+                </template>
+
+                <template #optionSvg>
+                    <code
+                        style="
+                            color: chocolate;
+                            font-size: 0.7rem;
+                            pointer-events: none;
+                        "
+                        >#optionSvg</code
+                    >
+                </template>
+
+                <template #optionTable>
+                    <code
+                        style="
+                            color: chocolate;
+                            font-size: 0.7rem;
+                            pointer-events: none;
+                        "
+                        >#optionTable</code
+                    >
+                </template>
+
+                <template
+                    #optionFullscreen="{ toggleFullscreen, isFullscreen }"
+                >
+                    <CommonOptionFullscreen :toggle-fullscreen :is-fullscreen />
+                </template>
+
+                <template #optionAnnotator="{ toggleAnnotator, isAnnotator }">
+                    <CommonOptionAnnotator :toggle-annotator :is-annotator />
+                </template>
+
+                <template #optionAltCopy>
+                    <code style="color: chocolate; font-size: 10px"
+                        >#optionAltCopy</code
+                    >
+                </template>
+
+                <template #chart-background>
+                    <div
+                        style="
+                            width: 100%;
+                            height: 100%;
+                            background: linear-gradient(
+                                to bottom,
+                                #cccccc00,
+                                #cccccc90
+                            );
+                        "
+                    >
+                        <code style="color: chocolate">
+                            #chart-background
+                        </code>
+                    </div>
+                </template>
+
+                <template #pattern="{ seriesIndex, patternId }">
+                    <PatternSlot :series-index :pattern-id color="#6376DD" />
+                </template>
+
+                <template #time-label="label">
+                    <StackbarTimeLabel
+                        v-bind="label"
+                        :offset-y="label.fontSize * 1.5"
+                    />
+                </template>
+
+                <template #svg="{ svg }">
+                    <StackbarSvg :svg />
+                </template>
+
+                <template #hint="{ hint, isVisible }">
+                    <KeyboardNavigationHint
+                        :hint
+                        :is-visible
+                        style="margin-top: -48px"
+                    />
+                </template>
+
+                <template #watermark="{ isPrinting }">
+                    <Watermark :is-printing />
+                </template>
+
+                <template #source>
+                    <code style="color: chocolate"> #source </code>
+                </template>
+
+                <template #skeleton>
+                    <Skeleton />
+                </template>
+
+                <template #reset-action="{ reset }">
+                    <CommonResetAction :reset />
+                </template>
+
+                <template #tooltip-before>
+                    <span style="color: chocolate"> #tooltip-before </span>
+                    <br />
+                </template>
+
+                <template #tooltip="{ datapoint, seriesIndex }">
+                    <StackbarTooltip :datapoint :series-index />
+                </template>
+
+                <template #tooltip-after>
+                    <br />
+                    <span style="color: chocolate"> #tooltip-after </span>
+                </template>
+
+                <template #legend="{ legend }">
+                    <StackbarLegend :items="legend" />
+                </template>
+                <template #custom-menu-before> BEFORE </template>
+                <template #custom-menu-after> AFTER </template>
+            </VueUiStackbar>
+        </div>
     </div>
 </template>

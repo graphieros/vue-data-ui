@@ -1163,50 +1163,45 @@ function normalizeColor(raw) {
 }
 
 export function convertConfigColors(config, seen = new WeakSet()) {
-    const obj = toRaw(config);
-    if (!isPlainObject(obj) || seen.has(obj)) return obj;
-    seen.add(obj);
+    const visit = (value) => {
+        if (isRef(value)) {
+            const unwrapped = unref(value);
+            if (typeof unwrapped === 'string') {
+                return convertColorToHex(unwrapped) ?? value;
+            }
+            visit(unwrapped);
+            return value;
+        }
 
-    for (const key in obj) {
-        const v = isRef(obj[key]) ? unref(obj[key]) : obj[key];
+        if (typeof value === 'string') {
+            return convertColorToHex(value) ?? value;
+        }
 
         if (
-            key === 'backgroundColor' ||
-            key === 'cold' ||
-            key === 'color' ||
-            key === 'emptyFill' ||
-            key === 'fill' ||
-            key === 'handleFill' ||
-            key === 'hot' ||
-            key === 'medianCircleFill'
+            !value ||
+            typeof value !== 'object' ||
+            looksLikeVueReactive(value)
         ) {
-            if (typeof v === 'string') obj[key] = normalizeColor(v);
-            continue;
+            return value;
         }
 
-        // "stroke" can be EITHER a color string OR a nested object
-        if (key === 'stroke') {
-            if (typeof v === 'string') {
-                obj[key] = normalizeColor(v);
-            } else if (isPlainObject(v) && !looksLikeVueReactive(v)) {
-                convertConfigColors(v, seen);
-            }
-            continue;
+        const raw = toRaw(value);
+
+        if ((!isPlainObject(raw) && !Array.isArray(raw)) || seen.has(raw)) {
+            return value;
         }
 
-        if (Array.isArray(v)) {
-            for (const item of v) {
-                if (isPlainObject(item) && !looksLikeVueReactive(item)) {
-                    convertConfigColors(item, seen);
-                }
-            }
-            continue;
+        seen.add(raw);
+
+        for (const key of Object.keys(raw)) {
+            raw[key] = visit(raw[key]);
         }
 
-        if (isPlainObject(v) && !looksLikeVueReactive(v)) {
-            convertConfigColors(v, seen);
-        }
-    }
+        return value;
+    };
+
+    const obj = toRaw(config);
+    visit(obj);
 
     return obj;
 }

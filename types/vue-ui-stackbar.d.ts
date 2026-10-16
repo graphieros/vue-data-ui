@@ -30,6 +30,11 @@ import type {
     VueUiStackbarEmitCopyAlt,
     VueUiZoomState,
     VueUiEmitZoom,
+    VueUiStackbarWaterfallKind,
+    VueUiStackbarStandardDatasetItem,
+    VueUiStackbarDatasetItemWaterfallSeries,
+    VueUiStackbarWaterfallSegment,
+    VueUiStackbarWaterfallDatasetItem,
 } from 'vue-data-ui';
 
 export type {
@@ -62,6 +67,11 @@ export type {
     VueUiStackbarEmitCopyAlt,
     VueUiZoomState,
     VueUiEmitZoom,
+    VueUiStackbarWaterfallKind,
+    VueUiStackbarStandardDatasetItem,
+    VueUiStackbarDatasetItemWaterfallSeries,
+    VueUiStackbarWaterfallSegment,
+    VueUiStackbarWaterfallDatasetItem,
 };
 
 declare const VueUiStackbarBase: DefineComponent<

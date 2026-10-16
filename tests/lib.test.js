@@ -32,6 +32,7 @@ import {
     clampToUnitInterval,
     closestDecimal,
     convertColorToHex,
+    convertConfigColors,
     convertCustomPalette,
     convertNameColorToHex,
     convertOklabToSrgb,
@@ -65,6 +66,7 @@ import {
     easeInOutCubic,
     easeOutCubic,
     error,
+    escapeHtml,
     escapeXml,
     escapeXmlAttr,
     forceValidValue,
@@ -116,7 +118,15 @@ import {
     deepClone,
 } from '../src/lib';
 
-import { computed, isProxy, isReactive, reactive, ref, shallowRef } from 'vue';
+import {
+    computed,
+    isProxy,
+    isReactive,
+    reactive,
+    ref,
+    shallowRef,
+    toRaw,
+} from 'vue';
 
 describe('calcTrend', () => {
     test('returns 0 if dataset has insufficient length', () => {
@@ -4923,6 +4933,130 @@ describe('buildInterLineAreas', () => {
     });
 });
 
+describe('escapeHtml', () => {
+    describe('HTML special characters', () => {
+        test.each([
+            ['ampersand', '&', '&amp;'],
+            ['less-than sign', '<', '&lt;'],
+            ['greater-than sign', '>', '&gt;'],
+            ['double quote', '"', '&quot;'],
+            ['single quote', "'", '&#39;'],
+        ])('escapes %s', (_, input, expected) => {
+            expect(escapeHtml(input)).toBe(expected);
+        });
+
+        test('escapes all special characters in one string', () => {
+            expect(escapeHtml(`&<>"'`)).toBe('&amp;&lt;&gt;&quot;&#39;');
+        });
+
+        test('escapes repeated special characters', () => {
+            expect(escapeHtml('&&<<>>""\'\'')).toBe(
+                '&amp;&amp;&lt;&lt;&gt;&gt;&quot;&quot;&#39;&#39;',
+            );
+        });
+
+        test('escapes HTML tags', () => {
+            expect(escapeHtml('<div>Hello</div>')).toBe(
+                '&lt;div&gt;Hello&lt;/div&gt;',
+            );
+        });
+
+        test('escapes HTML attributes', () => {
+            expect(escapeHtml('<a href="test">Click</a>')).toBe(
+                '&lt;a href=&quot;test&quot;&gt;Click&lt;/a&gt;',
+            );
+        });
+
+        test('escapes ampersands in existing HTML entities', () => {
+            expect(escapeHtml('&amp; &lt; &#39;')).toBe(
+                '&amp;amp; &amp;lt; &amp;#39;',
+            );
+        });
+    });
+
+    describe('non-special characters', () => {
+        test.each([
+            ['empty string', ''],
+            ['plain text', 'Hello world'],
+            ['numbers as text', '123456'],
+            ['punctuation', '.,;:!?()-_'],
+            ['whitespace', '  \t\n  '],
+            ['Unicode', 'Café résumé'],
+            ['emoji', 'Hello 🌍'],
+        ])('preserves %s', (_, input) => {
+            expect(escapeHtml(input)).toBe(input);
+        });
+
+        test('preserves text surrounding special characters', () => {
+            expect(escapeHtml('A & B <3')).toBe('A &amp; B &lt;3');
+        });
+
+        test('preserves line breaks', () => {
+            expect(escapeHtml('Line 1\nLine 2')).toBe('Line 1\nLine 2');
+        });
+    });
+
+    describe('type coercion', () => {
+        test.each([
+            ['null', null, 'null'],
+            ['undefined', undefined, 'undefined'],
+            ['zero', 0, '0'],
+            ['positive number', 42, '42'],
+            ['negative number', -42, '-42'],
+            ['decimal number', 3.14, '3.14'],
+            ['NaN', NaN, 'NaN'],
+            ['Infinity', Infinity, 'Infinity'],
+            ['true', true, 'true'],
+            ['false', false, 'false'],
+            ['empty array', [], ''],
+            ['number array', [1, 2, 3], '1,2,3'],
+            ['plain object', {}, '[object Object]'],
+        ])('converts %s to a string', (_, input, expected) => {
+            expect(escapeHtml(input)).toBe(expected);
+        });
+
+        test('escapes special characters after array coercion', () => {
+            expect(escapeHtml(['<div>', '&', '"test"'])).toBe(
+                '&lt;div&gt;,&amp;,&quot;test&quot;',
+            );
+        });
+
+        test('escapes special characters from custom toString', () => {
+            const value = {
+                toString: () => '<span>"Hello" & goodbye</span>',
+            };
+            expect(escapeHtml(value)).toBe(
+                '&lt;span&gt;&quot;Hello&quot; &amp; goodbye&lt;/span&gt;',
+            );
+        });
+    });
+
+    describe('behavior', () => {
+        test('always returns a string', () => {
+            expect(typeof escapeHtml('Hello')).toBe('string');
+            expect(typeof escapeHtml(42)).toBe('string');
+            expect(typeof escapeHtml(null)).toBe('string');
+        });
+
+        test('does not mutate the input', () => {
+            const input = ['<div>', '&'];
+            escapeHtml(input);
+            expect(input).toEqual(['<div>', '&']);
+        });
+
+        test('handles long strings', () => {
+            const input = '<>&"\''.repeat(1000);
+            const expected = '&lt;&gt;&amp;&quot;&#39;'.repeat(1000);
+            expect(escapeHtml(input)).toBe(expected);
+        });
+
+        test('escapes newly generated entity ampersands only once', () => {
+            expect(escapeHtml('&')).toBe('&amp;');
+            expect(escapeHtml('<')).toBe('&lt;');
+        });
+    });
+});
+
 describe('escapeXml', () => {
     test('handles empty string', () => {
         expect(escapeXml('')).toBe('');
@@ -7317,5 +7451,290 @@ describe('deepClone', () => {
         test.todo(
             'handles a ref whose value directly references the ref itself',
         );
+    });
+});
+
+describe('convertConfigColors', () => {
+    describe('color detection', () => {
+        test.each([
+            ['named color', 'red', '#FF0000ff'],
+            ['hex shorthand', '#abc', '#aabbccff'],
+            ['hex', '#123456', '#123456ff'],
+            ['hex with alpha', '#12345680', '#12345680'],
+            ['rgb', 'rgb(255, 0, 0)', '#ff0000ff'],
+            ['rgba', 'rgba(255, 0, 0, 0.5)', '#ff000080'],
+            ['rgb with percentages', 'rgb(100% 0% 0%)', '#ff0000ff'],
+            ['hsl', 'hsl(120, 100%, 50%)', '#00ff00ff'],
+            ['hsla', 'hsla(120, 100%, 50%, 0.5)', '#00ff0080'],
+            ['oklch', 'oklch(0% 0 0)', '#000000ff'],
+            ['transparent', 'transparent', '#FFFFFF00'],
+        ])('converts %s', (_, input, expected) => {
+            const config = { value: input };
+            convertConfigColors(config);
+            expect(config.value).toBe(expected);
+        });
+
+        test('converts colors regardless of property names', () => {
+            const config = {
+                backgroundColor: 'red',
+                stroke: 'blue',
+                customProperty: '#fff',
+                arbitraryKey: 'rgb(0, 255, 0)',
+            };
+
+            convertConfigColors(config);
+
+            expect(config).toEqual({
+                backgroundColor: '#FF0000ff',
+                stroke: '#0000FFff',
+                customProperty: '#ffffffff',
+                arbitraryKey: '#00ff00ff',
+            });
+        });
+
+        test('converts valid color names even in non-color properties', () => {
+            const config = {
+                status: 'red',
+                label: 'blue',
+            };
+            convertConfigColors(config);
+            expect(config.status).toBe('#FF0000ff');
+            expect(config.label).toBe('#0000FFff');
+        });
+    });
+
+    describe('non-color values', () => {
+        test.each([
+            ['empty string', ''],
+            ['regular text', 'My chart'],
+            ['unknown color', 'not-a-color'],
+            ['invalid hex', '#xyz'],
+            ['invalid rgb', 'rgb(invalid)'],
+            ['CSS variable', 'var(--primary-color)'],
+            ['number', 42],
+            ['zero', 0],
+            ['boolean', true],
+            ['null', null],
+            ['undefined', undefined],
+            ['NaN', NaN],
+        ])('preserves %s', (_, value) => {
+            const config = { value };
+            convertConfigColors(config);
+            expect(config.value).toEqual(value);
+        });
+
+        test('preserves functions', () => {
+            const fn = () => 'red';
+            const config = { callback: fn };
+            convertConfigColors(config);
+            expect(config.callback).toBe(fn);
+        });
+
+        test('preserves non-plain objects', () => {
+            const date = new Date();
+            const map = new Map([['color', 'red']]);
+            const set = new Set(['blue']);
+            const config = { date, map, set };
+            convertConfigColors(config);
+            expect(config.date).toBe(date);
+            expect(config.map).toBe(map);
+            expect(config.set).toBe(set);
+            expect(map.get('color')).toBe('red');
+            expect(set.has('blue')).toBe(true);
+        });
+    });
+
+    describe('recursive traversal', () => {
+        test('converts deeply nested colors', () => {
+            const config = {
+                theme: {
+                    chart: {
+                        elements: {
+                            stroke: {
+                                color: 'red',
+                                width: 2,
+                            },
+                        },
+                    },
+                },
+            };
+
+            convertConfigColors(config);
+            expect(config.theme.chart.elements.stroke).toEqual({
+                color: '#FF0000ff',
+                width: 2,
+            });
+        });
+
+        test('converts color strings inside arrays', () => {
+            const config = {
+                palette: ['red', '#fff', 'rgb(0, 0, 255)', 'invalid'],
+            };
+
+            convertConfigColors(config);
+            expect(config.palette).toEqual([
+                '#FF0000ff',
+                '#ffffffff',
+                '#0000ffff',
+                'invalid',
+            ]);
+        });
+
+        test('converts nested arrays and objects', () => {
+            const config = {
+                series: [
+                    {
+                        color: 'red',
+                        values: [1, 2, 3],
+                    },
+                    {
+                        color: 'blue',
+                        nested: [
+                            'green',
+                            {
+                                fill: '#abc',
+                                stroke: {
+                                    color: 'transparent',
+                                },
+                            },
+                        ],
+                    },
+                ],
+            };
+
+            convertConfigColors(config);
+            expect(config.series[0].color).toBe('#FF0000ff');
+            expect(config.series[0].values).toEqual([1, 2, 3]);
+            expect(config.series[1].color).toBe('#0000FFff');
+            expect(config.series[1].nested[0]).toBe('#008000ff');
+            expect(config.series[1].nested[1].fill).toBe('#aabbccff');
+            expect(config.series[1].nested[1].stroke.color).toBe('#FFFFFF00');
+        });
+
+        test('supports a root-level array', () => {
+            const config = ['red', { fill: 'blue' }, ['#fff', 'invalid']];
+            const result = convertConfigColors(config);
+            expect(result).toEqual([
+                '#FF0000ff',
+                { fill: '#0000FFff' },
+                ['#ffffffff', 'invalid'],
+            ]);
+        });
+    });
+
+    describe('Vue reactivity', () => {
+        test('supports a reactive root config', () => {
+            const config = reactive({
+                color: 'red',
+                nested: {
+                    fill: 'blue',
+                },
+            });
+            const result = convertConfigColors(config);
+            expect(result).toBe(toRaw(config));
+            expect(config.color).toBe('#FF0000ff');
+            expect(config.nested.fill).toBe('#0000FFff');
+        });
+
+        test('converts string refs stored in plain objects', () => {
+            const color = ref('red');
+            const config = { color };
+            convertConfigColors(config);
+            expect(config.color).toBe('#FF0000ff');
+            expect(color.value).toBe('red');
+        });
+
+        test('preserves non-color refs', () => {
+            const label = ref('My chart');
+            const config = { label };
+            convertConfigColors(config);
+            expect(config.label).toBe(label);
+            expect(label.value).toBe('My chart');
+        });
+
+        test('traverses plain objects inside shallow refs', () => {
+            const theme = shallowRef({
+                fill: 'red',
+                stroke: 'blue',
+            });
+            const config = { theme };
+            convertConfigColors(config);
+            expect(config.theme).toBe(theme);
+            expect(theme.value).toEqual({
+                fill: '#FF0000ff',
+                stroke: '#0000FFff',
+            });
+        });
+
+        test('skips nested reactive objects', () => {
+            const nested = reactive({ color: 'red' });
+            const config = { nested };
+            convertConfigColors(config);
+            expect(config.nested).toBe(nested);
+            expect(nested.color).toBe('red');
+        });
+    });
+
+    describe('references and mutation', () => {
+        test('mutates the original config', () => {
+            const config = { color: 'red' };
+            const result = convertConfigColors(config);
+            expect(result).toBe(config);
+            expect(config.color).toBe('#FF0000ff');
+        });
+
+        test('preserves nested object and array references', () => {
+            const nested = { color: 'red' };
+            const palette = ['blue'];
+            const config = { nested, palette };
+            convertConfigColors(config);
+            expect(config.nested).toBe(nested);
+            expect(config.palette).toBe(palette);
+            expect(nested.color).toBe('#FF0000ff');
+            expect(palette[0]).toBe('#0000FFff');
+        });
+
+        test('handles circular references', () => {
+            const config = { color: 'red' };
+            config.self = config;
+            expect(() => convertConfigColors(config)).not.toThrow();
+            expect(config.color).toBe('#FF0000ff');
+            expect(config.self).toBe(config);
+        });
+
+        test('handles shared object references', () => {
+            const shared = { fill: 'blue' };
+            const config = {
+                first: shared,
+                second: shared,
+            };
+            convertConfigColors(config);
+            expect(config.first).toBe(shared);
+            expect(config.second).toBe(shared);
+            expect(shared.fill).toBe('#0000FFff');
+        });
+
+        test('remains unvaried', () => {
+            const config = {
+                color: 'red',
+                palette: ['blue', '#fff'],
+            };
+            convertConfigColors(config);
+            const firstResult = structuredClone(config);
+            convertConfigColors(config);
+            expect(config).toEqual(firstResult);
+        });
+
+        test('respects a provided WeakSet', () => {
+            const config = { color: 'red' };
+            const seen = new WeakSet([config]);
+            convertConfigColors(config, seen);
+            expect(config.color).toBe('red');
+        });
+
+        test('handles null and undefined root values', () => {
+            expect(convertConfigColors(null)).toBeNull();
+            expect(convertConfigColors(undefined)).toBeUndefined();
+        });
     });
 });

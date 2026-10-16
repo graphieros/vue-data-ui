@@ -30,6 +30,7 @@ import {
     deepClone,
     downloadCsv,
     error,
+    escapeHtml,
     forceValidValue,
     functionReturnsString,
     getEffectiveTimeLabelModulo,
@@ -227,9 +228,23 @@ const FINAL_CONFIG = ref(prepareConfig());
 const cfgUserOptions = computed(() => FINAL_CONFIG.value.userOptions);
 const cfgGrid = computed(() => FINAL_CONFIG.value.style.chart.grid);
 const cfgBars = computed(() => FINAL_CONFIG.value.style.chart.bars);
-const cfgTimeLabels = computed(
-    () => FINAL_CONFIG.value.style.chart.grid.x.timeLabels,
-);
+
+const cfgTimeLabels = computed(() => {
+    const base = FINAL_CONFIG.value.style.chart.grid.x.timeLabels;
+    if (!isWaterfall.value) return base;
+    const category = cfgWaterfall.value.categoryLabels;
+
+    return {
+        ...base,
+        ...category,
+        values: waterfallSteps.value.map((step) => step.name),
+        datetimeFormatter: {
+            ...base.datetimeFormatter,
+            enable: false, // Waterfall steps are categorical
+        },
+    };
+});
+
 const cfgTooltip = computed(() => FINAL_CONFIG.value.style.chart.tooltip);
 const cfgChart = computed(() => FINAL_CONFIG.value.style.chart);
 
@@ -361,6 +376,604 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
     }),
 });
 
+const waterfallSource = computed(() => {
+    // The first waterfall dataset wins; additional chart datasets are ignored.
+    const collection = FINAL_DATASET.value ?? [];
+    return collection.find((item) => item?.type === 'waterfall') ?? null;
+});
+const isWaterfall = computed(() => !!waterfallSource.value && !loading.value);
+const cfgWaterfall = computed(() => FINAL_CONFIG.value.style.chart.waterfall);
+const effectiveGapRatio = computed(() => {
+    const raw = Number(
+        isWaterfall.value
+            ? cfgWaterfall.value.bars.gapRatio
+            : cfgBars.value.gapRatio,
+    );
+    return Number.isFinite(raw) ? Math.max(0, Math.min(1.9, raw)) : 0.45;
+});
+const effectiveBorderRadius = computed(() =>
+    isWaterfall.value
+        ? cfgWaterfall.value.bars.borderRadius
+        : cfgBars.value.borderRadius,
+);
+
+function waterfallSegmentKey(segment, index) {
+    return String(
+        segment?.key ?? segment?.id ?? segment?.name ?? `Segment ${index + 1}`,
+    );
+}
+
+function waterfallStepSegments(step) {
+    return Array.isArray(step?.series) ? step.series : [];
+}
+
+function getWaterfallStepType(step, index) {
+    const type = String(
+        step?.type ?? (index === 0 ? 'total' : 'change'),
+    ).toLowerCase();
+    return ['total', 'subtotal', 'change'].includes(type) ? type : 'change';
+}
+
+// Synthetic groups are local to automatic balance columns. They must never
+// appear in the legend or be controlled by segment visibility, and keeping
+// them distinct preserves the total/subtotal color configuration.
+const WATERFALL_AUTO_BALANCE_KEYS = Object.freeze({
+    total: '__waterfall_total__',
+    subtotal: '__waterfall_subtotal__',
+});
+
+// One unique legend entry per segment key. Stable ids support toggling the
+// same segment across every category, even after zooming/recomputing geometry.
+const waterfallGroups = computed(() => {
+    if (!isWaterfall.value) return [];
+    const groups = new Map();
+    const steps = waterfallSource.value?.series ?? [];
+    steps.forEach((step) => {
+        waterfallStepSegments(step).forEach((segment, index) => {
+            if (!segment || typeof segment !== 'object') return;
+            const key = waterfallSegmentKey(segment, index);
+            if (groups.has(key)) return;
+            const ordinal = groups.size;
+            const color =
+                convertColorToHex(segment.color) ||
+                customPalette.value[
+                    ordinal % (customPalette.value.length || 1)
+                ] ||
+                palette[ordinal % palette.length];
+            groups.set(key, {
+                name: String(segment.name ?? key),
+                datasetKey: key,
+                id: `waterfall-segment-${uid.value}-${ordinal}`,
+                color,
+                absoluteIndex: ordinal,
+            });
+        });
+    });
+    return Array.from(groups.values());
+});
+
+const waterfallSteps = computed(() => {
+    if (!isWaterfall.value) return [];
+    const source = waterfallSource.value;
+    const rawSteps = Array.isArray(source?.series) ? source.series : [];
+    const visibleKeys = new Set(
+        waterfallGroups.value
+            .filter((group) => !segregated.value.includes(group.id))
+            .map((group) => group.datasetKey),
+    );
+    const groupColors = new Map(
+        waterfallGroups.value.map((group) => [group.datasetKey, group.color]),
+    );
+    const cfg = cfgWaterfall.value;
+    let balance = Number(source.startValue ?? 0);
+    if (!Number.isFinite(balance)) balance = 0;
+
+    return rawSteps.map((step, index) => {
+        const kind = getWaterfallStepType(step, index);
+        const isTotal = kind === 'total' || kind === 'subtotal';
+        const previousBalance = balance;
+        // Stack contributions of the same sign in their own directions.
+        // Using one cursor for both signs makes opposite-signed segments
+        // overlap: e.g. -80 then +40 hides half of the -80 rectangle.
+        // Both branches originate from the same cumulative entry level;
+        // the next step begins at their NET sum, not at either branch end.
+        const baseline = isTotal ? 0 : previousBalance;
+        let positiveCursor = baseline;
+        let negativeCursor = baseline;
+        let stepDelta = 0;
+        let input = waterfallStepSegments(step);
+        // Without an explicit breakdown, both total and subtotal display
+        // the incoming running balance as a zero-based column. This is an
+        // absolute snapshot, not a change: it must leave the balance intact.
+        // An explicit (non-empty) series still replaces the balance as usual.
+        if (isTotal && !input.length) {
+            input = [
+                {
+                    name: kind === 'total' ? 'Total' : 'Subtotal',
+                    key: WATERFALL_AUTO_BALANCE_KEYS[kind],
+                    value: previousBalance,
+                },
+            ];
+        }
+        const segments = [];
+        input.forEach((item, segmentIndex) => {
+            if (!item || typeof item !== 'object') return;
+            const key = waterfallSegmentKey(item, segmentIndex);
+            if (
+                key !== WATERFALL_AUTO_BALANCE_KEYS.total &&
+                key !== WATERFALL_AUTO_BALANCE_KEYS.subtotal &&
+                !visibleKeys.has(key)
+            )
+                return;
+            const value = Number(item.value ?? 0);
+            if (!Number.isFinite(value)) return;
+            const start = value < 0 ? negativeCursor : positiveCursor;
+            const end = start + value;
+            if (value < 0) negativeCursor = end;
+            else positiveCursor = end;
+            stepDelta += value;
+            const preferredColor = convertColorToHex(item.color);
+            const kindColor =
+                kind === 'total'
+                    ? cfg.colors.total
+                    : kind === 'subtotal'
+                      ? cfg.colors.subtotal
+                      : value > 0
+                        ? cfg.colors.positive
+                        : value < 0
+                          ? cfg.colors.negative
+                          : cfg.colors.neutral;
+            segments.push({
+                key,
+                name: String(item.name ?? key),
+                label: String(item.label ?? item.name ?? key),
+                value,
+                start,
+                end,
+                color:
+                    preferredColor ||
+                    convertColorToHex(step?.color) ||
+                    (cfg.colors.useSeriesColor ? groupColors.get(key) : null) ||
+                    kindColor,
+            });
+        });
+        const end = baseline + stepDelta;
+        const change = end - previousBalance;
+        balance = end;
+        return {
+            index,
+            name: String(step?.label ?? step?.name ?? `${index + 1}`),
+            kind,
+            isTotal,
+            previousBalance,
+            start: baseline,
+            end,
+            balance: end,
+            change,
+            hasMixedSigns:
+                positiveCursor > baseline && negativeCursor < baseline,
+            positiveExtent: positiveCursor,
+            negativeExtent: negativeCursor,
+            segments,
+            color: convertColorToHex(step?.color) || null,
+        };
+    });
+});
+
+function getWaterfallProjectedValue(
+    value,
+    orientation = 'vertical',
+    dimensions = drawingArea.value,
+) {
+    const range = yScale.value.max - yScale.value.min || 1;
+    const ratio = (value - yScale.value.min) / range;
+    return orientation === 'vertical'
+        ? dimensions.bottom - ratio * dimensions.height
+        : dimensions.left + ratio * dimensions.width;
+}
+
+const waterfallFormattedDataset = computed(() => {
+    const steps = waterfallSteps.value;
+    const groups = waterfallGroups.value.filter(
+        (g) => !segregated.value.includes(g.id),
+    );
+    const visibleSteps = steps.slice(slicer.value.start, slicer.value.end);
+    const length = visibleSteps.length;
+    const gap = effectiveGapRatio.value;
+    const entireScaleValues = [
+        0,
+        ...steps.flatMap((step) => [
+            step.start,
+            step.end,
+            ...step.segments.flatMap((seg) => [seg.start, seg.end]),
+        ]),
+    ];
+    const minValue = Math.min(...entireScaleValues);
+    const maxValue = Math.max(...entireScaleValues);
+    const minimapRange = maxValue - minValue || 1;
+
+    // Auto-generated total/subtotal columns need their own renderer groups.
+    // The absoluteIndex is also part of SVG gradient and pattern IDs. It MUST
+    // remain unique and stable as legend groups are hidden or shown: using
+    // includedGroups.length would collide with an existing segment ordinal
+    // after filtering (e.g. Product C and an automatic total both get 2).
+    const includedGroups = [...groups];
+    const syntheticGroupStartIndex = waterfallGroups.value.length;
+    for (const [offset, kind] of ['total', 'subtotal'].entries()) {
+        const key = WATERFALL_AUTO_BALANCE_KEYS[kind];
+        if (
+            steps.some((step) => step.segments.some((seg) => seg.key === key))
+        ) {
+            includedGroups.push({
+                name: kind === 'total' ? 'Total' : 'Subtotal',
+                datasetKey: key,
+                color: cfgWaterfall.value.colors[kind],
+                id: `waterfall-${kind}-${uid.value}`,
+                absoluteIndex: syntheticGroupStartIndex + offset,
+            });
+        }
+    }
+
+    return includedGroups.map((group) => {
+        const segmentForStep = steps.map(
+            (step) =>
+                step.segments.find((seg) => seg.key === group.datasetKey) ??
+                null,
+        );
+        const visibleSegments = segmentForStep.slice(
+            slicer.value.start,
+            slicer.value.end,
+        );
+        const rawSeries = segmentForStep.map((seg) => seg?.value ?? 0);
+        const series = visibleSegments.map((seg) => seg?.value ?? 0);
+        const positions = visibleSegments.map((seg, index) => {
+            const x =
+                drawingArea.value.left +
+                barSlot.value * index +
+                (barSlot.value * gap) / 4;
+            const y =
+                drawingArea.value.top +
+                barSlot.value * index +
+                (barSlot.value * gap) / 4;
+            if (!seg)
+                return {
+                    x,
+                    horizontal_y: y,
+                    top: 0,
+                    height: 0,
+                    left: 0,
+                    width: 0,
+                };
+            const y1 = getWaterfallProjectedValue(seg.start);
+            const y2 = getWaterfallProjectedValue(seg.end);
+            const x1 = getWaterfallProjectedValue(seg.start, 'horizontal');
+            const x2 = getWaterfallProjectedValue(seg.end, 'horizontal');
+            return {
+                x,
+                horizontal_y: y,
+                top: Math.min(y1, y2),
+                height: Math.abs(y2 - y1),
+                left: Math.min(x1, x2),
+                width: Math.abs(x2 - x1),
+            };
+        });
+        return {
+            ...group,
+            series,
+            signedSeries: series.map((v) => (v < 0 ? -1 : 1)),
+            waterfallSegments: visibleSegments,
+            waterfallColors: visibleSegments.map(
+                (seg) => seg?.color || group.color,
+            ),
+            minimapWaterfallColors: segmentForStep.map(
+                (seg) => seg?.color || group.color,
+            ),
+            rectKeys: series.map((_, j) =>
+                getStackbarRectKey(group, slicer.value.start + j),
+            ),
+            minimapRectKeys: rawSeries.map((_, j) =>
+                getStackbarRectKey(group, j),
+            ),
+            proportions: series.map((value, i) => {
+                const denominator =
+                    visibleSteps[i]?.segments.reduce(
+                        (total, seg) => total + Math.abs(seg.value),
+                        0,
+                    ) || 1;
+                return Math.abs(value) / denominator;
+            }),
+            x: positions.map((p) => p.x),
+            y: positions.map((p) => p.top),
+            height: positions.map((p) => p.height),
+            horizontal_y: positions.map((p) => p.horizontal_y),
+            horizontal_x: positions.map((p) => p.left),
+            horizontal_width: positions.map((p) => p.width),
+            xMinimap: ({ left, unitW }) =>
+                rawSeries.map((_, j) => left + unitW * j + (unitW * gap) / 4),
+            yMinimap: ({ minimapH }) =>
+                segmentForStep.map((seg) => {
+                    if (!seg) return minimapH;
+                    return (
+                        minimapH *
+                        (1 -
+                            (Math.max(seg.start, seg.end) - minValue) /
+                                minimapRange)
+                    );
+                }),
+            heightMinimap: ({ minimapH }) =>
+                segmentForStep.map((seg) =>
+                    seg
+                        ? (minimapH * Math.abs(seg.end - seg.start)) /
+                          minimapRange
+                        : 0,
+                ),
+        };
+    });
+});
+
+// Work with full-series steps, never a re-based zoom slice.
+const waterfallVisibleSteps = computed(() =>
+    waterfallSteps.value.slice(slicer.value.start, slicer.value.end),
+);
+const waterfallBounds = computed(() => {
+    const vertical = FINAL_CONFIG.value.orientation === 'vertical';
+    const thickness = barSlot.value * (1 - effectiveGapRatio.value / 2);
+    return waterfallVisibleSteps.value.map((step, index) => {
+        const positions = step.segments
+            .map((seg) => [seg.start, seg.end])
+            .flat();
+        const values = positions.length ? positions : [step.start, step.end];
+        const from = Math.min(...values);
+        const to = Math.max(...values);
+        const a = getWaterfallProjectedValue(
+            from,
+            vertical ? 'vertical' : 'horizontal',
+        );
+        const b = getWaterfallProjectedValue(
+            to,
+            vertical ? 'vertical' : 'horizontal',
+        );
+        const position = vertical
+            ? drawingArea.value.left +
+              barSlot.value * index +
+              (barSlot.value * effectiveGapRatio.value) / 4
+            : drawingArea.value.top +
+              barSlot.value * index +
+              (barSlot.value * effectiveGapRatio.value) / 4;
+        const width = vertical ? thickness : Math.abs(b - a);
+        const height = vertical ? Math.abs(b - a) : thickness;
+        return {
+            x: vertical ? position : Math.min(a, b),
+            y: vertical ? Math.min(a, b) : position,
+            width,
+            height,
+            radius: Math.min(
+                Math.max(0, effectiveBorderRadius.value),
+                width / 2,
+                height / 2,
+            ),
+            step,
+            index,
+        };
+    });
+});
+
+/**
+ * The connector touches the ACTUAL rounded-rect outline at its value level.
+ * At the straight portion of the edge there is no inset. As the endpoint
+ * approaches an outer corner, the inset grows smoothly up to the radius.
+ * Applying a fixed radius everywhere leaves connectors floating in mid-air.
+ */
+function getWaterfallConnectorCornerInset(bounds, coordinate, vertical) {
+    const radius = Number(bounds.radius) || 0;
+    if (radius <= 0) return 0;
+    const start = vertical ? bounds.y : bounds.x;
+    const length = vertical ? bounds.height : bounds.width;
+    if (length <= 0) return 0;
+    const distanceToNearestEnd = Math.max(
+        0,
+        Math.min(coordinate - start, start + length - coordinate),
+    );
+    if (distanceToNearestEnd >= radius) return 0;
+    const relative = radius - distanceToNearestEnd;
+    return (
+        radius - Math.sqrt(Math.max(0, radius * radius - relative * relative))
+    );
+}
+
+const waterfallConnectors = computed(() => {
+    if (!isWaterfall.value || !cfgWaterfall.value.connectors.show) return [];
+
+    const vertical = FINAL_CONFIG.value.orientation === 'vertical';
+    const cfg = cfgWaterfall.value.connectors;
+    const bounds = waterfallBounds.value;
+    const paths = [];
+    const epsilon = 1e-7;
+
+    const isPassThroughStep = (step) =>
+        step.kind === 'change' &&
+        step.segments.every(
+            (segment) => Math.abs(segment.end - segment.start) <= epsilon,
+        );
+
+    for (let i = 0; i < bounds.length - 1; i += 1) {
+        const before = bounds[i];
+
+        if (isPassThroughStep(before.step) || !before.step.segments.length) {
+            continue;
+        }
+
+        // Skip consecutive zero-height changes.
+        let nextIndex = i + 1;
+
+        while (
+            nextIndex < bounds.length &&
+            isPassThroughStep(bounds[nextIndex].step)
+        ) {
+            nextIndex += 1;
+        }
+
+        if (nextIndex >= bounds.length) continue;
+
+        const after = bounds[nextIndex];
+        if (!after.step.segments.length) continue;
+
+        // Preserve discontinuities caused by explicit total resets.
+        const nextAttachmentValue = after.step.isTotal
+            ? after.step.end
+            : after.step.start;
+
+        if (Math.abs(before.step.end - nextAttachmentValue) > epsilon) {
+            continue;
+        }
+
+        const level = getWaterfallProjectedValue(
+            before.step.end,
+            vertical ? 'vertical' : 'horizontal',
+        );
+
+        const insetBefore =
+            (cfg.adaptToRadius
+                ? getWaterfallConnectorCornerInset(before, level, vertical)
+                : 0) + Number(cfg.inset || 0);
+
+        const insetAfter =
+            (cfg.adaptToRadius
+                ? getWaterfallConnectorCornerInset(after, level, vertical)
+                : 0) + Number(cfg.inset || 0);
+
+        if (vertical) {
+            const x1 = before.x + before.width - insetBefore;
+            const x2 = after.x + insetAfter;
+
+            if (x2 < x1) continue;
+
+            paths.push({
+                x1,
+                y1: level,
+                x2,
+                y2: level,
+                key: `${before.step.index}-${after.step.index}`,
+            });
+        } else {
+            const y1 = before.y + before.height - insetBefore;
+            const y2 = after.y + insetAfter;
+
+            if (y2 < y1) continue;
+
+            paths.push({
+                x1: level,
+                y1,
+                x2: level,
+                y2,
+                key: `${before.step.index}-${after.step.index}`,
+            });
+        }
+    }
+
+    return paths;
+});
+
+const waterfallStepAnnotations = computed(() => {
+    if (!isWaterfall.value || !cfgWaterfall.value.stepLabels.show) return [];
+    const vertical = FINAL_CONFIG.value.orientation === 'vertical';
+    const cfg = cfgWaterfall.value.stepLabels;
+    return waterfallBounds.value
+        .map((bounds) => {
+            const step = bounds.step;
+            const value =
+                step.isTotal && cfg.useBalanceForTotals
+                    ? step.balance
+                    : step.change;
+            if (!cfg.showZero && !value) return null;
+            const defaultLabel = dataLabel({
+                p: cfg.prefix + (cfg.showPlusSign && value > 0 ? '+' : ''),
+                v: value,
+                s: cfg.suffix,
+                r: cfg.rounding,
+            });
+            const label = applyDataLabel(cfg.formatter, value, defaultLabel, {
+                datapoint: step,
+                seriesIndex: 0,
+                datapointIndex: step.index,
+            });
+            const pad = (Number(cfg.offset) || 0) + 7;
+            const sign = step.isTotal
+                ? Math.sign(step.balance)
+                : Math.sign(step.change);
+            return vertical
+                ? {
+                      key: step.index,
+                      text: label,
+                      x: bounds.x + bounds.width / 2,
+                      y:
+                          sign < 0
+                              ? bounds.y + bounds.height + pad + cfg.fontSize
+                              : bounds.y - pad,
+                      anchor: 'middle',
+                  }
+                : {
+                      key: step.index,
+                      text: label,
+                      x:
+                          sign < 0
+                              ? bounds.x - pad
+                              : bounds.x + bounds.width + pad,
+                      y: bounds.y + bounds.height / 2 + cfg.fontSize / 3,
+                      anchor: sign < 0 ? 'end' : 'start',
+                  };
+        })
+        .filter(Boolean);
+});
+
+function canShowWaterfallSegmentLabel(dp, index) {
+    const cfg = cfgWaterfall.value.segmentLabels;
+    if (!cfg.show || !dp.waterfallSegments?.[index]) return false;
+    const value = dp.series[index];
+    if (value === 0 && !cfg.showZero) return false;
+    const height =
+        FINAL_CONFIG.value.orientation === 'vertical'
+            ? dp.height[index]
+            : barSlot.value * (1 - effectiveGapRatio.value / 2);
+    const width =
+        FINAL_CONFIG.value.orientation === 'vertical'
+            ? barSlot.value * (1 - effectiveGapRatio.value / 2)
+            : dp.horizontal_width[index];
+    return height >= cfg.minHeight && width >= cfg.minWidth;
+}
+function formatWaterfallSegmentLabel(dp, index) {
+    const seg = dp.waterfallSegments[index];
+    const cfg = cfgWaterfall.value.segmentLabels;
+    return applyDataLabel(
+        cfg.formatter,
+        seg.value,
+        dataLabel({
+            p: cfg.prefix,
+            v: seg.value,
+            s: cfg.suffix,
+            r: cfg.rounding,
+        }),
+        {
+            datapoint: { ...seg, step: waterfallVisibleSteps.value[index] },
+            seriesIndex: dp.absoluteIndex,
+            datapointIndex: slicer.value.start + index,
+        },
+    );
+}
+function getWaterfallFill(dp, j) {
+    if (!isWaterfall.value)
+        return cfgBars.value.gradient.show
+            ? `url(#gradient_${dp.id})`
+            : dp.color;
+    if (!cfgWaterfall.value.bars.gradient.show)
+        return dp.waterfallColors?.[j] || dp.color;
+    return `url(#waterfall-gradient-${uid.value}-${dp.absoluteIndex}-${slicer.value.start + j})`;
+}
+
+function escapeWaterfallHtml(value) {
+    return escapeHtml(String(value ?? ''));
+}
+
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } =
     useUserOptionState({ config: FINAL_CONFIG.value });
 const { svgRef } = useChartAccessibility({
@@ -474,7 +1087,10 @@ watch(
         userOptionsVisible.value =
             !FINAL_CONFIG.value.userOptions.showOnChartHover;
 
-        mutableConfig.value.dataLabels.show = cfgBars.value.dataLabels.show;
+        mutableConfig.value.dataLabels.show = isWaterfall.value
+            ? cfgWaterfall.value.segmentLabels.show ||
+              cfgWaterfall.value.stepLabels.show
+            : cfgBars.value.dataLabels.show;
         mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
         mutableConfig.value.showTooltip = cfgTooltip.value.show;
 
@@ -521,7 +1137,10 @@ watch(
 
 const mutableConfig = ref({
     dataLabels: {
-        show: cfgBars.value.dataLabels.show,
+        show: isWaterfall.value
+            ? cfgWaterfall.value.segmentLabels.show ||
+              cfgWaterfall.value.stepLabels.show
+            : cfgBars.value.dataLabels.show,
     },
     showTable: FINAL_CONFIG.value.table.show,
     showTooltip: cfgTooltip.value.show,
@@ -533,7 +1152,10 @@ watch(
     () => {
         mutableConfig.value = {
             dataLabels: {
-                show: cfgBars.value.dataLabels.show,
+                show: isWaterfall.value
+                    ? cfgWaterfall.value.segmentLabels.show ||
+                      cfgWaterfall.value.stepLabels.show
+                    : cfgBars.value.dataLabels.show,
             },
             showTable: FINAL_CONFIG.value.table.show,
             showTooltip: cfgTooltip.value.show,
@@ -840,11 +1462,14 @@ const drawingArea = computed(() => {
     const { right: PR } = defaultSizes.value.paddingRatio;
 
     let topOffset =
-        cfgBars.value.totalValues.show &&
-        props.dataset &&
-        props.dataset.length > 1
-            ? cfgBars.value.totalValues.fontSize * 1.3
-            : 0;
+        isWaterfall.value && cfgWaterfall.value.stepLabels.show
+            ? cfgWaterfall.value.stepLabels.fontSize * 1.5 +
+              cfgWaterfall.value.stepLabels.offset
+            : cfgBars.value.totalValues.show &&
+                props.dataset &&
+                props.dataset.length > 1
+              ? cfgBars.value.totalValues.fontSize * 1.3
+              : 0;
 
     let offsetLeft = 0;
     let offsetRightAxis = 0;
@@ -952,6 +1577,25 @@ const precogRect = computed(() => {
 });
 
 const unmutableDataset = computed(() => {
+    if (isWaterfall.value) {
+        const steps = waterfallSource.value.series ?? [];
+        return waterfallGroups.value.map((group) => {
+            const series = steps.map((step) =>
+                waterfallStepSegments(step)
+                    .filter(
+                        (segment, index) =>
+                            waterfallSegmentKey(segment, index) ===
+                            group.datasetKey,
+                    )
+                    .reduce((sum, item) => sum + (Number(item.value) || 0), 0),
+            );
+            return {
+                ...group,
+                series,
+                signedSeries: series.map((value) => (value < 0 ? -1 : 1)),
+            };
+        });
+    }
     return FINAL_DATASET.value.map((ds, i) => {
         const id = createUid();
         const datasetKey = String(ds.key ?? ds.id ?? ds.name ?? id);
@@ -977,6 +1621,7 @@ const unmutableDataset = computed(() => {
 });
 
 const maxSeries = computed(() => {
+    if (isWaterfall.value) return waterfallSource.value.series?.length ?? 0;
     const v = Math.max(
         ...unmutableDataset.value
             .filter((ds) => !segregated.value.includes(ds.id))
@@ -993,12 +1638,12 @@ function selectMinimapIndex(i) {
 
 const slicer = ref({
     start: 0,
-    end: Math.max(...FINAL_DATASET.value.map((ds) => ds.series.length)),
+    end: maxSeries.value,
 });
 
 const slicerPrecog = ref({
     start: 0,
-    end: Math.max(...FINAL_DATASET.value.map((ds) => ds.series.length)),
+    end: maxSeries.value,
 });
 
 const isChartZoomSelecting = ref(false);
@@ -1203,6 +1848,8 @@ const allSegregated = computed(
 
 const datasetTotalsMinimap = computed(() => {
     if (!cfgChart.value.zoom.minimap.show) return [];
+    if (isWaterfall.value)
+        return waterfallSteps.value.map((step) => step.balance);
     return sumSeries(
         unmutableDataset.value
             .map((ds) => {
@@ -1230,6 +1877,9 @@ const allMinimaps = computed(() => {
 });
 
 const displayTotals = computed(() => {
+    if (isWaterfall.value) {
+        return waterfallVisibleSteps.value.map((step) => step.change);
+    }
     return sumSeries(
         unmutableDataset.value
             .filter((ds) => !segregated.value.includes(ds.id))
@@ -1277,6 +1927,32 @@ const datasetSignedTotals = computed(() => {
 });
 
 const yScale = computed(() => {
+    if (isWaterfall.value) {
+        const values = [
+            0,
+            ...waterfallVisibleSteps.value.flatMap((step) => [
+                step.start,
+                step.end,
+                ...step.segments.flatMap((segment) => [
+                    segment.start,
+                    segment.end,
+                ]),
+            ]),
+        ];
+        const min = Math.min(...values);
+        const max = Math.max(...values);
+        const explicitMin = cfgGrid.value.scale.scaleMin;
+        const explicitMax = cfgGrid.value.scale.scaleMax;
+        const low = explicitMin === null ? min : Number(explicitMin);
+        const high = explicitMax === null ? max : Number(explicitMax);
+        return explicitMin !== null || explicitMax !== null
+            ? calculateNiceScaleWithExactExtremes(
+                  low,
+                  high,
+                  cfgGrid.value.scale.ticks,
+              )
+            : calculateNiceScale(low, high, cfgGrid.value.scale.ticks);
+    }
     const MAX =
         cfgGrid.value.scale.scaleMax !== null && !cfgBars.value.distributed
             ? cfgGrid.value.scale.scaleMax
@@ -1382,6 +2058,19 @@ let timeLabelsRequestId = 0;
 watchEffect(() => {
     const requestId = ++timeLabelsRequestId;
 
+    if (isWaterfall.value) {
+        // Do not send category names to useTimeLabels: it formats dates and
+        // turns strings such as "Revenue" into NaN:NaN:NaN.
+        const start = slicer.value.start;
+        timeLabels.value = waterfallSteps.value
+            .slice(start, slicer.value.end)
+            .map((step, index) => ({
+                text: step.name,
+                absoluteIndex: start + index,
+            }));
+        return;
+    }
+
     (async () => {
         const labels = await useTimeLabels({
             values: cfgTimeLabels.value.values,
@@ -1400,6 +2089,14 @@ watchEffect(() => {
 let allTimeLabelsRequestId = 0;
 watchEffect(() => {
     const requestId = ++allTimeLabelsRequestId;
+
+    if (isWaterfall.value) {
+        allTimeLabels.value = waterfallSteps.value.map((step) => ({
+            text: step.name,
+            absoluteIndex: step.index,
+        }));
+        return;
+    }
 
     (async () => {
         const labels = await useTimeLabels({
@@ -1444,6 +2141,19 @@ const effectiveModulo = computed(() => {
 });
 
 function getDisplayedTimeLabels(selectedIndex) {
+    // Waterfall uses categorical labels.
+    // Always display every visible category without modulo filtering.
+    if (isWaterfall.value) {
+        const start = slicer.value.start ?? 0;
+        const end = slicer.value.end ?? waterfallSteps.value.length;
+
+        return waterfallSteps.value.slice(start, end).map((step, index) => ({
+            text: step.name,
+            absoluteIndex: start + index,
+        }));
+    }
+
+    // Preserve the original Stackbar behavior.
     const cfg = cfgTimeLabels.value;
 
     const vis = timeLabels.value || [];
@@ -1576,6 +2286,9 @@ const preciseTimeFormatter = computed(() => {
     });
 
     return (absIndex, fmt) => {
+        if (isWaterfall.value) {
+            return waterfallSteps.value[absIndex]?.name ?? '';
+        }
         const values = cfgTimeLabels.value.values;
         const ts = values?.[absIndex];
         if (ts == null) return '';
@@ -1584,6 +2297,12 @@ const preciseTimeFormatter = computed(() => {
 });
 
 const preciseAllTimeLabels = computed(() => {
+    if (isWaterfall.value) {
+        return waterfallSteps.value.map((step) => ({
+            text: step.name,
+            absoluteIndex: step.index,
+        }));
+    }
     const values = cfgTimeLabels.value.values || [];
     return values.map((_, i) => ({
         text: preciseTimeFormatter.value(i, cfgChart.value.zoom.timeFormat),
@@ -1592,6 +2311,12 @@ const preciseAllTimeLabels = computed(() => {
 });
 
 const preciseAllTimeLabelsTooltip = computed(() => {
+    if (isWaterfall.value) {
+        return waterfallSteps.value.map((step) => ({
+            text: step.name,
+            absoluteIndex: step.index,
+        }));
+    }
     const values = cfgTimeLabels.value.values || [];
     return values.map((_, i) => ({
         text: preciseTimeFormatter.value(i, cfgTooltip.value.timeFormat),
@@ -1629,6 +2354,7 @@ function getStackbarRectKey(ds, absoluteIndex) {
 
 const formattedDataset = computed(() => {
     if (!isDataset.value && !loading.value) return [];
+    if (isWaterfall.value) return waterfallFormattedDataset.value;
 
     let cumulativeY = Array(maxSeries.value).fill(0);
     let cumulativeX = Array(maxSeries.value).fill(0);
@@ -1726,7 +2452,7 @@ const formattedDataset = computed(() => {
                 return (
                     drawingArea.value.left +
                     barSlot.value * i +
-                    (barSlot.value * cfgBars.value.gapRatio) / 4
+                    (barSlot.value * effectiveGapRatio.value) / 4
                 );
             });
 
@@ -1765,7 +2491,7 @@ const formattedDataset = computed(() => {
             }
 
             const xMinimap = ({ left, unitW }) => {
-                const gap = unitW * (cfgBars.value.gapRatio / 4);
+                const gap = unitW * (effectiveGapRatio.value / 4);
                 return fullSeries.map((_, i) => left + unitW * i + gap);
             };
 
@@ -1773,7 +2499,7 @@ const formattedDataset = computed(() => {
                 return (
                     drawingArea.value.top +
                     barSlot.value * i +
-                    (barSlot.value * cfgBars.value.gapRatio) / 4
+                    (barSlot.value * effectiveGapRatio.value) / 4
                 );
             });
 
@@ -1919,7 +2645,7 @@ const formattedDataset = computed(() => {
  * this rounded boundary keeps all segment joins flat.
  */
 const stackClipRects = computed(() => {
-    if (!(Number(cfgBars.value.borderRadius) > 0)) return [];
+    if (!(Number(effectiveBorderRadius.value) > 0)) return [];
 
     const bars = formattedDataset.value;
     if (!bars.length) return [];
@@ -1927,7 +2653,7 @@ const stackClipRects = computed(() => {
     const isVertical = FINAL_CONFIG.value.orientation === 'vertical';
     const thickness = Math.max(
         0,
-        barSlot.value * (1 - cfgBars.value.gapRatio / 2),
+        barSlot.value * (1 - effectiveGapRatio.value / 2),
     );
     if (!Number.isFinite(thickness) || thickness <= 0) return [];
 
@@ -1973,7 +2699,7 @@ const stackClipRects = computed(() => {
         const width = isVertical ? thickness : end - start;
         const height = isVertical ? end - start : thickness;
         const radius = Math.min(
-            Number(cfgBars.value.borderRadius),
+            Number(effectiveBorderRadius.value),
             width / 2,
             height / 2,
         );
@@ -1995,7 +2721,7 @@ function getStackClipPath(index) {
  * the main chart's drawingArea) to keep the clip aligned while zooming.
  */
 function getMinimapStackClipRects({ minimapH, unitW }) {
-    const radius = Number(cfgBars.value.borderRadius);
+    const radius = Number(effectiveBorderRadius.value);
     if (
         !(radius > 0) ||
         !Number.isFinite(minimapH) ||
@@ -2011,8 +2737,8 @@ function getMinimapStackClipRects({ minimapH, unitW }) {
         height: dp.heightMinimap({ minimapH }),
     }));
 
-    const fullBarWidth = unitW * (1 - cfgBars.value.gapRatio / 2);
-    const offset = unitW * (cfgBars.value.gapRatio / 4);
+    const fullBarWidth = unitW * (1 - effectiveGapRatio.value / 2);
+    const offset = unitW * (effectiveGapRatio.value / 4);
 
     return Array.from({ length: maxSeries.value }, (_, j) => {
         // The first and last minimap rectangles are half-width
@@ -2099,6 +2825,18 @@ function barDataLabelPercentage(val, datapoint, index, dpIndex) {
 }
 
 function selectDatapoint(index) {
+    if (isWaterfall.value) {
+        const datapoint = getDatapoint(index);
+        const step = waterfallVisibleSteps.value[index];
+        const event = {
+            datapoint,
+            seriesIndex: index + slicer.value.start,
+            waterfall: step,
+        };
+        FINAL_CONFIG.value.events.datapointClick?.(event);
+        emit('selectDatapoint', { ...event, period: timeLabels.value[index] });
+        return;
+    }
     const datapoint = JSON.parse(JSON.stringify(formattedDataset.value)).map(
         (fd) => {
             return {
@@ -2122,6 +2860,30 @@ function selectDatapoint(index) {
 }
 
 function getDatapoint(seriesIndex) {
+    if (isWaterfall.value) {
+        const step = waterfallVisibleSteps.value[seriesIndex];
+        if (!step) return [];
+        return step.segments.map((segment) => ({
+            name: segment.name,
+            value: segment.value,
+            start: segment.start,
+            end: segment.end,
+            color: segment.color,
+            id: segment.key,
+            kind: step.kind,
+            balance: step.balance,
+            change: step.change,
+            stepName: step.name,
+            absoluteIndex: step.index,
+            proportion:
+                Math.abs(segment.value) /
+                (step.segments.reduce(
+                    (sum, item) => sum + Math.abs(item.value),
+                    0,
+                ) || 1),
+            timeLabel: { text: step.name },
+        }));
+    }
     return JSON.parse(JSON.stringify(formattedDataset.value)).map((fd) => {
         return {
             name: fd.name,
@@ -2189,6 +2951,8 @@ function getTooltipTimeLabel(seriesIndex) {
     const preciseTimeLabel =
         preciseAllTimeLabelsTooltip.value?.[seriesIndex]?.text || null;
     const fallbackTimeLabel = allTimeLabels.value?.[seriesIndex]?.text || null;
+    if (isWaterfall.value)
+        return waterfallVisibleSteps.value?.[seriesIndex]?.name || null;
     if (cfgTooltip.value.useDefaultTimeFormat) {
         return defaultTimeLabel;
     }
@@ -2217,6 +2981,9 @@ function useTooltip(seriesIndex, triggerMode = 'pointer') {
     }
 
     dataTooltipSlot.value = {
+        waterfall: isWaterfall.value
+            ? waterfallVisibleSteps.value[seriesIndex]
+            : null,
         timeLabel: getTooltipTimeLabel(seriesIndex),
         datapoint,
         seriesIndex,
@@ -2248,6 +3015,46 @@ function useTooltip(seriesIndex, triggerMode = 'pointer') {
             series: formattedDataset.value,
             config: FINAL_CONFIG.value,
         });
+    } else if (isWaterfall.value) {
+        const step = waterfallVisibleSteps.value[seriesIndex];
+        if (!step) return;
+        const cfg = cfgWaterfall.value.tooltip;
+        const number = (value) => dataLabel({ v: value, r: cfg.rounding });
+        const rows = step.segments
+            .map(
+                (segment) => `
+            <div style="display:flex;justify-content:space-between;gap:16px;align-items:center">
+                <span><span style="display:inline-block;width:9px;height:9px;margin-right:6px;border-radius:2px;background:${segment.color}"></span>${escapeWaterfallHtml(segment.label)}</span>
+                <b>${escapeWaterfallHtml(number(segment.value))}</b>
+            </div>`,
+            )
+            .join('');
+        const summary = [
+            cfg.showStart ? [cfg.startTranslation, step.start] : null,
+            cfg.showChange
+                ? [
+                      step.isTotal
+                          ? step.kind === 'subtotal'
+                              ? cfg.subtotalTranslation
+                              : cfg.totalTranslation
+                          : cfg.changeTranslation,
+                      step.isTotal ? step.balance : step.change,
+                  ]
+                : null,
+            cfg.showBalance ? [cfg.balanceTranslation, step.balance] : null,
+        ]
+            .filter(Boolean)
+            .map(
+                ([name, value]) => `
+            <div style="display:flex;justify-content:space-between;gap:16px">
+                <span>${escapeWaterfallHtml(name)}</span>
+                <b>${escapeWaterfallHtml(number(value))}</b>
+            </div>`,
+            )
+            .join('');
+        tooltipContent.value = `<div style="display:flex;flex-direction:column;gap:5px">
+            <div style="font-weight:bold;border-bottom:1px solid ${cfgTooltip.value.borderColor};padding-bottom:5px">${escapeWaterfallHtml(step.name)}</div>
+            ${rows}<div style="border-top:1px solid ${cfgTooltip.value.borderColor};padding-top:5px">${summary}</div></div>`;
     } else {
         const {
             showValue,
@@ -2384,6 +3191,34 @@ function getData() {
 }
 
 const tableCsv = computed(() => {
+    if (isWaterfall.value) {
+        const wf = cfgWaterfall.value.table;
+        const groups = waterfallGroups.value.filter(
+            (group) => !segregated.value.includes(group.id),
+        );
+        return {
+            head: [
+                ...groups.map((group) => ({
+                    label: group.name,
+                    color: group.color,
+                })),
+                { label: wf.changeTranslation },
+                ...(wf.showBalance ? [{ label: wf.balanceTranslation }] : []),
+                ...(wf.showKind ? [{ label: wf.kindTranslation }] : []),
+            ],
+            body: waterfallVisibleSteps.value.map((step) => [
+                step.name,
+                ...groups.map((group) =>
+                    step.segments
+                        .filter((seg) => seg.key === group.datasetKey)
+                        .reduce((sum, seg) => sum + seg.value, 0),
+                ),
+                step.change,
+                ...(wf.showBalance ? [step.balance] : []),
+                ...(wf.showKind ? [step.kind] : []),
+            ]),
+        };
+    }
     if (formattedDataset.value.length === 0)
         return { head: [], body: [], config: {}, columnNames: [] };
 
@@ -2435,6 +3270,36 @@ function generateCsv(callback = null) {
 }
 
 const dataTable = computed(() => {
+    if (isWaterfall.value) {
+        const csv = tableCsv.value;
+        const table = FINAL_CONFIG.value.table;
+        return {
+            head: [''].concat(csv.head.map((column) => column.label)),
+            colNames: [table.columnNames.period].concat(
+                csv.head.map((column) => column.label),
+            ),
+            body: csv.body.map((row) =>
+                row.map((item, index) =>
+                    typeof item === 'number'
+                        ? item.toFixed(table.td.roundingValue)
+                        : item,
+                ),
+            ),
+            config: {
+                th: {
+                    backgroundColor: table.th.backgroundColor,
+                    color: table.th.color,
+                    outline: table.th.outline,
+                },
+                td: {
+                    backgroundColor: table.td.backgroundColor,
+                    color: table.td.color,
+                    outline: table.td.outline,
+                },
+                breakpoint: table.responsiveBreakpoint,
+            },
+        };
+    }
     const head = ['']
         .concat(formattedDataset.value.map((ds) => ds.name))
         .concat('__SUM__');
@@ -2587,6 +3452,16 @@ function toggleAnnotator() {
 }
 
 function selectTimeLabel(label, relativeIndex) {
+    if (isWaterfall.value) {
+        const step = waterfallVisibleSteps.value[relativeIndex];
+        emit('selectTimeLabel', {
+            datapoint: getDatapoint(relativeIndex),
+            absoluteIndex: step?.index ?? label.absoluteIndex,
+            label: step?.name ?? label.text,
+            waterfall: step,
+        });
+        return;
+    }
     const datapoint = JSON.parse(JSON.stringify(formattedDataset.value)).map(
         (fd) => {
             return {
@@ -2904,7 +3779,9 @@ function selectX({ seriesIndex, datapoint }) {
     emit('selectX', {
         dataset: datapoint,
         index,
-        indexLabel: cfgTimeLabels.value.values[index],
+        indexLabel: isWaterfall.value
+            ? waterfallSteps.value[index]?.name
+            : cfgTimeLabels.value.values[index],
     });
 }
 
@@ -3534,6 +4411,7 @@ const a11yTable = computed(() => {
 defineExpose({
     getData,
     getImage,
+    getWaterfallSteps: () => waterfallSteps.value,
     generatePdf,
     generateCsv,
     generateImage,
@@ -3825,6 +4703,39 @@ defineExpose({
                     />
                 </defs>
 
+                <!-- Waterfall gradients belong to individual stack segments,
+                     since the same legend group may have per-step colors. -->
+                <defs v-if="isWaterfall && cfgWaterfall.bars.gradient.show">
+                    <template
+                        v-for="dp in formattedDataset"
+                        :key="`wf-gradient-${dp.id}`"
+                    >
+                        <DefGrad
+                            v-for="(segment, j) in dp.waterfallSegments"
+                            :key="`wf-grad-${dp.id}-${slicer.start + j}`"
+                            t="linear"
+                            :id="`waterfall-gradient-${uid}-${dp.absoluteIndex}-${slicer.start + j}`"
+                            x1="0%"
+                            y1="0%"
+                            x2="0%"
+                            y2="100%"
+                            :stops="[
+                                ['0%', dp.waterfallColors[j], 1],
+                                [
+                                    '60%',
+                                    lightenHexColor(
+                                        dp.waterfallColors[j],
+                                        cfgWaterfall.bars.gradient.intensity /
+                                            100,
+                                    ),
+                                    1,
+                                ],
+                                ['100%', dp.waterfallColors[j], 1],
+                            ]"
+                        />
+                    </template>
+                </defs>
+
                 <!-- Round only the stack exterior corners -->
                 <defs v-if="stackClipRects.length">
                     <template
@@ -3967,6 +4878,15 @@ defineExpose({
                         <rect
                             v-for="(rect, j) in dp.x"
                             :key="`stackbar-rect-${dp.rectKeys[j]}`"
+                            :data-cy="
+                                isWaterfall
+                                    ? 'waterfall-segment'
+                                    : 'stackbar-rect'
+                            "
+                            v-show="
+                                !isWaterfall ||
+                                (dp.waterfallSegments?.[j] && dp.height[j] > 0)
+                            "
                             :x="rect"
                             :y="forceValidValue(dp.y[j])"
                             :height="
@@ -3974,14 +4894,18 @@ defineExpose({
                             "
                             :rx="0"
                             :clip-path="getStackClipPath(j)"
-                            :width="barSlot * (1 - cfgBars.gapRatio / 2)"
-                            :fill="
-                                cfgBars.gradient.show
-                                    ? `url(#gradient_${dp.id})`
-                                    : dp.color
+                            :width="barSlot * (1 - effectiveGapRatio / 2)"
+                            :fill="getWaterfallFill(dp, j)"
+                            :stroke="
+                                isWaterfall
+                                    ? cfgWaterfall.bars.stroke
+                                    : cfgChart.backgroundColor
                             "
-                            :stroke="cfgChart.backgroundColor"
-                            :stroke-width="cfgBars.strokeWidth"
+                            :stroke-width="
+                                isWaterfall
+                                    ? cfgWaterfall.bars.strokeWidth
+                                    : cfgBars.strokeWidth
+                            "
                             stroke-linecap="round"
                             stroke-linejoin="miter"
                             :class="{
@@ -3992,6 +4916,11 @@ defineExpose({
                             <rect
                                 v-for="(rect, j) in dp.x"
                                 :key="`stackbar-pattern-rect-${dp.rectKeys[j]}`"
+                                v-show="
+                                    !isWaterfall ||
+                                    (dp.waterfallSegments?.[j] &&
+                                        dp.height[j] > 0)
+                                "
                                 :x="rect"
                                 :y="forceValidValue(dp.y[j])"
                                 :height="
@@ -4001,10 +4930,18 @@ defineExpose({
                                 "
                                 :rx="0"
                                 :clip-path="getStackClipPath(j)"
-                                :width="barSlot * (1 - cfgBars.gapRatio / 2)"
+                                :width="barSlot * (1 - effectiveGapRatio / 2)"
                                 :fill="`url(#pattern_${uid}_${dp.absoluteIndex})`"
-                                :stroke="cfgChart.backgroundColor"
-                                :stroke-width="cfgBars.strokeWidth"
+                                :stroke="
+                                    isWaterfall
+                                        ? cfgWaterfall.bars.stroke
+                                        : cfgChart.backgroundColor
+                                "
+                                :stroke-width="
+                                    isWaterfall
+                                        ? cfgWaterfall.bars.strokeWidth
+                                        : cfgBars.strokeWidth
+                                "
                                 stroke-linecap="round"
                                 stroke-linejoin="miter"
                                 :class="{
@@ -4019,6 +4956,16 @@ defineExpose({
                         <rect
                             v-for="(rect, j) in dp.horizontal_x"
                             :key="`stackbar-rect-${dp.rectKeys[j]}`"
+                            :data-cy="
+                                isWaterfall
+                                    ? 'waterfall-segment'
+                                    : 'stackbar-rect'
+                            "
+                            v-show="
+                                !isWaterfall ||
+                                (dp.waterfallSegments?.[j] &&
+                                    dp.horizontal_width[j] > 0)
+                            "
                             :x="forceValidValue(rect, drawingArea.left)"
                             :y="dp.horizontal_y[j] < 0 ? 0 : dp.horizontal_y[j]"
                             :width="
@@ -4030,14 +4977,18 @@ defineExpose({
                             "
                             :rx="0"
                             :clip-path="getStackClipPath(j)"
-                            :height="barSlot * (1 - cfgBars.gapRatio / 2)"
-                            :fill="
-                                cfgBars.gradient.show
-                                    ? `url(#gradient_${dp.id})`
-                                    : dp.color
+                            :height="barSlot * (1 - effectiveGapRatio / 2)"
+                            :fill="getWaterfallFill(dp, j)"
+                            :stroke="
+                                isWaterfall
+                                    ? cfgWaterfall.bars.stroke
+                                    : cfgChart.backgroundColor
                             "
-                            :stroke="cfgChart.backgroundColor"
-                            :stroke-width="cfgBars.strokeWidth"
+                            :stroke-width="
+                                isWaterfall
+                                    ? cfgWaterfall.bars.strokeWidth
+                                    : cfgBars.strokeWidth
+                            "
                             stroke-linecap="round"
                             stroke-linejoin="miter"
                             :class="{
@@ -4048,6 +4999,11 @@ defineExpose({
                             <rect
                                 v-for="(rect, j) in dp.horizontal_x"
                                 :key="`stackbar-pattern-rect-${dp.rectKeys[j]}`"
+                                v-show="
+                                    !isWaterfall ||
+                                    (dp.waterfallSegments?.[j] &&
+                                        dp.horizontal_width[j] > 0)
+                                "
                                 :x="forceValidValue(rect, drawingArea.left)"
                                 :y="
                                     dp.horizontal_y[j] < 0
@@ -4063,10 +5019,18 @@ defineExpose({
                                 "
                                 :rx="0"
                                 :clip-path="getStackClipPath(j)"
-                                :height="barSlot * (1 - cfgBars.gapRatio / 2)"
+                                :height="barSlot * (1 - effectiveGapRatio / 2)"
                                 :fill="`url(#pattern_${uid}_${dp.absoluteIndex})`"
-                                :stroke="cfgChart.backgroundColor"
-                                :stroke-width="cfgBars.strokeWidth"
+                                :stroke="
+                                    isWaterfall
+                                        ? cfgWaterfall.bars.stroke
+                                        : cfgChart.backgroundColor
+                                "
+                                :stroke-width="
+                                    isWaterfall
+                                        ? cfgWaterfall.bars.strokeWidth
+                                        : cfgBars.strokeWidth
+                                "
                                 stroke-linecap="round"
                                 stroke-linejoin="miter"
                                 :class="{
@@ -4075,6 +5039,29 @@ defineExpose({
                             />
                         </g>
                     </template>
+                </g>
+
+                <!-- Connectors are drawn on top of the bars. Their endpoints
+                     follow the actual rounded silhouette at the balance level. -->
+                <g
+                    v-if="isWaterfall && cfgWaterfall.connectors.show"
+                    data-cy="waterfall-connectors"
+                    style="pointer-events: none"
+                >
+                    <line
+                        v-for="link in waterfallConnectors"
+                        :key="`waterfall-link-${link.key}`"
+                        :x1="link.x1"
+                        :y1="link.y1"
+                        :x2="link.x2"
+                        :y2="link.y2"
+                        :stroke="cfgWaterfall.connectors.stroke"
+                        :stroke-width="cfgWaterfall.connectors.strokeWidth"
+                        :stroke-dasharray="
+                            cfgWaterfall.connectors.strokeDasharray
+                        "
+                        stroke-linecap="round"
+                    />
                 </g>
 
                 <!-- X AXIS -->
@@ -4094,7 +5081,10 @@ defineExpose({
                 <!-- Y AXIS -->
                 <line
                     data-cy="line-axis-y"
-                    v-if="cfgGrid.y.showAxis && !cfgBars.distributed"
+                    v-if="
+                        cfgGrid.y.showAxis &&
+                        (!cfgBars.distributed || isWaterfall)
+                    "
                     :x1="
                         yAxisLabelsAreRight
                             ? drawingArea.right
@@ -4168,39 +5158,66 @@ defineExpose({
                                     'vue-data-ui-transition': transitionEnabled,
                                 }"
                                 v-if="
-                                    isLabelDisplayed(
-                                        dp.series[j],
-                                        dp.proportions[j],
-                                    )
+                                    isWaterfall
+                                        ? canShowWaterfallSegmentLabel(dp, j)
+                                        : isLabelDisplayed(
+                                              dp.series[j],
+                                              dp.proportions[j],
+                                          )
                                 "
-                                :transform="`translate(${rect + (barSlot * (1 - cfgBars.gapRatio / 2)) / 2}, ${dp.y[j] + dp.height[j] / 2 + cfgBars.dataLabels.fontSize / 3})`"
-                                :font-size="cfgBars.dataLabels.fontSize"
+                                :transform="`translate(${rect + (barSlot * (1 - effectiveGapRatio / 2)) / 2}, ${dp.y[j] + dp.height[j] / 2 + (isWaterfall ? (cfgWaterfall.segmentLabels.fontSize ?? cfgBars.dataLabels.fontSize) : cfgBars.dataLabels.fontSize) / 3})`"
+                                :font-size="
+                                    isWaterfall
+                                        ? (cfgWaterfall.segmentLabels
+                                              .fontSize ??
+                                          cfgBars.dataLabels.fontSize)
+                                        : cfgBars.dataLabels.fontSize
+                                "
                                 :fill="
-                                    cfgBars.dataLabels.adaptColorToBackground
-                                        ? adaptColorToBackground(dp.color)
-                                        : cfgBars.dataLabels.color
+                                    isWaterfall
+                                        ? cfgWaterfall.segmentLabels
+                                              .adaptColorToBackground
+                                            ? adaptColorToBackground(
+                                                  dp.waterfallColors[j],
+                                              )
+                                            : (cfgWaterfall.segmentLabels
+                                                  .color ??
+                                              cfgBars.dataLabels.color)
+                                        : cfgBars.dataLabels
+                                                .adaptColorToBackground
+                                          ? adaptColorToBackground(dp.color)
+                                          : cfgBars.dataLabels.color
                                 "
                                 :font-weight="
-                                    cfgBars.dataLabels.bold ? 'bold' : 'normal'
+                                    isWaterfall
+                                        ? (cfgWaterfall.segmentLabels.bold ??
+                                          cfgBars.dataLabels.bold)
+                                            ? 'bold'
+                                            : 'normal'
+                                        : cfgBars.dataLabels.bold
+                                          ? 'bold'
+                                          : 'normal'
                                 "
                                 text-anchor="middle"
                             >
                                 {{
-                                    cfgBars.showDistributedPercentage &&
-                                    cfgBars.distributed
-                                        ? barDataLabelPercentage(
-                                              dp.proportions[j] * 100,
-                                              dp,
-                                              i,
-                                              j,
-                                          )
-                                        : barDataLabel(
-                                              dp.series[j],
-                                              dp,
-                                              i,
-                                              j,
-                                              dp.signedSeries[j],
-                                          )
+                                    isWaterfall
+                                        ? formatWaterfallSegmentLabel(dp, j)
+                                        : cfgBars.showDistributedPercentage &&
+                                            cfgBars.distributed
+                                          ? barDataLabelPercentage(
+                                                dp.proportions[j] * 100,
+                                                dp,
+                                                i,
+                                                j,
+                                            )
+                                          : barDataLabel(
+                                                dp.series[j],
+                                                dp,
+                                                i,
+                                                j,
+                                                dp.signedSeries[j],
+                                            )
                                 }}
                             </text>
                         </template>
@@ -4210,6 +5227,7 @@ defineExpose({
                     <g
                         ref="sumTop"
                         v-if="
+                            !isWaterfall &&
                             cfgBars.totalValues.show &&
                             formattedDataset.length > 1
                         "
@@ -4265,39 +5283,66 @@ defineExpose({
                                     'vue-data-ui-transition': transitionEnabled,
                                 }"
                                 v-if="
-                                    isLabelDisplayed(
-                                        dp.series[j],
-                                        dp.proportions[j],
-                                    )
+                                    isWaterfall
+                                        ? canShowWaterfallSegmentLabel(dp, j)
+                                        : isLabelDisplayed(
+                                              dp.series[j],
+                                              dp.proportions[j],
+                                          )
                                 "
-                                :transform="`translate(${rect + (dp.horizontal_width[j] < 0 ? 0.0001 : dp.horizontal_width[j]) / 2}, ${dp.horizontal_y[j] + (barSlot * (1 - cfgBars.gapRatio / 2)) / 2 + cfgBars.dataLabels.fontSize / 3})`"
-                                :font-size="cfgBars.dataLabels.fontSize"
+                                :transform="`translate(${rect + (dp.horizontal_width[j] < 0 ? 0.0001 : dp.horizontal_width[j]) / 2}, ${dp.horizontal_y[j] + (barSlot * (1 - effectiveGapRatio / 2)) / 2 + (isWaterfall ? (cfgWaterfall.segmentLabels.fontSize ?? cfgBars.dataLabels.fontSize) : cfgBars.dataLabels.fontSize) / 3})`"
+                                :font-size="
+                                    isWaterfall
+                                        ? (cfgWaterfall.segmentLabels
+                                              .fontSize ??
+                                          cfgBars.dataLabels.fontSize)
+                                        : cfgBars.dataLabels.fontSize
+                                "
                                 :fill="
-                                    cfgBars.dataLabels.adaptColorToBackground
-                                        ? adaptColorToBackground(dp.color)
-                                        : cfgBars.dataLabels.color
+                                    isWaterfall
+                                        ? cfgWaterfall.segmentLabels
+                                              .adaptColorToBackground
+                                            ? adaptColorToBackground(
+                                                  dp.waterfallColors[j],
+                                              )
+                                            : (cfgWaterfall.segmentLabels
+                                                  .color ??
+                                              cfgBars.dataLabels.color)
+                                        : cfgBars.dataLabels
+                                                .adaptColorToBackground
+                                          ? adaptColorToBackground(dp.color)
+                                          : cfgBars.dataLabels.color
                                 "
                                 :font-weight="
-                                    cfgBars.dataLabels.bold ? 'bold' : 'normal'
+                                    isWaterfall
+                                        ? (cfgWaterfall.segmentLabels.bold ??
+                                          cfgBars.dataLabels.bold)
+                                            ? 'bold'
+                                            : 'normal'
+                                        : cfgBars.dataLabels.bold
+                                          ? 'bold'
+                                          : 'normal'
                                 "
                                 text-anchor="middle"
                             >
                                 {{
-                                    cfgBars.showDistributedPercentage &&
-                                    cfgBars.distributed
-                                        ? barDataLabelPercentage(
-                                              dp.proportions[j] * 100,
-                                              dp,
-                                              i,
-                                              j,
-                                          )
-                                        : barDataLabel(
-                                              dp.series[j],
-                                              dp,
-                                              i,
-                                              j,
-                                              dp.signedSeries[j],
-                                          )
+                                    isWaterfall
+                                        ? formatWaterfallSegmentLabel(dp, j)
+                                        : cfgBars.showDistributedPercentage &&
+                                            cfgBars.distributed
+                                          ? barDataLabelPercentage(
+                                                dp.proportions[j] * 100,
+                                                dp,
+                                                i,
+                                                j,
+                                            )
+                                          : barDataLabel(
+                                                dp.series[j],
+                                                dp,
+                                                i,
+                                                j,
+                                                dp.signedSeries[j],
+                                            )
                                 }}
                             </text>
                         </template>
@@ -4306,6 +5351,7 @@ defineExpose({
                     <g
                         ref="sumRight"
                         v-if="
+                            !isWaterfall &&
                             cfgBars.totalValues.show &&
                             formattedDataset.length > 1
                         "
@@ -4342,11 +5388,38 @@ defineExpose({
                     </g>
                 </template>
 
+                <!-- Waterfall totals/step deltas; placement depends on
+                     whether the step is increasing, decreasing, or absolute. -->
+                <g
+                    v-if="
+                        isWaterfall &&
+                        cfgWaterfall.stepLabels.show &&
+                        mutableConfig.dataLabels.show
+                    "
+                    data-cy="waterfall-step-labels"
+                    style="pointer-events: none"
+                >
+                    <text
+                        v-for="item in waterfallStepAnnotations"
+                        :key="`wf-step-label-${item.key}`"
+                        :x="item.x"
+                        :y="item.y"
+                        :text-anchor="item.anchor"
+                        :font-size="cfgWaterfall.stepLabels.fontSize"
+                        :font-weight="
+                            cfgWaterfall.stepLabels.bold ? 'bold' : 'normal'
+                        "
+                        :fill="cfgWaterfall.stepLabels.color"
+                    >
+                        {{ item.text }}
+                    </text>
+                </g>
+
                 <!-- SCALE LABELS (vertical mode) -->
                 <template
                     v-if="
                         cfgGrid.y.axisLabels.show &&
-                        !cfgBars.distributed &&
+                        (!cfgBars.distributed || isWaterfall) &&
                         FINAL_CONFIG.orientation === 'vertical'
                     "
                 >
@@ -4399,7 +5472,7 @@ defineExpose({
                 <template
                     v-if="
                         cfgGrid.y.axisLabels.show &&
-                        !cfgBars.distributed &&
+                        (!cfgBars.distributed || isWaterfall) &&
                         FINAL_CONFIG.orientation === 'horizontal'
                     "
                 >
@@ -4474,19 +5547,17 @@ defineExpose({
                                             barSlot / 2,
                                         y:
                                             drawingArea.bottom +
-                                            cfgGrid.x.timeLabels.fontSize *
-                                                1.3 +
-                                            cfgGrid.x.timeLabels.offsetY,
-                                        fontSize: cfgGrid.x.timeLabels.fontSize,
-                                        fill: cfgGrid.x.timeLabels.color,
+                                            cfgTimeLabels.fontSize * 1.3 +
+                                            cfgTimeLabels.offsetY,
+                                        fontSize: cfgTimeLabels.fontSize,
+                                        fill: cfgTimeLabels.color,
                                         transform: `translate(${drawingArea.left + barSlot * i + barSlot / 2}, ${drawingArea.bottom + cfgTimeLabels.fontSize * 1.3 + cfgTimeLabels.offsetY}), rotate(${cfgTimeLabels.rotation})`,
                                         absoluteIndex: timeLabel.absoluteIndex,
                                         content: timeLabel.text,
                                         textAnchor:
-                                            cfgGrid.x.timeLabels.rotation > 0
+                                            cfgTimeLabels.rotation > 0
                                                 ? 'start'
-                                                : cfgGrid.x.timeLabels
-                                                        .rotation < 0
+                                                : cfgTimeLabels.rotation < 0
                                                   ? 'end'
                                                   : 'middle',
                                         show: true,
@@ -4504,19 +5575,17 @@ defineExpose({
                                     :key="i"
                                     data-cy="time-label"
                                     :text-anchor="
-                                        cfgGrid.x.timeLabels.rotation > 0
+                                        cfgTimeLabels.rotation > 0
                                             ? 'start'
-                                            : cfgGrid.x.timeLabels.rotation < 0
+                                            : cfgTimeLabels.rotation < 0
                                               ? 'end'
                                               : 'middle'
                                     "
-                                    :font-size="cfgGrid.x.timeLabels.fontSize"
+                                    :font-size="cfgTimeLabels.fontSize"
                                     :font-weight="
-                                        cfgGrid.x.timeLabels.bold
-                                            ? 'bold'
-                                            : 'normal'
+                                        cfgTimeLabels.bold ? 'bold' : 'normal'
                                     "
-                                    :fill="cfgGrid.x.timeLabels.color"
+                                    :fill="cfgTimeLabels.color"
                                     :transform="`translate(${drawingArea.left + barSlot * i + barSlot / 2}, ${drawingArea.bottom + cfgTimeLabels.fontSize * 1.3 + cfgTimeLabels.offsetY}), rotate(${cfgTimeLabels.rotation})`"
                                     :style="{
                                         cursor: isCursorPointer
@@ -4536,14 +5605,14 @@ defineExpose({
                                     :key="i + '-multi'"
                                     data-cy="time-label"
                                     :text-anchor="
-                                        cfgGrid.x.timeLabels.rotation > 0
+                                        cfgTimeLabels.rotation > 0
                                             ? 'start'
-                                            : cfgGrid.x.timeLabels.rotation < 0
+                                            : cfgTimeLabels.rotation < 0
                                               ? 'end'
                                               : 'middle'
                                     "
-                                    :font-size="cfgGrid.x.timeLabels.fontSize"
-                                    :fill="cfgGrid.x.timeLabels.color"
+                                    :font-size="cfgTimeLabels.fontSize"
+                                    :fill="cfgTimeLabels.color"
                                     :transform="`
                                         translate(
                                         ${drawingArea.left + barSlot * i + barSlot / 2},
@@ -4559,9 +5628,8 @@ defineExpose({
                                     v-html="
                                         createTSpansFromLineBreaksOnX({
                                             content: String(timeLabel.text),
-                                            fontSize:
-                                                cfgGrid.x.timeLabels.fontSize,
-                                            fill: cfgGrid.x.timeLabels.color,
+                                            fontSize: cfgTimeLabels.fontSize,
+                                            fill: cfgTimeLabels.color,
                                             x: 0,
                                             y: 0,
                                         })
@@ -4592,8 +5660,8 @@ defineExpose({
                                             barSlot * i +
                                             barSlot / 2 +
                                             cfgGrid.y.axisLabels.fontSize / 3,
-                                        fontSize: cfgGrid.x.timeLabels.fontSize,
-                                        fill: cfgGrid.x.timeLabels.color,
+                                        fontSize: cfgTimeLabels.fontSize,
+                                        fill: cfgTimeLabels.color,
                                         transform: null,
                                         absoluteIndex: timeLabel.absoluteIndex,
                                         content: timeLabel.text,
@@ -4820,14 +5888,18 @@ defineExpose({
             :inputColor="cfgChart.zoom.color"
             :isPreview="isPrecog"
             :labelLeft="
-                cfgTimeLabels.values[slicer.start]
+                isWaterfall
                     ? (timeLabels?.[0]?.text ?? '')
-                    : ''
+                    : cfgTimeLabels.values[slicer.start]
+                      ? (timeLabels?.[0]?.text ?? '')
+                      : ''
             "
             :labelRight="
-                cfgTimeLabels.values[slicer.end - 1]
+                isWaterfall
                     ? (timeLabels?.at(-1)?.text ?? '')
-                    : ''
+                    : cfgTimeLabels.values[slicer.end - 1]
+                      ? (timeLabels?.at(-1)?.text ?? '')
+                      : ''
             "
             :max="Math.max(...dataset.map((ds) => ds.series.length))"
             :min="0"
@@ -4862,6 +5934,7 @@ defineExpose({
             :textColor="cfgChart.color"
             :timeLabels="allTimeLabels"
             :usePreciseLabels="
+                !isWaterfall &&
                 cfgTimeLabels.datetimeFormatter.enable &&
                 !cfgChart.zoom.useDefaultFormat
             "
@@ -4901,7 +5974,7 @@ defineExpose({
 
             <template #slotMap="{ width: minimapW, height: minimapH, unitW }">
                 <!-- Rounded corners clipping -->
-                <defs v-if="Number(cfgBars.borderRadius) > 0">
+                <defs v-if="Number(effectiveBorderRadius) > 0">
                     <template
                         v-for="(bounds, j) in getMinimapStackClipRects({
                             minimapH,
@@ -4930,9 +6003,13 @@ defineExpose({
                         :key="`minimap-rect-${dp.minimapRectKeys[j]}`"
                     >
                         <rect
+                            v-if="
+                                !isWaterfall ||
+                                dp.heightMinimap({ minimapH })[j] > 0
+                            "
                             :x="
                                 j === 0
-                                    ? x - unitW * (cfgBars.gapRatio / 4)
+                                    ? x - unitW * (effectiveGapRatio / 4)
                                     : x - unitW / 2
                             "
                             :y="
@@ -4947,19 +6024,21 @@ defineExpose({
                             :height="dp.heightMinimap({ minimapH })[j]"
                             :width="
                                 [0, maxSeries - 1].includes(j)
-                                    ? (unitW * (1 - cfgBars.gapRatio / 2)) / 2
-                                    : unitW * (1 - cfgBars.gapRatio / 2)
+                                    ? (unitW * (1 - effectiveGapRatio / 2)) / 2
+                                    : unitW * (1 - effectiveGapRatio / 2)
                             "
                             :fill="
-                                cfgBars.gradient.show
-                                    ? `url(#gradient_${dp.id})`
-                                    : dp.color
+                                isWaterfall
+                                    ? dp.minimapWaterfallColors?.[j] || dp.color
+                                    : cfgBars.gradient.show
+                                      ? `url(#gradient_${dp.id})`
+                                      : dp.color
                             "
                             :stroke="cfgChart.backgroundColor"
                             :stroke-width="0.5"
                             rx="0"
                             :clip-path="
-                                Number(cfgBars.borderRadius) > 0
+                                Number(effectiveBorderRadius) > 0
                                     ? `url(#stackbar-minimap-outer-clip-${uid}-${j})`
                                     : undefined
                             "

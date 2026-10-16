@@ -14,6 +14,13 @@
                         "show": false
                     }
                 },
+                "waterfall": {
+                    "bars": {
+                        "gradient": {
+                            "show": false
+                        }
+                    }
+                },
                 "zoom": {
                     "minimap": {
                         "show": true,
@@ -53,6 +60,23 @@
                     "color": "#CCCCCC",
                     "selectAllToggle": {
                         "backgroundColor": "#3A3A3A",
+                        "color": "#CCCCCC"
+                    }
+                },
+                "waterfall": {
+                    "bars": {
+                        "stroke": "#1A1A1A",
+                        "gradient": {
+                            "show": false
+                        }
+                    },
+                    "categoryLabels": {
+                        "color": "#CCCCCC"
+                    },
+                    "segmentLabels": {
+                        "color": "#CCCCCC"
+                    },
+                    "stepLabels": {
                         "color": "#CCCCCC"
                     }
                 },
@@ -151,6 +175,20 @@
                         "color": "#CCCCCC"
                     }
                 },
+                "waterfall": {
+                    "bars": {
+                        "stroke": "#1A1A1A"
+                    },
+                    "categoryLabels": {
+                        "color": "#CCCCCC"
+                    },
+                    "segmentLabels": {
+                        "color": "#CCCCCC"
+                    },
+                    "stepLabels": {
+                        "color": "#CCCCCC"
+                    }
+                },
                 "zoom": {
                     "color": "#4A4A4A",
                     "highlightColor": "#9A9A9A",
@@ -241,6 +279,20 @@
                         "color": "#FFF8E1"
                     }
                 },
+                "waterfall": {
+                    "bars": {
+                        "stroke": "#FFF8E1"
+                    },
+                    "categoryLabels": {
+                        "color": "#424242"
+                    },
+                    "segmentLabels": {
+                        "color": "#424242"
+                    },
+                    "stepLabels": {
+                        "color": "#424242"
+                    }
+                },
                 "zoom": {
                     "color": "#5D4037",
                     "highlightColor": "#FF8A65",
@@ -326,6 +378,20 @@
                         "color": "#BDBDBD"
                     }
                 },
+                "waterfall": {
+                    "bars": {
+                        "stroke": "#1E1E1E"
+                    },
+                    "categoryLabels": {
+                        "color": "#BDBDBD"
+                    },
+                    "segmentLabels": {
+                        "color": "#BDBDBD"
+                    },
+                    "stepLabels": {
+                        "color": "#BDBDBD"
+                    }
+                },
                 "zoom": {
                     "color": "#5D4037",
                     "highlightColor": "#FF8A65",
@@ -400,6 +466,20 @@
                 "title": {
                     "color": "#66CC66",
                     "subtitle": {
+                        "color": "#99AA99"
+                    }
+                },
+                "waterfall": {
+                    "bars": {
+                        "stroke": "#1A1A1A"
+                    },
+                    "categoryLabels": {
+                        "color": "#99AA99"
+                    },
+                    "segmentLabels": {
+                        "color": "#99AA99"
+                    },
+                    "stepLabels": {
                         "color": "#99AA99"
                     }
                 },
@@ -493,6 +573,20 @@
                         "color": "#8F837A"
                     }
                 },
+                "waterfall": {
+                    "bars": {
+                        "stroke": "#fbfafa"
+                    },
+                    "categoryLabels": {
+                        "color": "#8A9892"
+                    },
+                    "segmentLabels": {
+                        "color": "#8A9892"
+                    },
+                    "stepLabels": {
+                        "color": "#8A9892"
+                    }
+                },
                 "zoom": {
                     "color": "#E0CFC3",
                     "highlightColor": "#8F837A",
@@ -577,6 +671,20 @@
                     "selectAllToggle": {
                         "backgroundColor": "#50606C",
                         "color": "#f6f6fb"
+                    }
+                },
+                "waterfall": {
+                    "bars": {
+                        "stroke": "#f6f6fb"
+                    },
+                    "categoryLabels": {
+                        "color": "#50606C"
+                    },
+                    "segmentLabels": {
+                        "color": "#50606C"
+                    },
+                    "stepLabels": {
+                        "color": "#50606C"
                     }
                 },
                 "zoom": {
