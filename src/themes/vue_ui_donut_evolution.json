@@ -331,13 +331,13 @@
                     "backgroundColor": "#FFF8E1",
                     "color": "#424242",
                     "header": {
-                        "backgroundColor": "##FFF8E1",
+                        "backgroundColor": "#FFF8E1",
                         "color": "#424242"
                     },
                     "donutChart": {
                         "style": {
                             "chart": {
-                                "backgroundColor": "##FFF8E1",
+                                "backgroundColor": "#FFF8E1",
                                 "color": "#424242",
                                 "layout": {
                                     "labels": {
@@ -364,7 +364,7 @@
                                     }
                                 },
                                 "legend": {
-                                    "backgroundColor": "##FFF8E1",
+                                    "backgroundColor": "#FFF8E1",
                                     "color": "#424242",
                                     "selectAllToggle": {
                                         "backgroundColor": "#5D4037",

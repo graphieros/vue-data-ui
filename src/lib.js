@@ -1155,26 +1155,49 @@ function looksLikeVueReactive(x) {
     );
 }
 
-function normalizeColor(raw) {
-    if (raw === '') return '#000000';
-    if (raw === 'transparent') return '#FFFFFF00';
-    const hex = convertColorToHex(raw);
-    return hex ?? raw;
-}
-
 export function convertConfigColors(config, seen = new WeakSet()) {
-    const visit = (value) => {
+    // Config text can also be valid CSS colors or bare hex (e.g. "Bad", "2024").
+    // Only normalize fields that represent colors, never arbitrary string values.
+    const colorField = (key) =>
+        /(?:color|colors|fill|stroke|palette)$/i.test(key) ||
+        [
+            'background',
+            'underlayer',
+            'strokeHovered',
+            'colorBackground',
+            'colorTextPrimary',
+            'colorTextSecondary',
+            'colorGrid',
+            'colorBorder',
+        ].includes(key);
+    const colorMaps = new Set([
+        'color',
+        'colors',
+        'evaluationColors',
+        'heatmapColors',
+        'selectedColor',
+        'nodeCategoryColors',
+    ]);
+    const textMaps = new Set([
+        'translations',
+        'buttonTitles',
+        'columnNames',
+        'nodeCategories',
+    ]);
+    const visit = (value, isColor = false, key = '') => {
         if (isRef(value)) {
             const unwrapped = unref(value);
             if (typeof unwrapped === 'string') {
-                return convertColorToHex(unwrapped) ?? value;
+                return isColor
+                    ? (convertColorToHex(unwrapped) ?? value)
+                    : value;
             }
-            visit(unwrapped);
+            visit(unwrapped, isColor, key);
             return value;
         }
 
         if (typeof value === 'string') {
-            return convertColorToHex(value) ?? value;
+            return isColor ? (convertColorToHex(value) ?? value) : value;
         }
 
         if (
@@ -1193,8 +1216,15 @@ export function convertConfigColors(config, seen = new WeakSet()) {
 
         seen.add(raw);
 
-        for (const key of Object.keys(raw)) {
-            raw[key] = visit(raw[key]);
+        for (const childKey of Object.keys(raw)) {
+            if (!colorMaps.has(key) && textMaps.has(childKey)) continue;
+            raw[childKey] = visit(
+                raw[childKey],
+                Array.isArray(raw)
+                    ? isColor
+                    : colorMaps.has(key) || colorField(childKey),
+                Array.isArray(raw) ? key : childKey,
+            );
         }
 
         return value;
