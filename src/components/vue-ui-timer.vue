@@ -405,7 +405,8 @@ defineExpose({
                 v-if="cfgTracker.aura.show"
                 v-bind="tracker"
                 :r="svg.tracker.aura"
-                :fill="`${cfgTracker.aura.fill}20`"
+                :fill="`${cfgTracker.aura.fill}`"
+                :opacity="0.2"
                 :stroke="cfgTracker.aura.stroke"
                 :stroke-width="cfgTracker.aura.strokeWidth"
             />
