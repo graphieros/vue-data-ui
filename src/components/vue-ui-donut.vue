@@ -1325,7 +1325,7 @@ function useTooltip({
         })}</b></div>`;
 
         if (cfgChart.value.comments.showInTooltip && datapoint.comment) {
-            html += `<div class="vue-data-ui-tooltip-comment" style="background:${datapoint.color}20; padding: 6px; margin-bottom: 6px; margin-top:6px; border-left: 1px solid ${datapoint.color}">${datapoint.comment}</div>`;
+            html += `<div class="vue-data-ui-tooltip-comment" style="background:${setOpacity(datapoint.color, 12.5)}; padding: 6px; margin-bottom: 6px; margin-top:6px; border-left: 1px solid ${datapoint.color}">${datapoint.comment}</div>`;
         }
         tooltipContent.value = `<div>${html}</div>`;
     }

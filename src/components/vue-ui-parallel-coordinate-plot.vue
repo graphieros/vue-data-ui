@@ -42,6 +42,7 @@ import {
     isFunction,
     objectIsEmpty,
     palette,
+    setOpacity,
     svgToClientCoords,
     translateSize,
     treeShake,
@@ -940,7 +941,7 @@ function useTooltip({
                     cfgChart.value.comments.showInTooltip &&
                     serie.datapoints[i].comment
                 ) {
-                    html += `<div class="vue-data-ui-tooltip-comment" style="background:${serie.color}20; padding: 6px; margin-bottom: 6px; border-left: 1px solid ${serie.color}">${serie.datapoints[i].comment}</div>`;
+                    html += `<div class="vue-data-ui-tooltip-comment" style="background:${setOpacity(serie.color, 12.5)}; padding: 6px; margin-bottom: 6px; border-left: 1px solid ${serie.color}">${serie.datapoints[i].comment}</div>`;
                 }
             });
         tooltipContent.value = `<div>${html}</div>`;

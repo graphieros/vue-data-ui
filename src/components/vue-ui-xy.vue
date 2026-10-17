@@ -6099,7 +6099,7 @@ const tooltipContent = computed(() => {
             );
 
             if (cfgChart.value.comments.showInTooltip && tooltipComment) {
-                html += `<div class="vue-data-ui-tooltip-comment" style="background:${s.color}20; padding: 6px; margin-bottom: 6px; border-left: 1px solid ${s.color}">${tooltipComment}</div>`;
+                html += `<div class="vue-data-ui-tooltip-comment" style="background:${setOpacity(s.color, 12.5)}; padding: 6px; margin-bottom: 6px; border-left: 1px solid ${s.color}">${tooltipComment}</div>`;
             }
         }
     });

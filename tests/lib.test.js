@@ -2413,6 +2413,22 @@ describe('darkenHexColor', () => {
 });
 
 describe('setOpacity', () => {
+    test.each(['#123456', '#123456ff', '#12345680', '#12345600'])(
+        'sets fractional and integer opacity percentages on %s',
+        (color) => {
+            expect(setOpacity(color, 12.5)).toBe('#12345620');
+            expect(setOpacity(color, 20)).toBe('#12345633');
+        },
+    );
+    test.each(['red', '#abc', 'rgb(255, 0, 0)', 'transparent'])(
+        'sets opacity on a normalized slicer color: %s',
+        (color) => {
+            const normalized = convertColorToHex(color);
+            expect(setOpacity(normalized, 20)).toBe(
+                `${normalized.slice(0, 7)}33`,
+            );
+        },
+    );
     test('should set an opacity to a simple hex color', () => {
         const result0 = setOpacity('#00FF00', 0);
         expect(result0).toBe('#00FF0000');

@@ -2938,10 +2938,19 @@ export function sanitizeArray(arr, keys = [], keepNull = false) {
 }
 
 export function setOpacity(hex, opac = 100) {
+    // Fractional percentages retain exact byte-level opacities such as 0x20.
+    const alpha =
+        opacity[opac] ??
+        (Number.isFinite(opac) && opac >= 0 && opac <= 100
+            ? Math.round((opac / 100) * 255)
+                  .toString(16)
+                  .padStart(2, '0')
+                  .toUpperCase()
+            : undefined);
     if (hex.length === 9) {
-        return hex.substring(0, 7) + opacity[opac];
+        return hex.substring(0, 7) + alpha;
     }
-    return hex + opacity[opac];
+    return hex + alpha;
 }
 
 export function createPolarAreas({

@@ -29,6 +29,7 @@ import {
     getMissingDatasetAttributes,
     objectIsEmpty,
     palette,
+    setOpacity,
 } from '../lib';
 import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
@@ -1060,7 +1061,7 @@ defineExpose({
                                     selectedDataIndex !== undefined &&
                                     j === selectedDataIndex
                                         ? cfgTbody.selectedColor.useSerieColor
-                                            ? `${tr.color.length > 7 ? tr.color.slice(0, -2) : tr.color}33`
+                                            ? setOpacity(tr.color, 20)
                                             : cfgTbody.selectedColor.fallback
                                         : '',
                             }"
