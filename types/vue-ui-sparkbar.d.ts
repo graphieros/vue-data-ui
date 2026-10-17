@@ -1,6 +1,4 @@
-import type { DefineComponent, VNodeChild } from 'vue';
-
-import type {
+export type {
     VueUiSparkbarDatasetItem,
     VueUiSparkbarConfig,
     VueUiSparkbarEvent,
@@ -11,39 +9,4 @@ import type {
     VueUiSparkbarEmitSelectDatapoint,
 } from 'vue-data-ui';
 
-export type {
-    VueUiSparkbarDatasetItem,
-    VueUiSparkbarConfig,
-    VueUiSparkbarEvent,
-    VueUiSparkbarProps,
-    VueUiSparkbarTitleSlotProps,
-    VueUiSparkbarDataLabelSlotProps,
-    VueUiSparkbarEmits,
-    VueUiSparkbarEmitSelectDatapoint,
-};
-
-declare const VueUiSparkbarBase: DefineComponent<
-    VueUiSparkbarProps,
-    {},
-    {},
-    {},
-    {},
-    {},
-    {},
-    VueUiSparkbarEmits
->;
-
-export const VueUiSparkbar: typeof VueUiSparkbarBase & {
-    new (): {
-        $slots: {
-            title?: (props: VueUiSparkbarTitleSlotProps) => VNodeChild;
-            ['data-label']?: (
-                props: VueUiSparkbarDataLabelSlotProps,
-            ) => VNodeChild;
-            source?: () => VNodeChild;
-        };
-    };
-};
-
-export default VueUiSparkbar;
-export { VueUiSparkbar };
+export { VueUiSparkbar, VueUiSparkbar as default } from 'vue-data-ui';

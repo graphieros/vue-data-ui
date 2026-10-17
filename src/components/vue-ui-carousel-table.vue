@@ -1,5 +1,9 @@
 <script setup>
 import {
+    getUserOptionSlots,
+    getUserOptionSlotProps,
+} from '../userOptionsSlots';
+import {
     ref,
     computed,
     onMounted,
@@ -755,51 +759,17 @@ defineExpose({
                     : 'visible',
             }"
         >
-            <template #menuIcon="{ isOpen, color }" v-if="$slots.menuIcon">
-                <slot name="menuIcon" v-bind="{ isOpen, color }" />
-            </template>
-            <template #optionPdf v-if="$slots.optionPdf">
-                <slot name="optionPdf" />
-            </template>
-            <template #optionCsv v-if="$slots.optionCsv">
-                <slot name="optionCsv" />
-            </template>
-            <template #optionImg v-if="$slots.optionImg">
-                <slot name="optionImg" />
-            </template>
-            <template #optionSvg v-if="$slots.optionSvg">
-                <slot name="optionSvg" />
-            </template>
             <template
-                #optionAnimation="{ toggleAnimation, isAnimated }"
-                v-if="$slots.optionAnimation"
+                v-for="slotName in getUserOptionSlots(
+                    $slots,
+                    'menuIcon optionPdf optionCsv optionImg optionSvg optionAnimation optionFullscreen optionAltCopy custom-menu-before custom-menu-after',
+                )"
+                #[slotName]="slotProps"
             >
                 <slot
-                    name="optionAnimation"
-                    v-bind="{ toggleAnimation, isAnimated }"
+                    :name="slotName"
+                    v-bind="getUserOptionSlotProps(slotName, slotProps)"
                 />
-            </template>
-            <template
-                v-if="$slots.optionFullscreen"
-                template
-                #optionFullscreen="{ toggleFullscreen, isFullscreen }"
-            >
-                <slot
-                    name="optionFullscreen"
-                    v-bind="{ toggleFullscreen, isFullscreen }"
-                />
-            </template>
-            <template
-                v-if="$slots.optionAltCopy"
-                #optionAltCopy="{ altCopy: c }"
-            >
-                <slot name="optionAltCopy" v-bind="{ altCopy: c }" />
-            </template>
-            <template #custom-menu-before v-if="$slots['custom-menu-before']">
-                <slot name="custom-menu-before" />
-            </template>
-            <template #custom-menu-after v-if="$slots['custom-menu-after']">
-                <slot name="custom-menu-after" />
             </template>
         </UserOptions>
 

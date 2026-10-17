@@ -1,4 +1,15 @@
 <script setup>
+import { getTableComponent, syncTableVisibility } from '../tableIntegration';
+import {
+    annotationSlotNames,
+    getAnnotationSlotProps,
+} from '../annotationSlots';
+import {
+    getUserOptionSlots,
+    getUserOptionSlotProps,
+} from '../userOptionsSlots';
+import { createChartImageGetter } from '../chartImage';
+import { resolveChartConfigWithPalette } from '../resolveChartConfig';
 import {
     ref,
     computed,
@@ -24,7 +35,6 @@ import {
     getMissingDatasetAttributes,
     objectIsEmpty,
     palette,
-    themePalettes,
     treeShake,
     wrapText,
     XMLNS,
@@ -34,13 +44,11 @@ import { useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 import { useLoading } from '../useLoading';
 import { usePrinter } from '../usePrinter';
-import { useNestedProp } from '../useNestedProp';
+
 import { useResponsive } from '../useResponsive';
-import { useThemeCheck } from '../useThemeCheck';
 import { useChartExport } from '../useChartExport';
 import { useUserOptionState } from '../useUserOptionState';
 import { useChartAccessibility } from '../useChartAccessibility';
-import img from '../img';
 import Shape from '../atoms/Shape.vue';
 import Title from '../atoms/Title.vue'; // Must be ready in responsive mode
 import themes from '../themes/vue_ui_chord.json';
@@ -65,7 +73,6 @@ const BaseDraggableDialog = defineAsyncComponent(
 );
 
 const { vue_ui_chord: DEFAULT_CONFIG } = useConfig();
-const { isThemeValid, warnInvalidTheme } = useThemeCheck();
 
 const props = defineProps({
     dataset: {
@@ -218,35 +225,7 @@ const mutableConfig = ref({
 });
 
 function prepareConfig() {
-    const mergedConfig = useNestedProp({
-        userConfig: props.config,
-        defaultConfig: DEFAULT_CONFIG,
-    });
-
-    const theme = mergedConfig.theme;
-    if (!theme) return mergedConfig;
-
-    if (!isThemeValid.value(mergedConfig)) {
-        warnInvalidTheme(mergedConfig);
-        return mergedConfig;
-    }
-
-    const fused = useNestedProp({
-        userConfig: themes[theme] || props.config,
-        defaultConfig: mergedConfig,
-    });
-
-    const finalConfig = useNestedProp({
-        userConfig: props.config,
-        defaultConfig: fused,
-    });
-
-    return {
-        ...finalConfig,
-        customPalette: finalConfig.customPalette.length
-            ? finalConfig.customPalette
-            : themePalettes[theme] || palette,
-    };
+    return resolveChartConfigWithPalette(props.config, DEFAULT_CONFIG, themes);
 }
 
 watch(
@@ -1090,25 +1069,10 @@ function generateCsv(callback = null) {
     });
 }
 
-async function getImage({ scale = 2 } = {}) {
-    if (!chordChart.value) return;
-    const { width, height } = chordChart.value.getBoundingClientRect();
-    const aspectRatio = width / height;
-    const { imageUri, base64 } = await img({
-        domElement: chordChart.value,
-        base64: true,
-        img: true,
-        scale,
-    });
-    return {
-        imageUri,
-        base64,
-        title: cfgChart.value.title.text,
-        width,
-        height,
-        aspectRatio,
-    };
-}
+const getImage = createChartImageGetter(
+    chordChart,
+    () => cfgChart.value.title.text,
+);
 
 function getArcLabel(group, index) {
     return `${formattedDataset.value.labels[index]}${
@@ -1123,54 +1087,23 @@ function getArcLabel(group, index) {
     }`;
 }
 
-const tableComponent = computed(() => {
-    const useDialog =
-        FINAL_CONFIG.value.table.useDialog && !FINAL_CONFIG.value.table.show;
-    const open = mutableConfig.value.showTable;
-    return {
-        component: useDialog ? BaseDraggableDialog : Accordion,
-        title: `${cfgChart.value.title.text}${cfgChart.value.title.subtitle.text ? `: ${cfgChart.value.title.subtitle.text}` : ''}`,
-        props: useDialog
-            ? {
-                  backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
-                  color: FINAL_CONFIG.value.table.th.color,
-                  headerColor: FINAL_CONFIG.value.table.th.color,
-                  headerBg: FINAL_CONFIG.value.table.th.backgroundColor,
-                  isFullscreen: isFullscreen.value,
-                  fullscreenParent: chordChart.value,
-                  forcedWidth: Math.min(800, window.innerWidth * 0.8),
-                  isCursorPointer: isCursorPointer.value,
-              }
-            : {
-                  hideDetails: true,
-                  config: {
-                      open,
-                      maxHeight: 10000,
-                      body: {
-                          backgroundColor: cfgChart.value.backgroundColor,
-                          color: cfgChart.value.color,
-                      },
-                      head: {
-                          backgroundColor: cfgChart.value.backgroundColor,
-                          color: cfgChart.value.color,
-                      },
-                  },
-              },
-    };
-});
+const tableComponent = computed(() =>
+    getTableComponent({
+        config: FINAL_CONFIG,
+        style: cfgChart,
+        mutableConfig,
+        dialog: BaseDraggableDialog,
+        accordion: Accordion,
+        isFullscreen,
+        parent: chordChart,
+        maxWidth: 800,
+        isCursorPointer,
+    }),
+);
 
 watch(
     () => mutableConfig.value.showTable,
-    (v) => {
-        if (FINAL_CONFIG.value.table.show) return;
-        if (v && FINAL_CONFIG.value.table.useDialog && tableUnit.value) {
-            tableUnit.value.open();
-        } else {
-            if ('close' in tableUnit.value) {
-                tableUnit.value.close();
-            }
-        }
-    },
+    (v) => syncTableVisibility(v, FINAL_CONFIG, tableUnit),
 );
 
 function closeTable() {
@@ -1455,23 +1388,14 @@ defineExpose({
             :palette="FINAL_CONFIG.userOptions.annotatorPalette"
             @close="toggleAnnotator"
         >
-            <template #annotator-action-close>
-                <slot name="annotator-action-close" />
-            </template>
-            <template #annotator-action-color="{ color }">
-                <slot name="annotator-action-color" v-bind="{ color }" />
-            </template>
-            <template #annotator-action-draw="{ mode }">
-                <slot name="annotator-action-draw" v-bind="{ mode }" />
-            </template>
-            <template #annotator-action-undo="{ disabled }">
-                <slot name="annotator-action-undo" v-bind="{ disabled }" />
-            </template>
-            <template #annotator-action-redo="{ disabled }">
-                <slot name="annotator-action-redo" v-bind="{ disabled }" />
-            </template>
-            <template #annotator-action-delete="{ disabled }">
-                <slot name="annotator-action-delete" v-bind="{ disabled }" />
+            <template
+                v-for="slotName in annotationSlotNames"
+                #[slotName]="slotProps"
+            >
+                <slot
+                    :name="slotName"
+                    v-bind="getAnnotationSlotProps(slotName, slotProps)"
+                />
             </template>
         </PenAndPaper>
 
@@ -1554,53 +1478,17 @@ defineExpose({
                     : 'visible',
             }"
         >
-            <template #menuIcon="{ isOpen, color }" v-if="$slots.menuIcon">
-                <slot name="menuIcon" v-bind="{ isOpen, color }" />
-            </template>
-            <template #optionPdf v-if="$slots.optionPdf">
-                <slot name="optionPdf" />
-            </template>
-            <template #optionCsv v-if="$slots.optionCsv">
-                <slot name="optionCsv" />
-            </template>
-            <template #optionImg v-if="$slots.optionImg">
-                <slot name="optionImg" />
-            </template>
-            <template #optionSvg v-if="$slots.optionSvg">
-                <slot name="optionSvg" />
-            </template>
-            <template #optionTable v-if="$slots.optionTable">
-                <slot name="optionTable" />
-            </template>
             <template
-                v-if="$slots.optionFullscreen"
-                #optionFullscreen="{ toggleFullscreen, isFullscreen }"
+                v-for="slotName in getUserOptionSlots(
+                    $slots,
+                    'menuIcon optionPdf optionCsv optionImg optionSvg optionTable optionFullscreen optionAnnotator optionAltCopy custom-menu-before custom-menu-after',
+                )"
+                #[slotName]="slotProps"
             >
                 <slot
-                    name="optionFullscreen"
-                    v-bind="{ toggleFullscreen, isFullscreen }"
+                    :name="slotName"
+                    v-bind="getUserOptionSlotProps(slotName, slotProps)"
                 />
-            </template>
-            <template
-                v-if="$slots.optionAnnotator"
-                #optionAnnotator="{ toggleAnnotator, isAnnotator }"
-            >
-                <slot
-                    name="optionAnnotator"
-                    v-bind="{ toggleAnnotator, isAnnotator }"
-                />
-            </template>
-            <template
-                v-if="$slots.optionAltCopy"
-                #optionAltCopy="{ altCopy: c }"
-            >
-                <slot name="optionAltCopy" v-bind="{ altCopy: c }" />
-            </template>
-            <template #custom-menu-before v-if="$slots['custom-menu-before']">
-                <slot name="custom-menu-before" />
-            </template>
-            <template #custom-menu-after v-if="$slots['custom-menu-after']">
-                <slot name="custom-menu-after" />
             </template>
         </UserOptions>
 

@@ -1,6 +1,4 @@
-import type { DefineComponent } from 'vue';
-
-import type {
+export type {
     VueUiTableDatasetHeaderItem,
     VueUiTableDatasetBodyItem,
     VueUiTableDataset,
@@ -10,29 +8,4 @@ import type {
     VueUiTableEmitPageChange,
 } from 'vue-data-ui';
 
-export type {
-    VueUiTableDatasetHeaderItem,
-    VueUiTableDatasetBodyItem,
-    VueUiTableDataset,
-    VueUiTableConfig,
-    VueUiTablePageChangeEvent,
-    VueUiTableEmits,
-    VueUiTableEmitPageChange,
-};
-
-declare const VueUiTable: DefineComponent<
-    {
-        config?: VueUiTableConfig;
-        dataset: VueUiTableDataset;
-    },
-    {},
-    {},
-    {},
-    {},
-    {},
-    {},
-    VueUiTableEmits
->;
-
-export default VueUiTable;
-export { VueUiTable };
+export { VueUiTable, VueUiTable as default } from 'vue-data-ui';

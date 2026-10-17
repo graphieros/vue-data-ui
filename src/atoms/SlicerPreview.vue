@@ -11,6 +11,8 @@ import {
 
 import {
     adaptColorToBackground,
+    convertColorToHex,
+    setOpacity,
     createSmoothPath,
     createSmoothPathWithCuts,
     createStraightPath,
@@ -504,7 +506,9 @@ const highlightStyle = computed(() => {
 
 const slicerColor = computed(() => props.inputColor);
 const backgroundColor = computed(() => props.background);
-const selectColorOpaque = computed(() => `${props.selectColor}33`);
+const selectColorOpaque = computed(() =>
+    setOpacity(convertColorToHex(props.selectColor) || props.selectColor, 20),
+);
 const borderColor = computed(() => props.borderColor);
 
 const hasAvailableTraps = computed(() => {

@@ -1,11 +1,3 @@
-import type { DefineComponent } from 'vue';
+export type { VueUiAccordionConfig } from 'vue-data-ui';
 
-import type { VueUiAccordionConfig } from 'vue-data-ui';
-export type { VueUiAccordionConfig };
-
-declare const VueUiAccordion: DefineComponent<{
-    config?: VueUiAccordionConfig;
-}>;
-
-export default VueUiAccordion;
-export { VueUiAccordion };
+export { VueUiAccordion, VueUiAccordion as default } from 'vue-data-ui';

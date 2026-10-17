@@ -1,4 +1,5 @@
 <script setup>
+import { resolveChartConfigWithPalette } from '../resolveChartConfig';
 import {
     ref,
     computed,
@@ -21,15 +22,13 @@ import {
     palette,
     setOpacity,
     shiftHue,
-    themePalettes,
     treeShake,
     XMLNS,
 } from '../lib';
 import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 import { useLoading } from '../useLoading';
-import { useNestedProp } from '../useNestedProp';
-import { useThemeCheck } from '../useThemeCheck';
+
 import { usePrefersReducedMotion } from '../usePrefersMotion';
 import themes from '../themes/vue_ui_sparkbar.json';
 import BaseScanner from '../atoms/BaseScanner.vue';
@@ -40,7 +39,6 @@ const PackageVersion = defineAsyncComponent(
 );
 
 const { vue_ui_sparkbar: DEFAULT_CONFIG } = useConfig();
-const { isThemeValid, warnInvalidTheme } = useThemeCheck();
 const prefersReducedMotion = usePrefersReducedMotion();
 
 const props = defineProps({
@@ -129,36 +127,7 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
 });
 
 function prepareConfig() {
-    const mergedConfig = useNestedProp({
-        userConfig: props.config,
-        defaultConfig: DEFAULT_CONFIG,
-    });
-
-    const theme = mergedConfig.theme;
-
-    if (!theme) return mergedConfig;
-
-    if (!isThemeValid.value(mergedConfig)) {
-        warnInvalidTheme(mergedConfig);
-        return mergedConfig;
-    }
-
-    const fused = useNestedProp({
-        userConfig: themes[theme] || props.config,
-        defaultConfig: mergedConfig,
-    });
-
-    const finalConfig = useNestedProp({
-        userConfig: props.config,
-        defaultConfig: fused,
-    });
-
-    return {
-        ...finalConfig,
-        customPalette: finalConfig.customPalette.length
-            ? finalConfig.customPalette
-            : themePalettes[theme] || palette,
-    };
+    return resolveChartConfigWithPalette(props.config, DEFAULT_CONFIG, themes);
 }
 
 watch(

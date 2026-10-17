@@ -1,5 +1,10 @@
 <script setup>
 import {
+    getUserOptionSlots,
+    getUserOptionSlotProps,
+} from '../userOptionsSlots';
+import { resolveChartConfig } from '../resolveChartConfig';
+import {
     computed,
     defineAsyncComponent,
     nextTick,
@@ -21,8 +26,7 @@ import {
 import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 import { usePrinter } from '../usePrinter';
-import { useNestedProp } from '../useNestedProp';
-import { useThemeCheck } from '../useThemeCheck';
+
 import { useUserOptionState } from '../useUserOptionState';
 import themes from '../themes/vue_ui_table_heatmap.json';
 import Shape from '../atoms/Shape.vue';
@@ -32,7 +36,6 @@ const UserOptions = defineAsyncComponent(
 );
 
 const { vue_ui_table_heatmap: DEFAULT_CONFIG } = useConfig();
-const { isThemeValid, warnInvalidTheme } = useThemeCheck();
 
 const props = defineProps({
     config: {
@@ -104,30 +107,7 @@ const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } =
     useUserOptionState({ config: FINAL_CONFIG.value });
 
 function prepareConfig() {
-    const mergedConfig = useNestedProp({
-        userConfig: props.config,
-        defaultConfig: DEFAULT_CONFIG,
-    });
-
-    const theme = mergedConfig.theme;
-    if (!theme) return mergedConfig;
-
-    if (!isThemeValid.value(mergedConfig)) {
-        warnInvalidTheme(mergedConfig);
-        return mergedConfig;
-    }
-
-    const fused = useNestedProp({
-        userConfig: themes[theme] || props.config,
-        defaultConfig: mergedConfig,
-    });
-
-    const finalConfig = useNestedProp({
-        userConfig: props.config,
-        defaultConfig: fused,
-    });
-
-    return finalConfig;
+    return resolveChartConfig(props.config, DEFAULT_CONFIG, themes);
 }
 
 watch(
@@ -332,33 +312,17 @@ defineExpose({
                     : 'visible',
             }"
         >
-            <template #menuIcon="{ isOpen, color }" v-if="$slots.menuIcon">
-                <slot name="menuIcon" v-bind="{ isOpen, color }" />
-            </template>
-            <template #optionPdf v-if="$slots.optionPdf">
-                <slot name="optionPdf" />
-            </template>
-            <template #optionCsv v-if="$slots.optionCsv">
-                <slot name="optionCsv" />
-            </template>
-            <template #optionImg v-if="$slots.optionImg">
-                <slot name="optionImg" />
-            </template>
             <template
-                v-if="$slots.optionFullscreen"
-                template
-                #optionFullscreen="{ toggleFullscreen, isFullscreen }"
+                v-for="slotName in getUserOptionSlots(
+                    $slots,
+                    'menuIcon optionPdf optionCsv optionImg optionFullscreen custom-menu-before custom-menu-after',
+                )"
+                #[slotName]="slotProps"
             >
                 <slot
-                    name="optionFullscreen"
-                    v-bind="{ toggleFullscreen, isFullscreen }"
+                    :name="slotName"
+                    v-bind="getUserOptionSlotProps(slotName, slotProps)"
                 />
-            </template>
-            <template #custom-menu-before v-if="$slots['custom-menu-before']">
-                <slot name="custom-menu-before" />
-            </template>
-            <template #custom-menu-after v-if="$slots['custom-menu-after']">
-                <slot name="custom-menu-after" />
             </template>
         </UserOptions>
 

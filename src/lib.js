@@ -1155,26 +1155,49 @@ function looksLikeVueReactive(x) {
     );
 }
 
-function normalizeColor(raw) {
-    if (raw === '') return '#000000';
-    if (raw === 'transparent') return '#FFFFFF00';
-    const hex = convertColorToHex(raw);
-    return hex ?? raw;
-}
-
 export function convertConfigColors(config, seen = new WeakSet()) {
-    const visit = (value) => {
+    // Config text can also be valid CSS colors or bare hex (e.g. "Bad", "2024").
+    // Only normalize fields that represent colors, never arbitrary string values.
+    const colorField = (key) =>
+        /(?:color|colors|fill|stroke|palette)$/i.test(key) ||
+        [
+            'background',
+            'underlayer',
+            'strokeHovered',
+            'colorBackground',
+            'colorTextPrimary',
+            'colorTextSecondary',
+            'colorGrid',
+            'colorBorder',
+        ].includes(key);
+    const colorMaps = new Set([
+        'color',
+        'colors',
+        'evaluationColors',
+        'heatmapColors',
+        'selectedColor',
+        'nodeCategoryColors',
+    ]);
+    const textMaps = new Set([
+        'translations',
+        'buttonTitles',
+        'columnNames',
+        'nodeCategories',
+    ]);
+    const visit = (value, isColor = false, key = '') => {
         if (isRef(value)) {
             const unwrapped = unref(value);
             if (typeof unwrapped === 'string') {
-                return convertColorToHex(unwrapped) ?? value;
+                return isColor
+                    ? (convertColorToHex(unwrapped) ?? value)
+                    : value;
             }
-            visit(unwrapped);
+            visit(unwrapped, isColor, key);
             return value;
         }
 
         if (typeof value === 'string') {
-            return convertColorToHex(value) ?? value;
+            return isColor ? (convertColorToHex(value) ?? value) : value;
         }
 
         if (
@@ -1193,8 +1216,15 @@ export function convertConfigColors(config, seen = new WeakSet()) {
 
         seen.add(raw);
 
-        for (const key of Object.keys(raw)) {
-            raw[key] = visit(raw[key]);
+        for (const childKey of Object.keys(raw)) {
+            if (!colorMaps.has(key) && textMaps.has(childKey)) continue;
+            raw[childKey] = visit(
+                raw[childKey],
+                Array.isArray(raw)
+                    ? isColor
+                    : colorMaps.has(key) || colorField(childKey),
+                Array.isArray(raw) ? key : childKey,
+            );
         }
 
         return value;
@@ -2908,10 +2938,19 @@ export function sanitizeArray(arr, keys = [], keepNull = false) {
 }
 
 export function setOpacity(hex, opac = 100) {
+    // Fractional percentages retain exact byte-level opacities such as 0x20.
+    const alpha =
+        opacity[opac] ??
+        (Number.isFinite(opac) && opac >= 0 && opac <= 100
+            ? Math.round((opac / 100) * 255)
+                  .toString(16)
+                  .padStart(2, '0')
+                  .toUpperCase()
+            : undefined);
     if (hex.length === 9) {
-        return hex.substring(0, 7) + opacity[opac];
+        return hex.substring(0, 7) + alpha;
     }
-    return hex + opacity[opac];
+    return hex + alpha;
 }
 
 export function createPolarAreas({
@@ -3193,6 +3232,22 @@ export function placeXYTag({ svgElement, x, y, element, position }) {
         top: t_point.y + _offsetY,
         left: t_point.x + _offsetX,
     };
+}
+
+export function stringifyStyleConfig(cfg) {
+    const clonedConfig = deepClone(cfg);
+    if (clonedConfig?.style) {
+        delete clonedConfig.style.tooltip;
+    }
+    return JSON.stringify(clonedConfig);
+}
+
+export function stringifyChartConfig(cfg) {
+    const clonedConfig = deepClone(cfg);
+    if (clonedConfig?.style?.chart) {
+        delete clonedConfig.style.chart.tooltip;
+    }
+    return JSON.stringify(clonedConfig);
 }
 
 export function deepClone(value, seen = new WeakMap()) {

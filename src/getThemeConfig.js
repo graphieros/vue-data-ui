@@ -1,17 +1,26 @@
-const _globLoaders = import.meta.glob('./themes/*.json', { import: 'default' });
+let themeLoaders;
 
-const THEME_LOADERS = Object.fromEntries(
-    Object.entries(_globLoaders).map(([path, load]) => {
-        const m = path.match(/\/themes\/(.+)\.json$/);
-        const type = m ? m[1] : path;
-        return [type, load];
-    }),
-);
+// Configuration-only imports can discard the registry until a theme is requested.
+function getThemeLoaders() {
+    if (!themeLoaders) {
+        const loaders = import.meta.glob('./themes/*.json', {
+            import: 'default',
+        });
+        themeLoaders = Object.fromEntries(
+            Object.entries(loaders).map(([path, load]) => {
+                const m = path.match(/\/themes\/(.+)\.json$/);
+                const type = m ? m[1] : path;
+                return [type, load];
+            }),
+        );
+    }
+    return themeLoaders;
+}
 
 const _cache = new Map();
 
 let _loader = async (type) => {
-    const load = THEME_LOADERS[type];
+    const load = getThemeLoaders()[type];
     if (!load) {
         const err = new Error('ENOENT');
         err.code = 'ENOENT';

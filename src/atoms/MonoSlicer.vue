@@ -1,5 +1,6 @@
 <script setup>
 import { computed } from 'vue';
+import { convertColorToHex, setOpacity } from '../lib';
 import BaseIcon from './BaseIcon.vue';
 
 const props = defineProps({
@@ -47,7 +48,9 @@ const props = defineProps({
 
 const slicerColor = computed(() => props.inputColor);
 const backgroundColor = computed(() => props.background);
-const selectColorOpaque = computed(() => `${props.selectColor}33`);
+const selectColorOpaque = computed(() =>
+    setOpacity(convertColorToHex(props.selectColor) || props.selectColor, 20),
+);
 const borderColor = computed(() => props.borderColor);
 
 const emit = defineEmits(['update:value', 'reset']);

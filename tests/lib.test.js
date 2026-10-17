@@ -2413,6 +2413,22 @@ describe('darkenHexColor', () => {
 });
 
 describe('setOpacity', () => {
+    test.each(['#123456', '#123456ff', '#12345680', '#12345600'])(
+        'sets fractional and integer opacity percentages on %s',
+        (color) => {
+            expect(setOpacity(color, 12.5)).toBe('#12345620');
+            expect(setOpacity(color, 20)).toBe('#12345633');
+        },
+    );
+    test.each(['red', '#abc', 'rgb(255, 0, 0)', 'transparent'])(
+        'sets opacity on a normalized slicer color: %s',
+        (color) => {
+            const normalized = convertColorToHex(color);
+            expect(setOpacity(normalized, 20)).toBe(
+                `${normalized.slice(0, 7)}33`,
+            );
+        },
+    );
     test('should set an opacity to a simple hex color', () => {
         const result0 = setOpacity('#00FF00', 0);
         expect(result0).toBe('#00FF0000');
@@ -7469,12 +7485,12 @@ describe('convertConfigColors', () => {
             ['oklch', 'oklch(0% 0 0)', '#000000ff'],
             ['transparent', 'transparent', '#FFFFFF00'],
         ])('converts %s', (_, input, expected) => {
-            const config = { value: input };
+            const config = { color: input };
             convertConfigColors(config);
-            expect(config.value).toBe(expected);
+            expect(config.color).toBe(expected);
         });
 
-        test('converts colors regardless of property names', () => {
+        test('converts color fields and preserves arbitrary string fields', () => {
             const config = {
                 backgroundColor: 'red',
                 stroke: 'blue',
@@ -7487,19 +7503,19 @@ describe('convertConfigColors', () => {
             expect(config).toEqual({
                 backgroundColor: '#FF0000ff',
                 stroke: '#0000FFff',
-                customProperty: '#ffffffff',
-                arbitraryKey: '#00ff00ff',
+                customProperty: '#fff',
+                arbitraryKey: 'rgb(0, 255, 0)',
             });
         });
 
-        test('converts valid color names even in non-color properties', () => {
+        test('preserves valid color names in non-color properties', () => {
             const config = {
                 status: 'red',
                 label: 'blue',
             };
             convertConfigColors(config);
-            expect(config.status).toBe('#FF0000ff');
-            expect(config.label).toBe('#0000FFff');
+            expect(config.status).toBe('red');
+            expect(config.label).toBe('blue');
         });
     });
 
@@ -7606,7 +7622,7 @@ describe('convertConfigColors', () => {
             expect(config.series[0].color).toBe('#FF0000ff');
             expect(config.series[0].values).toEqual([1, 2, 3]);
             expect(config.series[1].color).toBe('#0000FFff');
-            expect(config.series[1].nested[0]).toBe('#008000ff');
+            expect(config.series[1].nested[0]).toBe('green');
             expect(config.series[1].nested[1].fill).toBe('#aabbccff');
             expect(config.series[1].nested[1].stroke.color).toBe('#FFFFFF00');
         });
@@ -7615,9 +7631,9 @@ describe('convertConfigColors', () => {
             const config = ['red', { fill: 'blue' }, ['#fff', 'invalid']];
             const result = convertConfigColors(config);
             expect(result).toEqual([
-                '#FF0000ff',
+                'red',
                 { fill: '#0000FFff' },
-                ['#ffffffff', 'invalid'],
+                ['#fff', 'invalid'],
             ]);
         });
     });

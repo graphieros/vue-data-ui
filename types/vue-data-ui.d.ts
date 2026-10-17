@@ -13992,6 +13992,9 @@ declare module 'vue-data-ui' {
                     props: VueUiStackbarTooltipSlotProps,
                 ) => VNodeChild;
                 legend?: (props: VueUiStackbarLegendSlotProps) => VNodeChild;
+                ['reset-action']?: (
+                    props: VueUiResetActionSlotProps,
+                ) => VNodeChild;
             };
         };
     };

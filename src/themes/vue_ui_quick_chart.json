@@ -91,7 +91,7 @@
     "celebrationNight": {
         "backgroundColor": "#1E1E1E",
         "color": "#BDBDBD",
-        "donutStro:ke": "#1E1E1E",
+        "donutStroke": "#1E1E1E",
         "legendSelectAllToggleBackgroundColor": "#3A3A3A",
         "legendSelectAllToggleColor": "#BDBDBD",
         "xyAxisStroke": "#5D4037",

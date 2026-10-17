@@ -1,4 +1,5 @@
 <script setup>
+import { resolveChartConfig } from '../resolveChartConfig';
 import {
     computed,
     defineAsyncComponent,
@@ -25,9 +26,8 @@ import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 import { useLoading } from '../useLoading';
 import { useFitSvgText } from '../useFitSvgText';
-import { useNestedProp } from '../useNestedProp';
+
 import { useResponsive } from '../useResponsive';
-import { useThemeCheck } from '../useThemeCheck';
 import { useChartAccessibility } from '../useChartAccessibility';
 import Shape from '../atoms/Shape.vue';
 import themes from '../themes/vue_ui_sparkhistogram.json';
@@ -40,7 +40,6 @@ const PackageVersion = defineAsyncComponent(
 );
 
 const { vue_ui_sparkhistogram: DEFAULT_CONFIG } = useConfig();
-const { isThemeValid, warnInvalidTheme } = useThemeCheck();
 
 const props = defineProps({
     config: {
@@ -135,30 +134,7 @@ const { svgRef } = useChartAccessibility({
 });
 
 function prepareConfig() {
-    const mergedConfig = useNestedProp({
-        userConfig: props.config,
-        defaultConfig: DEFAULT_CONFIG,
-    });
-
-    const theme = mergedConfig.theme;
-    if (!theme) return mergedConfig;
-
-    if (!isThemeValid.value(mergedConfig)) {
-        warnInvalidTheme(mergedConfig);
-        return mergedConfig;
-    }
-
-    const fused = useNestedProp({
-        userConfig: themes[theme] || props.config,
-        defaultConfig: mergedConfig,
-    });
-
-    const finalConfig = useNestedProp({
-        userConfig: props.config,
-        defaultConfig: fused,
-    });
-
-    return finalConfig;
+    return resolveChartConfig(props.config, DEFAULT_CONFIG, themes);
 }
 
 onMounted(() => {

@@ -1,6 +1,4 @@
-import type { DefineComponent, VNodeChild } from 'vue';
-
-import type {
+export type {
     VueUiTimerConfig,
     VueUiTimerProps,
     VueUiTimerExpose,
@@ -11,39 +9,4 @@ import type {
     VueUiTimerLap,
 } from 'vue-data-ui';
 
-export type {
-    VueUiTimerConfig,
-    VueUiTimerProps,
-    VueUiTimerExpose,
-    VueUiTimerTimeSlotProps,
-    VueUiTimerControlsSlotProps,
-    VueUiTimerLapsSlotProps,
-    VueUiTimerEmits,
-    VueUiTimerLap,
-};
-
-declare const VueUiTimerBase: DefineComponent<
-    VueUiTimerProps,
-    {},
-    {},
-    {},
-    {},
-    {},
-    {},
-    VueUiTimerEmits
->;
-
-export const VueUiTimer: typeof VueUiTimerBase & {
-    new (): VueUiTimerExpose & {
-        $slots: {
-            ['chart-background']?: () => VNodeChild;
-            time?: (props: VueUiTimerTimeSlotProps) => VNodeChild;
-            timeSvg?: (props: VueUiTimerTimeSlotProps) => VNodeChild;
-            controls?: (props: VueUiTimerControlsSlotProps) => VNodeChild;
-            laps?: (props: VueUiTimerLapsSlotProps) => VNodeChild;
-        };
-    };
-};
-
-export default VueUiTimer;
-export { VueUiTimer };
+export { VueUiTimer, VueUiTimer as default } from 'vue-data-ui';

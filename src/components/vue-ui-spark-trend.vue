@@ -1,4 +1,5 @@
 <script setup>
+import { resolveChartConfig } from '../resolveChartConfig';
 import {
     computed,
     defineAsyncComponent,
@@ -27,9 +28,8 @@ import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 import { useLoading } from '../useLoading';
 import { useFitSvgText } from '../useFitSvgText';
-import { useNestedProp } from '../useNestedProp';
+
 import { useResponsive } from '../useResponsive';
-import { useThemeCheck } from '../useThemeCheck';
 import { usePrefersReducedMotion } from '../usePrefersMotion';
 import themes from '../themes/vue_ui_spark_trend.json';
 import BaseScanner from '../atoms/BaseScanner.vue';
@@ -40,7 +40,6 @@ const PackageVersion = defineAsyncComponent(
 );
 
 const { vue_ui_spark_trend: DEFAULT_CONFIG } = useConfig();
-const { isThemeValid, warnInvalidTheme } = useThemeCheck();
 const prefersReducedMotion = usePrefersReducedMotion();
 
 const props = defineProps({
@@ -127,30 +126,7 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
 });
 
 function prepareConfig() {
-    const mergedConfig = useNestedProp({
-        userConfig: props.config,
-        defaultConfig: DEFAULT_CONFIG,
-    });
-
-    const theme = mergedConfig.theme;
-    if (!theme) return mergedConfig;
-
-    if (!isThemeValid.value(mergedConfig)) {
-        warnInvalidTheme(mergedConfig);
-        return mergedConfig;
-    }
-
-    const fused = useNestedProp({
-        userConfig: themes[theme] || props.config,
-        defaultConfig: mergedConfig,
-    });
-
-    const finalConfig = useNestedProp({
-        userConfig: props.config,
-        defaultConfig: fused,
-    });
-
-    return finalConfig;
+    return resolveChartConfig(props.config, DEFAULT_CONFIG, themes);
 }
 
 const downsampled = computed(() =>
