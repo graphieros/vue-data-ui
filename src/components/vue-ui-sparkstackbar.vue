@@ -1,4 +1,5 @@
 <script setup>
+import { resolveChartConfigWithPalette } from '../resolveChartConfig';
 import {
     computed,
     defineAsyncComponent,
@@ -9,12 +10,12 @@ import {
     watch,
 } from 'vue';
 import {
+    stringifyStyleConfig as stringifyStructuralConfig,
     applyDataLabel,
     convertColorToHex,
     convertCustomPalette,
     createUid,
     dataLabel,
-    deepClone,
     error,
     getMissingDatasetAttributes,
     isFunction,
@@ -22,15 +23,13 @@ import {
     palette,
     setOpacity,
     shiftHue,
-    themePalettes,
     treeShake,
     XMLNS,
 } from '../lib';
 import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 import { useLoading } from '../useLoading';
-import { useNestedProp } from '../useNestedProp';
-import { useThemeCheck } from '../useThemeCheck';
+
 import { useChartAccessibility } from '../useChartAccessibility';
 import { usePrefersReducedMotion } from '../usePrefersMotion';
 import themes from '../themes/vue_ui_sparkstackbar.json';
@@ -45,7 +44,6 @@ const PackageVersion = defineAsyncComponent(
 const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
 
 const { vue_ui_sparkstackbar: DEFAULT_CONFIG } = useConfig();
-const { isThemeValid, warnInvalidTheme } = useThemeCheck();
 const prefersReducedMotion = usePrefersReducedMotion();
 const slots = useSlots();
 
@@ -151,44 +149,7 @@ const { svgRef } = useChartAccessibility({
 });
 
 function prepareConfig() {
-    const mergedConfig = useNestedProp({
-        userConfig: props.config,
-        defaultConfig: DEFAULT_CONFIG,
-    });
-
-    const theme = mergedConfig.theme;
-    if (!theme) return mergedConfig;
-
-    if (!isThemeValid.value(mergedConfig)) {
-        warnInvalidTheme(mergedConfig);
-        return mergedConfig;
-    }
-
-    const fused = useNestedProp({
-        userConfig: themes[theme] || props.config,
-        defaultConfig: mergedConfig,
-    });
-
-    const finalConfig = useNestedProp({
-        userConfig: props.config,
-        defaultConfig: fused,
-    });
-
-    return {
-        ...finalConfig,
-        customPalette: finalConfig.customPalette.length
-            ? finalConfig.customPalette
-            : themePalettes[theme] || palette,
-    };
-}
-
-function stringifyStructuralConfig(cfg) {
-    const clonedConfig = deepClone(cfg);
-    if (clonedConfig?.style) {
-        delete clonedConfig.style.tooltip;
-        // Add more properties here if they should not recompute the svg
-    }
-    return JSON.stringify(clonedConfig);
+    return resolveChartConfigWithPalette(props.config, DEFAULT_CONFIG, themes);
 }
 
 let previousStructuralConfig = stringifyStructuralConfig(props.config);

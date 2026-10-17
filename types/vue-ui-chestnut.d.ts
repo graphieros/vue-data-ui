@@ -1,6 +1,4 @@
-import type { DefineComponent, VNodeChild } from 'vue';
-
-import type {
+export type {
     VueUiChestnutDatasetBranchBreakdown,
     VueUiChestnutDatasetBranch,
     VueUiChestnutDatasetRoot,
@@ -28,71 +26,4 @@ import type {
     VueUiChestnutEmitCopyAlt,
 } from 'vue-data-ui';
 
-export type {
-    VueUiChestnutDatasetBranchBreakdown,
-    VueUiChestnutDatasetBranch,
-    VueUiChestnutDatasetRoot,
-    VueUiChestnutConfig,
-    VueUiChestnutExpose,
-    VueUiChestnutDatapointNut,
-    VueUiChestnutDatapointBranch,
-    VueUiChestnutDatapointRoot,
-    VueUiChestnutProps,
-    VueUiAnnotatorActionColorSlotProps,
-    VueUiAnnotatorActionDrawSlotProps,
-    VueUiAnnotatorActionUndoSlotProps,
-    VueUiAnnotatorActionRedoSlotProps,
-    VueUiAnnotatorActionDeleteSlotProps,
-    VueUiMenuIconSlotProps,
-    VueUiOptionFullscreenSlotProps,
-    VueUiOptionAnnotatorSlotProps,
-    VueUiChestnutSvgSlotProps,
-    VueUiChestnutLegendSlotProps,
-    CommonAnnotatorSlots,
-    VueUiChestnutEmits,
-    VueUiChestnutEmitSelectRoot,
-    VueUiChestnutEmitSelectBranch,
-    VueUiChestnutEmitSelectNut,
-    VueUiChestnutEmitCopyAlt,
-};
-
-declare const VueUiChestnutBase: DefineComponent<
-    VueUiChestnutProps,
-    {},
-    {},
-    {},
-    {},
-    {},
-    {},
-    VueUiChestnutEmits
->;
-
-export const VueUiChestnut: typeof VueUiChestnutBase & {
-    new (): VueUiChestnutExpose & {
-        $slots: CommonAnnotatorSlots & {
-            ['custom-menu-before']?: () => VNodeChild;
-            ['custom-menu-after']?: () => VNodeChild;
-            menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
-            optionPdf?: () => VNodeChild;
-            optionCsv?: () => VNodeChild;
-            optionImg?: () => VNodeChild;
-            optionSvg?: () => VNodeChild;
-            optionTable?: () => VNodeChild;
-            optionFullscreen?: (
-                props: VueUiOptionFullscreenSlotProps,
-            ) => VNodeChild;
-            optionAnnotator?: (
-                props: VueUiOptionAnnotatorSlotProps,
-            ) => VNodeChild;
-            optionAltCopy?: () => VNodeChild;
-            ['chart-background']?: () => VNodeChild;
-            svg?: (props: VueUiChestnutSvgSlotProps) => VNodeChild;
-            watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
-            legend?: (props: VueUiChestnutLegendSlotProps) => VNodeChild;
-            source?: () => VNodeChild;
-        };
-    };
-};
-
-export default VueUiChestnut;
-export { VueUiChestnut };
+export { VueUiChestnut, VueUiChestnut as default } from 'vue-data-ui';

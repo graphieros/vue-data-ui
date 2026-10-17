@@ -1,6 +1,4 @@
-import type { DefineComponent, VNodeChild } from 'vue';
-
-import type {
+export type {
     VueUiQuickChartConfig,
     VueUiQuickChartDatasetObjectItem,
     VueUiQuickChartDataset,
@@ -31,82 +29,4 @@ import type {
     VueUiEmitZoom,
 } from 'vue-data-ui';
 
-export type {
-    VueUiQuickChartConfig,
-    VueUiQuickChartDatasetObjectItem,
-    VueUiQuickChartDataset,
-    VueUiQuickChartExpose,
-    VueUiQuickChartProps,
-    VueUiQuickChartFormattedDataset,
-    VueUiAnnotatorActionColorSlotProps,
-    VueUiAnnotatorActionDrawSlotProps,
-    VueUiAnnotatorActionUndoSlotProps,
-    VueUiAnnotatorActionRedoSlotProps,
-    VueUiAnnotatorActionDeleteSlotProps,
-    VueUiMenuIconSlotProps,
-    VueUiOptionFullscreenSlotProps,
-    VueUiOptionAnnotatorSlotProps,
-    VueUiKeyboardNavigationHintSlotProps,
-    VueUiWatermarkSlotProps,
-    VueUiResetActionSlotProps,
-    VueUiQuickChartLegend,
-    VueUiQuickChartLegendSlotProps,
-    VueUiQuickChartTooltipSlotProps,
-    CommonAnnotatorSlots,
-    VueUiQuickChartEmits,
-    VueUiQuickChartEmitSelectLegend,
-    VueUiQuickChartEmitSelectDatapoint,
-    VueUiQuickChartEmitCopyAlt,
-    VueUiQuickChartLegendSource,
-    VueUiZoomState,
-    VueUiEmitZoom,
-};
-
-declare const VueUiQuickChartBase: DefineComponent<
-    VueUiQuickChartProps,
-    {},
-    {},
-    {},
-    {},
-    {},
-    {},
-    VueUiQuickChartEmits
->;
-
-export const VueUiQuickChart: typeof VueUiQuickChartBase & {
-    new (): VueUiQuickChartExpose & {
-        $slots: CommonAnnotatorSlots & {
-            ['custom-menu-before']?: () => VNodeChild;
-            ['custom-menu-after']?: () => VNodeChild;
-            menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
-            optionTooltip?: () => VNodeChild;
-            optionPdf?: () => VNodeChild;
-            optionImg?: () => VNodeChild;
-            optionSvg?: () => VNodeChild;
-            optionFullscreen?: (
-                props: VueUiOptionFullscreenSlotProps,
-            ) => VNodeChild;
-            optionAltCopy?: () => VNodeChild;
-            optionAnnotator?: (
-                props: VueUiOptionAnnotatorSlotProps,
-            ) => VNodeChild;
-            ['chart-background']?: () => VNodeChild;
-            hint?: (props: VueUiKeyboardNavigationHintSlotProps) => VNodeChild;
-            watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
-            ['reset-action']?: (props: VueUiResetActionSlotProps) => VNodeChild;
-            source?: () => VNodeChild;
-            legend?: (props: VueUiQuickChartLegendSlotProps) => VNodeChild;
-            ['tooltip-before']?: (
-                props: VueUiQuickChartTooltipSlotProps,
-            ) => VNodeChild;
-            tooltip?: (props: VueUiQuickChartTooltipSlotProps) => VNodeChild;
-            ['tooltip-after']?: (
-                props: VueUiQuickChartTooltipSlotProps,
-            ) => VNodeChild;
-            skeleton?: () => VNodeChild;
-        };
-    };
-};
-
-export default VueUiQuickChart;
-export { VueUiQuickChart };
+export { VueUiQuickChart, VueUiQuickChart as default } from 'vue-data-ui';

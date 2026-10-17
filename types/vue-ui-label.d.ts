@@ -1,6 +1,4 @@
-import type { DefineComponent, VNodeChild } from 'vue';
-
-import type {
+export type {
     VueUiLabelConfig,
     VueUiLabelDataset,
     VueUiLabelProps,
@@ -12,39 +10,4 @@ import type {
     VueUiLabelExpose,
 } from 'vue-data-ui';
 
-export type {
-    VueUiLabelConfig,
-    VueUiLabelDataset,
-    VueUiLabelProps,
-    VueUiLabelEmitDragStart,
-    VueUiLabelEmitDrag,
-    VueUiLabelEmitDragEnd,
-    VueUiLabelEmits,
-    VueUiLabelSlotProps,
-    VueUiLabelExpose,
-};
-
-declare const VueUiLabelBase: DefineComponent<
-    VueUiLabelProps,
-    {},
-    {},
-    {},
-    {},
-    {},
-    {},
-    VueUiLabelEmits
->;
-
-export const VueUiLabel: typeof VueUiLabelBase & {
-    new (): VueUiLabelExpose & {
-        $slots: {
-            after: (props: VueUiLabelSlotProps) => VNodeChild;
-            before: (props: VueUiLabelSlotProps) => VNodeChild;
-            title: (props: VueUiLabelSlotProps) => VNodeChild;
-            content: (props: VueUiLabelSlotProps) => VNodeChild;
-        };
-    };
-};
-
-export default VueUiLabel;
-export { VueUiLabel };
+export { VueUiLabel, VueUiLabel as default } from 'vue-data-ui';

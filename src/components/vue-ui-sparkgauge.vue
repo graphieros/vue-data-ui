@@ -1,4 +1,5 @@
 <script setup>
+import { resolveChartConfig } from '../resolveChartConfig';
 import {
     computed,
     defineAsyncComponent,
@@ -8,7 +9,7 @@ import {
     watch,
     onBeforeUnmount,
 } from 'vue';
-import { useNestedProp } from '../useNestedProp';
+
 import {
     applyDataLabel,
     checkNaN,
@@ -24,7 +25,6 @@ import {
 import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 import { useLoading } from '../useLoading';
-import { useThemeCheck } from '../useThemeCheck';
 import { useChartAccessibility } from '../useChartAccessibility';
 import { usePrefersReducedMotion } from '../usePrefersMotion';
 import themes from '../themes/vue_ui_sparkgauge.json';
@@ -36,7 +36,6 @@ const PackageVersion = defineAsyncComponent(
 );
 
 const { vue_ui_sparkgauge: DEFAULT_CONFIG } = useConfig();
-const { isThemeValid, warnInvalidTheme } = useThemeCheck();
 const prefersReducedMotion = usePrefersReducedMotion();
 
 const animationFrameId = ref(null);
@@ -131,30 +130,7 @@ const { svgRef } = useChartAccessibility({
 });
 
 function prepareConfig() {
-    const mergedConfig = useNestedProp({
-        userConfig: props.config,
-        defaultConfig: DEFAULT_CONFIG,
-    });
-
-    const theme = mergedConfig.theme;
-    if (!theme) return mergedConfig;
-
-    if (!isThemeValid.value(mergedConfig)) {
-        warnInvalidTheme(mergedConfig);
-        return mergedConfig;
-    }
-
-    const fused = useNestedProp({
-        userConfig: themes[theme] || props.config,
-        defaultConfig: mergedConfig,
-    });
-
-    const finalConfig = useNestedProp({
-        userConfig: props.config,
-        defaultConfig: fused,
-    });
-
-    return finalConfig;
+    return resolveChartConfig(props.config, DEFAULT_CONFIG, themes);
 }
 
 onMounted(() => {

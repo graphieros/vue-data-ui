@@ -1,4 +1,14 @@
 <script setup>
+import { getTableComponent, syncTableVisibility } from '../tableIntegration';
+import {
+    annotationSlotNames,
+    getAnnotationSlotProps,
+} from '../annotationSlots';
+import {
+    getUserOptionSlots,
+    getUserOptionSlotProps,
+} from '../userOptionsSlots';
+import { resolveChartConfig } from '../resolveChartConfig';
 import {
     computed,
     defineAsyncComponent,
@@ -35,8 +45,7 @@ import { useConfig } from '../useConfig';
 import { useLoading } from '../useLoading';
 import { usePrinter } from '../usePrinter';
 import { useResponsive } from '../useResponsive';
-import { useNestedProp } from '../useNestedProp';
-import { useThemeCheck } from '../useThemeCheck';
+
 import { useChartExport } from '../useChartExport';
 import { useUserOptionState } from '../useUserOptionState';
 import { useChartAccessibility } from '../useChartAccessibility';
@@ -66,7 +75,6 @@ const BaseDraggableDialog = defineAsyncComponent(
 );
 
 const { vue_ui_age_pyramid: DEFAULT_CONFIG } = useConfig();
-const { isThemeValid, warnInvalidTheme } = useThemeCheck();
 
 const props = defineProps({
     config: {
@@ -206,30 +214,7 @@ const { svgRef } = useChartAccessibility({
 });
 
 function prepareConfig() {
-    const mergedConfig = useNestedProp({
-        userConfig: props.config,
-        defaultConfig: DEFAULT_CONFIG,
-    });
-
-    const theme = mergedConfig.theme;
-    if (!theme) return mergedConfig;
-
-    if (!isThemeValid.value(mergedConfig)) {
-        warnInvalidTheme(mergedConfig);
-        return mergedConfig;
-    }
-
-    const fused = useNestedProp({
-        userConfig: themes[theme] || props.config,
-        defaultConfig: mergedConfig,
-    });
-
-    const finalConfig = useNestedProp({
-        userConfig: props.config,
-        defaultConfig: fused,
-    });
-
-    return finalConfig;
+    return resolveChartConfig(props.config, DEFAULT_CONFIG, themes);
 }
 
 function stringifyStructuralConfig(cfg) {
@@ -838,54 +823,23 @@ useTimeLabelCollision({
     rotation: style.value.layout.dataLabels.xAxis.autoRotate.angle,
 });
 
-const tableComponent = computed(() => {
-    const useDialog =
-        FINAL_CONFIG.value.table.useDialog && !FINAL_CONFIG.value.table.show;
-    const open = mutableConfig.value.showTable;
-    return {
-        component: useDialog ? BaseDraggableDialog : Accordion,
-        title: `${style.value.title.text}${style.value.title.subtitle.text ? `: ${style.value.title.subtitle.text}` : ''}`,
-        props: useDialog
-            ? {
-                  backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
-                  color: FINAL_CONFIG.value.table.th.color,
-                  headerColor: FINAL_CONFIG.value.table.th.color,
-                  headerBg: FINAL_CONFIG.value.table.th.backgroundColor,
-                  isFullscreen: isFullscreen.value,
-                  fullscreenParent: agePyramid.value,
-                  forcedWidth: Math.min(800, window.innerWidth * 0.8),
-                  isCursorPointer: isCursorPointer.value,
-              }
-            : {
-                  hideDetails: true,
-                  config: {
-                      open,
-                      maxHeight: 10000,
-                      body: {
-                          backgroundColor: style.value.backgroundColor,
-                          color: style.value.color,
-                      },
-                      head: {
-                          backgroundColor: style.value.backgroundColor,
-                          color: style.value.color,
-                      },
-                  },
-              },
-    };
-});
+const tableComponent = computed(() =>
+    getTableComponent({
+        config: FINAL_CONFIG,
+        style: style,
+        mutableConfig,
+        dialog: BaseDraggableDialog,
+        accordion: Accordion,
+        isFullscreen,
+        parent: agePyramid,
+        maxWidth: 800,
+        isCursorPointer,
+    }),
+);
 
 watch(
     () => mutableConfig.value.showTable,
-    (v) => {
-        if (FINAL_CONFIG.value.table.show) return;
-        if (v && FINAL_CONFIG.value.table.useDialog && tableUnit.value) {
-            tableUnit.value.open();
-        } else {
-            if ('close' in tableUnit.value) {
-                tableUnit.value.close();
-            }
-        }
-    },
+    (v) => syncTableVisibility(v, FINAL_CONFIG, tableUnit),
 );
 
 function closeTable() {
@@ -1068,23 +1022,14 @@ defineExpose({
             :palette="FINAL_CONFIG.userOptions.annotatorPalette"
             @close="toggleAnnotator"
         >
-            <template #annotator-action-close>
-                <slot name="annotator-action-close" />
-            </template>
-            <template #annotator-action-color="{ color }">
-                <slot name="annotator-action-color" v-bind="{ color }" />
-            </template>
-            <template #annotator-action-draw="{ mode }">
-                <slot name="annotator-action-draw" v-bind="{ mode }" />
-            </template>
-            <template #annotator-action-undo="{ disabled }">
-                <slot name="annotator-action-undo" v-bind="{ disabled }" />
-            </template>
-            <template #annotator-action-redo="{ disabled }">
-                <slot name="annotator-action-redo" v-bind="{ disabled }" />
-            </template>
-            <template #annotator-action-delete="{ disabled }">
-                <slot name="annotator-action-delete" v-bind="{ disabled }" />
+            <template
+                v-for="slotName in annotationSlotNames"
+                #[slotName]="slotProps"
+            >
+                <slot
+                    :name="slotName"
+                    v-bind="getAnnotationSlotProps(slotName, slotProps)"
+                />
             </template>
         </PenAndPaper>
 
@@ -1167,57 +1112,17 @@ defineExpose({
                     : 'visible',
             }"
         >
-            <template #menuIcon="{ isOpen, color }" v-if="$slots.menuIcon">
-                <slot name="menuIcon" v-bind="{ isOpen, color }" />
-            </template>
-            <template #optionTooltip v-if="$slots.optionTooltip">
-                <slot name="optionTooltip" />
-            </template>
-            <template #optionPdf v-if="$slots.optionPdf">
-                <slot name="optionPdf" />
-            </template>
-            <template #optionCsv v-if="$slots.optionCsv">
-                <slot name="optionCsv" />
-            </template>
-            <template #optionImg v-if="$slots.optionImg">
-                <slot name="optionImg" />
-            </template>
-            <template #optionSvg v-if="$slots.optionSvg">
-                <slot name="optionSvg" />
-            </template>
-            <template #optionTable v-if="$slots.optionTable">
-                <slot name="optionTable" />
-            </template>
             <template
-                v-if="$slots.optionFullscreen"
-                template
-                #optionFullscreen="{ toggleFullscreen, isFullscreen }"
+                v-for="slotName in getUserOptionSlots(
+                    $slots,
+                    'menuIcon optionTooltip optionPdf optionCsv optionImg optionSvg optionTable optionFullscreen optionAnnotator optionAltCopy custom-menu-before custom-menu-after',
+                )"
+                #[slotName]="slotProps"
             >
                 <slot
-                    name="optionFullscreen"
-                    v-bind="{ toggleFullscreen, isFullscreen }"
+                    :name="slotName"
+                    v-bind="getUserOptionSlotProps(slotName, slotProps)"
                 />
-            </template>
-            <template
-                v-if="$slots.optionAnnotator"
-                #optionAnnotator="{ toggleAnnotator, isAnnotator }"
-            >
-                <slot
-                    name="optionAnnotator"
-                    v-bind="{ toggleAnnotator, isAnnotator }"
-                />
-            </template>
-            <template
-                v-if="$slots.optionAltCopy"
-                #optionAltCopy="{ altCopy: c }"
-            >
-                <slot name="optionAltCopy" v-bind="{ altCopy: c }" />
-            </template>
-            <template #custom-menu-before v-if="$slots['custom-menu-before']">
-                <slot name="custom-menu-before" />
-            </template>
-            <template #custom-menu-after v-if="$slots['custom-menu-after']">
-                <slot name="custom-menu-after" />
             </template>
         </UserOptions>
 

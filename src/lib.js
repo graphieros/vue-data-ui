@@ -3195,6 +3195,22 @@ export function placeXYTag({ svgElement, x, y, element, position }) {
     };
 }
 
+export function stringifyStyleConfig(cfg) {
+    const clonedConfig = deepClone(cfg);
+    if (clonedConfig?.style) {
+        delete clonedConfig.style.tooltip;
+    }
+    return JSON.stringify(clonedConfig);
+}
+
+export function stringifyChartConfig(cfg) {
+    const clonedConfig = deepClone(cfg);
+    if (clonedConfig?.style?.chart) {
+        delete clonedConfig.style.chart.tooltip;
+    }
+    return JSON.stringify(clonedConfig);
+}
+
 export function deepClone(value, seen = new WeakMap()) {
     if (isRef(value)) {
         return deepClone(value.value, seen);

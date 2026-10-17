@@ -1,3 +1,12 @@
+import type { Ref } from 'vue';
+import type {
+    Point,
+    VueDataUiWordCloudTransformCallback,
+    VueUiWordCloudDatasetItem,
+    Theme,
+    VueDataUiConfigKey,
+} from 'vue-data-ui';
+
 //--------------------------------------------------------------------------------------------//
 
 /**

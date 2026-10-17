@@ -1,6 +1,4 @@
-import type { DefineComponent, VNodeChild } from 'vue';
-
-import type {
+export type {
     VueUi3dBarConfig,
     VueUi3dBarDataset,
     VueUi3dBarExpose,
@@ -25,69 +23,4 @@ import type {
     VueUi3dBarEmitCopyAlt,
 } from 'vue-data-ui';
 
-export type {
-    VueUi3dBarConfig,
-    VueUi3dBarDataset,
-    VueUi3dBarExpose,
-    VueUi3dBarDatapoint,
-    VueUi3dBarDatasetBreakdown,
-    VueUi3dBarEvent,
-    VueUi3dBarProps,
-    VueUiAnnotatorActionColorSlotProps,
-    VueUiAnnotatorActionDrawSlotProps,
-    VueUiAnnotatorActionUndoSlotProps,
-    VueUiAnnotatorActionRedoSlotProps,
-    VueUiAnnotatorActionDeleteSlotProps,
-    VueUiMenuIconSlotProps,
-    VueUiOptionFullscreenSlotProps,
-    VueUiOptionAnnotatorSlotProps,
-    VueUi3dBarLegendSlotProps,
-    VueUi3dBarSvgSlotProps,
-    VueUiWatermarkSlotProps,
-    CommonAnnotatorSlots,
-    VueUi3dBarEmits,
-    VueUi3dBarEmitSelectDatapoint,
-    VueUi3dBarEmitCopyAlt,
-};
-
-declare const VueUi3dBarBase: DefineComponent<
-    VueUi3dBarProps,
-    {},
-    {},
-    {},
-    {},
-    {},
-    {},
-    VueUi3dBarEmits
->;
-
-export const VueUi3dBar: typeof VueUi3dBarBase & {
-    new (): VueUi3dBarExpose & {
-        $slots: CommonAnnotatorSlots & {
-            ['custom-menu-before']?: () => VNodeChild;
-            ['custom-menu-after']?: () => VNodeChild;
-            menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
-            optionPdf?: () => VNodeChild;
-            optionCsv?: () => VNodeChild;
-            optionImg?: () => VNodeChild;
-            optionSvg?: () => VNodeChild;
-            optionTable?: () => VNodeChild;
-            optionFullscreen?: (
-                props: VueUiOptionFullscreenSlotProps,
-            ) => VNodeChild;
-            optionAnnotator?: (
-                props: VueUiOptionAnnotatorSlotProps,
-            ) => VNodeChild;
-            optionAltCopy?: () => VNodeChild;
-            ['chart-background']?: () => VNodeChild;
-            legend?: (props: VueUi3dBarLegendSlotProps) => VNodeChild;
-            svg?: (props: VueUi3dBarSvgSlotProps) => VNodeChild;
-            watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
-            source?: () => VNodeChild;
-            skeleton?: () => VNodeChild;
-        };
-    };
-};
-
-export default VueUi3dBar;
-export { VueUi3dBar };
+export { VueUi3dBar, VueUi3dBar as default } from 'vue-data-ui';

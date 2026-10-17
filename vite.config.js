@@ -4,6 +4,7 @@ import vue from '@vitejs/plugin-vue';
 import removeAttr from 'remove-attr';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import { themeModules } from './build-plugins/themeModules.js';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
@@ -289,6 +290,7 @@ const entries = {
 export default defineConfig({
     plugins: [
         vue(),
+        themeModules(__dirname),
         removeAttr({
             extensions: ['vue'],
             attributes: prod ? ['data-cy'] : [],
@@ -338,12 +340,22 @@ export default defineConfig({
             },
             formats: ['es'],
         },
-        rollupOptions: {
+        rolldownOptions: {
             external: ['vue', 'jspdf'],
             input: entries,
             output: {
                 exports: 'named',
                 globals: { vue: 'Vue' },
+                // Compact ES library output without dropping consumer tree-shaking hints.
+                minify: {
+                    compress: true,
+                    mangle: true,
+                    codegen: true,
+                },
+                comments: {
+                    annotation: true,
+                    legal: true,
+                },
             },
         },
         types: [

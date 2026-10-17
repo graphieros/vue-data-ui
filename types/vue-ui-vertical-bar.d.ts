@@ -1,5 +1,3 @@
-import type { DefineComponent } from 'vue';
-
 export type {
     VueUiVerticalBarConfig,
     VueUiVerticalBarDatapoint,
@@ -10,13 +8,4 @@ export type {
     VueUiVerticalBarEvent,
 } from 'vue-data-ui';
 
-declare const VueUiVerticalBar: DefineComponent<
-    {
-        config?: VueUiVerticalBarConfig;
-        dataset: VueUiVerticalBarDatasetItem[];
-    },
-    VueUiVerticalBarExpose
->;
-
-export default VueUiVerticalBar;
-export { VueUiVerticalBar };
+export { VueUiVerticalBar, VueUiVerticalBar as default } from 'vue-data-ui';

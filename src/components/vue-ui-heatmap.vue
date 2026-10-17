@@ -1,4 +1,13 @@
 <script setup>
+import { getTableComponent } from '../tableIntegration';
+import {
+    annotationSlotNames,
+    getAnnotationSlotProps,
+} from '../annotationSlots';
+import {
+    getUserOptionSlots,
+    getUserOptionSlotProps,
+} from '../userOptionsSlots';
 import {
     computed,
     defineAsyncComponent,
@@ -13,13 +22,13 @@ import {
     watchEffect,
 } from 'vue';
 import {
+    stringifyStyleConfig as stringifyStructuralConfig,
     adaptColorToBackground,
     applyDataLabel,
     checkNaN,
     createCsvContent,
     createUid,
     dataLabel,
-    deepClone,
     downloadCsv,
     error,
     functionReturnsString,
@@ -256,15 +265,6 @@ function prepareConfig() {
     }
 
     return finalConfig;
-}
-
-function stringifyStructuralConfig(cfg) {
-    const clonedConfig = deepClone(cfg);
-    if (clonedConfig?.style) {
-        delete clonedConfig.style.tooltip;
-        // Add more properties here if they should not recompute the svg
-    }
-    return JSON.stringify(clonedConfig);
 }
 
 let previousStructuralConfig = stringifyStructuralConfig(props.config);
@@ -1168,43 +1168,19 @@ useTimeLabelCollision({
     height: HEIGHT,
 });
 
-const tableComponent = computed(() => {
-    const useDialog =
-        FINAL_CONFIG.value.table.useDialog && !FINAL_CONFIG.value.table.show;
-    const open = mutableConfig.value.showTable;
-    return {
-        component: useDialog ? BaseDraggableDialog : Accordion,
-        title: `${FINAL_CONFIG.value.style.title.text}${FINAL_CONFIG.value.style.title.subtitle.text ? `: ${FINAL_CONFIG.value.style.title.subtitle.text}` : ''}`,
-        props: useDialog
-            ? {
-                  backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
-                  color: FINAL_CONFIG.value.table.th.color,
-                  headerColor: FINAL_CONFIG.value.table.th.color,
-                  headerBg: FINAL_CONFIG.value.table.th.backgroundColor,
-                  isFullscreen: isFullscreen.value,
-                  fullscreenParent: heatmapChart.value,
-                  forcedWidth: Math.min(800, window.innerWidth * 0.8),
-                  isCursorPointer: isCursorPointer.value,
-              }
-            : {
-                  hideDetails: true,
-                  config: {
-                      open,
-                      maxHeight: 10000,
-                      body: {
-                          backgroundColor:
-                              FINAL_CONFIG.value.style.backgroundColor,
-                          color: FINAL_CONFIG.value.style.color,
-                      },
-                      head: {
-                          backgroundColor:
-                              FINAL_CONFIG.value.style.backgroundColor,
-                          color: FINAL_CONFIG.value.style.color,
-                      },
-                  },
-              },
-    };
-});
+const tableComponent = computed(() =>
+    getTableComponent({
+        config: FINAL_CONFIG,
+        style: { value: FINAL_CONFIG.value.style },
+        mutableConfig,
+        dialog: BaseDraggableDialog,
+        accordion: Accordion,
+        isFullscreen,
+        parent: heatmapChart,
+        maxWidth: 800,
+        isCursorPointer,
+    }),
+);
 
 watch(
     () => mutableConfig.value.showTable,
@@ -1605,23 +1581,14 @@ defineExpose({
             :palette="FINAL_CONFIG.userOptions.annotatorPalette"
             @close="toggleAnnotator"
         >
-            <template #annotator-action-close>
-                <slot name="annotator-action-close" />
-            </template>
-            <template #annotator-action-color="{ color }">
-                <slot name="annotator-action-color" v-bind="{ color }" />
-            </template>
-            <template #annotator-action-draw="{ mode }">
-                <slot name="annotator-action-draw" v-bind="{ mode }" />
-            </template>
-            <template #annotator-action-undo="{ disabled }">
-                <slot name="annotator-action-undo" v-bind="{ disabled }" />
-            </template>
-            <template #annotator-action-redo="{ disabled }">
-                <slot name="annotator-action-redo" v-bind="{ disabled }" />
-            </template>
-            <template #annotator-action-delete="{ disabled }">
-                <slot name="annotator-action-delete" v-bind="{ disabled }" />
+            <template
+                v-for="slotName in annotationSlotNames"
+                #[slotName]="slotProps"
+            >
+                <slot
+                    :name="slotName"
+                    v-bind="getAnnotationSlotProps(slotName, slotProps)"
+                />
             </template>
         </PenAndPaper>
 
@@ -1705,57 +1672,17 @@ defineExpose({
                     : 'visible',
             }"
         >
-            <template #menuIcon="{ isOpen, color }" v-if="$slots.menuIcon">
-                <slot name="menuIcon" v-bind="{ isOpen, color }" />
-            </template>
-            <template #optionTooltip v-if="$slots.optionTooltip">
-                <slot name="optionTooltip" />
-            </template>
-            <template #optionPdf v-if="$slots.optionPdf">
-                <slot name="optionPdf" />
-            </template>
-            <template #optionCsv v-if="$slots.optionCsv">
-                <slot name="optionCsv" />
-            </template>
-            <template #optionImg v-if="$slots.optionImg">
-                <slot name="optionImg" />
-            </template>
-            <template #optionSvg v-if="$slots.optionSvg">
-                <slot name="optionSvg" />
-            </template>
-            <template #optionTable v-if="$slots.optionTable">
-                <slot name="optionTable" />
-            </template>
             <template
-                v-if="$slots.optionFullscreen"
-                template
-                #optionFullscreen="{ toggleFullscreen, isFullscreen }"
+                v-for="slotName in getUserOptionSlots(
+                    $slots,
+                    'menuIcon optionTooltip optionPdf optionCsv optionImg optionSvg optionTable optionFullscreen optionAnnotator optionAltCopy custom-menu-before custom-menu-after',
+                )"
+                #[slotName]="slotProps"
             >
                 <slot
-                    name="optionFullscreen"
-                    v-bind="{ toggleFullscreen, isFullscreen }"
+                    :name="slotName"
+                    v-bind="getUserOptionSlotProps(slotName, slotProps)"
                 />
-            </template>
-            <template
-                v-if="$slots.optionAnnotator"
-                #optionAnnotator="{ toggleAnnotator, isAnnotator }"
-            >
-                <slot
-                    name="optionAnnotator"
-                    v-bind="{ toggleAnnotator, isAnnotator }"
-                />
-            </template>
-            <template
-                v-if="$slots.optionAltCopy"
-                #optionAltCopy="{ altCopy: c }"
-            >
-                <slot name="optionAltCopy" v-bind="{ altCopy: c }" />
-            </template>
-            <template #custom-menu-before v-if="$slots['custom-menu-before']">
-                <slot name="custom-menu-before" />
-            </template>
-            <template #custom-menu-after v-if="$slots['custom-menu-after']">
-                <slot name="custom-menu-after" />
             </template>
         </UserOptions>
 

@@ -1,6 +1,4 @@
-import type { DefineComponent, VNodeChild } from 'vue';
-
-import type {
+export type {
     VueUiFlowDatasetItem,
     VueUiFlowNode,
     VueUiFlowFormattedDataset,
@@ -13,7 +11,6 @@ import type {
     VueUiAnnotatorActionUndoSlotProps,
     VueUiAnnotatorActionRedoSlotProps,
     VueUiAnnotatorActionDeleteSlotProps,
-    VueUiFlowFormattedDataset,
     VueUiFlowFormattedLink,
     VueUiFlowFormattedNode,
     VueUiMenuIconSlotProps,
@@ -30,77 +27,4 @@ import type {
     VueUiFlowEmitCopyAlt,
 } from 'vue-data-ui';
 
-export type {
-    VueUiFlowDatasetItem,
-    VueUiFlowNode,
-    VueUiFlowFormattedDataset,
-    VueUiFlowConfig,
-    VueUiFlowExpose,
-    VueUiFlowEvent,
-    VueUiFlowProps,
-    VueUiAnnotatorActionColorSlotProps,
-    VueUiAnnotatorActionDrawSlotProps,
-    VueUiAnnotatorActionUndoSlotProps,
-    VueUiAnnotatorActionRedoSlotProps,
-    VueUiAnnotatorActionDeleteSlotProps,
-    VueUiFlowFormattedDataset,
-    VueUiFlowFormattedLink,
-    VueUiFlowFormattedNode,
-    VueUiMenuIconSlotProps,
-    VueUiOptionFullscreenSlotProps,
-    VueUiOptionAnnotatorSlotProps,
-    VueUiFlowSvgSlotProps,
-    VueUiKeyboardNavigationHintSlotProps,
-    VueUiWatermarkSlotProps,
-    VueUiFlowLegendItem,
-    VueUiFlowLegendSlotProps,
-    VueUiFlowTooltipSlotProps,
-    CommonAnnotatorSlots,
-    VueUiFlowEmits,
-    VueUiFlowEmitCopyAlt,
-};
-
-declare const VueUiFlowBase: DefineComponent<
-    VueUiFlowProps,
-    {},
-    {},
-    {},
-    {},
-    {},
-    {},
-    VueUiFlowEmits
->;
-
-export const VueUiFlow: typeof VueUiFlowBase & {
-    new (): VueUiFlowExpose & {
-        $slots: CommonAnnotatorSlots & {
-            ['custom-menu-before']?: () => VNodeChild;
-            ['custom-menu-after']?: () => VNodeChild;
-            menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
-            optionTooltip?: () => VNodeChild;
-            optionPdf?: () => VNodeChild;
-            optionCsv?: () => VNodeChild;
-            optionImg?: () => VNodeChild;
-            optionSvg?: () => VNodeChild;
-            optionTable?: () => VNodeChild;
-            optionFullscreen?: (
-                props: VueUiOptionFullscreenSlotProps,
-            ) => VNodeChild;
-            optionAnnotator?: (
-                props: VueUiOptionAnnotatorSlotProps,
-            ) => VNodeChild;
-            optionAltCopy?: () => VNodeChild;
-            ['chart-background']?: () => VNodeChild;
-            svg?: (props: VueUiFlowSvgSlotProps) => VNodeChild;
-            hint?: (props: VueUiKeyboardNavigationHintSlotProps) => VNodeChild;
-            watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
-            legend?: (props: VueUiFlowLegendSlotProps) => VNodeChild;
-            source?: () => VNodeChild;
-            skeleton?: () => VNodeChild;
-            tooltip?: (props: c) => VNodeChild;
-        };
-    };
-};
-
-export default VueUiFlow;
-export { VueUiFlow };
+export { VueUiFlow, VueUiFlow as default } from 'vue-data-ui';

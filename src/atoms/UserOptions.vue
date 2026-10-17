@@ -731,6 +731,182 @@ onBeforeUnmount(() => {
         drawerRef.value.removeEventListener('toggle', syncFromPopoverToggle);
     }
 });
+
+// Keep stable keys so toggling one control does not remount the other slots.
+const optionActions = computed(() => [
+    {
+        key: 'pdf',
+        visible: props.hasPdf,
+        slot: 'optionPdf',
+        testId: 'user-options-pdf',
+        run: generatePdf,
+        icon: 'filePdf',
+        alternate: props.isPrinting,
+        alternateIcon: 'hourglass',
+        spin: true,
+    },
+    {
+        key: 'csv',
+        visible: props.hasXls,
+        slot: 'optionCsv',
+        testId: 'user-options-xls',
+        run: generateCsv,
+        icon: 'fileCsv',
+    },
+    {
+        key: 'img',
+        visible: props.hasImg,
+        slot: 'optionImg',
+        testId: 'user-options-img',
+        run: generateImage,
+        icon: 'filePng',
+        alternate: props.isImaging,
+        alternateIcon: 'hourglass',
+        spin: true,
+    },
+    {
+        key: 'svg',
+        visible: props.hasSvg,
+        slot: 'optionSvg',
+        testId: 'user-options-svg',
+        run: generateSvg,
+        icon: 'fileSvg',
+    },
+    {
+        key: 'tooltip',
+        visible: props.hasTooltip,
+        slot: 'optionTooltip',
+        testId: 'user-options-tooltip',
+        run: toggleTooltip,
+        icon: 'tooltipDisabled',
+        alternate: isItTooltip.value,
+        alternateIcon: 'tooltip',
+    },
+    {
+        key: 'table',
+        visible: props.hasTable,
+        slot: 'optionTable',
+        testId: 'user-options-table',
+        run: toggleTable,
+        icon: isTableOpen.value ? 'tableClose' : 'tableOpen',
+        alternate: props.tableDialog,
+        alternateIcon: isTableOpen.value
+            ? 'tableDialogClose'
+            : 'tableDialogOpen',
+    },
+    {
+        key: 'labels',
+        visible: props.hasLabel,
+        slot: 'optionLabels',
+        testId: 'user-options-label',
+        run: toggleLabels,
+        icon: isLabel.value ? 'labelClose' : 'labelOpen',
+    },
+    {
+        key: 'sort',
+        visible: props.hasSort,
+        slot: 'optionSort',
+        testId: 'user-options-sort',
+        run: toggleSort,
+        icon: 'sort',
+    },
+    {
+        key: 'stack',
+        visible: props.hasStack,
+        slot: 'optionStack',
+        testId: 'user-options-stack',
+        run: toggleStack,
+        icon: 'stack',
+        alternate: isItStacked.value,
+        alternateIcon: 'unstack',
+        slotProps: { first: { name: 'isStack', value: isItStacked.value } },
+    },
+    {
+        key: 'fullscreen',
+        visible: props.hasFullscreen,
+        slot: 'optionFullscreen',
+        testId: 'user-options-fullscreen',
+        run: () => toggleFullscreen(props.isFullscreen ? 'out' : 'in'),
+        icon: 'fullscreen',
+        alternate: props.isFullscreen,
+        alternateIcon: 'exitFullscreen',
+        slotProps: {
+            first: { name: 'toggleFullscreen', value: toggleFullscreen },
+            second: { name: 'isFullscreen', value: props.isFullscreen },
+        },
+    },
+    {
+        key: 'zoom',
+        visible: props.hasZoom,
+        slot: 'optionZoom',
+        testId: 'user-options-fullscreen',
+        run: () => toggleZoom(),
+        icon: 'zoomLock',
+        alternate: props.isZoom,
+        alternateIcon: 'zoomUnlock',
+        slotProps: {
+            first: { name: 'toggleZoom', value: toggleZoom },
+            second: { name: 'isZoomLocked', value: !props.isZoom },
+        },
+    },
+    {
+        key: 'animation',
+        visible: props.hasAnimation,
+        slot: 'optionAnimation',
+        testId: 'user-options-anim',
+        run: toggleAnimation,
+        icon: 'pause',
+        alternate: isAnimated.value,
+        alternateIcon: 'play',
+        slotProps: {
+            first: { name: 'toggleAnimation', value: toggleAnimation },
+            second: { name: 'isAnimated', value: isAnimated.value },
+        },
+    },
+    {
+        key: 'annotator',
+        visible: props.hasAnnotator,
+        slot: 'optionAnnotator',
+        testId: 'user-options-annotator',
+        run: toggleAnnotator,
+        icon: 'annotator',
+        alternate: isAnnotator.value,
+        alternateIcon: 'annotatorDisabled',
+        slotProps: {
+            first: { name: 'toggleAnnotator', value: toggleAnnotator },
+            second: { name: 'isAnnotator', value: isAnnotator.value },
+        },
+    },
+    {
+        key: 'altCopy',
+        visible: props.hasAltCopy,
+        slot: 'optionAltCopy',
+        testId: 'user-options-alt-copy',
+        run: copyAlt,
+        icon: 'accessibility',
+        slotProps: { first: { name: 'copyAlt', value: copyAlt } },
+    },
+]);
+
+function getInfoClass(key) {
+    const sides = {
+        'button-info-left': props.position === 'left',
+        'button-info-right': props.position === 'right',
+    };
+    const left = props.position === 'left' && isInfo.value[key];
+    const right = props.position === 'right' && isInfo.value[key];
+    return key === 'tooltip'
+        ? {
+              ...sides,
+              'button-info-left-visible': left,
+              'button-info-right-visible': right,
+          }
+        : {
+              ...sides,
+              'button-info-right-visible': right,
+              'button-info-left-visible': left,
+          };
+}
 </script>
 
 <template>
@@ -795,635 +971,77 @@ onBeforeUnmount(() => {
                       }`
             "
         >
-            <!-- Action buttons are duplicated in both branches, but we can live with that -->
-            <!-- PDF -->
+            <!-- Preserve each menu branch while sharing its action definitions. -->
             <slot name="custom-menu-before" />
-            <button
-                tabindex="0"
-                v-if="hasPdf"
-                data-cy="user-options-pdf"
-                class="vue-ui-user-options-button"
-                @click="generatePdf"
-                @mouseenter="isInfo.pdf = true"
-                @mouseout="isInfo.pdf = false"
-                :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }"
-            >
-                <template v-if="$slots.optionPdf">
-                    <slot name="optionPdf" />
-                </template>
-                <template v-else>
-                    <BaseIcon
-                        v-if="isPrinting"
-                        name="hourglass"
-                        isSpin
-                        :stroke="color"
-                        style="pointer-events: none"
-                    />
-                    <BaseIcon
-                        v-else
-                        name="filePdf"
-                        :stroke="color"
-                        style="pointer-events: none"
-                    />
-                </template>
-                <div
-                    data-cy="uo-tooltip"
-                    dir="auto"
-                    v-if="isDesktop && titles.pdf"
-                    :class="{
-                        'button-info-left': position === 'left',
-                        'button-info-right': position === 'right',
-                        'button-info-right-visible':
-                            position === 'right' && isInfo.pdf,
-                        'button-info-left-visible':
-                            position === 'left' && isInfo.pdf,
-                    }"
-                    :style="{ background: backgroundColor, color: color }"
+            <template v-for="action in optionActions" :key="action.key">
+                <button
+                    v-if="action.visible"
+                    tabindex="0"
+                    :data-cy="action.testId"
+                    class="vue-ui-user-options-button"
+                    @click="action.run"
+                    @mouseenter="isInfo[action.key] = true"
+                    @mouseout="isInfo[action.key] = false"
+                    :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }"
                 >
-                    {{ titles.pdf }}
-                </div>
-            </button>
-
-            <!-- CSV -->
-            <button
-                tabindex="0"
-                v-if="hasXls"
-                data-cy="user-options-xls"
-                class="vue-ui-user-options-button"
-                @click="generateCsv"
-                @mouseenter="isInfo.csv = true"
-                @mouseout="isInfo.csv = false"
-                :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }"
-            >
-                <template v-if="$slots.optionCsv">
-                    <slot name="optionCsv" />
-                </template>
-                <template v-else>
-                    <BaseIcon
-                        name="fileCsv"
-                        :stroke="color"
-                        style="pointer-events: none"
-                    />
-                </template>
-                <div
-                    data-cy="uo-tooltip"
-                    dir="auto"
-                    v-if="isDesktop && titles.csv"
-                    :class="{
-                        'button-info-left': position === 'left',
-                        'button-info-right': position === 'right',
-                        'button-info-right-visible':
-                            position === 'right' && isInfo.csv,
-                        'button-info-left-visible':
-                            position === 'left' && isInfo.csv,
-                    }"
-                    :style="{ background: backgroundColor, color: color }"
-                >
-                    {{ titles.csv }}
-                </div>
-            </button>
-
-            <!-- PNG -->
-            <button
-                tabindex="0"
-                v-if="hasImg"
-                data-cy="user-options-img"
-                class="vue-ui-user-options-button"
-                @click="generateImage"
-                @mouseenter="isInfo.img = true"
-                @mouseout="isInfo.img = false"
-                :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }"
-            >
-                <template v-if="$slots.optionImg">
-                    <slot name="optionImg" />
-                </template>
-                <template v-else>
-                    <BaseIcon
-                        v-if="isImaging"
-                        name="hourglass"
-                        isSpin
-                        :stroke="color"
-                        style="pointer-events: none"
-                    />
-                    <BaseIcon
-                        v-else
-                        name="filePng"
-                        :stroke="color"
-                        style="pointer-events: none"
-                    />
-                </template>
-                <div
-                    data-cy="uo-tooltip"
-                    dir="auto"
-                    v-if="isDesktop && titles.img"
-                    :class="{
-                        'button-info-left': position === 'left',
-                        'button-info-right': position === 'right',
-                        'button-info-right-visible':
-                            position === 'right' && isInfo.img,
-                        'button-info-left-visible':
-                            position === 'left' && isInfo.img,
-                    }"
-                    :style="{ background: backgroundColor, color: color }"
-                >
-                    {{ titles.img }}
-                </div>
-            </button>
-
-            <!-- SVG -->
-            <button
-                tabindex="0"
-                v-if="hasSvg"
-                data-cy="user-options-svg"
-                class="vue-ui-user-options-button"
-                @click="generateSvg"
-                @mouseenter="isInfo.svg = true"
-                @mouseout="isInfo.svg = false"
-                :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }"
-            >
-                <template v-if="$slots.optionSvg">
-                    <slot name="optionSvg" />
-                </template>
-                <template v-else>
-                    <BaseIcon
-                        name="fileSvg"
-                        :stroke="color"
-                        style="pointer-events: none"
-                    />
-                </template>
-                <div
-                    data-cy="uo-tooltip"
-                    dir="auto"
-                    v-if="isDesktop && titles.svg"
-                    :class="{
-                        'button-info-left': position === 'left',
-                        'button-info-right': position === 'right',
-                        'button-info-right-visible':
-                            position === 'right' && isInfo.svg,
-                        'button-info-left-visible':
-                            position === 'left' && isInfo.svg,
-                    }"
-                    :style="{ background: backgroundColor, color: color }"
-                >
-                    {{ titles.svg }}
-                </div>
-            </button>
-
-            <!-- TOOLTIP -->
-            <button
-                tabindex="0"
-                v-if="hasTooltip"
-                data-cy="user-options-tooltip"
-                class="vue-ui-user-options-button"
-                @click="toggleTooltip"
-                @mouseenter="isInfo.tooltip = true"
-                @mouseout="isInfo.tooltip = false"
-                :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }"
-            >
-                <template v-if="$slots.optionTooltip">
-                    <slot name="optionTooltip" />
-                </template>
-                <template v-else>
-                    <BaseIcon
-                        v-if="isItTooltip"
-                        name="tooltip"
-                        :stroke="color"
-                        style="pointer-events: none"
-                    />
-                    <BaseIcon
-                        v-else
-                        name="tooltipDisabled"
-                        :stroke="color"
-                        style="pointer-events: none"
-                    />
-                </template>
-                <div
-                    data-cy="uo-tooltip"
-                    dir="auto"
-                    v-if="isDesktop && titles.tooltip"
-                    :class="{
-                        'button-info-left': position === 'left',
-                        'button-info-right': position === 'right',
-                        'button-info-left-visible':
-                            position === 'left' && isInfo.tooltip,
-                        'button-info-right-visible':
-                            position === 'right' && isInfo.tooltip,
-                    }"
-                    :style="{ background: backgroundColor, color: color }"
-                >
-                    {{ titles.tooltip }}
-                </div>
-            </button>
-
-            <!-- TABLE -->
-            <button
-                tabindex="0"
-                v-if="hasTable"
-                data-cy="user-options-table"
-                class="vue-ui-user-options-button"
-                @click="toggleTable"
-                @mouseenter="isInfo.table = true"
-                @mouseout="isInfo.table = false"
-                :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }"
-            >
-                <template v-if="$slots.optionTable">
-                    <slot name="optionTable" />
-                </template>
-                <template v-else>
-                    <BaseIcon
-                        v-if="tableDialog"
-                        :name="
-                            isTableOpen ? 'tableDialogClose' : 'tableDialogOpen'
+                    <!-- Explicit bindings avoid Vue adding ref_for to slot props inside v-for. -->
+                    <template v-if="$slots[action.slot]">
+                        <template v-if="!action.slotProps">
+                            <slot :name="action.slot" />
+                        </template>
+                        <template v-else-if="!action.slotProps.second">
+                            <slot
+                                :name="action.slot"
+                                :[action.slotProps.first.name]="
+                                    action.slotProps.first.value
+                                "
+                            />
+                        </template>
+                        <template v-else>
+                            <slot
+                                :name="action.slot"
+                                :[action.slotProps.first.name]="
+                                    action.slotProps.first.value
+                                "
+                                :[action.slotProps.second.name]="
+                                    action.slotProps.second.value
+                                "
+                            />
+                        </template>
+                    </template>
+                    <template v-else>
+                        <BaseIcon
+                            v-if="action.alternate"
+                            :name="action.alternateIcon"
+                            :isSpin="action.spin"
+                            :stroke="color"
+                            style="pointer-events: none"
+                        />
+                        <BaseIcon
+                            v-else
+                            :name="action.icon"
+                            :stroke="color"
+                            style="pointer-events: none"
+                        />
+                    </template>
+                    <div
+                        data-cy="uo-tooltip"
+                        dir="auto"
+                        v-if="
+                            isDesktop &&
+                            titles[
+                                action.key === 'animation'
+                                    ? 'fullscreen'
+                                    : action.key
+                            ]
                         "
-                        :stroke="color"
-                        style="pointer-events: none"
-                    />
-                    <BaseIcon
-                        v-else
-                        :name="isTableOpen ? 'tableClose' : 'tableOpen'"
-                        :stroke="color"
-                        style="pointer-events: none"
-                    />
-                </template>
-                <div
-                    data-cy="uo-tooltip"
-                    dir="auto"
-                    v-if="isDesktop && titles.table"
-                    :class="{
-                        'button-info-left': position === 'left',
-                        'button-info-right': position === 'right',
-                        'button-info-right-visible':
-                            position === 'right' && isInfo.table,
-                        'button-info-left-visible':
-                            position === 'left' && isInfo.table,
-                    }"
-                    :style="{ background: backgroundColor, color: color }"
-                >
-                    {{ titles.table }}
-                </div>
-            </button>
-
-            <!-- LABELS -->
-            <button
-                tabindex="0"
-                v-if="hasLabel"
-                data-cy="user-options-label"
-                class="vue-ui-user-options-button"
-                @click="toggleLabels"
-                @mouseenter="isInfo.labels = true"
-                @mouseout="isInfo.labels = false"
-                :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }"
-            >
-                <template v-if="$slots.optionLabels">
-                    <slot name="optionLabels" />
-                </template>
-                <template v-else>
-                    <BaseIcon
-                        :name="isLabel ? 'labelClose' : 'labelOpen'"
-                        :stroke="color"
-                        style="pointer-events: none"
-                    />
-                </template>
-                <div
-                    data-cy="uo-tooltip"
-                    dir="auto"
-                    v-if="isDesktop && titles.labels"
-                    :class="{
-                        'button-info-left': position === 'left',
-                        'button-info-right': position === 'right',
-                        'button-info-right-visible':
-                            position === 'right' && isInfo.labels,
-                        'button-info-left-visible':
-                            position === 'left' && isInfo.labels,
-                    }"
-                    :style="{ background: backgroundColor, color: color }"
-                >
-                    {{ titles.labels }}
-                </div>
-            </button>
-
-            <!-- SORT -->
-            <button
-                tabindex="0"
-                v-if="hasSort"
-                data-cy="user-options-sort"
-                class="vue-ui-user-options-button"
-                @click="toggleSort"
-                @mouseenter="isInfo.sort = true"
-                @mouseout="isInfo.sort = false"
-                :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }"
-            >
-                <template v-if="$slots.optionSort">
-                    <slot name="optionSort" />
-                </template>
-                <template v-else>
-                    <BaseIcon
-                        name="sort"
-                        :stroke="color"
-                        style="pointer-events: none"
-                    />
-                </template>
-                <div
-                    data-cy="uo-tooltip"
-                    dir="auto"
-                    v-if="isDesktop && titles.sort"
-                    :class="{
-                        'button-info-left': position === 'left',
-                        'button-info-right': position === 'right',
-                        'button-info-right-visible':
-                            position === 'right' && isInfo.sort,
-                        'button-info-left-visible':
-                            position === 'left' && isInfo.sort,
-                    }"
-                    :style="{ background: backgroundColor, color: color }"
-                >
-                    {{ titles.sort }}
-                </div>
-            </button>
-
-            <!-- STACK -->
-            <button
-                tabindex="0"
-                v-if="hasStack"
-                data-cy="user-options-stack"
-                class="vue-ui-user-options-button"
-                @click="toggleStack"
-                @mouseenter="isInfo.stack = true"
-                @mouseout="isInfo.stack = false"
-                :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }"
-            >
-                <template v-if="$slots.optionStack">
-                    <slot
-                        name="optionStack"
-                        v-bind="{ isStack: isItStacked }"
-                    />
-                </template>
-                <template v-else>
-                    <BaseIcon
-                        v-if="isItStacked"
-                        name="unstack"
-                        :stroke="color"
-                        style="pointer-events: none"
-                    />
-                    <BaseIcon
-                        v-else
-                        name="stack"
-                        :stroke="color"
-                        style="pointer-events: none"
-                    />
-                </template>
-                <div
-                    data-cy="uo-tooltip"
-                    dir="auto"
-                    v-if="isDesktop && titles.stack"
-                    :class="{
-                        'button-info-left': position === 'left',
-                        'button-info-right': position === 'right',
-                        'button-info-right-visible':
-                            position === 'right' && isInfo.stack,
-                        'button-info-left-visible':
-                            position === 'left' && isInfo.stack,
-                    }"
-                    :style="{ background: backgroundColor, color: color }"
-                >
-                    {{ titles.stack }}
-                </div>
-            </button>
-
-            <!-- FULLSCREEN -->
-            <button
-                tabindex="0"
-                v-if="hasFullscreen"
-                data-cy="user-options-fullscreen"
-                class="vue-ui-user-options-button"
-                @mouseenter="isInfo.fullscreen = true"
-                @mouseout="isInfo.fullscreen = false"
-                @click="toggleFullscreen(isFullscreen ? 'out' : 'in')"
-                :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }"
-            >
-                <template v-if="$slots.optionFullscreen">
-                    <slot
-                        name="optionFullscreen"
-                        v-bind="{ toggleFullscreen, isFullscreen }"
-                    />
-                </template>
-                <template v-else>
-                    <BaseIcon
-                        v-if="isFullscreen"
-                        name="exitFullscreen"
-                        :stroke="color"
-                        style="pointer-events: none"
-                    />
-                    <BaseIcon
-                        v-else
-                        name="fullscreen"
-                        :stroke="color"
-                        style="pointer-events: none"
-                    />
-                </template>
-                <div
-                    data-cy="uo-tooltip"
-                    dir="auto"
-                    v-if="isDesktop && titles.fullscreen"
-                    :class="{
-                        'button-info-left': position === 'left',
-                        'button-info-right': position === 'right',
-                        'button-info-right-visible':
-                            position === 'right' && isInfo.fullscreen,
-                        'button-info-left-visible':
-                            position === 'left' && isInfo.fullscreen,
-                    }"
-                    :style="{ background: backgroundColor, color: color }"
-                >
-                    {{ titles.fullscreen }}
-                </div>
-            </button>
-
-            <!-- ZOOM -->
-            <button
-                tabindex="0"
-                v-if="hasZoom"
-                data-cy="user-options-fullscreen"
-                class="vue-ui-user-options-button"
-                @mouseenter="isInfo.zoom = true"
-                @mouseout="isInfo.zoom = false"
-                @click="toggleZoom()"
-                :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }"
-            >
-                <template v-if="$slots.optionZoom">
-                    <slot
-                        name="optionZoom"
-                        v-bind="{ toggleZoom, isZoomLocked: !isZoom }"
-                    />
-                </template>
-                <template v-else>
-                    <BaseIcon
-                        v-if="isZoom"
-                        name="zoomUnlock"
-                        :stroke="color"
-                        style="pointer-events: none"
-                    />
-                    <BaseIcon
-                        v-else
-                        name="zoomLock"
-                        :stroke="color"
-                        style="pointer-events: none"
-                    />
-                </template>
-                <div
-                    data-cy="uo-tooltip"
-                    dir="auto"
-                    v-if="isDesktop && titles.zoom"
-                    :class="{
-                        'button-info-left': position === 'left',
-                        'button-info-right': position === 'right',
-                        'button-info-right-visible':
-                            position === 'right' && isInfo.zoom,
-                        'button-info-left-visible':
-                            position === 'left' && isInfo.zoom,
-                    }"
-                    :style="{ background: backgroundColor, color: color }"
-                >
-                    {{ titles.zoom }}
-                </div>
-            </button>
-
-            <!-- ANIMATION -->
-            <button
-                tabindex="0"
-                v-if="hasAnimation"
-                data-cy="user-options-anim"
-                class="vue-ui-user-options-button"
-                @mouseenter="isInfo.animation = true"
-                @mouseout="isInfo.animation = false"
-                @click="toggleAnimation"
-                :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }"
-            >
-                <template v-if="$slots.optionAnimation">
-                    <slot
-                        name="optionAnimation"
-                        v-bind="{ toggleAnimation, isAnimated }"
-                    />
-                </template>
-                <template v-else>
-                    <BaseIcon
-                        v-if="isAnimated"
-                        name="play"
-                        :stroke="color"
-                        style="pointer-events: none"
-                    />
-                    <BaseIcon
-                        v-else
-                        name="pause"
-                        :stroke="color"
-                        style="pointer-events: none"
-                    />
-                </template>
-                <div
-                    data-cy="uo-tooltip"
-                    dir="auto"
-                    v-if="isDesktop && titles.fullscreen"
-                    :class="{
-                        'button-info-left': position === 'left',
-                        'button-info-right': position === 'right',
-                        'button-info-right-visible':
-                            position === 'right' && isInfo.animation,
-                        'button-info-left-visible':
-                            position === 'left' && isInfo.animation,
-                    }"
-                    :style="{ background: backgroundColor, color: color }"
-                >
-                    {{ titles.animation }}
-                </div>
-            </button>
-
-            <!-- ANNOTATOR -->
-            <button
-                tabindex="0"
-                v-if="hasAnnotator"
-                data-cy="user-options-annotator"
-                class="vue-ui-user-options-button"
-                @mouseenter="isInfo.annotator = true"
-                @mouseout="isInfo.annotator = false"
-                @click="toggleAnnotator"
-                :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }"
-            >
-                <template v-if="$slots.optionAnnotator">
-                    <slot
-                        name="optionAnnotator"
-                        v-bind="{ toggleAnnotator, isAnnotator }"
-                    />
-                </template>
-                <template v-else>
-                    <BaseIcon
-                        v-if="isAnnotator"
-                        name="annotatorDisabled"
-                        :stroke="color"
-                        style="pointer-events: none"
-                    />
-                    <BaseIcon
-                        v-else
-                        name="annotator"
-                        :stroke="color"
-                        style="pointer-events: none"
-                    />
-                </template>
-                <div
-                    data-cy="uo-tooltip"
-                    dir="auto"
-                    v-if="isDesktop && titles.annotator"
-                    :class="{
-                        'button-info-left': position === 'left',
-                        'button-info-right': position === 'right',
-                        'button-info-right-visible':
-                            position === 'right' && isInfo.annotator,
-                        'button-info-left-visible':
-                            position === 'left' && isInfo.annotator,
-                    }"
-                    :style="{ background: backgroundColor, color: color }"
-                >
-                    {{ titles.annotator }}
-                </div>
-            </button>
-
-            <!-- ALT COPY -->
-            <button
-                tabindex="0"
-                v-if="hasAltCopy"
-                data-cy="user-options-alt-copy"
-                class="vue-ui-user-options-button"
-                @mouseenter="isInfo.altCopy = true"
-                @mouseout="isInfo.altCopy = false"
-                @click="copyAlt"
-                :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }"
-            >
-                <template v-if="$slots.optionAltCopy">
-                    <slot name="optionAltCopy" v-bind="{ copyAlt }" />
-                </template>
-                <template v-else>
-                    <BaseIcon
-                        name="accessibility"
-                        :stroke="color"
-                        style="pointer-events: none"
-                    />
-                </template>
-                <div
-                    data-cy="uo-tooltip"
-                    dir="auto"
-                    v-if="isDesktop && titles.altCopy"
-                    :class="{
-                        'button-info-left': position === 'left',
-                        'button-info-right': position === 'right',
-                        'button-info-right-visible':
-                            position === 'right' && isInfo.altCopy,
-                        'button-info-left-visible':
-                            position === 'left' && isInfo.altCopy,
-                    }"
-                    :style="{ background: backgroundColor, color: color }"
-                >
-                    {{ titles.altCopy }}
-                </div>
-            </button>
+                        :class="getInfoClass(action.key)"
+                        :style="{ background: backgroundColor, color: color }"
+                    >
+                        {{ titles[action.key] }}
+                    </div>
+                </button>
+            </template>
             <slot name="custom-menu-after" />
         </div>
     </div>
@@ -1464,607 +1082,80 @@ onBeforeUnmount(() => {
             :class="{ 'vue-ui-user-options-drawer': true }"
             :style="`background:${backgroundColor}; ${position === 'right' ? `right: ${offsetX ? offsetX : noOffset ? 0 : 4}px` : `left: ${noOffset ? 0 : 4}px`}`"
         >
-            <!-- Action buttons are duplicated in both branches, but we can live with that -->
+            <!-- Preserve the fallback branch’s existing action behavior. -->
             <slot name="custom-menu-before" />
-            <button
-                tabindex="0"
-                v-if="hasPdf"
-                data-cy="user-options-pdf"
-                class="vue-ui-user-options-button"
-                @click="generatePdf"
-                @mouseenter="isInfo.pdf = true"
-                @mouseout="isInfo.pdf = false"
-            >
-                <template v-if="$slots.optionPdf">
-                    <slot name="optionPdf" />
-                </template>
-                <template v-else>
-                    <BaseIcon
-                        v-if="isPrinting"
-                        name="hourglass"
-                        isSpin
-                        :stroke="color"
-                        style="pointer-events: none"
-                    />
-                    <BaseIcon
-                        v-else
-                        name="filePdf"
-                        :stroke="color"
-                        style="pointer-events: none"
-                    />
-                </template>
-                <div
-                    data-cy="uo-tooltip"
-                    dir="auto"
-                    v-if="isDesktop && titles.pdf"
-                    :class="{
-                        'button-info-left': position === 'left',
-                        'button-info-right': position === 'right',
-                        'button-info-right-visible':
-                            position === 'right' && isInfo.pdf,
-                        'button-info-left-visible':
-                            position === 'left' && isInfo.pdf,
-                    }"
-                    :style="{ background: backgroundColor, color: color }"
+            <template v-for="action in optionActions" :key="action.key">
+                <button
+                    v-if="action.visible"
+                    tabindex="0"
+                    :data-cy="action.testId"
+                    class="vue-ui-user-options-button"
+                    @click="
+                        action.key === 'altCopy'
+                            ? toggleAnnotator()
+                            : action.run($event)
+                    "
+                    @mouseenter="isInfo[action.key] = true"
+                    @mouseout="isInfo[action.key] = false"
                 >
-                    {{ titles.pdf }}
-                </div>
-            </button>
-
-            <button
-                tabindex="0"
-                v-if="hasXls"
-                data-cy="user-options-xls"
-                class="vue-ui-user-options-button"
-                @click="generateCsv"
-                @mouseenter="isInfo.csv = true"
-                @mouseout="isInfo.csv = false"
-            >
-                <template v-if="$slots.optionCsv">
-                    <slot name="optionCsv" />
-                </template>
-                <template v-else>
-                    <BaseIcon
-                        name="fileCsv"
-                        :stroke="color"
-                        style="pointer-events: none"
-                    />
-                </template>
-                <div
-                    data-cy="uo-tooltip"
-                    dir="auto"
-                    v-if="isDesktop && titles.csv"
-                    :class="{
-                        'button-info-left': position === 'left',
-                        'button-info-right': position === 'right',
-                        'button-info-right-visible':
-                            position === 'right' && isInfo.csv,
-                        'button-info-left-visible':
-                            position === 'left' && isInfo.csv,
-                    }"
-                    :style="{ background: backgroundColor, color: color }"
-                >
-                    {{ titles.csv }}
-                </div>
-            </button>
-
-            <button
-                tabindex="0"
-                v-if="hasImg"
-                data-cy="user-options-img"
-                class="vue-ui-user-options-button"
-                @click="generateImage"
-                @mouseenter="isInfo.img = true"
-                @mouseout="isInfo.img = false"
-            >
-                <template v-if="$slots.optionImg">
-                    <slot name="optionImg" />
-                </template>
-                <template v-else>
-                    <BaseIcon
-                        v-if="isImaging"
-                        name="hourglass"
-                        isSpin
-                        :stroke="color"
-                        style="pointer-events: none"
-                    />
-                    <BaseIcon
-                        v-else
-                        name="filePng"
-                        :stroke="color"
-                        style="pointer-events: none"
-                    />
-                </template>
-                <div
-                    data-cy="uo-tooltip"
-                    dir="auto"
-                    v-if="isDesktop && titles.img"
-                    :class="{
-                        'button-info-left': position === 'left',
-                        'button-info-right': position === 'right',
-                        'button-info-right-visible':
-                            position === 'right' && isInfo.img,
-                        'button-info-left-visible':
-                            position === 'left' && isInfo.img,
-                    }"
-                    :style="{ background: backgroundColor, color: color }"
-                >
-                    {{ titles.img }}
-                </div>
-            </button>
-
-            <button
-                tabindex="0"
-                v-if="hasSvg"
-                data-cy="user-options-svg"
-                class="vue-ui-user-options-button"
-                @click="generateSvg"
-                @mouseenter="isInfo.svg = true"
-                @mouseout="isInfo.svg = false"
-            >
-                <template v-if="$slots.optionSvg">
-                    <slot name="optionSvg" />
-                </template>
-                <template v-else>
-                    <BaseIcon
-                        name="fileSvg"
-                        :stroke="color"
-                        style="pointer-events: none"
-                    />
-                </template>
-                <div
-                    data-cy="uo-tooltip"
-                    dir="auto"
-                    v-if="isDesktop && titles.svg"
-                    :class="{
-                        'button-info-left': position === 'left',
-                        'button-info-right': position === 'right',
-                        'button-info-right-visible':
-                            position === 'right' && isInfo.svg,
-                        'button-info-left-visible':
-                            position === 'left' && isInfo.svg,
-                    }"
-                    :style="{ background: backgroundColor, color: color }"
-                >
-                    {{ titles.svg }}
-                </div>
-            </button>
-
-            <button
-                tabindex="0"
-                v-if="hasTooltip"
-                data-cy="user-options-tooltip"
-                class="vue-ui-user-options-button"
-                @click="toggleTooltip"
-                @mouseenter="isInfo.tooltip = true"
-                @mouseout="isInfo.tooltip = false"
-            >
-                <template v-if="$slots.optionTooltip">
-                    <slot name="optionTooltip" />
-                </template>
-                <template v-else>
-                    <BaseIcon
-                        v-if="isItTooltip"
-                        name="tooltip"
-                        :stroke="color"
-                        style="pointer-events: none"
-                    />
-                    <BaseIcon
-                        v-else
-                        name="tooltipDisabled"
-                        :stroke="color"
-                        style="pointer-events: none"
-                    />
-                </template>
-                <div
-                    data-cy="uo-tooltip"
-                    dir="auto"
-                    v-if="isDesktop && titles.tooltip"
-                    :class="{
-                        'button-info-left': position === 'left',
-                        'button-info-right': position === 'right',
-                        'button-info-left-visible':
-                            position === 'left' && isInfo.tooltip,
-                        'button-info-right-visible':
-                            position === 'right' && isInfo.tooltip,
-                    }"
-                    :style="{ background: backgroundColor, color: color }"
-                >
-                    {{ titles.tooltip }}
-                </div>
-            </button>
-
-            <button
-                tabindex="0"
-                v-if="hasTable"
-                data-cy="user-options-table"
-                class="vue-ui-user-options-button"
-                @click="toggleTable"
-                @mouseenter="isInfo.table = true"
-                @mouseout="isInfo.table = false"
-            >
-                <template v-if="$slots.optionTable">
-                    <slot name="optionTable" />
-                </template>
-                <template v-else>
-                    <BaseIcon
-                        v-if="tableDialog"
-                        :name="
-                            isTableOpen ? 'tableDialogClose' : 'tableDialogOpen'
+                    <!-- Explicit bindings avoid Vue adding ref_for to slot props inside v-for. -->
+                    <template v-if="$slots[action.slot]">
+                        <template v-if="!action.slotProps">
+                            <slot :name="action.slot" />
+                        </template>
+                        <template v-else-if="!action.slotProps.second">
+                            <slot
+                                :name="action.slot"
+                                :[action.slotProps.first.name]="
+                                    action.slotProps.first.value
+                                "
+                            />
+                        </template>
+                        <template v-else>
+                            <slot
+                                :name="action.slot"
+                                :[action.slotProps.first.name]="
+                                    action.slotProps.first.value
+                                "
+                                :[action.slotProps.second.name]="
+                                    action.slotProps.second.value
+                                "
+                            />
+                        </template>
+                    </template>
+                    <template v-else>
+                        <BaseIcon
+                            v-if="action.alternate"
+                            :name="action.alternateIcon"
+                            :isSpin="action.spin"
+                            :stroke="color"
+                            style="pointer-events: none"
+                        />
+                        <BaseIcon
+                            v-else
+                            :name="action.icon"
+                            :stroke="color"
+                            style="pointer-events: none"
+                        />
+                    </template>
+                    <div
+                        data-cy="uo-tooltip"
+                        dir="auto"
+                        v-if="
+                            isDesktop &&
+                            titles[
+                                action.key === 'animation'
+                                    ? 'fullscreen'
+                                    : action.key
+                            ]
                         "
-                        :stroke="color"
-                        style="pointer-events: none"
-                    />
-                    <BaseIcon
-                        v-else
-                        :name="isTableOpen ? 'tableClose' : 'tableOpen'"
-                        :stroke="color"
-                        style="pointer-events: none"
-                    />
-                </template>
-                <div
-                    data-cy="uo-tooltip"
-                    dir="auto"
-                    v-if="isDesktop && titles.table"
-                    :class="{
-                        'button-info-left': position === 'left',
-                        'button-info-right': position === 'right',
-                        'button-info-right-visible':
-                            position === 'right' && isInfo.table,
-                        'button-info-left-visible':
-                            position === 'left' && isInfo.table,
-                    }"
-                    :style="{ background: backgroundColor, color: color }"
-                >
-                    {{ titles.table }}
-                </div>
-            </button>
-
-            <button
-                tabindex="0"
-                v-if="hasLabel"
-                data-cy="user-options-label"
-                class="vue-ui-user-options-button"
-                @click="toggleLabels"
-                @mouseenter="isInfo.labels = true"
-                @mouseout="isInfo.labels = false"
-            >
-                <template v-if="$slots.optionLabels">
-                    <slot name="optionLabels" />
-                </template>
-                <template v-else>
-                    <BaseIcon
-                        :name="isLabel ? 'labelClose' : 'labelOpen'"
-                        :stroke="color"
-                        style="pointer-events: none"
-                    />
-                </template>
-                <div
-                    data-cy="uo-tooltip"
-                    dir="auto"
-                    v-if="isDesktop && titles.labels"
-                    :class="{
-                        'button-info-left': position === 'left',
-                        'button-info-right': position === 'right',
-                        'button-info-right-visible':
-                            position === 'right' && isInfo.labels,
-                        'button-info-left-visible':
-                            position === 'left' && isInfo.labels,
-                    }"
-                    :style="{ background: backgroundColor, color: color }"
-                >
-                    {{ titles.labels }}
-                </div>
-            </button>
-
-            <button
-                tabindex="0"
-                v-if="hasSort"
-                data-cy="user-options-sort"
-                class="vue-ui-user-options-button"
-                @click="toggleSort"
-                @mouseenter="isInfo.sort = true"
-                @mouseout="isInfo.sort = false"
-            >
-                <template v-if="$slots.optionSort">
-                    <slot name="optionSort" />
-                </template>
-                <template v-else>
-                    <BaseIcon
-                        name="sort"
-                        :stroke="color"
-                        style="pointer-events: none"
-                    />
-                </template>
-                <div
-                    data-cy="uo-tooltip"
-                    dir="auto"
-                    v-if="isDesktop && titles.sort"
-                    :class="{
-                        'button-info-left': position === 'left',
-                        'button-info-right': position === 'right',
-                        'button-info-right-visible':
-                            position === 'right' && isInfo.sort,
-                        'button-info-left-visible':
-                            position === 'left' && isInfo.sort,
-                    }"
-                    :style="{ background: backgroundColor, color: color }"
-                >
-                    {{ titles.sort }}
-                </div>
-            </button>
-
-            <button
-                tabindex="0"
-                v-if="hasStack"
-                data-cy="user-options-stack"
-                class="vue-ui-user-options-button"
-                @click="toggleStack"
-                @mouseenter="isInfo.stack = true"
-                @mouseout="isInfo.stack = false"
-            >
-                <template v-if="$slots.optionStack">
-                    <slot
-                        name="optionStack"
-                        v-bind="{ isStack: isItStacked }"
-                    />
-                </template>
-                <template v-else>
-                    <BaseIcon
-                        v-if="isItStacked"
-                        name="unstack"
-                        :stroke="color"
-                        style="pointer-events: none"
-                    />
-                    <BaseIcon
-                        v-else
-                        name="stack"
-                        :stroke="color"
-                        style="pointer-events: none"
-                    />
-                </template>
-                <div
-                    data-cy="uo-tooltip"
-                    dir="auto"
-                    v-if="isDesktop && titles.stack"
-                    :class="{
-                        'button-info-left': position === 'left',
-                        'button-info-right': position === 'right',
-                        'button-info-right-visible':
-                            position === 'right' && isInfo.stack,
-                        'button-info-left-visible':
-                            position === 'left' && isInfo.stack,
-                    }"
-                    :style="{ background: backgroundColor, color: color }"
-                >
-                    {{ titles.stack }}
-                </div>
-            </button>
-
-            <button
-                tabindex="0"
-                v-if="hasFullscreen"
-                data-cy="user-options-fullscreen"
-                class="vue-ui-user-options-button"
-                @mouseenter="isInfo.fullscreen = true"
-                @mouseout="isInfo.fullscreen = false"
-                @click="toggleFullscreen(isFullscreen ? 'out' : 'in')"
-            >
-                <template v-if="$slots.optionFullscreen">
-                    <slot
-                        name="optionFullscreen"
-                        v-bind="{ toggleFullscreen, isFullscreen }"
-                    />
-                </template>
-                <template v-else>
-                    <BaseIcon
-                        v-if="isFullscreen"
-                        name="exitFullscreen"
-                        :stroke="color"
-                        style="pointer-events: none"
-                    />
-                    <BaseIcon
-                        v-else
-                        name="fullscreen"
-                        :stroke="color"
-                        style="pointer-events: none"
-                    />
-                </template>
-                <div
-                    data-cy="uo-tooltip"
-                    dir="auto"
-                    v-if="isDesktop && titles.fullscreen"
-                    :class="{
-                        'button-info-left': position === 'left',
-                        'button-info-right': position === 'right',
-                        'button-info-right-visible':
-                            position === 'right' && isInfo.fullscreen,
-                        'button-info-left-visible':
-                            position === 'left' && isInfo.fullscreen,
-                    }"
-                    :style="{ background: backgroundColor, color: color }"
-                >
-                    {{ titles.fullscreen }}
-                </div>
-            </button>
-
-            <button
-                tabindex="0"
-                v-if="hasZoom"
-                data-cy="user-options-fullscreen"
-                class="vue-ui-user-options-button"
-                @mouseenter="isInfo.zoom = true"
-                @mouseout="isInfo.zoom = false"
-                @click="toggleZoom()"
-            >
-                <template v-if="$slots.optionZoom">
-                    <slot
-                        name="optionZoom"
-                        v-bind="{ toggleZoom, isZoomLocked: !isZoom }"
-                    />
-                </template>
-                <template v-else>
-                    <BaseIcon
-                        v-if="isZoom"
-                        name="zoomUnlock"
-                        :stroke="color"
-                        style="pointer-events: none"
-                    />
-                    <BaseIcon
-                        v-else
-                        name="zoomLock"
-                        :stroke="color"
-                        style="pointer-events: none"
-                    />
-                </template>
-                <div
-                    data-cy="uo-tooltip"
-                    dir="auto"
-                    v-if="isDesktop && titles.zoom"
-                    :class="{
-                        'button-info-left': position === 'left',
-                        'button-info-right': position === 'right',
-                        'button-info-right-visible':
-                            position === 'right' && isInfo.zoom,
-                        'button-info-left-visible':
-                            position === 'left' && isInfo.zoom,
-                    }"
-                    :style="{ background: backgroundColor, color: color }"
-                >
-                    {{ titles.zoom }}
-                </div>
-            </button>
-
-            <button
-                tabindex="0"
-                v-if="hasAnimation"
-                data-cy="user-options-anim"
-                class="vue-ui-user-options-button"
-                @mouseenter="isInfo.animation = true"
-                @mouseout="isInfo.animation = false"
-                @click="toggleAnimation"
-            >
-                <template v-if="$slots.optionAnimation">
-                    <slot
-                        name="optionAnimation"
-                        v-bind="{ toggleAnimation, isAnimated }"
-                    />
-                </template>
-                <template v-else>
-                    <BaseIcon
-                        v-if="isAnimated"
-                        name="play"
-                        :stroke="color"
-                        style="pointer-events: none"
-                    />
-                    <BaseIcon
-                        v-else
-                        name="pause"
-                        :stroke="color"
-                        style="pointer-events: none"
-                    />
-                </template>
-                <div
-                    data-cy="uo-tooltip"
-                    dir="auto"
-                    v-if="isDesktop && titles.fullscreen"
-                    :class="{
-                        'button-info-left': position === 'left',
-                        'button-info-right': position === 'right',
-                        'button-info-right-visible':
-                            position === 'right' && isInfo.animation,
-                        'button-info-left-visible':
-                            position === 'left' && isInfo.animation,
-                    }"
-                    :style="{ background: backgroundColor, color: color }"
-                >
-                    {{ titles.animation }}
-                </div>
-            </button>
-
-            <button
-                tabindex="0"
-                v-if="hasAnnotator"
-                data-cy="user-options-annotator"
-                class="vue-ui-user-options-button"
-                @mouseenter="isInfo.annotator = true"
-                @mouseout="isInfo.annotator = false"
-                @click="toggleAnnotator"
-            >
-                <template v-if="$slots.optionAnnotator">
-                    <slot
-                        name="optionAnnotator"
-                        v-bind="{ toggleAnnotator, isAnnotator }"
-                    />
-                </template>
-                <template v-else>
-                    <BaseIcon
-                        v-if="isAnnotator"
-                        name="annotatorDisabled"
-                        :stroke="color"
-                        style="pointer-events: none"
-                    />
-                    <BaseIcon
-                        v-else
-                        name="annotator"
-                        :stroke="color"
-                        style="pointer-events: none"
-                    />
-                </template>
-                <div
-                    data-cy="uo-tooltip"
-                    dir="auto"
-                    v-if="isDesktop && titles.annotator"
-                    :class="{
-                        'button-info-left': position === 'left',
-                        'button-info-right': position === 'right',
-                        'button-info-right-visible':
-                            position === 'right' && isInfo.annotator,
-                        'button-info-left-visible':
-                            position === 'left' && isInfo.annotator,
-                    }"
-                    :style="{ background: backgroundColor, color: color }"
-                >
-                    {{ titles.annotator }}
-                </div>
-            </button>
-
-            <button
-                tabindex="0"
-                v-if="hasAltCopy"
-                data-cy="user-options-alt-copy"
-                class="vue-ui-user-options-button"
-                @mouseenter="isInfo.altCopy = true"
-                @mouseout="isInfo.altCopy = false"
-                @click="toggleAnnotator"
-            >
-                <template v-if="$slots.optionAltCopy">
-                    <slot name="optionAltCopy" v-bind="{ copyAlt }" />
-                </template>
-                <template v-else>
-                    <BaseIcon
-                        name="accessibility"
-                        :stroke="color"
-                        style="pointer-events: none"
-                    />
-                </template>
-                <div
-                    data-cy="uo-tooltip"
-                    dir="auto"
-                    v-if="isDesktop && titles.altCopy"
-                    :class="{
-                        'button-info-left': position === 'left',
-                        'button-info-right': position === 'right',
-                        'button-info-right-visible':
-                            position === 'right' && isInfo.altCopy,
-                        'button-info-left-visible':
-                            position === 'left' && isInfo.altCopy,
-                    }"
-                    :style="{ background: backgroundColor, color: color }"
-                >
-                    {{ titles.altCopy }}
-                </div>
-            </button>
+                        :class="getInfoClass(action.key)"
+                        :style="{ background: backgroundColor, color: color }"
+                    >
+                        {{ titles[action.key] }}
+                    </div>
+                </button>
+            </template>
             <slot name="custom-menu-actions" />
         </div>
     </div>
