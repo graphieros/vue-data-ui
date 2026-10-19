@@ -7,6 +7,7 @@ const cleanup = [];
 afterEach(() => {
     cleanup.splice(0).forEach((fn) => fn());
     vi.unstubAllGlobals();
+    vi.restoreAllMocks();
 });
 async function mount(config = {}, dataset = { nodes: [], links: [] }, slots) {
     const props = reactive({
@@ -48,6 +49,25 @@ async function mount(config = {}, dataset = { nodes: [], links: [] }, slots) {
     };
 }
 
+it('supports opt-in developer hints with the shared no-advice fallback', async () => {
+    const info = vi.spyOn(console, 'info').mockImplementation(() => {});
+    const m = await mount({}, { nodes: [{ id: 'a', fixed: true }], links: [] });
+    expect(info).not.toHaveBeenCalled();
+    m.props.config.devHints = { enable: true };
+    await nextTick();
+    expect(info).toHaveBeenCalledTimes(1);
+    expect(info.mock.calls[0][0]).toContain('VueUiGraph');
+    expect(info.mock.calls[0][0]).toContain('There is no advice available');
+    m.props.config.debug = true;
+    await nextTick();
+    expect(info).toHaveBeenCalledTimes(1);
+    m.props.config.devHints.enable = false;
+    await nextTick();
+    m.props.config.devHints.enable = true;
+    await nextTick();
+    expect(info).toHaveBeenCalledTimes(2);
+});
+
 it('shows a noninteractive skeleton for empty data and restores real data and config', async () => {
     const m = await mount({
         style: { chart: { nodes: { colorByGroup: false, color: '#123456' } } },
@@ -78,6 +98,28 @@ it('shows a noninteractive skeleton for empty data and restores real data and co
     m.props.dataset = { nodes: [], links: [] };
     await nextTick();
     expect(m.el.querySelector('.vue-data-ui-scanner')).not.toBeNull();
+});
+
+it('renders the source slot below the chart with automatic text direction', async () => {
+    const m = await mount(
+        {},
+        {
+            nodes: [{ id: 'a', fixed: true }],
+            links: [],
+        },
+        {
+            source: () =>
+                h('span', { class: 'graph-source' }, 'Source: sample data'),
+        },
+    );
+    const source = m.el.querySelector('.graph-source');
+    expect(source.textContent).toBe('Source: sample data');
+    expect(source.parentElement.getAttribute('dir')).toBe('auto');
+    expect(source.closest('svg')).toBeNull();
+    expect(
+        m.el.querySelector('svg').compareDocumentPosition(source) &
+            Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
 });
 
 it('supports explicit loading, skeleton overrides, and the skeleton slot', async () => {

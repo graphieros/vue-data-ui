@@ -180,6 +180,11 @@ function zoom(viewport: VueUiGraphViewport) {
             /></template>
             <template #custom-menu-before><code>BEFORE</code></template>
             <template #custom-menu-after><code>AFTER</code></template>
+            <template #source>
+                <div style="text-align: center; padding: 8px">
+                    Source: sample graph data
+                </div>
+            </template>
             <template #hint="{ hint, isVisible }"
                 ><KeyboardNavigationHint :hint :is-visible="isVisible"
             /></template>

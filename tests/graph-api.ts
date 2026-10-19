@@ -20,6 +20,7 @@ const config: VueUiGraphConfig = {
         },
     },
     theme: 'hack',
+    devHints: { enable: false },
     skeletonDataset: { nodes: [{ id: 'placeholder' }], links: [] },
     skeletonConfig: { tooltip: { show: false } },
     interaction: { zoom: { fitOnDoubleClick: false } },

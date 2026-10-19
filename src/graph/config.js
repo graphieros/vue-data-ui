@@ -12,6 +12,7 @@ export const graphDefaults = {
     skeletonDataset: null,
     skeletonConfig: null,
     debug: false,
+    devHints: { enable: false },
     customPalette: [],
     events: {
         datapointEnter: null,

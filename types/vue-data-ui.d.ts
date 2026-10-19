@@ -42,6 +42,7 @@ declare module 'vue-data-ui' {
     }) => void;
 
     export type VueUiGraphConfig = {
+        devHints?: DevHints;
         skeletonDataset?: VueUiGraphDataset;
         skeletonConfig?: VueUiGraphConfig;
         events?: {
@@ -315,6 +316,7 @@ declare module 'vue-data-ui' {
                     height: number;
                 }) => VNodeChild;
                 skeleton?: () => VNodeChild;
+                source?: () => VNodeChild;
             };
         };
     };

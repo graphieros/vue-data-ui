@@ -15,6 +15,7 @@ import {
 import { useConfig } from '../useConfig';
 import { createUid, createTSpansFromLineBreaksOnX, treeShake } from '../lib';
 import { useLoading } from '../useLoading';
+import { COMMON_RULES, useHints } from '../useHints';
 import BaseScanner from '../atoms/BaseScanner.vue';
 import { graphSkeletonDataset, graphSkeletonConfig } from '../graph/loading';
 import { resolveChartConfigWithPalette } from '../resolveChartConfig';
@@ -96,6 +97,14 @@ const preparedConfig = computed(() =>
 );
 
 const config = ref(preparedConfig.value);
+
+useHints({
+    config: () => config.value,
+    dataset: () => props.dataset,
+    component: 'VueUiGraph',
+    rules: [COMMON_RULES.noHint],
+});
+
 const skeletonConfig = computed(() =>
     treeShake({
         defaultConfig: treeShake({
@@ -2478,6 +2487,9 @@ defineExpose({
             @resetZoom="resetZoom"
             @fitToView="fitToView()"
         />
+        <div v-if="$slots.source" dir="auto">
+            <slot name="source" />
+        </div>
         <div
             v-if="graph.nodes.length && mutableConfig.showTable"
             class="vue-ui-graph-table-container"
