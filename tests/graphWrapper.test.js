@@ -10,7 +10,10 @@ it('loads through the universal wrapper and forwards graph methods and events', 
             h(VueDataUi, {
                 component: 'VueUiGraph',
                 dataset: { nodes: [{ id: 'a' }], links: [] },
-                config: { animation: { enabled: false }, layout: { iterations: 0 } },
+                config: {
+                    animation: { enabled: false },
+                    layout: { iterations: 0 },
+                },
                 onSelectNode: (n) => (selected = n),
                 ref: (r) => (api = r),
             }),

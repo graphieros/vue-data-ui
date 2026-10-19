@@ -80,16 +80,21 @@ async function mount(reduced = false) {
         },
     };
 }
-it.each([true, false])('fits on double click only when fitOnDoubleClick is %s', async (enabled) => {
-    const m = await mount(true);
-    m.props.config.interaction = { zoom: { fitOnDoubleClick: enabled } };
-    await nextTick();
-    const before = m.view();
-    m.el.querySelector('svg').dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
-    await nextTick();
-    if (enabled) expect(m.view()).not.toEqual(before);
-    else expect(m.view()).toEqual(before);
-});
+it.each([true, false])(
+    'fits on double click only when fitOnDoubleClick is %s',
+    async (enabled) => {
+        const m = await mount(true);
+        m.props.config.interaction = { zoom: { fitOnDoubleClick: enabled } };
+        await nextTick();
+        const before = m.view();
+        m.el
+            .querySelector('svg')
+            .dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
+        await nextTick();
+        if (enabled) expect(m.view()).not.toEqual(before);
+        else expect(m.view()).toEqual(before);
+    },
+);
 
 it('eases control zoom over frames and keeps the center anchored', async () => {
     const m = await mount();

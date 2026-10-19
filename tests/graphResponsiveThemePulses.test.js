@@ -33,7 +33,9 @@ async function mount(extra = {}) {
         layout: { iterations: 0 },
         userOptions: { show: false },
         tooltip: { show: false },
-        style: { chart: { width: 800, height: 600, controls: { show: false } } },
+        style: {
+            chart: { width: 800, height: 600, controls: { show: false } },
+        },
         ...extra,
     });
     const app = createApp({
@@ -84,7 +86,12 @@ it('tracks parent dimensions in both directions and subtracts chart chrome', asy
     );
     const m = await mount({
         style: {
-            chart: { width: 800, height: 600, controls: { show: false }, title: { text: 'Network' } },
+            chart: {
+                width: 800,
+                height: 600,
+                controls: { show: false },
+                title: { text: 'Network' },
+            },
         },
     });
     expect(m.observed).toContain(m.el);
