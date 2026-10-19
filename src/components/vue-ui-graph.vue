@@ -22,6 +22,7 @@ import { resolveChartConfigWithPalette } from '../resolveChartConfig';
 import { normalizeGraph, tickGraph } from '../graph/engine';
 import { prepareGraphLayout } from '../graph/layout';
 import { advancePulse, batchPulses } from '../graph/pulses';
+import { isHighlightedLink } from '../graph/highlight';
 import {
     linkGeometry,
     batchLinks,
@@ -204,6 +205,7 @@ let disposed = false;
 let suppressClick = false;
 let gesture = null;
 let suppressRestoredFocus = false;
+let keyboardInput = true;
 let resumeLayoutAfterAnnotation = false;
 
 const initialLayoutReady = ref(false);
@@ -245,9 +247,9 @@ const pulseLinks = computed(() => {
     if (!pulses.showOnHover) return pulses.show ? geometry.value : [];
     if (hovered.value === null) return [];
     return geometry.value.filter(
-        ({ link }) =>
-            link.source.id === hovered.value ||
-            link.target.id === hovered.value,
+        ({ link }) => isHighlightedLink(link, hovered.value,
+            config.value.interaction.highlight.neighbors
+                ? graph.value.adjacency.get(hovered.value) : undefined),
     );
 });
 
@@ -265,6 +267,7 @@ const pulseBatches = computed(() =>
         chart.value.links.pulses,
         isHighlighting.value ? highlightId.value : null,
         dim.value,
+        config.value.interaction.highlight.neighbors ? highlightedNeighbors.value : undefined,
     ),
 );
 
@@ -339,12 +342,8 @@ const highlightedLinks = computed(() =>
         ? []
         : batchLinks(
               geometry.value,
-              (link) =>
-                  link.source.id === highlightId.value ||
-                  link.target.id === highlightId.value ||
-                  (config.value.interaction.highlight.neighbors &&
-                      highlightedNeighbors.value.has(link.source.id) &&
-                      highlightedNeighbors.value.has(link.target.id)),
+              (link) => isHighlightedLink(link, highlightId.value,
+                  config.value.interaction.highlight.neighbors ? highlightedNeighbors.value : undefined),
           ),
 );
 
@@ -355,12 +354,8 @@ const hoveredArrowBatches = computed(() => {
     const related = graph.value.adjacency.get(id) || new Set();
     return batchLinks(
         geometry.value,
-        (link) =>
-            link.source.id === id ||
-            link.target.id === id ||
-            (config.value.interaction.highlight.neighbors &&
-                related.has(link.source.id) &&
-                related.has(link.target.id)),
+        (link) => isHighlightedLink(link, id,
+            config.value.interaction.highlight.neighbors ? related : undefined),
     );
 });
 
@@ -500,6 +495,7 @@ function canvasClick(e) {
 }
 
 function keyboardFocus() {
+    if (!keyboardInput) return;
     if (isAnnotator.value || !graph.value.nodes.length) return;
     if (suppressRestoredFocus) return;
     isFocus.value = true;
@@ -1587,10 +1583,17 @@ function visibilityChange() {
 }
 
 function keyboardIntent(e) {
+    if (!['Shift', 'Control', 'Alt', 'Meta'].includes(e.key)) keyboardInput = true;
     if (e.key === 'Tab') suppressRestoredFocus = false;
 }
 
+function pointerIntent() {
+    keyboardInput = false;
+    isFocus.value = false;
+}
+
 function focusIndividualNode(n) {
+    if (!keyboardInput) return;
     if (suppressRestoredFocus) return;
     keyboardNode.value = n.id;
     hover(n);
@@ -1613,6 +1616,7 @@ onMounted(() => {
     window.addEventListener('blur', suspendInteraction);
     document.addEventListener('visibilitychange', visibilityChange);
     document.addEventListener('keydown', keyboardIntent, true);
+    document.addEventListener('pointerdown', pointerIntent, true);
     document.addEventListener('fullscreenchange', nativeFullscreenChange);
     restart();
 });
@@ -1629,6 +1633,7 @@ onBeforeUnmount(() => {
     window.removeEventListener('blur', suspendInteraction);
     document.removeEventListener('visibilitychange', visibilityChange);
     document.removeEventListener('keydown', keyboardIntent, true);
+    document.removeEventListener('pointerdown', pointerIntent, true);
     document.removeEventListener('fullscreenchange', nativeFullscreenChange);
     media?.removeEventListener?.('change', motionChange);
     pointers.clear();

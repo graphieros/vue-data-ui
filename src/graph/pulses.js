@@ -1,4 +1,6 @@
-export function batchPulses(geometry, settings, highlightId = null, dim = 1) {
+import { isHighlightedLink } from './highlight';
+
+export function batchPulses(geometry, settings, highlightId = null, dim = 1, related) {
     const batches = new Map();
     for (const item of geometry) {
         const color = settings.colorBySource
@@ -6,8 +8,7 @@ export function batchPulses(geometry, settings, highlightId = null, dim = 1) {
             : settings.color || item.color;
         const unrelated =
             highlightId !== null &&
-            item.link.source.id !== highlightId &&
-            item.link.target.id !== highlightId;
+            !isHighlightedLink(item.link, highlightId, related);
         const opacity = settings.opacity * (unrelated ? dim : 1);
         const key = JSON.stringify([color, opacity]);
         if (!batches.has(key))
