@@ -26,6 +26,7 @@ const config: VueUiGraphConfig = {
     performance: { nodeBatchThreshold: 0 },
     style: {
         chart: {
+            links: { arrows: { showOnHover: true } },
             controls: { position: 'bottom', fontSize: 14 },
             nodes: {
                 stroke: '#FFFFFF',

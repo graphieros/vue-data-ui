@@ -101,7 +101,7 @@ declare module 'vue-data-ui' {
                     width?: number;
                     widthByValue?: boolean;
                     maxWidth?: number;
-                    arrows?: { show?: boolean };
+                    arrows?: { show?: boolean; showOnHover?: boolean };
                     pulses?: {
                         show?: boolean;
                         showOnHover?: boolean;

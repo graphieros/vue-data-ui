@@ -239,9 +239,7 @@ it('caps dense neighborhood labels and preserves selected border priority', asyn
         new MouseEvent('click', { bubbles: true, clientX: 400, clientY: 300 }),
     );
     await nextTick();
-    expect(
-        m.el.querySelectorAll('.vue-ui-graph-nodes-batched text'),
-    ).toHaveLength(1);
+    expect(m.el.querySelectorAll('.vue-ui-graph-labels text')).toHaveLength(1);
     const borders = m.el.querySelectorAll('.vue-ui-graph-node-overlay');
     expect(borders).toHaveLength(2);
     expect(borders[0].getAttribute('stroke')).toBe(

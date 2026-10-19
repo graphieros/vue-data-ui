@@ -1,4 +1,5 @@
 import { graphDefaults } from './graph/config';
+import { deepClone } from './lib';
 export function useConfig(options = {}) {
     const COLOR_BLACK = '#2D353C';
     const COLOR_GREY = '#A1A1A1';
@@ -8406,9 +8407,11 @@ export function useConfig(options = {}) {
         collisionGap: 0,
     };
 
+    // Merge shared defaults into this call's clone, never the module-level objects.
+    const graphConfig = deepClone(graphDefaults);
     const vue_ui_graph = {
-        ...structuredClone(graphDefaults),
-        tooltip: { ...TOOLTIP, ...graphDefaults.tooltip },
+        ...graphConfig,
+        tooltip: { ...TOOLTIP, ...graphConfig.tooltip },
         userOptions: {
             ...USER_OPTIONS({
                 pdf: true,
@@ -8421,7 +8424,7 @@ export function useConfig(options = {}) {
                 tooltip: true,
                 annotator: true,
             }),
-            useCursorPointer: graphDefaults.userOptions.useCursorPointer,
+            useCursorPointer: graphConfig.userOptions.useCursorPointer,
         },
         table: {
             ...TABLE,
@@ -8443,9 +8446,9 @@ export function useConfig(options = {}) {
             td: { ...TABLE_TD },
         },
         style: {
-            ...graphDefaults.style,
+            ...graphConfig.style,
             chart: {
-                ...graphDefaults.style.chart,
+                ...graphConfig.style.chart,
                 title: { ...TITLE, subtitle: { ...TITLE.subtitle } },
             },
         },

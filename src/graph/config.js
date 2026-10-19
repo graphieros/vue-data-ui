@@ -1,6 +1,6 @@
 // Chart-specific defaults; useConfig adds the shared title, options menu and table defaults.
 export const graphDefaults = {
-    responsive: true,
+    responsive: false,
     theme: '',
     a11y: {
         translations: {
@@ -74,7 +74,7 @@ export const graphDefaults = {
                 width: 1,
                 widthByValue: false,
                 maxWidth: 6,
-                arrows: { show: false },
+                arrows: { show: false, showOnHover: true },
                 pulses: {
                     show: false,
                     showOnHover: false,

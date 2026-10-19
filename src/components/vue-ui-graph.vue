@@ -332,9 +332,28 @@ const highlightedLinks = computed(() =>
               geometry.value,
               (link) =>
                   link.source.id === highlightId.value ||
-                  link.target.id === highlightId.value,
+                  link.target.id === highlightId.value ||
+                  (config.value.interaction.highlight.neighbors &&
+                      highlightedNeighbors.value.has(link.source.id) &&
+                      highlightedNeighbors.value.has(link.target.id)),
           ),
 );
+
+const hoveredArrowBatches = computed(() => {
+    if (!chart.value.links.arrows.showOnHover || hovered.value === null)
+        return [];
+    const id = hovered.value;
+    const related = graph.value.adjacency.get(id) || new Set();
+    return batchLinks(
+        geometry.value,
+        (link) =>
+            link.source.id === id ||
+            link.target.id === id ||
+            (config.value.interaction.highlight.neighbors &&
+                related.has(link.source.id) &&
+                related.has(link.target.id)),
+    );
+});
 
 const highlightedNodes = computed(() =>
     !batchedNodes.value || highlightId.value === null
@@ -375,9 +394,9 @@ const selectedNode = computed(() => graph.value.byId.get(selected.value));
 const hoveredNode = computed(() => graph.value.byId.get(hovered.value));
 
 const visibleLabels = computed(() => {
-    if (!batchedNodes.value) return [];
-    const limit = Math.max(1, chart.value.nodes.labels.maxCount);
     const labels = graph.value.nodes.filter((n, i) => showLabel(n, i));
+    if (!batchedNodes.value) return labels;
+    const limit = Math.max(1, chart.value.nodes.labels.maxCount);
     // Keep focused/selected labels first, then cap even a hub's neighborhood.
     return labels
         .sort(
@@ -1503,7 +1522,23 @@ function resize() {
               x: viewport.value.x + (width.value - oldW) / 2,
               y: viewport.value.y + (height.value - oldH) / 2,
           };
-    if (config.value.viewport.fitOnResize) fitToView(false);
+    const autoFit =
+        initialLayoutReady.value &&
+        !userViewport &&
+        config.value.viewport.initialFit &&
+        !isFullscreen.value &&
+        !saved &&
+        (oldW !== width.value || oldH !== height.value);
+    if (config.value.viewport.fitOnResize || autoFit) {
+        fitToView(false);
+        if (autoFit) {
+            initialViewport.value = {
+                ...viewport.value,
+                width: width.value,
+                height: height.value,
+            };
+        }
+    }
 }
 
 function nativeFullscreenChange() {
@@ -2013,7 +2048,12 @@ defineExpose({
             class="vue-ui-graph-svg"
             :viewBox="`0 0 ${width} ${height}`"
             :style="{
-                height: isFullscreen ? '0px' : `${height}px`,
+                height: isFullscreen
+                    ? '0px'
+                    : config.responsive
+                      ? `${height}px`
+                      : 'auto',
+                aspectRatio: `${width} / ${height}`,
                 touchAction: 'none',
                 cursor: batchedNodes && hoveredNode ? 'grab' : undefined,
             }"
@@ -2087,17 +2127,6 @@ defineExpose({
                         stop-opacity="0"
                     />
                 </radialGradient>
-                <marker
-                    :id="`${uid}-arrow`"
-                    viewBox="0 0 10 10"
-                    refX="10"
-                    refY="5"
-                    markerWidth="6"
-                    markerHeight="6"
-                    orient="auto-start-reverse"
-                >
-                    <path d="M 0 0 L 10 5 L 0 10 z" fill="context-stroke" />
-                </marker>
             </defs>
 
             <rect width="100%" height="100%" :fill="chart.backgroundColor" />
@@ -2123,26 +2152,34 @@ defineExpose({
                             : undefined
                     "
                 >
-                    <path
-                        v-for="(batch, i) in linkBatches"
-                        :key="i"
-                        class="vue-ui-graph-link"
-                        :d="batch.d"
-                        :stroke="batch.color"
-                        :stroke-width="batch.width"
-                        :opacity="chart.links.opacity * dim"
-                        :marker-end="
-                            batch.directed ? `url(#${uid}-arrow)` : undefined
-                        "
-                        pointer-events="none"
-                    />
+                    <g v-for="(batch, i) in linkBatches" :key="i">
+                        <path
+                            class="vue-ui-graph-link"
+                            :d="batch.d"
+                            :stroke="batch.color"
+                            :stroke-width="batch.width"
+                            :opacity="chart.links.opacity * dim"
+                            pointer-events="none"
+                        />
+                        <path
+                            v-if="
+                                batch.arrowD && !chart.links.arrows.showOnHover
+                            "
+                            class="vue-ui-graph-arrows"
+                            :d="batch.arrowD"
+                            :fill="batch.color"
+                            :opacity="chart.links.opacity * dim"
+                            stroke="none"
+                        />
+                    </g>
                     <TransitionGroup
                         tag="g"
                         name="vue-ui-graph-highlight"
                         :css="config.animation.enabled && !reduced"
                     >
-                        <path
+                        <g
                             v-for="(batch, i) in highlightedLinks"
+                            class="vue-ui-graph-link-highlight-batch"
                             :key="
                                 JSON.stringify([
                                     typeof highlightId,
@@ -2150,19 +2187,37 @@ defineExpose({
                                     i,
                                 ])
                             "
-                            class="vue-ui-graph-link vue-ui-graph-link-highlight"
-                            :d="batch.d"
-                            :stroke="batch.color"
-                            :stroke-width="batch.width"
                             :opacity="overlayOpacity(chart.links.opacity)"
-                            :marker-end="
-                                batch.directed
-                                    ? `url(#${uid}-arrow)`
-                                    : undefined
-                            "
-                            pointer-events="none"
-                        />
+                        >
+                            <path
+                                class="vue-ui-graph-link vue-ui-graph-link-highlight"
+                                :d="batch.d"
+                                :stroke="batch.color"
+                                :stroke-width="batch.width"
+                                pointer-events="none"
+                            />
+                            <path
+                                v-if="
+                                    batch.arrowD &&
+                                    !chart.links.arrows.showOnHover
+                                "
+                                class="vue-ui-graph-arrows vue-ui-graph-arrows-highlight"
+                                :d="batch.arrowD"
+                                :fill="batch.color"
+                                stroke="none"
+                            />
+                        </g>
                     </TransitionGroup>
+                    <path
+                        v-for="batch in hoveredArrowBatches"
+                        :key="batch.key"
+                        class="vue-ui-graph-arrows vue-ui-graph-arrows-hover"
+                        :d="batch.arrowD"
+                        :fill="batch.color"
+                        :opacity="chart.links.opacity"
+                        stroke="none"
+                        pointer-events="none"
+                    />
                 </g>
                 <g
                     ref="pulseLayer"
@@ -2282,24 +2337,6 @@ defineExpose({
                             stroke-dasharray="3 2"
                         />
                     </g>
-                    <text
-                        :stroke="chart.backgroundColor"
-                        :stroke-width="chart.nodes.labels.strokeWidth"
-                        stroke-linejoin="round"
-                        stroke-linecap="round"
-                        paint-order="stroke fill"
-                        v-for="n in visibleLabels"
-                        :key="n.id"
-                        :x="n.x"
-                        :y="n.y + labelOffsetY(n)"
-                        text-anchor="middle"
-                        :font-size="chart.nodes.labels.fontSize"
-                        :fill="chart.nodes.labels.color"
-                        :opacity="opacity(n.id)"
-                        dominant-baseline="middle"
-                        v-html="labelTSpans(n, true)"
-                        style="user-select: none"
-                    />
                 </g>
                 <g v-else class="vue-ui-graph-nodes">
                     <g
@@ -2370,21 +2407,6 @@ defineExpose({
                                 pointer-events="none"
                             />
                         </slot>
-                        <text
-                            :stroke="chart.backgroundColor"
-                            :stroke-width="chart.nodes.labels.strokeWidth"
-                            stroke-linejoin="round"
-                            paint-order="stroke fill"
-                            v-if="showLabel(n, i)"
-                            :x="0"
-                            :y="labelOffsetY(n)"
-                            text-anchor="middle"
-                            :font-size="chart.nodes.labels.fontSize"
-                            :fill="chart.nodes.labels.color"
-                            dominant-baseline="middle"
-                            pointer-events="none"
-                            v-html="labelTSpans(n)"
-                        />
                     </g>
                 </g>
                 <slot
@@ -2394,6 +2416,33 @@ defineExpose({
                     :config="config"
                     :viewport="viewport"
                 />
+                <g
+                    class="vue-ui-graph-labels"
+                    pointer-events="none"
+                    aria-hidden="true"
+                >
+                    <text
+                        :stroke="chart.backgroundColor"
+                        :stroke-width="chart.nodes.labels.strokeWidth"
+                        stroke-linejoin="round"
+                        stroke-linecap="round"
+                        paint-order="stroke fill"
+                        v-for="n in visibleLabels"
+                        :key="n.id"
+                        :x="n.x"
+                        :y="n.y + labelOffsetY(n)"
+                        text-anchor="middle"
+                        :font-size="chart.nodes.labels.fontSize"
+                        :fill="chart.nodes.labels.color"
+                        :opacity="
+                            (batchedNodes ? 1 : chart.nodes.opacity) *
+                            opacity(n.id)
+                        "
+                        dominant-baseline="middle"
+                        v-html="labelTSpans(n, true)"
+                        style="user-select: none"
+                    />
+                </g>
             </g>
             <slot name="watermark" :width="width" :height="height" />
         </svg>
@@ -2629,6 +2678,15 @@ defineExpose({
     width: 100%;
     overflow: hidden;
 }
+
+.vue-ui-graph-svg:focus {
+    outline: none;
+}
+
+.vue-ui-graph-svg:focus-visible {
+    outline: 2px solid currentColor;
+}
+
 .vue-ui-graph-title {
     width: 100%;
     padding: 12px 0;
@@ -2643,6 +2701,10 @@ defineExpose({
         stroke var(--graph-transition, 0ms),
         stroke-width var(--graph-transition, 0ms),
         fill var(--graph-transition, 0ms);
+}
+
+.vue-ui-graph-link-highlight-batch {
+    transition: opacity var(--graph-transition, 0ms);
 }
 
 .vue-ui-graph-highlight-enter-from,

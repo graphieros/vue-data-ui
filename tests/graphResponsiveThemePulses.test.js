@@ -29,6 +29,7 @@ async function mount(extra = {}) {
     el.style.height = '600px';
     document.body.append(el);
     const config = reactive({
+        responsive: true,
         animation: { enabled: false },
         layout: { iterations: 0 },
         userOptions: { show: false },

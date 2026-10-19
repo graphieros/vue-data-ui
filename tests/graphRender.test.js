@@ -31,6 +31,19 @@ function prepare(links) {
     };
 }
 describe('batched graph rendering', () => {
+    it('includes an arrowhead for every directed edge in a batch', () => {
+        const { geometry } = prepare([
+            { source: 'a', target: 'b', directed: true },
+            { source: 'b', target: 'c', directed: true },
+            { source: 'a', target: 'c', directed: true },
+            { source: 'a', target: 'c', directed: true },
+            { source: 'c', target: 'c', directed: true },
+        ]);
+        const batches = batchLinks(geometry);
+        expect(batches).toHaveLength(1);
+        expect(batches[0].arrowD.match(/M /g)).toHaveLength(5);
+        expect(batches[0].arrowD).not.toMatch(/NaN|Infinity/);
+    });
     it('renders thousands of uniform edges in one path and nodes by color', () => {
         const g = normalizeGraph(denseNetwork(), new Map(), graphDefaults);
         const batches = batchLinks(

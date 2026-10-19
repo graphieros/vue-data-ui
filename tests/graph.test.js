@@ -409,7 +409,7 @@ it.each([false, true])(
             },
         });
         await nextTick();
-        const text = () => m.el.querySelector('.vue-ui-graph-nodes text');
+        const text = () => m.el.querySelector('.vue-ui-graph-labels text');
         expect(text().getAttribute('x')).toBe('0');
         expect(text().getAttribute('text-anchor')).toBe('middle');
         const bottom = Number(text().getAttribute('y'));
@@ -460,7 +460,7 @@ it.each([false, true])(
         });
         await nextTick();
         const spans = () => [
-            ...m.el.querySelectorAll('.vue-ui-graph-nodes text tspan'),
+            ...m.el.querySelectorAll('.vue-ui-graph-labels text tspan'),
         ];
         expect(spans().map((s) => s.textContent)).toEqual([
             'First',
@@ -468,7 +468,7 @@ it.each([false, true])(
             'Third',
         ]);
         expect(
-            m.el.querySelector('.vue-ui-graph-nodes text second'),
+            m.el.querySelector('.vue-ui-graph-labels text second'),
         ).toBeNull();
         const positions = spans().map((s) => Number(s.getAttribute('y')));
         expect(positions[1] - positions[0]).toBe(11);

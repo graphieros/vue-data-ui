@@ -99,7 +99,7 @@ export const graphSkeletonConfig = {
             links: {
                 color: '#CCCCCC',
                 glow: false,
-                arrows: { show: false },
+                arrows: { show: false, showOnHover: false },
                 pulses: { show: false, showOnHover: false },
             },
         },

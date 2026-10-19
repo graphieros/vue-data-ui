@@ -67,6 +67,80 @@ function controlledFrames() {
         },
     };
 }
+it.each([true, false])(
+    'shows arrows between highlighted neighbors when neighbors=%s',
+    async (neighbors) => {
+        const m = await mount(
+            {
+                interaction: { highlight: { neighbors } },
+                style: {
+                    chart: {
+                        links: { arrows: { show: true, showOnHover: false } },
+                    },
+                },
+            },
+            {
+                nodes: ['a', 'b', 'c', 'd'].map((id, i) => ({
+                    id,
+                    x: i * 80,
+                    y: 0,
+                    fixed: true,
+                })),
+                links: [
+                    { source: 'a', target: 'b' },
+                    { source: 'a', target: 'c' },
+                    { source: 'b', target: 'c' },
+                    { source: 'c', target: 'd' },
+                ],
+            },
+        );
+        m.el
+            .querySelector('.vue-ui-graph-node')
+            .dispatchEvent(new FocusEvent('focus'));
+        await nextTick();
+        const arrows = m.el.querySelector('.vue-ui-graph-arrows-highlight');
+        expect(arrows.getAttribute('d').match(/M /g)).toHaveLength(
+            neighbors ? 3 : 2,
+        );
+        expect(
+            m.el
+                .querySelector('.vue-ui-graph-arrows')
+                .getAttribute('d')
+                .match(/M /g),
+        ).toHaveLength(4);
+    },
+);
+
+it.each([false, true])(
+    'shows arrows only on hover by default, including when show=%s',
+    async (show) => {
+        const m = await mount({
+            interaction: { highlight: { enabled: false } },
+            style: { chart: { links: { arrows: { show } } } },
+        });
+        expect(m.el.querySelectorAll('.vue-ui-graph-arrows')).toHaveLength(0);
+        const node = m.el.querySelector('.vue-ui-graph-node');
+        node.dispatchEvent(new FocusEvent('focus'));
+        await nextTick();
+        expect(
+            m.el.querySelectorAll('.vue-ui-graph-arrows-hover'),
+        ).toHaveLength(1);
+        node.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        node.dispatchEvent(new FocusEvent('blur'));
+        await nextTick();
+        expect(m.el.querySelectorAll('.vue-ui-graph-arrows')).toHaveLength(0);
+        m.props.config.style.chart.links.arrows = {
+            show: true,
+            showOnHover: false,
+        };
+        await nextTick();
+        expect(m.el.querySelector('.vue-ui-graph-arrows')).not.toBeNull();
+        m.props.config.style.chart.links.arrows.show = false;
+        await nextTick();
+        expect(m.el.querySelectorAll('.vue-ui-graph-arrows')).toHaveLength(0);
+    },
+);
+
 function view(m) {
     return m.el
         .querySelector('.vue-ui-graph-network')
@@ -74,6 +148,109 @@ function view(m) {
         .match(/-?\d*\.?\d+(?:e[+-]?\d+)?/gi)
         .map(Number);
 }
+it.each([false, true])(
+    'renders labels after all node shapes in batched=%s mode',
+    async (batched) => {
+        const m = await mount({
+            performance: { nodeBatchThreshold: batched ? 0 : 300 },
+            style: { chart: { nodes: { gradient: false } } },
+        });
+        const network = m.el.querySelector('.vue-ui-graph-network');
+        const layer = m.el.querySelector('.vue-ui-graph-labels');
+        expect(network.lastElementChild).toBe(layer);
+        expect(layer.getAttribute('pointer-events')).toBe('none');
+        expect(layer.querySelectorAll('text')).toHaveLength(2);
+        expect(m.el.querySelectorAll('.vue-ui-graph-nodes text')).toHaveLength(
+            0,
+        );
+    },
+);
+
+it('preserves the square default viewport and fits every node without config', async () => {
+    const frames = controlledFrames();
+    vi.spyOn(Element.prototype, 'getBoundingClientRect').mockReturnValue({
+        width: 800,
+        height: 1200,
+        left: 0,
+        top: 0,
+    });
+    const el = document.createElement('div');
+    document.body.append(el);
+    const app = createApp({
+        render: () =>
+            h(Graph, {
+                dataset: {
+                    nodes: [
+                        { id: 'left', x: -450, y: 0, radius: 40, fixed: true },
+                        {
+                            id: 'right',
+                            x: 450,
+                            y: 200,
+                            radius: 50,
+                            fixed: true,
+                        },
+                    ],
+                    links: [{ source: 'left', target: 'right' }],
+                },
+            }),
+    });
+    app.mount(el);
+    cleanup.push(() => {
+        app.unmount();
+        el.remove();
+    });
+    await frames.drain();
+    const svg = el.querySelector('.vue-ui-graph-svg');
+    expect(svg.getAttribute('viewBox')).toBe('0 0 600 600');
+    expect(svg.style.height).toBe('auto');
+    expect(svg.style.aspectRatio).toBe('600 / 600');
+    const [x, y, scale] = view({ el });
+    for (const [nx, ny, radius] of [
+        [-450, 0, 40],
+        [450, 200, 50],
+    ]) {
+        expect(x + (nx - radius) * scale).toBeGreaterThanOrEqual(0);
+        expect(x + (nx + radius) * scale).toBeLessThanOrEqual(600);
+        expect(y + (ny - radius) * scale).toBeGreaterThanOrEqual(0);
+        expect(y + (ny + radius) * scale).toBeLessThanOrEqual(600);
+    }
+});
+
+it('refits an automatic viewport on responsive resize until the user zooms', async () => {
+    let resize;
+    let width = 600;
+    vi.stubGlobal(
+        'ResizeObserver',
+        class {
+            constructor(callback) {
+                resize = callback;
+            }
+            observe() {}
+            disconnect() {}
+        },
+    );
+    vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(
+        () => ({ width, height: 600, left: 0, top: 0 }),
+    );
+    const m = await mount({
+        responsive: true,
+        viewport: { fitOnResize: false },
+        style: { chart: { controls: { show: false } } },
+    });
+    const initialScale = view(m)[2];
+    width = 200;
+    resize();
+    await nextTick();
+    expect(view(m)[2]).toBeLessThan(initialScale);
+    m.api.zoomIn();
+    await nextTick();
+    const userScale = view(m)[2];
+    width = 150;
+    resize();
+    await nextTick();
+    expect(view(m)[2]).toBe(userScale);
+});
+
 it('uses fixed plot height for an auto-height parent and follows a constrained parent', async () => {
     let resize;
     vi.stubGlobal(
@@ -132,7 +309,7 @@ it.each([false, true])(
         });
         m.svg.dispatchEvent(new FocusEvent('focus'));
         await nextTick();
-        expect(m.el.querySelectorAll('.vue-ui-graph-nodes text')).toHaveLength(
+        expect(m.el.querySelectorAll('.vue-ui-graph-labels text')).toHaveLength(
             0,
         );
         m.api.focusNode('a');
@@ -141,7 +318,7 @@ it.each([false, true])(
             new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }),
         );
         await nextTick();
-        const labels = m.el.querySelectorAll('.vue-ui-graph-nodes text');
+        const labels = m.el.querySelectorAll('.vue-ui-graph-labels text');
         expect(labels).toHaveLength(1);
         expect(labels[0].textContent).toBe('Alice');
     },
@@ -216,7 +393,7 @@ it('fits multiline labels and self-loop control-point bounds', async () => {
     );
     const [x, y, k] = view(m);
     for (const tspan of m.el.querySelectorAll(
-        '.vue-ui-graph-node text tspan',
+        '.vue-ui-graph-labels text tspan',
     )) {
         const baseline = y + Number(tspan.getAttribute('y')) * k;
         expect(baseline - 9 * k).toBeGreaterThanOrEqual(35.99);

@@ -52,10 +52,30 @@ export function linkGeometry(link, style) {
                   style.width * Math.sqrt(Math.max(0, link.raw.value ?? 1)),
               )
             : style.width);
-    const directed = !!(link.raw.directed || style.arrows.show);
+    const directed = !!(
+        link.raw.directed ||
+        style.arrows.show ||
+        style.arrows.showOnHover
+    );
+    let arrowD = '';
+    if (directed) {
+        const values = d.match(/-?\d*\.?\d+(?:e[+-]?\d+)?/gi).map(Number);
+        const x = values.at(-2),
+            y = values.at(-1);
+        const dx = x - values.at(-4),
+            dy = y - values.at(-3);
+        const length = Math.hypot(dx, dy) || 1;
+        const ux = dx / length,
+            uy = dy / length;
+        const size = 6 * width;
+        const bx = x - ux * size,
+            by = y - uy * size;
+        arrowD = `M ${coordinate(x)} ${coordinate(y)} L ${coordinate(bx - (uy * size) / 2)} ${coordinate(by + (ux * size) / 2)} L ${coordinate(bx + (uy * size) / 2)} ${coordinate(by - (ux * size) / 2)} Z`;
+    }
     return {
         link,
         d,
+        arrowD,
         get points() {
             return (cachedPoints ||= sample());
         },
@@ -90,14 +110,17 @@ export function batchLinks(geometry, predicate = () => true) {
                 width: item.width,
                 directed: item.directed,
                 paths: [],
+                arrows: [],
             };
             groups.set(item.key, group);
         }
         group.paths.push(item.d);
+        if (item.arrowD) group.arrows.push(item.arrowD);
     }
-    return [...groups.values()].map(({ paths, ...group }) => ({
+    return [...groups.values()].map(({ paths, arrows, ...group }) => ({
         ...group,
         d: paths.join(' '),
+        arrowD: arrows.join(' '),
     }));
 }
 export function circlePath(node) {
