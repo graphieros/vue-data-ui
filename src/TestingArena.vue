@@ -12,6 +12,7 @@
  */
 import { ref, computed, onMounted, nextTick, watch, markRaw } from 'vue';
 import Box from './Box.vue';
+import GraphArena from '../TestingArena/ArenaVueUiGraph.vue';
 import BaseIcon from './atoms/BaseIcon.vue';
 import TableTest from './components/vue-ui-table.vue';
 import DonutTest from './components/vue-ui-donut.vue';
@@ -3741,6 +3742,7 @@ function testGetData() {
 </script>
 
 <template>
+    <GraphArena />
     <button @click="testGetData">GET DATA</button>
 
     <VueDataUi component="VueUiCursor" :config="cursorConfig" />

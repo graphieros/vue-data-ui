@@ -105,7 +105,7 @@ describe.each([false, true])(
                     'toggleZoom',
                     'toggleAnimation',
                     'toggleAnnotator',
-                    popover ? 'copyAlt' : 'toggleAnnotator',
+                    'copyAlt',
                 ]);
             });
         });

@@ -18,6 +18,15 @@ const props = defineProps({
         type: Boolean,
         default: false,
     },
+    withFit: {
+        type: Boolean,
+        default: false,
+    },
+    zoomEnabled: {
+        type: Boolean,
+        default: true,
+    },
+    viewLocked: { type: Boolean, default: false },
     isFullscreen: {
         type: Boolean,
         default: false,
@@ -28,7 +37,13 @@ const props = defineProps({
     },
 });
 
-const emit = defineEmits(['zoomIn', 'zoomOut', 'resetZoom', 'switchDirection']);
+const emit = defineEmits([
+    'zoomIn',
+    'zoomOut',
+    'resetZoom',
+    'switchDirection',
+    'fitToView',
+]);
 </script>
 
 <template>
@@ -38,6 +53,8 @@ const emit = defineEmits(['zoomIn', 'zoomOut', 'resetZoom', 'switchDirection']);
             'vue-data-ui-zoom-controls-fullscreen': isFullscreen,
         }"
         data-dom-to-png-ignore
+        role="group"
+        aria-label="Chart viewport controls"
         :style="{
             border: config.style.chart.controls.border,
             backgroundColor: config.style.chart.controls.backgroundColor,
@@ -52,6 +69,8 @@ const emit = defineEmits(['zoomIn', 'zoomOut', 'resetZoom', 'switchDirection']);
         }"
     >
         <button
+            aria-label="Zoom out"
+            :disabled="!zoomEnabled"
             @click="emit('zoomOut')"
             class="vue-data-ui-zoom-controls-button"
             data-cy-zoom-out
@@ -64,6 +83,8 @@ const emit = defineEmits(['zoomIn', 'zoomOut', 'resetZoom', 'switchDirection']);
             />
         </button>
         <button
+            aria-label="Reset zoom"
+            :disabled="viewLocked"
             class="vue-data-ui-zoom-controls-button-zoom"
             @click="emit('resetZoom')"
             data-cy-zoom-reset
@@ -78,6 +99,8 @@ const emit = defineEmits(['zoomIn', 'zoomOut', 'resetZoom', 'switchDirection']);
             {{ Math.round(scale * 100) }}%
         </button>
         <button
+            aria-label="Zoom in"
+            :disabled="!zoomEnabled"
             @click="emit('zoomIn')"
             class="vue-data-ui-zoom-controls-button"
             data-cy-zoom-in
@@ -92,7 +115,8 @@ const emit = defineEmits(['zoomIn', 'zoomOut', 'resetZoom', 'switchDirection']);
             />
         </button>
         <button
-            :disabled="scale === 1"
+            aria-label="Reset view"
+            :disabled="scale === 1 || viewLocked"
             @click="emit('resetZoom')"
             class="vue-data-ui-zoom-controls-button"
             :style="{
@@ -101,6 +125,21 @@ const emit = defineEmits(['zoomIn', 'zoomOut', 'resetZoom', 'switchDirection']);
         >
             <BaseIcon
                 name="revert"
+                :stroke="config.style.chart.controls.color"
+                :size="config.style.chart.controls.fontSize * 1.2"
+            />
+        </button>
+        <button
+            v-if="withFit"
+            aria-label="Fit graph to viewport"
+            :disabled="viewLocked"
+            title="Fit graph to viewport"
+            @click="emit('fitToView')"
+            class="vue-data-ui-zoom-controls-button"
+            :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }"
+        >
+            <BaseIcon
+                name="focus"
                 :stroke="config.style.chart.controls.color"
                 :size="config.style.chart.controls.fontSize * 1.2"
             />

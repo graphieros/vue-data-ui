@@ -34,6 +34,7 @@ const components = [
     'ArenaVueUiMoodRadar',
     'ArenaVueUiMolecule',
     'ArenaVueUiNestedDonuts',
+    'ArenaVueUiGraph',
     'ArenaVueUiGalaxy',
     'ArenaVueUiStripPlot',
     'ArenaVueUiDumbbell',

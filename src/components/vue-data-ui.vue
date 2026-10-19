@@ -23,6 +23,7 @@ const props = defineProps({
 const attrs = useAttrs();
 
 const components = {
+    VueUiGraph: defineAsyncComponent(() => import('./vue-ui-graph.vue')),
     VueUi3dBar: defineAsyncComponent(() => import('./vue-ui-3d-bar.vue')),
     VueUiAgePyramid: defineAsyncComponent(
         () => import('./vue-ui-age-pyramid.vue'),
@@ -163,6 +164,9 @@ const CONFIG_ONLY_COMPONENTS = new Set([
 ]);
 
 const EXPOSED_METHODS = [
+    'fitToView',
+    'focusNode',
+    'resetLayout',
     'autoSize',
     'cancel',
     'close',
@@ -200,6 +204,7 @@ const EXPOSED_METHODS = [
     'toggleSort',
     'toggleStack',
     'toggleTable',
+    'toggleFullscreen',
     'toggleTooltip',
     'toggleZoom',
     'zoomIn',
