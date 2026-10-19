@@ -1,6 +1,12 @@
 import { isHighlightedLink } from './highlight';
 
-export function batchPulses(geometry, settings, highlightId = null, dim = 1, related) {
+export function batchPulses(
+    geometry,
+    settings,
+    highlightId = null,
+    dim = 1,
+    related,
+) {
     const batches = new Map();
     for (const item of geometry) {
         const color = settings.colorBySource

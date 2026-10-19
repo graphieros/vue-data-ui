@@ -246,10 +246,14 @@ const pulseLinks = computed(() => {
     if (reduced.value) return [];
     if (!pulses.showOnHover) return pulses.show ? geometry.value : [];
     if (hovered.value === null) return [];
-    return geometry.value.filter(
-        ({ link }) => isHighlightedLink(link, hovered.value,
+    return geometry.value.filter(({ link }) =>
+        isHighlightedLink(
+            link,
+            hovered.value,
             config.value.interaction.highlight.neighbors
-                ? graph.value.adjacency.get(hovered.value) : undefined),
+                ? graph.value.adjacency.get(hovered.value)
+                : undefined,
+        ),
     );
 });
 
@@ -267,7 +271,9 @@ const pulseBatches = computed(() =>
         chart.value.links.pulses,
         isHighlighting.value ? highlightId.value : null,
         dim.value,
-        config.value.interaction.highlight.neighbors ? highlightedNeighbors.value : undefined,
+        config.value.interaction.highlight.neighbors
+            ? highlightedNeighbors.value
+            : undefined,
     ),
 );
 
@@ -340,10 +346,14 @@ const dim = computed(() =>
 const highlightedLinks = computed(() =>
     highlightId.value === null
         ? []
-        : batchLinks(
-              geometry.value,
-              (link) => isHighlightedLink(link, highlightId.value,
-                  config.value.interaction.highlight.neighbors ? highlightedNeighbors.value : undefined),
+        : batchLinks(geometry.value, (link) =>
+              isHighlightedLink(
+                  link,
+                  highlightId.value,
+                  config.value.interaction.highlight.neighbors
+                      ? highlightedNeighbors.value
+                      : undefined,
+              ),
           ),
 );
 
@@ -352,10 +362,12 @@ const hoveredArrowBatches = computed(() => {
         return [];
     const id = hovered.value;
     const related = graph.value.adjacency.get(id) || new Set();
-    return batchLinks(
-        geometry.value,
-        (link) => isHighlightedLink(link, id,
-            config.value.interaction.highlight.neighbors ? related : undefined),
+    return batchLinks(geometry.value, (link) =>
+        isHighlightedLink(
+            link,
+            id,
+            config.value.interaction.highlight.neighbors ? related : undefined,
+        ),
     );
 });
 
@@ -1583,7 +1595,8 @@ function visibilityChange() {
 }
 
 function keyboardIntent(e) {
-    if (!['Shift', 'Control', 'Alt', 'Meta'].includes(e.key)) keyboardInput = true;
+    if (!['Shift', 'Control', 'Alt', 'Meta'].includes(e.key))
+        keyboardInput = true;
     if (e.key === 'Tab') suppressRestoredFocus = false;
 }
 
