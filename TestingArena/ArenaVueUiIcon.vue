@@ -79,6 +79,7 @@ const icons = ref([
     'arrowBottom',
     'arrowLeft',
     'chartCluster',
+    'chartGraph',
     'chartSparkline',
     'legend',
     'csv',

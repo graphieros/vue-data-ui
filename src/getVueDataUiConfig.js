@@ -1,6 +1,7 @@
 import { useConfig } from './useConfig';
 
 const availableComponents = [
+    'vue_ui_graph',
     'vue_ui_3d_bar',
     'vue_ui_accordion',
     'vue_ui_age_pyramid',

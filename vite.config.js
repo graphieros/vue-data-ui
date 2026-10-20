@@ -14,6 +14,10 @@ const prod = process.env.NODE_ENV === 'production';
  * Public entry points
  */
 const entries = {
+    'components/vue-ui-graph': resolve(
+        __dirname,
+        'src/entries/vue-ui-graph.js',
+    ),
     index: resolve(__dirname, 'src/index.js'),
     'components/arrow': resolve(__dirname, 'src/entries/arrow.js'),
     'components/vue-ui-annotator': resolve(
@@ -328,6 +332,7 @@ export default defineConfig({
         lib: {
             entry: entries.index,
             name: 'VueDataUi',
+            cssFileName: 'style',
             fileName: (format, entryName) => {
                 if (entryName === 'index') {
                     return `vue-data-ui.js`;

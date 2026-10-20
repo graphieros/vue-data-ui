@@ -2468,6 +2468,7 @@ export function createTSpansFromLineBreaksOnX({
     y,
     translateY = false,
     stroke = 'none',
+    strokeWidth = 3,
 }) {
     const lines = (content ?? '').split('\n');
     const lineCount = lines.length;
@@ -2478,7 +2479,7 @@ export function createTSpansFromLineBreaksOnX({
     return lines
         .map(
             (line, idx) =>
-                `<tspan x="${x}" y="${y - offsetY + idx * fontSize}" fill="${fill}" stroke="${stroke}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" paint-order="stroke fill">${line}</tspan>`,
+                `<tspan x="${x}" y="${y - offsetY + idx * fontSize}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}" stroke-linecap="round" stroke-linejoin="round" paint-order="stroke fill">${line}</tspan>`,
         )
         .join('');
 }

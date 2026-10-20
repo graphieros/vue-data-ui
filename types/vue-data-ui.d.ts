@@ -7,6 +7,320 @@ declare module 'vue-data-ui' {
         ComputedRef,
     } from 'vue';
 
+    export type VueUiGraphId = string | number;
+    export type VueUiGraphNode = {
+        id: VueUiGraphId;
+        label?: string;
+        group?: string | number;
+        value?: number;
+        color?: string;
+        radius?: number;
+        x?: number;
+        y?: number;
+        fixed?: boolean;
+        metadata?: unknown;
+    };
+    export type VueUiGraphLink = {
+        source: VueUiGraphId;
+        target: VueUiGraphId;
+        value?: number;
+        color?: string;
+        width?: number;
+        label?: string;
+        directed?: boolean;
+        metadata?: unknown;
+    };
+
+    export type VueUiGraphDataset = {
+        nodes: VueUiGraphNode[];
+        links: VueUiGraphLink[];
+    };
+
+    export type VueUiGraphEvent = (payload: {
+        datapoint: VueUiGraphNode;
+        seriesIndex: number;
+    }) => void;
+
+    export type VueUiGraphConfig = {
+        devHints?: DevHints;
+        skeletonDataset?: VueUiGraphDataset;
+        skeletonConfig?: VueUiGraphConfig;
+        events?: {
+            datapointEnter?: VueUiGraphEvent | null;
+            datapointLeave?: VueUiGraphEvent | null;
+            datapointClick?: VueUiGraphEvent | null;
+        };
+        a11y?: { translations?: { keyboardNavigation?: string } };
+        responsive?: boolean;
+        theme?: string;
+        loading?: boolean;
+        debug?: boolean;
+        customPalette?: string[];
+        style?: {
+            chart?: {
+                width?: number;
+                height?: number;
+                padding?: number;
+                backgroundColor?: string;
+                color?: string;
+                fontFamily?: string;
+                title?: ChartTitle;
+                controls?: ChartZoomControls;
+                nodes?: {
+                    radius?: number;
+                    minRadius?: number;
+                    maxRadius?: number;
+                    sizeByValue?: boolean;
+                    sizeByDegree?: boolean;
+                    colorByGroup?: boolean;
+                    color?: string;
+                    opacity?: number;
+                    strokeWidth?: number;
+                    stroke?: string;
+                    gradient?: boolean;
+                    gradientColor?: string;
+                    glow?: { show?: boolean; blur?: number; opacity?: number };
+                    hover?: { stroke?: string; strokeWidth?: number };
+                    selected?: { stroke?: string; strokeWidth?: number };
+                    labels?: {
+                        strokeWidth?: number;
+                        show?: boolean;
+                        fontSize?: number;
+                        color?: string;
+                        position?: 'top' | 'bottom';
+                        offsetY?: number;
+                        hoverOnly?: boolean;
+                        selectedOnly?: boolean;
+                        maxCount?: number;
+                        minZoom?: number;
+                        maxLength?: number;
+                    };
+                };
+                links?: {
+                    color?: string;
+                    opacity?: number;
+                    width?: number;
+                    widthByValue?: boolean;
+                    maxWidth?: number;
+                    arrows?: { show?: boolean; showOnHover?: boolean };
+                    pulses?: {
+                        show?: boolean;
+                        showOnHover?: boolean;
+                        reverse?: boolean;
+                        color?: string;
+                        colorBySource?: boolean;
+                        radius?: number;
+                        opacity?: number;
+                        duration?: number;
+                    };
+                    glow?: boolean;
+                };
+            };
+        };
+        layout?: {
+            chargeStrength?: number;
+            linkDistance?: number;
+            linkStrength?: number;
+            centerStrength?: number;
+            collisionPadding?: number;
+            friction?: number;
+            clusterStrength?: number;
+            iterations?: number;
+            strength?: number;
+            theta?: number;
+        };
+        interaction?: {
+            zoom?: {
+                enabled?: boolean;
+                min?: number;
+                max?: number;
+                fitOnDoubleClick?: boolean;
+            };
+            pan?: { enabled?: boolean };
+            drag?: { enabled?: boolean; pinOnRelease?: boolean };
+            highlight?: {
+                enabled?: boolean;
+                neighbors?: boolean;
+                keepSelection?: boolean;
+                dimOpacity?: number;
+            };
+        };
+        tooltip?: ChartTooltip & {
+            showMetadata?: boolean;
+            customFormat?:
+                | ((scope: VueUiGraphTooltipSlotProps) => string)
+                | null;
+        };
+        animation?: { enabled?: boolean; duration?: number };
+        userOptions?: ChartUserOptions<VueUiGraphDataset, VueUiGraphConfig>;
+        table?: {
+            show?: boolean;
+            useDialog?: boolean;
+            responsiveBreakpoint?: number;
+            columnNames?: Partial<
+                Record<
+                    | 'nodes'
+                    | 'links'
+                    | 'id'
+                    | 'label'
+                    | 'group'
+                    | 'value'
+                    | 'connections'
+                    | 'source'
+                    | 'target'
+                    | 'directed'
+                    | 'metadata',
+                    string
+                >
+            >;
+            th?: ChartTableCell;
+            td?: ChartTableCell;
+        };
+        viewport?: {
+            initialFit?: boolean;
+            fitOnResize?: boolean;
+            fitOnUpdate?: boolean;
+        };
+        performance?: {
+            effectThreshold?: number;
+            stepsPerFrame?: number;
+            nodeBatchThreshold?: number;
+        };
+    };
+
+    export type VueUiGraphViewport = {
+        x: number;
+        y: number;
+        k: number;
+    };
+
+    export type VueUiGraphTooltipSlotProps = {
+        datapoint: VueUiGraphNode;
+        node: VueUiGraphNode | null;
+        connections?: number;
+        config: VueUiGraphConfig;
+    };
+
+    export type VueUiGraphExpose = {
+        copyAlt(): Promise<void>;
+        zoomIn(): void;
+        zoomOut(): void;
+        resetZoom(): void;
+        fitToView(): void;
+        focusNode(id: VueUiGraphId): void;
+        resetLayout(): void;
+        getData(): VueUiGraphDataset;
+        getImage(options?: { scale?: number }): Promise<
+            | {
+                  imageUri: string;
+                  base64: string;
+                  title: string;
+                  width: number;
+                  height: number;
+                  aspectRatio: number;
+              }
+            | undefined
+        >;
+        generateImage(): Promise<unknown>;
+        generatePdf(): Promise<unknown>;
+        generateSvg(options?: { isCb: boolean }): Promise<void>;
+        generateCsv(callback?: ((content: string) => void) | null): string;
+        toggleTable(): void;
+        toggleFullscreen(state: boolean): void;
+        toggleZoom(): void;
+        toggleTooltip(): void;
+        toggleAnnotator(): void;
+    };
+
+    export type VueUiGraphProps = {
+        dataset?: VueUiGraphDataset;
+        config?: VueUiGraphConfig;
+    };
+
+    export type VueUiGraphEmits = {
+        copyAlt: (
+            args: AltCopyArgs<VueUiGraphDataset, VueUiGraphConfig>,
+        ) => void;
+        selectNode: (node: VueUiGraphNode | null) => void;
+        hoverNode: (node: VueUiGraphNode | null) => void;
+        zoom: (viewport: VueUiGraphViewport) => void;
+        zoomReset: (viewport: VueUiGraphViewport) => void;
+        layoutStart: () => void;
+        layoutEnd: (dataset: VueUiGraphDataset) => void;
+    };
+    const VueUiGraphBase: DefineComponent<
+        VueUiGraphProps,
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        VueUiGraphEmits
+    >;
+
+    export const VueUiGraph: typeof VueUiGraphBase & {
+        new (): VueUiGraphExpose & {
+            $slots: CommonAnnotatorSlots & {
+                optionAltCopy?: () => VNodeChild;
+                hint?: (props: {
+                    hint: string;
+                    isVisible: boolean;
+                }) => VNodeChild;
+                menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
+                optionPdf?: () => VNodeChild;
+                optionImg?: () => VNodeChild;
+                optionSvg?: () => VNodeChild;
+                optionCsv?: () => VNodeChild;
+                optionTable?: () => VNodeChild;
+                optionTooltip?: () => VNodeChild;
+                optionAnnotator?: (
+                    props: VueUiOptionAnnotatorSlotProps,
+                ) => VNodeChild;
+                optionZoom?: (props: {
+                    toggleZoom: () => void;
+                    isZoomLocked: boolean;
+                }) => VNodeChild;
+                optionFullscreen?: (
+                    props: VueUiOptionFullscreenSlotProps,
+                ) => VNodeChild;
+                'custom-menu-before'?: () => VNodeChild;
+                'custom-menu-after'?: () => VNodeChild;
+                'tooltip-before'?: (
+                    props: VueUiGraphTooltipSlotProps,
+                ) => VNodeChild;
+                'tooltip-after'?: (
+                    props: VueUiGraphTooltipSlotProps,
+                ) => VNodeChild;
+                tooltip?: (props: VueUiGraphTooltipSlotProps) => VNodeChild;
+                node?: (props: {
+                    node: VueUiGraphNode;
+                    radius: number;
+                    color: string;
+                    selected: boolean;
+                    hovered: boolean;
+                }) => VNodeChild;
+                svg?: (props: {
+                    nodes: VueUiGraphNode[];
+                    links: unknown[];
+                    config: VueUiGraphConfig;
+                    viewport: VueUiGraphViewport;
+                }) => VNodeChild;
+                'chart-background'?: (props: {
+                    width: number;
+                    height: number;
+                    config: VueUiGraphConfig;
+                }) => VNodeChild;
+                watermark?: (props: {
+                    width: number;
+                    height: number;
+                }) => VNodeChild;
+                skeleton?: () => VNodeChild;
+                source?: () => VNodeChild;
+            };
+        };
+    };
+
     export type VueUiUnknownObj = {
         [key: string]: unknown;
     };
@@ -18,6 +332,7 @@ declare module 'vue-data-ui' {
     >;
 
     export type VueDataUiAnyDataset =
+        | VueUiGraphDataset
         | VueUiHillDatasetItem[]
         | VueUi3dBarDataset
         | VueUiAgePyramidDataset
@@ -81,6 +396,7 @@ declare module 'vue-data-ui' {
         | VueUiLabelDataset;
 
     export type VueDataUiAnyConfig =
+        | VueUiGraphConfig
         | VueUiHillConfig
         | VueUi3dBarConfig
         | VueUiAgePyramidConfig
@@ -156,6 +472,9 @@ declare module 'vue-data-ui' {
     };
 
     export type VueDataUiExpose = {
+        fitToView(): void;
+        focusNode(id: VueUiGraphId): void;
+        resetLayout(): void;
         getData?: (...args: any[]) => Promise<any> | any;
         getWaterfallSteps?: () => VueUiStackbarWaterfallComputedStep[];
         getImage?: (options?: { scale?: number }) => Promise<any>;
@@ -432,6 +751,7 @@ declare module 'vue-data-ui' {
         keepStateOnChartLeave?: boolean;
         position?: 'left' | 'right';
         useCursorPointer?: boolean;
+        annotatorPalette?: string[];
         buttons?: {
             animation?: boolean;
             annotator?: boolean;
@@ -2267,6 +2587,7 @@ declare module 'vue-data-ui' {
         | 'chartFlow'
         | 'chartFunnel'
         | 'chartGalaxy'
+        | 'chartGraph'
         | 'chartGauge'
         | 'chartHeatmap'
         | 'chartHill'
@@ -17713,6 +18034,7 @@ declare module 'vue-data-ui' {
     };
 
     export type VueDataUiConfig =
+        | VueUiGraphConfig
         | VueUiHillConfig
         | VueUi3dBarConfig
         | VueUiAgePyramidConfig
@@ -17822,6 +18144,7 @@ declare module 'vue-data-ui' {
         | 'vue_ui_wheel'
         | 'vue_ui_xy'
         | 'vue_ui_nested_donuts'
+        | 'vue_ui_graph'
         | 'vue_ui_galaxy'
         | 'vue_ui_kpi'
         | 'vue_ui_treemap'

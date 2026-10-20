@@ -14,6 +14,10 @@ const props = defineProps({
     config: {
         type: Object,
     },
+    defaultConfig: {
+        type: Object,
+        default: () => ({}),
+    },
     showDefault: {
         type: Boolean,
         default: true,
@@ -326,7 +330,11 @@ onBeforeUnmount(() => {
                 {{ comp }} (local VueDataUi universal component, knobs don't
                 apply)
             </div>
-            <LocalVueDataUi :component="comp" :dataset="dataset" />
+            <LocalVueDataUi
+                :component="comp"
+                :dataset="dataset"
+                :config="defaultConfig"
+            />
         </div>
 
         <div class="box">

@@ -266,6 +266,7 @@ function setTableIconState(state) {
 
 defineExpose({
     setTableIconState,
+    setTooltipIconState,
 });
 
 const isLabel = ref(props.isLabelActive);
@@ -334,6 +335,9 @@ function toggleStack() {
 }
 
 const isItTooltip = ref(props.isTooltip);
+function setTooltipIconState(state) {
+    isItTooltip.value = state;
+}
 function toggleTooltip() {
     if (props.callbacks.tooltip) {
         props.callbacks.tooltip();
@@ -1082,7 +1086,7 @@ function getInfoClass(key) {
             :class="{ 'vue-ui-user-options-drawer': true }"
             :style="`background:${backgroundColor}; ${position === 'right' ? `right: ${offsetX ? offsetX : noOffset ? 0 : 4}px` : `left: ${noOffset ? 0 : 4}px`}`"
         >
-            <!-- Preserve the fallback branch’s existing action behavior. -->
+            <!-- Share action behavior with the popover menu. -->
             <slot name="custom-menu-before" />
             <template v-for="action in optionActions" :key="action.key">
                 <button
@@ -1090,11 +1094,7 @@ function getInfoClass(key) {
                     tabindex="0"
                     :data-cy="action.testId"
                     class="vue-ui-user-options-button"
-                    @click="
-                        action.key === 'altCopy'
-                            ? toggleAnnotator()
-                            : action.run($event)
-                    "
+                    @click="action.run($event)"
                     @mouseenter="isInfo[action.key] = true"
                     @mouseout="isInfo[action.key] = false"
                 >

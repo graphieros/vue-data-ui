@@ -8,6 +8,7 @@ import CURRENT_PACKAGE from '../../package.json';
 import TodoList from './components/TodoList.vue';
 
 const components = [
+    { name: 'ArenaVueUiGraph', icon: 'chartGraph' },
     { name: 'ArenaVueUi3dBar', icon: 'chart3dBar' },
     { name: 'ArenaVueUiAgePyramid', icon: 'chartAgePyramid' },
     { name: 'ArenaVueUiBullet', icon: 'chartBullet' },

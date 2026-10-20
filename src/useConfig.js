@@ -1,3 +1,5 @@
+import { graphDefaults } from './graph/config';
+import { deepClone } from './lib';
 export function useConfig(options = {}) {
     const COLOR_BLACK = '#2D353C';
     const COLOR_GREY = '#A1A1A1';
@@ -8405,7 +8407,55 @@ export function useConfig(options = {}) {
         collisionGap: 0,
     };
 
+    // Merge shared defaults into this call's clone, never the module-level objects.
+    const graphConfig = deepClone(graphDefaults);
+    const vue_ui_graph = {
+        ...graphConfig,
+        tooltip: { ...TOOLTIP, ...graphConfig.tooltip },
+        userOptions: {
+            ...USER_OPTIONS({
+                pdf: true,
+                csv: true,
+                img: true,
+                svg: true,
+                table: true,
+                fullscreen: true,
+                zoom: true,
+                tooltip: true,
+                annotator: true,
+            }),
+            useCursorPointer: graphConfig.userOptions.useCursorPointer,
+        },
+        table: {
+            ...TABLE,
+            useDialog: false,
+            columnNames: {
+                nodes: 'Nodes',
+                links: 'Links',
+                id: 'ID',
+                label: 'Label',
+                group: 'Group',
+                value: 'Value',
+                connections: 'Connections',
+                source: 'Source',
+                target: 'Target',
+                directed: 'Directed',
+                metadata: 'Metadata',
+            },
+            th: { ...TABLE_TH },
+            td: { ...TABLE_TD },
+        },
+        style: {
+            ...graphConfig.style,
+            chart: {
+                ...graphConfig.style.chart,
+                title: { ...TITLE, subtitle: { ...TITLE.subtitle } },
+            },
+        },
+    };
+
     return {
+        vue_ui_graph,
         vue_ui_xy,
         vue_ui_donut,
         vue_ui_treemap,

@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, onBeforeUnmount, ref } from 'vue';
 import Shape from './Shape.vue';
 import BaseIcon from './BaseIcon.vue';
 
@@ -28,8 +28,11 @@ const breakpoint = computed(() => {
 const tableContainer = ref(null);
 const isResponsive = ref(false);
 
+let observer;
+onBeforeUnmount(() => observer?.disconnect());
 onMounted(() => {
-    const observer = new ResizeObserver((entries) => {
+    if (typeof ResizeObserver === 'undefined') return;
+    observer = new ResizeObserver((entries) => {
         entries.forEach((entry) => {
             isResponsive.value = entry.contentRect.width < breakpoint.value;
         });
