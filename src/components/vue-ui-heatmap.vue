@@ -40,7 +40,6 @@ import {
     triggerResize,
     XMLNS,
 } from '../lib';
-import { throttle } from '../canvas-lib';
 import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 import { usePrinter } from '../usePrinter';
@@ -54,7 +53,7 @@ import { useTableResponsive } from '../useTableResponsive';
 import { useUserOptionState } from '../useUserOptionState';
 import { useTimeLabelCollision } from '../useTimeLabelCollider';
 import { useChartAccessibility } from '../useChartAccessibility';
-import { useLabelObserverEffect } from '../useLabelObserverEfffect';
+import { useSvgLabelLayout } from '../useSvgLabelLayout';
 import img from '../img';
 import Title from '../atoms/Title.vue'; // Must be ready in responsive mode
 import themes from '../themes/vue_ui_heatmap.json';
@@ -302,8 +301,10 @@ watch(
         mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
         mutableConfig.value.showTooltip = FINAL_CONFIG.value.style.tooltip.show;
 
-        WIDTH.value = cfgLayout.value.width;
-        HEIGHT.value = cfgLayout.value.height;
+        if (!FINAL_CONFIG.value.responsive) {
+            WIDTH.value = cfgLayout.value.width;
+            HEIGHT.value = cfgLayout.value.height;
+        }
     },
     { deep: true },
 );
@@ -354,6 +355,8 @@ const breakpoint = computed(() => {
 });
 
 const resizeObserver = ref(null);
+const responsiveSizeReady = ref(false);
+let resizeFrame = 0;
 
 const debug = computed(() => FINAL_CONFIG.value.debug);
 
@@ -374,7 +377,7 @@ function prepareChart() {
     }
 
     if (FINAL_CONFIG.value.responsive) {
-        const handleResize = throttle(() => {
+        const handleResize = () => {
             const { width, height } = useResponsive({
                 chart: heatmapChart.value,
                 title: FINAL_CONFIG.value.style.title.text
@@ -386,11 +389,13 @@ function prepareChart() {
                 noTitle: noTitle.value,
             });
 
-            requestAnimationFrame(() => {
+            cancelAnimationFrame(resizeFrame);
+            resizeFrame = requestAnimationFrame(() => {
                 WIDTH.value = width;
                 HEIGHT.value = height;
+                responsiveSizeReady.value = true;
             });
-        });
+        };
 
         if (resizeObserver.value) {
             if (observedEl.value) {
@@ -406,6 +411,7 @@ function prepareChart() {
 }
 
 onBeforeUnmount(() => {
+    cancelAnimationFrame(resizeFrame);
     if (resizeObserver.value) {
         if (observedEl.value) {
             resizeObserver.value.unobserve(observedEl.value);
@@ -432,47 +438,36 @@ const svg = computed(() => ({
     height: Math.max(10, HEIGHT.value),
 }));
 
-const topLabelsHeight = ref(0);
-const updateTopLabelsHeight = throttle((h) => {
-    if (h !== topLabelsHeight.value) {
-        topLabelsHeight.value = h;
-    }
-}, 100);
-useLabelObserverEffect({
-    elementRef: xAxisLabels,
-    callback: updateTopLabelsHeight,
-    attr: 'height',
+const {
+    metrics: labelLayout,
+    ready: labelLayoutReady,
+    update: measureLabelLayout,
+} = useSvgLabelLayout({
+    svgRef,
+    canMeasure: () =>
+        (!FINAL_CONFIG.value.responsive || responsiveSizeReady.value) &&
+        (!(
+            cfgLabels.value.xAxis.show || cfgCells.value.columnTotal.value.show
+        ) ||
+            xAxisLabelsAreReady.value) &&
+        (!cfgLabels.value.yAxis.show || yAxisLabelsAreReady.value),
+    initialMetrics: {
+        topLabelsHeight: 0,
+        leftLabelsWidth: 0,
+        xAxisSumLabelsHeight: 0,
+    },
+    measure: (read) => ({
+        topLabelsHeight: read(xAxisLabels.value).height,
+        leftLabelsWidth: read(yAxisLabels.value).width,
+        xAxisSumLabelsHeight: read(xAxisSums.value).height,
+    }),
 });
 
-const leftLabelsWidth = ref(0);
-const updateLeftLabelsWidth = throttle((w) => {
-    if (w !== leftLabelsWidth.value) {
-        leftLabelsWidth.value = w;
-    }
-}, 100);
-useLabelObserverEffect({
-    elementRef: yAxisLabels,
-    callback: updateLeftLabelsWidth,
-    attr: 'width',
-});
-
-const xAxisSumLabelsHeight = ref(0);
-const updateXAxisSumLabelsHeight = throttle((h) => {
-    if (h !== xAxisSumLabelsHeight.value) {
-        xAxisSumLabelsHeight.value = h;
-    }
-}, 100);
-useLabelObserverEffect({
-    elementRef: xAxisSums,
-    callback: updateXAxisSumLabelsHeight,
-    attr: 'height',
-});
-
-onBeforeUnmount(() => {
-    topLabelsHeight.value = 0;
-    leftLabelsWidth.value = 0;
-    xAxisSumLabelsHeight.value = 0;
-});
+const topLabelsHeight = computed(() => labelLayout.value.topLabelsHeight);
+const leftLabelsWidth = computed(() => labelLayout.value.leftLabelsWidth);
+const xAxisSumLabelsHeight = computed(
+    () => labelLayout.value.xAxisSumLabelsHeight,
+);
 
 const cellGap = computed(() => {
     return (
@@ -572,6 +567,8 @@ const average = computed(() => {
 });
 
 const yAxisTimeLabels = ref([]);
+const yAxisLabelsAreReady = ref(false);
+const xAxisLabelsAreReady = ref(false);
 const xAxisTimeLabels = ref([]);
 
 let yAxisLabelsRequestId = 0;
@@ -593,6 +590,7 @@ watchEffect(() => {
 
         if (requestId === yAxisLabelsRequestId) {
             yAxisTimeLabels.value = labels;
+            yAxisLabelsAreReady.value = true;
         }
     })();
 });
@@ -614,6 +612,7 @@ watchEffect(() => {
 
         if (requestId === xAxisLabelsRequestId) {
             xAxisTimeLabels.value = labels;
+            xAxisLabelsAreReady.value = true;
         }
     })();
 });
@@ -1539,6 +1538,26 @@ defineExpose({
     toggleFullscreen,
     copyAlt,
 });
+// Commit top, left and total-label margins together before the next paint.
+watch(
+    () => [
+        svg.value,
+        cfgLabels.value,
+        cfgCells.value,
+        FINAL_CONFIG.value.style.fontFamily,
+        props.dataset,
+        xAxisTimeLabels.value,
+        yAxisTimeLabels.value,
+        xAxisLabelsAreReady.value,
+        yAxisLabelsAreReady.value,
+        responsiveSizeReady.value,
+        xAxisLabels.value,
+        yAxisLabels.value,
+        xAxisSums.value,
+    ],
+    measureLabelLayout,
+    { flush: 'post', deep: true },
+);
 </script>
 
 <template>
@@ -1705,7 +1724,7 @@ defineExpose({
                 }"
                 :viewBox="`0 0 ${svg.width} ${svg.height}`"
                 width="100%"
-                :style="`overflow: visible; background:transparent;color:${FINAL_CONFIG.style.color}`"
+                :style="`overflow: visible; background:transparent;color:${FINAL_CONFIG.style.color};visibility:${labelLayoutReady ? 'visible' : 'hidden'}`"
                 aria-live="polite"
                 role="img"
                 preserveAspectRatio="xMidYMid"

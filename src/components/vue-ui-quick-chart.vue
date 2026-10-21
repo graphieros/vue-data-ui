@@ -45,9 +45,9 @@ import {
     objectIsEmpty,
     deepClone,
 } from '../lib';
-import { throttle } from '../canvas-lib';
 import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
+import { useSvgLabelLayout } from '../useSvgLabelLayout';
 import { useLoading } from '../useLoading';
 import { usePrinter } from '../usePrinter';
 import { useNestedProp } from '../useNestedProp';
@@ -337,8 +337,10 @@ watch(
         if (!loading.value) {
             FINAL_CONFIG.value = preparedConfig;
         }
-        defaultSizes.value.width = FINAL_CONFIG.value.width;
-        defaultSizes.value.height = FINAL_CONFIG.value.height;
+        if (!FINAL_CONFIG.value.responsive) {
+            defaultSizes.value.width = FINAL_CONFIG.value.width;
+            defaultSizes.value.height = FINAL_CONFIG.value.height;
+        }
         userOptionsVisible.value =
             !FINAL_CONFIG.value.showUserOptionsOnChartHover;
         prepareChart();
@@ -461,6 +463,9 @@ watch(
 const resizeObserver = shallowRef(null);
 const observedEl = shallowRef(null);
 
+const responsiveSizeReady = ref(false);
+let resizeFrame = 0;
+
 onMounted(() => {
     readyTeleport.value = true;
     setParentElementReference();
@@ -475,7 +480,7 @@ function prepareChart() {
         manualLoading.value = FINAL_CONFIG.value.loading;
     }
     if (FINAL_CONFIG.value.responsive) {
-        const handleResize = throttle(() => {
+        const handleResize = () => {
             const { width, height } = useResponsive({
                 chart: quickChart.value,
                 title: FINAL_CONFIG.value.title ? quickChartTitle.value : null,
@@ -487,12 +492,14 @@ function prepareChart() {
                 noTitle: noTitle.value,
             });
 
-            requestAnimationFrame(() => {
+            cancelAnimationFrame(resizeFrame);
+            resizeFrame = requestAnimationFrame(() => {
                 defaultSizes.value.width = width;
                 defaultSizes.value.height = height;
+                responsiveSizeReady.value = true;
                 queueParentStableLayoutRefresh();
             });
-        });
+        };
 
         if (resizeObserver.value) {
             if (observedEl.value) {
@@ -510,6 +517,7 @@ function prepareChart() {
 }
 
 onBeforeUnmount(() => {
+    cancelAnimationFrame(resizeFrame);
     stableParentSize.stop();
     clearQueuedSlicerFrame();
     cancelChartZoomSelection();
@@ -1397,55 +1405,37 @@ const minimap = computed(() => {
     return sumAllSeries.map((dp) => dp + (min < 0 ? Math.abs(min) : 0)); // positivized
 });
 
+const {
+    metrics: labelLayout,
+    ready: labelLayoutReady,
+    settling: labelLayoutSettling,
+    update: measureLabelLayout,
+} = useSvgLabelLayout({
+    svgRef,
+    canMeasure: () =>
+        (!FINAL_CONFIG.value.responsive || responsiveSizeReady.value) &&
+        (![detector.chartType.LINE, detector.chartType.BAR].includes(
+            chartType.value,
+        ) ||
+            timeLabelsAreReady.value),
+    initialMetrics: { scale: 0, bottom: 0, leftOverhang: 0 },
+    measure: (read) => ({
+        scale: read(scaleLabels.value).textWidth,
+        bottom: read(timeLabelsEls.value).height,
+        leftOverhang: read(timeLabelsEls.value).leftOverhang,
+    }),
+});
+
 function getScaleLabelX() {
-    let base = 0;
-    if (scaleLabels.value) {
-        const texts = Array.from(scaleLabels.value.querySelectorAll('text'));
-        base = texts.reduce((max, t) => {
-            const w = t.getComputedTextLength();
-            return w > max ? w : max;
-        }, 0);
-    }
-
-    const crosshair = 4;
-    return base + crosshair;
+    return Math.max(
+        labelLayout.value.scale + 4,
+        labelLayout.value.leftOverhang - FINAL_CONFIG.value.xyPaddingLeft,
+    );
 }
-
-const timeLabelsHeight = ref(0);
-
-const updateHeight = throttle((h) => {
-    timeLabelsHeight.value = h;
-}, 100);
-
-// Track time label height to update drawing area when they rotate
-watchEffect((onInvalidate) => {
-    const el = timeLabelsEls.value;
-    if (!el) return;
-
-    const observer = new ResizeObserver((entries) => {
-        updateHeight(entries[0].contentRect.height);
-    });
-    observer.observe(el);
-    onInvalidate(() => observer.disconnect());
-});
-
-onBeforeUnmount(() => {
-    timeLabelsHeight.value = 0;
-});
-
-const timeLabelsY = computed(() => {
-    let h = 0;
-    let tlH = 0;
-    if (timeLabelsEls.value) {
-        tlH = timeLabelsHeight.value;
-    }
-    return h + tlH;
-});
+const timeLabelsY = computed(() => labelLayout.value.bottom);
 
 const line = computed(() => {
     if (chartType.value !== detector.chartType.LINE) return null;
-
-    void parentLayoutStableRunSequence.value;
 
     const chartDimensions = {
         height: defaultSizes.value.height,
@@ -1453,13 +1443,6 @@ const line = computed(() => {
     };
 
     let _scaleLabelX = getScaleLabelX();
-
-    if (timeLabelsEls.value) {
-        const x = timeLabelsEls.value.getBBox().x;
-        if (x < 0) {
-            _scaleLabelX += Math.abs(x);
-        }
-    }
 
     const drawingArea = {
         left: _scaleLabelX + FINAL_CONFIG.value.xyPaddingLeft,
@@ -1759,21 +1742,12 @@ const line = computed(() => {
 const bar = computed(() => {
     if (chartType.value !== detector.chartType.BAR) return null;
 
-    void parentLayoutStableRunSequence.value;
-
     const chartDimensions = {
         height: defaultSizes.value.height,
         width: defaultSizes.value.width,
     };
 
     let _scaleLabelX = getScaleLabelX();
-
-    if (timeLabelsEls.value) {
-        const x = timeLabelsEls.value.getBBox().x;
-        if (x < 0) {
-            _scaleLabelX += Math.abs(x);
-        }
-    }
 
     const drawingArea = {
         left: _scaleLabelX + FINAL_CONFIG.value.xyPaddingLeft,
@@ -2631,6 +2605,7 @@ const allMinimaps = computed(() => {
 });
 
 const timeLabels = ref([]);
+const timeLabelsAreReady = ref(false);
 
 let timeLabelsRequestId = 0;
 watchEffect(() => {
@@ -2647,6 +2622,7 @@ watchEffect(() => {
 
         if (requestId === timeLabelsRequestId) {
             timeLabels.value = labels;
+            timeLabelsAreReady.value = true;
         }
     })();
 });
@@ -3097,6 +3073,24 @@ defineExpose({
         }),
     setZoomState,
 });
+watch(
+    () => [
+        defaultSizes.value.width,
+        defaultSizes.value.height,
+        FINAL_CONFIG.value,
+        chartType.value,
+        timeLabels.value,
+        timeLabelsAreReady.value,
+        scaleLabels.value,
+        timeLabelsEls.value,
+        props.dataset,
+        segregated.value,
+        responsiveSizeReady.value,
+        FINAL_CONFIG.value.fontFamily,
+    ],
+    measureLabelLayout,
+    { flush: 'post', deep: true },
+);
 </script>
 
 <template>
@@ -3235,6 +3229,7 @@ defineExpose({
                 :viewBox="viewBox"
                 :style="{
                     maxWidth: '100%',
+                    visibility: labelLayoutReady ? 'visible' : 'hidden',
                     overflow: 'visible',
                     background: 'transparent',
                     color: FINAL_CONFIG.color,
@@ -3247,7 +3242,8 @@ defineExpose({
                     userSelect: isChartZoomEnabled ? 'none' : undefined,
                 }"
                 :class="{
-                    'vue-data-ui-no-transition': !transitionEnabled,
+                    'vue-data-ui-no-transition':
+                        !transitionEnabled || labelLayoutSettling,
                     'vue-ui-quick-chart-zoom-pointer-focus':
                         isChartZoomEnabled && isChartZoomPointerFocused,
                 }"
@@ -3594,7 +3590,9 @@ defineExpose({
                             <path
                                 data-cy="scale-line-tick"
                                 :class="{
-                                    'vue-data-ui-transition': transitionEnabled,
+                                    'vue-data-ui-transition':
+                                        transitionEnabled &&
+                                        !labelLayoutSettling,
                                 }"
                                 :d="`M${label.x + 4},${label.y} ${line.drawingArea.left},${label.y}`"
                                 v-if="label.y <= line.drawingArea.bottom"
@@ -3604,7 +3602,9 @@ defineExpose({
                             />
                             <text
                                 :class="{
-                                    'vue-data-ui-transition': transitionEnabled,
+                                    'vue-data-ui-transition':
+                                        transitionEnabled &&
+                                        !labelLayoutSettling,
                                 }"
                                 data-cy="scale-line-label"
                                 v-if="label.y <= line.drawingArea.bottom"
@@ -3764,7 +3764,8 @@ defineExpose({
                                         fill="none"
                                         :class="{
                                             'vue-data-ui-transition':
-                                                transitionEnabled,
+                                                transitionEnabled &&
+                                                !labelLayoutSettling,
                                         }"
                                     />
                                     <path
@@ -3779,7 +3780,8 @@ defineExpose({
                                         fill="none"
                                         :class="{
                                             'vue-data-ui-transition':
-                                                transitionEnabled,
+                                                transitionEnabled &&
+                                                !labelLayoutSettling,
                                         }"
                                         :style="{
                                             transition: loading
@@ -3801,7 +3803,8 @@ defineExpose({
                                         fill="none"
                                         :class="{
                                             'vue-data-ui-transition':
-                                                transitionEnabled,
+                                                transitionEnabled &&
+                                                !labelLayoutSettling,
                                         }"
                                     />
                                     <path
@@ -3816,7 +3819,8 @@ defineExpose({
                                         fill="none"
                                         :class="{
                                             'vue-data-ui-transition':
-                                                transitionEnabled,
+                                                transitionEnabled &&
+                                                !labelLayoutSettling,
                                         }"
                                     />
                                 </template>
@@ -3835,7 +3839,8 @@ defineExpose({
                                         :class="{
                                             'vue-ui-quick-chart-plot': true,
                                             'vue-data-ui-transition':
-                                                transitionEnabled,
+                                                transitionEnabled &&
+                                                !labelLayoutSettling,
                                         }"
                                     />
                                 </template>
@@ -3850,7 +3855,9 @@ defineExpose({
                             <text
                                 class="vue-ui-quick-chart-label"
                                 :class="{
-                                    'vue-data-ui-transition': transitionEnabled,
+                                    'vue-data-ui-transition':
+                                        transitionEnabled &&
+                                        !labelLayoutSettling,
                                 }"
                                 data-cy="datapoint-label"
                                 v-for="(plot, j) in ds.coordinates"
@@ -3977,7 +3984,9 @@ defineExpose({
                             <path
                                 data-cy="scale-bar-tick"
                                 :class="{
-                                    'vue-data-ui-transition': transitionEnabled,
+                                    'vue-data-ui-transition':
+                                        transitionEnabled &&
+                                        !labelLayoutSettling,
                                 }"
                                 v-if="label.y <= bar.drawingArea.bottom"
                                 :d="`M${label.x + 4},${label.y} ${bar.drawingArea.left},${label.y}`"
@@ -3987,7 +3996,9 @@ defineExpose({
                             />
                             <text
                                 :class="{
-                                    'vue-data-ui-transition': transitionEnabled,
+                                    'vue-data-ui-transition':
+                                        transitionEnabled &&
+                                        !labelLayoutSettling,
                                 }"
                                 data-cy="scale-bar-label"
                                 v-if="label.y <= bar.drawingArea.bottom"
@@ -4135,7 +4146,9 @@ defineExpose({
                                 :stroke-width="FINAL_CONFIG.barStrokeWidth"
                                 stroke-linecap="round"
                                 :class="{
-                                    'vue-data-ui-transition': transitionEnabled,
+                                    'vue-data-ui-transition':
+                                        transitionEnabled &&
+                                        !labelLayoutSettling,
                                 }"
                             />
                         </template>
@@ -4148,7 +4161,9 @@ defineExpose({
                             <text
                                 data-cy="datapoint-label"
                                 :class="{
-                                    'vue-data-ui-transition': transitionEnabled,
+                                    'vue-data-ui-transition':
+                                        transitionEnabled &&
+                                        !labelLayoutSettling,
                                 }"
                                 v-for="(plot, j) in ds.coordinates"
                                 :key="`plot_${j + slicer.start}`"

@@ -48,9 +48,9 @@ import {
     treeShake,
     XMLNS,
 } from '../lib';
-import { throttle } from '../canvas-lib';
 import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
+import { useSvgLabelLayout } from '../useSvgLabelLayout';
 import { usePrinter } from '../usePrinter';
 import { useLoading } from '../useLoading';
 import { useResponsive } from '../useResponsive';
@@ -339,6 +339,9 @@ watch(
 const resizeObserver = shallowRef(null);
 const observedEl = shallowRef(null);
 
+const responsiveSizeReady = ref(false);
+let resizeFrame = 0;
+
 onMounted(() => {
     readyTeleport.value = true;
     prepareChart();
@@ -378,7 +381,7 @@ function prepareChart() {
     }
 
     if (FINAL_CONFIG.value.responsive) {
-        const handleResize = throttle(() => {
+        const handleResize = () => {
             const { width, height } = useResponsive({
                 chart: pcpChart.value,
                 title: cfgChart.value.title.text ? chartTitle.value : null,
@@ -387,9 +390,11 @@ function prepareChart() {
                 noTitle: noTitle.value,
             });
 
-            requestAnimationFrame(() => {
+            cancelAnimationFrame(resizeFrame);
+            resizeFrame = requestAnimationFrame(() => {
                 chartDimensions.value.width = width;
                 chartDimensions.value.height = height - 12;
+                responsiveSizeReady.value = true;
 
                 if (FINAL_CONFIG.value.responsiveProportionalSizing) {
                     chartDimensions.value.plotSize = translateSize({
@@ -431,7 +436,7 @@ function prepareChart() {
                         cfgYAxisLabels.value.axisNamesFontSize;
                 }
             });
-        });
+        };
 
         if (resizeObserver.value) {
             if (observedEl.value) {
@@ -447,6 +452,7 @@ function prepareChart() {
 }
 
 onBeforeUnmount(() => {
+    cancelAnimationFrame(resizeFrame);
     if (resizeObserver.value) {
         if (observedEl.value) {
             resizeObserver.value.unobserve(observedEl.value);
@@ -477,23 +483,20 @@ const chartDimensions = ref({
 const WIDTH = computed(() => chartDimensions.value.width);
 const HEIGHT = computed(() => chartDimensions.value.height);
 
-const topLabelsHeight = ref(0);
-
-const updateTopLabelsHeight = throttle((h) => {
-    topLabelsHeight.value = h;
-}, 100);
-
-// Track time label height to update drawing area when they rotate
-watchEffect((onInvalidate) => {
-    const el = xAxisLabels.value;
-    if (!el) return;
-
-    const observer = new ResizeObserver((entries) => {
-        updateTopLabelsHeight(entries[0].contentRect.height);
-    });
-    observer.observe(el);
-    onInvalidate(() => observer.disconnect());
+const {
+    metrics: labelLayout,
+    ready: labelLayoutReady,
+    settling: labelLayoutSettling,
+    update: measureLabelLayout,
+} = useSvgLabelLayout({
+    svgRef,
+    canMeasure: () =>
+        !FINAL_CONFIG.value.responsive || responsiveSizeReady.value,
+    initialMetrics: { top: 0 },
+    measure: (read) => ({ top: read(xAxisLabels.value).height }),
 });
+
+const topLabelsHeight = computed(() => labelLayout.value.top);
 
 const drawingArea = computed(() => {
     const {
@@ -1273,6 +1276,19 @@ defineExpose({
     toggleFullscreen,
     copyAlt,
 });
+watch(
+    () => [
+        chartDimensions.value,
+        cfgYAxisLabels.value,
+        xAxisLabels.value,
+        props.dataset,
+        segregated.value,
+        responsiveSizeReady.value,
+        FINAL_CONFIG.value.style.fontFamily,
+    ],
+    measureLabelLayout,
+    { flush: 'post', deep: true },
+);
 </script>
 
 <template>
@@ -1420,10 +1436,11 @@ defineExpose({
                 :class="{
                     'vue-data-ui-fullscreen--on': isFullscreen,
                     'vue-data-ui-fulscreen--off': !isFullscreen,
-                    'vue-data-ui-no-transition': !transitionEnabled,
+                    'vue-data-ui-no-transition':
+                        !transitionEnabled || labelLayoutSettling,
                 }"
                 :viewBox="`0 0 ${drawingArea.chartWidth <= 0 ? 10 : drawingArea.chartWidth} ${drawingArea.chartHeight <= 0 ? 10 : drawingArea.chartHeight}`"
-                :style="`max-width:100%; overflow: visible; background:transparent;color:${cfgChart.color}`"
+                :style="`max-width:100%; overflow: visible; background:transparent;color:${cfgChart.color};visibility:${labelLayoutReady ? 'visible' : 'hidden'}`"
                 tabindex="0"
                 @focus="onSvgFocus"
                 @blur="onSvgBlur"
@@ -1471,7 +1488,8 @@ defineExpose({
                         <!-- TICKS -->
                         <path
                             :class="{
-                                'vue-data-ui-transition': transitionEnabled,
+                                'vue-data-ui-transition':
+                                    transitionEnabled && !labelLayoutSettling,
                             }"
                             v-for="(tick, j) in scale.ticks"
                             :key="`tick_${scale.name}_${j}`"
@@ -1489,7 +1507,9 @@ defineExpose({
                                 v-for="(tick, j) in scale.ticks"
                                 :key="`tl_${scale.name}_${j}`"
                                 :class="{
-                                    'vue-data-ui-transition': transitionEnabled,
+                                    'vue-data-ui-transition':
+                                        transitionEnabled &&
+                                        !labelLayoutSettling,
                                 }"
                                 :transform="`translate(${tick.x - 12 + cfgYAxisLabels.ticks.offsetX}, ${tick.y + cfgYAxisLabels.ticks.offsetY + chartDimensions.ticksFontSize / 3})`"
                                 :fill="cfgYAxisLabels.ticks.color"
@@ -1686,7 +1706,8 @@ defineExpose({
                             :class="{
                                 'vue-ui-pcp-animated vue-data-ui-line-animated':
                                     FINAL_CONFIG.useCssAnimation,
-                                'vue-data-ui-transition': transitionEnabled,
+                                'vue-data-ui-transition':
+                                    transitionEnabled && !labelLayoutSettling,
                             }"
                             @mouseenter="
                                 useTooltip({
@@ -1727,7 +1748,8 @@ defineExpose({
                             :class="{
                                 'vue-ui-pcp-animated vue-data-ui-line-animated':
                                     FINAL_CONFIG.useCssAnimation,
-                                'vue-data-ui-transition': transitionEnabled,
+                                'vue-data-ui-transition':
+                                    transitionEnabled && !labelLayoutSettling,
                             }"
                             @mouseenter="
                                 useTooltip({
@@ -1790,7 +1812,9 @@ defineExpose({
                                 "
                                 :class="{
                                     'vue-ui-pcp-plot-label': true,
-                                    'vue-data-ui-transition': transitionEnabled,
+                                    'vue-data-ui-transition':
+                                        transitionEnabled &&
+                                        !labelLayoutSettling,
                                 }"
                                 :font-size="chartDimensions.datapointFontSize"
                                 :stroke="cfgChart.backgroundColor"

@@ -31,6 +31,7 @@ import {
     convertColorToHex,
     convertCustomPalette,
     createCsvContent,
+    createTSpansFromLineBreaksOnX,
     createPolygonPath,
     createSmoothPath,
     createStar,
@@ -61,6 +62,7 @@ import { throttle } from '../canvas-lib';
 import { COMMON_RULES, useHints } from '../useHints';
 import { useLocale } from '../useLocale';
 import { useConfig } from '../useConfig';
+import { useSvgLabelLayout } from '../useSvgLabelLayout';
 import { useDateTime } from '../useDateTime';
 import { useLoading } from '../useLoading';
 import { usePrinter } from '../usePrinter';
@@ -166,6 +168,7 @@ const noTitle = ref(null);
 const source = ref(null);
 const isFullscreen = ref(false);
 const isLoaded = ref(false);
+const responsiveSizeReady = ref(false);
 const titleStep = ref(0);
 const tableStep = ref(0);
 const legendStep = ref(0);
@@ -643,6 +646,7 @@ function prepareChart({ resetSlicer = true } = {}) {
             requestAnimationFrame(() => {
                 defaultSizes.value.width = width;
                 defaultSizes.value.height = height - 12;
+                responsiveSizeReady.value = true;
                 clearTimeout(to.value);
                 to.value = setTimeout(() => {
                     isLoaded.value = true;
@@ -682,102 +686,45 @@ const yAxisLabelsAreRight = computed(() => {
     return cfgGrid.value.y.position === 'right';
 });
 
-function getOffsetX() {
-    let scaleLabelsWidth = 0;
-
-    if (scaleLabels.value) {
-        const texts = Array.from(scaleLabels.value.querySelectorAll('text'));
-
-        scaleLabelsWidth = texts.reduce((max, textElement) => {
-            const width = textElement.getComputedTextLength();
-            return width > max ? width : max;
-        }, 0);
-    }
-
-    const yAxisLabelWidth = yAxisLabel.value
-        ? yAxisLabel.value.getBoundingClientRect().width +
-          cfgGrid.value.y.axisName.fontSize +
-          cfgGrid.value.y.axisName.offsetX
-        : 0;
-
-    return {
-        left: yAxisLabelsAreRight.value
-            ? 0
-            : scaleLabelsWidth + yAxisLabelWidth,
-
-        right: yAxisLabelsAreRight.value
-            ? scaleLabelsWidth + yAxisLabelWidth
-            : 0,
-
-        scaleLabelsWidth,
-        yAxisLabelWidth,
-    };
-}
-
-const offsetRight = ref(0);
-const measuredTimeLabelsHeight = ref(0);
-
-const timeLabelsHeightAnimationFrameId = ref(0);
-
-function measureTimeLabelsHeightNow() {
-    const labelGroupElement = timeLabelsEls.value;
-
-    if (!labelGroupElement) {
-        measuredTimeLabelsHeight.value = 0;
-        return;
-    }
-
-    try {
-        const box = labelGroupElement.getBBox();
-        measuredTimeLabelsHeight.value = Number.isFinite(box?.height)
-            ? box.height
+const {
+    metrics: labelLayout,
+    ready: labelLayoutReady,
+    settling: labelLayoutSettling,
+    update: measureLabelLayout,
+} = useSvgLabelLayout({
+    svgRef,
+    canMeasure: () =>
+        (!FINAL_CONFIG.value.responsive || responsiveSizeReady.value) &&
+        (!cfgTimeLabels.value.show || timeLabelsAreReady.value),
+    measure: (read) => {
+        const scaleGroup = scaleLabels.value;
+        const bottomGroup = timeLabelsEls.value;
+        const scaleLabelsWidth = cfgGrid.value.y.axisLabels.show
+            ? read(scaleGroup).textWidth
             : 0;
-    } catch (_) {
-        measuredTimeLabelsHeight.value = 0;
-    }
-}
-
-function scheduleMeasureTimeLabelsHeight() {
-    if (timeLabelsHeightAnimationFrameId.value) {
-        cancelAnimationFrame(timeLabelsHeightAnimationFrameId.value);
-    }
-
-    timeLabelsHeightAnimationFrameId.value = requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-            measureTimeLabelsHeightNow();
-        });
-    });
-}
-
-onBeforeUnmount(() => {
-    if (timeLabelsHeightAnimationFrameId.value) {
-        cancelAnimationFrame(timeLabelsHeightAnimationFrameId.value);
-    }
-    measuredTimeLabelsHeight.value = 0;
-    offsetRight.value = 0;
+        const yAxisLabelWidth = yAxisLabel.value
+            ? read(yAxisLabel.value).rotatedWidth +
+              cfgGrid.value.y.axisName.fontSize +
+              cfgGrid.value.y.axisName.offsetX
+            : 0;
+        return {
+            scaleLabelsWidth,
+            yAxisLabelWidth,
+            xAxisLabelHeight: read(xAxisLabel.value).height,
+            timeLabelsHeight: cfgTimeLabels.value.show
+                ? read(bottomGroup).height
+                : 0,
+            right: 0,
+        };
+    },
 });
 
-const offsetY = computed(() => {
-    let xAxisLabelHeight = 0;
-
-    if (xAxisLabel.value) {
-        try {
-            xAxisLabelHeight = xAxisLabel.value.getBBox().height;
-        } catch (_) {
-            xAxisLabelHeight = 0;
-        }
-    }
-
-    const timeLabelsHeight = cfgTimeLabels.value.show
-        ? measuredTimeLabelsHeight.value
-        : 0;
-
-    return xAxisLabelHeight + timeLabelsHeight;
-});
+const offsetY = computed(
+    () =>
+        labelLayout.value.xAxisLabelHeight + labelLayout.value.timeLabelsHeight,
+);
 
 const drawingArea = computed(() => {
-    void parentLayoutStableRunSequence.value;
-
     const { height: H, width: W } = defaultSizes.value;
     const { right: PR } = defaultSizes.value.paddingRatio;
 
@@ -788,30 +735,21 @@ const drawingArea = computed(() => {
             ? cfgLines.value.totalValues.fontSize * 1.3
             : 0;
 
-    let offsetLeftAxis = 0;
-    let offsetRightAxis = 0;
-    let scaleLabelsWidth = 0;
-    let yAxisLabelWidth = 0;
-
-    if (cfgGrid.value.y.axisLabels.show) {
-        const offsetX = getOffsetX();
-
-        offsetLeftAxis = offsetX.left;
-        offsetRightAxis = offsetX.right;
-        scaleLabelsWidth = offsetX.scaleLabelsWidth;
-        yAxisLabelWidth = offsetX.yAxisLabelWidth;
-    }
+    const { scaleLabelsWidth, yAxisLabelWidth } = labelLayout.value;
+    const axisWidth = scaleLabelsWidth + yAxisLabelWidth;
+    const offsetLeftAxis = yAxisLabelsAreRight.value ? 0 : axisWidth;
+    const offsetRightAxis = yAxisLabelsAreRight.value ? axisWidth : 0;
 
     const top = cfgChart.value.padding.top + topOffset;
 
-    const right = W - W * PR - offsetRight.value - offsetRightAxis;
+    const right = W - W * PR - labelLayout.value.right - offsetRightAxis;
 
     const bottom =
         H - cfgChart.value.padding.bottom - offsetY.value - topOffset;
 
     const left = cfgChart.value.padding.left + offsetLeftAxis;
 
-    const width = W - left - W * PR - offsetRight.value - offsetRightAxis;
+    const width = W - left - W * PR - labelLayout.value.right - offsetRightAxis;
 
     const height =
         H - top - cfgChart.value.padding.bottom - offsetY.value - topOffset;
@@ -1688,6 +1626,7 @@ const yLabels = computed(() => {
 });
 
 const timeLabels = ref([]);
+const timeLabelsAreReady = ref(false);
 const allTimeLabels = ref([]);
 
 let timeLabelsRequestId = 0;
@@ -1705,6 +1644,7 @@ watchEffect(() => {
 
         if (requestId === timeLabelsRequestId) {
             timeLabels.value = labels;
+            timeLabelsAreReady.value = true;
         }
     })();
 });
@@ -1810,37 +1750,32 @@ const layoutDisplayedTimeLabels = computed(() => {
     return getDisplayedTimeLabels(null);
 });
 
-watchEffect(
-    () => {
-        const timeLabelsAreShown = cfgTimeLabels.value.show;
-        const timeLabelsFontSize = cfgTimeLabels.value.fontSize;
-        const timeLabelsRotation = cfgTimeLabels.value.rotation;
-        const timeLabelsOffsetY = cfgTimeLabels.value.offsetY;
-
-        // Layout measurement intentionally excludes the hovered series index.
-        const renderedTimeLabelTexts = (layoutDisplayedTimeLabels.value || [])
+watch(
+    () => [
+        defaultSizes.value.width,
+        defaultSizes.value.height,
+        parentLayoutStableRunSequence.value,
+        FINAL_CONFIG.value.style.fontFamily,
+        cfgGrid.value,
+        cfgTimeLabels.value,
+        cfgLines.value,
+        layoutDisplayedTimeLabels.value
             .map((label) => label?.text ?? '')
-            .join('|');
-
-        const chartWidth = defaultSizes.value.width;
-        const chartHeight = defaultSizes.value.height;
-
-        const timeLabelsGroupElement = timeLabelsEls.value;
-        const xAxisLabelElement = xAxisLabel.value;
-
-        void timeLabelsAreShown;
-        void timeLabelsFontSize;
-        void timeLabelsRotation;
-        void timeLabelsOffsetY;
-        void renderedTimeLabelTexts;
-        void chartWidth;
-        void chartHeight;
-        void timeLabelsGroupElement;
-        void xAxisLabelElement;
-
-        scheduleMeasureTimeLabelsHeight();
-    },
-    { flush: 'post' },
+            .join('|'),
+        props.dataset,
+        timeLabelsAreReady.value,
+        responsiveSizeReady.value,
+        segregated.value,
+        mutableConfig.value,
+        slicer.value.start,
+        slicer.value.end,
+        timeLabelsEls.value,
+        scaleLabels.value,
+        xAxisLabel.value,
+        yAxisLabel.value,
+    ],
+    measureLabelLayout,
+    { flush: 'post', deep: true },
 );
 
 const localeData = ref({
@@ -4233,12 +4168,14 @@ defineExpose({
                     'vue-data-ui-loading': loading,
                     'vue-data-ui-fullscreen--on': isFullscreen,
                     'vue-data-ui-fulscreen--off': !isFullscreen,
-                    'vue-data-ui-no-transition': !transitionEnabled,
+                    'vue-data-ui-no-transition':
+                        !transitionEnabled || labelLayoutSettling,
                     'vue-ui-stackline-chart-zoom-pointer-focus':
                         isChartZoomEnabled && isChartZoomPointerFocused,
                 }"
                 :style="{
                     maxWidth: '100%',
+                    visibility: labelLayoutReady ? 'visible' : 'hidden',
                     overflow: 'visible',
                     background: 'transparent',
                     color: cfgChart.color,
@@ -4481,7 +4418,9 @@ defineExpose({
                                 "
                                 :opacity="cfgLines.areaOpacity"
                                 :class="{
-                                    'vue-data-ui-transition': transitionEnabled,
+                                    'vue-data-ui-transition':
+                                        transitionEnabled &&
+                                        !labelLayoutSettling,
                                 }"
                             />
                         </template>
@@ -4501,7 +4440,9 @@ defineExpose({
                                 fill="none"
                                 stroke-linecap="round"
                                 :class="{
-                                    'vue-data-ui-transition': transitionEnabled,
+                                    'vue-data-ui-transition':
+                                        transitionEnabled &&
+                                        !labelLayoutSettling,
                                 }"
                             />
                         </template>
@@ -4518,7 +4459,8 @@ defineExpose({
                             v-for="(yLabel, i) in yLabels"
                             :key="`ytick_${i}`"
                             :class="{
-                                'vue-data-ui-transition': transitionEnabled,
+                                'vue-data-ui-transition':
+                                    transitionEnabled && !labelLayoutSettling,
                             }"
                             :x1="
                                 yAxisLabelsAreRight
@@ -4537,7 +4479,8 @@ defineExpose({
                         />
                         <text
                             :class="{
-                                'vue-data-ui-transition': transitionEnabled,
+                                'vue-data-ui-transition':
+                                    transitionEnabled && !labelLayoutSettling,
                             }"
                             data-cy="scale-label-y"
                             v-for="(yLabel, i) in yLabels"
@@ -4850,7 +4793,8 @@ defineExpose({
                                             :still="loading"
                                             :class="{
                                                 'vue-data-ui-transition':
-                                                    transitionEnabled,
+                                                    transitionEnabled &&
+                                                    !labelLayoutSettling,
                                             }"
                                         />
                                     </template>
@@ -4916,7 +4860,8 @@ defineExpose({
                                         :still="loading"
                                         :class="{
                                             'vue-data-ui-transition':
-                                                transitionEnabled,
+                                                transitionEnabled &&
+                                                !labelLayoutSettling,
                                         }"
                                     />
                                 </g>
@@ -4940,7 +4885,9 @@ defineExpose({
                         >
                             <text
                                 :class="{
-                                    'vue-data-ui-transition': transitionEnabled,
+                                    'vue-data-ui-transition':
+                                        transitionEnabled &&
+                                        !labelLayoutSettling,
                                 }"
                                 data-cy="label-datapoint"
                                 v-if="
@@ -4991,7 +4938,9 @@ defineExpose({
                         >
                             <text
                                 :class="{
-                                    'vue-data-ui-transition': transitionEnabled,
+                                    'vue-data-ui-transition':
+                                        transitionEnabled &&
+                                        !labelLayoutSettling,
                                 }"
                                 data-cy="label-total"
                                 v-if="

@@ -49,9 +49,9 @@ import {
     wrapText,
     XMLNS,
 } from '../lib';
-import { throttle } from '../canvas-lib';
 import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
+import { useSvgLabelLayout } from '../useSvgLabelLayout';
 import { useLoading } from '../useLoading';
 import { usePrinter } from '../usePrinter';
 
@@ -332,9 +332,11 @@ watch(
         mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
         mutableConfig.value.showTooltip = cfgTooltip.value.show;
 
-        WIDTH.value = cfgChart.value.width;
-        HEIGHT.value = cfgChart.value.height;
-        plotRadius.value = cfgChart.value.plots.radius;
+        if (!FINAL_CONFIG.value.responsive) {
+            WIDTH.value = cfgChart.value.width;
+            HEIGHT.value = cfgChart.value.height;
+            plotRadius.value = cfgChart.value.plots.radius;
+        }
     },
     { deep: true },
 );
@@ -351,6 +353,9 @@ watch(
 
 const resizeObserver = shallowRef(null);
 const observedEl = shallowRef(null);
+
+const responsiveSizeReady = ref(false);
+let resizeFrame = 0;
 
 onMounted(() => {
     prepareChart();
@@ -407,7 +412,7 @@ function prepareChart() {
     }
 
     if (FINAL_CONFIG.value.responsive) {
-        const handleResize = throttle(() => {
+        const handleResize = () => {
             const { width, height } = useResponsive({
                 chart: stripPlotChart.value,
                 title: cfgChart.value.title.text ? chartTitle.value : null,
@@ -415,11 +420,13 @@ function prepareChart() {
                 noTitle: noTitle.value,
             });
 
-            requestAnimationFrame(() => {
+            cancelAnimationFrame(resizeFrame);
+            resizeFrame = requestAnimationFrame(() => {
                 absoluteHeight.value = height;
 
                 WIDTH.value = Math.max(0.1, width);
                 HEIGHT.value = Math.max(0.1, height - 12);
+                responsiveSizeReady.value = true;
 
                 if (FINAL_CONFIG.value.responsiveProportionalSizing) {
                     plotRadius.value = translateSize({
@@ -433,7 +440,7 @@ function prepareChart() {
                     plotRadius.value = cfgChart.value.plots.radius;
                 }
             });
-        });
+        };
 
         if (resizeObserver.value) {
             if (observedEl.value) {
@@ -454,6 +461,7 @@ function prepareChart() {
 }
 
 onBeforeUnmount(() => {
+    cancelAnimationFrame(resizeFrame);
     if (resizeObserver.value) {
         if (observedEl.value) {
             resizeObserver.value.unobserve(observedEl.value);
@@ -510,9 +518,11 @@ watch(
             },
             showTooltip: cfgTooltip.value.show,
         };
-        WIDTH.value = cfgChart.value.width;
-        HEIGHT.value = cfgChart.value.height;
-        plotRadius.value = cfgChart.value.plots.radius;
+        if (!FINAL_CONFIG.value.responsive) {
+            WIDTH.value = cfgChart.value.width;
+            HEIGHT.value = cfgChart.value.height;
+            plotRadius.value = cfgChart.value.plots.radius;
+        }
     },
     { immediate: true },
 );
@@ -536,57 +546,46 @@ function getViolinMaxWidth() {
     );
 }
 
-function getOffsetX() {
-    let base = 0;
-    if (scaleLabels.value) {
-        const texts = Array.from(scaleLabels.value.querySelectorAll('text'));
-        base = texts.reduce((max, t) => {
-            const w = t.getComputedTextLength();
-            return w > max ? w : max;
-        }, 0);
-    }
-    const yAxisLabelW = yAxisLabel.value
-        ? yAxisLabel.value.getBoundingClientRect().width
-        : 0;
+const {
+    metrics: labelLayout,
+    ready: labelLayoutReady,
+    settling: labelLayoutSettling,
+    update: measureLabelLayout,
+} = useSvgLabelLayout({
+    svgRef,
+    canMeasure: () =>
+        !FINAL_CONFIG.value.responsive || responsiveSizeReady.value,
+    initialMetrics: {
+        scaleLabelsWidth: 0,
+        yAxisLabelWidth: 0,
+        xAxisLabelHeight: 0,
+        timeLabelsHeight: 0,
+    },
+    measure: (read) => ({
+        scaleLabelsWidth: read(scaleLabels.value).textWidth,
+        yAxisLabelWidth: read(yAxisLabel.value).rotatedWidth,
+        xAxisLabelHeight: read(xAxisLabel.value).height,
+        timeLabelsHeight: read(timeLabelsEls.value).height,
+    }),
+});
 
+function getOffsetX() {
+    const base = labelLayout.value.scaleLabelsWidth;
+    const yAxisLabelW = labelLayout.value.yAxisLabelWidth;
     return base + yAxisLabelW + (yAxisLabelW ? 24 : 0);
 }
 
-const labelsXHeight = ref(0);
-
-const updateHeight = throttle((h) => {
-    labelsXHeight.value = h;
-}, 100);
-
-watchEffect((onInvalidate) => {
-    const el = timeLabelsEls.value;
-    if (!el) return;
-    const observer = new ResizeObserver((entries) => {
-        updateHeight(entries[0].contentRect.height);
-    });
-    observer.observe(el);
-    onInvalidate(() => observer.disconnect());
-});
-
-onBeforeUnmount(() => {
-    labelsXHeight.value = 0;
-});
-
-const offsetY = computed(() => {
-    let h = 0;
-    if (xAxisLabel.value) {
-        h =
-            xAxisLabel.value.getBBox().height +
-            cfgLabels.value.axis.fontSize / 3 +
-            12 +
-            cfgLabels.value.axis.xLabelOffsetY;
-    }
-    let tlH = 0;
-    if (timeLabelsEls.value) {
-        tlH = labelsXHeight.value + 12;
-    }
-    return h + tlH;
-});
+const offsetY = computed(
+    () =>
+        labelLayout.value.xAxisLabelHeight +
+        labelLayout.value.timeLabelsHeight +
+        (xAxisLabel.value
+            ? cfgLabels.value.axis.fontSize / 3 +
+              12 +
+              cfgLabels.value.axis.xLabelOffsetY
+            : 0) +
+        (timeLabelsEls.value ? 12 : 0),
+);
 
 const drawingArea = computed(() => {
     const offsetX = getOffsetX();
@@ -1716,6 +1715,24 @@ defineExpose({
     toggleFullscreen,
     copyAlt,
 });
+// Label metrics update together after rendering, without depending on hover.
+watch(
+    () => [
+        WIDTH.value,
+        HEIGHT.value,
+        cfgLabels.value,
+        cfgChart.value,
+        FINAL_CONFIG.value.style.fontFamily,
+        props.dataset,
+        responsiveSizeReady.value,
+        scaleLabels.value,
+        timeLabelsEls.value,
+        xAxisLabel.value,
+        yAxisLabel.value,
+    ],
+    measureLabelLayout,
+    { flush: 'post', deep: true },
+);
 </script>
 
 <template>
@@ -1862,10 +1879,11 @@ defineExpose({
                 :class="{
                     'vue-data-ui-fullscreen--on': isFullscreen,
                     'vue-data-ui-fulscreen--off': !isFullscreen,
-                    'vue-data-ui-no-transition': !transitionEnabled,
+                    'vue-data-ui-no-transition':
+                        !transitionEnabled || labelLayoutSettling,
                 }"
                 :viewBox="`0 0 ${WIDTH} ${HEIGHT}`"
-                :style="`max-width:100%; overflow: visible; background:transparent;color:${cfgChart.color};`"
+                :style="`max-width:100%; overflow: visible; background:transparent;color:${cfgChart.color};;visibility:${labelLayoutReady ? 'visible' : 'hidden'}`"
                 :aria-describedby="`chart-instructions-${uid}`"
                 tabindex="0"
                 @focus="onSvgFocus"
@@ -1968,7 +1986,10 @@ defineExpose({
                 <g v-if="cfgLabels.yAxisLabels.show" ref="scaleLabels">
                     <text
                         data-cy="axis-y-label"
-                        :class="{ 'vue-data-ui-transition': transitionEnabled }"
+                        :class="{
+                            'vue-data-ui-transition':
+                                transitionEnabled && !labelLayoutSettling,
+                        }"
                         v-for="(label, i) in yLines"
                         :key="`sl_${i}`"
                         :transform="`translate(${label.x1 + cfgLabels.yAxisLabels.offsetX - 5}, ${label.y + cfgLabels.yAxisLabels.fontSize / 3})`"

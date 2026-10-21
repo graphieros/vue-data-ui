@@ -50,9 +50,9 @@ import {
     treeShake,
     interpolateHexColors,
 } from '../lib';
-import { throttle } from '../canvas-lib';
 import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
+import { useSvgLabelLayout } from '../useSvgLabelLayout';
 import { useLoading } from '../useLoading';
 import { usePrinter } from '../usePrinter';
 import { useNestedProp } from '../useNestedProp';
@@ -150,6 +150,9 @@ const isDataset = computed({
 
 const emit = defineEmits(['selectLegend', 'selectDatapoint', 'copyAlt']);
 
+const responsiveSizeReady = ref(false);
+let resizeFrame = 0;
+
 onMounted(() => {
     readyTeleport.value = true;
     prepareChart();
@@ -189,7 +192,7 @@ function prepareChart() {
     }
 
     if (FINAL_CONFIG.value.responsive) {
-        const handleResize = throttle(() => {
+        const handleResize = () => {
             const { width, height } = useResponsive({
                 chart: historyPlotChart.value,
                 title: cfgChart.value.title.text ? chartTitle.value : null,
@@ -198,9 +201,11 @@ function prepareChart() {
                 source: source.value,
             });
 
-            requestAnimationFrame(() => {
+            cancelAnimationFrame(resizeFrame);
+            resizeFrame = requestAnimationFrame(() => {
                 svg.value.width = width;
                 svg.value.height = height;
+                responsiveSizeReady.value = true;
 
                 if (FINAL_CONFIG.value.responsiveProportionalSizing) {
                     sizes.value.plots = translateSize({
@@ -269,7 +274,7 @@ function prepareChart() {
                     sizes.value.yAxisName = cfgAxes.value.y.name.fontSize;
                 }
             });
-        });
+        };
 
         if (resizeObserver.value) {
             if (observedEl.value) {
@@ -285,6 +290,7 @@ function prepareChart() {
 }
 
 onBeforeUnmount(() => {
+    cancelAnimationFrame(resizeFrame);
     if (resizeObserver.value) {
         if (observedEl.value) {
             resizeObserver.value.unobserve(observedEl.value);
@@ -543,48 +549,41 @@ const svg = ref({
 const WIDTH = computed(() => svg.value.width);
 const HEIGHT = computed(() => svg.value.height);
 
+const {
+    metrics: labelLayout,
+    ready: labelLayoutReady,
+    settling: labelLayoutSettling,
+    update: measureLabelLayout,
+} = useSvgLabelLayout({
+    svgRef,
+    canMeasure: () =>
+        !FINAL_CONFIG.value.responsive || responsiveSizeReady.value,
+    initialMetrics: {
+        scaleLabelsWidth: 0,
+        yAxisLabelWidth: 0,
+        xAxisLabelHeight: 0,
+        timeLabelsHeight: 0,
+    },
+    measure: (read) => ({
+        scaleLabelsWidth: read(yAxisScales.value).textWidth,
+        yAxisLabelWidth: read(yAxisLabel.value).rotatedWidth,
+        xAxisLabelHeight: read(xAxisLabel.value).height,
+        timeLabelsHeight: read(xAxisScales.value).height,
+    }),
+});
+
 function getOffsetX() {
-    let base = 0;
-    if (yAxisScales.value) {
-        const texts = Array.from(yAxisScales.value.querySelectorAll('text'));
-        base = texts.reduce((max, t) => {
-            const w = t.getComputedTextLength();
-            return w > max ? w : max;
-        }, 0);
-    }
-    const yAxisLabelW = yAxisLabel.value
-        ? yAxisLabel.value.getBoundingClientRect().width
-        : 0;
+    const base = labelLayout.value.scaleLabelsWidth;
+    const yAxisLabelW = labelLayout.value.yAxisLabelWidth;
     return base + yAxisLabelW + (yAxisLabelW ? 24 : 0);
 }
 
-const xAxisScalesH = ref(0);
-
-const updateHeight = throttle((h) => {
-    xAxisScalesH.value = h;
-});
-
-watchEffect((onInvalidate) => {
-    const el = xAxisScales.value;
-    if (!el) return;
-    const observer = new ResizeObserver((entries) => {
-        updateHeight(entries[0].contentRect.height);
-    });
-    observer.observe(el);
-    onInvalidate(() => observer.disconnect());
-});
-
-const offsetY = computed(() => {
-    let h = 0;
-    if (xAxisLabel.value) {
-        h = xAxisLabel.value.getBBox().height + sizes.value.xAxisName / 2;
-    }
-    let tlH = 0;
-    if (xAxisScales.value) {
-        tlH = xAxisScalesH.value;
-    }
-    return h + tlH;
-});
+const offsetY = computed(
+    () =>
+        labelLayout.value.xAxisLabelHeight +
+        labelLayout.value.timeLabelsHeight +
+        (xAxisLabel.value ? sizes.value.xAxisName / 2 : 0),
+);
 
 const drawingArea = computed(() => {
     const left = cfgChart.value.padding.left;
@@ -1654,6 +1653,24 @@ defineExpose({
     toggleFullscreen,
     copyAlt,
 });
+// Label metrics update together after rendering, without depending on hover.
+watch(
+    () => [
+        svg.value,
+        sizes.value,
+        cfgAxes.value,
+        cfgChart.value,
+        FINAL_CONFIG.value.style.fontFamily,
+        props.dataset,
+        responsiveSizeReady.value,
+        yAxisScales.value,
+        xAxisScales.value,
+        xAxisLabel.value,
+        yAxisLabel.value,
+    ],
+    measureLabelLayout,
+    { flush: 'post', deep: true },
+);
 </script>
 
 <template>
@@ -1807,7 +1824,7 @@ defineExpose({
                 ref="svgRef"
                 :xmlns="XMLNS"
                 :viewBox="`0 0 ${svg.width < 0 ? 0.1 : svg.width} ${svg.height < 0 ? 0.1 : svg.height}`"
-                :style="`max-width:100%;overflow:visible;background:transparent;color:${cfgChart.color}`"
+                :style="`max-width:100%;overflow:visible;background:transparent;color:${cfgChart.color};visibility:${labelLayoutReady ? 'visible' : 'hidden'}`"
                 :aria-describedby="`chart-instructions-${uid}`"
                 tabindex="0"
                 @focus="onSvgFocus"
@@ -2122,7 +2139,8 @@ defineExpose({
                     >
                         <path
                             :class="{
-                                'vue-data-ui-transition': transitionEnabled,
+                                'vue-data-ui-transition':
+                                    transitionEnabled && !labelLayoutSettling,
                             }"
                             data-cy="datapoint-path-wrapper"
                             :d="ds.path"
@@ -2134,7 +2152,8 @@ defineExpose({
                         />
                         <path
                             :class="{
-                                'vue-data-ui-transition': transitionEnabled,
+                                'vue-data-ui-transition':
+                                    transitionEnabled && !labelLayoutSettling,
                             }"
                             data-cy="datapoint-path"
                             :d="ds.path"
@@ -2156,7 +2175,10 @@ defineExpose({
                         :fill="cfgChart.backgroundColor"
                         :r="sizes.plots"
                         stroke="none"
-                        :class="{ 'vue-data-ui-transition': transitionEnabled }"
+                        :class="{
+                            'vue-data-ui-transition':
+                                transitionEnabled && !labelLayoutSettling,
+                        }"
                     />
                     <!-- Visible plots -->
                     <circle
@@ -2168,7 +2190,10 @@ defineExpose({
                         :r="sizes.plots"
                         :stroke="cfgPlots.stroke"
                         :stroke-width="cfgPlots.strokeWidth"
-                        :class="{ 'vue-data-ui-transition': transitionEnabled }"
+                        :class="{
+                            'vue-data-ui-transition':
+                                transitionEnabled && !labelLayoutSettling,
+                        }"
                         :style="{
                             opacity: getSeriesOpacity(ds.seriesIndex),
                         }"
@@ -2181,7 +2206,9 @@ defineExpose({
                                 v-if="!String(plot.label).includes('\n')"
                                 data-cy="datapoint-label"
                                 :class="{
-                                    'vue-data-ui-transition': transitionEnabled,
+                                    'vue-data-ui-transition':
+                                        transitionEnabled &&
+                                        !labelLayoutSettling,
                                 }"
                                 :transform="`translate(${plot.x + cfgPlots.labels.offsetX}, ${plot.y + cfgPlots.labels.offsetY + sizes.plots + sizes.labels})`"
                                 :font-size="sizes.labels"
@@ -2202,7 +2229,9 @@ defineExpose({
                                 v-else
                                 data-cy="datapoint-label"
                                 :class="{
-                                    'vue-data-ui-transition': transitionEnabled,
+                                    'vue-data-ui-transition':
+                                        transitionEnabled &&
+                                        !labelLayoutSettling,
                                 }"
                                 :transform="`translate(${plot.x + cfgPlots.labels.offsetX}, ${plot.y + cfgPlots.labels.offsetY + sizes.plots + sizes.labels})`"
                                 :font-size="sizes.labels"
@@ -2234,7 +2263,8 @@ defineExpose({
                             v-for="(label, n) in ds.plots"
                             :key="`lab_${n}`"
                             :class="{
-                                'vue-data-ui-transition': transitionEnabled,
+                                'vue-data-ui-transition':
+                                    transitionEnabled && !labelLayoutSettling,
                             }"
                             :transform="`translate(${label.x + cfgPlots.indexLabels.offsetX}, ${label.y + cfgPlots.indexLabels.offsetY + sizes.indexLabels / 3})`"
                             :font-size="sizes.indexLabels"

@@ -49,9 +49,9 @@ import {
     treeShake,
     isValidUserValue,
 } from '../lib';
-import { throttle } from '../canvas-lib';
 import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
+import { useSvgLabelLayout } from '../useSvgLabelLayout';
 import { usePrinter } from '../usePrinter';
 import { useLoading } from '../useLoading.js';
 import { useTimeLabels } from '../useTimeLabels';
@@ -208,6 +208,9 @@ const isDataset = computed(() => {
     return !!props.dataset && props.dataset.length;
 });
 
+const responsiveSizeReady = ref(false);
+let resizeFrame = 0;
+
 onMounted(() => {
     readyTeleport.value = true;
     setParentElementReference();
@@ -258,7 +261,7 @@ function prepareChart() {
     setupSlicer();
 
     if (FINAL_CONFIG.value.responsive) {
-        const handleResize = throttle(() => {
+        const handleResize = () => {
             isLoaded.value = false;
             const { width, height } = useResponsive({
                 chart: donutEvolutionChart.value,
@@ -275,16 +278,18 @@ function prepareChart() {
                 source: source.value,
             });
 
-            requestAnimationFrame(() => {
+            cancelAnimationFrame(resizeFrame);
+            resizeFrame = requestAnimationFrame(() => {
                 defaultSizes.value.width = width;
                 defaultSizes.value.height = height - 12;
+                responsiveSizeReady.value = true;
                 queueParentStableLayoutRefresh();
                 clearTimeout(to.value);
                 to.value = setTimeout(() => {
                     isLoaded.value = true;
                 }, 10);
             });
-        });
+        };
 
         if (resizeObserver.value) {
             if (observedEl.value) {
@@ -850,20 +855,34 @@ const yAxisLabelsAreRight = computed(() => {
     return cfgGrid.value.yAxis.position === 'right';
 });
 
+const {
+    metrics: labelLayout,
+    ready: labelLayoutReady,
+    settling: labelLayoutSettling,
+    update: measureLabelLayout,
+} = useSvgLabelLayout({
+    svgRef,
+    canMeasure: () =>
+        (!FINAL_CONFIG.value.responsive || responsiveSizeReady.value) &&
+        (!cfgGrid.value.xAxis.dataLabels.show || timeLabelsAreReady.value),
+    initialMetrics: {
+        scaleLabelsWidth: 0,
+        yAxisLabelWidth: 0,
+        xAxisLabelHeight: 0,
+        timeLabelsHeight: 0,
+    },
+    measure: (read) => ({
+        scaleLabelsWidth: read(scaleLabels.value).textWidth,
+        yAxisLabelWidth: read(yAxisLabel.value).rotatedWidth,
+        xAxisLabelHeight: read(xAxisLabel.value).height,
+        timeLabelsHeight: read(timeLabelsEls.value).height,
+    }),
+});
+
 function getScaleLabelX() {
-    let base = 0;
-
-    if (scaleLabels.value) {
-        const texts = Array.from(scaleLabels.value.querySelectorAll('text'));
-
-        base = texts.reduce((max, t) => {
-            const w = t.getComputedTextLength();
-            return w > max ? w : max;
-        }, 0);
-    }
-
+    const base = labelLayout.value.scaleLabelsWidth;
     const yAxisLabelW = yAxisLabel.value
-        ? yAxisLabel.value.getBoundingClientRect().width +
+        ? labelLayout.value.yAxisLabelWidth +
           cfgGrid.value.axis.yLabelOffsetX +
           cfgGrid.value.axis.fontSize
         : 0;
@@ -880,26 +899,8 @@ function getScaleLabelX() {
     };
 }
 
-const timeLabelsHeight = ref(0);
-
-const updateHeight = throttle((h) => {
-    timeLabelsHeight.value = h;
-}, 100);
-
-// Track time label height to update drawing area when they rotate
-watchEffect((onInvalidate) => {
-    const el = timeLabelsEls.value;
-    if (!el) return;
-
-    const observer = new ResizeObserver((entries) => {
-        updateHeight(entries[0].contentRect.height);
-    });
-    observer.observe(el);
-    onInvalidate(() => observer.disconnect());
-});
-
 onBeforeUnmount(() => {
-    timeLabelsHeight.value = 0;
+    cancelAnimationFrame(resizeFrame);
     stableParentSize.stop();
     clearTimeout(to.value);
     clearQueuedSlicerFrame();
@@ -917,26 +918,15 @@ onBeforeUnmount(() => {
     }
 });
 
-const timeLabelsY = computed(() => {
-    let h = 0;
-    if (xAxisLabel.value) {
-        h = xAxisLabel.value.getBBox().height;
-    }
-    let tlH = 0;
-    if (timeLabelsEls.value) {
-        tlH = timeLabelsHeight.value;
-    }
-    return (
-        h +
-        tlH +
+const timeLabelsY = computed(
+    () =>
+        labelLayout.value.xAxisLabelHeight +
+        labelLayout.value.timeLabelsHeight +
         cfgGrid.value.axis.fontSize +
-        cfgGrid.value.xAxis.dataLabels.offsetY
-    );
-});
+        cfgGrid.value.xAxis.dataLabels.offsetY,
+);
 
 const svg = computed(() => {
-    void parentLayoutStableRunSequence.value;
-
     const scaleLabelX = getScaleLabelX();
 
     const topOffset = cfgLayout.value.dataLabels.fontSize * 3;
@@ -1033,6 +1023,7 @@ const maxLength = computed(() => {
 });
 
 const timeLabels = ref([]);
+const timeLabelsAreReady = ref(false);
 let timeLabelsRequestId = 0;
 
 watchEffect(() => {
@@ -1049,6 +1040,7 @@ watchEffect(() => {
 
         if (requestId === timeLabelsRequestId) {
             timeLabels.value = labels;
+            timeLabelsAreReady.value = true;
         }
     })();
 });
@@ -2215,6 +2207,29 @@ defineExpose({
     resetZoom: () => refreshSlicer({ force: true, publish: true }),
     setZoomState,
 });
+// Label metrics update together after rendering, without depending on hover.
+watch(
+    () => [
+        defaultSizes.value.width,
+        defaultSizes.value.height,
+        parentLayoutStableRunSequence.value,
+        timeLabels.value,
+        timeLabelsAreReady.value,
+        slicer.value.start,
+        slicer.value.end,
+        cfgGrid.value,
+        cfgLayout.value,
+        FINAL_CONFIG.value.style.fontFamily,
+        props.dataset,
+        responsiveSizeReady.value,
+        scaleLabels.value,
+        timeLabelsEls.value,
+        xAxisLabel.value,
+        yAxisLabel.value,
+    ],
+    measureLabelLayout,
+    { flush: 'post', deep: true },
+);
 </script>
 
 <template>
@@ -2360,7 +2375,8 @@ defineExpose({
                 :class="{
                     'vue-data-ui-fullscreen--on': isFullscreen,
                     'vue-data-ui-fulscreen--off': !isFullscreen,
-                    'vue-data-ui-no-transition': !transitionEnabled,
+                    'vue-data-ui-no-transition':
+                        !transitionEnabled || labelLayoutSettling,
                     'vue-ui-donut-evolution-chart-zoom-pointer-focus':
                         isChartZoomEnabled && isChartZoomPointerFocused,
                 }"
@@ -2368,6 +2384,7 @@ defineExpose({
                 :viewBox="`0 0 ${svg.absoluteWidth} ${svg.absoluteHeight}`"
                 :style="{
                     maxWidth: '100%',
+                    visibility: labelLayoutReady ? 'visible' : 'hidden',
                     overflow: 'visible',
                     background: 'transparent',
                     color: cfgChart.color,
@@ -2552,7 +2569,8 @@ defineExpose({
                     <g v-for="(yLabel, i) in yLabels" :key="`sl_${i}`">
                         <path
                             :class="{
-                                'vue-data-ui-transition': transitionEnabled,
+                                'vue-data-ui-transition':
+                                    transitionEnabled && !labelLayoutSettling,
                             }"
                             data-cy="axis-y-tick"
                             v-if="
@@ -2567,7 +2585,8 @@ defineExpose({
                         <text
                             data-cy="axis-y-label"
                             :class="{
-                                'vue-data-ui-transition': transitionEnabled,
+                                'vue-data-ui-transition':
+                                    transitionEnabled && !labelLayoutSettling,
                             }"
                             v-if="
                                 yLabel.value >= niceScale.min &&

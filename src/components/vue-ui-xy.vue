@@ -101,6 +101,7 @@ import { useTimeLabels } from '../useTimeLabels.js';
 import { useChartExport } from '../useChartExport.js';
 import { useTransitions } from '../useTransitions.js';
 import { useStableElementSize } from '../useStableElementSize.js';
+import { useSvgLabelLayout } from '../useSvgLabelLayout';
 import { useTimeLabelCollision } from '../useTimeLabelCollider.js';
 import img from '../img.js';
 import Title from '../atoms/Title.vue';
@@ -1726,19 +1727,9 @@ const yAxisLabelsAreRight = computed(() => {
 });
 
 function getScaleLabelX() {
-    let scaleLabelsWidth = 0;
-
-    if (scaleLabels.value) {
-        const texts = Array.from(scaleLabels.value.querySelectorAll('text'));
-
-        scaleLabelsWidth = texts.reduce((max, textElement) => {
-            const width = textElement.getComputedTextLength();
-            return width > max ? width : max;
-        }, 0);
-    }
-
+    const scaleLabelsWidth = labelLayout.value.scaleLabelsWidth;
     const yAxisLabelWidth = yAxisLabel.value
-        ? yAxisLabel.value.getBoundingClientRect().width +
+        ? labelLayout.value.yAxisLabelWidth +
           gridLabels.value.axis.yLabelOffsetX +
           fontSizes.value.yAxis
         : 0;
@@ -1801,54 +1792,50 @@ function updateContinuousTooltipFromXValue(xValue) {
     continuousTooltipX.value = svgX;
 }
 
-const timeLabelsHeight = ref(0);
-const timeLabelsBBoxX = ref(0);
-
-function measureTimeLabelsBox() {
-    const el = timeLabelsEls.value;
-
-    if (!el) {
-        timeLabelsHeight.value = 0;
-        timeLabelsBBoxX.value = 0;
-        return;
-    }
-
-    try {
-        const bbox = el.getBBox();
-        timeLabelsHeight.value = bbox?.height ?? 0;
-        timeLabelsBBoxX.value = bbox?.x ?? 0;
-    } catch {
-        timeLabelsHeight.value = 0;
-        timeLabelsBBoxX.value = 0;
-    }
-}
+const {
+    metrics: labelLayout,
+    ready: labelLayoutReady,
+    settling: labelLayoutSettling,
+    update: measureLabelLayout,
+} = useSvgLabelLayout({
+    svgRef,
+    canMeasure: () =>
+        (!FINAL_CONFIG.value.responsive || parentLayoutIsStable.value) &&
+        (!gridLabels.value.xAxisLabels.show || timeLabelsAreReady.value),
+    initialMetrics: {
+        scaleLabelsWidth: 0,
+        yAxisLabelWidth: 0,
+        xAxisLabelHeight: 0,
+        bottom: 0,
+        leftOverhang: 0,
+    },
+    measure: (read) => {
+        if (
+            gridLabels.value.xAxisLabels.autoRotate.enable &&
+            detectTimeLabelCollisionNow()
+        )
+            return null;
+        return {
+            scaleLabelsWidth: read(scaleLabels.value).textWidth,
+            yAxisLabelWidth: read(yAxisLabel.value).rotatedWidth,
+            xAxisLabelHeight: read(xAxisLabel.value).height,
+            bottom: read(timeLabelsEls.value).height,
+            leftOverhang: read(timeLabelsEls.value).leftOverhang,
+        };
+    },
+});
 
 async function measureTimeLabelsAfterVisibilityChange() {
-    // prepareChart() updates the responsive SVG dimensions synchronously.
-    // Wait for Vue to render those dimensions, then measure the labels while
-    // the parent is already visible. A second flush/measure settles the case
-    // where the first bbox changes drawingArea (for example rotated labels
-    // overflowing on the left).
     await nextTick();
-    measureTimeLabelsBox();
-
-    await nextTick();
-    measureTimeLabelsBox();
+    measureLabelLayout();
 }
 
-const timeLabelsY = computed(() => {
-    let axisLabelHeight = 0;
-
-    if (xAxisLabel.value) {
-        try {
-            axisLabelHeight = xAxisLabel.value.getBBox().height || 0;
-        } catch {
-            axisLabelHeight = 0;
-        }
-    }
-
-    return axisLabelHeight + timeLabelsHeight.value + fontSizes.value.xAxis;
-});
+const timeLabelsY = computed(
+    () =>
+        labelLayout.value.xAxisLabelHeight +
+        labelLayout.value.bottom +
+        fontSizes.value.xAxis,
+);
 
 const useProgression = computed(() => {
     return FINAL_DATASET.value.some((el) => el.useProgression);
@@ -1866,8 +1853,6 @@ function getIndividualScaleSlotWidth() {
 }
 
 const drawingArea = computed(() => {
-    void parentLayoutStableRunSequence.value;
-
     let leftScaleLabelX = 0;
     let rightScaleLabelX = 0;
     let scaleLabelsOffset = 0;
@@ -1915,9 +1900,14 @@ const drawingArea = computed(() => {
     const topOffset = cfgChart.value.labels.fontSize * 1.1;
     const progressionLabelOffsetX = useProgression.value ? 24 : 6;
 
-    if (timeLabelsEls.value && timeLabelsBBoxX.value < 0) {
-        leftScaleLabelX += Math.abs(timeLabelsBBoxX.value);
-    }
+    leftScaleLabelX = Math.max(
+        leftScaleLabelX,
+        labelLayout.value.leftOverhang -
+            cfgChart.value.padding.left -
+            (yAxisLabelsAreRight.value
+                ? 0
+                : gridLabels.value.yAxis.crosshairSize),
+    );
 
     const _width =
         width.value -
@@ -2084,6 +2074,7 @@ function toggleAnnotator() {
 }
 
 const timeLabels = ref([]);
+const timeLabelsAreReady = ref(false);
 const allTimeLabels = ref([]);
 
 let timeLabelsRequestId = 0;
@@ -2103,6 +2094,7 @@ watchEffect(() => {
 
         if (requestId === timeLabelsRequestId) {
             timeLabels.value = labels;
+            timeLabelsAreReady.value = true;
         }
     })();
 });
@@ -2214,34 +2206,7 @@ const layoutDisplayedTimeLabelsKey = computed(() => {
         .join('|');
 });
 
-onMounted(() => {
-    // First measurement after initial paint
-    requestAnimationFrame(() => {
-        measureTimeLabelsBox();
-    });
-
-    // Re-measure when async labels arrive or layout inputs change
-    watch(
-        [
-            () => layoutDisplayedTimeLabelsKey.value,
-            () => gridLabels.value.xAxisLabels.rotation,
-            () => fontSizes.value.xAxis,
-            () => width.value,
-            () => height.value,
-        ],
-        async () => {
-            await nextTick();
-            requestAnimationFrame(() => {
-                measureTimeLabelsBox();
-            });
-        },
-        { flush: 'post' },
-    );
-});
-
 onBeforeUnmount(() => {
-    timeLabelsHeight.value = 0;
-    timeLabelsBBoxX.value = 0;
     stableParentSize.stop();
     if (visibilityResizeObserver.value) {
         visibilityResizeObserver.value.disconnect();
@@ -6727,7 +6692,7 @@ onBeforeUnmount(() => {
     stopChartZoomVisualTransition();
 });
 
-useTimeLabelCollision({
+const { detectTimeLabelCollisionNow } = useTimeLabelCollision({
     timeLabelsEls,
     timeLabels,
     slicer,
@@ -6745,6 +6710,7 @@ useTimeLabelCollision({
     height,
     width,
     rotation: gridLabels.value.xAxisLabels.autoRotate.angle,
+    resizeDebounceMs: 0,
 });
 
 const useCustomFormatTimeTag = ref(false);
@@ -7670,6 +7636,29 @@ defineExpose({
     resetZoom: refreshSlicer,
     setZoomState,
 });
+watch(
+    () => [
+        width.value,
+        height.value,
+        fontSizes.value,
+        gridLabels.value,
+        cfgChart.value.padding,
+        FINAL_CONFIG.value.chart.fontFamily,
+        layoutDisplayedTimeLabelsKey.value,
+        timeLabelsAreReady.value,
+        parentLayoutStableRunSequence.value,
+        props.dataset,
+        segregatedSeries.value,
+        mutableConfig.value.useIndividualScale,
+        mutableConfig.value.isStacked,
+        scaleLabels.value,
+        xAxisLabel.value,
+        yAxisLabel.value,
+        timeLabelsEls.value,
+    ],
+    measureLabelLayout,
+    { flush: 'post', deep: true },
+);
 </script>
 
 <template>
@@ -7826,7 +7815,8 @@ defineExpose({
                 :class="{
                     'vue-data-ui-fullscreen--on': isFullscreen,
                     'vue-data-ui-fulscreen--off': !isFullscreen,
-                    'vue-data-ui-no-transition': !transitionEnabled,
+                    'vue-data-ui-no-transition':
+                        !transitionEnabled || labelLayoutSettling,
                     'vue-ui-xy-chart-zoom-pointer-focus':
                         isChartZoomEnabled && isChartZoomPointerFocused,
                 }"
@@ -7835,6 +7825,7 @@ defineExpose({
                 :viewBox="viewBox"
                 class="vue-ui-xy-svg vue-data-ui-svg"
                 :style="{
+                    visibility: labelLayoutReady ? 'visible' : 'hidden',
                     background: 'transparent',
                     color: cfgChart.color,
                     fontFamily: cfgChart.fontFamily,
@@ -8754,7 +8745,8 @@ defineExpose({
                                     <text
                                         :class="{
                                             'vue-data-ui-transition':
-                                                transitionEnabled,
+                                                transitionEnabled &&
+                                                !labelLayoutSettling,
                                         }"
                                         :fill="el.color"
                                         :font-size="fontSizes.dataLabels * 0.8"
@@ -8869,7 +8861,8 @@ defineExpose({
                                     <text
                                         :class="{
                                             'vue-data-ui-transition':
-                                                transitionEnabled,
+                                                transitionEnabled &&
+                                                !labelLayoutSettling,
                                         }"
                                         v-for="(yLabel, j) in el.yLabels"
                                         :key="`individual_scale_y_label_${el.groupId || el.id}_${yLabel.value}_${j}`"
@@ -8964,7 +8957,8 @@ defineExpose({
                                     <text
                                         :class="{
                                             'vue-data-ui-transition':
-                                                transitionEnabled,
+                                                transitionEnabled &&
+                                                !labelLayoutSettling,
                                         }"
                                         data-cy="axis-y-label"
                                         v-if="
@@ -9019,7 +9013,9 @@ defineExpose({
                         >
                             <text
                                 :class="{
-                                    'vue-data-ui-transition': transitionEnabled,
+                                    'vue-data-ui-transition':
+                                        transitionEnabled &&
+                                        !labelLayoutSettling,
                                 }"
                                 v-for="plot in crosshairSelectedPlots"
                                 :key="`crosshair_y_label_${plot.serie.id}_${plot.index}`"
@@ -9866,7 +9862,8 @@ defineExpose({
                                 <text
                                     :class="{
                                         'vue-data-ui-transition':
-                                            transitionEnabled,
+                                            transitionEnabled &&
+                                            !labelLayoutSettling,
                                     }"
                                     data-cy="datapoint-bar-label"
                                     :text-anchor="
@@ -9906,7 +9903,8 @@ defineExpose({
                                     <text
                                         :class="{
                                             'vue-data-ui-transition':
-                                                transitionEnabled,
+                                                transitionEnabled &&
+                                                !labelLayoutSettling,
                                         }"
                                         v-if="
                                             plot &&
@@ -9960,7 +9958,8 @@ defineExpose({
                                 <text
                                     :class="{
                                         'vue-data-ui-transition':
-                                            transitionEnabled,
+                                            transitionEnabled &&
+                                            !labelLayoutSettling,
                                     }"
                                     data-cy="datapoint-plot-label"
                                     :transform="
@@ -10117,7 +10116,8 @@ defineExpose({
                                 <text
                                     :class="{
                                         'vue-data-ui-transition':
-                                            transitionEnabled,
+                                            transitionEnabled &&
+                                            !labelLayoutSettling,
                                     }"
                                     data-cy="datapoint-line-label"
                                     :transform="
@@ -10486,7 +10486,8 @@ defineExpose({
                                 <text
                                     :class="{
                                         'vue-data-ui-transition':
-                                            transitionEnabled,
+                                            transitionEnabled &&
+                                            !labelLayoutSettling,
                                     }"
                                     v-if="serie.plots.length > 1"
                                     :data-cy="`xy-progression-label-${i}`"
@@ -10862,7 +10863,8 @@ defineExpose({
                                     class="vue-ui-xy-annotation-label"
                                     :class="{
                                         'vue-data-ui-transition':
-                                            transitionEnabled,
+                                            transitionEnabled &&
+                                            !labelLayoutSettling,
                                     }"
                                     :transform="`translate(${annotation._text.x}, ${annotation._text.y})`"
                                     :font-size="

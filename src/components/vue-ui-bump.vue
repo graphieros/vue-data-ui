@@ -43,9 +43,9 @@ import {
     treeShake,
     XMLNS,
 } from '../lib';
-import { throttle } from '../canvas-lib';
 import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
+import { useSvgLabelLayout } from '../useSvgLabelLayout';
 import { useLoading } from '../useLoading';
 import { usePrinter } from '../usePrinter';
 import { useNestedProp } from '../useNestedProp';
@@ -229,6 +229,9 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
     }),
 });
 
+const responsiveSizeReady = ref(false);
+let resizeFrame = 0;
+
 onMounted(prepareChart);
 
 function prepareConfig() {
@@ -310,8 +313,10 @@ watch(
         tableStep.value += 1;
         // Reset mutable config
         mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
-        defaultSizes.value.width = cfgChart.value.width;
-        defaultSizes.value.height = cfgChart.value.height;
+        if (!FINAL_CONFIG.value.responsive) {
+            defaultSizes.value.width = cfgChart.value.width;
+            defaultSizes.value.height = cfgChart.value.height;
+        }
         defaultSizes.value.paddingRatio = {
             top: cfgChart.value.padding.top / cfgChart.value.height,
             right: cfgChart.value.padding.right / cfgChart.value.width,
@@ -397,7 +402,7 @@ function prepareChart() {
     }, 10);
 
     if (FINAL_CONFIG.value.responsive) {
-        const handleResize = throttle(() => {
+        const handleResize = () => {
             isLoaded.value = false;
             const { width, height } = useResponsive({
                 chart: bumpChart.value,
@@ -408,15 +413,17 @@ function prepareChart() {
                 source: source.value,
             });
 
-            requestAnimationFrame(() => {
+            cancelAnimationFrame(resizeFrame);
+            resizeFrame = requestAnimationFrame(() => {
                 defaultSizes.value.width = width;
                 defaultSizes.value.height = height - 12;
+                responsiveSizeReady.value = true;
                 clearTimeout(to.value);
                 to.value = setTimeout(() => {
                     isLoaded.value = true;
                 }, 10);
             });
-        });
+        };
 
         if (resizeObserver.value) {
             if (observedEl.value) {
@@ -432,6 +439,7 @@ function prepareChart() {
 }
 
 onBeforeUnmount(() => {
+    cancelAnimationFrame(resizeFrame);
     if (resizeObserver.value) {
         if (observedEl.value) {
             resizeObserver.value.unobserve(observedEl.value);
@@ -493,98 +501,46 @@ function getPositionsForAllSeries(dataset) {
     return positions;
 }
 
+const {
+    metrics: labelLayout,
+    ready: labelLayoutReady,
+    settling: labelLayoutSettling,
+    update: measureLabelLayout,
+} = useSvgLabelLayout({
+    svgRef,
+    canMeasure: () =>
+        (!FINAL_CONFIG.value.responsive || responsiveSizeReady.value) &&
+        (!cfgLayout.value.timeLabels.show || timeLabelsAreReady.value),
+    initialMetrics: { left: 0, right: 0, bottom: 0 },
+    measure: (read) => {
+        if (
+            cfgLayout.value.timeLabels.autoRotate.enable &&
+            detectTimeLabelCollisionNow()
+        ) {
+            return null;
+        }
+        return {
+            left: read(labelsLeft.value).width,
+            right: read(labelsRight.value).width,
+            bottom: read(timeLabelsEls.value).height,
+        };
+    },
+});
+
 function getOffsetXLeft() {
-    let base = 0;
-    if (labelsLeft.value) {
-        const texts = Array.from(labelsLeft.value.querySelectorAll('tspan'));
-        base = texts.reduce((max, t) => {
-            const w = t.getComputedTextLength();
-            return w > max ? w : max;
-        }, 0);
-    }
-
-    return base;
+    return labelLayout.value.left;
 }
-
 function getOffsetXRight() {
-    let base = 0;
-    if (labelsRight.value) {
-        const texts = Array.from(labelsRight.value.querySelectorAll('tspan'));
-        base = texts.reduce((max, t) => {
-            const w = t.getComputedTextLength();
-            return w > max ? w : max;
-        }, 0);
-    }
-
-    return base;
+    return labelLayout.value.right;
 }
 
-const labelsXHeight = ref(0);
-
-const updateHeight = throttle((h) => {
-    labelsXHeight.value = h;
-}, 100);
-
-watchEffect((onInvalidate) => {
-    const el = timeLabelsEls.value;
-    if (!el) return;
-
-    const observer = new ResizeObserver((entries) => {
-        updateHeight(entries[0].contentRect.height);
-    });
-    observer.observe(el);
-    onInvalidate(() => observer.disconnect());
-});
-
-onBeforeUnmount(() => {
-    labelsXHeight.value = 0;
-});
-
-const offsetY = computed(() => {
-    const timeLabelsConfig = cfgLayout.value.timeLabels;
-
-    if (!timeLabelsConfig.show) return 0;
-
-    const fontSize = timeLabelsConfig.fontSize;
-    const rotationDegrees = timeLabelsConfig.rotation;
-    const rotationRadians = (Math.PI / 180) * rotationDegrees;
-
-    const labels = displayedTimeLabels.value || [];
-
-    if (!labels.length) return 0;
-
-    const maxLines = labels.reduce((maxValue, label) => {
-        const lineCount = String(label?.text ?? '').split('\n').length;
-        return Math.max(maxValue, lineCount);
-    }, 1);
-
-    const maxCharactersPerLine = labels.reduce((maxValue, label) => {
-        const lines = String(label?.text ?? '').split('\n');
-        const longestLine = lines.reduce(
-            (maxLineValue, line) => Math.max(maxLineValue, line.length),
-            0,
-        );
-        return Math.max(maxValue, longestLine);
-    }, 0);
-
-    const lineHeight = fontSize * 1.3;
-    const textBlockHeight = maxLines * lineHeight;
-    const textBlockWidth =
-        maxCharactersPerLine *
-        fontSize *
-        (maxCharactersPerLine === 1 ? 1 : 0.6);
-
-    const verticalProjection =
-        Math.abs(Math.sin(rotationRadians)) * textBlockWidth +
-        Math.abs(Math.cos(rotationRadians)) * textBlockHeight;
-
-    const safetyMargin = fontSize * 0.3;
-
-    return Math.max(
-        0,
-        verticalProjection + Math.abs(timeLabelsConfig.offsetY) + safetyMargin,
-    );
-});
+const offsetY = computed(() =>
+    cfgLayout.value.timeLabels.show && displayedTimeLabels.value.length
+        ? labelLayout.value.bottom +
+          Math.abs(cfgLayout.value.timeLabels.offsetY) +
+          cfgLayout.value.timeLabels.fontSize * 0.3
+        : 0,
+);
 
 const drawingArea = computed(() => {
     const { height: H, width: W } = defaultSizes.value;
@@ -801,6 +757,7 @@ function getValueRect(label) {
 }
 
 const timeLabels = ref([]);
+const timeLabelsAreReady = ref(false);
 let timeLabelsRequestId = 0;
 
 watchEffect(() => {
@@ -814,6 +771,7 @@ watchEffect(() => {
     // Keep the shape stable when there is no data
     if (!end || !Array.isArray(values) || values.length === 0) {
         timeLabels.value = [];
+        timeLabelsAreReady.value = true;
         return;
     }
 
@@ -829,6 +787,7 @@ watchEffect(() => {
         // Prevent out-of-order async updates
         if (requestId === timeLabelsRequestId) {
             timeLabels.value = labels;
+            timeLabelsAreReady.value = true;
         }
     })();
 });
@@ -976,7 +935,7 @@ const a11yTable = computed(() => {
     };
 });
 
-useTimeLabelCollision({
+const { detectTimeLabelCollisionNow } = useTimeLabelCollision({
     timeLabelsEls: timeLabelsEls,
     timeLabels,
     slicer,
@@ -994,6 +953,7 @@ useTimeLabelCollision({
     width: WIDTH,
     height: HEIGHT,
     rotation: cfgLayout.value.timeLabels.autoRotate.angle,
+    resizeDebounceMs: 0,
 });
 
 const isAnnotator = ref(false);
@@ -1182,6 +1142,23 @@ defineExpose({
     toggleFullscreen,
     copyAlt,
 });
+watch(
+    () => [
+        defaultSizes.value.width,
+        defaultSizes.value.height,
+        cfgLayout.value,
+        timeLabels.value,
+        timeLabelsAreReady.value,
+        labelsLeft.value,
+        labelsRight.value,
+        timeLabelsEls.value,
+        props.dataset,
+        responsiveSizeReady.value,
+        FINAL_CONFIG.value.style.fontFamily,
+    ],
+    measureLabelLayout,
+    { flush: 'post', deep: true },
+);
 </script>
 
 <template>
@@ -1335,7 +1312,7 @@ defineExpose({
                     'vue-data-ui-loading': loading,
                     'no-transition': !FINAL_CONFIG.useCssAnimation,
                 }"
-                :style="`max-width:100%;overflow:visible;background:transparent;color:${cfgChart.color}`"
+                :style="`max-width:100%;overflow:visible;background:transparent;color:${cfgChart.color};visibility:${labelLayoutReady ? 'visible' : 'hidden'}`"
                 role="img"
                 aria-live="polite"
                 preserveAspectRatio="xMidYMid"

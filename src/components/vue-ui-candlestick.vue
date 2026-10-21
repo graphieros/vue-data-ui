@@ -42,9 +42,9 @@ import {
     treeShake,
     XMLNS,
 } from '../lib';
-import { throttle } from '../canvas-lib';
 import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
+import { useSvgLabelLayout } from '../useSvgLabelLayout';
 import { useLocale } from '../useLocale.js';
 import { usePrinter } from '../usePrinter';
 import { useLoading } from '../useLoading.js';
@@ -123,6 +123,8 @@ const isDataset = computed(() => {
 });
 
 const isLoaded = ref(false);
+const responsiveSizeReady = ref(false);
+let resizeFrame = 0;
 const to = ref(null);
 const uid = ref(createUid());
 const isTooltip = ref(false);
@@ -415,7 +417,7 @@ function prepareChart() {
 
     if (FINAL_CONFIG.value.responsive) {
         const additionalPad = 12;
-        const handleResize = throttle(() => {
+        const handleResize = () => {
             isLoaded.value = false;
             const { width, height } = useResponsive({
                 chart: candlestickChart.value,
@@ -429,9 +431,11 @@ function prepareChart() {
                 noTitle: noTitle.value,
             });
 
-            requestAnimationFrame(() => {
+            cancelAnimationFrame(resizeFrame);
+            resizeFrame = requestAnimationFrame(() => {
                 svg.value.width = width;
                 svg.value.height = height - additionalPad;
+                responsiveSizeReady.value = true;
                 if (FINAL_CONFIG.value.responsiveProportionalSizing) {
                     svg.value.xAxisFontSize = translateSize({
                         relator: Math.min(width, height),
@@ -458,7 +462,7 @@ function prepareChart() {
                     isLoaded.value = true;
                 }, 10);
             });
-        });
+        };
 
         if (resizeObserver.value) {
             if (observedEl.value) {
@@ -475,6 +479,7 @@ function prepareChart() {
 }
 
 onBeforeUnmount(() => {
+    cancelAnimationFrame(resizeFrame);
     if (resizeObserver.value) {
         if (observedEl.value) {
             resizeObserver.value.unobserve(observedEl.value);
@@ -498,51 +503,37 @@ const mutableConfig = ref({
     showTooltip: styleCfg.value.tooltip.show,
 });
 
-const timeLabelsHeight = ref(0);
-
-const updateHeight = throttle((h) => {
-    timeLabelsHeight.value = h;
-}, 100);
-
-// Track time label height to update drawing area when they rotate
-watchEffect((onInvalidate) => {
-    const el = timeLabelsEls.value;
-    if (!el) return;
-
-    const observer = new ResizeObserver((entries) => {
-        updateHeight(entries[0].contentRect.height);
-    });
-    observer.observe(el);
-    onInvalidate(() => observer.disconnect());
+const {
+    metrics: labelLayout,
+    ready: labelLayoutReady,
+    settling: labelLayoutSettling,
+    update: measureLabelLayout,
+} = useSvgLabelLayout({
+    svgRef,
+    canMeasure: () =>
+        (!FINAL_CONFIG.value.responsive || responsiveSizeReady.value) &&
+        (!gridCfg.value.xAxis.dataLabels.show || timeLabelsAreReady.value),
+    initialMetrics: { scaleLabelsWidth: 0, timeLabelsHeight: 0 },
+    measure: (read) => ({
+        scaleLabelsWidth: scaleLabels.value
+            ? read(scaleLabels.value).textWidth
+            : gridCfg.value.yAxis.dataLabels.offsetX,
+        timeLabelsHeight: read(timeLabelsEls.value).height,
+    }),
 });
 
-onBeforeUnmount(() => {
-    timeLabelsHeight.value = 0;
-});
-
-const timeLabelsY = computed(() => {
-    let tlH = 0;
-    if (timeLabelsEls.value) {
-        tlH = timeLabelsHeight.value + svg.value.xAxisFontSize;
-    }
-    return tlH;
-});
+const timeLabelsY = computed(() =>
+    timeLabelsEls.value
+        ? labelLayout.value.timeLabelsHeight + svg.value.xAxisFontSize
+        : 0,
+);
 
 const yAxisLabelsAreRight = computed(() => {
     return gridCfg.value.yAxis.position === 'right';
 });
 
 function getScaleLabelX() {
-    let scaleLabelsWidth = gridCfg.value.yAxis.dataLabels.offsetX;
-
-    if (scaleLabels.value) {
-        const texts = Array.from(scaleLabels.value.querySelectorAll('text'));
-
-        scaleLabelsWidth = texts.reduce((max, textElement) => {
-            const width = textElement.getComputedTextLength();
-            return width > max ? width : max;
-        }, 0);
-    }
+    const scaleLabelsWidth = labelLayout.value.scaleLabelsWidth;
 
     const crosshair = 13;
 
@@ -1023,6 +1014,7 @@ const xLabels = computed(() => {
 });
 
 const timeLabels = ref([]);
+const timeLabelsAreReady = ref(false);
 const allTimeLabels = ref([]);
 let timeLabelsRequestId = 0;
 
@@ -1040,6 +1032,7 @@ watchEffect(() => {
 
         if (requestId === timeLabelsRequestId) {
             timeLabels.value = labels;
+            timeLabelsAreReady.value = true;
         }
     })();
 });
@@ -2387,6 +2380,24 @@ defineExpose({
     resetZoom: () => refreshSlicer({ force: true, publish: true }),
     setZoomState,
 });
+// Measurements follow label content/configuration, never hover or plot coordinates.
+watch(
+    () => [
+        svg.value,
+        gridCfg.value,
+        FINAL_CONFIG.value.style.fontFamily,
+        props.dataset,
+        slicer.value.start,
+        slicer.value.end,
+        timeLabels.value,
+        timeLabelsAreReady.value,
+        responsiveSizeReady.value,
+        scaleLabels.value,
+        timeLabelsEls.value,
+    ],
+    measureLabelLayout,
+    { flush: 'post', deep: true },
+);
 </script>
 
 <template>
@@ -2536,13 +2547,15 @@ defineExpose({
                 :class="{
                     'vue-data-ui-fullscreen--on': isFullscreen,
                     'vue-data-ui-fulscreen--off': !isFullscreen,
-                    'vue-data-ui-no-transition': !transitionEnabled,
+                    'vue-data-ui-no-transition':
+                        !transitionEnabled || labelLayoutSettling,
                     'vue-ui-candlestick-chart-zoom-pointer-focus':
                         isChartZoomEnabled && isChartZoomPointerFocused,
                 }"
                 :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`"
                 :style="{
                     maxWidth: '100%',
+                    visibility: labelLayoutReady ? 'visible' : 'hidden',
                     overflow: 'visible',
                     background: 'transparent',
                     color: styleCfg.color,
@@ -2752,7 +2765,9 @@ defineExpose({
                             <text
                                 data-cy="y-scale-label"
                                 :class="{
-                                    'vue-data-ui-transition': transitionEnabled,
+                                    'vue-data-ui-transition':
+                                        transitionEnabled &&
+                                        !labelLayoutSettling,
                                 }"
                                 v-if="
                                     yLabel.value >= niceScale.min &&
@@ -2869,7 +2884,9 @@ defineExpose({
                                     :rx="layoutCfg.wick.strokeWidth / 2"
                                     :class="{
                                         'vue-data-ui-transition':
-                                            isLoaded && !loading,
+                                            isLoaded &&
+                                            !loading &&
+                                            !labelLayoutSettling,
                                     }"
                                 />
                                 <g
@@ -2890,7 +2907,9 @@ defineExpose({
                                         :fill="layoutCfg.wick.extremity.color"
                                         :class="{
                                             'vue-data-ui-transition':
-                                                isLoaded && !loading,
+                                                isLoaded &&
+                                                !loading &&
+                                                !labelLayoutSettling,
                                         }"
                                     />
                                     <circle
@@ -2905,7 +2924,9 @@ defineExpose({
                                         :fill="layoutCfg.wick.extremity.color"
                                         :class="{
                                             'vue-data-ui-transition':
-                                                isLoaded && !loading,
+                                                isLoaded &&
+                                                !loading &&
+                                                !labelLayoutSettling,
                                         }"
                                     />
                                 </g>
@@ -2963,7 +2984,9 @@ defineExpose({
                                         stroke="none"
                                         :class="{
                                             'vue-data-ui-transition':
-                                                isLoaded && !loading,
+                                                isLoaded &&
+                                                !loading &&
+                                                !labelLayoutSettling,
                                         }"
                                     />
                                     <rect
@@ -3014,7 +3037,9 @@ defineExpose({
                                         :rx="layoutCfg.wick.strokeWidth / 2"
                                         :class="{
                                             'vue-data-ui-transition':
-                                                isLoaded && !loading,
+                                                isLoaded &&
+                                                !loading &&
+                                                !labelLayoutSettling,
                                         }"
                                     />
                                 </g>
@@ -3053,7 +3078,9 @@ defineExpose({
                                 stroke="none"
                                 :class="{
                                     'vue-data-ui-transition':
-                                        isLoaded && !loading,
+                                        isLoaded &&
+                                        !loading &&
+                                        !labelLayoutSettling,
                                 }"
                             />
                             <rect
@@ -3098,7 +3125,9 @@ defineExpose({
                                 stroke-linejoin="round"
                                 :class="{
                                     'vue-data-ui-transition':
-                                        isLoaded && !loading,
+                                        isLoaded &&
+                                        !loading &&
+                                        !labelLayoutSettling,
                                 }"
                             />
                         </g>
@@ -3118,7 +3147,9 @@ defineExpose({
                                 "
                                 :stroke-width="1"
                                 :class="{
-                                    'vue-data-ui-transition': transitionEnabled,
+                                    'vue-data-ui-transition':
+                                        transitionEnabled &&
+                                        !labelLayoutSettling,
                                 }"
                                 stroke-linecap="round"
                                 stroke-linejoin="round"

@@ -15,6 +15,7 @@ export function useTimeLabelCollision({
     rotation = -30.0001,
     height = null,
     width = null,
+    resizeDebounceMs = 200,
 }) {
     function getNestedProp(obj, path) {
         return path.reduce((acc, key) => acc && acc[key], obj);
@@ -38,10 +39,9 @@ export function useTimeLabelCollision({
         };
     }
 
-    async function detectTimeLabelCollision() {
-        await nextTick();
+    function detectTimeLabelCollisionNow() {
         const container = timeLabelsEls.value;
-        if (!container) return;
+        if (!container) return false;
 
         const texts = Array.from(container.querySelectorAll(targetClass));
         const textCoordinates = texts.map((t) => ({
@@ -78,10 +78,18 @@ export function useTimeLabelCollision({
                 setViewBox();
                 forceResizeObserver();
             }
+            return true;
         } else if (!collision && currentRotation === rotation) {
             setNestedProp(configRef.value, rotationPath, 0);
             callback && callback({ collision });
+            return true;
         }
+        return false;
+    }
+
+    async function detectTimeLabelCollision() {
+        await nextTick();
+        return detectTimeLabelCollisionNow();
     }
 
     function debounce(fn, delay) {
@@ -92,7 +100,10 @@ export function useTimeLabelCollision({
         };
     }
 
-    const debouncedDetect = debounce(detectTimeLabelCollision, 200);
+    const debouncedDetect = debounce(
+        detectTimeLabelCollision,
+        resizeDebounceMs,
+    );
 
     if (height && width) {
         watch(
@@ -106,7 +117,8 @@ export function useTimeLabelCollision({
                 const ratChanged = newW !== oldW || newH !== oldH;
 
                 if (ratChanged) {
-                    debouncedDetect();
+                    if (resizeDebounceMs > 0) debouncedDetect();
+                    else await detectTimeLabelCollision();
                 } else {
                     await detectTimeLabelCollision();
                 }
@@ -136,5 +148,5 @@ export function useTimeLabelCollision({
         { immediate: true },
     );
 
-    return { detectTimeLabelCollision };
+    return { detectTimeLabelCollision, detectTimeLabelCollisionNow };
 }

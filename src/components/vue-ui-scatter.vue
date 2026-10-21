@@ -47,8 +47,8 @@ import {
     treeShake,
     XMLNS,
 } from '../lib';
-import { throttle } from '../canvas-lib';
 import { COMMON_RULES, useHints } from '../useHints';
+import { useSvgLabelLayout } from '../useSvgLabelLayout';
 import { useConfig } from '../useConfig';
 import { useLoading } from '../useLoading';
 import { usePrinter } from '../usePrinter';
@@ -353,6 +353,9 @@ watch(
 const resizeObserver = shallowRef(null);
 const observedEl = shallowRef(null);
 
+const responsiveSizeReady = ref(false);
+let resizeFrame = 0;
+
 onMounted(async () => {
     prepareChart();
     await nextTick();
@@ -377,7 +380,7 @@ function prepareChart() {
     }
 
     if (FINAL_CONFIG.value.responsive) {
-        const handleResize = throttle(() => {
+        const handleResize = () => {
             const { width, height } = useResponsive({
                 chart: scatterChart.value,
                 title: cfgStyle.value.title.text ? chartTitle.value : null,
@@ -386,11 +389,13 @@ function prepareChart() {
                 noTitle: noTitle.value,
             });
 
-            requestAnimationFrame(() => {
+            cancelAnimationFrame(resizeFrame);
+            resizeFrame = requestAnimationFrame(() => {
                 svg.value.width = width;
                 svg.value.height = height;
+                responsiveSizeReady.value = true;
             });
-        });
+        };
 
         if (resizeObserver.value) {
             if (observedEl.value) {
@@ -406,6 +411,7 @@ function prepareChart() {
 }
 
 onBeforeUnmount(() => {
+    cancelAnimationFrame(resizeFrame);
     if (resizeObserver.value) {
         if (observedEl.value) {
             resizeObserver.value.unobserve(observedEl.value);
@@ -457,97 +463,56 @@ const marginalSize = computed(() => {
     return cfgBars.value.size + cfgBars.value.offset;
 });
 
-function getLeftOverflowOffset() {
-    let scaleLabelsWidth = 0;
-
-    if (cfgYAxisLabels.value.scales.show && yAxisScaleLabels.value) {
-        try {
-            const texts = Array.from(
-                yAxisScaleLabels.value.querySelectorAll('text'),
-            );
-
-            scaleLabelsWidth = texts.reduce((maximumWidth, textElement) => {
-                const textWidth = textElement.getComputedTextLength();
-                return textWidth > maximumWidth ? textWidth : maximumWidth;
-            }, 0);
-        } catch (_) {
-            scaleLabelsWidth = 0;
-        }
-    }
-
-    let axisLabelWidth = 0;
-
-    if (xAxisLabelLeft.value) {
-        try {
-            axisLabelWidth = xAxisLabelLeft.value.getBBox().width;
-        } catch (_) {
-            axisLabelWidth = 0;
-        }
-    }
-
-    return Math.max(
-        axisLabelWidth,
-        scaleLabelsWidth ? scaleLabelsWidth + 12 : 0,
-    );
-}
-
-function getRightOverflowOffset() {
-    let axisLabelOverflow = 0;
-
-    if (xAxisLabelRight.value) {
-        try {
-            const box = xAxisLabelRight.value.getBBox();
-            const overflow = box.x + box.width - svg.value.width;
-            axisLabelOverflow = overflow > 0 ? overflow + 6 : 0;
-        } catch (_) {
-            axisLabelOverflow = 0;
-        }
-    }
-
-    let scaleLabelOverflow = 0;
-
-    if (cfgXAxisLabels.value.scales.show && xAxisScaleLabels.value) {
-        try {
-            const texts = Array.from(
-                xAxisScaleLabels.value.querySelectorAll('text'),
-            );
-
-            scaleLabelOverflow = texts.reduce(
-                (maximumOverflow, textElement) => {
-                    const box = textElement.getBBox();
-                    const overflow = box.x + box.width - svg.value.width;
-                    const safeOverflow = overflow > 0 ? overflow + 6 : 0;
-                    return safeOverflow > maximumOverflow
-                        ? safeOverflow
-                        : maximumOverflow;
-                },
-                0,
-            );
-        } catch (_) {
-            scaleLabelOverflow = 0;
-        }
-    }
-
-    return axisLabelOverflow > scaleLabelOverflow
-        ? axisLabelOverflow
-        : scaleLabelOverflow;
-}
+const {
+    metrics: labelLayout,
+    ready: labelLayoutReady,
+    settling: labelLayoutSettling,
+    update: measureLabelLayout,
+} = useSvgLabelLayout({
+    svgRef,
+    canMeasure: () =>
+        !FINAL_CONFIG.value.responsive || responsiveSizeReady.value,
+    initialMetrics: { left: 0, right: 0, bottom: 0 },
+    measure: (read) => {
+        const scaleWidth = cfgYAxisLabels.value.scales.show
+            ? read(yAxisScaleLabels.value).textWidth
+            : 0;
+        const overflow = (element) => {
+            const box = read(element);
+            return Math.max(0, box.x + box.width - svg.value.width);
+        };
+        const axisOverflow = xAxisLabelRight.value
+            ? overflow(xAxisLabelRight.value)
+            : 0;
+        const scaleOverflow =
+            cfgXAxisLabels.value.scales.show && xAxisScaleLabels.value
+                ? Math.max(
+                      0,
+                      ...[
+                          ...xAxisScaleLabels.value.querySelectorAll('text'),
+                      ].map(overflow),
+                  )
+                : 0;
+        const rightOverflow = Math.max(axisOverflow, scaleOverflow);
+        return {
+            left: Math.max(
+                read(xAxisLabelLeft.value).width,
+                scaleWidth ? scaleWidth + 12 : 0,
+            ),
+            right: rightOverflow ? rightOverflow + 6 : 0,
+            bottom: yAxisLabelBottom.value
+                ? read(yAxisLabelBottom.value).height + 6
+                : 0,
+        };
+    },
+});
 
 const drawingArea = computed(() => {
-    let offsetL = 0;
-    let offsetR = 0;
-    let offsetB = 0;
-
-    offsetL = getLeftOverflowOffset();
-    offsetR = getRightOverflowOffset();
-
-    if (yAxisLabelBottom.value) {
-        try {
-            offsetB = yAxisLabelBottom.value.getBBox().height + 6;
-        } catch (_) {
-            offsetB = 0;
-        }
-    }
+    const {
+        left: offsetL,
+        right: offsetR,
+        bottom: offsetB,
+    } = labelLayout.value;
 
     return {
         top:
@@ -1145,9 +1110,22 @@ function aggregateCoordinates(arr, scale) {
     const xCounts = Array(scale).fill(0);
     const yCounts = Array(scale).fill(0);
 
+    // Affine SVG projection can leave an exact boundary just below its bin.
+    // Keep membership stable across font metrics/resizes and include maxima.
+    const bin = (value, minimum, size) =>
+        size > 0
+            ? Math.max(
+                  0,
+                  Math.min(
+                      scale - 1,
+                      Math.floor((value - minimum) / size + 1e-10),
+                  ),
+              )
+            : 0;
+
     flattened.forEach(({ x, y }) => {
-        const xIndex = Math.floor((x - xMin) / chunkSizeX);
-        const yIndex = Math.floor((y - yMin) / chunkSizeY);
+        const xIndex = bin(x, xMin, chunkSizeX);
+        const yIndex = bin(y, yMin, chunkSizeY);
         if (!xCounts[xIndex]) {
             xCounts[xIndex] = 0;
         }
@@ -2221,6 +2199,28 @@ defineExpose({
     toggleFullscreen,
     copyAlt,
 });
+watch(
+    () => [
+        svg.value,
+        cfgXAxisLabels.value,
+        cfgYAxisLabels.value,
+        cfgStyle.value.layout.padding,
+        marginalSize.value,
+        displayedAxisBounds.value,
+        cfgPlots.value.selectors.labels,
+        FINAL_CONFIG.value.style.fontFamily,
+        props.dataset,
+        segregated.value,
+        responsiveSizeReady.value,
+        xAxisLabelLeft.value,
+        xAxisLabelRight.value,
+        yAxisLabelBottom.value,
+        xAxisScaleLabels.value,
+        yAxisScaleLabels.value,
+    ],
+    measureLabelLayout,
+    { flush: 'post', deep: true },
+);
 </script>
 
 <template>
@@ -2385,10 +2385,11 @@ defineExpose({
                 :class="{
                     'vue-data-ui-fullscreen--on': isFullscreen,
                     'vue-data-ui-fulscreen--off': !isFullscreen,
-                    'vue-data-ui-no-transition': !transitionEnabled,
+                    'vue-data-ui-no-transition':
+                        !transitionEnabled || labelLayoutSettling,
                 }"
                 :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`"
-                :style="`max-width:100%;overflow:visible;background:transparent;color:${cfgStyle.color}`"
+                :style="`max-width:100%;overflow:visible;background:transparent;color:${cfgStyle.color};visibility:${labelLayoutReady ? 'visible' : 'hidden'}`"
                 @mouseleave="onMarginalLeave"
                 tabindex="0"
                 @focus="onSvgFocus"
@@ -2479,7 +2480,8 @@ defineExpose({
                     >
                         <path
                             :class="{
-                                'vue-data-ui-transition': transitionEnabled,
+                                'vue-data-ui-transition':
+                                    transitionEnabled && !labelLayoutSettling,
                             }"
                             :stroke="cfgStyle.layout.axis.stroke"
                             :stroke-width="cfgStyle.layout.axis.strokeWidth"
@@ -2488,7 +2490,8 @@ defineExpose({
                         />
                         <text
                             :class="{
-                                'vue-data-ui-transition': transitionEnabled,
+                                'vue-data-ui-transition':
+                                    transitionEnabled && !labelLayoutSettling,
                             }"
                             :transform="`translate(${scaleItem.x}, ${zero.y + cfgXAxisLabels.scales.labels.fontSize + 6 + cfgXAxisLabels.scales.labels.offsetY})`"
                             text-anchor="middle"
@@ -2539,7 +2542,8 @@ defineExpose({
                     >
                         <path
                             :class="{
-                                'vue-data-ui-transition': transitionEnabled,
+                                'vue-data-ui-transition':
+                                    transitionEnabled && !labelLayoutSettling,
                             }"
                             :d="`M${zero.x - 4},${scaleItem.y} ${zero.x + 4},${scaleItem.y}`"
                             :stroke="cfgStyle.layout.axis.stroke"
@@ -2549,7 +2553,8 @@ defineExpose({
 
                         <text
                             :class="{
-                                'vue-data-ui-transition': transitionEnabled,
+                                'vue-data-ui-transition':
+                                    transitionEnabled && !labelLayoutSettling,
                             }"
                             :transform="`translate(${zero.x - cfgYAxisLabels.scales.labels.fontSize / 2 - 8 + cfgYAxisLabels.scales.labels.offsetX}, ${scaleItem.y + cfgYAxisLabels.scales.labels.fontSize / 3})`"
                             text-anchor="end"

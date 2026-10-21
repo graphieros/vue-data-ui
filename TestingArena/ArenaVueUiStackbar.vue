@@ -53,49 +53,49 @@ function makeDs(n) {
     return arr;
 }
 
-const dataset = ref([
-    {
-        name: 'Revenue breakdown',
-        type: 'waterfall',
-        series: [
-            {
-                name: 'Initial revenue',
-                type: 'total',
-                series: [
-                    { name: 'Product A', value: 250, color: '#FF8000' },
-                    { name: 'Product B', value: 150, color: '#A3D22D' },
-                    { name: 'Product C', value: 100, color: '#327F9C' },
-                ],
-            },
-            {
-                name: 'Growth',
-                type: 'change',
-                series: [
-                    { name: 'Product A', value: 80 },
-                    { name: 'Product B', value: 40 },
-                    { name: 'Product C', value: 30 },
-                ],
-            },
-            {
-                name: 'Expenses',
-                type: 'change',
-                series: [
-                    { name: 'Product A', value: -60 },
-                    { name: 'Product B', value: -40 },
-                ],
-            },
-            {
-                name: 'Final revenue',
-                type: 'total',
-                series: [
-                    { name: 'Product A', value: 270 },
-                    { name: 'Product B', value: 150 },
-                    { name: 'Product C', value: 130 },
-                ],
-            },
-        ],
-    },
-]);
+// const dataset = ref([
+//     {
+//         name: 'Revenue breakdown',
+//         type: 'waterfall',
+//         series: [
+//             {
+//                 name: 'Initial revenue',
+//                 type: 'total',
+//                 series: [
+//                     { name: 'Product A', value: 250, color: '#FF8000' },
+//                     { name: 'Product B', value: 150, color: '#A3D22D' },
+//                     { name: 'Product C', value: 100, color: '#327F9C' },
+//                 ],
+//             },
+//             {
+//                 name: 'Growth',
+//                 type: 'change',
+//                 series: [
+//                     { name: 'Product A', value: 80 },
+//                     { name: 'Product B', value: 40 },
+//                     { name: 'Product C', value: 30 },
+//                 ],
+//             },
+//             {
+//                 name: 'Expenses',
+//                 type: 'change',
+//                 series: [
+//                     { name: 'Product A', value: -60 },
+//                     { name: 'Product B', value: -40 },
+//                 ],
+//             },
+//             {
+//                 name: 'Final revenue',
+//                 type: 'total',
+//                 series: [
+//                     { name: 'Product A', value: 270 },
+//                     { name: 'Product B', value: 150 },
+//                     { name: 'Product C', value: 130 },
+//                 ],
+//             },
+//         ],
+//     },
+// ]);
 
 // const dataset = ref([
 //     {
@@ -183,22 +183,22 @@ const dataset = ref([
 //     },
 // ]);
 
-// const dataset = ref([
-//     {
-//         name: 'Series 1',
-//         series: makeDs(24),
-//         marked: true,
-//     },
-//     {
-//         name: 'Series 2',
-//         series: makeDs(24),
-//         marked: true,
-//     },
-//     {
-//         name: 'Series 3',
-//         series: makeDs(24),
-//     },
-// ]);
+const dataset = ref([
+    {
+        name: 'Series 1',
+        series: makeDs(24),
+        marked: true,
+    },
+    {
+        name: 'Series 2',
+        series: makeDs(24),
+        marked: true,
+    },
+    {
+        name: 'Series 3',
+        series: makeDs(24),
+    },
+]);
 
 // onMounted(() => {
 //     setTimeout(() => {

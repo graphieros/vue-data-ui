@@ -39,9 +39,9 @@ import {
     treeShake,
     XMLNS,
 } from '../lib';
-import { throttle } from '../canvas-lib';
 import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
+import { useSvgLabelLayout } from '../useSvgLabelLayout';
 import { useLoading } from '../useLoading';
 import { usePrinter } from '../usePrinter';
 import { useResponsive } from '../useResponsive';
@@ -277,6 +277,9 @@ watch(
 const resizeObserver = shallowRef(null);
 const observedEl = shallowRef(null);
 
+const responsiveSizeReady = ref(false);
+let resizeFrame = 0;
+
 onMounted(() => {
     prepareChart();
 });
@@ -299,7 +302,7 @@ function prepareChart() {
     }
 
     if (FINAL_CONFIG.value.responsive) {
-        const handleResize = throttle(() => {
+        const handleResize = () => {
             const { width, height } = useResponsive({
                 chart: agePyramid.value,
                 title: style.value.title.text ? chartTitle.value : null,
@@ -307,11 +310,13 @@ function prepareChart() {
                 noTitle: noTitle.value,
             });
 
-            requestAnimationFrame(() => {
+            cancelAnimationFrame(resizeFrame);
+            resizeFrame = requestAnimationFrame(() => {
                 svg.value.width = width;
                 svg.value.height = height;
+                responsiveSizeReady.value = true;
             });
-        });
+        };
 
         if (resizeObserver.value) {
             if (observedEl.value) {
@@ -327,6 +332,7 @@ function prepareChart() {
 }
 
 onBeforeUnmount(() => {
+    cancelAnimationFrame(resizeFrame);
     if (resizeObserver.value) {
         if (observedEl.value) {
             resizeObserver.value.unobserve(observedEl.value);
@@ -370,26 +376,20 @@ const svg = ref({
 const WIDTH = computed(() => svg.value.width);
 const HEIGHT = computed(() => svg.value.height);
 
-const xAxisLabelsHeight = ref(0);
-
-const updateHeight = throttle((h) => {
-    xAxisLabelsHeight.value = h;
-}, 100);
-
-watchEffect((onInvalidate) => {
-    const el = xAxisLabels.value;
-    if (!el) return;
-
-    const observer = new ResizeObserver((entries) => {
-        updateHeight(entries[0].contentRect.height);
-    });
-    observer.observe(el);
-    onInvalidate(() => observer.disconnect());
+const {
+    metrics: labelLayout,
+    ready: labelLayoutReady,
+    settling: labelLayoutSettling,
+    update: measureLabelLayout,
+} = useSvgLabelLayout({
+    svgRef,
+    canMeasure: () =>
+        !FINAL_CONFIG.value.responsive || responsiveSizeReady.value,
+    initialMetrics: { bottom: 0 },
+    measure: (read) => ({ bottom: read(xAxisLabels.value).height }),
 });
 
-onBeforeUnmount(() => {
-    xAxisLabelsHeight.value = 0;
-});
+const xAxisLabelsHeight = computed(() => labelLayout.value.bottom);
 
 const drawingArea = computed(() => {
     const width =
@@ -988,6 +988,18 @@ defineExpose({
     toggleFullscreen,
     copyAlt,
 });
+watch(
+    () => [
+        svg.value,
+        layoutDataLabels.value,
+        xAxisLabels.value,
+        props.dataset,
+        responsiveSizeReady.value,
+        FINAL_CONFIG.value.style.fontFamily,
+    ],
+    measureLabelLayout,
+    { flush: 'post', deep: true },
+);
 </script>
 
 <template>
@@ -1136,7 +1148,7 @@ defineExpose({
                     'vue-data-ui-fulscreen--off': !isFullscreen,
                 }"
                 :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`"
-                :style="`max-width:100%;overflow:visible;background:transparent;color:${style.color}`"
+                :style="`max-width:100%;overflow:visible;background:transparent;color:${style.color};visibility:${labelLayoutReady ? 'visible' : 'hidden'}`"
                 tabindex="0"
                 :aria-describedby="`chart-instructions-${uid}`"
                 @focus="onSvgFocus"

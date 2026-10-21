@@ -22,6 +22,7 @@ import {
     watchEffect,
 } from 'vue';
 import { useConfig } from '../useConfig';
+import { useSvgLabelLayout } from '../useSvgLabelLayout';
 import {
     stringifyChartConfig as stringifyStructuralConfig,
     XMLNS,
@@ -162,6 +163,7 @@ const source = ref(null);
 const isFullscreen = ref(false);
 const trapIndex = ref(null);
 const isLoaded = ref(false);
+const responsiveSizeReady = ref(false);
 const titleStep = ref(0);
 const tableStep = ref(0);
 const legendStep = ref(0);
@@ -1243,6 +1245,7 @@ function prepareChart({ resetSlicer = true } = {}) {
             requestAnimationFrame(() => {
                 defaultSizes.value.width = width;
                 defaultSizes.value.height = height - 12;
+                responsiveSizeReady.value = true;
                 clearTimeout(to.value);
                 to.value = setTimeout(() => {
                     isLoaded.value = true;
@@ -1283,181 +1286,57 @@ const yAxisLabelsAreRight = computed(() => {
     return cfgGrid.value.y.position === 'right';
 });
 
-function getOffsetX() {
-    let scaleLabelsWidth = 0;
-
-    if (FINAL_CONFIG.value.orientation === 'vertical') {
-        if (scaleLabels.value) {
-            const texts = Array.from(
-                scaleLabels.value.querySelectorAll('text'),
-            );
-
-            scaleLabelsWidth = texts.reduce((max, textElement) => {
-                const width = textElement.getComputedTextLength();
-                return width > max ? width : max;
-            }, 0);
-        }
-    }
-
-    if (FINAL_CONFIG.value.orientation === 'horizontal') {
-        if (timeLabelsEls.value) {
-            const texts = Array.from(
-                timeLabelsEls.value.querySelectorAll('text'),
-            );
-
-            scaleLabelsWidth = texts.reduce((max, textElement) => {
-                const width = textElement.getComputedTextLength();
-                return width > max ? width : max;
-            }, 0);
-        }
-    }
-
-    const yAxisLabelWidth = yAxisLabel.value
-        ? yAxisLabel.value.getBoundingClientRect().width +
-          cfgGrid.value.y.axisName.fontSize +
-          cfgGrid.value.y.axisName.offsetX
-        : 0;
-
-    return {
-        left: yAxisLabelsAreRight.value
-            ? 0
-            : scaleLabelsWidth + yAxisLabelWidth,
-        right: yAxisLabelsAreRight.value
-            ? scaleLabelsWidth + yAxisLabelWidth
-            : 0,
-        scaleLabelsWidth,
-        yAxisLabelWidth,
-    };
-}
-
-const labelsXHeight = ref(0);
-const offsetRight = ref(0);
-
-const updateOffsetRight = throttle((w) => {
-    offsetRight.value = w + cfgBars.value.totalValues.fontSize;
-}, 100);
-
-function computeRightOverhang() {
-    if (FINAL_CONFIG.value.orientation !== 'horizontal') return 0;
-
-    const group = sumRight.value;
-    if (!group) return 0;
-
-    const texts = Array.from(group.querySelectorAll('text'));
-    if (!texts.length) return 0;
-
-    let maxRight = -Infinity;
-    for (const t of texts) {
-        try {
-            const box = t.getBBox();
-            const right = box.x + box.width;
-            if (right > maxRight) maxRight = right;
-        } catch (_) {
-            //
-        }
-    }
-
-    const overhang = Math.max(0, maxRight - (drawingArea.value?.right ?? 0));
-    return overhang;
-}
-
-watchEffect((onInvalidate) => {
-    if (FINAL_CONFIG.value.orientation !== 'horizontal') return;
-
-    const el = sumRight.value;
-    if (!el) return;
-
-    const onChange = () => {
-        const overhang = computeRightOverhang();
-        updateOffsetRight(overhang);
-    };
-
-    onChange();
-    const resizeObserver = new ResizeObserver(onChange);
-    resizeObserver.observe(el);
-    const mutationObserver = new MutationObserver(onChange);
-    mutationObserver.observe(el, {
-        childList: true,
-        subtree: true,
-        characterData: true,
-    });
-
-    onInvalidate(() => {
-        resizeObserver.disconnect();
-        mutationObserver.disconnect();
-    });
+const {
+    metrics: labelLayout,
+    ready: labelLayoutReady,
+    settling: labelLayoutSettling,
+    update: measureLabelLayout,
+} = useSvgLabelLayout({
+    svgRef,
+    canMeasure: () =>
+        (!FINAL_CONFIG.value.responsive || responsiveSizeReady.value) &&
+        (!cfgTimeLabels.value.show || timeLabelsAreReady.value),
+    measure: (read) => {
+        const horizontal = FINAL_CONFIG.value.orientation === 'horizontal';
+        const scaleGroup = horizontal ? timeLabelsEls.value : scaleLabels.value;
+        const bottomGroup = horizontal
+            ? scaleLabels.value
+            : timeLabelsEls.value;
+        const scaleLabelsWidth = cfgGrid.value.y.axisLabels.show
+            ? read(scaleGroup).textWidth
+            : 0;
+        const yAxisLabelWidth = yAxisLabel.value
+            ? read(yAxisLabel.value).rotatedWidth +
+              cfgGrid.value.y.axisName.fontSize +
+              cfgGrid.value.y.axisName.offsetX
+            : 0;
+        return {
+            scaleLabelsWidth,
+            yAxisLabelWidth,
+            xAxisLabelHeight: read(xAxisLabel.value).height,
+            timeLabelsHeight: cfgTimeLabels.value.show
+                ? read(bottomGroup).height
+                : 0,
+            right:
+                horizontal && sumRight.value
+                    ? read(sumRight.value).textWidth +
+                      Math.max(
+                          2,
+                          cfgBars.value.totalValues.fontSize * 0.3 +
+                              cfgBars.value.totalValues.offsetX,
+                      ) +
+                      cfgBars.value.totalValues.fontSize
+                    : 0,
+        };
+    },
 });
 
-onBeforeUnmount(() => {
-    labelsXHeight.value = 0;
-    offsetRight.value = 0;
-});
-
-const measuredLabelsHeight = ref(0);
-
-const labelsHeightRaf = ref(0);
-
-function setMeasuredLabelsHeight(value) {
-    const nextValue = Number.isFinite(value) ? value : 0;
-    if (measuredLabelsHeight.value === nextValue) return;
-    measuredLabelsHeight.value = nextValue;
-}
-
-function measureLabelsHeightNow() {
-    // What contributes to Y offset depends on orientation
-    const el =
-        FINAL_CONFIG.value.orientation === 'vertical'
-            ? timeLabelsEls.value
-            : scaleLabels.value;
-
-    if (!el) {
-        setMeasuredLabelsHeight(0);
-        return;
-    }
-
-    try {
-        // SVG group bbox is the most reliable "rendered height"
-        const box = el.getBBox();
-        setMeasuredLabelsHeight(box?.height);
-    } catch (_) {
-        setMeasuredLabelsHeight(0);
-    }
-}
-
-function scheduleMeasureLabelsHeight() {
-    if (labelsHeightRaf.value) cancelAnimationFrame(labelsHeightRaf.value);
-
-    // Two RAFs to wait for SVG layout/font metrics
-    labelsHeightRaf.value = requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-            measureLabelsHeightNow();
-        });
-    });
-}
-
-onBeforeUnmount(() => {
-    if (labelsHeightRaf.value) cancelAnimationFrame(labelsHeightRaf.value);
-});
-
-const offsetY = computed(() => {
-    let h = 0;
-
-    if (xAxisLabel.value) {
-        try {
-            h = xAxisLabel.value.getBBox().height;
-        } catch (_) {
-            h = 0;
-        }
-    }
-
-    const tlH = cfgTimeLabels.value.show ? measuredLabelsHeight.value : 0;
-
-    return h + tlH;
-});
+const offsetY = computed(
+    () =>
+        labelLayout.value.xAxisLabelHeight + labelLayout.value.timeLabelsHeight,
+);
 
 const drawingArea = computed(() => {
-    void parentLayoutStableRunSequence.value;
-
     const { height: H, width: W } = defaultSizes.value;
     const { right: PR } = defaultSizes.value.paddingRatio;
 
@@ -1471,29 +1350,20 @@ const drawingArea = computed(() => {
               ? cfgBars.value.totalValues.fontSize * 1.3
               : 0;
 
-    let offsetLeft = 0;
-    let offsetRightAxis = 0;
-    let scaleLabelsWidth = 0;
-    let yAxisLabelWidth = 0;
-
-    if (cfgGrid.value.y.axisLabels.show) {
-        const offsetX = getOffsetX();
-
-        offsetLeft = offsetX.left;
-        offsetRightAxis = offsetX.right;
-        scaleLabelsWidth = offsetX.scaleLabelsWidth;
-        yAxisLabelWidth = offsetX.yAxisLabelWidth;
-    }
+    const { scaleLabelsWidth, yAxisLabelWidth } = labelLayout.value;
+    const axisWidth = scaleLabelsWidth + yAxisLabelWidth;
+    const offsetLeft = yAxisLabelsAreRight.value ? 0 : axisWidth;
+    const offsetRightAxis = yAxisLabelsAreRight.value ? axisWidth : 0;
 
     const top = cfgChart.value.padding.top + topOffset;
-    const right = W - W * PR - offsetRight.value - offsetRightAxis;
+    const right = W - W * PR - labelLayout.value.right - offsetRightAxis;
 
     const bottom =
         H - cfgChart.value.padding.bottom - offsetY.value - topOffset;
 
     const left = cfgChart.value.padding.left + offsetLeft;
 
-    const width = W - left - W * PR - offsetRight.value - offsetRightAxis;
+    const width = W - left - W * PR - labelLayout.value.right - offsetRightAxis;
 
     const height =
         H - top - cfgChart.value.padding.bottom - offsetY.value - topOffset;
@@ -2052,6 +1922,7 @@ watch(
 );
 
 const timeLabels = ref([]);
+const timeLabelsAreReady = ref(false);
 const allTimeLabels = ref([]);
 
 let timeLabelsRequestId = 0;
@@ -2068,6 +1939,7 @@ watchEffect(() => {
                 text: step.name,
                 absoluteIndex: start + index,
             }));
+        timeLabelsAreReady.value = true;
         return;
     }
 
@@ -2082,6 +1954,7 @@ watchEffect(() => {
 
         if (requestId === timeLabelsRequestId) {
             timeLabels.value = labels;
+            timeLabelsAreReady.value = true;
         }
     })();
 });
@@ -2208,50 +2081,35 @@ const layoutDisplayedTimeLabels = computed(() => {
     return getDisplayedTimeLabels(null);
 });
 
-watchEffect(
-    () => {
-        const orientation = FINAL_CONFIG.value.orientation;
-
-        // Things that affect label rendering/height
-        const tlShown = cfgTimeLabels.value.show;
-        const tlFontSize = cfgTimeLabels.value.fontSize;
-        const tlRotation = cfgTimeLabels.value.rotation;
-        const tlOffsetY = cfgTimeLabels.value.offsetY;
-
-        // Layout labels intentionally exclude the hovered/trapped index.
-        // Hovering can still affect rendered labels without triggering a
-        // new geometry measurement.
-        const visibleTimeLabels =
-            layoutDisplayedTimeLabels.value
-                ?.map((label) => label?.text ?? '')
-                .join('|') || '';
-        const scaleLabelsText = formattedScaleLabelSignature.value;
-
-        // Triggers on resize
-        const w = defaultSizes.value.width;
-        const h = defaultSizes.value.height;
-
-        // Ensure refs are tracked so we measure when they appear
-        const tlEl = timeLabelsEls.value;
-        const scEl = scaleLabels.value;
-        const xAxisEl = xAxisLabel.value;
-
-        void orientation;
-        void tlShown;
-        void tlFontSize;
-        void tlRotation;
-        void tlOffsetY;
-        void visibleTimeLabels;
-        void scaleLabelsText;
-        void w;
-        void h;
-        void tlEl;
-        void scEl;
-        void xAxisEl;
-
-        scheduleMeasureLabelsHeight();
-    },
-    { flush: 'post' },
+watch(
+    () => [
+        defaultSizes.value.width,
+        defaultSizes.value.height,
+        parentLayoutStableRunSequence.value,
+        FINAL_CONFIG.value.style.fontFamily,
+        FINAL_CONFIG.value.orientation,
+        cfgGrid.value,
+        cfgTimeLabels.value,
+        cfgBars.value,
+        layoutDisplayedTimeLabels.value
+            .map((label) => label?.text ?? '')
+            .join('|'),
+        formattedScaleLabelSignature.value,
+        timeLabelsAreReady.value,
+        responsiveSizeReady.value,
+        segregated.value,
+        mutableConfig.value,
+        slicer.value.start,
+        slicer.value.end,
+        timeLabelsEls.value,
+        scaleLabels.value,
+        xAxisLabel.value,
+        yAxisLabel.value,
+        sumRight.value,
+        props.dataset,
+    ],
+    measureLabelLayout,
+    { flush: 'post', deep: true },
 );
 
 const localeData = ref({
@@ -4545,12 +4403,14 @@ defineExpose({
                     'vue-data-ui-loading': loading,
                     'vue-data-ui-fullscreen--on': isFullscreen,
                     'vue-data-ui-fulscreen--off': !isFullscreen,
-                    'vue-data-ui-no-transition': !transitionEnabled,
+                    'vue-data-ui-no-transition':
+                        !transitionEnabled || labelLayoutSettling,
                     'vue-ui-stackbar-chart-zoom-pointer-focus':
                         isChartZoomEnabled && isChartZoomPointerFocused,
                 }"
                 :style="{
                     maxWidth: '100%',
+                    visibility: labelLayoutReady ? 'visible' : 'hidden',
                     overflow: 'visible',
                     background: 'transparent',
                     color: cfgChart.color,
@@ -4838,7 +4698,8 @@ defineExpose({
                             stroke-linecap="round"
                             stroke-linejoin="miter"
                             :class="{
-                                'vue-data-ui-bar-transition': isLoaded,
+                                'vue-data-ui-bar-transition':
+                                    isLoaded && !labelLayoutSettling,
                             }"
                         />
                         <g v-if="$slots.pattern">
@@ -4874,7 +4735,8 @@ defineExpose({
                                 stroke-linecap="round"
                                 stroke-linejoin="miter"
                                 :class="{
-                                    'vue-data-ui-bar-transition': isLoaded,
+                                    'vue-data-ui-bar-transition':
+                                        isLoaded && !labelLayoutSettling,
                                 }"
                             />
                         </g>
@@ -4921,7 +4783,8 @@ defineExpose({
                             stroke-linecap="round"
                             stroke-linejoin="miter"
                             :class="{
-                                'vue-data-ui-bar-transition': isLoaded,
+                                'vue-data-ui-bar-transition':
+                                    isLoaded && !labelLayoutSettling,
                             }"
                         />
                         <g v-if="$slots.pattern">
@@ -4963,7 +4826,8 @@ defineExpose({
                                 stroke-linecap="round"
                                 stroke-linejoin="miter"
                                 :class="{
-                                    'vue-data-ui-bar-transition': isLoaded,
+                                    'vue-data-ui-bar-transition':
+                                        isLoaded && !labelLayoutSettling,
                                 }"
                             />
                         </g>
@@ -5084,7 +4948,9 @@ defineExpose({
                             <text
                                 data-cy="label-datapoint"
                                 :class="{
-                                    'vue-data-ui-transition': transitionEnabled,
+                                    'vue-data-ui-transition':
+                                        transitionEnabled &&
+                                        !labelLayoutSettling,
                                 }"
                                 v-if="
                                     isWaterfall
@@ -5168,7 +5034,9 @@ defineExpose({
                             <text
                                 data-cy="label-total"
                                 :class="{
-                                    'vue-data-ui-transition': transitionEnabled,
+                                    'vue-data-ui-transition':
+                                        transitionEnabled &&
+                                        !labelLayoutSettling,
                                 }"
                                 v-if="
                                     cfgBars.dataLabels.hideEmptyValues
@@ -5209,7 +5077,9 @@ defineExpose({
                             <text
                                 data-cy="label-datapoint"
                                 :class="{
-                                    'vue-data-ui-transition': transitionEnabled,
+                                    'vue-data-ui-transition':
+                                        transitionEnabled &&
+                                        !labelLayoutSettling,
                                 }"
                                 v-if="
                                     isWaterfall
@@ -5289,7 +5159,9 @@ defineExpose({
                             <text
                                 data-cy="label-total"
                                 :class="{
-                                    'vue-data-ui-transition': transitionEnabled,
+                                    'vue-data-ui-transition':
+                                        transitionEnabled &&
+                                        !labelLayoutSettling,
                                 }"
                                 v-if="
                                     cfgBars.dataLabels.hideEmptyValues
@@ -5359,7 +5231,8 @@ defineExpose({
                             :key="`ty_${i}`"
                             :stroke="cfgGrid.x.axisColor"
                             :class="{
-                                'vue-data-ui-transition': transitionEnabled,
+                                'vue-data-ui-transition':
+                                    transitionEnabled && !labelLayoutSettling,
                             }"
                             :d="`M${yAxisLabelsAreRight ? drawingArea.right : drawingArea.left},${yLabel.y} ${yAxisLabelsAreRight ? drawingArea.right + 6 : drawingArea.left - 6},${yLabel.y}`"
                             :stroke-width="1"
@@ -5367,7 +5240,8 @@ defineExpose({
                         />
                         <text
                             :class="{
-                                'vue-data-ui-transition': transitionEnabled,
+                                'vue-data-ui-transition':
+                                    transitionEnabled && !labelLayoutSettling,
                             }"
                             data-cy="scale-label-y"
                             v-for="(yLabel, i) in yLabels"
@@ -5412,7 +5286,8 @@ defineExpose({
                             :key="`scy_${i}`"
                             :d="`M${yLabel.horizontal_x},${drawingArea.bottom} ${yLabel.horizontal_x},${drawingArea.bottom + 6}`"
                             :class="{
-                                'vue-data-ui-transition': transitionEnabled,
+                                'vue-data-ui-transition':
+                                    transitionEnabled && !labelLayoutSettling,
                             }"
                             :stroke="cfgGrid.x.axisColor"
                             :stroke-width="1"
@@ -5422,7 +5297,8 @@ defineExpose({
                             data-cy="scale-label-y"
                             class="vue-data-ui-time-label"
                             :class="{
-                                'vue-data-ui-transition': transitionEnabled,
+                                'vue-data-ui-transition':
+                                    transitionEnabled && !labelLayoutSettling,
                             }"
                             v-for="(yLabel, i) in yLabels"
                             :key="`tly_${i}`"
@@ -5529,7 +5405,8 @@ defineExpose({
                                     v-else
                                     :class="{
                                         'vue-data-ui-transition':
-                                            transitionEnabled,
+                                            transitionEnabled &&
+                                            !labelLayoutSettling,
                                     }"
                                     :key="i + '-multi'"
                                     data-cy="time-label"

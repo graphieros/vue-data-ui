@@ -29,23 +29,25 @@ describe('<VueUiScatter />', () => {
             cy.get('[data-cy="marginal-bar-x"]')
                 .should('exist')
                 .and('be.visible')
-                .and('have.length', 16);
+                .and('have.length', 20);
             cy.get('[data-cy="marginal-bar-y"]')
                 .should('exist')
                 .and('be.visible')
-                .and('have.length', 19);
+                .and('have.length', 20);
             cy.get('[data-cy="marginal-line-x-wrapper"]')
                 .should('exist')
-                .and('be.visible');
+                .and('have.css', 'opacity', '1');
+            // A uniform distribution draws a valid flat stroked path.
             cy.get('[data-cy="marginal-line-x"]')
-                .should('exist')
-                .and('be.visible');
+                .should('have.attr', 'd')
+                .and('not.be.empty');
             cy.get('[data-cy="marginal-line-y-wrapper"]')
                 .should('exist')
-                .and('be.visible');
+                .and('have.css', 'opacity', '1');
+            // A uniform distribution draws a valid flat stroked path.
             cy.get('[data-cy="marginal-line-y"]')
-                .should('exist')
-                .and('be.visible');
+                .should('have.attr', 'd')
+                .and('not.be.empty');
 
             cy.log('selection');
             cy.get('[data-cy="atom-shape"]')

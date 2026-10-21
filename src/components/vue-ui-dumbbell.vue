@@ -42,6 +42,7 @@ import {
 import { throttle } from '../canvas-lib';
 import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
+import { useSvgLabelLayout } from '../useSvgLabelLayout';
 import { usePrinter } from '../usePrinter';
 import { useLoading } from '../useLoading';
 
@@ -252,8 +253,10 @@ watch(
         titleStep.value += 1;
         tableStep.value += 1;
         legendStep.value += 1;
-        baseRowHeight.value = cfgChart.value.rowHeight;
-        WIDTH.value = cfgChart.value.width;
+        if (!FINAL_CONFIG.value.responsive) {
+            baseRowHeight.value = cfgChart.value.rowHeight;
+            WIDTH.value = cfgChart.value.width;
+        }
 
         // Reset mutable config
         mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
@@ -275,6 +278,9 @@ watch(
 
 const resizeObserver = shallowRef(null);
 const observedEl = shallowRef(null);
+
+const responsiveSizeReady = ref(false);
+let resizeFrame = 0;
 
 onMounted(() => {
     readyTeleport.value = true;
@@ -309,7 +315,7 @@ function prepareChart() {
     }
 
     if (FINAL_CONFIG.value.responsive) {
-        const handleResize = throttle(() => {
+        const handleResize = () => {
             const { width, height } = useResponsive({
                 chart: dumbbellChart.value,
                 title: cfgChart.value.title.text ? chartTitle.value : null,
@@ -321,7 +327,8 @@ function prepareChart() {
             const padTitle = cfgChart.value.title.text ? 24 : 0;
             const padLegend = cfgChart.value.legend.show ? 24 : 0;
 
-            requestAnimationFrame(async () => {
+            cancelAnimationFrame(resizeFrame);
+            resizeFrame = requestAnimationFrame(async () => {
                 WIDTH.value = Math.max(0.1, width);
                 baseRowHeight.value = Math.max(
                     0.1,
@@ -329,8 +336,9 @@ function prepareChart() {
                         FINAL_DATASET.value.length,
                 );
                 updateNameValueCollision();
+                responsiveSizeReady.value = true;
             });
-        });
+        };
 
         if (resizeObserver.value) {
             if (observedEl.value) {
@@ -348,6 +356,7 @@ function prepareChart() {
 }
 
 onBeforeUnmount(() => {
+    cancelAnimationFrame(resizeFrame);
     if (raf.value != null) {
         cancelAnimationFrame(raf.value);
         raf.value = null;
@@ -427,18 +436,32 @@ const scale = computed(() => {
 const baseRowHeight = ref(cfgChart.value.rowHeight);
 const WIDTH = ref(cfgChart.value.width);
 
+const {
+    metrics: labelLayout,
+    ready: labelLayoutReady,
+    settling: labelLayoutSettling,
+    update: measureLabelLayout,
+} = useSvgLabelLayout({
+    svgRef,
+    canMeasure: () =>
+        !FINAL_CONFIG.value.responsive || responsiveSizeReady.value,
+    initialMetrics: {
+        scaleLabelsWidth: 0,
+        yAxisLabelWidth: 0,
+        xAxisLabelHeight: 0,
+        timeLabelsHeight: 0,
+    },
+    measure: (read) => ({
+        scaleLabelsWidth: read(serieLabels.value).textWidth,
+        yAxisLabelWidth: read(yAxisLabel.value).rotatedWidth,
+        xAxisLabelHeight: read(xAxisLabel.value).height,
+        timeLabelsHeight: read(scaleLabels.value).height,
+    }),
+});
+
 function getOffsetX() {
-    let base = 0;
-    if (serieLabels.value) {
-        const texts = Array.from(serieLabels.value.querySelectorAll('text'));
-        base = texts.reduce((max, t) => {
-            const w = t.getComputedTextLength();
-            return w > max ? w : max;
-        }, 0);
-    }
-    const yAxisLabelW = yAxisLabel.value
-        ? yAxisLabel.value.getBoundingClientRect().width
-        : 0;
+    const base = labelLayout.value.scaleLabelsWidth;
+    const yAxisLabelW = labelLayout.value.yAxisLabelWidth;
     return (
         base +
         yAxisLabelW +
@@ -446,37 +469,10 @@ function getOffsetX() {
     );
 }
 
-const labelsXHeight = ref(0);
-const updateHeight = throttle((h) => {
-    labelsXHeight.value = h;
-}, 100);
-
-watchEffect((onInvalidate) => {
-    const el = scaleLabels.value;
-    if (!el) return;
-    const observer = new ResizeObserver((entries) => {
-        updateHeight(entries[0].contentRect.height);
-    });
-    observer.observe(el);
-    onInvalidate(() => observer.disconnect());
-});
-
-onBeforeUnmount(() => {
-    labelsXHeight.value = 0;
-});
-
-const offsetY = computed(() => {
-    const __triggerX__ = areSeriesNamesColliding.value;
-    let h = 0;
-    if (xAxisLabel.value) {
-        h = xAxisLabel.value.getBBox().height;
-    }
-    let slH = 0;
-    if (scaleLabels.value) {
-        slH = labelsXHeight.value;
-    }
-    return h + slH;
-});
+const offsetY = computed(
+    () =>
+        labelLayout.value.xAxisLabelHeight + labelLayout.value.timeLabelsHeight,
+);
 
 const rows = computed(() => immutableDataset.value.length);
 
@@ -1194,6 +1190,25 @@ defineExpose({
     toggleFullscreen,
     copyAlt,
 });
+// Label metrics update together after rendering, without depending on hover.
+watch(
+    () => [
+        WIDTH.value,
+        baseRowHeight.value,
+        areSeriesNamesColliding.value,
+        cfgLabels.value,
+        cfgChart.value,
+        FINAL_CONFIG.value.style.fontFamily,
+        props.dataset,
+        responsiveSizeReady.value,
+        serieLabels.value,
+        scaleLabels.value,
+        xAxisLabel.value,
+        yAxisLabel.value,
+    ],
+    measureLabelLayout,
+    { flush: 'post', deep: true },
+);
 </script>
 
 <template>
@@ -1337,7 +1352,7 @@ defineExpose({
                     'vue-data-ui-fulscreen--off': !isFullscreen,
                 }"
                 :viewBox="`0 0 ${WIDTH} ${drawingArea.absoluteHeight <= 0 ? 10 : drawingArea.absoluteHeight}`"
-                :style="`max-width:100%; overflow: visible; background:transparent;color:${cfgChart.color}`"
+                :style="`max-width:100%; overflow: visible; background:transparent;color:${cfgChart.color};visibility:${labelLayoutReady ? 'visible' : 'hidden'}`"
                 :aria-describedby="`chart-instructions-${uid}`"
                 tabindex="0"
                 @focus="onSvgFocus"
@@ -1612,7 +1627,11 @@ defineExpose({
                         "
                         :stroke-width="cfgComparisonLines.strokeWidth"
                         :stroke-dasharray="cfgComparisonLines.strokeDasharray"
-                        :style="{ transition: 'all 0.3s ease-in-out' }"
+                        :style="{
+                            transition: labelLayoutSettling
+                                ? 'none'
+                                : 'all 0.3s ease-in-out',
+                        }"
                     />
 
                     <!-- END -->
@@ -1631,7 +1650,11 @@ defineExpose({
                         "
                         :stroke-width="cfgComparisonLines.strokeWidth"
                         :stroke-dasharray="cfgComparisonLines.strokeDasharray"
-                        :style="{ transition: 'all 0.3s ease-in-out' }"
+                        :style="{
+                            transition: labelLayoutSettling
+                                ? 'none'
+                                : 'all 0.3s ease-in-out',
+                        }"
                     />
 
                     <rect
@@ -1672,7 +1695,11 @@ defineExpose({
                                   )
                                 : 'transparent'
                         "
-                        :style="{ transition: 'all 0.3s ease-in-out' }"
+                        :style="{
+                            transition: labelLayoutSettling
+                                ? 'none'
+                                : 'all 0.3s ease-in-out',
+                        }"
                     />
 
                     <text
@@ -1685,7 +1712,11 @@ defineExpose({
                         :fill="cfgComparisonLines.labelColor"
                         :font-size="cfgComparisonLines.labelFontSize"
                         text-anchor="middle"
-                        :style="{ transition: 'all 0.3s ease-in-out' }"
+                        :style="{
+                            transition: labelLayoutSettling
+                                ? 'none'
+                                : 'all 0.3s ease-in-out',
+                        }"
                     >
                         {{ comparisonLabel }}
                     </text>
