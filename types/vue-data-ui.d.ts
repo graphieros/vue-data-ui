@@ -306,6 +306,12 @@ declare module 'vue-data-ui' {
                     config: VueUiGraphConfig;
                     viewport: VueUiGraphViewport;
                 }) => VNodeChild;
+                'svg-underlayer'?: (props: {
+                    nodes: VueUiGraphNode[];
+                    links: unknown[];
+                    config: VueUiGraphConfig;
+                    viewport: VueUiGraphViewport;
+                }) => VNodeChild;
                 'chart-background'?: (props: {
                     width: number;
                     height: number;
@@ -1282,6 +1288,9 @@ declare module 'vue-data-ui' {
                 ['breadcrumb-arrow']?: () => VNodeChild;
                 rect?: (props: VueUiTreemapRectSlotProps) => VNodeChild;
                 svg?: (props: VueUiTreemapSvgSlotProps) => VNodeChild;
+                'svg-underlayer'?: (
+                    props: VueUiTreemapSvgSlotProps,
+                ) => VNodeChild;
                 hint?: (
                     props: VueUiKeyboardNavigationHintSlotProps,
                 ) => VNodeChild;
@@ -1609,6 +1618,9 @@ declare module 'vue-data-ui' {
                 optionAltCopy?: () => VNodeChild;
                 ['chart-background']?: () => VNodeChild;
                 svg?: (props: VueUiGalaxySvgSlotProps) => VNodeChild;
+                'svg-underlayer'?: (
+                    props: VueUiGalaxySvgSlotProps,
+                ) => VNodeChild;
                 hint?: (
                     props: VueUiKeyboardNavigationHintSlotProps,
                 ) => VNodeChild;
@@ -2087,6 +2099,9 @@ declare module 'vue-data-ui' {
                     props: VueUiMoleculeNodeSvgSlotProps,
                 ) => VNodeChild;
                 svg?: (props: VueUiMoleculeSvgSlotProps) => VNodeChild;
+                'svg-underlayer'?: (
+                    props: VueUiMoleculeSvgSlotProps,
+                ) => VNodeChild;
                 watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
                 ['reset-action']?: (
                     props: VueUiResetActionSlotProps,
@@ -2336,6 +2351,9 @@ declare module 'vue-data-ui' {
                 ['chart-background']?: () => VNodeChild;
                 legend?: (props: VueUi3dBarLegendSlotProps) => VNodeChild;
                 svg?: (props: VueUi3dBarSvgSlotProps) => VNodeChild;
+                'svg-underlayer'?: (
+                    props: VueUi3dBarSvgSlotProps,
+                ) => VNodeChild;
                 watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
                 source?: () => VNodeChild;
                 skeleton?: () => VNodeChild;
@@ -2527,6 +2545,9 @@ declare module 'vue-data-ui' {
                 ) => VNodeChild;
                 ['chart-background']?: () => VNodeChild;
                 svg?: (props: VueUiMoodRadarSvgSlotProps) => VNodeChild;
+                'svg-underlayer'?: (
+                    props: VueUiMoodRadarSvgSlotProps,
+                ) => VNodeChild;
                 hint?: (
                     props: VueUiKeyboardNavigationHintSlotProps,
                 ) => VNodeChild;
@@ -3130,6 +3151,9 @@ declare module 'vue-data-ui' {
                 optionAltCopy?: () => VNodeChild;
                 ['chart-background']?: () => VNodeChild;
                 svg?: (props: VueUiDonutEvolutionSvgSlotProps) => VNodeChild;
+                'svg-underlayer'?: (
+                    props: VueUiDonutEvolutionSvgSlotProps,
+                ) => VNodeChild;
                 hint?: (
                     props: VueUiKeyboardNavigationHintSlotProps,
                 ) => VNodeChild;
@@ -3265,6 +3289,9 @@ declare module 'vue-data-ui' {
                 ) => VNodeChild;
                 ['chart-background']?: () => VNodeChild;
                 svg?: (props: VueUiTiremarksSvgSlotProps) => VNodeChild;
+                'svg-underlayer'?: (
+                    props: VueUiTiremarksSvgSlotProps,
+                ) => VNodeChild;
                 watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
                 source?: () => VNodeChild;
                 skeleton?: () => VNodeChild;
@@ -3403,6 +3430,9 @@ declare module 'vue-data-ui' {
                 ) => VNodeChild;
                 ['chart-background']?: () => VNodeChild;
                 svg?: (props: VueUiWheelSvgSlotProps) => VNodeChild;
+                'svg-underlayer'?: (
+                    props: VueUiWheelSvgSlotProps,
+                ) => VNodeChild;
                 watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
                 source?: () => VNodeChild;
                 skeleton?: () => VNodeChild;
@@ -3641,6 +3671,9 @@ declare module 'vue-data-ui' {
                 ['chart-background']?: () => VNodeChild;
                 pattern?: (props: VueUiPatternSlotProps) => VNodeChild;
                 svg?: (props: VueUiRingsSvgSlotProps) => VNodeChild;
+                'svg-underlayer'?: (
+                    props: VueUiRingsSvgSlotProps,
+                ) => VNodeChild;
                 hint?: (
                     props: VueUiKeyboardNavigationHintSlotProps,
                 ) => VNodeChild;
@@ -4133,6 +4166,9 @@ declare module 'vue-data-ui' {
                 ) => VNodeChild;
                 ['chart-background']?: () => VNodeChild;
                 svg?: (props: VueUiThermometerSvgSlotProps) => VNodeChild;
+                'svg-underlayer'?: (
+                    props: VueUiThermometerSvgSlotProps,
+                ) => VNodeChild;
                 watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
                 source?: () => VNodeChild;
                 skeleton?: () => VNodeChild;
@@ -4303,6 +4339,9 @@ declare module 'vue-data-ui' {
                     props: VueUiRelationCircleDataLabelSlotProps,
                 ) => VNodeChild;
                 svg?: (props: VueUiRelationCircleSvgSlotProps) => VNodeChild;
+                'svg-underlayer'?: (
+                    props: VueUiRelationCircleSvgSlotProps,
+                ) => VNodeChild;
                 hint?: (
                     props: VueUiKeyboardNavigationHintSlotProps,
                 ) => VNodeChild;
@@ -5068,6 +5107,9 @@ declare module 'vue-data-ui' {
                 optionAltCopy?: () => VNodeChild;
                 ['chart-background']?: () => VNodeChild;
                 svg?: (props: VueUiAgePyramidSvgSlotProps) => VNodeChild;
+                'svg-underlayer'?: (
+                    props: VueUiAgePyramidSvgSlotProps,
+                ) => VNodeChild;
                 hint?: (
                     props: VueUiKeyboardNavigationHintSlotProps,
                 ) => VNodeChild;
@@ -5392,6 +5434,9 @@ declare module 'vue-data-ui' {
                 optionAltCopy?: () => VNodeChild;
                 ['chart-background']?: () => VNodeChild;
                 svg?: (props: VueUiCandlestickSvgSlotProps) => VNodeChild;
+                'svg-underlayer'?: (
+                    props: VueUiCandlestickSvgSlotProps,
+                ) => VNodeChild;
                 hint?: (
                     props: VueUiKeyboardNavigationHintSlotProps,
                 ) => VNodeChild;
@@ -5805,6 +5850,9 @@ declare module 'vue-data-ui' {
                     props: VueUiOptionAnnotatorSlotProps,
                 ) => VNodeChild;
                 svg?: (props: VueUiScatterSvgSlotProps) => VNodeChild;
+                'svg-underlayer'?: (
+                    props: VueUiScatterSvgSlotProps,
+                ) => VNodeChild;
                 hint?: (
                     props: VueUiKeyboardNavigationHintSlotProps,
                 ) => VNodeChild;
@@ -6103,6 +6151,9 @@ declare module 'vue-data-ui' {
                 optionAltCopy?: () => VNodeChild;
                 ['chart-background']?: () => VNodeChild;
                 svg?: (props: VueUiHeatmapSvgSlotProps) => VNodeChild;
+                'svg-underlayer'?: (
+                    props: VueUiHeatmapSvgSlotProps,
+                ) => VNodeChild;
                 hint?: (
                     props: VueUiKeyboardNavigationHintSlotProps,
                 ) => VNodeChild;
@@ -6895,6 +6946,7 @@ declare module 'vue-data-ui' {
                     props: VueUiXyTimeLabelSlotProps,
                 ) => VNodeChild;
                 svg?: (props: VueUiXySvgSlotProps) => VNodeChild;
+                'svg-underlayer'?: (props: VueUiXySvgSlotProps) => VNodeChild;
                 hint?: (
                     props: VueUiKeyboardNavigationHintSlotProps,
                 ) => VNodeChild;
@@ -7278,6 +7330,9 @@ declare module 'vue-data-ui' {
                 ) => VNodeChild;
                 ['chart-background']?: () => VNodeChild;
                 svg?: (props: VueUiDonutSvgSlotProps) => VNodeChild;
+                ['svg-underlayer']?: (
+                    props: VueUiDonutSvgSlotProps,
+                ) => VNodeChild;
                 hint?: (
                     props: VueUiKeyboardNavigationHintSlotProps,
                 ) => VNodeChild;
@@ -7625,6 +7680,9 @@ declare module 'vue-data-ui' {
                 ) => VNodeChild;
                 ['chart-background']?: () => VNodeChild;
                 svg?: (props: VueUiNestedDonutsSvgSlotProps) => VNodeChild;
+                'svg-underlayer'?: (
+                    props: VueUiNestedDonutsSvgSlotProps,
+                ) => VNodeChild;
                 hint?: (
                     props: VueUiKeyboardNavigationHintSlotProps,
                 ) => VNodeChild;
@@ -7940,6 +7998,9 @@ declare module 'vue-data-ui' {
                 cell?: (props: VueUiWaffleCellSlotProps) => VNodeChild;
                 cellSvg?: (props: VueUiWaffleCellSlotProps) => VNodeChild;
                 svg?: (props: VueUiWaffleSvgSlotProps) => VNodeChild;
+                'svg-underlayer'?: (
+                    props: VueUiWaffleSvgSlotProps,
+                ) => VNodeChild;
                 hint?: (
                     props: VueUiKeyboardNavigationHintSlotProps,
                 ) => VNodeChild;
@@ -8234,6 +8295,9 @@ declare module 'vue-data-ui' {
                 ) => VNodeChild;
                 ['chart-background']?: () => VNodeChild;
                 svg?: (props: VueUiRadarSvgSlotProps) => VNodeChild;
+                'svg-underlayer'?: (
+                    props: VueUiRadarSvgSlotProps,
+                ) => VNodeChild;
                 hint?: (
                     props: VueUiKeyboardNavigationHintSlotProps,
                 ) => VNodeChild;
@@ -8599,6 +8663,9 @@ declare module 'vue-data-ui' {
                     props: VueUiQuadrantDatapointSlotProps,
                 ) => VNodeChild;
                 svg?: (props: VueUiQuadrantSvgSlotProps) => VNodeChild;
+                'svg-underlayer'?: (
+                    props: VueUiQuadrantSvgSlotProps,
+                ) => VNodeChild;
                 hint?: (
                     props: VueUiKeyboardNavigationHintSlotProps,
                 ) => VNodeChild;
@@ -8806,6 +8873,9 @@ declare module 'vue-data-ui' {
                 ['chart-background']?: () => VNodeChild;
                 pattern?: (props: VueUiPatternSlotProps) => VNodeChild;
                 svg?: (props: VueUiGaugeSvgSlotProps) => VNodeChild;
+                'svg-underlayer'?: (
+                    props: VueUiGaugeSvgSlotProps,
+                ) => VNodeChild;
                 watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
                 legend?: (props: VueUiGaugeLegendSlotProps) => VNodeChild;
                 source?: () => VNodeChild;
@@ -9165,6 +9235,9 @@ declare module 'vue-data-ui' {
                 optionAltCopy?: () => VNodeChild;
                 ['chart-background']?: () => VNodeChild;
                 svg?: (props: VueUiChestnutSvgSlotProps) => VNodeChild;
+                'svg-underlayer'?: (
+                    props: VueUiChestnutSvgSlotProps,
+                ) => VNodeChild;
                 watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
                 legend?: (props: VueUiChestnutLegendSlotProps) => VNodeChild;
                 source?: () => VNodeChild;
@@ -9444,6 +9517,9 @@ declare module 'vue-data-ui' {
                 ) => VNodeChild;
                 ['chart-background']?: () => VNodeChild;
                 svg?: (props: VueUiOnionSvgSlotProps) => VNodeChild;
+                'svg-underlayer'?: (
+                    props: VueUiOnionSvgSlotProps,
+                ) => VNodeChild;
                 hint?: (
                     props: VueUiKeyboardNavigationHintSlotProps,
                 ) => VNodeChild;
@@ -9826,6 +9902,9 @@ declare module 'vue-data-ui' {
                 ['chart-background']?: () => VNodeChild;
                 pattern?: (props: VueUiPatternSlotProps) => VNodeChild;
                 svg?: (props: VueUiHorizontalBarSvgSlotProps) => VNodeChild;
+                'svg-underlayer'?: (
+                    props: VueUiHorizontalBarSvgSlotProps,
+                ) => VNodeChild;
                 hint?: (
                     props: VueUiKeyboardNavigationHintSlotProps,
                 ) => VNodeChild;
@@ -10110,6 +10189,9 @@ declare module 'vue-data-ui' {
                 before?: (props: VueUiSparklineBeforeSlotProps) => VNodeChild;
                 ['chart-background']?: () => VNodeChild;
                 svg?: (props: VueUiSparklineSvgSlotProps) => VNodeChild;
+                'svg-underlayer'?: (
+                    props: VueUiSparklineSvgSlotProps,
+                ) => VNodeChild;
                 hint?: (
                     props: VueUiKeyboardNavigationHintSlotProps,
                 ) => VNodeChild;
@@ -11850,6 +11932,9 @@ declare module 'vue-data-ui' {
                 ) => VNodeChild;
                 ['chart-background']?: () => VNodeChild;
                 svg?: (props: VueUiStripPlotSvgSlotProps) => VNodeChild;
+                'svg-underlayer'?: (
+                    props: VueUiStripPlotSvgSlotProps,
+                ) => VNodeChild;
                 hint?: (
                     props: VueUiKeyboardNavigationHintSlotProps,
                 ) => VNodeChild;
@@ -12153,6 +12238,9 @@ declare module 'vue-data-ui' {
                 optionAltCopy?: () => VNodeChild;
                 ['chart-background']?: () => VNodeChild;
                 svg?: (props: VueUiDumbbellSvgSlotProps) => VNodeChild;
+                'svg-underlayer'?: (
+                    props: VueUiDumbbellSvgSlotProps,
+                ) => VNodeChild;
                 hint?: (
                     props: VueUiKeyboardNavigationHintSlotProps,
                 ) => VNodeChild;
@@ -12353,6 +12441,9 @@ declare module 'vue-data-ui' {
                 ) => VNodeChild;
                 ['chart-background']?: () => VNodeChild;
                 svg?: (props: VueUiWordCloudSvgSlotProps) => VNodeChild;
+                'svg-underlayer'?: (
+                    props: VueUiWordCloudSvgSlotProps,
+                ) => VNodeChild;
                 hint?: (
                     props: VueUiKeyboardNavigationHintSlotProps,
                 ) => VNodeChild;
@@ -13007,6 +13098,7 @@ declare module 'vue-data-ui' {
                 optionAltCopy?: () => VNodeChild;
                 ['chart-background']?: () => VNodeChild;
                 svg?: (props: VueUiFlowSvgSlotProps) => VNodeChild;
+                'svg-underlayer'?: (props: VueUiFlowSvgSlotProps) => VNodeChild;
                 hint?: (
                     props: VueUiKeyboardNavigationHintSlotProps,
                 ) => VNodeChild;
@@ -13338,6 +13430,9 @@ declare module 'vue-data-ui' {
                     props: VueUiParallelCoordinatePlotCommentSlotProps,
                 ) => VNodeChild;
                 svg?: (
+                    props: VueUiParallelCoordinatePlotSvgSlotProps,
+                ) => VNodeChild;
+                'svg-underlayer'?: (
                     props: VueUiParallelCoordinatePlotSvgSlotProps,
                 ) => VNodeChild;
                 hint?: (
@@ -14299,6 +14394,9 @@ declare module 'vue-data-ui' {
                     props: VueUiStackbarTimeLabelSlotProps,
                 ) => VNodeChild;
                 svg?: (props: VueUiStackbarSvgSlotProps) => VNodeChild;
+                'svg-underlayer'?: (
+                    props: VueUiStackbarSvgSlotProps,
+                ) => VNodeChild;
                 hint?: (
                     props: VueUiKeyboardNavigationHintSlotProps,
                 ) => VNodeChild;
@@ -14756,6 +14854,9 @@ declare module 'vue-data-ui' {
                     props: VueUiStacklineTimeLabelSlotProps,
                 ) => VNodeChild;
                 svg?: (props: VueUiStacklineSvgSlotProps) => VNodeChild;
+                'svg-underlayer'?: (
+                    props: VueUiStacklineSvgSlotProps,
+                ) => VNodeChild;
                 hint?: (
                     props: VueUiKeyboardNavigationHintSlotProps,
                 ) => VNodeChild;
@@ -14959,6 +15060,9 @@ declare module 'vue-data-ui' {
                 optionAltCopy?: () => VNodeChild;
                 ['chart-background']?: () => VNodeChild;
                 svg?: (props: VueUiBulletSvgSlotProps) => VNodeChild;
+                'svg-underlayer'?: (
+                    props: VueUiBulletSvgSlotProps,
+                ) => VNodeChild;
                 watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
                 legend?: (props: VueUiBulletLegendSlotProps) => VNodeChild;
                 source?: () => VNodeChild;
@@ -15128,6 +15232,9 @@ declare module 'vue-data-ui' {
                 optionAltCopy?: () => VNodeChild;
                 ['chart-background']?: () => VNodeChild;
                 svg?: (props: VueUiFunnelSvgSlotProps) => VNodeChild;
+                'svg-underlayer'?: (
+                    props: VueUiFunnelSvgSlotProps,
+                ) => VNodeChild;
                 watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
                 source?: () => VNodeChild;
             };
@@ -15462,6 +15569,9 @@ declare module 'vue-data-ui' {
                 optionAltCopy?: () => VNodeChild;
                 ['chart-background']?: () => VNodeChild;
                 svg?: (props: VueUiHistoryPlotSvgSlotProps) => VNodeChild;
+                'svg-underlayer'?: (
+                    props: VueUiHistoryPlotSvgSlotProps,
+                ) => VNodeChild;
                 hint?: (
                     props: VueUiKeyboardNavigationHintSlotProps,
                 ) => VNodeChild;
@@ -15755,6 +15865,9 @@ declare module 'vue-data-ui' {
                 ) => VNodeChild;
                 circle?: (props: VueUiCirclePackCircleSlotProps) => VNodeChild;
                 svg?: (props: VueUiCirclePackSvgSlotProps) => VNodeChild;
+                'svg-underlayer'?: (
+                    props: VueUiCirclePackSvgSlotProps,
+                ) => VNodeChild;
                 hint?: (
                     props: VueUiKeyboardNavigationHintSlotProps,
                 ) => VNodeChild;
@@ -16005,6 +16118,9 @@ declare module 'vue-data-ui' {
                 ['chart-background']?: () => VNodeChild;
                 pattern?: (props: VueUiWorldPatternSlotProps) => VNodeChild;
                 svg?: (props: VueUiWorldSvgSlotProps) => VNodeChild;
+                'svg-underlayer'?: (
+                    props: VueUiWorldSvgSlotProps,
+                ) => VNodeChild;
                 watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
                 source?: () => VNodeChild;
                 skeleton?: () => VNodeChild;
@@ -16344,6 +16460,9 @@ declare module 'vue-data-ui' {
                     props: VueUiRidgelineTimeLabelSlotProps,
                 ) => VNodeChild;
                 svg?: (props: VueUiRidgelineSvgSlotProps) => VNodeChild;
+                'svg-underlayer'?: (
+                    props: VueUiRidgelineSvgSlotProps,
+                ) => VNodeChild;
                 hint?: (
                     props: VueUiKeyboardNavigationHintSlotProps,
                 ) => VNodeChild;
@@ -16586,6 +16705,9 @@ declare module 'vue-data-ui' {
                 optionAltCopy?: () => VNodeChild;
                 ['chart-background']?: () => VNodeChild;
                 svg?: (props: VueUiChordSvgSlotProps) => VNodeChild;
+                'svg-underlayer'?: (
+                    props: VueUiChordSvgSlotProps,
+                ) => VNodeChild;
                 watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
                 hint?: (
                     props: VueUiKeyboardNavigationHintSlotProps,
@@ -16908,6 +17030,7 @@ declare module 'vue-data-ui' {
                     props: VueUiDagFreeNodeLabelSlotProps,
                 ) => VNodeChild;
                 svg?: (props: VueUiDagSvgSlotProps) => VNodeChild;
+                'svg-underlayer'?: (props: VueUiDagSvgSlotProps) => VNodeChild;
                 hint?: (
                     props: VueUiKeyboardNavigationHintSlotProps,
                 ) => VNodeChild;
@@ -17216,6 +17339,7 @@ declare module 'vue-data-ui' {
                 optionZoom?: (props: VueUiGeoOptionZoomSlotProps) => VNodeChild;
                 datapoint?: (props: VueUiGeoDatapointSlotProps) => VNodeChild;
                 svg?: (props: VueUiGeoSvgSlotProps) => VNodeChild;
+                'svg-underlayer'?: (props: VueUiGeoSvgSlotProps) => VNodeChild;
                 hint?: (
                     props: VueUiKeyboardNavigationHintSlotProps,
                 ) => VNodeChild;
@@ -17478,6 +17602,7 @@ declare module 'vue-data-ui' {
                     props: VueUiBumpTimeLabelSlotProps,
                 ) => VNodeChild;
                 svg?: (props: VueUiBumpSvgSlotProps) => VNodeChild;
+                'svg-underlayer'?: (props: VueUiBumpSvgSlotProps) => VNodeChild;
                 hint?: (
                     props: VueUiKeyboardNavigationHintSlotProps,
                 ) => VNodeChild;
@@ -17868,6 +17993,7 @@ declare module 'vue-data-ui' {
                 ['custom-menu-after']?: () => VNodeChild;
                 ['chart-background']?: () => VNodeChild;
                 svg?: (props: VueUiHillSvgSlotProps) => VNodeChild;
+                'svg-underlayer'?: (props: VueUiHillSvgSlotProps) => VNodeChild;
                 analysis?: (props: VueUiHillAnalysisSlotProps) => VNodeChild;
                 menuIcon?: (props: VueUiMenuIconSlotProps) => VNodeChild;
                 optionPdf?: () => VNodeChild;

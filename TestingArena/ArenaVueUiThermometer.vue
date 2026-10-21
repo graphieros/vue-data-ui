@@ -218,6 +218,18 @@ onMounted(async () => {
                     <div style="width: 100%; height: 100%; background: radial-gradient(at top left, red, white)"/>
                 </template> -->
                 <template #optionPdf> PRINT PDF </template>
+                <template #svg-underlayer="{ svg }">
+                    <rect
+                        :x="svg.left"
+                        :y="svg.top"
+                        :width="svg.width / 2"
+                        :height="svg.height"
+                        fill="chocolate"
+                        opacity="0.15"
+                        pointer-events="none"
+                    />
+                </template>
+
                 <template #svg="{ svg }">
                     <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
                     <text :x="30" :y="30" text-anchor="middle">#SVG</text>

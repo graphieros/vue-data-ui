@@ -229,6 +229,18 @@ onMounted(async () => {
                 :key="`local_${step}`"
                 ref="local"
             >
+                <template #svg-underlayer="{ svg }">
+                    <rect
+                        :x="0"
+                        :y="0"
+                        :width="svg.width / 2"
+                        :height="svg.height"
+                        fill="chocolate"
+                        opacity="0.15"
+                        pointer-events="none"
+                    />
+                </template>
+
                 <!-- <template #chart-background>
                     <div style="width: 100%; height: 100%; background: radial-gradient(at top left, red, white)"/>
                 </template> -->

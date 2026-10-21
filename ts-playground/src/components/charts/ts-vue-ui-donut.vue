@@ -19,6 +19,7 @@ import DonutTooltip from '../slots/vue-ui-donut/donut-tooltip.vue';
 import DonutDataLabel from '../slots/vue-ui-donut/donut-data-label.vue';
 import DonutPlotComment from '../slots/vue-ui-donut/donut-plot-comment.vue';
 import DonutSvg from '../slots/vue-ui-donut/donut-svg.vue';
+import DonutSvgUnderlayer from '../slots/vue-ui-donut/donut-svg-underlayer.vue';
 import DonutHollow from '../slots/vue-ui-donut/donut-hollow.vue';
 
 import KeyboardNavigationHint from '../slots/common/keyboard-navigation-hint.vue';
@@ -507,6 +508,10 @@ watchEffect(async () => {
 
             <template #plot-comment="{ plot }">
                 <DonutPlotComment :plot />
+            </template>
+
+            <template #svg-underlayer="{ svg }">
+                <DonutSvgUnderlayer :svg />
             </template>
 
             <template #svg="{ svg }">

@@ -434,6 +434,18 @@ function copyAlt(payload: VueUiOnionEmitCopyAlt) {
                 </div>
             </template>
 
+            <template #svg-underlayer="{ svg }">
+                <rect
+                    :x="svg.drawingArea.left"
+                    :y="svg.drawingArea.top"
+                    :width="svg.drawingArea.width / 2"
+                    :height="svg.drawingArea.height"
+                    fill="chocolate"
+                    opacity="0.15"
+                    pointer-events="none"
+                />
+            </template>
+
             <template #svg="{ svg }">
                 <OnionSvg :svg />
             </template>

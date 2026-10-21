@@ -1513,6 +1513,15 @@ defineExpose({
             @keydown="onSvgKeydown"
         >
             <PackageVersion />
+            <slot
+                name="svg-underlayer"
+                :svg="{
+                    height: 600,
+                    width: 600,
+                    isPrintingImg: isPrinting || isImaging || isCallbackImaging,
+                    isPrintingSvg: isCallbackSvg,
+                }"
+            />
 
             <!-- BACKGROUND SLOT -->
             <foreignObject

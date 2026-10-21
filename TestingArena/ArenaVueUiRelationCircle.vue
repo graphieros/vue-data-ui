@@ -299,6 +299,18 @@ onMounted(async () => {
                 ref="local"
             >
                 <template #optionPdf> PRINT PDF </template>
+                <template #svg-underlayer="{ svg }">
+                    <rect
+                        :x="0"
+                        :y="0"
+                        :width="svg.width / 2"
+                        :height="svg.height"
+                        fill="chocolate"
+                        opacity="0.15"
+                        pointer-events="none"
+                    />
+                </template>
+
                 <template #svg="{ svg }">
                     <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
                     <text :x="30" :y="30" text-anchor="middle">#SVG</text>

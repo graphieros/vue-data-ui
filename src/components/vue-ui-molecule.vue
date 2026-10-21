@@ -941,6 +941,17 @@ defineExpose({
             :style="`overflow: hidden; background:transparent;color:${cfgChart.color}`"
         >
             <PackageVersion />
+            <slot
+                name="svg-underlayer"
+                :svg="{
+                    ...svg,
+                    drawingArea: {
+                        ...viewBox,
+                    },
+                    isPrintingImg: isPrinting || isImaging || isCallbackImaging,
+                    isPrintingSvg: isCallbackSvg,
+                }"
+            />
 
             <!-- BACKGROUND SLOT -->
             <foreignObject

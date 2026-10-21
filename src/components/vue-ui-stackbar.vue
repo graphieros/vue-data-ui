@@ -4579,6 +4579,18 @@ defineExpose({
                 @click.capture="onChartZoomClickCapture"
             >
                 <PackageVersion />
+                <slot
+                    name="svg-underlayer"
+                    :svg="{
+                        drawingArea,
+                        slicer,
+                        data: formattedDataset,
+                        isPrintingImg:
+                            isPrinting || isImaging || isCallbackImaging,
+                        isPrintingSvg: isCallbackSvg,
+                        barWidth: barSlot,
+                    }"
+                />
 
                 <!-- BACKGROUND SLOT -->
                 <foreignObject

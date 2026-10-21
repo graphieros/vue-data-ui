@@ -420,6 +420,18 @@ function copyAlt(payload: VueUiGalaxyEmitCopyAlt) {
                 </div>
             </template>
 
+            <template #svg-underlayer="{ svg }">
+                <rect
+                    :x="0"
+                    :y="0"
+                    :width="svg.width / 2"
+                    :height="svg.height"
+                    fill="chocolate"
+                    opacity="0.15"
+                    pointer-events="none"
+                />
+            </template>
+
             <template #svg="{ svg }">
                 <GalaxySvg :svg />
             </template>

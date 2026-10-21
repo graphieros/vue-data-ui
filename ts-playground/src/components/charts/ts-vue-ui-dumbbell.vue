@@ -456,6 +456,18 @@ function copyAlt(payload: VueUiDumbbellEmitCopyAlt) {
                 </div>
             </template>
 
+            <template #svg-underlayer="{ svg }">
+                <rect
+                    :x="svg.left"
+                    :y="svg.top"
+                    :width="svg.width / 2"
+                    :height="svg.height"
+                    fill="chocolate"
+                    opacity="0.15"
+                    pointer-events="none"
+                />
+            </template>
+
             <template #svg="{ svg }">
                 <DumbbellSvg :svg />
             </template>

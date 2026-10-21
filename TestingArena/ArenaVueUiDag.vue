@@ -326,6 +326,18 @@ onMounted(() => {
                         responsive: true,
                     }"
                 >
+                    <template #svg-underlayer="{ svg }">
+                        <rect
+                            :x="svg.drawingArea.x"
+                            :y="svg.drawingArea.y"
+                            :width="svg.drawingArea.width / 2"
+                            :height="svg.drawingArea.height"
+                            fill="chocolate"
+                            opacity="0.15"
+                            pointer-events="none"
+                        />
+                    </template>
+
                     <!-- <template #background-pattern="{ x, y, color }">
                     <line :x1="x - 2" :x2="x + 2" :y1="y" :y2="y" :stroke="color" stroke-width="0.5"/>
                     <line :x1="x" :x2="x" :y1="y - 2" :y2="y + 2" :stroke="color" stroke-width="0.5"/>

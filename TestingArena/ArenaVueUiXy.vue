@@ -1487,6 +1487,17 @@ const zoomState = ref(null);
                         {{ disabled }}
                     </template> -->
 
+                    <template #svg-underlayer="{ svg }">
+                        <rect
+                            :x="svg.drawingArea.left"
+                            :y="svg.drawingArea.top"
+                            :width="svg.drawingArea.width / 2"
+                            :height="svg.drawingArea.height"
+                            fill="chocolate"
+                            opacity="0.15"
+                        />
+                    </template>
+
                     <template #svg="{ svg }">
                         <g>
                             <!-- <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />

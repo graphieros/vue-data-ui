@@ -251,6 +251,19 @@ const responsiveConfig = computed(() =>
                 :dataset="dataset"
                 :config="config"
             >
+                <template #svg-underlayer="{ nodes, viewport }">
+                    <text
+                        :x="-viewport.x / viewport.k + 12"
+                        :y="-viewport.y / viewport.k + 24"
+                        fill="chocolate"
+                        font-size="16"
+                        opacity="0.5"
+                        pointer-events="none"
+                    >
+                        #svg-underlayer: {{ nodes.length }} nodes
+                    </text>
+                </template>
+
                 <template #tooltip="{ node, connections }">
                     <strong>{{ node?.label ?? node?.id }}</strong>
                     <div v-if="node">

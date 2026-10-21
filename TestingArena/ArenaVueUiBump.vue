@@ -309,6 +309,18 @@ onMounted(async () => {
 
         <template #local>
             <LocalVueUiBump :dataset="dataset" :config="config" ref="local">
+                <template #svg-underlayer="{ svg }">
+                    <rect
+                        :x="svg.drawingArea.left"
+                        :y="svg.drawingArea.top"
+                        :width="svg.drawingArea.width / 2"
+                        :height="svg.drawingArea.height"
+                        fill="chocolate"
+                        opacity="0.15"
+                        pointer-events="none"
+                    />
+                </template>
+
                 <!-- <template #time-label="{x, y, content }">
                     <text :x="x" :y="y" fill="red" font-size="12">
                         {{content}}

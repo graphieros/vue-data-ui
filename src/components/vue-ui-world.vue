@@ -1110,6 +1110,15 @@ defineExpose({
             @touchend="onTouchEnd"
         >
             <PackageVersion />
+            <slot
+                name="svg-underlayer"
+                :svg="{
+                    height: sizes.height,
+                    width: sizes.width,
+                    isPrintingImg: isPrinting || isImaging || isCallbackImaging,
+                    isPrintingSvg: isCallbackSvg,
+                }"
+            />
 
             <!-- BACKGROUND SLOT -->
             <foreignObject

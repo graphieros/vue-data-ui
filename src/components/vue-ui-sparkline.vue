@@ -2334,6 +2334,18 @@ const a11yTable = computed(() => {
                 @pointercancel="cancelZoomSelection"
             >
                 <PackageVersion />
+                <slot
+                    name="svg-underlayer"
+                    :svg="{
+                        ...svg,
+                        drawingArea,
+                        timeLabels,
+                        series: mutableDataset,
+                        hoveredIndex: activeTooltipIndex,
+                        isZoomed,
+                        zoomRange: zoomBounds,
+                    }"
+                />
 
                 <!-- BACKGROUND SLOT -->
                 <foreignObject

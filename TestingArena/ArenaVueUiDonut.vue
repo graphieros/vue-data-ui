@@ -1134,6 +1134,15 @@ function reorderAll() {
 
         <template #theme>
             <LocalVueUiDonut :dataset="dataset" :config="configTheme">
+                <template #svg-underlayer="{ svg }">
+                    <circle
+                        :cx="svg.width / 2"
+                        :cy="svg.height / 2"
+                        :r="Math.min(svg.width, svg.height) * 0.4"
+                        fill="chocolate"
+                        opacity="0.15"
+                    />
+                </template>
                 <template #svg="{ svg }">
                     <VueUiLabel
                         v-for="label in labels"

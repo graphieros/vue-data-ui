@@ -7866,6 +7866,18 @@ defineExpose({
             >
                 <g ref="G" class="vue-data-ui-g">
                     <PackageVersion />
+                    <slot
+                        name="svg-underlayer"
+                        :svg="{
+                            ...svg,
+                            slicer,
+                            isPrintingImg:
+                                isPrinting || isImaging || isCallbackImaging,
+                            isPrintingSvg: isCallbackSvg,
+                            data: svgSlotData,
+                            drawingArea,
+                        }"
+                    />
 
                     <defs>
                         <clipPath :id="`vue_ui_xy_zoom_clip_${uniqueId}`">

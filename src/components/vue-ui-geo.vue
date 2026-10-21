@@ -2321,6 +2321,25 @@ defineExpose({
                     :transform="mapFitTransform.transform"
                     :style="{ pointerEvents: isInteracting ? 'none' : 'auto' }"
                 >
+                    <slot
+                        name="svg-underlayer"
+                        :svg="{
+                            drawingArea: viewBox,
+                            x: projectedBounds?.minX ?? 0,
+                            y: projectedBounds?.minY ?? 0,
+                            width: projectedBounds?.width ?? 0,
+                            height: projectedBounds?.height ?? 0,
+                            isPrintingImg:
+                                isPrinting || isImaging || isCallbackImaging,
+                            isPrintingSvg: isCallbackSvg,
+                            data: {
+                                areaPaths,
+                                linePaths,
+                                geoJsonPoints,
+                                projectedPoints,
+                            },
+                        }"
+                    />
                     <g>
                         <path
                             class="vue-ui-geo-territory"

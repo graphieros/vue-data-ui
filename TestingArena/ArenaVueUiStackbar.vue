@@ -817,6 +817,18 @@ const zoomState = ref(null);
                     {{ datapoint }}
                 </template> -->
 
+                    <template #svg-underlayer="{ svg }">
+                        <rect
+                            :x="svg.drawingArea.left"
+                            :y="svg.drawingArea.top"
+                            :width="svg.drawingArea.width / 2"
+                            :height="svg.drawingArea.height"
+                            fill="chocolate"
+                            opacity="0.15"
+                            pointer-events="none"
+                        />
+                    </template>
+
                     <template #svg="{ svg }">
                         <!-- <g v-html="freestyle(svg)"/> -->
                     </template>

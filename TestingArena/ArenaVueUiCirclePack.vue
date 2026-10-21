@@ -286,6 +286,18 @@ onMounted(async () => {
                     :key="`local_${step}`"
                     @selectDatapoint="selectDatapoint"
                 >
+                    <template #svg-underlayer="{ svg }">
+                        <rect
+                            :x="0"
+                            :y="0"
+                            :width="svg.drawingArea.width / 2"
+                            :height="svg.drawingArea.height"
+                            fill="chocolate"
+                            opacity="0.15"
+                            pointer-events="none"
+                        />
+                    </template>
+
                     <!-- <template #circle="{ r, x, y, uid }">
           </template> -->
                     <!-- <template #tooltip="{ datapoint }">

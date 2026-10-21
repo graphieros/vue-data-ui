@@ -2270,6 +2270,16 @@ defineExpose({
             @pointercancel="finishDrag"
         >
             <PackageVersion />
+            <slot
+                name="svg-underlayer"
+                :svg="{
+                    drawingArea: geometry,
+                    isEditing,
+                    datapoints: orderedLaidOutDataset,
+                    isPrintingImg: isPrinting || isImaging || isCallbackImaging,
+                    isPrintingSvg: isCallbackSvg,
+                }"
+            />
 
             <!-- BACKGROUND SLOT -->
             <foreignObject

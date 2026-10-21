@@ -782,6 +782,14 @@ defineExpose({
             :aria-describedby="`bullet-svg-desc-${uid}`"
         >
             <PackageVersion />
+            <slot
+                name="svg-underlayer"
+                :svg="{
+                    ...svg,
+                    isPrintingImg: isPrinting || isImaging || isCallbackImaging,
+                    isPrintingSvg: isCallbackSvg,
+                }"
+            />
 
             <title :id="`bullet-svg-title-${uid}`">
                 {{ cfgChart.title.text || 'Bullet chart' }}

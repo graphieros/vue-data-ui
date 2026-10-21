@@ -2348,6 +2348,18 @@ defineExpose({
                 @pointerleave="onPanZoomPointerUp"
             >
                 <PackageVersion />
+                <slot
+                    name="svg-underlayer"
+                    v-bind="{
+                        svg,
+                        isZoom,
+                        rect: selectedRect,
+                        config: FINAL_CONFIG,
+                        isPrintingImg:
+                            isPrinting || isImaging || isCallbackImaging,
+                        isPrintingSvg: isCallbackSvg,
+                    }"
+                />
 
                 <g v-for="(rect, _i) in squarified" :key="`tgrad_${rect.id}`">
                     <defs v-if="cfgLayout.rects.gradient.show">

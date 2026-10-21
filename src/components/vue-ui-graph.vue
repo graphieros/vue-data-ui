@@ -57,6 +57,9 @@ const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
 const BaseDraggableDialog = defineAsyncComponent(
     () => import('../atoms/BaseDraggableDialog.vue'),
 );
+const PackageVersion = defineAsyncComponent(
+    () => import('../atoms/PackageVersion.vue'),
+);
 
 const props = defineProps({
     dataset: {
@@ -2114,6 +2117,7 @@ defineExpose({
             @lostpointercapture="up"
             @dblclick="config.interaction.zoom.fitOnDoubleClick && fitToView()"
         >
+            <PackageVersion />
             <desc :id="`${uid}-keyboard-hint`">
                 {{ config.a11y.translations.keyboardNavigation }}
             </desc>
@@ -2169,6 +2173,13 @@ defineExpose({
                 class="vue-ui-graph-network"
                 :transform="`translate(${viewport.x},${viewport.y}) scale(${viewport.k})`"
             >
+                <slot
+                    name="svg-underlayer"
+                    :nodes="graph.nodes"
+                    :links="graph.links"
+                    :config="config"
+                    :viewport="viewport"
+                />
                 <g
                     class="vue-ui-graph-links"
                     pointer-events="none"

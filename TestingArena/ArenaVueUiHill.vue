@@ -564,6 +564,18 @@ const configTheme = computed(() => ({
                 <!-- <template #hill-save>
         S
       </template> -->
+                <template #svg-underlayer="{ svg }">
+                    <rect
+                        :x="svg.drawingArea.startX"
+                        :y="svg.drawingArea.peakY"
+                        :width="svg.drawingArea.width / 2"
+                        :height="svg.drawingArea.baseY - svg.drawingArea.peakY"
+                        fill="chocolate"
+                        opacity="0.15"
+                        pointer-events="none"
+                    />
+                </template>
+
                 <template #svg="{ svg }">
                     {{ log(svg) }}
                 </template>

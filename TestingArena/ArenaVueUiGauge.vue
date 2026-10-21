@@ -582,6 +582,18 @@ onMounted(async () => {
                     /></pattern>
                 </template>
 
+                <template #svg-underlayer="{ svg }">
+                    <rect
+                        :x="0"
+                        :y="svg.top"
+                        :width="svg.width / 2"
+                        :height="svg.height"
+                        fill="chocolate"
+                        opacity="0.15"
+                        pointer-events="none"
+                    />
+                </template>
+
                 <template #svg="{ svg }">
                     <circle
                         :cx="svg.width / 2"

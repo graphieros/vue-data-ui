@@ -40,6 +40,7 @@ import XyPlotComment from '../slots/vue-ui-xy/xy-plot-comment.vue';
 import PatternSlot from '../slots/common/pattern-slot.vue';
 import XyTimeLabel from '../slots/vue-ui-xy/xy-time-label.vue';
 import XySvg from '../slots/vue-ui-xy/xy-svg.vue';
+import XySvgUnderlayer from '../slots/vue-ui-xy/xy-svg-underlayer.vue';
 import KeyboardNavigationHint from '../slots/common/keyboard-navigation-hint.vue';
 import Watermark from '../slots/common/watermark.vue';
 import Skeleton from '../slots/common/skeleton.vue';
@@ -915,6 +916,10 @@ function getLabels(svg: VueUiXySvgSlotProps['svg']) {
 
             <template #time-label="label">
                 <XyTimeLabel v-bind="label" :offset-y="label.fontSize * 1.5" />
+            </template>
+
+            <template #svg-underlayer="{ svg }">
+                <XySvgUnderlayer :svg />
             </template>
 
             <template #svg="{ svg }">

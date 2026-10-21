@@ -233,6 +233,19 @@ function zoom(viewport: VueUiGraphViewport) {
                     >{{ String(node.label ?? node.id).slice(0, 1) }}</text
                 >
             </template>
+            <template #svg-underlayer="{ nodes, viewport }">
+                <text
+                    :x="-viewport.x / viewport.k + 12"
+                    :y="-viewport.y / viewport.k + 24"
+                    fill="chocolate"
+                    font-size="16"
+                    opacity="0.5"
+                    pointer-events="none"
+                >
+                    #svg-underlayer: {{ nodes.length }} nodes
+                </text>
+            </template>
+
             <template #svg="{ nodes, links, config: chartConfig, viewport }">
                 <g
                     pointer-events="none"

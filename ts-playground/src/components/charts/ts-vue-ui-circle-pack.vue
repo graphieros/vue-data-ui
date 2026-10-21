@@ -465,6 +465,18 @@ function copyAlt(payload: VueUiCirclePackEmitCopyAlt) {
                 <CirclePackCircle :circle />
             </template>
 
+            <template #svg-underlayer="{ svg }">
+                <rect
+                    :x="0"
+                    :y="0"
+                    :width="svg.drawingArea.width / 2"
+                    :height="svg.drawingArea.height"
+                    fill="chocolate"
+                    opacity="0.15"
+                    pointer-events="none"
+                />
+            </template>
+
             <template #svg="{ svg }">
                 <CirclePackSvg :svg />
             </template>

@@ -547,6 +547,18 @@ function copyAlt(payload: VueUiMoleculeEmitCopyAlt) {
                 <MoleculeNodeSvg :node="nodeSvg" />
             </template>
 
+            <template #svg-underlayer="{ svg }">
+                <rect
+                    :x="svg.drawingArea.x"
+                    :y="svg.drawingArea.y"
+                    :width="svg.drawingArea.width / 2"
+                    :height="svg.drawingArea.height"
+                    fill="chocolate"
+                    opacity="0.15"
+                    pointer-events="none"
+                />
+            </template>
+
             <template #svg="{ svg }">
                 <MoleculeSvg :svg />
             </template>

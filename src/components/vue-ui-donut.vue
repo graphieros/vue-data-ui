@@ -2083,6 +2083,16 @@ defineExpose({
             >
                 <g ref="G" class="vue-data-ui-g">
                     <PackageVersion />
+                    <slot
+                        name="svg-underlayer"
+                        :svg="{
+                            ...svg,
+                            datapoints: currentDonut,
+                            isPrintingImg:
+                                isPrinting || isImaging || isCallbackImaging,
+                            isPrintingSvg: isCallbackSvg,
+                        }"
+                    />
 
                     <!-- BACKGROUND SLOT -->
                     <foreignObject

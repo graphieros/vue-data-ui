@@ -330,6 +330,18 @@ onMounted(async () => {
                         responsive: true,
                     }"
                 >
+                    <template #svg-underlayer="{ svg }">
+                        <rect
+                            :x="svg.left"
+                            :y="svg.top"
+                            :width="svg.width / 2"
+                            :height="svg.height"
+                            fill="chocolate"
+                            opacity="0.15"
+                            pointer-events="none"
+                        />
+                    </template>
+
                     <!-- <template #chart-background>
                     <div style="width: 100%; height: 100%; background: radial-gradient(at top left, red, white)"/>
                 </template> -->

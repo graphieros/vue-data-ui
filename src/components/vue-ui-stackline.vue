@@ -4266,6 +4266,16 @@ defineExpose({
                 @keydown="onSvgKeydown"
             >
                 <PackageVersion />
+                <slot
+                    name="svg-underlayer"
+                    :svg="{
+                        drawingArea,
+                        data: formattedDataset,
+                        isPrintingImg:
+                            isPrinting || isImaging || isCallbackImaging,
+                        isPrintingSvg: isCallbackSvg,
+                    }"
+                />
 
                 <defs>
                     <clipPath :id="`vue_ui_stackline_zoom_clip_${uid}`">

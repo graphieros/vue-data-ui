@@ -270,6 +270,18 @@ function focusOnPoint() {
                         responsive: true,
                     }"
                 >
+                    <template #svg-underlayer="{ svg }">
+                        <rect
+                            :x="svg.x"
+                            :y="svg.y"
+                            :width="svg.width / 2"
+                            :height="svg.height"
+                            fill="chocolate"
+                            opacity="0.15"
+                            pointer-events="none"
+                        />
+                    </template>
+
                     <!-- <template #tooltip="{ datapoint }">
                     {{ datapoint }}
                 </template>     -->

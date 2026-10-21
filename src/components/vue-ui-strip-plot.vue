@@ -1873,6 +1873,17 @@ defineExpose({
                 @keydown="onSvgKeydown"
             >
                 <PackageVersion />
+                <slot
+                    name="svg-underlayer"
+                    :svg="{
+                        ...drawingArea,
+                        isPrintingImg:
+                            isPrinting || isImaging || isCallbackImaging,
+                        isPrintingSvg: isCallbackSvg,
+                        boxPlotSummaries,
+                        series: mutableDataset,
+                    }"
+                />
 
                 <!-- BACKGROUND SLOT -->
                 <foreignObject
