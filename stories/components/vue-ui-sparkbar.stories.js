@@ -19,7 +19,17 @@ function createCases(env) {
             const mounted = await mountSubject(VueUiSparkbar, {
                 props: {
                     dataset,
-                    config,
+                    // This scenario checks formatted final values.
+                    config: {
+                        ...config,
+                        style: {
+                            ...config.style,
+                            animation: {
+                                ...config.style.animation,
+                                show: false,
+                            },
+                        },
+                    },
                 },
             });
             let read = () => mounted;

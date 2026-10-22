@@ -1,4 +1,5 @@
 import { mountStory } from './mount.js';
+import { controlAnimationFrames } from './animationFrames.js';
 import { nextTick } from 'vue';
 import {
     expect,
@@ -96,6 +97,7 @@ export function createScenario(canvasElement) {
         spy,
         fixtures,
         currentWrapper: () => wrapper,
+        controlAnimationFrames: () => controlAnimationFrames(spy),
     };
 }
 

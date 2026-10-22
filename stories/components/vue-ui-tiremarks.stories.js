@@ -4,7 +4,8 @@ import { commonFeatures } from '../support/common.js';
 import VueUiTiremarks from '../../src/components/vue-ui-tiremarks.vue';
 import { components } from '../fixtures/components.js';
 function createCases(env) {
-    const { aliases, select, mountSubject, spy, fixtures } = env;
+    const { aliases, select, mountSubject, controlAnimationFrames, fixtures } =
+        env;
     const cases = {};
     const hooks = [];
     const storeAlias = (name, value) => {
@@ -16,7 +17,8 @@ function createCases(env) {
         (c) => c.name === 'VueUiTiremarks',
     );
     cases.Renders = async () => {
-        storeAlias('rafSpy', spy(window, 'requestAnimationFrame'));
+        const animation = controlAnimationFrames();
+        storeAlias('rafSpy', animation.request);
         {
             const mounted = await mountSubject(VueUiTiremarks, {
                 props: {
@@ -24,6 +26,7 @@ function createCases(env) {
                     config,
                 },
             });
+            await animation.flush();
             let read = () => mounted;
             {
                 {

@@ -145,6 +145,14 @@ methods, emitted payloads, remounts, or reactive parent models. It unmounts comp
 restores spies, and removes teleports after each story. New stories can normally use
 Storybook's declarative `component` and `args` rendering directly.
 
+For harness scenarios checking animated values or events emitted after animation,
+call `env.controlAnimationFrames()` before mounting or starting the interaction,
+then `await animation.flush()` before asserting. Use `animation.request` for RAF
+call assertions. The controller runs actual animation callbacks and Vue updates,
+honors cancellation, and fails if an animation does not settle. Scenario cleanup
+restores native scheduling. For final-rendering scenarios that do not test
+animation, disable startup animation in that story's config instead.
+
 CI installs Chromium and runs both suites before publishing. Storybook configuration
 is separate from the library build; only `dist/` is published. See
 [the migration coverage map](./docs/storybook-migration.md) for the previous spec to

@@ -4,7 +4,14 @@ import { commonFeatures } from '../support/common.js';
 import VueUiWheel from '../../src/components/vue-ui-wheel.vue';
 import { components } from '../fixtures/components.js';
 function createCases(env) {
-    const { aliases, select, mountSubject, resize, spy, fixtures } = env;
+    const {
+        aliases,
+        select,
+        mountSubject,
+        resize,
+        controlAnimationFrames,
+        fixtures,
+    } = env;
     const cases = {};
     const hooks = [];
     const storeAlias = (name, value) => {
@@ -17,29 +24,16 @@ function createCases(env) {
         {
             await resize(500, 560);
         }
-        storeAlias('rafSpy', spy(window, 'requestAnimationFrame'));
+        const animation = controlAnimationFrames();
+        storeAlias('rafSpy', animation.request);
         {
             const mounted = await mountSubject(VueUiWheel, {
                 props: {
                     dataset,
-                    config: {
-                        ...config,
-                        style: {
-                            ...config.style,
-                            chart: {
-                                ...config.style.chart,
-                                animation: {
-                                    ...config.style.chart.animation,
-                                    // Preserve the RAF assertion with a short,
-                                    // two-step animation on slow CI browsers.
-                                    use: true,
-                                    speed: 1 / 60,
-                                },
-                            },
-                        },
-                    },
+                    config,
                 },
             });
+            await animation.flush();
             let read = () => mounted;
             {
                 {
@@ -71,21 +65,18 @@ function createCases(env) {
                     });
                 }
                 {
-                    await waitFor(
-                        () => {
-                            const elements = select('[data-cy="data-label"]');
-                            expect(elements).not.toHaveLength(0);
-                            expect(elements.length).toBeGreaterThan(0);
-                            expect(elements.some(visible)).toBe(true);
-                            expect(
-                                elements.map((e) => e.textContent).join(''),
-                            ).toContain(String(dataset.percentage));
-                            expect(
-                                elements.map((e) => e.textContent).join(''),
-                            ).toContain(String('%'));
-                        },
-                        { timeout: 5000 },
-                    );
+                    await waitFor(() => {
+                        const elements = select('[data-cy="data-label"]');
+                        expect(elements).not.toHaveLength(0);
+                        expect(elements.length).toBeGreaterThan(0);
+                        expect(elements.some(visible)).toBe(true);
+                        expect(
+                            elements.map((e) => e.textContent).join(''),
+                        ).toContain(String(dataset.percentage));
+                        expect(
+                            elements.map((e) => e.textContent).join(''),
+                        ).toContain(String('%'));
+                    });
                 }
             }
         }

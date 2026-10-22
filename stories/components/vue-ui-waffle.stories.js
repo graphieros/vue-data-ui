@@ -10,7 +10,14 @@ import { commonFeatures } from '../support/common.js';
 import VueUiWaffle from '../../src/components/vue-ui-waffle.vue';
 import { components } from '../fixtures/components.js';
 function createCases(env) {
-    const { aliases, select, mountSubject, resize, spy, fixtures } = env;
+    const {
+        aliases,
+        select,
+        mountSubject,
+        resize,
+        controlAnimationFrames,
+        fixtures,
+    } = env;
     const cases = {};
     const hooks = [];
     const storeAlias = (name, value) => {
@@ -152,7 +159,8 @@ function createCases(env) {
             let read = () => mounted;
             {
                 const { wrapper } = read();
-                storeAlias('rafSpy', spy(window, 'requestAnimationFrame'));
+                const animation = controlAnimationFrames();
+                storeAlias('rafSpy', animation.request);
                 {
                     let read = () => select('[data-cy="legend-item"]');
                     {
@@ -168,6 +176,7 @@ function createCases(env) {
                     await clickElements(read(), {
                         force: true,
                     });
+                    await animation.flush();
                 }
                 {
                     let read = aliases.get('rafSpy');

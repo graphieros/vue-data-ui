@@ -10,7 +10,14 @@ import { commonFeatures } from '../../support/common.js';
 import VueUiQuickChart from '../../../src/components/vue-ui-quick-chart.vue';
 import { components } from '../../fixtures/components.js';
 function createCases(env) {
-    const { aliases, select, mountSubject, spy, fixtures } = env;
+    const {
+        aliases,
+        select,
+        mountSubject,
+        spy,
+        controlAnimationFrames,
+        fixtures,
+    } = env;
     const cases = {};
     const hooks = [];
     const storeAlias = (name, value) => {
@@ -90,6 +97,7 @@ function createCases(env) {
                     }
                 }
                 {
+                    const animation = controlAnimationFrames();
                     let read = () => select('.vue-ui-quick-chart-legend-item');
                     {
                         const previous = read;
@@ -104,6 +112,7 @@ function createCases(env) {
                     await clickElements(read(), {
                         force: true,
                     });
+                    await animation.flush();
                 }
                 {
                     let read = aliases.get('onSelectLegend');
