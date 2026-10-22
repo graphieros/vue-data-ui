@@ -86,6 +86,21 @@ function setPropertyByPath(obj, path, value, delimiter) {
     current[keys[keys.length - 1]] = value;
 }
 
+/**
+ * Creates writable computed bindings for the leaf paths of a reactive config.
+ * Call during setup so the watcher follows the component lifecycle. Array paths
+ * are omitted by default; writing a binding updates the original config.
+ *
+ * @param {import('vue').Ref<object>} configRef - Configuration to read and mutate.
+ * @param {object} [options] - Path traversal options.
+ * @param {string} [options.delimiter='.'] - Separator used in binding keys.
+ * @param {boolean} [options.skipArrays=true] - Exclude arrays from traversal.
+ * @returns {Record<string, import('vue').WritableComputedRef<any>>} Path-indexed bindings.
+ * @example
+ * const config = ref({ chart: { show: true } });
+ * const bindings = useObjectBindings(config);
+ * bindings['chart.show'].value = false;
+ */
 export function useObjectBindings(configRef, options) {
     const { delimiter = '.', skipArrays = true } = options || {};
     const bindings = {};

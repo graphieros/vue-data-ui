@@ -4940,9 +4940,7 @@ function print() {
             try {
                 JsPDF = (await import('jspdf')).default;
             } catch (e) {
-                throw new Error(
-                    'jspdf is not installed. Run npm install jspdf',
-                );
+                throw new Error('jspdf is not installed. Run pnpm add jspdf');
             }
 
             const pngDataUrl = await domToPng({

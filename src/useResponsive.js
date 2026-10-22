@@ -1,3 +1,16 @@
+/**
+ * Measures available chart space inside its parent after subtracting surrounding UI.
+ * This is a synchronous measurement; callers decide when to remeasure.
+ * @param {object} options - Mounted chart elements and optional padding.
+ * @param {Element | null} options.chart - Chart whose parent supplies the available size.
+ * @param {Element | null} [options.title=null] - Title occupying vertical space.
+ * @param {Element | null} [options.slicer=null] - Slicer occupying vertical space.
+ * @param {Element | null} [options.legend=null] - Legend occupying vertical space.
+ * @param {Element | null} [options.source=null] - Source label occupying vertical space.
+ * @param {Element | null} [options.noTitle=null] - Alternate title occupying vertical space.
+ * @param {{top: number, bottom: number, left: number, right: number} | null} [options.padding=null] - Padding in CSS pixels.
+ * @returns {object} Available width/height and measured surrounding element heights.
+ */
 export function useResponsive({
     chart,
     title = null,

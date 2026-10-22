@@ -919,6 +919,13 @@ function validSeriesToToggle(name) {
     return dp;
 }
 
+/**
+ * Show the named series only if its visibility needs to change.
+ * Unknown names leave visibility unchanged.
+ *
+ * @param {string} name - Series name matched by the component.
+ * @returns {void}
+ */
 function showSeries(name) {
     const dp = validSeriesToToggle(name);
     if (dp === null) return;
@@ -927,6 +934,13 @@ function showSeries(name) {
     }
 }
 
+/**
+ * Hide the named series only if its visibility needs to change.
+ * Unknown names leave visibility unchanged.
+ *
+ * @param {string} name - Series name matched by the component.
+ * @returns {void}
+ */
 function hideSeries(name) {
     const dp = validSeriesToToggle(name);
     if (dp === null) return;
@@ -1249,6 +1263,10 @@ const miniMap = computed(() => {
     };
 });
 
+/**
+ * Return series with original x/y values and their computed quadrant labels.
+ * Rendering coordinates are replaced by the source values in the result.
+ */
 function getData() {
     return drawableDataset.value.map((ds) => {
         return {

@@ -1,5 +1,16 @@
 import { ref } from 'vue';
 
+/**
+ * Creates PDF and PNG download handlers with separate reactive busy flags.
+ * Exports are scheduled after a short render delay. Their returned promises do
+ * not wait for the delayed capture; use the busy refs to observe completion.
+ * @param {object} settings - Export target and rendering options.
+ * @param {string} settings.elementId - DOM id of the mounted chart container.
+ * @param {string} settings.fileName - Download name.
+ * @param {boolean} [settings.canPrint=true] - Enables exports.
+ * @param {object} settings.options - PDF orientation, overflowTolerance, scale, and aspectRatio.
+ * @returns {object} generatePdf/generateImage handlers and isPrinting/isImaging refs.
+ */
 export function usePrinter({ elementId, fileName, canPrint = true, options }) {
     const isPrinting = ref(false);
     const isImaging = ref(false);

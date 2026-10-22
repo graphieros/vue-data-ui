@@ -4,11 +4,16 @@ import { useLocale } from './useLocale';
 const SECONDS_IN_DAY = 24 * 60 * 60;
 
 /**
- * @param {Array<string|number>} values
- * @param {number} maxDatapoints
- * @param {{ enable:boolean, useUTC:boolean, locale:string, januaryAsYear:boolean, options:Record<string,string> }} formatter
- * @param {number} start  // start index (provided by Slicer)
- * @param {number} end    // end index (provided by Slicer)
+ * Formats the visible slice of x-axis labels according to its time range.
+ * When formatting is disabled, values become strings. At midnight, sub-day
+ * intervals use the day format. UTC mode controls boundary detection.
+ * @param {object} options - Label window and datetime settings.
+ * @param {Array<string | number>} options.values - Original x-axis values.
+ * @param {number} options.maxDatapoints - Retained for compatibility; currently unused.
+ * @param {{enable: boolean, useUTC: boolean, locale: string, januaryAsYear: boolean, options: Record<string, string>}} options.formatter - Datetime formatting rules.
+ * @param {number} options.start - Inclusive slice index in the original values.
+ * @param {number} options.end - Exclusive slice index in the original values.
+ * @returns {Promise<Array<{text: string, absoluteIndex: number}>>} Labels with indices into the original values.
  */
 export async function useTimeLabels({
     values,

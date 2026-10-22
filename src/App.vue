@@ -3,7 +3,7 @@
  * THIS TESTING PAGE IS DEPRECATED.
  *
  * Use the /manual-testing/src/App.vue
- * cd into manual-testing and npm run dev
+ * cd into manual-testing and pnpm run dev
  *
  */
 

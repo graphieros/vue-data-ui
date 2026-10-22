@@ -176,6 +176,20 @@ function calculateFontSize({ el, svg, bounds, baseSize, minSize, padding }) {
     }
 }
 
+/**
+ * Fits SVG labels within the viewBox by publishing reduced font sizes to refs.
+ * Call during setup. autoSizeLabels coalesces calls into one animation frame;
+ * autoSizeLabelsNow measures synchronously. Scheduled work stops before unmounting.
+ * @param {object} options - SVG and label fitting inputs; supported sources may be refs or getters.
+ * @param {import('vue').MaybeRefOrGetter<SVGSVGElement | null>} options.svgRef - SVG containing the labels.
+ * @param {unknown} options.fontSize - Base font size for the default label group.
+ * @param {unknown} options.minFontSize - Minimum permitted font size.
+ * @param {import('vue').Ref<number>} options.sizeRef - Receives the fitted font size.
+ * @param {unknown} options.labelClass - Selector for the default label group.
+ * @param {unknown} [options.labelTypes=[]] - Overrides with selector/baseSize/minSize/sizeRef per group.
+ * @param {number} [options.padding=1] - Inset from viewBox edges in SVG units.
+ * @returns {{autoSizeLabels: Function, autoSizeLabelsNow: Function}} Scheduled and immediate fitters.
+ */
 export function useAutoSizeLabelsInsideViewbox({
     svgRef,
     fontSize,

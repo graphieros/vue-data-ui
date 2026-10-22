@@ -1,5 +1,15 @@
 import { ref, onMounted, onUnmounted, watch, watchEffect, computed } from 'vue';
 
+/**
+ * Controls an SVG viewBox with wheel, pointer, and touch pan/zoom gestures.
+ * Call during setup and bind the returned viewBox to the rendered SVG.
+ * @param {import('vue').Ref<SVGSVGElement | null>} svgRef - Gesture target.
+ * @param {{x: number, y: number, width: number, height: number}} [initialViewBox] - Initial SVG coordinate bounds.
+ * @param {number} [speed=1] - Zoom sensitivity.
+ * @param {import('vue').Ref<boolean>} activeRef - Enables gesture handling.
+ * @param {Function | null} [callbackOnZoom=null] - Called on zoom changes.
+ * @returns {object} viewBox, scale, isZoom, resetZoom, setInitialViewBox, and zoomByFactor.
+ */
 export default function usePanZoom(
     svgRef,
     initialViewBox = { x: 0, y: 0, width: 100, height: 100 },

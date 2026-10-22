@@ -7,7 +7,6 @@ Important notes:
 - **Import and CSS:** Always import the required VueDataUI component and ensure you include the library's CSS.
 - **Reactive Data:** Use Vue's reactivity (`ref` or `computed`) to manage your `dataset` and `config` objects.
 - **Component Customization:** Use the config object to customize appearance (colors, legends, chart dimensions, etc.) based on your specific needs.
-- **CLI Utilization:** Leverage `vue-data-ui-cli` for quick scaffolding of new components, ensuring proper structure and reducing setup errors.
 - **AI Integration:** With these clear examples, AI code editors should suggest correct imports, prop bindings, and data structures, making it easier to build interactive charts with VueDataUI.
 
 ## Docs
@@ -19,7 +18,7 @@ Important notes:
 
 To begin, install the library and include its stylesheet:
 
-    npm install vue-data-ui
+    pnpm add vue-data-ui
 
 In your main entry file (e.g., main.js or main.ts), import the CSS and optionally register components globally:
 
@@ -52,7 +51,12 @@ You can also import components locally within Vue single-file components (see ex
 
 Using `VueDataUi` will lazy-load only the specified chart component.
 
-## XY Chart Example
+## XY Chart Example with a Tree-Shaken Import
+
+Import a chart directly from its component entry point to avoid importing the full library entry.
+Use `vue-data-ui/vue-ui-xy` for the XY chart; other charts use the same pattern,
+for example `vue-data-ui/vue-ui-donut`. Both default and named component imports are supported.
+Keep the stylesheet import so the chart renders correctly.
 
 For line (or area) charts, bar chart, or combined charts, use the `VueUiXy` component. The dataset is an array of data points with the following datastructure:
 
@@ -87,7 +91,8 @@ For line (or area) charts, bar chart, or combined charts, use the `VueUiXy` comp
 
     <script setup>
     import { ref } from 'vue';
-    import { VueUiXy } from 'vue-data-ui';  // import the XY chart component
+    import VueUiXy from 'vue-data-ui/vue-ui-xy';  // component-specific, tree-shaken import
+    import 'vue-data-ui/style.css';
 
     // Reactive dataset: array of points with minimal required attributes
     const dataset = ref([
@@ -200,33 +205,3 @@ Sparkline charts are mini charts for showing trends. The `VueUiSparkline` compon
 
 Notes:  
 - Ideal for embedding in dashboards or tables to indicate trends.
-
-## Using the vue-data-ui-cli
-
-VueDataUI offers a CLI tool, `vue-data-ui-cli`, to quickly generate chart component boilerplates.
-
-### Installation:
-
-    npm install -g vue-data-ui-cli
-
-This installs a global command `vdui-cli` (short for VueDataUI CLI).
-
-### Usage:
-
-Run the CLI in your project directory:
-
-    vdui-cli
-
-You'll be prompted for:
-- **Component Type:** Select the VueDataUI chart type (e.g., Donut, Radar, etc.).
-- **Reactive API:** Choose how to manage reactive data (using `ref` or `computed`).
-- **TypeScript Usage:** Decide if the component should be in TypeScript or JavaScript.
-- **Component Name:** Provide a name for your component (e.g., `MyDonutChart`).
-- **Target Directory:** Specify where to create the new component file.
-
-The CLI will generate a Vue single-file component pre-populated with:
-- Correct imports for VueDataUI components.
-- Sample reactive `dataset` and `config` objects.
-- A template ready to render the selected chart.
-
-This tool helps maintain consistency and speeds up development by providing a reliable boilerplate.

@@ -1214,6 +1214,10 @@ async function copyAlt() {
     await Promise.resolve(config.value.userOptions.callbacks.altCopy(args));
 }
 
+/**
+ * Return nodes with their current layout coordinates and copies of link records.
+ * Records are shallow copies; nested metadata remains shared.
+ */
 function getData() {
     return {
         nodes: graph.value.nodes.map((n) => ({ ...n.raw, x: n.x, y: n.y })),

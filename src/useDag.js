@@ -66,6 +66,16 @@ function buildCurvedPath(points) {
     return path;
 }
 
+/**
+ * Computes a directed graph layout reactively from nodes, edges, and configuration.
+ * Call during setup. Automatic layout errors are exposed through lastError;
+ * recomputeLayout performs an explicit layout pass and may throw.
+ * @param {object} options - Raw values or refs for the graph inputs.
+ * @param {import('vue').MaybeRef<object[]>} options.nodes - Graph nodes.
+ * @param {import('vue').MaybeRef<object[]>} options.edges - Graph edges.
+ * @param {import('vue').MaybeRef<object>} options.configuration - Layout overrides.
+ * @returns {object} layoutData and lastError refs, arrowMarkerIdentifier, and recomputeLayout.
+ */
 export function useDag(options) {
     const { nodes, edges, configuration } = options;
 

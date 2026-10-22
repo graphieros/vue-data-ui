@@ -33,6 +33,13 @@ function getLocaleData(locale) {
 
 const cache = new Map();
 
+/**
+ * Builds and caches localized month and weekday names using Intl.DateTimeFormat.
+ * Weekday arrays start on Sunday. No locale files are fetched.
+ *
+ * @param {string} locale - BCP 47 language tag; empty values fall back to English.
+ * @returns {Promise<{key: string, data: {months: string[], shortMonths: string[], days: string[], shortDays: string[]}}>} Normalized locale and labels.
+ */
 export async function useLocale(locale) {
     const key = normalizeLocale(locale) || 'en';
 

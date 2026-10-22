@@ -1436,6 +1436,12 @@ function toggleFullscreen(state) {
     step.value += 1;
 }
 
+/**
+ * Return the current mutable dataset.
+ * The result is the internal reactive value, not a defensive copy.
+ *
+ * @returns The current component data; treat it as read-only.
+ */
 function getData() {
     return mutableDataset.value;
 }

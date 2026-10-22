@@ -249,6 +249,11 @@ function rate(val) {
     emit('rate', val);
 }
 
+/**
+ * Return the current rating, including changes made through user interaction.
+ *
+ * @returns {number} Current rating value.
+ */
 function getData() {
     return currentRating.value;
 }

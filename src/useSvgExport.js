@@ -28,6 +28,19 @@ function completeFontFamily(ff) {
     return `${ff}, ${DEFAULT_SANS_STACK}`;
 }
 
+/**
+ * Creates SVG capture and download helpers for a mounted chart.
+ * Call during setup. Captures clone the SVG and embed its export decoration.
+ * @param {object} options - Chart elements and export styling.
+ * @param {SVGSVGElement | import('vue').Ref<SVGSVGElement | null>} options.svg - Chart SVG or its ref.
+ * @param {import('vue').ComputedRef<object>} options.title - Chart title settings.
+ * @param {import('vue').ComputedRef<object>} options.legend - Legend settings.
+ * @param {import('vue').ComputedRef<object[]>} options.legendItems - Legend entries.
+ * @param {import('vue').ComputedRef<string>} options.backgroundColor - Export background.
+ * @param {boolean} [options.stretchTitle=false] - Compensate for transformed chart titles.
+ * @param {boolean} [options.titleEmbedded=false] - Title is already rendered in the SVG.
+ * @returns {object} ready ref, getSvg() capture, and exportSvg(customFileName) download.
+ */
 export function useSvgExport({
     svg, // ref
     title, // computed
@@ -832,6 +845,11 @@ export function useSvgExport({
         }
     }
 
+    /**
+     * Serializes a decorated SVG clone without downloading it.
+     * The caller owns the returned object URL and should revoke it when finished.
+     * @returns {Promise<{blob: Blob, url: string, text: string, dataUrl: string}>} SVG representations.
+     */
     async function getSvg() {
         const svgEl = await waitForSvg();
         const clone = makeClone(svgEl);

@@ -1,5 +1,17 @@
 import { ref } from 'vue';
 
+/**
+ * Positions a tooltip relative to pointer coordinates, shifting it at chart edges.
+ * @param {object} options - Measured elements and pointer position.
+ * @param {HTMLElement | null} options.tooltip - Tooltip element to measure.
+ * @param {Element | null} options.chart - Chart bounding the placement.
+ * @param {{x: number, y: number}} options.clientPosition - Viewport pointer coordinates.
+ * @param {'center' | 'left' | 'right'} [options.positionPreference='center'] - Preferred horizontal placement.
+ * @param {number} [options.defaultOffsetY=24] - Vertical gap in CSS pixels.
+ * @param {number} [options.defaultOffsetX=0] - Horizontal gap in CSS pixels.
+ * @param {boolean} [options.blockShiftY=false] - Prevent flipping above the pointer.
+ * @returns {{top: number, left: number}} Viewport coordinates in CSS pixels.
+ */
 export function calcTooltipPosition({
     tooltip,
     chart,

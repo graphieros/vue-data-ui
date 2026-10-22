@@ -18,7 +18,7 @@ export default async function pdf({
     try {
         JsPDF = (await import('jspdf')).default;
     } catch (_) {
-        return Promise.reject('jspdf is not installed. Run npm install jspdf');
+        return Promise.reject('jspdf is not installed. Run pnpm add jspdf');
     }
 
     const A4_PORTRAIT = { width: 595.28, height: 841.89 };

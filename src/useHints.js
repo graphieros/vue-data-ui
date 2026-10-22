@@ -27,6 +27,16 @@ export const COMMON_RULES = {
     },
 };
 
+/**
+ * Logs dataset advice reactively when config.devHints.enable is true.
+ * Call during setup; repeated rule messages are suppressed until inputs change.
+ * @param {object} options - Hint inputs.
+ * @param {import('vue').MaybeRefOrGetter<object>} options.config - Chart settings.
+ * @param {import('vue').MaybeRefOrGetter<unknown>} options.dataset - Data checked by the rules.
+ * @param {string} options.component - Component name included in messages.
+ * @param {Array<{test: (dataset: any) => boolean, message: string[]}>} options.rules - Rules whose matching messages are logged.
+ * @returns {void}
+ */
 export function useHints({ config, dataset, component, rules }) {
     if (!rules || rules?.length === 0) {
         return;
