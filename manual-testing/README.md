@@ -15,9 +15,7 @@ This template should help get you started developing with Vue 3 in Vite.
     - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
     - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
 
-## Type Support for `.vue` Imports in TS
-
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
+This app uses JavaScript. `jsconfig.json` provides editor support for the `@/` alias.
 
 ## Customize configuration
 
@@ -26,17 +24,21 @@ See [Vite Configuration Reference](https://vite.dev/config/).
 ## Project Setup
 
 ```sh
-npm install
+pnpm install
 ```
 
 ### Compile and Hot-Reload for Development
 
 ```sh
-npm run dev
+pnpm run dev
 ```
 
-### Type-Check, Compile and Minify for Production
+### Compile and Minify for Production
 
 ```sh
-npm run build
+pnpm exec vite build
 ```
+
+Use Node.js 24 and pnpm 12.15.0. Build the root library before installing this app.
+Use `pnpm install --frozen-lockfile` for reproducible installs; after rebuilding the
+library, run `pnpm install` here to refresh the local `file:` dependency snapshot.

@@ -3,7 +3,7 @@
  *  MANUAL TESTING PAGE
  *  NOTE: this is the old testing arena. All chart components are now manually tested on App.vue
  *
- *  npm run dev
+ *  pnpm run dev
  *
  *  Left col : current components in dev mode
  *  Right col: current components in production

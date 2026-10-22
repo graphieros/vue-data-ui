@@ -121,7 +121,7 @@ Available components
 # Installation
 
 ```
-npm i vue-data-ui
+pnpm add vue-data-ui
 ```
 
 You can declare components globally in your main.js:
@@ -1568,14 +1568,19 @@ const config = computed(() => ({
 Storybook provides the component catalog, editable configurations, responsive
 previews, light/dark backgrounds, and automated interaction tests.
 
+Repository development uses **pnpm 12.15.0** (pinned in `packageManager`) and Node.js 24.
+Run `pnpm install --frozen-lockfile` to reproduce the committed dependencies.
+The `manual-testing` and `ts-playground` apps have separate installs and lockfiles;
+build the library before installing them. See [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ```sh
-npm install
-npx playwright install chromium
-npm run storybook        # http://localhost:6006
-npm run build:storybook  # storybook-static/
-npm run test:unit        # Vitest unit suite
-npm run test:storybook   # headless Chromium interaction suite
-npm run test:all         # both suites
+pnpm install
+pnpm exec playwright install chromium
+pnpm run storybook        # http://localhost:6006
+pnpm run build:storybook  # storybook-static/
+pnpm run test:unit        # Vitest unit suite
+pnpm run test:storybook   # headless Chromium interaction suite
+pnpm run test:all         # both suites
 ```
 
 Storybook replaces the previous Cypress component workflow. To add a component

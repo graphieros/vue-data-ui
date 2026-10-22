@@ -1,5 +1,4 @@
-<script setup lang="ts">
-//@ts-ignore
+<script setup>
 import BaseIcon from '../../../src/atoms/BaseIcon.vue';
 </script>
 
@@ -14,15 +13,15 @@ import BaseIcon from '../../../src/atoms/BaseIcon.vue';
                     Make sure to build the package at the root of the main
                     project:
                     <ul>
-                        <li><code>npm i</code></li>
+                        <li><code>pnpm install</code></li>
                         <li>
-                            <code>npm run prod</code> runs all tests before
+                            <code>pnpm run prod</code> runs all tests before
                             building the package. Run it when it is your first
                             time, or before submitting a PR, since
                             <strong>all tests must pass.</strong>
                         </li>
                         <li>
-                            <code>npm run preprod</code> skips tests and builds
+                            <code>pnpm run preprod</code> skips tests and builds
                             the package. Run this during dev, to test the build
                             versions of modified components in the arena.
                         </li>
@@ -33,7 +32,7 @@ import BaseIcon from '../../../src/atoms/BaseIcon.vue';
                     cd into the manual-testing directory:
                     <ul>
                         <li>
-                            <code>npm run dev</code> adds the local package to
+                            <code>pnpm run dev</code> adds the local package to
                             the testing directory and runs the testing app
                         </li>
                         <li>

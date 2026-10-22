@@ -1,0 +1,7 @@
+# Configuration for the library only; testing apps install independently.
+packages: []
+enablePrePostScripts: true
+allowBuilds:
+    '@parcel/watcher': true
+    esbuild: true
+    core-js: false

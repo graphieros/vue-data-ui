@@ -1,0 +1,2 @@
+# Keep this app independent of the parent package and lockfile.
+packages: []

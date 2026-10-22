@@ -97,14 +97,14 @@
     "module": "dist/vue-data-ui.js",
     "types": "dist/types/vue-data-ui.d.ts",
     "scripts": {
-        "dev": "node add-dev-dep.cjs && npm i && vite",
+        "dev": "node add-dev-dep.cjs && pnpm install && vite",
         "clean": "node cleanup.cjs",
-        "build": "npm run clean && vite build --mode production && node copy-types.cjs && npm i",
-        "prod": "npm run pretty && node del-dev-dep.cjs && node check-types.cjs && npm run test:all && npm run clean && vite build --mode production && node copy-types.cjs && node post-build.cjs",
+        "build": "pnpm run clean && vite build --mode production && node copy-types.cjs && pnpm install",
+        "prod": "pnpm run pretty && node del-dev-dep.cjs && node check-types.cjs && pnpm run test:all && pnpm run clean && vite build --mode production && node copy-types.cjs && node post-build.cjs",
         "test": "vitest run --config vitest.config.js",
         "test:w": "vitest --config vitest.config.js",
-        "preprod": "node check-types.cjs && npm run pretty:fix && node del-dev-dep.cjs && npm run clean && vite build --mode production && node copy-types.cjs && node post-build.cjs",
-        "pubprod": "node check-types.cjs && node del-dev-dep.cjs && npm run clean && vite build --mode production && node copy-types.cjs && node post-build.cjs",
+        "preprod": "node check-types.cjs && pnpm run pretty:fix && node del-dev-dep.cjs && pnpm run clean && vite build --mode production && node copy-types.cjs && node post-build.cjs",
+        "pubprod": "node check-types.cjs && node del-dev-dep.cjs && pnpm run clean && vite build --mode production && node copy-types.cjs && node post-build.cjs",
         "types": "node check-types.cjs",
         "pretty": "prettier . --check",
         "pretty:fix": "prettier . --write",
@@ -112,7 +112,7 @@
         "build:storybook": "storybook build",
         "test:storybook": "vitest run --config vitest.storybook.config.js",
         "test:unit": "vitest run --config vitest.config.js",
-        "test:all": "npm run test:unit && npm run test:storybook"
+        "test:all": "pnpm run test:unit && pnpm run test:storybook"
     },
     "peerDependencies": {
         "jspdf": ">=3.0.1",
@@ -130,11 +130,13 @@
         "@types/node": "^25.5.0",
         "@vitejs/plugin-vue": "^6.0.10",
         "@vitest/browser-playwright": "^5.0.5",
+        "@vue/compiler-dom": "3.5.44",
         "@vue/test-utils": "^2.5.1",
         "jsdom": "^29.1.1",
         "playwright": "^1.64.1",
         "prettier": "3.8.1",
         "remove-attr": "^0.0.13",
+        "rolldown": "1.2.15",
         "sass": "^1.57.1",
         "simple-git": "^4.0.2",
         "storybook": "^10.6.3",
@@ -142,5 +144,6 @@
         "vite": "^8.3.4",
         "vitest": "^5.0.0",
         "vue": "^3.5.44"
-    }
+    },
+    "packageManager": "pnpm@12.15.0"
 }

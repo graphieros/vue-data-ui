@@ -31,3 +31,6 @@ package-copy.json
 storybook-static
 test-results
 playwright-report
+
+# Local pnpm store
+.pnpm-store/

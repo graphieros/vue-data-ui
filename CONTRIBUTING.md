@@ -22,13 +22,29 @@ We'd also love PRs. If you're thinking of a large PR, we advise opening up an is
 ## Submitting a pull request
 
 0. [Fork][fork] and clone the repository.
-1. Configure and install the dependencies: `npm install`.
-2. `npm run prod`. Will run all the tests and build the package. (See the [Troubleshooting](#troubleshooting) section below if you encounter errors here.)
+   Use Node.js 24 and pnpm **12.15.0**, as pinned in each package's `packageManager` field.
+   Use `pnpm install --frozen-lockfile` for reproducible installs. These are independent
+   projects, so run installs separately at the root, in `manual-testing`, and in
+   `ts-playground`. Build the root library before installing the testing apps.
+   After rebuilding the library, run `pnpm install` in a testing app to refresh its
+   `file:` dependency snapshot. Commit updated pnpm lockfiles with dependency changes.
+
+pnpm 12 reads project settings from `pnpm-workspace.yaml`. Each testing app has
+its own configuration boundary, preserving its independent install and lockfile.
+
+The root `pnpm-workspace.yaml` enables pre/post script hooks to preserve the existing behavior:
+`pnpm run prod` also runs `preprod` first. Run `pnpm run preprod` directly to build
+without tests.
+Dependency builds are limited to esbuild and the root Sass watcher; core-js's
+postinstall message is intentionally skipped. No hoisting overrides are used.
+
+1. Configure and install the dependencies: `pnpm install`.
+2. `pnpm run prod`. Will run all the tests and build the package. (See the [Troubleshooting](#troubleshooting) section below if you encounter errors here.)
 3. cd into `manual-testing`
-4. `npm install` in the manual-testing directory
-5. `npm run dev` in the manual-testing directory: will hook the local build of the library to the testing app.
+4. `pnpm install` in the manual-testing directory
+5. `pnpm run dev` in the manual-testing directory: will hook the local build of the library to the testing app.
 6. Create a new branch: `git checkout -b my-branch-name`.
-7. Make your change, add tests, and make sure the tests still pass by running `npm run prod` from the root directory.
+7. Make your change, add tests, and make sure the tests still pass by running `pnpm run prod` from the root directory.
 8. Push to your fork and [submit a pull request][pr].
 
 Here are a few things you can do that will increase the likelihood of your pull request being accepted:
@@ -52,11 +68,11 @@ Work in Progress pull requests are also welcome to get feedback early on, or if 
 Install Chromium once after installing dependencies:
 
 ```sh
-npx playwright install chromium
+pnpm exec playwright install chromium
 ```
 
 On Linux CI, install the required system libraries too with
-`npx playwright install --with-deps chromium`.
+`pnpm exec playwright install --with-deps chromium`.
 
 ## Resources
 
@@ -89,7 +105,7 @@ If a feature added in a component requires the addition of a new emit or a new e
 ### Updating the testing arena
 
 The testing arena provides a quick way to visually test changes made on components, and toggle inputs to test configs.
-cd into the `manual-testing` directory and run `npm run dev` to start the dev server.
+cd into the `manual-testing` directory and run `pnpm run dev` to start the dev server.
 
 Each page shows several versions of the tested component:
 
@@ -99,7 +115,7 @@ Each page shows several versions of the tested component:
 4. build component
 5. build VueDataUi component
 
-All versions 2 to 5 must be identical after running `npm run prod` in the root directory then `npm run dev` in the `manual-testing` directory.
+All versions 2 to 5 must be identical after running `pnpm run prod` in the root directory then `pnpm run dev` in the `manual-testing` directory.
 
 The testing arena is pretty raw in terms of layout. Feel free to make it better ;)
 
@@ -109,12 +125,12 @@ Storybook is the primary component development and interaction testing environme
 The testing arena remains available to compare source components with package builds.
 
 ```sh
-npm run storybook        # interactive catalog at localhost:6006
-npm run build:storybook  # static site in storybook-static/
-npm run test:unit        # existing Vitest unit tests (jsdom)
-npm run test:storybook   # Storybook play functions in headless Chromium
-npm run test:all         # both suites
-npm run prod             # formatting, types, both suites, production build
+pnpm run storybook        # interactive catalog at localhost:6006
+pnpm run build:storybook  # static site in storybook-static/
+pnpm run test:unit        # existing Vitest unit tests (jsdom)
+pnpm run test:storybook   # Storybook play functions in headless Chromium
+pnpm run test:all         # both suites
+pnpm run prod             # formatting, types, both suites, production build
 ```
 
 Add stories under `stories/`, using the existing component family titles. Import
