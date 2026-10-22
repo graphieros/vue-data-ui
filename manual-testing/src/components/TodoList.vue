@@ -11,7 +11,7 @@ import {
 } from 'vue-data-ui';
 import PendingTodoList from './PendingTodoList.vue';
 import DoneTodoList from './DoneTodoList.vue';
-import { components } from '../../../cypress/fixtures/vdui-components';
+import { components } from '../../../stories/fixtures/components.js';
 import { useRoute } from 'vue-router';
 
 const { items, toBeDone, done, readAll, createOne, updateOne, deleteOne } =

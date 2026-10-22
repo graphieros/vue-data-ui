@@ -25,6 +25,15 @@ jobs:
 
             - run: npm ci
 
+            - name: Install browser test dependencies
+              run: npx playwright install --with-deps chromium
+
+            - name: Unit and Storybook interaction tests
+              run: npm run test:all
+
+            - name: Build Storybook
+              run: npm run build:storybook
+
             - run: npm run pubprod
 
             - name: Publish
