@@ -26,6 +26,10 @@ function createCases(env) {
                 props: {
                     dataset: components.find((c) => c.name === 'VueUi3dBar')
                         .dataset,
+                    // Final-value assertions must not depend on CI frame rate.
+                    config: {
+                        style: { chart: { animation: { use: false } } },
+                    },
                 },
             });
             let read = () => mounted;

@@ -16,7 +16,20 @@ function createCases(env) {
             const mounted = await mountSubject(VueUiBullet, {
                 props: {
                     dataset,
-                    config,
+                    // Keep the fixture styling, but render the settled value.
+                    config: {
+                        ...config,
+                        style: {
+                            ...config.style,
+                            chart: {
+                                ...config.style.chart,
+                                animation: {
+                                    ...config.style.chart.animation,
+                                    show: false,
+                                },
+                            },
+                        },
+                    },
                 },
             });
             let read = () => mounted;
