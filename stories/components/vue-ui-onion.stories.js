@@ -23,7 +23,8 @@ function createCases(env) {
             const mounted = await mountSubject(VueUiOnion, {
                 props: {
                     dataset,
-                    config,
+                    // This scenario asserts final labels, not animation timing.
+                    config: { ...config, useStartAnimation: false },
                 },
             });
             let read = () => mounted;

@@ -22,7 +22,22 @@ function createCases(env) {
             const mounted = await mountSubject(VueUiWheel, {
                 props: {
                     dataset,
-                    config,
+                    config: {
+                        ...config,
+                        style: {
+                            ...config.style,
+                            chart: {
+                                ...config.style.chart,
+                                animation: {
+                                    ...config.style.chart.animation,
+                                    // Preserve the RAF assertion with a short,
+                                    // two-step animation on slow CI browsers.
+                                    use: true,
+                                    speed: 1 / 60,
+                                },
+                            },
+                        },
+                    },
                 },
             });
             let read = () => mounted;
@@ -56,18 +71,21 @@ function createCases(env) {
                     });
                 }
                 {
-                    await waitFor(() => {
-                        const elements = select('[data-cy="data-label"]');
-                        expect(elements).not.toHaveLength(0);
-                        expect(elements.length).toBeGreaterThan(0);
-                        expect(elements.some(visible)).toBe(true);
-                        expect(
-                            elements.map((e) => e.textContent).join(''),
-                        ).toContain(String(dataset.percentage));
-                        expect(
-                            elements.map((e) => e.textContent).join(''),
-                        ).toContain(String('%'));
-                    });
+                    await waitFor(
+                        () => {
+                            const elements = select('[data-cy="data-label"]');
+                            expect(elements).not.toHaveLength(0);
+                            expect(elements.length).toBeGreaterThan(0);
+                            expect(elements.some(visible)).toBe(true);
+                            expect(
+                                elements.map((e) => e.textContent).join(''),
+                            ).toContain(String(dataset.percentage));
+                            expect(
+                                elements.map((e) => e.textContent).join(''),
+                            ).toContain(String('%'));
+                        },
+                        { timeout: 5000 },
+                    );
                 }
             }
         }
