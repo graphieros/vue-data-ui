@@ -1562,3 +1562,22 @@ const config = computed(() => ({
     useCursorPointer: true, // false by default
 }));
 ```
+
+## Component development and testing
+
+Storybook provides the component catalog, editable configurations, responsive
+previews, light/dark backgrounds, and automated interaction tests.
+
+```sh
+npm install
+npx playwright install chromium
+npm run storybook        # http://localhost:6006
+npm run build:storybook  # storybook-static/
+npm run test:unit        # Vitest unit suite
+npm run test:storybook   # headless Chromium interaction suite
+npm run test:all         # both suites
+```
+
+Storybook replaces the previous Cypress component workflow. To add a component
+example or interaction test, see [CONTRIBUTING.md](./CONTRIBUTING.md#tests-and-component-development).
+The [migration coverage map](./docs/storybook-migration.md) records all migrated specs.

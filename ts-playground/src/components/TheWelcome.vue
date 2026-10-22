@@ -48,8 +48,8 @@ const openReadmeInEditor = () => fetch('/__open-in-editor?file=README.md');
         >. If you need to test your components and web pages, check out
         <a href="https://vitest.dev/" target="_blank" rel="noopener">Vitest</a>
         and
-        <a href="https://www.cypress.io/" target="_blank" rel="noopener"
-            >Cypress</a
+        <a href="https://storybook.js.org/" target="_blank" rel="noopener"
+            >Storybook</a
         >
         /
         <a href="https://playwright.dev/" target="_blank" rel="noopener"

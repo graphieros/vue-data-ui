@@ -47,31 +47,16 @@ Here are a few things you can do that will increase the likelihood of your pull 
 
 Work in Progress pull requests are also welcome to get feedback early on, or if there is something that has blocked you.
 
-### Troubleshooting
+### Browser test setup
 
-- While working with either native Linux or Windows/WSL2, you may encounter an error of the following type after running `npm run prod`:
+Install Chromium once after installing dependencies:
 
-```
-It looks like this is your first time using Cypress: 15.12.0
-
-✖ Cypress failed to start.
-  This may be due to a missing library or dependency. https://on.cypress.io/required-dependencies
-  Please refer to the error below for more details.
-  ----------
-  /<HOME_DIRECTORY>/<YOUR_COMPUTER_NAME>/.cache/Cypress/15.12.0/Cypress/Cypress: error while loading shared libraries: libnspr4.so: cannot open shared object file: No such file or directory
-  ----------
-  Platform: linux-x64 (Ubuntu - 24.04.3 LTS)
-  Cypress Version: 15.12.0
+```sh
+npx playwright install chromium
 ```
 
-This can be resolved by running the following commands in your terminal:
-
-```
-sudo apt-get update
-sudo apt-get install -y libnspr4 libnss3 libxss1 libasound2t64 libatk-bridge2.0-0 libgtk-3-0 libgbm1
-```
-
-After which `npm run prod` should run correctly.
+On Linux CI, install the required system libraries too with
+`npx playwright install --with-deps chromium`.
 
 ## Resources
 
@@ -118,10 +103,49 @@ All versions 2 to 5 must be identical after running `npm run prod` in the root d
 
 The testing arena is pretty raw in terms of layout. Feel free to make it better ;)
 
-### Tests
+### Tests and component development
 
-1. Unit tests (Vitest)
-    - `npm run test` to run from the root directory, add `-w` flag to watch
+Storybook is the primary component development and interaction testing environment.
+The testing arena remains available to compare source components with package builds.
 
-2. Component tests (Cypress, Component testing)
-    - `npm run test:e2e` from the root directory to open Cypress
+```sh
+npm run storybook        # interactive catalog at localhost:6006
+npm run build:storybook  # static site in storybook-static/
+npm run test:unit        # existing Vitest unit tests (jsdom)
+npm run test:storybook   # Storybook play functions in headless Chromium
+npm run test:all         # both suites
+npm run prod             # formatting, types, both suites, production build
+```
+
+Add stories under `stories/`, using the existing component family titles. Import
+components from `src/` so a package build is not required. Keep datasets deterministic;
+shared fixture data and clone helpers live in `stories/fixtures/` and `stories/support/`.
+Use `args` and `argTypes` for editable dataset and config controls. Add separate stories
+for important configurations, empty/loading states, slots, and emitted events.
+
+Write assertions in an async `play` function with `expect`, `fn`, `waitFor`, and
+`userEvent` from `storybook/test`. Prefer `canvas.getByRole` and accessible names;
+existing `data-cy` attributes remain stable selectors for SVG geometry. Await
+interactions and poll observable state instead of adding fixed sleeps.
+
+```js
+import { expect, fn } from 'storybook/test';
+
+export const Selectable = {
+    args: { onSelectLegend: fn() },
+    play: async ({ canvas, args, userEvent }) => {
+        await userEvent.click(canvas.getByRole('button', { name: 'Series 1' }));
+        await expect(args.onSelectLegend).toHaveBeenCalled();
+    },
+};
+```
+
+The migrated scenarios use a Vue Test Utils canvas harness when they need exposed
+methods, emitted payloads, remounts, or reactive parent models. It unmounts components,
+restores spies, and removes teleports after each story. New stories can normally use
+Storybook's declarative `component` and `args` rendering directly.
+
+CI installs Chromium and runs both suites before publishing. Storybook configuration
+is separate from the library build; only `dist/` is published. See
+[the migration coverage map](./docs/storybook-migration.md) for the previous spec to
+story mapping and details of assertion adaptations.

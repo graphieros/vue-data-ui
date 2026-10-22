@@ -1,0 +1,1139 @@
+[
+    {
+        "source": "src/components/vue-data-ui.cy.js",
+        "story": "stories/components/vue-data-ui.stories.js",
+        "cases": [
+            "InvalidComponent",
+            "VueUiHill",
+            "VueUiBump",
+            "VueUiGeo",
+            "VueUiDag",
+            "VueUiChord",
+            "VueUiRidgeline",
+            "VueUiWorld",
+            "VueUi3dBar",
+            "VueUiAgePyramid",
+            "VueUiAnnotator",
+            "VueUiCandlestick",
+            "VueUiChestnut",
+            "VueUiDashboard",
+            "VueUiDigits",
+            "VueUiDonut",
+            "VueUiDonutEvolution",
+            "VueUiGalaxy",
+            "VueUiGauge",
+            "VueUiHeatmap",
+            "VueUiKpi",
+            "VueUiMiniLoader",
+            "VueUiMolecule",
+            "VueUiMoodRadar",
+            "VueUiNestedDonuts",
+            "VueUiOnion",
+            "VueUiQuadrant",
+            "VueUiRadar",
+            "VueUiRating",
+            "VueUiRelationCircle",
+            "VueUiRings",
+            "VueUiScatter",
+            "VueUiSkeleton",
+            "VueUiSmiley",
+            "VueUiSparkbar",
+            "VueUiSparkgauge",
+            "VueUiSparkHistogram",
+            "VueUiSparkline",
+            "VueUiSparkStackbar",
+            "VueUiTable",
+            "VueUiTableSparkline",
+            "VueUiThermometer",
+            "VueUiTiremarks",
+            "VueUiTreemap",
+            "VueUiHorizontalBar",
+            "VueUiWaffle",
+            "VueUiWheel",
+            "VueUiXy",
+            "VueUiQuickChart",
+            "VueUiSparkTrend",
+            "VueUiStripPlot",
+            "VueUiDumbbell",
+            "VueUiWordCloud",
+            "VueUiXyCanvas",
+            "VueUiFlow",
+            "VueUiParallelCoordinatePlot",
+            "VueUiTimer",
+            "VueUiCarouselTable",
+            "VueUiGizmo",
+            "VueUiStackbar",
+            "VueUiStackline",
+            "VueUiBullet",
+            "VueUiFunnel",
+            "VueUiHistoryPlot",
+            "VueUiCirclePack"
+        ]
+    },
+    {
+        "source": "src/components/vue-ui-3d-bar.cy.js",
+        "story": "stories/components/vue-ui-3d-bar.stories.js",
+        "cases": [
+            {
+                "id": "RendersWithSimpleDataset",
+                "title": "renders with simple dataset"
+            },
+            {
+                "id": "RendersWithBreakdownDataset",
+                "title": "renders with breakdown dataset"
+            },
+            {
+                "id": "HandlesDatasetReactivity",
+                "title": "handles dataset reactivity"
+            },
+            {
+                "id": "Emits",
+                "title": "emits"
+            }
+        ]
+    },
+    {
+        "source": "src/components/vue-ui-age-pyramid.cy.js",
+        "story": "stories/components/vue-ui-age-pyramid.stories.js",
+        "cases": [
+            {
+                "id": "Renders",
+                "title": "renders"
+            }
+        ]
+    },
+    {
+        "source": "src/components/vue-ui-annotator.cy.js",
+        "story": "stories/components/vue-ui-annotator.stories.js",
+        "cases": [
+            {
+                "id": "RendersWithDifferentConfigAttributes",
+                "title": "renders with different config attributes"
+            }
+        ]
+    },
+    {
+        "source": "src/components/vue-ui-bullet.cy.js",
+        "story": "stories/components/vue-ui-bullet.stories.js",
+        "cases": [
+            {
+                "id": "Renders",
+                "title": "renders"
+            }
+        ]
+    },
+    {
+        "source": "src/components/vue-ui-bump.cy.js",
+        "story": "stories/components/vue-ui-bump.stories.js",
+        "cases": [
+            {
+                "id": "Renders",
+                "title": "renders"
+            }
+        ]
+    },
+    {
+        "source": "src/components/vue-ui-candlestick.cy.js",
+        "story": "stories/components/vue-ui-candlestick.stories.js",
+        "cases": [
+            {
+                "id": "Renders",
+                "title": "renders"
+            }
+        ]
+    },
+    {
+        "source": "src/components/vue-ui-carousel-table.cy.js",
+        "story": "stories/components/vue-ui-carousel-table.stories.js",
+        "cases": [
+            {
+                "id": "Renders",
+                "title": "renders"
+            }
+        ]
+    },
+    {
+        "source": "src/components/vue-ui-chestnut.cy.js",
+        "story": "stories/components/vue-ui-chestnut.stories.js",
+        "cases": [
+            {
+                "id": "Renders",
+                "title": "renders"
+            },
+            {
+                "id": "Emits",
+                "title": "emits"
+            }
+        ]
+    },
+    {
+        "source": "src/components/vue-ui-circle-pack.cy.js",
+        "story": "stories/components/vue-ui-circle-pack.stories.js",
+        "cases": [
+            {
+                "id": "Renders",
+                "title": "renders"
+            }
+        ]
+    },
+    {
+        "source": "src/components/vue-ui-cursor.cy.js",
+        "story": "stories/components/vue-ui-cursor.stories.js",
+        "cases": [
+            {
+                "id": "Renders",
+                "title": "renders"
+            }
+        ]
+    },
+    {
+        "source": "src/components/vue-ui-dag.cy.js",
+        "story": "stories/components/vue-ui-dag.stories.js",
+        "cases": [
+            {
+                "id": "Renders",
+                "title": "renders"
+            }
+        ]
+    },
+    {
+        "source": "src/components/vue-ui-digits.cy.js",
+        "story": "stories/components/vue-ui-digits.stories.js",
+        "cases": [
+            {
+                "id": "RendersAllDigitsAndDecimal",
+                "title": "renders all digits and decimal"
+            },
+            {
+                "id": "Renders0",
+                "title": "renders 0"
+            },
+            {
+                "id": "Renders1",
+                "title": "renders 1"
+            },
+            {
+                "id": "Renders2",
+                "title": "renders 2"
+            },
+            {
+                "id": "Renders3",
+                "title": "renders 3"
+            },
+            {
+                "id": "Renders4",
+                "title": "renders 4"
+            },
+            {
+                "id": "Renders5",
+                "title": "renders 5"
+            },
+            {
+                "id": "Renders6",
+                "title": "renders 6"
+            },
+            {
+                "id": "Renders7",
+                "title": "renders 7"
+            },
+            {
+                "id": "Renders8",
+                "title": "renders 8"
+            },
+            {
+                "id": "Renders9",
+                "title": "renders 9"
+            }
+        ]
+    },
+    {
+        "source": "src/components/vue-ui-donut-evolution.cy.js",
+        "story": "stories/components/vue-ui-donut-evolution.stories.js",
+        "cases": [
+            {
+                "id": "Renders",
+                "title": "renders"
+            }
+        ]
+    },
+    {
+        "source": "src/components/vue-ui-donut.cy.js",
+        "story": "stories/components/vue-ui-donut.stories.js",
+        "cases": [
+            {
+                "id": "RendersDonutDefaultVariation",
+                "title": "renders donut default variation"
+            },
+            {
+                "id": "RendersPolarVariation",
+                "title": "renders polar variation"
+            }
+        ]
+    },
+    {
+        "source": "src/components/vue-ui-dumbbell.cy.js",
+        "story": "stories/components/vue-ui-dumbbell.stories.js",
+        "cases": [
+            {
+                "id": "Renders",
+                "title": "renders"
+            }
+        ]
+    },
+    {
+        "source": "src/components/vue-ui-flow.cy.js",
+        "story": "stories/components/vue-ui-flow.stories.js",
+        "cases": [
+            {
+                "id": "Renders",
+                "title": "renders"
+            }
+        ]
+    },
+    {
+        "source": "src/components/vue-ui-funnel.cy.js",
+        "story": "stories/components/vue-ui-funnel.stories.js",
+        "cases": [
+            {
+                "id": "Renders",
+                "title": "renders"
+            }
+        ]
+    },
+    {
+        "source": "src/components/vue-ui-galaxy.cy.js",
+        "story": "stories/components/vue-ui-galaxy.stories.js",
+        "cases": [
+            {
+                "id": "Renders",
+                "title": "renders"
+            },
+            {
+                "id": "Emits",
+                "title": "emits"
+            }
+        ]
+    },
+    {
+        "source": "src/components/vue-ui-gauge.cy.js",
+        "story": "stories/components/vue-ui-gauge.stories.js",
+        "cases": [
+            {
+                "id": "Renders",
+                "title": "renders"
+            }
+        ]
+    },
+    {
+        "source": "src/components/vue-ui-geo.cy.js",
+        "story": "stories/components/vue-ui-geo.stories.js",
+        "cases": [
+            {
+                "id": "Renders",
+                "title": "renders"
+            }
+        ]
+    },
+    {
+        "source": "src/components/vue-ui-gizmo.cy.js",
+        "story": "stories/components/vue-ui-gizmo.stories.js",
+        "cases": [
+            {
+                "id": "RendersAsABattery",
+                "title": "renders as a battery"
+            },
+            {
+                "id": "RendersAsAGauge",
+                "title": "renders as a gauge"
+            }
+        ]
+    },
+    {
+        "source": "src/components/vue-ui-heatmap.cy.js",
+        "story": "stories/components/vue-ui-heatmap.stories.js",
+        "cases": [
+            {
+                "id": "RendersWithLegend",
+                "title": "renders with legend"
+            }
+        ]
+    },
+    {
+        "source": "src/components/vue-ui-hill.cy.js",
+        "story": "stories/components/vue-ui-hill.stories.js",
+        "cases": [
+            {
+                "id": "Renders",
+                "title": "renders"
+            },
+            {
+                "id": "RendersOneAccessibleSliderForEachVisibleDatapoint",
+                "title": "renders one accessible slider for each visible datapoint"
+            },
+            {
+                "id": "EntersEditModeAndCallsTheEditCallback",
+                "title": "enters edit mode and calls the edit callback"
+            },
+            {
+                "id": "MovesADatapointWithTheKeyboardAndSavesTheEditedDataset",
+                "title": "moves a datapoint with the keyboard and saves the edited dataset"
+            },
+            {
+                "id": "RestoresTheOriginalDatasetWhenAnEditIsCancelled",
+                "title": "restores the original dataset when an edit is cancelled"
+            },
+            {
+                "id": "CallsSelectDatapointWithThePublicDatapointAndOriginalIndex",
+                "title": "calls selectDatapoint with the public datapoint and original index"
+            },
+            {
+                "id": "CallsDatapointEnterAndDatapointLeaveWithTheOriginalIndex",
+                "title": "calls datapointEnter and datapointLeave with the original index"
+            },
+            {
+                "id": "EmitsDragStartChangeAndDragEndDuringPointerDragging",
+                "title": "emits dragStart, change, and dragEnd during pointer dragging"
+            },
+            {
+                "id": "PreventsEditModeWhenReadonlyIsEnabled",
+                "title": "prevents edit mode when readonly is enabled"
+            },
+            {
+                "id": "OpensAnOverflowMenuPromotesAnItemAndRestoresTheStackOnOutsidePointerdown",
+                "title": "opens an overflow menu, promotes an item, and restores the stack on outside pointerdown"
+            },
+            {
+                "id": "RendersACustomLoadingSlot",
+                "title": "renders a custom loading slot"
+            }
+        ]
+    },
+    {
+        "source": "src/components/vue-ui-history-plot.cy.js",
+        "story": "stories/components/vue-ui-history-plot.stories.js",
+        "cases": [
+            {
+                "id": "Renders",
+                "title": "renders"
+            },
+            {
+                "id": "Emits",
+                "title": "emits"
+            }
+        ]
+    },
+    {
+        "source": "src/components/vue-ui-horizontal-bar.cy.js",
+        "story": "stories/components/vue-ui-horizontal-bar.stories.js",
+        "cases": [
+            {
+                "id": "Renders",
+                "title": "renders"
+            },
+            {
+                "id": "Emits",
+                "title": "emits"
+            }
+        ]
+    },
+    {
+        "source": "src/components/vue-ui-kpi.cy.js",
+        "story": "stories/components/vue-ui-kpi.stories.js",
+        "cases": [
+            {
+                "id": "RendersWithSlots",
+                "title": "renders with slots"
+            },
+            {
+                "id": "RendersWithDigits",
+                "title": "renders with digits"
+            }
+        ]
+    },
+    {
+        "source": "src/components/vue-ui-mini-loader.cy.js",
+        "story": "stories/components/vue-ui-mini-loader.stories.js",
+        "cases": [
+            {
+                "id": "RendersDefaultOnionVariant",
+                "title": "renders default onion variant"
+            },
+            {
+                "id": "RendersLineVariant",
+                "title": "renders line variant"
+            },
+            {
+                "id": "RendersBarVariant",
+                "title": "renders bar variant"
+            }
+        ]
+    },
+    {
+        "source": "src/components/vue-ui-molecule.cy.js",
+        "story": "stories/components/vue-ui-molecule.stories.js",
+        "cases": [
+            {
+                "id": "Renders",
+                "title": "renders"
+            }
+        ]
+    },
+    {
+        "source": "src/components/vue-ui-mood-radar.cy.js",
+        "story": "stories/components/vue-ui-mood-radar.stories.js",
+        "cases": [
+            {
+                "id": "Renders",
+                "title": "renders"
+            }
+        ]
+    },
+    {
+        "source": "src/components/vue-ui-nested-donuts.cy.js",
+        "story": "stories/components/vue-ui-nested-donuts.stories.js",
+        "cases": [
+            {
+                "id": "Renders",
+                "title": "renders"
+            },
+            {
+                "id": "Emits",
+                "title": "emits"
+            }
+        ]
+    },
+    {
+        "source": "src/components/vue-ui-onion.cy.js",
+        "story": "stories/components/vue-ui-onion.stories.js",
+        "cases": [
+            {
+                "id": "Renders",
+                "title": "renders"
+            },
+            {
+                "id": "Emits",
+                "title": "emits"
+            }
+        ]
+    },
+    {
+        "source": "src/components/vue-ui-parallel-coordinate-plot.cy.js",
+        "story": "stories/components/vue-ui-parallel-coordinate-plot.stories.js",
+        "cases": [
+            {
+                "id": "Renders",
+                "title": "renders"
+            },
+            {
+                "id": "Emits",
+                "title": "emits"
+            }
+        ]
+    },
+    {
+        "source": "src/components/vue-ui-quadrant.cy.js",
+        "story": "stories/components/vue-ui-quadrant.stories.js",
+        "cases": [
+            {
+                "id": "Renders",
+                "title": "renders"
+            },
+            {
+                "id": "Emits",
+                "title": "emits"
+            }
+        ]
+    },
+    {
+        "source": "src/components/vue-ui-quick-chart.cy.js",
+        "story": "stories/components/quick-chart/",
+        "cases": [
+            {
+                "id": "RendersABarChartFromAnArrayOfNumbers",
+                "title": "renders a bar chart from an array of numbers",
+                "story": "stories/components/quick-chart/renders-abar-chart-from-an-array-of-numbers.stories.js"
+            },
+            {
+                "id": "EmitsFromABarChartFromAnArrayOfNumbers",
+                "title": "emits from a bar chart from an array of numbers",
+                "story": "stories/components/quick-chart/emits-from-abar-chart-from-an-array-of-numbers.stories.js"
+            },
+            {
+                "id": "RendersALineChartFromAnArrayOfNumbers",
+                "title": "renders a line chart from an array of numbers",
+                "story": "stories/components/quick-chart/renders-aline-chart-from-an-array-of-numbers.stories.js"
+            },
+            {
+                "id": "EmitsFromALineChartFromAnArrayOfNumbers",
+                "title": "emits from a line chart from an array of numbers",
+                "story": "stories/components/quick-chart/emits-from-aline-chart-from-an-array-of-numbers.stories.js"
+            },
+            {
+                "id": "RendersABarChartWithAnArrayOfObjects",
+                "title": "renders a bar chart with an array of objects",
+                "story": "stories/components/quick-chart/renders-abar-chart-with-an-array-of-objects.stories.js"
+            },
+            {
+                "id": "EmitsFromABarChartFromAnArrayOfObjects",
+                "title": "emits from a bar chart from an array of objects",
+                "story": "stories/components/quick-chart/emits-from-abar-chart-from-an-array-of-objects.stories.js"
+            },
+            {
+                "id": "RendersALineChartWithAnArrayOfObjects",
+                "title": "renders a line chart with an array of objects",
+                "story": "stories/components/quick-chart/renders-aline-chart-with-an-array-of-objects.stories.js"
+            },
+            {
+                "id": "EmitsFromALineChartFromAnArrayOfObjects",
+                "title": "emits from a line chart from an array of objects",
+                "story": "stories/components/quick-chart/emits-from-aline-chart-from-an-array-of-objects.stories.js"
+            },
+            {
+                "id": "RendersADonutFromAnArrayOfObjects",
+                "title": "renders a donut from an array of objects",
+                "story": "stories/components/quick-chart/renders-adonut-from-an-array-of-objects.stories.js"
+            },
+            {
+                "id": "EmitsFromADonutChartFromAnArrayOfObjects",
+                "title": "emits from a donut chart from an array of objects",
+                "story": "stories/components/quick-chart/emits-from-adonut-chart-from-an-array-of-objects.stories.js"
+            }
+        ]
+    },
+    {
+        "source": "src/components/vue-ui-radar.cy.js",
+        "story": "stories/components/vue-ui-radar.stories.js",
+        "cases": [
+            {
+                "id": "Renders",
+                "title": "renders"
+            },
+            {
+                "id": "Emits",
+                "title": "emits"
+            }
+        ]
+    },
+    {
+        "source": "src/components/vue-ui-rating.cy.js",
+        "story": "stories/components/vue-ui-rating.stories.js",
+        "cases": [
+            {
+                "id": "RendersWithDifferentConfigAttributes",
+                "title": "renders with different config attributes"
+            }
+        ]
+    },
+    {
+        "source": "src/components/vue-ui-relation-circle.cy.js",
+        "story": "stories/components/vue-ui-relation-circle.stories.js",
+        "cases": [
+            {
+                "id": "Renders",
+                "title": "renders"
+            }
+        ]
+    },
+    {
+        "source": "src/components/vue-ui-rings.cy.js",
+        "story": "stories/components/vue-ui-rings.stories.js",
+        "cases": [
+            {
+                "id": "Renders",
+                "title": "renders"
+            },
+            {
+                "id": "Emits",
+                "title": "emits"
+            }
+        ]
+    },
+    {
+        "source": "src/components/vue-ui-scatter.cy.js",
+        "story": "stories/components/vue-ui-scatter.stories.js",
+        "cases": [
+            {
+                "id": "Renders",
+                "title": "renders"
+            },
+            {
+                "id": "UsesPerformanceMode",
+                "title": "uses performance mode"
+            }
+        ]
+    },
+    {
+        "source": "src/components/vue-ui-skeleton.cy.js",
+        "story": "stories/components/vue-ui-skeleton.stories.js",
+        "cases": [
+            {
+                "id": "Renders",
+                "title": "renders"
+            }
+        ]
+    },
+    {
+        "source": "src/components/vue-ui-smiley.cy.js",
+        "story": "stories/components/vue-ui-smiley.stories.js",
+        "cases": [
+            {
+                "id": "RendersWithDifferentConfigAttributes",
+                "title": "renders with different config attributes"
+            }
+        ]
+    },
+    {
+        "source": "src/components/vue-ui-sparkbar.cy.js",
+        "story": "stories/components/vue-ui-sparkbar.stories.js",
+        "cases": [
+            {
+                "id": "Renders",
+                "title": "renders"
+            },
+            {
+                "id": "RendersWithCustomTitleAndSubtitleUsingSlots",
+                "title": "renders with custom title and subtitle using slots"
+            },
+            {
+                "id": "RendersWithDefaultTitleWhenNoSlotIsProvided",
+                "title": "renders with default title when no slot is provided"
+            },
+            {
+                "id": "Emits",
+                "title": "emits"
+            }
+        ]
+    },
+    {
+        "source": "src/components/vue-ui-sparkhistogram.cy.js",
+        "story": "stories/components/vue-ui-sparkhistogram.stories.js",
+        "cases": [
+            {
+                "id": "Renders",
+                "title": "renders"
+            },
+            {
+                "id": "Emits",
+                "title": "emits"
+            }
+        ]
+    },
+    {
+        "source": "src/components/vue-ui-sparkline.cy.js",
+        "story": "stories/components/vue-ui-sparkline.stories.js",
+        "cases": [
+            {
+                "id": "RendersLine",
+                "title": "renders (line)"
+            },
+            {
+                "id": "RendersSpline",
+                "title": "renders (spline)"
+            },
+            {
+                "id": "RendersBars",
+                "title": "renders (bars)"
+            },
+            {
+                "id": "Emits",
+                "title": "emits"
+            }
+        ]
+    },
+    {
+        "source": "src/components/vue-ui-sparkstackbar.cy.js",
+        "story": "stories/components/vue-ui-sparkstackbar.stories.js",
+        "cases": [
+            {
+                "id": "Renders",
+                "title": "renders"
+            },
+            {
+                "id": "Emits",
+                "title": "emits"
+            }
+        ]
+    },
+    {
+        "source": "src/components/vue-ui-stackbar.cy.js",
+        "story": "stories/components/vue-ui-stackbar.stories.js",
+        "cases": [
+            {
+                "id": "RendersVertically",
+                "title": "renders vertically"
+            },
+            {
+                "id": "RendersHorizontally",
+                "title": "renders horizontally"
+            }
+        ]
+    },
+    {
+        "source": "src/components/vue-ui-stackline.cy.js",
+        "story": "stories/components/vue-ui-stackline.stories.js",
+        "cases": [
+            {
+                "id": "Renders",
+                "title": "renders"
+            }
+        ]
+    },
+    {
+        "source": "src/components/vue-ui-strip-plot.cy.js",
+        "story": "stories/components/vue-ui-strip-plot.stories.js",
+        "cases": [
+            {
+                "id": "Renders",
+                "title": "renders"
+            },
+            {
+                "id": "Emits",
+                "title": "emits"
+            }
+        ]
+    },
+    {
+        "source": "src/components/vue-ui-table-heatmap.cy.js",
+        "story": "stories/components/vue-ui-table-heatmap.stories.js",
+        "cases": [
+            {
+                "id": "RendersWithSlots",
+                "title": "renders with slots"
+            }
+        ]
+    },
+    {
+        "source": "src/components/vue-ui-table-sparkline.cy.js",
+        "story": "stories/components/vue-ui-table-sparkline.stories.js",
+        "cases": [
+            {
+                "id": "Renders",
+                "title": "renders"
+            }
+        ]
+    },
+    {
+        "source": "src/components/vue-ui-thermometer.cy.js",
+        "story": "stories/components/vue-ui-thermometer.stories.js",
+        "cases": [
+            {
+                "id": "Renders",
+                "title": "renders"
+            }
+        ]
+    },
+    {
+        "source": "src/components/vue-ui-tiremarks.cy.js",
+        "story": "stories/components/vue-ui-tiremarks.stories.js",
+        "cases": [
+            {
+                "id": "Renders",
+                "title": "renders"
+            }
+        ]
+    },
+    {
+        "source": "src/components/vue-ui-treemap.cy.js",
+        "story": "stories/components/vue-ui-treemap.stories.js",
+        "cases": [
+            {
+                "id": "Renders",
+                "title": "renders"
+            },
+            {
+                "id": "RendersBreadcrumbs",
+                "title": "renders breadcrumbs"
+            },
+            {
+                "id": "Emits",
+                "title": "emits"
+            }
+        ]
+    },
+    {
+        "source": "src/components/vue-ui-waffle.cy.js",
+        "story": "stories/components/vue-ui-waffle.stories.js",
+        "cases": [
+            {
+                "id": "Renders",
+                "title": "renders"
+            },
+            {
+                "id": "Emits",
+                "title": "emits"
+            }
+        ]
+    },
+    {
+        "source": "src/components/vue-ui-wheel.cy.js",
+        "story": "stories/components/vue-ui-wheel.stories.js",
+        "cases": [
+            {
+                "id": "Renders",
+                "title": "renders"
+            }
+        ]
+    },
+    {
+        "source": "src/components/vue-ui-word-cloud.cy.js",
+        "story": "stories/components/vue-ui-word-cloud.stories.js",
+        "cases": [
+            {
+                "id": "Renders",
+                "title": "renders"
+            }
+        ]
+    },
+    {
+        "source": "src/components/vue-ui-xy-canvas.cy.js",
+        "story": "stories/components/vue-ui-xy-canvas.stories.js",
+        "cases": [
+            {
+                "id": "Renders",
+                "title": "renders"
+            },
+            {
+                "id": "Emits",
+                "title": "emits"
+            }
+        ]
+    },
+    {
+        "source": "src/components/vue-ui-xy.cy.js",
+        "story": "stories/components/vue-ui-xy.stories.js",
+        "cases": [
+            {
+                "id": "RendersDefault",
+                "title": "renders default"
+            },
+            {
+                "id": "Emits",
+                "title": "emits"
+            }
+        ]
+    },
+    {
+        "source": "src/atoms/BaseDirectionPad.cy.js",
+        "story": "stories/atoms/BaseDirectionPad.stories.js",
+        "cases": [
+            {
+                "id": "RendersCorrectlyWithDefaultProps",
+                "title": "renders correctly with default props"
+            },
+            {
+                "id": "Emits",
+                "title": "emits"
+            },
+            {
+                "id": "HandlesColorProp",
+                "title": "handles color prop"
+            }
+        ]
+    },
+    {
+        "source": "src/atoms/DataTable.cy.js",
+        "story": "stories/atoms/DataTable.stories.js",
+        "cases": [
+            {
+                "id": "RendersCorrectlyWithSlots",
+                "title": "renders correctly with slots"
+            }
+        ]
+    },
+    {
+        "source": "src/atoms/Legend.cy.js",
+        "story": "stories/atoms/Legend.stories.js",
+        "cases": [
+            {
+                "id": "RendersCorrectlyWithSlots",
+                "title": "renders correctly with slots"
+            },
+            {
+                "id": "EmitsClickMarkerWithCorrectPayload",
+                "title": "emits clickMarker with correct payload"
+            }
+        ]
+    },
+    {
+        "source": "src/atoms/PenAndPaper.cy.js",
+        "story": "stories/atoms/PenAndPaper.stories.js",
+        "cases": [
+            {
+                "id": "RendersCorrectlyWhenActive",
+                "title": "renders correctly when active"
+            },
+            {
+                "id": "DrawsStraightLines",
+                "title": "draws straight lines"
+            },
+            {
+                "id": "DrawsLines",
+                "title": "draws lines"
+            },
+            {
+                "id": "RendersText",
+                "title": "renders text"
+            }
+        ]
+    },
+    {
+        "source": "src/atoms/Shape.cy.js",
+        "story": "stories/atoms/Shape.stories.js",
+        "cases": [
+            {
+                "id": "RendersACircle",
+                "title": "renders a circle"
+            },
+            {
+                "id": "RendersATriangle",
+                "title": "renders a triangle"
+            },
+            {
+                "id": "RendersASquare",
+                "title": "renders a square"
+            },
+            {
+                "id": "RendersADiamond",
+                "title": "renders a diamond"
+            },
+            {
+                "id": "RendersAPentagon",
+                "title": "renders a pentagon"
+            },
+            {
+                "id": "RendersAHaxagon",
+                "title": "renders a haxagon"
+            },
+            {
+                "id": "RendersAStar",
+                "title": "renders a star"
+            }
+        ]
+    },
+    {
+        "source": "src/atoms/SlicerPreview.cy.js",
+        "story": "stories/atoms/SlicerPreview.stories.js",
+        "cases": [
+            {
+                "id": "ShowsStartEndLabelsOnHover",
+                "title": "shows start & end labels on hover"
+            },
+            {
+                "id": "CompactRangeHandlesUpdateLabelsAndVModel",
+                "title": "compact range handles update labels and v-model"
+            },
+            {
+                "id": "MergesTooltipsWhenBothLabelsTargetTheSameIndex",
+                "title": "merges tooltips when both labels target the same index"
+            },
+            {
+                "id": "MergesTheTwoLabelsInASingleTooltipWhenTooltipsCollideAdjacentIndices",
+                "title": "merges the two labels in a single tooltip when tooltips collide (adjacent indices)"
+            },
+            {
+                "id": "EmitsResetWhenClickingTheDefaultResetButtonUseResetSlotFalse",
+                "title": "emits reset when clicking the default reset button (useResetSlot = false)"
+            },
+            {
+                "id": "EmitsTrapMouseWithTheHoveredTrapIndexAndNullOnMouseleave",
+                "title": "emits trapMouse with the hovered trap index and null on mouseleave"
+            },
+            {
+                "id": "EmitsResetWhenClickingTheCustomResetSlot",
+                "title": "emits reset when clicking the custom reset slot"
+            }
+        ]
+    },
+    {
+        "source": "src/atoms/Title.cy.js",
+        "story": "stories/atoms/Title.stories.js",
+        "cases": [
+            {
+                "id": "RendersContentWithDefaultStyles",
+                "title": "renders content with default styles"
+            },
+            {
+                "id": "RendersContentWithCustomStyles",
+                "title": "renders content with custom styles"
+            }
+        ]
+    },
+    {
+        "source": "src/atoms/Tooltip.cy.js",
+        "story": "stories/atoms/Tooltip.stories.js",
+        "cases": [
+            {
+                "id": "RendersAllContents",
+                "title": "renders all contents"
+            },
+            {
+                "id": "FollowsTheMouse",
+                "title": "follows the mouse"
+            }
+        ]
+    },
+    {
+        "source": "src/atoms/UserOptions.cy.js",
+        "story": "stories/atoms/UserOptions.stories.js",
+        "cases": [
+            {
+                "id": "OpensAndClosesOnMenuClick",
+                "title": "opens and closes on menu click"
+            },
+            {
+                "id": "ClosesTheDrawerOnClickOutside",
+                "title": "closes the drawer on click outside"
+            },
+            {
+                "id": "ContainsAllNecessaryIcons",
+                "title": "contains all necessary icons"
+            },
+            {
+                "id": "Emits",
+                "title": "emits"
+            },
+            {
+                "id": "DisplaysLabelsInTooltips",
+                "title": "displays labels in tooltips"
+            }
+        ]
+    },
+    {
+        "source": "tests/useObjectBindings.cy.js",
+        "story": "stories/composables/useObjectBindings.stories.js",
+        "cases": [
+            {
+                "id": "CreatesRefsForEachLeafProperty",
+                "title": "creates refs for each leaf property"
+            },
+            {
+                "id": "UpdatesConfigRefWhenComputedRefIsUpdated",
+                "title": "updates configRef when computed ref is updated"
+            },
+            {
+                "id": "IgnoresArraysByDefaultSkipArraysTrue",
+                "title": "ignores arrays by default (skipArrays=true)"
+            },
+            {
+                "id": "IncludesArrayPathsWhenSkipArraysFalseAndAllowsWritingToArrayEntries",
+                "title": "includes array paths when skipArrays=false and allows writing to array entries"
+            },
+            {
+                "id": "SupportsACustomDelimitor",
+                "title": "supports a custom delimitor"
+            },
+            {
+                "id": "TogglesConfigRefChartZoomShowViaVModelOnAToRef",
+                "title": "toggles configRef.chart.zoom.show via v-model on a toRef"
+            },
+            {
+                "id": "WarnsWhenAccessingANonExistentBinding",
+                "title": "warns when accessing a non-existent binding"
+            },
+            {
+                "id": "WarnsWhenSettingANonExistentBinding",
+                "title": "warns when setting a non-existent binding"
+            }
+        ]
+    }
+]

@@ -27,3 +27,7 @@ publish-build.cjs
 changeLog.cjs
 package-copy.json
 /backend
+# Storybook build and browser reports
+storybook-static
+test-results
+playwright-report
