@@ -694,6 +694,10 @@ function toggleFullscreen(state) {
     isFullscreen.value = state;
 }
 
+/**
+ * Return stacked geometry when stacking is active, otherwise percentage data.
+ * Both branches return internal data rather than defensive copies.
+ */
 function getData() {
     if (hasStack.value) {
         return stack.value;

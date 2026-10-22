@@ -266,6 +266,9 @@ export const palette = [
 
 // When adding themes, also update useThemeOptions and useThemeCheck composables
 
+/**
+ * Get the color palette for a given theme
+ */
 export function getPalette(palette = 'default') {
     switch (palette) {
         case 'hack':
@@ -1322,6 +1325,11 @@ export function calcAverage(arr) {
     return count === 0 ? null : average;
 }
 
+/**
+ * Serializes point coordinates for the points attribute of an SVG polyline.
+ * @param {Array<{x: number, y: number}>} points - Ordered SVG coordinates.
+ * @returns {string} Space-separated coordinate pairs, without SVG path commands.
+ */
 export function createStraightPath(points) {
     let arr = [];
     for (let i = 0; i < points.length; i += 1) {
@@ -1388,6 +1396,11 @@ export function createStepperPath(points, zero = null) {
 }
 
 // Monotone cubic interpolation
+/**
+ * Builds a monotone cubic spline from ordered SVG coordinates.
+ * @param {Array<{x: number, y: number}>} points - Points to interpolate.
+ * @returns {string} Path fragment to follow an M command; '0,0' for fewer than two points.
+ */
 export function createSmoothPath(points) {
     if (points.length < 2) return '0,0';
 
@@ -2517,6 +2530,19 @@ export function createTSpansFromLineBreaksOnY({
         .join('');
 }
 
+/**
+ * Builds SVG tspan markup by wrapping text after a fixed number of words.
+ * Content is inserted as markup without escaping.
+ * @param {object} options - Text content and SVG layout.
+ * @param {string} options.content - Text to split on spaces.
+ * @param {number} options.fontSize - Font size in SVG units.
+ * @param {string} options.fill - Text fill color.
+ * @param {number} options.maxWords - Positive number of words per line.
+ * @param {number} options.x - Horizontal text position.
+ * @param {number} options.y - Initial vertical text position.
+ * @param {string} [options.stroke='none'] - Text stroke color.
+ * @returns {string} Markup suitable for v-html inside an SVG text element.
+ */
 export function createTSpans({
     content,
     fontSize,
@@ -5344,6 +5370,12 @@ export function getImageDimensions(src, scale = 1) {
     });
 }
 
+/**
+ * Generates evenly spaced hues from a starting CSS color.
+ * @param {string} startColor - First color in the wheel.
+ * @param {number} len - Color count, rounded down to an integer.
+ * @returns {string[]} Hexadecimal colors; empty for an invalid color or non-positive count.
+ */
 export function createColorWheel(startColor, len) {
     const length = Math.floor(Number(len));
 

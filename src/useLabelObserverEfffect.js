@@ -1,5 +1,18 @@
 import { nextTick, watchEffect } from 'vue';
 
+/**
+ * Measures a rendered label after Vue updates and optionally after fonts load.
+ * Call during setup. Pending measurement work is invalidated when the watched
+ * element changes or its owning effect scope stops.
+ * @param {object} options - Label measurement inputs.
+ * @param {import('vue').Ref<Element | null>} options.elementRef - HTML or SVG label.
+ * @param {(size: number) => void} options.callback - Receives the measured dimension.
+ * @param {'width' | 'height'} options.attr - Dimension to measure.
+ * @param {boolean} [options.earlyReturn=false] - Skip registration entirely.
+ * @param {number} [options.retryFrames=12] - Additional animation-frame measurement attempts.
+ * @param {boolean} [options.alsoAfterFontsReady=true] - Remeasure after document fonts settle.
+ * @returns {void}
+ */
 export function useLabelObserverEffect({
     elementRef,
     callback,

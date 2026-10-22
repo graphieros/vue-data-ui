@@ -1,5 +1,16 @@
 import { nextTick } from 'vue';
 
+/**
+ * Creates a text fitter that measures mounted SVG labels after the next Vue tick.
+ * @param {object} options - Label fitting settings.
+ * @param {import('vue').Ref<SVGSVGElement | null>} options.svgRef - SVG containing the labels.
+ * @param {import('vue').Ref<number>} options.unitWidth - Available width per label in SVG units.
+ * @param {number} [options.fontSize=12] - Fallback initial font size.
+ * @param {number} [options.step=0.5] - Font size reduction per iteration.
+ * @param {number} [options.maxIterations=60] - Maximum shrink iterations.
+ * @param {boolean} [options.hideUnderMin=true] - Hide labels when they cannot fit above the minimum size.
+ * @returns {object} fitText(selector, minFontSize = 6) measures and updates the selected labels asynchronously.
+ */
 export function useFitSvgText({
     svgRef,
     unitWidth,

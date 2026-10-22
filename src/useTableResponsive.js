@@ -1,5 +1,14 @@
 import { ref, watch, nextTick, onBeforeUnmount } from 'vue';
 
+/**
+ * Observes a table container and enables compact layout below its breakpoint.
+ * Call during setup. Observation starts automatically, restarts when either ref
+ * changes, and disconnects before unmounting.
+ *
+ * @param {import('vue').Ref<HTMLElement | null>} elRef - Mounted table container.
+ * @param {import('vue').Ref<number>} breakpointRef - Compact-layout threshold in CSS pixels.
+ * @returns {{isResponsive: import('vue').Ref<boolean>, start: () => Promise<void>, stop: () => void}} Layout state and observer controls.
+ */
 export function useTableResponsive(elRef, breakpointRef) {
     const isResponsive = ref(false);
     let ro = null;

@@ -2077,6 +2077,9 @@ const getImage = createChartImageGetter(
     () => cfgChart.value.title.text,
 );
 
+/**
+ * Return the public dataset representation of the current hill state.
+ */
 function getData() {
     return toPublicDataset();
 }

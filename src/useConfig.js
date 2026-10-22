@@ -1,5 +1,11 @@
 import { graphDefaults } from './graph/config';
 import { deepClone } from './lib';
+/**
+ * Creates the default configuration registry used by chart components.
+ *
+ * @param {import('vue-data-ui').VueDataUiGetConfigOptions} [options={}] - Shared color overrides.
+ * @returns {object} Configurations keyed by snake_case component name.
+ */
 export function useConfig(options = {}) {
     const COLOR_BLACK = '#2D353C';
     const COLOR_GREY = '#A1A1A1';

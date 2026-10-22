@@ -306,6 +306,11 @@ function setParentElementReference() {
     parentElement.value = chart.value?.parentNode ?? null;
 }
 
+/**
+ * Wait for two animation frames before measuring painted layout.
+ *
+ * @returns {Promise<number>} Timestamp from the second animation frame.
+ */
 function nextPaintFrame() {
     return new Promise((resolve) => {
         requestAnimationFrame(() => {
@@ -339,6 +344,10 @@ async function runParentStableLayoutPass() {
 
 const parentStableLayoutRefreshIsQueued = ref(false);
 
+/**
+ * Coalesce layout refresh requests into one Vue tick and re-resolve the parent.
+ * The scheduled pass invalidates older asynchronous layout measurements.
+ */
 function queueParentStableLayoutRefresh() {
     if (parentStableLayoutRefreshIsQueued.value) return;
     parentStableLayoutRefreshIsQueued.value = true;
@@ -372,6 +381,12 @@ const plotRadii = ref({ plot: 3, line: 3, selectedLine: 3 });
 
 const lineStrokeViewportScale = ref(1);
 
+/**
+ * Measure screen pixels per root SVG user unit, excluding the child zoom transform.
+ * Use the screen matrix when available, then fall back to viewBox/container geometry.
+ *
+ * @returns {number | null} Positive viewport scale, or null when the SVG cannot be measured.
+ */
 function getRootSvgViewportScale() {
     const el = svgRef.value;
     if (!el) return null;
@@ -430,6 +445,13 @@ function updateLineStrokeViewportScale() {
     lineStrokeViewportScale.value = nextScale;
 }
 
+/**
+ * Convert a stroke metric from SVG user units to screen pixels.
+ * Non-numeric inputs pass through unchanged; uses the last measurable viewport scale.
+ *
+ * @param {number | string} value - Configured stroke width or dash metric.
+ * @returns {number | string} Scaled numeric metric or the original non-numeric input.
+ */
 function getLineStrokeMetric(value) {
     const numericValue = Number(value);
 
@@ -907,6 +929,13 @@ function setPrecog(side, val) {
     slicerPrecog.value[side] = val;
 }
 
+/**
+ * Synchronize the minimap with the committed chart range.
+ * A reversed continuous axis swaps and negates endpoints for the minimap.
+ *
+ * @param {number} start - Range start in chart units.
+ * @param {number} end - Range end in chart units.
+ */
 function setSlicerChildValues(start, end) {
     if (!chartSlicer.value) return;
     if (isContinuousScale.value && isXAxisReversed.value) {
@@ -926,6 +955,14 @@ function setMinimapPrecog(side, value) {
     setPrecog(side === 'start' ? 'end' : 'start', -numericValue);
 }
 
+/**
+ * Coerce supplied zoom bounds to finite numbers, filling omitted bounds from fallback.
+ * This validates the shape only; dataset clamping happens when the range is applied.
+ *
+ * @param {unknown} state - Candidate range; at least one bound must be supplied.
+ * @param {{ start: number, end: number }} [fallback] - Bounds used for missing endpoints.
+ * @returns {{ start: number, end: number } | null} Numeric range, or null for invalid input.
+ */
 function normalizeZoomState(state, fallback = slicer.value) {
     if (!state || typeof state !== 'object') return null;
     const hasStart = state.start !== undefined && state.start !== null;
@@ -955,6 +992,15 @@ function getCommittedChartZoomRange(source = slicer.value) {
     };
 }
 
+/**
+ * Project an axis value into root SVG x coordinates for a supplied zoom range.
+ * Continuous ranges use axis values; categorical ranges use indices and an exclusive end.
+ * Values outside the range are projected without clamping.
+ *
+ * @param {number} value - Continuous x value or categorical index.
+ * @param {{ start: number, end: number }} range - Bounds in the same units as value.
+ * @returns {number} SVG x coordinate, or the plot left edge for an invalid span/value.
+ */
 function getChartZoomXForValue(value, range) {
     const left = Number(drawingArea.value?.left) || 0;
     const width = Math.max(0, Number(drawingArea.value?.width) || 0);
@@ -1248,6 +1294,15 @@ const chartZoomClipPath = computed(() =>
         : undefined,
 );
 
+/**
+ * Commit and normalize a zoom range without emitting the controlled-model update.
+ * Clears queued slicer work when bounds change and optionally starts a visual transition.
+ *
+ * @param {import('vue-data-ui').VueUiZoomState} state - Requested bounds.
+ * @param {Object} [options] - Visual transition options.
+ * @param {boolean} [options.transition=false] - Animate a changed range.
+ * @returns {{ start: number, end: number } | null} Final committed bounds, or null for invalid input.
+ */
 function applyZoomState(state, { transition = false } = {}) {
     const normalized = normalizeZoomState(state);
     if (!normalized) return null;
@@ -1283,6 +1338,15 @@ function applyZoomState(state, { transition = false } = {}) {
     };
 }
 
+/**
+ * Apply an imperative zoom update and publish the committed range through update:zoomState.
+ * Invalid input leaves the current range unchanged.
+ *
+ * @param {import('vue-data-ui').VueUiZoomState} state - Range; omitted bounds keep their current values.
+ * @param {Object} [options] - Visual transition options.
+ * @param {boolean} [options.transition=true] - Animate the change when supported.
+ * @returns {{ start: number, end: number } | null} Committed bounds, or null for invalid input.
+ */
 function setZoomState(state, { transition = true } = {}) {
     const applied = applyZoomState(state, { transition });
     if (!applied) return null;
@@ -1291,6 +1355,11 @@ function setZoomState(state, { transition = true } = {}) {
     return applied;
 }
 
+/**
+ * Clamp the slicer range and synchronize its preview and minimap.
+ * Continuous mode uses x values; categorical mode uses sampled indices with an exclusive end.
+ * An empty or invalid range falls back to the full available range.
+ */
 function normalizeSlicerWindow() {
     if (isContinuousScale.value) {
         const min = continuousFullXRange.value.min;
@@ -1554,6 +1623,13 @@ function isNullCoordinateBreak(point) {
     );
 }
 
+/**
+ * Detect coordinate-based series, including explicit { x: null, y: null } gaps.
+ * This detects the series format; it does not validate every point.
+ *
+ * @param {unknown} series - Candidate series.
+ * @returns {boolean} Whether any point identifies a coordinate series.
+ */
 function isCoordinateSeries(series) {
     return (
         Array.isArray(series) &&
@@ -1574,6 +1650,15 @@ function canUseSeriesInContinuousMode(datapoint) {
     );
 }
 
+/**
+ * Normalize a coordinate point while retaining its source index and raw value.
+ * Explicit null/null gaps remain distinct from invalid non-object entries.
+ * Object coordinates are coerced; a non-finite x can still require downstream filtering.
+ *
+ * @param {unknown} point - Raw coordinate entry.
+ * @param {number} index - Index in the source series before rendering.
+ * @returns {{ x: number | null, y: number | null, index: number, raw: unknown, isNull: boolean, isInvalid?: boolean }} Normalized entry.
+ */
 function normalizeCoordinatePoint(point, index) {
     if (isNullCoordinateBreak(point)) {
         return {
@@ -3440,6 +3525,10 @@ function selectX(index) {
     }
 }
 
+/**
+ * Return absolute series values together with their name, color, and chart type.
+ * The outer records are new; values retain their internal references.
+ */
 function getData() {
     return absoluteDataset.value.map((s) => {
         return {
@@ -3549,6 +3638,13 @@ function validSeriesToToggle(name) {
     return dp;
 }
 
+/**
+ * Show the named series only if its visibility needs to change.
+ * Unknown names leave visibility unchanged.
+ *
+ * @param {string} name - Series name matched by the component.
+ * @returns {void}
+ */
 function showSeries(name) {
     const dp = validSeriesToToggle(name);
     if (dp === null) return;
@@ -3557,6 +3653,13 @@ function showSeries(name) {
     }
 }
 
+/**
+ * Hide the named series only if its visibility needs to change.
+ * Unknown names leave visibility unchanged.
+ *
+ * @param {string} name - Series name matched by the component.
+ * @returns {void}
+ */
 function hideSeries(name) {
     const dp = validSeriesToToggle(name);
     if (dp === null) return;

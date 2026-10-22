@@ -579,6 +579,9 @@ const immutableSet = computed(() => {
     });
 });
 
+/**
+ * Return series values with their computed square counts and proportions.
+ */
 function getData() {
     return immutableSet.value.map((ds) => {
         return {
@@ -916,6 +919,13 @@ function validSeriesToToggle(name) {
     return dp;
 }
 
+/**
+ * Show the named series only if its visibility needs to change.
+ * Unknown names leave visibility unchanged.
+ *
+ * @param {string} name - Series name matched by the component.
+ * @returns {void}
+ */
 function showSeries(name) {
     const dp = validSeriesToToggle(name);
     if (dp === null) return;
@@ -924,6 +934,13 @@ function showSeries(name) {
     }
 }
 
+/**
+ * Hide the named series only if its visibility needs to change.
+ * Unknown names leave visibility unchanged.
+ *
+ * @param {string} name - Series name matched by the component.
+ * @returns {void}
+ */
 function hideSeries(name) {
     const dp = validSeriesToToggle(name);
     if (dp === null) return;

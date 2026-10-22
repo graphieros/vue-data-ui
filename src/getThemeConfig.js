@@ -29,6 +29,12 @@ let _loader = async (type) => {
     return await load();
 };
 
+/**
+ * Lazily imports a theme configuration and caches successful loads.
+ *
+ * @param {string} type - Theme file name without the .json extension.
+ * @returns {Promise<object | null>} Cached or loaded theme; null for empty or failed requests.
+ */
 async function getThemeConfig(type) {
     if (!type) return null;
     if (_cache.has(type)) return _cache.get(type);
@@ -45,14 +51,29 @@ async function getThemeConfig(type) {
 export default getThemeConfig;
 export { getThemeConfig };
 
+/**
+ * Reads an already loaded theme without initiating an import.
+ * @param {string} type - Theme file name without the .json extension.
+ * @returns {object | null} Cached theme, or null until it has been loaded.
+ */
 export function getThemeConfigSync(type) {
     if (!type) return null;
     return _cache.get(type) ?? null;
 }
 
+/**
+ * Loads a theme into the cache before a chart needs it.
+ * @param {string} type - Theme file name without the .json extension.
+ * @returns {Promise<object | null>} Loaded configuration, or null on failure.
+ */
 export async function preloadTheme(type) {
     return await getThemeConfig(type);
 }
+/**
+ * Loads several themes concurrently, preserving the requested order.
+ * @param {string[]} [types=[]] - Theme file names without extensions.
+ * @returns {Promise<Array<object | null>>} One result per requested theme.
+ */
 export async function preloadThemes(types = []) {
     return Promise.all(types.map(getThemeConfig));
 }

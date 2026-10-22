@@ -511,6 +511,12 @@ function generateCsv(callback = null) {
     });
 }
 
+/**
+ * Return the current formatted dataset.
+ * The result is the internal reactive value, not a defensive copy.
+ *
+ * @returns The current component data; treat it as read-only.
+ */
 function getData() {
     return formattedDataset.value;
 }

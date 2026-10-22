@@ -12,6 +12,16 @@ function resolveSource(source) {
     return source;
 }
 
+/**
+ * Controls chart transitions and optional pauses after mounting or dataset changes.
+ * Call during setup. Sources may be values, refs, or getters; pending timers and
+ * the dataset watcher are disposed when the component unmounts.
+ *
+ * @param {object} options - Reactive transition inputs.
+ * @param {import('vue').MaybeRefOrGetter<{enable?: boolean, activationDelayMs?: number, pauseOnDatasetChange?: boolean, pauseOnLoad?: boolean}>} options.config - Transition settings.
+ * @param {import('vue').MaybeRefOrGetter<unknown>} options.dataset - Dataset watched when pauseOnDatasetChange is enabled.
+ * @returns {{transitionEnabled: import('vue').Ref<boolean>, pause: () => void}} State and a function that restarts the activation delay.
+ */
 export function useTransitions({ config, dataset }) {
     const resolvedConfig = computed(() => resolveSource(config) ?? {});
     const resolvedDataset = computed(() => resolveSource(dataset));

@@ -73,6 +73,14 @@ const availableComponents = [
     'vue_ui_xy_canvas',
 ];
 
+/**
+ * Returns the default configuration for a component, with optional shared colors.
+ * @param {import('vue-data-ui').VueDataUiConfigKey} type - Snake_case component key, such as vue_ui_xy.
+ * @param {import('vue-data-ui').VueDataUiGetConfigOptions} [options={}] - General color overrides.
+ * @returns {object} Component defaults; an unsupported key logs an error and returns an empty object.
+ * @example
+ * const config = getVueDataUiConfig('vue_ui_xy', { colorBackground: '#181818' });
+ */
 export default function getVueDataUiConfig(type, options = {}) {
     if (!availableComponents.includes(type)) {
         console.error(

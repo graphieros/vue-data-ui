@@ -994,6 +994,14 @@ function nextPaint() {
     );
 }
 
+/**
+ * Coerce supplied zoom bounds to finite numbers, filling omitted bounds from fallback.
+ * This validates the shape only; dataset clamping happens when the range is applied.
+ *
+ * @param {unknown} state - Candidate range; at least one bound must be supplied.
+ * @param {{ start: number, end: number }} [fallback] - Bounds used for missing endpoints.
+ * @returns {{ start: number, end: number } | null} Numeric range, or null for invalid input.
+ */
 function normalizeZoomState(state, fallback = slicer.value) {
     if (!state || typeof state !== 'object') return null;
     const hasStart = state.start !== undefined && state.start !== null;
@@ -1053,6 +1061,13 @@ function applyZoomState(state) {
     };
 }
 
+/**
+ * Apply an imperative zoom update and publish the committed range through update:zoomState.
+ * Invalid input leaves the current range unchanged.
+ *
+ * @param {import('vue-data-ui').VueUiZoomState} state - Range; omitted bounds keep their current values.
+ * @returns {{ start: number, end: number } | null} Committed bounds, or null for invalid input.
+ */
 function setZoomState(state) {
     const applied = applyZoomState(state);
     if (!applied) return null;
@@ -3486,6 +3501,13 @@ function validSeriesToToggle(name) {
     return dp;
 }
 
+/**
+ * Show the named series only if its visibility needs to change.
+ * Unknown names leave visibility unchanged.
+ *
+ * @param {string} name - Series name matched by the component.
+ * @returns {void}
+ */
 function showSeries(name) {
     const dp = validSeriesToToggle(name);
     if (dp === null) return;
@@ -3494,6 +3516,13 @@ function showSeries(name) {
     }
 }
 
+/**
+ * Hide the named series only if its visibility needs to change.
+ * Unknown names leave visibility unchanged.
+ *
+ * @param {string} name - Series name matched by the component.
+ * @returns {void}
+ */
 function hideSeries(name) {
     const dp = validSeriesToToggle(name);
     if (dp === null) return;
@@ -3657,6 +3686,12 @@ function generateCsv(callback = null) {
     }
 }
 
+/**
+ * Return the current formatted dataset.
+ * The result is the internal reactive value, not a defensive copy.
+ *
+ * @returns The current component data; treat it as read-only.
+ */
 function getData() {
     return formattedDataset.value;
 }

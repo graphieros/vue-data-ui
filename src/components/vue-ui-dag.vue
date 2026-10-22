@@ -1334,6 +1334,12 @@ function makeMarkerId(edgeIdentifier) {
     return `${arrowMarkerIdentifier}-${String(edgeIdentifier).replace(/[^a-zA-Z0-9_-]/g, '_')}`;
 }
 
+/**
+ * Return the current layout data.
+ * The result is the internal reactive value, not a defensive copy.
+ *
+ * @returns The current component data; treat it as read-only.
+ */
 function getData() {
     return layoutData.value;
 }

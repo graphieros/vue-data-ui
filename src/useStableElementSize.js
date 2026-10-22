@@ -9,11 +9,17 @@ function areSizesEqual(sizeA, sizeB) {
 }
 
 /**
- * - Observe an element's size
- * - Only accept the size once it has remained identical
- *   for a given number of animation frames
- * - Prevent early layout calculations when the parent/container
- *   is still settling (fonts, flex, grid, transitions, etc.)
+ * Accepts element dimensions after they remain equal across animation frames.
+ * Call during setup, then call start() once the target can be observed.
+ * Observers and scheduled frames are stopped before component unmounting.
+ * @param {object} options - Size acceptance rules.
+ * @param {import('vue').Ref<HTMLElement | null>} options.elementRef - Container to observe.
+ * @param {number} [options.minimumWidth=2] - Smallest accepted width in CSS pixels.
+ * @param {number} [options.minimumHeight=2] - Smallest accepted height in CSS pixels.
+ * @param {number} [options.stableFramesRequired=2] - Consecutive equal measurements required.
+ * @param {boolean} [options.once=false] - Stop accepting changes after the first stable size.
+ * @param {Function} [options.onSizeAccepted] - Called when a stable size is accepted.
+ * @returns {object} width, height, isStable refs and start, stop, measureOnce controls.
  */
 export function useStableElementSize({
     elementRef,
