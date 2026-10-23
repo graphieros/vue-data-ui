@@ -172,29 +172,29 @@ const instance = getCurrentInstance();
 const { vue_ui_xy: DEFAULT_CONFIG } = useConfig();
 const { isThemeValid, warnInvalidTheme } = useThemeCheck();
 
-const chart = ref(null);
-const chartTitle = ref(null);
-const chartSlicer = ref(null);
-const chartLegend = ref(null);
-const source = ref(null);
-const noTitle = ref(null);
-const G = ref(null);
-const xAxisLabel = ref(null);
-const yAxisLabel = ref(null);
-const timeLabelsEls = ref(null);
-const scaleLabels = ref(null);
-const userOptionsRef = ref(null);
+const chart = shallowRef(null);
+const chartTitle = shallowRef(null);
+const chartSlicer = shallowRef(null);
+const chartLegend = shallowRef(null);
+const source = shallowRef(null);
+const noTitle = shallowRef(null);
+const G = shallowRef(null);
+const xAxisLabel = shallowRef(null);
+const yAxisLabel = shallowRef(null);
+const timeLabelsEls = shallowRef(null);
+const scaleLabels = shallowRef(null);
+const userOptionsRef = shallowRef(null);
 
-const resizeObserver = ref(null);
-const observedEl = ref(null);
+const resizeObserver = shallowRef(null);
+const observedEl = shallowRef(null);
 const slicerStep = ref(0);
 const selectedScale = ref(null);
 const useSafeValues = ref(true);
 const height = ref(600);
 const width = ref(1000);
 const viewBox = ref('0 0 1000 600');
-const clientPosition = ref({ x: 0, y: 0 });
-const icons = ref({ line: 'line', bar: 'bar', plot: 'plot' });
+const clientPosition = shallowRef({ x: 0, y: 0 });
+const icons = shallowRef({ line: 'line', bar: 'bar', plot: 'plot' });
 const isAnnotator = ref(false);
 const isFullscreen = ref(false);
 const isTooltip = ref(false);
@@ -215,21 +215,21 @@ const selectedMinimapIndex = ref(null);
 const showUserOptionsOnChartHover = ref(false);
 const keepUserOptionState = ref(true);
 const userOptionsVisible = ref(true);
-const svgRef = ref(null);
+const svgRef = shallowRef(null);
 const tagRefs = ref({});
-const textMeasurer = ref(null);
+const textMeasurer = shallowRef(null);
 const readyTeleport = ref(false);
-const tableUnit = ref(null);
+const tableUnit = shallowRef(null);
 const selectedMinimapXValue = ref(null);
 
 const selectedSerieIndex = ref(null);
 const activeTooltipIndex = ref(null); // a11y
-const tooltipA11yPosition = ref({ x: 0, y: 0 }); // a11y
+const tooltipA11yPosition = shallowRef({ x: 0, y: 0 }); // a11y
 
-const visibilityResizeObserver = ref(null);
-const lineStrokeScaleResizeObserver = ref(null);
-const timeTagResizeObserver = ref(null);
-const observedTimeTagElement = ref(null);
+const visibilityResizeObserver = shallowRef(null);
+const lineStrokeScaleResizeObserver = shallowRef(null);
+const timeTagResizeObserver = shallowRef(null);
+const observedTimeTagElement = shallowRef(null);
 const timeTagResizeAnimationFrame = ref(null);
 const stopTimeTagObserverWatch = ref(null);
 
@@ -899,7 +899,7 @@ const chartZoomStartX = ref(null);
 const chartZoomCurrentX = ref(null);
 const chartZoomPointerId = ref(null);
 const ignoreNextChartClick = ref(false);
-const lastChartZoomTap = ref({
+const lastChartZoomTap = shallowRef({
     time: 0,
     x: 0,
     y: 0,
@@ -2158,9 +2158,9 @@ function toggleAnnotator() {
     isAnnotator.value = !isAnnotator.value;
 }
 
-const timeLabels = ref([]);
+const timeLabels = shallowRef([]);
 const timeLabelsAreReady = ref(false);
-const allTimeLabels = ref([]);
+const allTimeLabels = shallowRef([]);
 
 let timeLabelsRequestId = 0;
 watchEffect(() => {
@@ -5860,7 +5860,7 @@ const dataTooltipSlot = computed(() => {
     };
 });
 
-const localeData = ref({
+const localeData = shallowRef({
     months: [],
     shortMonths: [],
     days: [],
@@ -6818,7 +6818,7 @@ const { detectTimeLabelCollisionNow } = useTimeLabelCollision({
 
 const useCustomFormatTimeTag = ref(false);
 
-const timeTagEl = ref(null);
+const timeTagEl = shallowRef(null);
 const timeTagInnerW = ref(200);
 
 const activeIndex = computed(
