@@ -12,7 +12,6 @@ import {
     offsetFromCenterPoint,
     setOpacity,
     shiftHue,
-    calcNutArrowPath,
     createUid,
     XMLNS,
 } from '../../lib.js';
@@ -1427,6 +1426,10 @@ function renderPolarDataLabels(state, arcs, polarAreas) {
         nameLabels.fontSize,
         dataLabels.fontSize ?? 12,
     );
+    const valueFill = normalizeColor(
+        percentageLabels.color,
+        getChartTextColor(state.config),
+    );
     const output = [];
 
     arcs.forEach((arc, arcIndex) => {
@@ -1528,17 +1531,17 @@ function getClassicMarkerPath(state, arc, smallArcLayout = null) {
     const flatLength = safeNumber(dataLabels.markerFlatLength, 12);
     const curved = useCurvedMarkers(state);
 
-    return calcNutArrowPath(
-        arc,
-        false,
-        offset,
-        offset,
-        false,
-        false,
-        0,
-        flatLength,
-        curved,
-    );
+    // makeDonut already provides the radial midpoint. Use its side directly
+    // instead of measuring an SVG path through browser-only DOM APIs.
+    const labelX = calcMarkerOffsetX(arc).x;
+    const labelY = calcMarkerOffsetY(arc, offset, offset) - 4;
+    const elbowX =
+        labelX + (arc.center.endX > arc.cx ? -flatLength : flatLength);
+    const start = `${labelX},${labelY}`;
+    const elbow = `${elbowX},${labelY}`;
+    const end = `${arc.center.endX},${arc.center.endY}`;
+
+    return curved ? `M${start} Q${elbow} ${end}` : `M${start} ${elbow} ${end}`;
 }
 
 function renderClassicMarkers(state, arcs) {
