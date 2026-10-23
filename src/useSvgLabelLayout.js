@@ -81,6 +81,10 @@ export function withSvgLabelMeasurements(svg, measure) {
                 0,
                 ...texts.map((text) => {
                     const box = text.getBBox();
+                    // Empty slotted labels retain their anchor coordinates but
+                    // have a zero bounding box at the origin. They contribute
+                    // no text overhang and must not grow the chart's margins.
+                    if (box.width === 0 && box.height === 0) return 0;
                     const matrix = text.getCTM?.() || { a: 1, c: 0 };
                     const x = text.x?.baseVal?.[0]?.value || 0;
                     const y = text.y?.baseVal?.[0]?.value || 0;
