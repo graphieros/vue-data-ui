@@ -1,4 +1,5 @@
 <script setup>
+import { createAnnotationViewport } from '../utils/annotationViewport';
 import { getTableComponent, syncTableVisibility } from '../tableIntegration';
 import {
     annotationSlotNames,
@@ -4289,6 +4290,16 @@ defineExpose({
     resetZoom: () => refreshSlicer({ force: true, publish: true }),
     setZoomState,
 });
+
+const annotationViewport = computed(() => {
+    return createAnnotationViewport({
+        enabled: cfgUserOptions.value?.annotator?.followZoom,
+        area: drawingArea.value,
+        range: slicer.value,
+        ticks: cfgBars.value.distributed ? [] : yLabels.value,
+        horizontal: FINAL_CONFIG.value.orientation === 'horizontal',
+    });
+});
 </script>
 
 <template>
@@ -4319,8 +4330,13 @@ defineExpose({
         />
 
         <PenAndPaper
+            :showGroupActions="
+                cfgUserOptions.annotator?.showGroupActions ?? true
+            "
             v-if="cfgUserOptions.buttons.annotator"
             :svgRef="svgRef"
+            :followZoom="cfgUserOptions?.annotator?.followZoom"
+            :annotationViewport="annotationViewport"
             :backgroundColor="cfgChart.backgroundColor"
             :color="cfgChart.color"
             :active="isAnnotator"

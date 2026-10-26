@@ -30,6 +30,9 @@ import CommonAnnotatorActionDraw from '../slots/common/annotator-action-draw.vue
 import CommonAnnotatorActionUndo from '../slots/common/annotator-action-undo.vue';
 import CommonAnnotatorActionRedo from '../slots/common/annotator-action-redo.vue';
 import CommonAnnotatorActionDelete from '../slots/common/annotator-action-delete.vue';
+import CommonAnnotatorActionSelectMultiple from '../slots/common/annotator-action-select-multiple.vue';
+import CommonAnnotatorActionGroup from '../slots/common/annotator-action-group.vue';
+import CommonAnnotatorActionUngroup from '../slots/common/annotator-action-ungroup.vue';
 import CommonMenuIcon from '../slots/common/menu-icon.vue';
 import CommonOptionsStack from '../slots/common/options-stack.vue';
 import CommonOptionFullscreen from '../slots/common/option-fullscreen.vue';
@@ -439,6 +442,7 @@ const testPreconfig = computed<VueUiXyConfig>(() => {
                 timeFormat: 'yyyy-MM-dd HH:mm:ss',
             },
             userOptions: {
+                annotator: { followZoom: true },
                 show: true,
                 showOnChartHover: false,
                 keepStateOnChartLeave: true,
@@ -631,6 +635,9 @@ const config = computed<VueUiXyConfig>(() => {
             theme: 'dark',
             chart: {
                 userOptions: {
+                    annotator: {
+                        followZoom: true,
+                    },
                     buttons: {
                         altCopy: true,
                     },
@@ -779,6 +786,18 @@ function getLabels(svg: VueUiXySvgSlotProps['svg']) {
 
             <template #annotator-action-delete="{ disabled }">
                 <CommonAnnotatorActionDelete :disabled />
+            </template>
+
+            <template #annotator-action-select-multiple="{ isSelecting }">
+                <CommonAnnotatorActionSelectMultiple :isSelecting />
+            </template>
+
+            <template #annotator-action-group="{ disabled }">
+                <CommonAnnotatorActionGroup :disabled />
+            </template>
+
+            <template #annotator-action-ungroup="{ disabled }">
+                <CommonAnnotatorActionUngroup :disabled />
             </template>
 
             <template #menuIcon="{ isOpen, color }">

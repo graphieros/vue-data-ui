@@ -194,7 +194,7 @@ watch(
             :style="{
                 backgroundColor: backgroundColor,
                 position: 'absolute',
-                left: `calc(100% + 30px)`,
+                left: `calc(100% + 36px)`,
                 top: '50%',
                 transform: 'translateY(-18%)',
             }"

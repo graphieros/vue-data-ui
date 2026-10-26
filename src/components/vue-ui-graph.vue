@@ -1937,6 +1937,15 @@ defineExpose({
     toggleTooltip,
     toggleAnnotator,
 });
+const annotationViewport = computed(() => {
+    if (!config.value.userOptions.annotator?.followZoom) return null;
+    const { x, y, k } = viewport.value;
+    return {
+        x: { origin: x, unit: k },
+        y: { origin: y, unit: k },
+        clip: { x: 0, y: 0, width: width.value, height: height.value },
+    };
+});
 </script>
 
 <template>
@@ -1964,8 +1973,13 @@ defineExpose({
         "
     >
         <PenAndPaper
+            :showGroupActions="
+                config.userOptions.annotator?.showGroupActions ?? true
+            "
             v-if="config.userOptions.buttons.annotator"
             :svgRef="svg"
+            :followZoom="config.userOptions.annotator?.followZoom"
+            :annotationViewport="annotationViewport"
             :backgroundColor="chart.backgroundColor"
             :color="chart.color"
             :active="isAnnotator"

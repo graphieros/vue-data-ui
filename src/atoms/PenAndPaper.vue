@@ -7,6 +7,10 @@ import {
     nextTick,
     watch,
 } from 'vue';
+import {
+    captureAnnotationAnchor,
+    projectAnnotationAnchor,
+} from '../utils/annotationAnchors';
 import BaseIcon from './BaseIcon.vue';
 import ColorPicker from './ColorPicker.vue';
 import { dataLabel, lightenHexColor, XMLNS, createUid } from '../lib';
@@ -15,6 +19,19 @@ const props = defineProps({
     svgRef: {
         type: [Object, null, undefined],
         required: true,
+    },
+    showGroupActions: {
+        type: Boolean,
+        default: true,
+    },
+    followZoom: {
+        type: Boolean,
+        default: false,
+    },
+    // Root SVG projections
+    annotationViewport: {
+        type: Object,
+        default: null,
     },
     color: {
         type: String,
@@ -27,10 +44,6 @@ const props = defineProps({
     active: {
         type: Boolean,
         default: false,
-    },
-    scale: {
-        type: Number,
-        default: 1,
     },
     isCursorPointer: {
         type: Boolean,
@@ -65,6 +78,12 @@ const currentDrawingPath = ref(null);
 const currentLine = ref(null);
 const startPoint = ref(null);
 const selectedShape = ref(null);
+const selectedShapes = ref([]);
+const isMultiSelecting = ref(false);
+const canGroup = computed(() => selectedShapes.value.length > 1);
+const canUngroup = computed(() =>
+    selectedShape.value?.hasAttribute('data-annotation-group'),
+);
 const selectionBox = ref(null);
 const isDraggingShape = ref(false);
 const shapeDragStart = ref(null);
@@ -110,8 +129,12 @@ const cursorDraw = ref(
 function getDoodleFromEventTarget(event) {
     const target = event?.target;
     if (!(target instanceof Element)) return null;
-    const doodle = target.closest('.vue-data-ui-doodle');
-    return doodle && G.value?.contains(doodle) ? doodle : null;
+    let doodle = target.closest('.vue-data-ui-doodle');
+    if (!doodle || !G.value?.contains(doodle)) return null;
+    while (doodle.parentElement && doodle.parentElement !== G.value) {
+        doodle = doodle.parentElement;
+    }
+    return doodle;
 }
 
 function getSelectionHandleFromEvent(event) {
@@ -138,8 +161,95 @@ function getDoodleId(shape) {
     return id;
 }
 
+function annotationShapes() {
+    return Array.from(G.value?.children || []).filter((child) =>
+        child.classList?.contains('vue-data-ui-doodle'),
+    );
+}
+
+let captureViewport = null;
+function captureAnchors(
+    viewport = captureViewport || props.annotationViewport,
+    force = false,
+) {
+    if (!props.followZoom || !viewport) return;
+    annotationShapes().forEach((shape) =>
+        captureAnnotationAnchor(shape, props.svgRef, viewport, force),
+    );
+}
+
+function projectAnchors() {
+    if (!props.followZoom || !props.annotationViewport) return;
+    annotationShapes().forEach((shape) =>
+        projectAnnotationAnchor(shape, props.annotationViewport),
+    );
+    updateSelectionBox();
+}
+
+const annotationClip = ref(null);
+const annotationClipId = `annotation-clip-${createUid()}`;
+
+function syncAnnotationViewport() {
+    if (!G.value) return;
+    const viewport = props.followZoom && props.annotationViewport;
+    if (!viewport) {
+        G.value.removeAttribute('clip-path');
+        G.value.removeAttribute('data-annotation-inactive');
+        return;
+    }
+    if (!annotationClip.value) {
+        annotationClip.value = document.createElementNS(XMLNS, 'clipPath');
+        annotationClip.value.setAttribute('id', annotationClipId);
+        annotationClip.value.setAttribute('clipPathUnits', 'userSpaceOnUse');
+        annotationClip.value.appendChild(
+            document.createElementNS(XMLNS, 'rect'),
+        );
+        props.svgRef.appendChild(annotationClip.value);
+    }
+    const rect = annotationClip.value.firstChild;
+    for (const key of ['x', 'y', 'width', 'height']) {
+        rect.setAttribute(key, viewport.clip[key]);
+    }
+    G.value.setAttribute('clip-path', `url(#${annotationClipId})`);
+    G.value.toggleAttribute('data-annotation-inactive', !props.active);
+}
+
+watch(
+    [() => props.followZoom, () => props.annotationViewport],
+    ([enabled], [wasEnabled, previousViewport]) => {
+        // Finish edits in the coordinate system in which they were made.
+        captureViewport = previousViewport || props.annotationViewport;
+        if (isEditingText.value) cleanupSvgTextEditing(false);
+        if (isDrawing.value) {
+            if (currentDrawingPath.value) {
+                currentDrawingPath.value.setAttribute(
+                    'd',
+                    optimizeSvgPath(smoothPath(currentPath.value)),
+                );
+            }
+            commitHistory(pendingDrawingState.value);
+            isDrawing.value = false;
+            currentDrawingPath.value = null;
+            currentLine.value = null;
+            pendingDrawingState.value = '';
+        }
+        if (shapeDragMoved.value) stopShapeInteraction();
+        if (enabled) {
+            captureAnchors(
+                previousViewport || props.annotationViewport,
+                !wasEnabled,
+            );
+            projectAnchors();
+        }
+        captureViewport = null;
+        syncAnnotationViewport();
+    },
+    { flush: 'post' },
+);
+
 function serializeDoodles() {
     if (!G.value) return '';
+    captureAnchors();
     return Array.from(G.value.children)
         .filter((child) => child.classList?.contains('vue-data-ui-doodle'))
         .map((child) => child.outerHTML)
@@ -164,6 +274,19 @@ function restoreDoodles(state) {
             G.value.appendChild(child),
         );
     }
+    // Snapshots created before following was enabled have no data-space anchor.
+    if (props.followZoom) {
+        annotationShapes().forEach((shape) => {
+            if (!shape.hasAttribute('data-annotation-anchor')) {
+                captureAnnotationAnchor(
+                    shape,
+                    props.svgRef,
+                    props.annotationViewport,
+                );
+            }
+        });
+    }
+    projectAnchors();
 }
 
 function commitHistory(beforeState, mergeKey = null) {
@@ -226,11 +349,16 @@ function pointToSegmentDistance(px, py, x1, y1, x2, y2) {
 }
 
 function isShapeNearEvent(shape, event) {
+    if (shape.hasAttribute('data-annotation-group')) {
+        return Array.from(shape.children).some((child) =>
+            isShapeNearEvent(child, event),
+        );
+    }
     const point = getShapeLocalPoint(shape, event);
     if (!point) return false;
 
     const tagName = shape.tagName.toLowerCase();
-    const padding = SHAPE_HIT_PADDING * props.scale;
+    const padding = SHAPE_HIT_PADDING * getSvgUnitsPerPixel(shape);
 
     if (tagName === 'line') {
         const x1 = Number(shape.getAttribute('x1'));
@@ -292,7 +420,7 @@ function isShapeNearEvent(shape, event) {
             }
 
             const length = shape.getTotalLength();
-            const step = Math.max(2 * props.scale, 2);
+            const step = 2 * getSvgUnitsPerPixel(shape);
             for (let distance = 0; distance <= length; distance += step) {
                 const sample = shape.getPointAtLength(distance);
                 if (
@@ -315,13 +443,54 @@ function findShapeAtEvent(event) {
     if (direct) return direct;
     if (!G.value) return null;
 
-    const shapes = Array.from(
-        G.value.querySelectorAll('.vue-data-ui-doodle'),
-    ).reverse();
+    const shapes = annotationShapes().reverse();
     return shapes.find((shape) => isShapeNearEvent(shape, event)) || null;
 }
 
+let hoverOutline = null;
+
+function clearHoverOutline() {
+    hoverOutline?.remove();
+    hoverOutline = null;
+}
+
+function updateHoverOutline(event) {
+    clearHoverOutline();
+    if (!props.active || !isMultiSelecting.value || !G.value) return;
+    const shape = findShapeAtEvent(event);
+    if (!shape || selectedShapes.value.includes(shape)) return;
+    try {
+        const bbox = shape.getBBox();
+        const padding = 4 * getSvgUnitsPerPixel(shape);
+        const rect = document.createElementNS(XMLNS, 'rect');
+        rect.setAttribute('class', 'vue-data-ui-annotation-hover-outline');
+        rect.setAttribute('x', bbox.x - padding);
+        rect.setAttribute('y', bbox.y - padding);
+        rect.setAttribute(
+            'width',
+            Math.max(bbox.width + padding * 2, padding * 2),
+        );
+        rect.setAttribute(
+            'height',
+            Math.max(bbox.height + padding * 2, padding * 2),
+        );
+        rect.setAttribute('fill', 'none');
+        rect.setAttribute('stroke', props.color);
+        rect.setAttribute('stroke-width', '1');
+        rect.setAttribute('stroke-dasharray', '4 3');
+        rect.setAttribute('vector-effect', 'non-scaling-stroke');
+        rect.setAttribute('pointer-events', 'none');
+        const transform = shape.getAttribute('transform');
+        if (transform) rect.setAttribute('transform', transform);
+        G.value.appendChild(rect);
+        hoverOutline = rect;
+    } catch {
+        clearHoverOutline();
+    }
+}
+
 function removeSelectionBox() {
+    clearHoverOutline();
     if (selectionBox.value?.parentNode) {
         selectionBox.value.parentNode.removeChild(selectionBox.value);
     }
@@ -331,13 +500,47 @@ function removeSelectionBox() {
 function updateSelectionBox() {
     removeSelectionBox();
     if (isEditingText.value) return;
-    if (!props.active || !G.value || !selectedShape.value) return;
-    if (!G.value.contains(selectedShape.value)) return;
+    if (!props.active || !G.value) return;
+    if (selectedShapes.value.length > 1) {
+        const overlay = document.createElementNS(XMLNS, 'g');
+        overlay.setAttribute('class', 'vue-data-ui-selection-overlay');
+        overlay.setAttribute('pointer-events', 'none');
+        for (const shape of selectedShapes.value) {
+            if (!G.value.contains(shape)) continue;
+            const bbox = shape.getBBox();
+            const padding = 4 * getSvgUnitsPerPixel(shape);
+            const rect = document.createElementNS(XMLNS, 'rect');
+            rect.setAttribute('class', 'vue-data-ui-selection-box');
+            rect.setAttribute('x', bbox.x - padding);
+            rect.setAttribute('y', bbox.y - padding);
+            rect.setAttribute(
+                'width',
+                Math.max(bbox.width + padding * 2, padding * 2),
+            );
+            rect.setAttribute(
+                'height',
+                Math.max(bbox.height + padding * 2, padding * 2),
+            );
+            rect.setAttribute('fill', 'none');
+            rect.setAttribute('stroke', props.color);
+            rect.setAttribute('stroke-width', '1');
+            rect.setAttribute('vector-effect', 'non-scaling-stroke');
+            rect.setAttribute('stroke-dasharray', '4 3');
+            rect.setAttribute('pointer-events', 'none');
+            const transform = shape.getAttribute('transform');
+            if (transform) rect.setAttribute('transform', transform);
+            overlay.appendChild(rect);
+        }
+        G.value.appendChild(overlay);
+        selectionBox.value = overlay;
+        return;
+    }
+    if (!selectedShape.value || !G.value.contains(selectedShape.value)) return;
 
     try {
         const shape = selectedShape.value;
         const bbox = shape.getBBox();
-        const padding = 4 * props.scale;
+        const padding = 4 * getSvgUnitsPerPixel(shape);
         const overlay = document.createElementNS(XMLNS, 'g');
         overlay.setAttribute('class', 'vue-data-ui-selection-overlay');
 
@@ -355,17 +558,15 @@ function updateSelectionBox() {
         );
         rect.setAttribute('fill', 'none');
         rect.setAttribute('stroke', props.color);
-        rect.setAttribute('stroke-width', Math.max(1, props.scale));
-        rect.setAttribute(
-            'stroke-dasharray',
-            `${4 * props.scale} ${3 * props.scale}`,
-        );
+        rect.setAttribute('stroke-width', '1');
+        rect.setAttribute('vector-effect', 'non-scaling-stroke');
+        rect.setAttribute('stroke-dasharray', '4 3');
         rect.setAttribute('pointer-events', 'none');
         overlay.appendChild(rect);
 
-        if (shape.tagName.toLowerCase() === 'line') {
-            const handleRadius = Math.max(4, 5 * props.scale);
-            const handleStrokeWidth = Math.max(1, 1.5 * props.scale);
+        if (!isMultiSelecting.value && shape.tagName.toLowerCase() === 'line') {
+            const handleRadius = 5 * getSvgUnitsPerPixel(shape);
+            const handleStrokeWidth = 1.5;
             const endpoints = [
                 {
                     endpoint: 'start',
@@ -394,10 +595,13 @@ function updateSelectionBox() {
             });
         }
 
-        const deleteSize = Math.max(20, 24 * props.scale);
-        const deleteStrokeWidth = Math.max(1, props.scale);
-        const deleteX = bbox.x + bbox.width + padding + 4 * props.scale;
-        const deleteY = bbox.y - padding - deleteSize - 4 * props.scale;
+        // The overlay inherits the selected shape's transform. Account for
+        // both that transform and root zoom when sizing the delete control.
+        const deleteScale = getSvgUnitsPerPixel(shape);
+        const deleteSize = 24 * deleteScale;
+        const deleteStrokeWidth = 1;
+        const deleteX = bbox.x + bbox.width + padding + 4 * deleteScale;
+        const deleteY = bbox.y - padding - deleteSize - 4 * deleteScale;
         const deleteButton = document.createElementNS(XMLNS, 'g');
         deleteButton.setAttribute('class', 'vue-data-ui-selection-delete');
         deleteButton.setAttribute('role', 'button');
@@ -410,7 +614,7 @@ function updateSelectionBox() {
         deleteBackground.setAttribute('y', deleteY);
         deleteBackground.setAttribute('width', deleteSize);
         deleteBackground.setAttribute('height', deleteSize);
-        deleteBackground.setAttribute('rx', 4 * props.scale);
+        deleteBackground.setAttribute('rx', 4 * deleteScale);
         deleteBackground.setAttribute('fill', props.backgroundColor);
         deleteBackground.setAttribute('stroke', buttonBorderColor.value);
         deleteBackground.setAttribute('stroke-width', deleteStrokeWidth);
@@ -425,7 +629,7 @@ function updateSelectionBox() {
         );
         icon.setAttribute('fill', 'none');
         icon.setAttribute('stroke', props.color);
-        icon.setAttribute('stroke-width', Math.max(1.25, 1.5 * props.scale));
+        icon.setAttribute('stroke-width', 1.5);
         icon.setAttribute('stroke-linecap', 'round');
         icon.setAttribute('stroke-linejoin', 'round');
         icon.setAttribute('vector-effect', 'non-scaling-stroke');
@@ -452,6 +656,7 @@ function updateSelectionBox() {
 
 function deselectShape() {
     selectedShape.value = null;
+    selectedShapes.value = [];
     isDraggingShape.value = false;
     shapeDragStart.value = null;
     shapeDragBaseTransform.value = '';
@@ -489,8 +694,20 @@ function getShapeColor(shape) {
     return shape.getAttribute('stroke');
 }
 
+/**
+ * Converts CSS pixel sizes to local SVG units, including viewBox, responsive
+ * sizing, CSS transforms and any transforms on an existing annotation.
+ * Read at interaction time so resizing and zoom never leave a cached scale.
+ * Detached/hidden elements without a usable matrix fall back to one SVG unit.
+ */
+function getSvgUnitsPerPixel(element = props.svgRef) {
+    const matrix = element?.getScreenCTM?.();
+    const scale = matrix ? Math.hypot(matrix.a, matrix.b) : 0;
+    return Number.isFinite(scale) && scale > 0 ? 1 / scale : 1;
+}
+
 function syncControlsFromSelectedShape(shape) {
-    if (!shape) return;
+    if (!shape || shape.hasAttribute('data-annotation-group')) return;
     isSyncingControls.value = true;
     try {
         const tagName = shape.tagName.toLowerCase();
@@ -500,8 +717,8 @@ function syncControlsFromSelectedShape(shape) {
         if (tagName === 'text') {
             modeIndex.value = modes.indexOf('text');
             const size = Number(shape.getAttribute('font-size'));
-            if (Number.isFinite(size) && props.scale) {
-                fontSize.value = size / props.scale;
+            if (Number.isFinite(size)) {
+                fontSize.value = size / getSvgUnitsPerPixel(shape);
             }
             return;
         }
@@ -516,13 +733,13 @@ function syncControlsFromSelectedShape(shape) {
 
         if (tagName === 'circle') {
             const radius = Number(shape.getAttribute('r'));
-            if (Number.isFinite(radius) && props.scale) {
-                strokeWidth.value = (radius * 2) / props.scale;
+            if (Number.isFinite(radius)) {
+                strokeWidth.value = (radius * 2) / getSvgUnitsPerPixel(shape);
             }
         } else {
             const width = Number(shape.getAttribute('stroke-width'));
-            if (Number.isFinite(width) && props.scale) {
-                strokeWidth.value = width / props.scale;
+            if (Number.isFinite(width)) {
+                strokeWidth.value = width / getSvgUnitsPerPixel(shape);
             }
         }
     } finally {
@@ -536,12 +753,102 @@ function selectShape(shape) {
     if (!props.active || !shape || !G.value?.contains(shape)) return;
     getDoodleId(shape);
     selectedShape.value = shape;
+    selectedShapes.value = [shape];
     syncControlsFromSelectedShape(shape);
     nextTick(updateSelectionBox);
 }
 
+watch(
+    () => props.showGroupActions,
+    (show) => {
+        if (show) return;
+        isMultiSelecting.value = false;
+        if (selectedShapes.value.length > 1) deselectShape();
+        updateSelectionBox();
+        setCursorStyle();
+    },
+);
+
+function toggleMultiSelection() {
+    if (isEditingText.value) cleanupSvgTextEditing(false);
+    if (!props.active || !props.showGroupActions) return;
+    isMultiSelecting.value = !isMultiSelecting.value;
+    updateSelectionBox();
+    setCursorStyle();
+}
+
+function groupSelectedShapes() {
+    if (!props.active || !props.showGroupActions || !canGroup.value || !G.value)
+        return;
+    const beforeState = serializeDoodles();
+    const shapes = annotationShapes().filter((shape) =>
+        selectedShapes.value.includes(shape),
+    );
+    if (shapes.length < 2) return;
+    const group = document.createElementNS(XMLNS, 'g');
+    group.setAttribute('class', 'vue-data-ui-doodle');
+    group.setAttribute('data-annotation-group', '');
+    group.setAttribute('data-doodle-id', createUid());
+    G.value.insertBefore(group, shapes[0]);
+    for (const shape of shapes) group.appendChild(shape);
+    isMultiSelecting.value = false;
+    selectShape(group);
+    commitHistory(beforeState);
+}
+
+function ungroupSelectedShape() {
+    const group = selectedShape.value;
+    if (
+        !props.active ||
+        !props.showGroupActions ||
+        !canUngroup.value ||
+        !G.value?.contains(group)
+    )
+        return;
+    const beforeState = serializeDoodles();
+    const transform = group.getAttribute('transform') || '';
+    const children = Array.from(group.children);
+    for (const child of children) {
+        const childTransform = child.getAttribute('transform') || '';
+        const combined = `${transform} ${childTransform}`.trim();
+        if (combined) child.setAttribute('transform', combined);
+        else child.removeAttribute('transform');
+        // Group movement has changed each member's data-space anchor.
+        child.removeAttribute('data-annotation-anchor');
+        G.value.insertBefore(child, group);
+        if (props.followZoom)
+            captureAnnotationAnchor(
+                child,
+                props.svgRef,
+                props.annotationViewport,
+                true,
+            );
+    }
+    group.remove();
+    deselectShape();
+    isMultiSelecting.value = false;
+    commitHistory(beforeState);
+}
+
 function startShapeInteraction(event) {
     if (!props.active || !G.value || isEditingText.value) return;
+
+    if (props.showGroupActions && (isMultiSelecting.value || event.shiftKey)) {
+        if (event.cancelable) event.preventDefault();
+        event.stopImmediatePropagation?.();
+        const shape = findShapeAtEvent(event);
+        if (!shape) {
+            deselectShape();
+            return;
+        }
+        selectedShapes.value = selectedShapes.value.includes(shape)
+            ? selectedShapes.value.filter((selected) => selected !== shape)
+            : [...selectedShapes.value, shape];
+        selectedShape.value =
+            selectedShapes.value.length === 1 ? selectedShapes.value[0] : null;
+        updateSelectionBox();
+        return;
+    }
 
     if (getSelectionDeleteButtonFromEvent(event)) {
         deleteSelectedShape(event);
@@ -608,7 +915,7 @@ function moveSelectedShape(event) {
             !shapeDragMoved.value &&
             start &&
             Math.hypot(point.x - start.x, point.y - start.y) <
-                SHAPE_DRAG_THRESHOLD * props.scale
+                SHAPE_DRAG_THRESHOLD * getSvgUnitsPerPixel(selectedShape.value)
         ) {
             return;
         }
@@ -637,7 +944,7 @@ function moveSelectedShape(event) {
 
     if (
         !shapeDragMoved.value &&
-        distance < SHAPE_DRAG_THRESHOLD * props.scale
+        distance < SHAPE_DRAG_THRESHOLD * getSvgUnitsPerPixel()
     ) {
         return;
     }
@@ -647,7 +954,9 @@ function moveSelectedShape(event) {
     const base = shapeDragBaseTransform.value.trim();
     selectedShape.value.setAttribute(
         'transform',
-        `${base ? `${base} ` : ''}translate(${dx} ${dy})`,
+        // Pointer deltas are in root SVG coordinates, outside the shape's
+        // existing rotation or zoom compensation scale.
+        `translate(${dx} ${dy})${base ? ` ${base}` : ''}`,
     );
     updateSelectionBox();
 }
@@ -695,6 +1004,7 @@ function applyColorToSelectedShape(color) {
     }
 
     const shape = selectedShape.value;
+    if (shape.hasAttribute('data-annotation-group')) return;
     const tagName = shape.tagName.toLowerCase();
     const previousColor = getShapeColor(shape);
     if (previousColor === color) return;
@@ -724,9 +1034,10 @@ function applyStrokeWidthToSelectedShape(width) {
 
     const shape = selectedShape.value;
     const tagName = shape.tagName.toLowerCase();
-    if (tagName === 'text') return;
+    if (tagName === 'text' || shape.hasAttribute('data-annotation-group'))
+        return;
 
-    const targetWidth = Number(width) * props.scale;
+    const targetWidth = Number(width) * getSvgUnitsPerPixel(shape);
     const currentValue =
         tagName === 'circle'
             ? Number(shape.getAttribute('r')) * 2
@@ -751,7 +1062,7 @@ function applyFontSizeToSelectedShape(size) {
     const shape = selectedShape.value;
     if (shape.tagName.toLowerCase() !== 'text') return;
 
-    const fontPx = Number(size) * props.scale;
+    const fontPx = Number(size) * getSvgUnitsPerPixel(shape);
     if (Number(shape.getAttribute('font-size')) === fontPx) return;
 
     const beforeState = serializeDoodles();
@@ -777,6 +1088,8 @@ function switchMode() {
 }
 
 function startSvgTextEditing(event) {
+    if (props.showGroupActions && (isMultiSelecting.value || event.shiftKey))
+        return;
     if (!G.value || !props.active) return;
     if (mode.value !== 'text' || isEditingText.value) return;
     if (getSelectionHandleFromEvent(event) || findShapeAtEvent(event)) return;
@@ -795,7 +1108,7 @@ function startSvgTextEditing(event) {
     textNode.setAttribute('x', x);
     textNode.setAttribute('y', y);
     textNode.setAttribute('fill', currentColor.value);
-    textNode.setAttribute('font-size', fontSize.value * props.scale);
+    textNode.setAttribute('font-size', fontSize.value * getSvgUnitsPerPixel());
     textNode.setAttribute('font-family', 'sans-serif');
     textNode.setAttribute('class', 'vue-data-ui-doodle');
     textNode.setAttribute('data-doodle-id', createUid());
@@ -813,6 +1126,7 @@ function startSvgTextEditing(event) {
 
     G.value.appendChild(textNode);
     selectedShape.value = textNode;
+    selectedShapes.value = [textNode];
     editingTextNode.value = textNode;
     isEditingText.value = true;
     removeSelectionBox();
@@ -837,6 +1151,7 @@ function startExistingSvgTextEditing(shape) {
 
     const originalState = serializeDoodles();
     selectedShape.value = shape;
+    selectedShapes.value = [shape];
     syncControlsFromSelectedShape(shape);
 
     const x = Number(shape.getAttribute('x')) || 0;
@@ -973,7 +1288,9 @@ function updateSvgTextDisplay() {
         tspan.setAttribute('dominant-baseline', 'hanging');
         tspan.setAttribute(
             'dy',
-            i === 0 ? '0' : `${fontSize.value * 1.2 * props.scale}`,
+            i === 0
+                ? '0'
+                : `${fontSize.value * 1.2 * getSvgUnitsPerPixel(textNode)}`,
         );
         tspan.textContent = line.length ? line : '\u200B';
         textNode.appendChild(tspan);
@@ -1016,7 +1333,7 @@ function drawSvgCaret() {
 
     const { x, y } = editingTextAnchor.value;
     const { row, col } = editingCaret.value;
-    const fontPx = fontSize.value * props.scale;
+    const fontPx = fontSize.value * getSvgUnitsPerPixel(textNode);
 
     const tspan = textNode.childNodes[row];
     if (!tspan) return;
@@ -1042,8 +1359,8 @@ function drawSvgCaret() {
     const caret = document.createElementNS(XMLNS, 'rect');
     caret.setAttribute('x', caretX);
     caret.setAttribute('y', caretY);
-    caret.setAttribute('rx', 1);
-    caret.setAttribute('width', 2);
+    caret.setAttribute('rx', getSvgUnitsPerPixel(textNode));
+    caret.setAttribute('width', 2 * getSvgUnitsPerPixel(textNode));
     caret.setAttribute('height', fontPx);
     caret.setAttribute('fill', currentColor.value);
     caret.setAttribute('class', 'vue-data-ui-svg-caret');
@@ -1268,6 +1585,8 @@ function optimizeSvgPath(path) {
 }
 
 function startDrawing(event) {
+    if (props.showGroupActions && (isMultiSelecting.value || event.shiftKey))
+        return;
     if (mode.value !== 'draw') return;
     if (!props.active || !G.value) return;
     if (getSelectionHandleFromEvent(event) || findShapeAtEvent(event)) return;
@@ -1283,7 +1602,7 @@ function startDrawing(event) {
     currentDrawingPath.value.setAttribute('stroke', currentColor.value);
     currentDrawingPath.value.setAttribute(
         'stroke-width',
-        strokeWidth.value * props.scale,
+        strokeWidth.value * getSvgUnitsPerPixel(),
     );
     currentDrawingPath.value.setAttribute('fill', 'none');
     currentDrawingPath.value.setAttribute('stroke-linecap', 'round');
@@ -1347,6 +1666,8 @@ function useArrowMarker(color) {
 }
 
 function startLine(event) {
+    if (props.showGroupActions && (isMultiSelecting.value || event.shiftKey))
+        return;
     if (!['line', 'arrow'].includes(mode.value)) return;
     if (!props.active || !G.value) return;
     if (getSelectionHandleFromEvent(event) || findShapeAtEvent(event)) return;
@@ -1361,7 +1682,7 @@ function startLine(event) {
     currentLine.value.setAttribute('stroke', currentColor.value);
     currentLine.value.setAttribute(
         'stroke-width',
-        strokeWidth.value * props.scale,
+        strokeWidth.value * getSvgUnitsPerPixel(),
     );
     currentLine.value.setAttribute('stroke-linecap', 'round');
     currentLine.value.setAttribute('class', 'vue-data-ui-doodle');
@@ -1420,7 +1741,10 @@ function stopDrawing(event) {
             const circle = document.createElementNS(XMLNS, 'circle');
             circle.setAttribute('cx', x);
             circle.setAttribute('cy', y);
-            circle.setAttribute('r', (strokeWidth.value * props.scale) / 2);
+            circle.setAttribute(
+                'r',
+                (strokeWidth.value * getSvgUnitsPerPixel()) / 2,
+            );
             circle.setAttribute('fill', currentColor.value);
             circle.setAttribute('class', 'vue-data-ui-doodle');
             circle.setAttribute('data-doodle-id', createUid());
@@ -1495,6 +1819,8 @@ function enableDrawing() {
 
     props.svgRef.addEventListener('mousedown', startShapeInteraction);
     props.svgRef.addEventListener('mousemove', moveSelectedShape);
+    props.svgRef.addEventListener('mousemove', updateHoverOutline);
+    props.svgRef.addEventListener('mouseleave', clearHoverOutline);
     props.svgRef.addEventListener('mouseup', stopShapeInteraction);
     props.svgRef.addEventListener('mouseleave', stopShapeInteraction);
     props.svgRef.addEventListener('touchstart', startShapeInteraction, {
@@ -1543,11 +1869,14 @@ function enableDrawing() {
 }
 
 function disableDrawing() {
+    clearHoverOutline();
     if (!props.svgRef) return;
 
     // interact with positioned elements
     props.svgRef.removeEventListener('mousedown', startShapeInteraction);
     props.svgRef.removeEventListener('mousemove', moveSelectedShape);
+    props.svgRef.removeEventListener('mousemove', updateHoverOutline);
+    props.svgRef.removeEventListener('mouseleave', clearHoverOutline);
     props.svgRef.removeEventListener('mouseup', stopShapeInteraction);
     props.svgRef.removeEventListener('mouseleave', stopShapeInteraction);
     props.svgRef.removeEventListener('touchstart', startShapeInteraction);
@@ -1589,10 +1918,14 @@ watch(
         if (newVal) {
             enableDrawing();
         } else {
+            isMultiSelecting.value = false;
+            if (props.followZoom && isEditingText.value)
+                cleanupSvgTextEditing(false);
             deselectShape();
             disableDrawing();
         }
         setCursorStyle();
+        syncAnnotationViewport();
     },
 );
 
@@ -1624,6 +1957,10 @@ function setCursorStyle(event = null) {
 
     if (!props.active) {
         G.value.style.cursor = '';
+        return;
+    }
+    if (isMultiSelecting.value) {
+        G.value.style.cursor = 'pointer';
         return;
     }
 
@@ -1695,6 +2032,7 @@ function getMenuClientRect() {
         menuRef.value,
         menuRef.value.querySelector('.vue-ui-pen-and-paper-drag-handle'),
         menuRef.value.querySelector('.vertical-range'),
+        menuRef.value.querySelector('.vue-ui-pen-and-paper-group-actions'),
     ].filter(Boolean);
     const rects = elements.map((element) => element.getBoundingClientRect());
 
@@ -1798,6 +2136,7 @@ onMounted(() => {
             if (props.active) enableDrawing();
             else disableDrawing();
             addInteractionMask();
+            syncAnnotationViewport();
         }
     });
 });
@@ -1819,6 +2158,7 @@ watch(
 onBeforeUnmount(() => {
     stopCaretBlink();
     deselectShape();
+    annotationClip.value?.remove();
     stopMenuDrag();
     window.removeEventListener('resize', keepMenuInClient);
     if (G.value && props.svgRef) {
@@ -1834,7 +2174,10 @@ onBeforeUnmount(() => {
         ref="menuRef"
         data-dom-to-png-ignore
         class="vue-ui-pen-and-paper-actions"
-        :class="{ 'vue-ui-pen-and-paper-actions-dragging': isDraggingMenu }"
+        :class="{
+            'vue-ui-pen-and-paper-actions-dragging': isDraggingMenu,
+            'vue-ui-pen-and-paper-actions-with-groups': showGroupActions,
+        }"
         :style="menuStyle"
     >
         <button
@@ -1872,6 +2215,7 @@ onBeforeUnmount(() => {
         <button
             class="vue-ui-pen-and-paper-action"
             tabindex="-1"
+            :disabled="canGroup || canUngroup"
             :style="`padding: 0 !important; cursor: ${isCursorPointer ? 'pointer' : 'default'}`"
         >
             <ColorPicker
@@ -1987,9 +2331,87 @@ onBeforeUnmount(() => {
             </slot>
         </button>
 
+        <div
+            v-if="showGroupActions"
+            class="vue-ui-pen-and-paper-group-actions"
+            :style="{ color, backgroundColor }"
+        >
+            <button
+                type="button"
+                class="vue-ui-pen-and-paper-action"
+                data-cy="pen-and-paper-select-multiple"
+                :aria-label="
+                    isMultiSelecting
+                        ? 'Exit selection mode'
+                        : 'Select multiple annotations'
+                "
+                :aria-pressed="isMultiSelecting"
+                :class="{
+                    'vue-ui-pen-and-paper-action-active': isMultiSelecting,
+                }"
+                :style="{
+                    backgroundColor,
+                    color,
+                    border: `1px solid ${buttonBorderColor}`,
+                }"
+                @click="toggleMultiSelection"
+            >
+                <slot
+                    name="annotator-action-select-multiple"
+                    :isSelecting="isMultiSelecting"
+                >
+                    <BaseIcon
+                        :name="
+                            isMultiSelecting
+                                ? 'selectMultipleActive'
+                                : 'selectMultiple'
+                        "
+                        :stroke="color"
+                    />
+                </slot>
+            </button>
+            <button
+                type="button"
+                class="vue-ui-pen-and-paper-action"
+                data-cy="pen-and-paper-group"
+                aria-label="Group selected annotations"
+                :disabled="!canGroup"
+                :class="{ 'vue-ui-pen-and-paper-action-disabled': !canGroup }"
+                :style="{
+                    backgroundColor,
+                    color,
+                    border: `1px solid ${buttonBorderColor}`,
+                }"
+                @click="groupSelectedShapes"
+            >
+                <slot name="annotator-action-group" :disabled="!canGroup">
+                    <BaseIcon name="group" :stroke="color" />
+                </slot>
+            </button>
+            <button
+                type="button"
+                class="vue-ui-pen-and-paper-action"
+                data-cy="pen-and-paper-ungroup"
+                aria-label="Ungroup selected annotations"
+                :disabled="!canUngroup"
+                :class="{ 'vue-ui-pen-and-paper-action-disabled': !canUngroup }"
+                :style="{
+                    backgroundColor,
+                    color,
+                    border: `1px solid ${buttonBorderColor}`,
+                }"
+                @click="ungroupSelectedShape"
+            >
+                <slot name="annotator-action-ungroup" :disabled="!canUngroup">
+                    <BaseIcon name="ungroup" :stroke="color" />
+                </slot>
+            </button>
+        </div>
+
         <input
             v-if="mode === 'text'"
             data-cy="pen-and-paper-font-size"
+            :disabled="canGroup || canUngroup"
             ref="range"
             type="range"
             class="vertical-range"
@@ -2002,6 +2424,7 @@ onBeforeUnmount(() => {
 
         <input
             v-else
+            :disabled="canGroup || canUngroup"
             ref="range"
             type="range"
             class="vertical-range"
@@ -2102,5 +2525,40 @@ input[type='range'].vertical-range {
 
 .vue-data-ui-svg-caret {
     opacity: 1;
+}
+</style>
+
+<style>
+.vue-data-ui-doodles[data-annotation-inactive],
+.vue-data-ui-doodles[data-annotation-inactive] * {
+    pointer-events: none !important;
+}
+</style>
+
+<style>
+.vue-ui-pen-and-paper-group-actions {
+    position: absolute;
+    left: 36px;
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.vue-ui-pen-and-paper-actions-with-groups {
+    box-sizing: border-box;
+    width: 68px;
+    padding-right: 36px;
+}
+
+.vue-ui-pen-and-paper-actions-with-groups input[type='range'].vertical-range {
+    /* Three 32px buttons, their two 4px gaps, and a 4px gap before the slider. */
+    top: 108px;
+    left: 36px;
+    width: 32px;
+    height: calc(100% - 108px);
+    box-sizing: border-box;
+    margin: 0;
+    transform: rotate(180deg);
 }
 </style>

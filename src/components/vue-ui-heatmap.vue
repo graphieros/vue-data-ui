@@ -1597,6 +1597,9 @@ watch(
         />
 
         <PenAndPaper
+            :showGroupActions="
+                FINAL_CONFIG.userOptions.annotator?.showGroupActions ?? true
+            "
             v-if="FINAL_CONFIG.userOptions.buttons.annotator"
             :svgRef="svgRef"
             :backgroundColor="FINAL_CONFIG.style.backgroundColor"

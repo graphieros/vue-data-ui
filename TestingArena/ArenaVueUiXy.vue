@@ -492,6 +492,7 @@ function toggleProps() {
 // ]);
 
 const model = createModel([
+    CHECKBOX('chart.userOptions.buttons.annotator', { def: true }),
     CHECKBOX('devHints.enable', { def: true }),
     CHECKBOX('debug', { def: true }),
     CHECKBOX('autoSize', { def: false }),
@@ -515,6 +516,8 @@ const model = createModel([
     CHECKBOX('chart.userOptions.buttons.fullscreen', { def: true }),
     CHECKBOX('chart.userOptions.buttons.stack', { def: true }),
     CHECKBOX('chart.userOptions.buttons.altCopy', { def: true }),
+    CHECKBOX('chart.userOptions.annotator.showGroupActions', { def: true }),
+    CHECKBOX('chart.userOptions.annotator.followZoom', { def: true }),
 
     SELECT('chart.userOptions.position', ['left', 'right'], { def: 'right' }),
     CHECKBOX('chart.userOptions.showOnChartHover', { def: true }),

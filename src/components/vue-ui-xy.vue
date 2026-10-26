@@ -1070,6 +1070,65 @@ function getChartZoomYForValue(value, scale) {
     return scale.bottom - scale.height * ratio;
 }
 
+// Annotation anchors use the same committed X range and common Y scale as
+// plotted data. Individual Y scales have no unambiguous series for a drawing;
+// retain its relative vertical position in the plot in that mode.
+const annotationViewport = computed(() => {
+    if (!cfgChart.value.userOptions.annotator?.followZoom) return null;
+    const area = drawingArea.value;
+    const range = getCommittedChartZoomRange();
+    const span = range.end - range.start;
+    const continuous = isContinuousScale.value;
+    const middle = grid.value.position === 'middle';
+    const denominator = continuous
+        ? span
+        : middle
+          ? span
+          : Math.max(1, span - 1);
+    if (!(denominator > 0) || !(area.width > 0) || !(area.height > 0))
+        return null;
+    const unitX =
+        (area.width / denominator) *
+        (continuous && isXAxisReversed.value ? -1 : 1);
+    const originX =
+        getChartZoomXForValue(range.start, range) - range.start * unitX;
+    const yScale = captureChartZoomYScale();
+    const unitY = yScale
+        ? ((yScale.reversed ? 1 : -1) * yScale.height) /
+          (yScale.max - yScale.min)
+        : -area.height;
+    const originY = yScale ? getChartZoomYForValue(0, yScale) : area.bottom;
+    const matrix = chartZoomVisualTransform.value
+        .match(/matrix\(([^)]+)\)/)?.[1]
+        .split(',')
+        .map(Number);
+    const motion =
+        matrix && matrix.every(Number.isFinite)
+            ? {
+                  scaleX: isAnnotator.value ? 1 : matrix[0],
+                  scaleY: isAnnotator.value ? 1 : matrix[3],
+                  translateX: isAnnotator.value ? 0 : matrix[4],
+                  translateY: isAnnotator.value ? 0 : matrix[5],
+                  transition:
+                      !isAnnotator.value &&
+                      chartZoomVisualTransitionEnabled.value
+                          ? `transform ${CHART_ZOOM_TRANSITION_DURATION}ms cubic-bezier(0.4, 0, 0.2, 1)`
+                          : 'none',
+              }
+            : null;
+    return {
+        motion,
+        x: { origin: originX, unit: unitX },
+        y: { origin: originY, unit: unitY },
+        clip: {
+            x: area.left,
+            y: area.top,
+            width: area.width,
+            height: area.height,
+        },
+    };
+});
+
 function getChartZoomVisualMatrix({
     previousRange,
     targetRange,
@@ -7788,8 +7847,13 @@ watch(
         />
 
         <PenAndPaper
+            :showGroupActions="
+                cfgChart.userOptions.annotator?.showGroupActions ?? true
+            "
             v-if="cfgChart.userOptions.buttons.annotator && svgRef"
             :svgRef="svgRef"
+            :followZoom="cfgChart.userOptions.annotator?.followZoom"
+            :annotationViewport="annotationViewport"
             :backgroundColor="cfgChart.backgroundColor"
             :color="cfgChart.color"
             :active="isAnnotator"

@@ -266,6 +266,10 @@ export function useConfig(options = {}) {
             },
             useCursorPointer: false,
             annotatorPalette: COLOR_PICKER_PALETTE,
+            annotator: {
+                showGroupActions: true,
+                followZoom: true,
+            },
         };
     };
 
@@ -4010,6 +4014,7 @@ export function useConfig(options = {}) {
         showUserOptionsOnChartHover: false,
         keepUserOptionsStateOnChartLeave: true,
         useCursorPointer: false,
+        userOptionsAnnotator: { showGroupActions: true, followZoom: true },
         userOptionsButtons: {
             tooltip: true,
             pdf: true,
@@ -6573,6 +6578,7 @@ export function useConfig(options = {}) {
             },
         },
         userOptions: {
+            annotator: { showGroupActions: true },
             show: true,
             useCursorPointer: false,
             showOnChartHover: false,

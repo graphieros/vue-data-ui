@@ -15,7 +15,15 @@ import { treeShake } from '../src/lib';
 import { graphExamples } from '../src/graph/examples';
 
 const { local, build, vduiLocal, vduiBuild } = useArena();
-const DEFAULT_CONFIG = { ...useConfig().vue_ui_graph, responsive: false };
+const graphDefaults = useConfig().vue_ui_graph;
+const DEFAULT_CONFIG = {
+    ...graphDefaults,
+    responsive: false,
+    userOptions: {
+        ...graphDefaults.userOptions,
+        annotator: { ...graphDefaults.userOptions.annotator, followZoom: true },
+    },
+};
 const { CHECKBOX, NUMBER, TEXT, COLOR, SELECT, createModel } =
     useConfigurationControls(DEFAULT_CONFIG);
 const { currentTheme, themeOptions } = useThemeOptions();

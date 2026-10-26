@@ -104,6 +104,8 @@ function alterDataset() {
 }
 
 const model = createModel([
+    CHECKBOX('userOptions.buttons.annotator', { def: true }),
+    CHECKBOX('userOptions.annotator.followZoom', { def: true }),
     CHECKBOX('devHints.enable', { def: true }),
     SELECT('type', ['ohlc', 'candlestick'], { def: 'ohlc' }),
     CHECKBOX('loading', { def: false }),

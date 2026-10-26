@@ -1,4 +1,5 @@
 <script setup>
+import { createPanZoomAnnotationViewport } from '../utils/annotationViewport';
 import { getTableComponent, syncTableVisibility } from '../tableIntegration';
 import {
     annotationSlotNames,
@@ -262,8 +263,8 @@ function prepareConfig() {
 let previousStructuralConfig = stringifyStructuralConfig(props.config);
 
 watch(
-    (newConfig, oldConfig) => props.config,
-    (_newCfg) => {
+    () => props.config,
+    (newConfig) => {
         const nextStructuralConfig = stringifyStructuralConfig(newConfig);
 
         const requiresChartPreparation =
@@ -806,6 +807,12 @@ defineExpose({
     toggleZoom,
     copyAlt,
 });
+const annotationViewport = computed(() =>
+    createPanZoomAnnotationViewport(
+        FINAL_CONFIG.value.userOptions?.annotator?.followZoom,
+        viewBox.value,
+    ),
+);
 </script>
 
 <template>
@@ -822,8 +829,13 @@ defineExpose({
         @mouseenter="() => setUserOptionsVisibility(true)"
     >
         <PenAndPaper
+            :showGroupActions="
+                cfgUserOptions.annotator?.showGroupActions ?? true
+            "
             v-if="cfgUserOptions.buttons.annotator && !!svgRef"
             :svgRef="svgRef"
+            :followZoom="FINAL_CONFIG.userOptions?.annotator?.followZoom"
+            :annotationViewport="annotationViewport"
             :backgroundColor="cfgChart.backgroundColor"
             :color="cfgChart.color"
             :active="isAnnotator"

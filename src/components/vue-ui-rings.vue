@@ -1218,6 +1218,9 @@ defineExpose({
         />
 
         <PenAndPaper
+            :showGroupActions="
+                cfgUserOptions.annotator?.showGroupActions ?? true
+            "
             v-if="cfgUserOptions.buttons.annotator"
             :svgRef="svgRef"
             :backgroundColor="cfgChart.backgroundColor"

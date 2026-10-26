@@ -154,6 +154,8 @@ function alterDataset() {
 const selectedSerie = ref('longObject');
 
 const model = createModel([
+    CHECKBOX('userOptionsButtons.annotator', { def: true }),
+    CHECKBOX('userOptionsAnnotator.followZoom', { def: true }),
     CHECKBOX('devHints.enable', { def: true }),
     CHECKBOX('debug', { def: true }),
 
@@ -326,6 +328,7 @@ const config = computed(() => {
         //     backgroundColor: '#FF0000'
         // },
         userOptionsButtons: {
+            ...c.userOptionsButtons,
             altCopy: true,
         },
         userOptionsCallbacks: {
