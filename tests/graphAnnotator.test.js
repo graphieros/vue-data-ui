@@ -13,7 +13,10 @@ beforeAll(async () => {
 });
 const cleanups = [];
 afterEach(() => {
-    cleanups.splice(0).forEach((f) => f());
+    cleanups
+        .splice(0)
+        .reverse()
+        .forEach((f) => f());
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
     image.mockClear();
@@ -68,7 +71,39 @@ async function mount(extra = {}, slots) {
             return { x: this.x, y: this.y };
         },
     });
-    svg.getScreenCTM = () => ({ inverse: () => ({}) });
+    const identity = {
+        a: 1,
+        b: 0,
+        c: 0,
+        d: 1,
+        e: 0,
+        f: 0,
+        inverse() {
+            return this;
+        },
+        multiply() {
+            return this;
+        },
+    };
+    const previousMatrix = Object.getOwnPropertyDescriptor(
+        SVGElement.prototype,
+        'getScreenCTM',
+    );
+    Object.defineProperty(SVGElement.prototype, 'getScreenCTM', {
+        configurable: true,
+        writable: true,
+        value: () => identity,
+    });
+    cleanups.push(() => {
+        if (previousMatrix)
+            Object.defineProperty(
+                SVGElement.prototype,
+                'getScreenCTM',
+                previousMatrix,
+            );
+        else delete SVGElement.prototype.getScreenCTM;
+    });
+    svg.getScreenCTM = () => identity;
     return {
         el,
         svg,

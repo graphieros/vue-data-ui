@@ -57,6 +57,7 @@ export default {
                 svg: ref(null),
                 active: ref(true),
                 follow: ref(args.followZoom),
+                showGroupActions: ref(true),
                 viewport: ref(initial),
                 initial,
                 zoomed,
@@ -68,9 +69,10 @@ export default {
                 <button data-test="zoom" @click="viewport = zoomed">Zoom</button>
                 <button data-test="reset" @click="viewport = initial">Reset zoom</button>
                 <button data-test="follow" @click="follow = !follow">Toggle follow</button>
+                <button data-test="groups" @click="showGroupActions = !showGroupActions">Toggle grouping controls</button>
                 <button data-test="active" @click="active = !active">Toggle annotator</button>
                 <svg ref="svg" data-test="paper" viewBox="0 0 200 100" width="600" height="300" />
-                <PenAndPaper :svgRef="svg" :active="active" :followZoom="follow" :annotationViewport="viewport" />
+                <PenAndPaper :svgRef="svg" :active="active" :followZoom="follow" :showGroupActions="showGroupActions" :annotationViewport="viewport" />
             </div>`,
     }),
 };
@@ -497,9 +499,7 @@ export const GroupControlsAreConditionalAndDoNotAddHeight = {
             'Select multiple annotations',
         );
         await fireEvent.click(toggle);
-        expect(toggle.getAttribute('aria-label')).toBe(
-            'Finish selecting annotations',
-        );
+        expect(toggle.getAttribute('aria-label')).toBe('Exit selection mode');
         expect(toggle.getAttribute('aria-pressed')).toBe('true');
         expect(toggle.querySelector('svg').innerHTML).not.toBe(beforeIcon);
         await fireEvent.click(toggle);
@@ -527,6 +527,12 @@ export const GroupControlsAreConditionalAndDoNotAddHeight = {
         };
         expectSliderFits();
         await fireEvent.click(
+            canvasElement.querySelector('[data-test="follow"]'),
+        );
+        expect(
+            canvasElement.querySelector('.vue-ui-pen-and-paper-group-actions'),
+        ).toBeTruthy();
+        await fireEvent.click(
             canvasElement.querySelector(
                 '[data-cy="pen-and-paper-toggle-text"]',
             ),
@@ -536,14 +542,14 @@ export const GroupControlsAreConditionalAndDoNotAddHeight = {
         ).toBeTruthy();
         expectSliderFits();
         await fireEvent.click(
-            canvasElement.querySelector('[data-test="follow"]'),
+            canvasElement.querySelector('[data-test="groups"]'),
         );
         expect(
             canvasElement.querySelector('.vue-ui-pen-and-paper-group-actions'),
         ).toBeNull();
         expect(menu.getBoundingClientRect().height).toBe(height);
         await fireEvent.click(
-            canvasElement.querySelector('[data-test="follow"]'),
+            canvasElement.querySelector('[data-test="groups"]'),
         );
         expect(
             canvasElement.querySelector('.vue-ui-pen-and-paper-group-actions'),
