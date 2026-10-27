@@ -23,14 +23,29 @@ it.each([0.125, 0.5, 1, 2, 4, 8])(
         });
         const app = createApp({
             render: () =>
-                h(PenAndPaper, {
-                    svgRef: svg,
-                    active: true,
-                }),
+                h(
+                    PenAndPaper,
+                    {
+                        svgRef: svg,
+                        active: true,
+                    },
+                    {
+                        'annotator-action-undo': () =>
+                            h('span', { 'data-test': 'undo' }),
+                        'annotator-action-redo': () =>
+                            h('span', { 'data-test': 'redo' }),
+                        'annotator-action-delete': () =>
+                            h('span', { 'data-test': 'reset' }),
+                    },
+                ),
         });
         try {
             app.mount(menu);
             await nextTick();
+            expect(
+                menu.querySelector('[data-cy="pen-and-paper-select-multiple"]')
+                    .disabled,
+            ).toBe(true);
             for (const [type, x, y] of [
                 ['mousedown', 20, 30],
                 ['mousemove', 120, 130],
@@ -46,10 +61,24 @@ it.each([0.125, 0.5, 1, 2, 4, 8])(
                 );
             }
             await nextTick();
-            const line = svg.querySelector('line.vue-data-ui-doodle');
+            let line = svg.querySelector('line.vue-data-ui-doodle');
             expect(line).not.toBeNull();
+            expect(
+                menu.querySelector('[data-cy="pen-and-paper-select-multiple"]')
+                    .disabled,
+            ).toBe(true);
             expect(Number(line.getAttribute('stroke-width')) * zoom).toBe(2);
             expect(line.getAttribute('marker-end')).toBeTruthy();
+            const selectionToggle = menu.querySelector(
+                '[data-cy="pen-and-paper-select-multiple"]',
+            );
+            menu.querySelector('[data-test="undo"]').closest('button').click();
+            await nextTick();
+            expect(selectionToggle.disabled).toBe(true);
+            menu.querySelector('[data-test="redo"]').closest('button').click();
+            await nextTick();
+            expect(selectionToggle.disabled).toBe(true);
+            line = svg.querySelector('line.vue-data-ui-doodle');
             line.getBBox = () => ({
                 x: 20 / zoom,
                 y: 30 / zoom,
@@ -90,7 +119,10 @@ it.each([0.125, 0.5, 1, 2, 4, 8])(
                         .getAttribute('transform')
                         .match(/scale\(([^)]+)\)/)[1],
                 );
-                expect(8 * iconScale * zoom * localScale).toBeCloseTo(8);
+                expect(20 * iconScale * zoom * localScale).toBeCloseTo(16);
+                expect(deleteIcon.getAttribute('d')).toBe(
+                    'M7 18h6c2 0 2 0 3-12H4c1 12 1 12 3 12M3 4h14M8 2h4m-2 6v7M7 8l.518 7.01M13 8l-.546 6.984',
+                );
 
                 const outline = svg.querySelector('.vue-data-ui-selection-box');
                 expect(outline.getAttribute('vector-effect')).toBe(
@@ -126,6 +158,9 @@ it.each([0.125, 0.5, 1, 2, 4, 8])(
                 ).toBe(4);
                 svg.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
             }
+            menu.querySelector('[data-test="reset"]').closest('button').click();
+            await nextTick();
+            expect(selectionToggle.disabled).toBe(true);
         } finally {
             app.unmount();
             host.remove();
@@ -191,6 +226,22 @@ it.each([false, true])(
             line.getBBox = () => ({ x: 20, y: 30, width: 100, height: 100 });
             line.getScreenCTM = () => matrix;
             line.setAttribute('transform', 'translate(10 20)');
+            for (const [type, x, y] of [
+                ['mousedown', 300, 300],
+                ['mousemove', 340, 340],
+                ['mouseup', 340, 340],
+            ]) {
+                svg.dispatchEvent(
+                    new MouseEvent(type, {
+                        bubbles: true,
+                        cancelable: true,
+                        clientX: x,
+                        clientY: y,
+                    }),
+                );
+            }
+            await nextTick();
+
             const hover = () =>
                 line.dispatchEvent(
                     new MouseEvent('mousemove', {
@@ -241,11 +292,24 @@ it.each([false, true])(
             expect(
                 svg.querySelector('.vue-data-ui-selection-handle'),
             ).toBeNull();
-            const second = line.cloneNode(true);
+            expect(
+                svg.querySelector('.vue-data-ui-selection-delete'),
+            ).toBeNull();
+            toggle.click();
+            await nextTick();
+            expect(
+                svg.querySelector('.vue-data-ui-selection-delete'),
+            ).not.toBeNull();
+            toggle.click();
+            await nextTick();
+            expect(
+                svg.querySelector('.vue-data-ui-selection-delete'),
+            ).toBeNull();
+            const second = svg.querySelectorAll('line.vue-data-ui-doodle')[1];
             second.getBBox = line.getBBox;
             second.getScreenCTM = line.getScreenCTM;
             second.setAttribute('data-doodle-id', 'second-annotation');
-            line.parentNode.appendChild(second);
+
             second.dispatchEvent(
                 new MouseEvent('mousedown', {
                     bubbles: true,

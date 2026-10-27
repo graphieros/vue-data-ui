@@ -80,6 +80,7 @@ const startPoint = ref(null);
 const selectedShape = ref(null);
 const selectedShapes = ref([]);
 const isMultiSelecting = ref(false);
+const annotationCount = ref(0);
 const canGroup = computed(() => selectedShapes.value.length > 1);
 const canUngroup = computed(() =>
     selectedShape.value?.hasAttribute('data-annotation-group'),
@@ -167,6 +168,14 @@ function annotationShapes() {
     );
 }
 
+function syncAnnotationCount() {
+    annotationCount.value = annotationShapes().length;
+    if (annotationCount.value <= 1) {
+        isMultiSelecting.value = false;
+        clearHoverOutline();
+    }
+}
+
 let captureViewport = null;
 function captureAnchors(
     viewport = captureViewport || props.annotationViewport,
@@ -248,6 +257,7 @@ watch(
 );
 
 function serializeDoodles() {
+    syncAnnotationCount();
     if (!G.value) return '';
     captureAnchors();
     return Array.from(G.value.children)
@@ -287,6 +297,7 @@ function restoreDoodles(state) {
         });
     }
     projectAnchors();
+    syncAnnotationCount();
 }
 
 function commitHistory(beforeState, mergeKey = null) {
@@ -595,54 +606,65 @@ function updateSelectionBox() {
             });
         }
 
-        // The overlay inherits the selected shape's transform. Account for
-        // both that transform and root zoom when sizing the delete control.
-        const deleteScale = getSvgUnitsPerPixel(shape);
-        const deleteSize = 24 * deleteScale;
-        const deleteStrokeWidth = 1;
-        const deleteX = bbox.x + bbox.width + padding + 4 * deleteScale;
-        const deleteY = bbox.y - padding - deleteSize - 4 * deleteScale;
-        const deleteButton = document.createElementNS(XMLNS, 'g');
-        deleteButton.setAttribute('class', 'vue-data-ui-selection-delete');
-        deleteButton.setAttribute('role', 'button');
-        deleteButton.setAttribute('tabindex', '0');
-        deleteButton.setAttribute('aria-label', 'Delete selected drawing');
-        deleteButton.setAttribute('pointer-events', 'all');
+        if (!isMultiSelecting.value) {
+            // The overlay inherits the selected shape's transform. Account for
+            // both that transform and root zoom when sizing the delete control.
+            const deleteScale = getSvgUnitsPerPixel(shape);
+            const deleteSize = 24 * deleteScale;
+            const deleteStrokeWidth = 1;
+            const deleteX = bbox.x + bbox.width + padding + 4 * deleteScale;
+            const deleteY = bbox.y - padding - deleteSize - 4 * deleteScale;
+            const deleteButton = document.createElementNS(XMLNS, 'g');
+            deleteButton.setAttribute('class', 'vue-data-ui-selection-delete');
+            deleteButton.setAttribute('role', 'button');
+            deleteButton.setAttribute('tabindex', '0');
+            deleteButton.setAttribute('aria-label', 'Delete selected drawing');
+            deleteButton.setAttribute('pointer-events', 'all');
 
-        const deleteBackground = document.createElementNS(XMLNS, 'rect');
-        deleteBackground.setAttribute('x', deleteX);
-        deleteBackground.setAttribute('y', deleteY);
-        deleteBackground.setAttribute('width', deleteSize);
-        deleteBackground.setAttribute('height', deleteSize);
-        deleteBackground.setAttribute('rx', 4 * deleteScale);
-        deleteBackground.setAttribute('fill', props.backgroundColor);
-        deleteBackground.setAttribute('stroke', buttonBorderColor.value);
-        deleteBackground.setAttribute('stroke-width', deleteStrokeWidth);
-        deleteBackground.setAttribute('vector-effect', 'non-scaling-stroke');
+            const deleteBackground = document.createElementNS(XMLNS, 'rect');
+            deleteBackground.setAttribute('x', deleteX);
+            deleteBackground.setAttribute('y', deleteY);
+            deleteBackground.setAttribute('width', deleteSize);
+            deleteBackground.setAttribute('height', deleteSize);
+            deleteBackground.setAttribute('rx', 4 * deleteScale);
+            deleteBackground.setAttribute('fill', props.backgroundColor);
+            deleteBackground.setAttribute('stroke', buttonBorderColor.value);
+            deleteBackground.setAttribute('stroke-width', deleteStrokeWidth);
+            deleteBackground.setAttribute(
+                'vector-effect',
+                'non-scaling-stroke',
+            );
 
-        const iconScale = deleteSize / 24;
-        const icon = document.createElementNS(XMLNS, 'path');
-        icon.setAttribute('d', 'M 8 8 L 16 16 M 16 8 L 8 16');
-        icon.setAttribute(
-            'transform',
-            `translate(${deleteX} ${deleteY}) scale(${iconScale})`,
-        );
-        icon.setAttribute('fill', 'none');
-        icon.setAttribute('stroke', props.color);
-        icon.setAttribute('stroke-width', 1.5);
-        icon.setAttribute('stroke-linecap', 'round');
-        icon.setAttribute('stroke-linejoin', 'round');
-        icon.setAttribute('vector-effect', 'non-scaling-stroke');
-        icon.setAttribute('pointer-events', 'none');
+            // BaseIcon's trash path uses a 20 × 20 viewBox; center a 16px
+            // icon inside the 24px delete control.
+            const iconScale = deleteSize / 30;
+            const iconPadding = deleteSize / 6;
+            const icon = document.createElementNS(XMLNS, 'path');
+            icon.setAttribute(
+                'd',
+                'M7 18h6c2 0 2 0 3-12H4c1 12 1 12 3 12M3 4h14M8 2h4m-2 6v7M7 8l.518 7.01M13 8l-.546 6.984',
+            );
+            icon.setAttribute(
+                'transform',
+                `translate(${deleteX + iconPadding} ${deleteY + iconPadding}) scale(${iconScale})`,
+            );
+            icon.setAttribute('fill', 'none');
+            icon.setAttribute('stroke', props.color);
+            icon.setAttribute('stroke-width', 1.5);
+            icon.setAttribute('stroke-linecap', 'round');
+            icon.setAttribute('stroke-linejoin', 'round');
+            icon.setAttribute('vector-effect', 'non-scaling-stroke');
+            icon.setAttribute('pointer-events', 'none');
 
-        deleteButton.appendChild(deleteBackground);
-        deleteButton.appendChild(icon);
-        deleteButton.addEventListener('keydown', (event) => {
-            if (event.key !== 'Enter' && event.key !== ' ') return;
-            event.preventDefault();
-            deleteSelectedShape(event);
-        });
-        overlay.appendChild(deleteButton);
+            deleteButton.appendChild(deleteBackground);
+            deleteButton.appendChild(icon);
+            deleteButton.addEventListener('keydown', (event) => {
+                if (event.key !== 'Enter' && event.key !== ' ') return;
+                event.preventDefault();
+                deleteSelectedShape(event);
+            });
+            overlay.appendChild(deleteButton);
+        }
 
         const transform = shape.getAttribute('transform');
         if (transform) overlay.setAttribute('transform', transform);
@@ -771,7 +793,8 @@ watch(
 
 function toggleMultiSelection() {
     if (isEditingText.value) cleanupSvgTextEditing(false);
-    if (!props.active || !props.showGroupActions) return;
+    if (!props.active || !props.showGroupActions || annotationCount.value <= 1)
+        return;
     isMultiSelecting.value = !isMultiSelecting.value;
     updateSelectionBox();
     setCursorStyle();
@@ -1125,6 +1148,7 @@ function startSvgTextEditing(event) {
     textNode.style.userSelect = 'none';
 
     G.value.appendChild(textNode);
+    syncAnnotationCount();
     selectedShape.value = textNode;
     selectedShapes.value = [textNode];
     editingTextNode.value = textNode;
@@ -1611,6 +1635,7 @@ function startDrawing(event) {
     currentDrawingPath.value.setAttribute('data-doodle-id', createUid());
     currentDrawingPath.value.setAttribute('pointer-events', 'stroke');
     G.value.appendChild(currentDrawingPath.value);
+    syncAnnotationCount();
 }
 
 function draw(event) {
@@ -1699,6 +1724,7 @@ function startLine(event) {
         }
     }
     G.value.appendChild(currentLine.value);
+    syncAnnotationCount();
 }
 
 function drawLine(event) {
@@ -1750,6 +1776,7 @@ function stopDrawing(event) {
             circle.setAttribute('data-doodle-id', createUid());
             circle.setAttribute('pointer-events', 'all');
             G.value.appendChild(circle);
+            syncAnnotationCount();
         } else {
             currentDrawingPath.value.setAttribute(
                 'd',
@@ -1797,6 +1824,7 @@ function reset() {
     deselectShape();
     if (G.value) {
         G.value.innerHTML = '';
+        syncAnnotationCount();
     }
     stack.value = [];
     redoStack.value = [];
@@ -1960,7 +1988,7 @@ function setCursorStyle(event = null) {
         return;
     }
     if (isMultiSelecting.value) {
-        G.value.style.cursor = 'pointer';
+        G.value.style.cursor = 'default';
         return;
     }
 
@@ -2340,6 +2368,7 @@ onBeforeUnmount(() => {
                 type="button"
                 class="vue-ui-pen-and-paper-action"
                 data-cy="pen-and-paper-select-multiple"
+                :disabled="annotationCount <= 1"
                 :aria-label="
                     isMultiSelecting
                         ? 'Exit selection mode'
@@ -2348,6 +2377,8 @@ onBeforeUnmount(() => {
                 :aria-pressed="isMultiSelecting"
                 :class="{
                     'vue-ui-pen-and-paper-action-active': isMultiSelecting,
+                    'vue-ui-pen-and-paper-action-disabled':
+                        annotationCount <= 1,
                 }"
                 :style="{
                     backgroundColor,

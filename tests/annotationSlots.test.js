@@ -122,7 +122,7 @@ describe('annotation slot compatibility', () => {
                     '&quot;isSelecting&quot;:false',
                 );
                 expect(after.snapshots[3]).toContain(
-                    '&quot;isSelecting&quot;:true',
+                    '&quot;isSelecting&quot;:false',
                 );
             }
         },

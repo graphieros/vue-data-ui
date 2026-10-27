@@ -37,14 +37,14 @@ function anchor(svg, shape, x, y) {
     );
 }
 
-async function drawArrow(canvasElement) {
+async function drawArrow(canvasElement, offset = 0) {
     await waitFor(() =>
         expect(canvasElement.querySelector('.vue-data-ui-mask')).toBeTruthy(),
     );
     const svg = canvasElement.querySelector('[data-test="paper"]');
-    eventAt(svg, 'mousedown', 40, 70);
-    eventAt(svg, 'mousemove', 80, 50);
-    eventAt(svg, 'mouseup', 80, 50);
+    eventAt(svg, 'mousedown', 40 + offset, 70);
+    eventAt(svg, 'mousemove', 80 + offset, 50);
+    eventAt(svg, 'mouseup', 80 + offset, 50);
     return svg.querySelector('line.vue-data-ui-doodle');
 }
 
@@ -482,6 +482,8 @@ export const GroupDraggingAndHistoryAcrossZoom = {
 export const GroupControlsAreConditionalAndDoNotAddHeight = {
     args: { followZoom: true },
     play: async ({ canvasElement }) => {
+        await drawArrow(canvasElement);
+        await drawArrow(canvasElement, 80);
         await waitFor(() =>
             expect(
                 canvasElement.querySelector('.vue-data-ui-mask'),
@@ -574,6 +576,29 @@ export const XyForwardsGroupButtonSlots = {
             '[data-test="custom-select"]',
         );
         expect(select.textContent).toBe('Select');
+        expect(select.closest('button').disabled).toBe(true);
+        const svg = canvasElement.querySelector('[data-cy="xy-svg"]');
+        const clip = svg.querySelector('clipPath[id^="annotation-clip-"] rect');
+        const x =
+            Number(clip.getAttribute('x')) +
+            Number(clip.getAttribute('width')) / 2;
+        const y =
+            Number(clip.getAttribute('y')) +
+            Number(clip.getAttribute('height')) / 2;
+        eventAt(svg, 'mousedown', x - 20, y + 20);
+        eventAt(svg, 'mousemove', x, y);
+        eventAt(svg, 'mouseup', x, y);
+        await waitFor(() =>
+            expect(select.closest('button').disabled).toBe(true),
+        );
+        eventAt(svg, 'mousedown', x + 40, y);
+        eventAt(svg, 'mousemove', x + 60, y - 20);
+        eventAt(svg, 'mouseup', x + 60, y - 20);
+
+        await waitFor(() =>
+            expect(select.closest('button').disabled).toBe(false),
+        );
+
         expect(
             canvasElement
                 .querySelector('[data-test="custom-group"]')
