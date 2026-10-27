@@ -80,6 +80,8 @@ const dataset = ref({
 // })
 
 const model = createModel([
+    CHECKBOX('userOptions.buttons.annotator', { def: true }),
+    CHECKBOX('userOptions.annotator.followZoom', { def: true }),
     CHECKBOX('devHints.enable', { def: true }),
     CHECKBOX('loading', { def: false }),
     CHECKBOX('debug', { def: true }),

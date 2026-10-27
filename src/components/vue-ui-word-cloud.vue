@@ -1,4 +1,5 @@
 <script setup>
+import { createPanZoomAnnotationViewport } from '../utils/annotationViewport';
 import { getTableComponent, syncTableVisibility } from '../tableIntegration';
 import {
     annotationSlotNames,
@@ -950,6 +951,12 @@ defineExpose({
     toggleZoom,
     copyAlt,
 });
+const annotationViewport = computed(() =>
+    createPanZoomAnnotationViewport(
+        FINAL_CONFIG.value.userOptions?.annotator?.followZoom,
+        viewBox.value,
+    ),
+);
 </script>
 
 <template>
@@ -984,8 +991,13 @@ defineExpose({
         />
 
         <PenAndPaper
+            :showGroupActions="
+                cfgUserOptions.annotator?.showGroupActions ?? true
+            "
             v-if="cfgUserOptions.buttons.annotator"
             :svgRef="svgRef"
+            :followZoom="FINAL_CONFIG.userOptions?.annotator?.followZoom"
+            :annotationViewport="annotationViewport"
             :backgroundColor="cfgChart.backgroundColor"
             :color="cfgChart.color"
             :active="isAnnotator"

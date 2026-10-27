@@ -301,6 +301,36 @@ function getIconPath(name, { stroke: _s, strokeWidth: _sw }) {
     }
 
     const map = {
+        selectMultipleActive: `<path d="M4 2v15l4-4 3 6 3-1.5-3-5.5 5-1z" ${solid}/><path d="M14 2l4 4m0-4-4 4" ${rrAttrs}/>`,
+
+        selectMultiple: `<path d="M3 2h2m2 0h2m2 0h2m2 0h2M2 3v2m0 2v2m0 2v2m0 2v2M3 18h2m2 0h2M18 3v2m0 2v2" ${rrAttrs}/><rect x="5" y="5" width="4" height="4" ${rrAttrs}/><rect x="7" y="12" width="3" height="3" ${rrAttrs}/><path d="M13 10v9l2-3 2 3 2-1-2-3 3-1z" ${solid}/>`,
+
+        group: `<path d="M2 6v6H12V2H6M18 14V8H8V18h6" ${rrAttrs}/>${[
+            [1, 1],
+            [1, 17],
+            [17, 1],
+            [17, 17],
+        ]
+            .map(
+                ([x, y]) =>
+                    `<rect x="${x - 0.5}" y="${y - 0.5}" width="3" height="3" ${solid}/>`,
+            )
+            .join('')}`,
+        ungroup: `<path d="M9 10v7m1 1h7m1-1V10M17 9H10M2 3v7M3 2h7M3 11H6m5-8V6" ${rrAttrs}/>${[
+            [1, 1],
+            [1, 10],
+            [17, 8],
+            [17, 17],
+            [8, 8],
+            [8, 17],
+            [10, 1],
+        ]
+            .map(
+                ([x, y]) =>
+                    `<rect x="${x - 0.75}" y="${y - 0.75}" width="3.5" height="3.5" ${solid}/>`,
+            )
+            .join('')}`,
+
         annotator: `<path ${rrAttrs} d="m1 19 2-7c0 2 0 3 2 3 0 2 2 2 3 2zm2-7L14 1c1-1 2 0 2 0l3 3c1 1 0 2 0 2L8 17m-3-2L15 5M1.667 16.667l1.666 1.666m9.168-15.832L17.5 7.5" /><path d="M15 5 5 15c0 2 2 2 3 2l9.5-9.5z" ${solid} ${o3}/>`,
         annotatorDisabled: `<path ${rrAttrs} d="m1 19 2-7c0 2 0 3 2 3 0 2 2 2 3 2zm2-7L14 1c1-1 2 0 2 0l3 3c1 1 0 2 0 2L8 17m-3-2L15 5M1.667 16.667l1.666 1.666m9.168-15.832L17.5 7.5M2 2l16 16" /><path d="M15 5 5 15c0 2 2 2 3 2l9.5-9.5z" ${solid} ${o3}/>`,
         chart3dBar: `<path ${fn} ${sw} d="M10 1 6 3v14l4 2 4-2V3zM6 3l4 2 4-2m-4 2v14" ${sl_none}/><path ${solid} ${o3} d="m6 10 4 2 4-2v7l-4 2-4-2z"/>`,

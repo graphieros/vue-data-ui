@@ -6,6 +6,9 @@ export const annotationSlotNames = [
     'annotator-action-undo',
     'annotator-action-redo',
     'annotator-action-delete',
+    'annotator-action-select-multiple',
+    'annotator-action-group',
+    'annotator-action-ungroup',
 ];
 
 export function getAnnotationSlotProps(name, props) {
@@ -14,6 +17,10 @@ export function getAnnotationSlotProps(name, props) {
             return { color: props.color };
         case 'annotator-action-draw':
             return { mode: props.mode };
+        case 'annotator-action-select-multiple':
+            return { isSelecting: props.isSelecting };
+        case 'annotator-action-group':
+        case 'annotator-action-ungroup':
         case 'annotator-action-undo':
         case 'annotator-action-redo':
         case 'annotator-action-delete':

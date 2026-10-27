@@ -758,6 +758,11 @@ declare module 'vue-data-ui' {
         position?: 'left' | 'right';
         useCursorPointer?: boolean;
         annotatorPalette?: string[];
+        annotator?: {
+            /** Show multi-selection, group and ungroup actions. Defaults to true. */
+            showGroupActions?: boolean;
+            followZoom?: boolean;
+        };
         buttons?: {
             animation?: boolean;
             annotator?: boolean;
@@ -976,6 +981,15 @@ declare module 'vue-data-ui' {
         ) => VNodeChild;
         ['annotator-action-delete']?: (
             props: VueUiAnnotatorActionDeleteSlotProps,
+        ) => VNodeChild;
+        ['annotator-action-select-multiple']?: (
+            props: VueUiAnnotatorActionSelectMultipleSlotProps,
+        ) => VNodeChild;
+        ['annotator-action-group']?: (
+            props: VueUiAnnotatorActionGroupSlotProps,
+        ) => VNodeChild;
+        ['annotator-action-ungroup']?: (
+            props: VueUiAnnotatorActionUngroupSlotProps,
         ) => VNodeChild;
     };
 
@@ -2714,6 +2728,7 @@ declare module 'vue-data-ui' {
         | 'func'
         | 'gisLayerQuery'
         | 'gisLayerSearch'
+        | 'group'
         | 'hexagon'
         | 'hexagonFill'
         | 'hierarchy'
@@ -2844,6 +2859,7 @@ declare module 'vue-data-ui' {
         | 'triangleFill'
         | 'triangleInformation'
         | 'twig'
+        | 'ungroup'
         | 'unlock'
         | 'unplug'
         | 'unstack'
@@ -2857,7 +2873,9 @@ declare module 'vue-data-ui' {
         | 'zoomLock'
         | 'zoomMinus'
         | 'zoomPlus'
-        | 'zoomUnlock';
+        | 'zoomUnlock'
+        | 'selectMultiple'
+        | 'selectMultipleActive';
 
     export const VueUiIcon: DefineComponent<{
         name: VueUiIconName;
@@ -4554,6 +4572,7 @@ declare module 'vue-data-ui' {
             };
         };
         userOptions?: {
+            annotator?: ChartUserOptions['annotator'];
             show?: boolean;
             showOnChartHover?: boolean;
             keepStateOnChartLeave?: boolean;
@@ -6758,6 +6777,11 @@ declare module 'vue-data-ui' {
     export type VueUiAnnotatorActionUndoSlotProps = { disabled: boolean };
     export type VueUiAnnotatorActionRedoSlotProps = { disabled: boolean };
     export type VueUiAnnotatorActionDeleteSlotProps = { disabled: boolean };
+    export type VueUiAnnotatorActionSelectMultipleSlotProps = {
+        isSelecting: boolean;
+    };
+    export type VueUiAnnotatorActionGroupSlotProps = { disabled: boolean };
+    export type VueUiAnnotatorActionUngroupSlotProps = { disabled: boolean };
     export type VueUiMenuIconSlotProps = { isOpen: boolean; color: string };
     export type VueUiOptionStackSlotProps = { isStack: boolean };
     export type VueUiOptionFullscreenSlotProps = {
@@ -11148,6 +11172,7 @@ declare module 'vue-data-ui' {
         zoomMaxWidth?: number | null;
         dragToZoom?: ZoomOnChart;
         userOptionsPosition?: 'right' | 'left';
+        userOptionsAnnotator?: ChartUserOptions['annotator'];
         userOptionsButtons?: {
             tooltip?: boolean;
             pdf?: boolean;

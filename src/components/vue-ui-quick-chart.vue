@@ -1,4 +1,5 @@
 <script setup>
+import { createAnnotationViewport } from '../utils/annotationViewport';
 import {
     annotationSlotNames,
     getAnnotationSlotProps,
@@ -3106,6 +3107,17 @@ watch(
     measureLabelLayout,
     { flush: 'post', deep: true },
 );
+
+const annotationViewport = computed(() => {
+    const activeChart =
+        chartType.value === detector.chartType.LINE ? line.value : bar.value;
+    return createAnnotationViewport({
+        enabled: FINAL_CONFIG.value.userOptionsAnnotator?.followZoom,
+        area: slicerDrawingArea.value,
+        range: slicer.value,
+        ticks: activeChart?.yLabels ?? [],
+    });
+});
 </script>
 
 <template>
@@ -3136,8 +3148,13 @@ watch(
         />
 
         <PenAndPaper
+            :showGroupActions="
+                FINAL_CONFIG.userOptionsAnnotator?.showGroupActions ?? true
+            "
             v-if="FINAL_CONFIG.userOptionsButtons.annotator"
             :svgRef="svgRef"
+            :followZoom="FINAL_CONFIG.userOptionsAnnotator?.followZoom"
+            :annotationViewport="annotationViewport"
             :backgroundColor="FINAL_CONFIG.backgroundColor"
             :color="FINAL_CONFIG.color"
             :active="isAnnotator"

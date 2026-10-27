@@ -1,4 +1,5 @@
 <script setup>
+import { createAnnotationViewport } from '../utils/annotationViewport';
 import { getTableComponent, syncTableVisibility } from '../tableIntegration';
 import {
     annotationSlotNames,
@@ -2265,6 +2266,15 @@ watch(
     measureLabelLayout,
     { flush: 'post', deep: true },
 );
+
+const annotationViewport = computed(() => {
+    return createAnnotationViewport({
+        enabled: FINAL_CONFIG.value.userOptions?.annotator?.followZoom,
+        area: svg.value,
+        range: slicer.value,
+        ticks: yLabels.value,
+    });
+});
 </script>
 
 <template>
@@ -2291,8 +2301,13 @@ watch(
         />
 
         <PenAndPaper
+            :showGroupActions="
+                FINAL_CONFIG.userOptions.annotator?.showGroupActions ?? true
+            "
             v-if="FINAL_CONFIG.userOptions.buttons.annotator"
             :svgRef="svgRef"
+            :followZoom="FINAL_CONFIG.userOptions?.annotator?.followZoom"
+            :annotationViewport="annotationViewport"
             :backgroundColor="cfgChart.backgroundColor"
             :color="cfgChart.color"
             :active="isAnnotator"

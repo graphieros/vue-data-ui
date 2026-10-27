@@ -180,6 +180,8 @@ onMounted(() => {
 });
 
 const model = createModel([
+    CHECKBOX('userOptions.buttons.annotator', { def: true }),
+    CHECKBOX('userOptions.annotator.followZoom', { def: true }),
     CHECKBOX('devHints.enable', { def: true }),
     CHECKBOX('debug', { def: true }),
     CHECKBOX('loading', { def: false }),

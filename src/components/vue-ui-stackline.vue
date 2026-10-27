@@ -1,4 +1,5 @@
 <script setup>
+import { createAnnotationViewport } from '../utils/annotationViewport';
 import { getTableComponent, syncTableVisibility } from '../tableIntegration';
 import {
     annotationSlotNames,
@@ -4046,6 +4047,30 @@ defineExpose({
     resetZoom: () => refreshSlicer({ force: true, publish: true }),
     setZoomState,
 });
+
+const annotationViewport = computed(() => {
+    const matrix = chartZoomVisualTransform.value
+        .match(/matrix\(([^)]+)\)/)[1]
+        .split(',')
+        .map(Number);
+    return createAnnotationViewport({
+        enabled: cfgUserOptions.value?.annotator?.followZoom,
+        area: drawingArea.value,
+        range: slicer.value,
+        ticks: cfgLines.value.distributed ? [] : yLabels.value,
+        middle: false,
+        motion: {
+            scaleX: isAnnotator.value ? 1 : matrix[0],
+            scaleY: isAnnotator.value ? 1 : matrix[3],
+            translateX: isAnnotator.value ? 0 : matrix[4],
+            translateY: isAnnotator.value ? 0 : matrix[5],
+            transition:
+                !isAnnotator.value && chartZoomVisualTransitionEnabled.value
+                    ? `transform ${CHART_ZOOM_TRANSITION_DURATION}ms cubic-bezier(0.4, 0, 0.2, 1)`
+                    : 'none',
+        },
+    });
+});
 </script>
 
 <template>
@@ -4077,8 +4102,13 @@ defineExpose({
 
         <!-- PEN AND PAPER -->
         <PenAndPaper
+            :showGroupActions="
+                cfgUserOptions.annotator?.showGroupActions ?? true
+            "
             v-if="cfgUserOptions.buttons.annotator"
             :svgRef="svgRef"
+            :followZoom="cfgUserOptions?.annotator?.followZoom"
+            :annotationViewport="annotationViewport"
             :backgroundColor="cfgChart.backgroundColor"
             :color="cfgChart.color"
             :active="isAnnotator"

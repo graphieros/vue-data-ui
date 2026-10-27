@@ -13,7 +13,10 @@ beforeAll(async () => {
 });
 const cleanups = [];
 afterEach(() => {
-    cleanups.splice(0).forEach((f) => f());
+    cleanups
+        .splice(0)
+        .reverse()
+        .forEach((f) => f());
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
     image.mockClear();
@@ -68,7 +71,39 @@ async function mount(extra = {}, slots) {
             return { x: this.x, y: this.y };
         },
     });
-    svg.getScreenCTM = () => ({ inverse: () => ({}) });
+    const identity = {
+        a: 1,
+        b: 0,
+        c: 0,
+        d: 1,
+        e: 0,
+        f: 0,
+        inverse() {
+            return this;
+        },
+        multiply() {
+            return this;
+        },
+    };
+    const previousMatrix = Object.getOwnPropertyDescriptor(
+        SVGElement.prototype,
+        'getScreenCTM',
+    );
+    Object.defineProperty(SVGElement.prototype, 'getScreenCTM', {
+        configurable: true,
+        writable: true,
+        value: () => identity,
+    });
+    cleanups.push(() => {
+        if (previousMatrix)
+            Object.defineProperty(
+                SVGElement.prototype,
+                'getScreenCTM',
+                previousMatrix,
+            );
+        else delete SVGElement.prototype.getScreenCTM;
+    });
+    svg.getScreenCTM = () => identity;
     return {
         el,
         svg,
@@ -229,4 +264,51 @@ it('pauses a running force layout while annotating and resumes on close', async 
     m.api.toggleAnnotator();
     await flush();
     expect(frames.size).toBe(1);
+});
+
+it('drags zoom-compensated annotations by the root SVG pointer delta', async () => {
+    const m = await mount();
+    await draw(m);
+    const shape = m.svg.querySelector('line.vue-data-ui-doodle');
+    const base = 'translate(120 130) scale(0.5 0.5) translate(-120 -130)';
+    shape.setAttribute('transform', base);
+    shape.getScreenCTM = () => ({ inverse: () => ({}) });
+    shape.getBBox = () => ({ x: 20, y: 30, width: 100, height: 100 });
+    // A zoomed SVG maps two client pixels to one root SVG unit.
+    m.svg.createSVGPoint = () => ({
+        x: 0,
+        y: 0,
+        matrixTransform() {
+            return { x: this.x / 2, y: this.y / 2 };
+        },
+    });
+    shape.dispatchEvent(
+        new MouseEvent('mousedown', {
+            bubbles: true,
+            cancelable: true,
+            clientX: 100,
+            clientY: 100,
+        }),
+    );
+    m.svg.dispatchEvent(
+        new MouseEvent('mousemove', {
+            bubbles: true,
+            cancelable: true,
+            clientX: 140,
+            clientY: 120,
+        }),
+    );
+    expect(shape.getAttribute('transform')).toBe(`translate(20 10) ${base}`);
+    m.svg.dispatchEvent(
+        new MouseEvent('mousemove', {
+            bubbles: true,
+            cancelable: true,
+            clientX: 180,
+            clientY: 140,
+        }),
+    );
+    expect(shape.getAttribute('transform')).toBe(`translate(40 20) ${base}`);
+    m.svg.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+    await nextTick();
+    expect(shape.getAttribute('transform')).toBe(`translate(40 20) ${base}`);
 });

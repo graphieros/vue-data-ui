@@ -1,4 +1,5 @@
 <script setup>
+import { createPanZoomAnnotationViewport } from '../utils/annotationViewport';
 import {
     annotationSlotNames,
     getAnnotationSlotProps,
@@ -1664,6 +1665,12 @@ defineExpose({
     copyAlt,
     focusOnNode,
 });
+const annotationViewport = computed(() =>
+    createPanZoomAnnotationViewport(
+        FINAL_CONFIG.value.userOptions?.annotator?.followZoom,
+        panZoomViewBox.value,
+    ),
+);
 </script>
 
 <template>
@@ -1697,8 +1704,13 @@ defineExpose({
         </div>
 
         <PenAndPaper
+            :showGroupActions="
+                FINAL_CONFIG.userOptions.annotator?.showGroupActions ?? true
+            "
             v-if="FINAL_CONFIG.userOptions.buttons.annotator"
             :svgRef="svgRef"
+            :followZoom="FINAL_CONFIG.userOptions?.annotator?.followZoom"
+            :annotationViewport="annotationViewport"
             :backgroundColor="cfgChart.backgroundColor"
             :color="cfgChart.color"
             :active="isAnnotator"

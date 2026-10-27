@@ -13,7 +13,10 @@ const original = `
     <template #annotator-action-draw="{ mode }"><slot name="annotator-action-draw" v-bind="{ mode }" /></template>
     <template #annotator-action-undo="{ disabled }"><slot name="annotator-action-undo" v-bind="{ disabled }" /></template>
     <template #annotator-action-redo="{ disabled }"><slot name="annotator-action-redo" v-bind="{ disabled }" /></template>
-    <template #annotator-action-delete="{ disabled }"><slot name="annotator-action-delete" v-bind="{ disabled }" /></template>`;
+    <template #annotator-action-delete="{ disabled }"><slot name="annotator-action-delete" v-bind="{ disabled }" /></template>
+    <template #annotator-action-select-multiple="{ isSelecting }"><slot name="annotator-action-select-multiple" v-bind="{ isSelecting }" /></template>
+    <template #annotator-action-group="{ disabled }"><slot name="annotator-action-group" v-bind="{ disabled }" /></template>
+    <template #annotator-action-ungroup="{ disabled }"><slot name="annotator-action-ungroup" v-bind="{ disabled }" /></template>`;
 const shared = `
     <template v-for="slotName in annotationSlotNames" #[slotName]="slotProps">
         <slot :name="slotName" v-bind="getAnnotationSlotProps(slotName, slotProps)" />
@@ -47,7 +50,7 @@ async function exercise(children, scenario) {
     const render = new Function(
         'Vue',
         compile(
-            `<PenAndPaper :svgRef="null" :active="active" @close="onClose">${children}</PenAndPaper>`,
+            `<PenAndPaper :svgRef="null" :followZoom="true" :active="active" @close="onClose">${children}</PenAndPaper>`,
             { mode: 'function', prefixIdentifiers: true },
         ).code,
     )(Vue);
@@ -76,6 +79,9 @@ async function exercise(children, scenario) {
         await settle();
         snapshots.push(host.innerHTML);
         actions()[2].click();
+        await settle();
+        snapshots.push(host.innerHTML);
+        host.querySelector('[data-cy="pen-and-paper-select-multiple"]').click();
         await settle();
         snapshots.push(host.innerHTML);
         slots.value = {};
@@ -112,6 +118,12 @@ describe('annotation slot compatibility', () => {
                 expect(after.snapshots[0]).toContain(
                     '&quot;disabled&quot;:true',
                 );
+                expect(after.snapshots[0]).toContain(
+                    '&quot;isSelecting&quot;:false',
+                );
+                expect(after.snapshots[3]).toContain(
+                    '&quot;isSelecting&quot;:false',
+                );
             }
         },
     );
@@ -123,12 +135,16 @@ describe('annotation slot compatibility', () => {
         ['annotator-action-undo', { disabled: false }],
         ['annotator-action-redo', { disabled: false }],
         ['annotator-action-delete', { disabled: false }],
+        ['annotator-action-select-multiple', { isSelecting: false }],
+        ['annotator-action-group', { disabled: false }],
+        ['annotator-action-ungroup', { disabled: false }],
     ])('forwards only the existing scope for %s', (name, expected) => {
         expect(
             getAnnotationSlotProps(name, {
                 color: '#123456',
                 mode: 'line',
                 disabled: false,
+                isSelecting: false,
                 extra: true,
             }),
         ).toEqual(expected);
