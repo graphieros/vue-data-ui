@@ -160,6 +160,7 @@ const step = ref(0);
 const chartTitle = ref(null);
 const chartLegend = ref(null);
 const chartSlicer = ref(null);
+const noTitle = ref(null);
 const source = ref(null);
 const isFullscreen = ref(false);
 const trapIndex = ref(null);
@@ -1173,6 +1174,10 @@ const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     options: FINAL_CONFIG.value.userOptions.print,
 });
 
+const hasOptionsNoTitle = computed(() => {
+    return FINAL_CONFIG.value.userOptions.show && !cfgChart.value.title.text;
+});
+
 const defaultSizes = ref({
     width: cfgChart.value.width,
     height: cfgChart.value.height,
@@ -1234,6 +1239,7 @@ function prepareChart({ resetSlicer = true } = {}) {
             isLoaded.value = false; // unset rect transitions as it looks janky during resizing process
             const { width, height } = useResponsive({
                 chart: stackbarChart.value,
+                noTitle: noTitle.value,
                 title: cfgChart.value.title.text ? chartTitle.value : null,
                 legend: cfgChart.value.legend.show ? chartLegend.value : null,
                 slicer:
@@ -4356,6 +4362,13 @@ const annotationViewport = computed(() => {
         </PenAndPaper>
 
         <slot name="userConfig" />
+
+        <div
+            ref="noTitle"
+            v-if="hasOptionsNoTitle"
+            class="vue-data-ui-no-title-space"
+            :style="`height:36px; width: 100%;background:transparent`"
+        />
 
         <div
             ref="chartTitle"
