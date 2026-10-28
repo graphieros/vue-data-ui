@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed, onMounted, watchEffect } from 'vue';
+import { useParentSize } from '../src/useParentSize';
 import LocalVueUiXy from '../src/components/vue-ui-xy.vue';
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from './Box.vue';
@@ -1401,6 +1402,73 @@ watchEffect(async () => {
 });
 
 const zoomState = ref(null);
+
+// Pass the template ref and reactive options once during setup.
+const parentSizeTarget = ref(null);
+const parentSizeObserve = ref(true);
+const parentSizeScale = ref(1);
+const parentSizeUseWidth = ref(true);
+const parentSizeUseHeight = ref(true);
+const parentSizeWidthOffset = ref(0);
+const parentSizeHeightOffset = ref(0);
+const parentSizeContainerWidth = ref(800);
+const parentSizeContainerHeight = ref(400);
+
+const { width: parentSizeWidth, height: parentSizeHeight } = useParentSize(
+    parentSizeTarget,
+    {
+        observe: parentSizeObserve,
+        scale: parentSizeScale,
+        offsetWidth: parentSizeWidthOffset,
+        offsetHeight: parentSizeHeightOffset,
+    },
+);
+
+const parentSizeConfig = computed(() => ({
+    responsive: false,
+    chart: {
+        width: parentSizeUseWidth.value
+            ? (parentSizeWidth.value ?? 1000)
+            : 1000,
+        height: parentSizeUseHeight.value
+            ? (parentSizeHeight.value ?? 600)
+            : 600,
+        title: { text: 'Parent size test' },
+    },
+}));
+const parentSizeDataset = [
+    { name: 'Series', type: 'line', series: [12, 18, 14, 25, 21, 30] },
+];
+
+// An intrinsic parent grows with the chart. Padding and scaling deliberately
+// feed larger dimensions back into the composable until its limits are reached.
+const growthSizeTarget = ref(null);
+const growthSizeScale = ref(1.05);
+const growthSizeCustomLimits = ref(false);
+const growthSizeMaxWidth = ref(600);
+const growthSizeMaxHeight = ref(400);
+const { width: growthSizeWidth, height: growthSizeHeight } = useParentSize(
+    growthSizeTarget,
+    {
+        scale: growthSizeScale,
+        maxWidth: () =>
+            growthSizeCustomLimits.value ? growthSizeMaxWidth.value : undefined,
+        maxHeight: () =>
+            growthSizeCustomLimits.value
+                ? growthSizeMaxHeight.value
+                : undefined,
+    },
+);
+const growthSizeConfig = computed(() => ({
+    responsive: false,
+    useCssAnimation: false,
+    userOptions: { show: false },
+    chart: {
+        width: growthSizeWidth.value ?? 300,
+        height: growthSizeHeight.value ?? 200,
+        title: { text: 'Bounded growth test' },
+    },
+}));
 </script>
 
 <template>
@@ -2339,4 +2407,188 @@ const zoomState = ref(null);
             @selectX="selectX">
         </LocalVueUiXy>
     </div> -->
+    <section style="margin: 48px 0; padding: 16px; border: 1px solid #888">
+        <h2>useParentSize playground</h2>
+        <div
+            style="
+                display: flex;
+                flex-wrap: wrap;
+                gap: 16px;
+                margin-bottom: 16px;
+            "
+        >
+            <label
+                ><input v-model="parentSizeUseWidth" type="checkbox" /> Apply
+                measured width</label
+            >
+            <label
+                ><input v-model="parentSizeUseHeight" type="checkbox" /> Apply
+                measured height</label
+            >
+            <label
+                ><input v-model="parentSizeObserve" type="checkbox" /> Observe
+                parent resizing</label
+            >
+            <label
+                >Width offset (px)
+                <input
+                    v-model.number="parentSizeWidthOffset"
+                    type="number"
+                    step="1"
+                />
+            </label>
+            <label
+                >Height offset (px)
+                <input
+                    v-model.number="parentSizeHeightOffset"
+                    type="number"
+                    step="1"
+                />
+            </label>
+            <label
+                >Scale
+                <input
+                    v-model.number="parentSizeScale"
+                    type="range"
+                    min="0.25"
+                    max="2"
+                    step="0.05"
+                />
+                {{ parentSizeScale }}
+            </label>
+            <label
+                >Parent width (px)
+                <input
+                    v-model.number="parentSizeContainerWidth"
+                    type="range"
+                    min="300"
+                    max="1200"
+                    step="10"
+                />
+                {{ parentSizeContainerWidth }}
+            </label>
+            <label
+                >Parent height (px)
+                <input
+                    v-model.number="parentSizeContainerHeight"
+                    type="range"
+                    min="200"
+                    max="800"
+                    step="10"
+                />
+                {{ parentSizeContainerHeight }}
+            </label>
+        </div>
+        <p>
+            Measured: {{ parentSizeWidth ?? 'undefined' }} ×
+            {{ parentSizeHeight ?? 'undefined' }} px. Config:
+            {{ parentSizeConfig.chart.width }} ×
+            {{ parentSizeConfig.chart.height }} px.
+        </p>
+        <p>
+            Resize the parent with the sliders. With observation disabled, the
+            measurement stays fixed. Unchecked dimensions use the chart defaults
+            (1000 × 600).
+        </p>
+        <div style="overflow: auto; padding: 2px">
+            <div
+                :style="{
+                    width: `${parentSizeContainerWidth}px`,
+                    height: `${parentSizeContainerHeight}px`,
+                    outline: '2px dashed #888',
+                }"
+            >
+                <div ref="parentSizeTarget">
+                    <LocalVueUiXy
+                        :dataset="parentSizeDataset"
+                        :config="parentSizeConfig"
+                    />
+                </div>
+            </div>
+        </div>
+    </section>
+    <section style="margin: 48px 0; padding: 16px; border: 1px solid #888">
+        <h2>useParentSize growth limits</h2>
+        <p>
+            This parent has no fixed width or height. Its padding and the scale
+            feed growth back into the chart. The chart dimensions should settle
+            at the viewport limits, or the custom limits when enabled.
+        </p>
+        <div
+            style="
+                display: flex;
+                flex-wrap: wrap;
+                gap: 16px;
+                margin-bottom: 16px;
+            "
+        >
+            <label
+                >Growth scale
+                <input
+                    v-model.number="growthSizeScale"
+                    type="range"
+                    min="1"
+                    max="1.5"
+                    step="0.05"
+                />
+                {{ growthSizeScale }}
+            </label>
+            <label
+                ><input v-model="growthSizeCustomLimits" type="checkbox" /> Use
+                custom limits</label
+            >
+            <label
+                >Maximum width (px)
+                <input
+                    v-model.number="growthSizeMaxWidth"
+                    type="number"
+                    min="200"
+                    step="10"
+                    :disabled="!growthSizeCustomLimits"
+                />
+            </label>
+            <label
+                >Maximum height (px)
+                <input
+                    v-model.number="growthSizeMaxHeight"
+                    type="number"
+                    min="200"
+                    step="10"
+                    :disabled="!growthSizeCustomLimits"
+                />
+            </label>
+        </div>
+        <p>
+            Chart: {{ growthSizeWidth ?? 'undefined' }} ×
+            {{ growthSizeHeight ?? 'undefined' }} px. Limits:
+            {{
+                growthSizeCustomLimits
+                    ? `${growthSizeMaxWidth} × ${growthSizeMaxHeight} px`
+                    : 'browser viewport (resize the window to test)'
+            }}.
+        </p>
+        <div style="overflow: auto; padding: 2px">
+            <div
+                style="
+                    display: inline-block;
+                    padding: 10px;
+                    outline: 2px dashed #888;
+                    vertical-align: top;
+                "
+            >
+                <div
+                    ref="growthSizeTarget"
+                    :style="{
+                        width: `${growthSizeConfig.chart.width}px`,
+                        height: `${growthSizeConfig.chart.height}px`,
+                    }"
+                >
+                    <LocalVueUiXy
+                        :dataset="parentSizeDataset"
+                        :config="growthSizeConfig"
+                    />
+                </div>
+            </div>
+        </div>
+    </section>
 </template>
