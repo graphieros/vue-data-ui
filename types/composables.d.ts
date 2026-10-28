@@ -58,3 +58,54 @@ export type TooltipPositionTarget<T = TooltipPositionTargetValue> =
 export declare function useTooltipPosition<T>(
     chartRef: TooltipPositionTarget<T>,
 ): ComputedRef<TooltipPosition>;
+
+/** A plain value, Vue ref, computed ref, template ref, or getter. */
+export type ParentSizeValue<T> = T | { readonly value: T } | (() => T);
+
+export type ParentSizeOptions = {
+    /** Multiplier applied after adding offsets. Defaults to 1. */
+    scale?: ParentSizeValue<number>;
+    /** Width adjustment before scaling. Defaults to 0. */
+    offsetWidth?: ParentSizeValue<number>;
+    /** Height adjustment before scaling. Defaults to 0. */
+    offsetHeight?: ParentSizeValue<number>;
+    /** Maximum final width after offsets and scaling. Defaults to viewport width. */
+    maxWidth?: ParentSizeValue<number>;
+    /** Maximum final height after offsets and scaling. Defaults to viewport height. */
+    maxHeight?: ParentSizeValue<number>;
+    /** Track parent resizes. Defaults to true. */
+    observe?: ParentSizeValue<boolean>;
+};
+
+export type ParentSize = {
+    height: ComputedRef<number | undefined>;
+    width: ComputedRef<number | undefined>;
+    stop: () => void;
+};
+
+/**
+ * Vue Data UI composable
+ * ---
+ * Returns dynamic parent dimensions, calculated as `(size + offset) * scale`
+ * and capped at the maximum width and height (viewport dimensions by default).
+ * ---
+ * These values can be passed to vue-data-ui component configurations using the
+ * `.width` and `.height` attributes.
+ *
+ * Call during setup with a template ref to measure after mounting and disconnect
+ * automatically on scope disposal. Outside an active Vue scope or component
+ * lifecycle hook, call `stop()` manually.
+ *
+ * @param element - A Vue ref, shallow ref, computed ref, readonly template ref,
+ * getter, raw HTMLElement, null, or undefined. Its parent is measured.
+ * @param options - Scale (default: 1), width and height offsets (default: 0),
+ * resize observation (default: true), and maximum width and height (default: viewport).
+ * Each option accepts a value, ref, or getter. Invalid or negative maximums fall back
+ * to viewport dimensions. During SSR, no viewport limit is applied.
+ * @returns Computed `width` and `height` values, or undefined dimensions when no
+ * parent exists, and a `stop` function to stop tracking changes.
+ */
+export declare function useParentSize(
+    element: ParentSizeValue<HTMLElement | null | undefined>,
+    options?: ParentSizeOptions,
+): ParentSize;

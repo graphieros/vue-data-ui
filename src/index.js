@@ -102,3 +102,4 @@ export { useObjectBindings } from './useObjectBindings';
 export { createPatternDef } from './patternUtils';
 
 export { useTooltipPosition } from './useTooltipPosition';
+export { useParentSize } from './useParentSize';
