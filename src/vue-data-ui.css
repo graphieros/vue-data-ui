@@ -12,7 +12,78 @@
     max-width: 100%;
 }
 .vue-data-ui-wrapper-fullscreen {
-    overflow: scroll;
+    overflow: hidden;
+}
+
+/* Keep surrounding text readable and fit the visualization into the remaining space. */
+[data-vdui-fullscreen-layout] {
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100vw !important;
+    height: 100dvh !important;
+    max-width: none !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 16px !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+}
+[data-vdui-fullscreen-layout] > .vue-data-ui-zoom-controls {
+    position: relative !important;
+    inset: auto !important;
+    transform: none !important;
+    margin: 0 !important;
+}
+[data-vdui-fullscreen-layout] > [data-vdui-fullscreen-content] {
+    flex: 0 0 auto !important;
+    box-sizing: border-box !important;
+    width: var(--vdui-fullscreen-chrome-width) !important;
+    max-width: none !important;
+    min-height: 0 !important;
+    zoom: var(--vdui-fullscreen-chrome-scale);
+}
+[data-vdui-fullscreen-layout]
+    > .vue-data-ui-zoom-controls[data-vdui-fullscreen-content] {
+    width: fit-content !important;
+    max-width: 100% !important;
+    align-self: center;
+}
+[data-vdui-fullscreen-layout] > [data-vdui-fullscreen-auto-fit] {
+    width: var(
+        --vdui-fullscreen-chart-width,
+        var(--vdui-fullscreen-chrome-width)
+    ) !important;
+}
+[data-vdui-fullscreen-layout] > [data-vdui-fullscreen-visual] {
+    width: var(--vdui-fullscreen-width) !important;
+    zoom: var(--vdui-fullscreen-scale);
+}
+[data-vdui-fullscreen-layout] > [data-vdui-fullscreen-pan-zoom] {
+    width: 100% !important;
+    height: var(--vdui-fullscreen-pan-height) !important;
+    aspect-ratio: auto !important;
+    zoom: 1;
+}
+[data-vdui-fullscreen-layout] .vue-data-ui-fullscreen--on {
+    height: auto !important;
+    max-height: none !important;
+}
+[data-vdui-fullscreen-layout]
+    [data-vdui-fullscreen-pan-zoom]
+    svg[data-vdui-pan-zoom] {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+    max-height: none !important;
+}
+[data-vdui-fullscreen-layout] > svg[data-vdui-fullscreen-pan-zoom] {
+    display: block;
+    width: 100% !important;
+    height: var(--vdui-fullscreen-pan-height) !important;
 }
 
 .vue-data-ui-zoom-plus {

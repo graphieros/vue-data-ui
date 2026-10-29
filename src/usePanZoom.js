@@ -58,6 +58,13 @@ export default function usePanZoom(
     function pxToVb(dxPx, dyPx) {
         const svg = svgRef.value;
         if (!svg) return { dx: 0, dy: 0 };
+        const inverse = svg.getScreenCTM?.()?.inverse();
+        if (inverse) {
+            return {
+                dx: inverse.a * dxPx + inverse.c * dyPx,
+                dy: inverse.b * dxPx + inverse.d * dyPx,
+            };
+        }
         const w = Math.max(1, svg.clientWidth);
         const h = Math.max(1, svg.clientHeight);
         const sx = viewBox.value.width / w;
@@ -268,10 +275,14 @@ export default function usePanZoom(
     }
 
     onMounted(() => {
+        svgRef.value?.setAttribute('data-vdui-pan-zoom', '');
         if (!activeRef || activeRef.value) addEventListeners();
     });
 
-    onUnmounted(removeEventListeners);
+    onUnmounted(() => {
+        removeEventListeners();
+        svgRef.value?.removeAttribute('data-vdui-pan-zoom');
+    });
 
     watchEffect(() => {
         if (!activeRef) return;
@@ -280,7 +291,9 @@ export default function usePanZoom(
         return () => removeEventListeners();
     });
 
-    watch(svgRef, () => {
+    watch(svgRef, (svg, previous) => {
+        previous?.removeAttribute('data-vdui-pan-zoom');
+        svg?.setAttribute('data-vdui-pan-zoom', '');
         removeEventListeners();
         if (!activeRef || activeRef.value) addEventListeners();
     });

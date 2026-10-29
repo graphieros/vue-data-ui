@@ -2050,6 +2050,10 @@ defineExpose({
 <template>
     <div
         data-cy="slicer"
+        data-vdui-fullscreen-control
+        :data-vdui-fullscreen-auto-fit="
+            shouldAutoFitToDrawingArea ? '' : undefined
+        "
         :data-minimap="hasMinimap"
         data-dom-to-png-ignore
         data-dom-to-png-ignore-layout

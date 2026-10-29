@@ -3044,9 +3044,10 @@ function handleMousemove(e) {
         return;
     }
 
-    const { left, top } = canvas.value.getBoundingClientRect();
-    const mouseX = e.clientX - left;
-    mouseY.value = (e.clientY - top) * 2;
+    const point = clientToCanvasCoords(e);
+    if (!point) return;
+    const mouseX = point.x;
+    mouseY.value = point.y;
 
     if (
         mouseY.value < drawingArea.value.top ||
@@ -3055,16 +3056,13 @@ function handleMousemove(e) {
         mouseY.value = null;
     }
 
-    if (
-        mouseX * 2 < drawingArea.value.left ||
-        mouseX * 2 > drawingArea.value.right
-    ) {
+    if (mouseX < drawingArea.value.left || mouseX > drawingArea.value.right) {
         clearChartEventHoveredIndex();
         clearA11yTooltip();
         return;
     }
 
-    const effectiveMouseX = mouseX * 2 - drawingArea.value.left;
+    const effectiveMouseX = mouseX - drawingArea.value.left;
     const index = Math.floor(effectiveMouseX / drawingArea.value.slot);
 
     setChartEventHoveredIndex(index);
