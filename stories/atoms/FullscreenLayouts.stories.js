@@ -1,6 +1,6 @@
 import { expect, waitFor } from 'storybook/test';
 import { nextTick } from 'vue';
-import { page } from '@vitest/browser/context';
+import { page } from '../support/browserPage.js';
 import { scenarioRender, runScenario } from '../support/scenario.js';
 import { components } from '../fixtures/components.js';
 

@@ -7,6 +7,7 @@ export default defineConfig({
     plugins: [vue(), storybookTest({ configDir: '.storybook' })],
     test: {
         name: 'storybook',
+        setupFiles: ['.storybook/vitest.setup.js'],
         maxWorkers: 4,
         testTimeout: 30000,
         browser: {
