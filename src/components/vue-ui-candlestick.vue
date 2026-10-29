@@ -858,10 +858,32 @@ const slot = computed(() => {
     return drawingArea.value.width / mutableDataset.value.length;
 });
 
+// Keep data-only statistics independent from layout and hover changes.
+const visibleExtrema = computed(() => {
+    const max = { o: -Infinity, h: -Infinity, l: -Infinity };
+    const min = { o: Infinity, h: Infinity, l: Infinity };
+    let volumeMax = -Infinity;
+    let volumeMin = Infinity;
+    for (const ds of datasetBreakdown.value) {
+        max.o = Math.max(max.o, ds.open);
+        max.h = Math.max(max.h, ds.high);
+        max.l = Math.max(max.l, ds.low);
+        min.o = Math.min(min.o, ds.open);
+        min.h = Math.min(min.h, ds.high);
+        min.l = Math.min(min.l, ds.low);
+        volumeMax = Math.max(volumeMax, ds.volume);
+        volumeMin = Math.min(volumeMin, ds.volume);
+    }
+    // Preserve the existing close marker comparisons against low extrema.
+    max.c = max.l;
+    min.c = min.l;
+    return { max, min, volumeMax, volumeMin };
+});
+
 const extremes = computed(() => {
     const max =
         gridCfg.value.yAxis.scale.max === null
-            ? Math.max(...datasetBreakdown.value.map((ds) => ds.high))
+            ? visibleExtrema.value.max.h
             : gridCfg.value.yAxis.scale.max;
     const min =
         gridCfg.value.yAxis.scale.min === null
@@ -902,20 +924,12 @@ function convertToPlot(item, index, dpMax = null, dpMin = null) {
 }
 
 const drawableDataset = computed(() => {
-    const dpMax = {
-        o: Math.max(...datasetBreakdown.value.map((d) => d.open)),
-        h: Math.max(...datasetBreakdown.value.map((d) => d.high)),
-        l: Math.max(...datasetBreakdown.value.map((d) => d.low)),
-        c: Math.max(...datasetBreakdown.value.map((d) => d.low)),
-    };
-    const dpMin = {
-        o: Math.min(...datasetBreakdown.value.map((d) => d.open)),
-        h: Math.min(...datasetBreakdown.value.map((d) => d.high)),
-        l: Math.min(...datasetBreakdown.value.map((d) => d.low)),
-        c: Math.min(...datasetBreakdown.value.map((d) => d.low)),
-    };
-    const volumeMax = Math.max(...datasetBreakdown.value.map((d) => d.volume));
-    const volumeMin = Math.min(...datasetBreakdown.value.map((d) => d.volume));
+    const {
+        max: dpMax,
+        min: dpMin,
+        volumeMax,
+        volumeMin,
+    } = visibleExtrema.value;
 
     return datasetBreakdown.value.map((ds, i) => {
         const open = convertToPlot(ds.open, i, dpMax.o, dpMin.o);
@@ -940,46 +954,75 @@ const drawableDataset = computed(() => {
     });
 });
 
-function convertToMinimapPlot({ item, index, minimapH, unitW }) {
-    const _min = gridCfg.value.yAxis.scale.min ?? 0;
-    const _max =
-        gridCfg.value.yAxis.scale.max ??
-        Math.max(...FINAL_DATASET.value.map((d) => d[2]));
+const minimapMaximum = computed(() => {
+    let max = -Infinity;
+    for (const ds of FINAL_DATASET.value) {
+        max = Math.max(max, ds[2]);
+    }
+    return max;
+});
+
+function convertToMinimapPlot({ item, index, minimapH, unitW, min, max }) {
     return {
         ...item,
         x: checkNaN(index * unitW),
-        y: checkNaN((1 - (item - _min) / (_max - _min)) * minimapH),
+        y: checkNaN((1 - (item - min) / (max - min)) * minimapH),
         value: checkNaN(item),
     };
 }
 
 const minimapDataset = computed(() => {
-    // expose SVG dimensions from Slicer minimap to apply a convertToPlot
-    return ({ minimapH, unitW }) =>
-        minimapSource.value.map((ds, i) => {
+    const source = minimapSource.value;
+    const min = gridCfg.value.yAxis.scale.min ?? 0;
+    const max = gridCfg.value.yAxis.scale.max ?? minimapMaximum.value;
+    let cachedHeight;
+    let cachedUnitWidth;
+    let cachedPlots;
+
+    // Slicer supplies dimensions through its slot. Retain one geometry result
+    // until dimensions change; source and scale changes invalidate this closure.
+    return ({ minimapH, unitW }) => {
+        if (
+            cachedPlots &&
+            cachedHeight === minimapH &&
+            cachedUnitWidth === unitW
+        ) {
+            return cachedPlots;
+        }
+        cachedHeight = minimapH;
+        cachedUnitWidth = unitW;
+        cachedPlots = source.map((ds, i) => {
             const open = convertToMinimapPlot({
                 item: ds.open,
                 index: i,
                 minimapH,
                 unitW,
+                min,
+                max,
             });
             const high = convertToMinimapPlot({
                 item: ds.high,
                 index: i,
                 minimapH,
                 unitW,
+                min,
+                max,
             });
             const low = convertToMinimapPlot({
                 item: ds.low,
                 index: i,
                 minimapH,
                 unitW,
+                min,
+                max,
             });
             const close = convertToMinimapPlot({
                 item: ds.close,
                 index: i,
                 minimapH,
                 unitW,
+                min,
+                max,
             });
             const isBullish = ds.close > ds.open;
             return {
@@ -993,6 +1036,8 @@ const minimapDataset = computed(() => {
                 absoluteIndex: ds.absoluteIndex,
             };
         });
+        return cachedPlots;
+    };
 });
 
 const allMinimaps = computed(() => {
@@ -1127,19 +1172,21 @@ const preciseAllTimeLabels = computed(() => {
     }));
 });
 
+const visibleTimeTexts = computed(() =>
+    (timeLabels.value || []).map((label) => label?.text ?? ''),
+);
+const allTimeTexts = computed(() =>
+    (allTimeLabels.value || []).map((label) => label?.text ?? ''),
+);
+
 const effectiveModulo = computed(() => {
     const configuredModulo = Math.max(
         1,
         Math.floor(Number(gridCfg.value.xAxis.dataLabels.modulo) || 1),
     );
 
-    const visibleTexts = (timeLabels.value || []).map(
-        (label) => label?.text ?? '',
-    );
-
-    const allTexts = (allTimeLabels.value || []).map(
-        (label) => label?.text ?? '',
-    );
+    const visibleTexts = visibleTimeTexts.value;
+    const allTexts = allTimeTexts.value;
 
     const start = slicer.value.start ?? 0;
 
@@ -1157,15 +1204,12 @@ const effectiveModulo = computed(() => {
 const displayedTimeLabels = computed(() => {
     const cfg = gridCfg.value.xAxis.dataLabels;
 
-    const vis = timeLabels.value || [];
-    const all = allTimeLabels.value || [];
     const start = slicer.value.start ?? 0;
     const sel = hoveredIndex.value;
     const maxS = len.value;
 
-    const visTexts = vis.map((label) => label?.text ?? '');
-
-    const allTexts = all.map((label) => label?.text ?? '');
+    const visTexts = visibleTimeTexts.value;
+    const allTexts = allTimeTexts.value;
 
     const displayed = buildDisplayedTimeLabels(
         !!cfg.showOnlyFirstAndLast,
