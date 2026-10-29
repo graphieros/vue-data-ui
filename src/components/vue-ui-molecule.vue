@@ -903,6 +903,7 @@ const annotationViewport = computed(() =>
             :hasAltCopy="cfgUserOptions.buttons.altCopy"
             :isTooltip="mutableConfig.showTooltip"
             :titles="{ ...cfgUserOptions.buttonTitles }"
+            :isFullscreen="isFullscreen"
             :chartElement="moleculeChart"
             :position="cfgUserOptions.position"
             :hasAnnotator="cfgUserOptions.buttons.annotator"

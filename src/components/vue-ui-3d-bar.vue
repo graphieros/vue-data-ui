@@ -1191,6 +1191,7 @@ defineExpose({
             :hasFullscreen="cfgUserOptions.buttons.fullscreen"
             :hasAltCopy="cfgUserOptions.buttons.altCopy"
             :titles="{ ...cfgUserOptions.buttonTitles }"
+            :isFullscreen="isFullscreen"
             :chartElement="bar3dChart"
             :position="cfgUserOptions.position"
             :hasAnnotator="cfgUserOptions.buttons.annotator"

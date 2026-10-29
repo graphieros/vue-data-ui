@@ -2220,6 +2220,7 @@ defineExpose({
             :hasLabel="FINAL_CONFIG.userOptions.buttons.labels"
             :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
             :hasAltCopy="FINAL_CONFIG.userOptions.buttons.altCopy"
+            :isFullscreen="isFullscreen"
             :chartElement="hillChartRef"
             :position="FINAL_CONFIG.userOptions.position"
             :callbacks="FINAL_CONFIG.userOptions.callbacks"

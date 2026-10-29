@@ -2578,6 +2578,12 @@ svg:focus-visible {
     transition: all 0.2s ease-in-out;
 }
 
+/* Fullscreen fitting changes label geometry repeatedly while settling.
+   Keep visual fades without interpolating font sizes or text positions. */
+.vue-ui-history-plot[data-vdui-fullscreen-layout] text.vue-data-ui-transition {
+    transition-property: fill, opacity;
+}
+
 @media (prefers-reduced-motion: reduce) {
     .vue-data-ui-component * {
         transition: none !important;

@@ -628,6 +628,55 @@ const svgViewBox = computed(() => {
 });
 
 const isFullscreen = ref(false);
+
+// A wide or tall fullscreen SVG exposes space outside its nominal viewBox
+// under xMidYMid meet. Cover that entire visible area with the pattern.
+const backgroundViewport = ref({ width: 0, height: 0 });
+watch(
+    [svgRef, isFullscreen, () => cfgChart.value.backgroundPattern.show],
+    ([svg, fullscreen, show], _, onCleanup) => {
+        if (!svg || !fullscreen || !show) return;
+        const measure = () => {
+            const { width, height } = svg.getBoundingClientRect();
+            if (
+                width !== backgroundViewport.value.width ||
+                height !== backgroundViewport.value.height
+            ) {
+                backgroundViewport.value = { width, height };
+            }
+        };
+        measure();
+        const observer = new ResizeObserver(measure);
+        observer.observe(svg);
+        onCleanup(() => observer.disconnect());
+    },
+    { flush: 'post' },
+);
+
+const backgroundPatternBounds = computed(() => {
+    const box = panZoomViewBox.value;
+    if (!box || !isFullscreen.value) {
+        return box;
+    }
+
+    const { width, height } = backgroundViewport.value;
+
+    if (!(width > 0 && height > 0 && box.width > 0 && box.height > 0)) {
+        return box;
+    }
+
+    const scale = Math.min(width / box.width, height / box.height);
+    const visibleWidth = width / scale;
+    const visibleHeight = height / scale;
+
+    return {
+        x: box.x - (visibleWidth - box.width) / 2,
+        y: box.y - (visibleHeight - box.height) / 2,
+        width: visibleWidth,
+        height: visibleHeight,
+    };
+});
+
 function toggleFullscreen(state) {
     isFullscreen.value = state;
     step.value += 1;
@@ -1890,10 +1939,11 @@ const annotationViewport = computed(() =>
 
                 <rect
                     v-if="cfgChart.backgroundPattern.show"
-                    :x="panZoomViewBox?.x ?? 0"
-                    :y="panZoomViewBox?.y ?? 0"
-                    :width="panZoomViewBox?.width ?? 0"
-                    :height="panZoomViewBox?.height ?? 0"
+                    data-cy="dag-background-pattern"
+                    :x="backgroundPatternBounds?.x ?? 0"
+                    :y="backgroundPatternBounds?.y ?? 0"
+                    :width="backgroundPatternBounds?.width ?? 0"
+                    :height="backgroundPatternBounds?.height ?? 0"
                     :fill="`url(#dag_bg_pattern_${uid})`"
                     :style="{
                         pointerEvents: 'none',

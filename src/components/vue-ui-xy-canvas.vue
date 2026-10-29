@@ -43,15 +43,7 @@ import {
     getImageDimensions,
 } from '../lib';
 import { throttle } from '../canvas-lib';
-import {
-    circle,
-    cloneCanvas,
-    debounce,
-    line,
-    polygon,
-    rect,
-    text,
-} from '../canvas-lib';
+import { circle, cloneCanvas, line, polygon, rect, text } from '../canvas-lib';
 import { COMMON_RULES, useHints } from '../useHints';
 import { useLocale } from '../useLocale';
 import { useConfig } from '../useConfig';
@@ -226,14 +218,9 @@ const activePointA11yText = computed(() => {
 
     const absoluteIndex = activeTooltipIndex.value + slicer.value.start;
 
-    const label = cfgXAxisLabels.value.values.slice(
-        slicer.value.start,
-        slicer.value.end,
-    )[activeTooltipIndex.value]
+    const label = visibleTooltipLabels.value[activeTooltipIndex.value]
         ? cfgTooltip.value.useDefaultTimeFormat
-            ? timeLabels.value.slice(slicer.value.start, slicer.value.end)[
-                  activeTooltipIndex.value
-              ]?.text
+            ? visibleTooltipTimeLabels.value[activeTooltipIndex.value]?.text
             : preciseAllTimeLabelsTooltip.value[activeTooltipIndex.value]?.text
         : (timeLabels.value[absoluteIndex]?.text ??
           `Point ${absoluteIndex + 1}`);
@@ -516,7 +503,7 @@ const maxSeries = computed(() => {
 
 function selectMinimapIndex(i) {
     selectedMinimapIndex.value = i;
-    draw();
+    scheduleDraw();
 }
 
 const measuredBottomExtraPixels = ref(0);
@@ -676,33 +663,44 @@ function createDatapointCoordinates({
     });
 }
 
+// Data scans must not rerun when only canvas dimensions change.
+const visibleSeriesRanges = computed(() => {
+    const ranges = new Map();
+    for (const ds of dsCopy.value) {
+        let min = Infinity;
+        let max = -Infinity;
+        for (const value of ds.series.slice(
+            slicer.value.start,
+            slicer.value.end,
+        )) {
+            min = Math.min(min, value);
+            max = Math.max(max, value);
+        }
+        ranges.set(ds.absoluteIndex, { min, max });
+    }
+    return ranges;
+});
+const visibleDataRange = computed(() => {
+    let min = Infinity;
+    let max = -Infinity;
+    for (const ds of dsCopy.value) {
+        if (segregated.value.includes(ds.absoluteIndex)) continue;
+        const range = visibleSeriesRanges.value.get(ds.absoluteIndex);
+        min = Math.min(min, range.min);
+        max = Math.max(max, range.max);
+    }
+    return { min, max };
+});
+
 const absoluteExtremes = computed(() => {
     const min =
         cfgChart.value.scale.min !== null
             ? cfgChart.value.scale.min
-            : Math.min(
-                  ...dsCopy.value
-                      .filter(
-                          (ds, i) =>
-                              !segregated.value.includes(ds.absoluteIndex),
-                      )
-                      .flatMap((ds) =>
-                          ds.series.slice(slicer.value.start, slicer.value.end),
-                      ),
-              );
+            : visibleDataRange.value.min;
     const max =
         cfgChart.value.scale.max !== null
             ? cfgChart.value.scale.max
-            : Math.max(
-                  ...dsCopy.value
-                      .filter(
-                          (ds, i) =>
-                              !segregated.value.includes(ds.absoluteIndex),
-                      )
-                      .flatMap((ds) =>
-                          ds.series.slice(slicer.value.start, slicer.value.end),
-                      ),
-              );
+            : visibleDataRange.value.max;
     const scale = calculateNiceScale(
         min < 0 ? min : 0,
         max === min ? (min + 1 < 0 ? 0 : min + 1) : max < 0 ? 0 : max,
@@ -787,19 +785,16 @@ const minimap = computed(() => {
     const _source = dsCopy.value.filter(
         (ds) => !segregated.value.includes(ds.absoluteIndex),
     );
-    const maxIndex = Math.max(
-        ..._source.map((datapoint) => datapoint.series.length),
-    );
-
+    let maxIndex = 0;
+    for (const ds of _source) maxIndex = Math.max(maxIndex, ds.series.length);
     const sumAllSeries = [];
+    let _min = Infinity;
     for (let i = 0; i < maxIndex; i += 1) {
-        sumAllSeries.push(
-            _source
-                .map((ds) => ds.series[i] || 0)
-                .reduce((a, b) => (a || 0) + (b || 0), 0),
-        );
+        let sum = 0;
+        for (const ds of _source) sum = (sum || 0) + (ds.series[i] || 0);
+        sumAllSeries.push(sum);
+        _min = Math.min(_min, sum);
     }
-    const _min = Math.min(...sumAllSeries);
     return sumAllSeries.map((dp) => dp + (_min < 0 ? Math.abs(_min) : 0)); // positivized
 });
 
@@ -835,10 +830,10 @@ const formattedDataset = computed(() => {
         })
         .map((ds, i) => {
             let min = [null, undefined].includes(ds.scaleMin)
-                ? Math.min(...ds.series) || 0
+                ? visibleSeriesRanges.value.get(ds.absoluteIndex).min || 0
                 : ds.scaleMin;
             let max = [null, undefined].includes(ds.scaleMax)
-                ? Math.max(...ds.series) || 1
+                ? visibleSeriesRanges.value.get(ds.absoluteIndex).max || 1
                 : ds.scaleMax;
 
             if (min === max) {
@@ -1313,11 +1308,20 @@ function resizeCanvas() {
     if (!canvas.value || !container.value) return;
     const containerWidth = container.value.offsetWidth;
     const containerHeight = container.value.offsetHeight;
-    canvas.value.width = containerWidth * dpr.value * 2;
-    canvas.value.height = containerHeight * dpr.value * 2;
-    w.value = containerWidth * dpr.value * 2;
-    h.value = containerHeight * dpr.value * 2;
-    ctx.value?.scale(dpr.value, dpr.value);
+    const width = containerWidth * dpr.value * 2;
+    const height = containerHeight * dpr.value * 2;
+    if (
+        canvas.value.width !== Math.trunc(width) ||
+        canvas.value.height !== Math.trunc(height)
+    ) {
+        canvas.value.width = width;
+        canvas.value.height = height;
+        ctx.value?.scale(dpr.value, dpr.value);
+        datasetHasChanged.value = true;
+        clonedCanvas.value = null;
+    }
+    w.value = width;
+    h.value = height;
     draw();
 }
 
@@ -1337,7 +1341,6 @@ watch(isDataset, async (hasData) => {
     tooltipHasChanged.value = true;
     await refreshSlicer();
     resizeCanvas();
-    draw();
 });
 
 function setupChart() {
@@ -2512,9 +2515,19 @@ function drawPrecogRect() {
 function draw() {
     if (!isDataset.value || !canvas.value || !ctx.value) return;
 
-    setupChart();
+    if (resizePending) {
+        resizePending = false;
+        resizeCanvas();
+        return;
+    }
+    if (drawFrame !== null) {
+        cancelAnimationFrame(drawFrame);
+        drawFrame = null;
+    }
+    if (!clonedCanvas.value) datasetHasChanged.value = true;
 
     if (datasetHasChanged.value) {
+        setupChart();
         (tooltipIndex.value !== null || selectedMinimapIndex.value !== null) &&
             cfgChart.value.selector.show &&
             drawVerticalSelector();
@@ -2528,14 +2541,9 @@ function draw() {
         lineAndPlotTypes.value.forEach((ds) => {
             (ds.type === 'line' || !ds.type) && drawLineOrArea(ds);
 
-            if (tooltipHasChanged.value) {
-                // PLOTS
-                drawPlots(ds);
-                // DATALABELS
-                if (mutableConfig.value.showDataLabels) {
-                    [true, undefined].includes(ds.dataLabels) &&
-                        drawDataLabels(ds);
-                }
+            drawPlots(ds);
+            if (mutableConfig.value.showDataLabels) {
+                [true, undefined].includes(ds.dataLabels) && drawDataLabels(ds);
             }
         });
 
@@ -2601,14 +2609,28 @@ function draw() {
     datasetHasChanged.value = false;
 }
 
-const debounceCanvasResize = debounce(
-    () => {
-        tooltipHasChanged.value = true;
-        resizeCanvas();
-    },
-    maxSeries.value > 200 ? 10 : 1,
-    !tooltipHasChanged.value,
-);
+let drawFrame = null;
+let resizePending = false;
+function scheduleDraw() {
+    if (drawFrame !== null) return;
+    drawFrame = requestAnimationFrame(() => {
+        drawFrame = null;
+        if (resizePending) {
+            resizePending = false;
+            resizeCanvas();
+        } else {
+            draw();
+        }
+    });
+}
+function scheduleCanvasResize() {
+    tooltipHasChanged.value = true;
+    resizePending = true;
+    scheduleDraw();
+}
+onBeforeUnmount(() => {
+    if (drawFrame !== null) cancelAnimationFrame(drawFrame);
+});
 
 function getYandValueAtIndex(datapoint) {
     if (
@@ -3005,6 +3027,13 @@ function onChartZoomPointerUp(event) {
     }
 }
 
+const visibleTooltipLabels = computed(() =>
+    cfgXAxisLabels.value.values.slice(slicer.value.start, slicer.value.end),
+);
+const visibleTooltipTimeLabels = computed(() =>
+    timeLabels.value.slice(slicer.value.start, slicer.value.end),
+);
+
 function handleMousemove(e) {
     if (
         !isDataset.value ||
@@ -3015,9 +3044,10 @@ function handleMousemove(e) {
         return;
     }
 
-    const { left, top } = canvas.value.getBoundingClientRect();
-    const mouseX = e.clientX - left;
-    mouseY.value = (e.clientY - top) * 2;
+    const point = clientToCanvasCoords(e);
+    if (!point) return;
+    const mouseX = point.x;
+    mouseY.value = point.y;
 
     if (
         mouseY.value < drawingArea.value.top ||
@@ -3026,20 +3056,18 @@ function handleMousemove(e) {
         mouseY.value = null;
     }
 
-    if (
-        mouseX * 2 < drawingArea.value.left ||
-        mouseX * 2 > drawingArea.value.right
-    ) {
+    if (mouseX < drawingArea.value.left || mouseX > drawingArea.value.right) {
         clearChartEventHoveredIndex();
         clearA11yTooltip();
         return;
     }
 
-    const effectiveMouseX = mouseX * 2 - drawingArea.value.left;
+    const effectiveMouseX = mouseX - drawingArea.value.left;
     const index = Math.floor(effectiveMouseX / drawingArea.value.slot);
 
     setChartEventHoveredIndex(index);
 
+    if (tooltipIndex.value !== index) tooltipHasChanged.value = true;
     tooltipIndex.value = index;
     activeTooltipIndex.value = index;
     isTooltip.value = true;
@@ -3055,18 +3083,16 @@ function handleMousemove(e) {
         name: ds.name,
         color: ds.color,
         type: ds.type || 'line',
-        value: ds.series.find((s, i) => i === tooltipIndex.value),
+        value:
+            Number.isInteger(tooltipIndex.value) && tooltipIndex.value >= 0
+                ? ds.series[tooltipIndex.value]
+                : undefined,
     }));
 
     dataTooltipSlot.value = {
-        timeLabel: cfgXAxisLabels.value.values.slice(
-            slicer.value.start,
-            slicer.value.end,
-        )[tooltipIndex.value]
+        timeLabel: visibleTooltipLabels.value[tooltipIndex.value]
             ? cfgTooltip.value.useDefaultTimeFormat
-                ? timeLabels.value.slice(slicer.value.start, slicer.value.end)[
-                      tooltipIndex.value
-                  ]?.text
+                ? visibleTooltipTimeLabels.value[tooltipIndex.value]?.text
                 : preciseAllTimeLabelsTooltip.value[tooltipIndex.value]?.text
             : '',
         datapoint,
@@ -3095,13 +3121,8 @@ function handleMousemove(e) {
             config: FINAL_CONFIG.value,
         });
     } else {
-        if (
-            cfgXAxisLabels.value.values.slice(
-                slicer.value.start,
-                slicer.value.end,
-            )[tooltipIndex.value]
-        ) {
-            html += `<div style="padding-bottom: 6px; margin-bottom: 4px; border-bottom: 1px solid ${cfgTooltip.value.borderColor}; width:100%">${cfgTooltip.value.useDefaultTimeFormat ? timeLabels.value.slice(slicer.value.start, slicer.value.end)[tooltipIndex.value]?.text : preciseAllTimeLabelsTooltip.value[tooltipIndex.value]?.text}</div>`;
+        if (visibleTooltipLabels.value[tooltipIndex.value]) {
+            html += `<div style="padding-bottom: 6px; margin-bottom: 4px; border-bottom: 1px solid ${cfgTooltip.value.borderColor}; width:100%">${cfgTooltip.value.useDefaultTimeFormat ? visibleTooltipTimeLabels.value[tooltipIndex.value]?.text : preciseAllTimeLabelsTooltip.value[tooltipIndex.value]?.text}</div>`;
         } else {
             html += `<div style="padding-bottom: 6px; margin-bottom: 4px; border-bottom: 1px solid ${cfgTooltip.value.borderColor}; width:100%">${timeLabels.value[tooltipIndex.value + slicer.value.start]?.text ?? ''}</div>`;
         }
@@ -3117,7 +3138,10 @@ function getTooltipDatapointAtIndex(index) {
         name: ds.name,
         color: ds.color,
         type: ds.type || 'line',
-        value: ds.series.find((s, i) => i === index),
+        value:
+            Number.isInteger(index) && index >= 0
+                ? ds.series[index]
+                : undefined,
     }));
 }
 
@@ -3147,12 +3171,8 @@ function buildTooltipContentForIndex(index) {
         });
     }
 
-    if (
-        cfgXAxisLabels.value.values.slice(slicer.value.start, slicer.value.end)[
-            index
-        ]
-    ) {
-        html += `<div style="padding-bottom: 6px; margin-bottom: 4px; border-bottom: 1px solid ${cfgTooltip.value.borderColor}; width:100%">${cfgTooltip.value.useDefaultTimeFormat ? timeLabels.value.slice(slicer.value.start, slicer.value.end)[index]?.text : preciseAllTimeLabelsTooltip.value[index]?.text}</div>`;
+    if (visibleTooltipLabels.value[index]) {
+        html += `<div style="padding-bottom: 6px; margin-bottom: 4px; border-bottom: 1px solid ${cfgTooltip.value.borderColor}; width:100%">${cfgTooltip.value.useDefaultTimeFormat ? visibleTooltipTimeLabels.value[index]?.text : preciseAllTimeLabelsTooltip.value[index]?.text}</div>`;
     } else {
         html += `<div style="padding-bottom: 6px; margin-bottom: 4px; border-bottom: 1px solid ${cfgTooltip.value.borderColor}; width:100%">${timeLabels.value[index + slicer.value.start]?.text ?? ''}</div>`;
     }
@@ -3203,7 +3223,7 @@ function setTooltipFromIndex(
     }
 
     tooltipHasChanged.value = false;
-    draw();
+    scheduleDraw();
 }
 
 function clearA11yTooltip() {
@@ -3213,7 +3233,7 @@ function clearA11yTooltip() {
     tooltipContent.value = '';
     mouseY.value = null;
     isKeyboardTooltipMode.value = false;
-    draw();
+    scheduleDraw();
 }
 
 function onCanvasFocus() {
@@ -3321,10 +3341,17 @@ watch(
     { immediate: true },
 );
 
+// Layout measurements can change without a container resize (for example,
+// after rotated time labels resolve). Invalidate the cached base in that case.
+watch(drawingArea, () => {
+    datasetHasChanged.value = true;
+    scheduleDraw();
+});
+
 watch(
     () => tooltipIndex.value,
-    (_) => {
-        debounceCanvasResize();
+    () => {
+        scheduleDraw();
     },
 );
 
@@ -3342,7 +3369,7 @@ watch(
 watch(
     () => slicerPrecog.value,
     (_) => {
-        draw();
+        scheduleDraw();
     },
     { deep: true },
 );
@@ -3357,10 +3384,8 @@ watch(
 
 watch(
     () => mouseY.value,
-    (newVal) => {
-        if (newVal) {
-            draw();
-        }
+    () => {
+        scheduleDraw();
     },
 );
 
@@ -3369,7 +3394,7 @@ watch(
     (_) => {
         datasetHasChanged.value = true;
         tooltipHasChanged.value = true;
-        debounceCanvasResize();
+        scheduleCanvasResize();
     },
 );
 
@@ -3442,7 +3467,7 @@ function prepareChart() {
         for (const entry of entries) {
             if (entry.contentBoxSize && container.value) {
                 datasetHasChanged.value = true;
-                debounceCanvasResize();
+                scheduleCanvasResize();
             }
         }
     });
@@ -3469,7 +3494,7 @@ function toggleLegend() {
         });
     }
     datasetHasChanged.value = true;
-    debounceCanvasResize();
+    scheduleCanvasResize();
     emit('selectLegend', formattedDataset.value);
 }
 
@@ -3480,7 +3505,7 @@ function segregate(index) {
         segregated.value.push(index);
     }
     datasetHasChanged.value = true;
-    debounceCanvasResize();
+    scheduleCanvasResize();
     emit('selectLegend', formattedDataset.value);
 }
 
@@ -3585,10 +3610,7 @@ const dataTable = computed(() => {
 
         body.push(
             [
-                cfgXAxisLabels.value.values.slice(
-                    slicer.value.start,
-                    slicer.value.end,
-                )[i]
+                visibleTooltipLabels.value[i]
                     ? (timeLabels?.value?.slice(
                           slicer.value.start,
                           slicer.value.end,
@@ -3719,6 +3741,12 @@ function toggleAnnotator() {
 
 async function getImage({ scale = 2 } = {}) {
     if (!xy.value) return;
+    if (resizePending) {
+        resizePending = false;
+        resizeCanvas();
+    } else if (drawFrame !== null) {
+        draw();
+    }
     const { imageUri, base64 } = await img({
         domElement: xy.value,
         base64: true,

@@ -1270,7 +1270,7 @@ watch(
             :hasLabel="false"
             :hasAltCopy="cfgUserOptions.buttons.altCopy"
             :hasFullscreen="cfgUserOptions.buttons.fullscreen"
-            :isFullcreen="isFullscreen"
+            :isFullscreen="isFullscreen"
             :chartElement="bumpChart"
             :position="cfgUserOptions.position"
             :titles="{ ...cfgUserOptions.buttonTitles }"

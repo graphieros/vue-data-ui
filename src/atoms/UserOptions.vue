@@ -10,6 +10,7 @@ import {
 import vClickOutside from '../directives/vClickOutside';
 import BaseIcon from './BaseIcon.vue';
 import img from '../img';
+import { createFullscreenLayout } from '../fullscreenLayout';
 import vPopoverClickOutside from '../directives/vPopoverClickOutside';
 
 const props = defineProps({
@@ -347,35 +348,62 @@ function toggleTooltip() {
     }
 }
 
-const _isFullscreen = computed({
-    get: () => props.isFullscreen,
-    set: (val) => emit('toggleFullscreen', val),
-});
+let fullscreenLayout = null;
+let fullscreenChartElement = null;
+function prepareFullscreenLayout() {
+    if (fullscreenChartElement !== props.chartElement) {
+        fullscreenLayout?.stop();
+        fullscreenChartElement = props.chartElement;
+        fullscreenLayout = createFullscreenLayout(props.chartElement);
+    }
+}
 
-function toggleFullscreen() {
+async function toggleFullscreen() {
     if (!props.chartElement) return;
-
-    const next = !props.isFullscreen;
-    _isFullscreen.value = next;
-
-    if (next) {
-        props.chartElement.requestFullscreen();
-    } else {
-        document.exitFullscreen();
+    prepareFullscreenLayout();
+    emit('toggleFullscreen', !props.isFullscreen);
+    try {
+        if (document.fullscreenElement === props.chartElement) {
+            await document.exitFullscreen();
+        } else {
+            await props.chartElement.requestFullscreen();
+        }
+    } catch {
+        fullscreenLayout?.stop();
+        emit('toggleFullscreen', false);
     }
 }
 
 function fullscreenchanged() {
-    const flag = !!document.fullscreenElement;
-    emit('toggleFullscreen', flag);
+    const flag =
+        !!props.chartElement &&
+        document.fullscreenElement === props.chartElement;
+    if (flag) {
+        prepareFullscreenLayout();
+        fullscreenLayout?.enter();
+    } else {
+        fullscreenLayout?.stop();
+    }
+    if (flag !== props.isFullscreen) emit('toggleFullscreen', flag);
 }
 
 onMounted(() => {
     document.addEventListener('fullscreenchange', fullscreenchanged);
+    if (props.chartElement && document.fullscreenElement === props.chartElement)
+        fullscreenchanged();
 });
 
 onBeforeUnmount(() => {
     document.removeEventListener('fullscreenchange', fullscreenchanged);
+    // Many charts remount their toolbar when fullscreen changes. Keep the
+    // element-owned layout alive across that remount, but release it when the
+    // chart itself is removed or is no longer fullscreen.
+    const layout = fullscreenLayout;
+    const element = fullscreenChartElement;
+    nextTick(() => {
+        if (!element?.isConnected || document.fullscreenElement !== element)
+            layout?.stop();
+    });
 });
 
 const isDesktop = ref(window.innerWidth > 600);

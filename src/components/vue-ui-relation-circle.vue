@@ -374,7 +374,7 @@ function prepareChart() {
 
 onBeforeUnmount(() => {
     const chart = document.getElementById(`relation_circle_${uid.value}`);
-    chart.removeEventListener('click', clickOutside);
+    chart?.removeEventListener('click', clickOutside);
     if (resizeObserver.value) {
         if (observedEl.value) {
             resizeObserver.value.unobserve(observedEl.value);

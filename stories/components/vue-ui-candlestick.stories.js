@@ -16,6 +16,60 @@ function createCases(env) {
     const { dataset, config } = components.find(
         (c) => c.name === 'VueUiCandlestick',
     );
+    cases.MinimapGeometryCache = async () => {
+        const points = [
+            ['A', 10, 18, 6, 14, 100],
+            ['B', 16, 24, 8, 12, 200],
+            ['C', 12, 20, 4, 18, 150],
+        ];
+        const { wrapper } = await mountSubject(VueUiCandlestick, {
+            props: {
+                dataset: points,
+                config: { style: { zoom: { minimap: { show: true } } } },
+            },
+        });
+        const state = wrapper.vm.$.setupState;
+        const dimensions = { minimapH: 40, unitW: 10 };
+        const plots = state.minimapDataset(dimensions);
+        expect(state.minimapDataset(dimensions)).toBe(plots);
+        for (let i = 0; i < points.length; i++) {
+            for (const [field, column] of [
+                ['open', 1],
+                ['high', 2],
+                ['low', 3],
+                ['close', 4],
+            ]) {
+                expect(plots[i][field].x).toBe(i * 10);
+                expect(plots[i][field].y).toBe(
+                    (1 - points[i][column] / 24) * 40,
+                );
+            }
+        }
+        const resized = state.minimapDataset({ minimapH: 80, unitW: 20 });
+        expect(resized).not.toBe(plots);
+        expect(resized[1].high.x).toBe(20);
+        expect(resized[0].high.y).toBe(plots[0].high.y * 2);
+
+        // Hovering must retain geometry, while data and scale changes rebuild it.
+        state.hoveredIndex = 1;
+        expect(state.minimapDataset({ minimapH: 80, unitW: 20 })).toBe(resized);
+        await wrapper.setProps({
+            dataset: [points[0], ['B', 16, 48, 8, 12, 200], points[2]],
+        });
+        const updated = state.minimapDataset(dimensions);
+        expect(updated).not.toBe(plots);
+        expect(updated[0].high.y).toBe((1 - 18 / 48) * 40);
+        await wrapper.setProps({
+            config: {
+                style: {
+                    layout: { grid: { yAxis: { scale: { min: 2, max: 50 } } } },
+                },
+            },
+        });
+        expect(state.minimapDataset(dimensions)[0].high.y).toBe(
+            (1 - (18 - 2) / (50 - 2)) * 40,
+        );
+    };
     cases.Renders = async () => {
         {
             const mounted = await mountSubject(VueUiCandlestick, {
@@ -163,4 +217,10 @@ export default {
 export const Renders = {
     name: 'renders',
     play: async (context) => runScenario(context, createCases, 'Renders'),
+};
+
+export const MinimapGeometryCache = {
+    name: 'minimap geometry stays identical and cache invalidates correctly',
+    play: async (context) =>
+        runScenario(context, createCases, 'MinimapGeometryCache'),
 };
