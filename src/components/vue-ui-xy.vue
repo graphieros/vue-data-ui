@@ -2264,19 +2264,21 @@ watchEffect(() => {
     })();
 });
 
+const visibleTimeTexts = computed(() =>
+    (timeLabels.value || []).map((label) => label?.text ?? ''),
+);
+const allTimeTexts = computed(() =>
+    (allTimeLabels.value || []).map((label) => label?.text ?? ''),
+);
+
 const effectiveModulo = computed(() => {
     const configuredModulo = Math.max(
         1,
         Math.floor(Number(gridLabels.value.xAxisLabels.modulo) || 1),
     );
 
-    const visibleTexts = (timeLabels.value || []).map(
-        (label) => label?.text ?? '',
-    );
-
-    const allTexts = (allTimeLabels.value || []).map(
-        (label) => label?.text ?? '',
-    );
+    const visibleTexts = visibleTimeTexts.value;
+    const allTexts = allTimeTexts.value;
 
     const start = slicer.value.start ?? 0;
 
@@ -2293,12 +2295,10 @@ const effectiveModulo = computed(() => {
 
 function getDisplayedTimeLabels(selectedIndex = null) {
     const cfg = gridLabels.value.xAxisLabels;
-    const vis = timeLabels.value || [];
-    const all = allTimeLabels.value || [];
     const start = slicer.value.start ?? 0;
     const maxS = maxSeries.value;
-    const visTexts = vis.map((l) => l?.text ?? '');
-    const allTexts = all.map((l) => l?.text ?? '');
+    const visTexts = visibleTimeTexts.value;
+    const allTexts = allTimeTexts.value;
 
     const displayed = buildDisplayedTimeLabels(
         !!cfg.showOnlyFirstAndLast,
@@ -2368,9 +2368,10 @@ function selectTimeLabel(label, relativeIndex) {
             name: datapoint.name,
             color: datapoint.color,
             type: datapoint.type,
-            value: datapoint.absoluteValues.find(
-                (_s, i) => i === relativeIndex,
-            ),
+            value:
+                Number.isInteger(relativeIndex) && relativeIndex >= 0
+                    ? datapoint.absoluteValues[relativeIndex]
+                    : undefined,
             comments: datapoint.comments || [],
             prefix: datapoint.prefix || cfgChart.value.labels.prefix,
             suffix: datapoint.suffix || cfgChart.value.labels.suffix,
@@ -4317,9 +4318,11 @@ const selectedSeries = computed(() => {
             name: datapoint.name,
             color: datapoint.color,
             type: datapoint.type,
-            value: datapoint.absoluteValues.find(
-                (_s, i) => i === selectedSerieIndex.value,
-            ),
+            value:
+                Number.isInteger(selectedSerieIndex.value) &&
+                selectedSerieIndex.value >= 0
+                    ? datapoint.absoluteValues[selectedSerieIndex.value]
+                    : undefined,
             comments: datapoint.comments || [],
             prefix: datapoint.prefix || cfgChart.value.labels.prefix,
             suffix: datapoint.suffix || cfgChart.value.labels.suffix,
@@ -5103,13 +5106,7 @@ const barSet = computed(() => {
                     : drawingArea.value?.left -
                       slot.value.bar / 2 +
                       slot.value.bar * i +
-                      slot.value.bar *
-                          j *
-                          absoluteDataset.value
-                              .filter((ds) => ds.type === 'bar')
-                              .filter(
-                                  (s) => !segregatedSeriesSet.value.has(s.id),
-                              ).length;
+                      slot.value.bar * j * barLen;
             return {
                 yOffset: checkNaN(yOffset),
                 individualHeight: checkNaN(individualHeight),
@@ -5224,12 +5221,7 @@ const lineSet = computed(() => {
                     y: null,
                     value: null,
                     datasetXValue: getDatasetXValue(plot),
-                    comment: datapoint.comments
-                        ? datapoint.comments.slice(
-                              slicer.value.start,
-                              slicer.value.end,
-                          )[j] || ''
-                        : '',
+                    comment: comments[j] || '',
                 };
             }
             const yRatio = mutableConfig.value.useIndividualScale
@@ -6303,6 +6295,25 @@ function getTablePeriodLabel(index) {
     );
 }
 
+// Build once per visible dataset, preserving Array.find's first match for
+// duplicate numeric X coordinates (including a first match with a null Y).
+const continuousTablePointLookup = computed(() => {
+    const bySeries = new Map();
+    if (!isContinuousScale.value) return bySeries;
+
+    for (const seriesItem of relativeDataset.value) {
+        const pointsByX = new Map();
+        for (const point of seriesItem.series) {
+            const x = Number(point?.x);
+            if (Number.isFinite(x) && !pointsByX.has(x)) {
+                pointsByX.set(x, point);
+            }
+        }
+        bySeries.set(seriesItem, pointsByX);
+    }
+    return bySeries;
+});
+
 function getTableRawValue(seriesItem, rowReference) {
     if (isContinuousScale.value) {
         const xValue = Number(rowReference);
@@ -6311,9 +6322,9 @@ function getTableRawValue(seriesItem, rowReference) {
             return null;
         }
 
-        const point = seriesItem.series.find((candidate) => {
-            return Number(candidate?.x) === xValue;
-        });
+        const point = continuousTablePointLookup.value
+            .get(seriesItem)
+            ?.get(xValue);
 
         return point?.y ?? null;
     }

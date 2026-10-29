@@ -33,6 +33,79 @@ function createCases(env) {
         }
         return arr;
     }
+    cases.ContinuousTableLookup = async () => {
+        const points = [
+            { x: null, y: null },
+            { x: 0, y: 10 },
+            { x: 1, y: 30 },
+            { x: 2, y: 20 },
+        ];
+        const { wrapper } = await mountSubject(VueUiXy, {
+            props: {
+                dataset: [
+                    {
+                        name: 'Continuous',
+                        type: 'line',
+                        series: points,
+                        comments: ['gap', 'zero', 'duplicate', 'two'],
+                    },
+                ],
+                config: { table: { show: true } },
+            },
+        });
+        const state = wrapper.vm.$.setupState;
+        const series = state.relativeDataset[0];
+        const lookup = state.continuousTablePointLookup;
+        for (const x of [0, 1, 2, 3, NaN, Infinity]) {
+            const expected = Number.isFinite(x)
+                ? (series.series.find((point) => Number(point?.x) === x)?.y ??
+                  null)
+                : null;
+            expect(state.getTableRawValue(series, x)).toBe(expected);
+        }
+        expect(state.getTableRawValue(series, 0)).toBeNull();
+        const gap = state.lineSet[0].plots.find(
+            (point) => point.value === null,
+        );
+        expect(gap.comment).toBe('gap');
+        state.selectedSerieIndex = 1;
+        expect(state.continuousTablePointLookup).toBe(lookup);
+
+        await wrapper.setProps({
+            dataset: [
+                {
+                    name: 'Continuous',
+                    type: 'line',
+                    series: [
+                        { x: 0, y: 42 },
+                        { x: 1, y: 7 },
+                    ],
+                },
+            ],
+        });
+        expect(state.continuousTablePointLookup).not.toBe(lookup);
+        expect(state.getTableRawValue(state.relativeDataset[0], 0)).toBe(42);
+    };
+    cases.HoverLookupAndLabelCache = async () => {
+        const { wrapper } = await mountSubject(VueUiXy, {
+            props: {
+                dataset: [
+                    { name: 'Numeric', type: 'line', series: [10, null, 30] },
+                ],
+            },
+        });
+        const state = wrapper.vm.$.setupState;
+        await waitFor(() => expect(state.timeLabelsAreReady).toBe(true));
+        const texts = state.visibleTimeTexts;
+        for (const index of [null, 0, 1, 2, 3, -1, '1']) {
+            state.selectedSerieIndex = index;
+            const values = state.relativeDataset[0].absoluteValues;
+            expect(state.selectedSeries[0].value).toBe(
+                values.find((_, i) => i === index),
+            );
+            expect(state.visibleTimeTexts).toBe(texts);
+        }
+    };
     cases.RendersDefault = async () => {
         {
             const mounted = await mountSubject(VueUiXy, {
@@ -421,4 +494,15 @@ export const RendersDefault = {
 export const Emits = {
     name: 'emits',
     play: async (context) => runScenario(context, createCases, 'Emits'),
+};
+
+export const ContinuousTableLookup = {
+    name: 'continuous table preserves duplicates and null gaps',
+    play: async (context) =>
+        runScenario(context, createCases, 'ContinuousTableLookup'),
+};
+export const HoverLookupAndLabelCache = {
+    name: 'hover values and cached label texts stay consistent',
+    play: async (context) =>
+        runScenario(context, createCases, 'HoverLookupAndLabelCache'),
 };
