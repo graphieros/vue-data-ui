@@ -72,7 +72,12 @@ function apply() {
     emit('apply', selection());
 }
 
-onMounted(() => panel.value.open());
+onMounted(() => {
+    panel.value.open();
+    // Reopening after zoom must preview the remembered selection without
+    // requiring a checkbox change to trigger the draft watcher.
+    emit('preview', selection());
+});
 </script>
 
 <template>

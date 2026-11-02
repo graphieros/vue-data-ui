@@ -7667,6 +7667,7 @@ const analysisOptionsOpen = ref(false);
 const selectedAnalysisOptions = ref(defaultXyAnalysisOptions());
 const selectedAnalysisSeries = ref(null);
 const analysisDraftAppearance = ref(null);
+const analysisDraftSelection = shallowRef(null);
 const selectedAnalysisAppearance = ref(null);
 const analysisSeries = computed(() =>
     safeDataset.value
@@ -7696,15 +7697,16 @@ function openAnalysisOptions() {
     analysisWasAnnotator = isAnnotator.value;
     analysisDraftAppearance.value = analysisPen.value.getAnalysisAppearance();
     analysisOptionsOpen.value = true;
-    previewAnalysisOptions({
+    analysisDraftSelection.value = {
         options: selectedAnalysisOptions.value,
         seriesIds: currentAnalysisSeries.value,
         appearance: analysisDraftAppearance.value,
-    });
+    };
 }
 
 function closeAnalysisOptions() {
     analysisOptionsOpen.value = false;
+    analysisDraftSelection.value = null;
     nextTick(() =>
         userOptionsRef.value?.$el
             ?.querySelector('[data-cy="user-options-analyze"]')
@@ -7721,6 +7723,11 @@ function cancelAnalysisOptions() {
 
 function previewAnalysisOptions({ options, seriesIds, appearance }) {
     if (appearance) analysisDraftAppearance.value = appearance;
+    analysisDraftSelection.value = {
+        options: { ...options },
+        seriesIds: [...seriesIds],
+        appearance: analysisDraftAppearance.value,
+    };
     if (cfgChart.value.userOptions.callbacks.analyze) return;
     refreshAnalysis(seriesIds);
     visualizeAnalysis(options, appearance);
@@ -7877,9 +7884,14 @@ watch(
         canAnalyze,
     ],
     async () => {
-        // Plot geometry may settle while the dialog is opening. Keep its draft
-        // alive; preview changes and Apply use the latest rendered geometry.
-        if (analysisOptionsOpen.value) return;
+        // Zoom animation/layout may settle after the dialog mounts. Refresh
+        // the current draft rather than leaving checked options without shapes.
+        if (analysisOptionsOpen.value) {
+            await nextTick();
+            if (analysisOptionsOpen.value && analysisDraftSelection.value)
+                previewAnalysisOptions(analysisDraftSelection.value);
+            return;
+        }
         if (
             !analysisApplied.value ||
             cfgChart.value.userOptions.callbacks.analyze

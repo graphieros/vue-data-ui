@@ -33,6 +33,55 @@ function createCases(env) {
         }
         return arr;
     }
+    cases.AnalysisReopensAfterZoom = async () => {
+        const { wrapper } = await mountSubject(VueUiXy, {
+            props: {
+                dataset: [
+                    { name: 'A', type: 'line', series: [100, 2, 8, -99] },
+                    { name: 'B', type: 'line', series: [1000, 20, 80, -999] },
+                ],
+                config: {
+                    transitions: { enable: false },
+                    useCssAnimation: false,
+                    chart: { userOptions: { buttons: { analyze: true } } },
+                },
+            },
+        });
+        const state = wrapper.vm.$.setupState;
+        const selection = {
+            options: { minimum: true, maximum: true },
+            seriesIds: ['uniqueId_0', 'uniqueId_1'],
+            appearance: { color: '#123456', fontSize: 16, strokeWidth: 3 },
+        };
+        const groups = () =>
+            wrapper.element.querySelectorAll('g[data-analysis-generated]');
+        await waitFor(() => expect(state.analysisPen).toBeTruthy());
+        state.openAnalysisOptions();
+        await waitFor(() =>
+            expect(
+                document.querySelector('[data-cy="analysis-apply"]'),
+            ).toBeTruthy(),
+        );
+        state.applyAnalysisOptions(selection);
+        await waitFor(() => expect(groups().length).toBe(4));
+        wrapper.vm.setZoomState({ start: 1, end: 3 });
+        await waitFor(() => expect(groups().length).toBe(0));
+        state.openAnalysisOptions();
+        await waitFor(() => expect(groups().length).toBe(4));
+        expect(
+            state.analysisResult.map((series) => series.minimum.value),
+        ).toEqual([2, 20]);
+        expect(
+            state.analysisResult.map((series) => series.maximum.value),
+        ).toEqual([8, 80]);
+        state.cancelAnalysisOptions();
+        await waitFor(() => expect(groups().length).toBe(0));
+        state.openAnalysisOptions();
+        await waitFor(() => expect(groups().length).toBe(4));
+        state.applyAnalysisOptions(selection);
+        await waitFor(() => expect(groups().length).toBe(4));
+        expect(state.analysisOptionsOpen).toBe(false);
+    };
     cases.StackedAnalysisAnnotations = async () => {
         const { wrapper } = await mountSubject(VueUiXy, {
             props: {
@@ -675,4 +724,10 @@ export const StackedAnalysisAnnotations = {
     name: 'analysis annotations follow stack mode',
     play: async (context) =>
         runScenario(context, createCases, 'StackedAnalysisAnnotations'),
+};
+
+export const AnalysisReopensAfterZoom = {
+    name: 'saved analysis previews after zoom',
+    play: async (context) =>
+        runScenario(context, createCases, 'AnalysisReopensAfterZoom'),
 };

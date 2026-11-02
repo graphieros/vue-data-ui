@@ -34,7 +34,7 @@ describe('analysis selection dialog', () => {
             await optionInput(wrapper, 'increase').setValue(true);
             expect(wrapper.emitted('apply')).toBeUndefined();
             await wrapper.find('[data-cy="analysis-apply"]').trigger('click');
-            expect(wrapper.emitted('preview')[0][0].options.increase).toBe(
+            expect(wrapper.emitted('preview').at(-1)[0].options.increase).toBe(
                 true,
             );
             expect(wrapper.emitted('apply')[0][0].options).toMatchObject({
@@ -246,3 +246,31 @@ it.each([false, true])(
         }
     },
 );
+
+it('previews remembered options, series and appearance immediately on each opening', async () => {
+    const props = {
+        messages,
+        selected: { minimum: true, maximum: true },
+        selectedSeries: ['a'],
+        series: [
+            { id: 'a', name: 'A' },
+            { id: 'b', name: 'B' },
+        ],
+        appearance: { color: '#123456', fontSize: 16, strokeWidth: 3 },
+    };
+    for (let opening = 0; opening < 2; opening += 1) {
+        const wrapper = await mountOptions({ props });
+        try {
+            expect(wrapper.emitted('preview')).toHaveLength(1);
+            expect(wrapper.emitted('preview')[0][0]).toMatchObject({
+                options: { minimum: true, maximum: true },
+                seriesIds: ['a'],
+                appearance: props.appearance,
+            });
+            await wrapper.find('[data-cy="analysis-cancel"]').trigger('click');
+            expect(wrapper.emitted('apply')).toBeUndefined();
+        } finally {
+            wrapper.unmount();
+        }
+    }
+});
