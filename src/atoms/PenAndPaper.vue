@@ -11,6 +11,7 @@ import {
     captureAnnotationAnchor,
     projectAnnotationAnchor,
 } from '../utils/annotationAnchors';
+import { fitAnnotationText } from '../utils/annotationTextBounds';
 import BaseIcon from './BaseIcon.vue';
 import ColorPicker from './ColorPicker.vue';
 import { dataLabel, lightenHexColor, XMLNS, createUid } from '../lib';
@@ -41,6 +42,18 @@ const props = defineProps({
         type: String,
         default: '#FFFFFF',
     },
+    useOutline: {
+        type: Boolean,
+        default: true,
+    },
+    outlineThickness: {
+        type: Number,
+        default: 1,
+    },
+    outlineColor: {
+        type: String,
+        default: null,
+    },
     active: {
         type: Boolean,
         default: false,
@@ -64,6 +77,19 @@ const props = defineProps({
         ],
     },
 });
+
+// Background-colored outline around manual and generated annotation text, shafts and arrowheads.
+// Width is in CSS pixels, independent of fullscreen/responsive SVG scaling.
+const outlineThicknessPx = computed(() =>
+    Number.isFinite(props.outlineThickness)
+        ? Math.max(0, props.outlineThickness)
+        : 1,
+);
+const outlineEnabled = computed(
+    () => props.useOutline && outlineThicknessPx.value > 0,
+);
+
+const MANUAL_OUTLINE_DEFS_ID = `manual-outline-defs-${createUid()}`;
 
 const emit = defineEmits(['close']);
 
@@ -192,7 +218,120 @@ function projectAnchors() {
     annotationShapes().forEach((shape) =>
         projectAnnotationAnchor(shape, props.annotationViewport),
     );
+    fitGeneratedTexts();
     updateSelectionBox();
+}
+
+// Retain generated text/stroke sizes in screen pixels when the root SVG or
+// an anchored group changes scale. The saved scale also survives undo/redo.
+function syncGeneratedScreenSizes(container = G.value) {
+    container
+        ?.querySelectorAll('[data-analysis-generated]')
+        .forEach((shape) => {
+            if (
+                !['text', 'line', 'circle'].includes(
+                    shape.tagName.toLowerCase(),
+                )
+            )
+                return;
+            const matrix =
+                shape.getScreenCTM?.() || props.svgRef?.getScreenCTM?.();
+            const scale = matrix ? Math.hypot(matrix.a, matrix.b) : 0;
+            if (!Number.isFinite(scale) || scale <= 0) return;
+            const previous = Number(
+                shape.getAttribute('data-analysis-screen-scale'),
+            );
+            if (previous > 0 && Math.abs(previous / scale - 1) > 1e-9) {
+                const ratio = previous / scale;
+                for (const attr of ['font-size', 'stroke-width', 'r']) {
+                    if (!shape.hasAttribute(attr)) continue;
+                    const value = Number(shape.getAttribute(attr));
+                    if (Number.isFinite(value))
+                        shape.setAttribute(attr, String(value * ratio));
+                }
+                const dashes = shape.getAttribute('stroke-dasharray');
+                if (dashes && /^[\d.\s,]+$/.test(dashes)) {
+                    shape.setAttribute(
+                        'stroke-dasharray',
+                        dashes
+                            .split(/[\s,]+/)
+                            .map(Number)
+                            .map((value) => value * ratio)
+                            .join(' '),
+                    );
+                }
+                shape.querySelectorAll('tspan[dy]').forEach((span) => {
+                    const dy = Number(span.getAttribute('dy'));
+                    if (Number.isFinite(dy))
+                        span.setAttribute('dy', String(dy * ratio));
+                });
+            }
+            shape.setAttribute('data-analysis-screen-scale', String(scale));
+        });
+}
+
+function syncGeneratedOutlines() {
+    G.value?.querySelectorAll('[data-annotation-outline]').forEach((shape) => {
+        const id = shape.getAttribute('data-annotation-outline');
+        if (outlineEnabled.value) shape.setAttribute('filter', `url(#${id})`);
+        else shape.removeAttribute('filter');
+        const filter = props.svgRef?.querySelector(`[id="${id}"]`);
+        filter
+            ?.querySelector('[data-analysis-outline-radius]')
+            ?.setAttribute(
+                'stdDeviation',
+                String(
+                    outlineThicknessPx.value *
+                        0.75 *
+                        getSvgUnitsPerPixel(shape),
+                ),
+            );
+        filter
+            ?.querySelector('[data-analysis-outline-color]')
+            ?.setAttribute(
+                'flood-color',
+                props.outlineColor ?? props.backgroundColor,
+            );
+    });
+}
+
+function ensureManualOutlines() {
+    G.value?.querySelectorAll('.vue-data-ui-doodle').forEach((shape) => {
+        if (
+            !['text', 'line', 'path', 'circle'].includes(
+                shape.tagName.toLowerCase(),
+            )
+        )
+            return;
+        if (
+            shape.hasAttribute('data-annotation-outline') ||
+            shape.parentElement?.closest('[data-annotation-outline]')
+        )
+            return;
+        addAnalysisOutline(shape, getSvgUnitsPerPixel(shape));
+    });
+}
+
+function fitGeneratedTexts() {
+    syncGeneratedScreenSizes();
+    syncGeneratedOutlines();
+    G.value
+        ?.querySelectorAll('text[data-analysis-generated]')
+        .forEach((text) => {
+            const clip = props.annotationViewport?.clip;
+            fitAnnotationText(
+                text,
+                props.svgRef,
+                clip
+                    ? {
+                          left: clip.x,
+                          top: clip.y,
+                          right: clip.x + clip.width,
+                          bottom: clip.y + clip.height,
+                      }
+                    : null,
+            );
+        });
 }
 
 const annotationClip = ref(null);
@@ -216,9 +355,13 @@ function syncAnnotationViewport() {
         props.svgRef.appendChild(annotationClip.value);
     }
     const rect = annotationClip.value.firstChild;
-    for (const key of ['x', 'y', 'width', 'height']) {
-        rect.setAttribute(key, viewport.clip[key]);
-    }
+    // A boundary datapoint is inside the plot, but its arrowhead/stroke has
+    // thickness. Allow a small screen-pixel gutter so that geometry stays intact.
+    const gutter = 8 * getSvgUnitsPerPixel();
+    rect.setAttribute('x', viewport.clip.x - gutter);
+    rect.setAttribute('y', viewport.clip.y - gutter);
+    rect.setAttribute('width', viewport.clip.width + gutter * 2);
+    rect.setAttribute('height', viewport.clip.height + gutter * 2);
     G.value.setAttribute('clip-path', `url(#${annotationClipId})`);
     G.value.toggleAttribute('data-annotation-inactive', !props.active);
 }
@@ -296,13 +439,18 @@ function restoreDoodles(state) {
             }
         });
     }
+    ensureManualOutlines();
     projectAnchors();
+    fitGeneratedTexts();
     syncAnnotationCount();
 }
 
+let generatedPreview = null;
+
 function commitHistory(beforeState, mergeKey = null) {
+    if (!isEditingText.value) fitGeneratedTexts();
     const afterState = serializeDoodles();
-    if (beforeState === afterState) return;
+    if (generatedPreview || beforeState === afterState) return;
 
     const now = Date.now();
     const last = stack.value[stack.value.length - 1];
@@ -340,7 +488,7 @@ function getShapeLocalPoint(shape, event) {
     point.x = x;
     point.y = y;
 
-    const matrix = shape.getScreenCTM()?.inverse();
+    const matrix = shape.getScreenCTM?.()?.inverse();
     return matrix ? point.matrixTransform(matrix) : null;
 }
 
@@ -848,6 +996,7 @@ function ungroupSelectedShape() {
             );
     }
     group.remove();
+    ensureManualOutlines();
     deselectShape();
     isMultiSelecting.value = false;
     commitHistory(beforeState);
@@ -1148,6 +1297,7 @@ function startSvgTextEditing(event) {
     textNode.style.userSelect = 'none';
 
     G.value.appendChild(textNode);
+    addAnalysisOutline(textNode, getSvgUnitsPerPixel());
     syncAnnotationCount();
     selectedShape.value = textNode;
     selectedShapes.value = [textNode];
@@ -1635,6 +1785,7 @@ function startDrawing(event) {
     currentDrawingPath.value.setAttribute('data-doodle-id', createUid());
     currentDrawingPath.value.setAttribute('pointer-events', 'stroke');
     G.value.appendChild(currentDrawingPath.value);
+    addAnalysisOutline(currentDrawingPath.value, getSvgUnitsPerPixel());
     syncAnnotationCount();
 }
 
@@ -1672,7 +1823,8 @@ function useArrowMarker(color) {
     marker.setAttribute('markerUnits', 'strokeWidth');
     marker.setAttribute('markerWidth', String(size));
     marker.setAttribute('markerHeight', String(size));
-    marker.setAttribute('refX', String(size - 2));
+    marker.setAttribute('refX', String(size - 1.5)); // remove protruding arrow tip
+    marker.setAttribute('overflow', 'visible');
     marker.setAttribute('refY', String(size / 2));
     marker.setAttribute('orient', 'auto');
     marker.setAttribute('viewBox', `0 0 ${size} ${size}`);
@@ -1689,6 +1841,337 @@ function useArrowMarker(color) {
 
     return markerId;
 }
+
+function createAnnotationSvg(tag, attributes = {}) {
+    const element = document.createElementNS(XMLNS, tag);
+    for (const [key, value] of Object.entries(attributes)) {
+        element.setAttribute(key, value);
+    }
+    return element;
+}
+
+function addAnalysisOutline(group, unit) {
+    const id = `analysis-outline-${createUid()}`;
+    const filter = createAnnotationSvg('filter', {
+        id,
+        x: '-50%',
+        y: '-50%',
+        width: '200%',
+        height: '200%',
+        'color-interpolation-filters': 'sRGB',
+    });
+
+    // Gaussian expansion has rounded corners; morphology uses a rectangular
+    // kernel that leaves diagonal strokes and arrowheads looking cut off.
+    const blur = createAnnotationSvg('feGaussianBlur', {
+        in: 'SourceAlpha',
+        stdDeviation: outlineThicknessPx.value * 0.75 * unit,
+        result: 'soft-outline',
+        'data-analysis-outline-radius': '',
+    });
+
+    // Sharpen the blurred alpha into a solid halo with a small antialiased edge.
+    const sharpen = document.createElementNS(XMLNS, 'feComponentTransfer');
+    sharpen.setAttribute('in', 'soft-outline');
+    sharpen.setAttribute('result', 'outline');
+    const alpha = document.createElementNS(XMLNS, 'feFuncA');
+    alpha.setAttribute('type', 'linear');
+    alpha.setAttribute('slope', '20');
+    alpha.setAttribute('intercept', '-1');
+    sharpen.appendChild(alpha);
+
+    const flood = document.createElementNS(XMLNS, 'feFlood');
+    flood.setAttribute(
+        'flood-color',
+        props.outlineColor ?? props.backgroundColor,
+    );
+    flood.setAttribute('data-analysis-outline-color', '');
+    flood.setAttribute('result', 'background');
+
+    const composite = createAnnotationSvg('feComposite', {
+        in: 'background',
+        in2: 'outline',
+        operator: 'in',
+        result: 'colored-outline',
+    });
+
+    const merge = document.createElementNS(XMLNS, 'feMerge');
+    for (const source of ['colored-outline', 'SourceGraphic']) {
+        const node = document.createElementNS(XMLNS, 'feMergeNode');
+        node.setAttribute('in', source);
+        merge.appendChild(node);
+    }
+
+    filter.append(blur, sharpen, flood, composite, merge);
+    if (group.tagName.toLowerCase() === 'g') {
+        group.appendChild(filter);
+    } else {
+        // Keep leaf graphics valid SVG, and preserve their filter definitions
+        // outside history snapshots so undo/redo can restore their references.
+        let defs = props.svgRef.querySelector(
+            `[id="${MANUAL_OUTLINE_DEFS_ID}"]`,
+        );
+        if (!defs) {
+            defs = document.createElementNS(XMLNS, 'defs');
+            defs.setAttribute('id', MANUAL_OUTLINE_DEFS_ID);
+            props.svgRef.appendChild(defs);
+        }
+        // Horizontal/vertical lines have a zero-sized geometric bbox in one
+        // dimension. A viewport-relative region keeps their filters visible.
+        filter.setAttribute('filterUnits', 'userSpaceOnUse');
+        defs.appendChild(filter);
+    }
+    group.setAttribute('data-annotation-outline', id);
+    if (outlineEnabled.value) group.setAttribute('filter', `url(#${id})`);
+}
+
+// Descriptor-only API: generated content never enters the SVG as arbitrary markup.
+function replaceGeneratedAnnotations(annotations = [], appearance = null) {
+    if (
+        !G.value ||
+        isDrawing.value ||
+        isDraggingShape.value ||
+        isEditingText.value
+    )
+        return false;
+    const valid = annotations.filter(
+        (item) =>
+            Number.isFinite(item.x) &&
+            Number.isFinite(item.y) &&
+            Number.isFinite(item.labelX) &&
+            Number.isFinite(item.labelY) &&
+            typeof item.label === 'string',
+    );
+    const before = serializeDoodles();
+    deselectShape();
+    G.value
+        .querySelectorAll('[data-analysis-generated]')
+        .forEach((node) => node.remove());
+    const unit = getSvgUnitsPerPixel();
+    for (const item of valid) {
+        const color = appearance?.color || currentColor.value;
+        const generatedFontSize = Number.isFinite(appearance?.fontSize)
+            ? Math.max(3, Math.min(48, appearance.fontSize))
+            : 12;
+        const generatedStrokeWidth = Number.isFinite(appearance?.strokeWidth)
+            ? Math.max(0.5, Math.min(12, appearance.strokeWidth))
+            : 2;
+        const group = document.createElementNS(XMLNS, 'g');
+        group.setAttribute('class', 'vue-data-ui-doodle');
+        group.setAttribute('data-doodle-id', createUid());
+        group.setAttribute('data-annotation-group', '');
+        group.setAttribute('data-analysis-generated', item.id || 'extreme');
+        addAnalysisOutline(group, unit);
+        const arrow = createAnnotationSvg('line', {
+            x1: item.labelX,
+            y1: item.labelY,
+            x2: item.x,
+            y2: item.y,
+            stroke: color,
+            'stroke-width': generatedStrokeWidth * unit,
+            'pointer-events': 'stroke',
+            'stroke-linecap': 'round',
+        });
+        const marker = useArrowMarker(color);
+        if (marker && !item.geometry?.arrow)
+            arrow.setAttribute('marker-end', `url(#${marker})`);
+        const extraShapes = [];
+        const geometry = item.geometry;
+        function addGeometryLine(x1, y1, x2, y2, withArrow = false) {
+            if (![x1, y1, x2, y2].every(Number.isFinite)) return;
+            const line = createAnnotationSvg('line', {
+                x1,
+                y1,
+                x2,
+                y2,
+                stroke: color,
+                'stroke-width': generatedStrokeWidth * unit,
+                'pointer-events': 'stroke',
+                'stroke-linecap': 'round',
+            });
+            if (geometry.dashed)
+                line.setAttribute(
+                    'stroke-dasharray',
+                    `${5 * unit} ${4 * unit}`,
+                );
+            if (withArrow && marker)
+                line.setAttribute('marker-end', `url(#${marker})`);
+            extraShapes.push(line);
+        }
+        if (geometry?.kind === 'line' || geometry?.kind === 'bracket') {
+            addGeometryLine(
+                geometry.fromX,
+                geometry.fromY,
+                geometry.x,
+                geometry.y,
+                geometry.arrow,
+            );
+            if (geometry.kind === 'bracket') {
+                addGeometryLine(
+                    geometry.fromX - 5 * unit,
+                    geometry.fromY,
+                    geometry.fromX + 5 * unit,
+                    geometry.fromY,
+                );
+                addGeometryLine(
+                    geometry.x - 5 * unit,
+                    geometry.y,
+                    geometry.x + 5 * unit,
+                    geometry.y,
+                );
+            }
+        } else if (
+            geometry?.kind === 'circle' &&
+            Number.isFinite(geometry.x) &&
+            Number.isFinite(geometry.y)
+        ) {
+            const circle = createAnnotationSvg('circle', {
+                cx: geometry.x,
+                cy: geometry.y,
+                r: 6 * unit,
+                fill: 'none',
+                stroke: color,
+                'stroke-width': generatedStrokeWidth * unit,
+                'pointer-events': 'stroke',
+            });
+            extraShapes.push(circle);
+        }
+        const text = document.createElementNS(XMLNS, 'text');
+        const directLabel =
+            geometry?.kind === 'line' &&
+            [geometry.fromX, geometry.fromY, geometry.x, geometry.y].every(
+                Number.isFinite,
+            );
+        let angle = directLabel
+            ? (Math.atan2(
+                  geometry.y - geometry.fromY,
+                  geometry.x - geometry.fromX,
+              ) *
+                  180) /
+              Math.PI
+            : 0;
+        if (angle > 90) angle -= 180;
+        if (angle < -90) angle += 180;
+        const radians = (angle * Math.PI) / 180;
+        const direction = directLabel ? 0 : Math.sign(item.labelX - item.x);
+        const textAnchor =
+            direction > 0 ? 'start' : direction < 0 ? 'end' : 'middle';
+        const textX = directLabel
+            ? (geometry.fromX + geometry.x) / 2 + Math.sin(radians) * 8 * unit
+            : item.labelX + direction * 6 * unit;
+        const verticalDirection = Math.sign(item.labelY - item.y);
+        const textY = directLabel
+            ? (geometry.fromY + geometry.y) / 2 - Math.cos(radians) * 8 * unit
+            : item.labelY +
+              (direction === 0 ? verticalDirection * 6 * unit : 0);
+        const baseline = directLabel
+            ? 'auto'
+            : direction !== 0
+              ? 'middle'
+              : verticalDirection > 0
+                ? 'hanging'
+                : 'auto';
+        for (const [key, value] of Object.entries({
+            x: textX,
+            y: textY,
+            'text-anchor': textAnchor,
+            'dominant-baseline': baseline,
+            fill: color,
+            'font-size': generatedFontSize * unit,
+            'font-family': 'sans-serif',
+            'pointer-events': 'all',
+        }))
+            text.setAttribute(key, value);
+        if (directLabel)
+            text.setAttribute(
+                'transform',
+                `rotate(${angle} ${textX} ${textY})`,
+            );
+        const tspan = document.createElementNS(XMLNS, 'tspan');
+        tspan.setAttribute('x', textX);
+        tspan.setAttribute('dy', '0');
+        tspan.textContent = item.label;
+        text.appendChild(tspan);
+        for (const shape of [
+            ...(directLabel ? [] : [arrow]),
+            ...extraShapes,
+            text,
+        ]) {
+            shape.setAttribute('class', 'vue-data-ui-doodle');
+            shape.setAttribute('data-doodle-id', createUid());
+            shape.setAttribute('data-analysis-generated', item.id || 'extreme');
+            group.appendChild(shape);
+        }
+        if (item.bounds)
+            text.setAttribute(
+                'data-analysis-text-bounds',
+                JSON.stringify(item.bounds),
+            );
+        G.value.appendChild(group);
+        syncGeneratedScreenSizes(group);
+        fitAnnotationText(text, props.svgRef);
+    }
+    commitHistory(before);
+    syncAnnotationCount();
+    return true;
+}
+
+function beginGeneratedPreview() {
+    if (
+        generatedPreview ||
+        !G.value ||
+        isDrawing.value ||
+        isDraggingShape.value ||
+        isEditingText.value
+    )
+        return false;
+    generatedPreview = {
+        state: serializeDoodles(),
+        undo: [...stack.value],
+        redo: [...redoStack.value],
+    };
+    return true;
+}
+function finishGeneratedPreview(commit = false) {
+    if (!generatedPreview) return;
+    if (isEditingText.value) cleanupSvgTextEditing(false);
+    const snapshot = generatedPreview;
+    generatedPreview = null;
+    stack.value = snapshot.undo;
+    redoStack.value = snapshot.redo;
+    if (commit) commitHistory(snapshot.state);
+    else restoreDoodles(snapshot.state);
+}
+
+function hasGeneratedAnnotations() {
+    return !!G.value?.querySelector('[data-analysis-generated]');
+}
+
+function getAnalysisAppearance() {
+    return {
+        color: currentColor.value,
+        fontSize: Number(fontSize.value),
+        strokeWidth: Number(strokeWidth.value),
+    };
+}
+function setAnalysisAppearance(appearance) {
+    if (!appearance) return;
+    deselectShape();
+    currentColor.value = appearance.color || currentColor.value;
+    if (Number.isFinite(appearance.fontSize))
+        fontSize.value = Math.max(3, Math.min(48, appearance.fontSize));
+    if (Number.isFinite(appearance.strokeWidth))
+        strokeWidth.value = Math.max(0.5, Math.min(12, appearance.strokeWidth));
+}
+
+defineExpose({
+    getAnalysisAppearance,
+    setAnalysisAppearance,
+    hasGeneratedAnnotations,
+    replaceGeneratedAnnotations,
+    beginGeneratedPreview,
+    finishGeneratedPreview,
+});
 
 function startLine(event) {
     if (props.showGroupActions && (isMultiSelecting.value || event.shiftKey))
@@ -1724,6 +2207,7 @@ function startLine(event) {
         }
     }
     G.value.appendChild(currentLine.value);
+    addAnalysisOutline(currentLine.value, getSvgUnitsPerPixel());
     syncAnnotationCount();
 }
 
@@ -1776,6 +2260,7 @@ function stopDrawing(event) {
             circle.setAttribute('data-doodle-id', createUid());
             circle.setAttribute('pointer-events', 'all');
             G.value.appendChild(circle);
+            addAnalysisOutline(circle, getSvgUnitsPerPixel());
             syncAnnotationCount();
         } else {
             currentDrawingPath.value.setAttribute(
@@ -1792,6 +2277,7 @@ function stopDrawing(event) {
 }
 
 function deleteLastDraw() {
+    if (generatedPreview) return;
     if (!stack.value.length || !G.value) return;
 
     const currentState = serializeDoodles();
@@ -1805,6 +2291,7 @@ function deleteLastDraw() {
 }
 
 function redoLastDraw() {
+    if (generatedPreview) return;
     if (!redoStack.value.length || !G.value) return;
 
     const currentState = serializeDoodles();
@@ -2150,7 +2637,36 @@ function keepMenuInClient() {
     }
 }
 
+watch(
+    () => [
+        props.backgroundColor,
+        props.useOutline,
+        props.outlineThickness,
+        props.outlineColor,
+    ],
+    syncGeneratedOutlines,
+    { flush: 'post' },
+);
+
+let annotationTextResizeObserver = null;
+let annotationViewBoxObserver = null;
+function scheduleTextFit() {
+    nextTick(fitGeneratedTexts);
+}
 onMounted(() => {
+    window.addEventListener('resize', scheduleTextFit);
+    if (props.svgRef && typeof ResizeObserver !== 'undefined') {
+        annotationTextResizeObserver = new ResizeObserver(scheduleTextFit);
+        annotationTextResizeObserver.observe(props.svgRef);
+    }
+    if (props.svgRef && typeof MutationObserver !== 'undefined') {
+        annotationViewBoxObserver = new MutationObserver(scheduleTextFit);
+        annotationViewBoxObserver.observe(props.svgRef, {
+            attributes: true,
+            attributeFilter: ['viewBox'],
+        });
+    }
+    document.fonts?.ready?.then(scheduleTextFit);
     window.addEventListener('resize', keepMenuInClient);
     nextTick(() => {
         if (props.svgRef) {
@@ -2184,9 +2700,13 @@ watch(
 );
 
 onBeforeUnmount(() => {
+    window.removeEventListener('resize', scheduleTextFit);
+    annotationTextResizeObserver?.disconnect();
+    annotationViewBoxObserver?.disconnect();
     stopCaretBlink();
     deselectShape();
     annotationClip.value?.remove();
+    props.svgRef?.querySelector(`[id="${MANUAL_OUTLINE_DEFS_ID}"]`)?.remove();
     stopMenuDrag();
     window.removeEventListener('resize', keepMenuInClient);
     if (G.value && props.svgRef) {

@@ -33,6 +33,74 @@ function createCases(env) {
         }
         return arr;
     }
+    cases.StackedAnalysisAnnotations = async () => {
+        const { wrapper } = await mountSubject(VueUiXy, {
+            props: {
+                dataset: [
+                    { name: 'A', type: 'line', series: [1, 9, 3, 5] },
+                    { name: 'B', type: 'line', series: [100, 300, 200, 150] },
+                ],
+                config: {
+                    transitions: { enable: false },
+                    chart: {
+                        userOptions: {
+                            buttons: { analyze: true },
+                            annotator: { followZoom: true },
+                        },
+                    },
+                },
+            },
+        });
+        const state = wrapper.vm.$.setupState;
+        await waitFor(() => expect(state.analysisPen).toBeTruthy());
+        state.openAnalysisOptions();
+        state.applyAnalysisOptions({
+            options: { minimum: true, maximum: true },
+            seriesIds: ['uniqueId_0', 'uniqueId_1'],
+        });
+        const svg = wrapper.element.querySelector('[data-cy="xy-svg"]');
+        const manual = document.createElementNS(
+            'http://www.w3.org/2000/svg',
+            'line',
+        );
+        manual.setAttribute('class', 'vue-data-ui-doodle');
+        manual.setAttribute('data-manual-stack-test', '');
+        svg.querySelector('.vue-data-ui-doodles').appendChild(manual);
+        function checkTargets() {
+            const groups = svg.querySelectorAll('g[data-analysis-generated]');
+            expect(groups.length).toBe(4);
+            for (const group of groups) {
+                const id = group.getAttribute('data-analysis-generated');
+                const sourceId = id.startsWith('series-0')
+                    ? 'uniqueId_0'
+                    : 'uniqueId_1';
+                const series = state.svgSlotData.find(
+                    (series) => series.id === sourceId,
+                );
+                const value = id.endsWith('minimum')
+                    ? Math.min(...series.plots.map((point) => point.value))
+                    : Math.max(...series.plots.map((point) => point.value));
+                const point = series.plots.find(
+                    (point) => point.value === value,
+                );
+                const arrow = group.querySelector('line[marker-end]');
+                const tip = svg.createSVGPoint();
+                tip.x = Number(arrow.getAttribute('x2'));
+                tip.y = Number(arrow.getAttribute('y2'));
+                const actual = tip.matrixTransform(
+                    svg.getScreenCTM().inverse().multiply(arrow.getScreenCTM()),
+                );
+                expect(actual.x).toBeCloseTo(point.x, 3);
+                expect(actual.y).toBeCloseTo(point.y, 3);
+            }
+            expect(svg.querySelector('[data-manual-stack-test]')).toBeTruthy();
+        }
+        await waitFor(checkTargets);
+        state.toggleStack();
+        await waitFor(checkTargets);
+        state.toggleStack();
+        await waitFor(checkTargets);
+    };
     cases.ContinuousTableLookup = async () => {
         const points = [
             { x: null, y: null },
@@ -505,4 +573,106 @@ export const HoverLookupAndLabelCache = {
     name: 'hover values and cached label texts stay consistent',
     play: async (context) =>
         runScenario(context, createCases, 'HoverLookupAndLabelCache'),
+};
+
+export const DatasetAnalysis = {
+    name: 'dataset analysis prototype',
+    play: async ({ canvasElement }) => {
+        // The menu and annotator are separate async components.
+        await waitFor(() =>
+            expect(
+                canvasElement.querySelector('.vue-data-ui-doodles'),
+            ).toBeTruthy(),
+        );
+        await waitFor(() =>
+            expect(
+                canvasElement.querySelector('[data-cy="user-options-summary"]'),
+                'analysis menu summary',
+            ).toBeTruthy(),
+        );
+        canvasElement.querySelector('[data-cy="user-options-summary"]').click();
+        await waitFor(() =>
+            expect(
+                canvasElement.querySelector('[data-cy="user-options-analyze"]'),
+                'analysis menu action',
+            ).toBeTruthy(),
+        );
+        canvasElement.querySelector('[data-cy="user-options-analyze"]').click();
+        await waitFor(() =>
+            expect(
+                document.querySelector('[data-cy="analysis-apply"]'),
+                'analysis apply dialog first',
+            ).toBeTruthy(),
+        );
+        const optionInputs = document.querySelectorAll(
+            '.vue-ui-xy-analysis-options input[type="checkbox"]:not([data-series-id])',
+        );
+        for (const input of Array.from(optionInputs).slice(0, 2)) {
+            input.checked = true;
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        await waitFor(() =>
+            expect(
+                canvasElement.querySelectorAll('g[data-analysis-generated]')
+                    .length,
+            ).toBeGreaterThan(0),
+        );
+        document.querySelector('[data-cy="analysis-apply"]').click();
+        await waitFor(() =>
+            expect(
+                canvasElement.querySelectorAll('g[data-analysis-generated]')
+                    .length,
+            ).toBeGreaterThan(0),
+        );
+        const count = canvasElement.querySelectorAll(
+            'g[data-analysis-generated]',
+        ).length;
+        canvasElement.querySelector('[data-cy="user-options-analyze"]').click();
+        await waitFor(() =>
+            expect(
+                document.querySelector('[data-cy="analysis-apply"]'),
+                'analysis apply dialog second',
+            ).toBeTruthy(),
+        );
+        document.querySelector('[data-cy="analysis-apply"]').click();
+        await waitFor(() =>
+            expect(
+                canvasElement.querySelectorAll('g[data-analysis-generated]')
+                    .length,
+            ).toBe(count),
+        );
+    },
+
+    render: () => ({
+        components: { VueUiXy },
+        setup() {
+            return {
+                dataset: [
+                    {
+                        name: 'Revenue',
+                        type: 'line',
+                        series: [12, 18, null, 35, 28, 45, 45, 32],
+                    },
+                    {
+                        name: 'Costs',
+                        type: 'bar',
+                        series: [8, 10, 12, 14, 13, 18, 20, 17],
+                    },
+                ],
+                config: {
+                    chart: {
+                        title: { text: 'Dataset analysis prototype' },
+                        userOptions: { buttons: { analyze: true } },
+                    },
+                },
+            };
+        },
+        template: '<VueUiXy :dataset="dataset" :config="config" />',
+    }),
+};
+
+export const StackedAnalysisAnnotations = {
+    name: 'analysis annotations follow stack mode',
+    play: async (context) =>
+        runScenario(context, createCases, 'StackedAnalysisAnnotations'),
 };

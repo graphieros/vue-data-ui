@@ -282,6 +282,7 @@ function trapFocus(event) {
             ref="draggableDialog"
             data-cy="draggable-dialog"
             class="vue-ui-draggable-dialog"
+            :class="{ 'vue-ui-draggable-dialog-with-footer': !!$slots.footer }"
             :style="modalStyle"
             role="dialog"
             :aria-modal="true"
@@ -350,11 +351,15 @@ function trapFocus(event) {
                     'vue-ui-draggable-dialog-body': !withPadding,
                     'vue-ui-draggable-dialog-body-pad': withPadding,
                     'vue-ui-draggable-dialog-body-full-width': withFullWidth,
+                    'vue-ui-draggable-dialog-scroll-body': !!$slots.footer,
                 }"
             >
                 <slot name="before" />
                 <slot name="content" />
                 <slot name="after" />
+            </div>
+            <div v-if="$slots.footer" class="vue-ui-draggable-dialog-footer">
+                <slot name="footer" />
             </div>
             <div
                 class="resize-handle"
@@ -373,6 +378,33 @@ function trapFocus(event) {
 </template>
 
 <style scoped>
+.vue-ui-draggable-dialog-body,
+.vue-ui-draggable-dialog-body-pad,
+.vue-ui-draggable-dialog-scroll-body {
+    overscroll-behavior: contain;
+}
+
+/* Footer layout is opt-in; existing dialogs retain their sizing and scrolling. */
+.vue-ui-draggable-dialog-with-footer {
+    display: flex;
+    flex-direction: column;
+}
+.vue-ui-draggable-dialog-with-footer > .vue-ui-draggable-dialog-header {
+    flex: 0 0 auto;
+}
+.vue-ui-draggable-dialog-with-footer > .vue-ui-draggable-dialog-scroll-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    height: auto;
+    box-sizing: border-box;
+    overflow: auto;
+}
+.vue-ui-draggable-dialog-footer {
+    flex: 0 0 auto;
+    padding: 12px 24px;
+}
+
 .vue-ui-draggable-dialog-header {
     display: flex;
     align-items: center;

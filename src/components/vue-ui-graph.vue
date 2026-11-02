@@ -1,4 +1,5 @@
 <script setup>
+import { getAnnotatorProps } from '../annotatorConfig';
 import {
     computed,
     ref,
@@ -1973,9 +1974,7 @@ const annotationViewport = computed(() => {
         "
     >
         <PenAndPaper
-            :showGroupActions="
-                config.userOptions.annotator?.showGroupActions ?? true
-            "
+            v-bind="getAnnotatorProps(config.userOptions.annotator)"
             v-if="config.userOptions.buttons.annotator"
             :svgRef="svg"
             :followZoom="config.userOptions.annotator?.followZoom"

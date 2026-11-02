@@ -1,4 +1,5 @@
 <script setup>
+import { getAnnotatorProps } from '../annotatorConfig';
 import { getTableComponent, syncTableVisibility } from '../tableIntegration';
 import {
     annotationSlotNames,
@@ -973,9 +974,7 @@ defineExpose({
         @mouseleave="() => setUserOptionsVisibility(false)"
     >
         <PenAndPaper
-            :showGroupActions="
-                cfgUserOptions.annotator?.showGroupActions ?? true
-            "
+            v-bind="getAnnotatorProps(cfgUserOptions.annotator)"
             v-if="cfgUserOptions.buttons.annotator && svgRef"
             :color="cfgChart.color"
             :backgroundColor="cfgChart.backgroundColor"

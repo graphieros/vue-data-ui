@@ -18,6 +18,9 @@ import {
     VueDataUi,
 } from 'vue-data-ui';
 import 'vue-data-ui/style.css';
+// Arena files outside manual-testing resolve the root package's dist build.
+// Include its matching scoped styles alongside the installed package's styles.
+import '../../dist/style.css';
 
 // import VueUiXy  from "vue-data-ui/vue-ui-xy";
 

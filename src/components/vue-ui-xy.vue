@@ -1,4 +1,17 @@
 <script setup>
+import { getAnnotatorProps } from '../annotatorConfig';
+import {
+    analyzeXy,
+    describeXyAnalysis,
+    buildXyAnalysisAnnotations,
+    getXyAnalysisSelection,
+    hasXyAnalysisPoints,
+} from '../utils/xyAnalysis';
+import {
+    defaultXyAnalysisOptions,
+    resolveXyAnalysisOptions,
+    xyAnalysisOptionKeys,
+} from '../utils/xyAnalysisInsights';
 import { getTableComponent } from '../tableIntegration';
 import {
     annotationSlotNames,
@@ -7632,6 +7645,256 @@ async function copyAlt() {
     );
 }
 
+const canAnalyze = computed(
+    () =>
+        cfgChart.value.userOptions.buttons.analyze &&
+        !loading.value &&
+        xyAnalysisOptionKeys.some(
+            (key) => FINAL_CONFIG.value.analysis.options?.[key] !== false,
+        ) &&
+        hasXyAnalysisPoints(
+            safeDataset.value,
+            segregatedSeriesSet.value,
+            isContinuousScale.value,
+        ),
+);
+
+const XyAnalysisOptions = defineAsyncComponent(
+    () => import('../atoms/XyAnalysisOptions.vue'),
+);
+
+const analysisOptionsOpen = ref(false);
+const selectedAnalysisOptions = ref(defaultXyAnalysisOptions());
+const selectedAnalysisSeries = ref(null);
+const analysisDraftAppearance = ref(null);
+const selectedAnalysisAppearance = ref(null);
+const analysisSeries = computed(() =>
+    safeDataset.value
+        .filter(
+            (series) =>
+                !segregatedSeriesSet.value.has(series.id) &&
+                ['line', 'bar', 'plot'].includes(series.type),
+        )
+        .map((series) => ({ id: series.id, name: series.name })),
+);
+
+const currentAnalysisSeries = computed(() =>
+    analysisSeries.value.length === 1
+        ? [analysisSeries.value[0].id]
+        : (selectedAnalysisSeries.value ??
+          analysisSeries.value.map((series) => series.id)),
+);
+
+let analysisWasAnnotator = false;
+
+function openAnalysisOptions() {
+    if (!canAnalyze.value || analysisOptionsOpen.value) return;
+    if (!analysisPen.value?.beginGeneratedPreview()) {
+        analysisVisualStatus.value = FINAL_CONFIG.value.analysis.visualBusy;
+        return;
+    }
+    analysisWasAnnotator = isAnnotator.value;
+    analysisDraftAppearance.value = analysisPen.value.getAnalysisAppearance();
+    analysisOptionsOpen.value = true;
+    previewAnalysisOptions({
+        options: selectedAnalysisOptions.value,
+        seriesIds: currentAnalysisSeries.value,
+        appearance: analysisDraftAppearance.value,
+    });
+}
+
+function closeAnalysisOptions() {
+    analysisOptionsOpen.value = false;
+    nextTick(() =>
+        userOptionsRef.value?.$el
+            ?.querySelector('[data-cy="user-options-analyze"]')
+            ?.focus(),
+    );
+}
+
+function cancelAnalysisOptions() {
+    analysisPen.value?.finishGeneratedPreview(false);
+    isAnnotator.value = analysisWasAnnotator;
+    analysisVisualStatus.value = '';
+    closeAnalysisOptions();
+}
+
+function previewAnalysisOptions({ options, seriesIds, appearance }) {
+    if (appearance) analysisDraftAppearance.value = appearance;
+    if (cfgChart.value.userOptions.callbacks.analyze) return;
+    refreshAnalysis(seriesIds);
+    visualizeAnalysis(options, appearance);
+}
+
+function applyAnalysisOptions({ options, seriesIds, appearance }) {
+    selectedAnalysisAppearance.value =
+        appearance ||
+        analysisDraftAppearance.value ||
+        analysisPen.value?.getAnalysisAppearance();
+    selectedAnalysisOptions.value = resolveXyAnalysisOptions(
+        options,
+        FINAL_CONFIG.value.analysis.options,
+    );
+    selectedAnalysisSeries.value = [...seriesIds];
+    runAnalysis();
+    analysisApplied.value = !cfgChart.value.userOptions.callbacks.analyze;
+    analysisPen.value?.finishGeneratedPreview(true);
+    analysisPen.value?.setAnalysisAppearance(selectedAnalysisAppearance.value);
+    closeAnalysisOptions();
+}
+
+const analysisPen = shallowRef(null);
+const analysisVisualStatus = ref('');
+const analysisResult = shallowRef([]);
+const analysisApplied = ref(false);
+
+function refreshAnalysis(seriesIds = currentAnalysisSeries.value) {
+    const selectedIds = new Set(seriesIds);
+    analysisResult.value = analyzeXy(
+        FINAL_DATASET.value,
+        segregatedSeriesSet.value,
+        isContinuousScale.value,
+        getXyAnalysisSelection(
+            safeDataset.value,
+            isContinuousScale.value,
+            slicer.value.start,
+        ),
+    );
+    analysisResult.value = analysisResult.value.filter((series) =>
+        selectedIds.has(series.id.replace('series-', 'uniqueId_')),
+    );
+    analysisVisualStatus.value = '';
+}
+
+function runAnalysis() {
+    if (!canAnalyze.value) return;
+    refreshAnalysis();
+    const callback = cfgChart.value.userOptions.callbacks.analyze;
+    if (callback) {
+        callback({
+            scope: 'visible-datapoints',
+            options: resolveXyAnalysisOptions(
+                selectedAnalysisOptions.value,
+                FINAL_CONFIG.value.analysis.options,
+            ),
+            seriesIds: [...currentAnalysisSeries.value],
+            appearance: selectedAnalysisAppearance.value,
+            range: {
+                ...getCommittedChartZoomRange(),
+                scale: isContinuousScale.value ? 'continuous' : 'category',
+            },
+            series: analysisResult.value,
+            text: describeXyAnalysis(
+                analysisResult.value,
+                FINAL_CONFIG.value.analysis,
+            ),
+        });
+    } else {
+        visualizeAnalysis();
+    }
+}
+
+function visualizeAnalysis(
+    options = selectedAnalysisOptions.value,
+    appearance = selectedAnalysisAppearance.value,
+) {
+    const annotations = buildXyAnalysisAnnotations(
+        analysisResult.value,
+        svgSlotData.value.map((series) => ({
+            ...series,
+            analysisSliceStart: Math.trunc(slicer.value.start),
+            analysisUnit: JSON.stringify([
+                series.prefix || cfgChart.value.labels.prefix,
+                series.suffix || cfgChart.value.labels.suffix,
+                mutableConfig.value.useIndividualScale ||
+                mutableConfig.value.isStacked
+                    ? series.id
+                    : series.autoScaling
+                      ? series.scaleLabel
+                      : '',
+            ]),
+        })),
+        drawingArea.value,
+        FINAL_CONFIG.value.analysis,
+        isContinuousScale.value,
+        (value, series) =>
+            dataLabel({
+                v: value,
+                r: FINAL_CONFIG.value[series.type].labels.rounding,
+                locale: FINAL_CONFIG.value.analysis.locale,
+            }),
+        options,
+    );
+    const inserted = analysisPen.value?.replaceGeneratedAnnotations(
+        annotations,
+        appearance,
+    );
+    analysisVisualStatus.value = !inserted
+        ? FINAL_CONFIG.value.analysis.visualBusy
+        : annotations.length
+          ? FINAL_CONFIG.value.analysis.visualAdded.replace(
+                '{count}',
+                String(annotations.length),
+            )
+          : FINAL_CONFIG.value.analysis.visualEmpty;
+    if (inserted && annotations.length) isAnnotator.value = true;
+}
+
+function clearAppliedAnalysis() {
+    if (analysisOptionsOpen.value) cancelAnalysisOptions();
+    analysisApplied.value = false;
+    analysisPen.value?.replaceGeneratedAnnotations([]);
+    analysisVisualStatus.value = '';
+    analysisResult.value = [];
+}
+
+// Watch source observations, not prepared datasets or config object identities:
+// switching chart layout can recreate those without changing the actual data.
+watch(
+    () =>
+        JSON.stringify(
+            props.dataset.map(({ name, type, series }) => ({
+                name,
+                type,
+                series,
+            })),
+        ),
+    clearAppliedAnalysis,
+);
+
+// Only committed zoom changes invalidate the selected analysis context.
+watch([() => slicer.value.start, () => slicer.value.end], clearAppliedAnalysis);
+
+// Recompute from the final rendered geometry after stacking, scale, visibility
+// or appearance changes. Remember applied analysis even if a layout temporarily
+// has no drawable annotations (for example, a cross-series gap in stack mode).
+watch(
+    [
+        svgSlotData,
+        () => mutableConfig.value.isStacked,
+        () => mutableConfig.value.useIndividualScale,
+        () => FINAL_CONFIG.value.analysis,
+        canAnalyze,
+    ],
+    async () => {
+        // Plot geometry may settle while the dialog is opening. Keep its draft
+        // alive; preview changes and Apply use the latest rendered geometry.
+        if (analysisOptionsOpen.value) return;
+        if (
+            !analysisApplied.value ||
+            cfgChart.value.userOptions.callbacks.analyze
+        )
+            return;
+        await nextTick();
+        if (!analysisApplied.value || !canAnalyze.value) return;
+        refreshAnalysis();
+        visualizeAnalysis();
+    },
+    { deep: true, flush: 'post' },
+);
+
+onBeforeUnmount(() => analysisPen.value?.finishGeneratedPreview(false));
+
 /***************************************************************************************************
  * a11y
  **************************************************************************************************/
@@ -7858,16 +8121,19 @@ watch(
         />
 
         <PenAndPaper
-            :showGroupActions="
-                cfgChart.userOptions.annotator?.showGroupActions ?? true
+            ref="analysisPen"
+            v-bind="getAnnotatorProps(cfgChart.userOptions.annotator)"
+            v-if="
+                (cfgChart.userOptions.buttons.annotator ||
+                    cfgChart.userOptions.buttons.analyze) &&
+                svgRef
             "
-            v-if="cfgChart.userOptions.buttons.annotator && svgRef"
             :svgRef="svgRef"
             :followZoom="cfgChart.userOptions.annotator?.followZoom"
             :annotationViewport="annotationViewport"
             :backgroundColor="cfgChart.backgroundColor"
             :color="cfgChart.color"
-            :active="isAnnotator"
+            :active="isAnnotator && !analysisOptionsOpen"
             :isCursorPointer="isCursorPointer"
             :palette="cfgChart.userOptions.annotatorPalette"
             @close="toggleAnnotator"
@@ -7936,6 +8202,8 @@ watch(
             :hasTable="cfgChart.userOptions.buttons.table"
             :hasStack="dataset.length > 1 && cfgChart.userOptions.buttons.stack"
             :hasFullscreen="cfgChart.userOptions.buttons.fullscreen"
+            :hasAnalyze="canAnalyze"
+            @analyze="openAnalysisOptions"
             :hasAltCopy="cfgChart.userOptions.buttons.altCopy"
             :isStacked="mutableConfig.isStacked"
             :isFullscreen="isFullscreen"
@@ -7971,7 +8239,7 @@ watch(
             <template
                 v-for="slotName in getUserOptionSlots(
                     $slots,
-                    'menuIcon optionTooltip optionPdf optionCsv optionImg optionSvg optionTable optionLabels optionFullscreen optionAnnotator optionAltCopy custom-menu-before custom-menu-after',
+                    'menuIcon optionTooltip optionPdf optionCsv optionImg optionSvg optionTable optionLabels optionFullscreen optionAnnotator optionAltCopy optionAnalyze custom-menu-before custom-menu-after',
                 )"
                 #[slotName]="slotProps"
             >
@@ -7985,6 +8253,26 @@ watch(
                 <slot name="optionStack" v-bind="{ isStack }" />
             </template>
         </UserOptions>
+
+        <XyAnalysisOptions
+            v-if="analysisOptionsOpen && canAnalyze"
+            :messages="FINAL_CONFIG.analysis"
+            :selected="selectedAnalysisOptions"
+            :series="analysisSeries"
+            :selectedSeries="currentAnalysisSeries"
+            :appearance="analysisDraftAppearance"
+            :palette="cfgChart.userOptions.annotatorPalette"
+            @preview="previewAnalysisOptions"
+            :isFullscreen="isFullscreen"
+            :fullscreenParent="$refs.chart"
+            :fontFamily="cfgChart.fontFamily"
+            :isCursorPointer="isCursorPointer"
+            :color="cfgChart.color"
+            :backgroundColor="cfgChart.backgroundColor"
+            @apply="applyAnalysisOptions"
+            @cancel="cancelAnalysisOptions"
+        />
+        <p class="sr-only" role="status">{{ analysisVisualStatus }}</p>
 
         <div style="position: relative">
             <svg

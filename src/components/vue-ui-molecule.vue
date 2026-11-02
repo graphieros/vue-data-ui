@@ -1,4 +1,5 @@
 <script setup>
+import { getAnnotatorProps } from '../annotatorConfig';
 import { createPanZoomAnnotationViewport } from '../utils/annotationViewport';
 import { getTableComponent, syncTableVisibility } from '../tableIntegration';
 import {
@@ -829,9 +830,7 @@ const annotationViewport = computed(() =>
         @mouseenter="() => setUserOptionsVisibility(true)"
     >
         <PenAndPaper
-            :showGroupActions="
-                cfgUserOptions.annotator?.showGroupActions ?? true
-            "
+            v-bind="getAnnotatorProps(cfgUserOptions.annotator)"
             v-if="cfgUserOptions.buttons.annotator && !!svgRef"
             :svgRef="svgRef"
             :followZoom="FINAL_CONFIG.userOptions?.annotator?.followZoom"

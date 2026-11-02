@@ -14,6 +14,7 @@ import { createFullscreenLayout } from '../fullscreenLayout';
 import vPopoverClickOutside from '../directives/vPopoverClickOutside';
 
 const props = defineProps({
+    hasAnalyze: { type: Boolean, default: false },
     hasPdf: {
         type: Boolean,
         default: true,
@@ -169,6 +170,7 @@ const props = defineProps({
 });
 
 const emit = defineEmits([
+    'analyze',
     'generatePdf',
     'generateCsv',
     'generateImage',
@@ -409,6 +411,7 @@ onBeforeUnmount(() => {
 const isDesktop = ref(window.innerWidth > 600);
 
 const isInfo = ref({
+    analyze: false,
     tooltip: false,
     pdf: false,
     csv: false,
@@ -908,6 +911,14 @@ const optionActions = computed(() => [
             first: { name: 'toggleAnnotator', value: toggleAnnotator },
             second: { name: 'isAnnotator', value: isAnnotator.value },
         },
+    },
+    {
+        key: 'analyze',
+        visible: props.hasAnalyze,
+        slot: 'optionAnalyze',
+        testId: 'user-options-analyze',
+        run: () => emit('analyze'),
+        icon: 'analyze',
     },
     {
         key: 'altCopy',
