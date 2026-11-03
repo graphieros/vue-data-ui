@@ -1,3 +1,8 @@
+<script>
+// Shared by instances so raising a dialog never needs to remount its content.
+let topDialogLayer = 9999;
+</script>
+
 <script setup>
 import { ref, reactive, computed, onUnmounted, nextTick, onMounted } from 'vue';
 import BaseIcon from './BaseIcon.vue';
@@ -15,6 +20,7 @@ const props = defineProps({
     forcedHeight: { type: Number, default: 400 },
     isCursorPointer: { type: Boolean, default: false },
     forceAspectRatio: { type: Boolean, default: false },
+    fitViewport: { type: Boolean, default: false },
     withFullWidth: { type: Boolean, default: false },
     noLayerUpdate: { type: Boolean, default: false },
 });
@@ -23,7 +29,7 @@ const emit = defineEmits(['close', 'size']);
 
 const isOpen = ref(false);
 const hasBeenOpened = ref(false);
-const instanceKey = ref(0);
+const dialogLayer = ref(9999);
 const draggableDialog = ref(null);
 const closeButtonElement = ref(null);
 const previouslyFocusedElement = ref(null);
@@ -33,7 +39,7 @@ const dialogBodyId = `${dialogId}-body`;
 
 function bringToFront() {
     if (props.noLayerUpdate) return;
-    instanceKey.value += 1;
+    dialogLayer.value = ++topDialogLayer;
 }
 
 const modal = reactive({
@@ -45,6 +51,8 @@ const modal = reactive({
     resizing: false,
     dragOffsetX: 0,
     dragOffsetY: 0,
+    dragWidth: props.forcedWidth,
+    dragHeight: props.forcedHeight,
     pointerStartX: 0,
     pointerStartY: 0,
     resizeStartW: 0,
@@ -57,6 +65,7 @@ function open() {
             ? document.activeElement
             : null;
 
+    bringToFront();
     isOpen.value = true;
     nextTick(() => {
         if (!hasBeenOpened.value) {
@@ -88,15 +97,21 @@ defineExpose({ open, close });
 
 const modalStyle = computed(() => ({
     position: 'fixed',
-    left: `${modal.left}px`,
-    top: `${modal.top}px`,
+    left: props.fitViewport
+        ? `clamp(8px, ${modal.left}px, calc(100vw - min(${modal.width}px, 100vw - 16px) - 8px))`
+        : `${modal.left}px`,
+    top: props.fitViewport
+        ? `clamp(8px, ${modal.top}px, calc(100dvh - min(${modal.height}px, 100dvh - 16px) - 8px))`
+        : `${modal.top}px`,
     width: `${modal.width}px`,
     height: `${modal.height}px`,
+    maxWidth: props.fitViewport ? 'calc(100vw - 16px)' : undefined,
+    maxHeight: props.fitViewport ? 'calc(100dvh - 16px)' : undefined,
     padding: 0,
     border: 'none',
     background: props.backgroundColor,
     boxShadow: '0 4px 24px rgba(0,0,0,0.15)',
-    zIndex: 9999,
+    zIndex: dialogLayer.value,
     overflow: 'visible',
     borderRadius: '2px',
     '--dlg-color': props.color,
@@ -114,12 +129,16 @@ function initDrag(e) {
     bringToFront();
     modal.dragging = true;
     const pointer = getPointer(e);
-    modal.dragOffsetX = pointer.x - modal.left;
-    modal.dragOffsetY = pointer.y - modal.top;
+    const rect = draggableDialog.value.getBoundingClientRect();
+    modal.dragOffsetX = pointer.x - rect.left;
+    modal.dragOffsetY = pointer.y - rect.top;
+    modal.dragWidth = rect.width;
+    modal.dragHeight = rect.height;
     document.addEventListener('mousemove', drag);
     document.addEventListener('mouseup', endDrag);
     document.addEventListener('touchmove', drag, { passive: false });
     document.addEventListener('touchend', endDrag);
+    document.addEventListener('touchcancel', endDrag);
 }
 
 function drag(e) {
@@ -128,8 +147,15 @@ function drag(e) {
     const pointer = getPointer(e);
     let newLeft = pointer.x - modal.dragOffsetX;
     let newTop = pointer.y - modal.dragOffsetY;
-    newLeft = Math.max(0, Math.min(newLeft, window.innerWidth - modal.width));
-    newTop = Math.max(0, Math.min(newTop, window.innerHeight - modal.height));
+    const inset = props.fitViewport ? 8 : 0;
+    newLeft = Math.max(
+        inset,
+        Math.min(newLeft, window.innerWidth - modal.dragWidth - inset),
+    );
+    newTop = Math.max(
+        inset,
+        Math.min(newTop, window.innerHeight - modal.dragHeight - inset),
+    );
     modal.left = newLeft;
     modal.top = newTop;
 }
@@ -140,6 +166,7 @@ function endDrag() {
     document.removeEventListener('mouseup', endDrag);
     document.removeEventListener('touchmove', drag);
     document.removeEventListener('touchend', endDrag);
+    document.removeEventListener('touchcancel', endDrag);
 }
 
 function initResize(e) {
@@ -155,6 +182,7 @@ function initResize(e) {
     document.addEventListener('mouseup', endResize);
     document.addEventListener('touchmove', resize, { passive: false });
     document.addEventListener('touchend', endResize);
+    document.addEventListener('touchcancel', endResize);
 }
 
 function resize(e) {
@@ -174,6 +202,7 @@ function endResize() {
     document.removeEventListener('mouseup', endResize);
     document.removeEventListener('touchmove', resize);
     document.removeEventListener('touchend', endResize);
+    document.removeEventListener('touchcancel', endResize);
     emit('size', { width: modal.width, height: modal.height });
 }
 
@@ -196,6 +225,7 @@ function initResizeLeft(e) {
     document.addEventListener('mouseup', endResizeLeft);
     document.addEventListener('touchmove', resizeLeft, { passive: false });
     document.addEventListener('touchend', endResizeLeft);
+    document.addEventListener('touchcancel', endResizeLeft);
 }
 
 function resizeLeft(e) {
@@ -221,6 +251,7 @@ function endResizeLeft() {
     document.removeEventListener('mouseup', endResizeLeft);
     document.removeEventListener('touchmove', resizeLeft);
     document.removeEventListener('touchend', endResizeLeft);
+    document.removeEventListener('touchcancel', endResizeLeft);
 }
 
 onMounted(() => {
@@ -276,13 +307,16 @@ function trapFocus(event) {
 </script>
 
 <template>
-    <Teleport :to="isFullscreen ? fullscreenParent : 'body'" :key="instanceKey">
+    <Teleport :to="isFullscreen ? fullscreenParent : 'body'">
         <div
             v-if="isOpen"
             ref="draggableDialog"
             data-cy="draggable-dialog"
             class="vue-ui-draggable-dialog"
-            :class="{ 'vue-ui-draggable-dialog-with-footer': !!$slots.footer }"
+            :class="{
+                'vue-ui-draggable-dialog-with-footer': !!$slots.footer,
+                'vue-ui-draggable-dialog-fit-viewport': fitViewport,
+            }"
             :style="modalStyle"
             role="dialog"
             :aria-modal="true"
@@ -384,6 +418,11 @@ function trapFocus(event) {
     overscroll-behavior: contain;
 }
 
+.vue-ui-draggable-dialog-fit-viewport .vue-ui-draggable-dialog-title {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
 /* Footer layout is opt-in; existing dialogs retain their sizing and scrolling. */
 .vue-ui-draggable-dialog-with-footer {
     display: flex;
@@ -423,11 +462,21 @@ function trapFocus(event) {
 }
 
 .drag-handle {
+    touch-action: none;
     display: flex;
     align-items: center;
     cursor: grab;
     margin-right: 0.5em;
     padding: 0.2em;
+}
+
+@media (pointer: coarse) {
+    .drag-handle {
+        min-width: 44px;
+        min-height: 44px;
+        box-sizing: border-box;
+        justify-content: center;
+    }
 }
 
 .drag-handle:active {
@@ -466,6 +515,7 @@ function trapFocus(event) {
 }
 
 .resize-handle {
+    touch-action: none;
     width: 20px;
     height: 20px;
     position: absolute;

@@ -88,7 +88,8 @@ onMounted(() => {
         :headerBg="backgroundColor"
         :headerColor="color"
         :forcedWidth="440"
-        :forcedHeight="560"
+        :forcedHeight="480"
+        fitViewport
         :isFullscreen="isFullscreen"
         :fullscreenParent="fullscreenParent"
         :isCursorPointer="isCursorPointer"
@@ -119,14 +120,20 @@ onMounted(() => {
                                 :palette="palette"
                                 :isCursorPointer="isCursorPointer"
                                 teleported
-                            />
+                            >
+                                <template
+                                    v-if="$slots['analysis-action-color']"
+                                    #annotator-action-color="{ color }"
+                                >
+                                    <slot
+                                        name="analysis-action-color"
+                                        v-bind="{ color }"
+                                    />
+                                </template>
+                            </ColorPicker>
                         </div>
                     </div>
                     <label>
-                        <span
-                            >{{ messages.fontSizeLabel }}:
-                            {{ draftAppearance.fontSize }}</span
-                        >
                         <input
                             data-cy="analysis-font-size"
                             type="range"
@@ -136,21 +143,25 @@ onMounted(() => {
                             v-model.number="draftAppearance.fontSize"
                             :style="{ accentColor: color }"
                         />
+                        <span
+                            >{{ messages.fontSizeLabel }}:
+                            {{ draftAppearance.fontSize }}</span
+                        >
                     </label>
                     <label>
-                        <span
-                            >{{ messages.strokeWidthLabel }}:
-                            {{ draftAppearance.strokeWidth }}</span
-                        >
                         <input
                             data-cy="analysis-stroke-width"
                             type="range"
                             min="0.5"
-                            max="12"
-                            step="0.1"
+                            max="6"
+                            step="0.5"
                             v-model.number="draftAppearance.strokeWidth"
                             :style="{ accentColor: color }"
                         />
+                        <span
+                            >{{ messages.strokeWidthLabel }}:
+                            {{ draftAppearance.strokeWidth }}</span
+                        >
                     </label>
                 </fieldset>
 
@@ -160,31 +171,40 @@ onMounted(() => {
                     class="vue-ui-xy-analysis-series"
                 >
                     <legend>{{ messages.seriesTitle }}</legend>
-                    <label v-for="seriesItem in series" :key="seriesItem.id">
-                        <input
-                            type="checkbox"
-                            v-model="draftSeries"
-                            :value="seriesItem.id"
-                            :data-series-id="seriesItem.id"
-                        />
-                        <span>{{ seriesItem.name || messages.series }}</span>
-                    </label>
+                    <div class="vue-ui-xy-analysis-checkboxes">
+                        <label
+                            v-for="seriesItem in series"
+                            :key="seriesItem.id"
+                        >
+                            <input
+                                type="checkbox"
+                                v-model="draftSeries"
+                                :value="seriesItem.id"
+                                :data-series-id="seriesItem.id"
+                            />
+                            <span>{{
+                                seriesItem.name || messages.series
+                            }}</span>
+                        </label>
+                    </div>
                 </fieldset>
 
                 <!-- ANALYSIS OPTIONS -->
                 <fieldset>
                     <legend>{{ messages.optionsTitle }}</legend>
-                    <label v-for="key in availableOptions" :key="key">
-                        <input
-                            type="checkbox"
-                            v-model="draft[key]"
-                            :disabled="
-                                key === 'threshold' &&
-                                !messages.thresholds?.some(Number.isFinite)
-                            "
-                        />
-                        <span>{{ messages.optionLabels[key] }}</span>
-                    </label>
+                    <div class="vue-ui-xy-analysis-checkboxes">
+                        <label v-for="key in availableOptions" :key="key">
+                            <input
+                                type="checkbox"
+                                v-model="draft[key]"
+                                :disabled="
+                                    key === 'threshold' &&
+                                    !messages.thresholds?.some(Number.isFinite)
+                                "
+                            />
+                            <span>{{ messages.optionLabels[key] }}</span>
+                        </label>
+                    </div>
                 </fieldset>
                 <p
                     v-if="
@@ -231,13 +251,18 @@ onMounted(() => {
 
 <style scoped>
 .vue-ui-xy-analysis-options {
-    padding-top: 12px;
+    display: grid;
+    gap: 12px;
+    padding: 8px 0;
     box-sizing: border-box;
+    min-width: 0;
+    font-size: 14px;
+    line-height: 1.4;
 }
 
 .vue-ui-xy-analysis-appearance {
-    margin-top: 16px;
-    margin-bottom: 12px;
+    display: grid;
+    gap: 4px;
 }
 
 .vue-ui-xy-analysis-color-control {
@@ -250,44 +275,55 @@ onMounted(() => {
 .vue-ui-xy-analysis-color {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-start;
     gap: 8px;
-    margin-bottom: 8px;
-}
-
-.vue-ui-xy-analysis-appearance label {
-    justify-content: space-between;
 }
 
 fieldset {
     border: none;
     margin: 0;
     padding: 0;
-}
-
-.vue-ui-xy-analysis-series {
-    margin-bottom: 12px;
+    min-width: 0;
 }
 
 legend {
     font-weight: bold;
-    margin-bottom: 8px;
+    margin-bottom: 4px;
+    padding: 0;
+    overflow-wrap: anywhere;
+    max-width: 100%;
+}
+
+.vue-ui-xy-analysis-checkboxes {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+    gap: 0 12px;
 }
 
 label {
     display: flex;
     align-items: center;
     gap: 8px;
+    min-width: 0;
+    min-height: 32px;
     cursor: inherit;
+}
+
+label span,
+.vue-ui-xy-analysis-color > span {
+    overflow-wrap: anywhere;
+    min-width: 0;
 }
 
 .vue-ui-xy-analysis-options-notice {
     font-size: 0.85em;
-    max-width: 280px;
+    margin: 0;
+    overflow-wrap: anywhere;
 }
 
 .vue-ui-xy-analysis-options-actions {
     display: flex;
+    flex-wrap: wrap;
     gap: 8px;
 }
 
@@ -295,13 +331,35 @@ input {
     cursor: inherit;
 }
 
+input[type='checkbox'] {
+    flex-shrink: 0;
+    margin: 0;
+}
+
+input[type='range'] {
+    min-width: 0;
+    width: 100%;
+    max-width: 100px;
+    margin: 0;
+}
+
 button {
     color: inherit;
     background: transparent;
     border: 1px solid currentColor;
     border-radius: 3px;
-    padding: 3px 12px;
+    padding: 6px 12px;
+    min-height: 36px;
+    max-width: 100%;
+    overflow-wrap: anywhere;
     font: inherit;
     cursor: inherit;
+}
+
+@media (pointer: coarse) {
+    label,
+    button {
+        min-height: 44px;
+    }
 }
 </style>

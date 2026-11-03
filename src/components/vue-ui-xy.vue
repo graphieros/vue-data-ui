@@ -7747,6 +7747,7 @@ function applyAnalysisOptions({ options, seriesIds, appearance }) {
     analysisApplied.value = !cfgChart.value.userOptions.callbacks.analyze;
     analysisPen.value?.finishGeneratedPreview(true);
     analysisPen.value?.setAnalysisAppearance(selectedAnalysisAppearance.value);
+    isAnnotator.value = analysisWasAnnotator;
     closeAnalysisOptions();
 }
 
@@ -7844,7 +7845,10 @@ function visualizeAnalysis(
                 String(annotations.length),
             )
           : FINAL_CONFIG.value.analysis.visualEmpty;
-    if (inserted && annotations.length) isAnnotator.value = true;
+    // Preview may open the toolbar, but refreshing applied annotations must
+    // preserve the user's current editing state.
+    if (inserted && annotations.length && analysisOptionsOpen.value)
+        isAnnotator.value = true;
 }
 
 function clearAppliedAnalysis() {
@@ -8283,7 +8287,14 @@ watch(
             :backgroundColor="cfgChart.backgroundColor"
             @apply="applyAnalysisOptions"
             @cancel="cancelAnalysisOptions"
-        />
+        >
+            <template
+                v-if="$slots['analysis-action-color']"
+                #analysis-action-color="{ color }"
+            >
+                <slot name="analysis-action-color" v-bind="{ color }" />
+            </template>
+        </XyAnalysisOptions>
         <p class="sr-only" role="status">{{ analysisVisualStatus }}</p>
 
         <div style="position: relative">

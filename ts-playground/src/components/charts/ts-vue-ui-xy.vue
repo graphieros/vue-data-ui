@@ -861,6 +861,10 @@ function getLabels(svg: VueUiXySvgSlotProps['svg']) {
                 <span style="color: chocolate">X</span>
             </template>
 
+            <template #analysis-action-color="{ color }">
+                <CommonAnnotatorActionColor :color />
+            </template>
+
             <template #annotator-action-color="{ color }">
                 <!-- text color, either black or white depending on the selected palette color -->
                 <CommonAnnotatorActionColor :color />

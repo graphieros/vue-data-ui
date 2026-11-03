@@ -6860,6 +6860,8 @@ declare module 'vue-data-ui' {
         };
         absoluteIndex: number;
     };
+    export type VueUiXyAnalysisActionColorSlotProps = { color: string };
+
     export type VueUiAnnotatorActionColorSlotProps = { color: string };
     export type VueUiAnnotatorActionDrawSlotProps = {
         mode: 'arrow' | 'text' | 'line' | 'draw';
@@ -7016,6 +7018,9 @@ declare module 'vue-data-ui' {
     export const VueUiXy: typeof VueUiXyBase & {
         new (): VueUiXyExpose & {
             $slots: CommonAnnotatorSlots & {
+                ['analysis-action-color']?: (
+                    props: VueUiXyAnalysisActionColorSlotProps,
+                ) => VNodeChild;
                 ['custom-menu-before']?: () => VNodeChild;
                 ['custom-menu-after']?: () => VNodeChild;
                 legend?: (props: VueUiXyLegendSlotProps) => VNodeChild;

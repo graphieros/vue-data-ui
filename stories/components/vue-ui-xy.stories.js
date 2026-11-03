@@ -33,6 +33,52 @@ function createCases(env) {
         }
         return arr;
     }
+    cases.AnalysisRestoresAnnotator = async () => {
+        const { wrapper } = await mountSubject(VueUiXy, {
+            props: {
+                dataset: [{ name: 'A', type: 'line', series: [1, 9, 3] }],
+                config: {
+                    chart: { userOptions: { buttons: { analyze: true } } },
+                },
+            },
+        });
+        const state = wrapper.vm.$.setupState;
+        await waitFor(() => expect(state.analysisPen).toBeTruthy());
+        const selection = {
+            options: { minimum: true, maximum: true },
+            seriesIds: ['uniqueId_0'],
+        };
+        for (const wasOpen of [false, true]) {
+            state.isAnnotator = wasOpen;
+            state.openAnalysisOptions();
+            await waitFor(() =>
+                expect(
+                    document.querySelector('[data-cy="analysis-apply"]'),
+                ).toBeTruthy(),
+            );
+            state.previewAnalysisOptions(selection);
+            await waitFor(() => expect(state.isAnnotator).toBe(true));
+            state.applyAnalysisOptions(selection);
+            const check = () => {
+                expect(state.isAnnotator).toBe(wasOpen);
+                expect(
+                    wrapper.element.querySelectorAll(
+                        'g[data-analysis-generated]',
+                    ).length,
+                ).toBe(2);
+                expect(
+                    !!wrapper.element.querySelector(
+                        '.vue-ui-pen-and-paper-actions',
+                    ),
+                ).toBe(wasOpen);
+            };
+            await waitFor(check);
+            state.toggleStack();
+            await waitFor(check);
+            state.toggleStack();
+            await waitFor(check);
+        }
+    };
     cases.AnalysisReopensAfterZoom = async () => {
         const { wrapper } = await mountSubject(VueUiXy, {
             props: {
@@ -730,4 +776,10 @@ export const AnalysisReopensAfterZoom = {
     name: 'saved analysis previews after zoom',
     play: async (context) =>
         runScenario(context, createCases, 'AnalysisReopensAfterZoom'),
+};
+
+export const AnalysisRestoresAnnotator = {
+    name: 'applying analysis restores the previous annotator state',
+    play: async (context) =>
+        runScenario(context, createCases, 'AnalysisRestoresAnnotator'),
 };
