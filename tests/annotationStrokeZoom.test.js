@@ -459,3 +459,84 @@ it.each([0.2, 1, 5])(
         }
     },
 );
+
+it.each([0.5, 1, 2])(
+    'keeps an eight-screen-pixel gutter around annotation clipping at scale %s',
+    async (zoom) => {
+        const host = document.createElement('div');
+        const svg = document.createElementNS(
+            'http://www.w3.org/2000/svg',
+            'svg',
+        );
+        svg.getScreenCTM = () => ({ a: zoom, b: 0 });
+        const app = createApp({
+            render: () =>
+                h(PenAndPaper, {
+                    svgRef: svg,
+                    followZoom: true,
+                    annotationViewport: {
+                        x: { origin: 0, unit: 1 },
+                        y: { origin: 0, unit: 1 },
+                        clip: { x: 20, y: 30, width: 400, height: 200 },
+                    },
+                }),
+        });
+        try {
+            app.mount(host);
+            await nextTick();
+            const rect = svg.querySelector('clipPath rect');
+            expect((20 - Number(rect.getAttribute('x'))) * zoom).toBeCloseTo(8);
+            expect((30 - Number(rect.getAttribute('y'))) * zoom).toBeCloseTo(8);
+            expect(
+                (Number(rect.getAttribute('width')) - 400) * zoom,
+            ).toBeCloseTo(16);
+            expect(
+                (Number(rect.getAttribute('height')) - 200) * zoom,
+            ).toBeCloseTo(16);
+        } finally {
+            app.unmount();
+        }
+    },
+);
+
+it('preserves generated label, stroke and ring pixel sizes when leaving and reentering fullscreen scale', async () => {
+    const host = document.createElement('div');
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    let screenScale = 2;
+    svg.getScreenCTM = () => ({ a: screenScale, b: 0 });
+    const pen = ref(null);
+    const app = createApp({
+        render: () => h(PenAndPaper, { ref: pen, svgRef: svg }),
+    });
+    try {
+        app.mount(host);
+        await nextTick();
+        pen.value.replaceGeneratedAnnotations([
+            {
+                x: 100,
+                y: 100,
+                labelX: 128,
+                labelY: 130,
+                label: 'Analysis',
+                geometry: { kind: 'circle', x: 100, y: 100 },
+            },
+        ]);
+        const text = svg.querySelector('text[data-analysis-generated]');
+        const line = svg.querySelector('line[data-analysis-generated]');
+        const ring = svg.querySelector('circle[data-analysis-generated]');
+        for (const nextScale of [0.5, 2, 0.75, 2]) {
+            screenScale = nextScale;
+            window.dispatchEvent(new Event('resize'));
+            await nextTick();
+            expect(
+                Number(text.getAttribute('font-size')) * screenScale,
+            ).toBeCloseTo(12);
+            expect(
+                Number(line.getAttribute('stroke-width')) * screenScale,
+            ).toBeCloseTo(2);
+            expect(Number(ring.getAttribute('r')) * screenScale).toBeCloseTo(6);
+        }
+    } finally {
+        app.unmount();
+    }
+});

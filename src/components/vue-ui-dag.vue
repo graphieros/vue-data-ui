@@ -1,4 +1,5 @@
 <script setup>
+import { getAnnotatorProps } from '../annotatorConfig';
 import { createPanZoomAnnotationViewport } from '../utils/annotationViewport';
 import {
     annotationSlotNames,
@@ -1753,9 +1754,7 @@ const annotationViewport = computed(() =>
         </div>
 
         <PenAndPaper
-            :showGroupActions="
-                FINAL_CONFIG.userOptions.annotator?.showGroupActions ?? true
-            "
+            v-bind="getAnnotatorProps(FINAL_CONFIG.userOptions.annotator)"
             v-if="FINAL_CONFIG.userOptions.buttons.annotator"
             :svgRef="svgRef"
             :followZoom="FINAL_CONFIG.userOptions?.annotator?.followZoom"

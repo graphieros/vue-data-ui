@@ -64,6 +64,7 @@ const blur = (o) => {
 };
 
 const rrPaths = {
+    analyze: `M17 10A7 7 0 111 8 7 7 0 0117 10M14.7 14.7 19 19M4 11 6 11M8 11 8 8 10 8 10 11M4 11 4 9 6 9 6 11M12 11 12 6 14 6 14 11M8 11 10 11M12 11 14 11`,
     chartHill: `M1 16c9 0 6-8 9-8s0 8 9 8M10 3a1 1 0 000 2 1 1 0 000-2m-8 8a1 1 0 000 2 1 1 0 000-2m16 0a1 1 0 000 2 1 1 0 000-2`,
     annotation: `M10 17a1 1 0 000 2 1 1 0 000-2m-9 1h6m6 0h6M4 1h12v9h-4l-2 4M7 4h3M7 7h6M4 1v9h4l2 4`,
     chartAgePyramid: `M2 15v2h7v-2zm9 0v2h7v-2zm-2-2H3v-2h6zm2-2v2h6v-2zM9 9H4V7h5zm2-2v2h5V7zM9 5H6V3h3zm2-2v2h3V3z`,

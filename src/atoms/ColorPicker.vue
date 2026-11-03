@@ -10,7 +10,6 @@ import {
 } from 'vue';
 import BaseIcon from './BaseIcon.vue';
 import { adaptColorToBackground } from '../lib';
-import vClickOutside from '../directives/vClickOutside';
 
 const props = defineProps({
     value: {
@@ -56,6 +55,7 @@ const props = defineProps({
 const emit = defineEmits(['update:value']);
 
 const wrapperRef = ref(null);
+const panelRef = ref(null);
 const buttonRef = ref(null);
 const colorInput = ref(null);
 
@@ -93,6 +93,17 @@ function close() {
 
 function closeIfOpen() {
     if (!isUsingNative.value && isOpen.value) close();
+}
+
+// Dialogs stop bubbling clicks. Capture outside clicks while excluding both
+// the trigger and the palette, which may be teleported outside its wrapper.
+function onDocumentClick(event) {
+    if (
+        wrapperRef.value?.contains(event.target) ||
+        panelRef.value?.contains(event.target)
+    )
+        return;
+    closeIfOpen();
 }
 
 async function togglePicker() {
@@ -142,12 +153,14 @@ function onVisibilityChange() {
 }
 
 onMounted(() => {
+    document.addEventListener('click', onDocumentClick, true);
     window.addEventListener('scroll', onScrollOrResize, { passive: true });
     window.addEventListener('resize', onScrollOrResize, { passive: true });
     window.addEventListener('focus', onWindowFocus);
     document.addEventListener('visibilitychange', onVisibilityChange);
 });
 onBeforeUnmount(() => {
+    document.removeEventListener('click', onDocumentClick, true);
     window.removeEventListener('scroll', onScrollOrResize);
     window.removeEventListener('resize', onScrollOrResize);
     window.removeEventListener('focus', onWindowFocus);
@@ -166,7 +179,6 @@ watch(
     <div
         ref="wrapperRef"
         data-cy="color-picker"
-        v-click-outside="closeIfOpen"
         @keydown.esc="closeIfOpen"
         style="height: 100%; width: 100%; position: relative"
         :aria-expanded="isOpen ? 'true' : 'false'"
@@ -257,6 +269,7 @@ watch(
 
         <teleport to="body" v-if="isOpen && teleported">
             <div
+                ref="panelRef"
                 tabindex="0"
                 class="vue-ui-color-picker"
                 :style="{
@@ -289,7 +302,7 @@ watch(
                     :style="{
                         backgroundColor: value,
                         outline: `1px solid ${buttonBorderColor}`,
-                        cursor: isCursorPointer ? 'cursor' : 'default',
+                        cursor: isCursorPointer ? 'pointer' : 'default',
                     }"
                     @click.stop="triggerColorPicker"
                     @mousedown.stop

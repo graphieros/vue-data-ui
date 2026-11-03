@@ -1,4 +1,5 @@
 <script setup>
+import { getAnnotatorProps } from '../annotatorConfig';
 import {
     annotationSlotNames,
     getAnnotationSlotProps,
@@ -2133,9 +2134,7 @@ defineExpose({
         </div>
 
         <PenAndPaper
-            :showGroupActions="
-                FINAL_CONFIG.userOptions.annotator?.showGroupActions ?? true
-            "
+            v-bind="getAnnotatorProps(FINAL_CONFIG.userOptions.annotator)"
             v-if="FINAL_CONFIG.userOptions.buttons.annotator && svgRef"
             :color="cfgChart.color"
             :backgroundColor="cfgChart.backgroundColor"

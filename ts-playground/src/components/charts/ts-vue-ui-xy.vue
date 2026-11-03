@@ -6,6 +6,7 @@ import { computed, ref, useTemplateRef, watchEffect } from 'vue';
 import {
     VueUiXy,
     type VueUiXyConfig,
+    type VueUiXyAnalysisResult,
     type VueUiXyDatasetItem,
     type VueUiXyEmitCopyAlt,
     type VueUiXyEmitSelectLegend,
@@ -93,8 +94,82 @@ const chartRef = useTemplateRef('chartRef');
 
 const tooltipPosition = useTooltipPosition(chartRef);
 
+// Leave disabled to use the built-in visual annotations. Enabling the callback
+// replaces annotation injection with a typed result for custom handling.
+const useCustomAnalysis = ref(false);
+const analysisResult = ref<VueUiXyAnalysisResult | null>(null);
+function handleAnalysis(result: VueUiXyAnalysisResult) {
+    analysisResult.value = result;
+    console.log('analysis', result);
+}
+
 const testPreconfig = computed<VueUiXyConfig>(() => {
     return {
+        analysis: {
+            // Availability flags; the dialog checkboxes start unchecked.
+            options: {
+                minimum: true,
+                maximum: true,
+                increase: true,
+                decrease: true,
+                change: true,
+                average: true,
+                median: true,
+                threshold: true,
+                outlier: true,
+                gap: true,
+                trend: true,
+            },
+            optionsTitle: 'Analysis annotations',
+            seriesTitle: 'Series to annotate',
+            appearanceTitle: 'Annotation appearance',
+            colorLabel: 'Color',
+            fontSizeLabel: 'Font size',
+            strokeWidthLabel: 'Arrow stroke width',
+            apply: 'Apply',
+            cancel: 'Cancel',
+            thresholdUnavailable: 'No thresholds defined.',
+            thresholds: [5, 10],
+            maxAnnotations: 24,
+            optionLabels: {
+                minimum: 'Minimum',
+                maximum: 'Maximum',
+                increase: 'Largest increase',
+                decrease: 'Largest decrease',
+                change: 'First-to-last change',
+                average: 'Average',
+                median: 'Median',
+                threshold: 'Threshold crossings',
+                outlier: 'Outlier candidates (1.5 x IQR)',
+                gap: 'Largest gap between comparable series',
+                trend: 'Linear trend',
+            },
+            visualIncrease: '{series}: largest increase {value}',
+            visualDecrease: '{series}: largest decrease {value}',
+            visualChange: '{series}: first-to-last change {value}',
+            visualAverage: '{series}: average {value}',
+            visualMedian: '{series}: median {value}',
+            visualThreshold: '{series}: crossed threshold {value}',
+            visualOutlier: '{series}: outlier candidate {value} (1.5 x IQR)',
+            visualGap: '{series} / {other}: largest gap {value}',
+            visualTrend: '{series}: fitted slope {value} per x-unit',
+            visualMinimum: '{series}: minimum {value}',
+            visualMaximum: '{series}: maximum {value}',
+            visualAdded: '{count} annotations added.',
+            visualEmpty:
+                'No eligible annotations for the selected options in this view.',
+            visualBusy: 'Finish your current annotation edit and try again.',
+            locale: 'en',
+            series: 'Series',
+            summary: '{series}: {count} observations; {excluded} excluded.',
+            minimum: 'Minimum: {value} (point {point}, {ties} tied).',
+            maximum: 'Maximum: {value} (point {point}, {ties} tied).',
+            change: 'First-to-last change: {value}.',
+            increase:
+                'Largest consecutive increase: {value} (points {from}–{to}).',
+            decrease:
+                'Largest consecutive decrease: {value} (points {from}–{to}).',
+        },
         devHints: { enable: true },
         skeletonConfig: null,
         skeletonDataset: null,
@@ -442,12 +517,19 @@ const testPreconfig = computed<VueUiXyConfig>(() => {
                 timeFormat: 'yyyy-MM-dd HH:mm:ss',
             },
             userOptions: {
-                annotator: { followZoom: true },
+                annotator: {
+                    showGroupActions: true,
+                    followZoom: true,
+                    useOutline: true,
+                    outlineThickness: 1,
+                    outlineColor: null, // Use the chart background color.
+                },
                 show: true,
                 showOnChartHover: false,
                 keepStateOnChartLeave: true,
                 position: 'right',
                 buttons: {
+                    analyze: true,
                     tooltip: true,
                     pdf: true,
                     csv: true,
@@ -464,6 +546,7 @@ const testPreconfig = computed<VueUiXyConfig>(() => {
                     altCopy: false,
                 },
                 callbacks: {
+                    analyze: null,
                     animation: null,
                     annotator: null,
                     csv: null,
@@ -491,6 +574,7 @@ const testPreconfig = computed<VueUiXyConfig>(() => {
                     fullscreen: 'Toggle fullscreen',
                     stack: 'Toggle stack mode',
                     annotator: 'Toggle annotator',
+                    analyze: 'Analyze visible data',
                     svg: 'Download SVG',
                     altCopy: 'Copy alt text',
                 },
@@ -642,6 +726,9 @@ const config = computed<VueUiXyConfig>(() => {
                         altCopy: true,
                     },
                     callbacks: {
+                        analyze: useCustomAnalysis.value
+                            ? handleAnalysis
+                            : null,
                         altCopy: (args) => {
                             console.log(args);
                         },
@@ -729,6 +816,13 @@ function getLabels(svg: VueUiXySvgSlotProps['svg']) {
 
 <template>
     <div>
+        <label>
+            <input v-model="useCustomAnalysis" type="checkbox" />
+            Use a custom analysis callback instead of visual annotations
+        </label>
+        <pre v-if="useCustomAnalysis && analysisResult">{{
+            analysisResult.text
+        }}</pre>
         <div v-html="svgRender" />
         <VueUiXy
             ref="chartRef"
@@ -765,6 +859,10 @@ function getLabels(svg: VueUiXySvgSlotProps['svg']) {
 
             <template #annotator-action-close>
                 <span style="color: chocolate">X</span>
+            </template>
+
+            <template #analysis-action-color="{ color }">
+                <CommonAnnotatorActionColor :color />
             </template>
 
             <template #annotator-action-color="{ color }">
@@ -891,6 +989,18 @@ function getLabels(svg: VueUiXySvgSlotProps['svg']) {
 
             <template #optionAnnotator="{ toggleAnnotator, isAnnotator }">
                 <CommonOptionAnnotator :toggle-annotator :is-annotator />
+            </template>
+
+            <template #optionAnalyze>
+                <code
+                    style="
+                        color: chocolate;
+                        font-size: 10px;
+                        pointer-events: none;
+                    "
+                >
+                    #optionAnalyze
+                </code>
             </template>
 
             <template #optionAltCopy>

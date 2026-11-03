@@ -227,7 +227,9 @@ export const XyZoomIntegration = {
             canvasElement.querySelector('[data-test="annotate"]'),
         );
         const svg = canvasElement.querySelector('[data-cy="xy-svg"]');
-        const clip = svg.querySelector('clipPath[id^="annotation-clip-"] rect');
+        const clip = svg.querySelector(
+            'clipPath[id^="vue_ui_xy_zoom_clip_"] rect',
+        );
         const left = Number(clip.getAttribute('x'));
         const top = Number(clip.getAttribute('y'));
         const width = Number(clip.getAttribute('width'));
@@ -251,15 +253,15 @@ export const XyZoomIntegration = {
         const data = JSON.parse(line.getAttribute('data-annotation-anchor'));
         // Six categorical cells become three, with the range starting at index 1.
         const zoomClip = svg.querySelector(
-            'clipPath[id^="annotation-clip-"] rect',
+            'clipPath[id^="vue_ui_xy_zoom_clip_"] rect',
         );
-        const newLeft = Number(zoomClip.getAttribute('x'));
-        const newWidth = Number(zoomClip.getAttribute('width'));
-        await waitFor(() =>
+        await waitFor(() => {
+            const newLeft = Number(zoomClip.getAttribute('x'));
+            const newWidth = Number(zoomClip.getAttribute('width'));
             expect(anchor(svg, line, x, y).x).toBeCloseTo(
                 newLeft + newWidth / 6 + ((data.x - 1) * newWidth) / 3,
-            ),
-        );
+            );
+        });
         expect(line.getAttribute('stroke-width')).toBe(strokeWidth);
         await fireEvent.click(
             canvasElement.querySelector('[data-test="reset"]'),

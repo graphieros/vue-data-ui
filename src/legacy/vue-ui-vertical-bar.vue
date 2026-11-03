@@ -1252,6 +1252,13 @@ defineExpose({
         @mouseleave="() => setUserOptionsVisibility(false)"
     >
         <PenAndPaper
+            :useOutline="FINAL_CONFIG.userOptions.annotator?.useOutline ?? true"
+            :outlineThickness="
+                FINAL_CONFIG.userOptions.annotator?.outlineThickness ?? 1
+            "
+            :outlineColor="
+                FINAL_CONFIG.userOptions.annotator?.outlineColor ?? null
+            "
             v-if="FINAL_CONFIG.userOptions.buttons.annotator"
             :svgRef="svgRef"
             :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"

@@ -219,12 +219,12 @@ const dataset = ref([
     //     ],
     //     dataLabels: true,
     // },
-    // {
-    //     name: 'SERIE',
-    //     type: 'bar',
-    //     series: createDs(20),
-    //     dataLabels: true,
-    // },
+    {
+        name: 'SERIE',
+        type: 'bar',
+        series: createDs(20),
+        dataLabels: true,
+    },
     // {
     //     name: 'Serie B',
     //     type: 'bar',
@@ -509,6 +509,7 @@ const model = createModel([
     CHECKBOX('loading', { def: false }),
 
     CHECKBOX('chart.userOptions.show', { def: true }),
+    CHECKBOX('chart.userOptions.buttons.analyze', { def: true }),
     CHECKBOX('chart.userOptions.buttons.pdf', { def: true }),
     CHECKBOX('chart.userOptions.buttons.csv', { def: true }),
     CHECKBOX('chart.userOptions.buttons.img', { def: true }),
@@ -519,6 +520,14 @@ const model = createModel([
     CHECKBOX('chart.userOptions.buttons.altCopy', { def: true }),
     CHECKBOX('chart.userOptions.annotator.showGroupActions', { def: true }),
     CHECKBOX('chart.userOptions.annotator.followZoom', { def: true }),
+    CHECKBOX('chart.userOptions.annotator.useOutline', { def: true }),
+    COLOR('chart.userOptions.annotator.outlineColor', { def: null }),
+    RANGE('chart.userOptions.annotator.outlineThickness', {
+        def: 1,
+        min: 0,
+        max: 10,
+        step: 0.1,
+    }),
 
     SELECT('chart.userOptions.position', ['left', 'right'], { def: 'right' }),
     CHECKBOX('chart.userOptions.showOnChartHover', { def: true }),

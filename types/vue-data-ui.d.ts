@@ -709,10 +709,89 @@ declare module 'vue-data-ui' {
         config: TConfig;
     };
 
+    export type VueUiXyAnalysisSeries = {
+        id: string;
+        name: string;
+        points: { index: number; value: number; x: number }[];
+        count: number;
+        excluded: number;
+        minimum: { value: number; indices: number[] };
+        maximum: { value: number; indices: number[] };
+        change: number | null;
+        increase: { value: number; from: number; to: number } | null;
+        decrease: { value: number; from: number; to: number } | null;
+    };
+    export type VueUiXyAnalysisResult = {
+        scope: 'visible-datapoints';
+        options: Record<VueUiXyAnalysisOption, boolean>;
+        seriesIds: string[];
+        appearance: {
+            color: string;
+            fontSize: number;
+            strokeWidth: number;
+        } | null;
+        range: { start: number; end: number; scale: 'continuous' | 'category' };
+        series: VueUiXyAnalysisSeries[];
+        text: string;
+    };
+    export type VueUiXyAnalysisOption =
+        | 'minimum'
+        | 'maximum'
+        | 'increase'
+        | 'decrease'
+        | 'change'
+        | 'average'
+        | 'median'
+        | 'threshold'
+        | 'outlier'
+        | 'gap'
+        | 'trend';
+    export type VueUiXyAnalysisConfig = {
+        /** Available analysis options. False hides and disables an option. All default to true; checkboxes initially remain unchecked. */
+        options?: Partial<Record<VueUiXyAnalysisOption, boolean>>;
+        optionsTitle?: string;
+        seriesTitle?: string;
+        appearanceTitle?: string;
+        colorLabel?: string;
+        fontSizeLabel?: string;
+        strokeWidthLabel?: string;
+        apply?: string;
+        cancel?: string;
+        thresholdUnavailable?: string;
+        /** Targets in original series values. Crossings mark the first observed sample on the new side. */
+        thresholds?: number[];
+        /** Maximum generated annotation groups; defaults to 24, capped at 100. */
+        maxAnnotations?: number;
+        optionLabels?: Partial<Record<VueUiXyAnalysisOption, string>>;
+        visualIncrease?: string;
+        visualDecrease?: string;
+        visualChange?: string;
+        visualAverage?: string;
+        visualMedian?: string;
+        visualThreshold?: string;
+        visualOutlier?: string;
+        visualGap?: string;
+        visualTrend?: string;
+        visualMinimum?: string;
+        visualMaximum?: string;
+        visualAdded?: string;
+        visualEmpty?: string;
+        visualBusy?: string;
+        locale?: string;
+        series?: string;
+        summary?: string;
+        minimum?: string;
+        maximum?: string;
+        change?: string;
+        increase?: string;
+        decrease?: string;
+    };
+
     export type ChartCallbacks<
         TDataset = unknown,
         TConfig = Record<string, any>,
     > = {
+        analyze?: null | ((result: VueUiXyAnalysisResult) => void);
         animation?: null | (() => void);
         annotator?: null | (() => void);
         csv?: null | ((csvStr?: string) => void);
@@ -762,8 +841,16 @@ declare module 'vue-data-ui' {
             /** Show multi-selection, group and ungroup actions. Defaults to true. */
             showGroupActions?: boolean;
             followZoom?: boolean;
+            /** Background-colored outlines for manual and analysis annotations. Defaults to true. */
+            useOutline?: boolean;
+            /** Outline thickness in CSS pixels. Defaults to 1. */
+            outlineThickness?: number;
+            /** Outline color. Defaults to null, which uses the chart background color. */
+            outlineColor?: string | null;
         };
         buttons?: {
+            /** Prototype: supported by VueUiXy only; defaults to false. */
+            analyze?: boolean;
             animation?: boolean;
             annotator?: boolean;
             csv?: boolean;
@@ -780,6 +867,7 @@ declare module 'vue-data-ui' {
             altCopy?: boolean;
         };
         buttonTitles?: {
+            analyze?: string;
             animation?: string;
             annotator?: string;
             close?: string;
@@ -2574,6 +2662,7 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiIconName =
+        | 'analyze'
         | 'accessibility'
         | 'addColumn'
         | 'addRow'
@@ -6249,6 +6338,7 @@ declare module 'vue-data-ui' {
     } & Record<string, any>;
 
     export type VueUiXyConfig = {
+        analysis?: VueUiXyAnalysisConfig;
         devHints?: DevHints;
         skeletonDataset?: VueUiBuiltInSkeletonDataset<
             VueUiXyDatasetItem[]
@@ -6770,6 +6860,8 @@ declare module 'vue-data-ui' {
         };
         absoluteIndex: number;
     };
+    export type VueUiXyAnalysisActionColorSlotProps = { color: string };
+
     export type VueUiAnnotatorActionColorSlotProps = { color: string };
     export type VueUiAnnotatorActionDrawSlotProps = {
         mode: 'arrow' | 'text' | 'line' | 'draw';
@@ -6926,6 +7018,9 @@ declare module 'vue-data-ui' {
     export const VueUiXy: typeof VueUiXyBase & {
         new (): VueUiXyExpose & {
             $slots: CommonAnnotatorSlots & {
+                ['analysis-action-color']?: (
+                    props: VueUiXyAnalysisActionColorSlotProps,
+                ) => VNodeChild;
                 ['custom-menu-before']?: () => VNodeChild;
                 ['custom-menu-after']?: () => VNodeChild;
                 legend?: (props: VueUiXyLegendSlotProps) => VNodeChild;
@@ -6954,6 +7049,7 @@ declare module 'vue-data-ui' {
                 optionAnnotator?: (
                     props: VueUiOptionAnnotatorSlotProps,
                 ) => VNodeChild;
+                optionAnalyze?: () => VNodeChild;
                 optionAltCopy?: () => VNodeChild;
                 ['chart-background']?: () => VNodeChild;
                 ['bar-gradient']?: (

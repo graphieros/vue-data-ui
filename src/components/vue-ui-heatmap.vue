@@ -1,4 +1,5 @@
 <script setup>
+import { getAnnotatorProps } from '../annotatorConfig';
 import { getTableComponent } from '../tableIntegration';
 import {
     annotationSlotNames,
@@ -1597,9 +1598,7 @@ watch(
         />
 
         <PenAndPaper
-            :showGroupActions="
-                FINAL_CONFIG.userOptions.annotator?.showGroupActions ?? true
-            "
+            v-bind="getAnnotatorProps(FINAL_CONFIG.userOptions.annotator)"
             v-if="FINAL_CONFIG.userOptions.buttons.annotator"
             :svgRef="svgRef"
             :backgroundColor="FINAL_CONFIG.style.backgroundColor"
