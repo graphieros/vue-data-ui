@@ -7696,6 +7696,7 @@ function openAnalysisOptions() {
     }
     analysisWasAnnotator = isAnnotator.value;
     analysisDraftAppearance.value = analysisPen.value.getAnalysisAppearance();
+    userOptionsRef.value?.close();
     analysisOptionsOpen.value = true;
     analysisDraftSelection.value = {
         options: selectedAnalysisOptions.value,
@@ -7709,7 +7710,7 @@ function closeAnalysisOptions() {
     analysisDraftSelection.value = null;
     nextTick(() =>
         userOptionsRef.value?.$el
-            ?.querySelector('[data-cy="user-options-analyze"]')
+            ?.querySelector('[data-cy="user-options-summary"]')
             ?.focus(),
     );
 }

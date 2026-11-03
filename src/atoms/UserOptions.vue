@@ -270,6 +270,7 @@ function setTableIconState(state) {
 defineExpose({
     setTableIconState,
     setTooltipIconState,
+    close,
 });
 
 const isLabel = ref(props.isLabelActive);
