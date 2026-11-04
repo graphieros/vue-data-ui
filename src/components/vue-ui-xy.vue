@@ -93,6 +93,7 @@ import {
 } from '../lib';
 import {
     canShowValue,
+    createContinuousWindowSelector,
     fillArray,
     groupBy,
     isCoordinatePoint,
@@ -120,6 +121,7 @@ import img from '../img.js';
 import Title from '../atoms/Title.vue';
 import themes from '../themes/vue_ui_xy.json';
 import Shape from '../atoms/Shape.vue';
+import XyRenderLayer from '../atoms/XyRenderLayer.vue';
 import BaseScanner from '../atoms/BaseScanner.vue';
 import SlicerPreview from '../atoms/SlicerPreview.vue'; // v3
 import Accordion from './vue-ui-accordion.vue'; // Must be ready in responsive mode
@@ -206,7 +208,6 @@ const useSafeValues = ref(true);
 const height = ref(600);
 const width = ref(1000);
 const viewBox = ref('0 0 1000 600');
-const clientPosition = shallowRef({ x: 0, y: 0 });
 const icons = shallowRef({ line: 'line', bar: 'bar', plot: 'plot' });
 const isAnnotator = ref(false);
 const isFullscreen = ref(false);
@@ -1768,7 +1769,7 @@ function getValueFromPoint(point) {
     return point && typeof point === 'object' ? point.y : null;
 }
 
-const safeDataset = computed(() => {
+const normalizedDataset = computed(() => {
     if (!useSafeValues.value && !isContinuousScale.value) {
         return FINAL_DATASET.value;
     }
@@ -1790,36 +1791,16 @@ const safeDataset = computed(() => {
         return {
             ...datapoint,
             slotAbsoluteIndex: i,
-            sourceIndices: isContinuousScale.value
-                ? undefined
-                : sourceIndices.slice(slicer.value.start, slicer.value.end),
+            sourceIndices: isContinuousScale.value ? undefined : sourceIndices,
             series: isContinuousScale.value
                 ? sourceSeries
                       .map((point, index) =>
                           normalizeCoordinatePoint(point, index),
                       )
-                      .filter((point) => {
-                          if (point.isInvalid) {
-                              return false;
-                          }
-
-                          if (point.x === null && point.y === null) {
-                              return (
-                                  slicer.value.start <= 0 &&
-                                  slicer.value.end >= 0
-                              );
-                          }
-
-                          return (
-                              point.x >= slicer.value.start &&
-                              point.x <= slicer.value.end
-                          );
-                      })
-                : sourceSeries
-                      .map((d) => {
-                          return isSafeValue(d) ? d : null;
-                      })
-                      .slice(slicer.value.start, slicer.value.end),
+                      .filter((point) => !point.isInvalid)
+                : sourceSeries.map((d) => {
+                      return isSafeValue(d) ? d : null;
+                  }),
             color: convertColorToHex(
                 datapoint.color
                     ? datapoint.color
@@ -1831,6 +1812,28 @@ const safeDataset = computed(() => {
             scaleLabel: datapoint.scaleLabel || id,
         };
     });
+});
+
+const continuousWindowSelectors = computed(() =>
+    isContinuousScale.value
+        ? normalizedDataset.value.map((datapoint) =>
+              createContinuousWindowSelector(datapoint.series),
+          )
+        : [],
+);
+
+const safeDataset = computed(() => {
+    if (!useSafeValues.value && !isContinuousScale.value) {
+        return normalizedDataset.value;
+    }
+    const { start, end } = slicer.value;
+    return normalizedDataset.value.map((datapoint, index) => ({
+        ...datapoint,
+        sourceIndices: datapoint.sourceIndices?.slice(start, end),
+        series: isContinuousScale.value
+            ? continuousWindowSelectors.value[index](start, end)
+            : datapoint.series.slice(start, end),
+    }));
 });
 
 const absoluteDataset = computed(() => {
@@ -1926,12 +1929,20 @@ function updateContinuousTooltip(svgX) {
         continuousTooltipLookup.value.matchingPointsByXValue.get(selectedX) ||
         [];
 
-    continuousTooltipSet.value = matchingPoints.map((point) => {
-        return {
+    const previousPoints = continuousTooltipSet.value;
+    if (
+        previousPoints.length !== matchingPoints.length ||
+        matchingPoints.some(
+            (point, index) =>
+                previousPoints[index]?.point !== point.point ||
+                previousPoints[index]?.datapoint !== point.datapoint,
+        )
+    ) {
+        continuousTooltipSet.value = matchingPoints.map((point) => ({
             ...point,
             distance: 0,
-        };
-    });
+        }));
+    }
 
     continuousTooltipX.value = getContinuousX({ x: selectedX });
     selectedMinimapXValue.value = selectedX;
@@ -2945,7 +2956,7 @@ function calcIndividualRectY(plot) {
 }
 
 const hoveredIndex = ref(null);
-const continuousTooltipSet = ref([]);
+const continuousTooltipSet = shallowRef([]);
 const continuousTooltipX = ref(null);
 
 const continuousTooltipLookup = computed(() => {
@@ -5019,10 +5030,12 @@ function createSeriesVerticalContext({
         individualHeight: geometry.individualHeight,
     });
 
-    const autoScaleRatiosToNiceScale = createAutoScaleRatiosToNiceScale({
-        values: datapoint.absoluteValues,
-        autoScaleSteps: geometry.autoScaleSteps,
-    });
+    const autoScaleRatiosToNiceScale = datapoint.autoScaling
+        ? createAutoScaleRatiosToNiceScale({
+              values: datapoint.absoluteValues,
+              autoScaleSteps: geometry.autoScaleSteps,
+          })
+        : [];
 
     return {
         autoScale,
@@ -5079,64 +5092,69 @@ const barSet = computed(() => {
 
         const comments = getSlicedComments(datapoint.comments);
 
-        const plots = datapoint.series.map((plot, j) => {
-            const yRatio = mutableConfig.value.useIndividualScale
-                ? (datapoint.absoluteValues[j] + individualZero) / individualMax
-                : ratioToMax(plot);
-            const x =
-                mutableConfig.value.useIndividualScale &&
-                mutableConfig.value.isStacked
-                    ? drawingArea.value?.left +
-                      (drawingArea.value.width / maxSeries.value) * j
-                    : drawingArea.value?.left +
-                      slot.value.bar * i +
-                      slot.value.bar * j * barLen -
-                      barSlot.value / 2 -
-                      i * barPeriodGap.value;
+        const plots = !datapoint.autoScaling
+            ? datapoint.series.map((plot, j) => {
+                  const yRatio = mutableConfig.value.useIndividualScale
+                      ? (datapoint.absoluteValues[j] + individualZero) /
+                        individualMax
+                      : ratioToMax(plot);
+                  const x =
+                      mutableConfig.value.useIndividualScale &&
+                      mutableConfig.value.isStacked
+                          ? drawingArea.value?.left +
+                            (drawingArea.value.width / maxSeries.value) * j
+                          : drawingArea.value?.left +
+                            slot.value.bar * i +
+                            slot.value.bar * j * barLen -
+                            barSlot.value / 2 -
+                            i * barPeriodGap.value;
 
-            return {
-                yOffset: checkNaN(yOffset),
-                individualHeight: checkNaN(individualHeight),
-                x: checkNaN(x),
-                y: getYFromRatio({
-                    ratio: yRatio,
-                    yOffset,
-                    individualHeight,
-                }),
-                value: datapoint.absoluteValues[j],
-                zeroPosition: checkNaN(zeroPosition),
-                individualMax: checkNaN(individualMax),
-                comment: comments[j] || '',
-            };
-        });
+                  return {
+                      yOffset: checkNaN(yOffset),
+                      individualHeight: checkNaN(individualHeight),
+                      x: checkNaN(x),
+                      y: getYFromRatio({
+                          ratio: yRatio,
+                          yOffset,
+                          individualHeight,
+                      }),
+                      value: datapoint.absoluteValues[j],
+                      zeroPosition: checkNaN(zeroPosition),
+                      individualMax: checkNaN(individualMax),
+                      comment: comments[j] || '',
+                  };
+              })
+            : [];
 
-        const autoScalePlots = datapoint.series.map((_, j) => {
-            const x =
-                mutableConfig.value.useIndividualScale &&
-                mutableConfig.value.isStacked
-                    ? drawingArea.value?.left +
-                      (drawingArea.value.width / maxSeries.value) * j
-                    : drawingArea.value?.left -
-                      slot.value.bar / 2 +
-                      slot.value.bar * i +
-                      slot.value.bar * j * barLen;
-            return {
-                yOffset: checkNaN(yOffset),
-                individualHeight: checkNaN(individualHeight),
-                x: checkNaN(x),
-                y: checkNaN(
-                    getYFromRatio({
-                        ratio: autoScaleRatiosToNiceScale[j] || 0,
-                        yOffset: checkNaN(yOffset),
-                        individualHeight: checkNaN(individualHeight),
-                    }),
-                ),
-                value: datapoint.absoluteValues[j],
-                zeroPosition: checkNaN(zeroPosition),
-                individualMax: checkNaN(individualMax),
-                comment: comments[j] || '',
-            };
-        });
+        const autoScalePlots = datapoint.autoScaling
+            ? datapoint.series.map((_, j) => {
+                  const x =
+                      mutableConfig.value.useIndividualScale &&
+                      mutableConfig.value.isStacked
+                          ? drawingArea.value?.left +
+                            (drawingArea.value.width / maxSeries.value) * j
+                          : drawingArea.value?.left -
+                            slot.value.bar / 2 +
+                            slot.value.bar * i +
+                            slot.value.bar * j * barLen;
+                  return {
+                      yOffset: checkNaN(yOffset),
+                      individualHeight: checkNaN(individualHeight),
+                      x: checkNaN(x),
+                      y: checkNaN(
+                          getYFromRatio({
+                              ratio: autoScaleRatiosToNiceScale[j] || 0,
+                              yOffset: checkNaN(yOffset),
+                              individualHeight: checkNaN(individualHeight),
+                          }),
+                      ),
+                      value: datapoint.absoluteValues[j],
+                      zeroPosition: checkNaN(zeroPosition),
+                      individualMax: checkNaN(individualMax),
+                      comment: comments[j] || '',
+                  };
+              })
+            : [];
 
         const scaleGroup = createScaleGroupEntry({
             datapoint,
@@ -5225,83 +5243,97 @@ const lineSet = computed(() => {
                 : localIndex;
         };
 
-        const plots = datapoint.series.map((plot, j) => {
-            if (isContinuousScale.value && (plot.x == null || plot.y == null)) {
-                return {
-                    index: j,
-                    sourceIndex: getSourceIndex(plot, j),
-                    x: null,
-                    y: null,
-                    value: null,
-                    datasetXValue: getDatasetXValue(plot),
-                    comment: comments[j] || '',
-                };
-            }
-            const yRatio = mutableConfig.value.useIndividualScale
-                ? (datapoint.absoluteValues[j] + Math.abs(individualZero)) /
-                  individualMax
-                : ratioToMax(getValueFromPoint(plot));
+        const plots =
+            !datapoint.autoScaling ||
+            (datapoint.useArea &&
+                !datapoint.useStepper &&
+                !mutableConfig.value.useIndividualScale)
+                ? datapoint.series.map((plot, j) => {
+                      if (
+                          isContinuousScale.value &&
+                          (plot.x == null || plot.y == null)
+                      ) {
+                          return {
+                              index: j,
+                              sourceIndex: getSourceIndex(plot, j),
+                              x: null,
+                              y: null,
+                              value: null,
+                              datasetXValue: getDatasetXValue(plot),
+                              comment: comments[j] || '',
+                          };
+                      }
+                      const yRatio = mutableConfig.value.useIndividualScale
+                          ? (datapoint.absoluteValues[j] +
+                                Math.abs(individualZero)) /
+                            individualMax
+                          : ratioToMax(getValueFromPoint(plot));
 
-            return {
-                index: j,
-                sourceIndex: getSourceIndex(plot, j),
-                x: checkNaN(getPointX(plot, j)),
-                datasetXValue: getDatasetXValue(plot),
-                y: checkNaN(
-                    getYFromRatio({
-                        ratio: yRatio,
-                        yOffset,
-                        individualHeight,
-                    }),
-                ),
-                value: datapoint.absoluteValues[j],
-                comment: comments[j] || '',
-            };
-        });
+                      return {
+                          index: j,
+                          sourceIndex: getSourceIndex(plot, j),
+                          x: checkNaN(getPointX(plot, j)),
+                          datasetXValue: getDatasetXValue(plot),
+                          y: checkNaN(
+                              getYFromRatio({
+                                  ratio: yRatio,
+                                  yOffset,
+                                  individualHeight,
+                              }),
+                          ),
+                          value: datapoint.absoluteValues[j],
+                          comment: comments[j] || '',
+                      };
+                  })
+                : [];
 
-        const autoScalePlots = datapoint.series.map((plot, j) => {
-            if (
-                isContinuousScale.value &&
-                (plot.x === null || plot.y === null)
-            ) {
-                return {
-                    index: j,
-                    sourceIndex: getSourceIndex(plot, j),
-                    x: null,
-                    y: null,
-                    datasetXValue: getDatasetXValue(plot),
-                    value: null,
-                    comment: comments[j] || '',
-                };
-            }
+        const autoScalePlots = datapoint.autoScaling
+            ? datapoint.series.map((plot, j) => {
+                  if (
+                      isContinuousScale.value &&
+                      (plot.x === null || plot.y === null)
+                  ) {
+                      return {
+                          index: j,
+                          sourceIndex: getSourceIndex(plot, j),
+                          x: null,
+                          y: null,
+                          datasetXValue: getDatasetXValue(plot),
+                          value: null,
+                          comment: comments[j] || '',
+                      };
+                  }
 
-            if (![undefined, null].includes(datapoint.absoluteValues[j])) {
-                return {
-                    index: j,
-                    sourceIndex: getSourceIndex(plot, j),
-                    x: checkNaN(getPointX(plot, j)),
-                    datasetXValue: getDatasetXValue(plot),
-                    y: checkNaN(
-                        getYFromRatio({
-                            ratio: autoScaleRatiosToNiceScale[j] || 0,
-                            yOffset,
-                            individualHeight,
-                        }),
-                    ),
-                    value: datapoint.absoluteValues[j],
-                    comment: comments[j] || '',
-                };
-            } else {
-                return {
-                    index: j,
-                    sourceIndex: getSourceIndex(plot, j),
-                    x: checkNaN(getPointX(plot, j)),
-                    y: zeroPosition,
-                    value: datapoint.absoluteValues[j],
-                    comment: comments[j] || '',
-                };
-            }
-        });
+                  if (
+                      ![undefined, null].includes(datapoint.absoluteValues[j])
+                  ) {
+                      return {
+                          index: j,
+                          sourceIndex: getSourceIndex(plot, j),
+                          x: checkNaN(getPointX(plot, j)),
+                          datasetXValue: getDatasetXValue(plot),
+                          y: checkNaN(
+                              getYFromRatio({
+                                  ratio: autoScaleRatiosToNiceScale[j] || 0,
+                                  yOffset,
+                                  individualHeight,
+                              }),
+                          ),
+                          value: datapoint.absoluteValues[j],
+                          comment: comments[j] || '',
+                      };
+                  } else {
+                      return {
+                          index: j,
+                          sourceIndex: getSourceIndex(plot, j),
+                          x: checkNaN(getPointX(plot, j)),
+                          y: zeroPosition,
+                          value: datapoint.absoluteValues[j],
+                          comment: comments[j] || '',
+                      };
+                  }
+              })
+            : [];
 
         const cutNullValues = FINAL_CONFIG.value.line.cutNullValues;
         const showNullDashes =
@@ -5410,28 +5442,36 @@ const lineSet = computed(() => {
         const hasDashedSegments =
             hasUserDashedSegments || hasNullDashedSegments;
 
-        const curve = cutNullValues
-            ? createSmoothPathWithCuts(plots)
-            : createSmoothPath(linePlots);
+        const curve = datapoint.autoScaling
+            ? ''
+            : cutNullValues
+              ? createSmoothPathWithCuts(plots)
+              : createSmoothPath(linePlots);
 
-        const autoScaleCurve = cutNullValues
-            ? createSmoothPathWithCuts(autoScalePlots)
-            : createSmoothPath(autoScaleLinePlots);
+        const autoScaleCurve = !datapoint.autoScaling
+            ? ''
+            : cutNullValues
+              ? createSmoothPathWithCuts(autoScalePlots)
+              : createSmoothPath(autoScaleLinePlots);
 
-        const straight = cutNullValues
-            ? createStraightPathWithCuts(plots)
-            : createStraightPath(linePlots);
+        const straight = datapoint.autoScaling
+            ? ''
+            : cutNullValues
+              ? createStraightPathWithCuts(plots)
+              : createStraightPath(linePlots);
 
-        const autoScaleStraight = cutNullValues
-            ? createStraightPathWithCuts(autoScalePlots)
-            : createStraightPath(autoScaleLinePlots);
+        const autoScaleStraight = !datapoint.autoScaling
+            ? ''
+            : cutNullValues
+              ? createStraightPathWithCuts(autoScalePlots)
+              : createStraightPath(autoScaleLinePlots);
 
-        const stepper = normalizeStepperStrokePath(
-            createStepperPath(linePlots),
-        );
-        const autoScaleStepper = normalizeStepperStrokePath(
-            createStepperPath(autoScaleLinePlots),
-        );
+        const stepper = datapoint.autoScaling
+            ? ''
+            : normalizeStepperStrokePath(createStepperPath(linePlots));
+        const autoScaleStepper = !datapoint.autoScaling
+            ? ''
+            : normalizeStepperStrokePath(createStepperPath(autoScaleLinePlots));
 
         const dashedStraight = !hasDashedSegments
             ? []
@@ -5604,68 +5644,76 @@ const plotSet = computed(() => {
 
         const comments = getSlicedComments(datapoint.comments);
 
-        const plots = datapoint.series.map((plot, j) => {
-            if (isContinuousScale.value && (plot.x == null || plot.y == null)) {
-                return {
-                    index: j,
-                    x: null,
-                    datasetXValue: getDatasetXValue(plot),
-                    y: null,
-                    value: null,
-                    comment: comments[j] || '',
-                };
-            }
+        const plots = !datapoint.autoScaling
+            ? datapoint.series.map((plot, j) => {
+                  if (
+                      isContinuousScale.value &&
+                      (plot.x == null || plot.y == null)
+                  ) {
+                      return {
+                          index: j,
+                          x: null,
+                          datasetXValue: getDatasetXValue(plot),
+                          y: null,
+                          value: null,
+                          comment: comments[j] || '',
+                      };
+                  }
 
-            const yRatio = mutableConfig.value.useIndividualScale
-                ? (datapoint.absoluteValues[j] + Math.abs(individualZero)) /
-                  individualMax
-                : ratioToMax(getValueFromPoint(plot));
-            return {
-                index: j,
-                x: checkNaN(getPointX(plot, j)),
-                datasetXValue: getDatasetXValue(plot),
-                y: checkNaN(
-                    getYFromRatio({
-                        ratio: yRatio,
-                        yOffset,
-                        individualHeight,
-                    }),
-                ),
-                value: datapoint.absoluteValues[j],
-                comment: comments[j] || '',
-            };
-        });
+                  const yRatio = mutableConfig.value.useIndividualScale
+                      ? (datapoint.absoluteValues[j] +
+                            Math.abs(individualZero)) /
+                        individualMax
+                      : ratioToMax(getValueFromPoint(plot));
+                  return {
+                      index: j,
+                      x: checkNaN(getPointX(plot, j)),
+                      datasetXValue: getDatasetXValue(plot),
+                      y: checkNaN(
+                          getYFromRatio({
+                              ratio: yRatio,
+                              yOffset,
+                              individualHeight,
+                          }),
+                      ),
+                      value: datapoint.absoluteValues[j],
+                      comment: comments[j] || '',
+                  };
+              })
+            : [];
 
-        const autoScalePlots = datapoint.series.map((plot, j) => {
-            if (
-                isContinuousScale.value &&
-                (plot.x === null || plot.y === null)
-            ) {
-                return {
-                    index: j,
-                    x: null,
-                    datasetXValue: getDatasetXValue(plot),
-                    y: null,
-                    value: null,
-                    comment: comments[j] || '',
-                };
-            }
+        const autoScalePlots = datapoint.autoScaling
+            ? datapoint.series.map((plot, j) => {
+                  if (
+                      isContinuousScale.value &&
+                      (plot.x === null || plot.y === null)
+                  ) {
+                      return {
+                          index: j,
+                          x: null,
+                          datasetXValue: getDatasetXValue(plot),
+                          y: null,
+                          value: null,
+                          comment: comments[j] || '',
+                      };
+                  }
 
-            return {
-                index: j,
-                x: checkNaN(getPointX(plot, j)),
-                datasetXValue: getDatasetXValue(plot),
-                y: checkNaN(
-                    getYFromRatio({
-                        ratio: autoScaleRatiosToNiceScale[j] || 0,
-                        yOffset,
-                        individualHeight,
-                    }),
-                ),
-                value: datapoint.absoluteValues[j],
-                comment: comments[j] || '',
-            };
-        });
+                  return {
+                      index: j,
+                      x: checkNaN(getPointX(plot, j)),
+                      datasetXValue: getDatasetXValue(plot),
+                      y: checkNaN(
+                          getYFromRatio({
+                              ratio: autoScaleRatiosToNiceScale[j] || 0,
+                              yOffset,
+                              individualHeight,
+                          }),
+                      ),
+                      value: datapoint.absoluteValues[j],
+                      comment: comments[j] || '',
+                  };
+              })
+            : [];
 
         const scaleGroup = createScaleGroupEntry({
             datapoint,
@@ -6531,25 +6579,26 @@ function toggleTooltipVisibility(show, selectedIndex = null) {
     if (allSegregated.value) return;
     isTooltip.value = show;
 
-    const datapoint = relativeDataset.value.map((s) => {
-        return {
-            ...s,
-            name: s.name,
-            value: [null, undefined, NaN].includes(
-                s.absoluteValues[selectedIndex],
-            )
-                ? null
-                : s.absoluteValues[selectedIndex],
-            color: s.color,
-            type: s.type,
-        };
-    });
+    const getDatapoint = () =>
+        relativeDataset.value.map((s) => {
+            return {
+                ...s,
+                name: s.name,
+                value: [null, undefined, NaN].includes(
+                    s.absoluteValues[selectedIndex],
+                )
+                    ? null
+                    : s.absoluteValues[selectedIndex],
+                color: s.color,
+                type: s.type,
+            };
+        });
 
     if (show) {
         selectedSerieIndex.value = selectedIndex;
         if (FINAL_CONFIG.value.events.datapointEnter) {
             FINAL_CONFIG.value.events.datapointEnter({
-                datapoint,
+                datapoint: getDatapoint(),
                 seriesIndex: selectedIndex + slicer.value.start,
             });
         }
@@ -6557,7 +6606,7 @@ function toggleTooltipVisibility(show, selectedIndex = null) {
         selectedSerieIndex.value = null;
         if (FINAL_CONFIG.value.events.datapointLeave) {
             FINAL_CONFIG.value.events.datapointLeave({
-                datapoint,
+                datapoint: getDatapoint(),
                 seriesIndex: selectedIndex + slicer.value.start,
             });
         }
@@ -6840,27 +6889,14 @@ function prepareChart() {
     queueParentStableLayoutRefresh();
 }
 
-function setClientPosition(e) {
-    clientPosition.value = {
-        x: e.clientX,
-        y: e.clientY,
-    };
-}
-
 onMounted(() => {
     prepareChart();
     setupSlicer();
-    document.addEventListener('mousemove', setClientPosition, {
-        passive: true,
-    });
     document.addEventListener('scroll', hideTags, { passive: true });
 });
 
 onBeforeUnmount(() => {
     document.removeEventListener('scroll', hideTags, { passive: true });
-    document.removeEventListener('mousemove', setClientPosition, {
-        passive: true,
-    });
 
     if (resizeObserver.value) {
         if (observedEl.value) {
@@ -7310,6 +7346,94 @@ function getCrosshairXEdge(plotX) {
     return gridLabels.value.yAxis.position === 'right'
         ? drawingArea.value.right
         : drawingArea.value.left;
+}
+
+// There can be at most three selected tag indices, regardless of series size.
+const followValueIndices = computed(() =>
+    [
+        ...new Set([
+            selectedMinimapIndex.value,
+            selectedSerieIndex.value,
+            selectedRowIndex.value,
+        ]),
+    ]
+        .filter(Number.isInteger)
+        .sort((a, b) => a - b),
+);
+
+function getFollowValuePlots(serie) {
+    if (
+        !['start', 'end'].includes(serie.useTag) ||
+        !FINAL_CONFIG.value[serie.type]?.tag.followValue
+    )
+        return [];
+    return followValueIndices.value
+        .filter((index) => index >= 0 && index < serie.plots.length)
+        .map((index) => ({ plot: serie.plots[index], index }));
+}
+
+function getTagPlots(serie, type) {
+    if (FINAL_CONFIG.value[type].tag.followValue) {
+        if (!serie.useTag) return [];
+        return followValueIndices.value
+            .filter((index) => index >= 0 && index < serie.plots.length)
+            .map((index) => ({ plot: serie.plots[index], index }));
+    }
+    const index =
+        serie.useTag === 'start'
+            ? 0
+            : serie.useTag === 'end'
+              ? serie.plots.length - 1
+              : -1;
+    return index >= 0 && serie.plots[index]
+        ? [{ plot: serie.plots[index], index }]
+        : [];
+}
+
+const markerPositions = new WeakMap();
+function getMarkerPosition(plot) {
+    let position = markerPositions.get(plot);
+    if (!position) {
+        position = { x: checkNaN(plot.x), y: checkNaN(plot.y) };
+        markerPositions.set(plot, position);
+    }
+    return position;
+}
+
+const lineMarkerBaseItems = computed(() => {
+    const result = new Map();
+    for (const serie of lineSet.value) {
+        const items = [];
+        serie.plots.forEach((plot, index) => {
+            if (
+                !optimize.value.linePlot ||
+                (plot.comment && cfgChart.value.comments.show) ||
+                isPlotAlone(serie.plots, index)
+            ) {
+                items.push({ plot, index });
+            }
+        });
+        result.set(serie, items);
+    }
+    return result;
+});
+
+function getLineMarkerItems(serie) {
+    const base = lineMarkerBaseItems.value.get(serie) || [];
+    if (!optimize.value.linePlot) return base;
+    const selected = [selectedSerieIndex.value, selectedMinimapIndex.value];
+    const additions = [...new Set(selected)]
+        .filter(
+            (index) =>
+                Number.isInteger(index) &&
+                serie.plots[index] &&
+                canShowValue(serie.plots[index].value) &&
+                !base.some((item) => item.index === index),
+        )
+        .map((index) => ({ plot: serie.plots[index], index }));
+    return additions.length
+        ? [...base, ...additions].sort((a, b) => a.index - b.index)
+        : base;
 }
 
 function isSelectedDatapoint(serie, plot, index) {
@@ -8387,89 +8511,53 @@ watch(
 
                     <g v-if="maxSeries > 0">
                         <!-- GRID -->
-                        <g class="vue-ui-xy-grid">
-                            <line
-                                v-if="gridLabels.xAxis.showBaseline"
-                                data-cy="xy-grid-line-x"
-                                :stroke="grid.stroke"
-                                stroke-width="1"
-                                :x1="drawingArea?.left"
-                                :x2="drawingArea?.right"
-                                :y1="forceValidValue(drawingArea?.bottom)"
-                                :y2="forceValidValue(drawingArea?.bottom)"
-                                stroke-linecap="round"
-                                :style="{ animation: 'none !important' }"
-                            />
-                            <template v-if="!mutableConfig.useIndividualScale">
+                        <XyRenderLayer>
+                            <g class="vue-ui-xy-grid">
                                 <line
-                                    class="vue-ui-xy-y-axis"
-                                    v-if="gridLabels.yAxis.showBaseline"
-                                    data-cy="xy-grid-line-y"
+                                    v-if="gridLabels.xAxis.showBaseline"
+                                    data-cy="xy-grid-line-x"
                                     :stroke="grid.stroke"
                                     stroke-width="1"
-                                    :x1="
-                                        yAxisLabelsAreRight
-                                            ? drawingArea?.right
-                                            : drawingArea?.left
-                                    "
-                                    :x2="
-                                        yAxisLabelsAreRight
-                                            ? drawingArea?.right
-                                            : drawingArea?.left
-                                    "
-                                    :y1="forceValidValue(drawingArea?.top)"
+                                    :x1="drawingArea?.left"
+                                    :x2="drawingArea?.right"
+                                    :y1="forceValidValue(drawingArea?.bottom)"
                                     :y2="forceValidValue(drawingArea?.bottom)"
                                     stroke-linecap="round"
                                     :style="{ animation: 'none !important' }"
                                 />
-                                <g v-if="grid.showHorizontalLines">
+                                <template
+                                    v-if="!mutableConfig.useIndividualScale"
+                                >
                                     <line
-                                        data-cy="xy-grid-horizontal-line"
-                                        v-for="l in yLabels"
-                                        :key="`horizontal_grid_line_${l.value}_${l.y}`"
-                                        :x1="drawingArea?.left"
-                                        :x2="drawingArea?.right"
-                                        :y1="forceValidValue(l.y)"
-                                        :y2="forceValidValue(l.y)"
+                                        class="vue-ui-xy-y-axis"
+                                        v-if="gridLabels.yAxis.showBaseline"
+                                        data-cy="xy-grid-line-y"
                                         :stroke="grid.stroke"
-                                        :stroke-width="0.5"
+                                        stroke-width="1"
+                                        :x1="
+                                            yAxisLabelsAreRight
+                                                ? drawingArea?.right
+                                                : drawingArea?.left
+                                        "
+                                        :x2="
+                                            yAxisLabelsAreRight
+                                                ? drawingArea?.right
+                                                : drawingArea?.left
+                                        "
+                                        :y1="forceValidValue(drawingArea?.top)"
+                                        :y2="
+                                            forceValidValue(drawingArea?.bottom)
+                                        "
                                         stroke-linecap="round"
                                         :style="{
                                             animation: 'none !important',
                                         }"
                                     />
-                                </g>
-                            </template>
-                            <template v-else-if="grid.showHorizontalLines">
-                                <g
-                                    v-for="grid in allScales"
-                                    :key="`individual_grid_${grid.groupId || grid.id}`"
-                                >
-                                    <template
-                                        v-if="
-                                            grid.id === selectedScale &&
-                                            grid.yLabels.length
-                                        "
-                                    >
+                                    <g v-if="grid.showHorizontalLines">
                                         <line
-                                            v-for="l in grid.yLabels"
-                                            :key="`selected_individual_grid_line_${grid.groupId || grid.id}_${l.value}_${l.y}`"
-                                            :x1="drawingArea?.left"
-                                            :x2="drawingArea?.right"
-                                            :y1="forceValidValue(l.y)"
-                                            :y2="forceValidValue(l.y)"
-                                            :stroke="grid.color"
-                                            :stroke-width="0.5"
-                                            stroke-linecap="round"
-                                            :style="{
-                                                animation: 'none !important',
-                                            }"
-                                        />
-                                    </template>
-                                    <template v-else-if="grid.yLabels.length">
-                                        <line
-                                            v-for="l in grid.yLabels"
-                                            :key="`individual_grid_line_${grid.groupId || grid.id}_${l.value}_${l.y}`"
+                                            data-cy="xy-grid-horizontal-line"
+                                            v-for="l in yLabels"
+                                            :key="`horizontal_grid_line_${l.value}_${l.y}`"
                                             :x1="drawingArea?.left"
                                             :x2="drawingArea?.right"
                                             :y1="forceValidValue(l.y)"
@@ -8481,30 +8569,82 @@ watch(
                                                 animation: 'none !important',
                                             }"
                                         />
-                                    </template>
+                                    </g>
+                                </template>
+                                <template v-else-if="grid.showHorizontalLines">
+                                    <g
+                                        v-for="grid in allScales"
+                                        :key="`individual_grid_${grid.groupId || grid.id}`"
+                                    >
+                                        <template
+                                            v-if="
+                                                grid.id === selectedScale &&
+                                                grid.yLabels.length
+                                            "
+                                        >
+                                            <line
+                                                v-for="l in grid.yLabels"
+                                                :key="`selected_individual_grid_line_${grid.groupId || grid.id}_${l.value}_${l.y}`"
+                                                :x1="drawingArea?.left"
+                                                :x2="drawingArea?.right"
+                                                :y1="forceValidValue(l.y)"
+                                                :y2="forceValidValue(l.y)"
+                                                :stroke="grid.color"
+                                                :stroke-width="0.5"
+                                                stroke-linecap="round"
+                                                :style="{
+                                                    animation:
+                                                        'none !important',
+                                                }"
+                                            />
+                                        </template>
+                                        <template
+                                            v-else-if="grid.yLabels.length"
+                                        >
+                                            <line
+                                                v-for="l in grid.yLabels"
+                                                :key="`individual_grid_line_${grid.groupId || grid.id}_${l.value}_${l.y}`"
+                                                :x1="drawingArea?.left"
+                                                :x2="drawingArea?.right"
+                                                :y1="forceValidValue(l.y)"
+                                                :y2="forceValidValue(l.y)"
+                                                :stroke="grid.stroke"
+                                                :stroke-width="0.5"
+                                                stroke-linecap="round"
+                                                :style="{
+                                                    animation:
+                                                        'none !important',
+                                                }"
+                                            />
+                                        </template>
+                                    </g>
+                                </template>
+                                <g v-if="grid.showVerticalLines">
+                                    <path
+                                        data-cy="xy-grid-vertical-line"
+                                        :d="gridVerticalLines"
+                                        :stroke-width="0.5"
+                                        :stroke="grid.stroke"
+                                        stroke-linecap="round"
+                                        :style="{
+                                            animation: 'none !important',
+                                        }"
+                                    />
                                 </g>
-                            </template>
-                            <g v-if="grid.showVerticalLines">
-                                <path
-                                    data-cy="xy-grid-vertical-line"
-                                    :d="gridVerticalLines"
-                                    :stroke-width="0.5"
-                                    :stroke="grid.stroke"
-                                    stroke-linecap="round"
-                                    :style="{ animation: 'none !important' }"
-                                />
-                            </g>
 
-                            <g v-if="gridLabels.xAxisLabels.show">
-                                <path
-                                    :d="crosshairsX"
-                                    :stroke="grid.stroke"
-                                    :stroke-width="1"
-                                    stroke-linecap="round"
-                                    :style="{ animation: 'none !important' }"
-                                />
+                                <g v-if="gridLabels.xAxisLabels.show">
+                                    <path
+                                        :d="crosshairsX"
+                                        :stroke="grid.stroke"
+                                        :stroke-width="1"
+                                        stroke-linecap="round"
+                                        :style="{
+                                            animation: 'none !important',
+                                        }"
+                                    />
+                                </g>
                             </g>
-                        </g>
+                        </XyRenderLayer>
 
                         <!-- DEFS BARS -->
                         <template
@@ -8670,33 +8810,126 @@ watch(
                         </template>
 
                         <!-- HIGHLIGHT AREAS -->
-                        <g
-                            v-for="oneArea in highlightAreas"
-                            :key="`highlight_area_${oneArea.from}_${oneArea.span}_${oneArea.color}`"
-                        >
-                            <template v-if="oneArea.show">
-                                <!-- HIGHLIGHT AREA FILLED RECT UNITS -->
+                        <XyRenderLayer>
+                            <g
+                                v-for="oneArea in highlightAreas"
+                                :key="`highlight_area_${oneArea.from}_${oneArea.span}_${oneArea.color}`"
+                            >
+                                <template v-if="oneArea.show">
+                                    <!-- HIGHLIGHT AREA FILLED RECT UNITS -->
+                                    <g
+                                        v-for="(_, i) in oneArea.span"
+                                        :key="`highlight_area_rect_${oneArea.from}_${i}`"
+                                    >
+                                        <rect
+                                            data-cy="highlight-area"
+                                            :style="{
+                                                transition: 'none',
+                                                opacity:
+                                                    oneArea.from + i >=
+                                                        slicer.start &&
+                                                    oneArea.from + i <=
+                                                        slicer.end - 1
+                                                        ? 1
+                                                        : 0,
+                                            }"
+                                            :x="
+                                                getClampedHorizontalBandX(
+                                                    oneArea.from +
+                                                        i -
+                                                        slicer.start,
+                                                )
+                                            "
+                                            :y="drawingArea?.top"
+                                            :height="
+                                                drawingArea.height < 0
+                                                    ? 10
+                                                    : drawingArea.height
+                                            "
+                                            :width="
+                                                getHighlightAreaHorizontalBandWidth(
+                                                    oneArea.from +
+                                                        i -
+                                                        slicer.start,
+                                                )
+                                            "
+                                            :fill="
+                                                setOpacity(
+                                                    oneArea.color,
+                                                    oneArea.opacity,
+                                                )
+                                            "
+                                        />
+                                    </g>
+                                    <!-- HIGHLIGHT AREA CAPTION -->
+                                    <g
+                                        v-for="(_, i) in oneArea.span"
+                                        :key="`highlight_area_caption_${oneArea.from}_${i}`"
+                                    >
+                                        <foreignObject
+                                            v-if="
+                                                oneArea.caption.text && i === 0
+                                            "
+                                            :x="
+                                                getClampedHorizontalBandX(
+                                                    oneArea.from +
+                                                        i -
+                                                        slicer.start,
+                                                ) -
+                                                (oneArea.caption.width ===
+                                                'auto'
+                                                    ? 0
+                                                    : oneArea.caption.width /
+                                                          2 -
+                                                      getHorizontalSpanWidth(
+                                                          oneArea.span,
+                                                      ) /
+                                                          2)
+                                            "
+                                            :y="
+                                                drawingArea?.top +
+                                                oneArea.caption.offsetY
+                                            "
+                                            :style="{
+                                                overflow: 'visible',
+                                                opacity:
+                                                    oneArea.to >=
+                                                        slicer.start &&
+                                                    oneArea.from < slicer.end
+                                                        ? 1
+                                                        : 0,
+                                            }"
+                                            height="1"
+                                            :width="
+                                                oneArea.caption.width === 'auto'
+                                                    ? getHorizontalSpanWidth(
+                                                          oneArea.span,
+                                                      )
+                                                    : oneArea.caption.width
+                                            "
+                                        >
+                                            <div
+                                                data-cy="highlight-area-caption"
+                                                :style="`padding:${oneArea.caption.padding}px;text-align:${oneArea.caption.textAlign};font-size:${oneArea.caption.fontSize}px;color:${oneArea.caption.color};font-weight:${oneArea.caption.bold ? 'bold' : 'normal'}`"
+                                            >
+                                                {{ oneArea.caption.text }}
+                                            </div>
+                                        </foreignObject>
+                                    </g>
+                                </template>
+                            </g>
+                        </XyRenderLayer>
+
+                        <!-- HIGHLIGHTERS -->
+                        <XyRenderLayer>
+                            <g v-if="userHovers && !isContinuousScale">
                                 <g
-                                    v-for="(_, i) in oneArea.span"
-                                    :key="`highlight_area_rect_${oneArea.from}_${i}`"
+                                    v-for="(_, i) in maxSeries"
+                                    :key="`tooltip_trap_highlighter_${i}`"
                                 >
                                     <rect
-                                        data-cy="highlight-area"
-                                        :style="{
-                                            transition: 'none',
-                                            opacity:
-                                                oneArea.from + i >=
-                                                    slicer.start &&
-                                                oneArea.from + i <=
-                                                    slicer.end - 1
-                                                    ? 1
-                                                    : 0,
-                                        }"
-                                        :x="
-                                            getClampedHorizontalBandX(
-                                                oneArea.from + i - slicer.start,
-                                            )
-                                        "
+                                        data-cy="highlighter"
+                                        :x="getClampedHorizontalBandX(i)"
                                         :y="drawingArea?.top"
                                         :height="
                                             drawingArea.height < 0
@@ -8704,296 +8937,233 @@ watch(
                                                 : drawingArea.height
                                         "
                                         :width="
-                                            getHighlightAreaHorizontalBandWidth(
-                                                oneArea.from + i - slicer.start,
-                                            )
+                                            getHighlighterHorizontalBandWidth(i)
                                         "
                                         :fill="
-                                            setOpacity(
-                                                oneArea.color,
-                                                oneArea.opacity,
-                                            )
-                                        "
-                                    />
-                                </g>
-                                <!-- HIGHLIGHT AREA CAPTION -->
-                                <g
-                                    v-for="(_, i) in oneArea.span"
-                                    :key="`highlight_area_caption_${oneArea.from}_${i}`"
-                                >
-                                    <foreignObject
-                                        v-if="oneArea.caption.text && i === 0"
-                                        :x="
-                                            getClampedHorizontalBandX(
-                                                oneArea.from + i - slicer.start,
-                                            ) -
-                                            (oneArea.caption.width === 'auto'
-                                                ? 0
-                                                : oneArea.caption.width / 2 -
-                                                  getHorizontalSpanWidth(
-                                                      oneArea.span,
-                                                  ) /
-                                                      2)
-                                        "
-                                        :y="
-                                            drawingArea?.top +
-                                            oneArea.caption.offsetY
+                                            [
+                                                selectedMinimapIndex,
+                                                selectedSerieIndex,
+                                                selectedRowIndex,
+                                            ].includes(i)
+                                                ? setOpacity(
+                                                      cfgChart.highlighter
+                                                          .color,
+                                                      cfgChart.highlighter
+                                                          .crosshairs.show
+                                                          ? 0
+                                                          : cfgChart.highlighter
+                                                                .opacity,
+                                                  )
+                                                : 'transparent'
                                         "
                                         :style="{
-                                            overflow: 'visible',
-                                            opacity:
-                                                oneArea.to >= slicer.start &&
-                                                oneArea.from < slicer.end
-                                                    ? 1
-                                                    : 0,
+                                            transition: 'none !important',
+                                            animation: 'none !important',
                                         }"
-                                        height="1"
-                                        :width="
-                                            oneArea.caption.width === 'auto'
-                                                ? getHorizontalSpanWidth(
-                                                      oneArea.span,
-                                                  )
-                                                : oneArea.caption.width
-                                        "
-                                    >
-                                        <div
-                                            data-cy="highlight-area-caption"
-                                            :style="`padding:${oneArea.caption.padding}px;text-align:${oneArea.caption.textAlign};font-size:${oneArea.caption.fontSize}px;color:${oneArea.caption.color};font-weight:${oneArea.caption.bold ? 'bold' : 'normal'}`"
-                                        >
-                                            {{ oneArea.caption.text }}
-                                        </div>
-                                    </foreignObject>
+                                    />
                                 </g>
-                            </template>
-                        </g>
-
-                        <!-- HIGHLIGHTERS -->
-                        <g v-if="userHovers && !isContinuousScale">
-                            <g
-                                v-for="(_, i) in maxSeries"
-                                :key="`tooltip_trap_highlighter_${i}`"
-                            >
-                                <rect
-                                    data-cy="highlighter"
-                                    :x="getClampedHorizontalBandX(i)"
-                                    :y="drawingArea?.top"
-                                    :height="
-                                        drawingArea.height < 0
-                                            ? 10
-                                            : drawingArea.height
-                                    "
-                                    :width="
-                                        getHighlighterHorizontalBandWidth(i)
-                                    "
-                                    :fill="
-                                        [
-                                            selectedMinimapIndex,
-                                            selectedSerieIndex,
-                                            selectedRowIndex,
-                                        ].includes(i)
-                                            ? setOpacity(
-                                                  cfgChart.highlighter.color,
-                                                  cfgChart.highlighter
-                                                      .crosshairs.show
-                                                      ? 0
-                                                      : cfgChart.highlighter
-                                                            .opacity,
-                                              )
-                                            : 'transparent'
-                                    "
-                                    :style="{
-                                        transition: 'none !important',
-                                        animation: 'none !important',
-                                    }"
-                                />
                             </g>
-                        </g>
+                        </XyRenderLayer>
 
                         <!-- BARS -->
-                        <g :clip-path="chartZoomClipPath">
-                            <g
-                                :class="[
-                                    'vue-ui-xy-zoom-geometry',
-                                    {
-                                        'vue-ui-xy-zoom-geometry--transitioning':
-                                            isChartZoomTransitioning,
-                                    },
-                                ]"
-                                :style="chartZoomGeometryStyle"
-                            >
-                                <template v-if="barSet.length">
-                                    <g
-                                        v-for="(serie, i) in barSet"
-                                        :key="`serie_bar_${serie.id}`"
-                                        :class="`serie_bar_${i}`"
-                                        :style="`opacity:${selectedScale ? (selectedScale === serie.groupId ? 1 : 0.2) : 1};transition:opacity 0.2s ease-in-out`"
-                                    >
+                        <XyRenderLayer>
+                            <g :clip-path="chartZoomClipPath">
+                                <g
+                                    :class="[
+                                        'vue-ui-xy-zoom-geometry',
+                                        {
+                                            'vue-ui-xy-zoom-geometry--transitioning':
+                                                isChartZoomTransitioning,
+                                        },
+                                    ]"
+                                    :style="chartZoomGeometryStyle"
+                                >
+                                    <template v-if="barSet.length">
                                         <g
-                                            v-for="(plot, j) in serie.plots"
-                                            :key="`bar_plot_${i}_${j}`"
+                                            v-for="(serie, i) in barSet"
+                                            :key="`serie_bar_${serie.id}`"
+                                            :class="`serie_bar_${i}`"
+                                            :style="`opacity:${selectedScale ? (selectedScale === serie.groupId ? 1 : 0.2) : 1};transition:opacity 0.2s ease-in-out`"
                                         >
-                                            <rect
-                                                data-cy="datapoint-bar"
-                                                v-if="canShowValue(plot.value)"
-                                                :x="
-                                                    calcRectX(plot) +
-                                                    barInnerGap / 2
-                                                "
-                                                :y="
-                                                    mutableConfig.useIndividualScale
-                                                        ? calcIndividualRectY(
-                                                              plot,
-                                                          )
-                                                        : calcRectY(plot)
-                                                "
-                                                :height="
-                                                    mutableConfig.useIndividualScale
-                                                        ? Math.abs(
-                                                              calcIndividualHeight(
-                                                                  plot,
-                                                              ),
-                                                          )
-                                                        : Math.abs(
-                                                              calcRectHeight(
-                                                                  plot,
-                                                              ),
-                                                          )
-                                                "
-                                                :width="barWidth - barInnerGap"
-                                                :rx="
-                                                    FINAL_CONFIG.bar
-                                                        .borderRadius
-                                                "
-                                                :fill="
-                                                    FINAL_CONFIG.bar.useGradient
-                                                        ? plot.value >= 0
-                                                            ? `url(#rectGradient_pos_${i}_${uniqueId})`
-                                                            : `url(#rectGradient_neg_${i}_${uniqueId})`
-                                                        : serie.color
-                                                "
-                                                :stroke="
-                                                    FINAL_CONFIG.bar.border
-                                                        .useSerieColor
-                                                        ? serie.color
-                                                        : FINAL_CONFIG.bar
-                                                              .border.stroke
-                                                "
-                                                :stroke-width="
-                                                    FINAL_CONFIG.bar.border
-                                                        .strokeWidth
-                                                "
-                                                :style="{
-                                                    transition:
-                                                        loading ||
-                                                        isChartZoomTransitioning ||
-                                                        !FINAL_CONFIG.bar
-                                                            .showTransition
-                                                            ? undefined
-                                                            : `all ${FINAL_CONFIG.bar.transitionDurationMs}ms ease-in-out`,
-                                                }"
-                                            />
-                                            <rect
-                                                data-cy="datapoint-bar"
-                                                v-if="
-                                                    canShowValue(plot.value) &&
-                                                    $slots.pattern
-                                                "
-                                                :x="
-                                                    calcRectX(plot) -
-                                                    barInnerGap / 2
-                                                "
-                                                :y="
-                                                    mutableConfig.useIndividualScale
-                                                        ? calcIndividualRectY(
-                                                              plot,
-                                                          )
-                                                        : calcRectY(plot)
-                                                "
-                                                :height="
-                                                    mutableConfig.useIndividualScale
-                                                        ? Math.abs(
-                                                              calcIndividualHeight(
-                                                                  plot,
-                                                              ),
-                                                          )
-                                                        : Math.abs(
-                                                              calcRectHeight(
-                                                                  plot,
-                                                              ),
-                                                          )
-                                                "
-                                                :width="barWidth - barInnerGap"
-                                                :rx="
-                                                    FINAL_CONFIG.bar
-                                                        .borderRadius
-                                                "
-                                                :fill="`url(#pattern_${uniqueId}_${serie.slotAbsoluteIndex})`"
-                                                :stroke="
-                                                    FINAL_CONFIG.bar.border
-                                                        .useSerieColor
-                                                        ? serie.color
-                                                        : FINAL_CONFIG.bar
-                                                              .border.stroke
-                                                "
-                                                :stroke-width="
-                                                    FINAL_CONFIG.bar.border
-                                                        .strokeWidth
-                                                "
-                                                :style="{
-                                                    transition:
-                                                        loading ||
-                                                        isChartZoomTransitioning ||
-                                                        !FINAL_CONFIG.bar
-                                                            .showTransition
-                                                            ? undefined
-                                                            : `all ${FINAL_CONFIG.bar.transitionDurationMs}ms ease-in-out`,
-                                                }"
-                                            />
-
-                                            <template
-                                                v-if="
-                                                    plot.comment &&
-                                                    cfgChart.comments.show
-                                                "
+                                            <g
+                                                v-for="(plot, j) in serie.plots"
+                                                :key="`bar_plot_${i}_${j}`"
                                             >
-                                                <foreignObject
-                                                    style="overflow: visible"
-                                                    height="12"
+                                                <rect
+                                                    data-cy="datapoint-bar"
+                                                    v-if="
+                                                        canShowValue(plot.value)
+                                                    "
+                                                    :x="
+                                                        calcRectX(plot) +
+                                                        barInnerGap / 2
+                                                    "
+                                                    :y="
+                                                        mutableConfig.useIndividualScale
+                                                            ? calcIndividualRectY(
+                                                                  plot,
+                                                              )
+                                                            : calcRectY(plot)
+                                                    "
+                                                    :height="
+                                                        mutableConfig.useIndividualScale
+                                                            ? Math.abs(
+                                                                  calcIndividualHeight(
+                                                                      plot,
+                                                                  ),
+                                                              )
+                                                            : Math.abs(
+                                                                  calcRectHeight(
+                                                                      plot,
+                                                                  ),
+                                                              )
+                                                    "
                                                     :width="
-                                                        barWidth +
-                                                        cfgChart.comments.width
+                                                        barWidth - barInnerGap
+                                                    "
+                                                    :rx="
+                                                        FINAL_CONFIG.bar
+                                                            .borderRadius
+                                                    "
+                                                    :fill="
+                                                        FINAL_CONFIG.bar
+                                                            .useGradient
+                                                            ? plot.value >= 0
+                                                                ? `url(#rectGradient_pos_${i}_${uniqueId})`
+                                                                : `url(#rectGradient_neg_${i}_${uniqueId})`
+                                                            : serie.color
+                                                    "
+                                                    :stroke="
+                                                        FINAL_CONFIG.bar.border
+                                                            .useSerieColor
+                                                            ? serie.color
+                                                            : FINAL_CONFIG.bar
+                                                                  .border.stroke
+                                                    "
+                                                    :stroke-width="
+                                                        FINAL_CONFIG.bar.border
+                                                            .strokeWidth
+                                                    "
+                                                    :style="{
+                                                        transition:
+                                                            loading ||
+                                                            isChartZoomTransitioning ||
+                                                            !FINAL_CONFIG.bar
+                                                                .showTransition
+                                                                ? undefined
+                                                                : `all ${FINAL_CONFIG.bar.transitionDurationMs}ms ease-in-out`,
+                                                    }"
+                                                />
+                                                <rect
+                                                    data-cy="datapoint-bar"
+                                                    v-if="
+                                                        canShowValue(
+                                                            plot.value,
+                                                        ) && $slots.pattern
                                                     "
                                                     :x="
                                                         calcRectX(plot) -
-                                                        cfgChart.comments
-                                                            .width /
-                                                            2 +
-                                                        cfgChart.comments
-                                                            .offsetX
+                                                        barInnerGap / 2
                                                     "
                                                     :y="
-                                                        checkNaN(plot.y) +
-                                                        cfgChart.comments
-                                                            .offsetY +
-                                                        6
+                                                        mutableConfig.useIndividualScale
+                                                            ? calcIndividualRectY(
+                                                                  plot,
+                                                              )
+                                                            : calcRectY(plot)
+                                                    "
+                                                    :height="
+                                                        mutableConfig.useIndividualScale
+                                                            ? Math.abs(
+                                                                  calcIndividualHeight(
+                                                                      plot,
+                                                                  ),
+                                                              )
+                                                            : Math.abs(
+                                                                  calcRectHeight(
+                                                                      plot,
+                                                                  ),
+                                                              )
+                                                    "
+                                                    :width="
+                                                        barWidth - barInnerGap
+                                                    "
+                                                    :rx="
+                                                        FINAL_CONFIG.bar
+                                                            .borderRadius
+                                                    "
+                                                    :fill="`url(#pattern_${uniqueId}_${serie.slotAbsoluteIndex})`"
+                                                    :stroke="
+                                                        FINAL_CONFIG.bar.border
+                                                            .useSerieColor
+                                                            ? serie.color
+                                                            : FINAL_CONFIG.bar
+                                                                  .border.stroke
+                                                    "
+                                                    :stroke-width="
+                                                        FINAL_CONFIG.bar.border
+                                                            .strokeWidth
+                                                    "
+                                                    :style="{
+                                                        transition:
+                                                            loading ||
+                                                            isChartZoomTransitioning ||
+                                                            !FINAL_CONFIG.bar
+                                                                .showTransition
+                                                                ? undefined
+                                                                : `all ${FINAL_CONFIG.bar.transitionDurationMs}ms ease-in-out`,
+                                                    }"
+                                                />
+
+                                                <template
+                                                    v-if="
+                                                        plot.comment &&
+                                                        cfgChart.comments.show
                                                     "
                                                 >
-                                                    <slot
-                                                        name="plot-comment"
-                                                        :plot="{
-                                                            ...plot,
-                                                            color: serie.color,
-                                                            seriesIndex: i,
-                                                            datapointIndex: j,
-                                                        }"
-                                                    />
-                                                </foreignObject>
-                                            </template>
+                                                    <foreignObject
+                                                        style="
+                                                            overflow: visible;
+                                                        "
+                                                        height="12"
+                                                        :width="
+                                                            barWidth +
+                                                            cfgChart.comments
+                                                                .width
+                                                        "
+                                                        :x="
+                                                            calcRectX(plot) -
+                                                            cfgChart.comments
+                                                                .width /
+                                                                2 +
+                                                            cfgChart.comments
+                                                                .offsetX
+                                                        "
+                                                        :y="
+                                                            checkNaN(plot.y) +
+                                                            cfgChart.comments
+                                                                .offsetY +
+                                                            6
+                                                        "
+                                                    >
+                                                        <slot
+                                                            name="plot-comment"
+                                                            :plot="{
+                                                                ...plot,
+                                                                color: serie.color,
+                                                                seriesIndex: i,
+                                                                datapointIndex:
+                                                                    j,
+                                                            }"
+                                                        />
+                                                    </foreignObject>
+                                                </template>
+                                            </g>
                                         </g>
-                                    </g>
-                                </template>
+                                    </template>
+                                </g>
                             </g>
-                        </g>
+                        </XyRenderLayer>
 
                         <!-- ZERO LINE (AFTER BAR DATASETS, BEFORE LABELS) -->
                         <template
@@ -9016,132 +9186,141 @@ watch(
                         </template>
 
                         <!-- HIGHLIGHTER (useLine) -->
-                        <g
-                            v-if="
-                                !cfgChart.highlighter.crosshairs.show &&
-                                (cfgChart.highlighter.useLine ||
-                                    isContinuousScale) &&
-                                hasHighlighterSelection
-                            "
-                        >
-                            <line
-                                :x1="highlighterX"
-                                :x2="highlighterX"
-                                :y1="forceValidValue(drawingArea?.top)"
-                                :y2="forceValidValue(drawingArea?.bottom)"
-                                :stroke="cfgChart.highlighter.color"
-                                :stroke-width="cfgChart.highlighter.lineWidth"
-                                :stroke-dasharray="
-                                    cfgChart.highlighter.lineDasharray
-                                "
-                                stroke-linecap="round"
-                                style="
-                                    transition: none !important;
-                                    animation: none !important;
-                                    pointer-events: none;
-                                "
-                            />
-                        </g>
-
-                        <!-- CROSSHAIR SELECTION (x & y lines, dot on y) -->
-                        <g
-                            v-if="crosshairsAreActive"
-                            class="vue-ui-xy-crosshair-selection"
-                        >
+                        <XyRenderLayer>
                             <g
-                                v-for="plot in crosshairSelectedPlots"
-                                :key="`crosshair_${plot.serie.id}_${plot.index}`"
+                                v-if="
+                                    !cfgChart.highlighter.crosshairs.show &&
+                                    (cfgChart.highlighter.useLine ||
+                                        isContinuousScale) &&
+                                    hasHighlighterSelection
+                                "
                             >
                                 <line
-                                    :x1="
-                                        cfgChart.highlighter.crosshairs
-                                            .stopOnPoint
-                                            ? forceValidValue(plot.x)
-                                            : drawingArea.left
-                                    "
-                                    :x2="
-                                        cfgChart.highlighter.crosshairs
-                                            .stopOnPoint
-                                            ? forceValidValue(
-                                                  getCrosshairXEdge(plot.x),
-                                              )
-                                            : drawingArea.right
-                                    "
-                                    :y1="forceValidValue(plot.y)"
-                                    :y2="forceValidValue(plot.y)"
-                                    :stroke="
-                                        cfgChart.highlighter.crosshairs.stroke
-                                    "
+                                    :x1="highlighterX"
+                                    :x2="highlighterX"
+                                    :y1="forceValidValue(drawingArea?.top)"
+                                    :y2="forceValidValue(drawingArea?.bottom)"
+                                    :stroke="cfgChart.highlighter.color"
                                     :stroke-width="
-                                        cfgChart.highlighter.crosshairs
-                                            .strokeWidth
+                                        cfgChart.highlighter.lineWidth
                                     "
                                     :stroke-dasharray="
-                                        cfgChart.highlighter.crosshairs
-                                            .strokeDasharray
+                                        cfgChart.highlighter.lineDasharray
                                     "
                                     stroke-linecap="round"
-                                    style="pointer-events: none"
-                                />
-
-                                <line
-                                    :x1="forceValidValue(plot.x)"
-                                    :x2="forceValidValue(plot.x)"
-                                    :y1="
-                                        cfgChart.highlighter.crosshairs
-                                            .stopOnPoint
-                                            ? forceValidValue(plot.y)
-                                            : drawingArea.top
+                                    style="
+                                        transition: none !important;
+                                        animation: none !important;
+                                        pointer-events: none;
                                     "
-                                    :y2="
-                                        cfgChart.highlighter.crosshairs
-                                            .stopOnPoint
-                                            ? forceValidValue(
-                                                  drawingArea.bottom,
-                                              )
-                                            : drawingArea.bottom
-                                    "
-                                    :stroke="
-                                        cfgChart.highlighter.crosshairs.stroke
-                                    "
-                                    :stroke-width="
-                                        cfgChart.highlighter.crosshairs
-                                            .strokeWidth
-                                    "
-                                    :stroke-dasharray="
-                                        cfgChart.highlighter.crosshairs
-                                            .strokeDasharray
-                                    "
-                                    stroke-linecap="round"
-                                    style="pointer-events: none"
-                                />
-
-                                <circle
-                                    :cx="
-                                        forceValidValue(
-                                            getCrosshairXEdge(plot.x),
-                                        )
-                                    "
-                                    :cy="forceValidValue(plot.y)"
-                                    :r="
-                                        cfgChart.highlighter.crosshairs.dot
-                                            .radius
-                                    "
-                                    :fill="
-                                        cfgChart.highlighter.crosshairs.dot.fill
-                                    "
-                                    :stroke="
-                                        cfgChart.highlighter.crosshairs.dot
-                                            .stroke
-                                    "
-                                    :stroke-width="
-                                        cfgChart.highlighter.crosshairs.dot
-                                            .strokeWidth
-                                    "
-                                    style="pointer-events: none"
                                 />
                             </g>
-                        </g>
+                        </XyRenderLayer>
+
+                        <!-- CROSSHAIR SELECTION (x & y lines, dot on y) -->
+                        <XyRenderLayer>
+                            <g
+                                v-if="crosshairsAreActive"
+                                class="vue-ui-xy-crosshair-selection"
+                            >
+                                <g
+                                    v-for="plot in crosshairSelectedPlots"
+                                    :key="`crosshair_${plot.serie.id}_${plot.index}`"
+                                >
+                                    <line
+                                        :x1="
+                                            cfgChart.highlighter.crosshairs
+                                                .stopOnPoint
+                                                ? forceValidValue(plot.x)
+                                                : drawingArea.left
+                                        "
+                                        :x2="
+                                            cfgChart.highlighter.crosshairs
+                                                .stopOnPoint
+                                                ? forceValidValue(
+                                                      getCrosshairXEdge(plot.x),
+                                                  )
+                                                : drawingArea.right
+                                        "
+                                        :y1="forceValidValue(plot.y)"
+                                        :y2="forceValidValue(plot.y)"
+                                        :stroke="
+                                            cfgChart.highlighter.crosshairs
+                                                .stroke
+                                        "
+                                        :stroke-width="
+                                            cfgChart.highlighter.crosshairs
+                                                .strokeWidth
+                                        "
+                                        :stroke-dasharray="
+                                            cfgChart.highlighter.crosshairs
+                                                .strokeDasharray
+                                        "
+                                        stroke-linecap="round"
+                                        style="pointer-events: none"
+                                    />
+
+                                    <line
+                                        :x1="forceValidValue(plot.x)"
+                                        :x2="forceValidValue(plot.x)"
+                                        :y1="
+                                            cfgChart.highlighter.crosshairs
+                                                .stopOnPoint
+                                                ? forceValidValue(plot.y)
+                                                : drawingArea.top
+                                        "
+                                        :y2="
+                                            cfgChart.highlighter.crosshairs
+                                                .stopOnPoint
+                                                ? forceValidValue(
+                                                      drawingArea.bottom,
+                                                  )
+                                                : drawingArea.bottom
+                                        "
+                                        :stroke="
+                                            cfgChart.highlighter.crosshairs
+                                                .stroke
+                                        "
+                                        :stroke-width="
+                                            cfgChart.highlighter.crosshairs
+                                                .strokeWidth
+                                        "
+                                        :stroke-dasharray="
+                                            cfgChart.highlighter.crosshairs
+                                                .strokeDasharray
+                                        "
+                                        stroke-linecap="round"
+                                        style="pointer-events: none"
+                                    />
+
+                                    <circle
+                                        :cx="
+                                            forceValidValue(
+                                                getCrosshairXEdge(plot.x),
+                                            )
+                                        "
+                                        :cy="forceValidValue(plot.y)"
+                                        :r="
+                                            cfgChart.highlighter.crosshairs.dot
+                                                .radius
+                                        "
+                                        :fill="
+                                            cfgChart.highlighter.crosshairs.dot
+                                                .fill
+                                        "
+                                        :stroke="
+                                            cfgChart.highlighter.crosshairs.dot
+                                                .stroke
+                                        "
+                                        :stroke-width="
+                                            cfgChart.highlighter.crosshairs.dot
+                                                .strokeWidth
+                                        "
+                                        style="pointer-events: none"
+                                    />
+                                </g>
+                            </g>
+                        </XyRenderLayer>
 
                         <!-- FRAME -->
                         <rect
@@ -9167,145 +9346,21 @@ watch(
                         />
 
                         <!-- Y LABELS -->
-                        <g
-                            v-if="gridLabels.show"
-                            ref="scaleLabels"
-                            :opacity="crosshairsAreActive ? 0.2 : 1"
-                            style="transition: opacity 0.2s"
-                        >
-                            <template v-if="mutableConfig.useIndividualScale">
-                                <g
-                                    v-for="el in allScales"
-                                    :key="`individual_scale_axis_${el.groupId || el.id}`"
+                        <XyRenderLayer>
+                            <g
+                                v-if="gridLabels.show"
+                                ref="scaleLabels"
+                                :opacity="crosshairsAreActive ? 0.2 : 1"
+                                style="transition: opacity 0.2s"
+                            >
+                                <template
+                                    v-if="mutableConfig.useIndividualScale"
                                 >
-                                    <line
-                                        :x1="
-                                            mutableConfig.isStacked
-                                                ? yAxisLabelsAreRight
-                                                    ? drawingArea.right
-                                                    : drawingArea.left
-                                                : yAxisLabelsAreRight
-                                                  ? el.x
-                                                  : el.x -
-                                                    drawingArea.individualOffsetX
-                                        "
-                                        :x2="
-                                            mutableConfig.isStacked
-                                                ? yAxisLabelsAreRight
-                                                    ? drawingArea.right
-                                                    : drawingArea.left
-                                                : yAxisLabelsAreRight
-                                                  ? el.x
-                                                  : el.x -
-                                                    drawingArea.individualOffsetX
-                                        "
-                                        :y1="
-                                            mutableConfig.isStacked
-                                                ? forceValidValue(
-                                                      drawingArea?.bottom -
-                                                          el.yOffset -
-                                                          el.individualHeight,
-                                                  )
-                                                : forceValidValue(
-                                                      drawingArea?.top,
-                                                  )
-                                        "
-                                        :y2="
-                                            mutableConfig.isStacked
-                                                ? forceValidValue(
-                                                      drawingArea?.bottom -
-                                                          el.yOffset,
-                                                  )
-                                                : forceValidValue(
-                                                      drawingArea?.bottom,
-                                                  )
-                                        "
-                                        :stroke="el.color"
-                                        :stroke-width="grid.stroke"
-                                        stroke-linecap="round"
-                                        :style="`opacity:${selectedScale ? (selectedScale === el.groupId ? 1 : 0.3) : 1};transition:opacity 0.2s ease-in-out; animation: none !important`"
-                                    />
-                                </g>
-
-                                <g
-                                    v-for="el in allScales"
-                                    :key="`individual_scale_label_${el.groupId || el.id}`"
-                                    :style="`opacity:${selectedScale ? (selectedScale === el.groupId ? 1 : 0.3) : 1};transition:opacity 0.2s ease-in-out`"
-                                >
-                                    <text
-                                        :class="{
-                                            'vue-data-ui-transition':
-                                                transitionEnabled &&
-                                                !labelLayoutSettling,
-                                        }"
-                                        :fill="el.color"
-                                        :font-size="fontSizes.dataLabels * 0.8"
-                                        text-anchor="middle"
-                                        :transform="`translate(${
-                                            mutableConfig.isStacked
-                                                ? yAxisLabelsAreRight
-                                                    ? drawingArea.right +
-                                                      grid.labels.yAxis
-                                                          .crosshairSize +
-                                                      grid.labels.yAxis
-                                                          .scaleValueOffsetX +
-                                                      5 +
-                                                      grid.labels.yAxis
-                                                          .labelWidth +
-                                                      drawingArea.individualOffsetX +
-                                                      grid.labels.axis
-                                                          .yLabelOffsetX
-                                                    : drawingArea.left -
-                                                      grid.labels.yAxis
-                                                          .crosshairSize -
-                                                      grid.labels.yAxis
-                                                          .scaleValueOffsetX -
-                                                      grid.labels.yAxis
-                                                          .labelWidth -
-                                                      grid.labels.axis
-                                                          .yLabelOffsetX
-                                                : yAxisLabelsAreRight
-                                                  ? el.x +
-                                                    grid.labels.yAxis
-                                                        .crosshairSize +
-                                                    grid.labels.yAxis
-                                                        .scaleValueOffsetX +
-                                                    5 +
-                                                    grid.labels.yAxis
-                                                        .labelWidth +
-                                                    grid.labels.axis
-                                                        .yLabelOffsetX
-                                                  : el.x -
-                                                    (fontSizes.dataLabels *
-                                                        0.8) /
-                                                        2
-                                        }, ${
-                                            mutableConfig.isStacked
-                                                ? drawingArea?.bottom -
-                                                  el.yOffset -
-                                                  el.individualHeight / 2
-                                                : drawingArea?.top +
-                                                  drawingArea.height / 2
-                                        }) rotate(-90)`"
-                                    >
-                                        {{ el.name }}
-                                        {{
-                                            el.scaleLabel &&
-                                            el.unique &&
-                                            el.scaleLabel !== el.id
-                                                ? `- ${el.scaleLabel}`
-                                                : ''
-                                        }}
-                                    </text>
-
-                                    <template
-                                        v-for="(yLabel, j) in el.yLabels"
-                                        :key="`individual_scale_y_crosshair_${el.groupId || el.id}_${yLabel.value}_${j}`"
+                                    <g
+                                        v-for="el in allScales"
+                                        :key="`individual_scale_axis_${el.groupId || el.id}`"
                                     >
                                         <line
-                                            v-if="
-                                                gridLabels.yAxis.showCrosshairs
-                                            "
                                             :x1="
                                                 mutableConfig.isStacked
                                                     ? yAxisLabelsAreRight
@@ -9313,1082 +9368,1308 @@ watch(
                                                         : drawingArea.left
                                                     : yAxisLabelsAreRight
                                                       ? el.x
-                                                      : el.x +
-                                                        3 -
-                                                        grid.labels.yAxis
-                                                            .crosshairSize -
+                                                      : el.x -
                                                         drawingArea.individualOffsetX
                                             "
                                             :x2="
                                                 mutableConfig.isStacked
                                                     ? yAxisLabelsAreRight
-                                                        ? drawingArea.right +
-                                                          cfgChart.grid.labels
-                                                              .yAxis
-                                                              .crosshairSize
-                                                        : drawingArea.left -
-                                                          cfgChart.grid.labels
-                                                              .yAxis
-                                                              .crosshairSize
+                                                        ? drawingArea.right
+                                                        : drawingArea.left
                                                     : yAxisLabelsAreRight
-                                                      ? el.x +
-                                                        grid.labels.yAxis
-                                                            .crosshairSize
+                                                      ? el.x
                                                       : el.x -
                                                         drawingArea.individualOffsetX
                                             "
+                                            :y1="
+                                                mutableConfig.isStacked
+                                                    ? forceValidValue(
+                                                          drawingArea?.bottom -
+                                                              el.yOffset -
+                                                              el.individualHeight,
+                                                      )
+                                                    : forceValidValue(
+                                                          drawingArea?.top,
+                                                      )
+                                            "
+                                            :y2="
+                                                mutableConfig.isStacked
+                                                    ? forceValidValue(
+                                                          drawingArea?.bottom -
+                                                              el.yOffset,
+                                                      )
+                                                    : forceValidValue(
+                                                          drawingArea?.bottom,
+                                                      )
+                                            "
+                                            :stroke="el.color"
+                                            :stroke-width="grid.stroke"
+                                            stroke-linecap="round"
+                                            :style="`opacity:${selectedScale ? (selectedScale === el.groupId ? 1 : 0.3) : 1};transition:opacity 0.2s ease-in-out; animation: none !important`"
+                                        />
+                                    </g>
+
+                                    <g
+                                        v-for="el in allScales"
+                                        :key="`individual_scale_label_${el.groupId || el.id}`"
+                                        :style="`opacity:${selectedScale ? (selectedScale === el.groupId ? 1 : 0.3) : 1};transition:opacity 0.2s ease-in-out`"
+                                    >
+                                        <text
+                                            :class="{
+                                                'vue-data-ui-transition':
+                                                    transitionEnabled &&
+                                                    !labelLayoutSettling,
+                                            }"
+                                            :fill="el.color"
+                                            :font-size="
+                                                fontSizes.dataLabels * 0.8
+                                            "
+                                            text-anchor="middle"
+                                            :transform="`translate(${
+                                                mutableConfig.isStacked
+                                                    ? yAxisLabelsAreRight
+                                                        ? drawingArea.right +
+                                                          grid.labels.yAxis
+                                                              .crosshairSize +
+                                                          grid.labels.yAxis
+                                                              .scaleValueOffsetX +
+                                                          5 +
+                                                          grid.labels.yAxis
+                                                              .labelWidth +
+                                                          drawingArea.individualOffsetX +
+                                                          grid.labels.axis
+                                                              .yLabelOffsetX
+                                                        : drawingArea.left -
+                                                          grid.labels.yAxis
+                                                              .crosshairSize -
+                                                          grid.labels.yAxis
+                                                              .scaleValueOffsetX -
+                                                          grid.labels.yAxis
+                                                              .labelWidth -
+                                                          grid.labels.axis
+                                                              .yLabelOffsetX
+                                                    : yAxisLabelsAreRight
+                                                      ? el.x +
+                                                        grid.labels.yAxis
+                                                            .crosshairSize +
+                                                        grid.labels.yAxis
+                                                            .scaleValueOffsetX +
+                                                        5 +
+                                                        grid.labels.yAxis
+                                                            .labelWidth +
+                                                        grid.labels.axis
+                                                            .yLabelOffsetX
+                                                      : el.x -
+                                                        (fontSizes.dataLabels *
+                                                            0.8) /
+                                                            2
+                                            }, ${
+                                                mutableConfig.isStacked
+                                                    ? drawingArea?.bottom -
+                                                      el.yOffset -
+                                                      el.individualHeight / 2
+                                                    : drawingArea?.top +
+                                                      drawingArea.height / 2
+                                            }) rotate(-90)`"
+                                        >
+                                            {{ el.name }}
+                                            {{
+                                                el.scaleLabel &&
+                                                el.unique &&
+                                                el.scaleLabel !== el.id
+                                                    ? `- ${el.scaleLabel}`
+                                                    : ''
+                                            }}
+                                        </text>
+
+                                        <template
+                                            v-for="(yLabel, j) in el.yLabels"
+                                            :key="`individual_scale_y_crosshair_${el.groupId || el.id}_${yLabel.value}_${j}`"
+                                        >
+                                            <line
+                                                v-if="
+                                                    gridLabels.yAxis
+                                                        .showCrosshairs
+                                                "
+                                                :x1="
+                                                    mutableConfig.isStacked
+                                                        ? yAxisLabelsAreRight
+                                                            ? drawingArea.right
+                                                            : drawingArea.left
+                                                        : yAxisLabelsAreRight
+                                                          ? el.x
+                                                          : el.x +
+                                                            3 -
+                                                            grid.labels.yAxis
+                                                                .crosshairSize -
+                                                            drawingArea.individualOffsetX
+                                                "
+                                                :x2="
+                                                    mutableConfig.isStacked
+                                                        ? yAxisLabelsAreRight
+                                                            ? drawingArea.right +
+                                                              cfgChart.grid
+                                                                  .labels.yAxis
+                                                                  .crosshairSize
+                                                            : drawingArea.left -
+                                                              cfgChart.grid
+                                                                  .labels.yAxis
+                                                                  .crosshairSize
+                                                        : yAxisLabelsAreRight
+                                                          ? el.x +
+                                                            grid.labels.yAxis
+                                                                .crosshairSize
+                                                          : el.x -
+                                                            drawingArea.individualOffsetX
+                                                "
+                                                :y1="forceValidValue(yLabel.y)"
+                                                :y2="forceValidValue(yLabel.y)"
+                                                :stroke="el.color"
+                                                :stroke-width="1"
+                                                stroke-linecap="round"
+                                                :style="{
+                                                    animation:
+                                                        'none !important',
+                                                }"
+                                            />
+                                        </template>
+
+                                        <text
+                                            :class="{
+                                                'vue-data-ui-transition':
+                                                    transitionEnabled &&
+                                                    !labelLayoutSettling,
+                                            }"
+                                            v-for="(yLabel, j) in el.yLabels"
+                                            :key="`individual_scale_y_label_${el.groupId || el.id}_${yLabel.value}_${j}`"
+                                            :transform="`translate(${
+                                                mutableConfig.isStacked
+                                                    ? yAxisLabelsAreRight
+                                                        ? drawingArea.right +
+                                                          grid.labels.yAxis
+                                                              .crosshairSize +
+                                                          grid.labels.yAxis
+                                                              .scaleValueOffsetX +
+                                                          5
+                                                        : drawingArea.left -
+                                                          grid.labels.yAxis
+                                                              .crosshairSize -
+                                                          grid.labels.yAxis
+                                                              .scaleValueOffsetX -
+                                                          5
+                                                    : yAxisLabelsAreRight
+                                                      ? el.x +
+                                                        grid.labels.yAxis
+                                                            .crosshairSize +
+                                                        grid.labels.yAxis
+                                                            .scaleValueOffsetX +
+                                                        5
+                                                      : el.x -
+                                                        5 -
+                                                        drawingArea.individualOffsetX
+                                            }, ${forceValidValue(yLabel.y) + fontSizes.dataLabels / 3})`"
+                                            :text-anchor="
+                                                yAxisLabelsAreRight
+                                                    ? 'start'
+                                                    : 'end'
+                                            "
+                                            :font-size="fontSizes.dataLabels"
+                                            :fill="el.color"
+                                        >
+                                            {{
+                                                applyDataLabel(
+                                                    gridLabels.yAxis.formatter,
+                                                    yLabel.value,
+                                                    dataLabel({
+                                                        p: yLabel.prefix,
+                                                        v: yLabel.value,
+                                                        s: yLabel.suffix,
+                                                        r: grid.labels.yAxis
+                                                            .rounding,
+                                                    }),
+                                                    {
+                                                        datapoint:
+                                                            yLabel.datapoint,
+                                                        seriesIndex: j,
+                                                    },
+                                                )
+                                            }}
+                                        </text>
+                                    </g>
+                                </template>
+                                <template v-else>
+                                    <g
+                                        v-for="(yLabel, i) in yLabels"
+                                        :key="`yLabel_${i}`"
+                                    >
+                                        <line
+                                            data-cy="axis-y-tick"
+                                            v-if="
+                                                canShowValue(yLabel) &&
+                                                yLabel.value >= niceScale.min &&
+                                                yLabel.value <= niceScale.max &&
+                                                gridLabels.yAxis.showCrosshairs
+                                            "
+                                            :x1="
+                                                yAxisLabelsAreRight
+                                                    ? drawingArea?.right
+                                                    : drawingArea?.left
+                                            "
+                                            :x2="
+                                                yAxisLabelsAreRight
+                                                    ? drawingArea?.right +
+                                                      gridLabels.yAxis
+                                                          .crosshairSize
+                                                    : drawingArea?.left -
+                                                      gridLabels.yAxis
+                                                          .crosshairSize
+                                            "
                                             :y1="forceValidValue(yLabel.y)"
                                             :y2="forceValidValue(yLabel.y)"
-                                            :stroke="el.color"
-                                            :stroke-width="1"
+                                            :stroke="grid.stroke"
+                                            stroke-width="1"
                                             stroke-linecap="round"
                                             :style="{
                                                 animation: 'none !important',
                                             }"
                                         />
-                                    </template>
-
-                                    <text
-                                        :class="{
-                                            'vue-data-ui-transition':
-                                                transitionEnabled &&
-                                                !labelLayoutSettling,
-                                        }"
-                                        v-for="(yLabel, j) in el.yLabels"
-                                        :key="`individual_scale_y_label_${el.groupId || el.id}_${yLabel.value}_${j}`"
-                                        :transform="`translate(${
-                                            mutableConfig.isStacked
-                                                ? yAxisLabelsAreRight
+                                        <text
+                                            :class="{
+                                                'vue-data-ui-transition':
+                                                    transitionEnabled &&
+                                                    !labelLayoutSettling,
+                                            }"
+                                            data-cy="axis-y-label"
+                                            v-if="
+                                                yLabel.value >= niceScale.min &&
+                                                yLabel.value <= niceScale.max
+                                            "
+                                            :transform="`translate(${
+                                                yAxisLabelsAreRight
                                                     ? drawingArea.right +
-                                                      grid.labels.yAxis
+                                                      gridLabels.yAxis
                                                           .crosshairSize +
-                                                      grid.labels.yAxis
+                                                      gridLabels.yAxis
                                                           .scaleValueOffsetX +
                                                       5
-                                                    : drawingArea.left -
-                                                      grid.labels.yAxis
-                                                          .crosshairSize -
-                                                      grid.labels.yAxis
-                                                          .scaleValueOffsetX -
-                                                      5
-                                                : yAxisLabelsAreRight
-                                                  ? el.x +
-                                                    grid.labels.yAxis
-                                                        .crosshairSize +
-                                                    grid.labels.yAxis
-                                                        .scaleValueOffsetX +
-                                                    5
-                                                  : el.x -
-                                                    5 -
-                                                    drawingArea.individualOffsetX
-                                        }, ${forceValidValue(yLabel.y) + fontSizes.dataLabels / 3})`"
-                                        :text-anchor="
-                                            yAxisLabelsAreRight
-                                                ? 'start'
-                                                : 'end'
-                                        "
-                                        :font-size="fontSizes.dataLabels"
-                                        :fill="el.color"
-                                    >
-                                        {{
-                                            applyDataLabel(
-                                                gridLabels.yAxis.formatter,
-                                                yLabel.value,
-                                                dataLabel({
-                                                    p: yLabel.prefix,
-                                                    v: yLabel.value,
-                                                    s: yLabel.suffix,
-                                                    r: grid.labels.yAxis
-                                                        .rounding,
-                                                }),
-                                                {
-                                                    datapoint: yLabel.datapoint,
-                                                    seriesIndex: j,
-                                                },
-                                            )
-                                        }}
-                                    </text>
-                                </g>
-                            </template>
-                            <template v-else>
-                                <g
-                                    v-for="(yLabel, i) in yLabels"
-                                    :key="`yLabel_${i}`"
-                                >
-                                    <line
-                                        data-cy="axis-y-tick"
-                                        v-if="
-                                            canShowValue(yLabel) &&
-                                            yLabel.value >= niceScale.min &&
-                                            yLabel.value <= niceScale.max &&
-                                            gridLabels.yAxis.showCrosshairs
-                                        "
-                                        :x1="
-                                            yAxisLabelsAreRight
-                                                ? drawingArea?.right
-                                                : drawingArea?.left
-                                        "
-                                        :x2="
-                                            yAxisLabelsAreRight
-                                                ? drawingArea?.right +
-                                                  gridLabels.yAxis.crosshairSize
-                                                : drawingArea?.left -
-                                                  gridLabels.yAxis.crosshairSize
-                                        "
-                                        :y1="forceValidValue(yLabel.y)"
-                                        :y2="forceValidValue(yLabel.y)"
-                                        :stroke="grid.stroke"
-                                        stroke-width="1"
-                                        stroke-linecap="round"
-                                        :style="{
-                                            animation: 'none !important',
-                                        }"
-                                    />
-                                    <text
-                                        :class="{
-                                            'vue-data-ui-transition':
-                                                transitionEnabled &&
-                                                !labelLayoutSettling,
-                                        }"
-                                        data-cy="axis-y-label"
-                                        v-if="
-                                            yLabel.value >= niceScale.min &&
-                                            yLabel.value <= niceScale.max
-                                        "
-                                        :transform="`translate(${
-                                            yAxisLabelsAreRight
-                                                ? drawingArea.right +
-                                                  gridLabels.yAxis
-                                                      .crosshairSize +
-                                                  gridLabels.yAxis
-                                                      .scaleValueOffsetX +
-                                                  5
-                                                : drawingArea.scaleLabelX -
-                                                  gridLabels.yAxis.crosshairSize
-                                        }, ${checkNaN(yLabel.y + fontSizes.dataLabels / 3)})`"
-                                        :font-size="fontSizes.dataLabels"
-                                        :text-anchor="
-                                            yAxisLabelsAreRight
-                                                ? 'start'
-                                                : 'end'
-                                        "
-                                        :fill="gridLabels.color"
-                                    >
-                                        {{
-                                            canShowValue(yLabel.value)
-                                                ? applyDataLabel(
-                                                      grid.labels.yAxis
-                                                          .formatter,
-                                                      yLabel.value,
-                                                      dataLabel({
-                                                          p: yLabel.prefix,
-                                                          v: yLabel.value,
-                                                          s: yLabel.suffix,
-                                                          r: cfgChart.grid
-                                                              .labels.yAxis
-                                                              .rounding,
-                                                      }),
-                                                  )
-                                                : ''
-                                        }}
-                                    </text>
-                                </g>
-                            </template>
-                        </g>
+                                                    : drawingArea.scaleLabelX -
+                                                      gridLabels.yAxis
+                                                          .crosshairSize
+                                            }, ${checkNaN(yLabel.y + fontSizes.dataLabels / 3)})`"
+                                            :font-size="fontSizes.dataLabels"
+                                            :text-anchor="
+                                                yAxisLabelsAreRight
+                                                    ? 'start'
+                                                    : 'end'
+                                            "
+                                            :fill="gridLabels.color"
+                                        >
+                                            {{
+                                                canShowValue(yLabel.value)
+                                                    ? applyDataLabel(
+                                                          grid.labels.yAxis
+                                                              .formatter,
+                                                          yLabel.value,
+                                                          dataLabel({
+                                                              p: yLabel.prefix,
+                                                              v: yLabel.value,
+                                                              s: yLabel.suffix,
+                                                              r: cfgChart.grid
+                                                                  .labels.yAxis
+                                                                  .rounding,
+                                                          }),
+                                                      )
+                                                    : ''
+                                            }}
+                                        </text>
+                                    </g>
+                                </template>
+                            </g>
+                        </XyRenderLayer>
 
                         <!-- CROSSHAIR SELECTION (label on y) -->
-                        <g
-                            v-if="crosshairsAreActive"
-                            class="vue-ui-xy-crosshair-selection"
-                        >
-                            <text
-                                :class="{
-                                    'vue-data-ui-transition':
-                                        transitionEnabled &&
-                                        !labelLayoutSettling,
-                                }"
-                                v-for="plot in crosshairSelectedPlots"
-                                :key="`crosshair_y_label_${plot.serie.id}_${plot.index}`"
-                                :transform="`translate(${
-                                    yAxisLabelsAreRight
-                                        ? drawingArea.right +
-                                          gridLabels.yAxis.crosshairSize +
-                                          gridLabels.yAxis.scaleValueOffsetX +
-                                          5
-                                        : drawingArea.scaleLabelX -
-                                          gridLabels.yAxis.crosshairSize
-                                }, ${forceValidValue(plot.y) + fontSizes.dataLabels / 3})`"
-                                :font-size="fontSizes.dataLabels"
-                                :text-anchor="
-                                    yAxisLabelsAreRight ? 'start' : 'end'
-                                "
-                                :fill="gridLabels.color"
-                                style="
-                                    transition: none !important;
-                                    animation: none !important;
-                                    pointer-events: none;
-                                "
-                            >
-                                {{
-                                    applyDataLabel(
-                                        gridLabels.yAxis.formatter,
-                                        plot.value,
-                                        dataLabel({
-                                            p:
-                                                plot.serie.prefix ||
-                                                cfgChart.labels.prefix,
-                                            v: plot.value,
-                                            s:
-                                                plot.serie.suffix ||
-                                                cfgChart.labels.suffix,
-                                            r: gridLabels.yAxis.rounding,
-                                        }),
-                                        {
-                                            datapoint: plot.serie,
-                                            seriesIndex: plot.index,
-                                        },
-                                    )
-                                }}
-                            </text>
-                        </g>
-
-                        <!-- CROSSHAIR SELECTION (dot on x, before line & plot series) -->
-                        <g
-                            v-if="crosshairXAxisLabel"
-                            class="vue-ui-xy-crosshair-selection"
-                        >
-                            <circle
-                                :cx="highlighterX"
-                                :cy="forceValidValue(drawingArea?.bottom)"
-                                :r="cfgChart.highlighter.crosshairs.dot.radius"
-                                :fill="cfgChart.highlighter.crosshairs.dot.fill"
-                                :stroke="
-                                    cfgChart.highlighter.crosshairs.dot.stroke
-                                "
-                                :stroke-width="
-                                    cfgChart.highlighter.crosshairs.dot
-                                        .strokeWidth
-                                "
-                                style="
-                                    transition: none !important;
-                                    animation: none !important;
-                                    pointer-events: none;
-                                "
-                            />
-                        </g>
-
-                        <!-- PLOTS / LINES ZOOM GEOMETRY -->
-                        <g :clip-path="chartZoomClipPath">
-                            <!-- PLOTS -->
+                        <XyRenderLayer>
                             <g
-                                v-for="(serie, i) in plotSet"
-                                :key="`serie_plot_${serie.id}`"
-                                :class="`serie_plot_${i}`"
-                                :style="`opacity:${selectedScale ? (selectedScale === serie.groupId ? 1 : 0.2) : 1};transition:opacity 0.2s ease-in-out`"
+                                v-if="crosshairsAreActive"
+                                class="vue-ui-xy-crosshair-selection"
                             >
-                                <g
-                                    data-cy="datapoint-plot"
-                                    v-for="(plot, j) in serie.plots"
-                                    :key="`circle_plot_${serie.id}_${j}`"
-                                    :style="getChartZoomPlotStyle(plot)"
-                                >
-                                    <Shape
-                                        :data-cy="`xy-plot-${i}-${j}`"
-                                        v-if="plot && canShowValue(plot.value)"
-                                        :shape="
-                                            [
-                                                'triangle',
-                                                'square',
-                                                'diamond',
-                                                'pentagon',
-                                                'hexagon',
-                                                'star',
-                                            ].includes(serie.shape)
-                                                ? serie.shape
-                                                : 'circle'
-                                        "
-                                        :color="
-                                            FINAL_CONFIG.plot.useGradient
-                                                ? `url(#plotGradient_${i}_${uniqueId})`
-                                                : FINAL_CONFIG.plot.dot
-                                                        .useSerieColor
-                                                  ? serie.color
-                                                  : FINAL_CONFIG.plot.dot.fill
-                                        "
-                                        :plot="{
-                                            x: checkNaN(plot.x),
-                                            y: checkNaN(plot.y),
-                                        }"
-                                        :radius="
-                                            isSelectedDatapoint(serie, plot, j)
-                                                ? (plotRadii.plot || 6) * 1.5
-                                                : isPlotAlone(serie.plots, j)
-                                                  ? plotRadii.plot || 6
-                                                  : plotRadii.plot || 6
-                                        "
-                                        :stroke="
-                                            FINAL_CONFIG.plot.dot.useSerieColor
-                                                ? cfgChart.backgroundColor
-                                                : serie.color
-                                        "
-                                        :strokeWidth="
-                                            FINAL_CONFIG.plot.dot.strokeWidth
-                                        "
-                                        :transition="
-                                            loading ||
-                                            isChartZoomTransitioning ||
-                                            disableShapeTransitionForRangeResize ||
-                                            !FINAL_CONFIG.plot.showTransition
-                                                ? undefined
-                                                : `all ${FINAL_CONFIG.plot.transitionDurationMs}ms ease-in-out`
-                                        "
-                                        :still="
-                                            disableShapeTransitionForRangeResize ||
-                                            isChartZoomTransitioning
-                                        "
-                                    />
-
-                                    <template
-                                        v-if="
-                                            plot.comment &&
-                                            cfgChart.comments.show
-                                        "
-                                    >
-                                        <foreignObject
-                                            style="overflow: visible"
-                                            height="12"
-                                            :width="cfgChart.comments.width"
-                                            :x="
-                                                plot.x -
-                                                cfgChart.comments.width / 2 +
-                                                cfgChart.comments.offsetX
-                                            "
-                                            :y="
-                                                plot.y +
-                                                cfgChart.comments.offsetY +
-                                                6
-                                            "
-                                        >
-                                            <div style="width: 100%">
-                                                <slot
-                                                    name="plot-comment"
-                                                    :plot="{
-                                                        ...plot,
-                                                        color: serie.color,
-                                                        seriesIndex: i,
-                                                        datapointIndex: j,
-                                                    }"
-                                                />
-                                            </div>
-                                        </foreignObject>
-                                    </template>
-                                </g>
-                            </g>
-
-                            <g
-                                :class="[
-                                    'vue-ui-xy-zoom-geometry',
-                                    {
-                                        'vue-ui-xy-zoom-geometry--transitioning':
-                                            isChartZoomTransitioning,
-                                    },
-                                ]"
-                                :style="chartZoomGeometryStyle"
-                            >
-                                <!-- LINE COATINGS -->
-                                <g
-                                    v-for="(serie, i) in lineSet"
-                                    :key="`serie_line_${serie.id}`"
-                                    :class="`serie_line_${i}`"
-                                    :style="`opacity:${selectedScale ? (selectedScale === serie.groupId ? 1 : 0.2) : 1};transition:opacity 0.2s ease-in-out`"
-                                >
-                                    <template v-if="serie.hasDashedSegments">
-                                        <template v-if="serie.useStepper">
-                                            <path
-                                                vector-effect="non-scaling-stroke"
-                                                v-for="(
-                                                    seg, segIndex
-                                                ) in serie.dashedStepper"
-                                                :key="`line_coating_stepper_segment_${serie.id}_${segIndex}`"
-                                                data-cy="datapoint-line-coating-stepper-segment"
-                                                fill="none"
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                :d="`M ${seg.path}`"
-                                                :stroke="
-                                                    cfgChart.backgroundColor
-                                                "
-                                                :stroke-width="
-                                                    getLineStrokeMetric(
-                                                        FINAL_CONFIG.line
-                                                            .strokeWidth + 1,
-                                                    )
-                                                "
-                                                :stroke-dasharray="
-                                                    serie.dashed || seg.dashed
-                                                        ? getLineStrokeMetric(
-                                                              FINAL_CONFIG.line
-                                                                  .strokeWidth *
-                                                                  2,
-                                                          )
-                                                        : 0
-                                                "
-                                                :style="{
-                                                    transition:
-                                                        getLinePathTransition(),
-                                                }"
-                                            />
-                                        </template>
-
-                                        <template v-else-if="serie.smooth">
-                                            <path
-                                                vector-effect="non-scaling-stroke"
-                                                v-for="(
-                                                    seg, segIndex
-                                                ) in serie.dashedSmooth"
-                                                :key="`line_coating_smooth_segment_${serie.id}_${segIndex}`"
-                                                data-cy="datapoint-line-coating-smooth-segment"
-                                                fill="none"
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                :d="`M ${seg.path}`"
-                                                :stroke="
-                                                    cfgChart.backgroundColor
-                                                "
-                                                :stroke-width="
-                                                    getLineStrokeMetric(
-                                                        FINAL_CONFIG.line
-                                                            .strokeWidth + 1,
-                                                    )
-                                                "
-                                                :stroke-dasharray="
-                                                    serie.dashed || seg.dashed
-                                                        ? getLineStrokeMetric(
-                                                              FINAL_CONFIG.line
-                                                                  .strokeWidth *
-                                                                  2,
-                                                          )
-                                                        : 0
-                                                "
-                                                :style="{
-                                                    transition:
-                                                        getLinePathTransition(),
-                                                }"
-                                            />
-                                        </template>
-
-                                        <template v-else>
-                                            <path
-                                                vector-effect="non-scaling-stroke"
-                                                v-for="(
-                                                    seg, segIndex
-                                                ) in serie.dashedStraight"
-                                                :key="`line_coating_straight_segment_${serie.id}_${segIndex}`"
-                                                data-cy="datapoint-line-coating-straight-segment"
-                                                fill="none"
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                :d="`M ${seg.path}`"
-                                                :stroke="
-                                                    cfgChart.backgroundColor
-                                                "
-                                                :stroke-width="
-                                                    getLineStrokeMetric(
-                                                        FINAL_CONFIG.line
-                                                            .strokeWidth + 1,
-                                                    )
-                                                "
-                                                :stroke-dasharray="
-                                                    serie.dashed || seg.dashed
-                                                        ? getLineStrokeMetric(
-                                                              FINAL_CONFIG.line
-                                                                  .strokeWidth *
-                                                                  2,
-                                                          )
-                                                        : 0
-                                                "
-                                                :style="{
-                                                    transition:
-                                                        getLinePathTransition(),
-                                                }"
-                                            />
-                                        </template>
-                                    </template>
-
-                                    <path
-                                        vector-effect="non-scaling-stroke"
-                                        v-else-if="
-                                            serie.smooth &&
-                                            serie.plots.length > 1 &&
-                                            !!serie.curve
-                                        "
-                                        data-cy="datapoint-line-coating-smooth"
-                                        :d="`M${serie.curve}`"
-                                        :stroke="cfgChart.backgroundColor"
-                                        :stroke-width="
-                                            getLineStrokeMetric(
-                                                FINAL_CONFIG.line.strokeWidth +
-                                                    1,
-                                            )
-                                        "
-                                        :stroke-dasharray="
-                                            serie.dashed
-                                                ? getLineStrokeMetric(
-                                                      FINAL_CONFIG.line
-                                                          .strokeWidth * 2,
-                                                  )
-                                                : 0
-                                        "
-                                        fill="none"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        :style="{
-                                            transition: getLinePathTransition(),
-                                        }"
-                                    />
-
-                                    <path
-                                        vector-effect="non-scaling-stroke"
-                                        v-else-if="
-                                            serie.plots.length > 1 &&
-                                            !!serie.straight
-                                        "
-                                        data-cy="datapoint-line-coating-straight"
-                                        :d="`M${serie.straight}`"
-                                        :stroke="cfgChart.backgroundColor"
-                                        :stroke-width="
-                                            getLineStrokeMetric(
-                                                FINAL_CONFIG.line.strokeWidth +
-                                                    1,
-                                            )
-                                        "
-                                        :stroke-dasharray="
-                                            serie.dashed
-                                                ? getLineStrokeMetric(
-                                                      FINAL_CONFIG.line
-                                                          .strokeWidth * 2,
-                                                  )
-                                                : 0
-                                        "
-                                        fill="none"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        :style="{
-                                            transition: getLinePathTransition(),
-                                        }"
-                                    />
-                                </g>
-
-                                <defs v-if="$slots.pattern">
-                                    <slot
-                                        v-for="(serie, i) in safeDataset"
-                                        :key="`serie_pattern_slot_${serie.id}`"
-                                        name="pattern"
-                                        v-bind="{
-                                            ...serie,
-                                            seriesIndex:
-                                                serie.slotAbsoluteIndex,
-                                            patternId: `pattern_${uniqueId}_${i}`,
-                                        }"
-                                    />
-                                </defs>
-
-                                <!-- INTERLINE AREAS (non stack mode only) -->
-                                <g
-                                    v-if="
-                                        interLineAreas.length &&
-                                        !mutableConfig.isStacked
+                                <text
+                                    :class="{
+                                        'vue-data-ui-transition':
+                                            transitionEnabled &&
+                                            !labelLayoutSettling,
+                                    }"
+                                    v-for="plot in crosshairSelectedPlots"
+                                    :key="`crosshair_y_label_${plot.serie.id}_${plot.index}`"
+                                    :transform="`translate(${
+                                        yAxisLabelsAreRight
+                                            ? drawingArea.right +
+                                              gridLabels.yAxis.crosshairSize +
+                                              gridLabels.yAxis
+                                                  .scaleValueOffsetX +
+                                              5
+                                            : drawingArea.scaleLabelX -
+                                              gridLabels.yAxis.crosshairSize
+                                    }, ${forceValidValue(plot.y) + fontSizes.dataLabels / 3})`"
+                                    :font-size="fontSizes.dataLabels"
+                                    :text-anchor="
+                                        yAxisLabelsAreRight ? 'start' : 'end'
+                                    "
+                                    :fill="gridLabels.color"
+                                    style="
+                                        transition: none !important;
+                                        animation: none !important;
+                                        pointer-events: none;
                                     "
                                 >
-                                    <path
-                                        v-for="area in interLineAreas"
-                                        :key="area.key"
-                                        :d="area.d"
-                                        :fill="area.color"
-                                        :fill-opacity="
-                                            FINAL_CONFIG.line.interLine
-                                                .fillOpacity
-                                        "
-                                        stroke="none"
-                                        pointer-events="none"
-                                        :style="{
-                                            transition: getLinePathTransition(),
-                                        }"
-                                    />
-                                </g>
-
-                                <!-- LINES -->
-                                <g
-                                    v-for="(serie, i) in lineSet"
-                                    :key="`serie_line_above_${serie.id}`"
-                                    :class="`serie_line_${i}`"
-                                    :style="`opacity:${selectedScale ? (selectedScale === serie.groupId ? 1 : 0.2) : 1};transition:opacity 0.2s ease-in-out`"
-                                >
-                                    <g
-                                        v-if="
-                                            serie.useArea &&
-                                            serie.plots.length > 1
-                                        "
-                                    >
-                                        <template v-if="serie.smooth">
-                                            <template
-                                                v-for="(
-                                                    d, segIndex
-                                                ) in serie.curveAreas"
-                                                :key="segIndex"
-                                            >
-                                                <path
-                                                    v-if="d"
-                                                    :d="d"
-                                                    :fill="
-                                                        FINAL_CONFIG.line.area
-                                                            .useGradient
-                                                            ? `url(#areaGradient_${i}_${uniqueId})`
-                                                            : setOpacity(
-                                                                  serie.color,
-                                                                  FINAL_CONFIG
-                                                                      .line.area
-                                                                      .opacity,
-                                                              )
-                                                    "
-                                                    :style="{
-                                                        transition:
-                                                            getLinePathTransition(),
-                                                    }"
-                                                />
-                                                <path
-                                                    v-if="$slots.pattern && d"
-                                                    :d="d"
-                                                    :fill="`url(#pattern_${uniqueId}_${serie.slotAbsoluteIndex})`"
-                                                    :style="{
-                                                        transition:
-                                                            getLinePathTransition(),
-                                                    }"
-                                                />
-                                            </template>
-                                        </template>
-                                        <template v-else>
-                                            <template
-                                                v-for="(
-                                                    d, segIndex
-                                                ) in serie.area.split(';')"
-                                                :key="segIndex"
-                                            >
-                                                <path
-                                                    v-if="d"
-                                                    data-cy="datapoint-line-area-straight"
-                                                    :d="`M${d}Z`"
-                                                    :fill="
-                                                        FINAL_CONFIG.line.area
-                                                            .useGradient
-                                                            ? `url(#areaGradient_${i}_${uniqueId})`
-                                                            : setOpacity(
-                                                                  serie.color,
-                                                                  FINAL_CONFIG
-                                                                      .line.area
-                                                                      .opacity,
-                                                              )
-                                                    "
-                                                    :style="{
-                                                        transition:
-                                                            getLinePathTransition(),
-                                                    }"
-                                                />
-                                                <path
-                                                    v-if="$slots.pattern && d"
-                                                    :d="`M${d}Z`"
-                                                    :fill="`url(#pattern_${uniqueId}_${serie.slotAbsoluteIndex})`"
-                                                    :style="{
-                                                        transition:
-                                                            getLinePathTransition(),
-                                                    }"
-                                                />
-                                            </template>
-                                        </template>
-                                    </g>
-
-                                    <path
-                                        vector-effect="non-scaling-stroke"
-                                        data-cy="datapoint-line-smooth"
-                                        v-if="
-                                            !serie.hasDashedSegments &&
-                                            serie.smooth &&
-                                            serie.plots.length > 1 &&
-                                            !!serie.curve
-                                        "
-                                        :d="`M${serie.curve}`"
-                                        :stroke="
-                                            serie.temperatureColors &&
-                                            !serie.isFlatTemperatureLine
-                                                ? `url(#temperature_grad_line_${i}_${uniqueId})`
-                                                : serie.color
-                                        "
-                                        :stroke-width="
-                                            getLineStrokeMetric(
-                                                FINAL_CONFIG.line.strokeWidth,
-                                            )
-                                        "
-                                        :stroke-dasharray="
-                                            serie.dashed
-                                                ? getLineStrokeMetric(
-                                                      FINAL_CONFIG.line
-                                                          .strokeWidth * 2,
-                                                  )
-                                                : 0
-                                        "
-                                        fill="none"
-                                        stroke-linecap="round"
-                                        :style="{
-                                            transition: getLinePathTransition(),
-                                        }"
-                                    />
-
-                                    <template
-                                        v-else-if="serie.hasDashedSegments"
-                                    >
-                                        <template v-if="serie.useStepper">
-                                            <path
-                                                vector-effect="non-scaling-stroke"
-                                                v-for="(
-                                                    seg, segIndex
-                                                ) in serie.dashedStepper"
-                                                :key="`line_stepper_segment_${serie.id}_${segIndex}`"
-                                                fill="none"
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                :d="`M ${seg.path}`"
-                                                :stroke="
-                                                    serie.temperatureColors &&
-                                                    !serie.isFlatTemperatureLine
-                                                        ? `url(#temperature_grad_line_${i}_${uniqueId})`
-                                                        : serie.color
-                                                "
-                                                :stroke-width="
-                                                    getLineStrokeMetric(
-                                                        FINAL_CONFIG.line
-                                                            .strokeWidth,
-                                                    )
-                                                "
-                                                :stroke-dasharray="
-                                                    serie.dashed || seg.dashed
-                                                        ? getLineStrokeMetric(
-                                                              FINAL_CONFIG.line
-                                                                  .strokeWidth *
-                                                                  2,
-                                                          )
-                                                        : 0
-                                                "
-                                                :style="{
-                                                    transition:
-                                                        getLinePathTransition(),
-                                                }"
-                                            />
-                                        </template>
-
-                                        <template v-else-if="serie.smooth">
-                                            <path
-                                                vector-effect="non-scaling-stroke"
-                                                v-for="(
-                                                    seg, segIndex
-                                                ) in serie.dashedSmooth"
-                                                :key="`line_smooth_segment_${serie.id}_${segIndex}`"
-                                                fill="none"
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                :d="`M ${seg.path}`"
-                                                :stroke="
-                                                    serie.temperatureColors &&
-                                                    !serie.isFlatTemperatureLine
-                                                        ? `url(#temperature_grad_line_${i}_${uniqueId})`
-                                                        : serie.color
-                                                "
-                                                :stroke-width="
-                                                    getLineStrokeMetric(
-                                                        FINAL_CONFIG.line
-                                                            .strokeWidth,
-                                                    )
-                                                "
-                                                :stroke-dasharray="
-                                                    serie.dashed || seg.dashed
-                                                        ? getLineStrokeMetric(
-                                                              FINAL_CONFIG.line
-                                                                  .strokeWidth *
-                                                                  2,
-                                                          )
-                                                        : 0
-                                                "
-                                                :style="{
-                                                    transition:
-                                                        getLinePathTransition(),
-                                                }"
-                                            />
-                                        </template>
-                                        <template v-else>
-                                            <path
-                                                vector-effect="non-scaling-stroke"
-                                                v-for="(
-                                                    seg, segIndex
-                                                ) in serie.dashedStraight"
-                                                :key="`line_straight_segment_${serie.id}_${segIndex}`"
-                                                fill="none"
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                :d="`M ${seg.path}`"
-                                                :stroke="
-                                                    serie.temperatureColors &&
-                                                    !serie.isFlatTemperatureLine
-                                                        ? `url(#temperature_grad_line_${i}_${uniqueId})`
-                                                        : serie.color
-                                                "
-                                                :stroke-width="
-                                                    getLineStrokeMetric(
-                                                        FINAL_CONFIG.line
-                                                            .strokeWidth,
-                                                    )
-                                                "
-                                                :stroke-dasharray="
-                                                    serie.dashed || seg.dashed
-                                                        ? getLineStrokeMetric(
-                                                              FINAL_CONFIG.line
-                                                                  .strokeWidth *
-                                                                  2,
-                                                          )
-                                                        : 0
-                                                "
-                                                :style="{
-                                                    transition:
-                                                        getLinePathTransition(),
-                                                }"
-                                            />
-                                        </template>
-                                    </template>
-
-                                    <path
-                                        vector-effect="non-scaling-stroke"
-                                        data-cy="datapoint-line-straight"
-                                        v-else-if="
-                                            serie.plots.length > 1 &&
-                                            !!serie.straight
-                                        "
-                                        :d="`M${serie.straight}`"
-                                        :stroke="
-                                            serie.temperatureColors &&
-                                            !serie.isFlatTemperatureLine
-                                                ? `url(#temperature_grad_line_${i}_${uniqueId})`
-                                                : serie.color
-                                        "
-                                        :stroke-width="
-                                            getLineStrokeMetric(
-                                                FINAL_CONFIG.line.strokeWidth,
-                                            )
-                                        "
-                                        :stroke-dasharray="
-                                            serie.dashed
-                                                ? getLineStrokeMetric(
-                                                      FINAL_CONFIG.line
-                                                          .strokeWidth * 2,
-                                                  )
-                                                : 0
-                                        "
-                                        fill="none"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        :style="{
-                                            transition: getLinePathTransition(),
-                                        }"
-                                    />
-                                </g>
+                                    {{
+                                        applyDataLabel(
+                                            gridLabels.yAxis.formatter,
+                                            plot.value,
+                                            dataLabel({
+                                                p:
+                                                    plot.serie.prefix ||
+                                                    cfgChart.labels.prefix,
+                                                v: plot.value,
+                                                s:
+                                                    plot.serie.suffix ||
+                                                    cfgChart.labels.suffix,
+                                                r: gridLabels.yAxis.rounding,
+                                            }),
+                                            {
+                                                datapoint: plot.serie,
+                                                seriesIndex: plot.index,
+                                            },
+                                        )
+                                    }}
+                                </text>
                             </g>
+                        </XyRenderLayer>
 
-                            <!-- LINE MARKERS: translation-only during matrix zoom -->
-                            <g class="vue-ui-xy-line-markers">
-                                <g
-                                    v-for="(serie, i) in lineSet"
-                                    :key="`serie_line_markers_${serie.id}`"
-                                    :style="`opacity:${selectedScale ? (selectedScale === serie.groupId ? 1 : 0.2) : 1};transition:opacity 0.2s ease-in-out`"
-                                >
+                        <!-- CROSSHAIR SELECTION (dot on x, before line & plot series) -->
+                        <XyRenderLayer>
+                            <g
+                                v-if="crosshairXAxisLabel"
+                                class="vue-ui-xy-crosshair-selection"
+                            >
+                                <circle
+                                    :cx="highlighterX"
+                                    :cy="forceValidValue(drawingArea?.bottom)"
+                                    :r="
+                                        cfgChart.highlighter.crosshairs.dot
+                                            .radius
+                                    "
+                                    :fill="
+                                        cfgChart.highlighter.crosshairs.dot.fill
+                                    "
+                                    :stroke="
+                                        cfgChart.highlighter.crosshairs.dot
+                                            .stroke
+                                    "
+                                    :stroke-width="
+                                        cfgChart.highlighter.crosshairs.dot
+                                            .strokeWidth
+                                    "
+                                    style="
+                                        transition: none !important;
+                                        animation: none !important;
+                                        pointer-events: none;
+                                    "
+                                />
+                            </g>
+                        </XyRenderLayer>
+
+                        <!-- PLOTS / LINES ZOOM GEOMETRY -->
+                        <XyRenderLayer>
+                            <g :clip-path="chartZoomClipPath">
+                                <!-- PLOTS -->
+                                <XyRenderLayer>
                                     <g
-                                        v-for="(plot, j) in serie.plots"
-                                        :key="`circle_line_${serie.id}_${j}`"
-                                        class="vue-ui-xy-line-marker"
-                                        :style="getChartZoomPlotStyle(plot)"
+                                        v-for="(serie, i) in plotSet"
+                                        :key="`serie_plot_${serie.id}`"
+                                        :class="`serie_plot_${i}`"
+                                        :style="`opacity:${selectedScale ? (selectedScale === serie.groupId ? 1 : 0.2) : 1};transition:opacity 0.2s ease-in-out`"
                                     >
-                                        <Shape
-                                            data-cy="datapoint-line-plot"
+                                        <g
+                                            data-cy="datapoint-plot"
+                                            v-for="(plot, j) in serie.plots"
+                                            :key="`circle_plot_${serie.id}_${j}`"
+                                            :style="getChartZoomPlotStyle(plot)"
+                                        >
+                                            <Shape
+                                                :data-cy="`xy-plot-${i}-${j}`"
+                                                v-if="
+                                                    plot &&
+                                                    canShowValue(plot.value)
+                                                "
+                                                :shape="
+                                                    [
+                                                        'triangle',
+                                                        'square',
+                                                        'diamond',
+                                                        'pentagon',
+                                                        'hexagon',
+                                                        'star',
+                                                    ].includes(serie.shape)
+                                                        ? serie.shape
+                                                        : 'circle'
+                                                "
+                                                :color="
+                                                    FINAL_CONFIG.plot
+                                                        .useGradient
+                                                        ? `url(#plotGradient_${i}_${uniqueId})`
+                                                        : FINAL_CONFIG.plot.dot
+                                                                .useSerieColor
+                                                          ? serie.color
+                                                          : FINAL_CONFIG.plot
+                                                                .dot.fill
+                                                "
+                                                :plot="getMarkerPosition(plot)"
+                                                :radius="
+                                                    isSelectedDatapoint(
+                                                        serie,
+                                                        plot,
+                                                        j,
+                                                    )
+                                                        ? (plotRadii.plot ||
+                                                              6) * 1.5
+                                                        : isPlotAlone(
+                                                                serie.plots,
+                                                                j,
+                                                            )
+                                                          ? plotRadii.plot || 6
+                                                          : plotRadii.plot || 6
+                                                "
+                                                :stroke="
+                                                    FINAL_CONFIG.plot.dot
+                                                        .useSerieColor
+                                                        ? cfgChart.backgroundColor
+                                                        : serie.color
+                                                "
+                                                :strokeWidth="
+                                                    FINAL_CONFIG.plot.dot
+                                                        .strokeWidth
+                                                "
+                                                :transition="
+                                                    loading ||
+                                                    isChartZoomTransitioning ||
+                                                    disableShapeTransitionForRangeResize ||
+                                                    !FINAL_CONFIG.plot
+                                                        .showTransition
+                                                        ? undefined
+                                                        : `all ${FINAL_CONFIG.plot.transitionDurationMs}ms ease-in-out`
+                                                "
+                                                :still="
+                                                    disableShapeTransitionForRangeResize ||
+                                                    isChartZoomTransitioning
+                                                "
+                                            />
+
+                                            <template
+                                                v-if="
+                                                    plot.comment &&
+                                                    cfgChart.comments.show
+                                                "
+                                            >
+                                                <foreignObject
+                                                    style="overflow: visible"
+                                                    height="12"
+                                                    :width="
+                                                        cfgChart.comments.width
+                                                    "
+                                                    :x="
+                                                        plot.x -
+                                                        cfgChart.comments
+                                                            .width /
+                                                            2 +
+                                                        cfgChart.comments
+                                                            .offsetX
+                                                    "
+                                                    :y="
+                                                        plot.y +
+                                                        cfgChart.comments
+                                                            .offsetY +
+                                                        6
+                                                    "
+                                                >
+                                                    <div style="width: 100%">
+                                                        <slot
+                                                            name="plot-comment"
+                                                            :plot="{
+                                                                ...plot,
+                                                                color: serie.color,
+                                                                seriesIndex: i,
+                                                                datapointIndex:
+                                                                    j,
+                                                            }"
+                                                        />
+                                                    </div>
+                                                </foreignObject>
+                                            </template>
+                                        </g>
+                                    </g>
+                                </XyRenderLayer>
+
+                                <XyRenderLayer>
+                                    <g
+                                        :class="[
+                                            'vue-ui-xy-zoom-geometry',
+                                            {
+                                                'vue-ui-xy-zoom-geometry--transitioning':
+                                                    isChartZoomTransitioning,
+                                            },
+                                        ]"
+                                        :style="chartZoomGeometryStyle"
+                                    >
+                                        <!-- LINE COATINGS -->
+                                        <g
+                                            v-for="(serie, i) in lineSet"
+                                            :key="`serie_line_${serie.id}`"
+                                            :class="`serie_line_${i}`"
+                                            :style="`opacity:${selectedScale ? (selectedScale === serie.groupId ? 1 : 0.2) : 1};transition:opacity 0.2s ease-in-out`"
+                                        >
+                                            <template
+                                                v-if="serie.hasDashedSegments"
+                                            >
+                                                <template
+                                                    v-if="serie.useStepper"
+                                                >
+                                                    <path
+                                                        vector-effect="non-scaling-stroke"
+                                                        v-for="(
+                                                            seg, segIndex
+                                                        ) in serie.dashedStepper"
+                                                        :key="`line_coating_stepper_segment_${serie.id}_${segIndex}`"
+                                                        data-cy="datapoint-line-coating-stepper-segment"
+                                                        fill="none"
+                                                        stroke-linecap="round"
+                                                        stroke-linejoin="round"
+                                                        :d="`M ${seg.path}`"
+                                                        :stroke="
+                                                            cfgChart.backgroundColor
+                                                        "
+                                                        :stroke-width="
+                                                            getLineStrokeMetric(
+                                                                FINAL_CONFIG
+                                                                    .line
+                                                                    .strokeWidth +
+                                                                    1,
+                                                            )
+                                                        "
+                                                        :stroke-dasharray="
+                                                            serie.dashed ||
+                                                            seg.dashed
+                                                                ? getLineStrokeMetric(
+                                                                      FINAL_CONFIG
+                                                                          .line
+                                                                          .strokeWidth *
+                                                                          2,
+                                                                  )
+                                                                : 0
+                                                        "
+                                                        :style="{
+                                                            transition:
+                                                                getLinePathTransition(),
+                                                        }"
+                                                    />
+                                                </template>
+
+                                                <template
+                                                    v-else-if="serie.smooth"
+                                                >
+                                                    <path
+                                                        vector-effect="non-scaling-stroke"
+                                                        v-for="(
+                                                            seg, segIndex
+                                                        ) in serie.dashedSmooth"
+                                                        :key="`line_coating_smooth_segment_${serie.id}_${segIndex}`"
+                                                        data-cy="datapoint-line-coating-smooth-segment"
+                                                        fill="none"
+                                                        stroke-linecap="round"
+                                                        stroke-linejoin="round"
+                                                        :d="`M ${seg.path}`"
+                                                        :stroke="
+                                                            cfgChart.backgroundColor
+                                                        "
+                                                        :stroke-width="
+                                                            getLineStrokeMetric(
+                                                                FINAL_CONFIG
+                                                                    .line
+                                                                    .strokeWidth +
+                                                                    1,
+                                                            )
+                                                        "
+                                                        :stroke-dasharray="
+                                                            serie.dashed ||
+                                                            seg.dashed
+                                                                ? getLineStrokeMetric(
+                                                                      FINAL_CONFIG
+                                                                          .line
+                                                                          .strokeWidth *
+                                                                          2,
+                                                                  )
+                                                                : 0
+                                                        "
+                                                        :style="{
+                                                            transition:
+                                                                getLinePathTransition(),
+                                                        }"
+                                                    />
+                                                </template>
+
+                                                <template v-else>
+                                                    <path
+                                                        vector-effect="non-scaling-stroke"
+                                                        v-for="(
+                                                            seg, segIndex
+                                                        ) in serie.dashedStraight"
+                                                        :key="`line_coating_straight_segment_${serie.id}_${segIndex}`"
+                                                        data-cy="datapoint-line-coating-straight-segment"
+                                                        fill="none"
+                                                        stroke-linecap="round"
+                                                        stroke-linejoin="round"
+                                                        :d="`M ${seg.path}`"
+                                                        :stroke="
+                                                            cfgChart.backgroundColor
+                                                        "
+                                                        :stroke-width="
+                                                            getLineStrokeMetric(
+                                                                FINAL_CONFIG
+                                                                    .line
+                                                                    .strokeWidth +
+                                                                    1,
+                                                            )
+                                                        "
+                                                        :stroke-dasharray="
+                                                            serie.dashed ||
+                                                            seg.dashed
+                                                                ? getLineStrokeMetric(
+                                                                      FINAL_CONFIG
+                                                                          .line
+                                                                          .strokeWidth *
+                                                                          2,
+                                                                  )
+                                                                : 0
+                                                        "
+                                                        :style="{
+                                                            transition:
+                                                                getLinePathTransition(),
+                                                        }"
+                                                    />
+                                                </template>
+                                            </template>
+
+                                            <path
+                                                vector-effect="non-scaling-stroke"
+                                                v-else-if="
+                                                    serie.smooth &&
+                                                    serie.plots.length > 1 &&
+                                                    !!serie.curve
+                                                "
+                                                data-cy="datapoint-line-coating-smooth"
+                                                :d="`M${serie.curve}`"
+                                                :stroke="
+                                                    cfgChart.backgroundColor
+                                                "
+                                                :stroke-width="
+                                                    getLineStrokeMetric(
+                                                        FINAL_CONFIG.line
+                                                            .strokeWidth + 1,
+                                                    )
+                                                "
+                                                :stroke-dasharray="
+                                                    serie.dashed
+                                                        ? getLineStrokeMetric(
+                                                              FINAL_CONFIG.line
+                                                                  .strokeWidth *
+                                                                  2,
+                                                          )
+                                                        : 0
+                                                "
+                                                fill="none"
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                :style="{
+                                                    transition:
+                                                        getLinePathTransition(),
+                                                }"
+                                            />
+
+                                            <path
+                                                vector-effect="non-scaling-stroke"
+                                                v-else-if="
+                                                    serie.plots.length > 1 &&
+                                                    !!serie.straight
+                                                "
+                                                data-cy="datapoint-line-coating-straight"
+                                                :d="`M${serie.straight}`"
+                                                :stroke="
+                                                    cfgChart.backgroundColor
+                                                "
+                                                :stroke-width="
+                                                    getLineStrokeMetric(
+                                                        FINAL_CONFIG.line
+                                                            .strokeWidth + 1,
+                                                    )
+                                                "
+                                                :stroke-dasharray="
+                                                    serie.dashed
+                                                        ? getLineStrokeMetric(
+                                                              FINAL_CONFIG.line
+                                                                  .strokeWidth *
+                                                                  2,
+                                                          )
+                                                        : 0
+                                                "
+                                                fill="none"
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                :style="{
+                                                    transition:
+                                                        getLinePathTransition(),
+                                                }"
+                                            />
+                                        </g>
+
+                                        <defs v-if="$slots.pattern">
+                                            <slot
+                                                v-for="(
+                                                    serie, i
+                                                ) in safeDataset"
+                                                :key="`serie_pattern_slot_${serie.id}`"
+                                                name="pattern"
+                                                v-bind="{
+                                                    ...serie,
+                                                    seriesIndex:
+                                                        serie.slotAbsoluteIndex,
+                                                    patternId: `pattern_${uniqueId}_${i}`,
+                                                }"
+                                            />
+                                        </defs>
+
+                                        <!-- INTERLINE AREAS (non stack mode only) -->
+                                        <g
                                             v-if="
-                                                (!optimize.linePlot &&
-                                                    plot &&
-                                                    canShowValue(plot.value)) ||
-                                                (optimize.linePlot &&
-                                                    plot &&
-                                                    canShowValue(plot.value) &&
-                                                    ((selectedSerieIndex !==
-                                                        null &&
-                                                        selectedSerieIndex ===
-                                                            j) ||
-                                                        (selectedMinimapIndex !==
-                                                            null &&
-                                                            selectedMinimapIndex ===
-                                                                j))) ||
-                                                isPlotAlone(serie.plots, j)
+                                                interLineAreas.length &&
+                                                !mutableConfig.isStacked
                                             "
-                                            :shape="
-                                                [
-                                                    'triangle',
-                                                    'square',
-                                                    'diamond',
-                                                    'pentagon',
-                                                    'hexagon',
-                                                    'star',
-                                                ].includes(serie.shape)
-                                                    ? serie.shape
-                                                    : 'circle'
-                                            "
-                                            :color="
-                                                FINAL_CONFIG.line.useGradient
-                                                    ? `url(#lineGradient_${i}_${uniqueId})`
-                                                    : FINAL_CONFIG.line.dot
-                                                            .useSerieColor
-                                                      ? serie.color
-                                                      : FINAL_CONFIG.line.dot
-                                                            .fill
-                                            "
-                                            :plot="{
-                                                x: checkNaN(plot.x),
-                                                y: checkNaN(plot.y),
-                                            }"
-                                            :radius="
-                                                isSelectedDatapoint(
-                                                    serie,
+                                        >
+                                            <path
+                                                v-for="area in interLineAreas"
+                                                :key="area.key"
+                                                :d="area.d"
+                                                :fill="area.color"
+                                                :fill-opacity="
+                                                    FINAL_CONFIG.line.interLine
+                                                        .fillOpacity
+                                                "
+                                                stroke="none"
+                                                pointer-events="none"
+                                                :style="{
+                                                    transition:
+                                                        getLinePathTransition(),
+                                                }"
+                                            />
+                                        </g>
+
+                                        <!-- LINES -->
+                                        <g
+                                            v-for="(serie, i) in lineSet"
+                                            :key="`serie_line_above_${serie.id}`"
+                                            :class="`serie_line_${i}`"
+                                            :style="`opacity:${selectedScale ? (selectedScale === serie.groupId ? 1 : 0.2) : 1};transition:opacity 0.2s ease-in-out`"
+                                        >
+                                            <g
+                                                v-if="
+                                                    serie.useArea &&
+                                                    serie.plots.length > 1
+                                                "
+                                            >
+                                                <template v-if="serie.smooth">
+                                                    <template
+                                                        v-for="(
+                                                            d, segIndex
+                                                        ) in serie.curveAreas"
+                                                        :key="segIndex"
+                                                    >
+                                                        <path
+                                                            v-if="d"
+                                                            :d="d"
+                                                            :fill="
+                                                                FINAL_CONFIG
+                                                                    .line.area
+                                                                    .useGradient
+                                                                    ? `url(#areaGradient_${i}_${uniqueId})`
+                                                                    : setOpacity(
+                                                                          serie.color,
+                                                                          FINAL_CONFIG
+                                                                              .line
+                                                                              .area
+                                                                              .opacity,
+                                                                      )
+                                                            "
+                                                            :style="{
+                                                                transition:
+                                                                    getLinePathTransition(),
+                                                            }"
+                                                        />
+                                                        <path
+                                                            v-if="
+                                                                $slots.pattern &&
+                                                                d
+                                                            "
+                                                            :d="d"
+                                                            :fill="`url(#pattern_${uniqueId}_${serie.slotAbsoluteIndex})`"
+                                                            :style="{
+                                                                transition:
+                                                                    getLinePathTransition(),
+                                                            }"
+                                                        />
+                                                    </template>
+                                                </template>
+                                                <template v-else>
+                                                    <template
+                                                        v-for="(
+                                                            d, segIndex
+                                                        ) in serie.area.split(
+                                                            ';',
+                                                        )"
+                                                        :key="segIndex"
+                                                    >
+                                                        <path
+                                                            v-if="d"
+                                                            data-cy="datapoint-line-area-straight"
+                                                            :d="`M${d}Z`"
+                                                            :fill="
+                                                                FINAL_CONFIG
+                                                                    .line.area
+                                                                    .useGradient
+                                                                    ? `url(#areaGradient_${i}_${uniqueId})`
+                                                                    : setOpacity(
+                                                                          serie.color,
+                                                                          FINAL_CONFIG
+                                                                              .line
+                                                                              .area
+                                                                              .opacity,
+                                                                      )
+                                                            "
+                                                            :style="{
+                                                                transition:
+                                                                    getLinePathTransition(),
+                                                            }"
+                                                        />
+                                                        <path
+                                                            v-if="
+                                                                $slots.pattern &&
+                                                                d
+                                                            "
+                                                            :d="`M${d}Z`"
+                                                            :fill="`url(#pattern_${uniqueId}_${serie.slotAbsoluteIndex})`"
+                                                            :style="{
+                                                                transition:
+                                                                    getLinePathTransition(),
+                                                            }"
+                                                        />
+                                                    </template>
+                                                </template>
+                                            </g>
+
+                                            <path
+                                                vector-effect="non-scaling-stroke"
+                                                data-cy="datapoint-line-smooth"
+                                                v-if="
+                                                    !serie.hasDashedSegments &&
+                                                    serie.smooth &&
+                                                    serie.plots.length > 1 &&
+                                                    !!serie.curve
+                                                "
+                                                :d="`M${serie.curve}`"
+                                                :stroke="
+                                                    serie.temperatureColors &&
+                                                    !serie.isFlatTemperatureLine
+                                                        ? `url(#temperature_grad_line_${i}_${uniqueId})`
+                                                        : serie.color
+                                                "
+                                                :stroke-width="
+                                                    getLineStrokeMetric(
+                                                        FINAL_CONFIG.line
+                                                            .strokeWidth,
+                                                    )
+                                                "
+                                                :stroke-dasharray="
+                                                    serie.dashed
+                                                        ? getLineStrokeMetric(
+                                                              FINAL_CONFIG.line
+                                                                  .strokeWidth *
+                                                                  2,
+                                                          )
+                                                        : 0
+                                                "
+                                                fill="none"
+                                                stroke-linecap="round"
+                                                :style="{
+                                                    transition:
+                                                        getLinePathTransition(),
+                                                }"
+                                            />
+
+                                            <template
+                                                v-else-if="
+                                                    serie.hasDashedSegments
+                                                "
+                                            >
+                                                <template
+                                                    v-if="serie.useStepper"
+                                                >
+                                                    <path
+                                                        vector-effect="non-scaling-stroke"
+                                                        v-for="(
+                                                            seg, segIndex
+                                                        ) in serie.dashedStepper"
+                                                        :key="`line_stepper_segment_${serie.id}_${segIndex}`"
+                                                        fill="none"
+                                                        stroke-linecap="round"
+                                                        stroke-linejoin="round"
+                                                        :d="`M ${seg.path}`"
+                                                        :stroke="
+                                                            serie.temperatureColors &&
+                                                            !serie.isFlatTemperatureLine
+                                                                ? `url(#temperature_grad_line_${i}_${uniqueId})`
+                                                                : serie.color
+                                                        "
+                                                        :stroke-width="
+                                                            getLineStrokeMetric(
+                                                                FINAL_CONFIG
+                                                                    .line
+                                                                    .strokeWidth,
+                                                            )
+                                                        "
+                                                        :stroke-dasharray="
+                                                            serie.dashed ||
+                                                            seg.dashed
+                                                                ? getLineStrokeMetric(
+                                                                      FINAL_CONFIG
+                                                                          .line
+                                                                          .strokeWidth *
+                                                                          2,
+                                                                  )
+                                                                : 0
+                                                        "
+                                                        :style="{
+                                                            transition:
+                                                                getLinePathTransition(),
+                                                        }"
+                                                    />
+                                                </template>
+
+                                                <template
+                                                    v-else-if="serie.smooth"
+                                                >
+                                                    <path
+                                                        vector-effect="non-scaling-stroke"
+                                                        v-for="(
+                                                            seg, segIndex
+                                                        ) in serie.dashedSmooth"
+                                                        :key="`line_smooth_segment_${serie.id}_${segIndex}`"
+                                                        fill="none"
+                                                        stroke-linecap="round"
+                                                        stroke-linejoin="round"
+                                                        :d="`M ${seg.path}`"
+                                                        :stroke="
+                                                            serie.temperatureColors &&
+                                                            !serie.isFlatTemperatureLine
+                                                                ? `url(#temperature_grad_line_${i}_${uniqueId})`
+                                                                : serie.color
+                                                        "
+                                                        :stroke-width="
+                                                            getLineStrokeMetric(
+                                                                FINAL_CONFIG
+                                                                    .line
+                                                                    .strokeWidth,
+                                                            )
+                                                        "
+                                                        :stroke-dasharray="
+                                                            serie.dashed ||
+                                                            seg.dashed
+                                                                ? getLineStrokeMetric(
+                                                                      FINAL_CONFIG
+                                                                          .line
+                                                                          .strokeWidth *
+                                                                          2,
+                                                                  )
+                                                                : 0
+                                                        "
+                                                        :style="{
+                                                            transition:
+                                                                getLinePathTransition(),
+                                                        }"
+                                                    />
+                                                </template>
+                                                <template v-else>
+                                                    <path
+                                                        vector-effect="non-scaling-stroke"
+                                                        v-for="(
+                                                            seg, segIndex
+                                                        ) in serie.dashedStraight"
+                                                        :key="`line_straight_segment_${serie.id}_${segIndex}`"
+                                                        fill="none"
+                                                        stroke-linecap="round"
+                                                        stroke-linejoin="round"
+                                                        :d="`M ${seg.path}`"
+                                                        :stroke="
+                                                            serie.temperatureColors &&
+                                                            !serie.isFlatTemperatureLine
+                                                                ? `url(#temperature_grad_line_${i}_${uniqueId})`
+                                                                : serie.color
+                                                        "
+                                                        :stroke-width="
+                                                            getLineStrokeMetric(
+                                                                FINAL_CONFIG
+                                                                    .line
+                                                                    .strokeWidth,
+                                                            )
+                                                        "
+                                                        :stroke-dasharray="
+                                                            serie.dashed ||
+                                                            seg.dashed
+                                                                ? getLineStrokeMetric(
+                                                                      FINAL_CONFIG
+                                                                          .line
+                                                                          .strokeWidth *
+                                                                          2,
+                                                                  )
+                                                                : 0
+                                                        "
+                                                        :style="{
+                                                            transition:
+                                                                getLinePathTransition(),
+                                                        }"
+                                                    />
+                                                </template>
+                                            </template>
+
+                                            <path
+                                                vector-effect="non-scaling-stroke"
+                                                data-cy="datapoint-line-straight"
+                                                v-else-if="
+                                                    serie.plots.length > 1 &&
+                                                    !!serie.straight
+                                                "
+                                                :d="`M${serie.straight}`"
+                                                :stroke="
+                                                    serie.temperatureColors &&
+                                                    !serie.isFlatTemperatureLine
+                                                        ? `url(#temperature_grad_line_${i}_${uniqueId})`
+                                                        : serie.color
+                                                "
+                                                :stroke-width="
+                                                    getLineStrokeMetric(
+                                                        FINAL_CONFIG.line
+                                                            .strokeWidth,
+                                                    )
+                                                "
+                                                :stroke-dasharray="
+                                                    serie.dashed
+                                                        ? getLineStrokeMetric(
+                                                              FINAL_CONFIG.line
+                                                                  .strokeWidth *
+                                                                  2,
+                                                          )
+                                                        : 0
+                                                "
+                                                fill="none"
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                :style="{
+                                                    transition:
+                                                        getLinePathTransition(),
+                                                }"
+                                            />
+                                        </g>
+                                    </g>
+                                </XyRenderLayer>
+
+                                <!-- LINE MARKERS: translation-only during matrix zoom -->
+                                <XyRenderLayer>
+                                    <g class="vue-ui-xy-line-markers">
+                                        <g
+                                            v-for="(serie, i) in lineSet"
+                                            :key="`serie_line_markers_${serie.id}`"
+                                            :style="`opacity:${selectedScale ? (selectedScale === serie.groupId ? 1 : 0.2) : 1};transition:opacity 0.2s ease-in-out`"
+                                        >
+                                            <g
+                                                v-for="{
                                                     plot,
-                                                    j,
-                                                )
-                                                    ? selectedPlotRadius || 0
-                                                    : isPlotAlone(
+                                                    index: j,
+                                                } in getLineMarkerItems(serie)"
+                                                :key="`circle_line_${serie.id}_${j}`"
+                                                class="vue-ui-xy-line-marker"
+                                                :style="
+                                                    getChartZoomPlotStyle(plot)
+                                                "
+                                            >
+                                                <Shape
+                                                    data-cy="datapoint-line-plot"
+                                                    v-if="
+                                                        (!optimize.linePlot &&
+                                                            plot &&
+                                                            canShowValue(
+                                                                plot.value,
+                                                            )) ||
+                                                        (optimize.linePlot &&
+                                                            plot &&
+                                                            canShowValue(
+                                                                plot.value,
+                                                            ) &&
+                                                            ((selectedSerieIndex !==
+                                                                null &&
+                                                                selectedSerieIndex ===
+                                                                    j) ||
+                                                                (selectedMinimapIndex !==
+                                                                    null &&
+                                                                    selectedMinimapIndex ===
+                                                                        j))) ||
+                                                        isPlotAlone(
                                                             serie.plots,
                                                             j,
                                                         )
-                                                      ? plotRadii.line || 0
-                                                      : plotRadii.line || 0
-                                            "
-                                            :stroke="
-                                                FINAL_CONFIG.line.dot
-                                                    .useSerieColor
-                                                    ? cfgChart.backgroundColor
-                                                    : serie.color
-                                            "
-                                            :strokeWidth="
-                                                FINAL_CONFIG.line.dot
-                                                    .strokeWidth
-                                            "
-                                            :transition="
-                                                loading ||
-                                                isChartZoomTransitioning ||
-                                                disableShapeTransitionForRangeResize ||
-                                                !FINAL_CONFIG.line
-                                                    .showTransition
-                                                    ? undefined
-                                                    : `all ${FINAL_CONFIG.line.transitionDurationMs}ms ease-in-out`
-                                            "
-                                            :still="
-                                                disableShapeTransitionForRangeResize ||
-                                                isChartZoomTransitioning
-                                            "
-                                        />
+                                                    "
+                                                    :shape="
+                                                        [
+                                                            'triangle',
+                                                            'square',
+                                                            'diamond',
+                                                            'pentagon',
+                                                            'hexagon',
+                                                            'star',
+                                                        ].includes(serie.shape)
+                                                            ? serie.shape
+                                                            : 'circle'
+                                                    "
+                                                    :color="
+                                                        FINAL_CONFIG.line
+                                                            .useGradient
+                                                            ? `url(#lineGradient_${i}_${uniqueId})`
+                                                            : FINAL_CONFIG.line
+                                                                    .dot
+                                                                    .useSerieColor
+                                                              ? serie.color
+                                                              : FINAL_CONFIG
+                                                                    .line.dot
+                                                                    .fill
+                                                    "
+                                                    :plot="
+                                                        getMarkerPosition(plot)
+                                                    "
+                                                    :radius="
+                                                        isSelectedDatapoint(
+                                                            serie,
+                                                            plot,
+                                                            j,
+                                                        )
+                                                            ? selectedPlotRadius ||
+                                                              0
+                                                            : isPlotAlone(
+                                                                    serie.plots,
+                                                                    j,
+                                                                )
+                                                              ? plotRadii.line ||
+                                                                0
+                                                              : plotRadii.line ||
+                                                                0
+                                                    "
+                                                    :stroke="
+                                                        FINAL_CONFIG.line.dot
+                                                            .useSerieColor
+                                                            ? cfgChart.backgroundColor
+                                                            : serie.color
+                                                    "
+                                                    :strokeWidth="
+                                                        FINAL_CONFIG.line.dot
+                                                            .strokeWidth
+                                                    "
+                                                    :transition="
+                                                        loading ||
+                                                        isChartZoomTransitioning ||
+                                                        disableShapeTransitionForRangeResize ||
+                                                        !FINAL_CONFIG.line
+                                                            .showTransition
+                                                            ? undefined
+                                                            : `all ${FINAL_CONFIG.line.transitionDurationMs}ms ease-in-out`
+                                                    "
+                                                    :still="
+                                                        disableShapeTransitionForRangeResize ||
+                                                        isChartZoomTransitioning
+                                                    "
+                                                />
 
-                                        <template
-                                            v-if="
-                                                plot.comment &&
-                                                cfgChart.comments.show
-                                            "
-                                        >
-                                            <foreignObject
-                                                style="overflow: visible"
-                                                height="12"
-                                                :width="cfgChart.comments.width"
-                                                :x="
-                                                    plot.x -
-                                                    cfgChart.comments.width /
-                                                        2 +
-                                                    cfgChart.comments.offsetX
-                                                "
-                                                :y="
-                                                    plot.y +
-                                                    cfgChart.comments.offsetY +
-                                                    6
-                                                "
-                                            >
-                                                <div style="width: 100%">
-                                                    <slot
-                                                        name="plot-comment"
-                                                        :plot="{
-                                                            ...plot,
-                                                            color: serie.color,
-                                                            seriesIndex: i,
-                                                            datapointIndex: j,
-                                                        }"
-                                                    />
-                                                </div>
-                                            </foreignObject>
-                                        </template>
+                                                <template
+                                                    v-if="
+                                                        plot.comment &&
+                                                        cfgChart.comments.show
+                                                    "
+                                                >
+                                                    <foreignObject
+                                                        style="
+                                                            overflow: visible;
+                                                        "
+                                                        height="12"
+                                                        :width="
+                                                            cfgChart.comments
+                                                                .width
+                                                        "
+                                                        :x="
+                                                            plot.x -
+                                                            cfgChart.comments
+                                                                .width /
+                                                                2 +
+                                                            cfgChart.comments
+                                                                .offsetX
+                                                        "
+                                                        :y="
+                                                            plot.y +
+                                                            cfgChart.comments
+                                                                .offsetY +
+                                                            6
+                                                        "
+                                                    >
+                                                        <div
+                                                            style="width: 100%"
+                                                        >
+                                                            <slot
+                                                                name="plot-comment"
+                                                                :plot="{
+                                                                    ...plot,
+                                                                    color: serie.color,
+                                                                    seriesIndex:
+                                                                        i,
+                                                                    datapointIndex:
+                                                                        j,
+                                                                }"
+                                                            />
+                                                        </div>
+                                                    </foreignObject>
+                                                </template>
+                                            </g>
+                                        </g>
                                     </g>
-                                </g>
+                                </XyRenderLayer>
                             </g>
-                        </g>
+                        </XyRenderLayer>
 
                         <!-- X LABELS BAR -->
-                        <g
-                            v-if="
-                                (FINAL_CONFIG.bar.labels.show ||
-                                    FINAL_CONFIG.bar.serieName.show) &&
-                                mutableConfig.dataLabels.show
-                            "
-                        >
-                            <!-- BAR DATA LABELS -->
-                            <template
-                                v-for="item in barDataLabelItems"
-                                :key="item.key"
+                        <XyRenderLayer>
+                            <g
+                                v-if="
+                                    (FINAL_CONFIG.bar.labels.show ||
+                                        FINAL_CONFIG.bar.serieName.show) &&
+                                    mutableConfig.dataLabels.show
+                                "
                             >
-                                <text
-                                    :class="{
-                                        'vue-data-ui-transition':
-                                            transitionEnabled &&
-                                            !labelLayoutSettling,
-                                    }"
-                                    data-cy="datapoint-bar-label"
-                                    :text-anchor="
-                                        getDataLabelTextAnchor({
-                                            plot: item.plot,
-                                            type: 'bar',
-                                        })
-                                    "
-                                    :font-size="fontSizes.plotLabels"
-                                    :transform="
-                                        getDataLabelTransformBar({
-                                            plot: item.plot,
-                                        })
-                                    "
-                                    :fill="FINAL_CONFIG.bar.labels.color"
-                                    :stroke="cfgChart.backgroundColor"
-                                    paint-order="stroke"
-                                    :style="`opacity:${selectedScale ? (selectedScale === item.serie.groupId ? 1 : 0.2) : 1};`"
-                                    v-html="
-                                        getDataLabelContent({
-                                            serie: item.serie,
-                                            plot: item.plot,
-                                            type: 'bar',
-                                        })
-                                    "
-                                />
-                            </template>
-                            <template
-                                v-for="(serie, i) in barSet"
-                                :key="`xLabel_bar_${serie.id}`"
-                                :class="`xLabel_bar_${i}`"
-                            >
+                                <!-- BAR DATA LABELS -->
                                 <template
-                                    v-for="(plot, j) in serie.plots"
-                                    :key="`xLabel_bar_${i}_${j}`"
+                                    v-for="item in barDataLabelItems"
+                                    :key="item.key"
                                 >
                                     <text
                                         :class="{
@@ -10396,354 +10677,413 @@ watch(
                                                 transitionEnabled &&
                                                 !labelLayoutSettling,
                                         }"
-                                        v-if="
-                                            plot &&
-                                            FINAL_CONFIG.bar.serieName.show
+                                        data-cy="datapoint-bar-label"
+                                        :text-anchor="
+                                            getDataLabelTextAnchor({
+                                                plot: item.plot,
+                                                type: 'bar',
+                                            })
                                         "
-                                        :transform="`translate(${mutableConfig.useIndividualScale && mutableConfig.isStacked ? plot.x + slot.line / 2 : plot.x + calcRectWidth() * 1.1}, ${plot.y + (plot.value > 0 ? FINAL_CONFIG.bar.serieName.offsetY : -FINAL_CONFIG.bar.serieName.offsetY * 3)})`"
-                                        text-anchor="middle"
                                         :font-size="fontSizes.plotLabels"
-                                        :fill="
-                                            FINAL_CONFIG.bar.serieName
-                                                .useSerieColor
-                                                ? serie.color
-                                                : FINAL_CONFIG.bar.serieName
-                                                      .color
+                                        :transform="
+                                            getDataLabelTransformBar({
+                                                plot: item.plot,
+                                            })
                                         "
-                                        :font-weight="
-                                            FINAL_CONFIG.bar.serieName.bold
-                                                ? 'bold'
-                                                : 'normal'
+                                        :fill="FINAL_CONFIG.bar.labels.color"
+                                        :stroke="cfgChart.backgroundColor"
+                                        paint-order="stroke"
+                                        :style="`opacity:${selectedScale ? (selectedScale === item.serie.groupId ? 1 : 0.2) : 1};`"
+                                        v-html="
+                                            getDataLabelContent({
+                                                serie: item.serie,
+                                                plot: item.plot,
+                                                type: 'bar',
+                                            })
                                         "
-                                        :style="`opacity:${selectedScale ? (selectedScale === serie.groupId ? 1 : 0.2) : 1};transition:opacity 0.2s ease-in-out`"
-                                    >
-                                        {{
-                                            FINAL_CONFIG.bar.serieName
-                                                .useAbbreviation
-                                                ? abbreviate({
-                                                      source: serie.name,
-                                                      length: FINAL_CONFIG.bar
-                                                          .serieName
-                                                          .abbreviationSize,
-                                                  })
-                                                : serie.name
-                                        }}
-                                    </text>
+                                    />
                                 </template>
-                            </template>
-                        </g>
+                                <template
+                                    v-for="(serie, i) in barSet"
+                                    :key="`xLabel_bar_${serie.id}`"
+                                    :class="`xLabel_bar_${i}`"
+                                >
+                                    <template
+                                        v-for="(plot, j) in serie.plots"
+                                        :key="`xLabel_bar_${i}_${j}`"
+                                    >
+                                        <text
+                                            :class="{
+                                                'vue-data-ui-transition':
+                                                    transitionEnabled &&
+                                                    !labelLayoutSettling,
+                                            }"
+                                            v-if="
+                                                plot &&
+                                                FINAL_CONFIG.bar.serieName.show
+                                            "
+                                            :transform="`translate(${mutableConfig.useIndividualScale && mutableConfig.isStacked ? plot.x + slot.line / 2 : plot.x + calcRectWidth() * 1.1}, ${plot.y + (plot.value > 0 ? FINAL_CONFIG.bar.serieName.offsetY : -FINAL_CONFIG.bar.serieName.offsetY * 3)})`"
+                                            text-anchor="middle"
+                                            :font-size="fontSizes.plotLabels"
+                                            :fill="
+                                                FINAL_CONFIG.bar.serieName
+                                                    .useSerieColor
+                                                    ? serie.color
+                                                    : FINAL_CONFIG.bar.serieName
+                                                          .color
+                                            "
+                                            :font-weight="
+                                                FINAL_CONFIG.bar.serieName.bold
+                                                    ? 'bold'
+                                                    : 'normal'
+                                            "
+                                            :style="`opacity:${selectedScale ? (selectedScale === serie.groupId ? 1 : 0.2) : 1};transition:opacity 0.2s ease-in-out`"
+                                        >
+                                            {{
+                                                FINAL_CONFIG.bar.serieName
+                                                    .useAbbreviation
+                                                    ? abbreviate({
+                                                          source: serie.name,
+                                                          length: FINAL_CONFIG
+                                                              .bar.serieName
+                                                              .abbreviationSize,
+                                                      })
+                                                    : serie.name
+                                            }}
+                                        </text>
+                                    </template>
+                                </template>
+                            </g>
+                        </XyRenderLayer>
 
                         <!-- X LABELS PLOT -->
-                        <g
-                            v-if="
-                                FINAL_CONFIG.plot.labels.show &&
-                                mutableConfig.dataLabels.show
-                            "
-                        >
-                            <!-- PLOT DATA LABELS -->
-                            <template
-                                v-for="item in plotDataLabelItems"
-                                :key="item.key"
+                        <XyRenderLayer>
+                            <g
+                                v-if="
+                                    FINAL_CONFIG.plot.labels.show &&
+                                    mutableConfig.dataLabels.show
+                                "
                             >
-                                <text
-                                    :class="{
-                                        'vue-data-ui-transition':
-                                            transitionEnabled &&
-                                            !labelLayoutSettling,
-                                    }"
-                                    data-cy="datapoint-plot-label"
-                                    :transform="
-                                        getDataLabelTransformLineOrPlot({
-                                            plot: item.plot,
-                                            type: 'plot',
-                                        })
-                                    "
-                                    :text-anchor="
-                                        getDataLabelTextAnchor({
-                                            plot: item.plot,
-                                            type: 'plot',
-                                        })
-                                    "
-                                    :font-size="fontSizes.plotLabels"
-                                    :fill="FINAL_CONFIG.plot.labels.color"
-                                    :stroke="cfgChart.backgroundColor"
-                                    paint-order="stroke"
-                                    :style="`opacity:${selectedScale ? (selectedScale === item.serie.groupId ? 1 : 0.2) : 1}`"
-                                    v-html="
-                                        getDataLabelContent({
-                                            serie: item.serie,
-                                            plot: item.plot,
-                                            type: 'plot',
-                                        })
-                                    "
-                                />
-                            </template>
-                        </g>
-
-                        <g v-else>
-                            <template
-                                v-for="(serie, i) in plotSet"
-                                :key="`xLabel_plot_${serie.id}`"
-                                :class="`xLabel_plot_${i}`"
-                            >
+                                <!-- PLOT DATA LABELS -->
                                 <template
-                                    v-for="(plot, j) in serie.plots"
-                                    :key="`xLabel_plot_${i}_${j}`"
+                                    v-for="item in plotDataLabelItems"
+                                    :key="item.key"
                                 >
-                                    <!-- PLOT TAGS (fixed) -->
-                                    <template
-                                        v-if="
-                                            !FINAL_CONFIG.plot.tag.followValue
+                                    <text
+                                        :class="{
+                                            'vue-data-ui-transition':
+                                                transitionEnabled &&
+                                                !labelLayoutSettling,
+                                        }"
+                                        data-cy="datapoint-plot-label"
+                                        :transform="
+                                            getDataLabelTransformLineOrPlot({
+                                                plot: item.plot,
+                                                type: 'plot',
+                                            })
                                         "
+                                        :text-anchor="
+                                            getDataLabelTextAnchor({
+                                                plot: item.plot,
+                                                type: 'plot',
+                                            })
+                                        "
+                                        :font-size="fontSizes.plotLabels"
+                                        :fill="FINAL_CONFIG.plot.labels.color"
+                                        :stroke="cfgChart.backgroundColor"
+                                        paint-order="stroke"
+                                        :style="`opacity:${selectedScale ? (selectedScale === item.serie.groupId ? 1 : 0.2) : 1}`"
+                                        v-html="
+                                            getDataLabelContent({
+                                                serie: item.serie,
+                                                plot: item.plot,
+                                                type: 'plot',
+                                            })
+                                        "
+                                    />
+                                </template>
+                            </g>
+                            <g v-else>
+                                <template
+                                    v-for="(serie, i) in plotSet"
+                                    :key="`xLabel_plot_${serie.id}`"
+                                    :class="`xLabel_plot_${i}`"
+                                >
+                                    <template
+                                        v-for="{
+                                            plot,
+                                            index: j,
+                                        } in getTagPlots(serie, 'plot')"
+                                        :key="`xLabel_plot_${i}_${j}`"
                                     >
-                                        <foreignObject
-                                            :data-cy="`xy-plot-tag-start-${i}`"
+                                        <!-- PLOT TAGS (fixed) -->
+                                        <template
                                             v-if="
-                                                plot &&
-                                                j === 0 &&
-                                                serie.useTag &&
-                                                serie.useTag === 'start'
+                                                !FINAL_CONFIG.plot.tag
+                                                    .followValue
                                             "
-                                            :x="plot.x"
-                                            :y="plot.y - 20"
-                                            :height="24"
-                                            width="150"
-                                            :style="`overflow: visible; opacity:${selectedScale ? (selectedScale === serie.groupId ? 1 : 0.2) : 1};transition:opacity 0.2s ease-in-out`"
                                         >
-                                            <div
-                                                :style="`padding: 3px; background:${setOpacity(serie.color, 80)};color:${adaptColorToBackground(serie.color)};width:fit-content;font-size:${fontSizes.plotLabels}px;border-radius: 2px;`"
-                                                v-html="
-                                                    applyDataLabel(
-                                                        FINAL_CONFIG.plot.tag
-                                                            .formatter,
-                                                        plot.value,
-                                                        serie.name,
-                                                        {
-                                                            datapoint: plot,
-                                                            seriesIndex: j,
-                                                            serieName:
-                                                                serie.name,
-                                                        },
-                                                    )
+                                            <foreignObject
+                                                :data-cy="`xy-plot-tag-start-${i}`"
+                                                v-if="
+                                                    plot &&
+                                                    j === 0 &&
+                                                    serie.useTag &&
+                                                    serie.useTag === 'start'
                                                 "
-                                            />
-                                        </foreignObject>
-                                        <foreignObject
-                                            :data-cy="`xy-plot-tag-end-${i}`"
-                                            v-if="
-                                                plot &&
-                                                j === serie.plots.length - 1 &&
-                                                serie.useTag &&
-                                                serie.useTag === 'end'
-                                            "
-                                            :x="
-                                                plot.x -
-                                                serie.name.length *
-                                                    (fontSizes.plotLabels / 2)
-                                            "
-                                            :y="plot.y - 20"
-                                            :height="24"
-                                            width="150"
-                                            :style="`overflow: visible; opacity:${selectedScale ? (selectedScale === serie.groupId ? 1 : 0.2) : 1};transition:opacity 0.2s ease-in-out`"
-                                        >
-                                            <div
-                                                :style="`padding: 3px; background:${setOpacity(serie.color, 80)};color:${adaptColorToBackground(serie.color)};width:fit-content;font-size:${fontSizes.plotLabels}px;border-radius: 2px;`"
-                                                v-html="
-                                                    applyDataLabel(
-                                                        FINAL_CONFIG.plot.tag
-                                                            .formatter,
-                                                        plot.value,
-                                                        serie.name,
-                                                        {
-                                                            datapoint: plot,
-                                                            seriesIndex: j,
-                                                            serieName:
-                                                                serie.name,
-                                                        },
-                                                    )
+                                                :x="plot.x"
+                                                :y="plot.y - 20"
+                                                :height="24"
+                                                width="150"
+                                                :style="`overflow: visible; opacity:${selectedScale ? (selectedScale === serie.groupId ? 1 : 0.2) : 1};transition:opacity 0.2s ease-in-out`"
+                                            >
+                                                <div
+                                                    :style="`padding: 3px; background:${setOpacity(serie.color, 80)};color:${adaptColorToBackground(serie.color)};width:fit-content;font-size:${fontSizes.plotLabels}px;border-radius: 2px;`"
+                                                    v-html="
+                                                        applyDataLabel(
+                                                            FINAL_CONFIG.plot
+                                                                .tag.formatter,
+                                                            plot.value,
+                                                            serie.name,
+                                                            {
+                                                                datapoint: plot,
+                                                                seriesIndex: j,
+                                                                serieName:
+                                                                    serie.name,
+                                                            },
+                                                        )
+                                                    "
+                                                />
+                                            </foreignObject>
+                                            <foreignObject
+                                                :data-cy="`xy-plot-tag-end-${i}`"
+                                                v-if="
+                                                    plot &&
+                                                    j ===
+                                                        serie.plots.length -
+                                                            1 &&
+                                                    serie.useTag &&
+                                                    serie.useTag === 'end'
                                                 "
-                                            />
-                                        </foreignObject>
-                                    </template>
+                                                :x="
+                                                    plot.x -
+                                                    serie.name.length *
+                                                        (fontSizes.plotLabels /
+                                                            2)
+                                                "
+                                                :y="plot.y - 20"
+                                                :height="24"
+                                                width="150"
+                                                :style="`overflow: visible; opacity:${selectedScale ? (selectedScale === serie.groupId ? 1 : 0.2) : 1};transition:opacity 0.2s ease-in-out`"
+                                            >
+                                                <div
+                                                    :style="`padding: 3px; background:${setOpacity(serie.color, 80)};color:${adaptColorToBackground(serie.color)};width:fit-content;font-size:${fontSizes.plotLabels}px;border-radius: 2px;`"
+                                                    v-html="
+                                                        applyDataLabel(
+                                                            FINAL_CONFIG.plot
+                                                                .tag.formatter,
+                                                            plot.value,
+                                                            serie.name,
+                                                            {
+                                                                datapoint: plot,
+                                                                seriesIndex: j,
+                                                                serieName:
+                                                                    serie.name,
+                                                            },
+                                                        )
+                                                    "
+                                                />
+                                            </foreignObject>
+                                        </template>
 
-                                    <!-- TAG LINE (follower) -->
-                                    <template v-else>
-                                        <line
-                                            class="vue-ui-xy-tag-plot"
-                                            v-if="
-                                                [
-                                                    selectedMinimapIndex,
-                                                    selectedSerieIndex,
-                                                    selectedRowIndex,
-                                                ].includes(j) && serie.useTag
-                                            "
-                                            :x1="drawingArea?.left"
-                                            :x2="drawingArea?.right"
-                                            :y1="plot.y"
-                                            :y2="plot.y"
-                                            :stroke-width="1"
-                                            stroke-linecap="round"
-                                            stroke-dasharray="2"
-                                            :stroke="serie.color"
-                                        />
+                                        <!-- TAG LINE (follower) -->
+                                        <template v-else>
+                                            <line
+                                                class="vue-ui-xy-tag-plot"
+                                                v-if="
+                                                    [
+                                                        selectedMinimapIndex,
+                                                        selectedSerieIndex,
+                                                        selectedRowIndex,
+                                                    ].includes(j) &&
+                                                    serie.useTag
+                                                "
+                                                :x1="drawingArea?.left"
+                                                :x2="drawingArea?.right"
+                                                :y1="plot.y"
+                                                :y2="plot.y"
+                                                :stroke-width="1"
+                                                stroke-linecap="round"
+                                                stroke-dasharray="2"
+                                                :stroke="serie.color"
+                                            />
+                                        </template>
                                     </template>
                                 </template>
-                            </template>
-                        </g>
+                            </g>
+                        </XyRenderLayer>
 
                         <!-- X LABELS LINE -->
-                        <g
-                            v-if="
-                                FINAL_CONFIG.line.labels.show &&
-                                mutableConfig.dataLabels.show
-                            "
-                        >
-                            <!-- LINE DATA LABELS -->
-                            <template
-                                v-for="item in lineDataLabelItems"
-                                :key="item.key"
+                        <XyRenderLayer>
+                            <g
+                                v-if="
+                                    FINAL_CONFIG.line.labels.show &&
+                                    mutableConfig.dataLabels.show
+                                "
                             >
-                                <text
-                                    :class="{
-                                        'vue-data-ui-transition':
-                                            transitionEnabled &&
-                                            !labelLayoutSettling,
-                                    }"
-                                    data-cy="datapoint-line-label"
-                                    :transform="
-                                        getDataLabelTransformLineOrPlot({
-                                            plot: item.plot,
-                                            type: 'line',
-                                        })
-                                    "
-                                    :text-anchor="
-                                        getDataLabelTextAnchor({
-                                            plot: item.plot,
-                                            type: 'line',
-                                        })
-                                    "
-                                    :font-size="fontSizes.plotLabels"
-                                    :fill="FINAL_CONFIG.line.labels.color"
-                                    :stroke="cfgChart.backgroundColor"
-                                    paint-order="stroke"
-                                    :style="`opacity:${selectedScale ? (selectedScale === item.serie.groupId ? 1 : 0.2) : 1};`"
-                                    v-html="
-                                        getDataLabelContent({
-                                            serie: item.serie,
-                                            plot: item.plot,
-                                            type: 'line',
-                                        })
-                                    "
-                                />
-                            </template>
-                        </g>
-
-                        <g v-else>
-                            <template
-                                v-for="(serie, i) in lineSet"
-                                :key="`xLabel_line_${serie.id}`"
-                                :class="`xLabel_line_${i}`"
-                            >
+                                <!-- LINE DATA LABELS -->
                                 <template
-                                    v-for="(plot, j) in serie.plots"
-                                    :key="`xLabel_line_${i}_${j}`"
+                                    v-for="item in lineDataLabelItems"
+                                    :key="item.key"
                                 >
-                                    <!-- LINE TAGS (fixed) -->
-                                    <template
-                                        v-if="
-                                            !FINAL_CONFIG.line.tag.followValue
+                                    <text
+                                        :class="{
+                                            'vue-data-ui-transition':
+                                                transitionEnabled &&
+                                                !labelLayoutSettling,
+                                        }"
+                                        data-cy="datapoint-line-label"
+                                        :transform="
+                                            getDataLabelTransformLineOrPlot({
+                                                plot: item.plot,
+                                                type: 'line',
+                                            })
                                         "
+                                        :text-anchor="
+                                            getDataLabelTextAnchor({
+                                                plot: item.plot,
+                                                type: 'line',
+                                            })
+                                        "
+                                        :font-size="fontSizes.plotLabels"
+                                        :fill="FINAL_CONFIG.line.labels.color"
+                                        :stroke="cfgChart.backgroundColor"
+                                        paint-order="stroke"
+                                        :style="`opacity:${selectedScale ? (selectedScale === item.serie.groupId ? 1 : 0.2) : 1};`"
+                                        v-html="
+                                            getDataLabelContent({
+                                                serie: item.serie,
+                                                plot: item.plot,
+                                                type: 'line',
+                                            })
+                                        "
+                                    />
+                                </template>
+                            </g>
+                            <g v-else>
+                                <template
+                                    v-for="(serie, i) in lineSet"
+                                    :key="`xLabel_line_${serie.id}`"
+                                    :class="`xLabel_line_${i}`"
+                                >
+                                    <template
+                                        v-for="{
+                                            plot,
+                                            index: j,
+                                        } in getTagPlots(serie, 'line')"
+                                        :key="`xLabel_line_${i}_${j}`"
                                     >
-                                        <foreignObject
-                                            :data-cy="`xy-line-tag-start-${i}`"
+                                        <!-- LINE TAGS (fixed) -->
+                                        <template
                                             v-if="
-                                                plot &&
-                                                j === 0 &&
-                                                serie.useTag &&
-                                                serie.useTag === 'start'
+                                                !FINAL_CONFIG.line.tag
+                                                    .followValue
                                             "
-                                            :x="plot.x"
-                                            :y="plot.y - 20"
-                                            :height="24"
-                                            width="150"
-                                            :style="`overflow: visible; opacity:${selectedScale ? (selectedScale === serie.groupId ? 1 : 0.2) : 1};transition:opacity 0.2s ease-in-out`"
                                         >
-                                            <div
-                                                :style="`padding: 3px; background:${setOpacity(serie.color, 80)};color:${adaptColorToBackground(serie.color)};width:fit-content;font-size:${fontSizes.plotLabels}px;border-radius: 2px;`"
-                                                v-html="
-                                                    applyDataLabel(
-                                                        FINAL_CONFIG.line.tag
-                                                            .formatter,
-                                                        plot.value,
-                                                        serie.name,
-                                                        {
-                                                            datapoint: plot,
-                                                            seriesIndex: j,
-                                                            serieName:
-                                                                serie.name,
-                                                        },
-                                                    )
+                                            <foreignObject
+                                                :data-cy="`xy-line-tag-start-${i}`"
+                                                v-if="
+                                                    plot &&
+                                                    j === 0 &&
+                                                    serie.useTag &&
+                                                    serie.useTag === 'start'
                                                 "
-                                            ></div>
-                                        </foreignObject>
-                                        <foreignObject
-                                            :data-cy="`xy-line-tag-end-${i}`"
-                                            v-if="
-                                                plot &&
-                                                j === serie.plots.length - 1 &&
-                                                serie.useTag &&
-                                                serie.useTag === 'end'
-                                            "
-                                            :x="plot.x"
-                                            :y="plot.y - 20"
-                                            :height="24"
-                                            width="150"
-                                            :style="`overflow: visible; opacity:${selectedScale ? (selectedScale === serie.groupId ? 1 : 0.2) : 1};transition:opacity 0.2s ease-in-out`"
-                                        >
-                                            <div
-                                                :style="`padding: 3px; background:${setOpacity(serie.color, 80)};color:${adaptColorToBackground(serie.color)};width:fit-content;font-size:${fontSizes.plotLabels}px;border-radius: 2px;`"
-                                                v-html="
-                                                    applyDataLabel(
-                                                        FINAL_CONFIG.line.tag
-                                                            .formatter,
-                                                        plot.value,
-                                                        serie.name,
-                                                        {
-                                                            datapoint: plot,
-                                                            seriesIndex: j,
-                                                            serieName:
-                                                                serie.name,
-                                                        },
-                                                    )
+                                                :x="plot.x"
+                                                :y="plot.y - 20"
+                                                :height="24"
+                                                width="150"
+                                                :style="`overflow: visible; opacity:${selectedScale ? (selectedScale === serie.groupId ? 1 : 0.2) : 1};transition:opacity 0.2s ease-in-out`"
+                                            >
+                                                <div
+                                                    :style="`padding: 3px; background:${setOpacity(serie.color, 80)};color:${adaptColorToBackground(serie.color)};width:fit-content;font-size:${fontSizes.plotLabels}px;border-radius: 2px;`"
+                                                    v-html="
+                                                        applyDataLabel(
+                                                            FINAL_CONFIG.line
+                                                                .tag.formatter,
+                                                            plot.value,
+                                                            serie.name,
+                                                            {
+                                                                datapoint: plot,
+                                                                seriesIndex: j,
+                                                                serieName:
+                                                                    serie.name,
+                                                            },
+                                                        )
+                                                    "
+                                                ></div>
+                                            </foreignObject>
+                                            <foreignObject
+                                                :data-cy="`xy-line-tag-end-${i}`"
+                                                v-if="
+                                                    plot &&
+                                                    j ===
+                                                        serie.plots.length -
+                                                            1 &&
+                                                    serie.useTag &&
+                                                    serie.useTag === 'end'
                                                 "
-                                            />
-                                        </foreignObject>
-                                    </template>
+                                                :x="plot.x"
+                                                :y="plot.y - 20"
+                                                :height="24"
+                                                width="150"
+                                                :style="`overflow: visible; opacity:${selectedScale ? (selectedScale === serie.groupId ? 1 : 0.2) : 1};transition:opacity 0.2s ease-in-out`"
+                                            >
+                                                <div
+                                                    :style="`padding: 3px; background:${setOpacity(serie.color, 80)};color:${adaptColorToBackground(serie.color)};width:fit-content;font-size:${fontSizes.plotLabels}px;border-radius: 2px;`"
+                                                    v-html="
+                                                        applyDataLabel(
+                                                            FINAL_CONFIG.line
+                                                                .tag.formatter,
+                                                            plot.value,
+                                                            serie.name,
+                                                            {
+                                                                datapoint: plot,
+                                                                seriesIndex: j,
+                                                                serieName:
+                                                                    serie.name,
+                                                            },
+                                                        )
+                                                    "
+                                                />
+                                            </foreignObject>
+                                        </template>
 
-                                    <!-- TAG LINE (follower) -->
-                                    <template v-else>
-                                        <line
-                                            class="vue-ui-xy-tag-line"
-                                            v-if="
-                                                [
-                                                    selectedMinimapIndex,
-                                                    selectedSerieIndex,
-                                                    selectedRowIndex,
-                                                ].includes(j) && serie.useTag
-                                            "
-                                            :x1="drawingArea?.left"
-                                            :x2="drawingArea?.right"
-                                            :y1="plot.y"
-                                            :y2="plot.y"
-                                            :stroke-width="1"
-                                            stroke-linecap="round"
-                                            stroke-dasharray="2"
-                                            :stroke="serie.color"
-                                        />
+                                        <!-- TAG LINE (follower) -->
+                                        <template v-else>
+                                            <line
+                                                class="vue-ui-xy-tag-line"
+                                                v-if="
+                                                    [
+                                                        selectedMinimapIndex,
+                                                        selectedSerieIndex,
+                                                        selectedRowIndex,
+                                                    ].includes(j) &&
+                                                    serie.useTag
+                                                "
+                                                :x1="drawingArea?.left"
+                                                :x2="drawingArea?.right"
+                                                :y1="plot.y"
+                                                :y2="plot.y"
+                                                :stroke-width="1"
+                                                stroke-linecap="round"
+                                                stroke-dasharray="2"
+                                                :stroke="serie.color"
+                                            />
+                                        </template>
                                     </template>
                                 </template>
-                            </template>
-                        </g>
+                            </g>
+                        </XyRenderLayer>
 
                         <!-- SERIE NAME TAGS : LINES -->
                         <template
@@ -11062,366 +11402,411 @@ watch(
                         </template>
 
                         <!-- AXIS LABELS -->
-                        <g>
-                            <text
-                                ref="yAxisLabel"
-                                data-cy="xy-axis-yLabel"
-                                v-if="
-                                    gridLabels.axis.yLabel &&
-                                    !mutableConfig.useIndividualScale
-                                "
-                                :font-size="fontSizes.yAxis"
-                                :fill="gridLabels.color"
-                                :transform="`translate(${
-                                    yAxisLabelsAreRight
-                                        ? drawingArea.right +
-                                          drawingArea.scaleLabelsOffset +
-                                          gridLabels.axis.yLabelOffsetX +
-                                          fontSizes.yAxis
-                                        : gridLabels.axis.fontSize +
-                                          gridLabels.axis.yLabelOffsetX
-                                }, ${drawingArea?.top + drawingArea.height / 2}) rotate(-90)`"
-                                text-anchor="middle"
-                                style="transition: none"
-                            >
-                                {{ gridLabels.axis.yLabel }}
-                            </text>
-                            <text
-                                ref="xAxisLabel"
-                                data-cy="xy-axis-xLabel"
-                                v-if="gridLabels.axis.xLabel"
-                                text-anchor="middle"
-                                :x="width / 2"
-                                :y="height - 3"
-                                :font-size="fontSizes.yAxis"
-                                :fill="gridLabels.color"
-                            >
-                                {{ gridLabels.axis.xLabel }}
-                            </text>
-                        </g>
+                        <XyRenderLayer>
+                            <g>
+                                <text
+                                    ref="yAxisLabel"
+                                    data-cy="xy-axis-yLabel"
+                                    v-if="
+                                        gridLabels.axis.yLabel &&
+                                        !mutableConfig.useIndividualScale
+                                    "
+                                    :font-size="fontSizes.yAxis"
+                                    :fill="gridLabels.color"
+                                    :transform="`translate(${
+                                        yAxisLabelsAreRight
+                                            ? drawingArea.right +
+                                              drawingArea.scaleLabelsOffset +
+                                              gridLabels.axis.yLabelOffsetX +
+                                              fontSizes.yAxis
+                                            : gridLabels.axis.fontSize +
+                                              gridLabels.axis.yLabelOffsetX
+                                    }, ${drawingArea?.top + drawingArea.height / 2}) rotate(-90)`"
+                                    text-anchor="middle"
+                                    style="transition: none"
+                                >
+                                    {{ gridLabels.axis.yLabel }}
+                                </text>
+                                <text
+                                    ref="xAxisLabel"
+                                    data-cy="xy-axis-xLabel"
+                                    v-if="gridLabels.axis.xLabel"
+                                    text-anchor="middle"
+                                    :x="width / 2"
+                                    :y="height - 3"
+                                    :font-size="fontSizes.yAxis"
+                                    :fill="gridLabels.color"
+                                >
+                                    {{ gridLabels.axis.xLabel }}
+                                </text>
+                            </g>
+                        </XyRenderLayer>
 
                         <!-- TIME LABELS -->
-                        <g
-                            v-if="gridLabels.xAxisLabels.show"
-                            ref="timeLabelsEls"
-                            :opacity="crosshairsAreActive ? 0.1 : 1"
-                            style="transition: opacity 0.2s"
-                        >
-                            <template v-if="$slots['time-label']">
-                                <template
-                                    v-for="(label, i) in continuousXLabels"
-                                    :key="`time_label_${label.id}`"
-                                >
-                                    <slot
-                                        name="time-label"
-                                        v-bind="{
-                                            x: getXAxisLabelX(label, i),
-                                            y: drawingArea?.bottom,
-                                            fontSize: fontSizes.xAxis,
-                                            fill: gridLabels.xAxisLabels.color,
-                                            transform: `translate(${getXAxisLabelX(label, i)}, ${drawingArea?.bottom + fontSizes.xAxis * 1.3 + gridLabels.xAxisLabels.yOffset}), rotate(${gridLabels.xAxisLabels.rotation})`,
-                                            absoluteIndex: label.absoluteIndex,
-                                            content: label.text,
-                                            textAnchor:
-                                                gridLabels.xAxisLabels
-                                                    .rotation > 0
-                                                    ? 'start'
-                                                    : grid.labels.xAxisLabels
-                                                            .rotation < 0
-                                                      ? 'end'
-                                                      : 'middle',
-                                            show: label && label.text,
-                                        }"
-                                    />
-                                </template>
-                            </template>
-                            <template v-else>
-                                <g
-                                    v-for="(label, i) in continuousXLabels"
-                                    :key="`time_label_${i}`"
-                                >
-                                    <template v-if="label && label.text">
-                                        <!-- SINGLE LINE LABEL -->
-                                        <text
-                                            v-if="
-                                                !String(label.text).includes(
-                                                    '\n',
-                                                )
-                                            "
-                                            class="vue-data-ui-time-label"
-                                            data-cy="time-label"
-                                            :text-anchor="
-                                                gridLabels.xAxisLabels
-                                                    .rotation > 0
-                                                    ? 'start'
-                                                    : grid.labels.xAxisLabels
-                                                            .rotation < 0
-                                                      ? 'end'
-                                                      : 'middle'
-                                            "
-                                            :font-size="fontSizes.xAxis"
-                                            :fill="gridLabels.xAxisLabels.color"
-                                            :stroke="cfgChart.backgroundColor"
-                                            stroke-width="3"
-                                            stroke-linejoin="round"
-                                            stroke-linecap="round"
-                                            paint-order="stroke fill"
-                                            :transform="`translate(${getXAxisLabelX(label, i)}, ${drawingArea?.bottom + fontSizes.xAxis * 1.5}), rotate(${gridLabels.xAxisLabels.rotation})`"
-                                            :style="{
-                                                cursor:
-                                                    usesSelectTimeLabelEvent() &&
-                                                    isCursorPointer
-                                                        ? 'pointer'
-                                                        : 'default',
+                        <XyRenderLayer>
+                            <g
+                                v-if="gridLabels.xAxisLabels.show"
+                                ref="timeLabelsEls"
+                                :opacity="crosshairsAreActive ? 0.1 : 1"
+                                style="transition: opacity 0.2s"
+                            >
+                                <template v-if="$slots['time-label']">
+                                    <template
+                                        v-for="(label, i) in continuousXLabels"
+                                        :key="`time_label_${label.id}`"
+                                    >
+                                        <slot
+                                            name="time-label"
+                                            v-bind="{
+                                                x: getXAxisLabelX(label, i),
+                                                y: drawingArea?.bottom,
+                                                fontSize: fontSizes.xAxis,
+                                                fill: gridLabels.xAxisLabels
+                                                    .color,
+                                                transform: `translate(${getXAxisLabelX(label, i)}, ${drawingArea?.bottom + fontSizes.xAxis * 1.3 + gridLabels.xAxisLabels.yOffset}), rotate(${gridLabels.xAxisLabels.rotation})`,
+                                                absoluteIndex:
+                                                    label.absoluteIndex,
+                                                content: label.text,
+                                                textAnchor:
+                                                    gridLabels.xAxisLabels
+                                                        .rotation > 0
+                                                        ? 'start'
+                                                        : grid.labels
+                                                                .xAxisLabels
+                                                                .rotation < 0
+                                                          ? 'end'
+                                                          : 'middle',
+                                                show: label && label.text,
                                             }"
-                                            @click="selectTimeLabel(label, i)"
-                                        >
-                                            {{ label.text || '' }}
-                                        </text>
-
-                                        <!-- MULTILINE LABEL (when label includes \n) -->
-                                        <text
-                                            v-else
-                                            data-cy="time-label"
-                                            class="vue-data-ui-time-label"
-                                            :text-anchor="
-                                                gridLabels.xAxisLabels
-                                                    .rotation > 0
-                                                    ? 'start'
-                                                    : grid.labels.xAxisLabels
-                                                            .rotation < 0
-                                                      ? 'end'
-                                                      : 'middle'
-                                            "
-                                            :font-size="fontSizes.xAxis"
-                                            :fill="gridLabels.xAxisLabels.color"
-                                            :transform="`translate(${getXAxisLabelX(label, i)}, ${drawingArea?.bottom + fontSizes.xAxis * 1.5}), rotate(${gridLabels.xAxisLabels.rotation})`"
-                                            :style="{
-                                                cursor:
-                                                    usesSelectTimeLabelEvent() &&
-                                                    isCursorPointer
-                                                        ? 'pointer'
-                                                        : 'default',
-                                            }"
-                                            v-html="
-                                                createTSpansFromLineBreaksOnX({
-                                                    content: String(label.text),
-                                                    fontSize: fontSizes.xAxis,
-                                                    fill: cfgChart.grid.labels
-                                                        .xAxisLabels.color,
-                                                    stroke: cfgChart.backgroundColor,
-                                                    x: 0,
-                                                    y: 0,
-                                                })
-                                            "
-                                            @click="selectTimeLabel(label, i)"
                                         />
                                     </template>
-                                </g>
-                            </template>
-                        </g>
+                                </template>
+                                <template v-else>
+                                    <g
+                                        v-for="(label, i) in continuousXLabels"
+                                        :key="`time_label_${i}`"
+                                    >
+                                        <template v-if="label && label.text">
+                                            <!-- SINGLE LINE LABEL -->
+                                            <text
+                                                v-if="
+                                                    !String(
+                                                        label.text,
+                                                    ).includes('\n')
+                                                "
+                                                class="vue-data-ui-time-label"
+                                                data-cy="time-label"
+                                                :text-anchor="
+                                                    gridLabels.xAxisLabels
+                                                        .rotation > 0
+                                                        ? 'start'
+                                                        : grid.labels
+                                                                .xAxisLabels
+                                                                .rotation < 0
+                                                          ? 'end'
+                                                          : 'middle'
+                                                "
+                                                :font-size="fontSizes.xAxis"
+                                                :fill="
+                                                    gridLabels.xAxisLabels.color
+                                                "
+                                                :stroke="
+                                                    cfgChart.backgroundColor
+                                                "
+                                                stroke-width="3"
+                                                stroke-linejoin="round"
+                                                stroke-linecap="round"
+                                                paint-order="stroke fill"
+                                                :transform="`translate(${getXAxisLabelX(label, i)}, ${drawingArea?.bottom + fontSizes.xAxis * 1.5}), rotate(${gridLabels.xAxisLabels.rotation})`"
+                                                :style="{
+                                                    cursor:
+                                                        usesSelectTimeLabelEvent() &&
+                                                        isCursorPointer
+                                                            ? 'pointer'
+                                                            : 'default',
+                                                }"
+                                                @click="
+                                                    selectTimeLabel(label, i)
+                                                "
+                                            >
+                                                {{ label.text || '' }}
+                                            </text>
 
-                        <g v-if="crosshairXAxisLabel">
-                            <text
-                                class="vue-data-ui-time-label"
-                                data-cy="time-label"
-                                :text-anchor="
-                                    gridLabels.xAxisLabels.rotation > 0
-                                        ? 'start'
-                                        : gridLabels.xAxisLabels.rotation < 0
-                                          ? 'end'
-                                          : 'middle'
-                                "
-                                :font-size="fontSizes.xAxis"
-                                :fill="gridLabels.xAxisLabels.color"
-                                :transform="`translate(${crosshairXAxisLabel.x}, ${drawingArea?.bottom + fontSizes.xAxis * 1.5}), rotate(${gridLabels.xAxisLabels.rotation})`"
-                                font-weight="bold"
-                                style="
-                                    transition: none !important;
-                                    animation: none !important;
-                                    pointer-events: none;
-                                "
-                                v-html="
-                                    createTSpansFromLineBreaksOnX({
-                                        content: String(
-                                            crosshairXAxisLabel.text,
-                                        ),
-                                        fontSize: fontSizes.xAxis,
-                                        fill: gridLabels.xAxisLabels.color,
-                                        x: 0,
-                                        y: 0,
-                                    })
-                                "
-                            />
-                        </g>
+                                            <!-- MULTILINE LABEL (when label includes \n) -->
+                                            <text
+                                                v-else
+                                                data-cy="time-label"
+                                                class="vue-data-ui-time-label"
+                                                :text-anchor="
+                                                    gridLabels.xAxisLabels
+                                                        .rotation > 0
+                                                        ? 'start'
+                                                        : grid.labels
+                                                                .xAxisLabels
+                                                                .rotation < 0
+                                                          ? 'end'
+                                                          : 'middle'
+                                                "
+                                                :font-size="fontSizes.xAxis"
+                                                :fill="
+                                                    gridLabels.xAxisLabels.color
+                                                "
+                                                :transform="`translate(${getXAxisLabelX(label, i)}, ${drawingArea?.bottom + fontSizes.xAxis * 1.5}), rotate(${gridLabels.xAxisLabels.rotation})`"
+                                                :style="{
+                                                    cursor:
+                                                        usesSelectTimeLabelEvent() &&
+                                                        isCursorPointer
+                                                            ? 'pointer'
+                                                            : 'default',
+                                                }"
+                                                v-html="
+                                                    createTSpansFromLineBreaksOnX(
+                                                        {
+                                                            content: String(
+                                                                label.text,
+                                                            ),
+                                                            fontSize:
+                                                                fontSizes.xAxis,
+                                                            fill: cfgChart.grid
+                                                                .labels
+                                                                .xAxisLabels
+                                                                .color,
+                                                            stroke: cfgChart.backgroundColor,
+                                                            x: 0,
+                                                            y: 0,
+                                                        },
+                                                    )
+                                                "
+                                                @click="
+                                                    selectTimeLabel(label, i)
+                                                "
+                                            />
+                                        </template>
+                                    </g>
+                                </template>
+                            </g>
+                        </XyRenderLayer>
+
+                        <XyRenderLayer>
+                            <g v-if="crosshairXAxisLabel">
+                                <text
+                                    class="vue-data-ui-time-label"
+                                    data-cy="time-label"
+                                    :text-anchor="
+                                        gridLabels.xAxisLabels.rotation > 0
+                                            ? 'start'
+                                            : gridLabels.xAxisLabels.rotation <
+                                                0
+                                              ? 'end'
+                                              : 'middle'
+                                    "
+                                    :font-size="fontSizes.xAxis"
+                                    :fill="gridLabels.xAxisLabels.color"
+                                    :transform="`translate(${crosshairXAxisLabel.x}, ${drawingArea?.bottom + fontSizes.xAxis * 1.5}), rotate(${gridLabels.xAxisLabels.rotation})`"
+                                    font-weight="bold"
+                                    style="
+                                        transition: none !important;
+                                        animation: none !important;
+                                        pointer-events: none;
+                                    "
+                                    v-html="
+                                        createTSpansFromLineBreaksOnX({
+                                            content: String(
+                                                crosshairXAxisLabel.text,
+                                            ),
+                                            fontSize: fontSizes.xAxis,
+                                            fill: gridLabels.xAxisLabels.color,
+                                            x: 0,
+                                            y: 0,
+                                        })
+                                    "
+                                />
+                            </g>
+                        </XyRenderLayer>
 
                         <!-- ANNOTATIONS -->
                         <!-- YAXIS ANNOTATIONS -->
-                        <g
-                            v-if="
-                                annotationsY.length && !mutableConfig.isStacked
-                            "
-                        >
+                        <XyRenderLayer>
                             <g
-                                v-for="annotation in annotationsY"
-                                :key="annotation.id"
+                                v-if="
+                                    annotationsY.length &&
+                                    !mutableConfig.isStacked
+                                "
                             >
-                                <line
-                                    v-if="
-                                        annotation.yTop &&
-                                        annotation.show &&
-                                        isFinite(annotation.yTop)
-                                    "
-                                    :x1="annotation.x1"
-                                    :y1="annotation.yTop"
-                                    :x2="annotation.x2"
-                                    :y2="annotation.yTop"
-                                    :stroke="annotation.config.line.stroke"
-                                    :stroke-width="
-                                        annotation.config.line.strokeWidth
-                                    "
-                                    :stroke-dasharray="
-                                        annotation.config.line.strokeDasharray
-                                    "
-                                    stroke-linecap="round"
-                                    :style="{ animation: 'none !important' }"
-                                />
-                                <line
-                                    v-if="
-                                        annotation.yBottom &&
-                                        annotation.show &&
-                                        isFinite(annotation.yBottom)
-                                    "
-                                    :x1="annotation.x1"
-                                    :y1="annotation.yBottom"
-                                    :x2="annotation.x2"
-                                    :y2="annotation.yBottom"
-                                    :stroke="annotation.config.line.stroke"
-                                    :stroke-width="
-                                        annotation.config.line.strokeWidth
-                                    "
-                                    :stroke-dasharray="
-                                        annotation.config.line.strokeDasharray
-                                    "
-                                    stroke-linecap="round"
-                                    :style="{ animation: 'none !important' }"
-                                />
-                                <rect
-                                    v-if="
-                                        annotation.hasArea &&
-                                        annotation.show &&
-                                        isFinite(annotation.yTop) &&
-                                        isFinite(annotation.yBottom)
-                                    "
-                                    :y="
-                                        Math.min(
-                                            annotation.yTop,
-                                            annotation.yBottom,
-                                        )
-                                    "
-                                    :x="annotation.x1"
-                                    :width="drawingArea.width"
-                                    :height="checkNaN(annotation.areaHeight, 0)"
-                                    :fill="
-                                        setOpacity(
-                                            annotation.config.area.fill,
-                                            annotation.config.area.opacity,
-                                        )
-                                    "
-                                    :style="{ animation: 'none !important' }"
-                                />
-                                <rect
-                                    v-if="
-                                        annotation.config.label.text &&
-                                        annotation.show &&
-                                        isFinite(annotation._box.y)
-                                    "
-                                    class="vue-ui-xy-annotation-label-box"
-                                    v-bind="annotation._box"
-                                    :style="{
-                                        animation: 'none !important',
-                                        transition: 'none !important',
-                                    }"
-                                />
-                                <text
-                                    v-if="
-                                        annotation.config.label.text &&
-                                        annotation.show &&
-                                        isFinite(annotation._text.y)
-                                    "
-                                    :id="annotation.id"
-                                    class="vue-ui-xy-annotation-label"
-                                    :class="{
-                                        'vue-data-ui-transition':
-                                            transitionEnabled &&
-                                            !labelLayoutSettling,
-                                    }"
-                                    :transform="`translate(${annotation._text.x}, ${annotation._text.y})`"
-                                    :font-size="
-                                        annotation.config.label.fontSize
-                                    "
-                                    :fill="annotation.config.label.color"
-                                    :text-anchor="
-                                        annotation.config.label.textAnchor
-                                    "
+                                <g
+                                    v-for="annotation in annotationsY"
+                                    :key="annotation.id"
                                 >
-                                    {{ annotation.config.label.text }}
-                                </text>
+                                    <line
+                                        v-if="
+                                            annotation.yTop &&
+                                            annotation.show &&
+                                            isFinite(annotation.yTop)
+                                        "
+                                        :x1="annotation.x1"
+                                        :y1="annotation.yTop"
+                                        :x2="annotation.x2"
+                                        :y2="annotation.yTop"
+                                        :stroke="annotation.config.line.stroke"
+                                        :stroke-width="
+                                            annotation.config.line.strokeWidth
+                                        "
+                                        :stroke-dasharray="
+                                            annotation.config.line
+                                                .strokeDasharray
+                                        "
+                                        stroke-linecap="round"
+                                        :style="{
+                                            animation: 'none !important',
+                                        }"
+                                    />
+                                    <line
+                                        v-if="
+                                            annotation.yBottom &&
+                                            annotation.show &&
+                                            isFinite(annotation.yBottom)
+                                        "
+                                        :x1="annotation.x1"
+                                        :y1="annotation.yBottom"
+                                        :x2="annotation.x2"
+                                        :y2="annotation.yBottom"
+                                        :stroke="annotation.config.line.stroke"
+                                        :stroke-width="
+                                            annotation.config.line.strokeWidth
+                                        "
+                                        :stroke-dasharray="
+                                            annotation.config.line
+                                                .strokeDasharray
+                                        "
+                                        stroke-linecap="round"
+                                        :style="{
+                                            animation: 'none !important',
+                                        }"
+                                    />
+                                    <rect
+                                        v-if="
+                                            annotation.hasArea &&
+                                            annotation.show &&
+                                            isFinite(annotation.yTop) &&
+                                            isFinite(annotation.yBottom)
+                                        "
+                                        :y="
+                                            Math.min(
+                                                annotation.yTop,
+                                                annotation.yBottom,
+                                            )
+                                        "
+                                        :x="annotation.x1"
+                                        :width="drawingArea.width"
+                                        :height="
+                                            checkNaN(annotation.areaHeight, 0)
+                                        "
+                                        :fill="
+                                            setOpacity(
+                                                annotation.config.area.fill,
+                                                annotation.config.area.opacity,
+                                            )
+                                        "
+                                        :style="{
+                                            animation: 'none !important',
+                                        }"
+                                    />
+                                    <rect
+                                        v-if="
+                                            annotation.config.label.text &&
+                                            annotation.show &&
+                                            isFinite(annotation._box.y)
+                                        "
+                                        class="vue-ui-xy-annotation-label-box"
+                                        v-bind="annotation._box"
+                                        :style="{
+                                            animation: 'none !important',
+                                            transition: 'none !important',
+                                        }"
+                                    />
+                                    <text
+                                        v-if="
+                                            annotation.config.label.text &&
+                                            annotation.show &&
+                                            isFinite(annotation._text.y)
+                                        "
+                                        :id="annotation.id"
+                                        class="vue-ui-xy-annotation-label"
+                                        :class="{
+                                            'vue-data-ui-transition':
+                                                transitionEnabled &&
+                                                !labelLayoutSettling,
+                                        }"
+                                        :transform="`translate(${annotation._text.x}, ${annotation._text.y})`"
+                                        :font-size="
+                                            annotation.config.label.fontSize
+                                        "
+                                        :fill="annotation.config.label.color"
+                                        :text-anchor="
+                                            annotation.config.label.textAnchor
+                                        "
+                                    >
+                                        {{ annotation.config.label.text }}
+                                    </text>
+                                </g>
                             </g>
-                        </g>
+                        </XyRenderLayer>
 
                         <!-- TIME TAG -->
-                        <g
-                            v-if="
-                                !crosshairsAreActive &&
-                                cfgChart.timeTag.show &&
-                                (isContinuousScale
-                                    ? isValidNumber(activeContinuousXValue)
-                                    : ![null, undefined].includes(
-                                          selectedSerieIndex,
-                                      ) ||
-                                      ![null, undefined].includes(
-                                          selectedMinimapIndex,
-                                      ))
-                            "
-                            style="pointer-events: none"
-                        >
-                            <foreignObject
-                                :x="timeTagX()"
-                                :y="drawingArea?.bottom"
-                                width="200"
-                                height="40"
-                                style="overflow: visible !important"
-                            >
-                                <div
-                                    ref="timeTagEl"
-                                    data-cy="time-tag"
-                                    class="vue-ui-xy-time-tag"
-                                    :style="`width: fit-content;margin: 0 auto;text-align:center;padding:3px 12px;background:${cfgChart.timeTag.backgroundColor};color:${cfgChart.timeTag.color};font-size:${cfgChart.timeTag.fontSize}px`"
-                                    v-html="timeTagContent"
-                                />
-                            </foreignObject>
-                            <circle
-                                :cx="
-                                    isContinuousScale &&
-                                    isValidNumber(activeContinuousXValue)
-                                        ? getContinuousX({
-                                              x: activeContinuousXValue,
-                                          })
-                                        : getDatapointX(
-                                              (selectedSerieIndex !== null
-                                                  ? selectedSerieIndex
-                                                  : 0) ||
-                                                  (selectedMinimapIndex !== null
-                                                      ? selectedMinimapIndex
-                                                      : 0),
-                                          )
+                        <XyRenderLayer>
+                            <g
+                                v-if="
+                                    !crosshairsAreActive &&
+                                    cfgChart.timeTag.show &&
+                                    (isContinuousScale
+                                        ? isValidNumber(activeContinuousXValue)
+                                        : ![null, undefined].includes(
+                                              selectedSerieIndex,
+                                          ) ||
+                                          ![null, undefined].includes(
+                                              selectedMinimapIndex,
+                                          ))
                                 "
-                                :cy="drawingArea?.bottom"
-                                :r="cfgChart.timeTag.circleMarker.radius"
-                                :fill="cfgChart.timeTag.circleMarker.color"
-                            />
-                        </g>
+                                style="pointer-events: none"
+                            >
+                                <foreignObject
+                                    :x="timeTagX()"
+                                    :y="drawingArea?.bottom"
+                                    width="200"
+                                    height="40"
+                                    style="overflow: visible !important"
+                                >
+                                    <div
+                                        ref="timeTagEl"
+                                        data-cy="time-tag"
+                                        class="vue-ui-xy-time-tag"
+                                        :style="`width: fit-content;margin: 0 auto;text-align:center;padding:3px 12px;background:${cfgChart.timeTag.backgroundColor};color:${cfgChart.timeTag.color};font-size:${cfgChart.timeTag.fontSize}px`"
+                                        v-html="timeTagContent"
+                                    />
+                                </foreignObject>
+                                <circle
+                                    :cx="
+                                        isContinuousScale &&
+                                        isValidNumber(activeContinuousXValue)
+                                            ? getContinuousX({
+                                                  x: activeContinuousXValue,
+                                              })
+                                            : getDatapointX(
+                                                  (selectedSerieIndex !== null
+                                                      ? selectedSerieIndex
+                                                      : 0) ||
+                                                      (selectedMinimapIndex !==
+                                                      null
+                                                          ? selectedMinimapIndex
+                                                          : 0),
+                                              )
+                                    "
+                                    :cy="drawingArea?.bottom"
+                                    :r="cfgChart.timeTag.circleMarker.radius"
+                                    :fill="cfgChart.timeTag.circleMarker.color"
+                                />
+                            </g>
+                        </XyRenderLayer>
                     </g>
 
                     <!-- ON-CHART ZOOM SELECTION -->
@@ -11499,336 +11884,343 @@ watch(
             />
         </div>
 
-        <!-- LINE: TAGS FOLLOWING VALUE -->
-        <template v-for="(serie, i) in lineSet" :key="`tag_line_${serie.id}`">
+        <XyRenderLayer>
+            <!-- LINE: TAGS FOLLOWING VALUE -->
             <template
-                v-for="(plot, j) in serie.plots"
-                :key="`tag_line_${i}_${j}`"
+                v-for="(serie, i) in lineSet"
+                :key="`tag_line_${serie.id}`"
             >
-                <div
-                    :ref="(el) => setTagRef(i, j, el, 'right', 'line')"
-                    class="vue-ui-xy-tag"
-                    data-tag="right"
-                    v-if="
-                        [
-                            selectedMinimapIndex,
-                            selectedSerieIndex,
-                            selectedRowIndex,
-                        ].includes(j) &&
-                        serie.useTag &&
-                        serie.useTag === 'end' &&
-                        FINAL_CONFIG.line.tag.followValue
-                    "
-                    :style="{
-                        position: 'fixed',
-                        top:
-                            placeXYTag({
-                                svgElement: svgRef,
-                                x:
-                                    drawingArea?.right +
-                                    FINAL_CONFIG.line.tag.fontSize / 1.5,
-                                y: plot.y,
-                                element: tagRefs[`${i}_${j}_right_line`],
-                                position: 'right',
-                            })?.top + 'px',
-                        left:
-                            placeXYTag({
-                                svgElement: svgRef,
-                                x:
-                                    drawingArea?.right +
-                                    FINAL_CONFIG.line.tag.fontSize / 1.5,
-                                y: plot.y,
-                                element: tagRefs[`${i}_${j}_right_line`],
-                                position: 'right',
-                            })?.left + 'px',
-                        height: 'fit-content',
-                        width: 'fit-content',
-                        background: serie.color,
-                        color: adaptColorToBackground(serie.color),
-                        padding: '0 6px',
-                        fontSize: FINAL_CONFIG.line.tag.fontSize + 'px',
-                        opacity: 1,
-                    }"
+                <template
+                    v-for="{ plot, index: j } in getFollowValuePlots(serie)"
+                    :key="`tag_line_${i}_${j}`"
                 >
-                    <svg
-                        class="vue-ui-xy-tag-arrow"
-                        height="20"
-                        viewBox="0 0 10 20"
+                    <div
+                        :ref="(el) => setTagRef(i, j, el, 'right', 'line')"
+                        class="vue-ui-xy-tag"
+                        data-tag="right"
+                        v-if="
+                            [
+                                selectedMinimapIndex,
+                                selectedSerieIndex,
+                                selectedRowIndex,
+                            ].includes(j) &&
+                            serie.useTag &&
+                            serie.useTag === 'end' &&
+                            FINAL_CONFIG.line.tag.followValue
+                        "
                         :style="{
-                            position: 'absolute',
-                            right: '100%',
-                            top: '50%',
-                            transform: 'translateY(-50%)',
+                            position: 'fixed',
+                            top:
+                                placeXYTag({
+                                    svgElement: svgRef,
+                                    x:
+                                        drawingArea?.right +
+                                        FINAL_CONFIG.line.tag.fontSize / 1.5,
+                                    y: plot.y,
+                                    element: tagRefs[`${i}_${j}_right_line`],
+                                    position: 'right',
+                                })?.top + 'px',
+                            left:
+                                placeXYTag({
+                                    svgElement: svgRef,
+                                    x:
+                                        drawingArea?.right +
+                                        FINAL_CONFIG.line.tag.fontSize / 1.5,
+                                    y: plot.y,
+                                    element: tagRefs[`${i}_${j}_right_line`],
+                                    position: 'right',
+                                })?.left + 'px',
+                            height: 'fit-content',
+                            width: 'fit-content',
+                            background: serie.color,
+                            color: adaptColorToBackground(serie.color),
+                            padding: '0 6px',
+                            fontSize: FINAL_CONFIG.line.tag.fontSize + 'px',
+                            opacity: 1,
                         }"
                     >
-                        <path
-                            d="M 0,10 10,0 10,20 Z"
-                            :fill="serie.color"
-                            stroke="none"
-                        />
-                    </svg>
+                        <svg
+                            class="vue-ui-xy-tag-arrow"
+                            height="20"
+                            viewBox="0 0 10 20"
+                            :style="{
+                                position: 'absolute',
+                                right: '100%',
+                                top: '50%',
+                                transform: 'translateY(-50%)',
+                            }"
+                        >
+                            <path
+                                d="M 0,10 10,0 10,20 Z"
+                                :fill="serie.color"
+                                stroke="none"
+                            />
+                        </svg>
+                        <div
+                            class="vue-ui-xy-tag-content"
+                            v-html="
+                                applyDataLabel(
+                                    FINAL_CONFIG.line.tag.formatter,
+                                    plot.value,
+                                    serie.name,
+                                    {
+                                        datapoint: plot,
+                                        seriesIndex: j,
+                                        serieName: serie.name,
+                                    },
+                                )
+                            "
+                        ></div>
+                    </div>
                     <div
-                        class="vue-ui-xy-tag-content"
-                        v-html="
-                            applyDataLabel(
-                                FINAL_CONFIG.line.tag.formatter,
-                                plot.value,
-                                serie.name,
-                                {
-                                    datapoint: plot,
-                                    seriesIndex: j,
-                                    serieName: serie.name,
-                                },
-                            )
+                        :ref="(el) => setTagRef(i, j, el, 'left', 'line')"
+                        class="vue-ui-xy-tag"
+                        data-tag="left"
+                        v-if="
+                            [
+                                selectedMinimapIndex,
+                                selectedSerieIndex,
+                                selectedRowIndex,
+                            ].includes(j) &&
+                            serie.useTag &&
+                            serie.useTag === 'start' &&
+                            FINAL_CONFIG.line.tag.followValue
                         "
-                    ></div>
-                </div>
-                <div
-                    :ref="(el) => setTagRef(i, j, el, 'left', 'line')"
-                    class="vue-ui-xy-tag"
-                    data-tag="left"
-                    v-if="
-                        [
-                            selectedMinimapIndex,
-                            selectedSerieIndex,
-                            selectedRowIndex,
-                        ].includes(j) &&
-                        serie.useTag &&
-                        serie.useTag === 'start' &&
-                        FINAL_CONFIG.line.tag.followValue
-                    "
-                    :style="{
-                        position: 'fixed',
-                        top:
-                            placeXYTag({
-                                svgElement: svgRef,
-                                x:
-                                    drawingArea?.left -
-                                    FINAL_CONFIG.line.tag.fontSize / 1.5,
-                                y: plot.y,
-                                element: tagRefs[`${i}_${j}_left_line`],
-                                position: 'left',
-                            })?.top + 'px',
-                        left:
-                            placeXYTag({
-                                svgElement: svgRef,
-                                x:
-                                    drawingArea?.left -
-                                    FINAL_CONFIG.line.tag.fontSize / 1.5,
-                                y: plot.y,
-                                element: tagRefs[`${i}_${j}_left_line`],
-                                position: 'left',
-                            })?.left + 'px',
-                        height: 'fit-content',
-                        width: 'fit-content',
-                        background: serie.color,
-                        color: adaptColorToBackground(serie.color),
-                        padding: '0 6px',
-                        fontSize: FINAL_CONFIG.line.tag.fontSize + 'px',
-                        opacity: 1,
-                    }"
-                >
-                    <svg
-                        class="vue-ui-xy-tag-arrow"
-                        height="100%"
-                        viewBox="0 0 10 20"
                         :style="{
-                            position: 'absolute',
-                            left: '100%',
-                            top: '50%',
-                            transform: 'translateY(-50%)',
+                            position: 'fixed',
+                            top:
+                                placeXYTag({
+                                    svgElement: svgRef,
+                                    x:
+                                        drawingArea?.left -
+                                        FINAL_CONFIG.line.tag.fontSize / 1.5,
+                                    y: plot.y,
+                                    element: tagRefs[`${i}_${j}_left_line`],
+                                    position: 'left',
+                                })?.top + 'px',
+                            left:
+                                placeXYTag({
+                                    svgElement: svgRef,
+                                    x:
+                                        drawingArea?.left -
+                                        FINAL_CONFIG.line.tag.fontSize / 1.5,
+                                    y: plot.y,
+                                    element: tagRefs[`${i}_${j}_left_line`],
+                                    position: 'left',
+                                })?.left + 'px',
+                            height: 'fit-content',
+                            width: 'fit-content',
+                            background: serie.color,
+                            color: adaptColorToBackground(serie.color),
+                            padding: '0 6px',
+                            fontSize: FINAL_CONFIG.line.tag.fontSize + 'px',
+                            opacity: 1,
                         }"
                     >
-                        <path
-                            d="M 0,0 10,10 0,20 Z"
-                            :fill="serie.color"
-                            stroke="none"
-                        />
-                    </svg>
-                    <div
-                        class="vue-ui-xy-tag-content"
-                        v-html="
-                            applyDataLabel(
-                                FINAL_CONFIG.line.tag.formatter,
-                                plot.value,
-                                serie.name,
-                                {
-                                    datapoint: plot,
-                                    seriesIndex: j,
-                                    serieName: serie.name,
-                                },
-                            )
-                        "
-                    ></div>
-                </div>
+                        <svg
+                            class="vue-ui-xy-tag-arrow"
+                            height="100%"
+                            viewBox="0 0 10 20"
+                            :style="{
+                                position: 'absolute',
+                                left: '100%',
+                                top: '50%',
+                                transform: 'translateY(-50%)',
+                            }"
+                        >
+                            <path
+                                d="M 0,0 10,10 0,20 Z"
+                                :fill="serie.color"
+                                stroke="none"
+                            />
+                        </svg>
+                        <div
+                            class="vue-ui-xy-tag-content"
+                            v-html="
+                                applyDataLabel(
+                                    FINAL_CONFIG.line.tag.formatter,
+                                    plot.value,
+                                    serie.name,
+                                    {
+                                        datapoint: plot,
+                                        seriesIndex: j,
+                                        serieName: serie.name,
+                                    },
+                                )
+                            "
+                        ></div>
+                    </div>
+                </template>
             </template>
-        </template>
 
-        <!-- PLOT: TAGS FOLLOWING VALUE -->
-        <template v-for="(serie, i) in plotSet" :key="`tag_plot_${serie.id}`">
+            <!-- PLOT: TAGS FOLLOWING VALUE -->
             <template
-                v-for="(plot, j) in serie.plots"
-                :key="`tag_plot_${i}_${j}`"
+                v-for="(serie, i) in plotSet"
+                :key="`tag_plot_${serie.id}`"
             >
-                <div
-                    :ref="(el) => setTagRef(i, j, el, 'right', 'plot')"
-                    class="vue-ui-xy-tag"
-                    data-tag="right"
-                    v-if="
-                        [
-                            selectedMinimapIndex,
-                            selectedSerieIndex,
-                            selectedRowIndex,
-                        ].includes(j) &&
-                        serie.useTag &&
-                        serie.useTag === 'end' &&
-                        FINAL_CONFIG.plot.tag.followValue
-                    "
-                    :style="{
-                        position: 'fixed',
-                        top:
-                            placeXYTag({
-                                svgElement: svgRef,
-                                x:
-                                    drawingArea?.right +
-                                    FINAL_CONFIG.plot.tag.fontSize / 1.5,
-                                y: plot.y,
-                                element: tagRefs[`${i}_${j}_right_plot`],
-                                position: 'right',
-                            })?.top + 'px',
-                        left:
-                            placeXYTag({
-                                svgElement: svgRef,
-                                x:
-                                    drawingArea?.right +
-                                    FINAL_CONFIG.plot.tag.fontSize / 1.5,
-                                y: plot.y,
-                                element: tagRefs[`${i}_${j}_right_plot`],
-                                position: 'right',
-                            })?.left + 'px',
-                        height: 'fit-content',
-                        width: 'fit-content',
-                        background: serie.color,
-                        color: adaptColorToBackground(serie.color),
-                        padding: '0 6px',
-                        fontSize: FINAL_CONFIG.plot.tag.fontSize + 'px',
-                        opacity: 1,
-                    }"
+                <template
+                    v-for="{ plot, index: j } in getFollowValuePlots(serie)"
+                    :key="`tag_plot_${i}_${j}`"
                 >
-                    <svg
-                        class="vue-ui-xy-tag-arrow"
-                        height="20"
-                        viewBox="0 0 10 20"
+                    <div
+                        :ref="(el) => setTagRef(i, j, el, 'right', 'plot')"
+                        class="vue-ui-xy-tag"
+                        data-tag="right"
+                        v-if="
+                            [
+                                selectedMinimapIndex,
+                                selectedSerieIndex,
+                                selectedRowIndex,
+                            ].includes(j) &&
+                            serie.useTag &&
+                            serie.useTag === 'end' &&
+                            FINAL_CONFIG.plot.tag.followValue
+                        "
                         :style="{
-                            position: 'absolute',
-                            right: '100%',
-                            top: '50%',
-                            transform: 'translateY(-50%)',
+                            position: 'fixed',
+                            top:
+                                placeXYTag({
+                                    svgElement: svgRef,
+                                    x:
+                                        drawingArea?.right +
+                                        FINAL_CONFIG.plot.tag.fontSize / 1.5,
+                                    y: plot.y,
+                                    element: tagRefs[`${i}_${j}_right_plot`],
+                                    position: 'right',
+                                })?.top + 'px',
+                            left:
+                                placeXYTag({
+                                    svgElement: svgRef,
+                                    x:
+                                        drawingArea?.right +
+                                        FINAL_CONFIG.plot.tag.fontSize / 1.5,
+                                    y: plot.y,
+                                    element: tagRefs[`${i}_${j}_right_plot`],
+                                    position: 'right',
+                                })?.left + 'px',
+                            height: 'fit-content',
+                            width: 'fit-content',
+                            background: serie.color,
+                            color: adaptColorToBackground(serie.color),
+                            padding: '0 6px',
+                            fontSize: FINAL_CONFIG.plot.tag.fontSize + 'px',
+                            opacity: 1,
                         }"
                     >
-                        <path
-                            d="M 0,10 10,0 10,20 Z"
-                            :fill="serie.color"
-                            stroke="none"
-                        />
-                    </svg>
+                        <svg
+                            class="vue-ui-xy-tag-arrow"
+                            height="20"
+                            viewBox="0 0 10 20"
+                            :style="{
+                                position: 'absolute',
+                                right: '100%',
+                                top: '50%',
+                                transform: 'translateY(-50%)',
+                            }"
+                        >
+                            <path
+                                d="M 0,10 10,0 10,20 Z"
+                                :fill="serie.color"
+                                stroke="none"
+                            />
+                        </svg>
+                        <div
+                            class="vue-ui-xy-tag-content"
+                            v-html="
+                                applyDataLabel(
+                                    FINAL_CONFIG.plot.tag.formatter,
+                                    plot.value,
+                                    serie.name,
+                                    {
+                                        datapoint: plot,
+                                        seriesIndex: j,
+                                        serieName: serie.name,
+                                    },
+                                )
+                            "
+                        ></div>
+                    </div>
                     <div
-                        class="vue-ui-xy-tag-content"
-                        v-html="
-                            applyDataLabel(
-                                FINAL_CONFIG.plot.tag.formatter,
-                                plot.value,
-                                serie.name,
-                                {
-                                    datapoint: plot,
-                                    seriesIndex: j,
-                                    serieName: serie.name,
-                                },
-                            )
+                        :ref="(el) => setTagRef(i, j, el, 'left', 'plot')"
+                        class="vue-ui-xy-tag"
+                        data-tag="left"
+                        v-if="
+                            [
+                                selectedMinimapIndex,
+                                selectedSerieIndex,
+                                selectedRowIndex,
+                            ].includes(j) &&
+                            serie.useTag &&
+                            serie.useTag === 'start' &&
+                            FINAL_CONFIG.plot.tag.followValue
                         "
-                    ></div>
-                </div>
-                <div
-                    :ref="(el) => setTagRef(i, j, el, 'left', 'plot')"
-                    class="vue-ui-xy-tag"
-                    data-tag="left"
-                    v-if="
-                        [
-                            selectedMinimapIndex,
-                            selectedSerieIndex,
-                            selectedRowIndex,
-                        ].includes(j) &&
-                        serie.useTag &&
-                        serie.useTag === 'start' &&
-                        FINAL_CONFIG.plot.tag.followValue
-                    "
-                    :style="{
-                        position: 'fixed',
-                        top:
-                            placeXYTag({
-                                svgElement: svgRef,
-                                x:
-                                    drawingArea?.left -
-                                    FINAL_CONFIG.plot.tag.fontSize / 1.5,
-                                y: plot.y,
-                                element: tagRefs[`${i}_${j}_left_plot`],
-                                position: 'left',
-                            })?.top + 'px',
-                        left:
-                            placeXYTag({
-                                svgElement: svgRef,
-                                x:
-                                    drawingArea?.left -
-                                    FINAL_CONFIG.plot.tag.fontSize / 1.5,
-                                y: plot.y,
-                                element: tagRefs[`${i}_${j}_left_plot`],
-                                position: 'left',
-                            })?.left + 'px',
-                        height: 'fit-content',
-                        width: 'fit-content',
-                        background: serie.color,
-                        color: adaptColorToBackground(serie.color),
-                        padding: '0 6px',
-                        fontSize: FINAL_CONFIG.plot.tag.fontSize + 'px',
-                        opacity: 1,
-                    }"
-                >
-                    <svg
-                        class="vue-ui-xy-tag-arrow"
-                        height="100%"
-                        viewBox="0 0 10 20"
                         :style="{
-                            position: 'absolute',
-                            left: '100%',
-                            top: '50%',
-                            transform: 'translateY(-50%)',
+                            position: 'fixed',
+                            top:
+                                placeXYTag({
+                                    svgElement: svgRef,
+                                    x:
+                                        drawingArea?.left -
+                                        FINAL_CONFIG.plot.tag.fontSize / 1.5,
+                                    y: plot.y,
+                                    element: tagRefs[`${i}_${j}_left_plot`],
+                                    position: 'left',
+                                })?.top + 'px',
+                            left:
+                                placeXYTag({
+                                    svgElement: svgRef,
+                                    x:
+                                        drawingArea?.left -
+                                        FINAL_CONFIG.plot.tag.fontSize / 1.5,
+                                    y: plot.y,
+                                    element: tagRefs[`${i}_${j}_left_plot`],
+                                    position: 'left',
+                                })?.left + 'px',
+                            height: 'fit-content',
+                            width: 'fit-content',
+                            background: serie.color,
+                            color: adaptColorToBackground(serie.color),
+                            padding: '0 6px',
+                            fontSize: FINAL_CONFIG.plot.tag.fontSize + 'px',
+                            opacity: 1,
                         }"
                     >
-                        <path
-                            d="M 0,0 10,10 0,20 Z"
-                            :fill="serie.color"
-                            stroke="none"
-                        />
-                    </svg>
-                    <div
-                        class="vue-ui-xy-tag-content"
-                        v-html="
-                            applyDataLabel(
-                                FINAL_CONFIG.plot.tag.formatter,
-                                plot.value,
-                                serie.name,
-                                {
-                                    datapoint: plot,
-                                    seriesIndex: j,
-                                    serieName: serie.name,
-                                },
-                            )
-                        "
-                    ></div>
-                </div>
+                        <svg
+                            class="vue-ui-xy-tag-arrow"
+                            height="100%"
+                            viewBox="0 0 10 20"
+                            :style="{
+                                position: 'absolute',
+                                left: '100%',
+                                top: '50%',
+                                transform: 'translateY(-50%)',
+                            }"
+                        >
+                            <path
+                                d="M 0,0 10,10 0,20 Z"
+                                :fill="serie.color"
+                                stroke="none"
+                            />
+                        </svg>
+                        <div
+                            class="vue-ui-xy-tag-content"
+                            v-html="
+                                applyDataLabel(
+                                    FINAL_CONFIG.plot.tag.formatter,
+                                    plot.value,
+                                    serie.name,
+                                    {
+                                        datapoint: plot,
+                                        seriesIndex: j,
+                                        serieName: serie.name,
+                                    },
+                                )
+                            "
+                        ></div>
+                    </div>
+                </template>
             </template>
-        </template>
-
+        </XyRenderLayer>
         <SlicerPreview
             ref="chartSlicer"
             v-if="cfgChart.zoom.show && maxX > 6 && isDataset && slicerReady"
@@ -12106,49 +12498,50 @@ watch(
         </div>
 
         <!-- TOOLTIP -->
-        <Tooltip
-            :teleportTo="cfgChart.tooltip.teleportTo"
-            :show="mutableConfig.showTooltip && isTooltip"
-            :backgroundColor="cfgChart.tooltip.backgroundColor"
-            :color="cfgChart.tooltip.color"
-            :fontSize="cfgChart.tooltip.fontSize"
-            :borderRadius="cfgChart.tooltip.borderRadius"
-            :borderColor="cfgChart.tooltip.borderColor"
-            :borderWidth="cfgChart.tooltip.borderWidth"
-            :backgroundOpacity="cfgChart.tooltip.backgroundOpacity"
-            :position="cfgChart.tooltip.position"
-            :offsetX="cfgChart.tooltip.offsetX"
-            :offsetY="cfgChart.tooltip.offsetY"
-            :parent="$refs.chart"
-            :content="tooltipContent"
-            :isFullscreen="isFullscreen"
-            :isCustom="
-                cfgChart.tooltip.customFormat &&
-                typeof cfgChart.tooltip.customFormat === 'function'
-            "
-            :smooth="cfgChart.tooltip.smooth"
-            :backdropFilter="cfgChart.tooltip.backdropFilter"
-            :smoothForce="cfgChart.tooltip.smoothForce"
-            :smoothSnapThreshold="cfgChart.tooltip.smoothSnapThreshold"
-            :isA11yMode="activeTooltipIndex != null"
-            :a11yPosition="tooltipA11yPosition"
-        >
-            <template #tooltip-before>
-                <slot
-                    name="tooltip-before"
-                    v-bind="{ ...dataTooltipSlot }"
-                ></slot>
-            </template>
-            <template #tooltip>
-                <slot name="tooltip" v-bind="{ ...dataTooltipSlot }" />
-            </template>
-            <template #tooltip-after>
-                <slot
-                    name="tooltip-after"
-                    v-bind="{ ...dataTooltipSlot }"
-                ></slot>
-            </template>
-        </Tooltip>
+        <XyRenderLayer>
+            <Tooltip
+                :teleportTo="cfgChart.tooltip.teleportTo"
+                :show="mutableConfig.showTooltip && isTooltip"
+                :backgroundColor="cfgChart.tooltip.backgroundColor"
+                :color="cfgChart.tooltip.color"
+                :fontSize="cfgChart.tooltip.fontSize"
+                :borderRadius="cfgChart.tooltip.borderRadius"
+                :borderColor="cfgChart.tooltip.borderColor"
+                :borderWidth="cfgChart.tooltip.borderWidth"
+                :backgroundOpacity="cfgChart.tooltip.backgroundOpacity"
+                :position="cfgChart.tooltip.position"
+                :offsetX="cfgChart.tooltip.offsetX"
+                :offsetY="cfgChart.tooltip.offsetY"
+                :parent="$refs.chart"
+                :content="tooltipContent"
+                :isFullscreen="isFullscreen"
+                :isCustom="
+                    cfgChart.tooltip.customFormat &&
+                    typeof cfgChart.tooltip.customFormat === 'function'
+                "
+                :smooth="cfgChart.tooltip.smooth"
+                :backdropFilter="cfgChart.tooltip.backdropFilter"
+                :smoothForce="cfgChart.tooltip.smoothForce"
+                :smoothSnapThreshold="cfgChart.tooltip.smoothSnapThreshold"
+                :isA11yMode="activeTooltipIndex != null"
+                :a11yPosition="tooltipA11yPosition"
+            >
+                <template #tooltip-before>
+                    <slot
+                        name="tooltip-before"
+                        v-bind="{ ...dataTooltipSlot }"
+                    ></slot>
+                </template>
+                <template #tooltip>
+                    <slot name="tooltip" v-bind="{ ...dataTooltipSlot }" />
+                </template>
+                <template #tooltip-after>
+                    <slot
+                        name="tooltip-after"
+                        v-bind="{ ...dataTooltipSlot }"
+                    ></slot>
+                </template> </Tooltip
+        ></XyRenderLayer>
 
         <!-- DATA TABLE -->
         <component
