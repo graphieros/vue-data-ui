@@ -1,14 +1,16 @@
 <script setup>
+import {
+    getUserOptionsProps,
+    getUserOptionSlots,
+    getUserOptionSlotProps,
+} from '../userOptionsSlots';
 import { getAnnotatorProps } from '../annotatorConfig';
 import { getTableComponent, syncTableVisibility } from '../tableIntegration';
 import {
     annotationSlotNames,
     getAnnotationSlotProps,
 } from '../annotationSlots';
-import {
-    getUserOptionSlots,
-    getUserOptionSlotProps,
-} from '../userOptionsSlots';
+
 import { createChartImageGetter } from '../chartImage';
 import {
     computed,
@@ -1039,23 +1041,17 @@ defineExpose({
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uid"
-            :callbacks="cfgUserOptions.callbacks"
             :hasTooltip="cfgTooltip.show && cfgUserOptions.buttons.tooltip"
-            :hasPdf="cfgUserOptions.buttons.pdf"
-            :hasImg="cfgUserOptions.buttons.img"
-            :hasSvg="cfgUserOptions.buttons.svg"
-            :hasXls="cfgUserOptions.buttons.csv"
-            :hasTable="cfgUserOptions.buttons.table"
             :hasLabel="false"
-            :hasFullscreen="cfgUserOptions.buttons.fullscreen"
-            :hasAltCopy="cfgUserOptions.buttons.altCopy"
             :isFullscreen="isFullscreen"
             :chartElement="worldChart"
-            :position="cfgUserOptions.position"
-            :printScale="cfgUserOptions.print.scale"
+            v-bind="
+                getUserOptionsProps(
+                    cfgUserOptions,
+                    'pdf csv img svg table fullscreen altCopy annotator',
+                )
+            "
             :isTooltip="mutableConfig.showTooltip"
-            :titles="{ ...cfgUserOptions.buttonTitles }"
-            :hasAnnotator="cfgUserOptions.buttons.annotator"
             :isAnnotation="isAnnotator"
             :tableDialog="FINAL_CONFIG.table.useDialog"
             :isCursorPointer="isCursorPointer"

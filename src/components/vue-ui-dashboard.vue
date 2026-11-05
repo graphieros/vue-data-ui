@@ -1,13 +1,15 @@
 <script setup>
+import {
+    getUserOptionsProps,
+    getUserOptionSlots,
+    getUserOptionSlotProps,
+} from '../userOptionsSlots';
 import { getAnnotatorProps } from '../annotatorConfig';
 import {
     annotationSlotNames,
     getAnnotationSlotProps,
 } from '../annotationSlots';
-import {
-    getUserOptionSlots,
-    getUserOptionSlotProps,
-} from '../userOptionsSlots';
+
 import { ref, watch, computed, defineAsyncComponent } from 'vue';
 import { useNestedProp } from '../useNestedProp';
 import { COMMON_RULES, useHints } from '../useHints';
@@ -795,21 +797,19 @@ defineExpose({
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uid"
-            :position="FINAL_CONFIG.userOptions.position"
+            v-bind="
+                getUserOptionsProps(
+                    FINAL_CONFIG.userOptions,
+                    'pdf img altCopy annotator',
+                )
+            "
             :hasTooltip="false"
-            :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
-            :hasImg="FINAL_CONFIG.userOptions.buttons.img"
             :hasXls="false"
             :hasTable="false"
             :hasLabel="false"
             :hasFullscreen="false"
-            :hasAltCopy="FINAL_CONFIG.userOptions.buttons.altCopy"
             :chartElement="dashboardContainer"
-            :callbacks="FINAL_CONFIG.userOptions.callbacks"
-            :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator"
             :isAnnotation="isAnnotator"
-            :printScale="FINAL_CONFIG.userOptions.print.scale"
-            :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
             :isCursorPointer="isCursorPointer"
             @generatePdf="generatePdf"
             @generateImage="generateImage"

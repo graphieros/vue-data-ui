@@ -1,14 +1,16 @@
 <script setup>
+import {
+    getUserOptionsProps,
+    getUserOptionSlots,
+    getUserOptionSlotProps,
+} from '../userOptionsSlots';
 import { getAnnotatorProps } from '../annotatorConfig';
 import { createPanZoomAnnotationViewport } from '../utils/annotationViewport';
 import {
     annotationSlotNames,
     getAnnotationSlotProps,
 } from '../annotationSlots';
-import {
-    getUserOptionSlots,
-    getUserOptionSlotProps,
-} from '../userOptionsSlots';
+
 import { resolveChartConfig } from '../resolveChartConfig';
 import {
     computed,
@@ -1794,20 +1796,15 @@ const annotationViewport = computed(() =>
             :hasTable="false"
             :hasXls="false"
             :hasLabel="false"
-            :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
-            :hasImg="FINAL_CONFIG.userOptions.buttons.img"
-            :hasSvg="FINAL_CONFIG.userOptions.buttons.svg"
-            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
-            :hasAltCopy="FINAL_CONFIG.userOptions.buttons.altCopy"
             :isFullscreen="isFullscreen"
             :chartElement="dagChart"
-            :position="FINAL_CONFIG.userOptions.position"
-            :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
-            :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator"
+            v-bind="
+                getUserOptionsProps(
+                    FINAL_CONFIG.userOptions,
+                    'pdf img svg fullscreen altCopy annotator zoom',
+                )
+            "
             :isAnnotation="isAnnotator"
-            :callbacks="FINAL_CONFIG.userOptions.callbacks"
-            :printScale="FINAL_CONFIG.userOptions.print.scale"
-            :hasZoom="FINAL_CONFIG.userOptions.buttons.zoom"
             :isZoom="panZoomActive"
             :isCursorPointer="isCursorPointer"
             @toggleFullscreen="toggleFullscreen"

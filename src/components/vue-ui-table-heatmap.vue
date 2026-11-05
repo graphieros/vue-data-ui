@@ -1,8 +1,10 @@
 <script setup>
 import {
+    getUserOptionsProps,
     getUserOptionSlots,
     getUserOptionSlotProps,
 } from '../userOptionsSlots';
+
 import { resolveChartConfig } from '../resolveChartConfig';
 import {
     computed,
@@ -290,16 +292,14 @@ defineExpose({
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uid"
-            :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
-            :hasXls="FINAL_CONFIG.userOptions.buttons.csv"
-            :hasImg="FINAL_CONFIG.userOptions.buttons.img"
-            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
             :isFullscreen="isFullscreen"
-            :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
             :chartElement="tableContainer"
-            :position="FINAL_CONFIG.userOptions.position"
-            :callbacks="FINAL_CONFIG.userOptions.callbacks"
-            :printScale="FINAL_CONFIG.userOptions.print.scale"
+            v-bind="
+                getUserOptionsProps(
+                    FINAL_CONFIG.userOptions,
+                    'pdf csv img fullscreen',
+                )
+            "
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"

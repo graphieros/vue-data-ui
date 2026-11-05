@@ -1,14 +1,16 @@
 <script setup>
+import {
+    getUserOptionsProps,
+    getUserOptionSlots,
+    getUserOptionSlotProps,
+} from '../userOptionsSlots';
 import { getAnnotatorProps } from '../annotatorConfig';
 import { getTableComponent, syncTableVisibility } from '../tableIntegration';
 import {
     annotationSlotNames,
     getAnnotationSlotProps,
 } from '../annotationSlots';
-import {
-    getUserOptionSlots,
-    getUserOptionSlotProps,
-} from '../userOptionsSlots';
+
 import { createChartImageGetter } from '../chartImage';
 import {
     ref,
@@ -20,6 +22,7 @@ import {
     defineAsyncComponent,
     nextTick,
     toRefs,
+    toDisplayString,
 } from 'vue';
 import {
     stringifyChartConfig as stringifyStructuralConfig,
@@ -1294,6 +1297,31 @@ const table = computed(() => {
     return { head, body };
 });
 
+const tableColumns = [
+    { key: 'parentName', type: 'name' },
+    { key: 'parentValue', type: 'value' },
+    { key: 'percentageToTotal', type: 'percentage' },
+    { key: 'childName', type: 'name' },
+    { key: 'childValue', type: 'value' },
+    { key: 'childPercentageToParent', type: 'percentage' },
+    { key: 'childPercentageToTotal', type: 'percentage' },
+];
+
+function formatTableCell(row, column) {
+    const value = row[column.key];
+    const config = FINAL_CONFIG.value.table.td;
+    const empty = ['', NaN, undefined].includes(value);
+    if (column.type === 'value') {
+        return `${toDisplayString(config.prefix)}${empty ? '' : value.toFixed(config.roundingValue)}${toDisplayString(config.suffix)}`;
+    }
+    if (column.type === 'percentage') {
+        return empty
+            ? ''
+            : `${(value * 100).toFixed(config.roundingPercentage)}%`;
+    }
+    return value;
+}
+
 function generateCsv(callback = null) {
     const title = [
         [cfgChart.value.title.text],
@@ -1759,23 +1787,16 @@ defineExpose({
             :hasTooltip="
                 FINAL_CONFIG.userOptions.buttons.tooltip && cfgTooltip.show
             "
-            :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
-            :hasImg="FINAL_CONFIG.userOptions.buttons.img"
-            :hasSvg="FINAL_CONFIG.userOptions.buttons.svg"
-            :hasXls="FINAL_CONFIG.userOptions.buttons.csv"
-            :hasTable="FINAL_CONFIG.userOptions.buttons.table"
-            :hasSort="FINAL_CONFIG.userOptions.buttons.sort"
-            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
-            :hasAltCopy="FINAL_CONFIG.userOptions.buttons.altCopy"
             :isFullscreen="isFullscreen"
             :isTooltip="mutableConfig.showTooltip"
-            :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
             :chartElement="verticalBarChart"
-            :position="FINAL_CONFIG.userOptions.position"
-            :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator"
+            v-bind="
+                getUserOptionsProps(
+                    FINAL_CONFIG.userOptions,
+                    'pdf csv img svg table fullscreen altCopy annotator sort',
+                )
+            "
             :isAnnotation="isAnnotator"
-            :callbacks="FINAL_CONFIG.userOptions.callbacks"
-            :printScale="FINAL_CONFIG.userOptions.print.scale"
             :tableDialog="FINAL_CONFIG.table.useDialog"
             :isCursorPointer="isCursorPointer"
             @toggleFullscreen="toggleFullscreen"
@@ -2710,9 +2731,19 @@ defineExpose({
                                         :style="`background:${FINAL_CONFIG.table.td.backgroundColor};color:${FINAL_CONFIG.table.td.color}`"
                                     >
                                         <td
+                                            v-for="(
+                                                column, columnIndex
+                                            ) in tableColumns"
+                                            :key="column.key"
                                             class="vue-ui-data-table__tbody__td"
-                                            :style="`outline:${FINAL_CONFIG.table.td.outline};font-variant-numeric: tabular-nums;`"
-                                            :data-cell="table.head[0] ?? ''"
+                                            :style="
+                                                columnIndex === 0
+                                                    ? `outline:${FINAL_CONFIG.table.td.outline};font-variant-numeric: tabular-nums;`
+                                                    : `outline:${FINAL_CONFIG.table.td.outline}`
+                                            "
+                                            :data-cell="
+                                                table.head[columnIndex] ?? ''
+                                            "
                                         >
                                             <div
                                                 style="
@@ -2724,202 +2755,20 @@ defineExpose({
                                                     padding-right: 3px;
                                                 "
                                             >
-                                                <span
-                                                    v-if="tr.color"
-                                                    :style="`color:${tr.color};margin-right:3px`"
-                                                    >⬤</span
-                                                ><span>{{
-                                                    tr.parentName
-                                                }}</span>
-                                            </div>
-                                        </td>
-                                        <td
-                                            class="vue-ui-data-table__tbody__td"
-                                            :style="`outline:${FINAL_CONFIG.table.td.outline}`"
-                                            :data-cell="table.head[1] ?? ''"
-                                        >
-                                            <div
-                                                style="
-                                                    display: flex;
-                                                    align-items: center;
-                                                    gap: 5px;
-                                                    justify-content: flex-end;
-                                                    width: 100%;
-                                                    padding-right: 3px;
-                                                "
-                                            >
-                                                {{ FINAL_CONFIG.table.td.prefix
-                                                }}{{
-                                                    [
-                                                        '',
-                                                        NaN,
-                                                        undefined,
-                                                    ].includes(tr.parentValue)
-                                                        ? ''
-                                                        : tr.parentValue.toFixed(
-                                                              FINAL_CONFIG.table
-                                                                  .td
-                                                                  .roundingValue,
-                                                          )
-                                                }}{{
-                                                    FINAL_CONFIG.table.td.suffix
-                                                }}
-                                            </div>
-                                        </td>
-                                        <td
-                                            class="vue-ui-data-table__tbody__td"
-                                            :style="`outline:${FINAL_CONFIG.table.td.outline}`"
-                                            :data-cell="table.head[2] ?? ''"
-                                        >
-                                            <div
-                                                style="
-                                                    display: flex;
-                                                    align-items: center;
-                                                    gap: 5px;
-                                                    justify-content: flex-end;
-                                                    width: 100%;
-                                                    padding-right: 3px;
-                                                "
-                                            >
-                                                {{
-                                                    [
-                                                        '',
-                                                        NaN,
-                                                        undefined,
-                                                    ].includes(
-                                                        tr.percentageToTotal,
-                                                    )
-                                                        ? ''
-                                                        : `${(
-                                                              tr.percentageToTotal *
-                                                              100
-                                                          ).toFixed(
-                                                              FINAL_CONFIG.table
-                                                                  .td
-                                                                  .roundingPercentage,
-                                                          )}%`
-                                                }}
-                                            </div>
-                                        </td>
-                                        <td
-                                            class="vue-ui-data-table__tbody__td"
-                                            :style="`outline:${FINAL_CONFIG.table.td.outline}`"
-                                            :data-cell="table.head[3] ?? ''"
-                                        >
-                                            <div
-                                                style="
-                                                    display: flex;
-                                                    align-items: center;
-                                                    gap: 5px;
-                                                    justify-content: flex-end;
-                                                    width: 100%;
-                                                    padding-right: 3px;
-                                                "
-                                            >
-                                                {{ tr.childName }}
-                                            </div>
-                                        </td>
-                                        <td
-                                            class="vue-ui-data-table__tbody__td"
-                                            :style="`outline:${FINAL_CONFIG.table.td.outline}`"
-                                            :data-cell="table.head[4] ?? ''"
-                                        >
-                                            <div
-                                                style="
-                                                    display: flex;
-                                                    align-items: center;
-                                                    gap: 5px;
-                                                    justify-content: flex-end;
-                                                    width: 100%;
-                                                    padding-right: 3px;
-                                                "
-                                            >
-                                                {{ FINAL_CONFIG.table.td.prefix
-                                                }}{{
-                                                    [
-                                                        '',
-                                                        NaN,
-                                                        undefined,
-                                                    ].includes(tr.childValue)
-                                                        ? ''
-                                                        : tr.childValue.toFixed(
-                                                              FINAL_CONFIG.table
-                                                                  .td
-                                                                  .roundingValue,
-                                                          )
-                                                }}{{
-                                                    FINAL_CONFIG.table.td.suffix
-                                                }}
-                                            </div>
-                                        </td>
-                                        <td
-                                            class="vue-ui-data-table__tbody__td"
-                                            :style="`outline:${FINAL_CONFIG.table.td.outline}`"
-                                            :data-cell="table.head[5] ?? ''"
-                                        >
-                                            <div
-                                                style="
-                                                    display: flex;
-                                                    align-items: center;
-                                                    gap: 5px;
-                                                    justify-content: flex-end;
-                                                    width: 100%;
-                                                    padding-right: 3px;
-                                                "
-                                            >
-                                                {{
-                                                    [
-                                                        '',
-                                                        NaN,
-                                                        undefined,
-                                                    ].includes(
-                                                        tr.childPercentageToParent,
-                                                    )
-                                                        ? ''
-                                                        : `${(
-                                                              tr.childPercentageToParent *
-                                                              100
-                                                          ).toFixed(
-                                                              FINAL_CONFIG.table
-                                                                  .td
-                                                                  .roundingPercentage,
-                                                          )}%`
-                                                }}
-                                            </div>
-                                        </td>
-                                        <td
-                                            class="vue-ui-data-table__tbody__td"
-                                            :style="`outline:${FINAL_CONFIG.table.td.outline}`"
-                                            :data-cell="table.head[6] ?? ''"
-                                        >
-                                            <div
-                                                style="
-                                                    display: flex;
-                                                    align-items: center;
-                                                    gap: 5px;
-                                                    justify-content: flex-end;
-                                                    width: 100%;
-                                                    padding-right: 3px;
-                                                "
-                                            >
-                                                {{
-                                                    [
-                                                        '',
-                                                        NaN,
-                                                        undefined,
-                                                    ].includes(
-                                                        tr.childPercentageToTotal,
-                                                    )
-                                                        ? ''
-                                                        : `${(
-                                                              tr.childPercentageToTotal *
-                                                              100
-                                                          ).toFixed(
-                                                              FINAL_CONFIG.table
-                                                                  .td
-                                                                  .roundingPercentage,
-                                                          )}%`
-                                                }}
+                                                <template
+                                                    v-if="columnIndex === 0"
+                                                >
+                                                    <span
+                                                        v-if="tr.color"
+                                                        :style="`color:${tr.color};margin-right:3px`"
+                                                        >⬤</span
+                                                    ><span>{{
+                                                        tr.parentName
+                                                    }}</span>
+                                                </template>
+                                                <template v-else>{{
+                                                    formatTableCell(tr, column)
+                                                }}</template>
                                             </div>
                                         </td>
                                     </tr>

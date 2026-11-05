@@ -1,4 +1,9 @@
 <script setup>
+import {
+    getUserOptionsProps,
+    getUserOptionSlots,
+    getUserOptionSlotProps,
+} from '../userOptionsSlots';
 import { getAnnotatorProps } from '../annotatorConfig';
 import { createPanZoomAnnotationViewport } from '../utils/annotationViewport';
 import { getTableComponent, syncTableVisibility } from '../tableIntegration';
@@ -6,10 +11,7 @@ import {
     annotationSlotNames,
     getAnnotationSlotProps,
 } from '../annotationSlots';
-import {
-    getUserOptionSlots,
-    getUserOptionSlotProps,
-} from '../userOptionsSlots';
+
 import { createChartImageGetter } from '../chartImage';
 import { resolveChartConfigWithPalette } from '../resolveChartConfig';
 import {
@@ -1046,25 +1048,18 @@ const annotationViewport = computed(() =>
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uid"
-            :hasPdf="cfgUserOptions.buttons.pdf"
-            :hasXls="cfgUserOptions.buttons.csv"
-            :hasImg="cfgUserOptions.buttons.img"
-            :hasSvg="cfgUserOptions.buttons.svg"
-            :hasTable="cfgUserOptions.buttons.table"
-            :hasFullscreen="cfgUserOptions.buttons.fullscreen"
-            :hasAltCopy="cfgUserOptions.buttons.altCopy"
             :isFullscreen="isFullscreen"
-            :titles="{ ...cfgUserOptions.buttonTitles }"
             :chartElement="wordCloudChart"
-            :position="cfgUserOptions.position"
+            v-bind="
+                getUserOptionsProps(
+                    cfgUserOptions,
+                    'pdf csv img svg table fullscreen altCopy annotator zoom',
+                )
+            "
             :hasTooltip="cfgTooltip.show && cfgUserOptions.buttons.tooltip"
             :isTooltip="mutableConfig.showTooltip"
-            :hasAnnotator="cfgUserOptions.buttons.annotator"
             :isAnnotation="isAnnotator"
-            :callbacks="cfgUserOptions.callbacks"
-            :printScale="cfgUserOptions.print.scale"
             :tableDialog="FINAL_CONFIG.table.useDialog"
-            :hasZoom="cfgUserOptions.buttons.zoom"
             :isZoom="mutableConfig.showZoom"
             :isCursorPointer="isCursorPointer"
             @toggleFullscreen="toggleFullscreen"

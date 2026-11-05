@@ -1,14 +1,16 @@
 <script setup>
+import {
+    getUserOptionsProps,
+    getUserOptionSlots,
+    getUserOptionSlotProps,
+} from '../userOptionsSlots';
 import { getAnnotatorProps } from '../annotatorConfig';
 import { getTableComponent, syncTableVisibility } from '../tableIntegration';
 import {
     annotationSlotNames,
     getAnnotationSlotProps,
 } from '../annotationSlots';
-import {
-    getUserOptionSlots,
-    getUserOptionSlotProps,
-} from '../userOptionsSlots';
+
 import { createChartImageGetter } from '../chartImage';
 import { resolveChartConfig } from '../resolveChartConfig';
 import {
@@ -910,21 +912,15 @@ defineExpose({
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uid"
-            :hasPdf="cfgUserOptions.buttons.pdf"
-            :hasXls="cfgUserOptions.buttons.csv"
-            :hasImg="cfgUserOptions.buttons.img"
-            :hasSvg="cfgUserOptions.buttons.svg"
-            :hasTable="cfgUserOptions.buttons.table"
-            :hasFullscreen="cfgUserOptions.buttons.fullscreen"
-            :hasAltCopy="cfgUserOptions.buttons.altCopy"
             :isFullscreen="isFullscreen"
-            :titles="{ ...cfgUserOptions.buttonTitles }"
             :chartElement="moodRadarChart"
-            :position="cfgUserOptions.position"
-            :hasAnnotator="cfgUserOptions.buttons.annotator"
+            v-bind="
+                getUserOptionsProps(
+                    cfgUserOptions,
+                    'pdf csv img svg table fullscreen altCopy annotator',
+                )
+            "
             :isAnnotation="isAnnotator"
-            :callbacks="cfgUserOptions.callbacks"
-            :printScale="cfgUserOptions.print.scale"
             :tableDialog="FINAL_CONFIG.table.useDialog"
             :isCursorPointer="isCursorPointer"
             @toggleFullscreen="toggleFullscreen"

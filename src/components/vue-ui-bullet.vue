@@ -1,13 +1,15 @@
 <script setup>
+import {
+    getUserOptionsProps,
+    getUserOptionSlots,
+    getUserOptionSlotProps,
+} from '../userOptionsSlots';
 import { getAnnotatorProps } from '../annotatorConfig';
 import {
     annotationSlotNames,
     getAnnotationSlotProps,
 } from '../annotationSlots';
-import {
-    getUserOptionSlots,
-    getUserOptionSlotProps,
-} from '../userOptionsSlots';
+
 import { createChartImageGetter } from '../chartImage';
 import { resolveChartConfig } from '../resolveChartConfig';
 import {
@@ -731,22 +733,18 @@ defineExpose({
             :isImaging="isImaging"
             :uid="uid"
             :hasTooltip="false"
-            :hasPdf="cfgUserOptions.buttons.pdf"
-            :hasImg="cfgUserOptions.buttons.img"
-            :hasSvg="cfgUserOptions.buttons.svg"
             :hasXls="false"
             :hasTable="false"
             :hasLabel="false"
-            :hasFullscreen="cfgUserOptions.buttons.fullscreen"
-            :hasAltCopy="cfgUserOptions.buttons.altCopy"
             :isFullscreen="isFullscreen"
             :chartElement="bulletChart"
-            :position="cfgUserOptions.position"
-            :titles="{ ...cfgUserOptions.buttonTitles }"
-            :hasAnnotator="cfgUserOptions.buttons.annotator"
+            v-bind="
+                getUserOptionsProps(
+                    cfgUserOptions,
+                    'pdf img svg fullscreen altCopy annotator',
+                )
+            "
             :isAnnotation="isAnnotator"
-            :callbacks="cfgUserOptions.callbacks"
-            :printScale="cfgUserOptions.print.scale"
             :isCursorPointer="isCursorPointer"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"

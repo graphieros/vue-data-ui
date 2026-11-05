@@ -1451,9 +1451,7 @@ function getScaleLabelX() {
 }
 const timeLabelsY = computed(() => labelLayout.value.bottom);
 
-const line = computed(() => {
-    if (chartType.value !== detector.chartType.LINE) return null;
-
+function getXyDrawingArea() {
     const chartDimensions = {
         height: defaultSizes.value.height,
         width: defaultSizes.value.width,
@@ -1461,7 +1459,7 @@ const line = computed(() => {
 
     let _scaleLabelX = getScaleLabelX();
 
-    const drawingArea = {
+    return {
         left: _scaleLabelX + FINAL_CONFIG.value.xyPaddingLeft,
         top: FINAL_CONFIG.value.xyPaddingTop,
         right: chartDimensions.width - FINAL_CONFIG.value.xyPaddingRight,
@@ -1484,7 +1482,9 @@ const line = computed(() => {
                 timeLabelsY.value,
         ),
     };
+}
 
+function getXySeries(type) {
     let ds = [];
 
     if (detector.isSimpleArrayOfNumbers(formattedDataset.value.dataset)) {
@@ -1502,7 +1502,7 @@ const line = computed(() => {
                 color:
                     customPalette.value[FINAL_CONFIG.value.paletteStartIndex] ||
                     palette[FINAL_CONFIG.value.paletteStartIndex],
-                id: `line_0`,
+                id: `${type}_0`,
             },
         ];
     }
@@ -1526,7 +1526,7 @@ const line = computed(() => {
                         d.TITLE ||
                         d.LABEL ||
                         `Serie ${i}`,
-                    id: `line_${i}`,
+                    id: `${type}_${i}`,
                 };
             })
             .map((d, i) => {
@@ -1553,6 +1553,16 @@ const line = computed(() => {
                 };
             });
     }
+
+    return ds;
+}
+
+const line = computed(() => {
+    if (chartType.value !== detector.chartType.LINE) return null;
+
+    const drawingArea = getXyDrawingArea();
+    const ds = getXySeries('line');
+
     const extremes = {
         max: Math.max(
             ...ds
@@ -1759,105 +1769,8 @@ const line = computed(() => {
 const bar = computed(() => {
     if (chartType.value !== detector.chartType.BAR) return null;
 
-    const chartDimensions = {
-        height: defaultSizes.value.height,
-        width: defaultSizes.value.width,
-    };
-
-    let _scaleLabelX = getScaleLabelX();
-
-    const drawingArea = {
-        left: _scaleLabelX + FINAL_CONFIG.value.xyPaddingLeft,
-        top: FINAL_CONFIG.value.xyPaddingTop,
-        right: chartDimensions.width - FINAL_CONFIG.value.xyPaddingRight,
-        bottom:
-            chartDimensions.height -
-            FINAL_CONFIG.value.xyPaddingBottom -
-            timeLabelsY.value,
-        width: Math.max(
-            10,
-            chartDimensions.width -
-                FINAL_CONFIG.value.xyPaddingLeft -
-                FINAL_CONFIG.value.xyPaddingRight -
-                _scaleLabelX,
-        ),
-        height: Math.max(
-            10,
-            chartDimensions.height -
-                FINAL_CONFIG.value.xyPaddingTop -
-                FINAL_CONFIG.value.xyPaddingBottom -
-                timeLabelsY.value,
-        ),
-    };
-
-    let ds = [];
-
-    if (detector.isSimpleArrayOfNumbers(formattedDataset.value.dataset)) {
-        ds = [
-            {
-                values: formattedDataset.value.dataset.slice(
-                    slicer.value.start,
-                    slicer.value.end,
-                ),
-                absoluteValues: formattedDataset.value.dataset,
-                absoluteIndices: formattedDataset.value.dataset
-                    .map((_, i) => i)
-                    .slice(slicer.value.start, slicer.value.end),
-                name: FINAL_CONFIG.value.title,
-                color:
-                    customPalette.value[FINAL_CONFIG.value.paletteStartIndex] ||
-                    palette[FINAL_CONFIG.value.paletteStartIndex],
-                id: 'bar_0',
-            },
-        ];
-    }
-
-    if (detector.isSimpleArrayOfObjects(formattedDataset.value.dataset)) {
-        ds = formattedDataset.value.dataset
-            .map((d, i) => {
-                return {
-                    ...d,
-                    values:
-                        d.VALUE ||
-                        d.DATA ||
-                        d.SERIE ||
-                        d.SERIES ||
-                        d.VALUES ||
-                        d.NUM ||
-                        0,
-                    name:
-                        d.NAME ||
-                        d.DESCRIPTION ||
-                        d.TITLE ||
-                        d.LABEL ||
-                        `Serie ${i}`,
-                    id: `bar_${i}`,
-                };
-            })
-            .map((d, i) => {
-                return {
-                    ...d,
-                    color: d.COLOR
-                        ? convertColorToHex(d.COLOR)
-                        : customPalette.value[
-                              i + FINAL_CONFIG.value.paletteStartIndex
-                          ] ||
-                          palette[i + FINAL_CONFIG.value.paletteStartIndex] ||
-                          palette[
-                              (i + FINAL_CONFIG.value.paletteStartIndex) %
-                                  palette.length
-                          ],
-                    values: d.values.slice(
-                        slicer.value.start,
-                        slicer.value.end,
-                    ),
-                    absoluteValues: d.values,
-                    absoluteIndices: d.values
-                        .map((_, i) => i)
-                        .slice(slicer.value.start, slicer.value.end),
-                };
-            });
-    }
+    const drawingArea = getXyDrawingArea();
+    const ds = getXySeries('bar');
 
     const extremes = {
         max:
@@ -2129,6 +2042,26 @@ const bar = computed(() => {
         selectDatapoint,
     };
 });
+
+const isDev = import.meta.env.DEV;
+const xyChart = computed(() =>
+    chartType.value === detector.chartType.LINE
+        ? line.value
+        : chartType.value === detector.chartType.BAR
+          ? bar.value
+          : null,
+);
+const xyChartKind = computed(() =>
+    chartType.value === detector.chartType.LINE ? 'line' : 'bar',
+);
+const xyPeriodTicks = computed(() =>
+    chartType.value === detector.chartType.BAR
+        ? FINAL_CONFIG.value.xyPeriods.slice(
+              slicer.value.start,
+              slicer.value.end,
+          )
+        : timeLabels.value,
+);
 
 const slicerDrawingArea = computed(() => {
     if (chartType.value === detector.chartType.LINE) {
@@ -3552,14 +3485,18 @@ const annotationViewport = computed(() => {
                     </g>
                 </template>
 
-                <template v-if="chartType === detector.chartType.LINE">
+                <template v-if="xyChart">
                     <g class="line-grid" v-if="FINAL_CONFIG.xyShowGrid">
-                        <template v-for="yGridLine in line.yLabels">
+                        <template v-for="yGridLine in xyChart.yLabels">
                             <line
-                                data-cy="grid-horizontal-line-line"
-                                v-if="yGridLine.y <= line.drawingArea.bottom"
-                                :x1="line.drawingArea.left"
-                                :x2="line.drawingArea.right"
+                                :data-cy="
+                                    isDev
+                                        ? 'grid-horizontal-line-' + xyChartKind
+                                        : undefined
+                                "
+                                v-if="yGridLine.y <= xyChart.drawingArea.bottom"
+                                :x1="xyChart.drawingArea.left"
+                                :x2="xyChart.drawingArea.right"
                                 :y1="yGridLine.y"
                                 :y2="yGridLine.y"
                                 :stroke="FINAL_CONFIG.xyGridStroke"
@@ -3567,42 +3504,63 @@ const annotationViewport = computed(() => {
                                 stroke-linecap="round"
                             />
                         </template>
-                        <line
-                            data-cy="grid-vertical-line-line"
-                            v-for="(_, i) in line.extremes.maxSeries + 1"
-                            :x1="line.drawingArea.left + line.slotSize * i"
-                            :x2="line.drawingArea.left + line.slotSize * i"
-                            :y1="line.drawingArea.top"
-                            :y2="line.drawingArea.bottom"
-                            :stroke="FINAL_CONFIG.xyGridStroke"
-                            :stroke-width="FINAL_CONFIG.xyGridStrokeWidth"
-                            stroke-linecap="round"
-                        />
+                        <template
+                            v-if="
+                                chartType === detector.chartType.LINE ||
+                                segregated.length < xyChart.legend.length
+                            "
+                        >
+                            <line
+                                :data-cy="
+                                    isDev
+                                        ? 'grid-vertical-line-' + xyChartKind
+                                        : undefined
+                                "
+                                v-for="(_, i) in xyChart.extremes.maxSeries + 1"
+                                :x1="
+                                    xyChart.drawingArea.left +
+                                    xyChart.slotSize * i
+                                "
+                                :x2="
+                                    xyChart.drawingArea.left +
+                                    xyChart.slotSize * i
+                                "
+                                :y1="xyChart.drawingArea.top"
+                                :y2="xyChart.drawingArea.bottom"
+                                :stroke="FINAL_CONFIG.xyGridStroke"
+                                :stroke-width="FINAL_CONFIG.xyGridStrokeWidth"
+                                stroke-linecap="round"
+                            />
+                        </template>
                     </g>
                     <g class="line-axis" v-if="FINAL_CONFIG.xyShowAxis">
                         <line
-                            data-cy="line-y-axis"
-                            :x1="line.drawingArea.left"
-                            :x2="line.drawingArea.left"
-                            :y1="line.drawingArea.top"
-                            :y2="line.drawingArea.bottom"
+                            :data-cy="
+                                isDev ? xyChartKind + '-y-axis' : undefined
+                            "
+                            :x1="xyChart.drawingArea.left"
+                            :x2="xyChart.drawingArea.left"
+                            :y1="xyChart.drawingArea.top"
+                            :y2="xyChart.drawingArea.bottom"
                             :stroke="FINAL_CONFIG.xyAxisStroke"
                             :stroke-width="FINAL_CONFIG.xyAxisStrokeWidth"
                             stroke-linecap="round"
                         />
                         <line
-                            data-cy="line-zero-axis"
-                            :x1="line.drawingArea.left"
-                            :x2="line.drawingArea.right"
+                            :data-cy="
+                                isDev ? xyChartKind + '-zero-axis' : undefined
+                            "
+                            :x1="xyChart.drawingArea.left"
+                            :x2="xyChart.drawingArea.right"
                             :y1="
-                                isNaN(line.absoluteZero)
-                                    ? line.drawingArea.bottom
-                                    : line.absoluteZero
+                                isNaN(xyChart.absoluteZero)
+                                    ? xyChart.drawingArea.bottom
+                                    : xyChart.absoluteZero
                             "
                             :y2="
-                                isNaN(line.absoluteZero)
-                                    ? line.drawingArea.bottom
-                                    : line.absoluteZero
+                                isNaN(xyChart.absoluteZero)
+                                    ? xyChart.drawingArea.bottom
+                                    : xyChart.absoluteZero
                             "
                             :stroke="FINAL_CONFIG.xyAxisStroke"
                             :stroke-width="FINAL_CONFIG.xyAxisStrokeWidth"
@@ -3615,18 +3573,22 @@ const annotationViewport = computed(() => {
                         ref="scaleLabels"
                     >
                         <template
-                            v-for="(label, i) in line.yLabels"
+                            v-for="(label, i) in xyChart.yLabels"
                             :key="`sl_${i}`"
                         >
                             <path
-                                data-cy="scale-line-tick"
+                                :data-cy="
+                                    isDev
+                                        ? 'scale-' + xyChartKind + '-tick'
+                                        : undefined
+                                "
                                 :class="{
                                     'vue-data-ui-transition':
                                         transitionEnabled &&
                                         !labelLayoutSettling,
                                 }"
-                                :d="`M${label.x + 4},${label.y} ${line.drawingArea.left},${label.y}`"
-                                v-if="label.y <= line.drawingArea.bottom"
+                                :d="`M${label.x + 4},${label.y} ${xyChart.drawingArea.left},${label.y}`"
+                                v-if="label.y <= xyChart.drawingArea.bottom"
                                 :stroke="FINAL_CONFIG.xyAxisStroke"
                                 :stroke-width="FINAL_CONFIG.xyAxisStrokeWidth"
                                 stroke-linecap="round"
@@ -3637,8 +3599,12 @@ const annotationViewport = computed(() => {
                                         transitionEnabled &&
                                         !labelLayoutSettling,
                                 }"
-                                data-cy="scale-line-label"
-                                v-if="label.y <= line.drawingArea.bottom"
+                                :data-cy="
+                                    isDev
+                                        ? 'scale-' + xyChartKind + '-label'
+                                        : undefined
+                                "
+                                v-if="label.y <= xyChart.drawingArea.bottom"
                                 :transform="`translate(${label.x}, ${label.y + FINAL_CONFIG.xyLabelsYFontSize / 3})`"
                                 text-anchor="end"
                                 :font-size="FINAL_CONFIG.xyLabelsYFontSize"
@@ -3669,11 +3635,10 @@ const annotationViewport = computed(() => {
                             FINAL_CONFIG.xyPeriods.length
                         "
                     >
-                        <template
-                            v-for="(period, i) in timeLabels.map((l) => l.text)"
-                        >
+                        <template v-for="(_, i) in xyPeriodTicks">
                             <line
                                 v-if="
+                                    chartType === detector.chartType.BAR ||
                                     !FINAL_CONFIG.xyPeriodsShowOnlyAtModulo ||
                                     (FINAL_CONFIG.xyPeriodsShowOnlyAtModulo &&
                                         i %
@@ -3686,17 +3651,17 @@ const annotationViewport = computed(() => {
                                 "
                                 data-cy="period-tick"
                                 :x1="
-                                    line.drawingArea.left +
-                                    line.slotSize * (i + 1) -
-                                    line.slotSize / 2
+                                    xyChart.drawingArea.left +
+                                    xyChart.slotSize * (i + 1) -
+                                    xyChart.slotSize / 2
                                 "
                                 :x2="
-                                    line.drawingArea.left +
-                                    line.slotSize * (i + 1) -
-                                    line.slotSize / 2
+                                    xyChart.drawingArea.left +
+                                    xyChart.slotSize * (i + 1) -
+                                    xyChart.slotSize / 2
                                 "
-                                :y1="line.drawingArea.bottom"
-                                :y2="line.drawingArea.bottom + 4"
+                                :y1="xyChart.drawingArea.bottom"
+                                :y2="xyChart.drawingArea.bottom + 4"
                                 :stroke="FINAL_CONFIG.xyAxisStroke"
                                 :stroke-width="FINAL_CONFIG.xyAxisStrokeWidth"
                                 stroke-linecap="round"
@@ -3739,7 +3704,7 @@ const annotationViewport = computed(() => {
                                                   : 'middle'
                                         "
                                         :fill="FINAL_CONFIG.color"
-                                        :transform="`translate(${line.drawingArea.left + line.slotSize * (i + 1) - line.slotSize / 2}, ${line.drawingArea.bottom + FINAL_CONFIG.xyLabelsXFontSize + 6}), rotate(${FINAL_CONFIG.xyPeriodLabelsRotation})`"
+                                        :transform="`translate(${xyChart.drawingArea.left + xyChart.slotSize * (i + 1) - xyChart.slotSize / 2}, ${xyChart.drawingArea.bottom + FINAL_CONFIG.xyLabelsXFontSize + 6}), rotate(${FINAL_CONFIG.xyPeriodLabelsRotation})`"
                                     >
                                         {{ period }}
                                     </text>
@@ -3760,7 +3725,7 @@ const annotationViewport = computed(() => {
                                                   : 'middle'
                                         "
                                         :fill="FINAL_CONFIG.color"
-                                        :transform="`translate(${line.drawingArea.left + line.slotSize * (i + 1) - line.slotSize / 2}, ${line.drawingArea.bottom + FINAL_CONFIG.xyLabelsXFontSize + 6}), rotate(${FINAL_CONFIG.xyPeriodLabelsRotation})`"
+                                        :transform="`translate(${xyChart.drawingArea.left + xyChart.slotSize * (i + 1) - xyChart.slotSize / 2}, ${xyChart.drawingArea.bottom + FINAL_CONFIG.xyLabelsXFontSize + 6}), rotate(${FINAL_CONFIG.xyPeriodLabelsRotation})`"
                                         v-html="
                                             createTSpansFromLineBreaksOnX({
                                                 content: String(period),
@@ -3776,6 +3741,9 @@ const annotationViewport = computed(() => {
                             </template>
                         </g>
                     </g>
+                </template>
+
+                <template v-if="chartType === detector.chartType.LINE">
                     <g class="plots">
                         <template
                             v-for="(ds, i) in line.dataset"
@@ -3878,285 +3846,9 @@ const annotationViewport = computed(() => {
                             </g>
                         </template>
                     </g>
-                    <g class="dataLabels" v-if="FINAL_CONFIG.showDataLabels">
-                        <template
-                            v-for="(ds, i) in line.dataset"
-                            :key="`ds_${ds.id}`"
-                        >
-                            <text
-                                class="vue-ui-quick-chart-label"
-                                :class="{
-                                    'vue-data-ui-transition':
-                                        transitionEnabled &&
-                                        !labelLayoutSettling,
-                                }"
-                                data-cy="datapoint-label"
-                                v-for="(plot, j) in ds.coordinates"
-                                :key="`plot_${ds.id}_${j + slicer.start}`"
-                                text-anchor="middle"
-                                :font-size="FINAL_CONFIG.dataLabelFontSize"
-                                :fill="ds.color"
-                                :transform="`translate(${plot.x}, ${checkNaN(plot.y) - FINAL_CONFIG.dataLabelFontSize / 2})`"
-                            >
-                                {{
-                                    applyDataLabel(
-                                        FINAL_CONFIG.formatter,
-                                        checkNaN(plot.value),
-                                        dataLabel({
-                                            p: FINAL_CONFIG.valuePrefix,
-                                            v: checkNaN(plot.value),
-                                            s: FINAL_CONFIG.valueSuffix,
-                                            r: FINAL_CONFIG.dataLabelRoundingValue,
-                                        }),
-                                        { datapoint: plot, seriesIndex: j },
-                                    )
-                                }}
-                            </text>
-                        </template>
-                    </g>
-                    <g class="tooltip-traps" v-if="userHovers">
-                        <rect
-                            data-cy="tooltip-trap-line"
-                            v-for="(_, i) in line.extremes.maxSeries"
-                            :x="line.drawingArea.left + i * line.slotSize"
-                            :y="line.drawingArea.top"
-                            :height="
-                                line.drawingArea.height <= 0
-                                    ? 0.00001
-                                    : line.drawingArea.height
-                            "
-                            :width="
-                                line.slotSize <= 0 ? 0.00001 : line.slotSize
-                            "
-                            :fill="
-                                [
-                                    selectedDatapoint,
-                                    commonSelectedIndex,
-                                ].includes(i)
-                                    ? FINAL_CONFIG.xyHighlighterColor
-                                    : 'transparent'
-                            "
-                            :style="`opacity:${FINAL_CONFIG.xyHighlighterOpacity}`"
-                            @mouseenter="line.useTooltip(i, 'pointer')"
-                            @mouseleave="line.killTooltip(i)"
-                            @click="line.selectDatapoint(i)"
-                        />
-                    </g>
                 </template>
 
                 <template v-if="chartType === detector.chartType.BAR">
-                    <g class="line-grid" v-if="FINAL_CONFIG.xyShowGrid">
-                        <template v-for="yGridLine in bar.yLabels">
-                            <line
-                                data-cy="grid-horizontal-line-bar"
-                                v-if="yGridLine.y <= bar.drawingArea.bottom"
-                                :x1="bar.drawingArea.left"
-                                :x2="bar.drawingArea.right"
-                                :y1="yGridLine.y"
-                                :y2="yGridLine.y"
-                                :stroke="FINAL_CONFIG.xyGridStroke"
-                                :stroke-width="FINAL_CONFIG.xyGridStrokeWidth"
-                                stroke-linecap="round"
-                            />
-                        </template>
-                        <template v-if="segregated.length < bar.legend.length">
-                            <line
-                                data-cy="grid-vertical-line-bar"
-                                v-for="(_, i) in bar.extremes.maxSeries + 1"
-                                :x1="bar.drawingArea.left + bar.slotSize * i"
-                                :x2="bar.drawingArea.left + bar.slotSize * i"
-                                :y1="bar.drawingArea.top"
-                                :y2="bar.drawingArea.bottom"
-                                :stroke="FINAL_CONFIG.xyGridStroke"
-                                :stroke-width="FINAL_CONFIG.xyGridStrokeWidth"
-                                stroke-linecap="round"
-                            />
-                        </template>
-                    </g>
-                    <g class="line-axis" v-if="FINAL_CONFIG.xyShowAxis">
-                        <line
-                            data-cy="bar-y-axis"
-                            :x1="bar.drawingArea.left"
-                            :x2="bar.drawingArea.left"
-                            :y1="bar.drawingArea.top"
-                            :y2="bar.drawingArea.bottom"
-                            :stroke="FINAL_CONFIG.xyAxisStroke"
-                            :stroke-width="FINAL_CONFIG.xyAxisStrokeWidth"
-                            stroke-linecap="round"
-                        />
-                        <line
-                            data-cy="bar-zero-axis"
-                            :x1="bar.drawingArea.left"
-                            :x2="bar.drawingArea.right"
-                            :y1="
-                                isNaN(bar.absoluteZero)
-                                    ? bar.drawingArea.bottom
-                                    : bar.absoluteZero
-                            "
-                            :y2="
-                                isNaN(bar.absoluteZero)
-                                    ? bar.drawingArea.bottom
-                                    : bar.absoluteZero
-                            "
-                            :stroke="FINAL_CONFIG.xyAxisStroke"
-                            :stroke-width="FINAL_CONFIG.xyAxisStrokeWidth"
-                            stroke-linecap="round"
-                        />
-                    </g>
-                    <g
-                        class="yLabels"
-                        v-if="FINAL_CONFIG.xyShowScale"
-                        ref="scaleLabels"
-                    >
-                        <template
-                            v-for="(label, i) in bar.yLabels"
-                            :key="`sl_${i}`"
-                        >
-                            <path
-                                data-cy="scale-bar-tick"
-                                :class="{
-                                    'vue-data-ui-transition':
-                                        transitionEnabled &&
-                                        !labelLayoutSettling,
-                                }"
-                                v-if="label.y <= bar.drawingArea.bottom"
-                                :d="`M${label.x + 4},${label.y} ${bar.drawingArea.left},${label.y}`"
-                                :stroke="FINAL_CONFIG.xyAxisStroke"
-                                :stroke-width="FINAL_CONFIG.xyAxisStrokeWidth"
-                                stroke-linecap="round"
-                            />
-                            <text
-                                :class="{
-                                    'vue-data-ui-transition':
-                                        transitionEnabled &&
-                                        !labelLayoutSettling,
-                                }"
-                                data-cy="scale-bar-label"
-                                v-if="label.y <= bar.drawingArea.bottom"
-                                :transform="`translate(${label.x}, ${label.y + FINAL_CONFIG.xyLabelsYFontSize / 3})`"
-                                text-anchor="end"
-                                :font-size="FINAL_CONFIG.xyLabelsYFontSize"
-                                :fill="FINAL_CONFIG.color"
-                            >
-                                {{
-                                    applyDataLabel(
-                                        FINAL_CONFIG.formatter,
-                                        label.value,
-                                        dataLabel({
-                                            p: FINAL_CONFIG.valuePrefix,
-                                            v: label.value,
-                                            s: FINAL_CONFIG.valueSuffix,
-                                            r: FINAL_CONFIG.dataLabelRoundingValue,
-                                        }),
-                                        { datapoint: label, seriesIndex: i },
-                                    )
-                                }}
-                            </text>
-                        </template>
-                    </g>
-                    <g
-                        class="periodLabels"
-                        v-if="
-                            FINAL_CONFIG.xyShowScale &&
-                            FINAL_CONFIG.xyPeriods.length
-                        "
-                    >
-                        <line
-                            data-cy="period-tick"
-                            v-for="(_, i) in FINAL_CONFIG.xyPeriods.slice(
-                                slicer.start,
-                                slicer.end,
-                            )"
-                            :x1="
-                                bar.drawingArea.left +
-                                bar.slotSize * (i + 1) -
-                                bar.slotSize / 2
-                            "
-                            :x2="
-                                bar.drawingArea.left +
-                                bar.slotSize * (i + 1) -
-                                bar.slotSize / 2
-                            "
-                            :y1="bar.drawingArea.bottom"
-                            :y2="bar.drawingArea.bottom + 4"
-                            :stroke="FINAL_CONFIG.xyAxisStroke"
-                            :stroke-width="FINAL_CONFIG.xyAxisStrokeWidth"
-                            stroke-linecap="round"
-                        />
-                        <g ref="timeLabelsEls">
-                            <template
-                                v-for="(period, i) in timeLabels.map(
-                                    (l) => l.text,
-                                )"
-                            >
-                                <g
-                                    v-if="
-                                        !FINAL_CONFIG.xyPeriodsShowOnlyAtModulo ||
-                                        (FINAL_CONFIG.xyPeriodsShowOnlyAtModulo &&
-                                            i %
-                                                Math.floor(
-                                                    (slicer.end -
-                                                        slicer.start) /
-                                                        modulo,
-                                                ) ===
-                                                0) ||
-                                        slicer.end - slicer.start <= modulo
-                                    "
-                                >
-                                    <text
-                                        class="vue-data-ui-time-label"
-                                        v-if="!String(period).includes('\n')"
-                                        data-cy="period-label"
-                                        :font-size="
-                                            FINAL_CONFIG.xyLabelsXFontSize
-                                        "
-                                        :text-anchor="
-                                            FINAL_CONFIG.xyPeriodLabelsRotation >
-                                            0
-                                                ? 'start'
-                                                : FINAL_CONFIG.xyPeriodLabelsRotation <
-                                                    0
-                                                  ? 'end'
-                                                  : 'middle'
-                                        "
-                                        :fill="FINAL_CONFIG.color"
-                                        :transform="`translate(${bar.drawingArea.left + bar.slotSize * (i + 1) - bar.slotSize / 2}, ${bar.drawingArea.bottom + FINAL_CONFIG.xyLabelsXFontSize + 6}), rotate(${FINAL_CONFIG.xyPeriodLabelsRotation})`"
-                                    >
-                                        {{ period }}
-                                    </text>
-                                    <text
-                                        v-else
-                                        class="vue-data-ui-time-label"
-                                        data-cy="period-label"
-                                        :font-size="
-                                            FINAL_CONFIG.xyLabelsXFontSize
-                                        "
-                                        :text-anchor="
-                                            FINAL_CONFIG.xyPeriodLabelsRotation >
-                                            0
-                                                ? 'start'
-                                                : FINAL_CONFIG.xyPeriodLabelsRotation <
-                                                    0
-                                                  ? 'end'
-                                                  : 'middle'
-                                        "
-                                        :fill="FINAL_CONFIG.color"
-                                        :transform="`translate(${bar.drawingArea.left + bar.slotSize * (i + 1) - bar.slotSize / 2}, ${bar.drawingArea.bottom + FINAL_CONFIG.xyLabelsXFontSize + 6}), rotate(${FINAL_CONFIG.xyPeriodLabelsRotation})`"
-                                        v-html="
-                                            createTSpansFromLineBreaksOnX({
-                                                content: String(period),
-                                                fontSize:
-                                                    FINAL_CONFIG.xyLabelsXFontSize,
-                                                fill: FINAL_CONFIG.color,
-                                                x: 0,
-                                                y: 0,
-                                            })
-                                        "
-                                    />
-                                </g>
-                            </template>
-                        </g>
-                    </g>
                     <g class="plots">
                         <template v-for="(ds, i) in bar.dataset">
                             <rect
@@ -4184,24 +3876,33 @@ const annotationViewport = computed(() => {
                             />
                         </template>
                     </g>
+                </template>
+
+                <template v-if="xyChart">
                     <g class="dataLabels" v-if="FINAL_CONFIG.showDataLabels">
                         <template
-                            v-for="(ds, i) in bar.dataset"
+                            v-for="(ds, i) in xyChart.dataset"
                             :key="`ds_${ds.id}`"
                         >
                             <text
-                                data-cy="datapoint-label"
                                 :class="{
+                                    'vue-ui-quick-chart-label':
+                                        chartType === detector.chartType.LINE,
                                     'vue-data-ui-transition':
                                         transitionEnabled &&
                                         !labelLayoutSettling,
                                 }"
+                                data-cy="datapoint-label"
                                 v-for="(plot, j) in ds.coordinates"
-                                :key="`plot_${j + slicer.start}`"
-                                :transform="`translate(${plot.x + plot.width / 2}, ${checkNaN(plot.y) - FINAL_CONFIG.dataLabelFontSize / 2})`"
+                                :key="
+                                    chartType === detector.chartType.LINE
+                                        ? `plot_${ds.id}_${j + slicer.start}`
+                                        : `plot_${j + slicer.start}`
+                                "
                                 text-anchor="middle"
                                 :font-size="FINAL_CONFIG.dataLabelFontSize"
                                 :fill="ds.color"
+                                :transform="`translate(${chartType === detector.chartType.BAR ? plot.x + plot.width / 2 : plot.x}, ${checkNaN(plot.y) - FINAL_CONFIG.dataLabelFontSize / 2})`"
                             >
                                 {{
                                     applyDataLabel(
@@ -4222,20 +3923,30 @@ const annotationViewport = computed(() => {
                     <g
                         class="tooltip-traps"
                         v-if="
-                            userHovers && segregated.length < bar.legend.length
+                            userHovers &&
+                            (chartType === detector.chartType.LINE ||
+                                segregated.length < xyChart.legend.length)
                         "
                     >
                         <rect
-                            data-cy="tooltip-trap-bar"
-                            v-for="(_, i) in bar.extremes.maxSeries"
-                            :x="bar.drawingArea.left + i * bar.slotSize"
-                            :y="bar.drawingArea.top"
-                            :height="
-                                bar.drawingArea.height <= 0
-                                    ? 0.00001
-                                    : bar.drawingArea.height
+                            :data-cy="
+                                isDev
+                                    ? 'tooltip-trap-' + xyChartKind
+                                    : undefined
                             "
-                            :width="bar.slotSize <= 0 ? 0.00001 : bar.slotSize"
+                            v-for="(_, i) in xyChart.extremes.maxSeries"
+                            :x="xyChart.drawingArea.left + i * xyChart.slotSize"
+                            :y="xyChart.drawingArea.top"
+                            :height="
+                                xyChart.drawingArea.height <= 0
+                                    ? 0.00001
+                                    : xyChart.drawingArea.height
+                            "
+                            :width="
+                                xyChart.slotSize <= 0
+                                    ? 0.00001
+                                    : xyChart.slotSize
+                            "
                             :fill="
                                 [
                                     selectedDatapoint,
@@ -4245,9 +3956,9 @@ const annotationViewport = computed(() => {
                                     : 'transparent'
                             "
                             :style="`opacity:${FINAL_CONFIG.xyHighlighterOpacity}`"
-                            @mouseenter="bar.useTooltip(i, 'pointer')"
-                            @mouseleave="bar.killTooltip(i)"
-                            @click="bar.selectDatapoint(i)"
+                            @mouseenter="xyChart.useTooltip(i, 'pointer')"
+                            @mouseleave="xyChart.killTooltip(i)"
+                            @click="xyChart.selectDatapoint(i)"
                         />
                     </g>
                 </template>
@@ -4261,20 +3972,14 @@ const annotationViewport = computed(() => {
                     "
                 >
                     <g class="axis-labels">
-                        <g
-                            v-if="
-                                FINAL_CONFIG.xAxisLabel &&
-                                chartType === detector.chartType.LINE
-                            "
-                            ref="xAxisLabel"
-                        >
+                        <g v-if="FINAL_CONFIG.xAxisLabel" ref="xAxisLabel">
                             <text
                                 :font-size="FINAL_CONFIG.axisLabelsFontSize"
                                 :fill="FINAL_CONFIG.color"
                                 text-anchor="middle"
                                 :x="
-                                    line.drawingArea.left +
-                                    line.drawingArea.width / 2
+                                    xyChart.drawingArea.left +
+                                    xyChart.drawingArea.width / 2
                                 "
                                 :y="
                                     defaultSizes.height -
@@ -4284,56 +3989,11 @@ const annotationViewport = computed(() => {
                                 {{ FINAL_CONFIG.xAxisLabel }}
                             </text>
                         </g>
-                        <g
-                            v-if="
-                                FINAL_CONFIG.xAxisLabel &&
-                                chartType === detector.chartType.BAR
-                            "
-                            ref="xAxisLabel"
-                        >
+                        <g v-if="FINAL_CONFIG.yAxisLabel" ref="yAxisLabel">
                             <text
                                 :font-size="FINAL_CONFIG.axisLabelsFontSize"
                                 :fill="FINAL_CONFIG.color"
-                                text-anchor="middle"
-                                :x="
-                                    bar.drawingArea.left +
-                                    bar.drawingArea.width / 2
-                                "
-                                :y="
-                                    defaultSizes.height -
-                                    FINAL_CONFIG.axisLabelsFontSize / 3
-                                "
-                            >
-                                {{ FINAL_CONFIG.xAxisLabel }}
-                            </text>
-                        </g>
-                        <g
-                            v-if="
-                                FINAL_CONFIG.yAxisLabel &&
-                                chartType === detector.chartType.LINE
-                            "
-                            ref="yAxisLabel"
-                        >
-                            <text
-                                :font-size="FINAL_CONFIG.axisLabelsFontSize"
-                                :fill="FINAL_CONFIG.color"
-                                :transform="`translate(${FINAL_CONFIG.axisLabelsFontSize}, ${line.drawingArea.top + line.drawingArea.height / 2}) rotate(-90)`"
-                                text-anchor="middle"
-                            >
-                                {{ FINAL_CONFIG.yAxisLabel }}
-                            </text>
-                        </g>
-                        <g
-                            v-if="
-                                FINAL_CONFIG.yAxisLabel &&
-                                chartType === detector.chartType.BAR
-                            "
-                            ref="yAxisLabel"
-                        >
-                            <text
-                                :font-size="FINAL_CONFIG.axisLabelsFontSize"
-                                :fill="FINAL_CONFIG.color"
-                                :transform="`translate(${FINAL_CONFIG.axisLabelsFontSize}, ${bar.drawingArea.top + bar.drawingArea.height / 2}) rotate(-90)`"
+                                :transform="`translate(${FINAL_CONFIG.axisLabelsFontSize}, ${xyChart.drawingArea.top + xyChart.drawingArea.height / 2}) rotate(-90)`"
                                 text-anchor="middle"
                             >
                                 {{ FINAL_CONFIG.yAxisLabel }}
@@ -4599,24 +4259,24 @@ const annotationViewport = computed(() => {
                     </div>
                 </template>
 
-                <template v-if="chartType === detector.chartType.LINE">
+                <template v-if="xyChart">
                     <div
                         class="vue-ui-quick-chart-legend-item"
-                        v-for="(legendItem, i) in line.legend"
+                        v-for="(legendItem, i) in xyChart.legend"
                         @click="
-                            segregate(legendItem.id, line.legend.length - 1);
-                            emit('selectLegend', line.dataset);
+                            segregate(legendItem.id, xyChart.legend.length - 1);
+                            emit('selectLegend', xyChart.dataset);
                         "
-                        :style="`cursor: ${line.legend.length > 1 && isCursorPointer ? 'pointer' : 'default'}; opacity:${segregated.includes(legendItem.id) ? '0.5' : '1'}`"
+                        :style="`cursor: ${xyChart.legend.length > 1 && isCursorPointer ? 'pointer' : 'default'}; opacity:${segregated.includes(legendItem.id) ? '0.5' : '1'}`"
                         role="button"
                         tabindex="0"
                         @keydown="
                             handleLegendKeydown($event, () => {
                                 segregate(
                                     legendItem.id,
-                                    line.legend.length - 1,
+                                    xyChart.legend.length - 1,
                                 );
-                                emit('selectLegend', line.dataset);
+                                emit('selectLegend', xyChart.dataset);
                             })
                         "
                     >
@@ -4632,62 +4292,12 @@ const annotationViewport = computed(() => {
                                         segregate: () => {
                                             segregate(
                                                 legendItem.id,
-                                                line.legend.length - 1,
+                                                xyChart.legend.length - 1,
                                             );
-                                            emit('selectLegend', line.dataset);
-                                        },
-                                    },
-                                }"
-                            />
-                        </template>
-                        <template v-else>
-                            <BaseIcon
-                                :name="FINAL_CONFIG.legendIcon"
-                                :stroke="legendItem.color"
-                                :size="FINAL_CONFIG.legendIconSize"
-                            />
-                            <span
-                                :style="`font-size:${FINAL_CONFIG.legendFontSize}px`"
-                            >
-                                {{ legendItem.name }}
-                            </span>
-                        </template>
-                    </div>
-                </template>
-
-                <template v-if="chartType === detector.chartType.BAR">
-                    <div
-                        class="vue-ui-quick-chart-legend-item"
-                        v-for="(legendItem, i) in bar.legend"
-                        @click="
-                            segregate(legendItem.id, bar.legend.length - 1);
-                            emit('selectLegend', bar.dataset);
-                        "
-                        :style="`cursor: ${bar.legend.length > 1 && isCursorPointer ? 'pointer' : 'default'}; opacity:${segregated.includes(legendItem.id) ? '0.5' : '1'}`"
-                        role="button"
-                        tabindex="0"
-                        @keydown="
-                            handleLegendKeydown($event, () => {
-                                segregate(legendItem.id, bar.legend.length - 1);
-                                emit('selectLegend', bar.dataset);
-                            })
-                        "
-                    >
-                        <template v-if="FINAL_CONFIG.useCustomLegend">
-                            <slot
-                                name="legend"
-                                v-bind="{
-                                    legend: {
-                                        ...legendItem,
-                                        isSegregated: segregated.includes(
-                                            legendItem.id,
-                                        ),
-                                        segregate: () => {
-                                            segregate(
-                                                legendItem.id,
-                                                bar.legend.length - 1,
+                                            emit(
+                                                'selectLegend',
+                                                xyChart.dataset,
                                             );
-                                            emit('selectLegend', bar.dataset);
                                         },
                                     },
                                 }"

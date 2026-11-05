@@ -1,4 +1,9 @@
 <script setup>
+import {
+    getUserOptionsProps,
+    getUserOptionSlots,
+    getUserOptionSlotProps,
+} from '../userOptionsSlots';
 import { getAnnotatorProps } from '../annotatorConfig';
 import { createPanZoomAnnotationViewport } from '../utils/annotationViewport';
 import { getTableComponent, syncTableVisibility } from '../tableIntegration';
@@ -6,10 +11,7 @@ import {
     annotationSlotNames,
     getAnnotationSlotProps,
 } from '../annotationSlots';
-import {
-    getUserOptionSlots,
-    getUserOptionSlotProps,
-} from '../userOptionsSlots';
+
 import { createChartImageGetter } from '../chartImage';
 import { resolveChartConfigWithPalette } from '../resolveChartConfig';
 import {
@@ -892,25 +894,17 @@ const annotationViewport = computed(() =>
             :isImaging="isImaging"
             :uid="uid"
             :hasTooltip="cfgUserOptions.buttons.tooltip && cfgTooltip.show"
-            :hasPdf="cfgUserOptions.buttons.pdf"
-            :hasXls="cfgUserOptions.buttons.csv"
-            :hasImg="cfgUserOptions.buttons.img"
-            :hasSvg="cfgUserOptions.buttons.svg"
-            :hasTable="cfgUserOptions.buttons.table"
-            :hasLabel="cfgUserOptions.buttons.labels"
-            :hasFullscreen="cfgUserOptions.buttons.fullscreen"
-            :hasAltCopy="cfgUserOptions.buttons.altCopy"
             :isTooltip="mutableConfig.showTooltip"
-            :titles="{ ...cfgUserOptions.buttonTitles }"
             :isFullscreen="isFullscreen"
             :chartElement="moleculeChart"
-            :position="cfgUserOptions.position"
-            :hasAnnotator="cfgUserOptions.buttons.annotator"
+            v-bind="
+                getUserOptionsProps(
+                    cfgUserOptions,
+                    'pdf csv img svg labels table fullscreen altCopy annotator zoom',
+                )
+            "
             :isAnnotation="isAnnotator"
-            :callbacks="cfgUserOptions.callbacks"
-            :printScale="cfgUserOptions.print.scale"
             :tableDialog="FINAL_CONFIG.table.useDialog"
-            :hasZoom="cfgUserOptions.buttons.zoom"
             :isZoom="mutableConfig.showZoom"
             :isCursorPointer="isCursorPointer"
             @toggleFullscreen="toggleFullscreen"

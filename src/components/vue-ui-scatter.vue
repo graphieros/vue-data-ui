@@ -1,14 +1,16 @@
 <script setup>
+import {
+    getUserOptionsProps,
+    getUserOptionSlots,
+    getUserOptionSlotProps,
+} from '../userOptionsSlots';
 import { getAnnotatorProps } from '../annotatorConfig';
 import { getTableComponent, syncTableVisibility } from '../tableIntegration';
 import {
     annotationSlotNames,
     getAnnotationSlotProps,
 } from '../annotationSlots';
-import {
-    getUserOptionSlots,
-    getUserOptionSlotProps,
-} from '../userOptionsSlots';
+
 import { resolveChartConfigWithPalette } from '../resolveChartConfig';
 import {
     computed,
@@ -701,49 +703,38 @@ const displayedAxisBounds = computed(() => {
     };
 });
 
-const xAxisScaleItems = computed(() => {
-    const xAxisConfig = cfgXAxisLabels.value;
-    const xAxisLabelsConfig = xAxisConfig.scales.labels;
+function formatCoordinate(value, formatter, rounding, context) {
+    return applyDataLabel(
+        formatter,
+        checkNaN(value),
+        dataLabel({
+            p: cfgPlots.value.selectors.labels.prefix,
+            v: checkNaN(value),
+            s: cfgPlots.value.selectors.labels.suffix,
+            r: rounding,
+        }),
+        ...(context ? [context] : []),
+    );
+}
 
-    return xAxisScale.value.ticks.map((tickValue) => {
-        return {
-            value: tickValue,
-            x: normalizeX(tickValue),
-            label: applyDataLabel(
-                xAxisLabelsConfig.formatter,
-                checkNaN(tickValue),
-                dataLabel({
-                    p: cfgPlots.value.selectors.labels.prefix,
-                    v: checkNaN(tickValue),
-                    s: cfgPlots.value.selectors.labels.suffix,
-                    r: getAxisRoundingValue(xAxisConfig),
-                }),
-            ),
-        };
-    });
-});
+function getAxisScaleItems(axis, axisScale, axisConfig, normalize) {
+    return axisScale.ticks.map((value) => ({
+        value,
+        [axis]: normalize(value),
+        label: formatCoordinate(
+            value,
+            axisConfig.scales.labels.formatter,
+            getAxisRoundingValue(axisConfig),
+        ),
+    }));
+}
 
-const yAxisScaleItems = computed(() => {
-    const yAxisConfig = cfgYAxisLabels.value;
-    const yAxisLabelsConfig = yAxisConfig.scales.labels;
-
-    return yAxisScale.value.ticks.map((tickValue) => {
-        return {
-            value: tickValue,
-            y: normalizeY(tickValue),
-            label: applyDataLabel(
-                yAxisLabelsConfig.formatter,
-                checkNaN(tickValue),
-                dataLabel({
-                    p: cfgPlots.value.selectors.labels.prefix,
-                    v: checkNaN(tickValue),
-                    s: cfgPlots.value.selectors.labels.suffix,
-                    r: getAxisRoundingValue(yAxisConfig),
-                }),
-            ),
-        };
-    });
-});
+const xAxisScaleItems = computed(() =>
+    getAxisScaleItems('x', xAxisScale.value, cfgXAxisLabels.value, normalizeX),
+);
+const yAxisScaleItems = computed(() =>
+    getAxisScaleItems('y', yAxisScale.value, cfgYAxisLabels.value, normalizeY),
+);
 
 const useXSelectorScaleLabel = computed(() => {
     return selectorPlots.value.length > 0 && cfgXAxisLabels.value.scales.show;
@@ -1160,6 +1151,107 @@ const marginalBars = computed(() => {
     return aggregateCoordinates(mutableDataset.value, scale.value);
 });
 
+// Geometry stays cached when only the hovered marginal bin changes.
+const marginalAxes = [
+    {
+        key: 'x',
+        onEnter: onMarginalXEnter,
+        get selected() {
+            return selectedMarginalX.value;
+        },
+    },
+    {
+        key: 'y',
+        onEnter: onMarginalYEnter,
+        get selected() {
+            return selectedMarginalY.value;
+        },
+    },
+];
+const isDev = import.meta.env.DEV;
+const marginalBins = computed(() =>
+    Object.fromEntries(
+        marginalAxes.map(({ key }) => {
+            const horizontal = key === 'x';
+            const area = drawingArea.value;
+            const bars = cfgBars.value;
+            const coordinates = marginalBars.value;
+            const averages = horizontal ? coordinates.avgX : coordinates.avgY;
+            const maximum = horizontal ? coordinates.maxX : coordinates.maxY;
+            const dimension = horizontal ? area.width : area.height;
+            const rawThickness = dimension / scale.value;
+            const thickness = rawThickness <= 0 ? 0.0001 : rawThickness;
+            return [
+                key,
+                coordinates[key].map((count, index) => {
+                    const average = averages[index];
+                    const start = average - rawThickness / 2;
+                    const length = (count / maximum) * bars.size;
+                    const barLength = length <= 0 ? 0.0001 : length;
+                    return {
+                        count,
+                        average,
+                        bar: horizontal
+                            ? {
+                                  x: start,
+                                  y: area.top - bars.offset - length,
+                                  width: thickness,
+                                  height: barLength,
+                              }
+                            : {
+                                  x: area.right + bars.offset,
+                                  y: start,
+                                  width: barLength,
+                                  height: thickness,
+                              },
+                        trap: horizontal
+                            ? {
+                                  x: start,
+                                  y: area.top - bars.offset - bars.size,
+                                  width: thickness,
+                                  height: Math.max(0.1, bars.size),
+                              }
+                            : {
+                                  x: area.right + bars.offset,
+                                  y: start,
+                                  width: Math.max(0.1, bars.size),
+                                  height: thickness,
+                              },
+                        highlight: horizontal
+                            ? {
+                                  x: start,
+                                  y: area.top,
+                                  width: thickness,
+                                  height: area.height,
+                              }
+                            : {
+                                  x: area.left,
+                                  y: start,
+                                  width: area.width,
+                                  height: thickness,
+                              },
+                        lines: [start, start + thickness].map((position) =>
+                            horizontal
+                                ? {
+                                      x1: position,
+                                      x2: position,
+                                      y1: 0,
+                                      y2: area.top + area.height,
+                                  }
+                                : {
+                                      x1: area.left,
+                                      x2: svg.value.width,
+                                      y1: position,
+                                      y2: position,
+                                  },
+                        ),
+                    };
+                }),
+            ];
+        }),
+    ),
+);
+
 const marginalLines = computed(() => {
     const top = drawingArea.value.top - cfgBars.value.offset;
     const right = drawingArea.value.right + cfgBars.value.offset;
@@ -1250,35 +1342,19 @@ const selectorPlots = computed(() => {
 });
 
 function getSelectorXAxisScaleLabel(selectorPlot) {
-    const xAxisConfig = cfgXAxisLabels.value;
-    const xAxisLabelsConfig = xAxisConfig.scales.labels;
-
-    return applyDataLabel(
-        xAxisLabelsConfig.formatter,
-        checkNaN(selectorPlot.v.x),
-        dataLabel({
-            p: cfgPlots.value.selectors.labels.prefix,
-            v: checkNaN(selectorPlot.v.x),
-            s: cfgPlots.value.selectors.labels.suffix,
-            r: getAxisRoundingValue(xAxisConfig),
-        }),
+    return formatCoordinate(
+        selectorPlot.v.x,
+        cfgXAxisLabels.value.scales.labels.formatter,
+        getAxisRoundingValue(cfgXAxisLabels.value),
         { datapoint: selectorPlot },
     );
 }
 
 function getSelectorYAxisScaleLabel(selectorPlot) {
-    const yAxisConfig = cfgYAxisLabels.value;
-    const yAxisLabelsConfig = yAxisConfig.scales.labels;
-
-    return applyDataLabel(
-        yAxisLabelsConfig.formatter,
-        checkNaN(selectorPlot.v.y),
-        dataLabel({
-            p: cfgPlots.value.selectors.labels.prefix,
-            v: checkNaN(selectorPlot.v.y),
-            s: cfgPlots.value.selectors.labels.suffix,
-            r: getAxisRoundingValue(yAxisConfig),
-        }),
+    return formatCoordinate(
+        selectorPlot.v.y,
+        cfgYAxisLabels.value.scales.labels.formatter,
+        getAxisRoundingValue(cfgYAxisLabels.value),
         { datapoint: selectorPlot },
     );
 }
@@ -2349,22 +2425,16 @@ watch(
             :isPrinting="isPrinting"
             :uid="uid"
             :hasTooltip="cfgUserOptions.buttons.tooltip && cfgTooltip.show"
-            :hasPdf="cfgUserOptions.buttons.pdf"
-            :hasImg="cfgUserOptions.buttons.img"
-            :hasSvg="cfgUserOptions.buttons.svg"
-            :hasXls="cfgUserOptions.buttons.csv"
-            :hasTable="cfgUserOptions.buttons.table"
-            :hasFullscreen="cfgUserOptions.buttons.fullscreen"
-            :hasAltCopy="cfgUserOptions.buttons.altCopy"
             :isTooltip="mutableConfig.showTooltip"
             :isFullscreen="isFullscreen"
-            :titles="{ ...cfgUserOptions.buttonTitles }"
             :chartElement="scatterChart"
-            :position="cfgUserOptions.position"
-            :hasAnnotator="cfgUserOptions.buttons.annotator"
+            v-bind="
+                getUserOptionsProps(
+                    cfgUserOptions,
+                    'pdf csv img svg table fullscreen altCopy annotator',
+                )
+            "
             :isAnnotation="isAnnotator"
-            :callbacks="cfgUserOptions.callbacks"
-            :printScale="cfgUserOptions.print.scale"
             :tableDialog="FINAL_CONFIG.table.useDialog"
             :isCursorPointer="isCursorPointer"
             @toggleFullscreen="toggleFullscreen"
@@ -2619,264 +2689,68 @@ watch(
                             ]"
                         />
                     </defs>
-                    <g v-for="(x, i) in marginalBars.x">
-                        <rect
-                            data-cy="marginal-bar-x"
-                            v-if="x && marginalBars.avgX[i]"
-                            :x="
-                                marginalBars.avgX[i] -
-                                drawingArea.width / scale / 2
-                            "
-                            :y="
-                                drawingArea.top -
-                                cfgBars.offset -
-                                (x / marginalBars.maxX) * cfgBars.size
-                            "
-                            :width="
-                                drawingArea.width / scale <= 0
-                                    ? 0.0001
-                                    : drawingArea.width / scale
-                            "
-                            :height="
-                                (x / marginalBars.maxX) * cfgBars.size <= 0
-                                    ? 0.0001
-                                    : (x / marginalBars.maxX) * cfgBars.size
-                            "
-                            :fill="
-                                cfgBars.useGradient
-                                    ? `url(#marginal_x_${uid})`
-                                    : cfgBars.fill
-                            "
-                            :style="`opacity:${cfgBars.opacity}`"
-                            :stroke="cfgStyle.backgroundColor"
-                            :stroke-width="cfgBars.strokeWidth"
-                            :rx="cfgBars.borderRadius"
-                            style="pointer-events: none"
-                        />
-                        <!-- MARGINAL MOUSE TRAP (X) -->
-                        <rect
-                            v-if="marginalBars.avgX[i]"
-                            :x="
-                                marginalBars.avgX[i] -
-                                drawingArea.width / scale / 2
-                            "
-                            :y="drawingArea.top - cfgBars.offset - cfgBars.size"
-                            :width="
-                                drawingArea.width / scale <= 0
-                                    ? 0.0001
-                                    : drawingArea.width / scale
-                            "
-                            :height="Math.max(0.1, cfgBars.size)"
-                            fill="transparent"
-                            @mouseenter="onMarginalXEnter(i)"
-                            @mouseleave="onMarginalLeave()"
-                        />
-                        <!-- MARGINAL HIGHLIGHTER (X) -->
-                        <template
-                            v-if="
-                                marginalBars.avgX[i] &&
-                                selectedMarginalX != null &&
-                                selectedMarginalX === i
-                            "
-                        >
-                            <g style="pointer-events: none">
-                                <rect
-                                    :x="
-                                        marginalBars.avgX[i] -
-                                        drawingArea.width / scale / 2
-                                    "
-                                    :y="drawingArea.top"
-                                    :width="
-                                        drawingArea.width / scale <= 0
-                                            ? 0.0001
-                                            : drawingArea.width / scale
-                                    "
-                                    :height="drawingArea.height"
-                                    :fill="cfgBars.highlighter.color"
-                                    :fill-opacity="cfgBars.highlighter.opacity"
-                                />
-                                <line
-                                    :x1="
-                                        marginalBars.avgX[i] -
-                                        drawingArea.width / scale / 2
-                                    "
-                                    :x2="
-                                        marginalBars.avgX[i] -
-                                        drawingArea.width / scale / 2
-                                    "
-                                    :y1="0"
-                                    :y2="drawingArea.top + drawingArea.height"
-                                    :stroke="cfgBars.highlighter.stroke"
-                                    :stroke-dasharray="
-                                        cfgBars.highlighter.strokeDasharray
-                                    "
-                                    :stroke-width="
-                                        cfgBars.highlighter.strokeWidth
-                                    "
-                                    :style="{
-                                        transition: 'none !important',
-                                        animation: 'none !important',
-                                    }"
-                                />
-                                <line
-                                    :x1="
-                                        marginalBars.avgX[i] -
-                                        drawingArea.width / scale / 2 +
-                                        (drawingArea.width / scale <= 0
-                                            ? 0.0001
-                                            : drawingArea.width / scale)
-                                    "
-                                    :x2="
-                                        marginalBars.avgX[i] -
-                                        drawingArea.width / scale / 2 +
-                                        (drawingArea.width / scale <= 0
-                                            ? 0.0001
-                                            : drawingArea.width / scale)
-                                    "
-                                    :y1="0"
-                                    :y2="drawingArea.top + drawingArea.height"
-                                    :stroke="cfgBars.highlighter.stroke"
-                                    :stroke-dasharray="
-                                        cfgBars.highlighter.strokeDasharray
-                                    "
-                                    :stroke-width="
-                                        cfgBars.highlighter.strokeWidth
-                                    "
-                                    :style="{
-                                        transition: 'none !important',
-                                        animation: 'none !important',
-                                    }"
-                                />
-                            </g>
-                        </template>
-                    </g>
-                    <g v-for="(y, i) in marginalBars.y">
-                        <rect
-                            data-cy="marginal-bar-y"
-                            v-if="y && marginalBars.avgY[i]"
-                            :x="drawingArea.right + cfgBars.offset"
-                            :y="
-                                marginalBars.avgY[i] -
-                                drawingArea.height / scale / 2
-                            "
-                            :height="
-                                drawingArea.height / scale <= 0
-                                    ? 0.0001
-                                    : drawingArea.height / scale
-                            "
-                            :width="
-                                (y / marginalBars.maxY) * cfgBars.size <= 0
-                                    ? 0.0001
-                                    : (y / marginalBars.maxY) * cfgBars.size
-                            "
-                            :fill="
-                                cfgBars.useGradient
-                                    ? `url(#marginal_y_${uid})`
-                                    : cfgBars.fill
-                            "
-                            :style="`opacity:${cfgBars.opacity}`"
-                            :stroke="cfgStyle.backgroundColor"
-                            :stroke-width="cfgBars.strokeWidth"
-                            :rx="cfgBars.borderRadius"
-                            style="pointer-events: none"
-                        />
-                        <!-- MARGINAL MOUSE TRAP (Y) -->
-                        <rect
-                            v-if="marginalBars.avgY[i]"
-                            :x="drawingArea.right + cfgBars.offset"
-                            :y="
-                                marginalBars.avgY[i] -
-                                drawingArea.height / scale / 2
-                            "
-                            :width="Math.max(0.1, cfgBars.size)"
-                            :height="
-                                drawingArea.height / scale <= 0
-                                    ? 0.0001
-                                    : drawingArea.height / scale
-                            "
-                            fill="transparent"
-                            @mouseenter="onMarginalYEnter(i)"
-                            @mouseleave="onMarginalLeave()"
-                        />
-                        <!-- MARGINAL HIGHLIGHTER (X) -->
-                        <template
-                            v-if="
-                                marginalBars.avgY[i] &&
-                                selectedMarginalY != null &&
-                                selectedMarginalY === i
-                            "
-                        >
-                            <g style="pointer-events: none">
-                                <rect
-                                    :x="drawingArea.left"
-                                    :y="
-                                        marginalBars.avgY[i] -
-                                        drawingArea.height / scale / 2
-                                    "
-                                    :width="drawingArea.width"
-                                    :height="
-                                        drawingArea.height / scale <= 0
-                                            ? 0.0001
-                                            : drawingArea.height / scale
-                                    "
-                                    :fill="cfgBars.highlighter.color"
-                                    :fill-opacity="cfgBars.highlighter.opacity"
-                                />
-                                <line
-                                    :x1="drawingArea.left"
-                                    :x2="svg.width"
-                                    :y1="
-                                        marginalBars.avgY[i] -
-                                        drawingArea.height / scale / 2
-                                    "
-                                    :y2="
-                                        marginalBars.avgY[i] -
-                                        drawingArea.height / scale / 2
-                                    "
-                                    :stroke="cfgBars.highlighter.stroke"
-                                    :stroke-dasharray="
-                                        cfgBars.highlighter.strokeDasharray
-                                    "
-                                    :stroke-width="
-                                        cfgBars.highlighter.strokeWidth
-                                    "
-                                    :style="{
-                                        transition: 'none !important',
-                                        animation: 'none !important',
-                                    }"
-                                />
-                                <line
-                                    :x1="drawingArea.left"
-                                    :x2="svg.width"
-                                    :y1="
-                                        marginalBars.avgY[i] -
-                                        drawingArea.height / scale / 2 +
-                                        (drawingArea.height / scale <= 0
-                                            ? 0.0001
-                                            : drawingArea.height / scale)
-                                    "
-                                    :y2="
-                                        marginalBars.avgY[i] -
-                                        drawingArea.height / scale / 2 +
-                                        (drawingArea.height / scale <= 0
-                                            ? 0.0001
-                                            : drawingArea.height / scale)
-                                    "
-                                    :stroke="cfgBars.highlighter.stroke"
-                                    :stroke-dasharray="
-                                        cfgBars.highlighter.strokeDasharray
-                                    "
-                                    :stroke-width="
-                                        cfgBars.highlighter.strokeWidth
-                                    "
-                                    :style="{
-                                        transition: 'none !important',
-                                        animation: 'none !important',
-                                    }"
-                                />
-                            </g>
-                        </template>
-                    </g>
+                    <template v-for="axis in marginalAxes" :key="axis.key">
+                        <g v-for="(bin, i) in marginalBins[axis.key]">
+                            <rect
+                                :data-cy="
+                                    isDev
+                                        ? 'marginal-bar-' + axis.key
+                                        : undefined
+                                "
+                                v-if="bin.count && bin.average"
+                                v-bind="bin.bar"
+                                :fill="
+                                    cfgBars.useGradient
+                                        ? `url(#marginal_${axis.key}_${uid})`
+                                        : cfgBars.fill
+                                "
+                                :style="`opacity:${cfgBars.opacity}`"
+                                :stroke="cfgStyle.backgroundColor"
+                                :stroke-width="cfgBars.strokeWidth"
+                                :rx="cfgBars.borderRadius"
+                                style="pointer-events: none"
+                            />
+                            <rect
+                                v-if="bin.average"
+                                v-bind="bin.trap"
+                                fill="transparent"
+                                @mouseenter="axis.onEnter(i)"
+                                @mouseleave="onMarginalLeave()"
+                            />
+                            <template
+                                v-if="
+                                    bin.average &&
+                                    axis.selected != null &&
+                                    axis.selected === i
+                                "
+                            >
+                                <g style="pointer-events: none">
+                                    <rect
+                                        v-bind="bin.highlight"
+                                        :fill="cfgBars.highlighter.color"
+                                        :fill-opacity="
+                                            cfgBars.highlighter.opacity
+                                        "
+                                    />
+                                    <line
+                                        v-for="bounds in bin.lines"
+                                        v-bind="bounds"
+                                        :stroke="cfgBars.highlighter.stroke"
+                                        :stroke-dasharray="
+                                            cfgBars.highlighter.strokeDasharray
+                                        "
+                                        :stroke-width="
+                                            cfgBars.highlighter.strokeWidth
+                                        "
+                                        :style="{
+                                            transition: 'none !important',
+                                            animation: 'none !important',
+                                        }"
+                                    />
+                                </g>
+                            </template>
+                        </g>
+                    </template>
                     <g v-if="cfgBars.showLines" style="pointer-events: none">
                         <template v-for="line in marginalLines">
                             <path
@@ -3186,15 +3060,10 @@ watch(
                             "
                         >
                             {{
-                                applyDataLabel(
+                                formatCoordinate(
+                                    selectorPlot.v.y,
                                     cfgPlots.selectors.labels.y.formatter,
-                                    checkNaN(selectorPlot.v.y),
-                                    dataLabel({
-                                        p: cfgPlots.selectors.labels.prefix,
-                                        v: checkNaN(selectorPlot.v.y),
-                                        s: cfgPlots.selectors.labels.suffix,
-                                        r: cfgPlots.selectors.labels.rounding,
-                                    }),
+                                    cfgPlots.selectors.labels.rounding,
                                     { datapoint: selectorPlot },
                                 )
                             }}
@@ -3219,15 +3088,10 @@ watch(
                             :text-anchor="'middle'"
                         >
                             {{
-                                applyDataLabel(
+                                formatCoordinate(
+                                    selectorPlot.v.x,
                                     cfgPlots.selectors.labels.y.formatter,
-                                    checkNaN(selectorPlot.v.x),
-                                    dataLabel({
-                                        p: cfgPlots.selectors.labels.prefix,
-                                        v: checkNaN(selectorPlot.v.x),
-                                        s: cfgPlots.selectors.labels.suffix,
-                                        r: cfgPlots.selectors.labels.rounding,
-                                    }),
+                                    cfgPlots.selectors.labels.rounding,
                                     { datapoint: selectorPlot },
                                 )
                             }}
@@ -3357,16 +3221,10 @@ watch(
                         :transform="`translate(${cfgXAxisLabels.name ? cfgXAxisLabels.fontSize * 3 : 0}, ${zero.y + cfgXAxisLabels.fontSize / 3}), rotate(-90)`"
                     >
                         {{
-                            applyDataLabel(
+                            formatCoordinate(
+                                displayedAxisBounds.xMin,
                                 cfgPlots.selectors.labels.x.formatter,
-                                checkNaN(displayedAxisBounds.xMin),
-                                dataLabel({
-                                    p: cfgPlots.selectors.labels.prefix,
-                                    v: checkNaN(displayedAxisBounds.xMin),
-                                    s: cfgPlots.selectors.labels.suffix,
-                                    r: cfgStyle.layout.dataLabels.xAxis
-                                        .rounding,
-                                }),
+                                cfgStyle.layout.dataLabels.xAxis.rounding,
                             )
                         }}
                     </text>
@@ -3382,15 +3240,10 @@ watch(
                     :fill="cfgXAxisLabels.color"
                 >
                     {{
-                        applyDataLabel(
+                        formatCoordinate(
+                            displayedAxisBounds.xMax,
                             cfgPlots.selectors.labels.x.formatter,
-                            checkNaN(displayedAxisBounds.xMax),
-                            dataLabel({
-                                p: cfgPlots.selectors.labels.prefix,
-                                v: checkNaN(displayedAxisBounds.xMax),
-                                s: cfgPlots.selectors.labels.suffix,
-                                r: cfgXAxisLabels.rounding,
-                            }),
+                            cfgXAxisLabels.rounding,
                         )
                     }}
                 </text>
@@ -3407,15 +3260,10 @@ watch(
                     :fill="cfgYAxisLabels.color"
                 >
                     {{
-                        applyDataLabel(
+                        formatCoordinate(
+                            displayedAxisBounds.yMax,
                             cfgPlots.selectors.labels.y.formatter,
-                            checkNaN(displayedAxisBounds.yMax),
-                            dataLabel({
-                                p: cfgPlots.selectors.labels.prefix,
-                                v: checkNaN(displayedAxisBounds.yMax),
-                                s: cfgPlots.selectors.labels.suffix,
-                                r: cfgYAxisLabels.rounding,
-                            }),
+                            cfgYAxisLabels.rounding,
                         )
                     }}
                 </text>
@@ -3432,16 +3280,10 @@ watch(
                         :fill="cfgYAxisLabels.color"
                     >
                         {{
-                            applyDataLabel(
+                            formatCoordinate(
+                                displayedAxisBounds.yMin,
                                 cfgPlots.selectors.labels.y.formatter,
-                                checkNaN(displayedAxisBounds.yMin),
-                                dataLabel({
-                                    p: cfgPlots.selectors.labels.prefix,
-                                    v: checkNaN(displayedAxisBounds.yMin),
-                                    s: cfgPlots.selectors.labels.suffix,
-                                    r: cfgStyle.layout.dataLabels.yAxis
-                                        .rounding,
-                                }),
+                                cfgStyle.layout.dataLabels.yAxis.rounding,
                             )
                         }}
                     </text>

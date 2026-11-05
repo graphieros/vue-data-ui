@@ -1,4 +1,16 @@
 <script setup>
+import { useStackChartLegend } from '../useStackChartLegend';
+import { useStackChartSlicer } from '../useStackChartSlicer';
+import { useStackChartTimeLabels } from '../useStackChartTimeLabels';
+import { useStackChartFormatters } from '../useStackChartFormatters';
+import StackChartLegend from '../atoms/StackChartLegend.vue';
+import StackChartTable from '../atoms/StackChartTable.vue';
+
+import {
+    getUserOptionsProps,
+    getUserOptionSlots,
+    getUserOptionSlotProps,
+} from '../userOptionsSlots';
 import { getAnnotatorProps } from '../annotatorConfig';
 import { createAnnotationViewport } from '../utils/annotationViewport';
 import { getTableComponent, syncTableVisibility } from '../tableIntegration';
@@ -6,10 +18,7 @@ import {
     annotationSlotNames,
     getAnnotationSlotProps,
 } from '../annotationSlots';
-import {
-    getUserOptionSlots,
-    getUserOptionSlotProps,
-} from '../userOptionsSlots';
+
 import {
     computed,
     defineAsyncComponent,
@@ -21,7 +30,6 @@ import {
     toRefs,
     useSlots,
     watch,
-    watchEffect,
 } from 'vue';
 import { useConfig } from '../useConfig';
 import { useSvgLabelLayout } from '../useSvgLabelLayout';
@@ -30,22 +38,18 @@ import {
     XMLNS,
     adaptColorToBackground,
     applyDataLabel,
-    buildDisplayedTimeLabels,
     calculateNiceScale,
     calculateNiceScaleWithExactExtremes,
     convertColorToHex,
     convertCustomPalette,
-    createCsvContent,
     createTSpansFromLineBreaksOnX,
     createTSpansFromLineBreaksOnY,
     createUid,
     dataLabel,
-    downloadCsv,
     error,
     escapeHtml,
     forceValidValue,
     functionReturnsString,
-    getEffectiveTimeLabelModulo,
     getImageDimensions,
     getMissingDatasetAttributes,
     hasDeepProperty,
@@ -60,13 +64,10 @@ import {
 } from '../lib';
 import { throttle } from '../canvas-lib';
 import { COMMON_RULES, useHints } from '../useHints.js';
-import { useLocale } from '../useLocale.js';
 import { usePrinter } from '../usePrinter';
 import { useLoading } from '../useLoading.js';
-import { useDateTime } from '../useDateTime.js';
 import { useNestedProp } from '../useNestedProp';
 import { useResponsive } from '../useResponsive';
-import { useTimeLabels } from '../useTimeLabels';
 import { useThemeCheck } from '../useThemeCheck.js';
 import { useChartExport } from '../useChartExport.js';
 import { useTransitions } from '../useTransitions.js';
@@ -78,17 +79,14 @@ import img from '../img';
 import Title from '../atoms/Title.vue'; // Must be ready in responsive mode
 import Shape from '../atoms/Shape.vue';
 import themes from '../themes/vue_ui_stackbar.json';
-import Legend from '../atoms/Legend.vue'; // Must be ready in responsive mode
 import BaseScanner from '../atoms/BaseScanner.vue';
 import A11yDataTable from '../atoms/A11yDataTable.vue';
 import SlicerPreview from '../atoms/SlicerPreview.vue';
-import BaseLegendToggle from '../atoms/BaseLegendToggle.vue';
 import DefGrad from '../atoms/DefGrad.vue';
 
 const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
-const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
 const PenAndPaper = defineAsyncComponent(
     () => import('../atoms/PenAndPaper.vue'),
 );
@@ -1498,6 +1496,19 @@ const unmutableDataset = computed(() => {
     });
 });
 
+const { toggleLegend, showSeries, hideSeries, legendSet, legendConfig } =
+    useStackChartLegend({
+        unmutableDataset,
+        formattedDataset: computed(() => formattedDataset.value),
+        segregated,
+        cfgChart,
+        debug,
+        emit,
+        chartName: 'stackbar',
+        componentName: 'VueUiStackbar',
+        legendShape: 'square',
+    });
+
 const maxSeries = computed(() => {
     if (isWaterfall.value) return waterfallSource.value.series?.length ?? 0;
     const v = Math.max(
@@ -1524,6 +1535,28 @@ const slicerPrecog = ref({
     end: maxSeries.value,
 });
 
+const {
+    isPrecog,
+    setPrecog,
+    normalizeZoomState,
+    emitZoomState,
+    clearQueuedSlicerFrame,
+    normalizeSlicerWindow,
+    setupSlicer,
+    onSlicerStart,
+    onSlicerEnd,
+    slicerReady,
+} = useStackChartSlicer({
+    slicer,
+    slicerPrecog,
+    cfgChart,
+    maxSeries,
+    chartSlicer,
+    props,
+    emit,
+    applyZoomState: (state) => applyZoomState(state),
+});
+
 const isChartZoomSelecting = ref(false);
 const isChartZoomPointerFocused = ref(false);
 const chartZoomStartCoord = ref(null);
@@ -1548,61 +1581,6 @@ const isChartZoomEnabled = computed(() => {
         !loading.value
     );
 });
-
-let queuedSlicerFrame = null;
-let queuedSlicerUpdate = {};
-
-const isPrecog = computed(() => {
-    return (
-        cfgChart.value.zoom.preview.enable &&
-        (slicerPrecog.value.start !== slicer.value.start ||
-            slicerPrecog.value.end !== slicer.value.end)
-    );
-});
-
-function setPrecog(side, val) {
-    slicerPrecog.value[side] = val;
-}
-
-/**
- * Coerce supplied zoom bounds to finite numbers, filling omitted bounds from fallback.
- * This validates the shape only; dataset clamping happens when the range is applied.
- *
- * @param {unknown} state - Candidate range; at least one bound must be supplied.
- * @param {{ start: number, end: number }} [fallback] - Bounds used for missing endpoints.
- * @returns {{ start: number, end: number } | null} Numeric range, or null for invalid input.
- */
-function normalizeZoomState(state, fallback = slicer.value) {
-    if (!state || typeof state !== 'object') return null;
-    const hasStart = state.start !== undefined && state.start !== null;
-    const hasEnd = state.end !== undefined && state.end !== null;
-    if (!hasStart && !hasEnd) return null;
-    const start = hasStart ? Number(state.start) : Number(fallback.start);
-    const end = hasEnd ? Number(state.end) : Number(fallback.end);
-    if (!Number.isFinite(start) || !Number.isFinite(end)) {
-        return null;
-    }
-    return {
-        start,
-        end,
-    };
-}
-
-function emitZoomState(state) {
-    const normalized = normalizeZoomState(state);
-    if (!normalized) return;
-
-    emit('update:zoomState', normalized);
-}
-
-function clearQueuedSlicerFrame() {
-    if (queuedSlicerFrame) {
-        cancelAnimationFrame(queuedSlicerFrame);
-        queuedSlicerFrame = null;
-    }
-
-    queuedSlicerUpdate = {};
-}
 
 function applyZoomState(state) {
     const normalized = normalizeZoomState(state);
@@ -1645,26 +1623,6 @@ function setZoomState(state) {
     emit('update:zoomState', applied);
 
     return applied;
-}
-
-function normalizeSlicerWindow() {
-    const maxLen = maxSeries.value;
-    let s = Math.max(0, Math.min(slicer.value.start ?? 0, maxLen - 1));
-    let e = Math.max(s + 1, Math.min(slicer.value.end ?? maxLen, maxLen));
-
-    if (!Number.isFinite(s) || !Number.isFinite(e) || e <= s) {
-        s = 0;
-        e = maxLen;
-    }
-
-    slicer.value.start = s;
-    slicer.value.end = e;
-    slicerPrecog.value.start = s;
-    slicerPrecog.value.end = e;
-
-    if (chartSlicer.value) {
-        chartSlicer.value.setRangeValues(s, e);
-    }
 }
 
 const refreshRAF = ref(null);
@@ -1948,151 +1906,27 @@ const timeLabels = ref([]);
 const timeLabelsAreReady = ref(false);
 const allTimeLabels = ref([]);
 
-let timeLabelsRequestId = 0;
-watchEffect(() => {
-    const requestId = ++timeLabelsRequestId;
-
-    if (isWaterfall.value) {
-        // Do not send category names to useTimeLabels: it formats dates and
-        // turns strings such as "Revenue" into NaN:NaN:NaN.
-        const start = slicer.value.start;
-        timeLabels.value = waterfallSteps.value
-            .slice(start, slicer.value.end)
-            .map((step, index) => ({
-                text: step.name,
-                absoluteIndex: start + index,
-            }));
-        timeLabelsAreReady.value = true;
-        return;
-    }
-
-    (async () => {
-        const labels = await useTimeLabels({
-            values: cfgTimeLabels.value.values,
-            maxDatapoints: maxSeries.value,
-            formatter: cfgTimeLabels.value.datetimeFormatter,
-            start: slicer.value.start,
-            end: slicer.value.end,
-        });
-
-        if (requestId === timeLabelsRequestId) {
-            timeLabels.value = labels;
-            timeLabelsAreReady.value = true;
-        }
-    })();
+const {
+    getDisplayedTimeLabels,
+    preciseAllTimeLabels,
+    preciseAllTimeLabelsTooltip,
+} = useStackChartTimeLabels({
+    cfgTimeLabels,
+    timeLabels,
+    timeLabelsAreReady,
+    allTimeLabels,
+    slicer,
+    maxSeries,
+    cfgChart,
+    cfgTooltip,
+    getCategoryLabels: () =>
+        isWaterfall.value
+            ? waterfallSteps.value.map((step, index) => ({
+                  text: step.name,
+                  absoluteIndex: index,
+              }))
+            : null,
 });
-
-let allTimeLabelsRequestId = 0;
-watchEffect(() => {
-    const requestId = ++allTimeLabelsRequestId;
-
-    if (isWaterfall.value) {
-        allTimeLabels.value = waterfallSteps.value.map((step) => ({
-            text: step.name,
-            absoluteIndex: step.index,
-        }));
-        return;
-    }
-
-    (async () => {
-        const labels = await useTimeLabels({
-            values: cfgTimeLabels.value.values,
-            maxDatapoints: maxSeries.value,
-            formatter: cfgTimeLabels.value.datetimeFormatter,
-            start: 0,
-            end: maxSeries.value,
-        });
-
-        if (requestId === allTimeLabelsRequestId) {
-            allTimeLabels.value = labels;
-        }
-    })();
-});
-
-const effectiveModulo = computed(() => {
-    const configuredModulo = Math.max(
-        1,
-        Math.floor(Number(cfgTimeLabels.value.modulo) || 1),
-    );
-
-    const visibleTexts = (timeLabels.value || []).map(
-        (label) => label?.text ?? '',
-    );
-
-    const allTexts = (allTimeLabels.value || []).map(
-        (label) => label?.text ?? '',
-    );
-
-    const start = slicer.value.start ?? 0;
-
-    const isZoomed = start > 0 || visibleTexts.length < allTexts.length;
-
-    return getEffectiveTimeLabelModulo({
-        configuredModulo,
-        visibleTexts,
-        allTexts,
-        startAbs: start,
-        isZoomed,
-    });
-});
-
-function getDisplayedTimeLabels(selectedIndex) {
-    // Waterfall uses categorical labels.
-    // Always display every visible category without modulo filtering.
-    if (isWaterfall.value) {
-        const start = slicer.value.start ?? 0;
-        const end = slicer.value.end ?? waterfallSteps.value.length;
-
-        return waterfallSteps.value.slice(start, end).map((step, index) => ({
-            text: step.name,
-            absoluteIndex: start + index,
-        }));
-    }
-
-    // Preserve the original Stackbar behavior.
-    const cfg = cfgTimeLabels.value;
-
-    const vis = timeLabels.value || [];
-    const all = allTimeLabels.value || [];
-    const start = slicer.value.start ?? 0;
-    const maxS = maxSeries.value;
-
-    const visTexts = vis.map((label) => label?.text ?? '');
-    const allTexts = all.map((label) => label?.text ?? '');
-
-    const displayed = buildDisplayedTimeLabels(
-        !!cfg.showOnlyFirstAndLast,
-        !!cfg.showOnlyAtModulo,
-        effectiveModulo.value,
-        visTexts,
-        allTexts,
-        start,
-        selectedIndex,
-        maxS,
-    );
-
-    if (
-        !cfg.showFirstAndLast ||
-        cfg.showOnlyFirstAndLast ||
-        !displayed.length
-    ) {
-        return displayed;
-    }
-
-    const lastIndex = displayed.length - 1;
-
-    return displayed.map((label, i) => {
-        if (i !== 0 && i !== lastIndex) {
-            return label;
-        }
-
-        return {
-            ...label,
-            text: visTexts[i] ?? '',
-        };
-    });
-}
-
 const displayedTimeLabels = computed(() => {
     return getDisplayedTimeLabels(trapIndex.value);
 });
@@ -2134,76 +1968,6 @@ watch(
     measureLabelLayout,
     { flush: 'post', deep: true },
 );
-
-const localeData = ref({
-    months: [],
-    shortMonths: [],
-    days: [],
-    shortDays: [],
-});
-
-let localeRequestId = 0;
-watchEffect(() => {
-    const requestId = ++localeRequestId;
-    const xl = cfgTimeLabels.value.datetimeFormatter;
-
-    (async () => {
-        const resolved = await useLocale(xl.locale).catch(() =>
-            useLocale('en'),
-        );
-        if (requestId === localeRequestId) {
-            localeData.value = resolved.data;
-        }
-    })();
-});
-
-const preciseTimeFormatter = computed(() => {
-    const xl = cfgTimeLabels.value.datetimeFormatter;
-
-    const dt = useDateTime({
-        useUTC: xl.useUTC,
-        locale: localeData.value,
-        januaryAsYear: xl.januaryAsYear,
-    });
-
-    return (absIndex, fmt) => {
-        if (isWaterfall.value) {
-            return waterfallSteps.value[absIndex]?.name ?? '';
-        }
-        const values = cfgTimeLabels.value.values;
-        const ts = values?.[absIndex];
-        if (ts == null) return '';
-        return dt.formatDate(new Date(ts), fmt);
-    };
-});
-
-const preciseAllTimeLabels = computed(() => {
-    if (isWaterfall.value) {
-        return waterfallSteps.value.map((step) => ({
-            text: step.name,
-            absoluteIndex: step.index,
-        }));
-    }
-    const values = cfgTimeLabels.value.values || [];
-    return values.map((_, i) => ({
-        text: preciseTimeFormatter.value(i, cfgChart.value.zoom.timeFormat),
-        absoluteIndex: i,
-    }));
-});
-
-const preciseAllTimeLabelsTooltip = computed(() => {
-    if (isWaterfall.value) {
-        return waterfallSteps.value.map((step) => ({
-            text: step.name,
-            absoluteIndex: step.index,
-        }));
-    }
-    const values = cfgTimeLabels.value.values || [];
-    return values.map((_, i) => ({
-        text: preciseTimeFormatter.value(i, cfgTooltip.value.timeFormat),
-        absoluteIndex: i,
-    }));
-});
 
 const stackbarTimeLabelCounts = computed(() => {
     const counts = new Map();
@@ -2677,34 +2441,6 @@ const totalLabels = computed(() => {
     });
 });
 
-function barDataLabel(val, datapoint, index, dpIndex, signed) {
-    const appliedValue = signed === -1 ? (val >= 0 ? -val : val) : val;
-    return applyDataLabel(
-        cfgBars.value.dataLabels.formatter,
-        appliedValue,
-        dataLabel({
-            p: cfgBars.value.dataLabels.prefix,
-            v: appliedValue,
-            s: cfgBars.value.dataLabels.suffix,
-            r: cfgBars.value.dataLabels.rounding,
-        }),
-        { datapoint, seriesIndex: index, datapointIndex: dpIndex },
-    );
-}
-
-function barDataLabelPercentage(val, datapoint, index, dpIndex) {
-    return applyDataLabel(
-        cfgBars.value.dataLabels.formatter,
-        val,
-        dataLabel({
-            v: isNaN(val) ? 0 : val,
-            s: '%',
-            r: cfgBars.value.dataLabels.rounding,
-        }),
-        { datapoint, seriesIndex: index, datapointIndex: dpIndex },
-    );
-}
-
 function selectDatapoint(index) {
     if (isWaterfall.value) {
         const datapoint = getDatapoint(index);
@@ -3134,27 +2870,16 @@ const tableCsv = computed(() => {
     });
     return { head, body };
 });
-
-function generateCsv(callback = null) {
-    const title = [
-        [cfgChart.value.title.text],
-        [cfgChart.value.title.subtitle.text],
-        [''],
-    ];
-    const head = ['', ...tableCsv.value.head.map((h) => h.label)];
-    const body = tableCsv.value.body;
-    const table = title.concat([head]).concat(body);
-    const csvContent = createCsvContent(table);
-
-    if (!callback) {
-        downloadCsv({
-            csvContent,
-            title: cfgChart.value.title.text || 'vue-ui-stackbar',
-        });
-    } else {
-        callback(csvContent);
-    }
-}
+const {
+    valueLabel: barDataLabel,
+    percentageLabel: barDataLabelPercentage,
+    generateCsv,
+} = useStackChartFormatters({
+    dataLabels: computed(() => cfgBars.value.dataLabels),
+    cfgChart,
+    tableCsv,
+    fallbackTitle: 'vue-ui-stackbar',
+});
 
 const dataTable = computed(() => {
     if (isWaterfall.value) {
@@ -3246,104 +2971,6 @@ const dataTable = computed(() => {
         body: body.slice(0, slicer.value.end - slicer.value.start),
         config,
         colNames,
-    };
-});
-
-function toggleLegend() {
-    if (segregated.value.length) {
-        segregated.value = [];
-    } else {
-        legendSet.value.forEach((l) => {
-            segregated.value.push(l.id);
-        });
-    }
-    emit('selectLegend', formattedDataset.value);
-}
-
-function segregate(item) {
-    if (segregated.value.includes(item.id)) {
-        segregated.value = segregated.value.filter((el) => el !== item.id);
-    } else {
-        if (segregated.value.length === unmutableDataset.value.length - 1)
-            return;
-        segregated.value.push(item.id);
-    }
-    emit('selectLegend', formattedDataset.value);
-}
-
-function validSeriesToToggle(name) {
-    if (!unmutableDataset.value.length) {
-        if (debug.value) {
-            console.warn('VueUiStackbar - There are no series to show.');
-        }
-        return null;
-    }
-    const dp = unmutableDataset.value.find((d) => d.name === name);
-    if (!dp) {
-        if (debug.value) {
-            console.warn(`VueUiStackbar - Series name not found "${name}"`);
-        }
-        return null;
-    }
-    return dp;
-}
-
-/**
- * Show the named series only if its visibility needs to change.
- * Unknown names leave visibility unchanged.
- *
- * @param {string} name - Series name matched by the component.
- * @returns {void}
- */
-function showSeries(name) {
-    const dp = validSeriesToToggle(name);
-    if (dp === null) return;
-    if (segregated.value.includes(dp.id)) {
-        segregate({ id: dp.id });
-    }
-}
-
-/**
- * Hide the named series only if its visibility needs to change.
- * Unknown names leave visibility unchanged.
- *
- * @param {string} name - Series name matched by the component.
- * @returns {void}
- */
-function hideSeries(name) {
-    const dp = validSeriesToToggle(name);
-    if (dp === null) return;
-    if (!segregated.value.includes(dp.id)) {
-        segregate({ id: dp.id });
-    }
-}
-
-const legendSet = computed(() => {
-    return unmutableDataset.value
-        .map((ds, i) => {
-            return {
-                ...ds,
-                shape: 'square',
-            };
-        })
-        .map((ds) => {
-            return {
-                ...ds,
-                opacity: segregated.value.includes(ds.id) ? 0.5 : 1,
-                segregate: () => segregate(ds),
-                isSegregated: segregated.value.includes(ds.id),
-            };
-        });
-});
-
-const legendConfig = computed(() => {
-    return {
-        cy: 'stackbar-legend',
-        backgroundColor: cfgChart.value.legend.backgroundColor,
-        color: cfgChart.value.legend.color,
-        fontSize: cfgChart.value.legend.fontSize,
-        paddingBottom: 12,
-        fontWeight: cfgChart.value.legend.bold ? 'bold' : '',
     };
 });
 
@@ -3492,70 +3119,6 @@ const { isCallbackImaging, isCallbackSvg, generateSvg, onGenerateImage } =
         generateImage,
     });
 
-function validSlicerEnd(v, start = slicer.value.start) {
-    const _max = maxSeries.value;
-    const effectiveStart = Number(start);
-
-    if (v > _max) {
-        return _max;
-    }
-
-    if (v < 0 || v <= effectiveStart) {
-        return Math.min(effectiveStart + 1, _max);
-    }
-
-    return v;
-}
-
-const isSettingUp = ref(false);
-const slicerReady = ref(false);
-
-function setupSlicer(applyControlledZoom = true) {
-    if (isSettingUp.value) return;
-
-    isSettingUp.value = true;
-
-    try {
-        const { startIndex, endIndex, keepState } = cfgChart.value.zoom;
-
-        const max = keepState ? Math.max(0, maxSeries.value) : maxSeries.value;
-
-        if (keepState && max <= 0) {
-            return;
-        }
-
-        const start = startIndex != null ? startIndex : 0;
-
-        const end =
-            endIndex != null
-                ? Math.min(validSlicerEnd(endIndex + 1, start), max)
-                : max;
-
-        suppressChild.value = true;
-
-        slicer.value.start = start;
-        slicer.value.end = end;
-        slicerPrecog.value.start = start;
-        slicerPrecog.value.end = end;
-
-        normalizeSlicerWindow();
-
-        slicerReady.value = true;
-
-        if (applyControlledZoom && props.zoomState) {
-            applyZoomState(props.zoomState);
-        }
-    } finally {
-        queueMicrotask(() => {
-            suppressChild.value = false;
-        });
-
-        isSettingUp.value = false;
-    }
-}
-
-const suppressChild = ref(false);
-
 watch(
     [() => props.zoomState, slicerReady],
     ([state, ready]) => {
@@ -3571,78 +3134,6 @@ watch(
         immediate: true,
     },
 );
-
-function queueSlicerUpdate(update) {
-    queuedSlicerUpdate = {
-        ...queuedSlicerUpdate,
-        ...update,
-    };
-
-    if (queuedSlicerFrame) {
-        cancelAnimationFrame(queuedSlicerFrame);
-    }
-
-    queuedSlicerFrame = requestAnimationFrame(() => {
-        const nextSlicer = {
-            ...slicer.value,
-            ...queuedSlicerUpdate,
-        };
-
-        queuedSlicerUpdate = {};
-        queuedSlicerFrame = null;
-
-        slicer.value = nextSlicer;
-        slicerPrecog.value = { ...nextSlicer };
-
-        normalizeSlicerWindow();
-
-        // Publish only the complete, normalized range. SlicerPreview emits
-        // start and end separately while dragging the whole selection.
-        emitZoomState({
-            start: Number(slicer.value.start),
-            end: Number(slicer.value.end),
-        });
-    });
-}
-
-function onSlicerStart(v) {
-    if (isSettingUp.value || suppressChild.value) return;
-
-    const start = Number(v);
-    if (!Number.isFinite(start)) return;
-
-    emit('zoomStart', {
-        index: start,
-        isZoom: start !== 0,
-    });
-
-    if (start === slicer.value.start) return;
-
-    queueSlicerUpdate({ start });
-}
-
-function onSlicerEnd(v) {
-    if (isSettingUp.value || suppressChild.value) return;
-
-    const pendingStart =
-        queuedSlicerUpdate.start !== undefined
-            ? queuedSlicerUpdate.start
-            : slicer.value.start;
-
-    const end = validSlicerEnd(Number(v), pendingStart);
-    if (!Number.isFinite(end)) return;
-
-    emit('zoomEnd', {
-        index: end,
-        isZoom: end !== maxSeries.value,
-    });
-
-    if (end === slicer.value.end && queuedSlicerUpdate.start === undefined) {
-        return;
-    }
-
-    queueSlicerUpdate({ end });
-}
 
 function selectX({ seriesIndex, datapoint }) {
     const index = slicer.value.start + seriesIndex;
@@ -4405,23 +3896,16 @@ const annotationViewport = computed(() => {
             :isImaging="isImaging"
             :uid="uid"
             :hasTooltip="cfgTooltip.show && cfgUserOptions.buttons.tooltip"
-            :hasPdf="cfgUserOptions.buttons.pdf"
-            :hasImg="cfgUserOptions.buttons.img"
-            :hasSvg="cfgUserOptions.buttons.svg"
-            :hasXls="cfgUserOptions.buttons.csv"
-            :hasTable="cfgUserOptions.buttons.table"
-            :hasLabel="cfgUserOptions.buttons.labels"
-            :hasFullscreen="cfgUserOptions.buttons.fullscreen"
-            :hasAltCopy="cfgUserOptions.buttons.altCopy"
             :isFullscreen="isFullscreen"
             :chartElement="stackbarChart"
-            :position="cfgUserOptions.position"
+            v-bind="
+                getUserOptionsProps(
+                    cfgUserOptions,
+                    'pdf csv img svg labels table fullscreen altCopy annotator',
+                )
+            "
             :isTooltip="mutableConfig.showTooltip"
-            :titles="{ ...cfgUserOptions.buttonTitles }"
-            :hasAnnotator="cfgUserOptions.buttons.annotator"
             :isAnnotation="isAnnotator"
-            :callbacks="cfgUserOptions.callbacks"
-            :printScale="cfgUserOptions.print.scale"
             :tableDialog="FINAL_CONFIG.table.useDialog"
             :isCursorPointer="isCursorPointer"
             @toggleFullscreen="toggleFullscreen"
@@ -5980,54 +5464,17 @@ const annotationViewport = computed(() => {
         >
             <div ref="chartLegend">
                 <slot name="legend" v-bind:legend="legendSet">
-                    <Legend
-                        v-if="svgLegend.show"
+                    <StackChartLegend
+                        :legend="cfgChart.legend"
                         :legendSet="legendSet"
-                        :config="legendConfig"
+                        :legendConfig="legendConfig"
                         :isCursorPointer="isCursorPointer"
-                        @clickMarker="({ legend }) => legend.segregate()"
-                    >
-                        <template
-                            #legend-pattern="{ legend, index }"
-                            v-if="$slots.pattern"
-                        >
-                            <Shape
-                                :shape="legend.shape"
-                                :radius="30"
-                                stroke="none"
-                                :plot="{ x: 30, y: 30 }"
-                                :fill="`url(#pattern_${uid}_${index})`"
-                            />
-                        </template>
-
-                        <template #item="{ legend }">
-                            <div
-                                @click="legend.segregate()"
-                                :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`"
-                                v-if="!loading"
-                            >
-                                {{ legend.name }}
-                            </div>
-                        </template>
-
-                        <template #legendToggle>
-                            <BaseLegendToggle
-                                v-if="
-                                    legendSet.length > 2 &&
-                                    svgLegend.selectAllToggle.show &&
-                                    !loading
-                                "
-                                :backgroundColor="
-                                    svgLegend.selectAllToggle.backgroundColor
-                                "
-                                :color="svgLegend.selectAllToggle.color"
-                                :fontSize="svgLegend.fontSize"
-                                :checked="segregated.length > 0"
-                                :isCursorPointer="isCursorPointer"
-                                @toggle="toggleLegend"
-                            />
-                        </template>
-                    </Legend>
+                        :hasPattern="!!$slots.pattern"
+                        :uid="uid"
+                        :segregated="segregated"
+                        :loading="loading"
+                        @toggle="toggleLegend"
+                    />
                 </slot>
             </div>
         </Teleport>
@@ -6036,67 +5483,18 @@ const annotationViewport = computed(() => {
             <slot name="source" />
         </div>
 
-        <component
+        <StackChartTable
             v-if="isDataset && cfgUserOptions.buttons.table"
-            :is="tableComponent.component"
-            v-bind="tableComponent.props"
-            ref="tableUnit"
+            :tableComponent="tableComponent"
+            :dataTable="dataTable"
+            :useDialog="FINAL_CONFIG.table.useDialog"
+            :dataLabels="cfgBars.dataLabels"
+            :rounding="FINAL_CONFIG.table.td.roundingValue"
+            :isCursorPointer="isCursorPointer"
+            :setTableRef="(el) => (tableUnit = el)"
             @close="closeTable"
-        >
-            <template #title v-if="FINAL_CONFIG.table.useDialog">
-                {{ tableComponent.title }}
-            </template>
-            <template #actions v-if="FINAL_CONFIG.table.useDialog">
-                <button
-                    tabindex="0"
-                    class="vue-ui-user-options-button"
-                    @click="generateCsv(cfgUserOptions.callbacks.csv)"
-                    :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }"
-                >
-                    <BaseIcon
-                        name="fileCsv"
-                        :stroke="tableComponent.props.color"
-                    />
-                </button>
-            </template>
-            <template #content>
-                <DataTable
-                    :colNames="dataTable.colNames"
-                    :head="dataTable.head"
-                    :body="dataTable.body"
-                    :config="dataTable.config"
-                    :title="
-                        FINAL_CONFIG.table.useDialog ? '' : tableComponent.title
-                    "
-                    :withCloseButton="!FINAL_CONFIG.table.useDialog"
-                    :isCursorPointer="isCursorPointer"
-                    @close="closeTable"
-                >
-                    <template #th="{ th }">
-                        <div v-if="th === '__SUM__'">
-                            <BaseIcon
-                                name="sigma"
-                                :stroke="dataTable.config.th.color"
-                                :size="16"
-                            />
-                        </div>
-                        <div v-else>{{ th }}</div>
-                    </template>
-                    <template #td="{ td }">
-                        {{
-                            !isNaN(Number(td))
-                                ? dataLabel({
-                                      p: cfgBars.dataLabels.prefix,
-                                      v: td,
-                                      s: cfgBars.dataLabels.suffix,
-                                      r: FINAL_CONFIG.table.td.roundingValue,
-                                  })
-                                : td
-                        }}
-                    </template>
-                </DataTable>
-            </template>
-        </component>
+            @csv="generateCsv(cfgUserOptions.callbacks.csv)"
+        />
 
         <!-- v3 Skeleton loader -->
         <slot name="skeleton">

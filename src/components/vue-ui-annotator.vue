@@ -50,719 +50,83 @@
             >
                 <div>
                     <div class="tool-selection">
-                        <!-- MOVE -->
-                        <button
-                            data-cy="annotator-button-move"
-                            :disabled="shapes.length === 0"
-                            :style="{
-                                background: isMoveMode
-                                    ? buttons.controls.selected.backgroundColor
-                                    : buttons.controls.backgroundColor,
-                                border: isMoveMode
-                                    ? buttons.controls.selected.border
-                                    : buttons.controls.border,
-                                color: isMoveMode
-                                    ? buttons.controls.selected.color
-                                    : buttons.controls.color,
-                                borderRadius: `${buttons.borderRadius}px`,
-                                cursor: isCursorPointer ? 'pointer' : 'default',
-                            }"
-                            :class="{
-                                'button-tool': true,
-                                'button-tool--selected': isMoveMode,
-                                tooltip: true,
-                            }"
-                            @click="
-                                deleteEmptyTextElement();
-                                isMoveMode = !isMoveMode;
-                                isDeleteMode = false;
-                                isDrawMode = false;
-                                isResizeMode = false;
-                                isSelectMode = false;
-                                isTextMode = false;
-                                isWriting = false;
-                                showCaret = false;
-                            "
-                            @mouseenter="
-                                style.showTooltips &&
-                                showToolTipFor('move', $event, 'top')
-                            "
-                            @mouseleave="hideTooltip"
-                            @focus="
-                                style.showTooltips &&
-                                showToolTipFor('move', $event, 'top')
-                            "
-                            @blur="hideTooltip"
+                        <!-- TOOLBAR ACTIONS -->
+                        <AnnotatorToolbarActions
+                            :actions="toolbarActions"
+                            v-slot="{ action }"
                         >
-                            <slot
-                                name="icon-move"
-                                v-bind="{ active: isMoveMode }"
+                            <button
+                                v-if="!('visible' in action) || action.visible"
+                                :data-cy="action.testId"
+                                :disabled="action.disabled"
+                                :style="
+                                    getToolButtonStyle(
+                                        'controls',
+                                        action.active,
+                                    )
+                                "
+                                :class="{
+                                    'button-tool': true,
+                                    'button-tool--selected': action.active,
+                                    'button-tool--one-shot': action.oneShot,
+                                    tooltip: true,
+                                }"
+                                @click="action.run"
+                                @mouseenter="
+                                    style.showTooltips &&
+                                    showToolTipFor(action.key, $event, 'top')
+                                "
+                                @mouseleave="hideTooltip"
+                                @focus="
+                                    style.showTooltips &&
+                                    showToolTipFor(action.key, $event, 'top')
+                                "
+                                @blur="hideTooltip"
                             >
-                                <BaseIcon
-                                    name="move"
-                                    :stroke="
-                                        isMoveMode
-                                            ? buttons.controls.selected.color
-                                            : buttons.controls.color
+                                <slot
+                                    :name="action.slot"
+                                    v-bind="
+                                        'active' in action
+                                            ? { active: action.active }
+                                            : {}
                                     "
-                                />
-                            </slot>
-
-                            <TeleportedTooltip
-                                v-if="style.showTooltips"
-                                :show="showTooltip && tooltipKey === 'move'"
-                                :x="tooltipPos.x"
-                                :y="tooltipPos.y - 6"
-                                :placement="'top'"
-                                :styleObject="tooltipStyleObject"
-                            >
-                                {{ FINAL_CONFIG.translations.tooltipMove }}
-                                <kbd>M</kbd>
-                            </TeleportedTooltip>
-                        </button>
-
-                        <!-- RESIZE -->
-                        <button
-                            :disabled="shapes.length === 0"
-                            :style="{
-                                background: isResizeMode
-                                    ? buttons.controls.selected.backgroundColor
-                                    : buttons.controls.backgroundColor,
-                                border: isResizeMode
-                                    ? buttons.controls.selected.border
-                                    : buttons.controls.border,
-                                color: isResizeMode
-                                    ? buttons.controls.selected.color
-                                    : buttons.controls.color,
-                                borderRadius: `${buttons.borderRadius}px`,
-                                cursor: isCursorPointer ? 'pointer' : 'default',
-                            }"
-                            :class="{
-                                'button-tool': true,
-                                'button-tool--selected': isResizeMode,
-                                tooltip: true,
-                            }"
-                            @click="
-                                deleteEmptyTextElement();
-                                isResizeMode = !isResizeMode;
-                                isMoveMode = false;
-                                isDeleteMode = false;
-                                isDrawMode = false;
-                                isSelectMode = false;
-                                isTextMode = false;
-                                isWriting = false;
-                                activeShape = undefined;
-                                showCaret = false;
-                            "
-                            @mouseenter="
-                                style.showTooltips &&
-                                showToolTipFor('resize', $event, 'top')
-                            "
-                            @mouseleave="hideTooltip"
-                            @focus="
-                                style.showTooltips &&
-                                showToolTipFor('resize', $event, 'top')
-                            "
-                            @blur="hideTooltip"
-                        >
-                            <slot
-                                name="icon-resize"
-                                v-bind="{ active: isResizeMode }"
-                            >
-                                <BaseIcon
-                                    name="resize"
-                                    :stroke="
-                                        isResizeMode
-                                            ? buttons.controls.selected.color
-                                            : buttons.controls.color
+                                >
+                                    <BaseIcon
+                                        :name="action.icon"
+                                        :stroke="
+                                            action.active
+                                                ? buttons.controls.selected
+                                                      .color
+                                                : buttons.controls.color
+                                        "
+                                        v-bind="action.iconProps"
+                                    />
+                                </slot>
+                                <TeleportedTooltip
+                                    v-if="style.showTooltips"
+                                    :show="
+                                        showTooltip && tooltipKey === action.key
                                     "
-                                />
-                            </slot>
-
-                            <TeleportedTooltip
-                                v-if="style.showTooltips"
-                                :show="showTooltip && tooltipKey === 'resize'"
-                                :x="tooltipPos.x"
-                                :y="tooltipPos.y - 6"
-                                :placement="'top'"
-                                :styleObject="tooltipStyleObject"
-                            >
-                                {{ FINAL_CONFIG.translations.tooltipResize }}
-                                <kbd>R</kbd>
-                            </TeleportedTooltip>
-                        </button>
-
-                        <!-- DELETE -->
-                        <button
-                            :disabled="shapes.length === 0"
-                            :style="{
-                                background: isDeleteMode
-                                    ? buttons.controls.selected.backgroundColor
-                                    : buttons.controls.backgroundColor,
-                                border: isDeleteMode
-                                    ? buttons.controls.selected.border
-                                    : buttons.controls.border,
-                                color: isDeleteMode
-                                    ? buttons.controls.selected.color
-                                    : buttons.controls.color,
-                                borderRadius: `${buttons.borderRadius}px`,
-                                cursor: isCursorPointer ? 'pointer' : 'default',
-                            }"
-                            :class="{
-                                'button-tool': true,
-                                'button-tool--selected': isDeleteMode,
-                                tooltip: true,
-                            }"
-                            @click="
-                                deleteEmptyTextElement();
-                                isDeleteMode = !isDeleteMode;
-                                isMoveMode = false;
-                                isResizeMode = false;
-                                isSelectMode = false;
-                                isTextMode = false;
-                                isWriting = false;
-                                activeShape = undefined;
-                                showCaret = false;
-                            "
-                            @mouseenter="
-                                style.showTooltips &&
-                                showToolTipFor('delete', $event, 'top')
-                            "
-                            @mouseleave="hideTooltip"
-                            @focus="
-                                style.showTooltips &&
-                                showToolTipFor('delete', $event, 'top')
-                            "
-                            @blur="hideTooltip"
-                        >
-                            <slot
-                                name="icon-delete"
-                                v-bind="{ active: isDeleteMode }"
-                            >
-                                <BaseIcon
-                                    name="trash"
-                                    :stroke="
-                                        isDeleteMode
-                                            ? buttons.controls.selected.color
-                                            : buttons.controls.color
-                                    "
-                                />
-                            </slot>
-
-                            <TeleportedTooltip
-                                v-if="style.showTooltips"
-                                :show="showTooltip && tooltipKey === 'delete'"
-                                :x="tooltipPos.x"
-                                :y="tooltipPos.y - 6"
-                                :placement="'top'"
-                                :styleObject="tooltipStyleObject"
-                            >
-                                {{ FINAL_CONFIG.translations.tooltipDelete }}
-                                <kbd>D</kbd>
-                            </TeleportedTooltip>
-                        </button>
-
-                        <!-- SELECT -->
-                        <button
-                            :disabled="!canSelect"
-                            :style="{
-                                background: isSelectMode
-                                    ? buttons.controls.selected.backgroundColor
-                                    : buttons.controls.backgroundColor,
-                                border: isSelectMode
-                                    ? buttons.controls.selected.border
-                                    : buttons.controls.border,
-                                color: isSelectMode
-                                    ? buttons.controls.selected.color
-                                    : buttons.controls.color,
-                                borderRadius: `${buttons.borderRadius}px`,
-                                cursor: isCursorPointer ? 'pointer' : 'default',
-                            }"
-                            :class="{
-                                'button-tool': true,
-                                'button-tool--selected': isSelectMode,
-                                tooltip: true,
-                            }"
-                            @click="
-                                deleteEmptyTextElement();
-                                setShapeTo('group');
-                                isSelectMode = !isSelectMode;
-                                isDeleteMode = false;
-                                isMoveMode = false;
-                                isResizeMode = false;
-                                isTextMode = false;
-                                isWriting = false;
-                                activeShape = 'group';
-                                showCaret = false;
-                            "
-                            @mouseenter="
-                                style.showTooltips &&
-                                showToolTipFor('selectAndGroup', $event, 'top')
-                            "
-                            @mouseleave="hideTooltip"
-                            @focus="
-                                style.showTooltips &&
-                                showToolTipFor('selectAndGroup', $event, 'top')
-                            "
-                            @blur="hideTooltip"
-                        >
-                            <slot
-                                name="icon-select-group"
-                                v-bind="{ active: isSelectMode }"
-                            >
-                                <BaseIcon
-                                    name="selectAndGroup"
-                                    :stroke="
-                                        isSelectMode
-                                            ? buttons.controls.selected.color
-                                            : buttons.controls.color
-                                    "
-                                />
-                            </slot>
-
-                            <TeleportedTooltip
-                                v-if="style.showTooltips"
-                                :show="
-                                    showTooltip &&
-                                    tooltipKey === 'selectAndGroup'
-                                "
-                                :x="tooltipPos.x"
-                                :y="tooltipPos.y - 6"
-                                :placement="'top'"
-                                :styleObject="tooltipStyleObject"
-                            >
-                                {{ FINAL_CONFIG.translations.tooltipGroup }}
-                                <kbd>G</kbd>
-                            </TeleportedTooltip>
-                        </button>
-
-                        <!-- SEND SHAPE TO FRONT -->
-                        <button
-                            :disabled="shapes.length === 0"
-                            :style="{
-                                background: buttons.controls.backgroundColor,
-                                border: buttons.controls.border,
-                                color: buttons.controls.color,
-                                borderRadius: `${buttons.borderRadius}px`,
-                                cursor: isCursorPointer ? 'pointer' : 'default',
-                            }"
-                            :class="{ 'button-tool': true, tooltip: true }"
-                            @click="
-                                isResizeMode = false;
-                                isMoveMode = true;
-                                isDeleteMode = false;
-                                isDrawMode = false;
-                                isSelectMode = false;
-                                isTextMode = false;
-                                isWriting = false;
-                                showCaret = false;
-                                bringShapeTo('front');
-                            "
-                            @mouseenter="
-                                style.showTooltips &&
-                                showToolTipFor('bringToFront', $event, 'top')
-                            "
-                            @mouseleave="hideTooltip"
-                            @focus="
-                                style.showTooltips &&
-                                showToolTipFor('bringToFront', $event, 'top')
-                            "
-                            @blur="hideTooltip"
-                        >
-                            <slot name="icon-bring-to-front">
-                                <BaseIcon
-                                    name="bringToFront"
-                                    :stroke="buttons.controls.color"
-                                />
-                            </slot>
-
-                            <TeleportedTooltip
-                                v-if="style.showTooltips"
-                                :show="
-                                    showTooltip && tooltipKey === 'bringToFront'
-                                "
-                                :x="tooltipPos.x"
-                                :y="tooltipPos.y - 6"
-                                :placement="'top'"
-                                :styleObject="tooltipStyleObject"
-                            >
-                                {{
-                                    FINAL_CONFIG.translations
-                                        .tooltipBringToFront
-                                }}
-                            </TeleportedTooltip>
-                        </button>
-
-                        <!-- SEND SHAPE TO BACK -->
-                        <button
-                            :disabled="shapes.length === 0"
-                            :style="{
-                                background: buttons.controls.backgroundColor,
-                                border: buttons.controls.border,
-                                color: buttons.controls.color,
-                                borderRadius: `${buttons.borderRadius}px`,
-                                cursor: isCursorPointer ? 'pointer' : 'default',
-                            }"
-                            :class="{ 'button-tool': true, tooltip: true }"
-                            @click="
-                                isResizeMode = false;
-                                isMoveMode = true;
-                                isDeleteMode = false;
-                                isDrawMode = false;
-                                isSelectMode = false;
-                                isTextMode = false;
-                                isWriting = false;
-                                showCaret = false;
-                                bringShapeTo('back');
-                            "
-                            @mouseenter="
-                                style.showTooltips &&
-                                showToolTipFor('bringToBack', $event, 'top')
-                            "
-                            @mouseleave="hideTooltip"
-                            @focus="
-                                style.showTooltips &&
-                                showToolTipFor('bringToBack', $event, 'top')
-                            "
-                            @blur="hideTooltip"
-                        >
-                            <slot name="icon-bring-to-back">
-                                <BaseIcon
-                                    name="bringToBack"
-                                    :stroke="buttons.controls.color"
-                                />
-                            </slot>
-
-                            <TeleportedTooltip
-                                v-if="style.showTooltips"
-                                :show="
-                                    showTooltip && tooltipKey === 'bringToBack'
-                                "
-                                :x="tooltipPos.x"
-                                :y="tooltipPos.y - 6"
-                                :placement="'top'"
-                                :styleObject="tooltipStyleObject"
-                            >
-                                {{
-                                    FINAL_CONFIG.translations.tooltipBringToBack
-                                }}
-                            </TeleportedTooltip>
-                        </button>
-
-                        <!-- COPY PASTE LAST SELECTED SHAPE -->
-                        <button
-                            :disabled="
-                                shapes.length === 0 || activeShape === 'line'
-                            "
-                            :style="{
-                                background: buttons.controls.backgroundColor,
-                                border: buttons.controls.border,
-                                color: buttons.controls.color,
-                                borderRadius: `${buttons.borderRadius}px`,
-                                cursor: isCursorPointer ? 'pointer' : 'default',
-                            }"
-                            :class="{ 'button-tool': true, tooltip: true }"
-                            @click="
-                                deleteEmptyTextElement();
-                                isResizeMode = false;
-                                isMoveMode = true;
-                                isDeleteMode = false;
-                                isDrawMode = false;
-                                isSelectMode = false;
-                                isTextMode = false;
-                                isWriting = false;
-                                showCaret = false;
-                                copyPaste();
-                            "
-                            @mouseenter="
-                                style.showTooltips &&
-                                showToolTipFor('duplicate', $event, 'top')
-                            "
-                            @mouseleave="hideTooltip"
-                            @focus="
-                                style.showTooltips &&
-                                showToolTipFor('duplicate', $event, 'top')
-                            "
-                            @blur="hideTooltip"
-                        >
-                            <slot name="icon-copy">
-                                <BaseIcon
-                                    name="copy"
-                                    :stroke="buttons.controls.color"
-                                    :size="18"
-                                />
-                            </slot>
-
-                            <TeleportedTooltip
-                                v-if="style.showTooltips"
-                                :show="
-                                    showTooltip && tooltipKey === 'duplicate'
-                                "
-                                :x="tooltipPos.x"
-                                :y="tooltipPos.y - 6"
-                                :placement="'top'"
-                                :styleObject="tooltipStyleObject"
-                            >
-                                {{ FINAL_CONFIG.translations.tooltipDuplicate }}
-                            </TeleportedTooltip>
-                        </button>
-
-                        <!-- UNDO LAST SHAPE -->
-                        <button
-                            data-cy="annotator-button-undo"
-                            :disabled="HISTORY_SIZE.undo === 0"
-                            :style="{
-                                background: buttons.controls.backgroundColor,
-                                border: buttons.controls.border,
-                                color: buttons.controls.color,
-                                borderRadius: `${buttons.borderRadius}px`,
-                                cursor: isCursorPointer ? 'pointer' : 'default',
-                            }"
-                            :class="{
-                                'button-tool': true,
-                                'button-tool--one-shot': true,
-                                tooltip: true,
-                            }"
-                            @click="
-                                isResizeMode = false;
-                                isMoveMode = false;
-                                isDeleteMode = false;
-                                isDrawMode = false;
-                                isSelectMode = false;
-                                isTextMode = false;
-                                isWriting = false;
-                                activeShape = undefined;
-                                showCaret = false;
-                                undoLastShape();
-                            "
-                            @mouseenter="
-                                style.showTooltips &&
-                                showToolTipFor('undoLast', $event, 'top')
-                            "
-                            @mouseleave="hideTooltip"
-                            @focus="
-                                style.showTooltips &&
-                                showToolTipFor('undoLast', $event, 'top')
-                            "
-                            @blur="hideTooltip"
-                        >
-                            <slot name="icon-undo">
-                                <BaseIcon
-                                    name="refresh"
-                                    :stroke="buttons.controls.color"
-                                    :size="20"
-                                />
-                            </slot>
-
-                            <TeleportedTooltip
-                                v-if="style.showTooltips"
-                                :show="showTooltip && tooltipKey === 'undoLast'"
-                                :x="tooltipPos.x"
-                                :y="tooltipPos.y - 6"
-                                :placement="'top'"
-                                :styleObject="tooltipStyleObject"
-                            >
-                                {{ FINAL_CONFIG.translations.tooltipUndo }}
-                                <kbd>{{ isMacLike ? '⌘' : 'Ctrl' }}</kbd
-                                ><kbd>Z</kbd>
-                            </TeleportedTooltip>
-                        </button>
-
-                        <!-- REDO LAST SHAPE -->
-                        <button
-                            data-cy="annotator-button-redo"
-                            :disabled="HISTORY_SIZE.redo === 0"
-                            :style="{
-                                background: buttons.controls.backgroundColor,
-                                border: buttons.controls.border,
-                                color: buttons.controls.color,
-                                borderRadius: `${buttons.borderRadius}px`,
-                                cursor: isCursorPointer ? 'pointer' : 'default',
-                            }"
-                            :class="{
-                                'button-tool': true,
-                                'button-tool--one-shot': true,
-                                tooltip: true,
-                            }"
-                            @click="
-                                isResizeMode = false;
-                                isMoveMode = false;
-                                isDeleteMode = false;
-                                isDrawMode = false;
-                                isSelectMode = false;
-                                isTextMode = false;
-                                isWriting = false;
-                                activeShape = undefined;
-                                showCaret = false;
-                                redoLastShape();
-                            "
-                            @mouseenter="
-                                style.showTooltips &&
-                                showToolTipFor('redoLast', $event, 'top')
-                            "
-                            @mouseleave="hideTooltip"
-                            @focus="
-                                style.showTooltips &&
-                                showToolTipFor('redoLast', $event, 'top')
-                            "
-                            @blur="hideTooltip"
-                        >
-                            <slot name="icon-redo">
-                                <BaseIcon
-                                    name="refresh"
-                                    :stroke="buttons.controls.color"
-                                    :size="20"
-                                    :style="{
-                                        transform:
-                                            'rotateX(0deg) rotateY(180deg)',
-                                    }"
-                                />
-                            </slot>
-
-                            <TeleportedTooltip
-                                v-if="style.showTooltips"
-                                :show="showTooltip && tooltipKey === 'redoLast'"
-                                :x="tooltipPos.x"
-                                :y="tooltipPos.y - 6"
-                                :placement="'top'"
-                                :styleObject="tooltipStyleObject"
-                            >
-                                {{ FINAL_CONFIG.translations.tooltipRedo }}
-                                <kbd>{{ isMacLike ? '⌘' : 'Ctrl' }}</kbd
-                                ><kbd>Y</kbd>
-                            </TeleportedTooltip>
-                        </button>
-
-                        <!-- PRINT -->
-                        <button
-                            v-if="style.showPrint"
-                            :style="{
-                                background: buttons.controls.backgroundColor,
-                                border: buttons.controls.border,
-                                color: buttons.controls.color,
-                                borderRadius: `${buttons.borderRadius}px`,
-                                cursor: isCursorPointer ? 'pointer' : 'default',
-                            }"
-                            :class="{ 'button-tool': true, tooltip: true }"
-                            @click="print"
-                            @mouseenter="
-                                style.showTooltips &&
-                                showToolTipFor('printPdf', $event, 'top')
-                            "
-                            @mouseleave="hideTooltip"
-                            @focus="
-                                style.showTooltips &&
-                                showToolTipFor('printPdf', $event, 'top')
-                            "
-                            @blur="hideTooltip"
-                        >
-                            <slot name="icon-print">
-                                <BaseIcon
-                                    name="printer"
-                                    :stroke="buttons.controls.color"
-                                />
-                            </slot>
-
-                            <TeleportedTooltip
-                                v-if="style.showTooltips"
-                                :show="showTooltip && tooltipKey === 'printPdf'"
-                                :x="tooltipPos.x"
-                                :y="tooltipPos.y - 6"
-                                :placement="'top'"
-                                :styleObject="tooltipStyleObject"
-                            >
-                                {{ FINAL_CONFIG.translations.tooltipPdf }}
-                            </TeleportedTooltip>
-                        </button>
-
-                        <!-- IMAGE -->
-                        <button
-                            v-if="style.showImage"
-                            :style="{
-                                background: buttons.controls.backgroundColor,
-                                border: buttons.controls.border,
-                                color: buttons.controls.color,
-                                borderRadius: `${buttons.borderRadius}px`,
-                                cursor: isCursorPointer ? 'pointer' : 'default',
-                            }"
-                            :class="{ 'button-tool': true, tooltip: true }"
-                            @click="generateImage"
-                            @mouseenter="
-                                style.showTooltips &&
-                                showToolTipFor('printImage', $event, 'top')
-                            "
-                            @mouseleave="hideTooltip"
-                            @focus="
-                                style.showTooltips &&
-                                showToolTipFor('printImage', $event, 'top')
-                            "
-                            @blur="hideTooltip"
-                        >
-                            <slot name="icon-export-image">
-                                <BaseIcon
-                                    name="image"
-                                    :stroke="buttons.controls.color"
-                                    :size="20"
-                                />
-                            </slot>
-
-                            <TeleportedTooltip
-                                v-if="style.showTooltips"
-                                :show="
-                                    showTooltip && tooltipKey === 'printImage'
-                                "
-                                :x="tooltipPos.x"
-                                :y="tooltipPos.y - 6"
-                                :placement="'top'"
-                                :styleObject="tooltipStyleObject"
-                            >
-                                {{ FINAL_CONFIG.translations.tooltipImage }}
-                            </TeleportedTooltip>
-                        </button>
-
-                        <!-- SAVE -->
-                        <button
-                            v-if="style.showSave"
-                            :style="{
-                                background: buttons.controls.backgroundColor,
-                                border: buttons.controls.border,
-                                color: buttons.controls.color,
-                                borderRadius: `${buttons.borderRadius}px`,
-                                cursor: isCursorPointer ? 'pointer' : 'default',
-                            }"
-                            :class="{ 'button-tool': true, tooltip: true }"
-                            @click="save"
-                            @mouseenter="
-                                style.showTooltips &&
-                                showToolTipFor('saveAction', $event, 'top')
-                            "
-                            @mouseleave="hideTooltip"
-                            @focus="
-                                style.showTooltips &&
-                                showToolTipFor('saveAction', $event, 'top')
-                            "
-                            @blur="hideTooltip"
-                        >
-                            <slot name="icon-save">
-                                <BaseIcon
-                                    name="save"
-                                    :stroke="buttons.controls.color"
-                                />
-                            </slot>
-
-                            <TeleportedTooltip
-                                v-if="style.showTooltips"
-                                :show="
-                                    showTooltip && tooltipKey === 'saveAction'
-                                "
-                                :x="tooltipPos.x"
-                                :y="tooltipPos.y - 6"
-                                :placement="'top'"
-                                :styleObject="tooltipStyleObject"
-                            >
-                                {{ FINAL_CONFIG.translations.tooltipSave }}
-                            </TeleportedTooltip>
-                        </button>
+                                    :x="tooltipPos.x"
+                                    :y="tooltipPos.y - 6"
+                                    placement="top"
+                                    :styleObject="tooltipStyleObject"
+                                >
+                                    {{
+                                        FINAL_CONFIG.translations[
+                                            action.translation
+                                        ]
+                                    }}
+                                    <kbd
+                                        v-for="shortcut in getToolbarShortcuts(
+                                            action,
+                                        )"
+                                        :key="shortcut"
+                                        >{{ shortcut }}</kbd
+                                    >
+                                </TeleportedTooltip>
+                            </button>
+                        </AnnotatorToolbarActions>
                     </div>
 
                     <div class="tool-selection" style="margin-top: 6px">
@@ -775,23 +139,12 @@
                                     activeShape === 'circle',
                                 tooltip: true,
                             }"
-                            :style="{
-                                background:
-                                    activeShape === 'circle'
-                                        ? buttons.shapes.selected
-                                              .backgroundColor
-                                        : buttons.shapes.backgroundColor,
-                                border:
-                                    activeShape === 'circle'
-                                        ? buttons.shapes.selected.border
-                                        : buttons.shapes.border,
-                                color:
-                                    activeShape === 'circle'
-                                        ? buttons.shapes.selected.color
-                                        : buttons.shapes.color,
-                                borderRadius: `${buttons.borderRadius}px`,
-                                cursor: isCursorPointer ? 'pointer' : 'default',
-                            }"
+                            :style="
+                                getToolButtonStyle(
+                                    'shapes',
+                                    activeShape === 'circle',
+                                )
+                            "
                             @click="
                                 setShapeTo('circle');
                                 isSelectMode = false;
@@ -873,23 +226,12 @@
                                 'button-tool--selected': activeShape === 'rect',
                                 tooltip: true,
                             }"
-                            :style="{
-                                background:
-                                    activeShape === 'rect'
-                                        ? buttons.shapes.selected
-                                              .backgroundColor
-                                        : buttons.shapes.backgroundColor,
-                                border:
-                                    activeShape === 'rect'
-                                        ? buttons.shapes.selected.border
-                                        : buttons.shapes.border,
-                                color:
-                                    activeShape === 'rect'
-                                        ? buttons.shapes.selected.color
-                                        : buttons.shapes.color,
-                                borderRadius: `${buttons.borderRadius}px`,
-                                cursor: isCursorPointer ? 'pointer' : 'default',
-                            }"
+                            :style="
+                                getToolButtonStyle(
+                                    'shapes',
+                                    activeShape === 'rect',
+                                )
+                            "
                             @click="
                                 setShapeTo('rect');
                                 isSelectMode = false;
@@ -973,23 +315,12 @@
                                     activeShape === 'arrow',
                                 tooltip: true,
                             }"
-                            :style="{
-                                background:
-                                    activeShape === 'arrow'
-                                        ? buttons.shapes.selected
-                                              .backgroundColor
-                                        : buttons.shapes.backgroundColor,
-                                border:
-                                    activeShape === 'arrow'
-                                        ? buttons.shapes.selected.border
-                                        : buttons.shapes.border,
-                                color:
-                                    activeShape === 'arrow'
-                                        ? buttons.shapes.selected.color
-                                        : buttons.shapes.color,
-                                borderRadius: `${buttons.borderRadius}px`,
-                                cursor: isCursorPointer ? 'pointer' : 'default',
-                            }"
+                            :style="
+                                getToolButtonStyle(
+                                    'shapes',
+                                    activeShape === 'arrow',
+                                )
+                            "
                             @click="
                                 setShapeTo('arrow');
                                 isSelectMode = false;
@@ -1047,23 +378,12 @@
                                 'button-tool--selected': activeShape === 'line',
                                 tooltip: true,
                             }"
-                            :style="{
-                                background:
-                                    activeShape === 'line'
-                                        ? buttons.shapes.selected
-                                              .backgroundColor
-                                        : buttons.shapes.backgroundColor,
-                                border:
-                                    activeShape === 'line'
-                                        ? buttons.shapes.selected.border
-                                        : buttons.shapes.border,
-                                color:
-                                    activeShape === 'line'
-                                        ? buttons.shapes.selected.color
-                                        : buttons.shapes.color,
-                                borderRadius: `${buttons.borderRadius}px`,
-                                cursor: isCursorPointer ? 'pointer' : 'default',
-                            }"
+                            :style="
+                                getToolButtonStyle(
+                                    'shapes',
+                                    activeShape === 'line',
+                                )
+                            "
                             @click="
                                 setShapeTo('line');
                                 isSelectMode = false;
@@ -1196,19 +516,7 @@
                                 'button-tool--selected': isTextMode,
                                 tooltip: true,
                             }"
-                            :style="{
-                                background: isTextMode
-                                    ? buttons.shapes.selected.backgroundColor
-                                    : buttons.shapes.backgroundColor,
-                                border: isTextMode
-                                    ? buttons.shapes.selected.border
-                                    : buttons.shapes.border,
-                                color: isTextMode
-                                    ? buttons.shapes.selected.color
-                                    : buttons.shapes.color,
-                                borderRadius: `${buttons.borderRadius}px`,
-                                cursor: isCursorPointer ? 'pointer' : 'default',
-                            }"
+                            :style="getToolButtonStyle('shapes', isTextMode)"
                             @click="
                                 deleteEmptyTextElement();
                                 isTextMode = !isTextMode;
@@ -1293,25 +601,12 @@
                                         textAlign === 'start',
                                     tooltip: true,
                                 }"
-                                :style="{
-                                    background:
-                                        textAlign === 'start'
-                                            ? buttons.shapes.selected
-                                                  .backgroundColor
-                                            : buttons.shapes.backgroundColor,
-                                    border:
-                                        textAlign === 'start'
-                                            ? buttons.shapes.selected.border
-                                            : buttons.shapes.border,
-                                    color:
-                                        textAlign === 'start'
-                                            ? buttons.shapes.selected.color
-                                            : buttons.shapes.color,
-                                    borderRadius: `${buttons.borderRadius}px`,
-                                    cursor: isCursorPointer
-                                        ? 'pointer'
-                                        : 'default',
-                                }"
+                                :style="
+                                    getToolButtonStyle(
+                                        'shapes',
+                                        textAlign === 'start',
+                                    )
+                                "
                                 @click="
                                     isDeleteMode = false;
                                     isMoveMode = false;
@@ -1390,25 +685,12 @@
                                         textAlign === 'middle',
                                     tooltip: true,
                                 }"
-                                :style="{
-                                    background:
-                                        textAlign === 'middle'
-                                            ? buttons.shapes.selected
-                                                  .backgroundColor
-                                            : buttons.shapes.backgroundColor,
-                                    border:
-                                        textAlign === 'middle'
-                                            ? buttons.shapes.selected.border
-                                            : buttons.shapes.border,
-                                    color:
-                                        textAlign === 'middle'
-                                            ? buttons.shapes.selected.color
-                                            : buttons.shapes.color,
-                                    borderRadius: `${buttons.borderRadius}px`,
-                                    cursor: isCursorPointer
-                                        ? 'pointer'
-                                        : 'default',
-                                }"
+                                :style="
+                                    getToolButtonStyle(
+                                        'shapes',
+                                        textAlign === 'middle',
+                                    )
+                                "
                                 :disabled="isBulletTextMode"
                                 @click="
                                     isDeleteMode = false;
@@ -1488,25 +770,12 @@
                                         textAlign === 'end',
                                     tooltip: true,
                                 }"
-                                :style="{
-                                    background:
-                                        textAlign === 'end'
-                                            ? buttons.shapes.selected
-                                                  .backgroundColor
-                                            : buttons.shapes.backgroundColor,
-                                    border:
-                                        textAlign === 'end'
-                                            ? buttons.shapes.selected.border
-                                            : buttons.shapes.border,
-                                    color:
-                                        textAlign === 'end'
-                                            ? buttons.shapes.selected.color
-                                            : buttons.shapes.color,
-                                    borderRadius: `${buttons.borderRadius}px`,
-                                    cursor: isCursorPointer
-                                        ? 'pointer'
-                                        : 'default',
-                                }"
+                                :style="
+                                    getToolButtonStyle(
+                                        'shapes',
+                                        textAlign === 'end',
+                                    )
+                                "
                                 :disabled="isBulletTextMode"
                                 @click="
                                     isDeleteMode = false;
@@ -1577,22 +846,12 @@
                                     'button-tool--selected': isBulletTextMode,
                                     tooltip: true,
                                 }"
-                                :style="{
-                                    background: isBulletTextMode
-                                        ? buttons.shapes.selected
-                                              .backgroundColor
-                                        : buttons.shapes.backgroundColor,
-                                    border: isBulletTextMode
-                                        ? buttons.shapes.selected.border
-                                        : buttons.shapes.border,
-                                    color: isBulletTextMode
-                                        ? buttons.shapes.selected.color
-                                        : buttons.shapes.color,
-                                    borderRadius: `${buttons.borderRadius}px`,
-                                    cursor: isCursorPointer
-                                        ? 'pointer'
-                                        : 'default',
-                                }"
+                                :style="
+                                    getToolButtonStyle(
+                                        'shapes',
+                                        isBulletTextMode,
+                                    )
+                                "
                                 @click="
                                     isDeleteMode = false;
                                     isMoveMode = false;
@@ -1675,22 +934,7 @@
                                     'button-tool--selected': isBold,
                                     tooltip: true,
                                 }"
-                                :style="{
-                                    background: isBold
-                                        ? buttons.shapes.selected
-                                              .backgroundColor
-                                        : buttons.shapes.backgroundColor,
-                                    border: isBold
-                                        ? buttons.shapes.selected.border
-                                        : buttons.shapes.border,
-                                    color: isBold
-                                        ? buttons.shapes.selected.color
-                                        : buttons.shapes.color,
-                                    borderRadius: `${buttons.borderRadius}px`,
-                                    cursor: isCursorPointer
-                                        ? 'pointer'
-                                        : 'default',
-                                }"
+                                :style="getToolButtonStyle('shapes', isBold)"
                                 @click="
                                     isDeleteMode = false;
                                     isMoveMode = false;
@@ -1762,22 +1006,7 @@
                                     'button-tool--selected': isItalic,
                                     tooltip: true,
                                 }"
-                                :style="{
-                                    background: isItalic
-                                        ? buttons.shapes.selected
-                                              .backgroundColor
-                                        : buttons.shapes.backgroundColor,
-                                    border: isItalic
-                                        ? buttons.shapes.selected.border
-                                        : buttons.shapes.border,
-                                    color: isItalic
-                                        ? buttons.shapes.selected.color
-                                        : buttons.shapes.color,
-                                    borderRadius: `${buttons.borderRadius}px`,
-                                    cursor: isCursorPointer
-                                        ? 'pointer'
-                                        : 'default',
-                                }"
+                                :style="getToolButtonStyle('shapes', isItalic)"
                                 @click="
                                     isDeleteMode = false;
                                     isMoveMode = false;
@@ -1848,22 +1077,9 @@
                                     'button-tool--selected': isUnderline,
                                     tooltip: true,
                                 }"
-                                :style="{
-                                    background: isUnderline
-                                        ? buttons.shapes.selected
-                                              .backgroundColor
-                                        : buttons.shapes.backgroundColor,
-                                    border: isUnderline
-                                        ? buttons.shapes.selected.border
-                                        : buttons.shapes.border,
-                                    color: isUnderline
-                                        ? buttons.shapes.selected.color
-                                        : buttons.shapes.color,
-                                    borderRadius: `${buttons.borderRadius}px`,
-                                    cursor: isCursorPointer
-                                        ? 'pointer'
-                                        : 'default',
-                                }"
+                                :style="
+                                    getToolButtonStyle('shapes', isUnderline)
+                                "
                                 @click="
                                     isDeleteMode = false;
                                     isMoveMode = false;
@@ -1966,7 +1182,7 @@
                                     :backgroundColor="style.backgroundColor"
                                     :buttonBorderColor="style.color"
                                     :isCursorPointer="isCursorPointer"
-                                    :palette="style.palette"
+                                    :palette="style.palette.map(toShapeColor)"
                                     teleported
                                     @update:value="
                                         setColorOfSelectedShape($event)
@@ -2152,13 +1368,20 @@ import {
     watch,
     nextTick,
 } from 'vue';
-import { opacity, treeShake, convertConfigColors, createUid } from '../lib';
+import {
+    opacity,
+    treeShake,
+    convertConfigColors,
+    convertColorToHex,
+    createUid,
+} from '../lib';
 import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 import { domToPng } from '../dom-to-png';
 import { registerAnnotatorShortcuts } from '../registerAnnotatorShortcuts';
 import { usePrinter } from '../usePrinter';
 import BaseIcon from '../atoms/BaseIcon.vue';
+import AnnotatorToolbarActions from '../atoms/AnnotatorToolbarActions.vue';
 import Accordion from './vue-ui-accordion.vue';
 import TeleportedTooltip from '../atoms/TeleportedTooltip.vue';
 import ColorPicker from '../atoms/ColorPicker.vue';
@@ -2309,7 +1532,12 @@ const FINAL_CONFIG = computed(() => {
     return convertConfigColors(reconcilied);
 });
 
-const selectedColor = ref(FINAL_CONFIG.value.style.paletteColor);
+// Shape opacity is stored separately, so keep picker colors in RGB format.
+function toShapeColor(color) {
+    return convertColorToHex(color)?.slice(0, 7) || color;
+}
+
+const selectedColor = ref(toShapeColor(FINAL_CONFIG.value.style.paletteColor));
 const buttons = computed(() => FINAL_CONFIG.value.style.buttons);
 const style = computed(() => FINAL_CONFIG.value.style);
 
@@ -2344,6 +1572,278 @@ const canSelect = computed(
 const colorTransparency = computed(
     () => transparencyCodes[transparency.value > 98 ? 98 : transparency.value],
 );
+
+function getToolButtonStyle(group, active = false) {
+    const palette = active
+        ? buttons.value[group].selected
+        : buttons.value[group];
+    return {
+        background: palette.backgroundColor,
+        border: palette.border,
+        color: palette.color,
+        borderRadius: `${buttons.value.borderRadius}px`,
+        cursor: isCursorPointer.value ? 'pointer' : 'default',
+    };
+}
+
+const toolbarActions = [
+    {
+        key: 'move',
+        slot: 'icon-move',
+        icon: 'move',
+        translation: 'tooltipMove',
+        testId: import.meta.env.DEV ? 'annotator-button-move' : undefined,
+        get active() {
+            return isMoveMode.value;
+        },
+        get disabled() {
+            return shapes.value.length === 0;
+        },
+        shortcut: 'M',
+        run: () => {
+            deleteEmptyTextElement();
+            isMoveMode.value = !isMoveMode.value;
+            isDeleteMode.value = false;
+            isDrawMode.value = false;
+            isResizeMode.value = false;
+            isSelectMode.value = false;
+            isTextMode.value = false;
+            isWriting.value = false;
+            showCaret.value = false;
+        },
+    },
+    {
+        key: 'resize',
+        slot: 'icon-resize',
+        icon: 'resize',
+        translation: 'tooltipResize',
+        get active() {
+            return isResizeMode.value;
+        },
+        get disabled() {
+            return shapes.value.length === 0;
+        },
+        shortcut: 'R',
+        run: () => {
+            deleteEmptyTextElement();
+            isResizeMode.value = !isResizeMode.value;
+            isMoveMode.value = false;
+            isDeleteMode.value = false;
+            isDrawMode.value = false;
+            isSelectMode.value = false;
+            isTextMode.value = false;
+            isWriting.value = false;
+            activeShape.value = undefined;
+            showCaret.value = false;
+        },
+    },
+    {
+        key: 'delete',
+        slot: 'icon-delete',
+        icon: 'trash',
+        translation: 'tooltipDelete',
+        get active() {
+            return isDeleteMode.value;
+        },
+        get disabled() {
+            return shapes.value.length === 0;
+        },
+        shortcut: 'D',
+        run: () => {
+            deleteEmptyTextElement();
+            isDeleteMode.value = !isDeleteMode.value;
+            isMoveMode.value = false;
+            isResizeMode.value = false;
+            isSelectMode.value = false;
+            isTextMode.value = false;
+            isWriting.value = false;
+            activeShape.value = undefined;
+            showCaret.value = false;
+        },
+    },
+    {
+        key: 'selectAndGroup',
+        slot: 'icon-select-group',
+        icon: 'selectAndGroup',
+        translation: 'tooltipGroup',
+        get active() {
+            return isSelectMode.value;
+        },
+        get disabled() {
+            return !canSelect.value;
+        },
+        shortcut: 'G',
+        run: () => {
+            deleteEmptyTextElement();
+            setShapeTo('group');
+            isSelectMode.value = !isSelectMode.value;
+            isDeleteMode.value = false;
+            isMoveMode.value = false;
+            isResizeMode.value = false;
+            isTextMode.value = false;
+            isWriting.value = false;
+            activeShape.value = 'group';
+            showCaret.value = false;
+        },
+    },
+    {
+        key: 'bringToFront',
+        slot: 'icon-bring-to-front',
+        icon: 'bringToFront',
+        translation: 'tooltipBringToFront',
+        get disabled() {
+            return shapes.value.length === 0;
+        },
+        run: () => {
+            isResizeMode.value = false;
+            isMoveMode.value = true;
+            isDeleteMode.value = false;
+            isDrawMode.value = false;
+            isSelectMode.value = false;
+            isTextMode.value = false;
+            isWriting.value = false;
+            showCaret.value = false;
+            bringShapeTo('front');
+        },
+    },
+    {
+        key: 'bringToBack',
+        slot: 'icon-bring-to-back',
+        icon: 'bringToBack',
+        translation: 'tooltipBringToBack',
+        get disabled() {
+            return shapes.value.length === 0;
+        },
+        run: () => {
+            isResizeMode.value = false;
+            isMoveMode.value = true;
+            isDeleteMode.value = false;
+            isDrawMode.value = false;
+            isSelectMode.value = false;
+            isTextMode.value = false;
+            isWriting.value = false;
+            showCaret.value = false;
+            bringShapeTo('back');
+        },
+    },
+    {
+        key: 'duplicate',
+        slot: 'icon-copy',
+        icon: 'copy',
+        translation: 'tooltipDuplicate',
+        get disabled() {
+            return shapes.value.length === 0 || activeShape.value === 'line';
+        },
+        iconProps: { size: 18 },
+        run: () => {
+            deleteEmptyTextElement();
+            isResizeMode.value = false;
+            isMoveMode.value = true;
+            isDeleteMode.value = false;
+            isDrawMode.value = false;
+            isSelectMode.value = false;
+            isTextMode.value = false;
+            isWriting.value = false;
+            showCaret.value = false;
+            copyPaste();
+        },
+    },
+    {
+        key: 'undoLast',
+        slot: 'icon-undo',
+        icon: 'refresh',
+        translation: 'tooltipUndo',
+        testId: import.meta.env.DEV ? 'annotator-button-undo' : undefined,
+        oneShot: true,
+        get disabled() {
+            return HISTORY_SIZE.value.undo === 0;
+        },
+        modifier: true,
+        shortcut: 'Z',
+        iconProps: { size: 20 },
+        run: () => {
+            isResizeMode.value = false;
+            isMoveMode.value = false;
+            isDeleteMode.value = false;
+            isDrawMode.value = false;
+            isSelectMode.value = false;
+            isTextMode.value = false;
+            isWriting.value = false;
+            activeShape.value = undefined;
+            showCaret.value = false;
+            undoLastShape();
+        },
+    },
+    {
+        key: 'redoLast',
+        slot: 'icon-redo',
+        icon: 'refresh',
+        translation: 'tooltipRedo',
+        testId: import.meta.env.DEV ? 'annotator-button-redo' : undefined,
+        oneShot: true,
+        get disabled() {
+            return HISTORY_SIZE.value.redo === 0;
+        },
+        modifier: true,
+        shortcut: 'Y',
+        iconProps: {
+            size: 20,
+            style: {
+                transform: 'rotateX(0deg) rotateY(180deg)',
+            },
+        },
+        run: () => {
+            isResizeMode.value = false;
+            isMoveMode.value = false;
+            isDeleteMode.value = false;
+            isDrawMode.value = false;
+            isSelectMode.value = false;
+            isTextMode.value = false;
+            isWriting.value = false;
+            activeShape.value = undefined;
+            showCaret.value = false;
+            redoLastShape();
+        },
+    },
+    {
+        key: 'printPdf',
+        slot: 'icon-print',
+        icon: 'printer',
+        translation: 'tooltipPdf',
+        get visible() {
+            return style.value.showPrint;
+        },
+        run: print,
+    },
+    {
+        key: 'printImage',
+        slot: 'icon-export-image',
+        icon: 'image',
+        translation: 'tooltipImage',
+        get visible() {
+            return style.value.showImage;
+        },
+        iconProps: { size: 20 },
+        run: generateImage,
+    },
+    {
+        key: 'saveAction',
+        slot: 'icon-save',
+        icon: 'save',
+        translation: 'tooltipSave',
+        get visible() {
+            return style.value.showSave;
+        },
+        run: save,
+    },
+];
+
+function getToolbarShortcuts(action) {
+    if (!action.shortcut) return [];
+    return action.modifier
+        ? [isMacLike.value ? '⌘' : 'Ctrl', action.shortcut]
+        : [action.shortcut];
+}
 
 const cursorClass = computed(() => {
     switch (true) {
@@ -3169,16 +2669,15 @@ function drawUp(useShapeReference = false) {
                 ` ${pointerPosition.value.x} ${pointerPosition.value.y} `;
             break;
 
-        case ['rect', 'group'].includes(activeShape.value):
-            const minRectSize = 20;
-            shapes.value.at(-1).rectWidth =
-                copy(currentPointer.value.end.x - shapes.value.at(-1).x) > 0
-                    ? copy(currentPointer.value.end.x - shapes.value.at(-1).x)
-                    : minRectSize;
-            shapes.value.at(-1).rectHeight =
-                copy(currentPointer.value.end.y - shapes.value.at(-1).y) > 0
-                    ? copy(currentPointer.value.end.y - shapes.value.at(-1).y)
-                    : minRectSize;
+        case ['rect', 'group'].includes(activeShape.value): {
+            const shape = shapes.value.at(-1);
+            // Keep the drag origin fixed while the top-left follows the pointer.
+            shape.x = Xmin;
+            shape.y = Ymin;
+            shape.rectWidth = Xmax - Xmin || 20;
+            shape.rectHeight = Ymax - Ymin || 20;
+            break;
+        }
 
         default:
             break;
@@ -3490,7 +2989,7 @@ function copyPaste() {
 function syncControlsFromShape(shape) {
     if (!shape) return;
 
-    if (shape.color) selectedColor.value = shape.color;
+    if (shape.color) selectedColor.value = toShapeColor(shape.color);
     if (Number.isFinite(Number(shape.strokeWidth))) {
         strokeSize.value = Number(shape.strokeWidth);
     }
@@ -5097,12 +4596,13 @@ function setFillOfSelectedCircle() {
 }
 
 function setColorOfSelectedShape(color = selectedColor.value) {
-    const nextColor =
-        typeof color === 'string' && color.length ? color : selectedColor.value;
+    const nextColor = toShapeColor(
+        typeof color === 'string' && color.length ? color : selectedColor.value,
+    );
 
     selectedColor.value = nextColor;
 
-    if (!lastSelectedShape.value || isMoveMode.value) {
+    if (!lastSelectedShape.value) {
         return;
     }
 
