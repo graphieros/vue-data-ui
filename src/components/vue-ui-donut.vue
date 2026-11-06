@@ -987,24 +987,16 @@ const donutSet = computed(() => {
 });
 
 const legendSet = computed(() => {
-    return FINAL_DATASET.value
-        .map((serie, i) => {
-            const value = (serie.values || []).reduce((a, b) => a + b, 0);
-            const proportion =
-                value /
-                FINAL_DATASET.value
-                    .map((m) => (m.values || []).reduce((a, b) => a + b, 0))
-                    .reduce((a, b) => a + b, 0);
+    return immutableSet.value
+        .map((serie) => {
+            const value = serie.value;
+            const proportion = value / _total.value;
             return {
                 name: serie.name,
-                color:
-                    convertColorToHex(serie.color) ||
-                    customPalette.value[i] ||
-                    palette[i] ||
-                    palette[i % palette.length],
+                color: serie.color,
                 value,
                 shape: 'circle',
-                patternIndex: i,
+                patternIndex: serie.patternIndex,
                 proportion,
             };
         })

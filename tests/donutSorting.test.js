@@ -32,3 +32,56 @@ test('can switch between descending values and dataset order without mutating th
         wrapper.unmount();
     }
 });
+
+test.each([true, false])(
+    'keeps legend order, colors and toggles aligned with arcs (sorted=%s)',
+    (sorted) => {
+        const dataset = [
+            { name: 'Small', values: [10] },
+            { name: 'Large', values: [100], color: '#123456' },
+            { name: 'Medium', values: [50] },
+        ];
+        const wrapper = mount(
+            { ...VueUiDonut, render: () => null },
+            {
+                props: {
+                    dataset,
+                    config: {
+                        sorted,
+                        autoSize: false,
+                        customPalette: ['#ff0000', '#00ff00', '#0000ff'],
+                        useCssAnimation: false,
+                        serieToggleAnimation: { show: false },
+                    },
+                },
+            },
+        );
+
+        try {
+            const legend = wrapper.vm.$.setupState.legendSet;
+            const series = wrapper.vm.getData();
+            expect(
+                legend.map(({ name, color, value }) => ({
+                    name,
+                    color,
+                    value,
+                })),
+            ).toEqual(series);
+            expect(legend.map((item) => item.patternIndex)).toEqual([0, 1, 2]);
+            expect(legend.map((item) => item.proportion)).toEqual(
+                series.map((item) => item.value / 160),
+            );
+
+            legend[0].segregate();
+            const emitted = wrapper.emitted('selectLegend').at(-1)[0];
+            expect(emitted.map((item) => item.name)).toEqual(
+                series.slice(1).map((item) => item.name),
+            );
+            expect(wrapper.vm.$.setupState.legendSet[0].isSegregated).toBe(
+                true,
+            );
+        } finally {
+            wrapper.unmount();
+        }
+    },
+);
