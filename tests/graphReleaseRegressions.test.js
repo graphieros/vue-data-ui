@@ -346,8 +346,10 @@ it('anchors keyboard tooltips using the SVG screen transform', async () => {
         await new Promise((resolve) => setTimeout(resolve, 0));
         await nextTick();
     }
+    const expectedStyle = document.createElement('div').style;
+    expectedStyle.transform = 'translate3d(290px, 424px, 0)';
     expect(document.querySelector('[role=tooltip]').style.transform).toBe(
-        'translate3d(290px, 424px, 0)',
+        expectedStyle.transform,
     );
 });
 it('fits the updated graph only after its force simulation completes', async () => {

@@ -98,7 +98,9 @@ describe('categorical annotation viewports', () => {
         );
         expect(shape.getAttribute('transform')).toBe('translate(-190 0)');
         expect(shape.getAttribute('font-size')).toBe('16');
-        expect(shape.style.transition).toBe(motion.transition);
+        const expectedStyle = document.createElement('div').style;
+        expectedStyle.transition = motion.transition;
+        expect(shape.style.transition).toBe(expectedStyle.transition);
     });
 
     it('disables anchoring for opt-out, absent Cartesian plots and invalid ranges', () => {

@@ -162,7 +162,9 @@ it('anchors keyboard tooltips to the node in client coordinates', async () => {
         .dispatchEvent(new FocusEvent('focus'));
     await flush();
     const tooltip = document.querySelector('[role=tooltip]');
-    expect(tooltip.style.transform).toBe('translate3d(440px, 374px, 0)');
+    const expectedStyle = document.createElement('div').style;
+    expectedStyle.transform = 'translate3d(440px, 374px, 0)';
+    expect(tooltip.style.transform).toBe(expectedStyle.transform);
 });
 it('keeps tooltips inside the fullscreen chart', async () => {
     const m = await mount();

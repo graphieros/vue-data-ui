@@ -675,8 +675,10 @@ const donutThickness = computed(() => {
 const emit = defineEmits(['selectLegend', 'selectDatapoint', 'copyAlt']);
 
 const immutableSet = computed(() => {
-    return FINAL_DATASET.value
+    return [...FINAL_DATASET.value]
         .sort((a, b) => {
+            if (!FINAL_CONFIG.value.sorted) return 0;
+
             const sumA = Array.isArray(a.values)
                 ? a.values.reduce((x, y) => x + y, 0)
                 : (a.value ?? 0);

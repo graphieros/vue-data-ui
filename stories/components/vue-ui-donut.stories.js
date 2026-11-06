@@ -20,6 +20,11 @@ function createCases(env) {
     };
     const testCommonFeatures = commonFeatures(env);
     const { config, dataset } = components.find((c) => c.name === 'VueUiDonut');
+    const displayedDataset = [...dataset].sort(
+        (a, b) =>
+            b.values.reduce((sum, value) => sum + value, 0) -
+            a.values.reduce((sum, value) => sum + value, 0),
+    );
     const total = dataset.flatMap((d) => d.values).reduce((a, b) => a + b, 0);
     const average = total / dataset.length;
     async function commonTest() {
@@ -89,7 +94,7 @@ function createCases(env) {
                                     elements.map((e) => e.textContent).join(''),
                                 ).toContain(
                                     String(
-                                        dataset[i].values.reduce(
+                                        displayedDataset[i].values.reduce(
                                             (a, b) => a + b,
                                             0,
                                         ),
@@ -129,7 +134,7 @@ function createCases(env) {
                                 const elements = name;
                                 expect(
                                     elements.map((e) => e.textContent).join(''),
-                                ).toContain(String(dataset[i].name));
+                                ).toContain(String(displayedDataset[i].name));
                             });
                         }
                     })([items[index]], index, items);
@@ -163,7 +168,9 @@ function createCases(env) {
                                 const elements = comment;
                                 expect(
                                     elements.map((e) => e.textContent).join(''),
-                                ).toContain(String(dataset[i].comment));
+                                ).toContain(
+                                    String(displayedDataset[i].comment),
+                                );
                             });
                         }
                     })([items[index]], index, items);
