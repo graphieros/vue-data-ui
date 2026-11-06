@@ -7078,6 +7078,7 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiDonutConfig = {
+        sorted?: boolean;
         devHints?: DevHints;
         skeletonDataset?: VueUiBuiltInSkeletonDataset<
             VueUiDonutDatasetItem[]

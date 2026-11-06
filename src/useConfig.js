@@ -1548,6 +1548,7 @@ export function useConfig(options = {}) {
     };
 
     const vue_ui_donut = {
+        sorted: true,
         devHints: DEV_HINTS,
         skeletonConfig: null,
         skeletonDataset: null,

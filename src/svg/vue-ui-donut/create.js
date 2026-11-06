@@ -106,6 +106,8 @@ function normalizeDataset(dataset = [], config) {
         }))
         .filter((entry) => Number.isFinite(entry.value))
         .sort((entryA, entryB) => {
+            if (!config.sorted) return 0;
+
             if (entryA.source?.ghost && !entryB.source?.ghost) return 1;
             if (entryB.source?.ghost && !entryA.source?.ghost) return -1;
 

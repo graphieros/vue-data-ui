@@ -191,6 +191,25 @@ describe('createVueUiDonutState', () => {
         ]);
     });
 
+    test('preserves dataset order without mutating it when sorting is disabled', () => {
+        const dataset = [
+            { name: 'Small', values: [5, 5] },
+            { name: 'Large', values: [60, 40] },
+            { name: 'Medium', values: [25, 25] },
+        ];
+        const originalOrder = dataset.map((serie) => serie.name);
+
+        createVueUiDonutState({ dataset });
+        expect(dataset.map((serie) => serie.name)).toEqual(originalOrder);
+
+        const state = createVueUiDonutState({
+            dataset,
+            config: { sorted: false },
+        });
+        expect(state.series.map((serie) => serie.name)).toEqual(originalOrder);
+        expect(state.series.map((serie) => serie.value)).toEqual([10, 100, 50]);
+    });
+
     test('places ghost series at the end', () => {
         const state = createVueUiDonutState({
             dataset: [
