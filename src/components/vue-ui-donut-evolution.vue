@@ -1,4 +1,9 @@
 <script setup>
+import {
+    getUserOptionsProps,
+    getUserOptionSlots,
+    getUserOptionSlotProps,
+} from '../userOptionsSlots';
 import { getAnnotatorProps } from '../annotatorConfig';
 import { createAnnotationViewport } from '../utils/annotationViewport';
 import { getTableComponent, syncTableVisibility } from '../tableIntegration';
@@ -6,10 +11,7 @@ import {
     annotationSlotNames,
     getAnnotationSlotProps,
 } from '../annotationSlots';
-import {
-    getUserOptionSlots,
-    getUserOptionSlotProps,
-} from '../userOptionsSlots';
+
 import { createChartImageGetter } from '../chartImage';
 import {
     computed,
@@ -2369,21 +2371,15 @@ const annotationViewport = computed(() => {
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uid"
-            :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
-            :hasImg="FINAL_CONFIG.userOptions.buttons.img"
-            :hasSvg="FINAL_CONFIG.userOptions.buttons.svg"
-            :hasXls="FINAL_CONFIG.userOptions.buttons.csv"
-            :hasTable="FINAL_CONFIG.userOptions.buttons.table"
-            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
-            :hasAltCopy="FINAL_CONFIG.userOptions.buttons.altCopy"
             :isFullscreen="isFullscreen"
-            :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
             :chartElement="donutEvolutionChart"
-            :position="FINAL_CONFIG.userOptions.position"
-            :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator"
+            v-bind="
+                getUserOptionsProps(
+                    FINAL_CONFIG.userOptions,
+                    'pdf csv img svg table fullscreen altCopy annotator',
+                )
+            "
             :isAnnotation="isAnnotator"
-            :callbacks="FINAL_CONFIG.userOptions.callbacks"
-            :printScale="FINAL_CONFIG.userOptions.print.scale"
             :tableDialog="FINAL_CONFIG.table.useDialog"
             :isCursorPointer="isCursorPointer"
             @toggleFullscreen="toggleFullscreen"

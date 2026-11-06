@@ -83,3 +83,43 @@ const util = {
 };
 
 export default util;
+
+// Speed up zoom with binary search on sorted points. Otherwise filter in source order
+export function createContinuousWindowSelector(series) {
+    const sorted = series.every(
+        (point, index) =>
+            Number.isFinite(point.x) &&
+            (index === 0 || point.x >= series[index - 1].x),
+    );
+
+    return (start, end) => {
+        if (!sorted || !Number.isFinite(start) || !Number.isFinite(end)) {
+            return series.filter((point) => {
+                if (point.x === null && point.y === null) {
+                    return start <= 0 && end >= 0;
+                }
+                return point.x >= start && point.x <= end;
+            });
+        }
+
+        let left = 0;
+        let right = series.length;
+
+        while (left < right) {
+            const middle = (left + right) >>> 1;
+            if (series[middle].x < start) left = middle + 1;
+            else right = middle;
+        }
+
+        const first = left;
+        right = series.length;
+
+        while (left < right) {
+            const middle = (left + right) >>> 1;
+            if (series[middle].x <= end) left = middle + 1;
+            else right = middle;
+        }
+
+        return series.slice(first, left);
+    };
+}

@@ -27,34 +27,31 @@
                     ✖
                 </button>
                 <div class="vue-ui-table-export-hub-options">
-                    <div class="vue-ui-table-export-hub-option-wrapper">
+                    <div
+                        v-for="action in ['All', 'Page']"
+                        :key="action"
+                        class="vue-ui-table-export-hub-option-wrapper"
+                    >
                         <div class="label">
-                            {{ FINAL_CONFIG.translations.exportAllLabel }}
-                            ({{ bodyCopy.length }})
+                            {{
+                                FINAL_CONFIG.translations[
+                                    `export${action}Label`
+                                ]
+                            }}
+                            <template v-if="action === 'All'">
+                                ({{ bodyCopy.length }})</template
+                            >
                         </div>
                         <button
-                            id="exportAll"
-                            @click="createXls('all')"
+                            :id="`export${action}`"
+                            @click="createXls(action.toLowerCase())"
                             :style="`background:${cfgExportMenu.buttons.backgroundColor};color:${cfgExportMenu.buttons.color};cursor:${isCursorPointer ? 'pointer' : 'default'}`"
                         >
                             <div v-html="icons.fileDownload" />
                             <span>{{
-                                FINAL_CONFIG.translations.exportAllButton
-                            }}</span>
-                        </button>
-                    </div>
-                    <div class="vue-ui-table-export-hub-option-wrapper">
-                        <div class="label">
-                            {{ FINAL_CONFIG.translations.exportPageLabel }}
-                        </div>
-                        <button
-                            id="exportPage"
-                            @click="createXls('page')"
-                            :style="`background:${cfgExportMenu.buttons.backgroundColor};color:${cfgExportMenu.buttons.color};cursor:${isCursorPointer ? 'pointer' : 'default'}`"
-                        >
-                            <div v-html="icons.fileDownload" />
-                            <span>{{
-                                FINAL_CONFIG.translations.exportPageButton
+                                FINAL_CONFIG.translations[
+                                    `export${action}Button`
+                                ]
                             }}</span>
                         </button>
                     </div>
@@ -152,7 +149,7 @@
                         <th
                             v-for="(th, i) in tableHead"
                             :key="`thead_${i}`"
-                            :style="`overflow: visible;background:${cfgTh.backgroundColor};color:${cfgTh.color};outline:${cfgTh.outline}`"
+                            :style="`overflow: visible;${headerStyle}`"
                             :class="{ 'th-has-nan': hasNaN[i] }"
                         >
                             <span
@@ -182,7 +179,7 @@
                                     'th-numeric': true,
                                     'th-has-nan': hasNaN[i],
                                 }"
-                                :style="`background:${cfgTh.backgroundColor};color:${cfgTh.color};outline:${cfgTh.outline}`"
+                                :style="headerStyle"
                             >
                                 <span
                                     v-if="th.sum && !hasNaN[i]"
@@ -199,14 +196,7 @@
                                             margin-right: 3px;
                                         "
                                     />
-                                    {{
-                                        dataLabel({
-                                            p: th.prefix,
-                                            v: Number(getSum(i)),
-                                            s: th.suffix,
-                                            r: th.decimals,
-                                        })
-                                    }}
+                                    {{ formatColumnValue(getSum(i), th) }}
                                     <span
                                         v-if="
                                             percentages[i] &&
@@ -251,19 +241,17 @@
                                     'th-numeric': true,
                                     'th-has-nan': hasNaN[i],
                                 }"
-                                :style="`background:${cfgTh.backgroundColor};color:${cfgTh.color};outline:${cfgTh.outline}`"
+                                :style="headerStyle"
                             >
                                 <span v-if="th.average && !hasNaN[i]">
                                     ~
                                     {{
                                         isNaN(getAverage(i))
                                             ? ''
-                                            : dataLabel({
-                                                  p: th.prefix,
-                                                  v: Number(getAverage(i)),
-                                                  s: th.suffix,
-                                                  r: th.decimals,
-                                              })
+                                            : formatColumnValue(
+                                                  getAverage(i),
+                                                  th,
+                                              )
                                     }}
                                 </span>
                             </th>
@@ -276,7 +264,7 @@
                                 v-for="(th, i) in tableHead"
                                 :key="`thead_${i}`"
                                 :class="{ 'th-has-nan': hasNaN[i] }"
-                                :style="`background:${cfgTh.backgroundColor};color:${cfgTh.color};outline:${cfgTh.outline}`"
+                                :style="headerStyle"
                             >
                                 <div class="th-filter">
                                     <!-- DATE -->
@@ -840,13 +828,8 @@
                 <span>
                     <!-- NAME OF SELECTED COLUMN -->
                     <b>
-                        {{ dataset.header[currentSelectionSpan.col].name }}
-                        <span
-                            v-if="
-                                dataset.header[currentSelectionSpan.col]
-                                    .isPercentage
-                            "
-                        >
+                        {{ selectedHeader.name }}
+                        <span v-if="selectedHeader.isPercentage">
                             /
                             {{
                                 dataset.header[
@@ -865,64 +848,24 @@
                         }}</b>
                     </span>
 
-                    <!-- SUM OF SELECTED CELLS -->
-                    <span style="margin-left: 12px">
-                        {{ FINAL_CONFIG.translations.sum }} :
+                    <span
+                        v-for="stat in ['sum', 'average']"
+                        :key="stat"
+                        style="margin-left: 12px"
+                    >
+                        {{ FINAL_CONFIG.translations[stat] }} :
                         <b
                             class="format-num"
-                            v-if="
-                                dataset.header[currentSelectionSpan.col]
-                                    .isPercentage
-                            "
+                            v-if="selectedHeader.isPercentage"
                         >
-                            {{ selectedCellsCalculations.sumPercentage }}
+                            {{ selectedCellsCalculations[`${stat}Percentage`] }}
                         </b>
                         <b v-else class="format-num">
-                            {{
-                                dataset.header[currentSelectionSpan.col].prefix
-                            }}
-                            {{ selectedCellsCalculations.sumRegular }}
-                            {{
-                                dataset.header[currentSelectionSpan.col].suffix
-                            }}
+                            {{ selectedHeader.prefix }}
+                            {{ selectedCellsCalculations[`${stat}Regular`] }}
+                            {{ selectedHeader.suffix }}
                         </b>
-                        <b
-                            v-if="
-                                dataset.header[currentSelectionSpan.col]
-                                    .isPercentage
-                            "
-                            >%</b
-                        >
-                    </span>
-
-                    <!-- AVERAGE OF SELECTED CELLS -->
-                    <span style="margin-left: 12px">
-                        {{ FINAL_CONFIG.translations.average }} :
-                        <b
-                            v-if="
-                                dataset.header[currentSelectionSpan.col]
-                                    .isPercentage
-                            "
-                            class="format-num"
-                        >
-                            {{ selectedCellsCalculations.averagePercentage }}
-                        </b>
-                        <b v-else class="format-num">
-                            {{
-                                dataset.header[currentSelectionSpan.col].prefix
-                            }}
-                            {{ selectedCellsCalculations.averageRegular }}
-                            {{
-                                dataset.header[currentSelectionSpan.col].suffix
-                            }}
-                        </b>
-                        <b
-                            v-if="
-                                dataset.header[currentSelectionSpan.col]
-                                    .isPercentage
-                            "
-                            >%</b
-                        >
+                        <b v-if="selectedHeader.isPercentage">%</b>
                     </span>
                 </span>
                 <button
@@ -984,16 +927,14 @@
                 class="vue-ui-table-navigation"
                 @click.stop="navigate('previous')"
                 v-html="icons.chevronLeft"
-                :disabled="currentPage === 0"
-                :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${cfgPagination.buttons.backgroundColor};color:${cfgPagination.buttons.color};opacity:${currentPage === 0 ? cfgPagination.buttons.opacityDisabled : 1}`"
+                v-bind="getNavigationProps(currentPage === 0)"
             />
             <template v-if="pages.length > 3">
                 <!-- FIRST PAGE -->
                 <button
                     class="vue-ui-table-navigation"
                     @click.stop="navigate(1)"
-                    :disabled="currentPage === 0"
-                    :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${cfgPagination.buttons.backgroundColor};color:${cfgPagination.buttons.color};opacity:${currentPage === 0 ? cfgPagination.buttons.opacityDisabled : 1}`"
+                    v-bind="getNavigationProps(currentPage === 0)"
                 >
                     1
                 </button>
@@ -1027,8 +968,9 @@
                 <button
                     class="vue-ui-table-navigation"
                     @click.stop="navigate(pages.length)"
-                    :disabled="currentPage === pages.length - 1"
-                    :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${cfgPagination.buttons.backgroundColor};color:${cfgPagination.buttons.color};opacity:${currentPage === pages.length - 1 ? cfgPagination.buttons.opacityDisabled : 1}`"
+                    v-bind="
+                        getNavigationProps(currentPage === pages.length - 1)
+                    "
                 >
                     {{ pages.length }}
                 </button>
@@ -1042,8 +984,7 @@
                 class="vue-ui-table-navigation"
                 @click.stop="navigate('next')"
                 v-html="icons.chevronRight"
-                :disabled="currentPage === pages.length - 1"
-                :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${cfgPagination.buttons.backgroundColor};color:${cfgPagination.buttons.color};opacity:${currentPage === pages.length - 1 ? cfgPagination.buttons.opacityDisabled : 1}`"
+                v-bind="getNavigationProps(currentPage === pages.length - 1)"
             />
         </div>
 
@@ -1415,6 +1356,27 @@ const tableHead = ref(
     }),
 );
 
+const headerStyle = computed(
+    () =>
+        `background:${cfgTh.value.backgroundColor};color:${cfgTh.value.color};outline:${cfgTh.value.outline}`,
+);
+
+function getNavigationProps(disabled) {
+    return {
+        disabled,
+        style: `cursor:${isCursorPointer.value ? 'pointer' : 'default'};background:${cfgPagination.value.buttons.backgroundColor};color:${cfgPagination.value.buttons.color};opacity:${disabled ? cfgPagination.value.buttons.opacityDisabled : 1}`,
+    };
+}
+
+function formatColumnValue(value, header) {
+    return dataLabel({
+        p: header.prefix,
+        v: Number(value),
+        s: header.suffix,
+        r: header.decimals,
+    });
+}
+
 const exportButtonTop = computed(() => {
     if (!tableCaption.value) return 3;
     return tableCaption.value.getBoundingClientRect().height + 3;
@@ -1555,47 +1517,21 @@ const icons = computed(() => ({
 
 const rows = computed(() => bodyCopy.value.map((row) => row.td));
 
+const selectedHeader = computed(
+    () => props.dataset.header[currentSelectionSpan.value.col],
+);
 const selectedCellsCalculations = computed(() => {
+    const sum = currentSelectionSpan.value.rows
+        .map((r) => r.value)
+        .reduce((a, b) => a + b, 0);
+    const average = sum / currentSelectionSpan.value.rows.length;
+    const format = (value) =>
+        Number(value.toFixed(selectedHeader.value.decimals)).toLocaleString();
     return {
-        sumPercentage: Number(
-            (
-                currentSelectionSpan.value.rows
-                    .map((r) => r.value)
-                    .reduce((a, b) => a + b, 0) * 100
-            ).toFixed(
-                props.dataset.header[currentSelectionSpan.value.col].decimals,
-            ),
-        ).toLocaleString(),
-        sumRegular: Number(
-            currentSelectionSpan.value.rows
-                .map((r) => r.value)
-                .reduce((a, b) => a + b, 0)
-                .toFixed(
-                    props.dataset.header[currentSelectionSpan.value.col]
-                        .decimals,
-                ),
-        ).toLocaleString(),
-        averagePercentage: Number(
-            (
-                (currentSelectionSpan.value.rows
-                    .map((r) => r.value)
-                    .reduce((a, b) => a + b, 0) /
-                    currentSelectionSpan.value.rows.length) *
-                100
-            ).toFixed(
-                props.dataset.header[currentSelectionSpan.value.col].decimals,
-            ),
-        ).toLocaleString(),
-        averageRegular: Number(
-            (
-                currentSelectionSpan.value.rows
-                    .map((r) => r.value)
-                    .reduce((a, b) => a + b, 0) /
-                currentSelectionSpan.value.rows.length
-            ).toFixed(
-                props.dataset.header[currentSelectionSpan.value.col].decimals,
-            ),
-        ).toLocaleString(),
+        sumPercentage: format(sum * 100),
+        sumRegular: format(sum),
+        averagePercentage: format(average * 100),
+        averageRegular: format(average),
     };
 });
 
@@ -1610,6 +1546,13 @@ function setChartModalDimensions({ width, height }) {
 
 const chartData = computed(() => {
     if (!canChart.value) return [];
+    const header = selectedHeader.value;
+    const chartExportButtons = {
+        pdf: false,
+        csv: false,
+        table: false,
+        annotator: false,
+    };
     const height = chartModalDimensions.value.height;
     const width = chartModalDimensions.value.width;
     const items = currentSelectionSpan.value.rows.length;
@@ -1621,16 +1564,14 @@ const chartData = computed(() => {
         ...currentSelectionSpan.value.rows.map((row) => row.value),
     );
 
-    const hasPercentageTo =
-        props.dataset.header[currentSelectionSpan.value.col].isPercentage &&
-        props.dataset.header[currentSelectionSpan.value.col].percentageTo;
+    const hasPercentageTo = header.isPercentage && header.percentageTo;
     const isDonut =
         chart.value.type === constants.value.DONUT &&
         selectedDonutCategory.value &&
         selectedDonutCategory.value.name;
 
     const title =
-        props.dataset.header[currentSelectionSpan.value.col].name +
+        header.name +
         (hasPercentageTo
             ? ` / ${props.dataset.header[percentages.value[currentSelectionSpan.value.col].referenceIndex].name}`
             : '') +
@@ -1638,34 +1579,30 @@ const chartData = computed(() => {
             ? ` ${FINAL_CONFIG.value.translations.by} ${selectedDonutCategory.value.name}`
             : '');
 
-    const prefix = props.dataset.header[currentSelectionSpan.value.col].prefix;
-    const suffix = props.dataset.header[currentSelectionSpan.value.col].suffix;
+    const prefix = header.prefix;
+    const suffix = header.suffix;
 
-    const xyDatasetLine = [
+    const createXyDataset = (type) => [
         {
             name: title,
             series: currentSelectionSpan.value.rows.map((r) => r.value),
-            type: 'line',
+            type,
             useProgression: true,
-            smooth: cfgChart.value.layout.line.smooth,
-            color: cfgChart.value.layout.line.stroke,
-            useArea: cfgChart.value.layout.line.useArea,
+            ...(type === 'line'
+                ? {
+                      smooth: cfgChart.value.layout.line.smooth,
+                      color: cfgChart.value.layout.line.stroke,
+                      useArea: cfgChart.value.layout.line.useArea,
+                  }
+                : { color: cfgChart.value.layout.bar.fill }),
         },
     ];
-    const xyDatasetBar = [
-        {
-            name: title,
-            series: currentSelectionSpan.value.rows.map((r) => r.value),
-            type: 'bar',
-            useProgression: true,
-            color: cfgChart.value.layout.bar.fill,
-        },
-    ];
+    const xyDatasetLine = createXyDataset('line');
+    const xyDatasetBar = createXyDataset('bar');
 
     const bg = cfgChart.value.modal.backgroundColor;
     const textColor = adaptColorToBackground(bg);
-    const rounding =
-        props.dataset.header[currentSelectionSpan.value.col].decimals;
+    const rounding = header.decimals;
 
     const xyConfig = {
         useCssAnimation: false,
@@ -1717,12 +1654,7 @@ const chartData = computed(() => {
                 roundingValue: rounding,
             },
             userOptions: {
-                buttons: {
-                    pdf: false,
-                    csv: false,
-                    table: false,
-                    annotator: false,
-                },
+                buttons: { ...chartExportButtons },
             },
             zoom: {
                 show: cfgChart.value.layout.zoom.show,
@@ -1763,22 +1695,15 @@ const chartData = computed(() => {
     const relativeZero = min >= 0 ? 0 : Math.abs(min);
     const absoluteMax = max + relativeZero;
 
-    const isPercentage =
-        props.dataset.header[currentSelectionSpan.value.col].isPercentage;
+    const isPercentage = header.isPercentage;
 
     const plots = currentSelectionSpan.value.rows.map((row, i) => {
         return {
             x: slot * i + slot / 2,
             y: (1 - (row.value + relativeZero) / absoluteMax) * height,
             value: isPercentage ? row.value * 100 : row.value,
-            suffix: isPercentage
-                ? '%'
-                : props.dataset.header[currentSelectionSpan.value.col].suffix
-                  ? props.dataset.header[currentSelectionSpan.value.col].suffix
-                  : '',
-            prefix: props.dataset.header[currentSelectionSpan.value.col].prefix
-                ? props.dataset.header[currentSelectionSpan.value.col].prefix
-                : '',
+            suffix: isPercentage ? '%' : header.suffix ? header.suffix : '',
+            prefix: header.prefix ? header.prefix : '',
             index: row.index,
             absoluteValue: isPercentage
                 ? Math.abs(row.value) * 100
@@ -1790,12 +1715,7 @@ const chartData = computed(() => {
         useCssAnimation: false,
         userOptions: {
             position: 'left',
-            buttons: {
-                pdf: false,
-                csv: false,
-                table: false,
-                annotator: false,
-            },
+            buttons: { ...chartExportButtons },
         },
         style: {
             chart: {
@@ -2073,12 +1993,7 @@ function filterBody() {
 }
 
 function getAverage(index) {
-    return (
-        rows.value
-            .map((td) => td[index])
-            .map((el) => (isNaN(Number(el)) ? 0 : el))
-            .reduce((a, b) => a + b, 0) / bodyCopy.value.length
-    );
+    return getSum(index) / bodyCopy.value.length;
 }
 
 function getDatesRange(index) {

@@ -1,8 +1,10 @@
 <script setup>
 import {
+    getUserOptionsProps,
     getUserOptionSlots,
     getUserOptionSlotProps,
 } from '../userOptionsSlots';
+
 import {
     ref,
     computed,
@@ -727,23 +729,19 @@ defineExpose({
             :isImaging="isImaging"
             :uid="uid"
             :hasTooltip="false"
-            :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
-            :hasImg="FINAL_CONFIG.userOptions.buttons.img"
-            :hasXls="FINAL_CONFIG.userOptions.buttons.csv"
             :hasTable="false"
             :hasLabel="false"
-            :hasAnimation="FINAL_CONFIG.userOptions.buttons.animation"
             :isAnimation="!mutableConfig.showAnimation"
-            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
-            :hasAltCopy="FINAL_CONFIG.userOptions.buttons.altCopy"
             :isFullscreen="isFullscreen"
             :chartElement="chartContainer"
-            :position="FINAL_CONFIG.userOptions.position"
-            :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
+            v-bind="
+                getUserOptionsProps(
+                    FINAL_CONFIG.userOptions,
+                    'pdf csv img fullscreen altCopy animation',
+                )
+            "
             :zIndex="3"
             :offsetX="12"
-            :callbacks="FINAL_CONFIG.userOptions.callbacks"
-            :printScale="FINAL_CONFIG.userOptions.print.scale"
             :isCursorPointer="isCursorPointer"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"

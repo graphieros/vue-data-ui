@@ -27,3 +27,32 @@ export function getUserOptionSlotProps(name, props) {
     }
     return result;
 }
+
+const buttonProps = {
+    pdf: 'hasPdf',
+    csv: 'hasXls',
+    img: 'hasImg',
+    svg: 'hasSvg',
+    labels: 'hasLabel',
+    table: 'hasTable',
+    fullscreen: 'hasFullscreen',
+    altCopy: 'hasAltCopy',
+    annotator: 'hasAnnotator',
+    zoom: 'hasZoom',
+    sort: 'hasSort',
+    animation: 'hasAnimation',
+};
+
+// Only forward the buttons a chart already supports; retain UserOptions defaults.
+export function getUserOptionsProps(options, buttons) {
+    const props = {
+        position: options.position,
+        callbacks: options.callbacks,
+        printScale: options.print.scale,
+        titles: { ...options.buttonTitles },
+    };
+    for (const button of buttons.split(' ')) {
+        props[buttonProps[button]] = options.buttons[button];
+    }
+    return props;
+}

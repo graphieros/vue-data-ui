@@ -1,9 +1,11 @@
 <script setup>
-import { getTableComponent, syncTableVisibility } from '../tableIntegration';
 import {
+    getUserOptionsProps,
     getUserOptionSlots,
     getUserOptionSlotProps,
 } from '../userOptionsSlots';
+import { getTableComponent, syncTableVisibility } from '../tableIntegration';
+
 import {
     ref,
     computed,
@@ -3904,26 +3906,21 @@ defineExpose({
             :isImaging="isImaging"
             :uid="uid"
             :hasTooltip="cfgUserOptions.buttons.tooltip && cfgTooltip.show"
-            :hasPdf="cfgUserOptions.buttons.pdf"
-            :hasImg="cfgUserOptions.buttons.img"
-            :hasXls="cfgUserOptions.buttons.csv"
-            :hasLabel="cfgUserOptions.buttons.labels"
             :hasStack="dataset.length > 1 && cfgUserOptions.buttons.stack"
-            :hasFullscreen="cfgUserOptions.buttons.fullscreen"
-            :hasAltCopy="cfgUserOptions.buttons.altCopy"
             :hasTable="
                 slicer.end - slicer.start <= 730 && cfgUserOptions.buttons.table
             "
             :isFullscreen="isFullscreen"
             :isTooltip="mutableConfig.showTooltip"
             :isStacked="mutableConfig.stacked"
-            :titles="{ ...cfgUserOptions.buttonTitles }"
             :chartElement="xy"
-            :position="cfgUserOptions.position"
-            :hasAnnotator="cfgUserOptions.buttons.annotator"
+            v-bind="
+                getUserOptionsProps(
+                    cfgUserOptions,
+                    'pdf csv img labels fullscreen altCopy annotator',
+                )
+            "
             :isAnnotation="isAnnotator"
-            :callbacks="cfgUserOptions.callbacks"
-            :printScale="cfgUserOptions.print.scale"
             :tableDialog="FINAL_CONFIG.table.useDialog"
             :isCursorPointer="isCursorPointer"
             @toggleFullscreen="toggleFullscreen"

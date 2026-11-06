@@ -1,4 +1,9 @@
 <script setup>
+import {
+    getUserOptionsProps,
+    getUserOptionSlots,
+    getUserOptionSlotProps,
+} from '../userOptionsSlots';
 import { getAnnotatorProps } from '../annotatorConfig';
 import { createPanZoomAnnotationViewport } from '../utils/annotationViewport';
 import { getTableComponent } from '../tableIntegration';
@@ -6,10 +11,7 @@ import {
     annotationSlotNames,
     getAnnotationSlotProps,
 } from '../annotationSlots';
-import {
-    getUserOptionSlots,
-    getUserOptionSlotProps,
-} from '../userOptionsSlots';
+
 import { createChartImageGetter } from '../chartImage';
 import { resolveChartConfigWithPalette } from '../resolveChartConfig';
 import {
@@ -1665,24 +1667,17 @@ const annotationViewport = computed(() =>
             :hasTooltip="FINAL_CONFIG.userOptions.buttons.tooltip"
             :isTooltip="mutableConfig.showTooltip"
             :hasLabel="false"
-            :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
-            :hasImg="FINAL_CONFIG.userOptions.buttons.img"
-            :hasSvg="FINAL_CONFIG.userOptions.buttons.svg"
-            :hasXls="FINAL_CONFIG.userOptions.buttons.csv"
-            :hasTable="FINAL_CONFIG.userOptions.buttons.table"
-            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
-            :hasAltCopy="FINAL_CONFIG.userOptions.buttons.altCopy"
             :isFullscreen="isFullscreen"
             :chartElement="circlePackChart"
-            :position="FINAL_CONFIG.userOptions.position"
-            :callbacks="FINAL_CONFIG.userOptions.callbacks"
-            :printScale="FINAL_CONFIG.userOptions.print.scale"
-            :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
-            :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator"
+            v-bind="
+                getUserOptionsProps(
+                    FINAL_CONFIG.userOptions,
+                    'pdf csv img svg table fullscreen altCopy annotator zoom',
+                )
+            "
             :isAnnotation="isAnnotator"
             :tableDialog="FINAL_CONFIG.table.useDialog"
             :isCursorPointer="isCursorPointer"
-            :hasZoom="FINAL_CONFIG.userOptions.buttons.zoom"
             :isZoom="mutableConfig.showZoom"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"

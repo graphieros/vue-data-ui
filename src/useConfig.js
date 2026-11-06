@@ -5655,7 +5655,7 @@ export function useConfig(options = {}) {
         sparkline: {
             useGradient: true,
             showArea: true,
-            strokeWidth: 3,
+            strokeWidth: 2,
             type: SHAPE.LINE,
             smooth: true,
             cutNullValues: false,

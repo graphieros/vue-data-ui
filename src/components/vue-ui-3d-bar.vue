@@ -1,14 +1,16 @@
 <script setup>
+import {
+    getUserOptionsProps,
+    getUserOptionSlots,
+    getUserOptionSlotProps,
+} from '../userOptionsSlots';
 import { getAnnotatorProps } from '../annotatorConfig';
 import { getTableComponent, syncTableVisibility } from '../tableIntegration';
 import {
     annotationSlotNames,
     getAnnotationSlotProps,
 } from '../annotationSlots';
-import {
-    getUserOptionSlots,
-    getUserOptionSlotProps,
-} from '../userOptionsSlots';
+
 import { resolveChartConfigWithPalette } from '../resolveChartConfig';
 import {
     computed,
@@ -1182,21 +1184,17 @@ defineExpose({
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uid"
-            :hasPdf="cfgUserOptions.buttons.pdf"
             :hasTable="!!hasStack && cfgUserOptions.buttons.table"
             :hasXls="!!hasStack && cfgUserOptions.buttons.csv"
-            :hasImg="cfgUserOptions.buttons.img"
-            :hasSvg="cfgUserOptions.buttons.svg"
-            :hasFullscreen="cfgUserOptions.buttons.fullscreen"
-            :hasAltCopy="cfgUserOptions.buttons.altCopy"
-            :titles="{ ...cfgUserOptions.buttonTitles }"
             :isFullscreen="isFullscreen"
             :chartElement="bar3dChart"
-            :position="cfgUserOptions.position"
-            :hasAnnotator="cfgUserOptions.buttons.annotator"
+            v-bind="
+                getUserOptionsProps(
+                    cfgUserOptions,
+                    'pdf img svg fullscreen altCopy annotator',
+                )
+            "
             :isAnnotation="isAnnotator"
-            :callbacks="cfgUserOptions.callbacks"
-            :printScale="cfgUserOptions.print.scale"
             :tableDialog="FINAL_CONFIG.table.useDialog"
             :isCursorPointer="isCursorPointer"
             @toggleFullscreen="toggleFullscreen"

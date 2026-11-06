@@ -1,14 +1,16 @@
 <script setup>
+import {
+    getUserOptionsProps,
+    getUserOptionSlots,
+    getUserOptionSlotProps,
+} from '../userOptionsSlots';
 import { getAnnotatorProps } from '../annotatorConfig';
 import { getTableComponent, syncTableVisibility } from '../tableIntegration';
 import {
     annotationSlotNames,
     getAnnotationSlotProps,
 } from '../annotationSlots';
-import {
-    getUserOptionSlots,
-    getUserOptionSlotProps,
-} from '../userOptionsSlots';
+
 import { createChartImageGetter } from '../chartImage';
 import { resolveChartConfigWithPalette } from '../resolveChartConfig';
 import {
@@ -1500,22 +1502,16 @@ defineExpose({
             :isImaging="isImaging"
             :uid="uid"
             :hasTooltip="false"
-            :callbacks="cfgUserOptions.callbacks"
-            :hasPdf="cfgUserOptions.buttons.pdf"
-            :hasImg="cfgUserOptions.buttons.img"
-            :hasSvg="cfgUserOptions.buttons.svg"
-            :hasXls="cfgUserOptions.buttons.csv"
-            :hasTable="cfgUserOptions.buttons.table"
             :hasLabel="false"
-            :hasFullscreen="cfgUserOptions.buttons.fullscreen"
-            :hasAltCopy="cfgUserOptions.buttons.altCopy"
             :isFullscreen="isFullscreen"
-            :printScale="cfgUserOptions.print.scale"
             :chartElement="ridgelineChart"
-            :position="cfgUserOptions.position"
+            v-bind="
+                getUserOptionsProps(
+                    cfgUserOptions,
+                    'pdf csv img svg table fullscreen altCopy annotator',
+                )
+            "
             :isTooltip="false"
-            :titles="{ ...cfgUserOptions.buttonTitles }"
-            :hasAnnotator="cfgUserOptions.buttons.annotator"
             :isAnnotation="isAnnotator"
             :tableDialog="FINAL_CONFIG.table.useDialog"
             :style="{

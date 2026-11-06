@@ -1,14 +1,16 @@
 <script setup>
+import {
+    getUserOptionsProps,
+    getUserOptionSlots,
+    getUserOptionSlotProps,
+} from '../userOptionsSlots';
 import { getAnnotatorProps } from '../annotatorConfig';
 import { createPanZoomAnnotationViewport } from '../utils/annotationViewport';
 import {
     annotationSlotNames,
     getAnnotationSlotProps,
 } from '../annotationSlots';
-import {
-    getUserOptionSlots,
-    getUserOptionSlotProps,
-} from '../userOptionsSlots';
+
 import { createChartImageGetter } from '../chartImage';
 import { resolveChartConfig } from '../resolveChartConfig';
 import {
@@ -2233,22 +2235,17 @@ const annotationViewport = computed(() =>
                 FINAL_CONFIG.userOptions.buttons.tooltip &&
                 cfgChart.tooltip.show
             "
-            :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
-            :hasImg="FINAL_CONFIG.userOptions.buttons.img"
-            :hasSvg="FINAL_CONFIG.userOptions.buttons.svg"
-            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
-            :hasAltCopy="FINAL_CONFIG.userOptions.buttons.altCopy"
-            :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator"
-            :hasZoom="FINAL_CONFIG.userOptions.buttons.zoom"
             :isZoom="panZoomActive"
             :isFullscreen="isFullscreen"
             :isTooltip="mutableConfig.showTooltip"
-            :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
             :chartElement="geoChart"
-            :position="FINAL_CONFIG.userOptions.position"
+            v-bind="
+                getUserOptionsProps(
+                    FINAL_CONFIG.userOptions,
+                    'pdf img svg fullscreen altCopy annotator zoom',
+                )
+            "
             :isAnnotation="isAnnotator"
-            :callbacks="FINAL_CONFIG.userOptions.callbacks"
-            :printScale="FINAL_CONFIG.userOptions.print.scale"
             :isCursorPointer="isCursorPointer"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"

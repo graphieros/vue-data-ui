@@ -1,14 +1,16 @@
 <script setup>
+import {
+    getUserOptionsProps,
+    getUserOptionSlots,
+    getUserOptionSlotProps,
+} from '../userOptionsSlots';
 import { getAnnotatorProps } from '../annotatorConfig';
 import { getTableComponent, syncTableVisibility } from '../tableIntegration';
 import {
     annotationSlotNames,
     getAnnotationSlotProps,
 } from '../annotationSlots';
-import {
-    getUserOptionSlots,
-    getUserOptionSlotProps,
-} from '../userOptionsSlots';
+
 import { createChartImageGetter } from '../chartImage';
 import {
     ref,
@@ -1497,20 +1499,14 @@ defineExpose({
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uid"
-            :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
-            :hasXls="FINAL_CONFIG.userOptions.buttons.csv"
-            :hasImg="FINAL_CONFIG.userOptions.buttons.img"
-            :hasSvg="FINAL_CONFIG.userOptions.buttons.svg"
-            :hasTable="FINAL_CONFIG.userOptions.buttons.table"
-            :callbacks="FINAL_CONFIG.userOptions.callbacks"
-            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
-            :hasAltCopy="FINAL_CONFIG.userOptions.buttons.altCopy"
             :isFullscreen="isFullscreen"
-            :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
             :chartElement="flowChart"
-            :position="FINAL_CONFIG.userOptions.position"
-            :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator"
-            :printScale="FINAL_CONFIG.userOptions.print.scale"
+            v-bind="
+                getUserOptionsProps(
+                    FINAL_CONFIG.userOptions,
+                    'pdf csv img svg table fullscreen altCopy annotator',
+                )
+            "
             :isAnnotation="isAnnotator"
             :hasTooltip="
                 cfgChart.tooltip.show &&
