@@ -1,5 +1,5 @@
 import { readFileSync, readdirSync } from 'node:fs';
-import { parse } from '@vue/compiler-sfc';
+import { parse } from 'vue/compiler-sfc';
 import { baseParse } from '@vue/compiler-dom';
 import { expect, test } from 'vitest';
 import { useConfig } from '../src/useConfig';
