@@ -37,7 +37,6 @@ import {
     easeOutCubic,
     error,
     downloadCsv,
-    functionReturnsString,
     isFunction,
     makeDonut,
     objectIsEmpty,
@@ -45,20 +44,16 @@ import {
     parens,
     sanitizeArray,
     setOpacity,
-    themePalettes,
     XMLNS,
-    checkNaN,
     treeShake,
 } from '../lib';
 import { buildValuePercentageLabel } from '../labelUtils';
-import { throttle } from '../canvas-lib';
 import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 import { useLoading } from '../useLoading';
 import { usePrinter } from '../usePrinter';
-import { useNestedProp } from '../useNestedProp';
+import { resolveChartConfigWithPalette } from '../resolveChartConfig';
 import { useResponsive } from '../useResponsive';
-import { useThemeCheck } from '../useThemeCheck';
 import { useChartExport } from '../useChartExport';
 import { useUserOptionState } from '../useUserOptionState';
 import { useChartAccessibility } from '../useChartAccessibility';
@@ -88,7 +83,6 @@ const BaseDraggableDialog = defineAsyncComponent(
 );
 
 const { vue_ui_nested_donuts: DEFAULT_CONFIG } = useConfig();
-const { isThemeValid, warnInvalidTheme } = useThemeCheck();
 
 const props = defineProps({
     config: {
@@ -105,19 +99,10 @@ const props = defineProps({
     },
 });
 
-const isDataset = computed({
-    get() {
-        return !!props.dataset && props.dataset.length;
-    },
-    set(bool) {
-        return bool;
-    },
-});
-
+const isDataset = computed(() => !!props.dataset?.length);
 const uid = ref(createUid());
 const isTooltip = ref(false);
 const tooltipContent = ref('');
-const selectedSerie = ref(null);
 const step = ref(0);
 const nestedDonutsChart = ref(null);
 const chartTitle = ref(null);
@@ -129,7 +114,6 @@ const tableStep = ref(0);
 const legendStep = ref(0);
 const isFirstLoad = ref(true);
 const animatedValues = ref([]);
-const ghostSlices = ref([]);
 const readyTeleport = ref(false);
 const tableUnit = ref(null);
 const userOptionsRef = ref(null);
@@ -249,15 +233,10 @@ const skeletonConfig = computed(() => {
     });
 });
 
-const { loading, FINAL_DATASET, manualLoading } = useLoading({
+const { loading, FINAL_DATASET } = useLoading({
     ...toRefs(props),
     FINAL_CONFIG,
     prepareConfig,
-    callback: () => {
-        Promise.resolve().then(async () => {
-            await triggerAnim();
-        });
-    },
     skeletonDataset: props.config?.skeletonDataset ?? [loaderDs, loaderDs],
     skeletonConfig: treeShake({
         defaultConfig: FINAL_CONFIG.value,
@@ -272,39 +251,7 @@ const { svgRef } = useChartAccessibility({
 });
 
 function prepareConfig() {
-    const mergedConfig = useNestedProp({
-        userConfig: props.config,
-        defaultConfig: DEFAULT_CONFIG,
-    });
-
-    let finalConfig = {};
-
-    const theme = mergedConfig.theme;
-
-    if (theme) {
-        if (!isThemeValid.value(mergedConfig)) {
-            warnInvalidTheme(mergedConfig);
-            finalConfig = mergedConfig;
-        } else {
-            const fused = useNestedProp({
-                userConfig: themes[theme] || props.config,
-                defaultConfig: mergedConfig,
-            });
-            finalConfig = {
-                ...useNestedProp({
-                    userConfig: props.config,
-                    defaultConfig: fused,
-                }),
-                customPalette: mergedConfig.customPalette.length
-                    ? mergedConfig.customPalette
-                    : themePalettes[theme] || palette,
-            };
-        }
-    } else {
-        finalConfig = mergedConfig;
-    }
-
-    return finalConfig;
+    return resolveChartConfigWithPalette(props.config, DEFAULT_CONFIG, themes);
 }
 
 let previousStructuralConfig = stringifyStructuralConfig(props.config);
@@ -336,7 +283,6 @@ watch(
         }
         userOptionsVisible.value =
             !FINAL_CONFIG.value.userOptions.showOnChartHover;
-        prepareChart();
         titleStep.value += 1;
         tableStep.value += 1;
         legendStep.value += 1;
@@ -344,10 +290,6 @@ watch(
         mutableConfig.value.dataLabels.show = cfgLabels.value.dataLabels.show;
         mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
         mutableConfig.value.showTooltip = cfgTooltip.value.show;
-
-        // Other ref resets
-        svg.value.width = cfgChart.value.width;
-        svg.value.height = cfgChart.value.height;
     },
     { deep: true },
 );
@@ -363,157 +305,116 @@ const padding = computed(() => {
     };
 });
 
-function animateWithGhost(finalValues, duration = 1000, stagger = 50) {
-    return new Promise((resolve) => {
-        const N = finalValues.length;
-        animatedValues.value = Array(N).fill(0);
-        ghostSlices.value = [];
-
-        let completed = 0;
-
-        finalValues.forEach((target, i) => {
-            setTimeout(() => {
-                const start = performance.now();
-
-                function animate(now) {
-                    const p = Math.min((now - start) / duration, 1);
-                    const eased = easeOutCubic(p);
-                    const value = target * eased;
-                    animatedValues.value[i] = value;
-                    animatedValues.value = [...animatedValues.value];
-
-                    const ghostByGroup = [];
-                    let cursor = 0;
-                    props.dataset.forEach((ds, groupIndex) => {
-                        const realTotal = checkNaN(
-                            ds.series.reduce(
-                                (sum, s) =>
-                                    sum +
-                                    checkNaN(
-                                        sanitizeArray(s.values).reduce(
-                                            (a, b) => a + b,
-                                            0,
-                                        ),
-                                    ),
-                                0,
-                            ),
-                        );
-
-                        const animatedTotal = checkNaN(
-                            animatedValues.value
-                                .slice(cursor, cursor + ds.series.length)
-                                .reduce((a, b) => a + b, 0),
-                        );
-
-                        const ghostValue = realTotal - animatedTotal;
-
-                        if (ghostValue > Number.MIN_VALUE) {
-                            ghostByGroup.push({
-                                name: '__ghost__',
-                                arcOf: ds.name,
-                                arcOfId: `${uid.value}_${groupIndex}`,
-                                id: `ghost_${uid.value}_${groupIndex}`,
-                                seriesIndex: -1,
-                                datasetIndex: groupIndex,
-                                color: 'transparent',
-                                value: ghostValue,
-                                fullValue: ghostValue,
-                                absoluteValues: [],
-                                ghost: true,
-                            });
-                        }
-
-                        cursor += ds.series.length;
-                    });
-
-                    ghostSlices.value = ghostByGroup;
-
-                    if (p < 1) {
-                        requestAnimationFrame(animate);
-                    } else {
-                        completed += 1;
-                        if (completed === N) resolve();
-                    }
-                }
-
-                requestAnimationFrame(animate);
-            }, i * stagger);
-        });
-    });
+let disposed = false;
+let startupFrame = null;
+let startupSequence = 0;
+const toggleAnimations = new Map();
+const animatedOverrides = ref({});
+function cancelStartup() {
+    startupSequence += 1;
+    if (startupFrame !== null) cancelAnimationFrame(startupFrame);
+    startupFrame = null;
+    isFirstLoad.value = false;
 }
-
-async function triggerAnim() {
-    if (FINAL_CONFIG.value.startAnimation?.show) {
-        const seriesList = FINAL_DATASET.value.flatMap((d) => d.series);
-        const finalValues = seriesList.map((s) =>
-            sanitizeArray(s.values).reduce((a, b) => a + b, 0),
-        );
-
-        animatedValues.value = finalValues.map(() => 0);
-        isFirstLoad.value = true;
-
-        ghostSlices.value = FINAL_DATASET.value.map((ds, i) => {
-            const total = ds.series.reduce(
-                (sum, s) =>
-                    sum + sanitizeArray(s.values).reduce((a, b) => a + b, 0),
+function cancelToggle(id) {
+    const animation = toggleAnimations.get(id);
+    if (animation) cancelAnimationFrame(animation.frame);
+    toggleAnimations.delete(id);
+}
+function cancelAnimations() {
+    cancelStartup();
+    for (const id of toggleAnimations.keys()) cancelToggle(id);
+    animatedOverrides.value = {};
+}
+function triggerAnim() {
+    cancelAnimations();
+    segregated.value = segregated.value.filter((id) =>
+        seriesById.value.has(id),
+    );
+    if (disposed || loading.value || !FINAL_CONFIG.value.startAnimation.show)
+        return;
+    const targets = preparedDataset.value.flatMap((ds) =>
+        ds.series.map((s) => s.value),
+    );
+    const { durationMs, staggerMs } = FINAL_CONFIG.value.startAnimation;
+    const duration = Number(durationMs);
+    if (!targets.length || !Number.isFinite(duration) || duration <= 0) return;
+    const stagger = Number.isFinite(Number(staggerMs))
+        ? Math.max(0, Number(staggerMs))
+        : 0;
+    animatedValues.value = targets.map(() => 0);
+    isFirstLoad.value = true;
+    const sequence = startupSequence;
+    const start = performance.now();
+    function animate(now) {
+        if (disposed || sequence !== startupSequence) return;
+        let done = true;
+        animatedValues.value = targets.map((target, i) => {
+            const progress = Math.max(
                 0,
+                Math.min(1, (now - start - i * stagger) / duration),
             );
+            if (progress < 1) done = false;
+            return target * easeOutCubic(progress);
+        });
+        if (done) {
+            startupFrame = null;
+            isFirstLoad.value = false;
+        } else startupFrame = requestAnimationFrame(animate);
+    }
+    startupFrame = requestAnimationFrame(animate);
+}
+const ghostSlices = computed(() => {
+    if (!isFirstLoad.value) return [];
+    let cursor = 0;
+    return preparedDataset.value
+        .map((ds, i) => {
+            const value =
+                ds.series.reduce((sum, s) => sum + s.value, 0) -
+                animatedValues.value
+                    .slice(cursor, cursor + ds.series.length)
+                    .reduce((a, b) => a + b, 0);
+            cursor += ds.series.length;
             return {
                 name: '__ghost__',
                 arcOf: ds.name,
-                arcOfId: `${uid.value}_${i}`,
+                arcOfId: ds.id,
                 id: `ghost_${uid.value}_${i}`,
                 seriesIndex: -1,
                 datasetIndex: i,
                 color: 'transparent',
-                value: total,
-                fullValue: total,
+                value,
+                fullValue: value,
                 absoluteValues: [],
                 ghost: true,
             };
-        });
-
-        await nextTick();
-
-        animateWithGhost(
-            finalValues,
-            FINAL_CONFIG.value.startAnimation.durationMs,
-            FINAL_CONFIG.value.startAnimation.staggerMs,
-        ).then(() => {
-            isFirstLoad.value = false;
-            ghostSlices.value = [];
-        });
-    } else {
-        isFirstLoad.value = false;
-    }
-}
-
-onMounted(async () => {
-    readyTeleport.value = true;
-    prepareChart();
-    await triggerAnim();
+        })
+        .filter((g) => g.value > Number.MIN_VALUE);
 });
-
 const resizeObserver = shallowRef(null);
-const observedEl = shallowRef(null);
-
-const debug = computed(() => FINAL_CONFIG.value.debug);
-
+let resizeFrame = null;
+function stopResize() {
+    resizeObserver.value?.disconnect();
+    resizeObserver.value = null;
+    if (resizeFrame !== null) cancelAnimationFrame(resizeFrame);
+    resizeFrame = null;
+}
 function prepareChart() {
-    if (objectIsEmpty(props.dataset)) {
-        error({
-            componentName: 'VueUiNestedDonuts',
-            type: 'dataset',
-            debug: debug.value,
-        });
-        isDataset.value = false;
-        manualLoading.value = true; // v3
-    } else {
-        manualLoading.value = FINAL_CONFIG.value.loading;
+    stopResize();
+    if (!FINAL_CONFIG.value.responsive) {
+        svg.value = {
+            width: cfgChart.value.width,
+            height: cfgChart.value.height,
+        };
+        return;
     }
-
-    if (FINAL_CONFIG.value.responsive) {
-        const handleResize = throttle(() => {
+    const parent = nestedDonutsChart.value?.parentNode;
+    if (!parent) return;
+    const resize = () => {
+        if (resizeFrame !== null) cancelAnimationFrame(resizeFrame);
+        resizeFrame = requestAnimationFrame(() => {
+            resizeFrame = null;
+            if (disposed) return;
             const { width, height } = useResponsive({
                 chart: nestedDonutsChart.value,
                 title: cfgChart.value.title.text ? chartTitle.value : null,
@@ -522,34 +423,23 @@ function prepareChart() {
                 noTitle: noTitle.value,
                 padding: padding.value,
             });
-
-            requestAnimationFrame(() => {
-                svg.value.width = width;
-                svg.value.height = height;
-            });
+            svg.value = { width, height };
         });
-
-        if (resizeObserver.value) {
-            if (observedEl.value) {
-                resizeObserver.value.unobserve(observedEl.value);
-            }
-            resizeObserver.value.disconnect();
-        }
-
-        resizeObserver.value = new ResizeObserver(handleResize);
-        observedEl.value = nestedDonutsChart.value.parentNode;
-        resizeObserver.value.observe(observedEl.value);
-    }
+    };
+    resizeObserver.value = new ResizeObserver(resize);
+    resizeObserver.value.observe(parent);
+    resize();
 }
-
-onBeforeUnmount(() => {
-    if (resizeObserver.value) {
-        if (observedEl.value) {
-            resizeObserver.value.unobserve(observedEl.value);
-        }
-        resizeObserver.value.disconnect();
-    }
+onMounted(() => {
+    readyTeleport.value = true;
+    prepareChart();
 });
+onBeforeUnmount(() => {
+    disposed = true;
+    cancelAnimations();
+    stopResize();
+});
+const debug = computed(() => FINAL_CONFIG.value.debug);
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `nested_donuts_${uid.value}`,
@@ -602,34 +492,9 @@ function selectDatapoint({ datapoint, index, seriesIndex }) {
     emit('selectDatapoint', { datapoint, index });
 }
 
-function animateValue({
-    from,
-    to,
-    duration,
-    onUpdate,
-    onDone,
-    easing = easeOutCubic,
-}) {
-    const start = performance.now();
-    function step(now) {
-        const t = Math.min((now - start) / duration, 1);
-        const eased = easing(t);
-        const current = from + (to - from) * eased;
-        onUpdate(current, t);
-        if (t < 1) {
-            requestAnimationFrame(step);
-        } else {
-            onUpdate(to, 1);
-            if (onDone) onDone();
-        }
-    }
-    requestAnimationFrame(step);
-}
-
 const segregated = ref([]);
 
-const immutableDataset = computed(() => {
-    const l = loading.value;
+const preparedDataset = computed(() => {
     FINAL_DATASET.value.forEach((ds, i) => {
         if ([null, undefined].includes(ds.name)) {
             error({
@@ -683,18 +548,13 @@ const immutableDataset = computed(() => {
         }
     });
 
-    let animatedCounter = 0;
-
     return FINAL_DATASET.value.map((ds, i) => {
         return {
             ...ds,
-            total: ds.series
-                .filter((s) => !segregated.value.includes(s.id))
-                .map((s) => sanitizeArray(s.values).reduce((a, b) => a + b, 0))
-                .reduce((a, b) => a + b, 0),
+
             datasetIndex: i,
             id: `${uid.value}_${i}`,
-            series: ds.series.map((serie, j) => {
+            series: (ds.series || []).map((serie, j) => {
                 const rawValue = sanitizeArray(serie.values).reduce(
                     (a, b) => a + b,
                     0,
@@ -711,9 +571,7 @@ const immutableDataset = computed(() => {
                         convertColorToHex(serie.color) ||
                         customPalette.value[j] ||
                         palette[j % palette.length],
-                    value: isFirstLoad.value
-                        ? (animatedValues.value[animatedCounter++] ?? 0)
-                        : rawValue,
+                    value: rawValue,
                     absoluteValues: serie.values || [],
                 };
             }),
@@ -721,16 +579,29 @@ const immutableDataset = computed(() => {
     });
 });
 
-// v3 - Stop skeleton loader when props.dataset becomes valid
-watch(
-    () => props.dataset,
-    (newVal) => {
-        if (Array.isArray(newVal) && newVal.length > 0) {
-            manualLoading.value = false;
-        }
-    },
-    { immediate: true },
+const seriesById = computed(
+    () =>
+        new Map(
+            preparedDataset.value.flatMap((ds) =>
+                ds.series.map((s) => [s.id, s]),
+            ),
+        ),
 );
+const immutableDataset = computed(() => {
+    let index = 0;
+    return preparedDataset.value.map((ds) => ({
+        ...ds,
+        total: ds.series
+            .filter((s) => !segregated.value.includes(s.id))
+            .reduce((sum, s) => sum + s.value, 0),
+        series: ds.series.map((s) => ({
+            ...s,
+            value: isFirstLoad.value
+                ? (animatedValues.value[index++] ?? 0)
+                : s.value,
+        })),
+    }));
+});
 
 const donutSize = computed(() => {
     return (
@@ -739,48 +610,27 @@ const donutSize = computed(() => {
     );
 });
 
-const md = computed(() => {
-    return [...immutableDataset.value].map((ds, i) => {
-        const total = ds.series
-            .filter((serie) => !segregated.value.includes(serie.id))
-            .map((s) => {
-                return s.value;
-            })
-            .reduce((a, b) => a + b, 0);
-
+function visibleDataset(overrides = {}) {
+    return immutableDataset.value.map((ds) => {
+        const series = ds.series
+            .filter((s) => !segregated.value.includes(s.id))
+            .map((s) => ({ ...s, value: overrides[s.id] ?? s.value }));
+        const total = series.reduce((sum, s) => sum + s.value, 0);
         return {
             ...ds,
             total,
-            series: ds.series
-                .filter((serie) => !segregated.value.includes(serie.id))
-                .map((s) => {
-                    return {
-                        ...s,
-                        proportion: s.value / total,
-                    };
-                }),
+            series: series.map((s) => ({
+                ...s,
+                proportion: total ? s.value / total : 0,
+            })),
         };
     });
-});
-
-function checkSegregation(sourceArray, n, targetArray) {
-    let count = 0;
-    for (let i = 0; i < sourceArray.length; i += 1) {
-        if (targetArray.includes(sourceArray[i])) {
-            count += 1;
-        }
-    }
-    return count < n;
 }
-
-const mutableDataset = ref(md.value);
-
-watch(
-    () => md.value,
-    (val) => (mutableDataset.value = val),
-);
+const md = computed(() => visibleDataset());
+const mutableDataset = computed(() => visibleDataset(animatedOverrides.value));
 
 function toggleLegend(legendSet) {
+    cancelAnimations();
     const ids = legendSet.map((item) => item.id);
     if (legendSet.some((l) => segregated.value.includes(l.id))) {
         const removeIds = new Set(ids);
@@ -792,102 +642,58 @@ function toggleLegend(legendSet) {
 }
 
 function segregateDonut(item) {
-    const target = props.dataset
-        .flatMap((d, i) =>
-            d.series.map((s, j) => ({
-                value: sanitizeArray(s.values).reduce((a, b) => a + b, 0),
-                id: `${uid.value}_${i}_${j}`,
-                arcOfId: `${uid.value}_${i}`,
-            })),
-        )
-        .find((el) => el.id === item.id);
-
+    const target = seriesById.value.get(item.id);
     if (!target) return;
-
-    const targetValue =
-        immutableDataset.value
-            .flatMap((ds) => ds.series)
-            .find((s) => s.id === item.id)?.value ?? 0;
-
-    const sourceEl = mutableDataset.value
-        .flatMap((d) => d.series)
-        .find((el) => el.id === item.id);
-
-    const source = sourceEl ? sourceEl.value : 0;
-
-    let initVal = source;
-
-    const allParentDonut = immutableDataset.value.find(
-        (el) => el.id === target.arcOfId,
-    );
-    if (!allParentDonut) return;
-
-    const allParentDonutIds = allParentDonut.series.map((s) => s.id);
-    const canSegregate = checkSegregation(
-        allParentDonutIds,
-        allParentDonutIds.length - 1,
-        segregated.value,
-    );
-
-    if (segregated.value.includes(item.id)) {
-        segregated.value = segregated.value.filter((s) => s !== item.id);
-
-        if (FINAL_CONFIG.value.serieToggleAnimation.show) {
-            animateValue({
-                from: initVal,
-                to: targetValue,
-                duration: FINAL_CONFIG.value.serieToggleAnimation.durationMs,
-                onUpdate: (val) => {
-                    mutableDataset.value = mutableDataset.value.map((ds) => ({
-                        ...ds,
-                        series: ds.series.map((s) =>
-                            s.id === item.id ? { ...s, value: val } : s,
-                        ),
-                    }));
-                },
-                onDone: () => {
-                    emit('selectLegend', md.value);
-                },
-            });
-        } else {
-            mutableDataset.value = mutableDataset.value.map((ds) => ({
-                ...ds,
-                series: ds.series.map((s) =>
-                    s.id === item.id ? { ...s, value: targetValue } : s,
-                ),
-            }));
-            emit('selectLegend', md.value);
-        }
-    } else if (canSegregate) {
-        if (FINAL_CONFIG.value.serieToggleAnimation.show) {
-            animateValue({
-                from: initVal,
-                to: 0,
-                duration: FINAL_CONFIG.value.serieToggleAnimation.durationMs,
-                onUpdate: (val) => {
-                    mutableDataset.value = mutableDataset.value.map((ds) => ({
-                        ...ds,
-                        series: ds.series.map((s) =>
-                            s.id === item.id ? { ...s, value: val } : s,
-                        ),
-                    }));
-                },
-                onDone: () => {
-                    segregated.value.push(item.id);
-                    emit('selectLegend', md.value);
-                },
-            });
-        } else {
-            mutableDataset.value = mutableDataset.value.map((ds) => ({
-                ...ds,
-                series: ds.series.map((s) =>
-                    s.id === item.id ? { ...s, value: 0 } : s,
-                ),
-            }));
+    cancelStartup();
+    const pending = toggleAnimations.get(item.id);
+    const show = pending ? !pending.show : segregated.value.includes(item.id);
+    const group = preparedDataset.value[target.datasetIndex];
+    if (
+        !show &&
+        group.series.filter(
+            (s) =>
+                !segregated.value.includes(s.id) &&
+                toggleAnimations.get(s.id)?.show !== false,
+        ).length <= 1
+    )
+        return;
+    const from = animatedOverrides.value[item.id] ?? (show ? 0 : target.value);
+    cancelToggle(item.id);
+    if (show)
+        segregated.value = segregated.value.filter((id) => id !== item.id);
+    const finish = () => {
+        if (!show && !segregated.value.includes(item.id))
             segregated.value.push(item.id);
-            emit('selectLegend', md.value);
-        }
+        const { [item.id]: _removed, ...rest } = animatedOverrides.value;
+        animatedOverrides.value = rest;
+        toggleAnimations.delete(item.id);
+        emit('selectLegend', md.value);
+    };
+    const duration = Number(FINAL_CONFIG.value.serieToggleAnimation.durationMs);
+    if (
+        !FINAL_CONFIG.value.serieToggleAnimation.show ||
+        !Number.isFinite(duration) ||
+        duration <= 0
+    ) {
+        finish();
+        return;
     }
+    const animation = { show, frame: null };
+    toggleAnimations.set(item.id, animation);
+    const to = show ? target.value : 0;
+    animatedOverrides.value = { ...animatedOverrides.value, [item.id]: from };
+    const start = performance.now();
+    function step(now) {
+        if (disposed || toggleAnimations.get(item.id) !== animation) return;
+        const t = Math.min(1, Math.max(0, (now - start) / duration));
+        animatedOverrides.value = {
+            ...animatedOverrides.value,
+            [item.id]: from + (to - from) * easeOutCubic(t),
+        };
+        if (t < 1) animation.frame = requestAnimationFrame(step);
+        else finish();
+    }
+    animation.frame = requestAnimationFrame(step);
 }
 
 function validSeriesToToggle(name) {
@@ -902,7 +708,7 @@ function validSeriesToToggle(name) {
         .flatMap((d) => d.series)
         .filter((el) => el.name === name);
 
-    if (!dp) {
+    if (!dp.length) {
         if (debug.value) {
             console.warn(`VueUiNestedDonuts - Series name not found "${name}"`);
         }
@@ -922,17 +728,13 @@ function showSeries(name) {
     const dp = validSeriesToToggle(name);
     if (dp === null) return;
 
-    if (Array.isArray(dp)) {
-        dp.forEach((el) => {
-            if (segregated.value.includes(el.id)) {
-                segregateDonut({ id: el.id });
-            }
-        });
-    } else {
-        if (segregated.value.includes(dp.id)) {
-            segregateDonut({ id: dp.id });
-        }
-    }
+    dp.forEach((el) => {
+        if (
+            segregated.value.includes(el.id) ||
+            toggleAnimations.get(el.id)?.show === false
+        )
+            segregateDonut(el);
+    });
 }
 
 /**
@@ -945,140 +747,103 @@ function showSeries(name) {
 function hideSeries(name) {
     const dp = validSeriesToToggle(name);
     if (dp === null) return;
-    if (Array.isArray(dp)) {
-        dp.forEach((el) => {
-            if (!segregated.value.includes(el.id)) {
-                segregateDonut({ id: el.id });
-            }
-        });
-    } else {
-        if (!segregated.value.includes(dp.id)) {
-            segregateDonut({ id: dp.id });
-        }
-    }
+    dp.forEach((el) => {
+        if (
+            !segregated.value.includes(el.id) &&
+            toggleAnimations.get(el.id)?.show !== false
+        )
+            segregateDonut(el);
+    });
 }
 
 const donutThickness = computed(() => {
     return (
-        (donutSize.value / immutableDataset.value.length) *
+        (donutSize.value / Math.max(1, preparedDataset.value.length)) *
         cfgLayout.value.donut.spacingRatio
     );
 });
 
-const radii = computed(() => {
-    return mutableDataset.value.map((ds, i) => {
-        return (
+const radii = computed(() =>
+    preparedDataset.value.map(
+        (_, i) =>
             donutSize.value -
-            (i * donutSize.value) / immutableDataset.value.length
-        );
-    });
-});
-
-const donuts = computed(() => {
-    return mutableDataset.value.map((ds, i) => {
-        const hasData =
-            Math.abs(ds.series.map((s) => s.value).reduce((a, b) => a + b, 0)) >
-            0;
-        const radius =
-            donutSize.value -
-            (i * donutSize.value) / mutableDataset.value.length;
-        const ghost = isFirstLoad.value
-            ? ghostSlices.value.find((g) => g.datasetIndex === i)
-            : null;
+            (i * donutSize.value) / preparedDataset.value.length,
+    ),
+);
+function makeRing(series, radius) {
+    return makeDonut(
+        { series },
+        svg.value.width / 2,
+        svg.value.height / 2,
+        radius,
+        radius,
+        1.99999,
+        2,
+        1,
+        360,
+        105.25,
+        donutThickness.value,
+    );
+}
+const ringGeometry = computed(() =>
+    radii.value.map((radius) => ({
+        radius,
+        skeleton: makeRing(
+            [{ name: '_', color: cfgLayout.value.donut.emptyFill, value: 1 }],
+            radius,
+        ),
+        fullCirclePath: `M ${svg.value.width / 2},${svg.value.height / 2 + radius}
+            a ${radius},${radius} 0 1,1 0,${-2 * radius}
+            a ${radius},${radius} 0 1,1 0,${2 * radius}`,
+    })),
+);
+const donuts = computed(() =>
+    mutableDataset.value.map((ds, i) => {
+        const geometry = ringGeometry.value[i];
+        const ghost = ghostSlices.value.find((g) => g.datasetIndex === i);
         const series = [...ds.series, ...(ghost ? [ghost] : [])].map((s) => ({
             ...s,
             value: s.value < 0.00000000001 ? Number.MIN_VALUE : s.value,
         }));
-
-        const skeleton = makeDonut(
-            {
-                series: [
-                    {
-                        name: '_',
-                        color: cfgLayout.value.donut.emptyFill,
-                        value: 1,
-                    },
-                ],
-            },
-            svg.value.width / 2,
-            svg.value.height / 2,
-            radius,
-            radius,
-            1.99999,
-            2,
-            1,
-            360,
-            105.25,
-            donutThickness.value,
-        );
-
-        const fullCirclePath = `M ${svg.value.width / 2},${svg.value.height / 2 + radius}
-            a ${radius},${radius} 0 1,1 0,${-2 * radius}
-            a ${radius},${radius} 0 1,1 0,${2 * radius}`;
-
+        const donut = makeRing(series, geometry.radius);
         return {
             ...ds,
-            hasData,
-            radius,
-            skeleton,
-            fullCirclePath,
-            donut: makeDonut(
-                { series },
-                svg.value.width / 2,
-                svg.value.height / 2,
-                radius,
-                radius,
-                1.99999,
-                2,
-                1,
-                360,
-                105.25,
-                donutThickness.value,
-            ),
+            ...geometry,
+            hasData: Math.abs(ds.total) > 0,
+            donut,
+            visibleArcs: donut.filter((arc) => !arc.ghost),
         };
-    });
-});
+    }),
+);
+const gradientSets = computed(() =>
+    radii.value.map((radius) => ({
+        sizeRatio: donutSize.value - radius,
+        donut: makeRing([{ value: 1 }], radius)[0],
+    })),
+);
 
-const gradientSets = computed(() => {
-    return [...immutableDataset.value].map((ds, i) => {
-        const sizeRatio = (i * donutSize.value) / immutableDataset.value.length;
-
-        return {
-            sizeRatio,
-            donut: makeDonut(
-                { series: [{ value: 1 }] },
-                svg.value.width / 2,
-                svg.value.height / 2,
-                donutSize.value - sizeRatio,
-                donutSize.value - sizeRatio,
-                1.99999,
-                2,
-                1,
-                360,
-                105.25,
-                (donutSize.value / immutableDataset.value.length) *
-                    cfgLayout.value.donut.spacingRatio,
-            )[0],
-        };
-    });
-});
-
-const selectedDonut = ref(null);
 const selectedDatapoint = ref(null);
-const selectedDatapointIndex = ref(null);
+const selectedDatapointIndex = computed(
+    () =>
+        flatArcs.value.find((arc) => arc.id === selectedDatapoint.value)
+            ?.seriesIndex ?? null,
+);
 const dataTooltipSlot = ref(null);
+
+function clearSelection() {
+    isTooltip.value = false;
+
+    selectedDatapoint.value = null;
+
+    activeTooltipIndex.value = null;
+    tooltipTriggerMode.value = 'pointer';
+}
 
 function handleDatapointLeave({ datapoint, seriesIndex }) {
     if (FINAL_CONFIG.value.events.datapointLeave) {
         FINAL_CONFIG.value.events.datapointLeave({ datapoint, seriesIndex });
     }
-    isTooltip.value = false;
-    selectedDonut.value = null;
-    selectedSerie.value = null;
-    selectedDatapoint.value = null;
-    selectedDatapointIndex.value = null;
-    activeTooltipIndex.value = null;
-    tooltipTriggerMode.value = 'pointer';
+    clearSelection();
 }
 
 function buildLabel({ val, percentage, showVal, showPercentage, config }) {
@@ -1093,21 +858,21 @@ function buildLabel({ val, percentage, showVal, showPercentage, config }) {
 
 function useTooltip({
     datapoint,
-    _relativeIndex,
+    relativeIndex,
+    notify = true,
     seriesIndex,
     triggerMode = 'pointer',
 }) {
-    if (FINAL_CONFIG.value.events.datapointEnter) {
+    if (notify && FINAL_CONFIG.value.events.datapointEnter) {
         FINAL_CONFIG.value.events.datapointEnter({ datapoint, seriesIndex });
     }
 
     tooltipTriggerMode.value = triggerMode;
-    activeTooltipIndex.value = seriesIndex;
+    activeTooltipIndex.value =
+        relativeIndex ??
+        flatArcs.value.findIndex((arc) => arc.id === datapoint.id);
 
-    selectedDonut.value = datapoint.arcOfId;
     selectedDatapoint.value = datapoint.id;
-    selectedDatapointIndex.value = seriesIndex;
-    selectedSerie.value = datapoint.id;
 
     dataTooltipSlot.value = {
         datapoint,
@@ -1118,23 +883,16 @@ function useTooltip({
 
     const customFormat = cfgTooltip.value.customFormat;
 
-    if (
-        isFunction(customFormat) &&
-        functionReturnsString(() =>
-            customFormat({
-                seriesIndex,
-                datapoint,
-                series: mutableDataset.value,
-                config: FINAL_CONFIG.value,
-            }),
-        )
-    ) {
-        tooltipContent.value = customFormat({
-            seriesIndex,
-            datapoint,
-            series: mutableDataset.value,
-            config: FINAL_CONFIG.value,
-        });
+    const customContent = isFunction(customFormat)
+        ? customFormat({
+              seriesIndex,
+              datapoint,
+              series: mutableDataset.value,
+              config: FINAL_CONFIG.value,
+          })
+        : null;
+    if (typeof customContent === 'string') {
+        tooltipContent.value = customContent;
     } else {
         let html = '';
 
@@ -1176,17 +934,17 @@ function useTooltip({
                                     val: applyDataLabel(
                                         cfgLayout.value.labels.dataLabels
                                             .formatter,
-                                        datapoint.value,
+                                        item.value,
                                         dataLabel({
                                             p: cfgChart.value.layout.labels
                                                 .dataLabels.prefix,
-                                            v: datapoint.value,
+                                            v: item.value,
                                             s: cfgChart.value.layout.labels
                                                 .dataLabels.suffix,
                                             r: cfgChart.value.tooltip
                                                 .roundingValue,
                                         }),
-                                        { datapoint, seriesIndex },
+                                        { datapoint: item, seriesIndex },
                                     ),
                                     percentage: dataLabel({
                                         v: item.proportion * 100,
@@ -1280,25 +1038,13 @@ const legendSets = computed(() => {
             (s) => !segregated.value.includes(s.id),
         );
 
-        const total = isFirstLoad.value
-            ? visibleSeries
-                  .map((s) => {
-                      const indexInOriginal = FINAL_DATASET.value[
-                          i
-                      ].series.findIndex((orig) => orig.name === s.name);
-                      return sanitizeArray(
-                          FINAL_DATASET.value[i].series[indexInOriginal].values,
-                      ).reduce((a, b) => a + b, 0);
-                  })
-                  .reduce((a, b) => a + b, 0)
-            : visibleSeries.map((s) => s.value).reduce((a, b) => a + b, 0);
+        const total = visibleSeries.reduce(
+            (sum, s) => sum + seriesById.value.get(s.id).value,
+            0,
+        );
 
         return ds.series.map((s, j) => {
-            const rawValue = sanitizeArray(
-                FINAL_DATASET.value[i].series[j].values,
-            ).reduce((a, b) => a + b, 0);
-            const displayValue = isFirstLoad.value ? rawValue : s.value;
-
+            const displayValue = seriesById.value.get(s.id).value;
             const valueDisplay = applyDataLabel(
                 cfgLabels.value.dataLabels.formatter,
                 displayValue,
@@ -1603,13 +1349,7 @@ function onSvgFocus() {
 }
 
 function onSvgBlur() {
-    activeTooltipIndex.value = null;
-    tooltipTriggerMode.value = 'pointer';
-    isTooltip.value = false;
-    selectedDonut.value = null;
-    selectedSerie.value = null;
-    selectedDatapoint.value = null;
-    selectedDatapointIndex.value = null;
+    clearSelection();
     isFocus.value = false;
 }
 
@@ -1630,13 +1370,7 @@ function onSvgKeydown(event) {
     event.stopPropagation();
 
     if (isEscapeKey) {
-        activeTooltipIndex.value = null;
-        tooltipTriggerMode.value = 'pointer';
-        isTooltip.value = false;
-        selectedDonut.value = null;
-        selectedSerie.value = null;
-        selectedDatapoint.value = null;
-        selectedDatapointIndex.value = null;
+        clearSelection();
         return;
     }
 
@@ -1653,7 +1387,9 @@ function onSvgKeydown(event) {
     }
 
     let nextIndex = activeTooltipIndex.value;
-    const hoveredIndex = selectedDatapointIndex.value;
+    const hoveredIndex = flatArcs.value.findIndex(
+        (arc) => arc.id === selectedDatapoint.value,
+    );
 
     const hasValidActiveIndex =
         nextIndex !== null &&
@@ -1724,6 +1460,40 @@ const a11yTable = computed(() => {
     return { headers, rows };
 });
 
+watch(
+    [
+        preparedDataset,
+        () => FINAL_CONFIG.value.startAnimation,
+        () => FINAL_CONFIG.value.serieToggleAnimation,
+    ],
+    triggerAnim,
+    { deep: true, immediate: true, flush: 'post' },
+);
+watch(
+    [
+        () => FINAL_CONFIG.value.responsive,
+        () => cfgChart.value.width,
+        () => cfgChart.value.height,
+    ],
+    prepareChart,
+    { flush: 'post' },
+);
+watch(flatArcs, (arcs) => {
+    if (!selectedDatapoint.value) return;
+    const index = arcs.findIndex((arc) => arc.id === selectedDatapoint.value);
+    if (index < 0) {
+        clearSelection();
+        return;
+    }
+    useTooltip({
+        datapoint: arcs[index],
+        relativeIndex: index,
+        seriesIndex: arcs[index].seriesIndex,
+        triggerMode: tooltipTriggerMode.value,
+        notify: false,
+    });
+});
+
 defineExpose({
     autoSize,
     getData,
@@ -1760,7 +1530,7 @@ defineExpose({
         </div>
 
         <A11yDataTable
-            v-if="a11yTable?.rows?.length"
+            v-if="FINAL_CONFIG.a11y.includeTable && a11yTable?.rows?.length"
             :uid="uid"
             :head="a11yTable.headers"
             :body="a11yTable.rows"
@@ -1986,11 +1756,7 @@ defineExpose({
                     <!-- NESTED DONUTS -->
                     <g v-for="(item, i) in donuts">
                         <template v-if="item.hasData">
-                            <g
-                                v-for="(arc, j) in item.donut.filter(
-                                    (el) => !el.ghost,
-                                )"
-                            >
+                            <g v-for="(arc, j) in item.visibleArcs">
                                 <path
                                     data-cy="datapoint-arc"
                                     class="vue-ui-donut-arc-path"
@@ -2039,12 +1805,10 @@ defineExpose({
                     <g v-if="cfgLabels.dataLabels.showDonutName">
                         <template v-if="cfgLabels.dataLabels.curvedDonutName">
                             <g v-for="(item, i) in donuts">
-                                <g v-for="(arc, j) in item.donut">
+                                <g v-for="arc in item.visibleArcs.slice(0, 1)">
                                     <text
                                         data-cy="datapoint-name"
-                                        v-if="
-                                            j === 0 && svg.width && svg.height
-                                        "
+                                        v-if="svg.width && svg.height"
                                         text-anchor="middle"
                                         :font-size="
                                             cfgLayout.labels.dataLabels.fontSize
@@ -2090,12 +1854,10 @@ defineExpose({
                         </template>
                         <template v-else>
                             <g v-for="(item, i) in donuts">
-                                <g v-for="(arc, j) in item.donut">
+                                <g v-for="arc in item.visibleArcs.slice(0, 1)">
                                     <text
                                         data-cy="datapoint-name"
-                                        v-if="
-                                            j === 0 && svg.width && svg.height
-                                        "
+                                        v-if="svg.width && svg.height"
                                         :x="svg.width / 2"
                                         :y="
                                             arc.startY -
@@ -2140,9 +1902,7 @@ defineExpose({
                     <g v-if="cfgLabels.dataLabels.show">
                         <g v-for="(item, i) in donuts">
                             <g
-                                v-for="(arc, j) in item.donut.filter(
-                                    (el) => !el.ghost,
-                                )"
+                                v-for="(arc, j) in item.visibleArcs"
                                 :filter="getBlurFilter(arc, j)"
                             >
                                 <text
@@ -2287,12 +2047,12 @@ defineExpose({
 
                     <!-- TOOLTIP TRAPS -->
                     <g v-for="(item, i) in donuts">
-                        <g v-for="(arc, j) in item.donut">
+                        <g v-for="(arc, j) in item.visibleArcs">
                             <path
                                 data-cy="tooltip-trap"
                                 :d="arc.arcSlice"
                                 :fill="
-                                    selectedSerie === arc.id
+                                    selectedDatapoint === arc.id
                                         ? cfgLayout.donut.selectedColor
                                         : 'transparent'
                                 "
@@ -2416,7 +2176,7 @@ defineExpose({
         >
             <div
                 ref="chartLegend"
-                v-if="cfgChart.legend.show"
+                v-if="cfgChart.legend.show || $slots.legend"
                 :class="{
                     'vue-ui-nested-donuts-legend': legendSets.length > 1,
                 }"

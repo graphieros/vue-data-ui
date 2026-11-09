@@ -34,15 +34,12 @@ import {
     dataLabel,
     downloadCsv,
     error,
-    functionReturnsString,
     isFunction,
-    objectIsEmpty,
     palette,
     treeShake,
     XMLNS,
 } from '../lib.js';
-import { buildValuePercentageLabel } from '../labelUtils';
-import { throttle } from '../canvas-lib';
+import { buildValuePercentageLabel as buildLabel } from '../labelUtils';
 import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 import { useLoading } from '../useLoading.js';
@@ -100,7 +97,6 @@ const isDataset = computed(() => {
 });
 
 const uid = ref(createUid());
-const details = ref(null);
 const step = ref(0);
 const isTooltip = ref(false);
 const tooltipContent = ref('');
@@ -159,7 +155,7 @@ const isCursorPointer = computed(
     () => FINAL_CONFIG.value.userOptions.useCursorPointer,
 );
 
-const skeletonDataset = computed(() => {
+const skeletonConfig = computed(() => {
     return treeShake({
         defaultConfig: {
             userOptions: { show: false },
@@ -183,16 +179,10 @@ const skeletonDataset = computed(() => {
     });
 });
 
-const { loading, FINAL_DATASET, manualLoading } = useLoading({
+const { loading, FINAL_DATASET } = useLoading({
     ...toRefs(props),
     FINAL_CONFIG,
     prepareConfig,
-    callback: () => {
-        Promise.resolve().then(async () => {
-            await nextTick();
-            anim();
-        });
-    },
     skeletonDataset: props.config?.skeletonDataset ?? [
         { name: '_', percentage: 50, value: 1, color: '#DBDBDB' },
         { name: '_', percentage: 50, value: 1, color: '#C4C4C4' },
@@ -201,7 +191,7 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
     ],
     skeletonConfig: treeShake({
         defaultConfig: FINAL_CONFIG.value,
-        userConfig: skeletonDataset.value,
+        userConfig: skeletonConfig.value,
     }),
 });
 
@@ -244,7 +234,6 @@ watch(
         }
         userOptionsVisible.value =
             !FINAL_CONFIG.value.userOptions.showOnChartHover;
-        prepareChart();
         titleStep.value += 1;
         tableStep.value += 1;
         legendStep.value += 1;
@@ -300,14 +289,15 @@ const svg = ref({
 });
 
 const resizeObserver = shallowRef(null);
-const observedEl = shallowRef(null);
+let resizeFrame = null;
+let disposed = false;
 
 onMounted(() => {
     readyTeleport.value = true;
     prepareChart();
 });
 
-const { autoSizeLabels } = useAutoSizeLabelsInsideViewbox({
+const { autoSizeLabelsNow } = useAutoSizeLabelsInsideViewbox({
     svgRef,
     fontSize: () => cfgLabels.value.fontSize,
     minFontSize: () => cfgLabels.value.minFontSize,
@@ -385,17 +375,8 @@ function getLabelTransitionDurationMs() {
     }, 0);
 }
 
-function runAutoSizeLabels() {
-    if (typeof window === 'undefined') return;
-
-    autoSizeLabelsFrameId = requestAnimationFrame(() => {
-        autoSizeLabelsFrameId = null;
-        autoSizeLabels();
-    });
-}
-
 function scheduleAutoSizeLabels() {
-    if (typeof window === 'undefined') return;
+    if (disposed || typeof window === 'undefined') return;
 
     const scheduleId = ++autoSizeLabelsScheduleId;
 
@@ -412,7 +393,7 @@ function scheduleAutoSizeLabels() {
             const transitionDurationMs = getLabelTransitionDurationMs();
 
             if (transitionDurationMs <= 0) {
-                runAutoSizeLabels();
+                autoSizeLabelsNow();
                 return;
             }
 
@@ -423,88 +404,76 @@ function scheduleAutoSizeLabels() {
                     return;
                 }
 
-                runAutoSizeLabels();
+                autoSizeLabelsNow();
             }, transitionDurationMs + 34);
         });
     });
 }
 
 const debug = computed(() => FINAL_CONFIG.value.debug);
-let to = null;
-
+function stopResize() {
+    resizeObserver.value?.disconnect();
+    resizeObserver.value = null;
+    if (resizeFrame !== null) cancelAnimationFrame(resizeFrame);
+    resizeFrame = null;
+    resizing.value = false;
+}
 function prepareChart() {
-    if (objectIsEmpty(props.dataset)) {
-        error({
-            componentName: 'VueUiOnion',
-            type: 'dataset',
-            debug: debug.value,
-        });
-        manualLoading.value = true;
+    stopResize();
+    if (!FINAL_CONFIG.value.responsive) {
+        svg.value = {
+            width: 512,
+            height: 512,
+            padding: { top: 64, right: 64, bottom: 64, left: 64 },
+            minRadius: 64,
+        };
+        scheduleAutoSizeLabels();
+        return;
     }
-
-    // v3
-    if (!objectIsEmpty(props.dataset)) {
-        manualLoading.value = FINAL_CONFIG.value.loading;
-    }
-
-    if (FINAL_CONFIG.value.responsive) {
-        const paddingRatio = 64 / 512;
-        const handleResize = throttle(() => {
-            if (to) {
-                clearTimeout(to);
-            }
-            resizing.value = true;
-            let { width, height } = useResponsive({
+    const parent = onionChart.value?.parentNode;
+    if (!parent) return;
+    const resize = () => {
+        if (resizeFrame !== null) cancelAnimationFrame(resizeFrame);
+        resizing.value = true;
+        resizeFrame = requestAnimationFrame(async () => {
+            resizeFrame = null;
+            if (disposed) return;
+            const { width, height: fullHeight } = useResponsive({
                 chart: onionChart.value,
                 title: cfgChart.value.title.text ? chartTitle.value : null,
                 legend: cfgChart.value.legend.show ? chartLegend.value : null,
                 source: source.value,
                 noTitle: noTitle.value,
             });
-
-            height -= 12;
-
-            requestAnimationFrame(async () => {
-                svg.value.width = width;
-                svg.value.height = height;
-                svg.value.padding.top = Math.max(width, height) * paddingRatio;
-                svg.value.padding.right =
-                    Math.max(width, height) * paddingRatio;
-                svg.value.padding.bottom =
-                    Math.max(width, height) * paddingRatio;
-                svg.value.padding.left = Math.max(width, height) * paddingRatio;
-                svg.value.minRadius = Math.min(width, height) * paddingRatio;
-                to = setTimeout(() => {
-                    resizing.value = false;
-                    scheduleAutoSizeLabels();
-                }, 0);
-            });
+            const height = fullHeight - 12;
+            const padding = (Math.max(width, height) * 64) / 512;
+            svg.value = {
+                width,
+                height,
+                padding: {
+                    top: padding,
+                    right: padding,
+                    bottom: padding,
+                    left: padding,
+                },
+                minRadius: (Math.min(width, height) * 64) / 512,
+            };
+            await nextTick();
+            if (disposed) return;
+            resizing.value = false;
+            scheduleAutoSizeLabels();
         });
-
-        if (resizeObserver.value) {
-            if (observedEl.value) {
-                resizeObserver.value.unobserve(observedEl.value);
-            }
-            resizeObserver.value.disconnect();
-        }
-
-        resizeObserver.value = new ResizeObserver(handleResize);
-        observedEl.value = onionChart.value.parentNode;
-        resizeObserver.value.observe(observedEl.value);
-    }
-    scheduleAutoSizeLabels();
+    };
+    resizeObserver.value = new ResizeObserver(resize);
+    resizeObserver.value.observe(parent);
+    resize();
 }
-
 onBeforeUnmount(() => {
+    disposed = true;
+    stopAnimation();
+    stopResize();
     autoSizeLabelsScheduleId += 1;
     clearAutoSizeLabelsSchedule();
-
-    if (resizeObserver.value) {
-        if (observedEl.value) {
-            resizeObserver.value.unobserve(observedEl.value);
-        }
-        resizeObserver.value.disconnect();
-    }
 });
 
 const drawableArea = computed(() => {
@@ -605,68 +574,52 @@ const legendSet = computed(() => {
     });
 });
 
-const animDataset = ref(immutableDataset.value);
-
+const animationProgress = ref(null);
+const animDataset = computed(() =>
+    immutableDataset.value.map((ds) => ({
+        ...ds,
+        percentage:
+            animationProgress.value === null
+                ? ds.percentage
+                : Math.min(animationProgress.value, ds.targetPercentage),
+    })),
+);
 const isAnimated = computed(() => FINAL_CONFIG.value.useStartAnimation);
-const raf = ref(null);
-const maxPercentage = computed(() =>
-    Math.max(...immutableDataset.value.map((ds) => ds.percentage)),
-);
 const isLoaded = ref(false);
-
-watch(() => immutableDataset.value, anim, { immediate: true, deep: true });
-
-watch(
-    () => props.dataset,
-    (_) => {
-        if (Array.isArray(_) && _.length > 0) {
-            manualLoading.value = false;
-        }
-
-        scheduleAutoSizeLabels();
-    },
-    {
-        deep: true,
-        flush: 'post',
-    },
-);
-
+let animationFrame = null;
+let animationSequence = 0;
+function stopAnimation() {
+    animationSequence += 1;
+    if (animationFrame !== null) cancelAnimationFrame(animationFrame);
+    animationFrame = null;
+    animationProgress.value = null;
+}
 function anim() {
-    if (isAnimated.value && !isLoaded.value && !loading.value) {
-        animDataset.value = immutableDataset.value.map((ds) => {
-            return {
-                ...ds,
-                percentage: 0,
-            };
-        });
-
-        let counter = 0;
-
-        function animUp() {
-            if (counter >= maxPercentage.value) {
-                cancelAnimationFrame(raf.value);
-                animDataset.value = immutableDataset.value;
-                isLoaded.value = true;
-            } else {
-                animDataset.value = immutableDataset.value.map((ds) => {
-                    return {
-                        ...ds,
-                        percentage:
-                            counter < ds.targetPercentage
-                                ? counter
-                                : ds.targetPercentage,
-                    };
-                });
-                counter += 1;
-                requestAnimationFrame(animUp);
-                isLoaded.value = true;
-            }
-        }
-
-        animUp();
-    } else {
-        animDataset.value = immutableDataset.value;
+    stopAnimation();
+    if (disposed || !isAnimated.value || isLoaded.value || loading.value)
+        return;
+    const max = Math.max(
+        0,
+        ...immutableDataset.value.map((ds) => ds.percentage),
+    );
+    if (!Number.isFinite(max) || max <= 0) {
+        isLoaded.value = true;
+        return;
     }
+    const sequence = animationSequence;
+    let counter = 0;
+    function step() {
+        if (disposed || sequence !== animationSequence) return;
+        if (counter >= max) {
+            animationProgress.value = null;
+            animationFrame = null;
+            isLoaded.value = true;
+            return;
+        }
+        animationProgress.value = counter++;
+        animationFrame = requestAnimationFrame(step);
+    }
+    step();
 }
 
 const legendConfig = computed(() => {
@@ -680,48 +633,38 @@ const legendConfig = computed(() => {
     };
 });
 
-const mutableCount = computed(() => {
-    return immutableDataset.value.filter(
-        (onion) => !segregated.value.includes(onion.id),
-    ).length;
-});
-
+const visibleDataset = computed(() =>
+    animDataset.value.filter((onion) => !segregated.value.includes(onion.id)),
+);
 const onionSkin = computed(() => {
-    const baseThickness =
+    const thickness = Math.min(
+        cfgLayout.value.maxThickness,
         Math.min(drawableArea.value.width, drawableArea.value.height) /
-        2 /
-        immutableDataset.value.length;
-
+            2 /
+            Math.max(1, immutableDataset.value.length),
+    );
     return {
-        gutter:
-            (baseThickness > cfgLayout.value.maxThickness
-                ? cfgLayout.value.maxThickness
-                : baseThickness) * cfgLayout.value.gutter.width,
-        track:
-            (baseThickness > cfgLayout.value.maxThickness
-                ? cfgLayout.value.maxThickness
-                : baseThickness) * cfgLayout.value.track.width,
+        gutter: thickness * cfgLayout.value.gutter.width,
+        track: thickness * cfgLayout.value.track.width,
     };
 });
 
 const mutableDataset = computed(() => {
-    return animDataset.value
-        .filter((onion) => !segregated.value.includes(onion.id))
-        .map((onion, i) => {
-            const radius =
-                ((drawableArea.value.maxRadius - onionSkin.value.track) /
-                    mutableCount.value /
-                    2) *
-                (1 + i);
-            const labelY = drawableArea.value.centerY - radius;
-            return {
-                percentage: onion.percentage || 0,
-                ...onion,
-                labelY,
-                radius,
-                path: peelOnion(radius, onion.percentage || 0),
-            };
-        });
+    return visibleDataset.value.map((onion, i) => {
+        const radius =
+            ((drawableArea.value.maxRadius - onionSkin.value.track) /
+                visibleDataset.value.length /
+                2) *
+            (1 + i);
+        const labelY = drawableArea.value.centerY - radius;
+        return {
+            percentage: onion.percentage || 0,
+            ...onion,
+            labelY,
+            radius,
+            path: peelOnion(radius, onion.percentage || 0),
+        };
+    });
 });
 
 function peelOnion(radius, percentage) {
@@ -744,6 +687,29 @@ function peelOnion(radius, percentage) {
     };
 }
 
+function circleAttrs(onion, layer = 'gutter') {
+    const track = layer === 'track';
+    const radius = track
+        ? onion.radius < 0
+            ? 0.0001
+            : onion.radius
+        : onion.radius <= 0
+          ? 0.0001
+          : onion.radius;
+    return {
+        cx: drawableArea.value.centerX,
+        cy: drawableArea.value.centerY,
+        r: radius,
+        fill: 'none',
+        'stroke-dasharray':
+            layer !== 'gutter' ? onion.path.dashArray : onion.path.bgDashArray,
+        'stroke-dashoffset':
+            layer !== 'gutter' ? onion.path.dashOffset : onion.path.fullOffset,
+        'stroke-linecap': 'round',
+        style: { transform: 'rotate(-90deg)', transformOrigin: '50% 50%' },
+    };
+}
+
 const emit = defineEmits(['selectLegend', 'copyAlt']);
 
 function toggleLegend() {
@@ -755,7 +721,6 @@ function toggleLegend() {
         });
     }
 
-    scheduleAutoSizeLabels();
     emit('selectLegend', mutableDataset.value);
 }
 
@@ -768,7 +733,6 @@ function segregate(id) {
         segregated.value.push(id);
     }
 
-    scheduleAutoSizeLabels();
     emit('selectLegend', mutableDataset.value);
 }
 
@@ -842,18 +806,27 @@ const table = computed(() => {
     return { head, body };
 });
 
+function formatTableNumber(value, rounding) {
+    return typeof value === 'number' && Number.isFinite(value)
+        ? value.toLocaleString(undefined, {
+              minimumFractionDigits: rounding,
+              maximumFractionDigits: rounding,
+          })
+        : '-';
+}
+
 const dataTable = computed(() => {
     const head = table.value.head;
 
-    const body = mutableDataset.value.map((ds) => {
-        return [
-            `<span style="color:${ds.color}" aria-hidden="true">⬤</span> ${ds.name}`,
-            `${Number(ds.percentage ?? 0)
-                .toFixed(FINAL_CONFIG.value.table.td.roundingPercentage)
-                .toLocaleString()}%`,
-            `${ds.prefix || ''}${![null, undefined, NaN, 'NaN'].includes(ds.value) ? ds.value.toFixed(FINAL_CONFIG.value.table.td.roundingValue).toLocaleString() : '-'}${ds.suffix || ''}`,
-        ];
-    });
+    const rows = mutableDataset.value.map((ds) => [
+        ds.name,
+        `${formatTableNumber(ds.percentage ?? 0, FINAL_CONFIG.value.table.td.roundingPercentage)}%`,
+        `${ds.prefix || ''}${formatTableNumber(ds.value, FINAL_CONFIG.value.table.td.roundingValue)}${ds.suffix || ''}`,
+    ]);
+    const body = rows.map((row, i) => [
+        `<span style="color:${mutableDataset.value[i].color}" aria-hidden="true">⬤</span> ${row[0]}`,
+        ...row.slice(1),
+    ]);
 
     const config = {
         th: {
@@ -869,7 +842,7 @@ const dataTable = computed(() => {
         breakpoint: FINAL_CONFIG.value.table.responsiveBreakpoint,
     };
 
-    return { head, body, config, colNames: head };
+    return { head, body, config, colNames: head, a11yBody: rows };
 });
 
 function generateCsv(callback = null) {
@@ -895,7 +868,13 @@ function generateCsv(callback = null) {
     });
 }
 
-const selectedSerie = ref(undefined);
+const selectedId = ref(null);
+const selectedSerie = computed(() => {
+    const index = mutableDataset.value.findIndex(
+        (ds) => ds.id === selectedId.value,
+    );
+    return index < 0 ? undefined : index;
+});
 
 const isFullscreen = ref(false);
 function toggleFullscreen(state) {
@@ -913,26 +892,13 @@ function onTrapClick({ datapoint }) {
 }
 
 function onTrapLeave({ datapoint }) {
-    selectedSerie.value = undefined;
-    isTooltip.value = false;
-    activeTooltipIndex.value = null;
-    tooltipTriggerMode.value = 'pointer';
+    clearSelection();
     if (FINAL_CONFIG.value.events.datapointLeave) {
         FINAL_CONFIG.value.events.datapointLeave({
             datapoint,
             seriesIndex: datapoint.absoluteIndex,
         });
     }
-}
-
-function buildLabel({ val, percentage, showVal, showPercentage, config }) {
-    return buildValuePercentageLabel({
-        config,
-        val,
-        percentage,
-        showVal,
-        showPercentage,
-    });
 }
 
 function onionLabel(onion, i) {
@@ -970,8 +936,9 @@ function useTooltip({
     seriesIndex,
     show = true,
     triggerMode = 'pointer',
+    notify = true,
 }) {
-    if (FINAL_CONFIG.value.events.datapointEnter) {
+    if (notify && FINAL_CONFIG.value.events.datapointEnter) {
         FINAL_CONFIG.value.events.datapointEnter({
             datapoint,
             seriesIndex: datapoint.absoluteIndex,
@@ -982,7 +949,7 @@ function useTooltip({
     activeTooltipIndex.value = seriesIndex;
 
     const absoluteIndex = datapoint.absoluteIndex;
-    selectedSerie.value = seriesIndex;
+    selectedId.value = datapoint.id;
 
     dataTooltipSlot.value = {
         datapoint,
@@ -997,23 +964,16 @@ function useTooltip({
 
     const customFormat = cfgTooltip.value.customFormat;
 
-    if (
-        isFunction(customFormat) &&
-        functionReturnsString(() =>
-            customFormat({
-                seriesIndex: absoluteIndex,
-                datapoint,
-                series: immutableDataset.value,
-                config: FINAL_CONFIG.value,
-            }),
-        )
-    ) {
-        tooltipContent.value = customFormat({
-            seriesIndex: absoluteIndex,
-            datapoint,
-            series: immutableDataset.value,
-            config: FINAL_CONFIG.value,
-        });
+    const customContent = isFunction(customFormat)
+        ? customFormat({
+              seriesIndex: absoluteIndex,
+              datapoint,
+              series: immutableDataset.value,
+              config: FINAL_CONFIG.value,
+          })
+        : null;
+    if (typeof customContent === 'string') {
+        tooltipContent.value = customContent;
     } else {
         const showPercentage = cfgTooltip.value.showPercentage;
         const showVal = cfgTooltip.value.showValue;
@@ -1136,11 +1096,14 @@ function onSvgFocus() {
     isFocus.value = true;
 }
 
-function onSvgBlur() {
+function clearSelection() {
+    selectedId.value = null;
     activeTooltipIndex.value = null;
     tooltipTriggerMode.value = 'pointer';
     isTooltip.value = false;
-    selectedSerie.value = undefined;
+}
+function onSvgBlur() {
+    clearSelection();
     isFocus.value = false;
 }
 
@@ -1161,10 +1124,7 @@ function onSvgKeydown(event) {
     event.stopPropagation();
 
     if (isEscapeKey) {
-        activeTooltipIndex.value = null;
-        tooltipTriggerMode.value = 'pointer';
-        isTooltip.value = false;
-        selectedSerie.value = undefined;
+        clearSelection();
         return;
     }
 
@@ -1233,8 +1193,35 @@ function setKeyboardTooltipPositionFromSeriesIndex(seriesIndex) {
 
 const a11yTable = computed(() => {
     const headers = dataTable.value?.colNames ?? [];
-    const rows = dataTable.value?.body ?? [];
+    const rows = dataTable.value?.a11yBody ?? [];
     return { headers, rows };
+});
+
+watch([FINAL_DATASET, isAnimated, loading], anim, {
+    deep: true,
+    immediate: true,
+});
+watch(() => FINAL_CONFIG.value.responsive, prepareChart, { flush: 'post' });
+watch([mutableDataset, cfgLabels, transitionEnabled], scheduleAutoSizeLabels, {
+    deep: true,
+    flush: 'post',
+});
+watch(mutableDataset, (series) => {
+    if (!selectedId.value) return;
+    const index = series.findIndex((ds) => ds.id === selectedId.value);
+    if (index < 0) {
+        clearSelection();
+        return;
+    }
+    if (tooltipTriggerMode.value === 'keyboard')
+        setKeyboardTooltipPositionFromSeriesIndex(index);
+    useTooltip({
+        datapoint: series[index],
+        seriesIndex: index,
+        show: isTooltip.value,
+        triggerMode: tooltipTriggerMode.value,
+        notify: false,
+    });
 });
 
 defineExpose({
@@ -1269,7 +1256,7 @@ defineExpose({
         </div>
 
         <A11yDataTable
-            v-if="a11yTable?.rows?.length"
+            v-if="FINAL_CONFIG.a11y.includeTable && a11yTable?.rows?.length"
             :uid="uid"
             :head="a11yTable.headers"
             :body="a11yTable.rows"
@@ -1330,7 +1317,6 @@ defineExpose({
 
         <!-- OPTIONS -->
         <UserOptions
-            ref="details"
             :key="`user_options${step}`"
             v-if="
                 cfgUserOptions.show &&
@@ -1436,15 +1422,9 @@ defineExpose({
                 <circle
                     v-for="(onion, i) in mutableDataset"
                     data-cy="onion-gutter"
-                    :cx="drawableArea.centerX"
-                    :cy="drawableArea.centerY"
-                    :r="onion.radius <= 0 ? 0.0001 : onion.radius"
+                    v-bind="circleAttrs(onion, 'gutter')"
                     :stroke="cfgLayout.gutter.color"
                     :stroke-width="onionSkin.gutter"
-                    fill="none"
-                    :stroke-dasharray="onion.path.bgDashArray"
-                    :stroke-dashoffset="onion.path.fullOffset"
-                    stroke-linecap="round"
                     :class="{
                         'vue-ui-onion-path': true,
                         'vue-ui-onion-blur':
@@ -1452,10 +1432,6 @@ defineExpose({
                             ![null, undefined].includes(selectedSerie) &&
                             selectedSerie !== i,
                         'vue-data-ui-transition': transitionEnabled,
-                    }"
-                    :style="{
-                        transform: 'rotate(-90deg)',
-                        transformOrigin: '50% 50%',
                     }"
                 />
 
@@ -1463,14 +1439,9 @@ defineExpose({
                 <circle
                     data-cy="onion-track"
                     v-for="(onion, i) in mutableDataset"
-                    :cx="drawableArea.centerX"
-                    :cy="drawableArea.centerY"
-                    :r="onion.radius < 0 ? 0.0001 : onion.radius"
+                    v-bind="circleAttrs(onion, 'track')"
                     :stroke="`${onion.color}`"
                     :stroke-width="onionSkin.track"
-                    fill="none"
-                    :stroke-dasharray="onion.path.dashArray"
-                    :stroke-dashoffset="onion.path.dashOffset"
                     :class="{
                         'vue-ui-onion-path': true,
                         'vue-ui-onion-blur':
@@ -1478,11 +1449,6 @@ defineExpose({
                             ![null, undefined].includes(selectedSerie) &&
                             selectedSerie !== i,
                         'vue-data-ui-transition': transitionEnabled,
-                    }"
-                    stroke-linecap="round"
-                    :style="{
-                        transform: 'rotate(-90deg)',
-                        transformOrigin: '50% 50%',
                     }"
                 />
 
@@ -1506,19 +1472,9 @@ defineExpose({
                     <circle
                         data-cy="onion-gradient"
                         v-for="(onion, i) in mutableDataset"
-                        :cx="drawableArea.centerX"
-                        :cy="drawableArea.centerY"
-                        :r="onion.radius <= 0 ? 0.0001 : onion.radius"
+                        v-bind="circleAttrs(onion, 'gradient')"
                         :stroke="`white`"
                         :stroke-width="onionSkin.track / 3"
-                        fill="none"
-                        stroke-linecap="round"
-                        :stroke-dasharray="onion.path.dashArray"
-                        :stroke-dashoffset="onion.path.dashOffset"
-                        :style="{
-                            transform: 'rotate(-90deg)',
-                            transformOrigin: '50% 50%',
-                        }"
                         :class="{ 'vue-data-ui-transition': transitionEnabled }"
                     />
                 </g>
@@ -1528,20 +1484,10 @@ defineExpose({
                     v-for="(onion, i) in mutableDataset"
                     data-cy="tooltip-trap"
                     :data-cy="`onion-track-${i}`"
-                    :cx="drawableArea.centerX"
-                    :cy="drawableArea.centerY"
-                    :r="onion.radius <= 0 ? 0.0001 : onion.radius"
+                    v-bind="circleAttrs(onion, 'gutter')"
                     stroke="transparent"
                     :stroke-width="Math.max(onionSkin.track, onionSkin.gutter)"
-                    fill="none"
-                    :stroke-dasharray="onion.path.bgDashArray"
-                    :stroke-dashoffset="onion.path.fullOffset"
-                    stroke-linecap="round"
                     class="vue-ui-onion-path"
-                    :style="{
-                        transform: 'rotate(-90deg)',
-                        transformOrigin: '50% 50%',
-                    }"
                     @mouseenter="
                         useTooltip({
                             datapoint: onion,

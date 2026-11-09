@@ -49,7 +49,6 @@ import {
     error,
     escapeHtml,
     forceValidValue,
-    functionReturnsString,
     getImageDimensions,
     getMissingDatasetAttributes,
     hasDeepProperty,
@@ -77,7 +76,6 @@ import { useChartAccessibility } from '../useChartAccessibility';
 import { useTimeLabelCollision } from '../useTimeLabelCollider.js';
 import img from '../img';
 import Title from '../atoms/Title.vue'; // Must be ready in responsive mode
-import Shape from '../atoms/Shape.vue';
 import themes from '../themes/vue_ui_stackbar.json';
 import BaseScanner from '../atoms/BaseScanner.vue';
 import A11yDataTable from '../atoms/A11yDataTable.vue';
@@ -140,14 +138,7 @@ const emit = defineEmits([
     'copyAlt',
 ]);
 
-const isDataset = computed({
-    get() {
-        return !!props.dataset && props.dataset.length;
-    },
-    set(bool) {
-        return bool;
-    },
-});
+const isDataset = computed(() => !!props.dataset?.length);
 
 const stackbarChart = ref(null);
 const uid = ref(createUid());
@@ -176,11 +167,9 @@ const xAxisLabel = ref(null);
 const yAxisLabel = ref(null);
 const scaleLabels = ref(null);
 const timeLabelsEls = ref(null);
-const sumTop = ref(null);
 const sumRight = ref(null);
 
 const parentElement = shallowRef(null);
-const parentLayoutIsStable = ref(false);
 const parentLayoutStableRunSequence = ref(0);
 const pendingParentLayoutSequence = ref(0);
 
@@ -203,28 +192,40 @@ function setParentElementReference() {
     parentElement.value = stackbarChart.value?.parentNode ?? null;
 }
 
-function nextPaintFrame() {
+let chartDisposed = false;
+const pendingLayoutFrames = new Map();
+let slicerRefreshSequence = 0;
+let resizeFrame = null;
+let loadedTimer = null;
+let clickSuppressionTimer = null;
+
+function waitForLayoutFrame() {
     return new Promise((resolve) => {
-        requestAnimationFrame(() => {
-            requestAnimationFrame(resolve);
+        const frame = requestAnimationFrame(() => {
+            pendingLayoutFrames.delete(frame);
+            resolve(true);
         });
+        pendingLayoutFrames.set(frame, resolve);
     });
 }
 
+async function waitForLayoutFrames(count, isCurrent) {
+    for (let i = 0; i < count; i += 1) {
+        if (!(await waitForLayoutFrame()) || !isCurrent() || chartDisposed)
+            return false;
+    }
+    return true;
+}
+
 async function runParentStableLayoutPass() {
+    if (chartDisposed) return;
     const currentSequence = ++pendingParentLayoutSequence.value;
-
-    parentLayoutIsStable.value = false;
-
     await nextTick();
-    await nextPaintFrame();
-
-    await nextPaintFrame();
-
-    if (currentSequence !== pendingParentLayoutSequence.value) return;
-
+    const isCurrent = () =>
+        currentSequence === pendingParentLayoutSequence.value;
+    if (!isCurrent() || chartDisposed) return;
+    if (!(await waitForLayoutFrames(4, isCurrent))) return;
     parentLayoutStableRunSequence.value += 1;
-    parentLayoutIsStable.value = true;
 }
 
 const selectedMinimapIndex = ref(null);
@@ -589,7 +590,7 @@ const waterfallFormattedDataset = computed(() => {
     const groups = waterfallGroups.value.filter(
         (g) => !segregated.value.includes(g.id),
     );
-    const visibleSteps = steps.slice(slicer.value.start, slicer.value.end);
+    const visibleSteps = waterfallVisibleSteps.value;
     const length = visibleSteps.length;
     const gap = effectiveGapRatio.value;
     const entireScaleValues = [
@@ -1107,14 +1108,15 @@ watch(
 
         setParentElementReference();
 
-        if (
-            !cfgChart.value.zoom.keepState ||
-            !slicerReady.value ||
-            (slicer.value.start === 0 && slicer.value.end === 0)
-        ) {
-            setupSlicer();
-        } else {
-            normalizeSlicerWindow();
+        if (cfgChart.value.zoom.keepState) {
+            if (
+                !slicerReady.value ||
+                (slicer.value.start === 0 && slicer.value.end === 0)
+            ) {
+                setupSlicer();
+            } else {
+                normalizeSlicerWindow();
+            }
         }
     },
     { deep: true },
@@ -1138,31 +1140,26 @@ watch(
     { deep: true },
 );
 
-const mutableConfig = ref({
-    dataLabels: {
-        show: isWaterfall.value
-            ? cfgWaterfall.value.segmentLabels.show ||
-              cfgWaterfall.value.stepLabels.show
-            : cfgBars.value.dataLabels.show,
-    },
-    showTable: FINAL_CONFIG.value.table.show,
-    showTooltip: cfgTooltip.value.show,
-});
+function getMutableConfig() {
+    return {
+        dataLabels: {
+            show: isWaterfall.value
+                ? cfgWaterfall.value.segmentLabels.show ||
+                  cfgWaterfall.value.stepLabels.show
+                : cfgBars.value.dataLabels.show,
+        },
+        showTable: FINAL_CONFIG.value.table.show,
+        showTooltip: cfgTooltip.value.show,
+    };
+}
+
+const mutableConfig = ref(getMutableConfig());
 
 // v3 - Essential to make shifting between loading config and final config work
 watch(
     FINAL_CONFIG,
     () => {
-        mutableConfig.value = {
-            dataLabels: {
-                show: isWaterfall.value
-                    ? cfgWaterfall.value.segmentLabels.show ||
-                      cfgWaterfall.value.stepLabels.show
-                    : cfgBars.value.dataLabels.show,
-            },
-            showTable: FINAL_CONFIG.value.table.show,
-            showTooltip: cfgTooltip.value.show,
-        };
+        mutableConfig.value = getMutableConfig();
     },
     { immediate: true },
 );
@@ -1194,10 +1191,17 @@ const customPalette = computed(() => {
 
 const resizeObserver = shallowRef(null);
 const observedEl = shallowRef(null);
-const to = ref(null);
 const debug = computed(() => FINAL_CONFIG.value.debug);
 
+function scheduleLoaded() {
+    clearTimeout(loadedTimer);
+    loadedTimer = setTimeout(() => {
+        isLoaded.value = true;
+    }, 10);
+}
+
 function prepareChart({ resetSlicer = true } = {}) {
+    if (chartDisposed) return;
     if (objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiStackbar',
@@ -1211,7 +1215,6 @@ function prepareChart({ resetSlicer = true } = {}) {
                 datasetObject,
                 requiredAttributes: ['name', 'series'],
             }).forEach((attr) => {
-                isDataset.value = false;
                 error({
                     componentName: 'VueUiStackbar',
                     type: 'datasetSerieAttribute',
@@ -1229,9 +1232,7 @@ function prepareChart({ resetSlicer = true } = {}) {
         manualLoading.value = FINAL_CONFIG.value.loading;
     }
 
-    setTimeout(() => {
-        isLoaded.value = true;
-    }, 10);
+    scheduleLoaded();
 
     if (FINAL_CONFIG.value.responsive) {
         const handleResize = throttle(() => {
@@ -1248,14 +1249,12 @@ function prepareChart({ resetSlicer = true } = {}) {
                 source: source.value,
             });
 
-            requestAnimationFrame(() => {
+            cancelAnimationFrame(resizeFrame);
+            resizeFrame = requestAnimationFrame(() => {
                 defaultSizes.value.width = width;
                 defaultSizes.value.height = height - 12;
                 responsiveSizeReady.value = true;
-                clearTimeout(to.value);
-                to.value = setTimeout(() => {
-                    isLoaded.value = true;
-                }, 10);
+                scheduleLoaded();
             });
         });
 
@@ -1278,6 +1277,17 @@ function prepareChart({ resetSlicer = true } = {}) {
 }
 
 onBeforeUnmount(() => {
+    chartDisposed = true;
+    slicerRefreshSequence += 1;
+    pendingParentLayoutSequence.value += 1;
+    clearTimeout(loadedTimer);
+    clearTimeout(clickSuppressionTimer);
+    cancelAnimationFrame(resizeFrame);
+    for (const [frame, resolve] of pendingLayoutFrames) {
+        cancelAnimationFrame(frame);
+        resolve(false);
+    }
+    pendingLayoutFrames.clear();
     stableParentSize.stop();
 
     if (resizeObserver.value) {
@@ -1509,13 +1519,13 @@ const { toggleLegend, showSeries, hideSeries, legendSet, legendConfig } =
         legendShape: 'square',
     });
 
+const visibleDataset = computed(() =>
+    unmutableDataset.value.filter((ds) => !segregated.value.includes(ds.id)),
+);
+
 const maxSeries = computed(() => {
     if (isWaterfall.value) return waterfallSource.value.series?.length ?? 0;
-    const v = Math.max(
-        ...unmutableDataset.value
-            .filter((ds) => !segregated.value.includes(ds.id))
-            .map((ds) => ds.series.length),
-    );
+    const v = Math.max(...visibleDataset.value.map((ds) => ds.series.length));
     return isFinite(v)
         ? v
         : Math.max(...unmutableDataset.value.map((ds) => ds.series.length));
@@ -1625,20 +1635,14 @@ function setZoomState(state) {
     return applied;
 }
 
-const refreshRAF = ref(null);
-function nextPaint() {
-    return new Promise((r) =>
-        requestAnimationFrame(() => requestAnimationFrame(() => r())),
-    );
-}
-
 onBeforeUnmount(() => {
-    if (refreshRAF.value) cancelAnimationFrame(refreshRAF.value);
     clearQueuedSlicerFrame();
     cancelChartZoomSelection();
 });
 
 async function refreshSlicer({ force = false, publish = false } = {}) {
+    if (chartDisposed) return;
+    const sequence = ++slicerRefreshSequence;
     if (
         cfgChart.value.zoom.keepState &&
         !force &&
@@ -1648,31 +1652,20 @@ async function refreshSlicer({ force = false, publish = false } = {}) {
         normalizeSlicerWindow();
         return;
     }
-
     const applyControlledZoom = !force;
-
     setupSlicer(applyControlledZoom);
-
     await nextTick();
-
-    if (refreshRAF.value) {
-        cancelAnimationFrame(refreshRAF.value);
+    const isCurrent = () => sequence === slicerRefreshSequence;
+    if (!isCurrent() || chartDisposed) return;
+    if (!(await waitForLayoutFrames(3, isCurrent))) return;
+    setupSlicer(applyControlledZoom);
+    if (publish) {
+        emitZoomState({
+            start: Number(slicer.value.start),
+            end: Number(slicer.value.end),
+        });
+        emit('zoomReset');
     }
-
-    refreshRAF.value = requestAnimationFrame(async () => {
-        await nextPaint();
-
-        setupSlicer(applyControlledZoom);
-        refreshRAF.value = null;
-
-        if (publish) {
-            emitZoomState({
-                start: Number(slicer.value.start),
-                end: Number(slicer.value.end),
-            });
-            emit('zoomReset');
-        }
-    });
 }
 
 const barSlot = computed(() => {
@@ -1686,11 +1679,10 @@ const barSlot = computed(() => {
 });
 
 const datasetTotals = computed(() => {
-    return sumSeries(
-        unmutableDataset.value.filter(
-            (ds) => !segregated.value.includes(ds.id),
-        ),
-    ).slice(slicer.value.start, slicer.value.end);
+    return sumSeries(visibleDataset.value).slice(
+        slicer.value.start,
+        slicer.value.end,
+    );
 });
 
 const allSegregated = computed(
@@ -1732,27 +1724,19 @@ const displayTotals = computed(() => {
         return waterfallVisibleSteps.value.map((step) => step.change);
     }
     return sumSeries(
-        unmutableDataset.value
-            .filter((ds) => !segregated.value.includes(ds.id))
-            .map((s) => {
-                return {
-                    ...s,
-                    series: s.series.map((dp, i) => {
-                        return s.signedSeries[i] === -1
-                            ? dp >= 0
-                                ? -dp
-                                : dp
-                            : dp;
-                    }),
-                };
-            }),
+        visibleDataset.value.map((s) => {
+            return {
+                ...s,
+                series: s.series.map((dp, i) => {
+                    return s.signedSeries[i] === -1 ? (dp >= 0 ? -dp : dp) : dp;
+                }),
+            };
+        }),
     ).slice(slicer.value.start, slicer.value.end);
 });
 
 const datasetSignedTotals = computed(() => {
-    const src = unmutableDataset.value.filter(
-        (ds) => !segregated.value.includes(ds.id),
-    );
+    const src = visibleDataset.value;
     return {
         positive: sumSeries(
             src.map((s) => {
@@ -1997,15 +1981,8 @@ function getStackbarRectKey(ds, absoluteIndex) {
     return `${ds.datasetKey}:${getStackbarDatapointKey(absoluteIndex)}`;
 }
 
-const formattedDataset = computed(() => {
-    if (!isDataset.value && !loading.value) return [];
-    if (isWaterfall.value) return waterfallFormattedDataset.value;
-
-    let cumulativeY = Array(maxSeries.value).fill(0);
-    let cumulativeX = Array(maxSeries.value).fill(0);
-    let cumulativeNegY = Array(maxSeries.value).fill(0);
-    let cumulativeNegX = Array(maxSeries.value).fill(0);
-
+// Geometry retains its legacy explicit-bound rules, distinct from the axis scale.
+const stackGeometryScale = computed(() => {
     const premax = Math.max(...datasetSignedTotals.value.positive) || 0;
     const workingMin = Math.min(...datasetSignedTotals.value.negative);
     const premin = [-Infinity, Infinity, NaN, undefined, null].includes(
@@ -2044,7 +2021,19 @@ const formattedDataset = computed(() => {
                         : premax,
                   cfgGrid.value.scale.ticks,
               );
-    const { min: MIN, max: MAX } = scale;
+    return scale;
+});
+
+const formattedDataset = computed(() => {
+    if (!isDataset.value && !loading.value) return [];
+    if (isWaterfall.value) return waterfallFormattedDataset.value;
+
+    let cumulativeY = Array(maxSeries.value).fill(0);
+    let cumulativeX = Array(maxSeries.value).fill(0);
+    let cumulativeNegY = Array(maxSeries.value).fill(0);
+    let cumulativeNegX = Array(maxSeries.value).fill(0);
+
+    const { min: MIN, max: MAX } = stackGeometryScale.value;
 
     const maxTotal = MAX + (MIN >= 0 ? 0 : Math.abs(MIN)) || 1;
 
@@ -2060,227 +2049,217 @@ const formattedDataset = computed(() => {
     let posPrefixMini = Array(datasetTotalsMinimap.value.length).fill(0);
     let negPrefixMini = Array(datasetTotalsMinimap.value.length).fill(0);
 
-    return unmutableDataset.value
-        .filter((ds) => !segregated.value.includes(ds.id))
-        .map((ds) => {
-            const fullSeries = ds.series.slice();
+    const valsMini = (datasetTotalsMinimap.value || []).filter(Number.isFinite);
+    const premaxMini = valsMini.length ? Math.max(...valsMini) : 0;
+    const preminMini = valsMini.length ? Math.min(...valsMini) : 0;
 
-            const posOffsetMini = fullSeries.map((v, i) => posPrefixMini[i]);
-            const negOffsetMini = fullSeries.map((v, i) => negPrefixMini[i]);
+    function makeMiniScale({ minimapH }) {
+        const EPS = 1e-9;
+        const hasPos = premaxMini > 0;
+        const hasNeg = preminMini < 0;
 
-            fullSeries.forEach((v, i) => {
-                if ((Number(v) || 0) >= 0) {
-                    posPrefixMini[i] += Number(v) || 0;
-                } else {
-                    negPrefixMini[i] += Math.abs(Number(v) || 0);
-                }
-            });
+        if (hasPos && hasNeg) {
+            const M = Math.max(premaxMini, Math.abs(preminMini)) || EPS;
+            return {
+                pxPerUnit: minimapH / 2 / M,
+                zero: minimapH / 2,
+            };
+        }
 
-            const slicedSeries = ds.series.slice(
-                slicer.value.start,
-                slicer.value.end,
+        if (hasPos) {
+            const span = Math.max(EPS, premaxMini);
+            return {
+                pxPerUnit: minimapH / span,
+                zero: minimapH,
+            };
+        }
+
+        const span = Math.max(EPS, Math.abs(preminMini));
+        return {
+            pxPerUnit: minimapH / span,
+            zero: 0,
+        };
+    }
+
+    return visibleDataset.value.map((ds) => {
+        const fullSeries = ds.series.slice();
+
+        const posOffsetMini = fullSeries.map((v, i) => posPrefixMini[i]);
+        const negOffsetMini = fullSeries.map((v, i) => negPrefixMini[i]);
+
+        fullSeries.forEach((v, i) => {
+            if ((Number(v) || 0) >= 0) {
+                posPrefixMini[i] += Number(v) || 0;
+            } else {
+                negPrefixMini[i] += Math.abs(Number(v) || 0);
+            }
+        });
+
+        const slicedSeries = ds.series.slice(
+            slicer.value.start,
+            slicer.value.end,
+        );
+        const signedSliced = ds.signedSeries.slice(
+            slicer.value.start,
+            slicer.value.end,
+        );
+
+        const rectKeys = slicedSeries.map((_, i) =>
+            getStackbarRectKey(ds, slicer.value.start + i),
+        );
+
+        const minimapRectKeys = fullSeries.map((_, absoluteIndex) =>
+            getStackbarRectKey(ds, absoluteIndex),
+        );
+
+        const x = slicedSeries.map((_dp, i) => {
+            return (
+                drawingArea.value.left +
+                barSlot.value * i +
+                (barSlot.value * effectiveGapRatio.value) / 4
             );
-            const signedSliced = ds.signedSeries.slice(
-                slicer.value.start,
-                slicer.value.end,
+        });
+
+        const xMinimap = ({ left, unitW }) => {
+            const gap = unitW * (effectiveGapRatio.value / 4);
+            return fullSeries.map((_, i) => left + unitW * i + gap);
+        };
+
+        const horizontal_y = slicedSeries.map((_dp, i) => {
+            return (
+                drawingArea.value.top +
+                barSlot.value * i +
+                (barSlot.value * effectiveGapRatio.value) / 4
             );
+        });
 
-            const rectKeys = slicedSeries.map((_, i) =>
-                getStackbarRectKey(ds, slicer.value.start + i),
-            );
+        const scaleProportions = slicedSeries.map((dp, i) =>
+            cfgBars.value.distributed
+                ? (dp || 0) / datasetTotals.value[i]
+                : (dp || 0) / maxTotal,
+        );
 
-            const minimapRectKeys = fullSeries.map((_, absoluteIndex) =>
-                getStackbarRectKey(ds, absoluteIndex),
-            );
+        const y = slicedSeries.map((dp, i) => {
+            const proportion = scaleProportions[i];
 
-            const x = slicedSeries.map((_dp, i) => {
-                return (
-                    drawingArea.value.left +
-                    barSlot.value * i +
-                    (barSlot.value * effectiveGapRatio.value) / 4
-                );
-            });
+            let currentY, height;
+            if (dp > 0) {
+                height = totalHeight * proportion;
+                currentY = ZERO_POSITION - height - cumulativeY[i];
+                cumulativeY[i] += height;
+            } else {
+                height = totalHeight * proportion;
+                currentY = ZERO_POSITION + cumulativeNegY[i];
+                cumulativeNegY[i] += Math.abs(height);
+            }
+            return currentY;
+        });
 
-            const valsMini = (datasetTotalsMinimap.value || []).filter(
-                Number.isFinite,
-            );
-            const premaxMini = valsMini.length ? Math.max(...valsMini) : 0;
-            const preminMini = valsMini.length ? Math.min(...valsMini) : 0;
-
-            function makeMiniScale({ minimapH }) {
+        const yMinimap = ({ minimapH }) => {
+            if (cfgBars.value.distributed) {
                 const EPS = 1e-9;
-                const hasPos = premaxMini > 0;
-                const hasNeg = preminMini < 0;
-
-                if (hasPos && hasNeg) {
-                    const M = Math.max(premaxMini, Math.abs(preminMini)) || EPS;
-                    return {
-                        pxPerUnit: minimapH / 2 / M,
-                        zero: minimapH / 2,
-                    };
-                }
-
-                if (hasPos) {
-                    const span = Math.max(EPS, premaxMini);
-                    return {
-                        pxPerUnit: minimapH / span,
-                        zero: minimapH,
-                    };
-                }
-
-                const span = Math.max(EPS, Math.abs(preminMini));
-                return {
-                    pxPerUnit: minimapH / span,
-                    zero: 0,
-                };
+                return fullSeries.map((raw, i) => {
+                    const vAbs = Math.abs(Number(raw) || 0);
+                    const total =
+                        Math.abs(datasetTotalsMinimap.value?.[i] || 0) || EPS;
+                    const prevAbs = posOffsetMini[i];
+                    const topProportion = (prevAbs + vAbs) / total;
+                    return minimapH - topProportion * minimapH;
+                });
             }
 
-            const xMinimap = ({ left, unitW }) => {
-                const gap = unitW * (effectiveGapRatio.value / 4);
-                return fullSeries.map((_, i) => left + unitW * i + gap);
-            };
-
-            const horizontal_y = slicedSeries.map((_dp, i) => {
-                return (
-                    drawingArea.value.top +
-                    barSlot.value * i +
-                    (barSlot.value * effectiveGapRatio.value) / 4
-                );
+            const { pxPerUnit, zero } = makeMiniScale({ minimapH });
+            return fullSeries.map((raw, i) => {
+                const v = Number(raw) || 0;
+                return v >= 0
+                    ? zero - (posOffsetMini[i] + v) * pxPerUnit
+                    : zero + negOffsetMini[i] * pxPerUnit;
             });
+        };
 
-            const y = slicedSeries.map((dp, i) => {
-                const proportion = cfgBars.value.distributed
-                    ? (dp || 0) / datasetTotals.value[i]
-                    : (dp || 0) / maxTotal;
+        const horizontal_x = slicedSeries.map((dp, i) => {
+            const proportion = scaleProportions[i];
 
-                let currentY, height;
-                if (dp > 0) {
-                    height = totalHeight * proportion;
-                    currentY = ZERO_POSITION - height - cumulativeY[i];
-                    cumulativeY[i] += height;
-                } else {
-                    height = totalHeight * proportion;
-                    currentY = ZERO_POSITION + cumulativeNegY[i];
-                    cumulativeNegY[i] += Math.abs(height);
-                }
-                return currentY;
-            });
-
-            const yMinimap = ({ minimapH }) => {
-                if (cfgBars.value.distributed) {
-                    const EPS = 1e-9;
-                    return fullSeries.map((raw, i) => {
-                        const vAbs = Math.abs(Number(raw) || 0);
-                        const total =
-                            Math.abs(datasetTotalsMinimap.value?.[i] || 0) ||
-                            EPS;
-                        const prevAbs = posOffsetMini[i];
-                        const topProportion = (prevAbs + vAbs) / total;
-                        return minimapH - topProportion * minimapH;
-                    });
-                }
-
-                const { pxPerUnit, zero } = makeMiniScale({ minimapH });
-                return fullSeries.map((raw, i) => {
-                    const v = Number(raw) || 0;
-                    return v >= 0
-                        ? zero - (posOffsetMini[i] + v) * pxPerUnit
-                        : zero + negOffsetMini[i] * pxPerUnit;
-                });
-            };
-
-            const horizontal_x = slicedSeries.map((dp, i) => {
-                const proportion = cfgBars.value.distributed
-                    ? (dp || 0) / datasetTotals.value[i]
-                    : (dp || 0) / maxTotal;
-
-                let currentX, hw;
-                if (dp > 0) {
-                    hw = totalWidth * proportion;
-                    currentX = HORIZONTAL_ZERO_POSITION + cumulativeX[i];
-                    cumulativeX[i] += hw;
-                } else {
-                    hw = totalWidth * proportion;
-                    currentX =
-                        HORIZONTAL_ZERO_POSITION -
-                        Math.abs(hw) -
-                        cumulativeNegX[i];
-                    cumulativeNegX[i] += Math.abs(hw);
-                }
-                return currentX;
-            });
-
-            const height = slicedSeries.map((dp, i) => {
-                const proportion = cfgBars.value.distributed
-                    ? (dp || 0) / datasetTotals.value[i]
-                    : (dp || 0) / maxTotal;
-
-                if (dp > 0) {
-                    return totalHeight * proportion;
-                } else {
-                    return totalHeight * Math.abs(proportion);
-                }
-            });
-
-            const heightMinimap = ({ minimapH }) => {
-                if (cfgBars.value.distributed) {
-                    const EPS = 1e-9;
-                    return fullSeries.map((raw, i) => {
-                        const vAbs = Math.abs(Number(raw) || 0);
-                        const total =
-                            Math.abs(datasetTotalsMinimap.value?.[i] || 0) ||
-                            EPS;
-                        const proportion = vAbs / total;
-                        return proportion * minimapH;
-                    });
-                }
-
-                const { pxPerUnit } = makeMiniScale({ minimapH });
-                return fullSeries.map(
-                    (raw) => Math.abs(Number(raw) || 0) * pxPerUnit,
-                );
-            };
-
-            const horizontal_width = slicedSeries.map((dp, i) => {
-                const proportion = cfgBars.value.distributed
-                    ? (dp || 0) / datasetTotals.value[i]
-                    : (dp || 0) / maxTotal;
-
-                if (dp > 0) {
-                    return totalWidth * proportion;
-                } else {
-                    return totalWidth * Math.abs(proportion);
-                }
-            });
-
-            const absoluteTotal = slicedSeries
-                .map((v) => Math.abs(v))
-                .reduce((a, b) => a + b, 0);
-
-            return {
-                ...ds,
-                proportions: slicedSeries.map((dp, i) => {
-                    if (cfgBars.value.distributed) {
-                        return (dp || 0) / datasetTotals.value[i];
-                    } else {
-                        return (dp || 0) / absoluteTotal;
-                    }
-                }),
-                series: slicedSeries,
-                signedSeries: signedSliced,
-                rectKeys,
-                minimapRectKeys,
-                x,
-                y,
-                height,
-                horizontal_width,
-                horizontal_y,
-                horizontal_x,
-                xMinimap,
-                yMinimap,
-                heightMinimap,
-            };
+            let currentX, hw;
+            if (dp > 0) {
+                hw = totalWidth * proportion;
+                currentX = HORIZONTAL_ZERO_POSITION + cumulativeX[i];
+                cumulativeX[i] += hw;
+            } else {
+                hw = totalWidth * proportion;
+                currentX =
+                    HORIZONTAL_ZERO_POSITION - Math.abs(hw) - cumulativeNegX[i];
+                cumulativeNegX[i] += Math.abs(hw);
+            }
+            return currentX;
         });
+
+        const height = slicedSeries.map((dp, i) => {
+            const proportion = scaleProportions[i];
+
+            if (dp > 0) {
+                return totalHeight * proportion;
+            } else {
+                return totalHeight * Math.abs(proportion);
+            }
+        });
+
+        const heightMinimap = ({ minimapH }) => {
+            if (cfgBars.value.distributed) {
+                const EPS = 1e-9;
+                return fullSeries.map((raw, i) => {
+                    const vAbs = Math.abs(Number(raw) || 0);
+                    const total =
+                        Math.abs(datasetTotalsMinimap.value?.[i] || 0) || EPS;
+                    const proportion = vAbs / total;
+                    return proportion * minimapH;
+                });
+            }
+
+            const { pxPerUnit } = makeMiniScale({ minimapH });
+            return fullSeries.map(
+                (raw) => Math.abs(Number(raw) || 0) * pxPerUnit,
+            );
+        };
+
+        const horizontal_width = slicedSeries.map((dp, i) => {
+            const proportion = scaleProportions[i];
+
+            if (dp > 0) {
+                return totalWidth * proportion;
+            } else {
+                return totalWidth * Math.abs(proportion);
+            }
+        });
+
+        const absoluteTotal = slicedSeries
+            .map((v) => Math.abs(v))
+            .reduce((a, b) => a + b, 0);
+
+        return {
+            ...ds,
+            proportions: slicedSeries.map((dp, i) => {
+                if (cfgBars.value.distributed) {
+                    return (dp || 0) / datasetTotals.value[i];
+                } else {
+                    return (dp || 0) / absoluteTotal;
+                }
+            }),
+            series: slicedSeries,
+            signedSeries: signedSliced,
+            rectKeys,
+            minimapRectKeys,
+            x,
+            y,
+            height,
+            horizontal_width,
+            horizontal_y,
+            horizontal_x,
+            xMinimap,
+            yMinimap,
+            heightMinimap,
+        };
+    });
 });
 
 /**
@@ -2289,6 +2268,61 @@ const formattedDataset = computed(() => {
  * currently visible sections. Clipping the square sections to
  * this rounded boundary keeps all segment joins flat.
  */
+const segmentRects = computed(() => {
+    const vertical = FINAL_CONFIG.value.orientation === 'vertical';
+    const thickness = barSlot.value * (1 - effectiveGapRatio.value / 2);
+    return formattedDataset.value.map((dp) =>
+        dp.series.map((_, j) =>
+            vertical
+                ? {
+                      x: dp.x[j],
+                      y: forceValidValue(dp.y[j]),
+                      height: dp.height[j] < 0 ? 0.0001 : dp.height[j] || 0,
+                      width: thickness,
+                  }
+                : {
+                      x: forceValidValue(
+                          dp.horizontal_x[j],
+                          drawingArea.value.left,
+                      ),
+                      y: dp.horizontal_y[j] < 0 ? 0 : dp.horizontal_y[j],
+                      width: forceValidValue(
+                          dp.horizontal_width[j] < 0
+                              ? 0.0001
+                              : dp.horizontal_width[j],
+                      ),
+                      height: thickness,
+                  },
+        ),
+    );
+});
+
+const segmentLabelConfig = computed(() => {
+    const base = cfgBars.value.dataLabels;
+    const wf = cfgWaterfall.value.segmentLabels;
+    return isWaterfall.value
+        ? {
+              fontSize: wf.fontSize ?? base.fontSize,
+              color: wf.color ?? base.color,
+              bold: wf.bold ?? base.bold,
+              adaptColorToBackground: wf.adaptColorToBackground,
+          }
+        : base;
+});
+
+function getSegmentLabelStyle(dp, index) {
+    const cfg = segmentLabelConfig.value;
+    return {
+        'font-size': cfg.fontSize,
+        fill: cfg.adaptColorToBackground
+            ? adaptColorToBackground(
+                  isWaterfall.value ? dp.waterfallColors[index] : dp.color,
+              )
+            : cfg.color,
+        'font-weight': cfg.bold ? 'bold' : 'normal',
+    };
+}
+
 const stackClipRects = computed(() => {
     if (!(Number(effectiveBorderRadius.value) > 0)) return [];
 
@@ -2365,6 +2399,26 @@ function getStackClipPath(index) {
  * Use the exact dimensions passed to the SlicerPreview slot (rather than
  * the main chart's drawingArea) to keep the clip aligned while zooming.
  */
+const minimapGeometry = computed(() => {
+    const dataset = formattedDataset.value;
+    let cachedHeight;
+    let cachedUnitWidth;
+    let cached;
+    return ({ minimapH, unitW }) => {
+        if (cached && cachedHeight === minimapH && cachedUnitWidth === unitW)
+            return cached;
+        cachedHeight = minimapH;
+        cachedUnitWidth = unitW;
+        cached = dataset.map((dp) => ({
+            ...dp,
+            minimapX: dp.xMinimap({ left: 0, unitW }),
+            minimapY: dp.yMinimap({ minimapH }),
+            minimapHeight: dp.heightMinimap({ minimapH }),
+        }));
+        return cached;
+    };
+});
+
 function getMinimapStackClipRects({ minimapH, unitW }) {
     const radius = Number(effectiveBorderRadius.value);
     if (
@@ -2377,9 +2431,9 @@ function getMinimapStackClipRects({ minimapH, unitW }) {
         return [];
     }
 
-    const series = formattedDataset.value.map((dp) => ({
-        y: dp.yMinimap({ minimapH }),
-        height: dp.heightMinimap({ minimapH }),
+    const series = minimapGeometry.value({ minimapH, unitW }).map((dp) => ({
+        y: dp.minimapY,
+        height: dp.minimapHeight,
     }));
 
     const fullBarWidth = unitW * (1 - effectiveGapRatio.value / 2);
@@ -2454,17 +2508,15 @@ function selectDatapoint(index) {
         emit('selectDatapoint', { ...event, period: timeLabels.value[index] });
         return;
     }
-    const datapoint = JSON.parse(JSON.stringify(formattedDataset.value)).map(
-        (fd) => {
-            return {
-                name: fd.name,
-                value: fd.series[index] === 0 ? 0 : fd.series[index] || null,
-                proportion: fd.proportions[index] || null,
-                color: fd.color,
-                id: fd.id,
-            };
-        },
-    );
+    const datapoint = formattedDataset.value.map((fd) => {
+        return {
+            name: fd.name,
+            value: fd.series[index] === 0 ? 0 : fd.series[index] || null,
+            proportion: fd.proportions[index] || null,
+            color: fd.color,
+            id: fd.id,
+        };
+    });
 
     if (FINAL_CONFIG.value.events.datapointClick) {
         FINAL_CONFIG.value.events.datapointClick({
@@ -2474,6 +2526,11 @@ function selectDatapoint(index) {
     }
 
     emit('selectDatapoint', { datapoint, period: timeLabels.value[index] });
+}
+
+function getSignedValue(value, sign) {
+    if (value === 0) return 0;
+    return (sign === -1 && value >= 0 ? -value : value) || null;
 }
 
 function getDatapoint(seriesIndex) {
@@ -2501,22 +2558,18 @@ function getDatapoint(seriesIndex) {
             timeLabel: { text: step.name },
         }));
     }
-    return JSON.parse(JSON.stringify(formattedDataset.value)).map((fd) => {
+    return formattedDataset.value.map((fd) => {
         return {
             name: fd.name,
             absoluteIndex: fd.absoluteIndex,
-            value:
-                fd.series[seriesIndex] === 0
-                    ? 0
-                    : (fd.signedSeries[seriesIndex] === -1
-                          ? fd.series[seriesIndex] >= 0
-                              ? -fd.series[seriesIndex]
-                              : fd.series[seriesIndex]
-                          : fd.series[seriesIndex]) || null,
+            value: getSignedValue(
+                fd.series[seriesIndex],
+                fd.signedSeries[seriesIndex],
+            ),
             proportion: fd.proportions[seriesIndex] || null,
             color: fd.color,
             id: fd.id,
-            timeLabel: allTimeLabels.value[seriesIndex],
+            timeLabel: allTimeLabels.value[seriesIndex + slicer.value.start],
         };
     });
 }
@@ -2543,8 +2596,12 @@ const datapointsForSlicerCustomFormat = computed(() => {
 });
 
 watch(
-    () => props.selectedXIndex,
-    (v) => {
+    [
+        () => props.selectedXIndex,
+        () => slicer.value.start,
+        () => slicer.value.end,
+    ],
+    ([v]) => {
         if ([null, undefined].includes(props.selectedXIndex)) {
             trapIndex.value = null;
             return;
@@ -2566,8 +2623,10 @@ function getTooltipTimeLabel(seriesIndex) {
     }
     const defaultTimeLabel = timeLabels.value?.[seriesIndex]?.text || null;
     const preciseTimeLabel =
-        preciseAllTimeLabelsTooltip.value?.[seriesIndex]?.text || null;
-    const fallbackTimeLabel = allTimeLabels.value?.[seriesIndex]?.text || null;
+        preciseAllTimeLabelsTooltip.value?.[seriesIndex + slicer.value.start]
+            ?.text || null;
+    const fallbackTimeLabel =
+        allTimeLabels.value?.[seriesIndex + slicer.value.start]?.text || null;
     if (isWaterfall.value)
         return waterfallVisibleSteps.value?.[seriesIndex]?.name || null;
     if (cfgTooltip.value.useDefaultTimeFormat) {
@@ -2615,23 +2674,16 @@ function useTooltip(seriesIndex, triggerMode = 'pointer') {
         .map((d) => forceValidValue(d.value))
         .reduce((a, b) => a + b, 0);
 
-    if (
-        isFunction(customFormat) &&
-        functionReturnsString(() =>
-            customFormat({
-                seriesIndex,
-                datapoint,
-                series: formattedDataset.value,
-                config: FINAL_CONFIG.value,
-            }),
-        )
-    ) {
-        tooltipContent.value = customFormat({
-            seriesIndex,
-            datapoint,
-            series: formattedDataset.value,
-            config: FINAL_CONFIG.value,
-        });
+    const customContent = isFunction(customFormat)
+        ? customFormat({
+              seriesIndex,
+              datapoint,
+              series: formattedDataset.value,
+              config: FINAL_CONFIG.value,
+          })
+        : null;
+    if (typeof customContent === 'string') {
+        tooltipContent.value = customContent;
     } else if (isWaterfall.value) {
         const step = waterfallVisibleSteps.value[seriesIndex];
         if (!step) return;
@@ -2855,9 +2907,11 @@ const tableCsv = computed(() => {
 
     timeLabels.value.forEach((tl) => {
         const row = [
-            cfgTimeLabels.value.values[tl.absoluteIndex] ? tl.text : i + 1,
+            cfgTimeLabels.value.values[tl.absoluteIndex]
+                ? tl.text
+                : tl.absoluteIndex + 1,
         ];
-        unmutableDataset.value.forEach((s) => {
+        visibleDataset.value.forEach((s) => {
             row.push(
                 Number(
                     (s.series[tl.absoluteIndex] || 0).toFixed(
@@ -2990,24 +3044,18 @@ function selectTimeLabel(label, relativeIndex) {
         });
         return;
     }
-    const datapoint = JSON.parse(JSON.stringify(formattedDataset.value)).map(
-        (fd) => {
-            return {
-                name: fd.name,
-                value:
-                    fd.series[relativeIndex] === 0
-                        ? 0
-                        : (fd.signedSeries[relativeIndex] === -1
-                              ? fd.series[relativeIndex] >= 0
-                                  ? -fd.series[relativeIndex]
-                                  : fd.series[relativeIndex]
-                              : fd.series[relativeIndex]) || null,
-                proportion: fd.proportions[relativeIndex] || null,
-                color: fd.color,
-                id: fd.id,
-            };
-        },
-    );
+    const datapoint = formattedDataset.value.map((fd) => {
+        return {
+            name: fd.name,
+            value: getSignedValue(
+                fd.series[relativeIndex],
+                fd.signedSeries[relativeIndex],
+            ),
+            proportion: fd.proportions[relativeIndex] || null,
+            color: fd.color,
+            id: fd.id,
+        };
+    });
 
     emit('selectTimeLabel', {
         datapoint,
@@ -3148,7 +3196,8 @@ function selectX({ seriesIndex, datapoint }) {
 
 function getZeroPositions() {
     const y0 = yLabels.value?.[0]?.zero ?? drawingArea.value.bottom;
-    return { y0 };
+    const x0 = yLabels.value?.[0]?.horizontal_zero ?? drawingArea.value.left;
+    return { y0, x0 };
 }
 
 function placeLabelTotalY(index) {
@@ -3391,7 +3440,8 @@ function cancelChartZoomSelection(event) {
 function suppressNextChartClick() {
     ignoreNextChartClick.value = true;
 
-    setTimeout(() => {
+    clearTimeout(clickSuppressionTimer);
+    clickSuppressionTimer = setTimeout(() => {
         ignoreNextChartClick.value = false;
     }, 0);
 }
@@ -3819,7 +3869,7 @@ const annotationViewport = computed(() => {
         </div>
 
         <A11yDataTable
-            v-if="a11yTable?.rows?.length"
+            v-if="FINAL_CONFIG.a11y.includeTable && a11yTable?.rows?.length"
             :uid="uid"
             :head="a11yTable.headers"
             :body="a11yTable.rows"
@@ -4223,14 +4273,9 @@ const annotationViewport = computed(() => {
                                 !isWaterfall ||
                                 (dp.waterfallSegments?.[j] && dp.height[j] > 0)
                             "
-                            :x="rect"
-                            :y="forceValidValue(dp.y[j])"
-                            :height="
-                                dp.height[j] < 0 ? 0.0001 : dp.height[j] || 0
-                            "
+                            v-bind="segmentRects[i][j]"
                             :rx="0"
                             :clip-path="getStackClipPath(j)"
-                            :width="barSlot * (1 - effectiveGapRatio / 2)"
                             :fill="getWaterfallFill(dp, j)"
                             :stroke="
                                 isWaterfall
@@ -4258,16 +4303,9 @@ const annotationViewport = computed(() => {
                                     (dp.waterfallSegments?.[j] &&
                                         dp.height[j] > 0)
                                 "
-                                :x="rect"
-                                :y="forceValidValue(dp.y[j])"
-                                :height="
-                                    dp.height[j] < 0
-                                        ? 0.0001
-                                        : dp.height[j] || 0
-                                "
+                                v-bind="segmentRects[i][j]"
                                 :rx="0"
                                 :clip-path="getStackClipPath(j)"
-                                :width="barSlot * (1 - effectiveGapRatio / 2)"
                                 :fill="`url(#pattern_${uid}_${dp.absoluteIndex})`"
                                 :stroke="
                                     isWaterfall
@@ -4304,18 +4342,9 @@ const annotationViewport = computed(() => {
                                 (dp.waterfallSegments?.[j] &&
                                     dp.horizontal_width[j] > 0)
                             "
-                            :x="forceValidValue(rect, drawingArea.left)"
-                            :y="dp.horizontal_y[j] < 0 ? 0 : dp.horizontal_y[j]"
-                            :width="
-                                forceValidValue(
-                                    dp.horizontal_width[j] < 0
-                                        ? 0.0001
-                                        : dp.horizontal_width[j],
-                                )
-                            "
+                            v-bind="segmentRects[i][j]"
                             :rx="0"
                             :clip-path="getStackClipPath(j)"
-                            :height="barSlot * (1 - effectiveGapRatio / 2)"
                             :fill="getWaterfallFill(dp, j)"
                             :stroke="
                                 isWaterfall
@@ -4343,22 +4372,9 @@ const annotationViewport = computed(() => {
                                     (dp.waterfallSegments?.[j] &&
                                         dp.horizontal_width[j] > 0)
                                 "
-                                :x="forceValidValue(rect, drawingArea.left)"
-                                :y="
-                                    dp.horizontal_y[j] < 0
-                                        ? 0
-                                        : dp.horizontal_y[j]
-                                "
-                                :width="
-                                    forceValidValue(
-                                        dp.horizontal_width[j] < 0
-                                            ? 0.0001
-                                            : dp.horizontal_width[j],
-                                    )
-                                "
+                                v-bind="segmentRects[i][j]"
                                 :rx="0"
                                 :clip-path="getStackClipPath(j)"
-                                :height="barSlot * (1 - effectiveGapRatio / 2)"
                                 :fill="`url(#pattern_${uid}_${dp.absoluteIndex})`"
                                 :stroke="
                                     isWaterfall
@@ -4507,39 +4523,8 @@ const annotationViewport = computed(() => {
                                               dp.proportions[j],
                                           )
                                 "
-                                :transform="`translate(${rect + (barSlot * (1 - effectiveGapRatio / 2)) / 2}, ${dp.y[j] + dp.height[j] / 2 + (isWaterfall ? (cfgWaterfall.segmentLabels.fontSize ?? cfgBars.dataLabels.fontSize) : cfgBars.dataLabels.fontSize) / 3})`"
-                                :font-size="
-                                    isWaterfall
-                                        ? (cfgWaterfall.segmentLabels
-                                              .fontSize ??
-                                          cfgBars.dataLabels.fontSize)
-                                        : cfgBars.dataLabels.fontSize
-                                "
-                                :fill="
-                                    isWaterfall
-                                        ? cfgWaterfall.segmentLabels
-                                              .adaptColorToBackground
-                                            ? adaptColorToBackground(
-                                                  dp.waterfallColors[j],
-                                              )
-                                            : (cfgWaterfall.segmentLabels
-                                                  .color ??
-                                              cfgBars.dataLabels.color)
-                                        : cfgBars.dataLabels
-                                                .adaptColorToBackground
-                                          ? adaptColorToBackground(dp.color)
-                                          : cfgBars.dataLabels.color
-                                "
-                                :font-weight="
-                                    isWaterfall
-                                        ? (cfgWaterfall.segmentLabels.bold ??
-                                          cfgBars.dataLabels.bold)
-                                            ? 'bold'
-                                            : 'normal'
-                                        : cfgBars.dataLabels.bold
-                                          ? 'bold'
-                                          : 'normal'
-                                "
+                                :transform="`translate(${rect + (barSlot * (1 - effectiveGapRatio / 2)) / 2}, ${dp.y[j] + dp.height[j] / 2 + segmentLabelConfig.fontSize / 3})`"
+                                v-bind="getSegmentLabelStyle(dp, j)"
                                 text-anchor="middle"
                             >
                                 {{
@@ -4567,7 +4552,6 @@ const annotationViewport = computed(() => {
 
                     <!-- RECT TOTAL LABELS -->
                     <g
-                        ref="sumTop"
                         v-if="
                             !isWaterfall &&
                             cfgBars.totalValues.show &&
@@ -4636,39 +4620,8 @@ const annotationViewport = computed(() => {
                                               dp.proportions[j],
                                           )
                                 "
-                                :transform="`translate(${rect + (dp.horizontal_width[j] < 0 ? 0.0001 : dp.horizontal_width[j]) / 2}, ${dp.horizontal_y[j] + (barSlot * (1 - effectiveGapRatio / 2)) / 2 + (isWaterfall ? (cfgWaterfall.segmentLabels.fontSize ?? cfgBars.dataLabels.fontSize) : cfgBars.dataLabels.fontSize) / 3})`"
-                                :font-size="
-                                    isWaterfall
-                                        ? (cfgWaterfall.segmentLabels
-                                              .fontSize ??
-                                          cfgBars.dataLabels.fontSize)
-                                        : cfgBars.dataLabels.fontSize
-                                "
-                                :fill="
-                                    isWaterfall
-                                        ? cfgWaterfall.segmentLabels
-                                              .adaptColorToBackground
-                                            ? adaptColorToBackground(
-                                                  dp.waterfallColors[j],
-                                              )
-                                            : (cfgWaterfall.segmentLabels
-                                                  .color ??
-                                              cfgBars.dataLabels.color)
-                                        : cfgBars.dataLabels
-                                                .adaptColorToBackground
-                                          ? adaptColorToBackground(dp.color)
-                                          : cfgBars.dataLabels.color
-                                "
-                                :font-weight="
-                                    isWaterfall
-                                        ? (cfgWaterfall.segmentLabels.bold ??
-                                          cfgBars.dataLabels.bold)
-                                            ? 'bold'
-                                            : 'normal'
-                                        : cfgBars.dataLabels.bold
-                                          ? 'bold'
-                                          : 'normal'
-                                "
+                                :transform="`translate(${rect + (dp.horizontal_width[j] < 0 ? 0.0001 : dp.horizontal_width[j]) / 2}, ${dp.horizontal_y[j] + (barSlot * (1 - effectiveGapRatio / 2)) / 2 + segmentLabelConfig.fontSize / 3})`"
+                                v-bind="getSegmentLabelStyle(dp, j)"
                                 text-anchor="middle"
                             >
                                 {{
@@ -5350,31 +5303,23 @@ const annotationViewport = computed(() => {
                         </clipPath>
                     </template>
                 </defs>
-                <g v-for="dp in formattedDataset" :key="dp.id">
+                <g
+                    v-for="dp in minimapGeometry({ minimapH, unitW })"
+                    :key="dp.id"
+                >
                     <template
-                        v-for="(x, j) in dp.xMinimap({ left: 0, unitW })"
+                        v-for="(x, j) in dp.minimapX"
                         :key="`minimap-rect-${dp.minimapRectKeys[j]}`"
                     >
                         <rect
-                            v-if="
-                                !isWaterfall ||
-                                dp.heightMinimap({ minimapH })[j] > 0
-                            "
+                            v-if="!isWaterfall || dp.minimapHeight[j] > 0"
                             :x="
                                 j === 0
                                     ? x - unitW * (effectiveGapRatio / 4)
                                     : x - unitW / 2
                             "
-                            :y="
-                                Math.max(
-                                    0,
-                                    Math.min(
-                                        minimapH,
-                                        dp.yMinimap({ minimapH })[j],
-                                    ),
-                                )
-                            "
-                            :height="dp.heightMinimap({ minimapH })[j]"
+                            :y="Math.max(0, Math.min(minimapH, dp.minimapY[j]))"
+                            :height="dp.minimapHeight[j]"
                             :width="
                                 [0, maxSeries - 1].includes(j)
                                     ? (unitW * (1 - effectiveGapRatio / 2)) / 2

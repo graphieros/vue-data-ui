@@ -41,6 +41,24 @@ function createCases(env) {
                         expect(elements.length).toBeGreaterThan(0);
                         expect(elements.some(visible)).toBe(true);
                         expect(elements).toHaveLength(13);
+                        for (const link of elements) {
+                            const fill = link.getAttribute('fill');
+                            const id = fill.match(/^url\(#(.+)\)$/)?.[1];
+                            expect(id).toBeTruthy();
+                            // SVG fragment URLs decode escapes before finding the paint server.
+                            const gradient = link.ownerDocument.getElementById(
+                                decodeURIComponent(id),
+                            );
+                            expect(gradient?.tagName).toBe('linearGradient');
+                            expect(
+                                gradient.querySelectorAll('stop'),
+                            ).toHaveLength(2);
+                            expect(
+                                gradient
+                                    .querySelector('stop')
+                                    .getAttribute('stop-color'),
+                            ).toBeTruthy();
+                        }
                     });
                 }
                 {

@@ -23,7 +23,6 @@ import {
     shallowRef,
     toRefs,
     watch,
-    watchEffect,
 } from 'vue';
 import {
     applyDataLabel,
@@ -42,7 +41,6 @@ import {
     treeShake,
     XMLNS,
 } from '../lib';
-import { throttle } from '../canvas-lib';
 import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 import { useSvgLabelLayout } from '../useSvgLabelLayout';
@@ -98,15 +96,7 @@ const props = defineProps({
 
 const emit = defineEmits(['selectDatapoint', 'copyAlt']);
 
-const isDataset = computed({
-    get() {
-        return !!props.dataset && props.dataset.length;
-    },
-    set(bool) {
-        return bool;
-    },
-});
-
+const isDataset = computed(() => !!props.dataset?.length);
 const uid = ref(createUid());
 const step = ref(0);
 const dumbbellChart = ref(null);
@@ -126,13 +116,29 @@ const serieLabels = ref(null);
 const scaleLabels = ref(null);
 const xAxisLabel = ref(null);
 
-const selectedTrapIndex = ref(null);
-const selectedDatapoint = ref(null);
+const selectedId = ref(null);
+const selectedTrapIndex = computed(() => {
+    const index = mutableDataset.value.findIndex(
+        (row) => row.id === selectedId.value,
+    );
+    return index < 0 ? null : index;
+});
+const selectedDatapoint = computed(() =>
+    selectedTrapIndex.value == null
+        ? null
+        : mutableDataset.value[selectedTrapIndex.value],
+);
 
 const activeA11yTrapIndex = ref(null); // a11y
 const isFocus = ref(false); // a11y
 
-const areSeriesNamesColliding = ref(false);
+const areSeriesNamesColliding = computed(() =>
+    computeYAxisNameCollision({
+        rowHeight: drawingArea.value.rowHeight,
+        fontSize: cfgLabels.value.yAxisLabels.fontSize,
+        showProgression: cfgLabels.value.yAxisLabels.showProgression,
+    }),
+);
 
 const FINAL_CONFIG = ref(prepareConfig());
 const cfgGridHorizontal = computed(
@@ -217,7 +223,7 @@ const skeletonConfig = computed(() => {
     });
 });
 
-const { loading, FINAL_DATASET, manualLoading } = useLoading({
+const { loading, FINAL_DATASET } = useLoading({
     ...toRefs(props),
     FINAL_CONFIG,
     prepareConfig,
@@ -252,14 +258,10 @@ watch(
         }
         userOptionsVisible.value =
             !FINAL_CONFIG.value.userOptions.showOnChartHover;
-        prepareChart();
+        validateDataset();
         titleStep.value += 1;
         tableStep.value += 1;
         legendStep.value += 1;
-        if (!FINAL_CONFIG.value.responsive) {
-            baseRowHeight.value = cfgChart.value.rowHeight;
-            WIDTH.value = cfgChart.value.width;
-        }
 
         // Reset mutable config
         mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
@@ -267,32 +269,22 @@ watch(
     { deep: true },
 );
 
-watch(
-    () => FINAL_DATASET.value,
-    (_) => {
-        if (Array.isArray(_) && _.length > 0) {
-            manualLoading.value = false;
-        }
-        initMutableFromImmutable();
-        prepareDataset();
-    },
-    { deep: true },
-);
-
 const resizeObserver = shallowRef(null);
-const observedEl = shallowRef(null);
+let scheduleResize = null;
+let disposed = false;
 
 const responsiveSizeReady = ref(false);
 let resizeFrame = 0;
 
 onMounted(() => {
     readyTeleport.value = true;
+    validateDataset();
     prepareChart();
 });
 
 const debug = computed(() => FINAL_CONFIG.value.debug);
 
-function prepareChart() {
+function validateDataset() {
     if (objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiDumbbell',
@@ -305,7 +297,6 @@ function prepareChart() {
                 datasetObject: ds,
                 requiredAttributes: ['name', 'start', 'end'],
             }).forEach((attr) => {
-                isDataset.value = false;
                 error({
                     componentName: 'VueUiDumbbell',
                     type: 'datasetSerieAttribute',
@@ -316,9 +307,26 @@ function prepareChart() {
             });
         });
     }
-
-    if (FINAL_CONFIG.value.responsive) {
-        const handleResize = () => {
+}
+function stopResize() {
+    scheduleResize = null;
+    cancelAnimationFrame(resizeFrame);
+    resizeObserver.value?.disconnect();
+    resizeObserver.value = null;
+}
+function prepareChart() {
+    stopResize();
+    if (!FINAL_CONFIG.value.responsive) {
+        WIDTH.value = cfgChart.value.width;
+        baseRowHeight.value = cfgChart.value.rowHeight;
+        return;
+    }
+    const parent = dumbbellChart.value?.parentNode;
+    if (!parent) return;
+    const resize = () => {
+        cancelAnimationFrame(resizeFrame);
+        resizeFrame = requestAnimationFrame(() => {
+            if (disposed) return;
             const { width, height } = useResponsive({
                 chart: dumbbellChart.value,
                 title: cfgChart.value.title.text ? chartTitle.value : null,
@@ -326,51 +334,26 @@ function prepareChart() {
                 source: source.value,
                 noTitle: noTitle.value,
             });
-
-            const padTitle = cfgChart.value.title.text ? 24 : 0;
-            const padLegend = cfgChart.value.legend.show ? 24 : 0;
-
-            cancelAnimationFrame(resizeFrame);
-            resizeFrame = requestAnimationFrame(async () => {
-                WIDTH.value = Math.max(0.1, width);
-                baseRowHeight.value = Math.max(
-                    0.1,
-                    (Math.max(0.1, height) - (padTitle + padLegend)) /
-                        FINAL_DATASET.value.length,
-                );
-                updateNameValueCollision();
-                responsiveSizeReady.value = true;
-            });
-        };
-
-        if (resizeObserver.value) {
-            if (observedEl.value) {
-                resizeObserver.value.unobserve(observedEl.value);
-            }
-            resizeObserver.value.disconnect();
-        }
-
-        resizeObserver.value = new ResizeObserver(handleResize);
-        observedEl.value = dumbbellChart.value.parentNode;
-        resizeObserver.value.observe(observedEl.value);
-    }
-
-    updateNameValueCollision();
+            const padding =
+                (cfgChart.value.title.text ? 24 : 0) +
+                (cfgChart.value.legend.show ? 24 : 0);
+            WIDTH.value = Math.max(0.1, width);
+            baseRowHeight.value = Math.max(
+                0.1,
+                (Math.max(0.1, height) - padding) / Math.max(1, rows.value),
+            );
+            responsiveSizeReady.value = true;
+        });
+    };
+    scheduleResize = resize;
+    resizeObserver.value = new ResizeObserver(resize);
+    resizeObserver.value.observe(parent);
+    resize();
 }
-
 onBeforeUnmount(() => {
-    cancelAnimationFrame(resizeFrame);
-    if (raf.value != null) {
-        cancelAnimationFrame(raf.value);
-        raf.value = null;
-    }
-
-    if (resizeObserver.value) {
-        if (observedEl.value) {
-            resizeObserver.value.unobserve(observedEl.value);
-        }
-        resizeObserver.value.disconnect();
-    }
+    disposed = true;
+    stopResize();
+    stopAnimation();
 });
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
@@ -404,9 +387,7 @@ const immutableDataset = computed(() => {
             ...ds,
             start: checkNaN(ds.start),
             end: checkNaN(ds.end),
-            id:
-                ds.id ??
-                `${String(ds.name)}__${String(ds.start)}__${String(ds.end)}__${createUid()}`,
+            id: ds.id ?? `dumbbell_${uid.value}_${i}`,
         };
     });
 });
@@ -500,8 +481,6 @@ function projectX(value, sc, da) {
 }
 
 const drawingArea = computed(() => {
-    const __triggerX__ = areSeriesNamesColliding.value;
-
     const offsetX = getOffsetX();
     const padding = cfgChart.value.padding;
     const xLabelPad = cfgLabels.value.axis.xLabel
@@ -513,11 +492,10 @@ const drawingArea = computed(() => {
         padding.top -
         padding.bottom -
         xLabelPad;
-    const effectiveRowHeight = height / rows.value;
+    const effectiveRowHeight = rows.value ? height / rows.value : 0;
     const absoluteHeight = baseRowHeight.value * rows.value;
     const width = WIDTH.value - offsetX - padding.left - padding.right;
-    const widthPlotReference =
-        scale.value.ticks.length * (width / scale.value.ticks.length);
+    const widthPlotReference = width;
 
     return {
         left: cfgChart.value.padding.left + offsetX,
@@ -540,164 +518,136 @@ const plotRadius = computed(() => {
     return Math.min((baseRowHeight.value / 2) * 0.7, cfgPlots.value.radius);
 });
 
-const MUTABLE = ref([]);
+function finiteStart(row) {
+    const value = Number(row.start);
+    return Number.isFinite(value) ? value : 0;
+}
+function finiteEnd(row) {
+    const value = Number(row.end);
+    return Number.isFinite(value) ? value : finiteStart(row);
+}
+const animatedEnds = ref([]);
+const mutableDataset = computed(() => {
+    const da = drawingArea.value;
+    const sc = scale.value;
+    return immutableDataset.value.map((ds, i) => {
+        const startX = projectX(ds.start, sc, da);
+        const endX = projectX(animatedEnds.value[i] ?? finiteEnd(ds), sc, da); // animated
+        const centerX = startX + (endX - startX) / 2;
 
-const mutableDataset = computed({
-    get() {
-        const da = drawingArea.value;
-        const sc = scale.value;
-        return MUTABLE.value.map((ds, i) => {
-            const startX = projectX(ds.start, sc, da);
-            const endX = projectX(ds.endVal, sc, da); // animated
-            const centerX = startX + (endX - startX) / 2;
-
-            const isPositive =
-                ![null, undefined].includes(ds.start) &&
+        const isPositive =
+            ![null, undefined].includes(ds.start) &&
+            ![null, undefined].includes(ds.end) &&
+            ds.end > ds.start;
+        const isNegative =
+            ![null, undefined].includes(ds.start) &&
+            ![null, undefined].includes(ds.end) &&
+            ds.end < ds.start;
+        const isNeutral =
+            (![null, undefined].includes(ds.start) &&
                 ![null, undefined].includes(ds.end) &&
-                ds.end > ds.start;
-            const isNegative =
-                ![null, undefined].includes(ds.start) &&
-                ![null, undefined].includes(ds.end) &&
-                ds.end < ds.start;
-            const isNeutral =
-                (![null, undefined].includes(ds.start) &&
-                    ![null, undefined].includes(ds.end) &&
-                    ds.end === ds.start) ||
-                [null, undefined].includes(ds.start) ||
-                [null, undefined].includes(ds.end);
+                ds.end === ds.start) ||
+            [null, undefined].includes(ds.start) ||
+            [null, undefined].includes(ds.end);
 
-            const evaluationColor = isPositive
-                ? cfgPlots.value.evaluationColors.positive
-                : isNegative
-                  ? cfgPlots.value.evaluationColors.negative
-                  : isNeutral
-                    ? cfgPlots.value.evaluationColors.neutral
-                    : cfgPlots.value.evaluationColors.neutral;
+        const evaluationColor = isPositive
+            ? cfgPlots.value.evaluationColors.positive
+            : isNegative
+              ? cfgPlots.value.evaluationColors.negative
+              : cfgPlots.value.evaluationColors.neutral;
 
-            return {
-                ...ds,
-                isPositive,
-                isNegative,
-                isNeutral,
-                evaluationColor,
-                evaluationGrad: `url(#${isPositive ? 'positive' : isNegative ? 'negative' : 'neutral'}_grad_${uid.value})`,
-                startX,
-                endX,
-                centerX,
-                y: da.top + i * da.rowHeight + da.rowHeight / 2,
-            };
-        });
-    },
-    set(v) {
-        MUTABLE.value = v;
-    },
-});
-
-function initMutableFromImmutable() {
-    MUTABLE.value = immutableDataset.value.map((ds) => {
-        const start = Number(ds.start);
         return {
             ...ds,
-            endVal: Number.isFinite(start) ? start : 0,
+            endVal: animatedEnds.value[i] ?? finiteEnd(ds),
+            isPositive,
+            isNegative,
+            isNeutral,
+            evaluationColor,
+            evaluationGrad: `url(#${isPositive ? 'positive' : isNegative ? 'negative' : 'neutral'}_grad_${uid.value})`,
+            startX,
+            endX,
+            centerX,
+            y: da.top + i * da.rowHeight + da.rowHeight / 2,
         };
     });
-}
-
-const raf = ref(null);
-
-onMounted(() => {
-    prepareDataset();
 });
-
+let animationFrame = null;
+let animationSequence = 0;
+function stopAnimation() {
+    animationSequence++;
+    if (animationFrame !== null) cancelAnimationFrame(animationFrame);
+    animationFrame = null;
+}
 function prepareDataset() {
-    if (raf.value != null) {
-        cancelAnimationFrame(raf.value);
-        raf.value = null;
-    }
-
-    initMutableFromImmutable();
-
-    if (!FINAL_CONFIG.value.useAnimation || prefersReducedMotion.value) {
-        mutableDataset.value = MUTABLE.value.map((ds) => {
-            const endNum = Number(ds.end);
-            return {
-                ...ds,
-                endVal: Number.isFinite(endNum) ? endNum : ds.endVal,
-            };
-        });
+    stopAnimation();
+    const rows = immutableDataset.value;
+    const targets = rows.map(finiteEnd);
+    if (
+        disposed ||
+        !FINAL_CONFIG.value.useAnimation ||
+        prefersReducedMotion.value
+    ) {
+        animatedEnds.value = targets;
         return;
     }
-
+    animatedEnds.value = rows.map(finiteStart);
     const speed =
-        Math.max(1, Math.min(100, FINAL_CONFIG.value.animationSpeed || 100)) /
-        100;
-
-    const diffs = immutableDataset.value.map((ds) => {
-        const s = Number(ds.start);
-        const e = Number(ds.end);
-        const sNum = Number.isFinite(s) ? s : 0;
-        const eNum = Number.isFinite(e) ? e : sNum; // if end missing, target = start
-        return eNum - sNum;
-    });
-
-    const step = () => {
+        Math.max(
+            1,
+            Math.min(100, Number(FINAL_CONFIG.value.animationSpeed) || 100),
+        ) / 100;
+    const diffs = targets.map((value, i) => value - animatedEnds.value[i]);
+    const sequence = animationSequence;
+    function step() {
+        if (disposed || sequence !== animationSequence) return;
         let done = true;
-        mutableDataset.value = MUTABLE.value.map((ds, i) => {
-            const target = Number.isFinite(Number(ds.end))
-                ? Number(ds.end)
-                : ds.endVal;
-            const next = ds.endVal + diffs[i] * speed;
-            const endVal =
-                diffs[i] >= 0 ? Math.min(next, target) : Math.max(next, target);
-            if (endVal !== target) done = false;
-            return { ...ds, endVal };
+        animatedEnds.value = animatedEnds.value.map((value, i) => {
+            const next = value + diffs[i] * speed;
+            const end =
+                diffs[i] >= 0
+                    ? Math.min(next, targets[i])
+                    : Math.max(next, targets[i]);
+            if (end !== targets[i]) done = false;
+            return end;
         });
-        if (!done) raf.value = requestAnimationFrame(step);
-        else raf.value = null;
-    };
-
-    raf.value = requestAnimationFrame(step);
+        animationFrame = done ? null : requestAnimationFrame(step);
+    }
+    if (rows.length) animationFrame = requestAnimationFrame(step);
 }
 
-const legendSet = computed(() => {
-    if (cfgPlots.value.evaluationColors.enable) {
-        return [
-            {
-                name: cfgChart.value.legend.labelNegative,
-                color: cfgPlots.value.gradient.show
-                    ? `url(#negative_grad_${uid.value})`
-                    : cfgPlots.value.evaluationColors.negative,
-            },
-            {
-                name: cfgChart.value.legend.labelNeutral,
-                color: cfgPlots.value.gradient.show
-                    ? `url(#neutral_grad_${uid.value})`
-                    : cfgPlots.value.evaluationColors.neutral,
-            },
-            {
-                name: cfgChart.value.legend.labelPositive,
-                color: cfgPlots.value.gradient.show
-                    ? `url(#positive_grad_${uid.value})`
-                    : cfgPlots.value.evaluationColors.positive,
-            },
-        ];
-    } else {
-        return [
-            {
-                name: cfgChart.value.legend.labelStart,
-                color: cfgPlots.value.gradient.show
-                    ? `url(#start_grad_${uid.value})`
-                    : cfgPlots.value.startColor,
-            },
-            {
-                name: cfgChart.value.legend.labelEnd,
-                color: cfgPlots.value.gradient.show
-                    ? `url(#end_grad_${uid.value})`
-                    : cfgPlots.value.endColor,
-            },
-        ];
-    }
-});
+const plotStyles = computed(() => [
+    {
+        key: 'start',
+        color: cfgPlots.value.startColor,
+        name: cfgChart.value.legend.labelStart,
+    },
+    {
+        key: 'end',
+        color: cfgPlots.value.endColor,
+        name: cfgChart.value.legend.labelEnd,
+    },
+    ...['negative', 'neutral', 'positive'].map((key) => ({
+        key,
+        color: cfgPlots.value.evaluationColors[key],
+        name: cfgChart.value.legend[
+            `label${key[0].toUpperCase() + key.slice(1)}`
+        ],
+    })),
+]);
+const legendSet = computed(() =>
+    plotStyles.value
+        .filter((style) =>
+            cfgPlots.value.evaluationColors.enable
+                ? !['start', 'end'].includes(style.key)
+                : ['start', 'end'].includes(style.key),
+        )
+        .map((style) => ({
+            name: style.name,
+            color: cfgPlots.value.gradient.show
+                ? `url(#${style.key}_grad_${uid.value})`
+                : style.color,
+        })),
+);
 
 const legendConfig = computed(() => {
     return {
@@ -710,6 +660,41 @@ const legendConfig = computed(() => {
         fontWeight: cfgChart.value.legend.bold ? 'bold' : '',
     };
 });
+
+function progression(row) {
+    if (row.start == null || row.end == null || Number(row.start) === 0)
+        return null;
+    const value = 100 * (Number(row.end) / Number(row.start) - 1);
+    return Number.isFinite(value) ? value : null;
+}
+function formatProgression(row) {
+    const value = progression(row);
+    return value == null
+        ? ''
+        : applyDataLabel(
+              cfgLabels.value.yAxisLabels.formatter,
+              value,
+              dataLabel({
+                  v: value,
+                  s: '%',
+                  r: cfgLabels.value.yAxisLabels.rounding,
+              }),
+              { datapoint: row },
+          );
+}
+function formatEndpoint(value, rounding, context) {
+    return applyDataLabel(
+        cfgLabels.value.formatter,
+        value,
+        dataLabel({
+            p: cfgLabels.value.prefix,
+            v: value,
+            s: cfgLabels.value.suffix,
+            r: rounding,
+        }),
+        context,
+    );
+}
 
 const table = computed(() => {
     const head = mutableDataset.value.map((ds) => {
@@ -746,11 +731,15 @@ const dataTable = computed(() => {
             s: cfgLabels.value.suffix,
             r: FINAL_CONFIG.value.table.td.roundingValue,
         });
-        const labelProgression = dataLabel({
-            v: 100 * (table.value.body[i].end / table.value.body[i].start - 1),
-            s: '%',
-            r: FINAL_CONFIG.value.table.td.roundingPercentage,
-        });
+        const value = progression(table.value.body[i]);
+        const labelProgression =
+            value == null
+                ? '-'
+                : dataLabel({
+                      v: value,
+                      s: '%',
+                      r: FINAL_CONFIG.value.table.td.roundingPercentage,
+                  });
         return [{ name: h.name }, labelStart, labelEnd, labelProgression];
     });
 
@@ -768,12 +757,7 @@ const dataTable = computed(() => {
         breakpoint: FINAL_CONFIG.value.table.responsiveBreakpoint,
     };
 
-    const colNames = [
-        FINAL_CONFIG.value.table.columnNames.series,
-        FINAL_CONFIG.value.table.columnNames.start,
-        FINAL_CONFIG.value.table.columnNames.end,
-        FINAL_CONFIG.value.table.columnNames.progression,
-    ];
+    const colNames = head;
 
     return {
         colNames,
@@ -880,55 +864,15 @@ function computeYAxisNameCollision({ rowHeight, fontSize, showProgression }) {
     return distance < lineBox;
 }
 
-const setCollisionStable = (() => {
-    let pending = null;
-    let consecutive = 0;
-    const THRESHOLD = 1;
-
-    return (next) => {
-        if (next === areSeriesNamesColliding.value) {
-            pending = null;
-            consecutive = 0;
-            return;
-        }
-        if (pending === null || pending !== next) {
-            pending = next;
-            consecutive = 1;
-        } else {
-            consecutive += 1;
-            if (consecutive >= THRESHOLD) {
-                areSeriesNamesColliding.value = next;
-                pending = null;
-                consecutive = 0;
-            }
-        }
-    };
-})();
-
-const updateNameValueCollision = throttle(() => {
-    requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-            const collide = computeYAxisNameCollision({
-                rowHeight: drawingArea.value.rowHeight,
-                fontSize: cfgLabels.value.yAxisLabels.fontSize,
-                showProgression: cfgLabels.value.yAxisLabels.showProgression,
-            });
-            setCollisionStable(collide);
-        });
-    });
-}, 100);
-
 function onTrapEnter({ datapoint, seriesIndex }) {
-    selectedTrapIndex.value = seriesIndex;
-    selectedDatapoint.value = datapoint;
+    selectedId.value = datapoint.id;
     if (FINAL_CONFIG.value.events.datapointEnter) {
         FINAL_CONFIG.value.events.datapointEnter({ datapoint, seriesIndex });
     }
 }
 
 function onTrapLeave({ datapoint, seriesIndex }) {
-    selectedTrapIndex.value = null;
-    selectedDatapoint.value = null;
+    selectedId.value = null;
     if (FINAL_CONFIG.value.events.datapointLeave) {
         FINAL_CONFIG.value.events.datapointLeave({ datapoint, seriesIndex });
     }
@@ -942,78 +886,30 @@ function onTrapClick({ datapoint, seriesIndex }) {
 }
 
 const comparisonLabelX = computed(() => {
-    if (selectedDatapoint.value === null) return 0;
-    const hasStartX = ![null, undefined].includes(
-        selectedDatapoint.value.start,
-    );
-    const hasEndX = ![null, undefined].includes(selectedDatapoint.value.end);
-    return hasStartX && hasEndX
-        ? Math.min(
-              selectedDatapoint.value.startX,
-              selectedDatapoint.value.endX,
-          ) +
-              Math.abs(
-                  selectedDatapoint.value.startX - selectedDatapoint.value.endX,
-              ) /
-                  2
-        : hasStartX && !hasEndX
-          ? selectedDatapoint.value.startX
-          : hasEndX && !hasStartX
-            ? selectedDatapoint.value.endX
-            : null;
+    const row = selectedDatapoint.value;
+    if (!row) return 0;
+    const positions = [
+        row.start == null ? null : row.startX,
+        row.end == null ? null : row.endX,
+    ].filter((value) => value != null);
+    return positions.length
+        ? positions.reduce((a, b) => a + b, 0) / positions.length
+        : null;
 });
-
 const comparisonLabel = computed(() => {
-    if (selectedDatapoint.value === null) return '';
-    const hasStartX = ![null, undefined].includes(
-        selectedDatapoint.value.start,
-    );
-    const hasEndX = ![null, undefined].includes(selectedDatapoint.value.end);
-
-    let labelStart = '';
-    let labelEnd = '';
-
-    if (hasStartX) {
-        labelStart = applyDataLabel(
-            cfgLabels.value.formatter,
-            selectedDatapoint.value.start,
-            dataLabel({
-                p: cfgLabels.value.prefix,
-                v: selectedDatapoint.value.start,
-                s: cfgLabels.value.suffix,
-                r: cfgLabels.value.startLabels.rounding,
-            }),
-            {
-                datapoint: selectedDatapoint.value,
-                seriesIndex: selectedTrapIndex.value,
-            },
-        );
-    }
-
-    if (hasEndX) {
-        labelEnd = applyDataLabel(
-            cfgLabels.value.formatter,
-            selectedDatapoint.value.end,
-            dataLabel({
-                p: cfgLabels.value.prefix,
-                v: selectedDatapoint.value.end,
-                s: cfgLabels.value.suffix,
-                r: cfgLabels.value.startLabels.rounding,
-            }),
-            {
-                datapoint: selectedDatapoint.value,
-                seriesIndex: selectedTrapIndex.value,
-            },
-        );
-    }
-
-    return hasStartX && hasEndX
-        ? `${labelStart} → ${labelEnd}`
-        : hasStartX && !hasEndX
-          ? labelStart
-          : hasEndX && !hasStartX
-            ? labelEnd
-            : '';
+    const row = selectedDatapoint.value;
+    if (!row) return '';
+    const context = { datapoint: row, seriesIndex: selectedTrapIndex.value };
+    return ['start', 'end']
+        .filter((key) => row[key] != null)
+        .map((key) =>
+            formatEndpoint(
+                row[key],
+                cfgLabels.value[`${key}Labels`].rounding,
+                context,
+            ),
+        )
+        .join(' → ');
 });
 
 const tableComponent = computed(() =>
@@ -1106,8 +1002,7 @@ function clearKeyboardSelection() {
     }
 
     activeA11yTrapIndex.value = null;
-    selectedTrapIndex.value = null;
-    selectedDatapoint.value = null;
+    selectedId.value = null;
 }
 
 function onSvgFocus() {
@@ -1187,6 +1082,38 @@ const a11yTable = computed(() => {
     };
 });
 
+watch(
+    [
+        immutableDataset,
+        () => FINAL_CONFIG.value.useAnimation,
+        () => FINAL_CONFIG.value.animationSpeed,
+        prefersReducedMotion,
+    ],
+    prepareDataset,
+    { immediate: true },
+);
+watch(() => props.dataset, validateDataset, { deep: true });
+watch(
+    [
+        () => FINAL_CONFIG.value.responsive,
+        () => cfgChart.value.width,
+        () => cfgChart.value.rowHeight,
+    ],
+    prepareChart,
+    { flush: 'post' },
+);
+watch([cfgChart, rows], () => scheduleResize?.(), { flush: 'post' });
+watch(mutableDataset, (rows) => {
+    if (
+        selectedId.value != null &&
+        !rows.some((row) => row.id === selectedId.value)
+    ) {
+        selectedId.value = null;
+        activeA11yTrapIndex.value = null;
+    } else if (activeA11yTrapIndex.value != null)
+        activeA11yTrapIndex.value = selectedTrapIndex.value;
+});
+
 defineExpose({
     getData,
     getImage,
@@ -1234,7 +1161,7 @@ watch(
         </div>
 
         <A11yDataTable
-            v-if="a11yTable.body.length"
+            v-if="FINAL_CONFIG.a11y.includeTable && a11yTable.body.length"
             :uid="uid"
             :head="a11yTable.head"
             :body="a11yTable.body"
@@ -1477,26 +1404,9 @@ watch(
                         {{ datapoint.name }}
                         {{
                             areSeriesNamesColliding &&
-                            cfgLabels.yAxisLabels.showProgression
-                                ? [null, undefined].includes(datapoint.start) ||
-                                  [null, undefined].includes(datapoint.end)
-                                    ? ''
-                                    : `(${applyDataLabel(
-                                          cfgLabels.yAxisLabels.formatter,
-                                          100 *
-                                              (datapoint.end / datapoint.start -
-                                                  1),
-                                          dataLabel({
-                                              v:
-                                                  100 *
-                                                  (datapoint.end /
-                                                      datapoint.start -
-                                                      1),
-                                              s: '%',
-                                              r: cfgLabels.yAxisLabels.rounding,
-                                          }),
-                                          { datapoint },
-                                      )})`
+                            cfgLabels.yAxisLabels.showProgression &&
+                            progression(datapoint) != null
+                                ? `(${formatProgression(datapoint)})`
                                 : ''
                         }}
                     </text>
@@ -1532,27 +1442,7 @@ watch(
                             "
                             @click="onTrapClick({ datapoint, seriesIndex: i })"
                         >
-                            {{
-                                [null, undefined].includes(datapoint.start) ||
-                                [null, undefined].includes(datapoint.end)
-                                    ? ''
-                                    : applyDataLabel(
-                                          cfgLabels.yAxisLabels.formatter,
-                                          100 *
-                                              (datapoint.end / datapoint.start -
-                                                  1),
-                                          dataLabel({
-                                              v:
-                                                  100 *
-                                                  (datapoint.end /
-                                                      datapoint.start -
-                                                      1),
-                                              s: '%',
-                                              r: cfgLabels.yAxisLabels.rounding,
-                                          }),
-                                          { datapoint },
-                                      )
-                            }}
+                            {{ formatProgression(datapoint) }}
                         </text>
                     </template>
                 </g>
@@ -1729,113 +1619,48 @@ watch(
                 <!-- PLOTS -->
                 <defs>
                     <DefGrad
+                        v-for="style in plotStyles"
+                        :key="style.key"
                         t="radial"
-                        :id="`start_grad_${uid}`"
+                        :id="`${style.key}_grad_${uid}`"
                         fy="30%"
                         :stops="[
                             [
                                 '10%',
                                 lightenHexColor(
-                                    cfgPlots.startColor,
+                                    style.color,
                                     cfgPlots.gradient.intensity / 100,
                                 ),
                                 1,
                             ],
-                            [
-                                '90%',
-                                darkenHexColor(cfgPlots.startColor, 0.1),
-                                1,
-                            ],
-                            ['100%', cfgPlots.startColor, 1],
+                            ['90%', darkenHexColor(style.color, 0.1), 1],
+                            ['100%', style.color, 1],
                         ]"
                     />
                     <DefGrad
-                        t="radial"
-                        :id="`end_grad_${uid}`"
-                        fy="30%"
+                        v-for="direction in ['pos', 'neg']"
+                        :key="direction"
+                        t="linear"
+                        :id="`grad_${direction}_${uid}`"
+                        x1="0%"
+                        x2="100%"
+                        y1="0%"
+                        y2="0%"
                         :stops="[
                             [
-                                '10%',
-                                lightenHexColor(
-                                    cfgPlots.endColor,
-                                    cfgPlots.gradient.intensity / 100,
-                                ),
-                                1,
-                            ],
-                            ['90%', darkenHexColor(cfgPlots.endColor, 0.1), 1],
-                            ['100%', cfgPlots.endColor, 1],
-                        ]"
-                    />
-                    <DefGrad
-                        t="radial"
-                        :id="`positive_grad_${uid}`"
-                        fy="30%"
-                        :stops="[
-                            [
-                                '10%',
-                                lightenHexColor(
-                                    cfgPlots.evaluationColors.positive,
-                                    cfgPlots.gradient.intensity / 100,
-                                ),
+                                '0%',
+                                direction === 'pos'
+                                    ? cfgPlots.startColor
+                                    : cfgPlots.endColor,
                                 1,
                             ],
                             [
-                                '90%',
-                                darkenHexColor(
-                                    cfgPlots.evaluationColors.positive,
-                                    0.1,
-                                ),
+                                '100%',
+                                direction === 'pos'
+                                    ? cfgPlots.endColor
+                                    : cfgPlots.startColor,
                                 1,
                             ],
-                            ['100%', cfgPlots.evaluationColors.positive, 1],
-                        ]"
-                    />
-                    <DefGrad
-                        t="radial"
-                        :id="`negative_grad_${uid}`"
-                        fy="30%"
-                        :stops="[
-                            [
-                                '10%',
-                                lightenHexColor(
-                                    cfgPlots.evaluationColors.negative,
-                                    cfgPlots.gradient.intensity / 100,
-                                ),
-                                1,
-                            ],
-                            [
-                                '90%',
-                                darkenHexColor(
-                                    cfgPlots.evaluationColors.negative,
-                                    0.1,
-                                ),
-                                1,
-                            ],
-                            ['100%', cfgPlots.evaluationColors.negative, 1],
-                        ]"
-                    />
-                    <DefGrad
-                        t="radial"
-                        :id="`neutral_grad_${uid}`"
-                        fy="30%"
-                        :stops="[
-                            [
-                                '10%',
-                                lightenHexColor(
-                                    cfgPlots.evaluationColors.neutral,
-                                    cfgPlots.gradient.intensity / 100,
-                                ),
-                                1,
-                            ],
-                            [
-                                '90%',
-                                darkenHexColor(
-                                    cfgPlots.evaluationColors.neutral,
-                                    0.1,
-                                ),
-                                1,
-                            ],
-                            ['100%', cfgPlots.evaluationColors.neutral, 1],
                         ]"
                     />
                 </defs>
@@ -1844,32 +1669,7 @@ watch(
                     :key="`plot_${i}_${plot.id}`"
                 >
                     <!-- LINK -->
-                    <defs>
-                        <DefGrad
-                            t="linear"
-                            :id="`grad_pos_${uid}`"
-                            x1="0%"
-                            x2="100%"
-                            y1="0%"
-                            y2="0%"
-                            :stops="[
-                                ['0%', cfgPlots.startColor, 1],
-                                ['100%', cfgPlots.endColor, 1],
-                            ]"
-                        />
-                        <DefGrad
-                            t="linear"
-                            :id="`grad_neg_${uid}`"
-                            x1="0%"
-                            x2="100%"
-                            y1="0%"
-                            y2="0%"
-                            :stops="[
-                                ['0%', cfgPlots.endColor, 1],
-                                ['100%', cfgPlots.startColor, 1],
-                            ]"
-                        />
-                    </defs>
+
                     <g
                         v-if="
                             ![undefined, null].includes(plot.end) &&
@@ -1992,15 +1792,9 @@ watch(
                             text-anchor="middle"
                         >
                             {{
-                                applyDataLabel(
-                                    cfgLabels.formatter,
+                                formatEndpoint(
                                     plot.start,
-                                    dataLabel({
-                                        p: cfgLabels.prefix,
-                                        v: plot.start,
-                                        s: cfgLabels.suffix,
-                                        r: cfgLabels.startLabels.rounding,
-                                    }),
+                                    cfgLabels.startLabels.rounding,
                                     { datapoint: plot, seriesIndex: i },
                                 )
                             }}
@@ -2020,7 +1814,7 @@ watch(
                             :y="
                                 plot.y -
                                 (plotRadius * 2 -
-                                    cfgLabels.startLabels.fontSize / 3)
+                                    cfgLabels.endLabels.fontSize / 3)
                             "
                             :fill="
                                 cfgPlots.evaluationColors.enable &&
@@ -2034,15 +1828,9 @@ watch(
                             text-anchor="middle"
                         >
                             {{
-                                applyDataLabel(
-                                    cfgLabels.formatter,
+                                formatEndpoint(
                                     plot.end,
-                                    dataLabel({
-                                        p: cfgLabels.prefix,
-                                        v: plot.end,
-                                        s: cfgLabels.suffix,
-                                        r: cfgLabels.endLabels.rounding,
-                                    }),
+                                    cfgLabels.endLabels.rounding,
                                     { datapoint: plot, seriesIndex: i },
                                 )
                             }}

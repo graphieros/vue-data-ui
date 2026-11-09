@@ -27,6 +27,106 @@ const {
 } = useArena();
 const { vue_ui_xy: DEFAULT_CONFIG } = useConfig();
 
+const logDemoScale = ref('log');
+const logDemoSymlogConstant = ref(1);
+const logDemoReverse = ref(false);
+const logDemoContinuous = ref(false);
+const logDemoType = ref('line');
+const logDemoIndividual = ref(false);
+const logDemoMerged = ref(false);
+const logDemoInvalid = ref(false);
+const logDemoInterline = ref(false);
+const logDemoSmooth = ref(false);
+const logDemoSingleValue = ref(false);
+const logDemoEmptySeries = ref(false);
+
+const logDemoDataset = computed(() => {
+    // Every step multiplies by ten, from 0.000001 through 100000.
+    const values = Array.from({ length: 12 }, (_, index) => 10 ** (index - 6));
+    const nonpositiveValues = { 2: -2500, 3: 0, 7: -7500, 9: -15000, 11: 0 };
+    const mixed = logDemoType.value === 'mixed';
+    const factors = mixed ? [1, 1.5, 2] : [1, 2];
+    const interline = logDemoInterline.value && logDemoType.value === 'line';
+    const dataset = factors.map((factor, index) => {
+        const type = mixed
+            ? ['line', 'bar', 'plot'][index]
+            : logDemoContinuous.value && logDemoType.value === 'bar'
+              ? 'line'
+              : logDemoType.value;
+        return {
+            name: mixed ? `Log demo ${type}` : `Log demo ${index + 1}`,
+            type,
+            useArea: type === 'line' && !interline,
+            smooth: logDemoSmooth.value && type === 'line',
+            series: values.map((value, x) => {
+                const seriesFactor =
+                    interline && index === 1 && x % 4 < 2 ? 0.5 : factor;
+                const y =
+                    (logDemoInvalid.value
+                        ? (nonpositiveValues[x] ?? value)
+                        : value) * seriesFactor;
+                return logDemoContinuous.value && !mixed ? { x, y } : y;
+            }),
+        };
+    });
+    const extraType = mixed
+        ? 'line'
+        : logDemoContinuous.value && logDemoType.value === 'bar'
+          ? 'line'
+          : logDemoType.value;
+    if (logDemoSingleValue.value) {
+        dataset.push({
+            name: 'Single value',
+            type: extraType,
+            smooth: logDemoSmooth.value && extraType === 'line',
+            series:
+                logDemoContinuous.value && !mixed ? [{ x: 6, y: 100 }] : [100],
+        });
+    }
+    if (logDemoEmptySeries.value) {
+        dataset.push({ name: 'Empty series', type: extraType, series: [] });
+    }
+    return dataset;
+});
+
+const logDemoConfig = computed(() => ({
+    theme: 'dark',
+    line: {
+        interLine: {
+            pairs:
+                logDemoInterline.value && logDemoType.value === 'line'
+                    ? [['Log demo 1', 'Log demo 2']]
+                    : [],
+            colors: [['#2196F3', '#FF9800']],
+            fillOpacity: 0.35,
+        },
+    },
+    chart: {
+        title: { text: 'Y scale comparison: ×10 at every step' },
+        grid: {
+            showHorizontalLines: true,
+            labels: {
+                yAxis: {
+                    scale: logDemoScale.value,
+                    symlogConstant: logDemoSymlogConstant.value,
+                    reverse: logDemoReverse.value,
+                    useIndividualScale: logDemoIndividual.value,
+                    useNiceScale: true,
+                },
+            },
+        },
+        zoom: {
+            show: true,
+            minimap: {
+                show: true,
+                compact: true,
+                merged: !logDemoContinuous.value && logDemoMerged.value,
+            },
+        },
+        userOptions: { show: true },
+    },
+}));
+
 const { CHECKBOX, NUMBER, RANGE, TEXT, COLOR, SELECT, createModel } =
     useConfigurationControls(DEFAULT_CONFIG);
 
@@ -716,6 +816,10 @@ const model = createModel([
     NUMBER('chart.grid.labels.xAxisLabels.modulo', { def: 6 }),
     CHECKBOX('chart.grid.labels.xAxisLabels.autoRotate', { def: true }),
 
+    SELECT('chart.grid.labels.yAxis.scale', ['linear', 'log', 'symlog'], {
+        def: 'linear',
+    }),
+    NUMBER('chart.grid.labels.yAxis.symlogConstant', { def: 1, min: 0.001 }),
     SELECT('chart.grid.labels.yAxis.position', ['left', 'right'], {
         def: 'left',
     }),
@@ -2598,6 +2702,96 @@ const growthSizeConfig = computed(() => ({
                     />
                 </div>
             </div>
+        </div>
+    </section>
+
+    <section style="margin-bottom: 32px">
+        <div style="display: flex; flex-wrap: wrap; gap: 16px; padding: 16px">
+            <label
+                >Y scale
+                <select v-model="logDemoScale">
+                    <option value="log">Logarithmic</option>
+                    <option value="symlog">Symlog</option>
+                    <option value="linear">Linear</option>
+                </select></label
+            >
+            <label v-if="logDemoScale === 'symlog'">
+                Symlog constant
+                <input
+                    v-model.number="logDemoSymlogConstant"
+                    type="number"
+                    min="0.001"
+                    step="0.1"
+                />
+            </label>
+            <label
+                >Series
+                <select v-model="logDemoType">
+                    <option value="line">Line / area</option>
+                    <option value="plot">Plot</option>
+                    <option value="bar" :disabled="logDemoContinuous">
+                        Bar
+                    </option>
+                    <option value="mixed" :disabled="logDemoContinuous">
+                        Mixed (line, bar, plot)
+                    </option>
+                </select></label
+            >
+            <label
+                ><input v-model="logDemoReverse" type="checkbox" /> Reverse
+                Y</label
+            >
+            <label
+                ><input
+                    v-model="logDemoContinuous"
+                    type="checkbox"
+                    :disabled="logDemoType === 'mixed'"
+                />
+                Continuous X</label
+            >
+            <label
+                ><input v-model="logDemoIndividual" type="checkbox" />
+                Individual scales</label
+            >
+            <label
+                ><input
+                    v-model="logDemoMerged"
+                    type="checkbox"
+                    :disabled="logDemoContinuous"
+                />
+                Merged minimap</label
+            >
+            <label
+                ><input v-model="logDemoInvalid" type="checkbox" /> Include zero
+                / negative values</label
+            >
+            <label>
+                <input
+                    v-model="logDemoInterline"
+                    type="checkbox"
+                    :disabled="logDemoType !== 'line'"
+                />
+                Interline areas (crossing series)
+            </label>
+            <label>
+                <input
+                    v-model="logDemoSmooth"
+                    type="checkbox"
+                    :disabled="!['line', 'mixed'].includes(logDemoType)"
+                />
+                Smooth
+            </label>
+            <label>
+                <input v-model="logDemoSingleValue" type="checkbox" />
+                Single-value series
+            </label>
+            <label>
+                <input v-model="logDemoEmptySeries" type="checkbox" />
+                Empty series
+            </label>
+        </div>
+        <div style="max-width: 700px">
+            <LocalVueUiXy :dataset="logDemoDataset" :config="logDemoConfig" />
         </div>
     </section>
 </template>

@@ -596,6 +596,7 @@ declare module 'vue-data-ui' {
     export type VueUiBuiltInSkeletonDataset<D> = D | null;
 
     export type A11YConfig = {
+        includeTable?: boolean;
         translations?: {
             keyboardNavigation?: string;
             tableAvailable?: string;
@@ -6450,6 +6451,10 @@ declare module 'vue-data-ui' {
                         show?: boolean;
                     };
                     yAxis?: {
+                        /** Log mode plots positive values only and keeps original data values. */
+                        scale?: 'linear' | 'log' | 'symlog';
+                        /** Positive transition constant for symlog; defaults to 1. */
+                        symlogConstant?: number;
                         position?: 'left' | 'right';
                         commonScaleSteps?: number;
                         useIndividualScale?: boolean;
@@ -14669,6 +14674,8 @@ declare module 'vue-data-ui' {
                         stroke?: string;
                     };
                     dot?: {
+                        show?: boolean;
+                        showOnHover?: boolean;
                         hideAboveMaxSerieLength?: number;
                         useSerieColor?: boolean;
                         fill?: string;

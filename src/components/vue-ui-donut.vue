@@ -114,14 +114,7 @@ const props = defineProps({
     },
 });
 
-const isDataset = computed({
-    get() {
-        return !!props.dataset && props.dataset.length;
-    },
-    set(bool) {
-        return bool;
-    },
-});
+const isDataset = computed(() => !!props.dataset?.length);
 
 const donutChart = shallowRef(null);
 const G = ref(null);
@@ -146,31 +139,26 @@ const tooltipA11yPosition = ref({ x: 0, y: 0 }); // a11y
 const tooltipTriggerMode = ref('pointer'); // a11y
 const isFocus = ref(false); // a11y
 
-const labels_value_fontSize = computed({
-    get: () => FINAL_CONFIG.value.style.chart.layout.labels.percentage.fontSize,
-    set: (v) => v,
-});
-const labels_name_fontSize = computed({
-    get: () => FINAL_CONFIG.value.style.chart.layout.labels.name.fontSize,
-    set: (v) => v,
-});
-const labels_inline_fontSize = computed({
-    get: () =>
+const labels_value_fontSize = computed(
+    () => FINAL_CONFIG.value.style.chart.layout.labels.percentage.fontSize,
+);
+const labels_name_fontSize = computed(
+    () => FINAL_CONFIG.value.style.chart.layout.labels.name.fontSize,
+);
+const labels_inline_fontSize = computed(
+    () =>
         FINAL_CONFIG.value.style.chart.layout.labels.dataLabels
             .smallArcClusterFontSize,
-    set: (v) => v,
-});
+);
 
-let rafScheduled = false;
+let reflowFrame = null;
 /**
  * v3 - Auto size fonts, clamped between minFontSize and config font size, inside the viewBox
  */
 const resizeAndReflow = () => {
-    if (!FINAL_CONFIG.value.autoSize || rafScheduled) return;
-    rafScheduled = true;
-
-    requestAnimationFrame(() => {
-        rafScheduled = false;
+    if (!FINAL_CONFIG.value.autoSize || reflowFrame !== null) return;
+    reflowFrame = requestAnimationFrame(() => {
+        reflowFrame = null;
 
         const cfg = FINAL_CONFIG.value;
         const container = G.value;
@@ -186,32 +174,22 @@ const resizeAndReflow = () => {
                 selector: '.vue-data-ui-datalabel-value',
                 baseSize: cfgLabels.value.percentage.fontSize,
                 minSize: cfgLabels.value.percentage.minFontSize,
-                sizeRef: labels_value_fontSize,
             },
             {
                 selector: '.vue-data-ui-datalabel-name',
                 baseSize: cfgLabels.value.name.fontSize,
                 minSize: cfgLabels.value.name.minFontSize,
-                sizeRef: labels_name_fontSize,
             },
             {
                 selector: '.vue-data-ui-datalabel-inline',
                 baseSize: cfgLabels.value.dataLabels.smallArcClusterFontSize,
                 minSize: cfgLabels.value.name.minFontSize,
-                sizeRef: labels_inline_fontSize,
             },
         ];
 
-        // Early bail
-        const totalMatches = labelTypes
-            .map((lt) => container.querySelectorAll(lt.selector).length)
-            .reduce((a, b) => a + b, 0);
-
-        if (totalMatches === 0) return;
-
-        labelTypes.forEach(({ selector, baseSize, minSize, sizeRef }) => {
+        labelTypes.forEach(({ selector, baseSize, minSize }) => {
             container.querySelectorAll(selector).forEach((el) => {
-                const final = autoFontSize({
+                autoFontSize({
                     el,
                     bounds,
                     currentFontSize: baseSize,
@@ -219,7 +197,6 @@ const resizeAndReflow = () => {
                     attempts: 200,
                     padding: 1,
                 });
-                sizeRef.value = final;
             });
         });
     });
@@ -228,7 +205,7 @@ const resizeAndReflow = () => {
 onMounted(async () => {
     readyTeleport.value = true;
     prepareChart();
-    requestAnimationFrame(resizeAndReflow);
+    resizeAndReflow();
 });
 
 let ro;
@@ -250,9 +227,10 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
     ro?.disconnect();
-});
+    cancelAnimationFrame(reflowFrame);
+    cancelAnimationFrame(startAnimationFrameIdentifier);
+    legendAnimationVersion += 1;
 
-onBeforeUnmount(() => {
     if (resizeObserver.value) {
         if (observedEl.value) {
             resizeObserver.value.unobserve(observedEl.value);
@@ -270,7 +248,6 @@ function prepareChart() {
             type: 'dataset',
             debug: debug.value,
         });
-        isDataset.value = false;
         manualLoading.value = true; // v3
     } else {
         props.dataset.forEach((ds, i) => {
@@ -285,7 +262,6 @@ function prepareChart() {
                     index: i,
                     debug: debug.value,
                 });
-                isDataset.value = false;
                 manualLoading.value = true; // v3
             });
         });
@@ -674,32 +650,32 @@ const donutThickness = computed(() => {
 
 const emit = defineEmits(['selectLegend', 'selectDatapoint', 'copyAlt']);
 
+const valuedDataset = computed(() =>
+    FINAL_DATASET.value.map((serie, sourceIndex) => ({
+        ...serie,
+        sourceIndex,
+        value: serie.values.reduce((a, b) => a + b, 0),
+    })),
+);
+
 const immutableSet = computed(() => {
-    return [...FINAL_DATASET.value]
+    return [...valuedDataset.value]
         .sort((a, b) => {
             if (!FINAL_CONFIG.value.sorted) return 0;
-
-            const sumA = Array.isArray(a.values)
-                ? a.values.reduce((x, y) => x + y, 0)
-                : (a.value ?? 0);
-            const sumB = Array.isArray(b.values)
-                ? b.values.reduce((x, y) => x + y, 0)
-                : (b.value ?? 0);
-
             if (a.ghost && !b.ghost) return 1;
             if (b.ghost && !a.ghost) return -1;
-
-            return sumB - sumA; // descending order
+            return b.value - a.value;
         })
         .map((serie, i) => {
             return {
                 name: serie.name,
+                sourceIndex: serie.sourceIndex,
                 color:
                     convertColorToHex(serie.color) ||
                     customPalette.value[i] ||
                     palette[i] ||
                     palette[i % palette.length],
-                value: checkNaN(serie.values.reduce((a, b) => a + b, 0)),
+                value: checkNaN(serie.value),
                 absoluteValues: serie.values,
                 comment: serie.comment || '',
                 patternIndex: i,
@@ -721,13 +697,40 @@ watch(
     { immediate: true },
 );
 
+const segregated = ref([]);
+const animatingIndex = ref(null);
+const isAnimating = computed(() => animatingIndex.value !== null);
+let legendAnimationVersion = 0;
+let pendingLegendToggle = null;
 const mutableSet = shallowRef(immutableSet.value);
 
 watch(
     () => immutableSet.value,
-    (val) => {
-        mutableSet.value = val;
-        requestAnimationFrame(resizeAndReflow);
+    (val, previous) => {
+        const wasAnimating = pendingLegendToggle !== null;
+        const hiddenSources = new Set(
+            segregated.value.map((index) => previous[index]?.sourceIndex),
+        );
+        // Settle an in-flight legend toggle before moving its positional index.
+        if (pendingLegendToggle) {
+            if (pendingLegendToggle.hidden)
+                hiddenSources.add(pendingLegendToggle.sourceIndex);
+            else hiddenSources.delete(pendingLegendToggle.sourceIndex);
+        }
+        legendAnimationVersion += 1;
+        pendingLegendToggle = null;
+
+        animatingIndex.value = null;
+        segregated.value = val.flatMap((serie, index) =>
+            hiddenSources.has(serie.sourceIndex) ? [index] : [],
+        );
+        mutableSet.value = val.map((serie) =>
+            hiddenSources.has(serie.sourceIndex)
+                ? { ...serie, value: 0 }
+                : serie,
+        );
+        if (wasAnimating) emitSelectLegend();
+        resizeAndReflow();
     },
 );
 
@@ -743,10 +746,6 @@ function getData() {
         };
     });
 }
-
-const segregated = ref([]);
-const isAnimating = ref(false);
-const animatingIndex = ref(null);
 
 function emitSelectLegend() {
     emit(
@@ -768,7 +767,9 @@ function animateValue({
     easing = easeOutCubic,
 }) {
     const start = performance.now();
+    const version = legendAnimationVersion;
     function step(now) {
+        if (version !== legendAnimationVersion) return;
         const t = Math.min((now - start) / duration, 1);
         const eased = easing(t);
         const current = from + (to - from) * eased;
@@ -795,94 +796,54 @@ function toggleLegend() {
 }
 
 function segregate(index) {
-    const target = immutableSet.value.find((_, idx) => idx === index);
-    const source = mutableSet.value.find((_, idx) => idx === index);
-    let initVal = source.value;
+    const target = immutableSet.value[index];
+    const source = mutableSet.value[index];
+    const restoring = segregated.value.includes(index);
+    if (!restoring && segregated.value.length >= immutableSet.value.length - 1)
+        return;
 
-    if (segregated.value.includes(index)) {
-        // Restore series
+    if (restoring) {
         segregated.value = segregated.value.filter((s) => s !== index);
-        const targetVal = target.value;
+    }
+    const targetValue = restoring ? target.value : 0;
+    function updateValue(value) {
+        mutableSet.value = mutableSet.value.map((ds, i) =>
+            index === i ? { ...ds, value } : ds,
+        );
+    }
+    function finish() {
+        if (!restoring) segregated.value.push(index);
+        updateValue(targetValue);
+        emitSelectLegend();
+    }
 
-        function setFinalUpState() {
-            mutableSet.value = mutableSet.value.map((ds, i) =>
-                index === i ? { ...ds, value: targetVal } : ds,
-            );
-            emitSelectLegend();
-        }
-
-        function doAnimUp() {
-            isAnimating.value = true;
-            animatingIndex.value = index;
-
-            animateValue({
-                from: initVal,
-                to: targetVal,
-                duration: FINAL_CONFIG.value.serieToggleAnimation.durationMs,
-                onUpdate: (val, t) => {
-                    mutableSet.value = mutableSet.value.map((ds, i) =>
-                        index === i ? { ...ds, value: val } : ds,
-                    );
-                    requestAnimationFrame(resizeAndReflow);
-                },
-                onDone: () => {
-                    setFinalUpState();
-                    isAnimating.value = false;
-                    animatingIndex.value = null;
-                },
-            });
-        }
-
-        if (
-            FINAL_CONFIG.value.serieToggleAnimation.show &&
-            FINAL_CONFIG.value.type === 'classic'
-        ) {
-            doAnimUp();
-        } else {
-            setFinalUpState();
-            requestAnimationFrame(resizeAndReflow);
-        }
-    } else if (segregated.value.length < immutableSet.value.length - 1) {
-        // Hide series
-        function setFinalDownState() {
-            segregated.value.push(index);
-            mutableSet.value = mutableSet.value.map((ds, i) =>
-                index === i ? { ...ds, value: 0 } : ds,
-            );
-            emitSelectLegend();
-        }
-
-        function doAnimDown() {
-            isAnimating.value = true;
-            animatingIndex.value = index;
-
-            animateValue({
-                from: initVal,
-                to: 0,
-                duration: FINAL_CONFIG.value.serieToggleAnimation.durationMs,
-                onUpdate: (val, t) => {
-                    mutableSet.value = mutableSet.value.map((ds, i) =>
-                        index === i ? { ...ds, value: val } : ds,
-                    );
-                    requestAnimationFrame(resizeAndReflow);
-                },
-                onDone: () => {
-                    setFinalDownState();
-                    requestAnimationFrame(resizeAndReflow);
-                    isAnimating.value = false;
-                    animatingIndex.value = null;
-                },
-            });
-        }
-
-        if (
-            FINAL_CONFIG.value.serieToggleAnimation.show &&
-            FINAL_CONFIG.value.type === 'classic'
-        ) {
-            doAnimDown();
-        } else {
-            setFinalDownState();
-        }
+    if (
+        FINAL_CONFIG.value.serieToggleAnimation.show &&
+        FINAL_CONFIG.value.type === 'classic'
+    ) {
+        pendingLegendToggle = {
+            sourceIndex: target.sourceIndex,
+            hidden: !restoring,
+        };
+        animatingIndex.value = index;
+        animateValue({
+            from: source.value,
+            to: targetValue,
+            duration: FINAL_CONFIG.value.serieToggleAnimation.durationMs,
+            onUpdate: (value) => {
+                updateValue(value);
+                resizeAndReflow();
+            },
+            onDone: () => {
+                finish();
+                pendingLegendToggle = null;
+                if (!restoring) resizeAndReflow();
+                animatingIndex.value = null;
+            },
+        });
+    } else {
+        finish();
+        if (restoring) resizeAndReflow();
     }
 }
 
@@ -933,13 +894,7 @@ function hideSeries(name) {
     }
 }
 
-const _total = computed(() =>
-    FINAL_DATASET.value.reduce(
-        (sum, datasetEntry) =>
-            sum + datasetEntry.values.reduce((a, b) => a + b, 0),
-        0,
-    ),
-);
+const _total = computed(() => sumValues(valuedDataset.value));
 
 const donutSet = computed(() => {
     if (isFirstLoad.value && !loading.value) {
@@ -964,15 +919,6 @@ const donutSet = computed(() => {
 
         return arcs;
     } else {
-        mutableSet.value.forEach((datasetEntry) => {
-            if ([null, undefined].includes(datasetEntry.values)) {
-                return {
-                    ...datasetEntry,
-                    values: [],
-                };
-            }
-        });
-
         return mutableSet.value
             .map((serie, seriesIndex) => {
                 return {
@@ -1082,11 +1028,7 @@ const currentDonut = computed(() => {
 });
 
 const hasData = computed(() => {
-    return (
-        Math.abs(
-            donutSet.value.map((d) => d.value).reduce((a, b) => a + b, 0),
-        ) > 0
-    );
+    return Math.abs(total.value) > 0;
 });
 
 const emptySkeleton = computed(() => {
@@ -1144,6 +1086,24 @@ function getPolarAnchor(middlePoint) {
         return 'middle';
     }
 }
+
+const polarLabelLayouts = computed(() =>
+    polarAreas.value.map((area) => {
+        const offset = (distance) =>
+            offsetFromCenterPoint({
+                initX: area.middlePoint.x,
+                initY: area.middlePoint.y,
+                offset: distance,
+                centerX: svg.value.width / 2,
+                centerY: svg.value.height / 2,
+            });
+        return {
+            anchor: getPolarAnchor(area.middlePoint),
+            marker: offset(24),
+            label: offset(42),
+        };
+    }),
+);
 
 function getPolarCommentY(polarArea) {
     if (polarArea.middlePoint.y > svg.value.height / 2) {
@@ -1214,15 +1174,15 @@ function displayArcPercentage(arc, stepBreakdown) {
 }
 
 function sumValues(source) {
-    return [...source].map((s) => s.value).reduce((a, b) => a + b, 0);
+    return source.reduce((sum, serie) => sum + serie.value, 0);
 }
 
 const total = computed(() => {
-    return donutSet.value.map((s) => s.value).reduce((a, b) => a + b, 0);
+    return sumValues(donutSet.value);
 });
 
 const baseProportions = computed(() => {
-    const sum = immutableSet.value.reduce((acc, ds) => acc + ds.value, 0);
+    const sum = sumValues(immutableSet.value);
     if (sum <= 0) {
         return [];
     }
@@ -1364,6 +1324,23 @@ function getClassicLabelPosition(arc, index) {
     };
 }
 
+function buildNameTspans(arc, { x, fontSize, className, normalWeight }) {
+    return String(arc.name ?? '')
+        .split(/\n/g)
+        .map(
+            (line, index) => `
+        <tspan
+            class="${className}"
+            ${index ? `x="${x}" dy="${fontSize * 1.2}"` : ''}
+            fill="${cfgLabels.value.name.color}"
+            font-size="${fontSize}px"
+            style="font-weight:${cfgLabels.value.name.bold ? 'bold' : normalWeight}"
+        >${line}</tspan>
+    `,
+        )
+        .join('');
+}
+
 function buildClassicInlineLabel(arc, index, isSmall) {
     const { textAnchor, x } = getClassicLabelPosition(arc, index);
     const percentageLabel = arcLabel(arc);
@@ -1377,31 +1354,15 @@ function buildClassicInlineLabel(arc, index, isSmall) {
         >${percentageLabel}</tspan>
     `;
 
-    const nameLines = String(arc.name ?? '').split(/\n/g);
-    let nameTspans = '';
-
-    nameLines.forEach((line, lineIndex) => {
-        if (lineIndex === 0) {
-            nameTspans += `
-                <tspan
-                    class="${isSmall ? 'vue-data-ui-datalabel-inline' : 'vue-data-ui-datalabel-name'}"
-                    fill="${cfgLabels.value.name.color}"
-                    font-size="${isSmall ? labels_inline_fontSize.value : labels_name_fontSize.value}px"
-                    style="font-weight:${cfgLabels.value.name.bold ? 'bold' : ''}"
-                >${line}</tspan>
-            `;
-        } else {
-            nameTspans += `
-                <tspan
-                    class="${isSmall ? 'vue-data-ui-datalabel-inline' : 'vue-data-ui-datalabel-name'}"
-                    x="${x}"
-                    dy="${(isSmall ? labels_inline_fontSize.value : labels_name_fontSize.value) * 1.2}"
-                    fill="${cfgLabels.value.name.color}"
-                    font-size="${isSmall ? labels_inline_fontSize.value : labels_name_fontSize.value}px"
-                    style="font-weight:${cfgLabels.value.name.bold ? 'bold' : ''}"
-                >${line}</tspan>
-            `;
-        }
+    const nameTspans = buildNameTspans(arc, {
+        x,
+        fontSize: isSmall
+            ? labels_inline_fontSize.value
+            : labels_name_fontSize.value,
+        className: isSmall
+            ? 'vue-data-ui-datalabel-inline'
+            : 'vue-data-ui-datalabel-name',
+        normalWeight: '',
     });
 
     if (textAnchor === 'end') {
@@ -1411,19 +1372,10 @@ function buildClassicInlineLabel(arc, index, isSmall) {
 }
 
 function buildPolarInlineLabel(arc, index) {
-    const middlePoint = polarAreas.value[index].middlePoint;
-    const textAnchorComputed = getPolarAnchor(middlePoint);
-
-    const offsetPoint = offsetFromCenterPoint({
-        initX: middlePoint.x,
-        initY: middlePoint.y,
-        offset: 42,
-        centerX: svg.value.width / 2,
-        centerY: svg.value.height / 2,
-    });
-
-    const x = offsetPoint.x;
-    const y = offsetPoint.y;
+    const {
+        anchor: textAnchorComputed,
+        label: { x },
+    } = polarLabelLayouts.value[index];
 
     const percentageLabel = arcLabel(arc);
 
@@ -1436,31 +1388,11 @@ function buildPolarInlineLabel(arc, index) {
         >${percentageLabel}</tspan>
     `;
 
-    const nameLines = String(arc.name ?? '').split(/\n/g);
-    let nameTspans = '';
-
-    nameLines.forEach((line, lineIndex) => {
-        if (lineIndex === 0) {
-            nameTspans += `
-                <tspan
-                    class="vue-data-ui-datalabel-name"
-                    fill="${cfgLabels.value.name.color}"
-                    font-size="${labels_name_fontSize.value}px"
-                    style="font-weight:${cfgLabels.value.name.bold ? 'bold' : 'normal'}"
-                >${line}</tspan>
-            `;
-        } else {
-            nameTspans += `
-                <tspan
-                    class="vue-data-ui-datalabel-name"
-                    x="${x}"
-                    dy="${labels_name_fontSize.value * 1.2}"
-                    fill="${cfgLabels.value.name.color}"
-                    font-size="${labels_name_fontSize.value}px"
-                    style="font-weight:${cfgLabels.value.name.bold ? 'bold' : 'normal'}"
-                >${line}</tspan>
-            `;
-        }
+    const nameTspans = buildNameTspans(arc, {
+        x,
+        fontSize: labels_name_fontSize.value,
+        className: 'vue-data-ui-datalabel-name',
+        normalWeight: 'normal',
     });
 
     if (textAnchorComputed === 'end') {
@@ -1947,7 +1879,7 @@ defineExpose({
         </div>
 
         <A11yDataTable
-            v-if="a11yTable?.rows?.length"
+            v-if="FINAL_CONFIG.a11y.includeTable && a11yTable?.rows?.length"
             :uid="uid"
             :head="a11yTable.headers"
             :body="a11yTable.rows"
@@ -2280,7 +2212,7 @@ defineExpose({
                                     isArcBigEnough(arc) &&
                                     mutableConfig.dataLabels.show
                                 "
-                                :d="`M ${offsetFromCenterPoint({ initX: polarAreas[i].middlePoint.x, initY: polarAreas[i].middlePoint.y, offset: 24, centerX: svg.width / 2, centerY: svg.height / 2 }).x},${offsetFromCenterPoint({ initX: polarAreas[i].middlePoint.x, initY: polarAreas[i].middlePoint.y, offset: 24, centerX: svg.width / 2, centerY: svg.height / 2 }).y} ${polarAreas[i].middlePoint.x},${polarAreas[i].middlePoint.y}`"
+                                :d="`M ${polarLabelLayouts[i].marker.x},${polarLabelLayouts[i].marker.y} ${polarAreas[i].middlePoint.x},${polarAreas[i].middlePoint.y}`"
                                 :stroke="arc.color"
                                 stroke-width="1"
                                 stroke-linecap="round"
@@ -2604,7 +2536,7 @@ defineExpose({
                                             currentDonut[0].seriesIndex,
                                     })
                                 "
-                                @click="selectDatapoint(currentDonut[0], i)"
+                                @click="selectDatapoint(currentDonut[0], 0)"
                             />
                         </g>
                     </template>
@@ -3003,24 +2935,8 @@ defineExpose({
                                         isArcBigEnough(arc) &&
                                         mutableConfig.dataLabels.show
                                     "
-                                    :cx="
-                                        offsetFromCenterPoint({
-                                            initX: polarAreas[i].middlePoint.x,
-                                            initY: polarAreas[i].middlePoint.y,
-                                            offset: 24,
-                                            centerX: svg.width / 2,
-                                            centerY: svg.height / 2,
-                                        }).x
-                                    "
-                                    :cy="
-                                        offsetFromCenterPoint({
-                                            initX: polarAreas[i].middlePoint.x,
-                                            initY: polarAreas[i].middlePoint.y,
-                                            offset: 24,
-                                            centerX: svg.width / 2,
-                                            centerY: svg.height / 2,
-                                        }).y
-                                    "
+                                    :cx="polarLabelLayouts[i].marker.x"
+                                    :cy="polarLabelLayouts[i].marker.y"
                                     :fill="arc.color"
                                     :stroke="cfgChart.backgroundColor"
                                     :stroke-width="1"
@@ -3068,29 +2984,9 @@ defineExpose({
                                         isArcBigEnough(arc) &&
                                         mutableConfig.dataLabels.show
                                     "
-                                    :text-anchor="
-                                        getPolarAnchor(
-                                            polarAreas[i].middlePoint,
-                                        )
-                                    "
-                                    :x="
-                                        offsetFromCenterPoint({
-                                            initX: polarAreas[i].middlePoint.x,
-                                            initY: polarAreas[i].middlePoint.y,
-                                            offset: 42,
-                                            centerX: svg.width / 2,
-                                            centerY: svg.height / 2,
-                                        }).x
-                                    "
-                                    :y="
-                                        offsetFromCenterPoint({
-                                            initX: polarAreas[i].middlePoint.x,
-                                            initY: polarAreas[i].middlePoint.y,
-                                            offset: 42,
-                                            centerX: svg.width / 2,
-                                            centerY: svg.height / 2,
-                                        }).y
-                                    "
+                                    :text-anchor="polarLabelLayouts[i].anchor"
+                                    :x="polarLabelLayouts[i].label.x"
+                                    :y="polarLabelLayouts[i].label.y"
                                     :style="{
                                         transition:
                                             isFirstLoad ||
@@ -3127,32 +3023,10 @@ defineExpose({
                                             mutableConfig.dataLabels.show
                                         "
                                         :text-anchor="
-                                            getPolarAnchor(
-                                                polarAreas[i].middlePoint,
-                                            )
+                                            polarLabelLayouts[i].anchor
                                         "
-                                        :x="
-                                            offsetFromCenterPoint({
-                                                initX: polarAreas[i].middlePoint
-                                                    .x,
-                                                initY: polarAreas[i].middlePoint
-                                                    .y,
-                                                offset: 42,
-                                                centerX: svg.width / 2,
-                                                centerY: svg.height / 2,
-                                            }).x
-                                        "
-                                        :y="
-                                            offsetFromCenterPoint({
-                                                initX: polarAreas[i].middlePoint
-                                                    .x,
-                                                initY: polarAreas[i].middlePoint
-                                                    .y,
-                                                offset: 42,
-                                                centerX: svg.width / 2,
-                                                centerY: svg.height / 2,
-                                            }).y
-                                        "
+                                        :x="polarLabelLayouts[i].label.x"
+                                        :y="polarLabelLayouts[i].label.y"
                                         :fill="cfgLabels.percentage.color"
                                         :font-size="labels_value_fontSize"
                                         :style="{
@@ -3194,31 +3068,11 @@ defineExpose({
                                             cfgLabels.name.show
                                         "
                                         :text-anchor="
-                                            getPolarAnchor(
-                                                polarAreas[i].middlePoint,
-                                            )
+                                            polarLabelLayouts[i].anchor
                                         "
-                                        :x="
-                                            offsetFromCenterPoint({
-                                                initX: polarAreas[i].middlePoint
-                                                    .x,
-                                                initY: polarAreas[i].middlePoint
-                                                    .y,
-                                                offset: 42,
-                                                centerX: svg.width / 2,
-                                                centerY: svg.height / 2,
-                                            }).x
-                                        "
+                                        :x="polarLabelLayouts[i].label.x"
                                         :y="
-                                            offsetFromCenterPoint({
-                                                initX: polarAreas[i].middlePoint
-                                                    .x,
-                                                initY: polarAreas[i].middlePoint
-                                                    .y,
-                                                offset: 42,
-                                                centerX: svg.width / 2,
-                                                centerY: svg.height / 2,
-                                            }).y +
+                                            polarLabelLayouts[i].label.y +
                                             labels_name_fontSize * 1.2
                                         "
                                         :fill="cfgLabels.name.color"
@@ -3254,25 +3108,10 @@ defineExpose({
                                                 content: arc.name,
                                                 fontSize: labels_name_fontSize,
                                                 fill: cfgLabels.name.color,
-                                                x: offsetFromCenterPoint({
-                                                    initX: polarAreas[i]
-                                                        .middlePoint.x,
-                                                    initY: polarAreas[i]
-                                                        .middlePoint.y,
-                                                    offset: 42,
-                                                    centerX: svg.width / 2,
-                                                    centerY: svg.height / 2,
-                                                }).x,
+                                                x: polarLabelLayouts[i].label.x,
                                                 y:
-                                                    offsetFromCenterPoint({
-                                                        initX: polarAreas[i]
-                                                            .middlePoint.x,
-                                                        initY: polarAreas[i]
-                                                            .middlePoint.y,
-                                                        offset: 42,
-                                                        centerX: svg.width / 2,
-                                                        centerY: svg.height / 2,
-                                                    }).y +
+                                                    polarLabelLayouts[i].label
+                                                        .y +
                                                     labels_name_fontSize * 1.2,
                                             })
                                         "
@@ -3342,40 +3181,14 @@ defineExpose({
                                 "
                                 :x="
                                     cfgChart.comments.offsetX +
-                                    (getPolarAnchor(
-                                        polarAreas[i].middlePoint,
-                                    ) === 'end'
-                                        ? offsetFromCenterPoint({
-                                              initX: polarAreas[i].middlePoint
-                                                  .x,
-                                              initY: polarAreas[i].middlePoint
-                                                  .y,
-                                              offset: 42,
-                                              centerX: svg.width / 2,
-                                              centerY: svg.height / 2,
-                                          }).x - cfgChart.comments.width
-                                        : getPolarAnchor(
-                                                polarAreas[i].middlePoint,
-                                            ) === 'middle'
-                                          ? offsetFromCenterPoint({
-                                                initX: polarAreas[i].middlePoint
-                                                    .x,
-                                                initY: polarAreas[i].middlePoint
-                                                    .y,
-                                                offset: 42,
-                                                centerX: svg.width / 2,
-                                                centerY: svg.height / 2,
-                                            }).x -
+                                    (polarLabelLayouts[i].anchor === 'end'
+                                        ? polarLabelLayouts[i].label.x -
+                                          cfgChart.comments.width
+                                        : polarLabelLayouts[i].anchor ===
+                                            'middle'
+                                          ? polarLabelLayouts[i].label.x -
                                             cfgChart.comments.width / 2
-                                          : offsetFromCenterPoint({
-                                                initX: polarAreas[i].middlePoint
-                                                    .x,
-                                                initY: polarAreas[i].middlePoint
-                                                    .y,
-                                                offset: 42,
-                                                centerX: svg.width / 2,
-                                                centerY: svg.height / 2,
-                                            }).x)
+                                          : polarLabelLayouts[i].label.x)
                                 "
                                 :y="
                                     getPolarCommentY(polarAreas[i]) +
@@ -3398,12 +3211,10 @@ defineExpose({
                                         name="plot-comment"
                                         :plot="{
                                             ...arc,
-                                            textAlign: getPolarAnchor(
-                                                polarAreas[i].middlePoint,
-                                            ),
-                                            flexAlign: getPolarAnchor(
-                                                polarAreas[i].middlePoint,
-                                            ),
+                                            textAlign:
+                                                polarLabelLayouts[i].anchor,
+                                            flexAlign:
+                                                polarLabelLayouts[i].anchor,
                                             isFirstLoad,
                                         }"
                                     />

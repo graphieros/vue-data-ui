@@ -36,7 +36,6 @@ import {
     dataLabel,
     downloadCsv,
     error,
-    functionReturnsString,
     giftWrap,
     isFunction,
     largestTriangleThreeBuckets,
@@ -47,7 +46,6 @@ import {
     XMLNS,
     treeShake,
 } from '../lib';
-import { throttle } from '../canvas-lib';
 import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 import { useLoading } from '../useLoading';
@@ -196,12 +194,6 @@ const { loading, FINAL_DATASET } = useLoading({
     ...toRefs(props),
     FINAL_CONFIG,
     prepareConfig,
-    callback: () => {
-        Promise.resolve().then(async () => {
-            await nextTick();
-            mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
-        });
-    },
     skeletonDataset: props.config?.skeletonDataset ?? [
         {
             name: '_',
@@ -264,10 +256,9 @@ watch(
             return;
         }
 
-        FINAL_CONFIG.value = preparedConfig;
+        if (!loading.value) FINAL_CONFIG.value = preparedConfig;
         userOptionsVisible.value =
             !FINAL_CONFIG.value.userOptions.showOnChartHover;
-        prepareChart();
         titleStep.value += 1;
         tableStep.value += 1;
         legendStep.value += 1;
@@ -281,7 +272,8 @@ watch(
 );
 
 const resizeObserver = shallowRef(null);
-const observedEl = shallowRef(null);
+let chartDisposed = false;
+let resizeFrame = null;
 
 const debug = computed(() => FINAL_CONFIG.value.debug);
 
@@ -327,8 +319,33 @@ function prepareChart() {
         }
     }
 
-    if (FINAL_CONFIG.value.responsive) {
-        const handleResize = throttle(() => {
+    updateChartSizing();
+}
+
+function stopResponsive() {
+    resizeObserver.value?.disconnect();
+    resizeObserver.value = null;
+    if (resizeFrame !== null) cancelAnimationFrame(resizeFrame);
+    resizeFrame = null;
+}
+
+function updateChartSizing() {
+    stopResponsive();
+    if (chartDisposed) return;
+    if (!FINAL_CONFIG.value.responsive) {
+        applySvgSize(cfgChart.value.width, cfgChart.value.height);
+        return;
+    }
+    if (!quadrantChart.value) return;
+    const handleResize = () => {
+        if (
+            chartDisposed ||
+            !FINAL_CONFIG.value.responsive ||
+            resizeFrame !== null
+        )
+            return;
+        resizeFrame = requestAnimationFrame(() => {
+            resizeFrame = null;
             const { width, height } = useResponsive({
                 chart: quadrantChart.value,
                 title: cfgChart.value.title.text ? chartTitle.value : null,
@@ -336,49 +353,22 @@ function prepareChart() {
                 source: source.value,
                 noTitle: noTitle.value,
             });
-
-            basePadding.value = 48;
-
-            requestAnimationFrame(() => {
-                svg.value.height = height;
-                svg.value.usableHeight = height - basePadding.value * 2;
-                svg.value.width = width;
-                svg.value.usableWidth = width - basePadding.value * 2;
-                svg.value.top = basePadding.value;
-                svg.value.left = basePadding.value;
-                svg.value.right = width - basePadding.value;
-                svg.value.bottom = height - basePadding.value;
-                svg.value.centerX = width / 2;
-                svg.value.centerY = height - height / 2;
-                svg.value.padding = basePadding.value;
-            });
+            applySvgSize(width, height);
         });
-
-        if (resizeObserver.value) {
-            if (observedEl.value) {
-                resizeObserver.value.unobserve(observedEl.value);
-            }
-            resizeObserver.value.disconnect();
-        }
-
-        resizeObserver.value = new ResizeObserver(handleResize);
-        observedEl.value = quadrantChart.value.parentNode;
-        resizeObserver.value.observe(observedEl.value);
-    }
+    };
+    resizeObserver.value = new ResizeObserver(handleResize);
+    resizeObserver.value.observe(quadrantChart.value.parentNode);
+    handleResize();
 }
 
 onMounted(() => {
     readyTeleport.value = true;
     prepareChart();
 });
-
 onBeforeUnmount(() => {
-    if (resizeObserver.value) {
-        if (observedEl.value) {
-            resizeObserver.value.unobserve(observedEl.value);
-        }
-        resizeObserver.value.disconnect();
-    }
+    chartDisposed = true;
+    stopResponsive();
+    cancelZoomAnimation();
 });
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
@@ -403,133 +393,139 @@ const mutableConfig = ref({
     showTooltip: cfgTooltip.value.show,
 });
 
-const basePadding = ref(48);
-
-const svg = ref({
-    height: cfgChart.value.height,
-    usableHeight: cfgChart.value.height - basePadding.value * 2,
-    width: cfgChart.value.width,
-    usableWidth: cfgChart.value.width - basePadding.value * 2,
-    top: basePadding.value,
-    left: basePadding.value,
-    right: cfgChart.value.width - basePadding.value,
-    bottom: cfgChart.value.height - basePadding.value,
-    centerX: cfgChart.value.width / 2,
-    centerY: cfgChart.value.height - cfgChart.value.height / 2,
-    padding: basePadding.value,
-});
-
-const mutableSvg = ref({
-    ...JSON.parse(JSON.stringify(svg.value)),
-    startX: 0,
-    startY: 0,
-});
-
-watch(
-    () => svg.value,
-    (val) => {
-        if (val) {
-            mutableSvg.value = {
-                ...JSON.parse(JSON.stringify(svg.value)),
-                startX: 0,
-                startY: 0,
-            };
-        }
-    },
-    { deep: true },
-);
-
+function makeSvg(width, height) {
+    const padding = 48;
+    return {
+        height,
+        usableHeight: height - padding * 2,
+        width,
+        usableWidth: width - padding * 2,
+        top: padding,
+        left: padding,
+        right: width - padding,
+        bottom: height - padding,
+        centerX: width / 2,
+        centerY: height - height / 2,
+        padding,
+    };
+}
+const svg = ref(makeSvg(cfgChart.value.width, cfgChart.value.height));
+function applySvgSize(width, height) {
+    if (svg.value.width !== width || svg.value.height !== height)
+        svg.value = makeSvg(width, height);
+}
+const mutableSvg = ref({ ...svg.value, startX: 0, startY: 0 });
 const selectedSide = ref(null);
-
-const selectedSideLabelCoordinates = computed(() => {
-    switch (selectedSide.value) {
-        case 'TL':
-            return {
-                x: mutableSvg.value.startX + mutableSvg.value.width / 2,
-                y: mutableSvg.value.height,
-                text: cfgLabels.value.quadrantLabels.tl.text || 'Top Left',
-                fontSize: cfgLabels.value.quadrantLabels.tl.fontSize,
-                fill: cfgLabels.value.quadrantLabels.tl.color,
-                bold: cfgLabels.value.quadrantLabels.tl.bold,
-            };
-        case 'TR':
-            return {
-                x: mutableSvg.value.startX + mutableSvg.value.width / 2,
-                y: mutableSvg.value.height,
-                text: cfgLabels.value.quadrantLabels.tr.text || 'Top Right',
-                fontSize: cfgLabels.value.quadrantLabels.tr.fontSize,
-                fill: cfgLabels.value.quadrantLabels.tr.color,
-                bold: cfgLabels.value.quadrantLabels.tr.bold,
-            };
-        case 'BR':
-            return {
-                x: mutableSvg.value.startX + mutableSvg.value.width / 2,
-                y: mutableSvg.value.height * 1.678,
-                text: cfgLabels.value.quadrantLabels.br.text || 'Bottom Right',
-                fontSize: cfgLabels.value.quadrantLabels.br.fontSize,
-                fill: cfgLabels.value.quadrantLabels.br.color,
-                bold: cfgLabels.value.quadrantLabels.br.bold,
-            };
-        case 'BL':
-            return {
-                x: mutableSvg.value.startX + mutableSvg.value.width / 2,
-                y: mutableSvg.value.height * 1.678,
-                text: cfgLabels.value.quadrantLabels.bl.text || 'Bottom Left',
-                fontSize: cfgLabels.value.quadrantLabels.bl.fontSize,
-                fill: cfgLabels.value.quadrantLabels.bl.color,
-                bold: cfgLabels.value.quadrantLabels.bl.bold,
-            };
-
-        default:
-            return {
-                x: 0,
-                y: 0,
-                text: '',
-                fontSize: 0,
-                fill: 'none',
-                bold: false,
-            };
-    }
-});
-
 const currentAnimationFrame = ref(null);
 const isAnimating = ref(false);
+let zoomAnimationSequence = 0;
+const zoomEnabled = computed(() => FINAL_CONFIG.value.zoomEnabled);
+const quadrantSides = [
+    { id: 'TL', key: 'tl', right: false, bottom: false, fallback: 'Top Left' },
+    { id: 'TR', key: 'tr', right: true, bottom: false, fallback: 'Top Right' },
+    {
+        id: 'BR',
+        key: 'br',
+        right: true,
+        bottom: true,
+        fallback: 'Bottom Right',
+    },
+    {
+        id: 'BL',
+        key: 'bl',
+        right: false,
+        bottom: true,
+        fallback: 'Bottom Left',
+    },
+];
+const selectedSideLabelCoordinates = computed(() => {
+    const side = quadrantSides.find((side) => side.id === selectedSide.value);
+    if (!side)
+        return { x: 0, y: 0, text: '', fontSize: 0, fill: 'none', bold: false };
+    const labels = cfgLabels.value.quadrantLabels[side.key];
+    return {
+        x: mutableSvg.value.startX + mutableSvg.value.width / 2,
+        y: mutableSvg.value.height * (side.bottom ? 1.678 : 1),
+        text: labels.text || side.fallback,
+        fontSize: labels.fontSize,
+        fill: labels.color,
+        bold: labels.bold,
+    };
+});
+function cancelZoomAnimation() {
+    zoomAnimationSequence += 1;
+    if (currentAnimationFrame.value !== null)
+        cancelAnimationFrame(currentAnimationFrame.value);
+    currentAnimationFrame.value = null;
+    isAnimating.value = false;
+}
+function resetZoom() {
+    cancelZoomAnimation();
+    mutableSvg.value = { ...svg.value, startX: 0, startY: 0 };
+    selectedSide.value = null;
+    isZoom.value = false;
+}
+watch(svg, resetZoom, { deep: true });
+watch(
+    FINAL_CONFIG,
+    () => {
+        mutableConfig.value = {
+            plotLabels: { show: cfgLabels.value.plotLabels.show },
+            showTable: FINAL_CONFIG.value.table.show,
+            showTooltip: cfgTooltip.value.show,
+        };
+        updateChartSizing();
+    },
+    { flush: 'post' },
+);
 
 function zoomOnSide({ targetX, targetY, targetW, targetH, side }) {
-    if (selectedSide.value) {
-        selectSide(side);
-    }
-    const differentials = {
-        x: targetX - mutableSvg.value.startX,
-        y: targetY - mutableSvg.value.startY,
-        w: targetW - mutableSvg.value.width,
-        h: targetH - mutableSvg.value.height,
-    };
-
-    const steps = FINAL_CONFIG.value.zoomAnimationFrames;
-    let init = 0;
-    function anim() {
-        isAnimating.value = true;
-        mutableSvg.value.startX += differentials.x / steps;
-        mutableSvg.value.startY += differentials.y / steps;
-        mutableSvg.value.width += differentials.w / steps;
-        mutableSvg.value.height += differentials.h / steps;
-        init += 1;
-        if (init < steps) {
-            currentAnimationFrame.value = requestAnimationFrame(anim);
-        } else {
+    if (selectedSide.value) selectSide(side);
+    cancelZoomAnimation();
+    const sequence = zoomAnimationSequence;
+    const start = { ...mutableSvg.value };
+    const configured = Number(FINAL_CONFIG.value.zoomAnimationFrames);
+    const steps = Number.isFinite(configured)
+        ? Math.max(1, Math.trunc(configured))
+        : 1;
+    let frame = 0;
+    isAnimating.value = true;
+    function animate() {
+        if (chartDisposed || sequence !== zoomAnimationSequence) return;
+        frame += 1;
+        const progress = frame / steps;
+        Object.assign(mutableSvg.value, {
+            startX:
+                frame === steps
+                    ? targetX
+                    : start.startX + (targetX - start.startX) * progress,
+            startY:
+                frame === steps
+                    ? targetY
+                    : start.startY + (targetY - start.startY) * progress,
+            width:
+                frame === steps
+                    ? targetW
+                    : start.width + (targetW - start.width) * progress,
+            height:
+                frame === steps
+                    ? targetH
+                    : start.height + (targetH - start.height) * progress,
+        });
+        if (frame < steps)
+            currentAnimationFrame.value = requestAnimationFrame(animate);
+        else {
+            currentAnimationFrame.value = null;
             isAnimating.value = false;
         }
     }
-    anim();
+    animate();
 }
-
-const zoomEnabled = computed(() => FINAL_CONFIG.value.zoomEnabled);
-
-function selectQuadrantSide(side) {
-    if (!zoomEnabled.value) return;
-    if (isAnimating.value) return;
-    if (isZoom.value && selectedSide.value === side) {
+function selectQuadrantSide(id) {
+    if (!zoomEnabled.value || isAnimating.value) return;
+    const side = quadrantSides.find((side) => side.id === id);
+    if (!side) return;
+    if (isZoom.value && selectedSide.value === id) {
         zoomOnSide({
             targetX: 0,
             targetY: 0,
@@ -538,58 +534,17 @@ function selectQuadrantSide(side) {
         });
         selectedSide.value = null;
         isZoom.value = false;
-    } else {
-        selectedSide.value = side;
-        switch (side) {
-            case 'TL':
-                zoomOnSide({
-                    targetX: 0,
-                    targetY: 0,
-                    targetW: svg.value.width / 2 + svg.value.left,
-                    targetH: svg.value.height / 2 + svg.value.top,
-                    side: 'tl',
-                });
-                break;
-
-            case 'TR':
-                zoomOnSide({
-                    targetX: svg.value.width / 2 - svg.value.left,
-                    targetY: 0,
-                    targetW: svg.value.width / 2 + svg.value.left,
-                    targetH: svg.value.height / 2 + svg.value.top,
-                    side: 'tr',
-                });
-                break;
-
-            case 'BR':
-                zoomOnSide({
-                    targetX: svg.value.width / 2 - svg.value.left,
-                    targetY: svg.value.height / 2 - svg.value.top,
-                    targetW: svg.value.width / 2 + svg.value.left,
-                    targetH: svg.value.height / 2 + svg.value.top,
-                    side: 'br',
-                });
-                break;
-
-            case 'BL':
-                zoomOnSide({
-                    targetX: 0,
-                    targetY: svg.value.height / 2 - svg.value.top,
-                    targetW: svg.value.width / 2 + svg.value.left,
-                    targetH: svg.value.height / 2 + svg.value.top,
-                    side: 'bl',
-                });
-                break;
-
-            default:
-                mutableSvg.value.startX = 0;
-                mutableSvg.value.startY = 0;
-                mutableSvg.value.width = svg.value.width;
-                mutableSvg.value.height = svg.value.height;
-                break;
-        }
-        isZoom.value = true;
+        return;
     }
+    selectedSide.value = id;
+    zoomOnSide({
+        targetX: side.right ? svg.value.width / 2 - svg.value.left : 0,
+        targetY: side.bottom ? svg.value.height / 2 - svg.value.top : 0,
+        targetW: svg.value.width / 2 + svg.value.left,
+        targetH: svg.value.height / 2 + svg.value.top,
+        side: side.key,
+    });
+    isZoom.value = true;
 }
 
 const graduations = computed(() => {
@@ -617,29 +572,26 @@ const axisValues = computed(() => {
     let yMax = cfgGrid.value.yAxis.max;
     let yMin = cfgGrid.value.yAxis.min;
 
-    if (cfgGrid.value.xAxis.auto) {
-        xMax = Math.max(
-            ...immutableDataset.value.flatMap((category) => {
-                return category.series.map((s) => s.x);
-            }),
-        );
-        xMin = Math.min(
-            ...immutableDataset.value.flatMap((category) => {
-                return category.series.map((s) => s.x);
-            }),
-        );
-    }
-    if (cfgGrid.value.yAxis.auto) {
-        yMax = Math.max(
-            ...immutableDataset.value.flatMap((category) => {
-                return category.series.map((s) => s.y);
-            }),
-        );
-        yMin = Math.min(
-            ...immutableDataset.value.flatMap((category) => {
-                return category.series.map((s) => s.y);
-            }),
-        );
+    if (cfgGrid.value.xAxis.auto || cfgGrid.value.yAxis.auto) {
+        let minimumX = Infinity,
+            maximumX = -Infinity,
+            minimumY = Infinity,
+            maximumY = -Infinity;
+        for (const category of immutableDataset.value)
+            for (const plot of category.series) {
+                minimumX = Math.min(minimumX, plot.x);
+                maximumX = Math.max(maximumX, plot.x);
+                minimumY = Math.min(minimumY, plot.y);
+                maximumY = Math.max(maximumY, plot.y);
+            }
+        if (cfgGrid.value.xAxis.auto) {
+            xMin = minimumX;
+            xMax = maximumX;
+        }
+        if (cfgGrid.value.yAxis.auto) {
+            yMin = minimumY;
+            yMax = maximumY;
+        }
     }
 
     return {
@@ -679,30 +631,6 @@ const mutableDataset = computed(() => {
     });
 });
 
-const datasetReference = computed(() => {
-    return immutableDataset.value.map((category, i) => {
-        return {
-            ...category,
-            shape: category.shape || 'circle',
-            series: category.series.map((s) => {
-                return {
-                    ...s,
-
-                    x: calcX(s.x),
-                    y: calcY(s.y),
-                    xValue: s.x,
-                    yValue: s.y,
-                    quadrantSide: getQuadrantSide({ x: s.x, y: s.y }),
-                    categoryName: category.name,
-                    category,
-                    shape: category.shape,
-                    color: category.color,
-                };
-            }),
-        };
-    });
-});
-
 const drawableDataset = computed(() => {
     if (debug.value) {
         FINAL_DATASET.value.forEach((ds, i) => {
@@ -733,7 +661,7 @@ const drawableDataset = computed(() => {
             ...category,
             shape: category.shape || 'circle',
             color: category.color || customPalette.value[i] || palette[i],
-            series: category.series.map((s) => {
+            series: category.series.map((s, plotIndex) => {
                 return {
                     ...s,
                     category,
@@ -745,7 +673,7 @@ const drawableDataset = computed(() => {
                     categoryName: category.name,
                     shape: category.shape,
                     color: category.color,
-                    uid: createUid(),
+                    uid: `plot_${category.id}_${s.id ?? plotIndex}`,
                 };
             }),
         };
@@ -753,6 +681,11 @@ const drawableDataset = computed(() => {
 });
 
 function calcX(x) {
+    if (
+        x === 0 ||
+        (x >= 0 ? axisValues.value.x.max : axisValues.value.x.min) === 0
+    )
+        return svg.value.centerX;
     if (x >= 0) {
         const ratio = x / axisValues.value.x.max;
         return svg.value.centerX + (svg.value.usableWidth / 2) * ratio;
@@ -763,6 +696,8 @@ function calcX(x) {
 }
 
 function calcY(y) {
+    if ((y >= 0 ? axisValues.value.y.max : axisValues.value.y.min) === 0)
+        return svg.value.centerY;
     if (y >= 0) {
         const ratio = y / axisValues.value.y.max;
         return svg.value.centerY + (1 - (svg.value.usableHeight / 2) * ratio);
@@ -807,15 +742,17 @@ const table = computed(() => {
         ];
     });
 
-    const itsShapes = tableData.map((td) => {
-        return {
-            shape: td.shape,
-            color: td.color,
-        };
-    });
-
-    return { head, body, itsShapes, tableData };
+    return { head, body, tableData };
 });
+
+function formatCoordinate(value, axis, rounding, context) {
+    return applyDataLabel(
+        cfgLabels.value.plotLabels[axis].formatter,
+        value,
+        dataLabel({ v: value, r: rounding }),
+        context,
+    );
+}
 
 const dataTable = computed(() => {
     const head = table.value.head;
@@ -827,22 +764,8 @@ const dataTable = computed(() => {
                 name: ds.category,
             },
             ds.name,
-            applyDataLabel(
-                cfgLabels.value.plotLabels.x.formatter,
-                ds.x,
-                dataLabel({
-                    v: ds.x,
-                    r: cfgLabels.value.plotLabels.rounding,
-                }),
-            ),
-            applyDataLabel(
-                cfgLabels.value.plotLabels.y.formatter,
-                ds.y,
-                dataLabel({
-                    v: ds.y,
-                    r: cfgLabels.value.plotLabels.rounding,
-                }),
-            ),
+            formatCoordinate(ds.x, 'x', cfgLabels.value.plotLabels.rounding),
+            formatCoordinate(ds.y, 'y', cfgLabels.value.plotLabels.rounding),
             ds.sideName || ds.quadrantSide,
         ];
     });
@@ -892,10 +815,10 @@ function segregate(id) {
 }
 
 const legendSet = computed(() => {
-    return datasetReference.value.map((category) => {
+    return immutableDataset.value.map((category) => {
         return {
             name: category.name,
-            shape: category.shape,
+            shape: category.shape || 'circle',
             color: category.color,
             id: category.id,
             opacity: segregated.value.includes(category.id) ? 0.5 : 1,
@@ -1015,8 +938,9 @@ function useTooltip(
     categoryIndex,
     triggerMode = 'pointer',
     flatIndex = null,
+    notify = true,
 ) {
-    if (FINAL_CONFIG.value.events.datapointEnter) {
+    if (notify && FINAL_CONFIG.value.events.datapointEnter) {
         FINAL_CONFIG.value.events.datapointEnter({
             datapoint: plot,
             seriesIndex: categoryIndex,
@@ -1042,24 +966,16 @@ function useTooltip(
 
     const customFormat = cfgTooltip.value.customFormat;
 
-    if (
-        isFunction(customFormat) &&
-        functionReturnsString(() =>
-            customFormat({
-                seriesIndex: categoryIndex,
-                datapoint: plot,
-                series: drawableDataset.value,
-                config: FINAL_CONFIG.value,
-            }),
-        )
-    ) {
-        tooltipContent.value = customFormat({
-            seriesIndex: categoryIndex,
-            datapoint: plot,
-            series: drawableDataset.value,
-            config: FINAL_CONFIG.value,
-        });
-    } else {
+    const formatted = isFunction(customFormat)
+        ? customFormat({
+              seriesIndex: categoryIndex,
+              datapoint: plot,
+              series: drawableDataset.value,
+              config: FINAL_CONFIG.value,
+          })
+        : undefined;
+    if (typeof formatted === 'string') tooltipContent.value = formatted;
+    else {
         let html = '';
 
         if (plot.quadrantSide) {
@@ -1067,24 +983,8 @@ function useTooltip(
         }
         html += `<div>${category.name}</div>`;
         html += `<div style="padding-bottom:6px;border-bottom:1px solid ${cfgTooltip.value.borderColor};margin-bottom:3px">${plot.name}</div>`;
-        html += `<div>${cfgGrid.value.xAxis.name ? cfgGrid.value.xAxis.name : 'x'}: <b>${applyDataLabel(
-            cfgLabels.value.plotLabels.x.formatter,
-            plot.xValue,
-            dataLabel({
-                v: plot.xValue,
-                r: cfgTooltip.value.roundingValue,
-            }),
-            { datapoint: plot, category, categoryIndex },
-        )}</b></div>`;
-        html += `<div>${cfgGrid.value.yAxis.name ? cfgGrid.value.yAxis.name : 'y'}: <b>${applyDataLabel(
-            cfgLabels.value.plotLabels.y.formatter,
-            plot.yValue,
-            dataLabel({
-                v: plot.yValue,
-                r: cfgTooltip.value.roundingValue,
-            }),
-            { datapoint: plot, category, categoryIndex },
-        )}</b></div>`;
+        html += `<div>${cfgGrid.value.xAxis.name ? cfgGrid.value.xAxis.name : 'x'}: <b>${formatCoordinate(plot.xValue, 'x', cfgTooltip.value.roundingValue, { datapoint: plot, category, categoryIndex })}</b></div>`;
+        html += `<div>${cfgGrid.value.yAxis.name ? cfgGrid.value.yAxis.name : 'y'}: <b>${formatCoordinate(plot.yValue, 'y', cfgTooltip.value.roundingValue, { datapoint: plot, category, categoryIndex })}</b></div>`;
 
         tooltipContent.value = `<div style="text-align:left;font-size:${cfgTooltip.value.fontSize}px">${html}</div>`;
     }
@@ -1096,6 +996,30 @@ function useTooltip(
     }
 
     isTooltip.value = true;
+}
+
+function getSlotDatapoint(category, plot, index) {
+    return {
+        ...plot,
+        onEnter: () => useTooltip(category, plot, index),
+        onLeave: () => onTrapLeave(plot, index),
+        onClick: () => selectPlot(category, plot, index),
+        isSelected: hoveredPlotId.value && plot.uid === hoveredPlotId.value,
+    };
+}
+function getPlotLabelAttributes(plot) {
+    return {
+        'data-cy': 'plot-label',
+        x: plot.x,
+        y:
+            plot.y +
+            cfgLabels.value.plotLabels.offsetY +
+            cfgChart.value.layout.plots.radius,
+        'text-anchor': 'middle',
+        'font-size':
+            cfgLabels.value.plotLabels.fontSize / (isZoom.value ? 1.5 : 1),
+        fill: cfgLabels.value.plotLabels.color,
+    };
 }
 
 function onTrapLeave(plot, index) {
@@ -1157,114 +1081,46 @@ function selectSide(side) {
     emit('selectSide', sideEmit);
 }
 
-const miniMap = computed(() => {
-    return {
-        TL: {
-            tl: {
-                x: svg.value.left + svg.value.usableWidth / 4 - 20,
-                y: 0,
-                fill: cfgLabels.value.quadrantLabels.tl.color,
-            },
-            tr: {
-                x: svg.value.left + svg.value.usableWidth / 4,
-                y: 0,
-                fill: cfgLabels.value.quadrantLabels.tr.color,
-            },
-            br: {
-                x: svg.value.left + svg.value.usableWidth / 4,
-                y: 20,
-                fill: cfgLabels.value.quadrantLabels.br.color,
-            },
-            bl: {
-                x: svg.value.left + svg.value.usableWidth / 4 - 20,
-                y: 20,
-                fill: cfgLabels.value.quadrantLabels.bl.color,
-            },
-            crosshairs: {
-                horizontal: `M ${svg.value.left + svg.value.usableWidth / 4 - 20},${20} ${svg.value.left + svg.value.usableWidth / 4 + 20},${20}`,
-                vertical: `M ${svg.value.left + svg.value.usableWidth / 4},${0} ${svg.value.left + svg.value.usableWidth / 4},${40}`,
-            },
-        },
-        TR: {
-            tl: {
-                x: svg.value.centerX + svg.value.usableWidth / 4 - 20,
-                y: 0,
-                fill: cfgLabels.value.quadrantLabels.tl.color,
-            },
-            tr: {
-                x: svg.value.centerX + svg.value.usableWidth / 4,
-                y: 0,
-                fill: cfgLabels.value.quadrantLabels.tr.color,
-            },
-            br: {
-                x: svg.value.centerX + svg.value.usableWidth / 4,
-                y: 20,
-                fill: cfgLabels.value.quadrantLabels.br.color,
-            },
-            bl: {
-                x: svg.value.centerX + svg.value.usableWidth / 4 - 20,
-                y: 20,
-                fill: cfgLabels.value.quadrantLabels.bl.color,
-            },
-            crosshairs: {
-                horizontal: `M ${svg.value.centerX + svg.value.usableWidth / 4 - 20},${20} ${svg.value.centerX + svg.value.usableWidth / 4 + 20},${20}`,
-                vertical: `M ${svg.value.centerX + svg.value.usableWidth / 4},${0} ${svg.value.centerX + svg.value.usableWidth / 4},${40}`,
-            },
-        },
-        BR: {
-            tl: {
-                x: svg.value.centerX + svg.value.usableWidth / 4 - 20,
-                y: svg.value.centerY - 48,
-                fill: cfgLabels.value.quadrantLabels.tl.color,
-            },
-            tr: {
-                x: svg.value.centerX + svg.value.usableWidth / 4,
-                y: svg.value.centerY - 48,
-                fill: cfgLabels.value.quadrantLabels.tr.color,
-            },
-            br: {
-                x: svg.value.centerX + svg.value.usableWidth / 4,
-                y: svg.value.centerY - 28,
-                fill: cfgLabels.value.quadrantLabels.br.color,
-            },
-            bl: {
-                x: svg.value.centerX + svg.value.usableWidth / 4 - 20,
-                y: svg.value.centerY - 28,
-                fill: cfgLabels.value.quadrantLabels.bl.color,
-            },
-            crosshairs: {
-                horizontal: `M ${svg.value.centerX + svg.value.usableWidth / 4 - 20},${svg.value.centerY - 28} ${svg.value.centerX + svg.value.usableWidth / 4 + 20},${svg.value.centerY - 28}`,
-                vertical: `M ${svg.value.centerX + svg.value.usableWidth / 4},${svg.value.centerY - 48} ${svg.value.centerX + svg.value.usableWidth / 4},${svg.value.centerY - 8}`,
-            },
-        },
-        BL: {
-            tl: {
-                x: svg.value.left + svg.value.usableWidth / 4 - 20,
-                y: svg.value.centerY - 48,
-                fill: cfgLabels.value.quadrantLabels.tl.color,
-            },
-            tr: {
-                x: svg.value.left + svg.value.usableWidth / 4,
-                y: svg.value.centerY - 48,
-                fill: cfgLabels.value.quadrantLabels.tr.color,
-            },
-            br: {
-                x: svg.value.left + svg.value.usableWidth / 4,
-                y: svg.value.centerY - 28,
-                fill: cfgLabels.value.quadrantLabels.br.color,
-            },
-            bl: {
-                x: svg.value.left + svg.value.usableWidth / 4 - 20,
-                y: svg.value.centerY - 28,
-                fill: cfgLabels.value.quadrantLabels.bl.color,
-            },
-            crosshairs: {
-                horizontal: `M ${svg.value.left + svg.value.usableWidth / 4 - 20},${svg.value.centerY - 28} ${svg.value.left + svg.value.usableWidth / 4 + 20},${svg.value.centerY - 28}`,
-                vertical: `M ${svg.value.left + svg.value.usableWidth / 4},${svg.value.centerY - 48} ${svg.value.left + svg.value.usableWidth / 4},${svg.value.centerY - 8}`,
-            },
-        },
-    };
-});
+const zoomMask = computed(
+    () =>
+        ({
+            TL: `${svg.value.left - 1},${svg.value.centerY} ${svg.value.centerX},${svg.value.centerY} ${svg.value.centerX},${svg.value.top - 1} ${svg.value.right},${svg.value.top - 1} ${svg.value.right},${svg.value.bottom} ${svg.value.left - 1},${svg.value.bottom} ${svg.value.left - 1},${svg.value.centerY}`,
+            TR: `${svg.value.left},${svg.value.top - 1} ${svg.value.centerX},${svg.value.top - 1} ${svg.value.centerX},${svg.value.centerY} ${svg.value.right + 1},${svg.value.centerY} ${svg.value.right + 1},${svg.value.bottom} ${svg.value.left},${svg.value.bottom} ${svg.value.left},${svg.value.top - 1}`,
+            BR: `${svg.value.left},${svg.value.top} ${svg.value.right + 1},${svg.value.top} ${svg.value.right + 1},${svg.value.centerY} ${svg.value.centerX},${svg.value.centerY} ${svg.value.centerX},${svg.value.bottom + 1} ${svg.value.left},${svg.value.bottom + 1} ${svg.value.left},${svg.value.top}`,
+            BL: `${svg.value.left - 1},${svg.value.top} ${svg.value.right},${svg.value.top} ${svg.value.right},${svg.value.bottom + 1} ${svg.value.centerX},${svg.value.bottom + 1} ${svg.value.centerX},${svg.value.centerY} ${svg.value.left - 1},${svg.value.centerY} ${svg.value.left - 1},${svg.value.top}`,
+        })[selectedSide.value],
+);
+
+const miniMap = computed(() =>
+    Object.fromEntries(
+        quadrantSides.map((side) => {
+            const x =
+                (side.right ? svg.value.centerX : svg.value.left) +
+                svg.value.usableWidth / 4;
+            const y = side.bottom ? svg.value.centerY - 48 : 0;
+            return [
+                side.id,
+                {
+                    ...Object.fromEntries(
+                        quadrantSides.map((cell) => [
+                            cell.key,
+                            {
+                                x: x + (cell.right ? 0 : -20),
+                                y: y + (cell.bottom ? 20 : 0),
+                                fill: cfgLabels.value.quadrantLabels[cell.key]
+                                    .color,
+                            },
+                        ]),
+                    ),
+                    crosshairs: {
+                        horizontal: `M ${x - 20},${y + 20} ${x + 20},${y + 20}`,
+                        vertical: `M ${x},${y} ${x},${y + 40}`,
+                    },
+                },
+            ];
+        }),
+    ),
+);
 
 /**
  * Return series with original x/y values and their computed quadrant labels.
@@ -1357,7 +1213,9 @@ const tableComponent = computed(() =>
 
 watch(
     () => mutableConfig.value.showTable,
-    (v) => syncTableVisibility(v, FINAL_CONFIG, tableUnit),
+    (v) => {
+        if (tableUnit.value) syncTableVisibility(v, FINAL_CONFIG, tableUnit);
+    },
 );
 
 function closeTable() {
@@ -1525,6 +1383,26 @@ const a11yPlots = computed(() => {
     });
 });
 
+watch(a11yPlots, (entries) => {
+    if (!hoveredPlotId.value) return;
+    const index = entries.findIndex(
+        (entry) => entry.plot.uid === hoveredPlotId.value,
+    );
+    if (index === -1) {
+        clearPlotSelection();
+        return;
+    }
+    const entry = entries[index];
+    useTooltip(
+        entry.category,
+        entry.plot,
+        entry.categoryIndex,
+        tooltipTriggerMode.value,
+        activeTooltipIndex.value === null ? null : index,
+        false,
+    );
+});
+
 defineExpose({
     getData,
     getImage,
@@ -1564,7 +1442,7 @@ defineExpose({
         </div>
 
         <A11yDataTable
-            v-if="a11yTable?.rows?.length"
+            v-if="FINAL_CONFIG.a11y.includeTable && a11yTable?.rows?.length"
             :uid="uid"
             :head="a11yTable.headers"
             :body="a11yTable.rows"
@@ -1837,65 +1715,27 @@ defineExpose({
 
                 <!-- QUADRANT LABELS -->
                 <g v-if="cfgLabels.quadrantLabels.show && !isZoom">
-                    <!-- TL -->
-                    <text
-                        data-cy="quadrant-label-tl"
-                        v-if="cfgLabels.quadrantLabels.tl.text"
-                        :x="0"
-                        :y="svg.top - svg.padding / 2"
-                        text-anchor="start"
-                        :fill="cfgLabels.quadrantLabels.tl.color"
-                        :font-size="cfgLabels.quadrantLabels.tl.fontSize"
-                        :style="`font-weight:${cfgLabels.quadrantLabels.tl.bold ? 'bold' : ''}`"
-                        @click="selectSide('tl')"
-                    >
-                        {{ cfgLabels.quadrantLabels.tl.text }}
-                    </text>
-
-                    <!-- TR -->
-                    <text
-                        data-cy="quadrant-label-tr"
-                        v-if="cfgLabels.quadrantLabels.tr.text"
-                        :x="svg.width"
-                        :y="svg.top - svg.padding / 2"
-                        text-anchor="end"
-                        :fill="cfgLabels.quadrantLabels.tr.color"
-                        :font-size="cfgLabels.quadrantLabels.tr.fontSize"
-                        :style="`font-weight:${cfgLabels.quadrantLabels.tr.bold ? 'bold' : ''}`"
-                        @click="selectSide('tr')"
-                    >
-                        {{ cfgLabels.quadrantLabels.tr.text }}
-                    </text>
-
-                    <!-- BR -->
-                    <text
-                        data-cy="quadrant-label-br"
-                        v-if="cfgLabels.quadrantLabels.br.text"
-                        :x="svg.width"
-                        :y="svg.bottom + svg.padding * 0.7"
-                        text-anchor="end"
-                        :fill="cfgLabels.quadrantLabels.br.color"
-                        :font-size="cfgLabels.quadrantLabels.br.fontSize"
-                        :style="`font-weight:${cfgLabels.quadrantLabels.br.bold ? 'bold' : ''}`"
-                        @click="selectSide('br')"
-                    >
-                        {{ cfgLabels.quadrantLabels.br.text }}
-                    </text>
-
-                    <!-- BL -->
-                    <text
-                        data-cy="quadrant-label-bl"
-                        v-if="cfgLabels.quadrantLabels.bl.text"
-                        :x="0"
-                        :y="svg.bottom + svg.padding * 0.7"
-                        text-anchor="start"
-                        :fill="cfgLabels.quadrantLabels.bl.color"
-                        :font-size="cfgLabels.quadrantLabels.bl.fontSize"
-                        :style="`font-weight:${cfgLabels.quadrantLabels.bl.bold ? 'bold' : ''}`"
-                        @click="selectSide('bl')"
-                    >
-                        {{ cfgLabels.quadrantLabels.bl.text }}
-                    </text>
+                    <template v-for="side in quadrantSides" :key="side.id">
+                        <text
+                            v-if="cfgLabels.quadrantLabels[side.key].text"
+                            :data-cy="`quadrant-label-${side.key}`"
+                            :x="side.right ? svg.width : 0"
+                            :y="
+                                side.bottom
+                                    ? svg.bottom + svg.padding * 0.7
+                                    : svg.top - svg.padding / 2
+                            "
+                            :text-anchor="side.right ? 'end' : 'start'"
+                            :fill="cfgLabels.quadrantLabels[side.key].color"
+                            :font-size="
+                                cfgLabels.quadrantLabels[side.key].fontSize
+                            "
+                            :style="`font-weight:${cfgLabels.quadrantLabels[side.key].bold ? 'bold' : ''}`"
+                            @click="selectSide(side.key)"
+                        >
+                            {{ cfgLabels.quadrantLabels[side.key].text }}
+                        </text>
+                    </template>
                 </g>
 
                 <!-- AXIS VALUES -->
@@ -1911,13 +1751,10 @@ defineExpose({
                         :fill="cfgLabels.axisLabels.color.positive"
                     >
                         {{
-                            applyDataLabel(
-                                cfgLabels.plotLabels.y.formatter,
+                            formatCoordinate(
                                 axisValues.y.max,
-                                dataLabel({
-                                    v: axisValues.y.max,
-                                    r: cfgLabels.plotLabels.rounding,
-                                }),
+                                'y',
+                                cfgLabels.plotLabels.rounding,
                             )
                         }}
                     </text>
@@ -1943,13 +1780,10 @@ defineExpose({
                         :fill="cfgLabels.axisLabels.color.negative"
                     >
                         {{
-                            applyDataLabel(
-                                cfgLabels.plotLabels.y.formatter,
+                            formatCoordinate(
                                 axisValues.y.min,
-                                dataLabel({
-                                    v: axisValues.y.min,
-                                    r: cfgLabels.plotLabels.rounding,
-                                }),
+                                'y',
+                                cfgLabels.plotLabels.rounding,
                             )
                         }}
                     </text>
@@ -1965,13 +1799,10 @@ defineExpose({
                         :fill="cfgLabels.axisLabels.color.negative"
                     >
                         {{
-                            applyDataLabel(
-                                cfgLabels.plotLabels.x.formatter,
+                            formatCoordinate(
                                 axisValues.x.min,
-                                dataLabel({
-                                    v: axisValues.x.min,
-                                    r: cfgLabels.plotLabels.rounding,
-                                }),
+                                'x',
+                                cfgLabels.plotLabels.rounding,
                             )
                         }}
                     </text>
@@ -1987,13 +1818,10 @@ defineExpose({
                         :fill="cfgLabels.axisLabels.color.positive"
                     >
                         {{
-                            applyDataLabel(
-                                cfgLabels.plotLabels.x.formatter,
+                            formatCoordinate(
                                 axisValues.x.max,
-                                dataLabel({
-                                    v: axisValues.x.max,
-                                    r: cfgLabels.plotLabels.rounding,
-                                }),
+                                'x',
+                                cfgLabels.plotLabels.rounding,
                             )
                         }}
                     </text>
@@ -2032,83 +1860,14 @@ defineExpose({
                 <!-- SIDE TRAPS -->
                 <g>
                     <rect
-                        data-cy="side-trap-tl"
-                        @click="selectQuadrantSide('TL')"
-                        :x="svg.left"
-                        :y="svg.top"
-                        :width="
-                            svg.usableWidth / 2 <= 0
-                                ? 0.001
-                                : svg.usableWidth / 2
-                        "
-                        :height="
-                            svg.usableHeight / 2 <= 0
-                                ? 0.001
-                                : svg.usableHeight / 2
-                        "
-                        fill="transparent"
-                        :class="{
-                            'vue-data-ui-zoom-plus': !isZoom && zoomEnabled,
-                            'vue-data-ui-zoom-minus': isZoom && zoomEnabled,
-                        }"
-                    />
-                    <rect
-                        data-cy="side-trap-tr"
-                        @click="selectQuadrantSide('TR')"
-                        :x="svg.centerX"
-                        :y="svg.top"
-                        :width="
-                            svg.usableWidth / 2 <= 0
-                                ? 0.001
-                                : svg.usableWidth / 2
-                        "
-                        :height="
-                            svg.usableHeight / 2 <= 0
-                                ? 0.001
-                                : svg.usableHeight / 2
-                        "
-                        fill="transparent"
-                        :class="{
-                            'vue-data-ui-zoom-plus': !isZoom && zoomEnabled,
-                            'vue-data-ui-zoom-minus': isZoom && zoomEnabled,
-                        }"
-                    />
-                    <rect
-                        data-cy="side-trap-br"
-                        @click="selectQuadrantSide('BR')"
-                        :x="svg.centerX"
-                        :y="svg.centerY"
-                        :width="
-                            svg.usableWidth / 2 <= 0
-                                ? 0.001
-                                : svg.usableWidth / 2
-                        "
-                        :height="
-                            svg.usableHeight / 2 <= 0
-                                ? 0.001
-                                : svg.usableHeight / 2
-                        "
-                        fill="transparent"
-                        :class="{
-                            'vue-data-ui-zoom-plus': !isZoom && zoomEnabled,
-                            'vue-data-ui-zoom-minus': isZoom && zoomEnabled,
-                        }"
-                    />
-                    <rect
-                        data-cy="side-trap-bl"
-                        @click="selectQuadrantSide('BL')"
-                        :x="svg.left"
-                        :y="svg.centerY"
-                        :width="
-                            svg.usableWidth / 2 <= 0
-                                ? 0.001
-                                : svg.usableWidth / 2
-                        "
-                        :height="
-                            svg.usableHeight / 2 <= 0
-                                ? 0.001
-                                : svg.usableHeight / 2
-                        "
+                        v-for="side in quadrantSides"
+                        :key="side.id"
+                        :data-cy="`side-trap-${side.key}`"
+                        @click="selectQuadrantSide(side.id)"
+                        :x="side.right ? svg.centerX : svg.left"
+                        :y="side.bottom ? svg.centerY : svg.top"
+                        :width="Math.max(0.001, svg.usableWidth / 2)"
+                        :height="Math.max(0.001, svg.usableHeight / 2)"
                         fill="transparent"
                         :class="{
                             'vue-data-ui-zoom-plus': !isZoom && zoomEnabled,
@@ -2138,26 +1897,11 @@ defineExpose({
                                     <slot
                                         name="datapoint"
                                         v-bind="{
-                                            datapoint: {
-                                                ...plot,
-                                                onEnter: () =>
-                                                    useTooltip(
-                                                        category,
-                                                        plot,
-                                                        i,
-                                                    ),
-                                                onLeave: () =>
-                                                    onTrapLeave(plot, i),
-                                                onClick: () =>
-                                                    selectPlot(
-                                                        category,
-                                                        plot,
-                                                        i,
-                                                    ),
-                                                isSelected:
-                                                    hoveredPlotId &&
-                                                    plot.uid === hoveredPlotId,
-                                            },
+                                            datapoint: getSlotDatapoint(
+                                                category,
+                                                plot,
+                                                i,
+                                            ),
                                         }"
                                     />
                                 </foreignObject>
@@ -2184,17 +1928,11 @@ defineExpose({
                                 <slot
                                     name="datapointSvg"
                                     v-bind="{
-                                        datapoint: {
-                                            ...plot,
-                                            onEnter: () =>
-                                                useTooltip(category, plot, i),
-                                            onLeave: () => onTrapLeave(plot, i),
-                                            onClick: () =>
-                                                selectPlot(category, plot, i),
-                                            isSelected:
-                                                hoveredPlotId &&
-                                                plot.uid === hoveredPlotId,
-                                        },
+                                        datapoint: getSlotDatapoint(
+                                            category,
+                                            plot,
+                                            i,
+                                        ),
                                     }"
                                 />
                             </g>
@@ -2256,54 +1994,26 @@ defineExpose({
                     >
                         <g v-for="category in drawableDataset">
                             <g v-for="plot in category.series">
-                                <!-- SINGLE LINE -->
                                 <text
                                     v-if="!String(plot.name).includes('\n')"
-                                    data-cy="plot-label"
-                                    :x="plot.x"
-                                    :y="
-                                        plot.y +
-                                        cfgLabels.plotLabels.offsetY +
-                                        cfgChart.layout.plots.radius
-                                    "
-                                    text-anchor="middle"
-                                    :font-size="
-                                        cfgLabels.plotLabels.fontSize /
-                                        (isZoom ? 1.5 : 1)
-                                    "
-                                    :fill="cfgLabels.plotLabels.color"
+                                    v-bind="getPlotLabelAttributes(plot)"
                                 >
                                     {{ plot.name }}
                                 </text>
                                 <text
                                     v-else
-                                    data-cy="plot-label"
-                                    :x="plot.x"
-                                    :y="
-                                        plot.y +
-                                        cfgLabels.plotLabels.offsetY +
-                                        cfgChart.layout.plots.radius
-                                    "
-                                    text-anchor="middle"
-                                    :font-size="
-                                        cfgLabels.plotLabels.fontSize /
-                                        (isZoom ? 1.5 : 1)
-                                    "
-                                    :fill="cfgLabels.plotLabels.color"
+                                    v-bind="getPlotLabelAttributes(plot)"
                                     v-html="
                                         createTSpansFromLineBreaksOnX({
                                             content: String(plot.name),
                                             fontSize:
-                                                cfgChart.layout.labels
-                                                    .plotLabels.fontSize /
+                                                cfgLabels.plotLabels.fontSize /
                                                 (isZoom ? 1.5 : 1),
-                                            fill: cfgChart.layout.labels
-                                                .plotLabels.color,
+                                            fill: cfgLabels.plotLabels.color,
                                             x: plot.x,
                                             y:
                                                 plot.y +
-                                                cfgChart.layout.labels
-                                                    .plotLabels.offsetY +
+                                                cfgLabels.plotLabels.offsetY +
                                                 cfgChart.layout.plots.radius,
                                         })
                                     "
@@ -2340,26 +2050,8 @@ defineExpose({
                 <!-- HIDDEN AREAS ON ZOOM -->
                 <g v-if="isZoom" class="vue-ui-dna">
                     <polygon
-                        v-if="selectedSide === 'TL'"
-                        :points="`${svg.left - 1},${svg.centerY} ${svg.centerX},${svg.centerY} ${svg.centerX},${svg.top - 1} ${svg.right},${svg.top - 1} ${svg.right},${svg.bottom} ${svg.left - 1},${svg.bottom} ${svg.left - 1},${svg.centerY}`"
-                        :fill="cfgChart.backgroundColor"
-                        style="opacity: 1"
-                    />
-                    <polygon
-                        v-if="selectedSide === 'TR'"
-                        :points="`${svg.left},${svg.top - 1} ${svg.centerX},${svg.top - 1} ${svg.centerX},${svg.centerY} ${svg.right + 1},${svg.centerY} ${svg.right + 1},${svg.bottom} ${svg.left},${svg.bottom} ${svg.left},${svg.top - 1}`"
-                        :fill="cfgChart.backgroundColor"
-                        style="opacity: 1"
-                    />
-                    <polygon
-                        v-if="selectedSide === 'BR'"
-                        :points="`${svg.left},${svg.top} ${svg.right + 1},${svg.top} ${svg.right + 1},${svg.centerY} ${svg.centerX},${svg.centerY} ${svg.centerX},${svg.bottom + 1} ${svg.left},${svg.bottom + 1} ${svg.left},${svg.top}`"
-                        :fill="cfgChart.backgroundColor"
-                        style="opacity: 1"
-                    />
-                    <polygon
-                        v-if="selectedSide === 'BL'"
-                        :points="`${svg.left - 1},${svg.top} ${svg.right},${svg.top} ${svg.right},${svg.bottom + 1} ${svg.centerX},${svg.bottom + 1} ${svg.centerX},${svg.centerY} ${svg.left - 1},${svg.centerY} ${svg.left - 1},${svg.top}`"
+                        v-if="zoomMask"
+                        :points="zoomMask"
                         :fill="cfgChart.backgroundColor"
                         style="opacity: 1"
                     />
@@ -2388,63 +2080,20 @@ defineExpose({
                 <!-- MINI MAP -->
                 <g v-if="isZoom && selectedSide">
                     <rect
-                        data-cy="minimap-tl"
-                        :x="miniMap[selectedSide].tl.x"
-                        :y="miniMap[selectedSide].tl.y"
-                        height="20"
+                        v-for="side in quadrantSides"
+                        :key="side.id"
+                        :data-cy="`minimap-${side.key}`"
+                        :x="miniMap[selectedSide][side.key].x"
+                        :y="miniMap[selectedSide][side.key].y"
                         width="20"
-                        :fill="miniMap[selectedSide].tl.fill"
-                        :style="`cursor: ${isCursorPointer ? 'pointer' : 'default'}; opacity: ${selectedSide === 'TL' ? 1 : 0.2}`"
-                        @click="selectQuadrantSide('TL')"
+                        height="20"
+                        :fill="miniMap[selectedSide][side.key].fill"
+                        :style="`cursor: ${isCursorPointer ? 'pointer' : 'default'}; opacity: ${selectedSide === side.id ? 1 : 0.2}`"
+                        @click="selectQuadrantSide(side.id)"
                         :class="{
                             'vue-ui-quadrant-mini-map-cell': true,
                             'vue-ui-quadrant-mini-map-cell-selectable':
-                                selectedSide !== 'TL',
-                        }"
-                    />
-                    <rect
-                        data-cy="minimap-tr"
-                        :x="miniMap[selectedSide].tr.x"
-                        :y="miniMap[selectedSide].tr.y"
-                        height="20"
-                        width="20"
-                        :fill="miniMap[selectedSide].tr.fill"
-                        :style="`cursor: ${isCursorPointer ? 'pointer' : 'default'}; opacity: ${selectedSide === 'TR' ? 1 : 0.2}`"
-                        @click="selectQuadrantSide('TR')"
-                        :class="{
-                            'vue-ui-quadrant-mini-map-cell': true,
-                            'vue-ui-quadrant-mini-map-cell-selectable':
-                                selectedSide !== 'TR',
-                        }"
-                    />
-                    <rect
-                        data-cy="minimap-br"
-                        :x="miniMap[selectedSide].br.x"
-                        :y="miniMap[selectedSide].br.y"
-                        height="20"
-                        width="20"
-                        :fill="miniMap[selectedSide].br.fill"
-                        :style="`cursor: ${isCursorPointer ? 'pointer' : 'default'}; opacity: ${selectedSide === 'BR' ? 1 : 0.2}`"
-                        @click="selectQuadrantSide('BR')"
-                        :class="{
-                            'vue-ui-quadrant-mini-map-cell': true,
-                            'vue-ui-quadrant-mini-map-cell-selectable':
-                                selectedSide !== 'BR',
-                        }"
-                    />
-                    <rect
-                        data-cy="minimap-bl"
-                        :x="miniMap[selectedSide].bl.x"
-                        :y="miniMap[selectedSide].bl.y"
-                        height="20"
-                        width="20"
-                        :fill="miniMap[selectedSide].bl.fill"
-                        :style="`cursor: ${isCursorPointer ? 'pointer' : 'default'}; opacity: ${selectedSide === 'BL' ? 1 : 0.2}`"
-                        @click="selectQuadrantSide('BL')"
-                        :class="{
-                            'vue-ui-quadrant-mini-map-cell': true,
-                            'vue-ui-quadrant-mini-map-cell-selectable':
-                                selectedSide !== 'BL',
+                                selectedSide !== side.id,
                         }"
                     />
                     <path

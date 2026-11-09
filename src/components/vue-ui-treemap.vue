@@ -38,7 +38,6 @@ import {
     deepClone,
     downloadCsv,
     error,
-    functionReturnsString,
     isFunction,
     lightenHexColor,
     objectIsEmpty,
@@ -47,7 +46,6 @@ import {
     XMLNS,
 } from '../lib';
 import { generateTreemap } from '../treemap';
-import { throttle } from '../canvas-lib';
 import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 import { useLoading } from '../useLoading';
@@ -131,8 +129,6 @@ const breadcrumbsNav = ref(null);
 const readyTeleport = ref(false);
 const tableUnit = ref(null);
 const userOptionsRef = ref(null);
-const rootLayout = ref(null);
-const rootTextCache = ref(new Map());
 
 const activeTooltipIndex = ref(null); // a11y
 const tooltipA11yPosition = ref({ x: 0, y: 0 }); // a11y
@@ -386,31 +382,13 @@ const currentSet = ref(immutableDataset.value);
 const rootColorMap = shallowRef(new Map());
 
 watch(
-    [immutableDataset, () => FINAL_CONFIG.value],
-    () => {
-        rootLayout.value = null;
-        rootTextCache.value = new Map();
-    },
-    { deep: true },
-);
-
-watch(
     () => segregated.value,
     () => {
-        rootLayout.value = null;
-        rootTextCache.value = new Map();
         syncToZoomLevel();
         legendStep.value += 1;
         tableStep.value += 1;
     },
     { deep: true },
-);
-
-watch(
-    [() => chartDimensions.value.width, () => chartDimensions.value.height],
-    () => {
-        rootTextCache.value = new Map();
-    },
 );
 
 function applyIdsAndTopLevelColors(tree) {
@@ -450,6 +428,22 @@ function propagateColor(node, baseColor) {
         child.color = childBaseColor;
         propagateColor(child, childBaseColor);
     });
+}
+
+const nodesById = computed(() => {
+    const nodes = new Map();
+    function visit(items) {
+        for (const node of items) {
+            nodes.set(node.id, node);
+            if (Array.isArray(node.children)) visit(node.children);
+        }
+    }
+    visit(immutableDataset.value);
+    return nodes;
+});
+
+function findNodeById(id) {
+    return nodesById.value.get(id) ?? null;
 }
 
 function getTopAncestorId(id) {
@@ -502,7 +496,61 @@ watch(
 );
 
 const resizeObserver = shallowRef(null);
-const observedEl = shallowRef(null);
+let resizeFrame = null;
+let clickSuppressionTimer = null;
+let chartDisposed = false;
+
+function stopResponsive() {
+    resizeObserver.value?.disconnect();
+    resizeObserver.value = null;
+    if (resizeFrame !== null) cancelAnimationFrame(resizeFrame);
+    resizeFrame = null;
+}
+
+function updateChartSizing() {
+    stopResponsive();
+    if (chartDisposed || !treemapChart.value) return;
+    if (!FINAL_CONFIG.value.responsive) {
+        chartDimensions.value = {
+            width: cfgChart.value.width,
+            height: cfgChart.value.height,
+        };
+        return;
+    }
+    const handleResize = () => {
+        if (
+            chartDisposed ||
+            !FINAL_CONFIG.value.responsive ||
+            resizeFrame !== null
+        )
+            return;
+        resizeFrame = requestAnimationFrame(() => {
+            resizeFrame = null;
+            if (chartDisposed) return;
+            const { width, height } = useResponsive({
+                chart: treemapChart.value,
+                title: cfgChart.value.title.text ? chartTitle.value : null,
+                legend: cfgLegend.value.show ? chartLegend.value : null,
+                source: source.value,
+                noTitle: noTitle.value,
+            });
+            chartDimensions.value = { width, height: height - 12 };
+        });
+    };
+    resizeObserver.value = new ResizeObserver(handleResize);
+    resizeObserver.value.observe(treemapChart.value.parentNode);
+    handleResize();
+}
+
+watch(
+    [
+        () => FINAL_CONFIG.value.responsive,
+        () => cfgChart.value.width,
+        () => cfgChart.value.height,
+    ],
+    updateChartSizing,
+    { flush: 'post' },
+);
 
 onMounted(() => {
     readyTeleport.value = true;
@@ -535,42 +583,13 @@ function prepareChart() {
         manualLoading.value = FINAL_CONFIG.value.loading;
     }
 
-    if (FINAL_CONFIG.value.responsive) {
-        const handleResize = throttle(() => {
-            const { width, height } = useResponsive({
-                chart: treemapChart.value,
-                title: cfgChart.value.title.text ? chartTitle.value : null,
-                legend: cfgLegend.value.show ? chartLegend.value : null,
-                source: source.value,
-                noTitle: noTitle.value,
-            });
-
-            requestAnimationFrame(() => {
-                chartDimensions.value.width = width;
-                chartDimensions.value.height = height - 12;
-            });
-        });
-
-        if (resizeObserver.value) {
-            if (observedEl.value) {
-                resizeObserver.value.unobserve(observedEl.value);
-            }
-            resizeObserver.value.disconnect();
-        }
-
-        resizeObserver.value = new ResizeObserver(handleResize);
-        observedEl.value = treemapChart.value.parentNode;
-        resizeObserver.value.observe(observedEl.value);
-    }
+    updateChartSizing();
 }
 
 onBeforeUnmount(() => {
-    if (resizeObserver.value) {
-        if (observedEl.value) {
-            resizeObserver.value.unobserve(observedEl.value);
-        }
-        resizeObserver.value.disconnect();
-    }
+    chartDisposed = true;
+    stopResponsive();
+    clearTimeout(clickSuppressionTimer);
 });
 
 const datasetCopy = computed(() => {
@@ -595,21 +614,11 @@ const total = computed(() =>
         .reduce((a, b) => a + b, 0),
 );
 
-const orderedDataset = computed({
-    get() {
-        let ds = [...datasetCopy.value];
-        if (cfgLayout.value.sorted) {
-            ds = [...datasetCopy.value].sort((a, b) => b.value - a.value);
-        }
-        return ds.map((d) => {
-            return {
-                ...d,
-            };
-        });
-    },
-    set(val) {
-        return val;
-    },
+const orderedDataset = computed(() => {
+    const nodes = [...datasetCopy.value];
+    return cfgLayout.value.sorted
+        ? nodes.sort((a, b) => b.value - a.value)
+        : nodes;
 });
 
 function calcRectProportion(rect, totalValue) {
@@ -800,10 +809,8 @@ function buildVisibleTreemapLayout(
     return output;
 }
 
-const squarifiedRaw = computed(() => {
-    const source = currentSet.value.length
-        ? currentSet.value
-        : orderedDataset.value;
+const squarified = computed(() => {
+    const source = orderedDataset.value;
 
     const levelTotal =
         source.map((el) => Number(el.value) || 0).reduce((a, b) => a + b, 0) ||
@@ -862,99 +869,12 @@ const squarifiedRaw = computed(() => {
     return buildVisibleTreemapLayout(nodes, bounds);
 });
 
-const squarified = computed(() => squarifiedRaw.value);
-
 function getStrokeWidth(rect) {
     const base =
         selectedRect.value && selectedRect.value.id === rect.id
             ? cfgLayout.value.rects.selected.strokeWidth
             : cfgLayout.value.rects.strokeWidth;
     return base * inverseScale.value;
-}
-
-function computeParentWrapping(rects) {
-    const visibleRootId = drillStack.value.length
-        ? drillStack.value[drillStack.value.length - 1]
-        : null;
-
-    const wrapperMap = new Map();
-    const ancestorsByLeaf = new Map();
-    const descendantsByParent = new Map();
-    const depthByParent = new Map();
-
-    for (const rect of rects) {
-        let ancestors = getAncestorIds(rect.id);
-
-        if (visibleRootId) {
-            const idx = ancestors.indexOf(visibleRootId);
-            if (idx >= 0) {
-                ancestors = ancestors.slice(idx);
-            } else {
-                // this rect is outside the visible subtree
-                continue;
-            }
-        }
-
-        ancestors = ancestors.filter((id) => {
-            const n = findNodeById(id);
-            return n && Array.isArray(n.children) && n.children.length;
-        });
-
-        if (!ancestors.length) continue;
-
-        // Build | update wrappers for each ancestor
-        ancestors.forEach((ancestorId, depthIndex) => {
-            const n = findNodeById(ancestorId);
-            if (!n) return;
-
-            let w = wrapperMap.get(ancestorId);
-            if (!w) {
-                w = {
-                    id: ancestorId,
-                    name: n.name,
-                    value: n.value,
-                    color: n.color,
-                    x0: rect.x0,
-                    y0: rect.y0,
-                    x1: rect.x1,
-                    y1: rect.y1,
-                    depth: depthIndex, // depth from visible root
-                };
-                wrapperMap.set(ancestorId, w);
-            } else {
-                w.x0 = Math.min(w.x0, rect.x0);
-                w.y0 = Math.min(w.y0, rect.y0);
-                w.x1 = Math.max(w.x1, rect.x1);
-                w.y1 = Math.max(w.y1, rect.y1);
-                w.depth = Math.min(w.depth, depthIndex);
-            }
-
-            let set = descendantsByParent.get(ancestorId);
-            if (!set) {
-                set = new Set();
-                descendantsByParent.set(ancestorId, set);
-            }
-            set.add(rect.id);
-
-            const currentDepth = depthByParent.get(ancestorId);
-            if (currentDepth == null || depthIndex < currentDepth) {
-                depthByParent.set(ancestorId, depthIndex);
-            }
-        });
-
-        ancestorsByLeaf.set(rect.id, ancestors);
-    }
-
-    const wrappers = Array.from(wrapperMap.values()).map((w) => ({
-        ...w,
-        depth: depthByParent.get(w.id) ?? w.depth ?? 0,
-        childrenIds: Array.from(descendantsByParent.get(w.id) || []),
-    }));
-
-    return {
-        wrappers,
-        ancestorsByLeaf,
-    };
 }
 
 function getHeight({ y0, y1 }) {
@@ -1036,8 +956,7 @@ function getFullLabelLines(rect, seriesIndex) {
     return [`${rect.name}`, formattedValue].filter((line) => `${line}`.length);
 }
 
-function fullLabelFits(rect, fontSize, seriesIndex) {
-    const lines = getFullLabelLines(rect, seriesIndex);
+function fullLabelFits(rect, fontSize, lines) {
     const textBox = getTreemapTextBoxForFontSize(rect, fontSize);
     if (!lines.length || textBox.width <= 0 || textBox.height <= 0) {
         return false;
@@ -1053,13 +972,7 @@ function fullLabelFits(rect, fontSize, seriesIndex) {
     });
 }
 
-function getComfortableClippedFontSize(
-    rect,
-    seriesIndex,
-    lowerBound,
-    upperBound,
-) {
-    const lines = getFullLabelLines(rect, seriesIndex);
+function getComfortableClippedFontSize(rect, lines, lowerBound, upperBound) {
     const longestLineLength = Math.max(
         1,
         ...lines.map((line) => String(line).length),
@@ -1080,7 +993,11 @@ function getComfortableClippedFontSize(
     );
 }
 
-function calcFontSize(rect, seriesIndex) {
+function calcFontSize(
+    rect,
+    seriesIndex,
+    lines = getFullLabelLines(rect, seriesIndex),
+) {
     const { lowerBound, upperBound } = getLabelFontBounds();
     const maxOfMinDim = 0.9;
 
@@ -1091,19 +1008,14 @@ function calcFontSize(rect, seriesIndex) {
     );
     const comfortableFontSize = Math.min(
         maxRectFontSize,
-        getComfortableClippedFontSize(
-            rect,
-            seriesIndex,
-            lowerBound,
-            upperBound,
-        ),
+        getComfortableClippedFontSize(rect, lines, lowerBound, upperBound),
     );
 
-    if (fullLabelFits(rect, comfortableFontSize, seriesIndex)) {
+    if (fullLabelFits(rect, comfortableFontSize, lines)) {
         return comfortableFontSize;
     }
 
-    if (!fullLabelFits(rect, lowerBound, seriesIndex)) {
+    if (!fullLabelFits(rect, lowerBound, lines)) {
         return comfortableFontSize;
     }
 
@@ -1113,7 +1025,7 @@ function calcFontSize(rect, seriesIndex) {
 
     for (let i = 0; i < 8; i += 1) {
         const middle = (start + end) / 2;
-        if (fullLabelFits(rect, middle, seriesIndex)) {
+        if (fullLabelFits(rect, middle, lines)) {
             best = middle;
             start = middle;
         } else {
@@ -1141,21 +1053,6 @@ const initialViewBox = computed(() => {
         height: svg.value.vbHeight,
     };
 });
-
-function findNodeById(id, nodes = immutableDataset.value) {
-    for (const node of nodes) {
-        if (node.id === id) {
-            return node;
-        }
-        if (node.children) {
-            const foundNode = findNodeById(id, node.children);
-            if (foundNode) {
-                return foundNode;
-            }
-        }
-    }
-    return null;
-}
 
 function getAncestorIds(id) {
     const ancestors = [];
@@ -1271,6 +1168,35 @@ const breadcrumbs = computed(() => {
 
 const selectedRect = shallowRef(null);
 
+const legendTotal = computed(() =>
+    immutableDataset.value.reduce((sum, node) => sum + node.value, 0),
+);
+
+function getLegendDisplay(el) {
+    const cfg = cfgLegend.value;
+    const value = cfg.showValue
+        ? applyDataLabel(
+              cfgLabels.value.formatter,
+              el.value,
+              dataLabel({
+                  p: cfgLabels.value.prefix,
+                  v: el.value,
+                  s: cfgLabels.value.suffix,
+                  r: cfg.roundingValue,
+              }),
+              { datapoint: el },
+          )
+        : '';
+    let percentage = '';
+    if (cfg.showPercentage) {
+        percentage = segregated.value.includes(el.id)
+            ? '- %'
+            : `${isNaN(el.value / total.value) ? '-' : ((el.value / total.value) * 100).toFixed(cfg.roundingPercentage)}%`;
+        if (cfg.showValue) percentage = ` (${percentage})`;
+    }
+    return `${el.name}${cfg.showPercentage || cfg.showValue ? ': ' : ''}${value}${percentage}`;
+}
+
 const legendSet = computed(() => {
     return immutableDataset.value
         .map((ds, i) => {
@@ -1286,32 +1212,13 @@ const legendSet = computed(() => {
         })
         .sort((a, b) => b.value - a.value)
         .map((el, _i) => {
-            const proportion =
-                el.value /
-                immutableDataset.value
-                    .map((m) => m.value)
-                    .reduce((a, b) => a + b, 0);
             return {
                 ...el,
-                proportion,
+                proportion: el.value / legendTotal.value,
                 isSegregated: segregated.value.includes(el.id),
                 segregate: () => segregate(el),
                 opacity: segregated.value.includes(el.id) ? 0.5 : 1,
-                display: `${el.name}${cfgLegend.value.showPercentage || cfgLegend.value.showValue ? ': ' : ''}${
-                    !cfgLegend.value.showValue
-                        ? ''
-                        : applyDataLabel(
-                              cfgLabels.value.formatter,
-                              el.value,
-                              dataLabel({
-                                  p: cfgLabels.value.prefix,
-                                  v: el.value,
-                                  s: cfgLabels.value.suffix,
-                                  r: cfgLegend.value.roundingValue,
-                              }),
-                              { datapoint: el },
-                          )
-                }${!cfgLegend.value.showPercentage ? '' : !segregated.value.includes(el.id) ? `${cfgLegend.value.showValue ? ' (' : ''}${isNaN(el.value / total.value) ? '-' : ((el.value / total.value) * 100).toFixed(cfgLegend.value.roundingPercentage)}%${cfgLegend.value.showValue ? ')' : ''}` : `${cfgLegend.value.showValue ? ' (' : ''}- %${cfgLegend.value.showValue ? ')' : ''}`}`,
+                display: getLegendDisplay(el),
             };
         });
 });
@@ -1443,23 +1350,11 @@ function useTooltip({ datapoint, seriesIndex, triggerMode = 'pointer' }) {
 
     const customFormat = cfgTooltip.value.customFormat;
 
-    if (
-        isFunction(customFormat) &&
-        functionReturnsString(() =>
-            customFormat({
-                seriesIndex,
-                datapoint,
-                series: datasetCopy.value,
-                config: FINAL_CONFIG.value,
-            }),
-        )
-    ) {
-        tooltipContent.value = customFormat({
-            seriesIndex,
-            datapoint,
-            series: datasetCopy.value,
-            config: FINAL_CONFIG.value,
-        });
+    const formatted = isFunction(customFormat)
+        ? customFormat(dataTooltipSlot.value)
+        : undefined;
+    if (typeof formatted === 'string') {
+        tooltipContent.value = formatted;
     } else {
         let html = '';
 
@@ -1701,8 +1596,10 @@ function onPanZoomPointerUp() {
     panZoomDragStart.value = null;
 
     if (didPanZoomDrag.value) {
-        window.setTimeout(() => {
+        clearTimeout(clickSuppressionTimer);
+        clickSuppressionTimer = window.setTimeout(() => {
             didPanZoomDrag.value = false;
+            clickSuppressionTimer = null;
         }, 0);
     }
 }
@@ -1773,8 +1670,8 @@ const { isCallbackImaging, isCallbackSvg, generateSvg, onGenerateImage } =
         generateImage,
     });
 
-function getLabelMetrics(rect, seriesIndex) {
-    const fontSize = calcFontSize(rect, seriesIndex);
+function getLabelMetrics(rect, seriesIndex, lines) {
+    const fontSize = calcFontSize(rect, seriesIndex, lines);
     const { paddingX, paddingTop } = getLabelPadding(fontSize);
     const lineHeight = fontSize * 1.1;
 
@@ -1832,14 +1729,15 @@ function buildTreemapLabel({ rect, seriesIndex }) {
         return null;
     }
 
-    const { fontSize, paddingX, paddingTop, lineHeight } = getLabelMetrics(
-        rect,
-        seriesIndex,
-    );
-    const textColor = getLabelTextColor(rect);
     const lines = getFullLabelLines(rect, seriesIndex).map((line) =>
         String(line ?? ''),
     );
+    const { fontSize, paddingX, paddingTop, lineHeight } = getLabelMetrics(
+        rect,
+        seriesIndex,
+        lines,
+    );
+    const textColor = getLabelTextColor(rect);
     const textBox = getTreemapTextBoxForFontSize(rect, fontSize);
 
     if (!lines.some(Boolean) || textBox.width <= 0 || textBox.height <= 0) {
@@ -2149,7 +2047,7 @@ const annotationViewport = computed(() =>
         </div>
 
         <A11yDataTable
-            v-if="a11yTable?.rows?.length"
+            v-if="FINAL_CONFIG.a11y.includeTable && a11yTable?.rows?.length"
             :uid="uid"
             :head="a11yTable.headers"
             :body="a11yTable.rows"

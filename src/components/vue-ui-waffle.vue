@@ -37,17 +37,14 @@ import {
     dataLabel,
     downloadCsv,
     error,
-    functionReturnsString,
     getMissingDatasetAttributes,
     isFunction,
-    objectIsEmpty,
     palette,
     setOpacity,
     shiftHue,
     treeShake,
     XMLNS,
 } from '../lib';
-import { throttle } from '../canvas-lib';
 import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 import { useLoading } from '../useLoading';
@@ -59,7 +56,7 @@ import { useTransitions } from '../useTransitions.js';
 import { useUserOptionState } from '../useUserOptionState';
 import { useChartAccessibility } from '../useChartAccessibility';
 import { usePrefersReducedMotion } from '../usePrefersMotion';
-import { buildValuePercentageLabel } from '../labelUtils';
+import { buildValuePercentageLabel as buildLabel } from '../labelUtils';
 import Shape from '../atoms/Shape.vue';
 import Title from '../atoms/Title.vue'; // Must be ready in responsive mode
 import themes from '../themes/vue_ui_waffle.json';
@@ -106,19 +103,16 @@ const props = defineProps({
 
 const slots = useSlots();
 
-const isDataset = computed({
-    get() {
-        return !!props.dataset && props.dataset.length;
-    },
-    set(bool) {
-        return bool;
-    },
-});
-
+const isDataset = computed(() => !!props.dataset?.length);
 const uid = ref(createUid());
 const isTooltip = ref(false);
 const tooltipContent = ref('');
-const selectedSerie = ref(null);
+const selectedId = ref(null);
+const selectedSerie = computed(() =>
+    waffleSet.value.findIndex((serie) => serie.uid === selectedId.value) < 0
+        ? null
+        : waffleSet.value.findIndex((serie) => serie.uid === selectedId.value),
+);
 const step = ref(0);
 const waffleChart = ref(null);
 const chartTitle = ref(null);
@@ -207,15 +201,10 @@ const skeletonConfig = computed(() => {
 });
 
 // v3 - Skeleton loader management
-const { loading, FINAL_DATASET, manualLoading } = useLoading({
+const { loading, FINAL_DATASET } = useLoading({
     ...toRefs(props),
     FINAL_CONFIG,
     prepareConfig,
-    callback: () => {
-        Promise.resolve().then(async () => {
-            datasetCopy.value = prepareDataset();
-        });
-    },
     skeletonDataset: props.config?.skeletonDataset ?? [
         {
             name: '',
@@ -278,7 +267,6 @@ watch(
         }
         userOptionsVisible.value =
             !FINAL_CONFIG.value.userOptions.showOnChartHover;
-        prepareChart();
         titleStep.value += 1;
         tableStep.value += 1;
         legendStep.value += 1;
@@ -291,44 +279,30 @@ watch(
 );
 
 const resizeObserver = shallowRef(null);
-const observedEl = shallowRef(null);
-
+let resizeFrame = null;
+let scheduleResize = null;
+let disposed = false;
 const debug = computed(() => FINAL_CONFIG.value.debug);
-
+function stopResize() {
+    scheduleResize = null;
+    resizeObserver.value?.disconnect();
+    resizeObserver.value = null;
+    if (resizeFrame !== null) cancelAnimationFrame(resizeFrame);
+    resizeFrame = null;
+}
 function prepareChart() {
-    if (objectIsEmpty(props.dataset)) {
-        error({
-            componentName: 'VueUiWaffle',
-            type: 'dataset',
-            debug: debug.value,
-        });
-        isDataset.value = false;
-        manualLoading.value = true; // v3
-    } else {
-        if (debug.value) {
-            props.dataset.forEach((ds, i) => {
-                getMissingDatasetAttributes({
-                    datasetObject: ds,
-                    requiredAttributes: ['name', 'values'],
-                }).forEach((attr) => {
-                    error({
-                        componentName: 'VueUiWaffle',
-                        type: 'datasetSerieAttribute',
-                        property: attr,
-                        index: i,
-                    });
-                });
-            });
-        }
+    stopResize();
+    if (!FINAL_CONFIG.value.responsive) {
+        svg.value = { width: 512, height: 512 };
+        return;
     }
-
-    // v3
-    if (!objectIsEmpty(props.dataset)) {
-        manualLoading.value = FINAL_CONFIG.value.loading;
-    }
-
-    if (FINAL_CONFIG.value.responsive) {
-        const handleResize = throttle(() => {
+    const parent = waffleChart.value?.parentNode;
+    if (!parent) return;
+    const resize = () => {
+        if (resizeFrame !== null) cancelAnimationFrame(resizeFrame);
+        resizeFrame = requestAnimationFrame(() => {
+            resizeFrame = null;
+            if (disposed) return;
             const { width, height } = useResponsive({
                 chart: waffleChart.value,
                 title: cfgChart.value.title.text ? chartTitle.value : null,
@@ -336,40 +310,22 @@ function prepareChart() {
                 source: source.value,
                 noTitle: noTitle.value,
             });
-
-            requestAnimationFrame(() => {
-                svg.value.width = width;
-                svg.value.height = height;
-                drawingArea.value.width = width;
-                drawingArea.value.height = height;
-            });
+            svg.value = { width, height };
         });
-
-        if (resizeObserver.value) {
-            if (observedEl.value) {
-                resizeObserver.value.unobserve(observedEl.value);
-            }
-            resizeObserver.value.disconnect();
-        }
-
-        resizeObserver.value = new ResizeObserver(handleResize);
-        observedEl.value = waffleChart.value.parentNode;
-        resizeObserver.value.observe(observedEl.value);
-    }
+    };
+    scheduleResize = resize;
+    resizeObserver.value = new ResizeObserver(resize);
+    resizeObserver.value.observe(parent);
+    resize();
 }
-
 onMounted(() => {
     readyTeleport.value = true;
     prepareChart();
 });
-
 onBeforeUnmount(() => {
-    if (resizeObserver.value) {
-        if (observedEl.value) {
-            resizeObserver.value.unobserve(observedEl.value);
-        }
-        resizeObserver.value.disconnect();
-    }
+    disposed = true;
+    stopResize();
+    cancelAnimations();
 });
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
@@ -408,131 +364,134 @@ const svg = ref({
     width: 512,
 });
 
-const drawingArea = ref({
-    top: 0,
-    left: 0,
-    height: 512,
-    width: 512,
+const drawingArea = computed(() => ({ top: 0, left: 0, ...svg.value }));
+const gridSize = computed(() => {
+    const size = Number(cfgGrid.value.size);
+    return Number.isInteger(size) && size > 0 ? size : 10;
 });
 
 const rectDimension = computed(() => {
     return (
         (drawingArea.value.width -
-            cfgGrid.value.size * cfgGrid.value.spaceBetween) /
-        cfgGrid.value.size
+            gridSize.value * cfgGrid.value.spaceBetween) /
+        gridSize.value
     );
 });
 
 const rectDimensionY = computed(() => {
     return (
         (drawingArea.value.height -
-            cfgGrid.value.size * cfgGrid.value.spaceBetween) /
-        cfgGrid.value.size
+            gridSize.value * cfgGrid.value.spaceBetween) /
+        gridSize.value
     );
 });
 
 const absoluteRectDimension = computed(() => {
-    return Math.max(0.0001, drawingArea.value.width / cfgGrid.value.size);
+    return Math.max(0.0001, drawingArea.value.width / gridSize.value);
 });
 
 const absoluteRectDimensionY = computed(() => {
-    return Math.max(0.0001, drawingArea.value.height / cfgGrid.value.size);
+    return Math.max(0.0001, drawingArea.value.height / gridSize.value);
 });
 
-function calculateSquareCounts(numbers) {
-    const totalSquares = cfgGrid.value.size * cfgGrid.value.size;
-    const totalSum = numbers.reduce((a, b) => a + b, 0);
-    const exactSquareCounts = numbers.map(
-        (num) => (num / totalSum) * totalSquares,
+function sumValues(values) {
+    return (values || []).reduce(
+        (sum, value) =>
+            sum +
+            (typeof value === 'number' && Number.isFinite(value) ? value : 0),
+        0,
     );
-
-    const intParts = exactSquareCounts.map(Math.floor);
-    const fractionalParts = exactSquareCounts.map((num) => num % 1);
-
-    let remainingSquares = totalSquares - intParts.reduce((a, b) => a + b, 0);
-
-    while (remainingSquares > 0) {
-        let maxIndex = fractionalParts.indexOf(Math.max(...fractionalParts));
-        intParts[maxIndex] += 1;
-        fractionalParts[maxIndex] = 0;
-        remainingSquares -= 1;
-    }
-
-    return intParts;
 }
-
-const allDatapointsAreEmpty = ref(false);
-
-function prepareDataset() {
-    allDatapointsAreEmpty.value =
-        FINAL_DATASET.value
-            .flatMap((ds) => ds.values.reduce((a, b) => a + b, 0))
-            .reduce((a, b) => a + b, 0) === 0;
-
-    return FINAL_DATASET.value.map((s, i) => {
+function calculateSquareCounts(numbers) {
+    if (!numbers.length) return [];
+    const weights = numbers.map((value) => Math.max(0, value));
+    const sum = weights.reduce((a, b) => a + b, 0);
+    // Distribute an all-zero visible set evenly, using the same remainder rule.
+    const exact = weights.map(
+        (value) =>
+            (sum ? value / sum : 1 / weights.length) * totalGridSquares.value,
+    );
+    const counts = exact.map(Math.floor);
+    const order = exact
+        .map((value, index) => ({ index, remainder: value - counts[index] }))
+        .sort((a, b) => b.remainder - a.remainder);
+    const remaining =
+        totalGridSquares.value - counts.reduce((a, b) => a + b, 0);
+    for (let i = 0; i < remaining; i++) counts[order[i % order.length].index]++;
+    return counts;
+}
+const datasetCopyReference = computed(() =>
+    FINAL_DATASET.value.map((serie, i) => {
+        if (debug.value)
+            getMissingDatasetAttributes({
+                datasetObject: serie,
+                requiredAttributes: ['name', 'values'],
+            }).forEach((property) =>
+                error({
+                    componentName: 'VueUiWaffle',
+                    type: 'datasetSerieAttribute',
+                    property,
+                    index: i,
+                }),
+            );
         return {
-            ...s,
+            ...serie,
             color:
-                convertColorToHex(s.color) ||
+                convertColorToHex(serie.color) ||
                 customPalette.value[i] ||
-                palette[i] ||
                 palette[i % palette.length],
             uid: `serie_${i}`,
             absoluteIndex: i,
         };
-    });
-}
-
-const datasetCopyReference = computed(() => {
-    return prepareDataset();
-});
-
-const datasetCopy = ref(datasetCopyReference.value);
-
-// v3 - Stop skeleton loader when props.dataset becomes valid
-watch(
-    () => props.dataset,
-    (newVal) => {
-        if (Array.isArray(newVal) && newVal.length > 0) {
-            manualLoading.value = false;
-        }
-    },
-    { immediate: true },
+    }),
+);
+const animationValues = ref({});
+const datasetCopy = computed(() =>
+    datasetCopyReference.value.map((serie) =>
+        animationValues.value[serie.uid] === undefined
+            ? serie
+            : { ...serie, values: [animationValues.value[serie.uid]] },
+    ),
+);
+const sourceTotals = computed(
+    () =>
+        new Map(
+            datasetCopyReference.value.map((serie) => [
+                serie.uid,
+                sumValues(serie.values),
+            ]),
+        ),
+);
+const currentTotals = computed(
+    () =>
+        new Map(
+            datasetCopy.value.map((serie) => [
+                serie.uid,
+                sumValues(serie.values),
+            ]),
+        ),
+);
+const currentTotal = computed(() =>
+    [...currentTotals.value.values()].reduce((a, b) => a + b, 0),
+);
+const allDatapointsAreEmpty = computed(() =>
+    [...sourceTotals.value.values()].every((value) => value === 0),
+);
+const visibleSeries = computed(() =>
+    datasetCopy.value.filter((serie) => !segregated.value.includes(serie.uid)),
+);
+const squareCounts = computed(() =>
+    calculateSquareCounts(
+        visibleSeries.value.map((serie) => currentTotals.value.get(serie.uid)),
+    ),
+);
+const immutableSquareCounts = computed(() =>
+    calculateSquareCounts(
+        datasetCopy.value.map((serie) => currentTotals.value.get(serie.uid)),
+    ),
 );
 
-watch(
-    () => props.dataset,
-    (_) => {
-        datasetCopy.value = prepareDataset();
-    },
-    { deep: true },
-);
-
-const squareCounts = computed(() => {
-    const numbers = datasetCopy.value
-        .filter((serie, i) => !segregated.value.includes(serie.uid))
-        .map((serie, i) => {
-            if (allDatapointsAreEmpty.value) {
-                return 1;
-            } else {
-                return (serie.values || []).reduce((a, b) => a + b, 0);
-            }
-        });
-    return calculateSquareCounts(numbers);
-});
-
-const immutableSquareCounts = computed(() => {
-    const numbers = datasetCopy.value.map((serie, i) => {
-        if (allDatapointsAreEmpty.value) {
-            return 1;
-        } else {
-            return (serie.values || []).reduce((a, b) => a + b);
-        }
-    });
-    return calculateSquareCounts(numbers);
-});
-
-const totalGridSquares = computed(() => Math.pow(cfgGrid.value.size, 2));
+const totalGridSquares = computed(() => Math.pow(gridSize.value, 2));
 
 const waffleSet = computed(() => {
     if (debug.value) {
@@ -547,22 +506,20 @@ const waffleSet = computed(() => {
             }
         });
     }
-    return datasetCopy.value
-        .filter((serie, i) => !segregated.value.includes(serie.uid))
-        .map((serie, i) => {
-            const squareCount = squareCounts.value[i];
+    return visibleSeries.value.map((serie, i) => {
+        const squareCount = squareCounts.value[i];
 
-            return {
-                absoluteIndex: serie.absoluteIndex,
-                uid: serie.uid,
-                name: serie.name,
-                color: serie.color,
-                value: (serie.values || []).reduce((a, b) => a + b, 0),
-                absoluteValues: serie.values || [],
-                squareCount,
-                proportion: squareCount / totalGridSquares.value,
-            };
-        });
+        return {
+            absoluteIndex: serie.absoluteIndex,
+            uid: serie.uid,
+            name: serie.name,
+            color: serie.color,
+            value: currentTotals.value.get(serie.uid),
+            absoluteValues: serie.values || [],
+            squareCount,
+            proportion: squareCount / totalGridSquares.value,
+        };
+    });
 });
 
 const immutableSet = computed(() => {
@@ -574,7 +531,7 @@ const immutableSet = computed(() => {
             uid: serie.uid,
             name: serie.name,
             color: serie.color,
-            value: (serie.values || []).reduce((a, b) => a + b, 0),
+            value: currentTotals.value.get(serie.uid),
             absoluteValues: serie.values || [],
             squareCount,
             proportion: squareCount / totalGridSquares.value,
@@ -625,7 +582,7 @@ const rects = computed(() => {
             return serie.rects.map((rect, i) => {
                 return {
                     isFirst: i === 0,
-                    isLongEnough: rect.length > 2,
+                    isLongEnough: false,
                     name: serie.name,
                     color: serie.color,
                     value: serie.value,
@@ -639,15 +596,15 @@ const rects = computed(() => {
         .map((s, i) => {
             return {
                 ...s,
-                isAbsoluteFirst: i % cfgGrid.value.size === 0,
+                isAbsoluteFirst: i % gridSize.value === 0,
             };
         });
 });
 
 const positions = computed(() => {
     const grid = [];
-    for (let i = 0; i < cfgGrid.value.size; i += 1) {
-        for (let j = 0; j < cfgGrid.value.size; j += 1) {
+    for (let i = 0; i < gridSize.value; i += 1) {
+        for (let j = 0; j < gridSize.value; j += 1) {
             grid.push({
                 isStartOfLine: j === 0,
                 position: cfgGrid.value.vertical ? i : j,
@@ -664,245 +621,155 @@ const positions = computed(() => {
     return grid;
 });
 
+const cellPositions = computed(() =>
+    positions.value.slice(0, rects.value.length),
+);
+function getCellAttrs(position, trap = false) {
+    return {
+        x: position.x + cfgGrid.value.spaceBetween / 2,
+        y: position.y + cfgGrid.value.spaceBetween / 2,
+        width: trap
+            ? absoluteRectDimension.value
+            : rectDimension.value <= 0
+              ? 0.0001
+              : rectDimension.value,
+        height: trap
+            ? absoluteRectDimensionY.value
+            : rectDimensionY.value <= 0
+              ? 0.0001
+              : rectDimensionY.value,
+    };
+}
+function getCellSlotProps(position, index) {
+    const rect = rects.value[index];
+    return {
+        cell: {
+            ...position,
+            color: rect.color,
+            height: Math.max(0, rectDimensionY.value),
+            width: Math.max(0, rectDimension.value),
+            ...rect,
+        },
+        isSelected:
+            selectedSerie.value === null ||
+            rect.serieIndex === selectedSerie.value,
+    };
+}
+
 const segregated = ref([]);
 const isAnimating = ref(false);
 
-const animationFrameUpBySeriesId = ref(Object.create(null));
-const animationFrameDownBySeriesId = ref(Object.create(null));
-const activeAnimationCount = ref(0);
-
-function setSeriesValuesById(seriesId, nextValue) {
-    datasetCopy.value = datasetCopy.value.map((dataSeries) => {
-        if (dataSeries.uid === seriesId) {
-            return {
-                ...dataSeries,
-                values: [nextValue],
+const animations = new Map();
+function cancelAnimationBySeriesId(seriesId) {
+    const animation = animations.get(seriesId);
+    if (animation) cancelAnimationFrame(animation.frame);
+    animations.delete(seriesId);
+    isAnimating.value = animations.size > 0;
+}
+function cancelAnimations() {
+    for (const id of animations.keys()) cancelAnimationBySeriesId(id);
+    animationValues.value = {};
+}
+function emitLegendSelection() {
+    emit(
+        'selectLegend',
+        waffleSet.value.map(({ name, color, value, proportion }) => ({
+            name,
+            color,
+            value,
+            proportion,
+        })),
+    );
+}
+function toggleLegend() {
+    const restore =
+        segregated.value.length > 0 ||
+        [...animations.values()].some((animation) => !animation.show);
+    cancelAnimations();
+    if (
+        !FINAL_CONFIG.value.useAnimation ||
+        prefersReducedMotion.value ||
+        allDatapointsAreEmpty.value
+    ) {
+        segregated.value = restore
+            ? []
+            : datasetCopyReference.value.map((serie) => serie.uid);
+        emitLegendSelection();
+        return;
+    }
+    for (const serie of datasetCopyReference.value) {
+        if (restore === segregated.value.includes(serie.uid))
+            segregate(serie.uid, true);
+    }
+}
+function segregate(seriesId, allowHideAll = false) {
+    if (
+        !sourceTotals.value.has(seriesId) ||
+        (allDatapointsAreEmpty.value && !allowHideAll)
+    )
+        return;
+    const pending = animations.get(seriesId);
+    const show = pending ? !pending.show : segregated.value.includes(seriesId);
+    const visibleCount = datasetCopyReference.value.filter(
+        (serie) =>
+            !segregated.value.includes(serie.uid) &&
+            animations.get(serie.uid)?.show !== false,
+    ).length;
+    if (!show && !allowHideAll && visibleCount <= 1) return;
+    const target = sourceTotals.value.get(seriesId);
+    const from =
+        animationValues.value[seriesId] ??
+        (segregated.value.includes(seriesId) ? 0 : target);
+    cancelAnimationBySeriesId(seriesId);
+    if (show)
+        segregated.value = segregated.value.filter((id) => id !== seriesId);
+    const finish = () => {
+        if (!show && !segregated.value.includes(seriesId))
+            segregated.value.push(seriesId);
+        if (FINAL_CONFIG.value.useAnimation) {
+            animationValues.value = {
+                ...animationValues.value,
+                [seriesId]: show ? target : 0,
             };
         }
-        return dataSeries;
-    });
-}
-
-function getSeriesSumById(seriesId, sourceDataset) {
-    const series = sourceDataset.find((item) => item.uid === seriesId);
-    if (!series) return 0;
-    return (series.values || []).reduce((a, b) => a + b, 0);
-}
-
-function cancelAnimationBySeriesId(seriesId) {
-    let hasCancelledAnimation = false;
-
-    if (animationFrameUpBySeriesId.value[seriesId]) {
-        cancelAnimationFrame(animationFrameUpBySeriesId.value[seriesId]);
-        delete animationFrameUpBySeriesId.value[seriesId];
-        hasCancelledAnimation = true;
+        animations.delete(seriesId);
+        isAnimating.value = animations.size > 0;
+        emitLegendSelection();
+    };
+    if (
+        !FINAL_CONFIG.value.useAnimation ||
+        prefersReducedMotion.value ||
+        target <= 0
+    ) {
+        finish();
+        return;
     }
-    if (animationFrameDownBySeriesId.value[seriesId]) {
-        cancelAnimationFrame(animationFrameDownBySeriesId.value[seriesId]);
-        delete animationFrameDownBySeriesId.value[seriesId];
-        hasCancelledAnimation = true;
-    }
-
-    if (hasCancelledAnimation) {
-        activeAnimationCount.value = Math.max(
-            0,
-            activeAnimationCount.value - 1,
-        );
-        isAnimating.value = activeAnimationCount.value > 0;
-    }
-}
-
-function animateSeriesValue({ seriesId, fromValue, toValue, mode }) {
-    cancelAnimationBySeriesId(seriesId);
-
-    activeAnimationCount.value += 1;
+    const animation = { show, frame: null, value: from };
+    animations.set(seriesId, animation);
     isAnimating.value = true;
-
-    let currentValue = fromValue;
-
-    return new Promise((resolve) => {
-        function onFrame() {
-            const isIncreasing = mode === 'increase';
-
-            if (isIncreasing) {
-                if (currentValue >= toValue) {
-                    setSeriesValuesById(seriesId, toValue);
-                    activeAnimationCount.value -= 1;
-                    if (activeAnimationCount.value <= 0)
-                        isAnimating.value = false;
-                    delete animationFrameUpBySeriesId.value[seriesId];
-                    resolve();
-                    return;
-                }
-
-                currentValue += toValue * 0.025;
-                if (currentValue > toValue) currentValue = toValue;
-                setSeriesValuesById(seriesId, currentValue);
-                animationFrameUpBySeriesId.value[seriesId] =
-                    requestAnimationFrame(onFrame);
-            } else {
-                if (currentValue <= fromValue / 100) {
-                    setSeriesValuesById(seriesId, 0);
-                    activeAnimationCount.value -= 1;
-                    if (activeAnimationCount.value <= 0)
-                        isAnimating.value = false;
-                    delete animationFrameDownBySeriesId.value[seriesId];
-                    resolve();
-                    return;
-                }
-
-                currentValue /= 1.15;
-                setSeriesValuesById(seriesId, currentValue);
-                animationFrameDownBySeriesId.value[seriesId] =
-                    requestAnimationFrame(onFrame);
-            }
-        }
-
-        onFrame();
-    });
-}
-
-function toggleLegend() {
-    datasetCopy.value = datasetCopyReference.value;
-
-    const hasAnySegregated = segregated.value.length > 0;
-
-    if (!FINAL_CONFIG.value.useAnimation) {
-        if (hasAnySegregated) {
-            segregated.value = [];
-        } else {
-            segregated.value = legendSet.value.map(
-                (legendItem) => legendItem.uid,
+    function step() {
+        if (disposed || animations.get(seriesId) !== animation) return;
+        if (show)
+            animation.value = Math.min(
+                target,
+                animation.value + target * 0.025,
             );
-        }
-        return;
-    }
-
-    if (hasAnySegregated) {
-        const seriesIdsToRestore = [...segregated.value];
-
-        seriesIdsToRestore.forEach((seriesId) => {
-            segregate(seriesId, true);
-        });
-    } else {
-        const seriesIdsToHide = legendSet.value.map(
-            (legendItem) => legendItem.uid,
-        );
-
-        seriesIdsToHide.forEach((seriesId) => {
-            segregate(seriesId, true);
-        });
-    }
-}
-
-function segregate(seriesId, allowHideAll = false) {
-    if (allDatapointsAreEmpty.value && !allowHideAll) return;
-
-    const canHideMore =
-        allowHideAll ||
-        (segregated.value.length < legendSet.value.length - 1 &&
-            legendSet.value.length > 1);
-
-    if (!FINAL_CONFIG.value.useAnimation) {
-        if (segregated.value.includes(seriesId)) {
-            segregated.value = segregated.value.filter(
-                (item) => item !== seriesId,
-            );
-        } else if (canHideMore) {
-            segregated.value.push(seriesId);
-        }
-        return;
-    }
-
-    const targetValue = getSeriesSumById(seriesId, datasetCopyReference.value);
-    const sourceValue = getSeriesSumById(seriesId, datasetCopy.value);
-
-    if (sourceValue === 0 && targetValue === 0) return;
-
-    if (segregated.value.includes(seriesId)) {
-        segregated.value = segregated.value.filter((item) => item !== seriesId);
-
-        if (prefersReducedMotion.value) {
-            cancelAnimationBySeriesId(seriesId);
-            setSeriesValuesById(seriesId, targetValue);
-
-            emit(
-                'selectLegend',
-                waffleSet.value.map((waffleItem) => ({
-                    name: waffleItem.name,
-                    color: waffleItem.color,
-                    value: waffleItem.value,
-                    proportion: waffleItem.proportion,
-                })),
-            );
+        else animation.value /= 1.15;
+        if (
+            (show && animation.value >= target) ||
+            (!show && animation.value <= Math.abs(from) / 100)
+        ) {
+            finish();
             return;
         }
-
-        animateSeriesValue({
-            seriesId,
-            fromValue: sourceValue,
-            toValue: targetValue,
-            mode: 'increase',
-        }).then(() => {
-            emit(
-                'selectLegend',
-                waffleSet.value.map((waffleItem) => ({
-                    name: waffleItem.name,
-                    color: waffleItem.color,
-                    value: waffleItem.value,
-                    proportion: waffleItem.proportion,
-                })),
-            );
-        });
-
-        return;
+        animationValues.value = {
+            ...animationValues.value,
+            [seriesId]: animation.value,
+        };
+        animation.frame = requestAnimationFrame(step);
     }
-
-    if (!canHideMore) return;
-
-    if (prefersReducedMotion.value) {
-        cancelAnimationBySeriesId(seriesId);
-
-        if (!segregated.value.includes(seriesId)) {
-            segregated.value.push(seriesId);
-        }
-
-        setSeriesValuesById(seriesId, 0);
-
-        emit(
-            'selectLegend',
-            waffleSet.value.map((waffleItem) => ({
-                name: waffleItem.name,
-                color: waffleItem.color,
-                value: waffleItem.value,
-                proportion: waffleItem.proportion,
-            })),
-        );
-        return;
-    }
-
-    animateSeriesValue({
-        seriesId,
-        fromValue: sourceValue,
-        toValue: 0,
-        mode: 'decrease',
-    }).then(() => {
-        if (!segregated.value.includes(seriesId)) {
-            segregated.value.push(seriesId);
-        }
-
-        setSeriesValuesById(seriesId, 0);
-
-        emit(
-            'selectLegend',
-            waffleSet.value.map((waffleItem) => ({
-                name: waffleItem.name,
-                color: waffleItem.color,
-                value: waffleItem.value,
-                proportion: waffleItem.proportion,
-            })),
-        );
-    });
+    animationValues.value = { ...animationValues.value, [seriesId]: from };
+    step();
 }
 
 function validSeriesToToggle(name) {
@@ -932,7 +799,10 @@ function validSeriesToToggle(name) {
 function showSeries(name) {
     const dp = validSeriesToToggle(name);
     if (dp === null) return;
-    if (segregated.value.includes(dp.uid)) {
+    if (
+        segregated.value.includes(dp.uid) ||
+        animations.get(dp.uid)?.show === false
+    ) {
         segregate(dp.uid);
     }
 }
@@ -947,35 +817,26 @@ function showSeries(name) {
 function hideSeries(name) {
     const dp = validSeriesToToggle(name);
     if (dp === null) return;
-    if (!segregated.value.includes(dp.uid)) {
+    if (
+        !segregated.value.includes(dp.uid) &&
+        animations.get(dp.uid)?.show !== false
+    ) {
         segregate(dp.uid);
     }
-}
-
-function buildLabel({ val, percentage, showVal, showPercentage, config }) {
-    return buildValuePercentageLabel({
-        config,
-        val,
-        percentage,
-        showVal,
-        showPercentage,
-    });
 }
 
 const legendSet = computed(() => {
     return datasetCopy.value
         .map((serie, i) => {
-            const value = (serie.values || []).reduce((a, b) => a + b, 0);
-            const proportion =
-                value /
-                datasetCopy.value
-                    .map((ds) => (ds.values || []).reduce((a, b) => a + b, 0))
-                    .reduce((a, b) => a + b, 0);
+            const value = currentTotals.value.get(serie.uid);
+            const proportion = currentTotal.value
+                ? value / currentTotal.value
+                : 0;
             return {
                 name: serie.name,
                 color:
                     serie.color ||
-                    customPalette[i] ||
+                    customPalette.value[i] ||
                     palette[i] ||
                     palette[i % palette.length],
                 value,
@@ -1040,8 +901,6 @@ const total = computed(() => {
 
 const dataTooltipSlot = ref(null);
 
-const selectedSeriesIndex = ref(null);
-
 const navigableSeries = computed(() => {
     const grouped = new Map();
 
@@ -1083,6 +942,7 @@ function getRepresentativeRectIndexForSeries(seriesIndex) {
 
 function selectDatapoint(index) {
     const selected = rects.value[index];
+    if (!selected) return;
     if (FINAL_CONFIG.value.events.datapointClick) {
         FINAL_CONFIG.value.events.datapointClick({
             datapoint: selected,
@@ -1093,6 +953,7 @@ function selectDatapoint(index) {
 
 function onTrapLeave(index) {
     const selected = rects.value[index];
+    if (!selected) return;
 
     if (FINAL_CONFIG.value.events.datapointLeave) {
         FINAL_CONFIG.value.events.datapointLeave({
@@ -1101,15 +962,11 @@ function onTrapLeave(index) {
         });
     }
 
-    selectedSeriesIndex.value = null;
-    isTooltip.value = false;
-    selectedSerie.value = null;
-    activeTooltipIndex.value = null;
-    tooltipTriggerMode.value = 'pointer';
+    clearSelection();
 }
 
-function useTooltip(index, triggerMode = 'pointer') {
-    if (segregated.value.length === props.dataset.length) return;
+function useTooltip(index, triggerMode = 'pointer', notify = true) {
+    if (!rects.value.length) return;
 
     const selected = rects.value[index];
     if (!selected) return;
@@ -1125,8 +982,9 @@ function useTooltip(index, triggerMode = 'pointer') {
     };
 
     if (
+        notify &&
         FINAL_CONFIG.value.events.datapointEnter &&
-        selectedSeriesIndex.value !== selected.serieIndex
+        selectedSerie.value !== selected.serieIndex
     ) {
         FINAL_CONFIG.value.events.datapointEnter({
             datapoint: selected,
@@ -1134,29 +992,21 @@ function useTooltip(index, triggerMode = 'pointer') {
         });
     }
 
-    selectedSeriesIndex.value = selected.serieIndex;
+    selectedId.value = selected.serieId;
     isTooltip.value = true;
-    selectedSerie.value = selected.serieIndex;
 
     const customFormat = cfgTooltip.value.customFormat;
 
-    if (
-        isFunction(customFormat) &&
-        functionReturnsString(() =>
-            customFormat({
-                seriesIndex: selected.absoluteIndex,
-                datapoint: selected,
-                series: datasetCopy.value,
-                config: FINAL_CONFIG.value,
-            }),
-        )
-    ) {
-        tooltipContent.value = customFormat({
-            seriesIndex: selected.absoluteIndex,
-            datapoint: selected,
-            series: datasetCopy.value,
-            config: FINAL_CONFIG.value,
-        });
+    const customContent = isFunction(customFormat)
+        ? customFormat({
+              seriesIndex: selected.absoluteIndex,
+              datapoint: selected,
+              series: datasetCopy.value,
+              config: FINAL_CONFIG.value,
+          })
+        : null;
+    if (typeof customContent === 'string') {
+        tooltipContent.value = customContent;
     } else {
         let html = '';
 
@@ -1183,9 +1033,9 @@ function useTooltip(index, triggerMode = 'pointer') {
                 },
             )}</span>`,
             percentage: `<span data-cy="waffle-tooltip-percentage">${dataLabel({
-                v: allDatapointsAreEmpty.value
-                    ? (1 / FINAL_DATASET.value.length) * 100
-                    : (selected.value / total.value) * 100,
+                v: total.value
+                    ? (selected.value / total.value) * 100
+                    : selected.proportion * 100,
                 s: '%',
                 r: cfgTooltip.value.roundingPercentage,
             })}</span>`,
@@ -1263,8 +1113,8 @@ function getBoundaryPolygons(cells) {
         const queue = [cell];
         visited.add(startKey);
 
-        while (queue.length) {
-            const current = queue.shift();
+        for (let cursor = 0; cursor < queue.length; cursor++) {
+            const current = queue[cursor];
             component.push(current);
             neighbors.forEach(([rowOffset, colOffset]) => {
                 const row = current.row + rowOffset;
@@ -1351,31 +1201,32 @@ function getBoundaryPolygons(cells) {
     return polygons;
 }
 
-function getSerieCells(serieIndex) {
-    const size = cfgGrid.value.size;
-    const isVertical = cfgGrid.value.vertical;
-    const cells = [];
-    rects.value.forEach((rect, index) => {
-        if (rect.serieIndex !== serieIndex) return;
-        const primary = Math.floor(index / size);
-        const secondary = index % size;
-        cells.push({
-            row: isVertical ? secondary : primary,
-            col: isVertical ? primary : secondary,
-        });
-    });
-    return cells;
-}
-
+const serieBoundaryPolygons = computed(
+    () =>
+        new Map(
+            navigableSeries.value.map((serie) => {
+                const cells = serie.rectIndexes.map((index) => {
+                    const primary = Math.floor(index / gridSize.value),
+                        secondary = index % gridSize.value;
+                    return {
+                        row: cfgGrid.value.vertical ? secondary : primary,
+                        col: cfgGrid.value.vertical ? primary : secondary,
+                    };
+                });
+                const polygons = getBoundaryPolygons(cells).map((polygon) =>
+                    polygon.map(({ x, y }) => ({
+                        x: x * absoluteRectDimension.value,
+                        y:
+                            drawingArea.value.top +
+                            y * absoluteRectDimensionY.value,
+                    })),
+                );
+                return [serie.serieIndex, polygons];
+            }),
+        ),
+);
 function getSerieBoundaryPolygons(serieIndex) {
-    const cellWidth = absoluteRectDimension.value;
-    const cellHeight = absoluteRectDimensionY.value;
-    return getBoundaryPolygons(getSerieCells(serieIndex)).map((polygon) =>
-        polygon.map(({ x, y }) => ({
-            x: x * cellWidth,
-            y: drawingArea.value.top + y * cellHeight,
-        })),
-    );
+    return serieBoundaryPolygons.value.get(serieIndex) || [];
 }
 
 function polygonToPoints(polygon) {
@@ -1409,20 +1260,13 @@ const mergedSeriePaths = computed(() => {
     if (!cfgRect.value.merged) {
         return [];
     }
-    const series = new Map();
-    rects.value.forEach((rect, index) => {
-        if (series.has(rect.serieIndex)) return;
-        series.set(rect.serieIndex, {
-            serieIndex: rect.serieIndex,
-            absoluteIndex: rect.absoluteIndex,
-            color: rect.color,
-            gradientIndex: index,
-            rectIndex: index,
-        });
-    });
-    return Array.from(series.values())
+    return navigableSeries.value
         .map((serie) => ({
-            ...serie,
+            serieIndex: serie.serieIndex,
+            absoluteIndex: serie.absoluteIndex,
+            color: serie.color,
+            gradientIndex: serie.rectIndexes[0],
+            rectIndex: serie.rectIndexes[0],
             d: polygonsToPath(getSerieBoundaryPolygons(serie.serieIndex)),
         }))
         .filter((serie) => serie.d);
@@ -1436,10 +1280,9 @@ function showDataLabel(i, position) {
         rects.value.length &&
         !isAnimating.value &&
         !cfgGrid.value.vertical &&
-        ((rects.value[i].isFirst &&
-            position.position < cfgGrid.value.size - 2) ||
+        ((rects.value[i].isFirst && position.position < gridSize.value - 2) ||
             (rects.value[i].isAbsoluteFirst &&
-                i % cfgGrid.value.size === 0 &&
+                i % gridSize.value === 0 &&
                 rects.value[i].absoluteStartIndex))
     );
 }
@@ -1688,12 +1531,14 @@ function onSvgFocus() {
     isFocus.value = true;
 }
 
-function onSvgBlur() {
+function clearSelection() {
+    selectedId.value = null;
     activeTooltipIndex.value = null;
     tooltipTriggerMode.value = 'pointer';
     isTooltip.value = false;
-    selectedSerie.value = null;
-    selectedSeriesIndex.value = null;
+}
+function onSvgBlur() {
+    clearSelection();
     isFocus.value = false;
 }
 
@@ -1701,7 +1546,7 @@ function onSvgKeydown(event) {
     if (!svgRef.value || isAnnotator.value) return;
     if (document.activeElement !== svgRef.value) return;
     if (!navigableSeries.value.length) return;
-    if (segregated.value.length === props.dataset.length) return;
+    if (!rects.value.length) return;
 
     const isPreviousKey = ['ArrowLeft', 'ArrowUp'].includes(event.key);
     const isNextKey = ['ArrowRight', 'ArrowDown'].includes(event.key);
@@ -1715,11 +1560,7 @@ function onSvgKeydown(event) {
     event.stopPropagation();
 
     if (isEscapeKey) {
-        activeTooltipIndex.value = null;
-        tooltipTriggerMode.value = 'pointer';
-        isTooltip.value = false;
-        selectedSerie.value = null;
-        selectedSeriesIndex.value = null;
+        clearSelection();
         return;
     }
 
@@ -1814,8 +1655,43 @@ function setKeyboardTooltipPositionFromSeriesIndex(seriesIndex) {
 
 const a11yTable = computed(() => {
     const headers = dataTable.value?.colNames ?? [];
-    const rows = dataTable.value?.body ?? [];
+    const rows =
+        dataTable.value?.body.map((row) => [row[0].name, ...row.slice(1)]) ??
+        [];
     return { headers, rows };
+});
+
+watch(
+    [
+        datasetCopyReference,
+        () => FINAL_CONFIG.value.useAnimation,
+        prefersReducedMotion,
+    ],
+    () => {
+        cancelAnimations();
+        const ids = new Set(
+            datasetCopyReference.value.map((serie) => serie.uid),
+        );
+        segregated.value = segregated.value.filter((id) => ids.has(id));
+    },
+    { deep: true },
+);
+watch(() => FINAL_CONFIG.value.responsive, prepareChart, { flush: 'post' });
+watch(cfgChart, () => scheduleResize?.(), { flush: 'post' });
+watch(rects, () => {
+    if (!selectedId.value) return;
+    const index = rects.value.findIndex(
+        (rect) => rect.serieId === selectedId.value,
+    );
+    if (index < 0) {
+        clearSelection();
+        return;
+    }
+    if (tooltipTriggerMode.value === 'keyboard')
+        setKeyboardTooltipPositionFromSeriesIndex(
+            rects.value[index].serieIndex,
+        );
+    useTooltip(index, tooltipTriggerMode.value, false);
 });
 
 defineExpose({
@@ -1850,7 +1726,7 @@ defineExpose({
         </div>
 
         <A11yDataTable
-            v-if="a11yTable?.rows?.length"
+            v-if="FINAL_CONFIG.a11y.includeTable && a11yTable?.rows?.length"
             :uid="uid"
             :head="a11yTable.headers"
             :body="a11yTable.rows"
@@ -2007,9 +1883,9 @@ defineExpose({
                         r="50%"
                         fx="50%"
                         fy="50%"
-                        v-for="(rect, i) in rects"
-                        :id="`gradient_${uid}_${i}`"
-                        :key="`gradient_${uid}_${i}`"
+                        v-for="rect in waffleSet"
+                        :id="`gradient_${uid}_${rect.absoluteIndex}`"
+                        :key="`gradient_${uid}_${rect.absoluteIndex}`"
                         :stops="[
                             [
                                 '0%',
@@ -2047,7 +1923,7 @@ defineExpose({
                     "
                 >
                     <foreignObject
-                        v-for="(position, i) in positions"
+                        v-for="(position, i) in cellPositions"
                         :x="position.x"
                         :y="position.y"
                         :height="rectDimensionY <= 0 ? 0.0001 : rectDimensionY"
@@ -2056,20 +1932,7 @@ defineExpose({
                     >
                         <slot
                             name="cell"
-                            v-bind="{
-                                cell: {
-                                    ...position,
-                                    color: rects[i].color,
-                                    height: Math.max(0, rectDimensionY),
-                                    width: Math.max(0, rectDimension),
-                                    ...rects[i],
-                                },
-                                isSelected: [null, undefined].includes(
-                                    selectedSerie,
-                                )
-                                    ? true
-                                    : rects[i].serieIndex === selectedSerie,
-                            }"
+                            v-bind="getCellSlotProps(position, i)"
                         />
                     </foreignObject>
                 </template>
@@ -2125,7 +1988,7 @@ defineExpose({
                             :fill="
                                 cfgRect.useGradient &&
                                 cfgRect.gradientIntensity > 0
-                                    ? `url(#gradient_${uid}_${serie.gradientIndex})`
+                                    ? `url(#gradient_${uid}_${serie.absoluteIndex})`
                                     : serie.color
                             "
                             fill-rule="evenodd"
@@ -2157,14 +2020,9 @@ defineExpose({
                     <template v-else>
                         <rect
                             data-cy="datapoint-underlayer"
-                            v-for="(position, i) in positions"
+                            v-for="(position, i) in cellPositions"
                             :rx="cfgRect.rounded ? cfgRect.rounding : 0"
-                            :x="position.x + cfgGrid.spaceBetween / 2"
-                            :y="position.y + cfgGrid.spaceBetween / 2"
-                            :height="
-                                rectDimensionY <= 0 ? 0.0001 : rectDimensionY
-                            "
-                            :width="rectDimension <= 0 ? 0.0001 : rectDimension"
+                            v-bind="getCellAttrs(position)"
                             fill="white"
                             :stroke="cfgRect.stroke"
                             :stroke-width="cfgRect.strokeWidth"
@@ -2176,18 +2034,13 @@ defineExpose({
                         />
                         <rect
                             data-cy="datapoint-rect"
-                            v-for="(position, i) in positions"
+                            v-for="(position, i) in cellPositions"
                             :rx="cfgRect.rounded ? cfgRect.rounding : 0"
-                            :x="position.x + cfgGrid.spaceBetween / 2"
-                            :y="position.y + cfgGrid.spaceBetween / 2"
-                            :height="
-                                rectDimensionY <= 0 ? 0.0001 : rectDimensionY
-                            "
-                            :width="rectDimension <= 0 ? 0.0001 : rectDimension"
+                            v-bind="getCellAttrs(position)"
                             :fill="
                                 cfgRect.useGradient &&
                                 cfgRect.gradientIntensity > 0
-                                    ? `url(#gradient_${uid}_${i})`
+                                    ? `url(#gradient_${uid}_${rects[i].absoluteIndex})`
                                     : rects[i].color
                             "
                             :stroke="cfgRect.stroke"
@@ -2200,18 +2053,9 @@ defineExpose({
                         />
                         <g v-if="$slots.pattern">
                             <rect
-                                v-for="(position, i) in positions"
+                                v-for="(position, i) in cellPositions"
                                 :rx="cfgRect.rounded ? cfgRect.rounding : 0"
-                                :x="position.x + cfgGrid.spaceBetween / 2"
-                                :y="position.y + cfgGrid.spaceBetween / 2"
-                                :height="
-                                    rectDimensionY <= 0
-                                        ? 0.0001
-                                        : rectDimensionY
-                                "
-                                :width="
-                                    rectDimension <= 0 ? 0.0001 : rectDimension
-                                "
+                                v-bind="getCellAttrs(position)"
                                 :fill="`url(#pattern_${uid}_${rects[i].absoluteIndex})`"
                                 stroke="none"
                                 :filter="getBlurFilter(rects[i].serieIndex)"
@@ -2224,24 +2068,11 @@ defineExpose({
                     </template>
                 </template>
 
-                <template v-if="$slots.cellSvg">
-                    <g v-for="(position, i) in positions">
+                <template v-if="$slots.cellSvg && rects.length">
+                    <g v-for="(position, i) in cellPositions">
                         <slot
                             name="cellSvg"
-                            v-bind="{
-                                cell: {
-                                    ...position,
-                                    color: rects[i].color,
-                                    height: Math.max(0, rectDimensionY),
-                                    width: Math.max(0, rectDimension),
-                                    ...rects[i],
-                                },
-                                isSelected: [null, undefined].includes(
-                                    selectedSerie,
-                                )
-                                    ? true
-                                    : rects[i].serieIndex === selectedSerie,
-                            }"
+                            v-bind="getCellSlotProps(position, i)"
                         />
                     </g>
                 </template>
@@ -2259,7 +2090,7 @@ defineExpose({
                 />
 
                 <!-- DATA LABELS -->
-                <template v-for="(position, i) in positions">
+                <template v-for="(position, i) in cellPositions">
                     <text
                         :key="`datalabel_${i}`"
                         data-cy="datapoint-caption"
@@ -2303,12 +2134,9 @@ defineExpose({
                 <template v-else>
                     <rect
                         data-cy="tooltip-trap"
-                        v-for="(position, i) in positions"
+                        v-for="(position, i) in cellPositions"
                         :key="`tooltip-trap-${i}`"
-                        :x="position.x + cfgGrid.spaceBetween / 2"
-                        :y="position.y + cfgGrid.spaceBetween / 2"
-                        :height="absoluteRectDimensionY"
-                        :width="absoluteRectDimension"
+                        v-bind="getCellAttrs(position, true)"
                         fill="transparent"
                         stroke="none"
                         @mouseover="useTooltip(i)"

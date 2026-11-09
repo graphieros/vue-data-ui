@@ -1,4 +1,4 @@
-import { expect, waitFor } from 'storybook/test';
+import { expect, waitFor, fireEvent } from 'storybook/test';
 import {
     scenarioRender,
     runScenario,
@@ -358,6 +358,86 @@ function createCases(env) {
             }
         }
     };
+    cases.LiveUpdates = async () => {
+        let enterCount = 0;
+        const data = [
+            {
+                id: 'a',
+                name: 'A',
+                temperatureColors: ['#0000ff', '#ff0000'],
+                temperatureIndependant: true,
+                temperatureAngle: 45,
+                values: [
+                    { id: 'first', label: 'First', x: 1, y: 2 },
+                    { id: 'next', label: 'Next', x: 3, y: 4 },
+                ],
+            },
+            { id: 'b', name: 'B', values: [{ label: 'Other', x: 2, y: 3 }] },
+        ];
+        const cfg = {
+            events: { datapointEnter: () => enterCount++ },
+            style: { chart: { plots: { gradient: { show: true } } } },
+        };
+        const { wrapper } = await mountSubject(VueUiHistoryPlot, {
+            props: { dataset: data, config: cfg },
+        });
+        wrapper.vm.hideSeries('B');
+        await waitFor(() =>
+            expect(wrapper.findAll('[data-cy="tooltip-trap"]')).toHaveLength(2),
+        );
+        const svg = wrapper.find('svg').element;
+        svg.focus();
+        await fireEvent.keyDown(svg, { key: 'ArrowRight' });
+        await fireEvent.keyDown(svg, { key: 'ArrowDown' });
+        const selectedId = wrapper.vm.getData()[0].plots[1].id;
+        const count = enterCount;
+        await wrapper.setProps({
+            dataset: [
+                data[1],
+                {
+                    ...data[0],
+                    values: [
+                        { ...data[0].values[1], y: 10 },
+                        data[0].values[0],
+                    ],
+                },
+            ],
+        });
+        await waitFor(() =>
+            expect(wrapper.vm.getData()[0].plots[0].id).toBe(selectedId),
+        );
+        expect(wrapper.vm.getData().map((d) => d.name)).toEqual(['A']);
+        expect(enterCount).toBe(count);
+        await wrapper.setProps({
+            config: { ...cfg, style: { chart: { width: 800 } } },
+        });
+        await waitFor(() => {
+            const position = wrapper
+                .findComponent({ name: 'Tooltip' })
+                .props('a11yPosition');
+            const box = wrapper
+                .find('[data-cy="datapoint-plot"]')
+                .element.getBoundingClientRect();
+            expect(position.x).toBeCloseTo(box.left + box.width / 2, 1);
+            expect(position.y).toBeCloseTo(box.top + box.height / 2, 1);
+        });
+        expect(enterCount).toBe(count);
+        for (const circle of wrapper.findAll('[data-cy="datapoint-plot"]')) {
+            const fill = circle.attributes('fill');
+            expect(fill).toMatch(/^url\(#/);
+            expect(wrapper.find(`[id="${fill.slice(5, -1)}"]`).exists()).toBe(
+                true,
+            );
+        }
+        wrapper.vm.hideSeries('A');
+        await waitFor(() =>
+            expect(
+                wrapper.findComponent({ name: 'Tooltip' }).props('show'),
+            ).toBe(false),
+        );
+        expect(wrapper.findAll('[data-cy="datapoint-plot"]')).toHaveLength(0);
+        expect(wrapper.find('svg').html()).not.toMatch(/NaN|Infinity/);
+    };
     return {
         cases,
         hooks,
@@ -374,4 +454,9 @@ export const Renders = {
 export const Emits = {
     name: 'emits',
     play: async (context) => runScenario(context, createCases, 'Emits'),
+};
+
+export const LiveUpdates = {
+    name: 'preserves temperature paints and selection through live updates',
+    play: async (context) => runScenario(context, createCases, 'LiveUpdates'),
 };

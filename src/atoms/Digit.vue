@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { computed } from 'vue';
 
 const props = defineProps({
     quanta: {
@@ -29,7 +29,7 @@ const props = defineProps({
     },
 });
 
-const segments = ref({
+const segments = {
     /**
      * clockwise from top (last: g)
      *     a
@@ -52,119 +52,85 @@ const segments = ref({
     9: '1111011',
     '-': '0000001',
     X: '0000000',
-});
+};
 
-const segmentThickness = computed(() => 2 * (props.thickness || 1));
+const SEG_LEN = 26;
+const THICK_SCALE = 2;
+const L_SEG_X = -2;
+const R_SEG_X = 28;
+const UP_SEG_Y = 2;
+const LO_SEG_Y = 32;
+const MID_SEG_Y = 30;
+const BOT_SEG_Y = 60;
+const DEC_OFFSET_X = -8;
+const DEC_BASE_RADIUS = 2;
 
-const digit = computed(() => {
-    if ([undefined, null].includes(props.quanta)) {
-        return segments.value.X;
-    } else {
-        return segments.value[props.quanta];
+const segmentThickness = computed(() => THICK_SCALE * (props.thickness || 1));
+
+const digit = computed(() =>
+    Object.hasOwn(segments, props.quanta) ? segments[props.quanta] : segments.X,
+);
+
+function horizontalPath(x, y, thickness, top = false) {
+    if (top) {
+        return `M ${x} ${y} L ${x + thickness} ${y - thickness} L ${x + SEG_LEN - thickness} ${y - thickness} L ${x + SEG_LEN} ${y} L ${x + SEG_LEN - thickness} ${y + thickness} L ${x + thickness} ${y + thickness} Z`;
     }
+
+    return `M ${x + thickness} ${y - thickness} L ${x} ${y} L ${x + thickness} ${y + thickness} L ${x + SEG_LEN - thickness} ${y + thickness} L ${x + SEG_LEN} ${y} L ${x + SEG_LEN - thickness} ${y - thickness} L ${x + thickness} ${y - thickness}`;
+}
+
+function verticalPath(x, y, thickness, left = false) {
+    const direction = left ? -1 : 1;
+    const inner = x - direction * thickness;
+    const outer = x + direction * thickness;
+
+    return `M ${inner} ${y + SEG_LEN - thickness} L ${inner} ${y + thickness} L ${x} ${y} L ${outer} ${y + thickness} L ${outer} ${y + SEG_LEN - thickness} L ${x} ${y + SEG_LEN} L ${inner} ${y + SEG_LEN - thickness}`;
+}
+
+const paths = computed(() => {
+    const { x, y } = props;
+    const thickness = segmentThickness.value;
+    return [
+        { name: 'a', d: horizontalPath(x, y, thickness, true) },
+        {
+            name: 'b',
+            d: verticalPath(x + R_SEG_X, y + UP_SEG_Y, thickness),
+        },
+        {
+            name: 'c',
+            d: verticalPath(x + R_SEG_X, y + LO_SEG_Y, thickness),
+        },
+        { name: 'd', d: horizontalPath(x, y + BOT_SEG_Y, thickness) },
+        {
+            name: 'e',
+            d: verticalPath(x + L_SEG_X, y + LO_SEG_Y, thickness, true),
+        },
+        {
+            name: 'f',
+            d: verticalPath(x + L_SEG_X, y + UP_SEG_Y, thickness, true),
+        },
+        { name: 'g', d: horizontalPath(x, y + MID_SEG_Y, thickness) },
+    ];
 });
 </script>
 
 <template>
     <g v-if="![undefined, null, '.'].includes(quanta)" data-cy="digit">
-        <!-- BACKGROUND -->
-        <!-- a (top horizontal) -->
         <path
-            data-cy="digit-a"
-            :d="`M ${x} ${y}
-                L ${x + segmentThickness} ${y - segmentThickness}
-                L ${x + 26 - segmentThickness} ${y - segmentThickness}
-                L ${x + 26} ${y}
-                L ${x + 26 - segmentThickness} ${y + segmentThickness}
-                L ${x + segmentThickness} ${y + segmentThickness} Z`"
-            :fill="digit[0] == 1 ? color : backgroundColor"
-            stroke="none"
-        />
-        <!-- b (top right vertical) -->
-        <path
-            data-cy="digit-b"
-            :d="`M ${x + 28 - segmentThickness} ${y + 28 - segmentThickness}
-                L ${x + 28 - segmentThickness} ${y + 2 + segmentThickness}
-                L ${x + 28} ${y + 2}
-                L ${x + 28 + segmentThickness} ${y + 2 + segmentThickness}
-                L ${x + 28 + segmentThickness} ${y + 28 - segmentThickness}
-                L ${x + 28} ${y + 28}
-                L ${x + 28 - segmentThickness} ${y + 28 - segmentThickness}`"
-            :fill="digit[1] == 1 ? color : backgroundColor"
-            stroke="none"
-        />
-        <!-- c (bottom right vertical) -->
-        <path
-            data-cy="digit-c"
-            :d="`M ${x + 28 - segmentThickness} ${y + 58 - segmentThickness}
-                L ${x + 28 - segmentThickness} ${y + 32 + segmentThickness}
-                L ${x + 28} ${y + 32}
-                L ${x + 28 + segmentThickness} ${y + 32 + segmentThickness}
-                L ${x + 28 + segmentThickness} ${y + 58 - segmentThickness}
-                L ${x + 28} ${y + 58}
-                L ${x + 28 - segmentThickness} ${y + 58 - segmentThickness}`"
-            :fill="digit[2] == 1 ? color : backgroundColor"
-            stroke="none"
-        />
-        <!-- d (bottom horizontal) -->
-        <path
-            data-cy="digit-d"
-            :d="`M ${x + segmentThickness} ${y + 60 - segmentThickness}
-                L ${x} ${y + 60}
-                L ${x + segmentThickness} ${y + 60 + segmentThickness}
-                L ${x + 26 - segmentThickness} ${y + 60 + segmentThickness}
-                L ${x + 26} ${y + 60}
-                L ${x + 26 - segmentThickness} ${y + 60 - segmentThickness}
-                L ${x + segmentThickness} ${y + 60 - segmentThickness}`"
-            :fill="digit[3] == 1 ? color : backgroundColor"
-            stroke="none"
-        />
-        <!-- e (bottom left vertical) -->
-        <path
-            data-cy="digit-e"
-            :d="`M ${x - 2 + segmentThickness} ${y + 58 - segmentThickness}
-                L ${x - 2 + segmentThickness} ${y + 32 + segmentThickness}
-                L ${x - 2} ${y + 32}
-                L ${x - 2 - segmentThickness} ${y + 32 + segmentThickness}
-                L ${x - 2 - segmentThickness} ${y + 58 - segmentThickness}
-                L ${x - 2} ${y + 58}
-                L ${x - 2 + segmentThickness} ${y + 58 - segmentThickness}`"
-            :fill="digit[4] == 1 ? color : backgroundColor"
-            stroke="none"
-        />
-        <!-- f (top left vertical) -->
-        <path
-            data-cy="digit-f"
-            :d="`M ${x - 2 + segmentThickness} ${y + 28 - segmentThickness}
-                L ${x - 2 + segmentThickness} ${y + 2 + segmentThickness}
-                L ${x - 2} ${y + 2}
-                L ${x - 2 - segmentThickness} ${y + 2 + segmentThickness}
-                L ${x - 2 - segmentThickness} ${y + 28 - segmentThickness}
-                L ${x - 2} ${y + 28}
-                L ${x - 2 + segmentThickness} ${y + 28 - segmentThickness}`"
-            :fill="digit[5] == 1 ? color : backgroundColor"
-            stroke="none"
-        />
-        <!-- g (middle horizontal) -->
-        <path
-            data-cy="digit-g"
-            :d="`M ${x + segmentThickness} ${y + 30 - segmentThickness}
-                L ${x} ${y + 30}
-                L ${x + segmentThickness} ${y + 30 + segmentThickness}
-                L ${x + 26 - segmentThickness} ${y + 30 + segmentThickness}
-                L ${x + 26} ${y + 30}
-                L ${x + 26 - segmentThickness} ${y + 30 - segmentThickness}
-                L ${x + segmentThickness} ${y + 30 - segmentThickness}`"
-            :fill="digit[6] == 1 ? color : backgroundColor"
+            v-for="(segment, index) in paths"
+            :key="segment.name"
+            :data-cy="`digit-${segment.name}`"
+            :d="segment.d"
+            :fill="digit[index] === '1' ? color : backgroundColor"
             stroke="none"
         />
     </g>
     <g v-if="quanta == '.'">
         <circle
             data-cy="digit-decimal"
-            :cx="x - 8"
-            :cy="y + 60"
-            :r="2 + segmentThickness / 2"
+            :cx="x + DEC_OFFSET_X"
+            :cy="y + BOT_SEG_Y"
+            :r="DEC_BASE_RADIUS + segmentThickness / 2"
             :fill="color"
         />
     </g>

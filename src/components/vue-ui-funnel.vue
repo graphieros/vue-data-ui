@@ -32,20 +32,16 @@ import {
     dataLabel,
     downloadCsv,
     error,
-    getMissingDatasetAttributes,
     lightenHexColor,
-    objectIsEmpty,
     translateSize,
     XMLNS,
 } from '../lib';
-import { throttle } from '../canvas-lib';
 import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 import { usePrinter } from '../usePrinter';
 
 import { useResponsive } from '../useResponsive';
 import { useChartExport } from '../useChartExport';
-import { useUserOptionState } from '../useUserOptionState';
 import { useChartAccessibility } from '../useChartAccessibility';
 import { usePrefersReducedMotion } from '../usePrefersMotion';
 import Title from '../atoms/Title.vue'; // Must be ready in responsive mode
@@ -92,8 +88,6 @@ const emit = defineEmits(['copyAlt']);
 const funnelChart = ref(null);
 const uid = ref(createUid());
 const step = ref(0);
-const titleStep = ref(0);
-const tableStep = ref(0);
 const noTitle = ref(null);
 const source = ref(null);
 const chartTitle = ref(null);
@@ -103,33 +97,84 @@ const loaded = ref(false);
 const tableUnit = ref(null);
 const userOptionsRef = ref(null);
 
-const isDataset = computed(() => {
-    return !!props.dataset && props.dataset.length;
-});
+const validation = computed(() =>
+    props.dataset.map((row) => {
+        const keys = row && typeof row === 'object' ? Object.keys(row) : [];
+        return {
+            missing: ['name', 'value'].filter((key) => !keys.includes(key)),
+            finite: Number.isFinite(row?.value),
+        };
+    }),
+);
+const isDataset = computed(
+    () =>
+        props.dataset.length > 0 &&
+        validation.value.every((row) => !row.missing.length && row.finite),
+);
+
+let resizeFrame = null;
+let animationTimer = null;
+let disposed = false;
+const responsiveSize = ref(null);
+
+function stopResize() {
+    resizeObserver.value?.disconnect();
+    resizeObserver.value = null;
+    observedEl.value = null;
+    if (resizeFrame !== null) cancelAnimationFrame(resizeFrame);
+    resizeFrame = null;
+}
+
+function prepareChart() {
+    stopResize();
+    responsiveSize.value = null;
+    if (!FINAL_CONFIG.value.responsive || !funnelChart.value?.parentNode)
+        return;
+    const observer = new ResizeObserver(() => measure());
+    const measure = () => {
+        if (
+            disposed ||
+            resizeObserver.value !== observer ||
+            !FINAL_CONFIG.value.responsive
+        )
+            return;
+        if (resizeFrame !== null) cancelAnimationFrame(resizeFrame);
+        resizeFrame = requestAnimationFrame(() => {
+            resizeFrame = null;
+            if (
+                disposed ||
+                resizeObserver.value !== observer ||
+                !FINAL_CONFIG.value.responsive
+            )
+                return;
+            const { width, height } = useResponsive({
+                chart: funnelChart.value,
+                title: cfgChart.value.title.text ? chartTitle.value : null,
+                source: source.value,
+                noTitle: noTitle.value,
+            });
+            if (width > 0 && height > 0)
+                responsiveSize.value = { width, height };
+        });
+    };
+    resizeObserver.value = observer;
+    observedEl.value = funnelChart.value.parentNode;
+    resizeObserver.value.observe(observedEl.value);
+    measure();
+}
 
 onMounted(prepareChart);
-
 onBeforeUnmount(() => {
-    if (resizeObserver.value) {
-        if (observedEl.value) {
-            resizeObserver.value.unobserve(observedEl.value);
-        }
-        resizeObserver.value.disconnect();
-    }
+    disposed = true;
+    stopResize();
+    clearTimeout(animationTimer);
 });
 
 function prepareConfig() {
     return resolveChartConfig(props.config, DEFAULT_CONFIG, themes);
 }
 
-const FINAL_CONFIG = computed({
-    get: () => {
-        return prepareConfig();
-    },
-    set: (newCfg) => {
-        return newCfg;
-    },
-});
+const FINAL_CONFIG = computed(prepareConfig);
 
 const debug = computed(() => FINAL_CONFIG.value.debug);
 
@@ -137,92 +182,35 @@ const cfgBars = computed(() => FINAL_CONFIG.value.style.chart.bars);
 const cfgCircles = computed(() => FINAL_CONFIG.value.style.chart.circles);
 const cfgChart = computed(() => FINAL_CONFIG.value.style.chart);
 
-function prepareChart() {
-    if (objectIsEmpty(props.dataset)) {
-        error({
-            componentName: 'VueUiFunnel',
-            type: 'dataset',
-            debug: debug.value,
-        });
-    } else {
-        props.dataset.forEach((ds, i) => {
-            getMissingDatasetAttributes({
-                datasetObject: ds,
-                requiredAttributes: ['name', 'value'],
-            }).forEach((attr) => {
-                isDataset.value = false;
+watch(
+    [validation, () => props.config.debug],
+    () => {
+        if (!props.dataset.length) {
+            error({
+                componentName: 'VueUiFunnel',
+                type: 'dataset',
+                debug: debug.value,
+            });
+        }
+        validation.value.forEach((row, index) => {
+            row.missing.forEach((property) =>
                 error({
                     componentName: 'VueUiFunnel',
                     type: 'datasetSerieAttribute',
-                    property: attr,
-                    index: i,
+                    property,
+                    index,
                     debug: debug.value,
-                });
-            });
-        });
-    }
-
-    if (FINAL_CONFIG.value.responsive) {
-        const handleResize = throttle(() => {
-            const { width, height } = useResponsive({
-                chart: funnelChart.value,
-                title: cfgChart.value.title.text ? chartTitle.value : null,
-                source: source.value,
-                noTitle: noTitle.value,
-            });
-
-            requestAnimationFrame(() => {
-                svg.value.height = height;
-                svg.value.width = width;
-                drawingArea.value = setDrawingArea();
-
-                if (FINAL_CONFIG.value.responsiveProportionalSizing) {
-                    fontSizes.value.circles = translateSize({
-                        relator: Math.min(width, height),
-                        adjuster: 600,
-                        source: cfgCircles.value.dataLabels.fontSize,
-                        threshold: 10,
-                        fallback: 10,
-                    });
-
-                    fontSizes.value.names = translateSize({
-                        relator: Math.min(width, height),
-                        adjuster: 600,
-                        source: cfgBars.value.dataLabels.name.fontSize,
-                        threshold: 10,
-                        fallback: 10,
-                    });
-
-                    fontSizes.value.values = translateSize({
-                        relator: Math.min(width, height),
-                        adjuster: 600,
-                        source: cfgBars.value.dataLabels.value.fontSize,
-                        threshold: 10,
-                        fallback: 10,
-                    });
-                } else {
-                    fontSizes.value.circles =
-                        cfgCircles.value.dataLabels.fontSize;
-                    fontSizes.value.names =
-                        cfgBars.value.dataLabels.name.fontSize;
-                    fontSizes.value.values =
-                        cfgBars.value.dataLabels.value.fontSize;
-                }
-            });
-        });
-
-        if (resizeObserver.value) {
-            if (observedEl.value) {
-                resizeObserver.value.unobserve(observedEl.value);
+                }),
+            );
+            if (!row.missing.includes('value') && !row.finite && debug.value) {
+                console.warn(
+                    `VueUiFunnel: dataset[${index}].value must be a finite number.`,
+                );
             }
-            resizeObserver.value.disconnect();
-        }
-
-        resizeObserver.value = new ResizeObserver(handleResize);
-        observedEl.value = funnelChart.value.parentNode;
-        resizeObserver.value.observe(observedEl.value);
-    }
-}
+        });
+    },
+    { immediate: true },
+);
 
 useHints({
     config: () => FINAL_CONFIG.value,
@@ -245,29 +233,36 @@ const isCursorPointer = computed(
     () => FINAL_CONFIG.value.userOptions.useCursorPointer,
 );
 
-const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } =
-    useUserOptionState({ config: FINAL_CONFIG.value });
+const userOptionsVisible = ref(
+    !FINAL_CONFIG.value.userOptions.showOnChartHover,
+);
+const keepUserOptionState = computed(
+    () => FINAL_CONFIG.value.userOptions.keepStateOnChartLeave,
+);
+function setUserOptionsVisibility(state = false) {
+    if (FINAL_CONFIG.value.userOptions.showOnChartHover)
+        userOptionsVisible.value = state;
+}
 const { svgRef } = useChartAccessibility({
     config: cfgChart.value.title,
 });
 
 watch(
-    () => props.config,
-    (_newCfg) => {
-        FINAL_CONFIG.value = prepareConfig();
-        userOptionsVisible.value =
-            !FINAL_CONFIG.value.userOptions.showOnChartHover;
-        prepareChart();
-        titleStep.value += 1;
-        tableStep.value += 1;
-        fontSizes.value.circles = cfgCircles.value.dataLabels.fontSize;
-        fontSizes.value.names = cfgBars.value.dataLabels.name.fontSize;
-        fontSizes.value.values = cfgBars.value.dataLabels.value.fontSize;
-
-        // Reset mutable config
-        mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
+    [
+        () => FINAL_CONFIG.value.responsive,
+        () => cfgChart.value.title.text,
+        () => cfgChart.value.title.subtitle.text,
+        () => cfgChart.value.title.fontSize,
+        () => cfgChart.value.title.subtitle.fontSize,
+    ],
+    prepareChart,
+    { flush: 'post' },
+);
+watch(
+    () => FINAL_CONFIG.value.userOptions.showOnChartHover,
+    (value) => {
+        userOptionsVisible.value = !value;
     },
-    { deep: true },
 );
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
@@ -284,22 +279,38 @@ const mutableConfig = ref({
     showTable: FINAL_CONFIG.value.table.show,
 });
 
-const fontSizes = ref({
-    circles: cfgCircles.value.dataLabels.fontSize,
-    names: cfgBars.value.dataLabels.name.fontSize,
-    values: cfgBars.value.dataLabels.value.fontSize,
-});
+watch(
+    () => FINAL_CONFIG.value.table.show,
+    (value) => {
+        mutableConfig.value.showTable = value;
+    },
+);
 
-const svg = computed({
-    get: () => {
-        return {
+const svg = computed(
+    () =>
+        responsiveSize.value || {
             height: cfgChart.value.height,
             width: cfgChart.value.width,
-        };
-    },
-    set: (v) => {
-        return v;
-    },
+        },
+);
+const fontSizes = computed(() => {
+    const resize = (source) =>
+        FINAL_CONFIG.value.responsive &&
+        FINAL_CONFIG.value.responsiveProportionalSizing &&
+        responsiveSize.value
+            ? translateSize({
+                  relator: Math.min(svg.value.width, svg.value.height),
+                  adjuster: 600,
+                  source,
+                  threshold: 10,
+                  fallback: 10,
+              })
+            : source;
+    return {
+        circles: resize(cfgCircles.value.dataLabels.fontSize),
+        names: resize(cfgBars.value.dataLabels.name.fontSize),
+        values: resize(cfgBars.value.dataLabels.value.fontSize),
+    };
 });
 
 const formattedDataset = computed(() => {
@@ -317,9 +328,22 @@ const formattedDataset = computed(() => {
     });
 });
 
-setTimeout(() => {
-    loaded.value = true;
-}, formattedDataset.value.length * 150);
+const animationEnabled = computed(
+    () => FINAL_CONFIG.value.useCssAnimation && !prefersReducedMotion.value,
+);
+const isAnimating = computed(() => animationEnabled.value && !loaded.value);
+function restartAnimation() {
+    clearTimeout(animationTimer);
+    animationTimer = null;
+    loaded.value = !animationEnabled.value || !isDataset.value;
+    if (!loaded.value)
+        animationTimer = setTimeout(() => {
+            loaded.value = true;
+            animationTimer = null;
+        }, formattedDataset.value.length * 150);
+}
+watch(() => props.dataset, restartAnimation, { immediate: true, deep: true });
+watch(animationEnabled, restartAnimation);
 
 function setDrawingArea() {
     const left = cfgChart.value.padding.left;
@@ -334,10 +358,12 @@ function setDrawingArea() {
     };
 }
 
-const drawingArea = ref(setDrawingArea());
+const drawingArea = computed(setDrawingArea);
 
 const barHeight = computed(() => {
-    return drawingArea.value.height / props.dataset.length;
+    return props.dataset.length
+        ? drawingArea.value.height / props.dataset.length
+        : 0;
 });
 
 const gap = computed(() => {
@@ -349,17 +375,14 @@ const spacingRatio = computed(() => {
 });
 
 const datapoints = computed(() => {
+    const firstValue = formattedDataset.value[0]?.value;
     return formattedDataset.value.map((ds, i) => {
         const size = barHeight.value - gap.value;
-        const y =
-            drawingArea.value.top +
-            (gap.value / 2) * i +
-            (barHeight.value - gap.value / 2) * i +
-            gap.value / 2;
-        const proportion = ds.value / formattedDataset.value[0].value;
+        const y = drawingArea.value.top + barHeight.value * i + gap.value / 2;
+        const ratio = firstValue ? ds.value / firstValue : 0;
+        const proportion = Number.isFinite(ratio) ? ratio : 0;
         const width =
-            (drawingArea.value.width - size - spacingRatio.value) *
-            (ds.value / formattedDataset.value[0].value);
+            (drawingArea.value.width - size - spacingRatio.value) * proportion;
         return {
             ...ds,
             cx: drawingArea.value.left + size / 2,
@@ -369,7 +392,7 @@ const datapoints = computed(() => {
             height: Math.max(size, 0),
             proportion,
             r: Math.max(size / 2, 0),
-            width: Math.max(width, 0),
+            width: Number.isFinite(width) ? Math.max(width, 0) : 0,
             x: drawingArea.value.left + size + spacingRatio.value,
             y,
         };
@@ -377,6 +400,7 @@ const datapoints = computed(() => {
 });
 
 const funnelArea = computed(() => {
+    if (!datapoints.value.length) return '';
     const points = datapoints.value.map((dp) => {
         return `${dp.x + dp.width},${dp.y + (barHeight.value - gap.value) / 2}`;
     });
@@ -384,6 +408,7 @@ const funnelArea = computed(() => {
 });
 
 const circlesLink = computed(() => {
+    if (!datapoints.value.length) return {};
     return {
         x1: datapoints.value[0].cx,
         y1: datapoints.value[0].cy,
@@ -468,14 +493,8 @@ const dataTable = computed(() => {
         breakpoint: FINAL_CONFIG.value.table.responsiveBreakpoint,
     };
 
-    const colNames = [
-        FINAL_CONFIG.value.table.columnNames.series,
-        FINAL_CONFIG.value.table.columnNames.value,
-        FINAL_CONFIG.value.table.columnNames.percentage,
-    ];
-
     return {
-        colNames,
+        colNames: head,
         head,
         body,
         config,
@@ -544,7 +563,9 @@ const tableComponent = computed(() =>
 
 watch(
     () => mutableConfig.value.showTable,
-    (v) => syncTableVisibility(v, FINAL_CONFIG, tableUnit),
+    (v) => {
+        if (tableUnit.value) syncTableVisibility(v, FINAL_CONFIG, tableUnit);
+    },
 );
 
 function closeTable() {
@@ -645,7 +666,6 @@ defineExpose({
             :style="`width:100%;background:transparent;padding-bottom:24px`"
         >
             <Title
-                :key="`title_${titleStep}`"
                 :config="{
                     title: {
                         cy: 'funnel-div-title',
@@ -775,18 +795,11 @@ defineExpose({
                 :stroke-width="12 * cfgChart.circleLinks.widthRatio"
                 stroke-linecap="round"
                 :class="{
-                    animated:
-                        FINAL_CONFIG.useCssAnimation && !prefersReducedMotion,
+                    animated: isAnimating,
                 }"
                 :style="{
-                    strokeDasharray:
-                        FINAL_CONFIG.useCssAnimation && !prefersReducedMotion
-                            ? drawingArea.height
-                            : 0,
-                    strokeDashoffset:
-                        FINAL_CONFIG.useCssAnimation && !prefersReducedMotion
-                            ? drawingArea.height
-                            : 0,
+                    strokeDasharray: isAnimating ? drawingArea.height : 0,
+                    strokeDashoffset: isAnimating ? drawingArea.height : 0,
                 }"
             />
 
@@ -797,10 +810,7 @@ defineExpose({
                 :stroke="cfgCircles.stroke"
                 :stroke-width="cfgCircles.strokeWidth"
                 :class="{
-                    animated:
-                        FINAL_CONFIG.useCssAnimation &&
-                        !loaded &&
-                        !prefersReducedMotion,
+                    animated: isAnimating,
                 }"
                 :style="{
                     animationDelay: `${150 * i}ms`,
@@ -825,10 +835,7 @@ defineExpose({
                 "
                 :font-weight="cfgCircles.dataLabels.bold ? 'bold' : 'normal'"
                 :class="{
-                    animated:
-                        FINAL_CONFIG.useCssAnimation &&
-                        !loaded &&
-                        !prefersReducedMotion,
+                    animated: isAnimating,
                 }"
                 :style="{
                     animationDelay: `${150 * i}ms`,
@@ -854,13 +861,10 @@ defineExpose({
                 :points="funnelArea"
                 :fill="`url(#funnel_area_${uid})`"
                 :class="{
-                    animated:
-                        FINAL_CONFIG.useCssAnimation &&
-                        !loaded &&
-                        !prefersReducedMotion,
+                    animated: isAnimating,
                 }"
                 :style="{
-                    transition: FINAL_CONFIG.useCssAnimation
+                    transition: animationEnabled
                         ? `all ${150 * formattedDataset.length}ms ease-in`
                         : 'none',
                 }"
@@ -874,10 +878,7 @@ defineExpose({
                 :stroke-width="cfgBars.strokeWidth"
                 :rx="cfgBars.borderRadius"
                 :class="{
-                    animated:
-                        FINAL_CONFIG.useCssAnimation &&
-                        !loaded &&
-                        !prefersReducedMotion,
+                    animated: isAnimating,
                 }"
                 :style="{
                     animationDelay: `${150 * i}ms`,
@@ -905,10 +906,7 @@ defineExpose({
                         cfgBars.dataLabels.name.bold ? 'bold' : 'normal'
                     "
                     :class="{
-                        animated:
-                            FINAL_CONFIG.useCssAnimation &&
-                            !loaded &&
-                            !prefersReducedMotion,
+                        animated: isAnimating,
                     }"
                     :style="{
                         animationDelay: `${150 * i}ms`,
@@ -936,10 +934,7 @@ defineExpose({
                         cfgBars.dataLabels.value.bold ? 'bold' : 'normal'
                     "
                     :class="{
-                        animated:
-                            FINAL_CONFIG.useCssAnimation &&
-                            !loaded &&
-                            !prefersReducedMotion,
+                        animated: isAnimating,
                     }"
                     :style="{
                         animationDelay: `${150 * i}ms`,
@@ -1028,7 +1023,6 @@ defineExpose({
             </template>
             <template #content>
                 <DataTable
-                    :key="`table_${tableStep}`"
                     :colNames="dataTable.colNames"
                     :head="dataTable.head"
                     :body="dataTable.body"

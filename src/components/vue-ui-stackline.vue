@@ -48,7 +48,6 @@ import {
     dataLabel,
     error,
     forceValidValue,
-    functionReturnsString,
     getImageDimensions,
     getMissingDatasetAttributes,
     hasDeepProperty,
@@ -144,18 +143,8 @@ const emit = defineEmits([
     'copyAlt',
 ]);
 
-const isDataset = computed({
-    get() {
-        return !!props.dataset && props.dataset.length;
-    },
-    set(bool) {
-        return bool;
-    },
-});
+const isDataset = computed(() => !!props.dataset?.length);
 
-function canShowValue(v) {
-    return Number.isFinite(v);
-}
 const stacklineChart = ref(null);
 const uid = ref(createUid());
 const isTooltip = ref(false);
@@ -167,7 +156,6 @@ const chartSlicer = ref(null);
 const noTitle = ref(null);
 const source = ref(null);
 const isFullscreen = ref(false);
-const isLoaded = ref(false);
 const responsiveSizeReady = ref(false);
 const titleStep = ref(0);
 const tableStep = ref(0);
@@ -181,10 +169,8 @@ const xAxisLabel = ref(null);
 const yAxisLabel = ref(null);
 const scaleLabels = ref(null);
 const timeLabelsEls = ref(null);
-const sumTop = ref(null);
 
 const parentElement = shallowRef(null);
-const parentLayoutIsStable = ref(false);
 const parentLayoutStableRunSequence = ref(0);
 const pendingParentLayoutSequence = ref(0);
 
@@ -207,27 +193,38 @@ function setParentElementReference() {
     parentElement.value = stacklineChart.value?.parentNode ?? null;
 }
 
-function nextPaintFrame() {
+let chartDisposed = false;
+const pendingLayoutFrames = new Map();
+let slicerRefreshSequence = 0;
+let resizeFrame = null;
+let clickSuppressionTimer = null;
+
+function waitForLayoutFrame() {
     return new Promise((resolve) => {
-        requestAnimationFrame(() => {
-            requestAnimationFrame(resolve);
+        const frame = requestAnimationFrame(() => {
+            pendingLayoutFrames.delete(frame);
+            resolve(true);
         });
+        pendingLayoutFrames.set(frame, resolve);
     });
 }
 
+async function waitForLayoutFrames(count, isCurrent) {
+    for (let i = 0; i < count; i += 1) {
+        if (!(await waitForLayoutFrame()) || !isCurrent() || chartDisposed)
+            return false;
+    }
+    return true;
+}
+
 async function runParentStableLayoutPass() {
-    const currentSequence = ++pendingParentLayoutSequence.value;
-
-    parentLayoutIsStable.value = false;
-
+    if (chartDisposed) return;
+    const sequence = ++pendingParentLayoutSequence.value;
     await nextTick();
-    await nextPaintFrame();
-    await nextPaintFrame();
-
-    if (currentSequence !== pendingParentLayoutSequence.value) return;
-
+    const isCurrent = () => sequence === pendingParentLayoutSequence.value;
+    if (!isCurrent() || chartDisposed) return;
+    if (!(await waitForLayoutFrames(4, isCurrent))) return;
     parentLayoutStableRunSequence.value += 1;
-    parentLayoutIsStable.value = true;
 }
 
 const selectedMinimapIndex = ref(null);
@@ -511,14 +508,13 @@ watch(
         setParentElementReference();
         runParentStableLayoutPass();
 
-        if (
-            !cfgChart.value.zoom.keepState ||
-            !slicerReady.value ||
-            (slicer.value.start === 0 && slicer.value.end === 0)
-        ) {
-            setupSlicer();
-        } else {
-            normalizeSlicerWindow();
+        if (cfgChart.value.zoom.keepState) {
+            if (
+                !slicerReady.value ||
+                (slicer.value.start === 0 && slicer.value.end === 0)
+            )
+                setupSlicer();
+            else normalizeSlicerWindow();
         }
     },
     { deep: true },
@@ -541,24 +537,18 @@ watch(
     { deep: true },
 );
 
-const mutableConfig = ref({
-    dataLabels: {
-        show: cfgLines.value.dataLabels.show,
-    },
-    showTable: FINAL_CONFIG.value.table.show,
-    showTooltip: cfgTooltip.value.show,
-});
-
+function getMutableConfig() {
+    return {
+        dataLabels: { show: cfgLines.value.dataLabels.show },
+        showTable: FINAL_CONFIG.value.table.show,
+        showTooltip: cfgTooltip.value.show,
+    };
+}
+const mutableConfig = ref(getMutableConfig());
 watch(
     FINAL_CONFIG,
     () => {
-        mutableConfig.value = {
-            dataLabels: {
-                show: cfgLines.value.dataLabels.show,
-            },
-            showTable: FINAL_CONFIG.value.table.show,
-            showTooltip: cfgTooltip.value.show,
-        };
+        mutableConfig.value = getMutableConfig();
     },
     { immediate: true },
 );
@@ -590,10 +580,10 @@ const customPalette = computed(() => {
 
 const resizeObserver = shallowRef(null);
 const observedEl = shallowRef(null);
-const to = ref(null);
 const debug = computed(() => FINAL_CONFIG.value.debug);
 
 function prepareChart({ resetSlicer = true } = {}) {
+    if (chartDisposed) return;
     if (objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiStackline',
@@ -607,7 +597,6 @@ function prepareChart({ resetSlicer = true } = {}) {
                 datasetObject,
                 requiredAttributes: ['name', 'series'],
             }).forEach((attr) => {
-                isDataset.value = false;
                 error({
                     componentName: 'VueUiStackline',
                     type: 'datasetSerieAttribute',
@@ -624,13 +613,8 @@ function prepareChart({ resetSlicer = true } = {}) {
         manualLoading.value = FINAL_CONFIG.value.loading;
     }
 
-    setTimeout(() => {
-        isLoaded.value = true;
-    }, 10);
-
     if (FINAL_CONFIG.value.responsive) {
         const handleResize = throttle(() => {
-            isLoaded.value = false;
             const { width, height } = useResponsive({
                 chart: stacklineChart.value,
                 noTitle: noTitle.value,
@@ -643,14 +627,11 @@ function prepareChart({ resetSlicer = true } = {}) {
                 source: source.value,
             });
 
-            requestAnimationFrame(() => {
+            cancelAnimationFrame(resizeFrame);
+            resizeFrame = requestAnimationFrame(() => {
                 defaultSizes.value.width = width;
                 defaultSizes.value.height = height - 12;
                 responsiveSizeReady.value = true;
-                clearTimeout(to.value);
-                to.value = setTimeout(() => {
-                    isLoaded.value = true;
-                }, 10);
             });
         });
 
@@ -672,6 +653,17 @@ function prepareChart({ resetSlicer = true } = {}) {
 }
 
 onBeforeUnmount(() => {
+    chartDisposed = true;
+    slicerRefreshSequence += 1;
+    pendingParentLayoutSequence.value += 1;
+    cancelAnimationFrame(resizeFrame);
+    cancelAnimationFrame(RAF_MOUSE_MOVE);
+    clearTimeout(clickSuppressionTimer);
+    for (const [frame, resolve] of pendingLayoutFrames) {
+        cancelAnimationFrame(frame);
+        resolve(false);
+    }
+    pendingLayoutFrames.clear();
     stableParentSize.stop();
 
     if (resizeObserver.value) {
@@ -847,16 +839,14 @@ const unmutableDataset = computed(() => {
     });
 });
 
-const stackedDataset = computed(() =>
-    unmutableDataset.value.filter(
-        (ds) => !segregated.value.includes(ds.id) && !ds.standalone,
-    ),
+const visibleDataset = computed(() =>
+    unmutableDataset.value.filter((ds) => !segregated.value.includes(ds.id)),
 );
-
+const stackedDataset = computed(() =>
+    visibleDataset.value.filter((ds) => !ds.standalone),
+);
 const standaloneDatasetOnly = computed(() =>
-    unmutableDataset.value.filter(
-        (ds) => !segregated.value.includes(ds.id) && ds.standalone,
-    ),
+    visibleDataset.value.filter((ds) => ds.standalone),
 );
 
 const { toggleLegend, showSeries, hideSeries, legendSet, legendConfig } =
@@ -872,11 +862,7 @@ const { toggleLegend, showSeries, hideSeries, legendSet, legendConfig } =
     });
 
 const maxSeries = computed(() => {
-    const v = Math.max(
-        ...unmutableDataset.value
-            .filter((ds) => !segregated.value.includes(ds.id))
-            .map((ds) => ds.series.length),
-    );
+    const v = Math.max(...visibleDataset.value.map((ds) => ds.series.length));
     return isFinite(v)
         ? v
         : Math.max(...unmutableDataset.value.map((ds) => ds.series.length));
@@ -1258,15 +1244,7 @@ function setZoomState(state, { transition = true } = {}) {
     return applied;
 }
 
-const refreshRAF = ref(null);
-function nextPaint() {
-    return new Promise((r) =>
-        requestAnimationFrame(() => requestAnimationFrame(() => r())),
-    );
-}
-
 onBeforeUnmount(() => {
-    if (refreshRAF.value) cancelAnimationFrame(refreshRAF.value);
     clearQueuedSlicerFrame();
     cancelChartZoomSelection();
     stopChartZoomVisualTransition();
@@ -1277,6 +1255,8 @@ async function refreshSlicer({
     publish = false,
     transition = force && publish,
 } = {}) {
+    if (chartDisposed) return;
+    const sequence = ++slicerRefreshSequence;
     if (
         cfgChart.value.zoom.keepState &&
         !force &&
@@ -1286,54 +1266,36 @@ async function refreshSlicer({
         normalizeSlicerWindow();
         return;
     }
-
     const applyControlledZoom = !force;
     const previousRange = transition ? getCommittedChartZoomRange() : null;
     const previousYScale = transition ? captureChartZoomYScale() : null;
-
     setupSlicer(applyControlledZoom);
-
-    if (transition) {
+    if (transition)
         startChartZoomVisualTransition(previousRange, previousYScale);
-    }
-
     await nextTick();
-
-    if (refreshRAF.value) {
-        cancelAnimationFrame(refreshRAF.value);
+    const isCurrent = () => sequence === slicerRefreshSequence;
+    if (!isCurrent() || chartDisposed) return;
+    if (!(await waitForLayoutFrames(3, isCurrent))) return;
+    setupSlicer(applyControlledZoom);
+    if (publish) {
+        emitZoomState({
+            start: Number(slicer.value.start),
+            end: Number(slicer.value.end),
+        });
+        emit('zoomReset');
     }
-
-    refreshRAF.value = requestAnimationFrame(async () => {
-        await nextPaint();
-
-        setupSlicer(applyControlledZoom);
-        refreshRAF.value = null;
-
-        if (publish) {
-            emitZoomState({
-                start: Number(slicer.value.start),
-                end: Number(slicer.value.end),
-            });
-            emit('zoomReset');
-        }
-    });
 }
 
-const lineSlot = computed(() => {
-    return Math.max(
-        0,
-        drawingArea.value.width / (slicer.value.end - slicer.value.start),
-    );
-});
-
-const datasetTotals = computed(() => {
-    return sumSeries(
+const fullDatasetTotals = computed(() =>
+    sumSeries(
         stackedDataset.value.map((ds) => ({
-            ...ds,
-            series: ds.series.map((v) => v ?? 0),
+            series: ds.series.map((value) => value ?? 0),
         })),
-    ).slice(slicer.value.start, slicer.value.end);
-});
+    ),
+);
+const datasetTotals = computed(() =>
+    fullDatasetTotals.value.slice(slicer.value.start, slicer.value.end),
+);
 
 const allSegregated = computed(
     () => segregated.value.length === unmutableDataset.value.length,
@@ -1405,22 +1367,18 @@ const allMinimaps = computed(() => {
 
 const displayTotals = computed(() => {
     return sumSeries(
-        stackedDataset.value
-            .filter((ds) => !segregated.value.includes(ds.id))
-            .map((s) => ({
-                ...s,
-                series: s.series.map((dp, i) => {
-                    const v = dp ?? 0;
-                    return s.signedSeries[i] === -1 ? (v >= 0 ? -v : v) : v;
-                }),
-            })),
+        stackedDataset.value.map((s) => ({
+            ...s,
+            series: s.series.map((dp, i) => {
+                const v = dp ?? 0;
+                return s.signedSeries[i] === -1 ? (v >= 0 ? -v : v) : v;
+            }),
+        })),
     ).slice(slicer.value.start, slicer.value.end);
 });
 
 const datasetSignedTotals = computed(() => {
-    const src = stackedDataset.value.filter(
-        (ds) => !segregated.value.includes(ds.id),
-    );
+    const src = stackedDataset.value;
     return {
         positive: sumSeries(
             src.map((s) => {
@@ -1625,6 +1583,49 @@ const layoutDisplayedTimeLabels = computed(() => {
     return getDisplayedTimeLabels(null);
 });
 
+const DENSE_LABEL_THRESHOLD = 62;
+const MIN_TIME_LABEL_SPACING = 60;
+const useSparseTimeLabels = computed(
+    () =>
+        !slots['time-label'] &&
+        slicer.value.end - slicer.value.start > DENSE_LABEL_THRESHOLD,
+);
+const renderedTimeLabels = computed(() => {
+    const labels = (
+        useSparseTimeLabels.value
+            ? layoutDisplayedTimeLabels.value
+            : displayedTimeLabels.value
+    ).map((timeLabel, index) => ({ timeLabel, index }));
+    if (!useSparseTimeLabels.value) return labels;
+    const candidates = labels.filter(
+        ({ timeLabel }) => String(timeLabel.text ?? '').length,
+    );
+    const budget = Math.max(
+        2,
+        Math.floor(drawingArea.value.width / MIN_TIME_LABEL_SPACING),
+    );
+    if (candidates.length <= budget) return candidates;
+    // Evenly retain first and last available ticks without changing their indices.
+    return Array.from(
+        { length: budget },
+        (_, i) =>
+            candidates[
+                Math.round((i * (candidates.length - 1)) / (budget - 1))
+            ],
+    );
+});
+const selectedTimeLabel = computed(() => {
+    const index = selectedSerieIndex.value;
+    if (
+        !useSparseTimeLabels.value ||
+        index == null ||
+        !timeLabels.value[index] ||
+        renderedTimeLabels.value.some((label) => label.index === index)
+    )
+        return null;
+    return { index, timeLabel: timeLabels.value[index] };
+});
+
 watch(
     () => [
         defaultSizes.value.width,
@@ -1653,17 +1654,8 @@ watch(
     { flush: 'post', deep: true },
 );
 
-const _formattedDataset = computed(() => {
-    if (!isDataset.value && !loading.value) return [];
-
-    const totalHeight = drawingArea.value.height;
-    const ZERO_POSITION = yLabels.value[0]
-        ? yLabels.value[0].zero
-        : drawingArea.value.bottom;
-    const winStart = slicer.value.start ?? 0;
-    const winEnd = slicer.value.end ?? 0;
-    const winLen = Math.max(1, winEnd - winStart);
-
+// Keep explicit-bound behavior independent from the axis's distributed rules.
+const geometryScale = computed(() => {
     const stackedMax = Math.max(...datasetSignedTotals.value.positive, 0);
     const stackedMin = Math.min(...datasetSignedTotals.value.negative, 0);
     const standMax = Math.max(...standaloneSignedExtremes.value.positive, 0);
@@ -1702,6 +1694,21 @@ const _formattedDataset = computed(() => {
                   cfgGrid.value.scale.ticks,
               );
 
+    return scale;
+});
+
+const _formattedDataset = computed(() => {
+    if (!isDataset.value && !loading.value) return [];
+
+    const totalHeight = drawingArea.value.height;
+    const ZERO_POSITION = yLabels.value[0]
+        ? yLabels.value[0].zero
+        : drawingArea.value.bottom;
+    const winStart = slicer.value.start ?? 0;
+    const winEnd = slicer.value.end ?? 0;
+    const winLen = Math.max(1, winEnd - winStart);
+
+    const scale = geometryScale.value;
     const { min: MIN, max: MAX } = scale;
     const maxTotal = MAX + (MIN >= 0 ? 0 : Math.abs(MIN)) || 1;
 
@@ -1717,160 +1724,127 @@ const _formattedDataset = computed(() => {
         );
     };
 
-    return unmutableDataset.value
-        .filter((ds) => !segregated.value.includes(ds.id))
-        .map((ds) => {
-            const relIndices = [];
-            const seriesVals = [];
-            const signedVals = [];
-            const baseY = new Array(winLen).fill(null);
-            const topY = new Array(winLen).fill(null);
+    return visibleDataset.value.map((ds) => {
+        const relIndices = [];
+        const seriesVals = [];
+        const signedVals = [];
+        const baseY = new Array(winLen).fill(null);
+        const topY = new Array(winLen).fill(null);
 
-            for (let rel = 0; rel < winLen; rel += 1) {
-                const abs = winStart + rel;
-                const raw = ds.series?.[abs];
-                const sign = ds.signedSeries?.[abs];
+        for (let rel = 0; rel < winLen; rel += 1) {
+            const abs = winStart + rel;
+            const raw = ds.series?.[abs];
+            const sign = ds.signedSeries?.[abs];
 
-                const isMissing = raw == null || Number.isNaN(raw);
-                const dp = isMissing ? 0 : raw;
+            const isMissing = raw == null || Number.isNaN(raw);
+            const dp = isMissing ? 0 : raw;
 
-                const proportion = ds.standalone
-                    ? dp / maxTotal
-                    : cfgLines.value.distributed
-                      ? dp / (datasetTotals.value[rel] || 1)
-                      : dp / maxTotal;
+            const proportion = ds.standalone
+                ? dp / maxTotal
+                : cfgLines.value.distributed
+                  ? dp / (datasetTotals.value[rel] || 1)
+                  : dp / maxTotal;
 
-                if (dp >= 0) {
-                    const h = totalHeight * Math.abs(proportion);
-                    if (ds.standalone) {
-                        baseY[rel] = ZERO_POSITION;
-                        topY[rel] = ZERO_POSITION - h;
-                    } else {
-                        const prev = cumPos[rel];
-                        const newCum = prev + h;
-                        baseY[rel] = ZERO_POSITION - prev;
-                        topY[rel] = ZERO_POSITION - newCum;
-                        cumPos[rel] = newCum;
-                    }
+            if (dp >= 0) {
+                const h = totalHeight * Math.abs(proportion);
+                if (ds.standalone) {
+                    baseY[rel] = ZERO_POSITION;
+                    topY[rel] = ZERO_POSITION - h;
                 } else {
-                    const h = totalHeight * Math.abs(proportion);
-                    if (ds.standalone) {
-                        baseY[rel] = ZERO_POSITION;
-                        topY[rel] = ZERO_POSITION + h;
-                    } else {
-                        const prev = cumNeg[rel];
-                        const newCum = prev + h;
-                        baseY[rel] = ZERO_POSITION + prev;
-                        topY[rel] = ZERO_POSITION + newCum;
-                        cumNeg[rel] = newCum;
-                    }
+                    const prev = cumPos[rel];
+                    const newCum = prev + h;
+                    baseY[rel] = ZERO_POSITION - prev;
+                    topY[rel] = ZERO_POSITION - newCum;
+                    cumPos[rel] = newCum;
                 }
-
-                relIndices.push(rel);
-                seriesVals.push(dp);
-                signedVals.push(sign ?? (dp >= 0 ? 1 : -1));
+            } else {
+                const h = totalHeight * Math.abs(proportion);
+                if (ds.standalone) {
+                    baseY[rel] = ZERO_POSITION;
+                    topY[rel] = ZERO_POSITION + h;
+                } else {
+                    const prev = cumNeg[rel];
+                    const newCum = prev + h;
+                    baseY[rel] = ZERO_POSITION + prev;
+                    topY[rel] = ZERO_POSITION + newCum;
+                    cumNeg[rel] = newCum;
+                }
             }
 
-            const points = relIndices.map((rel) => ({
-                x: computeXFromRelativeIndex(rel),
-                y: topY[rel],
-            }));
-            const x = points.map((p) => p.x);
+            relIndices.push(rel);
+            seriesVals.push(dp);
+            signedVals.push(sign ?? (dp >= 0 ? 1 : -1));
+        }
 
-            const absoluteTotal = seriesVals.reduce(
-                (a, b) => a + Math.abs(b || 0),
-                0,
-            );
-            const safeTotal = absoluteTotal === 0 ? 1 : absoluteTotal;
+        const points = relIndices.map((rel) => ({
+            x: computeXFromRelativeIndex(rel),
+            y: topY[rel],
+        }));
+        const x = points.map((p) => p.x);
 
-            const proportions = seriesVals.map((dp, i) => {
-                if (cfgLines.value.distributed && !ds.standalone) {
-                    const rel = relIndices[i];
-                    const denom = datasetTotals.value[rel] || 1;
-                    return (dp || 0) / denom;
-                }
-                return (dp || 0) / safeTotal;
-            });
+        const absoluteTotal = seriesVals.reduce(
+            (a, b) => a + Math.abs(b || 0),
+            0,
+        );
+        const safeTotal = absoluteTotal === 0 ? 1 : absoluteTotal;
 
-            return {
-                ...ds,
-                x,
-                points,
-                baseY: relIndices.map((rel) => baseY[rel]),
-                topY: relIndices.map((rel) => topY[rel]),
-                series: seriesVals,
-                signedSeries: signedVals,
-                proportions,
-                rel: relIndices,
-                fullSeries: Array.isArray(ds.fullSeries)
-                    ? ds.fullSeries
-                    : ds.series,
-            };
+        const proportions = seriesVals.map((dp, i) => {
+            if (cfgLines.value.distributed && !ds.standalone) {
+                const rel = relIndices[i];
+                const denom = datasetTotals.value[rel] || 1;
+                return (dp || 0) / denom;
+            }
+            return (dp || 0) / safeTotal;
         });
+
+        return {
+            ...ds,
+            x,
+            points,
+            baseY: relIndices.map((rel) => baseY[rel]),
+            topY: relIndices.map((rel) => topY[rel]),
+            series: seriesVals,
+            signedSeries: signedVals,
+            proportions,
+            rel: relIndices,
+            fullSeries: Array.isArray(ds.fullSeries)
+                ? ds.fullSeries
+                : ds.series,
+        };
+    });
 });
 
-const formattedDataset = computed(() => {
-    const stripMove = (d) =>
-        typeof d === 'string'
-            ? d
-                  .replace(
-                      /^M\s*[-+]?[\d.]+(?:e[-+]?\d+)?\s*,?\s*[-+]?[\d.]+(?:e[-+]?\d+)?\s*/i,
-                      '',
-                  )
-                  .trim()
-            : '';
-
-    const stackedMax = Math.max(...datasetSignedTotals.value.positive, 0);
-    const stackedMin = Math.min(...datasetSignedTotals.value.negative, 0);
-    const standMax = Math.max(...standaloneSignedExtremes.value.positive, 0);
-    const standMin = Math.min(...standaloneSignedExtremes.value.negative, 0);
-
-    const premax = Math.max(stackedMax, standMax);
-    const premin = Math.min(stackedMin, standMin);
-
-    const scale =
-        !cfgLines.value.distributed &&
-        (cfgGrid.value.scale.scaleMax !== null ||
-            cfgGrid.value.scale.scaleMin !== null)
-            ? calculateNiceScaleWithExactExtremes(
-                  cfgGrid.value.scale.scaleMin !== null
-                      ? cfgGrid.value.scale.scaleMin
-                      : premin > 0
-                        ? 0
-                        : premin,
-                  cfgGrid.value.scale.scaleMax !== null
-                      ? cfgGrid.value.scale.scaleMax
-                      : premax < 0
-                        ? 0
-                        : premax,
-                  cfgGrid.value.scale.ticks,
+const stripMove = (d) =>
+    typeof d === 'string'
+        ? d
+              .replace(
+                  /^M\s*[-+]?[\d.]+(?:e[-+]?\d+)?\s*,?\s*[-+]?[\d.]+(?:e[-+]?\d+)?\s*/i,
+                  '',
               )
-            : calculateNiceScale(
-                  cfgGrid.value.scale.scaleMin !== null
-                      ? cfgGrid.value.scale.scaleMin
-                      : premin > 0
-                        ? 0
-                        : premin,
-                  cfgGrid.value.scale.scaleMax !== null
-                      ? cfgGrid.value.scale.scaleMax
-                      : premax < 0
-                        ? 0
-                        : premax,
-                  cfgGrid.value.scale.ticks,
-              );
+              .trim()
+        : '';
+
+const formattedDataset = computed(() => {
+    const scale = geometryScale.value;
 
     const SCALE_MIN = Number(scale.min) || 0;
     const SCALE_MAX = Number(scale.max) || 0;
     const ABS_MIN = Math.abs(SCALE_MIN);
     const RANGE = SCALE_MAX + ABS_MIN || 1;
 
-    const valueToMiniY = (v) => {
+    const valueToMiniY = (v, minimapH) => {
         if (cfgLines.value.distributed) {
             const clamped = Math.max(0, Math.min(1, v));
             return minimapH - minimapH * clamped;
         }
 
-        return clampY(minimapH - minimapH * (((v ?? 0) + ABS_MIN) / RANGE));
+        return Math.max(
+            0,
+            Math.min(
+                minimapH,
+                minimapH - minimapH * (((v ?? 0) + ABS_MIN) / RANGE),
+            ),
+        );
     };
 
     return _formattedDataset.value.map((ds) => {
@@ -1913,39 +1887,48 @@ const formattedDataset = computed(() => {
 
         const topPts = ds.x.map((x, i) => ({ x, y: ds.topY[i] }));
         const basePts = ds.x.map((x, i) => ({ x, y: ds.baseY[i] }));
-        const topSmooth =
+        const topSmooth = computed(() =>
             n >= 2
                 ? createSmoothPath(topPts)
-                : `M${topPts[0].x},${topPts[0].y}`;
-        const topStraight =
+                : `M${topPts[0].x},${topPts[0].y}`,
+        );
+        const topStraight = computed(() =>
             n >= 2
                 ? createStraightPath(topPts)
-                : `M${topPts[0].x},${topPts[0].y}`;
-
-        // IMPORTANT: for single-point, DO NOT strip leading M; use path as-is.
-        const smoothPath = n >= 2 ? `M${stripMove(topSmooth)}` : topSmooth;
-        const straightPath =
-            n >= 2 ? `M${stripMove(topStraight)}` : topStraight;
-
-        let smoothArea = '';
-        let straightArea = '';
-
-        if (cfgLines.value.useArea && n >= 2) {
-            const baseSmoothRv = createSmoothPath([...basePts].reverse());
-            const baseStraightRv = createStraightPath([...basePts].reverse());
+                : `M${topPts[0].x},${topPts[0].y}`,
+        );
+        const smoothPath = computed(() =>
+            n >= 2 ? `M${stripMove(topSmooth.value)}` : topSmooth.value,
+        );
+        const straightPath = computed(() =>
+            n >= 2 ? `M${stripMove(topStraight.value)}` : topStraight.value,
+        );
+        const smoothArea = computed(() => {
+            if (!cfgLines.value.useArea || n < 2) return '';
             const baseEnd = basePts[basePts.length - 1];
-
-            smoothArea = `M${topPts[0].x},${topPts[0].y} ${stripMove(topSmooth)} L${baseEnd.x},${baseEnd.y} ${stripMove(baseSmoothRv)} Z`;
-            straightArea = `M${topPts[0].x},${topPts[0].y} ${stripMove(topStraight)} L${baseEnd.x},${baseEnd.y} ${stripMove(baseStraightRv)} Z`;
-        }
+            return `M${topPts[0].x},${topPts[0].y} ${stripMove(topSmooth.value)} L${baseEnd.x},${baseEnd.y} ${stripMove(createSmoothPath([...basePts].reverse()))} Z`;
+        });
+        const straightArea = computed(() => {
+            if (!cfgLines.value.useArea || n < 2) return '';
+            const baseEnd = basePts[basePts.length - 1];
+            return `M${topPts[0].x},${topPts[0].y} ${stripMove(topStraight.value)} L${baseEnd.x},${baseEnd.y} ${stripMove(createStraightPath([...basePts].reverse()))} Z`;
+        });
 
         return {
             ...ds,
             points: topPts,
-            smoothPath,
-            straightPath,
-            smoothArea,
-            straightArea,
+            get smoothPath() {
+                return smoothPath.value;
+            },
+            get straightPath() {
+                return straightPath.value;
+            },
+            get smoothArea() {
+                return smoothArea.value;
+            },
+            get straightArea() {
+                return straightArea.value;
+            },
             xMinimap,
             yMinimap,
             yMinimapBase,
@@ -2155,7 +2138,8 @@ function cancelChartZoomSelection(event) {
 function suppressNextChartClick() {
     ignoreNextChartClick.value = true;
 
-    setTimeout(() => {
+    clearTimeout(clickSuppressionTimer);
+    clickSuppressionTimer = setTimeout(() => {
         ignoreNextChartClick.value = false;
     }, 0);
 }
@@ -2420,6 +2404,14 @@ function highlighterRectAt(i) {
     return { x: leftEdge, width: Math.max(0, rightEdge - leftEdge) };
 }
 
+function getVisibleIndexFromX(x) {
+    const index =
+        WINDOW_LEN.value > 1
+            ? Math.round((x - drawingArea.value.left) / STEP_X.value)
+            : 0;
+    return Math.min(WINDOW_LEN.value - 1, Math.max(0, index));
+}
+
 function onSvgMouseMove(e) {
     if (isAnnotator.value || isChartZoomSelecting.value) return;
     if (RAF_MOUSE_MOVE) cancelAnimationFrame(RAF_MOUSE_MOVE);
@@ -2444,16 +2436,7 @@ function onSvgMouseMove(e) {
             return;
         }
 
-        let idx = 0;
-        if (WINDOW_LEN.value > 1) {
-            const raw = (svgPt.x - left) / STEP_X.value;
-            idx = Math.round(raw);
-        } else {
-            idx = 0;
-        }
-
-        if (idx < 0) idx = 0;
-        if (idx > WINDOW_LEN.value - 1) idx = WINDOW_LEN.value - 1;
+        const idx = getVisibleIndexFromX(svgPt.x);
 
         if (hoveredIndex.value !== idx) {
             hoveredIndex.value = idx;
@@ -2477,16 +2460,7 @@ function onSvgClick(e) {
     if (svgPt.x < left || svgPt.x > right || svgPt.y < top || svgPt.y > bottom)
         return;
 
-    let relIdx = 0;
-    if (WINDOW_LEN.value > 1) {
-        const raw = (svgPt.x - left) / STEP_X.value;
-        relIdx = Math.round(raw);
-    } else {
-        relIdx = 0;
-    }
-
-    if (relIdx < 0) relIdx = 0;
-    if (relIdx > WINDOW_LEN.value - 1) relIdx = WINDOW_LEN.value - 1;
+    const relIdx = getVisibleIndexFromX(svgPt.x);
 
     selectX({
         seriesIndex: relIdx,
@@ -2497,17 +2471,15 @@ function onSvgClick(e) {
 }
 
 function selectDatapoint(index) {
-    const datapoint = JSON.parse(JSON.stringify(formattedDataset.value)).map(
-        (fd) => {
-            return {
-                name: fd.name,
-                value: fd.series[index] === 0 ? 0 : fd.series[index] || null,
-                proportion: fd.proportions[index] || null,
-                color: fd.color,
-                id: fd.id,
-            };
-        },
-    );
+    const datapoint = formattedDataset.value.map((fd) => {
+        return {
+            name: fd.name,
+            value: fd.series[index] === 0 ? 0 : fd.series[index] || null,
+            proportion: fd.proportions[index] || null,
+            color: fd.color,
+            id: fd.id,
+        };
+    });
 
     if (FINAL_CONFIG.value.events.datapointClick) {
         FINAL_CONFIG.value.events.datapointClick({
@@ -2545,6 +2517,22 @@ function onSvgMouseLeave() {
 
 const selectedSerieIndex = ref(null);
 
+const showPersistentDots = computed(
+    () =>
+        cfgLines.value.dot.show &&
+        slicer.value.end - slicer.value.start <
+            cfgLines.value.dot.hideAboveMaxSerieLength,
+);
+const showHoverDots = computed(
+    () => cfgLines.value.dot.showOnHover && !showPersistentDots.value,
+);
+
+const highlightedIndices = computed(() =>
+    [...new Set([selectedMinimapIndex.value, selectedSerieIndex.value])].filter(
+        (index) => index != null && index >= 0 && index < WINDOW_LEN.value,
+    ),
+);
+
 const selectedSeries = computed(() => {
     const rel = selectedSerieIndex.value;
     const abs = rel == null ? null : absIndex(rel);
@@ -2555,10 +2543,7 @@ const selectedSeries = computed(() => {
             shape: datapoint.shape || 'circle',
             name: datapoint.name,
             color: datapoint.color,
-            value:
-                rel == null
-                    ? null
-                    : datapoint.series.find((_s, i) => i === rel),
+            value: rel == null ? null : datapoint.series[rel],
             sourceValue: abs == null ? null : datapoint.seriesSource?.[abs],
             comments: datapoint.comments || [],
             id: datapoint.id,
@@ -2577,8 +2562,10 @@ function getTooltipTimeLabel(seriesIndex) {
     }
     const defaultTimeLabel = timeLabels.value?.[seriesIndex]?.text || null;
     const preciseTimeLabel =
-        preciseAllTimeLabelsTooltip.value?.[seriesIndex]?.text || null;
-    const fallbackTimeLabel = allTimeLabels.value?.[seriesIndex]?.text || null;
+        preciseAllTimeLabelsTooltip.value?.[absIndex(seriesIndex)]?.text ||
+        null;
+    const fallbackTimeLabel =
+        allTimeLabels.value?.[absIndex(seriesIndex)]?.text || null;
     if (cfgTooltip.value.useDefaultTimeFormat) {
         return defaultTimeLabel;
     }
@@ -2596,26 +2583,16 @@ const tooltipContent = computed(() => {
         .filter((v) => isSafeValue(v) && v !== null)
         .reduce((a, b) => Math.abs(a) + Math.abs(b), 0);
 
-    if (
-        isFunction(customFormat) &&
-        functionReturnsString(() =>
-            customFormat({
-                absoluteIndex: selectedSerieIndex.value + slicer.value.start,
-                seriesIndex: selectedSerieIndex.value,
-                datapoint: selectedSeries.value,
-                series: unmutableDataset.value,
-                config: FINAL_CONFIG.value,
-            }),
-        )
-    ) {
-        return customFormat({
-            absoluteIndex: selectedSerieIndex.value + slicer.value.start,
-            seriesIndex: selectedSerieIndex.value,
-            datapoint: selectedSeries.value,
-            series: unmutableDataset.value,
-            config: FINAL_CONFIG.value,
-        });
-    }
+    const customContent = isFunction(customFormat)
+        ? customFormat({
+              absoluteIndex: selectedSerieIndex.value + slicer.value.start,
+              seriesIndex: selectedSerieIndex.value,
+              datapoint: selectedSeries.value,
+              series: unmutableDataset.value,
+              config: FINAL_CONFIG.value,
+          })
+        : null;
+    if (typeof customContent === 'string') return customContent;
 
     const {
         showValue,
@@ -2787,24 +2764,22 @@ function toggleTooltipVisibility(
 }
 
 function selectTimeLabel(label, relativeIndex) {
-    const datapoint = JSON.parse(JSON.stringify(formattedDataset.value)).map(
-        (fd) => {
-            return {
-                name: fd.name,
-                value:
-                    fd.series[relativeIndex] === 0
-                        ? 0
-                        : (fd.signedSeries[relativeIndex] === -1
-                              ? fd.series[relativeIndex] >= 0
-                                  ? -fd.series[relativeIndex]
-                                  : fd.series[relativeIndex]
-                              : fd.series[relativeIndex]) || null,
-                proportion: fd.proportions[relativeIndex] || null,
-                color: fd.color,
-                id: fd.id,
-            };
-        },
-    );
+    const datapoint = formattedDataset.value.map((fd) => {
+        return {
+            name: fd.name,
+            value:
+                fd.series[relativeIndex] === 0
+                    ? 0
+                    : (fd.signedSeries[relativeIndex] === -1
+                          ? fd.series[relativeIndex] >= 0
+                              ? -fd.series[relativeIndex]
+                              : fd.series[relativeIndex]
+                          : fd.series[relativeIndex]) || null,
+            proportion: fd.proportions[relativeIndex] || null,
+            color: fd.color,
+            id: fd.id,
+        };
+    });
 
     emit('selectTimeLabel', {
         datapoint,
@@ -2824,12 +2799,12 @@ const tableCsv = computed(() => {
     }));
     const body = [];
 
-    displayedTimeLabels.value.forEach((tl) => {
+    layoutDisplayedTimeLabels.value.forEach((tl) => {
         const abs = tl.absoluteIndex;
         const rowLabel = cfgTimeLabels.value.values?.[abs] ? tl.text : abs + 1;
         const row = [rowLabel];
 
-        unmutableDataset.value.forEach((s) => {
+        visibleDataset.value.forEach((s) => {
             const raw = s.series?.[abs];
             const val = Number(
                 (raw ?? 0).toFixed(FINAL_CONFIG.value.table.td.roundingValue),
@@ -2876,12 +2851,7 @@ const dataTable = computed(() => {
         });
 
         // TOTAL must exclude standalone series
-        const stackedRowSeries = formattedDataset.value.filter(
-            (ds) => !ds.standalone,
-        );
-        const sum = stackedRowSeries
-            .map((ds) => ds.series?.[rel] ?? 0)
-            .reduce((a, b) => a + b, 0);
+        const sum = fullDatasetTotals.value[abs] ?? 0;
 
         rows.push(
             [label]
@@ -2972,8 +2942,12 @@ const tableComponent = computed(() =>
 );
 
 watch(
-    () => mutableConfig.value.showTable,
-    (v) => syncTableVisibility(v, FINAL_CONFIG, tableUnit),
+    [() => mutableConfig.value.showTable, tableUnit],
+    ([visible]) => {
+        if (tableUnit.value)
+            syncTableVisibility(visible, FINAL_CONFIG, tableUnit);
+    },
+    { flush: 'post' },
 );
 
 function closeTable() {
@@ -3014,7 +2988,7 @@ function getDatapoint(seriesIndex) {
     const rel = seriesIndex ?? 0;
     const abs = absIndex(rel);
 
-    return JSON.parse(JSON.stringify(formattedDataset.value)).map((fd) => {
+    return formattedDataset.value.map((fd) => {
         const valueRel = fd.series[rel];
         const signRel = fd.signedSeries?.[rel];
         const applied =
@@ -3045,8 +3019,12 @@ const datapointsForSlicerCustomFormat = computed(() => {
 });
 
 watch(
-    () => props.selectedXIndex,
-    (v) => {
+    [
+        () => props.selectedXIndex,
+        () => slicer.value.start,
+        () => slicer.value.end,
+    ],
+    ([v]) => {
         if ([null, undefined].includes(props.selectedXIndex)) {
             selectedSerieIndex.value = null;
             return;
@@ -3118,17 +3096,10 @@ const minimapScale = computed(() => {
     return { min: Number(scale.min) || 0, max: Number(scale.max) || 0 };
 });
 
-function makeMinimap({ minimapH, unitW }) {
-    const stripMove = (d) =>
-        typeof d === 'string'
-            ? d
-                  .replace(
-                      /^M\s*[-+]?[\d.]+(?:e[-+]?\d+)?\s*,?\s*[-+]?[\d.]+(?:e[-+]?\d+)?\s*/i,
-                      '',
-                  )
-                  .trim()
-            : '';
-
+function buildMinimap(
+    { minimapH, unitW },
+    { dataset, scale, config, hasPattern },
+) {
     if (
         !Number.isFinite(minimapH) ||
         minimapH <= 0 ||
@@ -3138,12 +3109,12 @@ function makeMinimap({ minimapH, unitW }) {
         return '';
     }
 
-    const stacked = formattedDataset.value.filter((dp) => !dp.standalone);
-    const standalone = formattedDataset.value.filter((dp) => dp.standalone);
+    const stacked = dataset.filter((dp) => !dp.standalone);
+    const standalone = dataset.filter((dp) => dp.standalone);
 
     const maxLen = Math.max(
         0,
-        ...formattedDataset.value.map((dp) =>
+        ...dataset.map((dp) =>
             Array.isArray(dp.fullSeries)
                 ? dp.fullSeries.length
                 : dp.series.length,
@@ -3156,8 +3127,25 @@ function makeMinimap({ minimapH, unitW }) {
             ? [unitW * 0.5]
             : Array.from({ length: maxLen }, (_, i) => i * unitW);
 
+    function renderPaths(dp, topPts, basePts = null) {
+        const path = config.smooth ? createSmoothPath : createStraightPath;
+        const top = path(topPts);
+        let html = '';
+        if (basePts && config.useArea) {
+            const base = path([...basePts].reverse());
+            const end = basePts[basePts.length - 1];
+            const area = `M${topPts[0].x},${topPts[0].y} ${stripMove(top)} L${end.x},${end.y} ${stripMove(base)} Z`;
+            html += `<path d="${area}" fill="${hasPattern ? `url(#pattern_${uid.value}_${dp.absoluteIndex})` : dp.color}" opacity="${config.areaOpacity}" stroke="none" />`;
+        }
+        const line = `M${topPts[0].x},${topPts[0].y} ${stripMove(top)}`;
+        return (
+            html +
+            `<path d="${line}" fill="none" stroke="${dp.color}" stroke-width="${config.strokeWidth}" stroke-linecap="round" />`
+        );
+    }
+
     // Distributed variant
-    if (cfgLines.value.distributed) {
+    if (config.distributed) {
         // Denominator per index: sum of ABS values of all stacked series (avoid mid "zero")
         const totalsAbs = Array.from({ length: maxLen }, (_, i) => {
             let s = 0;
@@ -3202,36 +3190,7 @@ function makeMinimap({ minimapH, unitW }) {
             const topPts = X.map((x, i) => ({ x, y: Ytop[i] }));
             const basePts = X.map((x, i) => ({ x, y: Ybase[i] }));
 
-            const topSmooth = createSmoothPath(topPts);
-            const baseSmoothRv = createSmoothPath([...basePts].reverse());
-            const topStraight = createStraightPath(topPts);
-            const baseStraightRv = createStraightPath([...basePts].reverse());
-            const baseEnd = basePts[basePts.length - 1];
-
-            if (cfgLines.value.useArea) {
-                const areaD = cfgLines.value.smooth
-                    ? `M${topPts[0].x},${topPts[0].y} ${stripMove(topSmooth)} L${baseEnd.x},${baseEnd.y} ${stripMove(baseSmoothRv)} Z`
-                    : `M${topPts[0].x},${topPts[0].y} ${stripMove(topStraight)} L${baseEnd.x},${baseEnd.y} ${stripMove(baseStraightRv)} Z`;
-
-                parts.push(
-                    `<path d="${areaD}"
-                    fill="${slots.pattern ? `url(#pattern_${uid.value}_${dp.absoluteIndex})` : cfgLines.value.gradient.show ? dp.color : dp.color}"
-                    opacity="${cfgLines.value.areaOpacity}"
-                    stroke="none" />`,
-                );
-            }
-
-            const lineD = cfgLines.value.smooth
-                ? `M${topPts[0].x},${topPts[0].y} ${stripMove(topSmooth)}`
-                : `M${topPts[0].x},${topPts[0].y} ${stripMove(topStraight)}`;
-
-            parts.push(
-                `<path d="${lineD}"
-                fill="none"
-                stroke="${dp.color}"
-                stroke-width="${cfgLines.value.strokeWidth}"
-                stroke-linecap="round" />`,
-            );
+            parts.push(renderPaths(dp, topPts, basePts));
         });
 
         // Standalone series as proportional lines (ABS value / totalsAbs)
@@ -3244,20 +3203,7 @@ function makeMinimap({ minimapH, unitW }) {
                     yFromProp(Math.abs(full?.[i] ?? 0) / totalsAbs[i]),
                 );
                 const pts = X.map((x, i) => ({ x, y: Y[i] }));
-                const smooth = createSmoothPath(pts);
-                const straight = createStraightPath(pts);
-
-                const lineD = cfgLines.value.smooth
-                    ? `M${pts[0].x},${pts[0].y} ${stripMove(smooth)}`
-                    : `M${pts[0].x},${pts[0].y} ${stripMove(straight)}`;
-
-                parts.push(
-                    `<path d="${lineD}"
-                    fill="none"
-                    stroke="${dp.color}"
-                    stroke-width="${cfgLines.value.strokeWidth}"
-                    stroke-linecap="round" />`,
-                );
+                parts.push(renderPaths(dp, pts));
             });
         }
 
@@ -3265,8 +3211,8 @@ function makeMinimap({ minimapH, unitW }) {
     }
 
     // Non distributed variant
-    const MIN = minimapScale.value.min;
-    const MAX = minimapScale.value.max;
+    const MIN = scale.min;
+    const MAX = scale.max;
     const ABS_MIN = Math.abs(MIN);
     const RANGE = MAX + ABS_MIN || 1;
 
@@ -3305,36 +3251,7 @@ function makeMinimap({ minimapH, unitW }) {
             const topPts = X.map((x, i) => ({ x, y: Ytop[i] }));
             const basePts = X.map((x, i) => ({ x, y: Ybase[i] }));
 
-            const topSmooth = createSmoothPath(topPts);
-            const baseSmoothRv = createSmoothPath([...basePts].reverse());
-            const topStraight = createStraightPath(topPts);
-            const baseStraightRv = createStraightPath([...basePts].reverse());
-            const baseEnd = basePts[basePts.length - 1];
-
-            if (cfgLines.value.useArea) {
-                const areaD = cfgLines.value.smooth
-                    ? `M${topPts[0].x},${topPts[0].y} ${stripMove(topSmooth)} L${baseEnd.x},${baseEnd.y} ${stripMove(baseSmoothRv)} Z`
-                    : `M${topPts[0].x},${topPts[0].y} ${stripMove(topStraight)} L${baseEnd.x},${baseEnd.y} ${stripMove(baseStraightRv)} Z`;
-
-                parts.push(
-                    `<path d="${areaD}"
-                    fill="${slots.pattern ? `url(#pattern_${uid.value}_${dp.absoluteIndex})` : cfgLines.value.gradient.show ? dp.color : dp.color}"
-                    opacity="${cfgLines.value.areaOpacity}"
-                    stroke="none" />`,
-                );
-            }
-
-            const lineD = cfgLines.value.smooth
-                ? `M${topPts[0].x},${topPts[0].y} ${stripMove(topSmooth)}`
-                : `M${topPts[0].x},${topPts[0].y} ${stripMove(topStraight)}`;
-
-            parts.push(
-                `<path d="${lineD}"
-                fill="none"
-                stroke="${dp.color}"
-                stroke-width="${cfgLines.value.strokeWidth}"
-                stroke-linecap="round" />`,
-            );
+            parts.push(renderPaths(dp, topPts, basePts));
         });
     }
 
@@ -3345,23 +3262,42 @@ function makeMinimap({ minimapH, unitW }) {
                 : dp.series;
             const Y = full.map(valueToMiniY);
             const topPts = X.map((x, i) => ({ x, y: Y[i] }));
-            const topSmooth = createSmoothPath(topPts);
-            const topStraight = createStraightPath(topPts);
-
-            const lineD = cfgLines.value.smooth
-                ? `M${topPts[0].x},${topPts[0].y} ${stripMove(topSmooth)}`
-                : `M${topPts[0].x},${topPts[0].y} ${stripMove(topStraight)}`;
-
-            parts.push(
-                `<path d="${lineD}"
-                fill="none"
-                stroke="${dp.color}"
-                stroke-width="${cfgLines.value.strokeWidth}"
-                stroke-linecap="round" />`,
-            );
+            parts.push(renderPaths(dp, topPts));
         });
     }
     return parts.join('');
+}
+
+const minimapRenderer = computed(() => {
+    const inputs = {
+        dataset: formattedDataset.value,
+        scale: minimapScale.value,
+        config: {
+            smooth: cfgLines.value.smooth,
+            distributed: cfgLines.value.distributed,
+            useArea: cfgLines.value.useArea,
+            areaOpacity: cfgLines.value.areaOpacity,
+            strokeWidth: cfgLines.value.strokeWidth,
+        },
+    };
+    let previous;
+    let cached;
+    return (dimensions, hasPattern) => {
+        if (
+            previous &&
+            previous.minimapH === dimensions.minimapH &&
+            previous.unitW === dimensions.unitW &&
+            previous.hasPattern === hasPattern
+        )
+            return cached;
+        previous = { ...dimensions, hasPattern };
+        cached = buildMinimap(dimensions, { ...inputs, hasPattern });
+        return cached;
+    };
+});
+
+function makeMinimap(dimensions) {
+    return minimapRenderer.value(dimensions, !!slots.pattern);
 }
 
 function isLabelDisplayed(value, proportion) {
@@ -3546,7 +3482,7 @@ function setKeyboardTooltipPositionFromIndex(index) {
     if (!Number.isFinite(index)) return;
     if (!svgRef.value) return;
 
-    const svgX = drawingArea.value.left + index * STEP_X.value;
+    const svgX = xAtVisibleIndex(index);
     const svgY = drawingArea.value.top + drawingArea.value.height / 2;
 
     const coords = svgToClientCoords(svgX, svgY, svgRef.value);
@@ -3625,7 +3561,7 @@ const annotationViewport = computed(() => {
         </div>
 
         <A11yDataTable
-            v-if="a11yTable?.rows?.length"
+            v-if="FINAL_CONFIG.a11y.includeTable && a11yTable?.rows?.length"
             :uid="uid"
             :head="a11yTable.headers"
             :body="a11yTable.rows"
@@ -3983,7 +3919,18 @@ const annotationViewport = computed(() => {
                 />
 
                 <!-- AREAS & LINES -->
-                <g :clip-path="chartZoomClipPath">
+                <g
+                    :clip-path="chartZoomClipPath"
+                    v-memo="[
+                        formattedDataset,
+                        cfgLines,
+                        transitionEnabled,
+                        labelLayoutSettling,
+                        chartZoomGeometryStyle,
+                        chartZoomClipPath,
+                        $slots.pattern,
+                    ]"
+                >
                     <g
                         class="vue-ui-stackline-zoom-geometry"
                         :class="{
@@ -4108,10 +4055,7 @@ const annotationViewport = computed(() => {
                                 <slot
                                     name="time-label"
                                     v-bind="{
-                                        x:
-                                            drawingArea.left +
-                                            lineSlot * i +
-                                            lineSlot / 2,
+                                        x: xAtVisibleIndex(i),
                                         y:
                                             drawingArea.bottom +
                                             cfgGrid.x.timeLabels.fontSize *
@@ -4119,7 +4063,7 @@ const annotationViewport = computed(() => {
                                             cfgGrid.x.timeLabels.offsetY,
                                         fontSize: cfgGrid.x.timeLabels.fontSize,
                                         fill: cfgGrid.x.timeLabels.color,
-                                        transform: `translate(${drawingArea.left + lineSlot * i + lineSlot / 2}, ${drawingArea.bottom + cfgTimeLabels.fontSize * 1.3 + cfgTimeLabels.offsetY}), rotate(${cfgTimeLabels.rotation})`,
+                                        transform: `translate(${xAtVisibleIndex(i)}, ${drawingArea.bottom + cfgTimeLabels.fontSize * 1.3 + cfgTimeLabels.offsetY}), rotate(${cfgTimeLabels.rotation})`,
                                         absoluteIndex: timeLabel.absoluteIndex,
                                         content: timeLabel.text,
                                         textAnchor:
@@ -4135,7 +4079,13 @@ const annotationViewport = computed(() => {
                             </g>
                         </g>
                         <g v-else>
-                            <g v-for="(timeLabel, i) in displayedTimeLabels">
+                            <g
+                                v-for="{
+                                    timeLabel,
+                                    index: i,
+                                } in renderedTimeLabels"
+                                :key="i"
+                            >
                                 <text
                                     v-if="
                                         !String(timeLabel.text).includes('\n')
@@ -4216,6 +4166,41 @@ const annotationViewport = computed(() => {
                     </g>
                 </template>
 
+                <text
+                    v-if="cfgTimeLabels.show && selectedTimeLabel"
+                    data-cy="selected-time-label"
+                    :text-anchor="
+                        cfgTimeLabels.rotation > 0
+                            ? 'start'
+                            : cfgTimeLabels.rotation < 0
+                              ? 'end'
+                              : 'middle'
+                    "
+                    :font-size="cfgTimeLabels.fontSize"
+                    :font-weight="cfgTimeLabels.bold ? 'bold' : 'normal'"
+                    :fill="cfgTimeLabels.color"
+                    :stroke="cfgChart.backgroundColor"
+                    stroke-width="3"
+                    paint-order="stroke fill"
+                    :transform="`translate(${xAtVisibleIndex(selectedTimeLabel.index)}, ${drawingArea.bottom + cfgTimeLabels.fontSize * 1.3 + cfgTimeLabels.offsetY}), rotate(${cfgTimeLabels.rotation})`"
+                    @click="
+                        selectTimeLabel(
+                            selectedTimeLabel.timeLabel,
+                            selectedTimeLabel.index,
+                        )
+                    "
+                    v-html="
+                        createTSpansFromLineBreaksOnX({
+                            content: String(selectedTimeLabel.timeLabel.text),
+                            fontSize: cfgTimeLabels.fontSize,
+                            fill: cfgTimeLabels.color,
+                            stroke: cfgChart.backgroundColor,
+                            x: 0,
+                            y: 0,
+                        })
+                    "
+                />
+
                 <!-- HIGHLIGHTER (rect) -->
                 <template
                     v-if="
@@ -4225,7 +4210,7 @@ const annotationViewport = computed(() => {
                     "
                 >
                     <g
-                        v-for="(_, i) in slicer.end - slicer.start"
+                        v-for="i in highlightedIndices"
                         :key="`tooltip_trap_highlighter_${i}`"
                     >
                         <rect
@@ -4313,19 +4298,12 @@ const annotationViewport = computed(() => {
                             v-for="ds in formattedDataset"
                             :key="`shp_sel_${ds.id}`"
                         >
-                            <g
-                                v-if="
-                                    userHovers &&
-                                    slicer.end - slicer.start >
-                                        cfgLines.dot.hideAboveMaxSerieLength
-                                "
-                            >
+                            <g v-if="userHovers && showHoverDots">
                                 <template v-if="selectedSerieIndex != null">
                                     <template
                                         v-if="
-                                            ds.rel.includes(
-                                                selectedSerieIndex,
-                                            ) &&
+                                            selectedSerieIndex <
+                                                ds.points.length &&
                                             ds.fullSeries?.[
                                                 slicer.start +
                                                     selectedSerieIndex
@@ -4359,16 +4337,12 @@ const annotationViewport = computed(() => {
                                             :plot="{
                                                 x: checkNaN(
                                                     ds.points[
-                                                        ds.rel.indexOf(
-                                                            selectedSerieIndex,
-                                                        )
+                                                        selectedSerieIndex
                                                     ].x,
                                                 ),
                                                 y: checkNaN(
                                                     ds.points[
-                                                        ds.rel.indexOf(
-                                                            selectedSerieIndex,
-                                                        )
+                                                        selectedSerieIndex
                                                     ].y,
                                                 ),
                                             }"
@@ -4397,12 +4371,7 @@ const annotationViewport = computed(() => {
                             v-for="ds in formattedDataset"
                             :key="`shp_${ds.id}`"
                         >
-                            <template
-                                v-if="
-                                    slicer.end - slicer.start <
-                                    cfgLines.dot.hideAboveMaxSerieLength
-                                "
-                            >
+                            <template v-if="showPersistentDots">
                                 <g
                                     v-for="(plot, k) in ds.points"
                                     :key="`shp_${ds.id}_${slicer.start + k}`"
@@ -4438,6 +4407,7 @@ const annotationViewport = computed(() => {
                                         :plot="{ x: plot.x, y: plot.y }"
                                         :radius="
                                             userHovers &&
+                                            cfgLines.dot.showOnHover &&
                                             selectedSerieIndex === ds.rel[k]
                                                 ? cfgLines.dot.radius * 1.3
                                                 : cfgLines.dot.radius
@@ -4517,7 +4487,6 @@ const annotationViewport = computed(() => {
                     </g>
 
                     <g
-                        ref="sumTop"
                         v-if="
                             cfgLines.totalValues.show &&
                             formattedDataset.length > 1
@@ -4660,7 +4629,11 @@ const annotationViewport = computed(() => {
         </Teleport>
 
         <StackChartTable
-            v-if="isDataset && cfgUserOptions.buttons.table"
+            v-if="
+                isDataset &&
+                cfgUserOptions.buttons.table &&
+                mutableConfig.showTable
+            "
             :tableComponent="tableComponent"
             :dataTable="dataTable"
             :useDialog="FINAL_CONFIG.table.useDialog"
@@ -4730,7 +4703,11 @@ const annotationViewport = computed(() => {
                 cfgChart.zoom.startIndex !== null ? cfgChart.zoom.startIndex : 0
             "
             :selectColor="cfgChart.zoom.highlightColor"
-            :selectedSeries="datapointsForSlicerCustomFormat"
+            :selectedSeries="
+                isFunction(cfgChart.zoom.customFormat)
+                    ? datapointsForSlicerCustomFormat
+                    : []
+            "
             :smoothMinimap="false"
             :start="slicer.start"
             :textColor="cfgChart.color"

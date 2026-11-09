@@ -15,11 +15,9 @@ import { resolveChartConfig } from '../resolveChartConfig';
 import {
     computed,
     defineAsyncComponent,
-    nextTick,
     onBeforeUnmount,
     onMounted,
     ref,
-    toRefs,
     watch,
 } from 'vue';
 import {
@@ -35,11 +33,10 @@ import {
     applyDataLabel,
     dataLabel,
 } from '../lib';
-import { throttle } from '../canvas-lib';
-import { COMMON_RULES, useHints } from '../useHints';
+import { useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 import { usePrinter } from '../usePrinter';
-import { useLoading } from '../useLoading';
+import { usePrefersReducedMotion } from '../usePrefersMotion';
 
 import { useResponsive } from '../useResponsive';
 import { useChartExport } from '../useChartExport';
@@ -81,35 +78,91 @@ const emit = defineEmits(['copyAlt']);
 
 const bulletChart = ref(null);
 const chartTitle = ref(null);
-const titleStep = ref(0);
 const chartLegend = ref(null);
 const source = ref(null);
-const step = ref(0);
-const resizeObserver = ref(null);
-const observedEl = ref(null);
 const readyTeleport = ref(false);
 
-const isDataset = computed({
-    get: () => {
-        return FINAL_DATASET.value.hasOwnProperty('value');
-    },
-    set: (bool) => {
-        return bool;
-    },
+const prefersReducedMotion = usePrefersReducedMotion();
+const resolvedConfig = computed(prepareConfig);
+const isDataset = computed(() => {
+    const ds = props.dataset;
+    return (
+        Number.isFinite(ds?.value) &&
+        Array.isArray(ds?.segments) &&
+        ds.segments.length > 0 &&
+        ds.segments.every(
+            (segment) =>
+                segment != null &&
+                typeof segment === 'object' &&
+                'name' in segment &&
+                Number.isFinite(segment.from) &&
+                Number.isFinite(segment.to),
+        )
+    );
+});
+const loading = computed(
+    () => !!resolvedConfig.value.loading || !isDataset.value,
+);
+const skeletonConfig = computed(() => {
+    return treeShake({
+        defaultConfig: {
+            userOptions: { show: false },
+            style: {
+                chart: {
+                    backgroundColor: '#99999930',
+                    segments: {
+                        dataLabels: { show: false },
+                        ticks: {
+                            stroke: '#8A8A8A',
+                        },
+                    },
+                    valueBar: {
+                        label: { show: false },
+                    },
+                },
+            },
+        },
+        userConfig: resolvedConfig.value.skeletonConfig ?? {},
+    });
 });
 
-const FINAL_CONFIG = ref(prepareConfig());
+const FINAL_CONFIG = computed(() =>
+    loading.value
+        ? treeShake({
+              defaultConfig: resolvedConfig.value,
+              userConfig: skeletonConfig.value,
+          })
+        : resolvedConfig.value,
+);
 
-const debug = computed(() => FINAL_CONFIG.value.debug);
+const debug = computed(() => resolvedConfig.value.debug);
 const cfgTarget = computed(() => FINAL_CONFIG.value.style.chart.target);
 const cfgSegments = computed(() => FINAL_CONFIG.value.style.chart.segments);
 const cfgChart = computed(() => FINAL_CONFIG.value.style.chart);
 const cfgUserOptions = computed(() => FINAL_CONFIG.value.userOptions);
 
-const hasSegments = computed(() => {
-    if (!FINAL_DATASET.value.segments) {
-        if (debug.value) {
-            console.warn(`VueUiBullet: dataset segments is empty. Provide segments with this datastructure:\n
+const hasSegments = computed(
+    () =>
+        Array.isArray(FINAL_DATASET.value?.segments) &&
+        FINAL_DATASET.value.segments.length > 0,
+);
+const padding = computed(() => cfgChart.value.padding);
+
+watch(
+    [() => props.dataset, debug],
+    ([dataset, enabled]) => {
+        if (!enabled) return;
+        if (objectIsEmpty(dataset)) {
+            error({ componentName: 'VueUiBullet', type: 'dataset' });
+            return;
+        }
+        const segments = dataset.segments;
+        if (!Array.isArray(segments) || !segments.length) {
+            const reason =
+                !segments || (Array.isArray(segments) && !segments.length)
+                    ? 'is empty'
+                    : 'must be an array of objects';
+            console.warn(`VueUiBullet: dataset segments ${reason}. Provide segments with this datastructure:\n
     segments: [
         {
             name: string;
@@ -120,132 +173,44 @@ const hasSegments = computed(() => {
         {...}
     ]
             `);
+            return;
         }
-        isDataset.value = false;
-        return false;
-    }
-    if (!Array.isArray(FINAL_DATASET.value.segments)) {
-        if (debug.value) {
-            console.warn(`VueUiBullet: dataset segments must be an array of objects with this datastructure:\n
-    segments: [
-        {
-            name: string;
-            from: number;
-            to: number;
-            color?: string;
-        },
-        {...}
-    ] 
-            `);
-        }
-        isDataset.value = false;
-        return false;
-    }
-    if (!FINAL_DATASET.value.segments.length) {
-        if (debug.value) {
-            console.warn(`VueUiBullet: dataset segments is empty. Provide segments with this datastructure:\n
-    segments: [
-        {
-            name: string;
-            from: number;
-            to: number;
-            color?: string;
-        },
-        {...}
-    ]
-            `);
-        }
-        isDataset.value = false;
-        return false;
-    }
-    return true;
-});
-
-const padding = computed(() => {
-    const { top, right, bottom, left } = cfgChart.value.padding;
-    return {
-        top,
-        right,
-        bottom,
-        left,
-    };
-});
-
-function prepareChart() {
-    if (objectIsEmpty(FINAL_DATASET.value)) {
-        error({
-            componentName: 'VueUiBullet',
-            type: 'dataset',
-            debug: debug.value,
-        });
-        manualLoading.value = true;
-    } else {
-        if (hasSegments.value) {
-            FINAL_DATASET.value.segments.forEach((segment, i) => {
-                getMissingDatasetAttributes({
-                    datasetObject: segment,
-                    requiredAttributes: ['name', 'from', 'to'],
-                }).forEach((attr) => {
-                    isDataset.value = false;
-                    error({
-                        componentName: 'VueUiBullet segment',
-                        type: 'datasetSerieAttribute',
-                        property: attr,
-                        index: i,
-                        debug: debug.value,
-                    });
-                });
+        segments.forEach((segment, index) => {
+            const datasetObject =
+                segment && typeof segment === 'object' ? segment : {};
+            const missing = getMissingDatasetAttributes({
+                datasetObject,
+                requiredAttributes: ['name', 'from', 'to'],
             });
-        } else {
-            isDataset.value = false;
-            manualLoading.value = true;
-        }
-    }
-
-    // v3
-    if (!objectIsEmpty(FINAL_DATASET.value)) {
-        manualLoading.value = FINAL_CONFIG.value.loading;
-    }
-
-    if (FINAL_CONFIG.value.responsive) {
-        const handleResize = throttle(() => {
-            const { width, height } = useResponsive({
-                chart: bulletChart.value,
-                title: cfgChart.value.title.text ? chartTitle.value : null,
-                legend: cfgChart.value.legend.show ? chartLegend.value : null,
-                source: source.value,
-                padding: padding.value,
-            });
-
-            const legendOffset = cfgChart.value.legend.show ? 24 : 0;
-            const offsetY = legendOffset || 12;
-
-            requestAnimationFrame(() => {
-                defaultSizes.value.width = width;
-                defaultSizes.value.height = height - offsetY;
-            });
-        });
-
-        if (resizeObserver.value) {
-            if (observedEl.value) {
-                resizeObserver.value.unobserve(observedEl.value);
+            missing.forEach((property) =>
+                error({
+                    componentName: 'VueUiBullet segment',
+                    type: 'datasetSerieAttribute',
+                    property,
+                    index,
+                }),
+            );
+            for (const property of ['from', 'to']) {
+                if (
+                    !missing.includes(property) &&
+                    !Number.isFinite(datasetObject[property])
+                ) {
+                    console.warn(
+                        `VueUiBullet segment at index ${index}: ${property} must be a finite number.`,
+                    );
+                }
             }
-            resizeObserver.value.disconnect();
+        });
+        if (!Number.isFinite(dataset.value)) {
+            console.warn('VueUiBullet: dataset value must be a finite number.');
         }
-
-        resizeObserver.value = new ResizeObserver(handleResize);
-        observedEl.value = bulletChart.value.parentNode;
-        resizeObserver.value.observe(observedEl.value);
-    }
-
-    if (cfgChart.value.animation.show && !loading.value) {
-        useAnimation(FINAL_DATASET.value.value || 0);
-    }
-}
+    },
+    { immediate: true, deep: true },
+);
 
 onMounted(() => {
     readyTeleport.value = true;
-    prepareChart();
+    updateSizing();
 });
 
 const uid = ref(createUid());
@@ -274,62 +239,20 @@ const isCursorPointer = computed(
     () => FINAL_CONFIG.value.userOptions.useCursorPointer,
 );
 
-const skeletonConfig = computed(() => {
-    return treeShake({
-        defaultConfig: {
-            userOptions: { show: false },
-            style: {
-                chart: {
-                    backgroundColor: '#99999930',
-                    segments: {
-                        dataLabels: { show: false },
-                        ticks: {
-                            stroke: '#8A8A8A',
-                        },
-                    },
-                    valueBar: {
-                        label: { show: false },
-                    },
-                },
-            },
-        },
-        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {},
-    });
-});
-
-const { loading, FINAL_DATASET, manualLoading } = useLoading({
-    ...toRefs(props),
-    FINAL_CONFIG,
-    prepareConfig,
-    skeletonDataset: props.config?.skeletonDataset ?? {
-        value: 100,
-        target: 100,
-        segments: [
-            {
-                name: '',
-                from: 0,
-                to: 33,
-                color: '#AAAAAA',
-            },
-            {
-                name: '',
-                from: 33,
-                to: 66,
-                color: '#BABABA',
-            },
-            {
-                name: '',
-                from: 66,
-                to: 100,
-                color: '#CACACA',
-            },
-        ],
-    },
-    skeletonConfig: treeShake({
-        defaultConfig: FINAL_CONFIG.value,
-        userConfig: skeletonConfig.value,
-    }),
-});
+const defaultSkeletonDataset = {
+    value: 100,
+    target: 100,
+    segments: [
+        { name: '', from: 0, to: 33, color: '#AAAAAA' },
+        { name: '', from: 33, to: 66, color: '#BABABA' },
+        { name: '', from: 66, to: 100, color: '#CACACA' },
+    ],
+};
+const FINAL_DATASET = computed(() =>
+    loading.value
+        ? (props.config?.skeletonDataset ?? defaultSkeletonDataset)
+        : props.dataset,
+);
 
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } =
     useUserOptionState({ config: FINAL_CONFIG.value });
@@ -345,18 +268,72 @@ const defaultSizes = ref({
 const WIDTH = computed(() => defaultSizes.value.width);
 const HEIGHT = computed(() => defaultSizes.value.height);
 
+let resizeObserver = null;
+let resizeFrame = null;
+let disposed = false;
+
+function resizeChart() {
+    resizeFrame = null;
+    if (
+        disposed ||
+        !FINAL_CONFIG.value.responsive ||
+        !bulletChart.value?.parentNode
+    )
+        return;
+    const { width, height } = useResponsive({
+        chart: bulletChart.value,
+        title: cfgChart.value.title.text ? chartTitle.value : null,
+        legend: cfgChart.value.legend.show ? chartLegend.value : null,
+        source: source.value,
+        padding: padding.value,
+    });
+    defaultSizes.value = {
+        width,
+        height: height - (cfgChart.value.legend.show ? 24 : 12),
+    };
+}
+
+function scheduleResize() {
+    if (!disposed && FINAL_CONFIG.value.responsive && resizeFrame === null) {
+        resizeFrame = requestAnimationFrame(resizeChart);
+    }
+}
+
+function updateSizing() {
+    resizeObserver?.disconnect();
+    resizeObserver = null;
+    if (resizeFrame !== null) cancelAnimationFrame(resizeFrame);
+    resizeFrame = null;
+    if (disposed) return;
+    if (FINAL_CONFIG.value.responsive && bulletChart.value?.parentNode) {
+        resizeObserver = new ResizeObserver(scheduleResize);
+        resizeObserver.observe(bulletChart.value.parentNode);
+        scheduleResize();
+    } else {
+        defaultSizes.value = {
+            width: cfgChart.value.width,
+            height: cfgChart.value.height,
+        };
+    }
+}
+
+watch(() => FINAL_CONFIG.value.responsive, updateSizing, { flush: 'post' });
+watch(
+    cfgChart,
+    () => {
+        if (FINAL_CONFIG.value.responsive) scheduleResize();
+        else
+            defaultSizes.value = {
+                width: cfgChart.value.width,
+                height: cfgChart.value.height,
+            };
+    },
+    { deep: true, flush: 'post' },
+);
 watch(
     () => props.config,
-    (_newCfg) => {
-        if (!loading.value) {
-            FINAL_CONFIG.value = prepareConfig();
-        }
-        userOptionsVisible.value =
-            !FINAL_CONFIG.value.userOptions.showOnChartHover;
-        defaultSizes.value.width = cfgChart.value.width;
-        defaultSizes.value.height = cfgChart.value.height;
-        prepareChart();
-        titleStep.value += 1;
+    () => {
+        userOptionsVisible.value = !cfgUserOptions.value.showOnChartHover;
     },
     { deep: true },
 );
@@ -402,162 +379,180 @@ const minMax = computed(() => {
     };
 });
 
-const activeValue = ref(getActiveValue());
+const scale = computed(() => {
+    let { min, max } = minMax.value;
+    if (
+        !Number.isFinite(min) ||
+        !Number.isFinite(max) ||
+        !Number.isFinite(max - min) ||
+        min > max
+    ) {
+        min = 0;
+        max = 1;
+    } else if (min === max) {
+        min = Math.min(0, min);
+        max = Math.max(0, max) || 1;
+    }
+    const divisions = Number(cfgSegments.value.ticks.divisions);
+    return calculateNiceScale(
+        min,
+        max,
+        Number.isFinite(divisions)
+            ? Math.max(2, Math.min(1000, Math.floor(divisions)))
+            : 10,
+    );
+});
+const scaleOrigin = computed(() => Math.min(0, scale.value.min));
+const scaleRange = computed(() => scale.value.max - scaleOrigin.value || 1);
+function project(value) {
+    return (
+        svg.value.left +
+        ((value - scaleOrigin.value) / scaleRange.value) * svg.value.chartWidth
+    );
+}
+const activeValue = ref(
+    cfgChart.value.animation.show && !loading.value
+        ? minMax.value.min
+        : FINAL_DATASET.value.value || 0,
+);
+let animationFrame = null;
+let animationSequence = 0;
+
+function stopAnimation() {
+    animationSequence += 1;
+    if (animationFrame !== null) cancelAnimationFrame(animationFrame);
+    animationFrame = null;
+}
 
 watch(
-    () => FINAL_DATASET.value,
-    (v) => {
-        if (v.hasOwnProperty('value')) {
-            manualLoading.value = false;
+    [
+        () => FINAL_DATASET.value?.value,
+        () => cfgChart.value.animation.show,
+        () => cfgChart.value.animation.animationFrames,
+        loading,
+        prefersReducedMotion,
+    ],
+    ([value, enabled, frames]) => {
+        stopAnimation();
+        const target = Number.isFinite(value) ? value : 0;
+        if (disposed) return;
+        if (
+            !enabled ||
+            loading.value ||
+            prefersReducedMotion.value ||
+            !Number.isFinite(frames) ||
+            frames <= 0
+        ) {
+            activeValue.value = target;
+            return;
         }
-        if (cfgChart.value.animation.show && !loading.value) {
-            useAnimation(v.value || 0);
-        } else {
-            activeValue.value = v.value || 0;
+        const start = activeValue.value;
+        const count = Math.ceil(frames);
+        const sequence = animationSequence;
+        let frame = 0;
+        function animate() {
+            if (disposed || sequence !== animationSequence) return;
+            animationFrame = null;
+            frame += 1;
+            activeValue.value =
+                frame >= count
+                    ? target
+                    : start + ((target - start) * frame) / count;
+            if (frame < count && activeValue.value !== target)
+                animationFrame = requestAnimationFrame(animate);
         }
+        animate();
     },
-    { deep: true },
+    { immediate: true },
 );
 
-function getActiveValue() {
-    if (cfgChart.value.animation.show && !loading.value) {
-        return minMax.value.min;
-    } else {
-        return FINAL_DATASET.value.value || 0;
-    }
-}
+const segmentGeometry = computed(() => ({
+    scale: scale.value,
+    ticks: scale.value.ticks.map((value) => ({
+        value,
+        y:
+            svg.value.bottom +
+            cfgSegments.value.dataLabels.fontSize +
+            3 +
+            cfgSegments.value.dataLabels.offsetY,
+        x: project(value),
+    })),
+    chunks: (hasSegments.value ? FINAL_DATASET.value.segments : []).map(
+        (segment, i) => ({
+            ...segment,
+            color: segment.color
+                ? convertColorToHex(segment.color)
+                : segmentColors.value[i],
+            x: project(segment.from),
+            y: svg.value.top,
+            height: svg.value.chartHeight,
+            width:
+                (svg.value.chartWidth * Math.abs(segment.to - segment.from)) /
+                scaleRange.value,
+        }),
+    ),
+}));
+const hasTarget = computed(() => Number.isFinite(FINAL_DATASET.value?.target));
+const target = computed(() => ({
+    x:
+        project(hasTarget.value ? FINAL_DATASET.value.target : 0) -
+        cfgTarget.value.width / 2,
+}));
+const segments = computed(() => ({
+    ...segmentGeometry.value,
+    target: target.value,
+    value: { width: Math.max(0, project(activeValue.value) - svg.value.left) },
+}));
+const targetAttrs = computed(() => ({
+    x: target.value.x,
+    y:
+        svg.value.top +
+        (svg.value.chartHeight -
+            svg.value.chartHeight * cfgTarget.value.heightRatio) /
+            2,
+    height: svg.value.chartHeight * cfgTarget.value.heightRatio,
+    width: cfgTarget.value.width,
+    rx: cfgTarget.value.rounded ? cfgTarget.value.width / 2 : 0,
+    fill: cfgTarget.value.color,
+    stroke: cfgTarget.value.stroke,
+    'stroke-width': cfgTarget.value.strokeWidth,
+}));
 
-const raf = ref(null);
-
-function useAnimation(targetValue) {
-    const chunk =
-        Math.abs(targetValue - activeValue.value) /
-        cfgChart.value.animation.animationFrames;
-    function animate() {
-        if (activeValue.value < targetValue) {
-            activeValue.value = Math.min(
-                activeValue.value + chunk,
-                targetValue,
-            );
-        } else if (activeValue.value > targetValue) {
-            activeValue.value = Math.max(
-                activeValue.value - chunk,
-                targetValue,
-            );
-        }
-        if (activeValue.value !== targetValue) {
-            raf.value = requestAnimationFrame(animate);
-        }
-    }
-    animate();
+function formatValue(value) {
+    const { formatter, prefix, suffix, rounding } =
+        cfgSegments.value.dataLabels;
+    return applyDataLabel(
+        formatter,
+        value,
+        dataLabel({ p: prefix, v: value, s: suffix, r: rounding }),
+    );
 }
+const valueLabel = computed(() => formatValue(activeValue.value));
+const tickLabels = computed(() =>
+    scale.value.ticks.map((value) => formatValue(value)),
+);
+const segmentLabels = computed(() =>
+    (hasSegments.value ? FINAL_DATASET.value.segments : []).map(
+        (segment) =>
+            `${formatValue(segment.from)} — ${formatValue(segment.to)}`,
+    ),
+);
 
 onBeforeUnmount(() => {
-    cancelAnimationFrame(raf.value);
+    disposed = true;
+    stopAnimation();
+    if (resizeFrame !== null) cancelAnimationFrame(resizeFrame);
+    resizeObserver?.disconnect();
 });
 
-const segments = computed(() => {
-    if (!hasSegments.value) {
-        return [];
-    }
-    const scale = calculateNiceScale(
-        minMax.value.min,
-        minMax.value.max,
-        cfgSegments.value.ticks.divisions,
-    );
-    const absMin = scale.min >= 0 ? 0 : Math.abs(scale.min);
-
-    const target = {
-        x:
-            svg.value.left +
-            ((FINAL_DATASET.value.target + absMin) / (scale.max + absMin)) *
-                svg.value.chartWidth -
-            cfgTarget.value.width / 2,
-    };
-    const value = {
-        width:
-            ((activeValue.value + absMin) / (scale.max + absMin)) *
-            svg.value.chartWidth,
-    };
-    const ticks = scale.ticks.map((t) => {
-        return {
-            value: t,
-            y:
-                svg.value.bottom +
-                cfgSegments.value.dataLabels.fontSize +
-                3 +
-                cfgSegments.value.dataLabels.offsetY,
-            x:
-                svg.value.left +
-                ((t + absMin) / (scale.max + absMin)) * svg.value.chartWidth,
-        };
-    });
-    return {
-        scale,
-        target,
-        value,
-        ticks,
-        chunks: FINAL_DATASET.value.segments.map((segment, i) => {
-            return {
-                ...segment,
-                color: segment.color
-                    ? convertColorToHex(segment.color)
-                    : segmentColors.value[i],
-                x:
-                    svg.value.left +
-                    svg.value.chartWidth *
-                        ((segment.from + absMin) / (scale.max + absMin)),
-                y: svg.value.top,
-                height: svg.value.chartHeight,
-                width:
-                    svg.value.chartWidth *
-                    (Math.abs(segment.to - segment.from) /
-                        (scale.max + absMin)),
-            };
-        }),
-    };
-});
-
-const legendSet = computed(() => {
-    if (
-        !segments.value ||
-        !segments.value.chunks ||
-        !segments.value.chunks.length
-    ) {
-        return [];
-    }
-    return segments.value.chunks.map((segment) => {
-        const formattedFrom = applyDataLabel(
-            cfgSegments.value.dataLabels.formatter,
-            segment.from,
-            dataLabel({
-                p: cfgSegments.value.dataLabels.prefix,
-                v: segment.from,
-                s: cfgSegments.value.dataLabels.suffix,
-                r: cfgSegments.value.dataLabels.rounding,
-            }),
-        );
-        const formattedTo = applyDataLabel(
-            cfgSegments.value.dataLabels.formatter,
-            segment.to,
-            dataLabel({
-                p: cfgSegments.value.dataLabels.prefix,
-                v: segment.to,
-                s: cfgSegments.value.dataLabels.suffix,
-                r: cfgSegments.value.dataLabels.rounding,
-            }),
-        );
-
-        const value = `${formattedFrom} — ${formattedTo}`;
-
-        return {
-            ...segment,
-            shape: 'square',
-            value,
-            display: `${segment.name}: ${value}`,
-        };
-    });
-});
+const legendSet = computed(() =>
+    segmentGeometry.value.chunks.map((segment, i) => ({
+        ...segment,
+        shape: 'square',
+        value: segmentLabels.value[i],
+        display: `${segment.name}: ${segmentLabels.value[i]}`,
+    })),
+);
 
 const legendConfig = computed(() => {
     return {
@@ -583,7 +578,6 @@ const hasOptionsNoTitle = computed(() => {
 const isFullscreen = ref(false);
 function toggleFullscreen(state) {
     isFullscreen.value = state;
-    step.value += 1;
 }
 
 /**
@@ -691,7 +685,6 @@ defineExpose({
         </PenAndPaper>
 
         <div
-            ref="noTitle"
             v-if="hasOptionsNoTitle"
             class="vue-data-ui-no-title-space"
             :style="`height:36px; width: 100%;background:transparent`"
@@ -704,7 +697,6 @@ defineExpose({
         >
             <Title
                 lineHeight="1.3rem"
-                :key="`title_${titleStep}`"
                 :config="{
                     title: {
                         cy: 'bullet-div-title',
@@ -721,7 +713,6 @@ defineExpose({
         <div :id="`legend-top-${uid}`" />
 
         <UserOptions
-            ref="details"
             v-if="
                 cfgUserOptions.show &&
                 isDataset &&
@@ -802,7 +793,8 @@ defineExpose({
             </title>
 
             <desc :id="`bullet-svg-desc-${uid}`">
-                Value: {{ activeValue }}, Target: {{ segments.target?.value }}
+                Value: {{ activeValue }}, Target:
+                {{ hasTarget ? FINAL_DATASET.target : '-' }}
             </desc>
 
             <!-- BACKGROUND SLOT -->
@@ -839,20 +831,8 @@ defineExpose({
                 <!-- TARGET BELOW-->
                 <rect
                     data-cy="vue-ui-bullet-target-below"
-                    v-if="!cfgTarget.onTop && cfgTarget.show"
-                    :x="segments.target.x"
-                    :y="
-                        svg.top +
-                        (svg.chartHeight -
-                            svg.chartHeight * cfgTarget.heightRatio) /
-                            2
-                    "
-                    :height="svg.chartHeight * cfgTarget.heightRatio"
-                    :width="cfgTarget.width"
-                    :rx="cfgTarget.rounded ? cfgTarget.width / 2 : 0"
-                    :fill="cfgTarget.color"
-                    :stroke="cfgTarget.stroke"
-                    :stroke-width="cfgTarget.strokeWidth"
+                    v-if="!cfgTarget.onTop && cfgTarget.show && hasTarget"
+                    v-bind="targetAttrs"
                 />
                 <!-- VALUE BAR -->
                 <rect
@@ -883,43 +863,20 @@ defineExpose({
                     :fill="cfgChart.valueBar.label.color"
                     text-anchor="middle"
                 >
-                    {{
-                        applyDataLabel(
-                            cfgSegments.dataLabels.formatter,
-                            activeValue,
-                            dataLabel({
-                                p: cfgSegments.dataLabels.prefix,
-                                v: activeValue,
-                                s: cfgSegments.dataLabels.suffix,
-                                r: cfgSegments.dataLabels.rounding,
-                            }),
-                        )
-                    }}
+                    {{ valueLabel }}
                 </text>
                 <!-- TARGET ON TOP-->
                 <rect
                     data-cy="vue-ui-bullet-target-top"
-                    v-if="cfgTarget.onTop && cfgTarget.show"
-                    :x="segments.target.x"
-                    :y="
-                        svg.top +
-                        (svg.chartHeight -
-                            svg.chartHeight * cfgTarget.heightRatio) /
-                            2
-                    "
-                    :height="svg.chartHeight * cfgTarget.heightRatio"
-                    :width="cfgTarget.width"
-                    :rx="cfgTarget.rounded ? cfgTarget.width / 2 : 0"
-                    :fill="cfgTarget.color"
-                    :stroke="cfgTarget.stroke"
-                    :stroke-width="cfgTarget.strokeWidth"
+                    v-if="cfgTarget.onTop && cfgTarget.show && hasTarget"
+                    v-bind="targetAttrs"
                     :style="{ transition: 'x 0.3s ease-in-out' }"
                 />
                 <!-- TICK LABELS -->
                 <g v-if="cfgSegments.dataLabels.show">
                     <text
                         data-cy="vue-ui-bullet-tick-label"
-                        v-for="tick in segments.ticks"
+                        v-for="(tick, i) in segments.ticks"
                         :x="tick.x"
                         :y="tick.y"
                         text-anchor="middle"
@@ -929,18 +886,7 @@ defineExpose({
                             cfgSegments.dataLabels.bold ? 'bold' : 'normal'
                         "
                     >
-                        {{
-                            applyDataLabel(
-                                cfgSegments.dataLabels.formatter,
-                                tick.value,
-                                dataLabel({
-                                    p: cfgSegments.dataLabels.prefix,
-                                    v: tick.value,
-                                    s: cfgSegments.dataLabels.suffix,
-                                    r: cfgSegments.dataLabels.rounding,
-                                }),
-                            )
-                        }}
+                        {{ tickLabels[i] }}
                     </text>
                 </g>
                 <!-- TICK MARKERS -->

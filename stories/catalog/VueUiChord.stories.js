@@ -24,6 +24,16 @@ export default {
                 canvasElement.querySelector('[data-catalog]').childElementCount,
             ).toBeGreaterThan(0),
         );
+        await waitFor(() => {
+            const paths = canvasElement.querySelectorAll(
+                '.vue-ui-chord-arc, .vue-ui-chord-ribbon',
+            );
+            expect(paths.length).toBeGreaterThan(0);
+            for (const path of paths) {
+                expect(path.getAttribute('d')).not.toMatch(/NaN|Infinity/);
+                expect(path.getAttribute('fill')).toBeTruthy();
+            }
+        });
     },
 };
 export const Default = {};

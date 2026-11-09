@@ -10,14 +10,22 @@ import {
     getAnnotationSlotProps,
 } from '../annotationSlots';
 
-import { ref, watch, computed, defineAsyncComponent } from 'vue';
+import {
+    ref,
+    shallowRef,
+    shallowReactive,
+    toRaw,
+    watch,
+    computed,
+    defineAsyncComponent,
+    onBeforeUnmount,
+} from 'vue';
 import { useNestedProp } from '../useNestedProp';
 import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 import { createUid } from '../lib';
 import { usePrinter } from '../usePrinter';
 import UserOptions from '../atoms/UserOptions.vue';
-import { useUserOptionState } from '../useUserOptionState';
 import PenAndPaper from '../atoms/PenAndPaper.vue';
 
 const builtInComponents = {
@@ -216,11 +224,10 @@ const builtInComponents = {
 const { vue_ui_dashboard: DEFAULT_CONFIG } = useConfig();
 
 const dashboardRef = ref(null);
-const userOptionsRef = ref(null);
 const svgRef = ref(null);
 
 const props = defineProps({
-    dataset: Array,
+    dataset: { type: Array, default: () => [] },
     config: Object,
 });
 
@@ -251,30 +258,72 @@ function toggleLock() {
 }
 
 watch(
-    () => props.config,
-    () => {
-        isLocked.value = FINAL_CONFIG.value.locked;
-        userOptionsVisible.value =
-            !FINAL_CONFIG.value.userOptions.showOnChartHover;
+    () => FINAL_CONFIG.value.locked,
+    (value) => {
+        isLocked.value = value;
     },
 );
-
-const gridSize = 1;
-
-function setItems() {
-    return props.dataset.map((item, i) => ({
-        ...item,
-        index: i,
-    }));
+const placementKeys = ['left', 'top', 'width', 'height'];
+function placement(item) {
+    return Object.fromEntries(placementKeys.map((key) => [key, item[key]]));
 }
-
-const items = ref(setItems());
-
+function samePlacement(a, b) {
+    return placementKeys.every((key) => Object.is(a[key], b[key]));
+}
+const itemKey = Symbol('dashboard-item');
+function makeItem(source, index, key = Symbol()) {
+    const item = { ...source, index };
+    Object.defineProperty(item, itemKey, { value: key });
+    return shallowReactive(item);
+}
+const items = shallowRef(
+    (props.dataset || []).map((item, index) => makeItem(item, index)),
+);
+let sourcePlacements = new Map(
+    items.value.map((item) => [item[itemKey], placement(item)]),
+);
 watch(
     () => props.dataset,
-    () => {
-        items.value = setItems();
+    (dataset) => {
+        const existing = new Map();
+        for (const item of items.value) {
+            if (!existing.has(item.id)) existing.set(item.id, []);
+            existing.get(item.id).push(item);
+        }
+        const nextSources = new Map();
+        let activeOverridden = false;
+        items.value = (dataset || []).map((source, index) => {
+            const previous = existing.get(source.id)?.shift();
+            const key = previous?.[itemKey] ?? Symbol();
+            const incoming = placement(source);
+            const oldSource = sourcePlacements.get(key);
+            const externalPlacementChanged =
+                !oldSource || !samePlacement(oldSource, incoming);
+            nextSources.set(key, incoming);
+            if (gesture.value?.key === key && externalPlacementChanged)
+                activeOverridden = true;
+            return makeItem(
+                {
+                    ...source,
+                    ...(previous && !externalPlacementChanged
+                        ? placement(previous)
+                        : incoming),
+                },
+                index,
+                key,
+            );
+        });
+        sourcePlacements = nextSources;
+        if (
+            gesture.value &&
+            (activeOverridden ||
+                !items.value.some(
+                    (item) => item[itemKey] === gesture.value.key,
+                ))
+        )
+            finishGesture(false);
     },
+    { deep: true },
 );
 
 const resolvedItems = computed(() =>
@@ -283,35 +332,187 @@ const resolvedItems = computed(() =>
         resolvedComponent:
             typeof item.component === 'string'
                 ? builtInComponents[item.component]
-                : item.component,
+                : toRaw(item.component),
     })),
 );
 
-const dragging = ref(null);
-const resizing = ref(null);
-const dragStart = ref({ x: 0, y: 0 });
-const resizeStart = ref({ x: 0, y: 0 });
 const dashboardContainer = ref(null);
-const isDragOrResize = ref(false);
-const changeIndex = ref(null);
-const isPaused = ref(false);
-
-function handleInteraction(event) {
-    const target = event.target;
+const gesture = shallowRef(null);
+const changeIndex = computed(() =>
+    gesture.value
+        ? items.value.findIndex((item) => item[itemKey] === gesture.value.key)
+        : null,
+);
+const emit = defineEmits(['change', 'copyAlt']);
+const directions = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
+const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+function boundedPlacement(item) {
+    const width = clamp(Number.isFinite(item.width) ? item.width : 1, 1, 100);
+    const height = clamp(
+        Number.isFinite(item.height) ? item.height : 1,
+        1,
+        100,
+    );
+    return {
+        width,
+        height,
+        left: clamp(Number.isFinite(item.left) ? item.left : 0, 0, 100 - width),
+        top: clamp(Number.isFinite(item.top) ? item.top : 0, 0, 100 - height),
+    };
+}
+function isInteractiveTarget(target) {
+    return !!target?.closest?.(
+        'input, button, select, textarea, a, [contenteditable]:not([contenteditable="false"]), [role="slider"], .range-handle, [data-dashboard-no-drag]',
+    );
+}
+function startGesture(index, event, direction = null) {
     if (
-        (target.tagName === 'INPUT' && target.type === 'range') ||
-        target.classList.contains('range-handle')
-    ) {
-        isPaused.value = true;
-    }
+        gesture.value ||
+        isLocked.value ||
+        isAnnotator.value ||
+        event.isPrimary === false ||
+        (event.button != null && event.button !== 0) ||
+        (!direction && isInteractiveTarget(event.target))
+    )
+        return;
+    const item = items.value[index];
+    const rect = dashboardContainer.value?.getBoundingClientRect();
+    if (
+        !item ||
+        !(rect?.width > 0 && rect.height > 0) ||
+        !Number.isFinite(event.clientX) ||
+        !Number.isFinite(event.clientY)
+    )
+        return;
+    const before = placement(item);
+    const initial = boundedPlacement(item);
+    Object.assign(item, initial);
+    gesture.value = {
+        key: item[itemKey],
+        direction,
+        pointerId: event.pointerId,
+        capture: event.currentTarget,
+        x: event.clientX,
+        y: event.clientY,
+        boardWidth: rect.width,
+        boardHeight: rect.height,
+        initial,
+        before,
+    };
+    event.preventDefault?.();
+    event.stopPropagation?.();
+    try {
+        event.currentTarget?.setPointerCapture?.(event.pointerId);
+    } catch {}
+    document.addEventListener('pointermove', moveGesture, { passive: false });
+    document.addEventListener('pointerup', endGesture);
+    document.addEventListener('pointercancel', cancelGesture);
 }
-
-function handleInteractionEnd(event) {
-    const target = event.target;
-    if (target.tagName === 'INPUT' && target.type === 'range') {
-        isPaused.value = false;
+function moveGesture(event) {
+    const active = gesture.value;
+    if (
+        !active ||
+        (active.pointerId != null && event.pointerId !== active.pointerId)
+    )
+        return;
+    if (!Number.isFinite(event.clientX) || !Number.isFinite(event.clientY))
+        return;
+    const item = items.value.find((item) => item[itemKey] === active.key);
+    if (!item) {
+        finishGesture(false);
+        return;
     }
+    event.preventDefault?.();
+    const dx = ((event.clientX - active.x) / active.boardWidth) * 100;
+    const dy = ((event.clientY - active.y) / active.boardHeight) * 100;
+    const initial = active.initial;
+    if (!active.direction) {
+        item.left = clamp(initial.left + dx, 0, 100 - initial.width);
+        item.top = clamp(initial.top + dy, 0, 100 - initial.height);
+        return;
+    }
+    let left = initial.left,
+        top = initial.top;
+    let right = initial.left + initial.width,
+        bottom = initial.top + initial.height;
+    if (active.direction.includes('left'))
+        left = clamp(initial.left + dx, 0, right - 1);
+    else right = clamp(right + dx, left + 1, 100);
+    if (active.direction.includes('top'))
+        top = clamp(initial.top + dy, 0, bottom - 1);
+    else bottom = clamp(bottom + dy, top + 1, 100);
+    Object.assign(item, {
+        left,
+        top,
+        width: right - left,
+        height: bottom - top,
+    });
 }
+function finishGesture(commit = true) {
+    const active = gesture.value;
+    if (!active) return;
+    gesture.value = null;
+    document.removeEventListener('pointermove', moveGesture);
+    document.removeEventListener('pointerup', endGesture);
+    document.removeEventListener('pointercancel', cancelGesture);
+    try {
+        active.capture?.releasePointerCapture?.(active.pointerId);
+    } catch {}
+    const item = items.value.find((item) => item[itemKey] === active.key);
+    if (!commit || !item || samePlacement(active.before, placement(item)))
+        return;
+    const initial = active.initial;
+    if (!active.direction) {
+        item.left = clamp(Math.round(item.left), 0, 100 - item.width);
+        item.top = clamp(Math.round(item.top), 0, 100 - item.height);
+    } else {
+        const right = initial.left + initial.width,
+            bottom = initial.top + initial.height;
+        if (active.direction.includes('left')) {
+            item.left = clamp(Math.round(item.left), 0, right - 1);
+            item.width = right - item.left;
+        } else
+            item.width =
+                clamp(Math.round(item.left + item.width), item.left + 1, 100) -
+                item.left;
+        if (active.direction.includes('top')) {
+            item.top = clamp(Math.round(item.top), 0, bottom - 1);
+            item.height = bottom - item.top;
+        } else
+            item.height =
+                clamp(Math.round(item.top + item.height), item.top + 1, 100) -
+                item.top;
+    }
+    if (!samePlacement(active.before, placement(item)))
+        emit('change', items.value);
+}
+function endGesture(event) {
+    if (
+        !gesture.value ||
+        (gesture.value.pointerId != null &&
+            event.pointerId !== gesture.value.pointerId)
+    )
+        return;
+    moveGesture(event);
+    finishGesture();
+}
+function cancelGesture(event) {
+    if (
+        gesture.value?.pointerId != null &&
+        event?.pointerId != null &&
+        event.pointerId !== gesture.value.pointerId
+    )
+        return;
+    finishGesture();
+}
+watch(
+    isLocked,
+    (locked) => {
+        if (locked) finishGesture();
+    },
+    { flush: 'sync' },
+);
+onBeforeUnmount(() => finishGesture(false));
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `vue-ui-dashboard_${uid.value}`,
@@ -321,239 +522,6 @@ const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
         aspectRatio: FINAL_CONFIG.value.style.board.aspectRatio,
     },
 });
-
-function startDrag(index) {
-    if (isLocked.value) return;
-    isDragOrResize.value = true;
-    changeIndex.value = index;
-    if (resizing.value === null) {
-        dragging.value = index;
-        dragStart.value = { x: event.clientX, y: event.clientY };
-        const item = items.value[index];
-        const maxLeft = 100 - item.width;
-        const maxTop = 100 - item.height;
-
-        if (item.left < 0) {
-            item.left = 0;
-        }
-        if (item.top < 0) {
-            item.top = 0;
-        }
-        if (item.left > maxLeft) {
-            item.left = maxLeft;
-        }
-        if (item.top > maxTop) {
-            item.top = maxTop;
-        }
-
-        if (item.left < 0) {
-            item.left = 0;
-        }
-        if (item.top < 0) {
-            item.top = 0;
-        }
-        if (item.left + item.width > 100) {
-            item.left = 100 - item.width;
-        }
-        if (item.top + item.height > 100) {
-            item.top = 100 - item.height;
-        }
-    }
-}
-
-function startResize(index, direction) {
-    isDragOrResize.value = true;
-    changeIndex.value = index;
-    resizing.value = { index, direction };
-    const item = items.value[index];
-    resizeStart.value = {
-        x: event.clientX,
-        y: event.clientY,
-        initialWidth: item.width,
-        initialHeight: item.height,
-    };
-}
-
-function checkDirection(item, deltaX, deltaY) {
-    if (resizing.value.direction.includes('top')) {
-        const newHeight =
-            item.height -
-            (deltaY / dashboardContainer.value.offsetHeight) * 100;
-        if (newHeight >= gridSize) {
-            item.top += (deltaY / dashboardContainer.value.offsetHeight) * 100;
-            item.height = newHeight;
-        }
-    }
-    if (resizing.value.direction.includes('bottom')) {
-        const newHeight =
-            item.height +
-            (deltaY / dashboardContainer.value.offsetHeight) * 100;
-        if (newHeight >= gridSize) {
-            item.height = newHeight;
-        }
-    }
-    if (resizing.value.direction.includes('left')) {
-        const newWidth =
-            item.width - (deltaX / dashboardContainer.value.offsetWidth) * 100;
-        if (newWidth >= gridSize) {
-            item.left += (deltaX / dashboardContainer.value.offsetWidth) * 100;
-            item.width = newWidth;
-        }
-    }
-    if (resizing.value.direction.includes('right')) {
-        const newWidth =
-            item.width + (deltaX / dashboardContainer.value.offsetWidth) * 100;
-        if (newWidth >= gridSize) {
-            item.width = newWidth;
-        }
-    }
-}
-
-function onMouseMove(event) {
-    if (isLocked.value || isPaused.value) return;
-    isDragOrResize.value = true;
-    if (dragging.value !== null) {
-        const item = items.value[dragging.value];
-        const deltaX = event.clientX - dragStart.value.x;
-        const deltaY = event.clientY - dragStart.value.y;
-
-        const newLeft =
-            item.left + (deltaX / dashboardContainer.value.offsetWidth) * 100;
-        const newTop =
-            item.top + (deltaY / dashboardContainer.value.offsetHeight) * 100;
-
-        if (
-            newLeft >= 0 &&
-            newTop >= 0 &&
-            newLeft + item.width <= 100 &&
-            newTop + item.height <= 100
-        ) {
-            item.left = newLeft;
-            item.top = newTop;
-        }
-        dragStart.value = { x: event.clientX, y: event.clientY };
-    }
-
-    if (resizing.value !== null) {
-        const item = items.value[resizing.value.index];
-        const deltaX = event.clientX - resizeStart.value.x;
-        const deltaY = event.clientY - resizeStart.value.y;
-        checkDirection(item, deltaX, deltaY);
-        resizeStart.value = { x: event.clientX, y: event.clientY };
-    }
-}
-
-const emit = defineEmits(['change', 'copyAlt']);
-
-watch(
-    items,
-    (change) => {
-        if (change && !isDragOrResize.value) {
-            emit('change', items.value);
-        }
-    },
-    { deep: true },
-);
-
-function stopDragResize() {
-    dragging.value = null;
-    resizing.value = null;
-    isDragOrResize.value = false;
-    changeIndex.value = null;
-
-    items.value.forEach((item) => {
-        item.left = Math.round((item.left / 100) * 100);
-        item.top = Math.round((item.top / 100) * 100);
-        item.width = Math.round((item.width / 100) * 100);
-        item.height = Math.round((item.height / 100) * 100);
-    });
-}
-
-function onTouchStart(index) {
-    if (isLocked.value || isPaused.value) return;
-    isDragOrResize.value = true;
-    changeIndex.value = index;
-    if (resizing.value === null) {
-        dragging.value = index;
-        dragStart.value = {
-            x: event.touches[0].clientX,
-            y: event.touches[0].clientY,
-        };
-    }
-}
-
-function onTouchResizeStart(index, direction, event) {
-    isDragOrResize.value = true;
-    changeIndex.value = index;
-    if (resizing.value === null) {
-        resizing.value = { index, direction };
-        const item = items.value[index];
-        resizeStart.value = {
-            x: event.touches[0].clientX,
-            y: event.touches[0].clientY,
-            initialWidth: item.width,
-            initialHeight: item.height,
-        };
-    }
-}
-
-function onTouchResizeMove(event) {
-    isDragOrResize.value = true;
-    event.preventDefault();
-    if (resizing.value !== null) {
-        const item = items.value[resizing.value.index];
-        const deltaX = event.touches[0].clientX - resizeStart.value.x;
-        const deltaY = event.touches[0].clientY - resizeStart.value.y;
-        checkDirection(item, deltaX, deltaY);
-        resizeStart.value = {
-            x: event.touches[0].clientX,
-            y: event.touches[0].clientY,
-        };
-    }
-}
-
-function onTouchMove(event) {
-    if (isLocked.value || isPaused.value) return;
-    isDragOrResize.value = true;
-    event.preventDefault();
-    if (dragging.value !== null) {
-        const item = items.value[dragging.value];
-        const deltaX = event.touches[0].clientX - dragStart.value.x;
-        const deltaY = event.touches[0].clientY - dragStart.value.y;
-
-        const newLeft =
-            item.left + (deltaX / dashboardContainer.value.offsetWidth) * 100;
-        const newTop =
-            item.top + (deltaY / dashboardContainer.value.offsetHeight) * 100;
-
-        if (
-            newLeft >= 0 &&
-            newTop >= 0 &&
-            newLeft + item.width <= 100 &&
-            newTop + item.height <= 100
-        ) {
-            item.left = newLeft;
-            item.top = newTop;
-        }
-        dragStart.value = {
-            x: event.touches[0].clientX,
-            y: event.touches[0].clientY,
-        };
-    }
-}
-
-function onTouchEnd() {
-    isDragOrResize.value = false;
-    changeIndex.value = null;
-    dragging.value = null;
-    resizing.value = null;
-    items.value.forEach((item) => {
-        item.left = Math.round((item.left / 100) * 100);
-        item.top = Math.round((item.top / 100) * 100);
-        item.width = Math.round((item.width / 100) * 100);
-        item.height = Math.round((item.height / 100) * 100);
-    });
-}
 
 const itemBorder = computed(() => {
     return FINAL_CONFIG.value.style.item.borderColor;
@@ -575,21 +543,32 @@ function getItemsPositions() {
     return items.value;
 }
 
-const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } =
-    useUserOptionState({ config: FINAL_CONFIG.value });
-
+const hovered = ref(false);
+const userOptionsVisible = computed(
+    () => !FINAL_CONFIG.value.userOptions.showOnChartHover || hovered.value,
+);
+const keepUserOptionState = computed(
+    () => FINAL_CONFIG.value.userOptions.keepStateOnChartLeave,
+);
+const hasUserOptions = computed(
+    () =>
+        (FINAL_CONFIG.value.allowPrint ||
+            FINAL_CONFIG.value.userOptions.show) &&
+        ['pdf', 'img', 'annotator', 'altCopy'].some(
+            (key) => FINAL_CONFIG.value.userOptions.buttons[key],
+        ),
+);
 const isAnnotator = ref(false);
 function toggleAnnotator() {
     isAnnotator.value = !isAnnotator.value;
 }
-
-function showOptions() {
-    setUserOptionsVisibility(true);
-}
-
-function hideOptions() {
-    setUserOptionsVisibility(false);
-}
+watch(
+    isAnnotator,
+    (active) => {
+        if (active) finishGesture();
+    },
+    { flush: 'sync' },
+);
 
 async function copyAlt() {
     emit('copyAlt', {
@@ -621,12 +600,8 @@ defineExpose({
 <template>
     <div
         :id="`vue-ui-dashboard_${uid}`"
-        @mousedown="handleInteraction"
-        @mouseup="handleInteractionEnd"
-        @touchstart="handleInteraction"
-        @touchend="handleInteractionEnd"
-        @mouseenter="showOptions"
-        @mouseleave="hideOptions"
+        @mouseenter="hovered = true"
+        @mouseleave="hovered = false"
         ref="dashboardRef"
         :style="{
             position: 'relative',
@@ -640,17 +615,12 @@ defineExpose({
         >
             <div
                 class="vue-ui-dashboard-grid-container"
-                ref="container"
-                @mousemove="onMouseMove"
-                @mouseup="stopDragResize"
-                @touchmove="onTouchMove"
-                @touchend="onTouchEnd"
                 :style="`background:${FINAL_CONFIG.style.board.backgroundColor}`"
             >
                 <div class="vue-ui-dashboard-grid"></div>
                 <div
                     v-for="(item, index) in resolvedItems"
-                    :key="item.id"
+                    :key="items[index][itemKey]"
                     :class="{
                         'vue-ui-dashboard-grid-item': true,
                         'vue-ui-dashboard-grid-item--locked': isLocked,
@@ -672,50 +642,18 @@ defineExpose({
                         backgroundColor:
                             FINAL_CONFIG.style.item.backgroundColor,
                     }"
-                    @mousedown="startDrag(index)"
-                    @touchstart="onTouchStart(index, item)"
+                    @pointerdown="startGesture(index, $event)"
+                    @lostpointercapture="cancelGesture"
                 >
                     <template v-if="!isLocked">
                         <div
-                            class="vue-ui-dashboard-resize-handle vue-ui-dashboard-top-left"
-                            @mousedown="startResize(index, 'top-left')"
-                            @touchstart="
-                                onTouchResizeStart(index, 'top-left', $event)
+                            v-for="direction in directions"
+                            :key="direction"
+                            :class="`vue-ui-dashboard-resize-handle vue-ui-dashboard-${direction}`"
+                            @pointerdown.stop="
+                                startGesture(index, $event, direction)
                             "
-                            @touchmove="onTouchResizeMove($event)"
-                            @touchend="onTouchEnd"
-                        ></div>
-                        <div
-                            class="vue-ui-dashboard-resize-handle vue-ui-dashboard-top-right"
-                            @mousedown="startResize(index, 'top-right')"
-                            @touchstart="
-                                onTouchResizeStart(index, 'top-right', $event)
-                            "
-                            @touchmove="onTouchResizeMove($event)"
-                            @touchend="onTouchEnd"
-                        ></div>
-                        <div
-                            class="vue-ui-dashboard-resize-handle vue-ui-dashboard-bottom-left"
-                            @mousedown="startResize(index, 'bottom-left')"
-                            @touchstart="
-                                onTouchResizeStart(index, 'bottom-left', $event)
-                            "
-                            @touchmove="onTouchResizeMove($event)"
-                            @touchend="onTouchEnd"
-                        ></div>
-                        <div
-                            class="vue-ui-dashboard-resize-handle vue-ui-dashboard-bottom-right"
-                            @mousedown="startResize(index, 'bottom-right')"
-                            @touchstart="
-                                onTouchResizeStart(
-                                    index,
-                                    'bottom-right',
-                                    $event,
-                                )
-                            "
-                            @touchmove="onTouchResizeMove($event)"
-                            @touchend="onTouchEnd"
-                        ></div>
+                        />
                     </template>
 
                     <slot name="top" :item="item" :index="index" />
@@ -785,13 +723,7 @@ defineExpose({
         </PenAndPaper>
 
         <UserOptions
-            v-if="
-                (FINAL_CONFIG.allowPrint /* deprecated, but still ok */ ||
-                    FINAL_CONFIG.userOptions.show) &&
-                (FINAL_CONFIG.userOptions.buttons.pdf ||
-                    FINAL_CONFIG.userOptions.buttons.img)
-            "
-            ref="userOptionsRef"
+            v-if="hasUserOptions && (keepUserOptionState || userOptionsVisible)"
             :backgroundColor="FINAL_CONFIG.style.board.backgroundColor"
             :color="FINAL_CONFIG.style.board.color"
             :isPrinting="isPrinting"
@@ -863,6 +795,7 @@ defineExpose({
 
 .vue-ui-dashboard-grid-item {
     position: absolute;
+    touch-action: none;
     border: 2px solid transparent;
     transition: opacity 0.1s ease-in-out;
 }
@@ -874,6 +807,7 @@ defineExpose({
 .vue-ui-dashboard-grid-item--locked {
     border: none !important;
     cursor: default !important;
+    touch-action: auto;
 }
 
 .vue-ui-dashboard-grid-item:hover .vue-ui-dashboard-resize-handle {
@@ -916,18 +850,6 @@ defineExpose({
     bottom: -5px;
     right: -5px;
     cursor: se-resize;
-}
-
-.vue-ui-dashboard-print-icon {
-    animation: smartspin 0.5s infinite linear;
-}
-@keyframes smartspin {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
 }
 
 /** Override legend font size to make it responsive */

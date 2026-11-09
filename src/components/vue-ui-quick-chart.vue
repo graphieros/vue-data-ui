@@ -36,15 +36,12 @@ import {
     createTSpansFromLineBreaksOnX,
     dataLabel,
     error,
-    functionReturnsString,
     isFunction,
     makeDonut,
     palette,
     sanitizeArray,
-    themePalettes,
     XMLNS,
     treeShake,
-    objectIsEmpty,
     deepClone,
 } from '../lib';
 import { COMMON_RULES, useHints } from '../useHints';
@@ -52,16 +49,14 @@ import { useConfig } from '../useConfig';
 import { useSvgLabelLayout } from '../useSvgLabelLayout';
 import { useLoading } from '../useLoading';
 import { usePrinter } from '../usePrinter';
-import { useNestedProp } from '../useNestedProp';
 import { useResponsive } from '../useResponsive';
 import { useTimeLabels } from '../useTimeLabels';
-import { useThemeCheck } from '../useThemeCheck';
 import { useChartExport } from '../useChartExport';
 import { useTransitions } from '../useTransitions.js';
-import { useStableElementSize } from '../useStableElementSize.js';
 import { useChartAccessibility } from '../useChartAccessibility';
 import { useTimeLabelCollision } from '../useTimeLabelCollider';
-import img from '../img';
+import { createChartImageGetter } from '../chartImage';
+import { resolveChartConfigWithPalette } from '../resolveChartConfig';
 import SlicerPreview from '../atoms/SlicerPreview.vue';
 import themes from '../themes/vue_ui_quick_chart.json';
 import BaseScanner from '../atoms/BaseScanner.vue';
@@ -81,7 +76,6 @@ const UserOptions = defineAsyncComponent(
 );
 
 const { vue_ui_quick_chart: DEFAULT_CONFIG } = useConfig();
-const { isThemeValid, warnInvalidTheme } = useThemeCheck();
 
 const props = defineProps({
     config: {
@@ -117,65 +111,10 @@ const segregated = ref([]);
 const step = ref(0);
 const slicerStep = ref(0);
 const readyTeleport = ref(false);
-const pathWrapper = ref(null);
-const pathTop = ref(null);
 
 const timeLabelsEls = ref(null);
 const scaleLabels = ref(null);
-const xAxisLabel = ref(null);
-const yAxisLabel = ref(null);
 
-const parentElement = shallowRef(null);
-const parentLayoutIsStable = ref(false);
-const parentLayoutStableRunSequence = ref(0);
-const pendingParentLayoutSequence = ref(0);
-const parentStableLayoutRefreshIsQueued = ref(false);
-
-function setParentElementReference() {
-    parentElement.value = quickChart.value?.parentNode ?? null;
-}
-
-function nextPaintFrame() {
-    return new Promise((resolve) => {
-        requestAnimationFrame(() => {
-            requestAnimationFrame(resolve);
-        });
-    });
-}
-
-async function runParentStableLayoutPass() {
-    const currentSequence = ++pendingParentLayoutSequence.value;
-    parentLayoutIsStable.value = false;
-    await nextTick();
-    await nextPaintFrame();
-    await nextPaintFrame();
-    if (currentSequence !== pendingParentLayoutSequence.value) return;
-    parentLayoutStableRunSequence.value += 1;
-    parentLayoutIsStable.value = true;
-}
-
-function queueParentStableLayoutRefresh() {
-    if (parentStableLayoutRefreshIsQueued.value) return;
-    parentStableLayoutRefreshIsQueued.value = true;
-    nextTick(() => {
-        parentStableLayoutRefreshIsQueued.value = false;
-        setParentElementReference();
-        runParentStableLayoutPass();
-    });
-}
-
-const stableParentSize = useStableElementSize({
-    elementRef: parentElement,
-    minimumWidth: 2,
-    minimumHeight: 2,
-    stableFramesRequired: 2,
-    once: false,
-    onSizeAccepted: () => {
-        runParentStableLayoutPass();
-    },
-});
-
-const donutStroke = ref('#FFFFFF');
 const FINAL_CONFIG = ref(prepareConfig());
 
 useHints({
@@ -212,7 +151,7 @@ const isFocus = ref(false); // a11y
 
 const skeletonConfig = computed(() => {
     return treeShake({
-        dafaultConfig: {
+        defaultConfig: {
             backgroundColor: '#99999930',
             customPalette: ['#BABABA'],
             showDataLabels: false,
@@ -236,7 +175,7 @@ const skeletonConfig = computed(() => {
 });
 
 // v3 - Skeleton loader management
-const { loading, FINAL_DATASET, manualLoading } = useLoading({
+const { loading, FINAL_DATASET } = useLoading({
     ...toRefs(props),
     FINAL_CONFIG,
     prepareConfig,
@@ -270,39 +209,7 @@ function setUserOptionsVisibility(state = false) {
 }
 
 function prepareConfig() {
-    const mergedConfig = useNestedProp({
-        userConfig: props.config,
-        defaultConfig: DEFAULT_CONFIG,
-    });
-    let finalConfig = {};
-
-    const theme = mergedConfig.theme;
-
-    if (theme) {
-        if (!isThemeValid.value(mergedConfig)) {
-            warnInvalidTheme(mergedConfig);
-            finalConfig = mergedConfig;
-        } else {
-            const fused = useNestedProp({
-                userConfig: themes[theme] || props.config,
-                defaultConfig: mergedConfig,
-            });
-
-            finalConfig = {
-                ...useNestedProp({
-                    userConfig: props.config,
-                    defaultConfig: fused,
-                }),
-                customPalette: mergedConfig.customPalette.length
-                    ? mergedConfig.customPalette
-                    : themePalettes[theme] || palette,
-            };
-        }
-    } else {
-        finalConfig = mergedConfig;
-    }
-
-    return finalConfig;
+    return resolveChartConfigWithPalette(props.config, DEFAULT_CONFIG, themes);
 }
 
 function stringifyStructuralConfig(cfg) {
@@ -353,17 +260,6 @@ watch(
     { deep: true },
 );
 
-// v3 - Stop skeleton loader when props.dataset becomes valid
-watch(
-    () => props.dataset,
-    (newVal) => {
-        if (Array.isArray(newVal) && newVal.length > 0) {
-            manualLoading.value = false;
-        }
-    },
-    { immediate: true },
-);
-
 const customPalette = computed(() => {
     return convertCustomPalette(FINAL_CONFIG.value.customPalette);
 });
@@ -391,10 +287,10 @@ const fd = computed(() => {
         ]),
         barLineSwitch: FINAL_CONFIG.value.chartIsBarUnderDatasetLength,
     });
-    if (!f && debug.value) {
+    if (!f?.type && debug.value) {
         console.error('VueUiQuickChart : Dataset is not processable');
     }
-    return f;
+    return f?.type ? f : null;
 });
 
 const formattedDataset = ref(fd.value);
@@ -463,26 +359,34 @@ watch(
 );
 
 const resizeObserver = shallowRef(null);
-const observedEl = shallowRef(null);
+let chartDisposed = false;
+let clickSuppressionTimer = null;
+
+function stopResponsive() {
+    cancelAnimationFrame(resizeFrame);
+    resizeObserver.value?.disconnect();
+    resizeObserver.value = null;
+}
 
 const responsiveSizeReady = ref(false);
 let resizeFrame = 0;
 
 onMounted(() => {
     readyTeleport.value = true;
-    setParentElementReference();
-    stableParentSize.start();
     prepareChart();
-    runParentStableLayoutPass();
 });
 
 function prepareChart() {
-    // v3
-    if (!objectIsEmpty(props.dataset)) {
-        manualLoading.value = FINAL_CONFIG.value.loading;
-    }
-    if (FINAL_CONFIG.value.responsive) {
+    updateChartSizing();
+    setupSlicer();
+}
+
+function updateChartSizing() {
+    if (chartDisposed) return;
+    stopResponsive();
+    if (FINAL_CONFIG.value.responsive && quickChart.value) {
         const handleResize = () => {
+            if (chartDisposed || !FINAL_CONFIG.value.responsive) return;
             const { width, height } = useResponsive({
                 chart: quickChart.value,
                 title: FINAL_CONFIG.value.title ? quickChartTitle.value : null,
@@ -499,56 +403,30 @@ function prepareChart() {
                 defaultSizes.value.width = width;
                 defaultSizes.value.height = height;
                 responsiveSizeReady.value = true;
-                queueParentStableLayoutRefresh();
             });
         };
 
-        if (resizeObserver.value) {
-            if (observedEl.value) {
-                resizeObserver.value.unobserve(observedEl.value);
-            }
-            resizeObserver.value.disconnect();
-        }
-
         resizeObserver.value = new ResizeObserver(handleResize);
-        observedEl.value = quickChart.value.parentNode;
-        resizeObserver.value.observe(observedEl.value);
+        resizeObserver.value.observe(quickChart.value.parentNode);
     }
-    setupSlicer();
-    queueParentStableLayoutRefresh();
 }
 
+watch(quickChart, updateChartSizing, { flush: 'post' });
+
 onBeforeUnmount(() => {
-    cancelAnimationFrame(resizeFrame);
-    stableParentSize.stop();
+    chartDisposed = true;
+    stopResponsive();
+    cancelDonutAnimations();
+    clearTimeout(clickSuppressionTimer);
+    timeLabelsRequestId += 1;
     clearQueuedSlicerFrame();
     cancelChartZoomSelection();
-
-    if (resizeObserver.value) {
-        if (observedEl.value) {
-            resizeObserver.value.unobserve(observedEl.value);
-        }
-        resizeObserver.value.disconnect();
-        resizeObserver.value = null;
-        observedEl.value = null;
-    }
 });
 
-const viewBox = computed(() => {
-    switch (chartType.value) {
-        case detector.chartType.LINE:
-            return `0 0 ${defaultSizes.value.width <= 0 ? 10 : defaultSizes.value.width} ${defaultSizes.value.height <= 0 ? 10 : defaultSizes.value.height}`;
-
-        case detector.chartType.BAR:
-            return `0 0 ${defaultSizes.value.width <= 0 ? 10 : defaultSizes.value.width} ${defaultSizes.value.height <= 0 ? 10 : defaultSizes.value.height}`;
-
-        case detector.chartType.DONUT:
-            return `0 0 ${defaultSizes.value.width <= 0 ? 10 : defaultSizes.value.width} ${defaultSizes.value.height <= 0 ? 10 : defaultSizes.value.height}`;
-
-        default:
-            return `0 0 ${defaultSizes.value.width <= 0 ? 10 : defaultSizes.value.width} ${defaultSizes.value.height <= 0 ? 10 : defaultSizes.value.height}`;
-    }
-});
+const viewBox = computed(
+    () =>
+        `0 0 ${defaultSizes.value.width <= 0 ? 10 : defaultSizes.value.width} ${defaultSizes.value.height <= 0 ? 10 : defaultSizes.value.height}`,
+);
 
 function sumValues(source) {
     return [...source].map((s) => s.value).reduce((a, b) => a + b, 0);
@@ -567,6 +445,9 @@ function getBlurFilter(id) {
 }
 
 function toggleLegend() {
+    cancelDonutAnimations();
+    if (chartType.value === detector.chartType.DONUT)
+        formattedDataset.value = fd.value;
     if (segregated.value.length) {
         segregated.value = [];
     } else {
@@ -604,101 +485,71 @@ function segregate(id, len) {
     }
 }
 
-const raf = ref(null);
-const rafUp = ref(null);
+const donutAnimations = new Map();
 const isSegregatingDonut = ref(false);
 
+function cancelDonutAnimations() {
+    for (const animation of donutAnimations.values())
+        cancelAnimationFrame(animation.frame);
+    donutAnimations.clear();
+    isSegregatingDonut.value = false;
+}
+
+function getDonutValue(node) {
+    return (
+        node?.VALUE ||
+        node?.DATA ||
+        node?.SERIE ||
+        node?.VALUES ||
+        node?.NUM ||
+        0
+    );
+}
+
+function setDonutValue(id, value) {
+    formattedDataset.value = {
+        ...formattedDataset.value,
+        dataset: formattedDataset.value.dataset.map((node, index) =>
+            id === `donut_${index}` ? { ...node, value, VALUE: value } : node,
+        ),
+    };
+}
+
 function segregateDonut(arc, ds) {
-    isSegregatingDonut.value = true;
-    let initVal = arc.value;
-    const targetVal = fd.value.dataset.find(
-        (el, i) => arc.id === `donut_${i}`,
-    ).VALUE;
-    if (segregated.value.includes(arc.id)) {
-        segregated.value = segregated.value.filter((el) => el !== arc.id);
-        function animUp() {
-            if (initVal > targetVal) {
-                isSegregatingDonut.value = false;
-                cancelAnimationFrame(rafUp.value);
-                formattedDataset.value = {
-                    ...formattedDataset.value,
-                    dataset: formattedDataset.value.dataset.map((ds, i) => {
-                        if (arc.id === `donut_${i}`) {
-                            return {
-                                ...ds,
-                                value: targetVal,
-                                VALUE: targetVal,
-                            };
-                        } else {
-                            return ds;
-                        }
-                    }),
-                };
-                emit('selectLegend', donut.value.dataset);
-            } else {
-                initVal += targetVal * 0.025;
-                formattedDataset.value = {
-                    ...formattedDataset.value,
-                    dataset: formattedDataset.value.dataset.map((ds, i) => {
-                        if (arc.id === `donut_${i}`) {
-                            return {
-                                ...ds,
-                                value: initVal,
-                                VALUE: initVal,
-                            };
-                        } else {
-                            return ds;
-                        }
-                    }),
-                };
-                rafUp.value = requestAnimationFrame(animUp);
-            }
-        }
-        animUp();
-    } else if (ds.length > 1) {
-        function anim() {
-            if (initVal < targetVal / 100) {
-                isSegregatingDonut.value = false;
-                cancelAnimationFrame(raf.value);
-                segregated.value.push(arc.id);
-                formattedDataset.value = {
-                    ...formattedDataset.value,
-                    dataset: formattedDataset.value.dataset.map((ds, i) => {
-                        if (arc.id === `donut_${i}`) {
-                            return {
-                                ...ds,
-                                value: 0,
-                                VALUE: 0,
-                            };
-                        } else {
-                            return ds;
-                        }
-                    }),
-                };
-                emit('selectLegend', donut.value.dataset);
-            } else {
-                initVal /= 1.1;
-                formattedDataset.value = {
-                    ...formattedDataset.value,
-                    dataset: formattedDataset.value.dataset.map((ds, i) => {
-                        if (arc.id === `donut_${i}`) {
-                            return {
-                                ...ds,
-                                value: initVal,
-                                VALUE: initVal,
-                            };
-                        } else {
-                            return ds;
-                        }
-                    }),
-                };
-                raf.value = requestAnimationFrame(anim);
-            }
-        }
-        anim();
-    } else {
+    const previous = donutAnimations.get(arc.id);
+    if (previous) return;
+    const restoring = segregated.value.includes(arc.id);
+    if (!restoring && ds.length <= 1) {
         emit('selectLegend', donut.value.dataset);
+        return;
     }
+    const targetValue = getDonutValue(
+        fd.value?.dataset.find((_, index) => arc.id === `donut_${index}`),
+    );
+    let value = arc.value;
+    if (restoring)
+        segregated.value = segregated.value.filter((id) => id !== arc.id);
+    const animation = { frame: null };
+    donutAnimations.set(arc.id, animation);
+    isSegregatingDonut.value = true;
+    function animate() {
+        if (donutAnimations.get(arc.id) !== animation) return;
+        if (
+            targetValue === 0 ||
+            (restoring ? value > targetValue : value < targetValue / 100)
+        ) {
+            setDonutValue(arc.id, restoring ? targetValue : 0);
+            if (!restoring) segregated.value.push(arc.id);
+            donutAnimations.delete(arc.id);
+            isSegregatingDonut.value = donutAnimations.size > 0;
+            emit('selectLegend', donut.value.dataset);
+            return;
+        }
+        value = restoring ? value + targetValue * 0.025 : value / 1.1;
+        setDonutValue(arc.id, value);
+        animation.frame = requestAnimationFrame(animate);
+    }
+    animate();
 }
 
 const commonSelectedIndex = ref(null);
@@ -721,8 +572,7 @@ const donut = computed(() => {
         .map((ds, i) => {
             return {
                 ...ds,
-                value:
-                    ds.VALUE || ds.DATA || ds.SERIE || ds.VALUES || ds.NUM || 0,
+                value: getDonutValue(ds),
                 name:
                     ds.NAME ||
                     ds.DESCRIPTION ||
@@ -767,9 +617,9 @@ const donut = computed(() => {
     }
 
     function getSpaces(datapointId, num2) {
-        const num1 = fd.value.dataset.find(
-            (_, i) => `donut_${i}` === datapointId,
-        ).VALUE;
+        const num1 = getDonutValue(
+            fd.value.dataset.find((_, i) => `donut_${i}` === datapointId),
+        );
         const difference = Math.abs(
             String(Number(num1.toFixed(0))).length -
                 String(Number(num2.toFixed(0))).length,
@@ -797,23 +647,16 @@ const donut = computed(() => {
             });
         }
 
-        if (
-            isFunction(customFormat) &&
-            functionReturnsString(() =>
-                customFormat({
-                    datapoint,
-                    seriesIndex,
-                    series: ds,
-                    config: FINAL_CONFIG.value,
-                }),
-            )
-        ) {
-            tooltipContent.value = customFormat({
-                datapoint,
-                seriesIndex,
-                series: ds,
-                config: FINAL_CONFIG.value,
-            });
+        const formatted = isFunction(customFormat)
+            ? customFormat({
+                  datapoint,
+                  seriesIndex,
+                  series: ds,
+                  config: FINAL_CONFIG.value,
+              })
+            : undefined;
+        if (typeof formatted === 'string') {
+            tooltipContent.value = formatted;
         } else {
             let html = '';
             html += `<div style="width:100%;text-align:center;border-bottom:1px solid ${FINAL_CONFIG.value.tooltipBorderColor};padding-bottom:6px;margin-bottom:3px;">${datapoint.name}</div>`;
@@ -877,9 +720,9 @@ const donut = computed(() => {
             ...d,
             proportion: (d.value || 0) / total,
             value: d.value || 0,
-            absoluteValue: fd.value.dataset.find(
-                (_, idx) => `donut_${idx}` === d.id,
-            ).VALUE,
+            absoluteValue: getDonutValue(
+                fd.value.dataset.find((_, idx) => `donut_${idx}` === d.id),
+            ),
             shape: 'circle',
         };
     });
@@ -921,10 +764,9 @@ const donut = computed(() => {
 
 const slicer = ref({
     start: 0,
-    end: formattedDataset.value.maxSeriesLength,
+    end: formattedDataset.value?.maxSeriesLength ?? 0,
 });
 
-const slicerPrecog = ref({ ...slicer.value });
 const slicerComponent = ref(null);
 const slicerReady = ref(false);
 const isSettingUpSlicer = ref(false);
@@ -1053,7 +895,6 @@ function normalizeSlicerWindow() {
 
     if (max <= 0) {
         slicer.value = { start: 0, end: 0 };
-        slicerPrecog.value = { ...slicer.value };
 
         if (slicerComponent.value) {
             slicerComponent.value.setRangeValues(0, 0);
@@ -1071,7 +912,6 @@ function normalizeSlicerWindow() {
     end = Math.max(start + 1, Math.min(end, max));
 
     slicer.value = { start, end };
-    slicerPrecog.value = { start, end };
 
     if (slicerComponent.value) {
         slicerComponent.value.setRangeValues(start, end);
@@ -1094,10 +934,8 @@ function applyZoomState(state) {
             start: normalized.start,
             end: normalized.end,
         };
-        slicerPrecog.value = { ...slicer.value };
 
         normalizeSlicerWindow();
-        queueParentStableLayoutRefresh();
     }
 
     // Always return the final committed range. Prop-driven synchronization
@@ -1126,7 +964,7 @@ function setZoomState(state) {
 }
 
 async function setupSlicer({ applyControlledZoom = true } = {}) {
-    if (isSettingUpSlicer.value) return;
+    if (chartDisposed || isSettingUpSlicer.value) return;
 
     if (!isZoomableChart.value) {
         slicerReady.value = false;
@@ -1138,13 +976,14 @@ async function setupSlicer({ applyControlledZoom = true } = {}) {
     try {
         await nextTick();
         await nextTick();
+        if (chartDisposed || !isZoomableChart.value) return;
 
         const { zoomStartIndex, zoomEndIndex } = FINAL_CONFIG.value;
         const max = getSlicerMax();
 
         if (max <= 0) {
             slicer.value = { start: 0, end: 0 };
-            slicerPrecog.value = { ...slicer.value };
+
             slicerReady.value = false;
             return;
         }
@@ -1164,7 +1003,6 @@ async function setupSlicer({ applyControlledZoom = true } = {}) {
         suppressSlicerChild.value = true;
 
         slicer.value = { start, end };
-        slicerPrecog.value = { start, end };
 
         normalizeSlicerWindow();
 
@@ -1180,11 +1018,10 @@ async function setupSlicer({ applyControlledZoom = true } = {}) {
         }
     } finally {
         queueMicrotask(() => {
-            suppressSlicerChild.value = false;
+            if (!chartDisposed) suppressSlicerChild.value = false;
         });
 
         isSettingUpSlicer.value = false;
-        queueParentStableLayoutRefresh();
     }
 }
 
@@ -1196,7 +1033,7 @@ async function refreshSlicer({
 
     await setupSlicer({ applyControlledZoom });
 
-    if (publish) {
+    if (publish && !chartDisposed) {
         emitZoomState({
             start: Number(slicer.value.start),
             end: Number(slicer.value.end),
@@ -1225,7 +1062,6 @@ function queueSlicerUpdate(update) {
         queuedSlicerFrame = null;
 
         slicer.value = nextSlicer;
-        slicerPrecog.value = { ...nextSlicer };
 
         normalizeSlicerWindow();
 
@@ -1236,8 +1072,6 @@ function queueSlicerUpdate(update) {
             start: Number(slicer.value.start),
             end: Number(slicer.value.end),
         });
-
-        queueParentStableLayoutRefresh();
     });
 }
 
@@ -1310,7 +1144,12 @@ watch(
 watch(
     fd,
     async (nextFormattedDataset) => {
+        cancelDonutAnimations();
         if (!nextFormattedDataset) {
+            formattedDataset.value = null;
+            clearQueuedSlicerFrame();
+            clearChartZoomHover();
+            cancelChartZoomSelection();
             slicerReady.value = false;
             return;
         }
@@ -1333,7 +1172,6 @@ watch(
         if (!nextIsZoomable) {
             clearQueuedSlicerFrame();
             slicerReady.value = false;
-            queueParentStableLayoutRefresh();
             return;
         }
 
@@ -1348,7 +1186,6 @@ watch(
                 start: 0,
                 end: nextMax,
             };
-            slicerPrecog.value = { ...slicer.value };
 
             // Force SlicerPreview to rebuild when it is visible. Shared state
             // is restored immediately afterwards.
@@ -1359,8 +1196,6 @@ watch(
         } else if (props.zoomState) {
             applyZoomState(props.zoomState);
         }
-
-        queueParentStableLayoutRefresh();
     },
     {
         deep: true,
@@ -1369,6 +1204,7 @@ watch(
 
 const minimap = computed(() => {
     if (
+        !formattedDataset.value ||
         !FINAL_CONFIG.value.zoomMinimap.show ||
         chartType.value === detector.chartType.DONUT
     )
@@ -1557,23 +1393,134 @@ function getXySeries(type) {
     return ds;
 }
 
+function getXyInteractions(ds, type) {
+    function getMappedSeries(index) {
+        return ds
+            .map((d) => {
+                return {
+                    ...d,
+                    value: d.values[index],
+                    absoluteIndex: d.absoluteIndices[index],
+                };
+            })
+            .filter((d) => !segregated.value.includes(d.id));
+    }
+
+    function useTooltip(index, triggerMode = 'pointer') {
+        if (isChartZoomSelecting.value && triggerMode === 'pointer') return;
+
+        selectedDatapoint.value = index;
+        commonSelectedIndex.value = index;
+        activeTooltipIndex.value = index;
+        tooltipTriggerMode.value = triggerMode;
+
+        const mappedSeries = getMappedSeries(index);
+        if (!mappedSeries.length) {
+            clearChartZoomHover();
+            return;
+        }
+
+        dataTooltipSlot.value = {
+            datapoint: mappedSeries,
+            seriesIndex: index,
+            config: FINAL_CONFIG.value,
+            dataset: ds,
+        };
+        const customFormat = FINAL_CONFIG.value.tooltipCustomFormat;
+
+        if (FINAL_CONFIG.value.events.datapointEnter) {
+            FINAL_CONFIG.value.events.datapointEnter({
+                datapoint: mappedSeries,
+                seriesIndex: index + slicer.value.start,
+            });
+        }
+
+        const payload = {
+            datapoint: mappedSeries,
+            seriesIndex: index,
+            series: ds,
+            config: FINAL_CONFIG.value,
+        };
+        if (type === 'bar') payload.point = mappedSeries;
+        const formatted = isFunction(customFormat)
+            ? customFormat(payload)
+            : undefined;
+        if (typeof formatted === 'string') {
+            tooltipContent.value = formatted;
+        } else {
+            let html = '';
+
+            if (timeLabels.value[index]) {
+                html += `<div style="border-bottom:1px solid ${FINAL_CONFIG.value.tooltipBorderColor};padding-bottom:6px;margin-bottom:3px;">${timeLabels.value[index].text}</div>`;
+            }
+
+            mappedSeries.forEach((s, i) => {
+                html += `
+                    <div style="display:flex; flex-wrap: wrap; align-items:center; gap:3px;">
+                        <svg viewBox="0 0 12 12" height="14" width="12">${type === 'bar' ? `<rect x=0 y="0" width="12" height="12" rx="1" stroke="none" fill="${s.color}"/>` : `<circle cx="6" cy="6" r="6" stroke="none" fill="${s.color}"/>`}</svg>
+                        <span>${s.name}:</span>
+                        <b>${applyDataLabel(
+                            FINAL_CONFIG.value.formatter,
+                            s.value,
+                            dataLabel({
+                                p: FINAL_CONFIG.value.valuePrefix,
+                                v: s.value,
+                                s: FINAL_CONFIG.value.valueSuffix,
+                                r: FINAL_CONFIG.value.dataLabelRoundingValue,
+                            }),
+                            { datapoint: s, seriesIndex: i },
+                        )}
+                        </b>
+                    </div>
+                `;
+            });
+            tooltipContent.value = html;
+        }
+        isTooltip.value = true;
+    }
+
+    function killTooltip(index) {
+        const datapoint = getMappedSeries(index);
+
+        if (FINAL_CONFIG.value.events.datapointLeave) {
+            FINAL_CONFIG.value.events.datapointLeave({
+                datapoint,
+                seriesIndex: index + slicer.value.start,
+            });
+        }
+
+        clearChartZoomHover();
+    }
+
+    function selectDatapoint(index) {
+        const datapoint = getMappedSeries(index);
+        if (FINAL_CONFIG.value.events.datapointClick) {
+            FINAL_CONFIG.value.events.datapointClick({
+                datapoint,
+                seriesIndex: index + slicer.value.start,
+            });
+        }
+        emit('selectDatapoint', datapoint);
+    }
+
+    return { useTooltip, killTooltip, selectDatapoint };
+}
+
+function getLinePath(series) {
+    return `M ${FINAL_CONFIG.value.lineSmooth ? createSmoothPath(series.coordinates) : series.linePath}`;
+}
+
 const line = computed(() => {
     if (chartType.value !== detector.chartType.LINE) return null;
 
     const drawingArea = getXyDrawingArea();
     const ds = getXySeries('line');
 
+    const visibleSeries = ds.filter((d) => !segregated.value.includes(d.id));
+    const visibleValues = visibleSeries.flatMap((d) => d.values);
     const extremes = {
-        max: Math.max(
-            ...ds
-                .filter((d) => !segregated.value.includes(d.id))
-                .flatMap((d) => d.values),
-        ),
-        min: Math.min(
-            ...ds
-                .filter((d) => !segregated.value.includes(d.id))
-                .flatMap((d) => d.values),
-        ),
+        max: Math.max(...visibleValues),
+        min: Math.min(...visibleValues),
         maxSeries: Math.max(...ds.map((d) => d.values.length)),
     };
 
@@ -1636,119 +1583,10 @@ const line = computed(() => {
             };
         });
 
-    function getMappedSeries(index) {
-        return ds
-            .map((d) => {
-                return {
-                    ...d,
-                    value: d.values[index],
-                    absoluteIndex: d.absoluteIndices[index],
-                };
-            })
-            .filter((d) => !segregated.value.includes(d.id));
-    }
-
-    function useTooltip(index, triggerMode = 'pointer') {
-        if (isChartZoomSelecting.value && triggerMode === 'pointer') return;
-
-        selectedDatapoint.value = index;
-        commonSelectedIndex.value = index;
-        activeTooltipIndex.value = index;
-        tooltipTriggerMode.value = triggerMode;
-
-        const mappedSeries = getMappedSeries(index);
-
-        dataTooltipSlot.value = {
-            datapoint: mappedSeries,
-            seriesIndex: index,
-            config: FINAL_CONFIG.value,
-            dataset: ds,
-        };
-        const customFormat = FINAL_CONFIG.value.tooltipCustomFormat;
-
-        if (FINAL_CONFIG.value.events.datapointEnter) {
-            FINAL_CONFIG.value.events.datapointEnter({
-                datapoint: mappedSeries,
-                seriesIndex: index + slicer.value.start,
-            });
-        }
-
-        if (
-            isFunction(customFormat) &&
-            functionReturnsString(() =>
-                customFormat({
-                    datapoint: mappedSeries,
-                    seriesIndex: index,
-                    series: ds,
-                    config: FINAL_CONFIG.value,
-                }),
-            )
-        ) {
-            tooltipContent.value = customFormat({
-                datapoint: mappedSeries,
-                seriesIndex: index,
-                series: ds,
-                config: FINAL_CONFIG.value,
-            });
-        } else {
-            let html = '';
-
-            if (timeLabels.value[mappedSeries[0].absoluteIndex]) {
-                html += `<div style="border-bottom:1px solid ${FINAL_CONFIG.value.tooltipBorderColor};padding-bottom:6px;margin-bottom:3px;">${timeLabels.value[mappedSeries[0].absoluteIndex].text}</div>`;
-            }
-
-            mappedSeries.forEach((s, i) => {
-                html += `
-                    <div style="display:flex; flex-wrap: wrap; align-items:center; gap:3px;">
-                        <svg viewBox="0 0 12 12" height="14" width="12"><circle cx="6" cy="6" r="6" stroke="none" fill="${s.color}"/></svg>
-                        <span>${s.name}:</span>
-                        <b>${applyDataLabel(
-                            FINAL_CONFIG.value.formatter,
-                            s.value,
-                            dataLabel({
-                                p: FINAL_CONFIG.value.valuePrefix,
-                                v: s.value,
-                                s: FINAL_CONFIG.value.valueSuffix,
-                                r: FINAL_CONFIG.value.dataLabelRoundingValue,
-                            }),
-                            { datapoint: s, seriesIndex: i },
-                        )}
-                        </b>
-                    </div>
-                `;
-            });
-            tooltipContent.value = html;
-        }
-        isTooltip.value = true;
-    }
-
-    function killTooltip(index) {
-        const datapoint = getMappedSeries(index);
-
-        if (FINAL_CONFIG.value.events.datapointLeave) {
-            FINAL_CONFIG.value.events.datapointLeave({
-                datapoint,
-                seriesIndex: index + slicer.value.start,
-            });
-        }
-
-        selectedDatapoint.value = null;
-        commonSelectedIndex.value = null;
-        isTooltip.value = false;
-        activeTooltipIndex.value = null;
-        tooltipTriggerMode.value = 'pointer';
-    }
-
-    function selectDatapoint(index) {
-        const datapoint = getMappedSeries(index);
-        if (FINAL_CONFIG.value.events.datapointClick) {
-            FINAL_CONFIG.value.events.datapointClick({
-                datapoint,
-                seriesIndex: index + slicer.value.start,
-            });
-        }
-        emit('selectDatapoint', datapoint);
-    }
+    const { useTooltip, killTooltip, selectDatapoint } = getXyInteractions(
+        ds,
+        'line',
+    );
 
     return {
         absoluteZero,
@@ -1772,31 +1610,12 @@ const bar = computed(() => {
     const drawingArea = getXyDrawingArea();
     const ds = getXySeries('bar');
 
+    const visibleSeries = ds.filter((d) => !segregated.value.includes(d.id));
+    const visibleValues = visibleSeries.flatMap((d) => d.values);
     const extremes = {
-        max:
-            Math.max(
-                ...ds
-                    .filter((d) => !segregated.value.includes(d.id))
-                    .flatMap((d) => d.values),
-            ) < 0
-                ? 0
-                : (Math.max(
-                      ...ds
-                          .filter((d) => !segregated.value.includes(d.id))
-                          .flatMap((d) => d.values),
-                  ) ?? 1),
-        min:
-            Math.min(
-                ...ds
-                    .filter((d) => !segregated.value.includes(d.id))
-                    .flatMap((d) => d.values),
-            ) ?? 0,
-        maxSeries:
-            Math.max(
-                ...ds
-                    .filter((d) => !segregated.value.includes(d.id))
-                    .map((d) => d.values.length),
-            ) ?? 0,
+        max: Math.max(0, Math.max(...visibleValues)),
+        min: Math.min(...visibleValues),
+        maxSeries: Math.max(...visibleSeries.map((d) => d.values.length)),
     };
 
     const scale =
@@ -1828,209 +1647,53 @@ const bar = computed(() => {
         };
     });
 
-    const legend = ds.map((d, i) => {
-        return {
-            ...d,
-            shape: 'square',
-            coordinates: d.values.map((v, j) => {
-                const barHeight =
-                    ((v + absoluteMin) / (extremes.max + absoluteMin)) *
-                    drawingArea.height;
-                const barHeightNegative =
-                    (Math.abs(v) / Math.abs(extremes.min)) *
-                    (drawingArea.height - absoluteZero);
-                const absoluteMinHeight =
-                    (absoluteMin / (extremes.max + absoluteMin)) *
-                    drawingArea.height;
-                const barWidth =
-                    slotSize /
-                        ds.filter((d) => !segregated.value.includes(d.id))
-                            .length -
-                    FINAL_CONFIG.value.barGap /
-                        ds.filter((d) => !segregated.value.includes(d.id))
-                            .length;
-
-                return {
-                    x:
-                        drawingArea.left +
-                        slotSize * j +
-                        barWidth * i +
-                        FINAL_CONFIG.value.barGap / 2,
-                    y: v > 0 ? drawingArea.bottom - barHeight : absoluteZero,
-                    height:
-                        v > 0
-                            ? barHeight - absoluteMinHeight
-                            : barHeightNegative,
-                    value: v,
-                    width: barWidth,
-                };
-            }),
-        };
-    });
-
-    const drawableDataset = ds
-        .filter((d) => !segregated.value.includes(d.id))
-        .map((d, i) => {
+    const barWidth =
+        slotSize / visibleSeries.length -
+        FINAL_CONFIG.value.barGap / visibleSeries.length;
+    const absoluteMinHeight =
+        (absoluteMin / (extremes.max + absoluteMin)) * drawingArea.height;
+    function getCoordinates(values, seriesIndex, forLegend = false) {
+        return values.map((value, index) => {
+            const barHeight =
+                ((value + absoluteMin) / (extremes.max + absoluteMin)) *
+                drawingArea.height;
+            const negativeHeight = forLegend
+                ? (Math.abs(value) / Math.abs(extremes.min)) *
+                  (drawingArea.height - absoluteZero)
+                : (Math.abs(value) / (extremes.max + absoluteMin)) *
+                  drawingArea.height;
             return {
-                ...d,
-                coordinates: d.values.map((v, j) => {
-                    const barHeight =
-                        ((v + absoluteMin) / (extremes.max + absoluteMin)) *
-                        drawingArea.height;
-                    const barHeightNegative =
-                        (Math.abs(v) / (extremes.max + absoluteMin)) *
-                        drawingArea.height;
-                    const absoluteMinHeight =
-                        (absoluteMin / (extremes.max + absoluteMin)) *
-                        drawingArea.height;
-                    const barWidth =
-                        slotSize /
-                            ds.filter((d) => !segregated.value.includes(d.id))
-                                .length -
-                        FINAL_CONFIG.value.barGap /
-                            ds.filter((d) => !segregated.value.includes(d.id))
-                                .length;
-
-                    return {
-                        x:
-                            drawingArea.left +
-                            slotSize * j +
-                            barWidth * i +
-                            FINAL_CONFIG.value.barGap / 2,
-                        y:
-                            v > 0
-                                ? drawingArea.bottom - barHeight
-                                : absoluteZero,
-                        height:
-                            v > 0
-                                ? barHeight - absoluteMinHeight
-                                : barHeightNegative,
-                        value: v,
-                        width: barWidth,
-                    };
-                }),
+                x:
+                    drawingArea.left +
+                    slotSize * index +
+                    barWidth * seriesIndex +
+                    FINAL_CONFIG.value.barGap / 2,
+                y: value > 0 ? drawingArea.bottom - barHeight : absoluteZero,
+                height:
+                    value > 0 ? barHeight - absoluteMinHeight : negativeHeight,
+                value,
+                width: barWidth,
             };
         });
-
-    function getMappedSeries(index) {
-        return ds
-            .map((d) => {
-                return {
-                    ...d,
-                    value: d.values[index],
-                    absoluteIndex: d.absoluteIndices[index],
-                };
-            })
-            .filter((d) => !segregated.value.includes(d.id));
     }
+    const legend = ds.map((d, index) => ({
+        ...d,
+        shape: 'square',
+        coordinates: getCoordinates(d.values, index, true),
+    }));
+    const drawableDataset = visibleSeries.map((d, index) => ({
+        ...d,
+        coordinates: getCoordinates(d.values, index),
+    }));
 
-    function useTooltip(index, triggerMode = 'pointer') {
-        if (isChartZoomSelecting.value && triggerMode === 'pointer') return;
-
-        selectedDatapoint.value = index;
-        commonSelectedIndex.value = index;
-        activeTooltipIndex.value = index;
-        tooltipTriggerMode.value = triggerMode;
-
-        const mappedSeries = getMappedSeries(index);
-
-        dataTooltipSlot.value = {
-            datapoint: mappedSeries,
-            seriesIndex: index,
-            config: FINAL_CONFIG.value,
-            dataset: ds,
-        };
-        const customFormat = FINAL_CONFIG.value.tooltipCustomFormat;
-
-        if (FINAL_CONFIG.value.events.datapointEnter) {
-            FINAL_CONFIG.value.events.datapointEnter({
-                datapoint: mappedSeries,
-                seriesIndex: index + slicer.value.start,
-            });
-        }
-
-        if (
-            isFunction(customFormat) &&
-            functionReturnsString(() =>
-                customFormat({
-                    datapoint: mappedSeries,
-                    seriesIndex: index,
-                    series: ds,
-                    config: FINAL_CONFIG.value,
-                }),
-            )
-        ) {
-            tooltipContent.value = customFormat({
-                point: mappedSeries,
-                seriesIndex: index,
-                series: ds,
-                config: FINAL_CONFIG.value,
-            });
-        } else {
-            let html = '';
-
-            if (timeLabels.value[mappedSeries[0].absoluteIndex]) {
-                html += `<div style="border-bottom:1px solid ${FINAL_CONFIG.value.tooltipBorderColor};padding-bottom:6px;margin-bottom:3px;">${timeLabels.value[mappedSeries[0].absoluteIndex].text}</div>`;
-            }
-
-            mappedSeries.forEach((s, i) => {
-                html += `
-                    <div style="display:flex; flex-wrap: wrap; align-items:center; gap:3px;">
-                        <svg viewBox="0 0 12 12" height="14" width="12"><rect x=0 y="0" width="12" height="12" rx="1" stroke="none" fill="${s.color}"/></svg>
-                        <span>${s.name}:</span>
-                        <b>${applyDataLabel(
-                            FINAL_CONFIG.value.formatter,
-                            s.value,
-                            dataLabel({
-                                p: FINAL_CONFIG.value.valuePrefix,
-                                v: s.value,
-                                s: FINAL_CONFIG.value.valueSuffix,
-                                r: FINAL_CONFIG.value.dataLabelRoundingValue,
-                            }),
-                            { datapoint: s, seriesIndex: i },
-                        )}
-                        </b>
-                    </div>
-                `;
-            });
-            tooltipContent.value = html;
-        }
-        isTooltip.value = true;
-    }
-
-    function killTooltip(index) {
-        const datapoint = getMappedSeries(index);
-
-        if (FINAL_CONFIG.value.events.datapointLeave) {
-            FINAL_CONFIG.value.events.datapointLeave({
-                datapoint,
-                seriesIndex: index + slicer.value.start,
-            });
-        }
-
-        isTooltip.value = false;
-        selectedDatapoint.value = null;
-        commonSelectedIndex.value = null;
-        activeTooltipIndex.value = null;
-        tooltipTriggerMode.value = 'pointer';
-    }
-
-    function selectDatapoint(index) {
-        const datapoint = getMappedSeries(index);
-        if (FINAL_CONFIG.value.events.datapointClick) {
-            FINAL_CONFIG.value.events.datapointClick({
-                datapoint,
-                seriesIndex: index + slicer.value.start,
-            });
-        }
-        emit('selectDatapoint', datapoint);
-    }
+    const { useTooltip, killTooltip, selectDatapoint } = getXyInteractions(
+        ds,
+        'bar',
+    );
 
     return {
         absoluteZero,
-        dataset: drawableDataset.filter(
-            (d) => !segregated.value.includes(d.id),
-        ),
+        dataset: drawableDataset,
         absoluteDataset: drawableDataset,
         legend,
         drawingArea,
@@ -2063,41 +1726,13 @@ const xyPeriodTicks = computed(() =>
         : timeLabels.value,
 );
 
-const slicerDrawingArea = computed(() => {
-    if (chartType.value === detector.chartType.LINE) {
-        return line.value?.drawingArea ?? null;
-    }
-
-    if (chartType.value === detector.chartType.BAR) {
-        return bar.value?.drawingArea ?? null;
-    }
-
-    return null;
-});
-
-const activeChartZoomSlotSize = computed(() => {
-    if (chartType.value === detector.chartType.LINE) {
-        return Number(line.value?.slotSize ?? 0);
-    }
-
-    if (chartType.value === detector.chartType.BAR) {
-        return Number(bar.value?.slotSize ?? 0);
-    }
-
-    return 0;
-});
-
-const activeChartZoomVisibleCount = computed(() => {
-    if (chartType.value === detector.chartType.LINE) {
-        return Number(line.value?.extremes?.maxSeries ?? 0);
-    }
-
-    if (chartType.value === detector.chartType.BAR) {
-        return Number(bar.value?.extremes?.maxSeries ?? 0);
-    }
-
-    return 0;
-});
+const slicerDrawingArea = computed(() => xyChart.value?.drawingArea ?? null);
+const activeChartZoomSlotSize = computed(() =>
+    Number(xyChart.value?.slotSize ?? 0),
+);
+const activeChartZoomVisibleCount = computed(() =>
+    Number(xyChart.value?.extremes?.maxSeries ?? 0),
+);
 
 const chartZoomSelectionRect = computed(() => {
     const drawingArea = slicerDrawingArea.value;
@@ -2207,8 +1842,10 @@ function cancelChartZoomSelection(event) {
 function suppressNextChartClick() {
     ignoreNextChartClick.value = true;
 
-    setTimeout(() => {
+    clearTimeout(clickSuppressionTimer);
+    clickSuppressionTimer = setTimeout(() => {
         ignoreNextChartClick.value = false;
+        clickSuppressionTimer = null;
     }, 0);
 }
 
@@ -2472,87 +2109,14 @@ const slicerMinimapRightInsetRatio = computed(() => {
     return (svgWidth - drawingArea.right) / svgWidth;
 });
 
-function primePath(p) {
-    if (!p) return;
-    const len = p.getTotalLength();
-    p.style.transition = 'none';
-    p.style.strokeDasharray = `${len}`;
-    p.style.strokeDashoffset = `${len}`;
-}
-
-function primeRevealables(els, { fromOpacity = '0', fromScale = '0.85' } = {}) {
-    els.forEach((el) => {
-        el.style.animation = 'none';
-        el.style.transition = 'none';
-        el.style.opacity = fromOpacity;
-        el.style.transform = `scale(${fromScale})`;
-        el.style.transformBox = 'fill-box';
-        el.style.transformOrigin = '50% 50%';
-    });
-}
-
-function getXFromCircle(el) {
-    return el.cx?.baseVal?.value ?? parseFloat(el.getAttribute('cx'));
-}
-function getXFromText(el) {
-    const xAttr = el.getAttribute('x');
-    if (xAttr != null) return parseFloat(xAttr);
-    const ctm = el.getCTM?.();
-    return ctm ? ctm.e : 0;
-}
-
-function bucketByXTolerance(elems, getX) {
-    if (!elems.length) return [];
-    const withX = elems
-        .map((el) => ({ el, x: getX(el) }))
-        .filter((o) => Number.isFinite(o.x));
-    withX.sort((a, b) => a.x - b.x);
-
-    let minGap = Infinity;
-    for (let i = 1; i < withX.length; i++) {
-        const d = withX[i].x - withX[i - 1].x;
-        if (d > 0 && d < minGap) minGap = d;
-    }
-    const tol = (minGap === Infinity ? 1 : minGap) / 2;
-
-    const buckets = [];
-    let current = { x: withX[0].x, items: [withX[0].el] };
-    for (let i = 1; i < withX.length; i++) {
-        const { x, el } = withX[i];
-        if (Math.abs(x - current.x) <= tol) {
-            current.items.push(el);
-        } else {
-            buckets.push(current);
-            current = { x, items: [el] };
-        }
-    }
-    buckets.push(current);
-    return buckets;
-}
-
-const allMinimaps = computed(() => {
-    if (chartType.value === detector.chartType.LINE) {
-        return line.value.legend.map((ds) => {
-            const _min = Math.min(...ds.absoluteValues.map((v) => v ?? 0));
-            return {
-                ...ds,
-                isVisible: !segregated.value.includes(ds.id),
-                type: 'line',
-                series: ds.absoluteValues,
-            };
-        });
-    } else if (chartType.value === detector.chartType.BAR) {
-        return bar.value.legend.map((ds) => {
-            const _min = Math.min(...ds.absoluteValues.map((v) => v ?? 0));
-            return {
-                ...ds,
-                isVisible: !segregated.value.includes(ds.id),
-                type: 'bar',
-                series: ds.absoluteValues,
-            };
-        });
-    }
-});
+const allMinimaps = computed(() =>
+    xyChart.value?.legend.map((ds) => ({
+        ...ds,
+        isVisible: !segregated.value.includes(ds.id),
+        type: xyChartKind.value,
+        series: ds.absoluteValues,
+    })),
+);
 
 const timeLabels = ref([]);
 const timeLabelsAreReady = ref(false);
@@ -2564,7 +2128,7 @@ watchEffect(() => {
     (async () => {
         const labels = await useTimeLabels({
             values: FINAL_CONFIG.value.xyPeriods,
-            maxDatapoints: formattedDataset.value.maxSeriesLength,
+            maxDatapoints: formattedDataset.value?.maxSeriesLength ?? 0,
             formatter: FINAL_CONFIG.value.datetimeFormatter,
             start: slicer.value.start,
             end: slicer.value.end,
@@ -2601,25 +2165,10 @@ function toggleAnnotator() {
     isAnnotator.value = !isAnnotator.value;
 }
 
-async function getImage({ scale = 2 } = {}) {
-    if (!quickChart.value) return;
-    const { width, height } = quickChart.value.getBoundingClientRect();
-    const aspectRatio = width / height;
-    const { imageUri, base64 } = await img({
-        domElement: quickChart.value,
-        base64: true,
-        img: true,
-        scale,
-    });
-    return {
-        imageUri,
-        base64,
-        title: FINAL_CONFIG.value.title,
-        width,
-        height,
-        aspectRatio,
-    };
-}
+const getImage = createChartImageGetter(
+    quickChart,
+    () => FINAL_CONFIG.value.title,
+);
 
 const WIDTH = computed(() => defaultSizes.value.width);
 const HEIGHT = computed(() => defaultSizes.value.height);
@@ -2639,15 +2188,9 @@ useTimeLabelCollision({
 
 const svgBg = computed(() => FINAL_CONFIG.value.backgroundColor);
 
-const svgLegendItems = computed(() => {
-    if (chartType.value === detector.chartType.DONUT) {
-        return donut.value.legend;
-    } else if (chartType.value === detector.chartType.LINE) {
-        return line.value.legend;
-    } else {
-        return bar.value.legend;
-    }
-});
+const svgLegendItems = computed(
+    () => donut.value?.legend ?? xyChart.value?.legend ?? [],
+);
 
 const svgLegend = computed(() => {
     return {
@@ -2718,21 +2261,11 @@ function handleLegendKeydown(event, callback) {
 /***************************************************************************************************
  * a11y
  **************************************************************************************************/
-const currentNavigationCount = computed(() => {
-    if (chartType.value === detector.chartType.DONUT) {
-        return donut.value?.chart?.length ?? 0;
-    }
-
-    if (chartType.value === detector.chartType.LINE) {
-        return line.value?.extremes?.maxSeries ?? 0;
-    }
-
-    if (chartType.value === detector.chartType.BAR) {
-        return bar.value?.extremes?.maxSeries ?? 0;
-    }
-
-    return 0;
-});
+const currentNavigationCount = computed(() =>
+    chartType.value === detector.chartType.DONUT
+        ? (donut.value?.chart?.length ?? 0)
+        : (xyChart.value?.extremes?.maxSeries ?? 0),
+);
 
 function onSvgFocus() {
     activeTooltipIndex.value = null;
@@ -2804,15 +2337,7 @@ function onSvgKeydown(event) {
             return;
         }
 
-        if (chartType.value === detector.chartType.LINE) {
-            line.value?.selectDatapoint(activeTooltipIndex.value);
-            return;
-        }
-
-        if (chartType.value === detector.chartType.BAR) {
-            bar.value?.selectDatapoint(activeTooltipIndex.value);
-            return;
-        }
+        xyChart.value?.selectDatapoint(activeTooltipIndex.value);
 
         return;
     }
@@ -2871,15 +2396,9 @@ function onSvgKeydown(event) {
         return;
     }
 
-    if (chartType.value === detector.chartType.LINE) {
+    if (xyChart.value) {
         setKeyboardTooltipPosition(nextIndex);
-        line.value?.useTooltip(nextIndex, 'keyboard');
-        return;
-    }
-
-    if (chartType.value === detector.chartType.BAR) {
-        setKeyboardTooltipPosition(nextIndex);
-        bar.value?.useTooltip(nextIndex, 'keyboard');
+        xyChart.value.useTooltip(nextIndex, 'keyboard');
     }
 }
 
@@ -2898,22 +2417,9 @@ function setKeyboardTooltipPosition(index) {
         svgY = calcMarkerOffsetY(arc);
     }
 
-    if (chartType.value === detector.chartType.LINE) {
-        const drawingArea = line.value?.drawingArea;
-        const slotSize = line.value?.slotSize;
-
+    if (xyChart.value) {
+        const { drawingArea, slotSize } = xyChart.value;
         if (!drawingArea || !slotSize) return;
-
-        svgX = drawingArea.left + slotSize * (index + 1) - slotSize / 2;
-        svgY = drawingArea.top + drawingArea.height / 2;
-    }
-
-    if (chartType.value === detector.chartType.BAR) {
-        const drawingArea = bar.value?.drawingArea;
-        const slotSize = bar.value?.slotSize;
-
-        if (!drawingArea || !slotSize) return;
-
         svgX = drawingArea.left + slotSize * (index + 1) - slotSize / 2;
         svgY = drawingArea.top + drawingArea.height / 2;
     }
@@ -2963,22 +2469,14 @@ const a11yTable = computed(() => {
         chartType.value === detector.chartType.LINE ||
         chartType.value === detector.chartType.BAR
     ) {
-        const series =
-            chartType.value === detector.chartType.LINE
-                ? (line.value?.dataset ?? [])
-                : (bar.value?.dataset ?? []);
-
-        const maxSeries =
-            chartType.value === detector.chartType.LINE
-                ? (line.value?.extremes?.maxSeries ?? 0)
-                : (bar.value?.extremes?.maxSeries ?? 0);
+        const series = xyChart.value?.dataset ?? [];
+        const maxSeries = xyChart.value?.extremes?.maxSeries ?? 0;
 
         const headers = ['Index', ...series.map((serie) => serie.name)];
 
         const rows = Array.from({ length: maxSeries }, (_, i) => {
             const label =
-                timeLabels.value?.[i + slicer.value.start]?.text ??
-                String(i + slicer.value.start);
+                timeLabels.value?.[i]?.text ?? String(i + slicer.value.start);
 
             return [
                 label,
@@ -3043,8 +2541,7 @@ watch(
 );
 
 const annotationViewport = computed(() => {
-    const activeChart =
-        chartType.value === detector.chartType.LINE ? line.value : bar.value;
+    const activeChart = xyChart.value;
     return createAnnotationViewport({
         enabled: FINAL_CONFIG.value.userOptionsAnnotator?.followZoom,
         area: slicerDrawingArea.value,
@@ -3073,7 +2570,7 @@ const annotationViewport = computed(() => {
         </div>
 
         <A11yDataTable
-            v-if="a11yTable.rows.length"
+            v-if="FINAL_CONFIG.a11y.includeTable && a11yTable.rows.length"
             :uid="uid"
             :head="a11yTable.headers"
             :body="a11yTable.rows"
@@ -3225,47 +2722,12 @@ const annotationViewport = computed(() => {
 
                 <!-- BACKGROUND SLOT -->
                 <foreignObject
-                    v-if="
-                        $slots['chart-background'] &&
-                        chartType === detector.chartType.BAR
-                    "
-                    :x="bar.drawingArea.left"
-                    :y="bar.drawingArea.top"
-                    :width="bar.drawingArea.width"
-                    :height="bar.drawingArea.height"
-                    :style="{
-                        pointerEvents: 'none',
-                    }"
-                >
-                    <slot name="chart-background" />
-                </foreignObject>
-                <foreignObject
-                    v-if="
-                        $slots['chart-background'] &&
-                        chartType === detector.chartType.LINE
-                    "
-                    :x="line.drawingArea.left"
-                    :y="line.drawingArea.top"
-                    :width="line.drawingArea.width"
-                    :height="line.drawingArea.height"
-                    :style="{
-                        pointerEvents: 'none',
-                    }"
-                >
-                    <slot name="chart-background" />
-                </foreignObject>
-                <foreignObject
-                    v-if="
-                        $slots['chart-background'] &&
-                        chartType === detector.chartType.DONUT
-                    "
-                    :x="0"
-                    :y="0"
-                    :width="defaultSizes.width"
-                    :height="defaultSizes.height"
-                    :style="{
-                        pointerEvents: 'none',
-                    }"
+                    v-if="$slots['chart-background']"
+                    :x="xyChart?.drawingArea.left ?? 0"
+                    :y="xyChart?.drawingArea.top ?? 0"
+                    :width="xyChart?.drawingArea.width ?? defaultSizes.width"
+                    :height="xyChart?.drawingArea.height ?? defaultSizes.height"
+                    style="pointer-events: none"
                 >
                     <slot name="chart-background" />
                 </foreignObject>
@@ -3750,79 +3212,40 @@ const annotationViewport = computed(() => {
                             :key="`serie_${ds.id}`"
                         >
                             <g class="line-plot-series">
-                                <template v-if="FINAL_CONFIG.lineSmooth">
-                                    <path
-                                        ref="pathWrapper"
-                                        data-cy="datapoint-line-wrapper"
-                                        :d="`M ${createSmoothPath(ds.coordinates)}`"
-                                        :stroke="FINAL_CONFIG.backgroundColor"
-                                        :stroke-width="
-                                            FINAL_CONFIG.lineStrokeWidth + 1
-                                        "
-                                        stroke-linecap="round"
-                                        fill="none"
-                                        :class="{
-                                            'vue-data-ui-transition':
-                                                transitionEnabled &&
-                                                !labelLayoutSettling,
-                                        }"
-                                    />
-                                    <path
-                                        ref="pathTop"
-                                        data-cy="datapoint-line"
-                                        :d="`M ${createSmoothPath(ds.coordinates)}`"
-                                        :stroke="ds.color"
-                                        :stroke-width="
-                                            FINAL_CONFIG.lineStrokeWidth
-                                        "
-                                        stroke-linecap="round"
-                                        fill="none"
-                                        :class="{
-                                            'vue-data-ui-transition':
-                                                transitionEnabled &&
-                                                !labelLayoutSettling,
-                                        }"
-                                        :style="{
-                                            transition: loading
+                                <path
+                                    data-cy="datapoint-line-wrapper"
+                                    :d="getLinePath(ds)"
+                                    :stroke="FINAL_CONFIG.backgroundColor"
+                                    :stroke-width="
+                                        FINAL_CONFIG.lineStrokeWidth + 1
+                                    "
+                                    stroke-linecap="round"
+                                    fill="none"
+                                    :class="{
+                                        'vue-data-ui-transition':
+                                            transitionEnabled &&
+                                            !labelLayoutSettling,
+                                    }"
+                                />
+                                <path
+                                    data-cy="datapoint-line"
+                                    :d="getLinePath(ds)"
+                                    :stroke="ds.color"
+                                    :stroke-width="FINAL_CONFIG.lineStrokeWidth"
+                                    stroke-linecap="round"
+                                    fill="none"
+                                    :class="{
+                                        'vue-data-ui-transition':
+                                            transitionEnabled &&
+                                            !labelLayoutSettling,
+                                    }"
+                                    :style="{
+                                        transition:
+                                            loading || !FINAL_CONFIG.lineSmooth
                                                 ? undefined
                                                 : 'all 0.2s ease-in-out',
-                                        }"
-                                    ></path>
-                                </template>
-                                <template v-else>
-                                    <path
-                                        ref="pathWrapper"
-                                        data-cy="datapoint-line-wrapper"
-                                        :d="`M ${ds.linePath}`"
-                                        :stroke="FINAL_CONFIG.backgroundColor"
-                                        :stroke-width="
-                                            FINAL_CONFIG.lineStrokeWidth + 1
-                                        "
-                                        stroke-linecap="round"
-                                        fill="none"
-                                        :class="{
-                                            'vue-data-ui-transition':
-                                                transitionEnabled &&
-                                                !labelLayoutSettling,
-                                        }"
-                                    />
-                                    <path
-                                        ref="pathTop"
-                                        data-cy="datapoint-line"
-                                        :d="`M ${ds.linePath}`"
-                                        :stroke="ds.color"
-                                        :stroke-width="
-                                            FINAL_CONFIG.lineStrokeWidth
-                                        "
-                                        stroke-linecap="round"
-                                        fill="none"
-                                        :class="{
-                                            'vue-data-ui-transition':
-                                                transitionEnabled &&
-                                                !labelLayoutSettling,
-                                        }"
-                                    />
-                                </template>
+                                    }"
+                                ></path>
                                 <template
                                     v-for="(plot, j) in ds.coordinates"
                                     :key="`dp_${ds.id}_${j + slicer.start}`"
@@ -3972,7 +3395,7 @@ const annotationViewport = computed(() => {
                     "
                 >
                     <g class="axis-labels">
-                        <g v-if="FINAL_CONFIG.xAxisLabel" ref="xAxisLabel">
+                        <g v-if="FINAL_CONFIG.xAxisLabel">
                             <text
                                 :font-size="FINAL_CONFIG.axisLabelsFontSize"
                                 :fill="FINAL_CONFIG.color"
@@ -3989,7 +3412,7 @@ const annotationViewport = computed(() => {
                                 {{ FINAL_CONFIG.xAxisLabel }}
                             </text>
                         </g>
-                        <g v-if="FINAL_CONFIG.yAxisLabel" ref="yAxisLabel">
+                        <g v-if="FINAL_CONFIG.yAxisLabel">
                             <text
                                 :font-size="FINAL_CONFIG.axisLabelsFontSize"
                                 :fill="FINAL_CONFIG.color"

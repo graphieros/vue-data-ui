@@ -1527,6 +1527,44 @@ function createCases(env) {
             }
         }
     };
+    cases.LiveValues = async () => {
+        const { wrapper } = await mountSubject(VueUiDigits, {
+            props: { dataset: 0, config },
+        });
+        for (const [dataset, expected] of [
+            [-12.3, '-12.3'],
+            [1e-7, '0.0000001'],
+            [1e21, '1000000000000000000000'],
+            [Infinity, '0'],
+            [NaN, '0'],
+            [42, '42'],
+        ]) {
+            await wrapper.setProps({ dataset });
+            await waitFor(() => {
+                expect(wrapper.find('.sr-only').text()).toBe(expected);
+                expect(wrapper.findAll('[data-cy="digit"]')).toHaveLength(
+                    expected.replace('.', '').length,
+                );
+                expect(
+                    wrapper.findAll('[data-cy="digit-decimal"]'),
+                ).toHaveLength(expected.includes('.') ? 1 : 0);
+            });
+            const svg = wrapper.find('svg');
+            expect(svg.attributes('aria-describedby')).toBe(
+                wrapper.find('.sr-only').attributes('id'),
+            );
+            expect(svg.html()).not.toMatch(/NaN|Infinity|undefined/);
+            expect(
+                wrapper
+                    .findAll('path')
+                    .every((path) =>
+                        ['#000000ff', '#CCCCCCff'].includes(
+                            path.attributes('fill'),
+                        ),
+                    ),
+            ).toBe(true);
+        }
+    };
     return {
         cases,
         hooks,
@@ -1580,4 +1618,9 @@ export const Renders8 = {
 export const Renders9 = {
     name: 'renders 9',
     play: async (context) => runScenario(context, createCases, 'Renders9'),
+};
+
+export const LiveValues = {
+    name: 'updates negative, scientific, and nonfinite values',
+    play: async (context) => runScenario(context, createCases, 'LiveValues'),
 };

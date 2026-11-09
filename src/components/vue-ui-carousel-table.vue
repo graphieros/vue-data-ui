@@ -14,7 +14,6 @@ import {
     onBeforeUnmount,
     useSlots,
     defineAsyncComponent,
-    shallowRef,
 } from 'vue';
 import {
     createCsvContent,
@@ -58,21 +57,35 @@ const emit = defineEmits(['copyAlt']);
 
 const uid = ref(createUid());
 const isFullscreen = ref(false);
-const isDataset = ref(!!props.dataset);
+const isDataset = computed(
+    () =>
+        Array.isArray(props.dataset?.head) &&
+        props.dataset.head.length > 0 &&
+        Array.isArray(props.dataset?.body) &&
+        props.dataset.body.length > 0 &&
+        props.dataset.body.every(Array.isArray),
+);
 const slots = useSlots();
 
 onMounted(() => {
     prepareChart();
 });
 
-const FINAL_CONFIG = computed({
-    get: () => {
-        return prepareConfig();
+const FINAL_CONFIG = computed(() =>
+    useNestedProp({
+        userConfig: props.config,
+        defaultConfig: DEFAULT_CONFIG,
+    }),
+);
+const userOptionConfig = computed(() => ({
+    ...FINAL_CONFIG.value.userOptions,
+    buttons: {
+        ...FINAL_CONFIG.value.userOptions.buttons,
+        animation:
+            FINAL_CONFIG.value.userOptions.buttons.animation &&
+            !prefersReducedMotion.value,
     },
-    set: (newCfg) => {
-        return newCfg;
-    },
-});
+}));
 
 const debug = computed(() => FINAL_CONFIG.value.debug);
 
@@ -99,7 +112,6 @@ function prepareChart() {
                 property: 'head',
                 debug: debug.value,
             });
-            isDataset.value = false;
         }
         if (!props.dataset.body || objectIsEmpty(props.dataset.body)) {
             error({
@@ -108,11 +120,7 @@ function prepareChart() {
                 property: 'body',
                 debug: debug.value,
             });
-            isDataset.value = false;
         }
-    }
-    if (prefersReducedMotion.value) {
-        FINAL_CONFIG.value.userOptions.buttons.animation = false;
     }
 }
 
@@ -130,31 +138,15 @@ const isCursorPointer = computed(
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } =
     useUserOptionState({ config: FINAL_CONFIG.value });
 
-function prepareConfig() {
-    return useNestedProp({
-        userConfig: props.config,
-        defaultConfig: DEFAULT_CONFIG,
-    });
-}
-
 watch(
     () => props.config,
-    (_newCfg) => {
-        FINAL_CONFIG.value = prepareConfig();
+    () => {
         userOptionsVisible.value =
             !FINAL_CONFIG.value.userOptions.showOnChartHover;
-        prepareChart();
     },
     { deep: true },
 );
-
-watch(
-    () => props.dataset,
-    (_) => {
-        setTrElements();
-    },
-    { deep: true },
-);
+watch(() => props.dataset, prepareChart, { deep: true });
 
 const {
     isPrinting,
@@ -181,30 +173,16 @@ const tableRowHeight = ref(0);
 const isResponsive = ref(false);
 
 const tbody = ref(null);
-const allTr = ref(null);
+const rowHeights = ref([]);
 const scrollIndex = ref(0);
 
-function setTrElements() {
-    if (tbody.value) {
-        allTr.value = {
-            elements: tbody.value.getElementsByTagName('tr'),
-            heights: Array.from(tbody.value.getElementsByTagName('tr')).map(
-                (el) => el.getBoundingClientRect().height,
-            ),
-        };
-    }
-}
-
-onMounted(setTrElements);
-
-const maxTrHeight = computed(() => {
-    if (!allTr.value || !allTr.value.heights.length) return 0;
-    return (
-        Math.max(...allTr.value.heights) +
-        captionHeight.value +
-        tableRowHeight.value
-    );
-});
+const maxTrHeight = computed(() =>
+    rowHeights.value.length
+        ? Math.max(...rowHeights.value) +
+          captionHeight.value +
+          tableRowHeight.value
+        : 0,
+);
 
 const visibleCells = computed(() => {
     if (!props.dataset.body) return 0;
@@ -226,225 +204,183 @@ const rowHeight = computed(() => {
 });
 
 const init = ref(0);
-const raf = ref(null);
-const lastTimestamp = ref(0);
-const isPaused = ref(false);
+let raf = null;
+let lastTimestamp = null;
+let resumeTouchTimeout = null;
+let tableObserver = null;
+let disposed = false;
+const explicitlyPaused = ref(false);
+const hovered = ref(false);
+const touching = ref(false);
+const isPaused = computed(
+    () =>
+        explicitlyPaused.value ||
+        touching.value ||
+        (hovered.value && FINAL_CONFIG.value.animation.pauseOnHover) ||
+        !mutableConfig.value.showAnimation ||
+        prefersReducedMotion.value ||
+        !isDataset.value,
+);
 const step = ref(0);
-
-onMounted(() => {
-    if (caption.value) {
-        captionHeight.value = caption.value.getBoundingClientRect().height;
-    }
-
-    if (tableRow.value) {
-        tableRowHeight.value = tableRow.value.getBoundingClientRect().height;
-    }
-
-    if (mutableConfig.value.showAnimation && !!allTr.value) {
-        startAnimation();
-    }
-});
-
-onMounted(() => {
-    if (tableContainer.value) {
-        const thead = tableContainer.value.querySelector('thead');
-        const trElements = Array.from(tbody.value.querySelectorAll('tr'));
-
-        function updateVisibility() {
-            const theadBottom = thead.getBoundingClientRect().bottom;
-            trElements.forEach((tr) => {
-                const trTop = tr.getBoundingClientRect().top;
-                if (trTop < theadBottom) {
-                    tr.style.visibility = 'hidden';
-                } else {
-                    tr.style.visibility = 'visible';
-                }
-            });
-        }
-
-        tableContainer.value.addEventListener('scroll', updateVisibility);
-        updateVisibility();
-
-        onBeforeUnmount(() => {
-            tableContainer.value.removeEventListener(
-                'scroll',
-                updateVisibility,
-            );
-        });
-    }
-});
 
 function toggleFullscreen(state) {
     isFullscreen.value = state;
     step.value += 1;
 }
 
-function startAnimation() {
-    if (prefersReducedMotion.value) return;
-    if (!raf.value && !isPaused.value) {
-        if (FINAL_CONFIG.value.animation.type === 'scroll') {
-            raf.value = requestAnimationFrame(animate);
-        } else {
-            raf.value = requestAnimationFrame(animateMarquee);
-        }
-    }
+function stopAnimation() {
+    if (raf !== null) cancelAnimationFrame(raf);
+    raf = null;
+    lastTimestamp = null;
 }
 
-function hasReachedScrollBottom() {
-    if (!tableContainer.value) return false;
-    const { scrollTop, scrollHeight, clientHeight } = tableContainer.value;
-    return scrollTop + clientHeight >= scrollHeight;
+function startAnimation() {
+    if (
+        !disposed &&
+        !isPaused.value &&
+        tableContainer.value &&
+        rowHeights.value.length &&
+        raf === null
+    ) {
+        raf = requestAnimationFrame(animate);
+    }
 }
 
 function animate(timestamp) {
-    if (isPaused.value) return;
-    if (!lastTimestamp.value) lastTimestamp.value = timestamp;
+    raf = null;
+    if (
+        disposed ||
+        isPaused.value ||
+        !tableContainer.value ||
+        !rowHeights.value.length
+    )
+        return;
+    const deltaTime = lastTimestamp === null ? 0 : timestamp - lastTimestamp;
+    const container = tableContainer.value;
+    const speedMs = Number(FINAL_CONFIG.value.animation.speedMs);
+    if (!Number.isFinite(speedMs) || speedMs <= 0) return;
 
-    const deltaTime = timestamp - lastTimestamp.value;
-
-    if (deltaTime >= FINAL_CONFIG.value.animation.speedMs) {
-        init.value += allTr.value.heights[scrollIndex.value];
-        if (
-            hasReachedScrollBottom() ||
-            scrollIndex.value >= allTr.value.heights.length
-        ) {
+    if (FINAL_CONFIG.value.animation.type === 'scroll') {
+        if (lastTimestamp === null) lastTimestamp = timestamp;
+        if (deltaTime >= speedMs) {
+            if (
+                container.scrollTop + container.clientHeight >=
+                    container.scrollHeight ||
+                scrollIndex.value >= rowHeights.value.length
+            ) {
+                init.value = 0;
+                scrollIndex.value = 0;
+            } else {
+                init.value += rowHeights.value[scrollIndex.value++];
+            }
+            container.scrollTo({ top: init.value, behavior: 'smooth' });
+            lastTimestamp = timestamp;
+        }
+    } else {
+        // Preserve the former 60 Hz pace while making distance independent of refresh rate.
+        init.value += (deltaTime * (speedMs / 4000) * 60) / 1000;
+        if (init.value >= container.scrollHeight - container.clientHeight)
             init.value = 0;
-            scrollIndex.value = -1;
-        }
-
-        scrollIndex.value += 1;
-        if (tableContainer.value) {
-            tableContainer.value.scrollTo({
-                top: init.value,
-                behavior: 'smooth',
-            });
-        }
-
-        lastTimestamp.value = timestamp;
+        container.scrollTo({ top: init.value, behavior: 'auto' });
+        lastTimestamp = timestamp;
     }
-
-    raf.value = requestAnimationFrame(animate);
-}
-
-function animateMarquee(timestamp) {
-    if (isPaused.value) return;
-    if (!lastTimestamp.value) lastTimestamp.value = timestamp;
-
-    const deltaTime = timestamp - lastTimestamp.value;
-    const marqueeSpeed = FINAL_CONFIG.value.animation.speedMs / 4 / 1000;
-
-    if (deltaTime >= marqueeSpeed) {
-        init.value += marqueeSpeed;
-        if (
-            init.value >=
-            tableContainer.value.scrollHeight -
-                tableContainer.value.clientHeight
-        ) {
-            init.value = 0;
-        }
-        if (tableContainer.value) {
-            tableContainer.value.scrollTo({
-                top: init.value,
-                behavior: 'auto',
-            });
-        }
-        lastTimestamp.value = timestamp;
-    }
-    raf.value = requestAnimationFrame(animateMarquee);
-}
-
-function pauseAnimation() {
-    isPaused.value = true;
-    cancelAnimationFrame(raf.value);
-    raf.value = null;
-}
-
-onBeforeUnmount(pauseAnimation);
-
-function resumeAnimation() {
-    if (!isPaused.value || !mutableConfig.value.showAnimation) return;
-    isPaused.value = false;
-    lastTimestamp.value = 0;
     startAnimation();
 }
 
-function pauseOnHover() {
-    if (!FINAL_CONFIG.value.animation.pauseOnHover) return;
-    pauseAnimation();
+function pauseAnimation() {
+    explicitlyPaused.value = true;
+    stopAnimation();
 }
 
-const resumeTouchTimeout = ref(null);
+function resumeAnimation() {
+    explicitlyPaused.value = false;
+    startAnimation();
+}
 
 function pauseOnTouch() {
-    pauseAnimation();
-    clearTimeout(resumeTouchTimeout.value);
+    touching.value = true;
+    stopAnimation();
+    clearTimeout(resumeTouchTimeout);
 }
 
 function resumeAfterDelay() {
-    clearTimeout(resumeTouchTimeout.value);
-    resumeTouchTimeout.value = setTimeout(resumeAnimation, 1000);
+    clearTimeout(resumeTouchTimeout);
+    resumeTouchTimeout = setTimeout(() => {
+        touching.value = false;
+    }, 1000);
+}
+
+function updateVisibility() {
+    const thead = tableContainer.value?.querySelector('thead');
+    if (!thead || !tbody.value) return;
+    const bottom = thead.getBoundingClientRect().bottom;
+    for (const tr of tbody.value.querySelectorAll('tr')) {
+        tr.style.visibility =
+            tr.getBoundingClientRect().top < bottom ? 'hidden' : 'visible';
+    }
+}
+
+function measureTable() {
+    if (disposed) return;
+    stopAnimation();
+    captionHeight.value = caption.value?.getBoundingClientRect().height || 0;
+    tableRowHeight.value = tableRow.value?.getBoundingClientRect().height || 0;
+    rowHeights.value = Array.from(
+        tbody.value?.querySelectorAll('tr') || [],
+        (row) => row.getBoundingClientRect().height,
+    );
+    init.value = 0;
+    scrollIndex.value = 0;
+    tableContainer.value?.scrollTo({ top: 0, behavior: 'auto' });
+    updateVisibility();
+    startAnimation();
 }
 
 watch(
-    () => FINAL_CONFIG.value.animation.use,
-    (newVal) => {
-        if (newVal) {
-            mutableConfig.value.showAnimation = true;
-            resumeAnimation();
-        } else {
-            mutableConfig.value.showAnimation = false;
-            pauseAnimation();
-        }
+    isPaused,
+    () => {
+        stopAnimation();
+        startAnimation();
     },
+    { flush: 'sync' },
 );
-
 watch(
-    () => FINAL_CONFIG.value.animation.type,
-    (_newVal) => {
-        pauseAnimation();
-        init.value = 0;
-        scrollIndex.value = 0;
-        tableContainer.value.scrollTo({
-            top: 0,
-            behavior: 'auto',
-        });
-        resumeAnimation();
+    () => FINAL_CONFIG.value.animation.use,
+    (value) => {
+        mutableConfig.value.showAnimation = value;
     },
 );
-
-const breakpoint = computed(() => FINAL_CONFIG.value.responsiveBreakpoint);
-
-const tableObserver = shallowRef(null);
+watch([() => props.dataset, FINAL_CONFIG], measureTable, {
+    deep: true,
+    flush: 'post',
+});
+watch(
+    () => FINAL_CONFIG.value.animation.speedMs,
+    () => {
+        stopAnimation();
+        startAnimation();
+    },
+);
 
 onMounted(() => {
-    tableObserver.value = new ResizeObserver((entries) => {
-        entries.forEach((entry) => {
-            isResponsive.value = entry.contentRect.width < breakpoint.value;
-        });
-        captionHeight.value = caption.value
-            ? caption.value.getBoundingClientRect().height
-            : 0;
-        tableRowHeight.value = tableRow.value
-            ? tableRow.value.getBoundingClientRect().height
-            : 0;
-        scrollIndex.value = 0;
-        nextTick(() => {
-            pauseAnimation();
-            lastTimestamp.value = 0;
-            init.value = 0;
-            setTrElements();
-            resumeAnimation();
-        });
+    measureTable();
+    tableObserver = new ResizeObserver((entries) => {
+        if (disposed) return;
+        for (const entry of entries) {
+            isResponsive.value =
+                entry.contentRect.width <
+                FINAL_CONFIG.value.responsiveBreakpoint;
+        }
+        nextTick(measureTable);
     });
-    if (tableContainer.value) {
-        tableObserver.value.observe(tableContainer.value);
-    }
+    if (tableContainer.value) tableObserver.observe(tableContainer.value);
 });
 
 onBeforeUnmount(() => {
-    if (tableObserver.value) {
-        tableObserver.value.disconnect();
-    }
+    disposed = true;
+    stopAnimation();
+    clearTimeout(resumeTouchTimeout);
+    tableObserver?.disconnect();
 });
 
 function generatePdf() {
@@ -453,23 +389,15 @@ function generatePdf() {
 
 function toggleAnimation() {
     mutableConfig.value.showAnimation = !mutableConfig.value.showAnimation;
-    if (!mutableConfig.value.showAnimation) {
-        pauseAnimation();
-    } else {
-        resumeAnimation();
-    }
 }
 
 function generateCsv(callback = null) {
     nextTick(() => {
-        const labels = props.dataset.head.map((_, i) => {
-            return [[props.dataset.body[i]]];
-        });
-
         const tableXls = [
             [FINAL_CONFIG.value.caption.text],
-            [props.dataset.head.map((h) => [h])],
-        ].concat(labels);
+            props.dataset?.head || [],
+            ...(props.dataset?.body || []),
+        ];
 
         const csvContent = createCsvContent(tableXls);
 
@@ -542,11 +470,12 @@ defineExpose({
                     FINAL_CONFIG.scrollbar.hide ||
                     (!isPaused && FINAL_CONFIG.scrollbar.showOnlyOnHover),
             }"
-            @mouseover="pauseOnHover()"
-            @mouseleave="resumeAnimation()"
+            @mouseenter="hovered = true"
+            @mouseleave="hovered = false"
             @touchstart="pauseOnTouch()"
             @touchend="resumeAfterDelay()"
             @touchcancel="resumeAfterDelay()"
+            @scroll="updateVisibility"
         >
             <table
                 class="vue-data-ui-carousel-table"
@@ -716,7 +645,6 @@ defineExpose({
         />
 
         <UserOptions
-            ref="details"
             :key="`user_option_${step}`"
             v-if="
                 FINAL_CONFIG.userOptions.show &&
@@ -736,7 +664,7 @@ defineExpose({
             :chartElement="chartContainer"
             v-bind="
                 getUserOptionsProps(
-                    FINAL_CONFIG.userOptions,
+                    userOptionConfig,
                     'pdf csv img fullscreen altCopy animation',
                 )
             "
@@ -771,14 +699,14 @@ defineExpose({
             </template>
         </UserOptions>
 
-        <div v-if="$slots.source" ref="source" dir="auto">
+        <div v-if="$slots.source" dir="auto">
             <slot name="source" />
         </div>
     </div>
 </template>
 
 <style scoped lang="scss">
-.vue-ui-data-carousel-table thead {
+.vue-data-ui-carousel-table thead {
     position: sticky;
     top: 0;
     user-select: none;

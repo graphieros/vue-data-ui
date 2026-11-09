@@ -17,8 +17,8 @@ import {
     defineAsyncComponent,
     nextTick,
     onMounted,
+    onBeforeUnmount,
     ref,
-    toRefs,
     watch,
 } from 'vue';
 import {
@@ -44,10 +44,9 @@ import {
     treeShake,
     XMLNS,
 } from '../lib';
-import { throttle } from '../canvas-lib';
-import { COMMON_RULES, useHints } from '../useHints';
+import { useHints } from '../useHints';
 import { useConfig } from '../useConfig';
-import { useLoading } from '../useLoading';
+import { usePrefersReducedMotion } from '../usePrefersMotion';
 import { usePrinter } from '../usePrinter';
 
 import { useResponsive } from '../useResponsive';
@@ -97,8 +96,39 @@ const props = defineProps({
 const emits = defineEmits(['selectDatapoint', 'copyAlt']);
 
 const isDataset = computed(() => {
-    return !!props.dataset && Object.keys(props.dataset).length;
+    const ds = props.dataset;
+    if (!ds || typeof ds !== 'object') return false;
+    if (ds.series != null)
+        return (
+            Array.isArray(ds.series) &&
+            ds.series.length > 0 &&
+            ds.series.every(
+                (serie) =>
+                    serie &&
+                    typeof serie === 'object' &&
+                    'name' in serie &&
+                    Number.isFinite(serie.value) &&
+                    (serie.breakdown == null ||
+                        (Array.isArray(serie.breakdown) &&
+                            serie.breakdown.every(
+                                (item) =>
+                                    item &&
+                                    typeof item === 'object' &&
+                                    'name' in item &&
+                                    Number.isFinite(item.value),
+                            ))),
+            )
+        );
+    return Number.isFinite(ds.percentage);
 });
+const resolvedConfig = computed(prepareConfig);
+const loading = computed(
+    () => !!resolvedConfig.value.loading || !isDataset.value,
+);
+const prefersReducedMotion = usePrefersReducedMotion();
+let disposed = false;
+let resizeObserver = null;
+let resizeFrame = null;
 
 const uid = ref(createUid());
 const bar3dChart = ref(null);
@@ -106,57 +136,10 @@ const selectionIsFixed = ref(false);
 const titleStep = ref(0);
 const tableStep = ref(0);
 const chartTitle = ref(null);
-const resizeObserver = ref(null);
-const observedEl = ref(null);
 const source = ref(null);
 const isFocus = ref(false);
 const tableUnit = ref(null);
 const userOptionsRef = ref(null);
-
-const activeAccessibilityIndex = ref(null);
-const a11yAnnouncement = ref('');
-
-const FINAL_CONFIG = ref(prepareConfig());
-
-const style = computed(() => FINAL_CONFIG.value.style);
-const chart = computed(() => FINAL_CONFIG.value.style.chart);
-const cfgUserOptions = computed(() => FINAL_CONFIG.value.userOptions);
-
-useHints({
-    config: () => FINAL_CONFIG.value,
-    dataset: () => props.dataset,
-    component: 'VueUi3dBar',
-    rules: [
-        {
-            test: (ds) => ds?.series && ds.series.length > 8,
-            message: [
-                '👀 The number of series is > 8. Consider:',
-                '',
-                '▶️ Grouping small values dynamically into a single "Other" series.',
-                '',
-                '▶️ Using filters to let users choose a maximum number of series to display.',
-                '',
-                '▶️ Using VueUiHorizontalBar instead to make the dataset breakdown easier to read.',
-            ],
-        },
-        {
-            test: (ds) =>
-                ds?.series &&
-                ds.series.some(
-                    (dp) => dp?.breakdown && dp.breakdown.length > 6,
-                ),
-            message: [
-                '👀 Some donut breakdowns have > 6 data points. Consider:',
-                '',
-                '▶️ Grouping small values dynamically into a single "Other" data point.',
-            ],
-        },
-    ],
-});
-
-const isCursorPointer = computed(
-    () => FINAL_CONFIG.value.userOptions.useCursorPointer,
-);
 
 const skeletonConfig = computed(() => {
     return treeShake({
@@ -178,53 +161,92 @@ const skeletonConfig = computed(() => {
                 },
             },
         },
-        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {},
+        userConfig: resolvedConfig.value.skeletonConfig ?? {},
     });
 });
 
-const { loading, FINAL_DATASET } = useLoading({
-    ...toRefs(props),
-    FINAL_CONFIG,
-    prepareConfig,
-    callback: () => {
-        Promise.resolve().then(async () => {
-            await nextTick();
-            animateOnLoad();
-        });
-    },
-    skeletonDataset: props.config?.skeletonDataset ?? {
-        series: [
-            {
-                name: '_',
-                value: 21,
-                breakdown: [
-                    { name: '_', value: 13 },
-                    { name: '_', value: 8 },
-                ],
-            },
-            {
-                name: '_',
-                value: 13,
-                breakdown: [
-                    { name: '_', value: 8 },
-                    { name: '_', value: 5 },
-                ],
-            },
-            {
-                name: '_',
-                value: 8,
-                breakdown: [
-                    { name: '_', value: 5 },
-                    { name: '_', value: 3 },
-                ],
-            },
-        ],
-    },
-    skeletonConfig: treeShake({
-        defaultConfig: FINAL_CONFIG.value,
-        userConfig: skeletonConfig.value,
-    }),
+const FINAL_CONFIG = computed(() =>
+    loading.value
+        ? treeShake({
+              defaultConfig: resolvedConfig.value,
+              userConfig: skeletonConfig.value,
+          })
+        : resolvedConfig.value,
+);
+
+const style = computed(() => FINAL_CONFIG.value.style);
+const chart = computed(() => FINAL_CONFIG.value.style.chart);
+const cfgUserOptions = computed(() => FINAL_CONFIG.value.userOptions);
+
+useHints({
+    config: () => FINAL_CONFIG.value,
+    dataset: () => props.dataset,
+    component: 'VueUi3dBar',
+    rules: [
+        {
+            test: (ds) => Array.isArray(ds?.series) && ds.series.length > 8,
+            message: [
+                '👀 The number of series is > 8. Consider:',
+                '',
+                '▶️ Grouping small values dynamically into a single "Other" series.',
+                '',
+                '▶️ Using filters to let users choose a maximum number of series to display.',
+                '',
+                '▶️ Using VueUiHorizontalBar instead to make the dataset breakdown easier to read.',
+            ],
+        },
+        {
+            test: (ds) =>
+                Array.isArray(ds?.series) &&
+                ds.series.some(
+                    (dp) => dp?.breakdown && dp.breakdown.length > 6,
+                ),
+            message: [
+                '👀 Some donut breakdowns have > 6 data points. Consider:',
+                '',
+                '▶️ Grouping small values dynamically into a single "Other" data point.',
+            ],
+        },
+    ],
 });
+
+const isCursorPointer = computed(
+    () => FINAL_CONFIG.value.userOptions.useCursorPointer,
+);
+
+const defaultSkeletonDataset = {
+    series: [
+        {
+            name: '_',
+            value: 21,
+            breakdown: [
+                { name: '_', value: 13 },
+                { name: '_', value: 8 },
+            ],
+        },
+        {
+            name: '_',
+            value: 13,
+            breakdown: [
+                { name: '_', value: 8 },
+                { name: '_', value: 5 },
+            ],
+        },
+        {
+            name: '_',
+            value: 8,
+            breakdown: [
+                { name: '_', value: 5 },
+                { name: '_', value: 3 },
+            ],
+        },
+    ],
+};
+const FINAL_DATASET = computed(() =>
+    loading.value
+        ? (props.config?.skeletonDataset ?? defaultSkeletonDataset)
+        : props.dataset,
+);
 
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } =
     useUserOptionState({ config: FINAL_CONFIG.value });
@@ -238,18 +260,11 @@ function prepareConfig() {
 
 watch(
     () => props.config,
-    (_newCfg) => {
-        if (!loading.value) {
-            FINAL_CONFIG.value = prepareConfig();
-        }
+    () => {
         userOptionsVisible.value =
             !FINAL_CONFIG.value.userOptions.showOnChartHover;
-        prepareChart();
         titleStep.value += 1;
         tableStep.value += 1;
-
-        // Reset mutable config
-        mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
     },
     { deep: true },
 );
@@ -268,16 +283,9 @@ const mutableConfig = ref({
     showTable: FINAL_CONFIG.value.table.show,
 });
 
-// v3 - Essential to make shifting between loading config and final config work
-watch(
-    FINAL_CONFIG,
-    () => {
-        mutableConfig.value = {
-            showTable: FINAL_CONFIG.value.table.show,
-        };
-    },
-    { immediate: true },
-);
+watch([() => FINAL_CONFIG.value.table.show, loading], ([value]) => {
+    mutableConfig.value.showTable = value;
+});
 
 const hasStack = computed(() => {
     return FINAL_DATASET.value.series && FINAL_DATASET.value.series.length;
@@ -299,46 +307,59 @@ const svg = computed(() => {
     };
 });
 
+const total = computed(() =>
+    (FINAL_DATASET.value.series || []).reduce(
+        (sum, serie) => sum + Math.max(0, serie.value || 0),
+        0,
+    ),
+);
+const preparedStack = computed(() => {
+    if (!hasStack.value) return null;
+    const ids = new Set();
+    return FINAL_DATASET.value.series
+        .map((serie, seriesIndex) => {
+            let id =
+                serie.id == null
+                    ? `bar3d_${uid.value}_${seriesIndex}`
+                    : `bar3d_${uid.value}_id_${Array.from(String(serie.id), (char) => char.codePointAt(0).toString(16)).join('_')}`;
+            if (ids.has(id)) id += `_duplicate_${seriesIndex}`;
+            ids.add(id);
+            const value = Math.max(0, serie.value || 0);
+            return {
+                ...serie,
+                value,
+                id,
+                seriesIndex,
+                proportion: total.value ? value / total.value : 0,
+                color:
+                    convertColorToHex(serie.color) ||
+                    customPalette.value[seriesIndex] ||
+                    palette[seriesIndex % palette.length],
+                breakdown: serie.breakdown
+                    ? [...serie.breakdown]
+                          .map((item) => ({
+                              ...item,
+                              value: Math.max(0, item.value || 0),
+                          }))
+                          .sort((a, b) => b.value - a.value)
+                    : null,
+            };
+        })
+        .sort((a, b) => b.value - a.value);
+});
 const stack = computed(() => {
-    if (hasStack.value) {
-        const total = FINAL_DATASET.value.series
-            .map((s) => s.value || 0)
-            .reduce((a, b) => a + b, 0);
-        const formatted = FINAL_DATASET.value.series
-            .map((ds, i) => {
-                return {
-                    ...ds,
-                    seriesIndex: i,
-                    id: createUid(),
-                    proportion: (ds.value || 0) / total,
-                    color:
-                        convertColorToHex(ds.color) ||
-                        customPalette.value[i] ||
-                        palette[i] ||
-                        palette[i % palette.length],
-                    breakdown: ds.breakdown
-                        ? ds.breakdown.sort((a, b) => b.value - a.value)
-                        : null,
-                };
-            })
-            .sort((a, b) => b.value - a.value);
-        const res = [];
-        let start = 0;
-        for (let i = 0; i < formatted.length; i += 1) {
-            res.push({
-                ...formatted[i],
-                fill: createFill(
-                    start,
-                    formatted[i].proportion,
-                    formatted[i].breakdown,
-                    formatted[i].color,
-                ),
-            });
-            start += formatted[i].proportion;
-        }
-        return res;
-    }
-    return null;
+    if (!preparedStack.value) return null;
+    let start = 0;
+    return preparedStack.value.map((serie) => {
+        const fill = createFill(
+            start,
+            serie.proportion,
+            serie.breakdown,
+            serie.color,
+        );
+        start += serie.proportion;
+        return { ...serie, fill };
+    });
 });
 
 const box = computed(() => {
@@ -357,36 +378,64 @@ const box = computed(() => {
     };
 });
 
-const activeValue = ref(
-    chart.value.animation.use ? 0 : FINAL_DATASET.value.percentage,
+const activeValue = ref(0);
+let animationFrame = null;
+let animationSequence = 0;
+function stopAnimation() {
+    animationSequence += 1;
+    if (animationFrame !== null) cancelAnimationFrame(animationFrame);
+    animationFrame = null;
+}
+watch(
+    [
+        () => FINAL_DATASET.value.percentage,
+        () => chart.value.animation.use,
+        () => chart.value.animation.speed,
+        () => chart.value.animation.acceleration,
+        hasStack,
+        loading,
+        prefersReducedMotion,
+    ],
+    ([percentage]) => {
+        stopAnimation();
+        const target = Number.isFinite(percentage) ? percentage : 0;
+        const { use, speed, acceleration } = chart.value.animation;
+        if (disposed) return;
+        if (
+            !use ||
+            hasStack.value ||
+            loading.value ||
+            prefersReducedMotion.value ||
+            !Number.isFinite(speed) ||
+            speed <= 0 ||
+            !Number.isFinite(acceleration) ||
+            acceleration < 0 ||
+            target <= 0
+        ) {
+            activeValue.value = target;
+            return;
+        }
+        activeValue.value = 0;
+        const sequence = animationSequence;
+        let increment = 0;
+        function animate() {
+            if (disposed || sequence !== animationSequence) return;
+            animationFrame = null;
+            activeValue.value = Math.min(
+                target,
+                activeValue.value + speed + increment,
+            );
+            increment += 0.005 * acceleration;
+            if (activeValue.value < target)
+                animationFrame = requestAnimationFrame(animate);
+        }
+        animate();
+    },
+    { immediate: true },
 );
 
-function animateOnLoad() {
-    let acceleration = 0;
-    let speed = chart.value.animation.speed;
-    let incr = 0.005 * chart.value.animation.acceleration;
-    function animate() {
-        activeValue.value += speed + acceleration;
-        acceleration += incr;
-        if (activeValue.value < FINAL_DATASET.value.percentage) {
-            requestAnimationFrame(animate);
-        } else {
-            activeValue.value = FINAL_DATASET.value.percentage;
-        }
-    }
-
-    if (chart.value.animation.use) {
-        activeValue.value = 0;
-        animate();
-    }
-}
-
-onMounted(() => {
-    prepareChart();
-    animateOnLoad();
-});
-
-const debug = computed(() => FINAL_CONFIG.value.debug);
+onMounted(setupSizing);
+const debug = computed(() => resolvedConfig.value.debug);
 
 function logErrors() {
     if (!debug.value) return;
@@ -410,7 +459,17 @@ function logErrors() {
                 });
             });
         } else {
+            if (!Array.isArray(props.dataset.series)) {
+                console.warn('VueUi3dBar: dataset series must be an array.');
+                return;
+            }
             props.dataset.series.forEach((serie, i) => {
+                if (!serie || typeof serie !== 'object') {
+                    console.warn(
+                        `VueUi3dBar: series at index ${i} must be an object.`,
+                    );
+                    return;
+                }
                 getMissingDatasetAttributes({
                     datasetObject: serie,
                     requiredAttributes: ['name', 'value'],
@@ -424,7 +483,19 @@ function logErrors() {
                     });
                 });
                 if (serie.breakdown) {
+                    if (!Array.isArray(serie.breakdown)) {
+                        console.warn(
+                            `VueUi3dBar: breakdown at series index ${i} must be an array.`,
+                        );
+                        return;
+                    }
                     serie.breakdown.forEach((b, j) => {
+                        if (!b || typeof b !== 'object') {
+                            console.warn(
+                                `VueUi3dBar: breakdown at index ${i} - ${j} must be an object.`,
+                            );
+                            return;
+                        }
                         getMissingDatasetAttributes({
                             datasetObject: b,
                             requiredAttributes: ['name', 'value'],
@@ -444,35 +515,59 @@ function logErrors() {
     }
 }
 
-function prepareChart() {
-    logErrors();
-
-    if (FINAL_CONFIG.value.responsive) {
-        const handleResize = throttle(() => {
-            const { width, height } = useResponsive({
-                chart: bar3dChart.value,
-                title: chart.value.title.text ? chartTitle.value : null,
-                source: source.value,
-            });
-
-            requestAnimationFrame(() => {
-                HEIGHT.value = height - 12;
-                WIDTH.value = width;
-            });
-        });
-
-        if (resizeObserver.value) {
-            if (observedEl.value) {
-                resizeObserver.value.unobserve(observedEl.value);
-            }
-            resizeObserver.value.disconnect();
-        }
-
-        resizeObserver.value = new ResizeObserver(handleResize);
-        observedEl.value = bar3dChart.value.parentNode;
-        resizeObserver.value.observe(observedEl.value);
-    }
+watch([() => props.dataset, debug], logErrors, { deep: true, immediate: true });
+function resizeChart() {
+    resizeFrame = null;
+    if (
+        disposed ||
+        !FINAL_CONFIG.value.responsive ||
+        !bar3dChart.value?.parentNode
+    )
+        return;
+    const { width, height } = useResponsive({
+        chart: bar3dChart.value,
+        title: chart.value.title.text ? chartTitle.value : null,
+        source: source.value,
+    });
+    HEIGHT.value = height - 12;
+    WIDTH.value = width;
 }
+function scheduleResize() {
+    if (!disposed && FINAL_CONFIG.value.responsive && resizeFrame === null)
+        resizeFrame = requestAnimationFrame(resizeChart);
+}
+function setFixedSize() {
+    WIDTH.value = chart.value.box.dimensions.width * (hasStack.value ? 2 : 1);
+    HEIGHT.value = chart.value.box.dimensions.height;
+}
+function setupSizing() {
+    resizeObserver?.disconnect();
+    resizeObserver = null;
+    if (resizeFrame !== null) cancelAnimationFrame(resizeFrame);
+    resizeFrame = null;
+    if (disposed) return;
+    if (FINAL_CONFIG.value.responsive && bar3dChart.value?.parentNode) {
+        resizeObserver = new ResizeObserver(scheduleResize);
+        resizeObserver.observe(bar3dChart.value.parentNode);
+        scheduleResize();
+    } else setFixedSize();
+}
+watch(() => FINAL_CONFIG.value.responsive, setupSizing, { flush: 'post' });
+watch(
+    [() => chart.value.box.dimensions, hasStack],
+    () => {
+        if (FINAL_CONFIG.value.responsive) scheduleResize();
+        else setFixedSize();
+    },
+    { deep: true },
+);
+watch(() => chart.value.title, scheduleResize, { deep: true, flush: 'post' });
+onBeforeUnmount(() => {
+    disposed = true;
+    stopAnimation();
+    if (resizeFrame !== null) cancelAnimationFrame(resizeFrame);
+    resizeObserver?.disconnect();
+});
 
 const CX = computed(() => {
     const W = svg.value.width;
@@ -503,7 +598,7 @@ function createFill(startProportion, proportion, breakdown, color) {
     const donutPosition = midY > svg.value.height / 2 ? 'top' : 'bottom';
     const donutOffset = H * 0.25;
 
-    const hasBreakdown = !!breakdown;
+    const hasBreakdown = !!breakdown?.length && sumValues(breakdown) > 0;
     let donut = null;
     let miniDonut = null;
     if (hasBreakdown) {
@@ -543,6 +638,7 @@ function createFill(startProportion, proportion, breakdown, color) {
     }
 
     const result = {
+        ...createFaces(startProportion, proportion),
         donut,
         miniDonut,
         donutR: W / 20,
@@ -557,35 +653,15 @@ function createFill(startProportion, proportion, breakdown, color) {
         },
         apexBottom: { y: H - relativeB, x: CENTER_X },
         apexTop: { y: H - relativeB - _height * proportion, x: CENTER_X },
-        right: `M${CENTER_X},${H - relativeB} ${CENTER_X},${H - relativeB - _height * proportion} ${W - RIGHT},${H - relativeB - P - _height * proportion} ${W - RIGHT},${H - relativeB - P}Z`,
-        left: `M${CENTER_X},${H - relativeB} ${CENTER_X},${H - relativeB - _height * proportion} ${L}, ${H - relativeB - P - _height * proportion} ${L},${H - relativeB - P}Z`,
         liningTop: `M${L},${H - relativeB - P - _height * proportion} ${CENTER_X},${H - relativeB - _height * proportion} ${W - RIGHT},${H - relativeB - P - _height * proportion}`,
         liningTopShade: `M${L},${H - relativeB - P - _height * proportion - 0.5} ${CENTER_X},${H - relativeB - _height * proportion - 0.5} ${W - RIGHT},${H - relativeB - P - _height * proportion - 0.5}`,
-        top: `M${CENTER_X},${H - relativeB - _height * proportion} ${L},${H - relativeB - P - _height * proportion} ${CENTER_X},${H - relativeB - P * 2 - _height * proportion} ${W - RIGHT},${H - relativeB - P - _height * proportion} Z`,
-        tubeTop: `M${L},${H - relativeB - _height * proportion - P} C ${L},${H - relativeB - _height * proportion - P * 2.5} ${W - RIGHT},${H - relativeB - _height * proportion - P * 2.5} ${W - RIGHT},${H - relativeB - _height * proportion - P} C ${W - RIGHT},${H - relativeB - _height * proportion + P / 2} ${L},${H - relativeB - _height * proportion + P / 2} ${L},${H - relativeB - _height * proportion - P}`,
         bottomTubeTop: `M ${W - RIGHT - 0.5},${H - relativeB - P} C ${W - RIGHT - 0.5},${H - relativeB + P / 2} ${L},${H - relativeB + P / 2} ${L + 0.5},${H - relativeB - P}`,
-        tubeBody: `M
-        ${L},${H - relativeB - _height * proportion - P} 
-        C ${L},${H - relativeB - _height * proportion + P / 2} 
-        ${W - RIGHT},${H - relativeB - _height * proportion + P / 2} 
-        ${W - RIGHT},${H - relativeB - _height * proportion - P} 
-        L${W - RIGHT},${H - relativeB - P}
-        C 
-        ${W - RIGHT},${H - relativeB + P / 2}
-        ${L},${H - relativeB + P / 2}
-        ${L},${H - relativeB - P}Z`,
     };
 
     return result;
 }
 
-const fill = computed(() => {
-    const proportion = checkNaN(activeValue.value / 100);
-    const height =
-        svg.value.height -
-        svg.value.bottom -
-        svg.value.top -
-        svg.value.perspective * 2;
+function createFaces(startProportion, proportion, single = false) {
     const {
         width: W,
         height: H,
@@ -594,14 +670,11 @@ const fill = computed(() => {
         left: L,
         perspective: P,
     } = svg.value;
-
+    const height = H - B - svg.value.top - P * 2;
     const CENTER_X = hasStack.value ? W / 4 : W / 2;
     const RIGHT = hasStack.value ? CENTER_X * 2 + L : R;
-
-    const startProportion = 0;
     const relativeB = B + height * startProportion;
-
-    const result = {
+    return {
         right: `M${CENTER_X},${H - relativeB} ${CENTER_X},${H - relativeB - height * proportion} ${W - RIGHT},${H - relativeB - P - height * proportion} ${W - RIGHT},${H - relativeB - P}Z`,
         left: `M${CENTER_X},${H - relativeB} ${CENTER_X},${H - relativeB - height * proportion} ${L}, ${H - relativeB - P - height * proportion} ${L},${H - relativeB - P}Z`,
         top: `M${CENTER_X},${H - relativeB - height * proportion} ${L},${H - relativeB - P - height * proportion} ${CENTER_X},${H - relativeB - P * 2 - height * proportion} ${W - RIGHT},${H - relativeB - P - height * proportion} Z`,
@@ -611,85 +684,82 @@ const fill = computed(() => {
         C ${L},${H - relativeB - height * proportion + P / 2} 
         ${W - RIGHT},${H - relativeB - height * proportion + P / 2} 
         ${W - RIGHT},${H - relativeB - height * proportion - P} 
-        L${W - RIGHT},${H - P * 1.5}
+        L${W - RIGHT},${single ? H - P * 1.5 : H - relativeB - P}
         C 
-        ${W - RIGHT},${H}
-        ${L},${H}
+        ${W - RIGHT},${single ? H : H - relativeB + P / 2}
+        ${L},${single ? H : H - relativeB + P / 2}
         ${L},${H - relativeB - P}Z`,
     };
-
-    return result;
-});
+}
+const fill = computed(() =>
+    createFaces(0, checkNaN(activeValue.value / 100), true),
+);
 
 const selectedSerie = ref(null);
-
+const activeAccessibilityIndex = computed(() => {
+    const index =
+        stack.value?.findIndex((serie) => serie.id === selectedSerie.value) ??
+        -1;
+    return index >= 0 ? index : null;
+});
+const selectedBar = computed(
+    () =>
+        stack.value?.find((serie) => serie.id === selectedSerie.value) ?? null,
+);
+const a11yAnnouncement = computed(() =>
+    selectedBar.value
+        ? buildAccessibilityAnnouncement(selectedBar.value) +
+          (selectionIsFixed.value ? ' selected' : '')
+        : '',
+);
+watch([stack, loading], () => {
+    if (loading.value || (selectedSerie.value != null && !selectedBar.value))
+        clearAccessibilitySelection();
+});
 function selectSerie(bar, fix = false) {
-    if (FINAL_CONFIG.value.events.datapointEnter && !fix) {
-        FINAL_CONFIG.value.events.datapointEnter({
-            datapoint: bar,
-            seriesIndex: bar.seriesIndex,
-        });
-    }
-
-    if (FINAL_CONFIG.value.events.datapointClick && fix) {
-        FINAL_CONFIG.value.events.datapointClick({
-            datapoint: bar,
-            seriesIndex: bar.seriesIndex,
-        });
-    }
-
+    if (loading.value) return;
+    const event = fix ? 'datapointClick' : 'datapointEnter';
+    FINAL_CONFIG.value.events[event]?.({
+        datapoint: bar,
+        seriesIndex: bar.seriesIndex,
+    });
     emits('selectDatapoint', bar);
-
-    const currentIndex =
-        stack.value?.findIndex((item) => item.id === bar.id) ?? null;
-    if (currentIndex !== null && currentIndex !== -1) {
-        activeAccessibilityIndex.value = currentIndex;
-        a11yAnnouncement.value = buildAccessibilityAnnouncement(bar);
-    }
-
-    if (!fix) {
-        selectedSerie.value = bar.id;
-    }
-    if (fix && selectionIsFixed.value) {
-        selectionIsFixed.value = false;
-    }
-    if (fix && !selectionIsFixed.value) {
-        selectionIsFixed.value = true;
-    }
+    if (fix)
+        selectionIsFixed.value = !(
+            selectionIsFixed.value && selectedSerie.value === bar.id
+        );
+    selectedSerie.value = bar.id;
 }
-
 function unselectSerie(bar) {
-    if (FINAL_CONFIG.value.events.datapointLeave) {
-        FINAL_CONFIG.value.events.datapointLeave({
-            datapoint: bar,
-            seriesIndex: bar.seriesIndex,
-        });
-    }
-    if (selectionIsFixed.value) {
-        return;
-    }
-    selectedSerie.value = null;
-    activeAccessibilityIndex.value = null;
-    a11yAnnouncement.value = '';
+    FINAL_CONFIG.value.events.datapointLeave?.({
+        datapoint: bar,
+        seriesIndex: bar.seriesIndex,
+    });
+    if (!selectionIsFixed.value) selectedSerie.value = null;
 }
 
-function displayArcPercentage(arc, stepBreakdown, numOnly = false) {
-    const total = FINAL_DATASET.value.series
-        .map((s) => s.value || 0)
-        .reduce((a, b) => a + b, 0);
-    const absoluteP = isNaN(arc.value / total) ? 0 : (arc.value / total) * 100;
-    const p = isNaN(arc.value / sumValues(stepBreakdown))
-        ? 0
-        : (arc.value / sumValues(stepBreakdown)) * 100;
-    if (numOnly) {
-        return p;
-    } else {
-        return absoluteP.toFixed(0) + '%';
-    }
+const breakdownTotals = computed(
+    () =>
+        new Map(
+            (preparedStack.value || []).map((serie) => [
+                serie.id,
+                sumValues(serie.breakdown || []),
+            ]),
+        ),
+);
+function displayArcPercentage(arc, bar, numOnly = false) {
+    const breakdownTotal = breakdownTotals.value.get(bar.id) || 0;
+    const percentage = numOnly
+        ? breakdownTotal
+            ? (arc.value / breakdownTotal) * 100
+            : 0
+        : total.value
+          ? (arc.value / total.value) * 100
+          : 0;
+    return numOnly ? percentage : percentage.toFixed(0) + '%';
 }
-
 function sumValues(src) {
-    return [...src].map((s) => s.value).reduce((a, b) => a + b, 0);
+    return src.reduce((sum, item) => sum + item.value, 0);
 }
 
 const isFullscreen = ref(false);
@@ -713,7 +783,7 @@ const table = computed(() => {
     if (!hasStack.value) {
         return null;
     } else {
-        const head = stack.value.flatMap((ds) => {
+        const head = preparedStack.value.flatMap((ds) => {
             if (ds.breakdown && ds.breakdown.length) {
                 return [
                     { name: ds.name, color: ds.color },
@@ -734,7 +804,7 @@ const table = computed(() => {
                 };
             }
         });
-        const body = stack.value.flatMap((ds) => {
+        const body = preparedStack.value.flatMap((ds) => {
             if (ds.breakdown && ds.breakdown.length) {
                 return [ds.value, ...ds.breakdown.map((b) => b.value)];
             } else {
@@ -753,17 +823,14 @@ function generateCsv(callback = null) {
         return;
     }
     nextTick(() => {
-        const total = stack.value
-            .map((ds) => ds.value)
-            .reduce((a, b) => a + b, 0);
         const labels = table.value.head.map((h, i) => {
             return [
                 [h.name],
                 [table.value.body[i]],
                 [
-                    isNaN(table.value.body[i] / total)
+                    isNaN(table.value.body[i] / total.value)
                         ? '-'
-                        : (table.value.body[i] / total) * 100,
+                        : (table.value.body[i] / total.value) * 100,
                 ],
             ];
         });
@@ -785,6 +852,21 @@ function generateCsv(callback = null) {
     });
 }
 
+const tableConfig = computed(() => ({
+    th: {
+        backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
+        color: FINAL_CONFIG.value.table.th.color,
+        outline: FINAL_CONFIG.value.table.th.outline,
+    },
+    td: {
+        backgroundColor: FINAL_CONFIG.value.table.td.backgroundColor,
+        color: FINAL_CONFIG.value.table.td.color,
+        outline: FINAL_CONFIG.value.table.td.outline,
+    },
+    breakpoint: FINAL_CONFIG.value.table.responsiveBreakpoint,
+    shape: FINAL_CONFIG.value.style.shape === 'tube' ? 'circle' : 'square',
+}));
+
 const dataTable = computed(() => {
     if (!hasStack.value || !Array.isArray(stack.value) || !stack.value.length) {
         return {
@@ -792,39 +874,19 @@ const dataTable = computed(() => {
             head: [],
             body: [],
             a11yBody: [],
-            config: {
-                th: {
-                    backgroundColor:
-                        FINAL_CONFIG.value.table.th.backgroundColor,
-                    color: FINAL_CONFIG.value.table.th.color,
-                    outline: FINAL_CONFIG.value.table.th.outline,
-                },
-                td: {
-                    backgroundColor:
-                        FINAL_CONFIG.value.table.td.backgroundColor,
-                    color: FINAL_CONFIG.value.table.td.color,
-                    outline: FINAL_CONFIG.value.table.td.outline,
-                },
-                breakpoint: FINAL_CONFIG.value.table.responsiveBreakpoint,
-                shape:
-                    FINAL_CONFIG.value.style.shape === 'tube'
-                        ? 'circle'
-                        : 'square',
-            },
+            config: tableConfig.value,
         };
     }
-
-    const total = stack.value.reduce((sum, ds) => sum + ds.value, 0);
 
     const head = [
         `__SUM__`,
         dataLabel({
             p: chart.value.legend.prefix,
-            v: total,
+            v: total.value,
             s: chart.value.legend.suffix,
             r: FINAL_CONFIG.value.table.td.roundingValue,
         }),
-        '100%',
+        total.value ? '100%' : '-',
     ];
 
     const body = table.value.head.map((headerItem, index) => {
@@ -841,10 +903,10 @@ const dataTable = computed(() => {
                 s: chart.value.legend.suffix,
                 r: FINAL_CONFIG.value.table.td.roundingValue,
             }),
-            isNaN(rawValue / total)
+            isNaN(rawValue / total.value)
                 ? '-'
                 : dataLabel({
-                      v: (rawValue / total) * 100,
+                      v: (rawValue / total.value) * 100,
                       s: '%',
                       r: FINAL_CONFIG.value.table.td.roundingPercentage,
                   }),
@@ -869,21 +931,7 @@ const dataTable = computed(() => {
         head,
         body,
         a11yBody,
-        config: {
-            th: {
-                backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
-                color: FINAL_CONFIG.value.table.th.color,
-                outline: FINAL_CONFIG.value.table.th.outline,
-            },
-            td: {
-                backgroundColor: FINAL_CONFIG.value.table.td.backgroundColor,
-                color: FINAL_CONFIG.value.table.td.color,
-                outline: FINAL_CONFIG.value.table.td.outline,
-            },
-            breakpoint: FINAL_CONFIG.value.table.responsiveBreakpoint,
-            shape:
-                FINAL_CONFIG.value.style.shape === 'tube' ? 'circle' : 'square',
-        },
+        config: tableConfig.value,
     };
 });
 
@@ -931,7 +979,9 @@ const tableComponent = computed(() =>
 
 watch(
     () => mutableConfig.value.showTable,
-    (v) => syncTableVisibility(v, FINAL_CONFIG, tableUnit),
+    (v) => {
+        if (tableUnit.value) syncTableVisibility(v, FINAL_CONFIG, tableUnit);
+    },
 );
 
 function closeTable() {
@@ -979,8 +1029,6 @@ async function copyAlt() {
  **************************************************************************************************/
 
 function clearAccessibilitySelection() {
-    activeAccessibilityIndex.value = null;
-    a11yAnnouncement.value = '';
     selectionIsFixed.value = false;
     selectedSerie.value = null;
 }
@@ -1005,14 +1053,12 @@ function focusSeriesByIndex(index) {
     if (!hasStack.value || !stack.value?.length) return;
     const bar = stack.value[index];
     if (!bar) return;
-    activeAccessibilityIndex.value = index;
     selectedSerie.value = bar.id;
-    a11yAnnouncement.value = buildAccessibilityAnnouncement(bar);
 }
 
 function onSvgFocus() {
     isFocus.value = true;
-    if (!hasStack.value || !stack.value?.length) return;
+    if (loading.value || !hasStack.value || !stack.value?.length) return;
     if (activeAccessibilityIndex.value === null) {
         focusSeriesByIndex(0);
     }
@@ -1022,14 +1068,18 @@ function onSvgBlur() {
     isFocus.value = false;
 
     if (!selectionIsFixed.value) {
-        activeAccessibilityIndex.value = null;
         selectedSerie.value = null;
-        a11yAnnouncement.value = '';
     }
 }
 
 function onSvgKeydown(event) {
-    if (!hasStack.value || !stack.value?.length) return;
+    if (
+        loading.value ||
+        isAnnotator.value ||
+        !hasStack.value ||
+        !stack.value?.length
+    )
+        return;
     if (!svgRef.value) return;
     if (document.activeElement !== svgRef.value) return;
 
@@ -1054,7 +1104,6 @@ function onSvgKeydown(event) {
         const bar = stack.value[activeAccessibilityIndex.value];
         if (!bar) return;
         selectSerie(bar, true);
-        a11yAnnouncement.value = `${buildAccessibilityAnnouncement(bar)} selected`;
         return;
     }
 
@@ -1120,7 +1169,7 @@ defineExpose({
         </div>
 
         <A11yDataTable
-            v-if="a11yTable?.rows?.length"
+            v-if="FINAL_CONFIG.a11y.includeTable && a11yTable?.rows?.length"
             :uid="uid"
             :head="a11yTable.headers"
             :body="a11yTable.rows"
@@ -1444,18 +1493,9 @@ defineExpose({
                     role="button"
                     tabindex="0"
                     aria-label="Clear selection"
-                    @click="
-                        selectionIsFixed = false;
-                        selectedSerie = null;
-                    "
-                    @keydown.enter.prevent="
-                        selectionIsFixed = false;
-                        selectedSerie = null;
-                    "
-                    @keydown.space.prevent="
-                        selectionIsFixed = false;
-                        selectedSerie = null;
-                    "
+                    @click="clearAccessibilitySelection()"
+                    @keydown.enter.prevent="clearAccessibilitySelection()"
+                    @keydown.space.prevent="clearAccessibilitySelection()"
                     @focus="isFocus = true"
                     @blur="isFocus = false"
                     @mouseenter="isFocus = true"
@@ -1633,233 +1673,6 @@ defineExpose({
                                 style="pointer-events: none"
                             />
                         </g>
-                        <!-- LEGEND (parallelogram) -->
-                        <g
-                            v-for="(bar, i) in stack"
-                            :style="`opacity:${selectedSerie ? (selectedSerie === bar.id ? 1 : 0) : bar.proportion * 100 > chart.legend.hideUnderPercentage ? 1 : 0}`"
-                            @click="emits('selectDatapoint', bar)"
-                        >
-                            <path
-                                :stroke="chart.color"
-                                stroke-dasharray="1"
-                                stroke-width="0.5"
-                                stroke-linecap="round"
-                                :d="`M${bar.fill.sidePointer.x},${bar.fill.sidePointer.y} ${bar.fill.sidePointer.x2},${bar.fill.sidePointer.y}`"
-                            />
-
-                            <circle
-                                v-if="!bar.fill.miniDonut || !!selectedSerie"
-                                :cx="bar.fill.sidePointer.x2"
-                                :cy="bar.fill.sidePointer.y"
-                                :r="2"
-                                :fill="bar.color"
-                                :stroke="chart.backgroundColor"
-                            />
-
-                            <rect
-                                v-if="loading"
-                                :x="bar.fill.sidePointer.xText"
-                                :y="
-                                    bar.fill.sidePointer.y -
-                                    chart.legend.fontSize / 2
-                                "
-                                :width="svg.width / 3"
-                                :height="chart.legend.fontSize"
-                                fill="#6A6A6A80"
-                                rx="3"
-                            />
-
-                            <foreignObject
-                                :x="bar.fill.sidePointer.xText"
-                                :y="
-                                    bar.fill.sidePointer.y -
-                                    chart.legend.fontSize
-                                "
-                                :width="svg.absoluteWidth / 3"
-                                :height="chart.legend.fontSize * 2"
-                                style="overflow: visible; position: relative"
-                                v-if="!loading"
-                            >
-                                <div
-                                    v-if="chart.legend.showDefault"
-                                    :style="`height: 100%; width: 100%; display: flex; flex-direction: row; flex-wrap: wrap; align-items:center;justify-content: flex-start; font-size:${chart.legend.fontSize}px; text-align:left; line-height: ${chart.legend.fontSize}px; color:${chart.legend.color}; font-weight:${chart.legend.bold ? 'bold' : 'normal'}`"
-                                >
-                                    {{
-                                        applyDataLabel(
-                                            chart.dataLabel.formatter,
-                                            bar.value,
-                                            `${bar.name}: ${dataLabel({ v: bar.proportion * 100, s: '%', r: chart.legend.roundingPercentage })} (${dataLabel(
-                                                {
-                                                    p: chart.legend.prefix,
-                                                    v: bar.value,
-                                                    s: chart.legend.suffix,
-                                                    r: chart.legend
-                                                        .roundingValue,
-                                                },
-                                            )})`,
-                                            {
-                                                datapoint: bar,
-                                                seriesIndex: i,
-                                                type: 'barDatapoint',
-                                            },
-                                        )
-                                    }}
-                                </div>
-                                <slot
-                                    name="legend"
-                                    v-bind="{
-                                        datapoint: bar,
-                                        config: FINAL_CONFIG,
-                                        dataset: stack,
-                                    }"
-                                />
-                            </foreignObject>
-
-                            <!-- BREAKDOWN DONUT -->
-                            <g
-                                v-if="
-                                    bar.fill.donut && selectedSerie === bar.id
-                                "
-                            >
-                                <!-- DONUT LABEL CONNECTOR -->
-                                <g v-for="(arc, j) in bar.fill.donut">
-                                    <path
-                                        v-if="
-                                            displayArcPercentage(
-                                                arc,
-                                                bar.fill.donut,
-                                                true,
-                                            ) > 6
-                                        "
-                                        :d="
-                                            calcNutArrowPath(
-                                                arc,
-                                                { x: arc.cx, y: arc.cy },
-                                                0,
-                                                8,
-                                                false,
-                                                true,
-                                                10,
-                                            )
-                                        "
-                                        :stroke="arc.color"
-                                        class="vue-ui-donut-arc-path"
-                                        stroke-width="0.5"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        fill="none"
-                                    />
-                                </g>
-
-                                <path
-                                    v-for="(arc, j) in bar.fill.donut"
-                                    class="vue-ui-donut-arc-path"
-                                    :data-cy="`donut-arc-${j}`"
-                                    :d="arc.arcSlice"
-                                    :fill="`${arc.color}`"
-                                    :stroke="chart.backgroundColor"
-                                    :stroke-width="1"
-                                />
-
-                                <!-- DONUT DATALABELS -->
-                                <g v-for="(arc, i) in bar.fill.donut">
-                                    <g
-                                        v-if="
-                                            displayArcPercentage(
-                                                arc,
-                                                bar.fill.donut,
-                                                true,
-                                            ) > 6
-                                        "
-                                    >
-                                        <text
-                                            :text-anchor="
-                                                calcMarkerOffsetX(arc, true, 0)
-                                                    .anchor
-                                            "
-                                            :x="
-                                                calcMarkerOffsetX(arc, true, 2)
-                                                    .x
-                                            "
-                                            :y="calcMarkerOffsetY(arc, 12, 12)"
-                                            :fill="chart.legend.color"
-                                            :font-size="
-                                                chart.legend.fontSize / 1.5
-                                            "
-                                            :font-weight="
-                                                chart.legend.bold
-                                                    ? 'bold'
-                                                    : 'normal'
-                                            "
-                                        >
-                                            {{
-                                                applyDataLabel(
-                                                    chart.dataLabel.formatter,
-                                                    arc.value,
-                                                    `${displayArcPercentage(arc, bar.fill.donut)} (${dataLabel(
-                                                        {
-                                                            p: FINAL_CONFIG
-                                                                .style.chart
-                                                                .legend.prefix,
-                                                            v: arc.value,
-                                                            s: FINAL_CONFIG
-                                                                .style.chart
-                                                                .legend.suffix,
-                                                            r: FINAL_CONFIG
-                                                                .style.chart
-                                                                .legend
-                                                                .roundingValue,
-                                                        },
-                                                    )})`,
-                                                    {
-                                                        datapoint: arc,
-                                                        seriesIndex: i,
-                                                        type: 'donutDatapoint',
-                                                    },
-                                                )
-                                            }}
-                                        </text>
-                                        <text
-                                            :text-anchor="
-                                                calcMarkerOffsetX(arc).anchor
-                                            "
-                                            :x="
-                                                calcMarkerOffsetX(arc, true, 2)
-                                                    .x
-                                            "
-                                            :y="
-                                                calcMarkerOffsetY(arc, 12, 12) +
-                                                chart.legend.fontSize / 1.5
-                                            "
-                                            :fill="chart.legend.color"
-                                            :font-size="
-                                                chart.legend.fontSize / 1.5
-                                            "
-                                            :font-weight="
-                                                chart.legend.bold
-                                                    ? 'bold'
-                                                    : 'normal'
-                                            "
-                                        >
-                                            {{ arc.name }}
-                                        </text>
-                                    </g>
-                                </g>
-                            </g>
-
-                            <!-- BREAKDOWN MINI DONUT -->
-                            <g v-if="bar.fill.miniDonut && !selectedSerie">
-                                <path
-                                    v-for="(arc, j) in bar.fill.miniDonut"
-                                    class="vue-ui-donut-arc-path"
-                                    :data-cy="`donut-arc-${j}`"
-                                    :d="arc.arcSlice"
-                                    :fill="`${arc.color}`"
-                                    :stroke="chart.backgroundColor"
-                                    :stroke-width="0.5"
-                                />
-                            </g>
-                        </g>
                     </g>
                 </g>
 
@@ -2034,233 +1847,208 @@ defineExpose({
                                 :fill="`url(#gradient_tube_top_${bar.id})`"
                             />
                         </g>
+                    </g>
+                </g>
 
-                        <!-- LEGEND (tube) -->
-                        <g
-                            v-for="(bar, i) in stack"
-                            :style="`opacity:${selectedSerie ? (selectedSerie === bar.id ? 1 : 0) : bar.proportion * 100 > chart.legend.hideUnderPercentage ? 1 : 0}`"
-                            @click="emits('selectDatapoint', bar)"
+                <g v-if="hasStack">
+                    <!-- LEGEND (parallelogram) -->
+                    <g
+                        v-for="(bar, i) in stack"
+                        :style="`opacity:${selectedSerie ? (selectedSerie === bar.id ? 1 : 0) : bar.proportion * 100 > chart.legend.hideUnderPercentage ? 1 : 0}`"
+                        @click="emits('selectDatapoint', bar)"
+                    >
+                        <path
+                            :stroke="chart.color"
+                            stroke-dasharray="1"
+                            stroke-width="0.5"
+                            stroke-linecap="round"
+                            :d="`M${bar.fill.sidePointer.x},${bar.fill.sidePointer.y} ${bar.fill.sidePointer.x2},${bar.fill.sidePointer.y}`"
+                        />
+
+                        <circle
+                            v-if="!bar.fill.miniDonut || !!selectedSerie"
+                            :cx="bar.fill.sidePointer.x2"
+                            :cy="bar.fill.sidePointer.y"
+                            :r="2"
+                            :fill="bar.color"
+                            :stroke="chart.backgroundColor"
+                        />
+
+                        <rect
+                            v-if="loading"
+                            :x="bar.fill.sidePointer.xText"
+                            :y="
+                                bar.fill.sidePointer.y -
+                                chart.legend.fontSize / 2
+                            "
+                            :width="svg.width / 3"
+                            :height="chart.legend.fontSize"
+                            fill="#6A6A6A80"
+                            rx="3"
+                        />
+
+                        <foreignObject
+                            :x="bar.fill.sidePointer.xText"
+                            :y="bar.fill.sidePointer.y - chart.legend.fontSize"
+                            :width="svg.absoluteWidth / 3"
+                            :height="chart.legend.fontSize * 2"
+                            style="overflow: visible; position: relative"
+                            v-if="!loading"
                         >
-                            <path
-                                :stroke="chart.color"
-                                stroke-dasharray="1"
-                                stroke-width="0.5"
-                                stroke-linecap="round"
-                                :d="`M${bar.fill.sidePointer.x},${bar.fill.sidePointer.y} ${bar.fill.sidePointer.x2},${bar.fill.sidePointer.y}`"
-                            />
-
-                            <circle
-                                v-if="!bar.fill.miniDonut || !!selectedSerie"
-                                :cx="bar.fill.sidePointer.x2"
-                                :cy="bar.fill.sidePointer.y"
-                                :r="2"
-                                :fill="bar.color"
-                                :stroke="chart.backgroundColor"
-                            />
-
-                            <rect
-                                v-if="loading"
-                                :x="bar.fill.sidePointer.xText"
-                                :y="
-                                    bar.fill.sidePointer.y -
-                                    chart.legend.fontSize / 2
-                                "
-                                :width="svg.width / 3"
-                                :height="chart.legend.fontSize"
-                                fill="#6A6A6A80"
-                                rx="3"
-                            />
-
-                            <foreignObject
-                                :x="bar.fill.sidePointer.xText"
-                                :y="
-                                    bar.fill.sidePointer.y -
-                                    chart.legend.fontSize
-                                "
-                                :width="svg.absoluteWidth / 3"
-                                :height="chart.legend.fontSize * 2"
-                                style="overflow: visible; position: relative"
-                                v-if="!loading"
+                            <div
+                                v-if="chart.legend.showDefault"
+                                :style="`height: 100%; width: 100%; display: flex; flex-direction: row; flex-wrap: wrap; align-items:center;justify-content: flex-start; font-size:${chart.legend.fontSize}px; text-align:left; line-height: ${chart.legend.fontSize}px; color:${chart.legend.color}; font-weight:${chart.legend.bold ? 'bold' : 'normal'}`"
                             >
-                                <div
-                                    v-if="chart.legend.showDefault"
-                                    :style="`height: 100%; width: 100%; display: flex; flex-direction: row; flex-wrap: wrap; align-items:center;justify-content: flex-start; font-size:${chart.legend.fontSize}px; text-align:left; line-height: ${chart.legend.fontSize}px; color:${chart.legend.color};font-weight:${chart.legend.bold ? 'bold' : 'normal'}`"
-                                >
-                                    {{
-                                        applyDataLabel(
-                                            chart.dataLabel.formatter,
-                                            bar.value,
-                                            `${bar.name}: ${dataLabel({ v: bar.proportion * 100, s: '%', r: chart.legend.roundingPercentage })} (${dataLabel(
-                                                {
-                                                    p: chart.legend.prefix,
-                                                    v: bar.value,
-                                                    s: chart.legend.suffix,
-                                                    r: chart.legend
-                                                        .roundingValue,
-                                                },
-                                            )})`,
+                                {{
+                                    applyDataLabel(
+                                        chart.dataLabel.formatter,
+                                        bar.value,
+                                        `${bar.name}: ${dataLabel({ v: bar.proportion * 100, s: '%', r: chart.legend.roundingPercentage })} (${dataLabel(
                                             {
-                                                datapoint: bar,
-                                                seriesIndex: i,
-                                                type: 'barDatapoint',
+                                                p: chart.legend.prefix,
+                                                v: bar.value,
+                                                s: chart.legend.suffix,
+                                                r: chart.legend.roundingValue,
                                             },
-                                        )
-                                    }}
-                                </div>
-                                <slot
-                                    name="legend"
-                                    v-bind="{
-                                        datapoint: bar,
-                                        config: FINAL_CONFIG,
-                                        dataset: stack,
-                                    }"
-                                />
-                            </foreignObject>
+                                        )})`,
+                                        {
+                                            datapoint: bar,
+                                            seriesIndex: i,
+                                            type: 'barDatapoint',
+                                        },
+                                    )
+                                }}
+                            </div>
+                            <slot
+                                name="legend"
+                                v-bind="{
+                                    datapoint: bar,
+                                    config: FINAL_CONFIG,
+                                    dataset: stack,
+                                }"
+                            />
+                        </foreignObject>
 
-                            <!-- BREAKDOWN DONUT -->
-                            <g
-                                v-if="
-                                    bar.fill.donut && selectedSerie === bar.id
-                                "
-                            >
-                                <!-- DONUT LABEL CONNECTOR -->
-                                <g v-for="(arc, j) in bar.fill.donut">
-                                    <path
-                                        v-if="
-                                            displayArcPercentage(
-                                                arc,
-                                                bar.fill.donut,
-                                                true,
-                                            ) > 6
-                                        "
-                                        :d="
-                                            calcNutArrowPath(
-                                                arc,
-                                                { x: arc.cx, y: arc.cy },
-                                                0,
-                                                8,
-                                                false,
-                                                true,
-                                                10,
-                                            )
-                                        "
-                                        :stroke="arc.color"
-                                        class="vue-ui-donut-arc-path"
-                                        stroke-width="0.5"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        fill="none"
-                                    />
-                                </g>
-
+                        <!-- BREAKDOWN DONUT -->
+                        <g v-if="bar.fill.donut && selectedSerie === bar.id">
+                            <!-- DONUT LABEL CONNECTOR -->
+                            <g v-for="(arc, j) in bar.fill.donut">
                                 <path
-                                    v-for="(arc, j) in bar.fill.donut"
+                                    v-if="
+                                        displayArcPercentage(arc, bar, true) > 6
+                                    "
+                                    :d="
+                                        calcNutArrowPath(
+                                            arc,
+                                            { x: arc.cx, y: arc.cy },
+                                            0,
+                                            8,
+                                            false,
+                                            true,
+                                            10,
+                                        )
+                                    "
+                                    :stroke="arc.color"
                                     class="vue-ui-donut-arc-path"
-                                    :data-cy="`donut-arc-${j}`"
-                                    :d="arc.arcSlice"
-                                    :fill="`${arc.color}`"
-                                    :stroke="chart.backgroundColor"
-                                    :stroke-width="1"
+                                    stroke-width="0.5"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    fill="none"
                                 />
+                            </g>
 
-                                <!-- DONUT DATALABELS -->
-                                <g v-for="(arc, i) in bar.fill.donut">
-                                    <g
-                                        v-if="
-                                            displayArcPercentage(
-                                                arc,
-                                                bar.fill.donut,
-                                                true,
-                                            ) > 6
+                            <path
+                                v-for="(arc, j) in bar.fill.donut"
+                                class="vue-ui-donut-arc-path"
+                                :data-cy="`donut-arc-${j}`"
+                                :d="arc.arcSlice"
+                                :fill="`${arc.color}`"
+                                :stroke="chart.backgroundColor"
+                                :stroke-width="1"
+                            />
+
+                            <!-- DONUT DATALABELS -->
+                            <g v-for="(arc, i) in bar.fill.donut">
+                                <g
+                                    v-if="
+                                        displayArcPercentage(arc, bar, true) > 6
+                                    "
+                                >
+                                    <text
+                                        :text-anchor="
+                                            calcMarkerOffsetX(arc, true, 0)
+                                                .anchor
+                                        "
+                                        :x="calcMarkerOffsetX(arc, true, 2).x"
+                                        :y="calcMarkerOffsetY(arc, 12, 12)"
+                                        :fill="chart.legend.color"
+                                        :font-size="chart.legend.fontSize / 1.5"
+                                        :font-weight="
+                                            chart.legend.bold
+                                                ? 'bold'
+                                                : 'normal'
                                         "
                                     >
-                                        <text
-                                            :text-anchor="
-                                                calcMarkerOffsetX(arc, true, 0)
-                                                    .anchor
-                                            "
-                                            :x="
-                                                calcMarkerOffsetX(arc, true, 2)
-                                                    .x
-                                            "
-                                            :y="calcMarkerOffsetY(arc, 12, 12)"
-                                            :fill="chart.legend.color"
-                                            :font-size="
-                                                chart.legend.fontSize / 1.5
-                                            "
-                                            :font-weight="
-                                                chart.legend.bold
-                                                    ? 'bold'
-                                                    : 'normal'
-                                            "
-                                        >
-                                            {{
-                                                applyDataLabel(
-                                                    chart.dataLabel.formatter,
-                                                    arc.value,
-                                                    `${displayArcPercentage(arc, bar.fill.donut)} (${dataLabel(
-                                                        {
-                                                            p: FINAL_CONFIG
-                                                                .style.chart
-                                                                .legend.prefix,
-                                                            v: arc.value,
-                                                            s: FINAL_CONFIG
-                                                                .style.chart
-                                                                .legend.suffix,
-                                                            r: FINAL_CONFIG
-                                                                .style.chart
-                                                                .legend
-                                                                .roundingValue,
-                                                        },
-                                                    )})`,
+                                        {{
+                                            applyDataLabel(
+                                                chart.dataLabel.formatter,
+                                                arc.value,
+                                                `${displayArcPercentage(arc, bar)} (${dataLabel(
                                                     {
-                                                        datapoint: arc,
-                                                        seriesIndex: i,
-                                                        type: 'donutDatapoint',
+                                                        p: FINAL_CONFIG.style
+                                                            .chart.legend
+                                                            .prefix,
+                                                        v: arc.value,
+                                                        s: FINAL_CONFIG.style
+                                                            .chart.legend
+                                                            .suffix,
+                                                        r: FINAL_CONFIG.style
+                                                            .chart.legend
+                                                            .roundingValue,
                                                     },
-                                                )
-                                            }}
-                                        </text>
-                                        <text
-                                            :text-anchor="
-                                                calcMarkerOffsetX(arc).anchor
-                                            "
-                                            :x="
-                                                calcMarkerOffsetX(arc, true, 2)
-                                                    .x
-                                            "
-                                            :y="
-                                                calcMarkerOffsetY(arc, 12, 12) +
-                                                chart.legend.fontSize / 1.5
-                                            "
-                                            :fill="chart.legend.color"
-                                            :font-size="
-                                                chart.legend.fontSize / 1.5
-                                            "
-                                            :font-weight="
-                                                chart.legend.bold
-                                                    ? 'bold'
-                                                    : 'normal'
-                                            "
-                                        >
-                                            {{ arc.name }}
-                                        </text>
-                                    </g>
+                                                )})`,
+                                                {
+                                                    datapoint: arc,
+                                                    seriesIndex: i,
+                                                    type: 'donutDatapoint',
+                                                },
+                                            )
+                                        }}
+                                    </text>
+                                    <text
+                                        :text-anchor="
+                                            calcMarkerOffsetX(arc).anchor
+                                        "
+                                        :x="calcMarkerOffsetX(arc, true, 2).x"
+                                        :y="
+                                            calcMarkerOffsetY(arc, 12, 12) +
+                                            chart.legend.fontSize / 1.5
+                                        "
+                                        :fill="chart.legend.color"
+                                        :font-size="chart.legend.fontSize / 1.5"
+                                        :font-weight="
+                                            chart.legend.bold
+                                                ? 'bold'
+                                                : 'normal'
+                                        "
+                                    >
+                                        {{ arc.name }}
+                                    </text>
                                 </g>
                             </g>
+                        </g>
 
-                            <!-- BREAKDOWN MINI DONUT -->
-                            <g v-if="bar.fill.miniDonut && !selectedSerie">
-                                <path
-                                    v-for="(arc, j) in bar.fill.miniDonut"
-                                    class="vue-ui-donut-arc-path"
-                                    :data-cy="`donut-arc-${j}`"
-                                    :d="arc.arcSlice"
-                                    :fill="`${arc.color}`"
-                                    :stroke="chart.backgroundColor"
-                                    :stroke-width="0.5"
-                                />
-                            </g>
+                        <!-- BREAKDOWN MINI DONUT -->
+                        <g v-if="bar.fill.miniDonut && !selectedSerie">
+                            <path
+                                v-for="(arc, j) in bar.fill.miniDonut"
+                                class="vue-ui-donut-arc-path"
+                                :data-cy="`donut-arc-${j}`"
+                                :d="arc.arcSlice"
+                                :fill="`${arc.color}`"
+                                :stroke="chart.backgroundColor"
+                                :stroke-width="0.5"
+                            />
                         </g>
                     </g>
                 </g>

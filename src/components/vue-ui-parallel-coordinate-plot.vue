@@ -23,7 +23,6 @@ import {
     shallowRef,
     toRefs,
     watch,
-    watchEffect,
 } from 'vue';
 import {
     stringifyChartConfig as stringifyStructuralConfig,
@@ -39,7 +38,6 @@ import {
     dataLabel,
     downloadCsv,
     error,
-    functionReturnsString,
     getMissingDatasetAttributes,
     getPathLengthFromCoordinates,
     isFunction,
@@ -105,14 +103,7 @@ const props = defineProps({
     },
 });
 
-const isDataset = computed({
-    get() {
-        return !!props.dataset && props.dataset.length;
-    },
-    set(bool) {
-        return bool;
-    },
-});
+const isDataset = computed(() => !!props.dataset?.length);
 
 const step = ref(0);
 const pcpChart = ref(null);
@@ -225,16 +216,10 @@ const skeletonConfig = computed(() => {
     });
 });
 
-const { loading, FINAL_DATASET, manualLoading } = useLoading({
+const { loading, FINAL_DATASET } = useLoading({
     ...toRefs(props),
     FINAL_CONFIG,
     prepareConfig,
-    callback: () => {
-        Promise.resolve().then(async () => {
-            await nextTick();
-            mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
-        });
-    },
     skeletonDataset: props.config?.skeletonDataset ?? [
         {
             name: '',
@@ -315,7 +300,6 @@ watch(
         }
         userOptionsVisible.value =
             !FINAL_CONFIG.value.userOptions.showOnChartHover;
-        prepareChart();
         titleStep.value += 1;
         tableStep.value += 1;
         legendStep.value += 1;
@@ -329,18 +313,8 @@ watch(
     { deep: true },
 );
 
-watch(
-    () => props.dataset,
-    (_) => {
-        if (Array.isArray(_) && _.length > 0) {
-            manualLoading.value = false;
-        }
-    },
-    { deep: true },
-);
-
 const resizeObserver = shallowRef(null);
-const observedEl = shallowRef(null);
+let chartDisposed = false;
 
 const responsiveSizeReady = ref(false);
 let resizeFrame = 0;
@@ -359,14 +333,12 @@ function prepareChart() {
             type: 'dataset',
             debug: debug.value,
         });
-        manualLoading.value = true;
     } else {
         props.dataset.forEach((ds, i) => {
             getMissingDatasetAttributes({
                 datasetObject: ds,
                 requiredAttributes: ['name', 'series'],
             }).forEach((attr) => {
-                isDataset.value = false;
                 error({
                     componentName: 'VueUiParallelCoordinatePlot',
                     type: 'datasetSerieAttribute',
@@ -378,13 +350,55 @@ function prepareChart() {
         });
     }
 
-    // v3
-    if (!objectIsEmpty(props.dataset)) {
-        manualLoading.value = FINAL_CONFIG.value.loading;
-    }
+    updateChartSizing();
+}
 
-    if (FINAL_CONFIG.value.responsive) {
-        const handleResize = () => {
+function makeChartDimensions(
+    width = cfgChart.value.width,
+    height = cfgChart.value.height,
+    relator = null,
+) {
+    const dimensions = { width, height };
+    const sizes = [
+        ['plotSize', cfgChart.value.plots.radius, 2],
+        ['ticksFontSize', cfgYAxisLabels.value.ticks.fontSize, 10],
+        ['datapointFontSize', cfgYAxisLabels.value.datapoints.fontSize, 10],
+        ['axisNameFontSize', cfgYAxisLabels.value.axisNamesFontSize, 12],
+    ];
+    for (const [key, source, threshold] of sizes) {
+        dimensions[key] =
+            relator !== null && FINAL_CONFIG.value.responsiveProportionalSizing
+                ? translateSize({
+                      relator,
+                      adjuster: 600,
+                      source,
+                      threshold,
+                      fallback: threshold,
+                  })
+                : source;
+    }
+    return dimensions;
+}
+
+function stopResponsive() {
+    cancelAnimationFrame(resizeFrame);
+    resizeObserver.value?.disconnect();
+    resizeObserver.value = null;
+}
+
+function updateChartSizing() {
+    stopResponsive();
+    if (chartDisposed) return;
+    responsiveSizeReady.value = false;
+    if (!FINAL_CONFIG.value.responsive) {
+        chartDimensions.value = makeChartDimensions();
+        return;
+    }
+    if (!pcpChart.value) return;
+    const handleResize = () => {
+        if (chartDisposed || !FINAL_CONFIG.value.responsive) return;
+        cancelAnimationFrame(resizeFrame);
+        resizeFrame = requestAnimationFrame(() => {
             const { width, height } = useResponsive({
                 chart: pcpChart.value,
                 title: cfgChart.value.title.text ? chartTitle.value : null,
@@ -392,76 +406,22 @@ function prepareChart() {
                 source: source.value,
                 noTitle: noTitle.value,
             });
-
-            cancelAnimationFrame(resizeFrame);
-            resizeFrame = requestAnimationFrame(() => {
-                chartDimensions.value.width = width;
-                chartDimensions.value.height = height - 12;
-                responsiveSizeReady.value = true;
-
-                if (FINAL_CONFIG.value.responsiveProportionalSizing) {
-                    chartDimensions.value.plotSize = translateSize({
-                        relator: Math.min(width, height),
-                        adjuster: 600,
-                        source: cfgChart.value.plots.radius,
-                        threshold: 2,
-                        fallback: 2,
-                    });
-                    chartDimensions.value.ticksFontSize = translateSize({
-                        relator: Math.min(width, height),
-                        adjuster: 600,
-                        source: cfgYAxisLabels.value.ticks.fontSize,
-                        threshold: 10,
-                        fallback: 10,
-                    });
-                    chartDimensions.value.datapointFontSize = translateSize({
-                        relator: Math.min(width, height),
-                        adjuster: 600,
-                        source: cfgYAxisLabels.value.datapoints.fontSize,
-                        threshold: 10,
-                        fallback: 10,
-                    });
-                    chartDimensions.value.axisNameFontSize = translateSize({
-                        relator: Math.min(width, height),
-                        adjuster: 600,
-                        source: cfgYAxisLabels.value.axisNamesFontSize,
-                        threshold: 12,
-                        fallback: 12,
-                    });
-                } else {
-                    chartDimensions.value.plotSize =
-                        cfgChart.value.plots.radius;
-                    chartDimensions.value.ticksFontSize =
-                        cfgYAxisLabels.value.ticks.fontSize;
-                    chartDimensions.value.datapointFontSize =
-                        cfgYAxisLabels.value.datapoints.fontSize;
-                    chartDimensions.value.axisNameFontSize =
-                        cfgYAxisLabels.value.axisNamesFontSize;
-                }
-            });
-        };
-
-        if (resizeObserver.value) {
-            if (observedEl.value) {
-                resizeObserver.value.unobserve(observedEl.value);
-            }
-            resizeObserver.value.disconnect();
-        }
-
-        resizeObserver.value = new ResizeObserver(handleResize);
-        observedEl.value = pcpChart.value.parentNode;
-        resizeObserver.value.observe(observedEl.value);
-    }
+            chartDimensions.value = makeChartDimensions(
+                width,
+                height - 12,
+                Math.min(width, height),
+            );
+            responsiveSizeReady.value = true;
+        });
+    };
+    resizeObserver.value = new ResizeObserver(handleResize);
+    resizeObserver.value.observe(pcpChart.value.parentNode);
+    handleResize();
 }
 
 onBeforeUnmount(() => {
-    cancelAnimationFrame(resizeFrame);
-    if (resizeObserver.value) {
-        if (observedEl.value) {
-            resizeObserver.value.unobserve(observedEl.value);
-        }
-        resizeObserver.value.disconnect();
-    }
+    chartDisposed = true;
+    stopResponsive();
 });
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
@@ -474,14 +434,7 @@ const hasOptionsNoTitle = computed(() => {
     return FINAL_CONFIG.value.userOptions.show && !cfgChart.value.title.text;
 });
 
-const chartDimensions = ref({
-    height: cfgChart.value.height,
-    width: cfgChart.value.width,
-    plotSize: cfgChart.value.plots.radius, // ratio 100
-    ticksFontSize: cfgYAxisLabels.value.ticks.fontSize, // ratio 42.85
-    datapointFontSize: cfgYAxisLabels.value.datapoints.fontSize,
-    axisNameFontSize: cfgYAxisLabels.value.axisNamesFontSize,
-});
+const chartDimensions = ref(makeChartDimensions());
 
 const WIDTH = computed(() => chartDimensions.value.width);
 const HEIGHT = computed(() => chartDimensions.value.height);
@@ -549,6 +502,7 @@ const mutableConfig = ref({
 watch(
     FINAL_CONFIG,
     () => {
+        updateChartSizing();
         mutableConfig.value = {
             dataLabels: {
                 show: cfgYAxisLabels.value.datapoints.show,
@@ -591,16 +545,16 @@ const immutableDataset = computed(() => {
             palette[i % palette.length];
         return {
             ...ds,
-            series: ds.series.map((s) => {
+            series: (ds.series || []).map((s, j) => {
                 return {
                     ...s,
-                    id: createUid(),
+                    id: `pcp_item_${uid.value}_${ds.id ?? i}_${s.id ?? j}`,
                     color,
                 };
             }),
             seriesIndex: i,
             color,
-            id: createUid(),
+            id: `pcp_group_${uid.value}_${ds.id ?? i}`,
             shape: ds.shape || 'circle',
         };
     });
@@ -680,150 +634,123 @@ const legendConfig = computed(() => {
     };
 });
 
-const maxSeries = computed(() => {
-    return Math.max(
-        ...immutableDataset.value
-            .filter((ds) => !segregated.value.includes(ds.id))
-            .map((ds) =>
-                Math.max(...ds.series.flatMap((s) => s.values.length)),
-            ),
+const filteredDs = computed(() =>
+    immutableDataset.value.filter((ds) => !segregated.value.includes(ds.id)),
+);
+const visibleItems = computed(() =>
+    filteredDs.value.flatMap((ds) => ds.series),
+);
+const maxSeries = computed(() =>
+    Math.max(0, ...visibleItems.value.map((item) => item.values.length)),
+);
+const slot = computed(() =>
+    maxSeries.value ? drawingArea.value.width / maxSeries.value : 0,
+);
+
+function projectY(value, scale) {
+    return (
+        drawingArea.value.bottom -
+        drawingArea.value.height *
+            ((value - scale.min) / (scale.max - scale.min))
     );
-});
-
-const slot = computed(() => {
-    return drawingArea.value.width / maxSeries.value;
-});
-
-const filteredDs = computed(() => {
-    return immutableDataset.value.filter(
-        (ds) => !segregated.value.includes(ds.id),
-    );
-});
-
-const scales = computed(() => {
-    let s = [];
-    for (let i = 0; i < maxSeries.value; i += 1) {
-        const min = Math.min(
-            ...filteredDs.value.flatMap(
-                (ds) => ds.series.map((s) => s.values[i] || 0) || 0,
-            ),
-        );
-        const max = Math.max(
-            ...filteredDs.value.flatMap(
-                (ds) => ds.series.map((s) => s.values[i] || 0) || 0,
-            ),
-        );
-        const opMin = max === min ? min / 4 : min;
-        const opMax = max === min ? max * 2 : max;
-        const scale = calculateNiceScale(
-            opMin,
-            opMax,
-            cfgChart.value.yAxis.scaleTicks,
-        );
-        const ticks = scale.ticks.map((t, k) => {
-            const senseValue =
-                scale.min < 0
-                    ? t + Math.abs(scale.min)
-                    : t - Math.abs(scale.min);
-            const senseMax =
-                scale.min < 0
-                    ? scale.max + Math.abs(scale.min)
-                    : scale.max - Math.abs(scale.min);
-            return {
-                y:
-                    drawingArea.value.bottom -
-                    drawingArea.value.height * (senseValue / senseMax),
-                x: drawingArea.value.left + slot.value * i + slot.value / 2,
-                value: t,
-            };
-        });
-        s.push({
-            scale,
-            ticks,
-            name: cfgYAxisLabels.value.axisNames[i] || `Y-${i + 1}`,
-        });
+}
+function axisX(index) {
+    return drawingArea.value.left + slot.value * index + slot.value / 2;
+}
+function buildAxisScale(minimum, maximum) {
+    let min = minimum,
+        max = maximum;
+    if (minimum === maximum) {
+        if (minimum > 0) {
+            min = minimum / 4;
+            max = maximum * 2;
+        } else if (minimum < 0) {
+            min = minimum * 2;
+            max = maximum / 4;
+        } else {
+            min = 0;
+            max = 1;
+        }
     }
-    return s;
-});
+    return calculateNiceScale(
+        min,
+        max,
+        Math.max(2, cfgChart.value.yAxis.scaleTicks),
+    );
+}
 
-const mutableDataset = computed(() => {
-    return filteredDs.value
-        .map((ds, i) => {
-            return {
-                ...ds,
-                series: ds.series.map((s, j) => {
-                    return {
-                        ...s,
-                        datapoints: s.values.map((v, k) => {
-                            const senseValue =
-                                scales.value[k].scale.min < 0
-                                    ? (v || 0) +
-                                      Math.abs(scales.value[k].scale.min)
-                                    : (v || 0) -
-                                      Math.abs(scales.value[k].scale.min);
-                            const senseMax =
-                                scales.value[k].scale.min < 0
-                                    ? scales.value[k].scale.max +
-                                      Math.abs(scales.value[k].scale.min)
-                                    : scales.value[k].scale.max -
-                                      Math.abs(scales.value[k].scale.min);
-                            return {
-                                name: s.name,
-                                seriesName: ds.name,
-                                axisIndex: k,
-                                datapointIndex: j,
-                                seriesIndex: i,
-                                value: v || 0,
-                                x:
-                                    drawingArea.value.left +
-                                    slot.value * k +
-                                    slot.value / 2,
-                                y:
-                                    drawingArea.value.bottom -
-                                    drawingArea.value.height *
-                                        (senseValue / senseMax),
-                                comment: s.comments ? s.comments[k] || '' : '',
-                            };
-                        }),
-                    };
-                }),
-            };
-        })
-        .map((ds) => {
-            return {
-                ...ds,
-                series: ds.series.map((s) => {
-                    const straightPath = createStraightPath(s.datapoints);
-                    const smoothPath = createSmoothPath(s.datapoints, 0.12);
-                    const pathLength = getPathLengthFromCoordinates(
-                        cfgChart.value.lines.smooth
-                            ? `M ${smoothPath}`
-                            : `M ${straightPath}`,
-                    );
-                    return {
-                        ...s,
-                        smoothPath,
-                        straightPath,
-                        pathLength,
-                    };
-                }),
-            };
-        });
-});
+const scales = computed(() =>
+    Array.from({ length: maxSeries.value }, (_, index) => {
+        const values = visibleItems.value.map(
+            (item) => item.values[index] || 0,
+        );
+        const scale = buildAxisScale(Math.min(...values), Math.max(...values));
+        return {
+            scale,
+            ticks: scale.ticks.map((value) => ({
+                y: projectY(value, scale),
+                x: axisX(index),
+                value,
+            })),
+            name: cfgYAxisLabels.value.axisNames[index] || `Y-${index + 1}`,
+        };
+    }),
+);
 
-const keyboardNavigableSeries = computed(() => {
-    return mutableDataset.value.flatMap((group, S) => {
-        return group.series.map((serie, relativeIndex) => ({
+const mutableDataset = computed(() =>
+    filteredDs.value.map((group, seriesIndex) => ({
+        ...group,
+        series: group.series.map((item, datapointIndex) => {
+            const datapoints = item.values.map((value, axisIndex) => ({
+                name: item.name,
+                seriesName: group.name,
+                axisIndex,
+                datapointIndex,
+                seriesIndex,
+                value: value || 0,
+                x: axisX(axisIndex),
+                y: projectY(value || 0, scales.value[axisIndex].scale),
+                comment: item.comments ? item.comments[axisIndex] || '' : '',
+            }));
+            const straightPath = createStraightPath(datapoints);
+            const smoothPath = createSmoothPath(datapoints, 0.12);
+            return {
+                ...item,
+                datapoints,
+                straightPath,
+                smoothPath,
+                pathLength: getPathLengthFromCoordinates(
+                    cfgChart.value.lines.smooth
+                        ? `M ${smoothPath}`
+                        : `M ${straightPath}`,
+                ),
+            };
+        }),
+    })),
+);
+
+const keyboardNavigableSeries = computed(() =>
+    mutableDataset.value.flatMap((group, S) =>
+        group.series.map((serie, relativeIndex) => ({
             shape: group.shape,
             serieName: group.name,
             serie,
             relativeIndex,
-            seriesIndex: serie.seriesIndex,
+            seriesIndex: group.seriesIndex,
             S,
-            key: `${S}_${relativeIndex}`,
-        }));
-    });
-});
+            key: serie.id,
+        })),
+    ),
+);
+const interactionsById = computed(
+    () =>
+        new Map(
+            keyboardNavigableSeries.value.map((item) => [item.serie.id, item]),
+        ),
+);
+function getInteraction(serie) {
+    return interactionsById.value.get(serie.id);
+}
 
 function makeDataLabel({ value, index, datapoint }) {
     return applyDataLabel(
@@ -837,6 +764,24 @@ function makeDataLabel({ value, index, datapoint }) {
         }),
         { datapoint, seriesIndex: index },
     );
+}
+
+function getAxisNameAttributes(scale, index) {
+    const labels = cfgYAxisLabels.value;
+    return {
+        class: 'vue-ui-parallel-coordinate-plot-x-label',
+        'data-cy': 'pcp-axis-label',
+        fill: labels.axisNamesColor,
+        'font-size': chartDimensions.value.axisNameFontSize,
+        'font-weight': labels.axisNamesBold ? 'bold' : '',
+        'text-anchor':
+            labels.axisNamesRotation === 0
+                ? 'middle'
+                : labels.axisNamesRotation < 0
+                  ? 'start'
+                  : 'end',
+        transform: `translate(${axisX(index)}, ${topLabelsHeight.value - chartDimensions.value.axisNameFontSize}), rotate(${labels.axisNamesRotation})`,
+    };
 }
 
 const selectedItem = ref(null);
@@ -891,8 +836,9 @@ function useTooltip({
     seriesIndex,
     S,
     triggerMode = 'pointer',
+    notify = true,
 }) {
-    if (FINAL_CONFIG.value.events.datapointEnter) {
+    if (notify && FINAL_CONFIG.value.events.datapointEnter) {
         FINAL_CONFIG.value.events.datapointEnter({
             datapoint: { ...serie, shape },
             seriesIndex: S,
@@ -915,25 +861,17 @@ function useTooltip({
 
     const customFormat = cfgTooltip.value.customFormat;
 
-    if (
-        isFunction(customFormat) &&
-        functionReturnsString(() =>
-            customFormat({
-                serie,
-                seriesIndex: serie.seriesIndex,
-                series: immutableDataset.value,
-                config: FINAL_CONFIG.value,
-                scales: scales.value,
-            }),
-        )
-    ) {
-        tooltipContent.value = customFormat({
-            serie,
-            seriesIndex: serie.seriesIndex,
-            series: immutableDataset.value,
-            config: FINAL_CONFIG.value,
-            scales: scales.value,
-        });
+    const formatted = isFunction(customFormat)
+        ? customFormat({
+              serie,
+              seriesIndex,
+              series: immutableDataset.value,
+              config: FINAL_CONFIG.value,
+              scales: scales.value,
+          })
+        : undefined;
+    if (typeof formatted === 'string') {
+        tooltipContent.value = formatted;
     } else {
         html += `<div style="width:100%;text-align:center;border-bottom:1px solid ${cfgTooltip.value.borderColor};padding-bottom:6px;margin-bottom:3px;">${serieName ? serieName + ' - ' : ''}${serie.name}</div>`;
         scales.value
@@ -943,23 +881,13 @@ function useTooltip({
                 <div class="vue-ui-tooltip-item" style="text-align:left">
                     <span>${s}: </span>
                     <span>
-                        ${applyDataLabel(
-                            cfgYAxisLabels.value.formatters[i] || null,
-                            serie.datapoints[i].value,
-                            dataLabel({
-                                p: cfgYAxisLabels.value.prefixes[i] || '',
-                                v: serie.datapoints[i].value,
-                                s: cfgYAxisLabels.value.suffixes[i] || '',
-                                r: cfgYAxisLabels.value.roundings[i] || '',
-                            }),
-                            { datapoint: serie.datapoints[i], seriesIndex: i },
-                        )}    
+                        ${serie.datapoints[i] ? makeDataLabel({ value: serie.datapoints[i].value, index: i, datapoint: serie.datapoints[i] }) : '-'}    
                     </span>
                 </div>
             `;
                 if (
                     cfgChart.value.comments.showInTooltip &&
-                    serie.datapoints[i].comment
+                    serie.datapoints[i]?.comment
                 ) {
                     html += `<div class="vue-data-ui-tooltip-comment" style="background:${setOpacity(serie.color, 12.5)}; padding: 6px; margin-bottom: 6px; border-left: 1px solid ${serie.color}">${serie.datapoints[i].comment}</div>`;
                 }
@@ -990,7 +918,11 @@ const dataTable = computed(() => {
         .concat(scales.value.map((s) => s.name));
     const body = mutableDataset.value.flatMap((ds, i) => {
         return ds.series.map((s) => {
-            return [ds.name].concat([s.name]).concat(s.values);
+            return [
+                ds.name,
+                s.name,
+                ...scales.value.map((_, index) => s.values[index] ?? '-'),
+            ];
         });
     });
 
@@ -1008,9 +940,7 @@ const dataTable = computed(() => {
         breakpoint: FINAL_CONFIG.value.table.responsiveBreakpoint,
     };
 
-    const colNames = [FINAL_CONFIG.value.table.columnNames.series]
-        .concat([FINAL_CONFIG.value.table.columnNames.item])
-        .concat(scales.value.map((s) => s.name));
+    const colNames = head;
 
     return {
         body,
@@ -1126,7 +1056,9 @@ const tableComponent = computed(() =>
 
 watch(
     () => mutableConfig.value.showTable,
-    (v) => syncTableVisibility(v, FINAL_CONFIG, tableUnit),
+    (v) => {
+        if (tableUnit.value) syncTableVisibility(v, FINAL_CONFIG, tableUnit);
+    },
 );
 
 function closeTable() {
@@ -1270,6 +1202,26 @@ function onSvgKeydown(event) {
     });
 }
 
+watch(keyboardNavigableSeries, (items) => {
+    if (!selectedItem.value) return;
+    const index = items.findIndex(
+        (item) => item.serie.id === selectedItem.value,
+    );
+    if (index === -1) {
+        activeA11yItemIndex.value = null;
+        tooltipTriggerMode.value = 'pointer';
+        selectedItem.value = null;
+        isTooltip.value = false;
+        return;
+    }
+    if (activeA11yItemIndex.value !== null) activeA11yItemIndex.value = index;
+    useTooltip({
+        ...items[index],
+        triggerMode: tooltipTriggerMode.value,
+        notify: false,
+    });
+});
+
 const a11yTable = computed(() => {
     return {
         head: dataTable.value.head,
@@ -1328,7 +1280,7 @@ watch(
         </div>
 
         <A11yDataTable
-            v-if="a11yTable.body.length"
+            v-if="FINAL_CONFIG.a11y.includeTable && a11yTable.body.length"
             :uid="uid"
             :head="a11yTable.head"
             :body="a11yTable.body"
@@ -1557,46 +1509,15 @@ watch(
                         v-for="(scale, i) in scales"
                         style="pointer-events: none"
                     >
-                        <!-- SINGLE LINE -->
                         <text
                             v-if="!String(scale.name).includes('\n')"
-                            class="vue-ui-parallel-coordinate-plot-x-label"
-                            data-cy="pcp-axis-label"
-                            :fill="cfgYAxisLabels.axisNamesColor"
-                            :font-size="chartDimensions.axisNameFontSize"
-                            :font-weight="
-                                cfgYAxisLabels.axisNamesBold ? 'bold' : ''
-                            "
-                            :text-anchor="
-                                cfgYAxisLabels.axisNamesRotation === 0
-                                    ? 'middle'
-                                    : cfgYAxisLabels.axisNamesRotation < 0
-                                      ? 'start'
-                                      : 'end'
-                            "
-                            :transform="`translate(${drawingArea.left + slot * i + slot / 2}, ${topLabelsHeight - chartDimensions.axisNameFontSize}), rotate(${cfgYAxisLabels.axisNamesRotation})`"
+                            v-bind="getAxisNameAttributes(scale, i)"
                         >
                             {{ scale.name }}
                         </text>
-
-                        <!-- MULTILINE -->
                         <text
                             v-else
-                            data-cy="pcp-axis-label"
-                            class="vue-ui-parallel-coordinate-plot-x-label"
-                            :fill="cfgYAxisLabels.axisNamesColor"
-                            :font-size="chartDimensions.axisNameFontSize"
-                            :font-weight="
-                                cfgYAxisLabels.axisNamesBold ? 'bold' : ''
-                            "
-                            :text-anchor="
-                                cfgYAxisLabels.axisNamesRotation === 0
-                                    ? 'middle'
-                                    : cfgYAxisLabels.axisNamesRotation < 0
-                                      ? 'start'
-                                      : 'end'
-                            "
-                            :transform="`translate(${drawingArea.left + slot * i + slot / 2}, ${topLabelsHeight - chartDimensions.axisNameFontSize}), rotate(${cfgYAxisLabels.axisNamesRotation})`"
+                            v-bind="getAxisNameAttributes(scale, i)"
                             v-html="
                                 createTSpansFromLineBreaksOnX({
                                     content: String(scale.name),
@@ -1628,31 +1549,17 @@ watch(
                                 :stroke="cfgChart.backgroundColor"
                                 :strokeWidth="0.5"
                                 @mouseenter="
-                                    useTooltip({
-                                        shape: serie.shape,
-                                        serieName: serie.name,
-                                        serie: serieSet,
-                                        relativeIndex: i,
-                                        seriesIndex: serieSet.seriesIndex,
-                                        S,
-                                        triggerMode: 'pointer',
-                                    })
+                                    useTooltip(getInteraction(serieSet))
                                 "
                                 @mouseleave="
-                                    onTrapLeave({
-                                        serie: serieSet,
-                                        shape: serie.shape,
-                                        S,
-                                    })
+                                    onTrapLeave(getInteraction(serieSet))
                                 "
                                 :style="`opacity:${selectedItem ? (selectedItem === serieSet.id ? cfgChart.plots.opacity : 0.2) : cfgChart.plots.opacity}`"
                                 @click="
                                     () =>
-                                        selectDatapoint({
-                                            serie: serieSet,
-                                            shape: serie.shape,
-                                            S,
-                                        })
+                                        selectDatapoint(
+                                            getInteraction(serieSet),
+                                        )
                                 "
                             />
                             <!-- SERIE LABEL WHEN TOOLTIP IS DISABLED -->
@@ -1726,31 +1633,10 @@ watch(
                                 'vue-data-ui-transition':
                                     transitionEnabled && !labelLayoutSettling,
                             }"
-                            @mouseenter="
-                                useTooltip({
-                                    shape: serie.shape,
-                                    serieName: serie.name,
-                                    serie: serieSet,
-                                    relativeIndex: i,
-                                    seriesIndex: serieSet.seriesIndex,
-                                    S,
-                                    triggerMode: 'pointer',
-                                })
-                            "
-                            @mouseleave="
-                                onTrapLeave({
-                                    serie: serieSet,
-                                    shape: serie.shape,
-                                    S,
-                                })
-                            "
+                            @mouseenter="useTooltip(getInteraction(serieSet))"
+                            @mouseleave="onTrapLeave(getInteraction(serieSet))"
                             @click="
-                                () =>
-                                    selectDatapoint({
-                                        serie: serieSet,
-                                        shape: serie.shape,
-                                        S,
-                                    })
+                                () => selectDatapoint(getInteraction(serieSet))
                             "
                             :style="`opacity:${selectedItem ? (selectedItem === serieSet.id ? cfgChart.lines.opacity : 0.2) : cfgChart.lines.opacity}; stroke-dasharray:${serieSet.pathLength}; stroke-dashoffset: ${FINAL_CONFIG.useCssAnimation ? serieSet.pathLength : 0}`"
                         />
@@ -1768,31 +1654,10 @@ watch(
                                 'vue-data-ui-transition':
                                     transitionEnabled && !labelLayoutSettling,
                             }"
-                            @mouseenter="
-                                useTooltip({
-                                    shape: serie.shape,
-                                    serieName: serie.name,
-                                    serie: serieSet,
-                                    relativeIndex: i,
-                                    seriesIndex: serieSet.seriesIndex,
-                                    S,
-                                    triggerMode: 'pointer',
-                                })
-                            "
-                            @mouseleave="
-                                onTrapLeave({
-                                    serie: serieSet,
-                                    shape: serie.shape,
-                                    S,
-                                })
-                            "
+                            @mouseenter="useTooltip(getInteraction(serieSet))"
+                            @mouseleave="onTrapLeave(getInteraction(serieSet))"
                             @click="
-                                () =>
-                                    selectDatapoint({
-                                        serie: serieSet,
-                                        shape: serie.shape,
-                                        S,
-                                    })
+                                () => selectDatapoint(getInteraction(serieSet))
                             "
                             style="opacity: 0"
                         />
@@ -1840,30 +1705,16 @@ watch(
                                 stroke-linejoin="round"
                                 paint-order="stroke fill"
                                 @mouseenter="
-                                    useTooltip({
-                                        shape: serie.shape,
-                                        serieName: serie.name,
-                                        serie: serieSet,
-                                        relativeIndex: i,
-                                        seriesIndex: serieSet.seriesIndex,
-                                        S,
-                                        triggerMode: 'pointer',
-                                    })
+                                    useTooltip(getInteraction(serieSet))
                                 "
                                 @mouseleave="
-                                    onTrapLeave({
-                                        serie: serieSet,
-                                        shape: serie.shape,
-                                        S,
-                                    })
+                                    onTrapLeave(getInteraction(serieSet))
                                 "
                                 @click="
                                     () =>
-                                        selectDatapoint({
-                                            serie: serieSet,
-                                            shape: serie.shape,
-                                            S,
-                                        })
+                                        selectDatapoint(
+                                            getInteraction(serieSet),
+                                        )
                                 "
                                 :style="`opacity:${selectedItem ? (selectedItem === serieSet.id ? 1 : 0.2) : 1}`"
                             >

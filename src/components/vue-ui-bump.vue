@@ -15,7 +15,6 @@ import { createChartImageGetter } from '../chartImage';
 import {
     computed,
     defineAsyncComponent,
-    nextTick,
     onBeforeUnmount,
     onMounted,
     ref,
@@ -39,10 +38,8 @@ import {
     downloadCsv,
     error,
     getMissingDatasetAttributes,
-    isValidUserValue,
     objectIsEmpty,
     palette,
-    themePalettes,
     treeShake,
     XMLNS,
 } from '../lib';
@@ -51,9 +48,8 @@ import { useConfig } from '../useConfig';
 import { useSvgLabelLayout } from '../useSvgLabelLayout';
 import { useLoading } from '../useLoading';
 import { usePrinter } from '../usePrinter';
-import { useNestedProp } from '../useNestedProp';
+import { resolveChartConfigWithPalette } from '../resolveChartConfig';
 import { useResponsive } from '../useResponsive';
-import { useThemeCheck } from '../useThemeCheck';
 import { useTimeLabels } from '../useTimeLabels';
 import { useChartExport } from '../useChartExport';
 import { useUserOptionState } from '../useUserOptionState';
@@ -79,7 +75,6 @@ const PackageVersion = defineAsyncComponent(
 );
 
 const { vue_ui_bump: DEFAULT_CONFIG } = useConfig();
-const { isThemeValid, warnInvalidTheme } = useThemeCheck();
 
 const props = defineProps({
     config: {
@@ -98,14 +93,7 @@ const props = defineProps({
 
 const emit = defineEmits(['copyAlt']);
 
-const isDataset = computed({
-    get() {
-        return !!props.dataset && props.dataset.length;
-    },
-    set(bool) {
-        return bool;
-    },
-});
+const isDataset = computed(() => !!props.dataset?.length);
 
 const bumpChart = ref(null);
 const uid = ref(createUid());
@@ -114,18 +102,22 @@ const chartTitle = ref(null);
 const noTitle = ref(null);
 const source = ref(null);
 const isFullscreen = ref(false);
-const isLoaded = ref(false);
 const titleStep = ref(0);
 const tableStep = ref(0);
 const tableUnit = ref(null);
 const userOptionsRef = ref(null);
-const userHovers = ref(false);
 const selectedSeries = ref(null);
 const labelsLeft = ref(null);
 const labelsRight = ref(null);
 const timeLabelsEls = ref(null);
 
-const activePointIndex = ref(null); // a11y
+const activeSeriesId = ref(null);
+const activePointIndex = computed(() => {
+    const index = keyboardNavigableSeries.value.findIndex(
+        (serie) => serie.id === activeSeriesId.value,
+    );
+    return index < 0 ? null : index;
+});
 const isFocus = ref(false); // a11y
 
 const FINAL_CONFIG = ref(prepareConfig());
@@ -159,7 +151,7 @@ useHints({
             ],
         },
         {
-            test: (ds) => ds.some((dp) => dp.values.length > 31),
+            test: (ds) => ds.some((dp) => (dp?.values?.length || 0) > 31),
             message: [
                 '👀 Some series contain > 31 data points, which can make the chart hard to read. Consider:',
                 '',
@@ -238,39 +230,7 @@ let resizeFrame = 0;
 onMounted(prepareChart);
 
 function prepareConfig() {
-    const mergedConfig = useNestedProp({
-        userConfig: props.config,
-        defaultConfig: DEFAULT_CONFIG,
-    });
-
-    let finalConfig = {};
-
-    const theme = mergedConfig.theme;
-
-    if (theme) {
-        if (!isThemeValid.value(mergedConfig)) {
-            warnInvalidTheme(mergedConfig);
-            finalConfig = mergedConfig;
-        } else {
-            const fused = useNestedProp({
-                userConfig: themes[theme] || props.config,
-                defaultConfig: mergedConfig,
-            });
-
-            finalConfig = {
-                ...useNestedProp({
-                    userConfig: props.config,
-                    defaultConfig: fused,
-                }),
-                customPalette: mergedConfig.customPalette.length
-                    ? mergedConfig.customPalette
-                    : themePalettes[theme] || palette,
-            };
-        }
-    } else {
-        finalConfig = mergedConfig;
-    }
-    return finalConfig;
+    return resolveChartConfigWithPalette(props.config, DEFAULT_CONFIG, themes);
 }
 
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } =
@@ -280,13 +240,11 @@ const { svgRef } = useChartAccessibility({
 });
 
 function onChartEnter() {
-    userHovers.value = true;
     setUserOptionsVisibility(true);
 }
 
 function onChartLeave() {
     setUserOptionsVisibility(false);
-    userHovers.value = false;
 }
 
 const mutableConfig = ref({
@@ -311,30 +269,11 @@ watch(
         }
         userOptionsVisible.value =
             !FINAL_CONFIG.value.userOptions.showOnChartHover;
-        prepareChart();
+        validateDataset();
         titleStep.value += 1;
         tableStep.value += 1;
         // Reset mutable config
         mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
-        if (!FINAL_CONFIG.value.responsive) {
-            defaultSizes.value.width = cfgChart.value.width;
-            defaultSizes.value.height = cfgChart.value.height;
-        }
-        defaultSizes.value.paddingRatio = {
-            top: cfgChart.value.padding.top / cfgChart.value.height,
-            right: cfgChart.value.padding.right / cfgChart.value.width,
-            bottom: cfgChart.value.padding.bottom / cfgChart.value.height,
-            left: cfgChart.value.padding.left / cfgChart.value.width,
-        };
-    },
-);
-
-watch(
-    () => props.dataset,
-    (_) => {
-        if (Array.isArray(_) && _.length > 0) {
-            manualLoading.value = false;
-        }
     },
     { deep: true },
 );
@@ -352,61 +291,79 @@ const hasOptionsNoTitle = computed(() => {
 const defaultSizes = ref({
     width: cfgChart.value.width,
     height: cfgChart.value.height,
-    paddingRatio: {
-        top: cfgChart.value.padding.top / cfgChart.value.height,
-        right: cfgChart.value.padding.right / cfgChart.value.width,
-        bottom: cfgChart.value.padding.bottom / cfgChart.value.height,
-        left: cfgChart.value.padding.left / cfgChart.value.width,
-    },
 });
+const paddingRatio = computed(() => ({
+    left: cfgChart.value.width
+        ? cfgChart.value.padding.left / cfgChart.value.width
+        : 0,
+    right: cfgChart.value.width
+        ? cfgChart.value.padding.right / cfgChart.value.width
+        : 0,
+}));
 
 const customPalette = computed(() => {
     return convertCustomPalette(FINAL_CONFIG.value.customPalette);
 });
 
 const resizeObserver = shallowRef(null);
-const observedEl = shallowRef(null);
-const to = ref(null);
+let scheduleResize = null;
+let disposed = false;
 const debug = computed(() => FINAL_CONFIG.value.debug);
 
-function prepareChart() {
-    if (objectIsEmpty(props.dataset)) {
+function validateDataset() {
+    let invalid = false;
+    if (objectIsEmpty(props.dataset))
         error({
             componentName: 'VueUiBump',
             type: 'dataset',
             debug: debug.value,
         });
-        manualLoading.value = true;
-    } else {
-        props.dataset.forEach((datasetObject, index) => {
-            getMissingDatasetAttributes({
-                datasetObject,
-                requiredAttributes: ['name', 'values'],
-            }).forEach((attr) => {
-                isDataset.value = false;
-                error({
-                    componentName: 'VueUiBump',
-                    type: 'datasetSerieAttribute',
-                    property: attr,
-                    index,
-                    debug: debug.value,
-                });
-                manualLoading.value = true;
+    for (const [index, datasetObject] of (Array.isArray(props.dataset)
+        ? props.dataset
+        : []
+    ).entries()) {
+        if (!datasetObject || typeof datasetObject !== 'object') {
+            invalid = true;
+            continue;
+        }
+        for (const property of getMissingDatasetAttributes({
+            datasetObject,
+            requiredAttributes: ['name', 'values'],
+        })) {
+            invalid = true;
+            error({
+                componentName: 'VueUiBump',
+                type: 'datasetSerieAttribute',
+                property,
+                index,
+                debug: debug.value,
             });
-        });
+        }
+        if (!Array.isArray(datasetObject.values)) invalid = true;
     }
-
-    if (!objectIsEmpty(props.dataset)) {
-        manualLoading.value = FINAL_CONFIG.value.loading;
+    manualLoading.value = invalid;
+}
+function stopResize() {
+    scheduleResize = null;
+    cancelAnimationFrame(resizeFrame);
+    resizeObserver.value?.disconnect();
+    resizeObserver.value = null;
+}
+function prepareChart() {
+    stopResize();
+    if (!FINAL_CONFIG.value.responsive) {
+        defaultSizes.value = {
+            width: cfgChart.value.width,
+            height: cfgChart.value.height,
+        };
+        return;
     }
-
-    setTimeout(() => {
-        isLoaded.value = true;
-    }, 10);
-
-    if (FINAL_CONFIG.value.responsive) {
-        const handleResize = () => {
-            isLoaded.value = false;
+    const parent = bumpChart.value?.parentNode;
+    if (!parent) return;
+    const resize = () => {
+        cancelAnimationFrame(resizeFrame);
+        resizeFrame = requestAnimationFrame(() => {
+            if (disposed) return;
             const { width, height } = useResponsive({
                 chart: bumpChart.value,
                 noTitle: noTitle.value,
@@ -415,44 +372,30 @@ function prepareChart() {
                 slicer: null,
                 source: source.value,
             });
-
-            cancelAnimationFrame(resizeFrame);
-            resizeFrame = requestAnimationFrame(() => {
-                defaultSizes.value.width = width;
-                defaultSizes.value.height = height - 12;
-                responsiveSizeReady.value = true;
-                clearTimeout(to.value);
-                to.value = setTimeout(() => {
-                    isLoaded.value = true;
-                }, 10);
-            });
-        };
-
-        if (resizeObserver.value) {
-            if (observedEl.value) {
-                resizeObserver.value.unobserve(observedEl.value);
-            }
-            resizeObserver.value.disconnect();
-        }
-
-        resizeObserver.value = new ResizeObserver(handleResize);
-        observedEl.value = bumpChart.value.parentNode;
-        resizeObserver.value.observe(observedEl.value);
-    }
+            defaultSizes.value = { width, height: height - 12 };
+            responsiveSizeReady.value = true;
+        });
+    };
+    scheduleResize = resize;
+    resizeObserver.value = new ResizeObserver(resize);
+    resizeObserver.value.observe(parent);
+    resize();
 }
-
 onBeforeUnmount(() => {
-    cancelAnimationFrame(resizeFrame);
-    if (resizeObserver.value) {
-        if (observedEl.value) {
-            resizeObserver.value.unobserve(observedEl.value);
-        }
-        resizeObserver.value.disconnect();
-    }
+    disposed = true;
+    timeLabelsRequestId++;
+    stopResize();
 });
 
 const unmutableDataset = computed(() => {
-    return FINAL_DATASET.value.map((ds, i) => {
+    const seen = new Set();
+    return FINAL_DATASET.value.map((source, i) => {
+        const ds = source || {};
+        const candidate = ds.id ?? `bump_${uid.value}_${i}`;
+        const id = seen.has(candidate)
+            ? `bump_duplicate_${uid.value}_${i}`
+            : candidate;
+        seen.add(id);
         const color =
             convertColorToHex(ds.color) ||
             customPalette.value[i] ||
@@ -461,14 +404,21 @@ const unmutableDataset = computed(() => {
         return {
             ...ds,
             absoluteIndex: i,
-            id: createUid(),
+            id,
+            values: Array.isArray(ds.values) ? ds.values : [],
             color,
         };
     });
 });
 
 const maxLen = computed(() =>
-    Math.max(...unmutableDataset.value.map((d) => d.values.length)),
+    Math.max(
+        0,
+        ...FINAL_DATASET.value.map((serie) => serie?.values?.length || 0),
+    ),
+);
+const allPositions = computed(() =>
+    getPositionsForAllSeries(FINAL_DATASET.value),
 );
 
 function getPositionsForAllSeries(dataset) {
@@ -478,9 +428,10 @@ function getPositionsForAllSeries(dataset) {
         const pairs = dataset
             .map((serie, seriesIndex) => ({
                 seriesIndex,
-                value: serie.values?.[valueIndex],
+                value: serie?.values?.[valueIndex],
                 previousPosition:
-                    valueIndex > 0
+                    valueIndex > 0 &&
+                    Number.isFinite(positions[seriesIndex][valueIndex - 1])
                         ? positions[seriesIndex][valueIndex - 1]
                         : seriesIndex,
             }))
@@ -488,7 +439,10 @@ function getPositionsForAllSeries(dataset) {
 
         pairs.sort((first, second) => {
             if (second.value !== first.value) return second.value - first.value;
-            return first.previousPosition - second.previousPosition; // break tie by last rank
+            return (
+                first.previousPosition - second.previousPosition ||
+                first.seriesIndex - second.seriesIndex
+            ); // break tie by last rank
         });
 
         for (
@@ -530,13 +484,6 @@ const {
     },
 });
 
-function getOffsetXLeft() {
-    return labelLayout.value.left;
-}
-function getOffsetXRight() {
-    return labelLayout.value.right;
-}
-
 const offsetY = computed(() =>
     cfgLayout.value.timeLabels.show && displayedTimeLabels.value.length
         ? labelLayout.value.bottom +
@@ -547,10 +494,10 @@ const offsetY = computed(() =>
 
 const drawingArea = computed(() => {
     const { height: H, width: W } = defaultSizes.value;
-    const { right: PR, left: PL } = defaultSizes.value.paddingRatio;
+    const { right: PR, left: PL } = paddingRatio.value;
 
-    let offsetXLeft = getOffsetXLeft();
-    let offsetXRight = getOffsetXRight();
+    const offsetXLeft = labelLayout.value.left;
+    const offsetXRight = labelLayout.value.right;
 
     const top = cfgChart.value.padding.top;
     const right = W - W * PR - offsetXRight;
@@ -572,35 +519,44 @@ const drawingArea = computed(() => {
         left: Math.max(0, left),
         width: Math.max(0, width),
         height: Math.max(0, height),
-        unitH: Math.max(0, height) / unmutableDataset.value.length,
-        unitW: Math.max(0, width) / maxLen.value,
+        unitH: unmutableDataset.value.length
+            ? Math.max(0, height) / unmutableDataset.value.length
+            : 0,
+        unitW: maxLen.value ? Math.max(0, width) / maxLen.value : 0,
         svgHeight,
     };
 });
+const seriesValueLabels = computed(() =>
+    FINAL_DATASET.value.map((serie) =>
+        Array.from({ length: maxLen.value }, (_, index) =>
+            applyDataLabel(
+                cfgPlots.value.labels.formatter,
+                serie?.values?.[index],
+                dataLabel({
+                    p: cfgPlots.value.labels.prefix,
+                    v: serie?.values?.[index],
+                    s: cfgPlots.value.labels.suffix,
+                    r: cfgPlots.value.labels.rounding,
+                }),
+            ),
+        ),
+    ),
+);
+
 const formattedDataset = computed(() => {
     if (!isDataset.value && !loading.value) return [];
-
-    const allPositions = getPositionsForAllSeries(unmutableDataset.value);
 
     return unmutableDataset.value
         .map((ds, seriesIndex) => {
             return {
                 ...ds,
-                positions: allPositions[seriesIndex],
+                positions: allPositions.value[seriesIndex],
             };
         })
         .map((ds) => {
             const coordinates = ds.positions.map((p, i) => {
-                const displayValue = applyDataLabel(
-                    cfgPlots.value.labels.formatter,
-                    ds.values[i],
-                    dataLabel({
-                        p: cfgPlots.value.labels.prefix,
-                        v: ds.values[i],
-                        s: cfgPlots.value.labels.suffix,
-                        r: cfgPlots.value.labels.rounding,
-                    }),
-                );
+                const displayValue =
+                    seriesValueLabels.value[ds.absoluteIndex][i];
 
                 return {
                     name: ds.name,
@@ -610,12 +566,14 @@ const formattedDataset = computed(() => {
                         i * drawingArea.value.unitW +
                         drawingArea.value.unitW / 2,
                     y:
-                        drawingArea.value.top +
-                        p * drawingArea.value.unitH +
-                        drawingArea.value.unitH / 2,
+                        p == null
+                            ? null
+                            : drawingArea.value.top +
+                              p * drawingArea.value.unitH +
+                              drawingArea.value.unitH / 2,
                     value: ds.values[i],
                     displayValue,
-                    rank: ds.positions[i] + 1,
+                    rank: p == null ? null : p + 1,
                     color: ds.color,
                     labelColor:
                         cfgPlots.value.labels.color === 'auto'
@@ -626,7 +584,7 @@ const formattedDataset = computed(() => {
             });
 
             const validCoordinates = coordinates.filter((c) =>
-                isValidUserValue(c.value),
+                Number.isFinite(c.value),
             );
 
             const path = cfgLayout.value.lines.smooth
@@ -641,20 +599,36 @@ const formattedDataset = computed(() => {
         });
 });
 
-const a11yPoints = computed(() => {
-    return formattedDataset.value.flatMap((serie, seriesIndex) => {
-        return serie.coordinates
-            .map((point, pointIndex) => ({
-                ...point,
-                pointIndex,
-                seriesIndex,
-                seriesId: serie.id,
-                seriesName: serie.name,
-                pointId: `${serie.id}_${pointIndex}`,
-            }))
-            .filter((point) => isValidUserValue(point.value));
-    });
-});
+const seriesPoints = computed(
+    () =>
+        new Map(
+            formattedDataset.value.map((serie) => [
+                serie.id,
+                serie.coordinates.filter((point) =>
+                    Number.isFinite(point.value),
+                ),
+            ]),
+        ),
+);
+const plottedSeries = computed(() =>
+    formattedDataset.value.filter((serie) => validPoints(serie).length),
+);
+function validPoints(serie) {
+    return seriesPoints.value.get(serie.id) || [];
+}
+function pointEvents(point, serie) {
+    const payload = { ...point, pointIndex: serie.coordinates.indexOf(point) };
+    return {
+        mouseenter: () => onPointEnter(payload, serie),
+        mouseleave: () => onPointLeave(payload, serie),
+        click: () => onPointClick(payload, serie),
+    };
+}
+function seriesOpacity(serie) {
+    return selectedSeries.value == null || selectedSeries.value === serie.id
+        ? 1
+        : 0.1;
+}
 
 function spreadLabelsVertically(labels, minGap, topLimit, bottomLimit) {
     const sorted = labels.toSorted((a, b) => a.y - b.y);
@@ -697,9 +671,7 @@ const nameLabels = computed(() => {
     const right = [];
 
     formattedDataset.value.forEach((ds) => {
-        const validCoords = ds.coordinates.filter((c) =>
-            Number.isFinite(c.rank),
-        );
+        const validCoords = validPoints(ds);
         if (!validCoords.length) return;
 
         left.push({ ...validCoords[0] });
@@ -734,9 +706,28 @@ const nameLabels = computed(() => {
     };
 });
 
+const nameLabelSides = [
+    {
+        key: 'left',
+        anchor: 'end',
+        sign: -1,
+        setRef: (element) => {
+            labelsLeft.value = element;
+        },
+    },
+    {
+        key: 'right',
+        anchor: 'start',
+        sign: 1,
+        setRef: (element) => {
+            labelsRight.value = element;
+        },
+    },
+];
+
 function getValueRect(label) {
     const padding = cfgPlots.value.labels.fontSize * 0.4;
-    const text = label.displayValue;
+    const text = String(label.displayValue);
     const textWidth =
         text.length *
         (cfgPlots.value.labels.fontSize * (text.length === 1 ? 1 : 0.6));
@@ -772,7 +763,7 @@ watchEffect(() => {
     const end = maxLen.value;
 
     // Keep the shape stable when there is no data
-    if (!end || !Array.isArray(values) || values.length === 0) {
+    if (!end) {
         timeLabels.value = [];
         timeLabelsAreReady.value = true;
         return;
@@ -780,7 +771,7 @@ watchEffect(() => {
 
     (async () => {
         const labels = await useTimeLabels({
-            values,
+            values: Array.isArray(values) ? values : [],
             maxDatapoints: end,
             formatter,
             start: 0,
@@ -788,7 +779,7 @@ watchEffect(() => {
         });
 
         // Prevent out-of-order async updates
-        if (requestId === timeLabelsRequestId) {
+        if (!disposed && requestId === timeLabelsRequestId) {
             timeLabels.value = labels;
             timeLabelsAreReady.value = true;
         }
@@ -797,23 +788,17 @@ watchEffect(() => {
 
 const displayedTimeLabels = computed(() => {
     const cfg = cfgLayout.value.timeLabels;
-    const vis = timeLabels.value || [];
-    const all = timeLabels.value || [];
-    const start = 0;
-    const sel = null;
-    const maxS = maxLen.value;
-    const visTexts = vis.map((l) => l?.text ?? '');
-    const allTexts = all.map((l) => l?.text ?? '');
-
+    if (!Array.isArray(cfg.values) || !cfg.values.length) return [];
+    const texts = timeLabels.value.map((label) => label?.text ?? '');
     return buildDisplayedTimeLabels(
         !!cfg.showOnlyFirstAndLast,
         !!cfg.showOnlyAtModulo,
         Math.max(1, Number(cfg.modulo) || 1),
-        visTexts,
-        allTexts,
-        start,
-        sel,
-        maxS,
+        texts,
+        texts,
+        0,
+        null,
+        maxLen.value,
     );
 });
 
@@ -829,10 +814,10 @@ const slicer = computed(() => ({
  * a11y
  **************************************************************************************************/
 const keyboardNavigableSeries = computed(() => {
-    return [...formattedDataset.value]
+    return [...plottedSeries.value]
         .map((serie) => {
             const lastValidCoordinate = [...serie.coordinates]
-                .filter((point) => isValidUserValue(point.value))
+                .filter((point) => Number.isFinite(point.value))
                 .at(-1);
 
             return {
@@ -845,7 +830,7 @@ const keyboardNavigableSeries = computed(() => {
 });
 
 function onSvgFocus() {
-    activePointIndex.value = null;
+    activeSeriesId.value = null;
     isFocus.value = true;
 }
 
@@ -869,7 +854,7 @@ function clearKeyboardSelection() {
             keyboardNavigableSeries.value[activePointIndex.value];
         currentSerie && onPointLeave(currentSerie, currentSerie);
     }
-    activePointIndex.value = null;
+    activeSeriesId.value = null;
     selectedSeries.value = null;
 }
 
@@ -917,22 +902,14 @@ function onSvgKeydown(event) {
     const serie = keyboardNavigableSeries.value[nextIndex];
     if (!serie) return;
 
-    activePointIndex.value = nextIndex;
+    activeSeriesId.value = serie.id;
     onPointEnter(serie, serie);
 }
 
 const a11yTable = computed(() => {
     return {
         head: dataTable.value.head,
-        body: formattedDataset.value.map((serie) => {
-            return [
-                serie.name,
-                ...serie.coordinates.map((point) => {
-                    if (!isValidUserValue(point.value)) return '-';
-                    return `${point.displayValue} (${point.rank})`;
-                }),
-            ];
-        }),
+        body: tableRows.value,
         caption: FINAL_CONFIG.value.a11y.translations.tableCaption,
         notice: FINAL_CONFIG.value.a11y.translations.tableAvailable,
     };
@@ -1001,13 +978,21 @@ function generateCsv(callback = null) {
         [cfgChart.value.title.subtitle.text],
         [''],
     ];
-    const head = ['', ...displayedTimeLabels.value.map((tl) => tl?.text ?? '')];
+    const head = tableHeaders.value;
     const bodyValue = formattedDataset.value.map((ds) => {
-        return [ds.name, ...ds.coordinates.map((c) => `${c.displayValue}`)];
+        return [
+            ds.name,
+            ...ds.coordinates.map((c) =>
+                Number.isFinite(c.value) ? `${c.displayValue}` : '-',
+            ),
+        ];
     });
 
     const bodyRank = formattedDataset.value.map((ds) => {
-        return [ds.name, ...ds.coordinates.map((c) => `${c.rank}`)];
+        return [
+            ds.name,
+            ...ds.coordinates.map((c) => (c.rank == null ? '-' : `${c.rank}`)),
+        ];
     });
 
     const table = title
@@ -1043,15 +1028,27 @@ const tableComponent = computed(() =>
     }),
 );
 
-const dataTable = computed(() => {
-    const head = [''].concat(displayedTimeLabels.value.map((t) => t.text));
+const tableHeaders = computed(() => [
+    '',
+    ...Array.from(
+        { length: maxLen.value },
+        (_, index) => timeLabels.value[index]?.text ?? String(index),
+    ),
+]);
+const tableRows = computed(() =>
+    formattedDataset.value.map((serie) => [
+        serie.name,
+        ...serie.coordinates.map((point) =>
+            Number.isFinite(point.value)
+                ? `${point.displayValue} (${point.rank})`
+                : '-',
+        ),
+    ]),
+);
 
-    const rows = formattedDataset.value.map((d, i) => {
-        return [
-            d.name,
-            ...d.coordinates.map((c) => `${c.displayValue} (${c.rank})`),
-        ];
-    });
+const dataTable = computed(() => {
+    const head = tableHeaders.value;
+    const rows = tableRows.value;
 
     const config = {
         th: {
@@ -1139,6 +1136,36 @@ async function copyAlt() {
     );
 }
 
+watch(() => props.dataset, validateDataset, { deep: true, immediate: true });
+watch(
+    [
+        () => FINAL_CONFIG.value.responsive,
+        () => cfgChart.value.width,
+        () => cfgChart.value.height,
+    ],
+    prepareChart,
+    { flush: 'post' },
+);
+watch(cfgChart, () => scheduleResize?.(), { flush: 'post' });
+watch(loading, (value) => {
+    if (value) {
+        selectedSeries.value = null;
+        activeSeriesId.value = null;
+    }
+});
+watch(plottedSeries, (series) => {
+    if (
+        selectedSeries.value != null &&
+        !series.some((serie) => serie.id === selectedSeries.value)
+    )
+        selectedSeries.value = null;
+    if (
+        activeSeriesId.value != null &&
+        !series.some((serie) => serie.id === activeSeriesId.value)
+    )
+        activeSeriesId.value = null;
+});
+
 defineExpose({
     getData,
     getImage,
@@ -1188,7 +1215,7 @@ watch(
         </p>
 
         <A11yDataTable
-            v-if="a11yTable.body.length"
+            v-if="FINAL_CONFIG.a11y.includeTable && a11yTable.body.length"
             :uid="uid"
             :head="a11yTable.head"
             :body="a11yTable.body"
@@ -1352,7 +1379,7 @@ watch(
                 </foreignObject>
 
                 <!-- LINES -->
-                <template v-for="serie in formattedDataset">
+                <template v-for="serie in plottedSeries">
                     <path
                         class="transition-opacity"
                         :d="`M${serie.path}`"
@@ -1362,12 +1389,7 @@ watch(
                         stroke-linejoin="round"
                         fill="none"
                         :style="{
-                            opacity:
-                                selectedSeries == null
-                                    ? 1
-                                    : selectedSeries === serie.id
-                                      ? 1
-                                      : 0.1,
+                            opacity: seriesOpacity(serie),
                         }"
                         @mouseenter="selectedSeries = serie.id"
                         @mouseleave="selectedSeries = null"
@@ -1381,12 +1403,7 @@ watch(
                         stroke-linejoin="round"
                         fill="none"
                         :style="{
-                            opacity:
-                                selectedSeries == null
-                                    ? 1
-                                    : selectedSeries === serie.id
-                                      ? 1
-                                      : 0.1,
+                            opacity: seriesOpacity(serie),
                         }"
                         @mouseenter="onPointEnter(serie, serie)"
                         @mouseleave="onPointLeave(serie, serie)"
@@ -1395,12 +1412,12 @@ watch(
                 </template>
 
                 <!-- PLOTS -->
-                <template v-for="serie in formattedDataset">
+                <template v-for="serie in plottedSeries">
                     <!-- RANK LAYOUT -->
                     <template v-if="cfgPlots.labels.displayedValue === 'rank'">
                         <circle
                             class="transition-opacity"
-                            v-for="(point, i) in serie.coordinates"
+                            v-for="point in validPoints(serie)"
                             :cx="point.x"
                             :cy="point.y"
                             :r="cfgPlots.radius"
@@ -1408,22 +1425,9 @@ watch(
                             :stroke="cfgPlots.stroke"
                             :stroke-width="cfgPlots.strokeWidth"
                             :style="{
-                                opacity:
-                                    selectedSeries == null
-                                        ? 1
-                                        : selectedSeries === serie.id
-                                          ? 1
-                                          : 0.1,
+                                opacity: seriesOpacity(serie),
                             }"
-                            @mouseenter="
-                                onPointEnter({ ...point, pointIndex: i }, serie)
-                            "
-                            @mouseleave="
-                                onPointLeave({ ...point, pointIndex: i }, serie)
-                            "
-                            @click="
-                                onPointEnter({ ...point, pointIndex: i }, serie)
-                            "
+                            v-on="pointEvents(point, serie)"
                         />
                     </template>
                     <template
@@ -1434,7 +1438,7 @@ watch(
                     >
                         <text
                             class="transition-opacity"
-                            v-for="label in serie.coordinates"
+                            v-for="label in validPoints(serie)"
                             :x="label.x"
                             :y="label.y + cfgPlots.labels.fontSize / 3"
                             :fill="label.labelColor"
@@ -1443,12 +1447,7 @@ watch(
                             :style="{
                                 userSelect: 'none',
                                 pointerEvents: 'none',
-                                opacity:
-                                    selectedSeries == null
-                                        ? 1
-                                        : selectedSeries === serie.id
-                                          ? 1
-                                          : 0.1,
+                                opacity: seriesOpacity(serie),
                             }"
                         >
                             {{ label.rank }}
@@ -1457,41 +1456,19 @@ watch(
 
                     <!-- VALUE LAYOUT -->
                     <template v-if="cfgPlots.labels.displayedValue === 'value'">
-                        <template v-for="label in serie.coordinates">
+                        <template v-for="label in validPoints(serie)">
                             <rect
-                                v-if="isValidUserValue(label.value)"
+                                v-if="Number.isFinite(label.value)"
                                 class="transition-opacity"
                                 v-bind="getValueRect(label)"
                                 :style="{
-                                    opacity:
-                                        selectedSeries == null
-                                            ? 1
-                                            : selectedSeries === serie.id
-                                              ? 1
-                                              : 0.1,
+                                    opacity: seriesOpacity(serie),
                                 }"
-                                @mouseenter="
-                                    onPointEnter(
-                                        { ...point, pointIndex: i },
-                                        serie,
-                                    )
-                                "
-                                @mouseleave="
-                                    onPointLeave(
-                                        { ...point, pointIndex: i },
-                                        serie,
-                                    )
-                                "
-                                @click="
-                                    onPointEnter(
-                                        { ...point, pointIndex: i },
-                                        serie,
-                                    )
-                                "
+                                v-on="pointEvents(label, serie)"
                             />
                             <text
                                 v-if="
-                                    isValidUserValue(label.value) &&
+                                    Number.isFinite(label.value) &&
                                     cfgPlots.labels.show
                                 "
                                 class="transition-opacity"
@@ -1503,12 +1480,7 @@ watch(
                                 :style="{
                                     userSelect: 'none',
                                     pointerEvents: 'none',
-                                    opacity:
-                                        selectedSeries == null
-                                            ? 1
-                                            : selectedSeries === serie.id
-                                              ? 1
-                                              : 0.1,
+                                    opacity: seriesOpacity(serie),
                                 }"
                             >
                                 {{ label.displayValue }}
@@ -1518,14 +1490,16 @@ watch(
                 </template>
 
                 <!-- SERIES LABELS -->
-                <template v-if="cfgLayout.nameLabels.leftLabels.show">
-                    <g ref="labelsLeft">
+                <template v-for="side in nameLabelSides" :key="side.key">
+                    <g
+                        v-if="cfgLayout.nameLabels[`${side.key}Labels`].show"
+                        :ref="side.setRef"
+                    >
                         <text
                             class="transition-opacity"
-                            v-for="(series, i) in nameLabels.left.filter((el) =>
-                                isValidUserValue(el.value),
-                            )"
-                            :x="drawingArea.left"
+                            v-for="series in nameLabels[side.key]"
+                            :key="series.id"
+                            :x="drawingArea[side.key]"
                             :y="series.y + cfgLayout.nameLabels.fontSize / 3"
                             :fill="
                                 cfgLayout.nameLabels.useSerieColor
@@ -1533,10 +1507,10 @@ watch(
                                     : cfgLayout.nameLabels.color
                             "
                             :font-size="cfgLayout.nameLabels.fontSize"
-                            :font--weight="
+                            :font-weight="
                                 cfgLayout.nameLabels.bold ? 'bold' : 'normal'
                             "
-                            text-anchor="end"
+                            :text-anchor="side.anchor"
                             v-html="
                                 createTSpansFromLineBreaksOnX({
                                     content: series.name,
@@ -1545,72 +1519,16 @@ watch(
                                         ? series.color
                                         : cfgLayout.nameLabels.color,
                                     x:
-                                        drawingArea.left -
-                                        cfgLayout.nameLabels.offsetX,
+                                        drawingArea[side.key] +
+                                        side.sign *
+                                            cfgLayout.nameLabels.offsetX,
                                     y:
                                         series.y +
                                         cfgLayout.nameLabels.fontSize / 3,
                                     translateY: true,
                                 })
                             "
-                            :style="{
-                                opacity:
-                                    selectedSeries == null
-                                        ? 1
-                                        : selectedSeries === series.id
-                                          ? 1
-                                          : 0.1,
-                            }"
-                            @mouseenter="onPointEnter(series, series)"
-                            @mouseleave="onPointLeave(series, series)"
-                            @click="onPointClick(series, series)"
-                        />
-                    </g>
-                </template>
-
-                <template v-if="cfgLayout.nameLabels.rightLabels.show">
-                    <g ref="labelsRight">
-                        <text
-                            class="transition-opacity"
-                            v-for="(series, i) in nameLabels.right.filter(
-                                (el) => isValidUserValue(el.value),
-                            )"
-                            :x="drawingArea.right"
-                            :y="series.y + cfgLayout.nameLabels.fontSize / 3"
-                            :fill="
-                                cfgLayout.nameLabels.useSerieColor
-                                    ? series.color
-                                    : cfgLayout.nameLabels.color
-                            "
-                            :font-size="cfgLayout.nameLabels.fontSize"
-                            :font--weight="
-                                cfgLayout.nameLabels.bold ? 'bold' : 'normal'
-                            "
-                            text-anchor="start"
-                            v-html="
-                                createTSpansFromLineBreaksOnX({
-                                    content: series.name,
-                                    fontSize: cfgLayout.nameLabels.fontSize,
-                                    fill: cfgLayout.nameLabels.useSerieColor
-                                        ? series.color
-                                        : cfgLayout.nameLabels.color,
-                                    x:
-                                        drawingArea.right +
-                                        cfgLayout.nameLabels.offsetX,
-                                    y:
-                                        series.y +
-                                        cfgLayout.nameLabels.fontSize / 3,
-                                    translateY: true,
-                                })
-                            "
-                            :style="{
-                                opacity:
-                                    selectedSeries == null
-                                        ? 1
-                                        : selectedSeries === series.id
-                                          ? 1
-                                          : 0.1,
-                            }"
+                            :style="{ opacity: seriesOpacity(series) }"
                             @mouseenter="onPointEnter(series, series)"
                             @mouseleave="onPointLeave(series, series)"
                             @click="onPointClick(series, series)"

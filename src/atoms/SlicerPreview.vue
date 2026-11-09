@@ -1,4 +1,5 @@
 <script setup>
+import { createNonlinearScale, createScaleProjector } from '../xyScales';
 import {
     computed,
     nextTick,
@@ -30,6 +31,10 @@ import BaseIcon from './BaseIcon.vue';
 import DefGrad from './DefGrad.vue';
 
 const props = defineProps({
+    yScale: { type: String, default: 'linear' },
+    yReverse: { type: Boolean, default: false },
+    symlogConstant: { type: Number, default: 1 },
+    yUseNiceScale: { type: Boolean, default: false },
     uuid: {
         type: String,
         default: '',
@@ -367,8 +372,6 @@ const compactHandleWidth = computed(() => {
     return Math.min(40, Math.max(20, props.handleWidth));
 });
 
-const wrapperWidth = ref(0);
-
 const emitFutureStart = throttle((v) => emit('futureStart', v), 0);
 const emitFutureEnd = throttle((v) => emit('futureEnd', v), 0);
 
@@ -412,10 +415,7 @@ const end = computed({
     },
 });
 
-let _commitTimeout = null;
-
 function commitImmediately() {
-    clearTimeout(_commitTimeout);
     if (!props.immediate) {
         emit('update:start', Number(startValue.value));
         emit('update:end', Number(endValue.value));
@@ -574,10 +574,6 @@ onMounted(() => {
     }
 });
 
-onBeforeUnmount(() => {
-    if (resizeObserver.value) resizeObserver.value.disconnect();
-});
-
 const absLen = computed(() => Math.max(1, props.max - props.min));
 
 function absToMiniStart(i) {
@@ -596,16 +592,6 @@ const endMini = computed(() => absToMiniEnd(endValue.value));
 const maxSeries = computed(() => {
     return Math.max(...props.allMinimaps.map((d) => d.series.length));
 });
-const compactThumbWidth = computed(() => {
-    return hasMinimap.value && props.minimapCompact ? 40 : 0;
-});
-
-const thumbInset = computed(() => compactThumbWidth.value / 2);
-
-const innerMinimapWidth = computed(() => {
-    return Math.max(1, svgMinimap.value.width - thumbInset.value * 2);
-});
-
 const unitWidthX = computed(() => {
     if (props.minimapCompact && !props.useValueRange) {
         return svgMinimap.value.width / Math.max(1, absLen.value - 1);
@@ -659,6 +645,14 @@ const globalRange = computed(() => {
             }
         }
     }
+    if (['log', 'symlog'].includes(props.yScale))
+        return createNonlinearScale(vals, {
+            mode: props.yScale,
+            min: props.minScale,
+            max: props.maxScale,
+            constant: props.symlogConstant,
+            nice: props.yUseNiceScale,
+        });
     if (!vals.length) return { min: 0, max: 1 };
     return { min: Math.min(...vals), max: Math.max(...vals) };
 });
@@ -680,6 +674,17 @@ const hasFixedScale = computed(() => {
 });
 
 const effectiveRange = computed(() => {
+    if (['log', 'symlog'].includes(props.yScale))
+        return createNonlinearScale(
+            [globalRange.value.min, globalRange.value.max],
+            {
+                mode: props.yScale,
+                constant: props.symlogConstant,
+                min: props.minScale,
+                max: props.maxScale,
+                nice: props.yUseNiceScale,
+            },
+        );
     const { min: computedMin, max: computedMax } = globalRange.value;
 
     const minOverride = parsedMinScale.value;
@@ -726,9 +731,26 @@ const mapY = (val) => {
     return mapper(val);
 };
 
-const minimapZero = computed(() => mapY(0));
+const minimapZero = computed(() =>
+    mapY(props.yScale === 'log' ? allMin.value : 0),
+);
 
 function makeSmartMapY(min, max, H, lockToRange = false) {
+    if (['log', 'symlog'].includes(props.yScale)) {
+        const project = createScaleProjector(min, max, {
+            mode: props.yScale,
+            constant: props.symlogConstant,
+        });
+        return (value) => {
+            const ratio = project(value);
+            return H * (props.yReverse ? ratio : 1 - ratio);
+        };
+    }
+    const mapper = makeLinearMapY(min, max, H, lockToRange);
+    return props.yReverse ? (value) => H - mapper(value) : mapper;
+}
+
+function makeLinearMapY(min, max, H, lockToRange = false) {
     const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
     const EPS = 1e-9;
 
@@ -787,28 +809,34 @@ function makeMiniChart(ds, smooth = false, useStepper = false) {
     const s = Math.min(Math.max(0, startMini.value), Math.max(0, len - 1));
     const e = Math.min(len, Math.max(s + 1, endMini.value));
 
+    const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+
+    // Bar baseline
+    // . smart mode: keep baseline at 0
+    // . fixed scale: baseline must be inside [allMin, allMax] => clamp 0 into the fixed range
+    const baseValue =
+        props.yScale === 'log'
+            ? allMin.value
+            : hasFixedScale.value
+              ? clamp(0, allMin.value, allMax.value)
+              : 0;
+
+    const y0 = mapYSeries(baseValue);
+
     const points = ds.map((dp, i) => {
         const val = getMiniValue(dp);
-        const valid = Number.isFinite(val);
+        const valid =
+            Number.isFinite(val) && (props.yScale !== 'log' || val > 0);
 
         const x = getMiniX(dp, i);
-
-        const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
-
-        // Bar baseline
-        // . smart mode: keep baseline at 0
-        // . fixed scale: baseline must be inside [allMin, allMax] => clamp 0 into the fixed range
-        const baseValue = hasFixedScale.value
-            ? clamp(0, allMin.value, allMax.value)
-            : 0;
-
-        const y0 = mapYSeries(baseValue);
 
         return {
             x,
             y: valid ? mapYSeries(val) : NaN,
             v: val,
             value: valid ? val : null,
+            logOmitted:
+                props.yScale === 'log' && Number.isFinite(val) && val <= 0,
             y0,
             i,
             xValue: getMiniXValue(dp, i),
@@ -841,39 +869,26 @@ function makeMiniChart(ds, smooth = false, useStepper = false) {
           })
         : points.slice(s, e);
 
-    const fullSet =
-        points.length >= 2
-            ? useStepper
-                ? createStepperPath(
-                      props.cutNullValues
-                          ? points
-                          : points.filter((p) => p.value != null),
-                  )
-                : props.smoothMinimap || smooth
-                  ? props.cutNullValues
-                      ? createSmoothPathWithCuts(points)
-                      : createSmoothPath(points.filter((p) => p.value != null))
-                  : props.cutNullValues
-                    ? createStraightPathWithCuts(points)
-                    : createStraightPath(points.filter((p) => p.value != null))
-            : '';
+    const pathPoints = points.filter((point) => !point.logOmitted);
+    const pathSliced = sliced.filter((point) => !point.logOmitted);
+    function buildPath(points) {
+        if (points.length < 2) return '';
+        const drawable = props.cutNullValues
+            ? points
+            : points.filter((p) => p.value != null);
+        if (useStepper) return createStepperPath(drawable);
+        if (props.smoothMinimap || smooth) {
+            return props.cutNullValues
+                ? createSmoothPathWithCuts(drawable)
+                : createSmoothPath(drawable);
+        }
+        return props.cutNullValues
+            ? createStraightPathWithCuts(drawable)
+            : createStraightPath(drawable);
+    }
 
-    const selectionSet =
-        sliced.length >= 2
-            ? useStepper
-                ? createStepperPath(
-                      props.cutNullValues
-                          ? sliced
-                          : sliced.filter((p) => p.value != null),
-                  )
-                : props.smoothMinimap || smooth
-                  ? props.cutNullValues
-                      ? createSmoothPathWithCuts(sliced)
-                      : createSmoothPath(sliced.filter((p) => p.value != null))
-                  : props.cutNullValues
-                    ? createStraightPathWithCuts(sliced)
-                    : createStraightPath(sliced.filter((p) => p.value != null))
-            : '';
+    const fullSet = buildPath(pathPoints);
+    const selectionSet = buildPath(pathSliced);
 
     return {
         fullSet,
@@ -1204,33 +1219,10 @@ const isZoom = computed(() => {
 });
 
 const isDragging = ref(false);
-let initialMouseX = ref(null);
-
-const selectionWidth = computed(() => {
-    return (
-        ((wrapperWidth.value - 48) / (props.max - props.min)) *
-        currentRange.value
-    );
-});
-
 const TRACK_PADDING = 48;
 
-const usablePx = computed(() => {
-    return Math.max(
-        1,
-        wrapperWidth.value - TRACK_PADDING - selectionWidth.value,
-    );
-});
-
-const usableSteps = computed(() => {
-    return Math.max(1, props.max - props.min - currentRange.value);
-});
-
-const indicesPerPixel = computed(() => usableSteps.value / usablePx.value);
 const dragStartX = ref(0);
 const dragStartStart = ref(0);
-const dragStartEnd = ref(0);
-const ippAtStart = ref(0);
 
 let activeMoveEvent = null;
 let activeEndEvent = null;
@@ -1284,7 +1276,6 @@ const startDragging = async (event) => {
     isDragging.value = true;
 
     const x = isTouch ? (touch0 ? touch0.clientX : 0) : event.clientX;
-    initialMouseX.value = x;
     dragStartX.value = x;
 
     if (
@@ -1326,13 +1317,11 @@ const startDragging = async (event) => {
     }
 
     dragStartStart.value = startValue.value;
-    dragStartEnd.value = endValue.value;
-    ippAtStart.value = indicesPerPixel.value;
 
     activeMoveEvent = isTouch ? 'touchmove' : 'mousemove';
     activeEndEvent = isTouch ? 'touchend' : 'mouseup';
     activeMoveHandler = isTouch ? handleTouchDragging : handleDragging;
-    activeEndHandler = isTouch ? stopTouchDragging : stopDragging;
+    activeEndHandler = endDragging;
 
     window.addEventListener(activeMoveEvent, activeMoveHandler, {
         passive: false,
@@ -1382,17 +1371,7 @@ function updateDragging(currentX) {
     emitFutureEnd(newEnd);
 }
 
-function stopDragging() {
-    endDragging();
-}
-
-function stopTouchDragging() {
-    endDragging();
-}
-
-function endDragging() {
-    isDragging.value = false;
-
+function removeDragListeners() {
     if (activeMoveEvent && activeMoveHandler) {
         window.removeEventListener(activeMoveEvent, activeMoveHandler);
     }
@@ -1402,6 +1381,12 @@ function endDragging() {
 
     activeMoveEvent = activeEndEvent = null;
     activeMoveHandler = activeEndHandler = null;
+}
+
+function endDragging() {
+    isDragging.value = false;
+
+    removeDragListeners();
 
     commitImmediately();
 }
@@ -1426,11 +1411,6 @@ function setTooltipRight() {
     }
 }
 
-onUpdated(() => {
-    setTooltipLeft();
-    setTooltipRight();
-});
-
 const leftLabelZIndex = ref(0);
 
 function setLeftLabelZIndex(handle) {
@@ -1440,7 +1420,6 @@ function setLeftLabelZIndex(handle) {
 const tooltipsCollide = ref(false);
 const mergeTooltip = ref({
     width: 0,
-    left: 0,
 });
 
 watch([startValue, endValue], async () => {
@@ -1448,21 +1427,15 @@ watch([startValue, endValue], async () => {
 
     if (!tooltipLeft.value || !tooltipRight.value) {
         tooltipsCollide.value = false;
-        mergeTooltip.value = { width: 0, left: 0 };
+        mergeTooltip.value = { width: 0 };
         return;
     }
 
     const leftRect = tooltipLeft.value.getBoundingClientRect();
     const rightRect = tooltipRight.value.getBoundingClientRect();
     tooltipsCollide.value = leftRect.x + leftRect.width > rightRect.x;
-    const leftCenter = leftRect.x + leftRect.width / 2;
-    const rightCenter = rightRect.x + rightRect.width / 2;
-    const totalWidth = leftRect.width + rightRect.width;
-    const centerX = (leftCenter + rightCenter) / 2;
-
     mergeTooltip.value = {
-        width: totalWidth,
-        left: centerX - totalWidth / 2,
+        width: leftRect.width + rightRect.width,
     };
 });
 
@@ -1556,17 +1529,7 @@ const labels = computed(() => {
 
 onBeforeUnmount(() => {
     if (resizeObserver.value) resizeObserver.value.disconnect();
-
-    if (activeMoveEvent && activeMoveHandler) {
-        window.removeEventListener(activeMoveEvent, activeMoveHandler);
-    }
-    if (activeEndEvent && activeEndHandler) {
-        window.removeEventListener(activeEndEvent, activeEndHandler);
-    }
-    activeMoveEvent = activeEndEvent = null;
-    activeMoveHandler = activeEndHandler = null;
-
-    clearTimeout(_commitTimeout);
+    removeDragListeners();
 });
 
 const selectionIndicator = computed(() => {
@@ -1666,30 +1629,23 @@ const actionsRight = {
     canMinus: canEndMinus,
 };
 
+function keyDirection(key) {
+    if (['ArrowLeft', 'ArrowDown', '-', 'Subtract'].includes(key)) return -1;
+    if (['ArrowRight', 'ArrowUp', '+', 'Add'].includes(key)) return 1;
+    return 0;
+}
+
 function onSelectionKeydown(event) {
     if (!event) return;
     if (isEditableTarget(event.target)) return;
 
-    const key = event.key;
-
-    const isLeft =
-        key === 'ArrowLeft' ||
-        key === 'ArrowDown' ||
-        key === '-' ||
-        key === 'Subtract';
-
-    const isRight =
-        key === 'ArrowRight' ||
-        key === 'ArrowUp' ||
-        key === '+' ||
-        key === 'Add';
-
-    if (!isLeft && !isRight) return;
+    const direction = keyDirection(event.key);
+    if (!direction) return;
 
     event.preventDefault();
     event.stopPropagation();
 
-    if (isRight) {
+    if (direction > 0) {
         actionsLeft.plus();
         actionsRight.plus();
     } else {
@@ -1727,29 +1683,17 @@ function onHandleKeydown(side, event) {
     if (!event) return;
     if (isEditableTarget(event.target)) return;
 
-    const key = event.key;
-
-    const isMinus =
-        key === 'ArrowLeft' ||
-        key === 'ArrowDown' ||
-        key === '-' ||
-        key === 'Subtract';
-    const isPlus =
-        key === 'ArrowRight' ||
-        key === 'ArrowUp' ||
-        key === '+' ||
-        key === 'Add';
-
-    if (!isMinus && !isPlus) return;
+    const direction = keyDirection(event.key);
+    if (!direction) return;
 
     event.preventDefault();
     event.stopPropagation();
 
     if (side === 'start') {
-        if (isPlus) actionsLeft.plus();
+        if (direction > 0) actionsLeft.plus();
         else actionsLeft.minus();
     } else {
-        if (isPlus) actionsRight.plus();
+        if (direction > 0) actionsRight.plus();
         else actionsRight.minus();
     }
 
@@ -1962,61 +1906,10 @@ watch(useMini, (enabled) => {
     }
 });
 
-const leftBoundaryMiniIndex = computed(() => startMini.value);
-const rightBoundaryMiniIndex = computed(() =>
-    Math.max(startMini.value, endMini.value - 1),
-);
-
-const compactOverlayBoundaryDots = computed(() => {
-    if (!hasMinimap.value || !props.minimapCompact || !props.allMinimaps.length)
-        return [];
-
-    const leftIndex = leftBoundaryMiniIndex.value;
-    const rightIndex = rightBoundaryMiniIndex.value;
-
-    return allMinimapLines.value.flatMap((dp) => {
-        if (!dp?.isVisible) return [];
-        if (!['line', 'plot'].includes(dp.type) || !dp.type) return [];
-
-        const dots = [];
-
-        const leftPoint = dp.points?.find(
-            (p) => p.i === leftIndex && p.value !== null,
-        );
-        const rightPoint = dp.points?.find(
-            (p) => p.i === rightIndex && p.value !== null,
-        );
-
-        if (leftPoint) {
-            dots.push({
-                key: `${dp.key}-left-${leftPoint.i}`,
-                x: leftPoint.x,
-                y: leftPoint.y,
-                color: dp.color,
-            });
-        }
-
-        if (rightPoint && rightIndex !== leftIndex) {
-            dots.push({
-                key: `${dp.key}-right-${rightPoint.i}`,
-                x: rightPoint.x,
-                y: rightPoint.y,
-                color: dp.color,
-            });
-        }
-
-        return dots;
-    });
-});
-
-const compactHandleSize = computed(() => {
-    return Math.min(40, Math.max(20, props.handleWidth));
-});
-
 const COMPACT_HANDLE_TOUCH_TARGET_SIZE = 48;
 
 const compactHandleHitWidth = computed(() => {
-    return Math.max(COMPACT_HANDLE_TOUCH_TARGET_SIZE, compactHandleSize.value);
+    return Math.max(COMPACT_HANDLE_TOUCH_TARGET_SIZE, compactHandleWidth.value);
 });
 
 const compactHandleHitHeight = computed(() => {
@@ -2039,6 +1932,21 @@ const compactHandleRightBoundaryX = computed(() => {
         selectionRectCoordinates.value.x + selectionRectCoordinates.value.width
     );
 });
+
+const compactHandles = computed(() => [
+    {
+        side: 'start',
+        name: 'left',
+        boundaryX: compactHandleLeftBoundaryX.value,
+        a11y: handleLeftA11y.value,
+    },
+    {
+        side: 'end',
+        name: 'right',
+        boundaryX: compactHandleRightBoundaryX.value,
+        a11y: handleRightA11y.value,
+    },
+]);
 
 defineExpose({
     setStartValue,
@@ -2184,15 +2092,12 @@ defineExpose({
                                 >
                                     <template v-for="(r, j) in dp.points">
                                         <rect
+                                            data-cy="minimap-bar"
                                             v-if="dp && !isNaN(r.y)"
                                             :x="getBarX(r.x, i, j)"
-                                            :y="r.v >= 0 ? r.y : r.y0"
+                                            :y="Math.min(r.y, r.y0)"
                                             :width="getBarWidth(i, j)"
-                                            :height="
-                                                r.v >= 0
-                                                    ? r.y0 - r.y
-                                                    : r.y - r.y0
-                                            "
+                                            :height="Math.abs(r.y0 - r.y)"
                                             :fill="dp.color"
                                             :style="{ opacity: 0.6 }"
                                         />
@@ -2365,15 +2270,12 @@ defineExpose({
                                 >
                                     <template v-for="(r, j) in dp.points">
                                         <rect
+                                            data-cy="minimap-bar"
                                             v-if="dp && !isNaN(r.y)"
                                             :x="getBarX(r.x, i, j)"
-                                            :y="r.v >= 0 ? r.y : r.y0"
+                                            :y="Math.min(r.y, r.y0)"
                                             :width="getBarWidth(i, j)"
-                                            :height="
-                                                r.v >= 0
-                                                    ? r.y0 - r.y
-                                                    : r.y - r.y0
-                                            "
+                                            :height="Math.abs(r.y0 - r.y)"
                                             :fill="dp.color"
                                             :style="{
                                                 opacity:
@@ -2482,32 +2384,41 @@ defineExpose({
                                 between them always remains available for selection dragging.
                             -->
                             <g
+                                v-for="handle in compactHandles"
+                                :key="handle.side"
                                 class="vue-ui-zoom-compact-minimap-handle"
-                                data-cy="slicer-compact-handle-left"
-                                :transform="`translate(${compactHandleLeftBoundaryX}, 0)`"
-                                v-bind="handleLeftA11y"
-                                @keydown="onHandleKeydown('start', $event)"
+                                :data-cy="`slicer-compact-handle-${handle.name}`"
+                                :transform="`translate(${handle.boundaryX}, 0)`"
+                                v-bind="handle.a11y"
+                                @keydown="onHandleKeydown(handle.side, $event)"
                                 @pointerdown.stop.prevent="
-                                    beginHandleDrag('start', $event)
+                                    beginHandleDrag(handle.side, $event)
                                 "
                                 @pointermove.stop.prevent="
-                                    onHandlePointerMove('start', $event)
+                                    onHandlePointerMove(handle.side, $event)
                                 "
                                 @pointerup.stop.prevent="
-                                    stopHandleDrag('start', $event)
+                                    stopHandleDrag(handle.side, $event)
                                 "
                                 @pointercancel.stop.prevent="
-                                    stopHandleDrag('start', $event)
+                                    stopHandleDrag(handle.side, $event)
                                 "
                                 @lostpointercapture="
-                                    handleLostPointerCapture('start', $event)
+                                    handleLostPointerCapture(
+                                        handle.side,
+                                        $event,
+                                    )
                                 "
                                 @click.stop.prevent
                             >
                                 <rect
                                     class="vue-ui-zoom-compact-minimap-handle-hit"
-                                    data-cy="slicer-compact-handle-left-hit"
-                                    :x="-compactHandleHitWidth"
+                                    :data-cy="`slicer-compact-handle-${handle.name}-hit`"
+                                    :x="
+                                        handle.side === 'start'
+                                            ? -compactHandleHitWidth
+                                            : 0
+                                    "
                                     :y="compactHandleHitY"
                                     :width="compactHandleHitWidth"
                                     :height="compactHandleHitHeight"
@@ -2516,9 +2427,13 @@ defineExpose({
 
                                 <rect
                                     class="vue-ui-zoom-compact-minimap-handle-visual"
-                                    :x="-compactHandleSize"
+                                    :x="
+                                        handle.side === 'start'
+                                            ? -compactHandleWidth
+                                            : 0
+                                    "
                                     :y="0"
-                                    :width="compactHandleSize"
+                                    :width="compactHandleWidth"
                                     :height="svgMinimap.height"
                                     :fill="handleFill || borderColor"
                                     :stroke="handleBorderColor || textColor"
@@ -2529,102 +2444,15 @@ defineExpose({
                                 <g
                                     v-if="handleType && handleType !== 'empty'"
                                     class="compact-handle-icon"
-                                    :transform="`translate(${-compactHandleSize}, 0)`"
+                                    :transform="
+                                        handle.side === 'start'
+                                            ? `translate(${-compactHandleWidth}, 0)`
+                                            : undefined
+                                    "
                                     style="pointer-events: none"
                                 >
                                     <svg
-                                        :width="compactHandleSize"
-                                        :height="svgMinimap.height"
-                                        viewBox="0 0 20 20"
-                                        preserveAspectRatio="xMidYMid meet"
-                                    >
-                                        <path
-                                            v-if="handleType === 'arrow'"
-                                            d="M 7 7 L 3 10 L 7 13 L 7 7 M 13 7 L 17 10 L 13 13 L 13 7"
-                                            :fill="borderColor"
-                                            :stroke="
-                                                handleIconColor || textColor
-                                            "
-                                            :stroke-width="0.618"
-                                            stroke-linejoin="round"
-                                            stroke-linecap="round"
-                                        />
-
-                                        <path
-                                            v-else-if="handleType === 'chevron'"
-                                            d="M 6 7 L 4 10 L 6 13 M 14 7 L 16 10 L 14 13"
-                                            fill="none"
-                                            :stroke="
-                                                handleIconColor || textColor
-                                            "
-                                            :stroke-width="0.618"
-                                            stroke-linejoin="round"
-                                            stroke-linecap="round"
-                                        />
-
-                                        <path
-                                            v-else-if="handleType === 'grab'"
-                                            d="M 8 5 A 1 1 0 0 0 8 7 A 1 1 0 0 0 8 5 M 8 9 A 1 1 0 0 0 8 11 A 1 1 0 0 0 8 9 M 8 13 A 1 1 0 0 0 8 15 A 1 1 0 0 0 8 13 M 12 5 A 1 1 0 0 0 12 7 A 1 1 0 0 0 12 5 M 12 9 A 1 1 0 0 0 12 11 A 1 1 0 0 0 12 9 M 12 13 A 1 1 0 0 0 12 15 A 1 1 0 0 0 12 13"
-                                            :fill="handleIconColor || textColor"
-                                            stroke="none"
-                                            opacity="0.6"
-                                        />
-                                    </svg>
-                                </g>
-                            </g>
-
-                            <g
-                                class="vue-ui-zoom-compact-minimap-handle"
-                                data-cy="slicer-compact-handle-right"
-                                :transform="`translate(${compactHandleRightBoundaryX}, 0)`"
-                                v-bind="handleRightA11y"
-                                @keydown="onHandleKeydown('end', $event)"
-                                @pointerdown.stop.prevent="
-                                    beginHandleDrag('end', $event)
-                                "
-                                @pointermove.stop.prevent="
-                                    onHandlePointerMove('end', $event)
-                                "
-                                @pointerup.stop.prevent="
-                                    stopHandleDrag('end', $event)
-                                "
-                                @pointercancel.stop.prevent="
-                                    stopHandleDrag('end', $event)
-                                "
-                                @lostpointercapture="
-                                    handleLostPointerCapture('end', $event)
-                                "
-                                @click.stop.prevent
-                            >
-                                <rect
-                                    class="vue-ui-zoom-compact-minimap-handle-hit"
-                                    data-cy="slicer-compact-handle-right-hit"
-                                    :x="0"
-                                    :y="compactHandleHitY"
-                                    :width="compactHandleHitWidth"
-                                    :height="compactHandleHitHeight"
-                                    fill="transparent"
-                                />
-
-                                <rect
-                                    class="vue-ui-zoom-compact-minimap-handle-visual"
-                                    :x="0"
-                                    :y="0"
-                                    :width="compactHandleSize"
-                                    :height="svgMinimap.height"
-                                    :fill="handleFill || borderColor"
-                                    :stroke="handleBorderColor || textColor"
-                                    :stroke-width="handleBorderWidth"
-                                    :rx="3"
-                                />
-
-                                <g
-                                    v-if="handleType && handleType !== 'empty'"
-                                    class="compact-handle-icon"
-                                    style="pointer-events: none"
-                                >
-                                    <svg
-                                        :width="compactHandleSize"
+                                        :width="compactHandleWidth"
                                         :height="svgMinimap.height"
                                         viewBox="0 0 20 20"
                                         preserveAspectRatio="xMidYMid meet"

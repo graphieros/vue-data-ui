@@ -59,7 +59,7 @@ function createCases(env) {
                         expect(elements).not.toHaveLength(0);
                         expect(elements.length).toBeGreaterThan(0);
                         expect(elements.some(visible)).toBe(true);
-                        expect(elements).toHaveLength(20);
+                        expect(elements).toHaveLength(22);
                     });
                 }
                 {
@@ -67,7 +67,10 @@ function createCases(env) {
                     {
                         const previous = read;
                         read = () => {
-                            const element = previous().at(0);
+                            const index = mounted.wrapper.vm
+                                .getData()
+                                .findIndex((rect) => rect.name === 'S1');
+                            const element = previous().at(index);
                             return element ? [element] : [];
                         };
                     }
@@ -109,7 +112,7 @@ function createCases(env) {
                         expect(elements).not.toHaveLength(0);
                         expect(elements.length).toBeGreaterThan(0);
                         expect(elements.some(visible)).toBe(true);
-                        expect(elements).toHaveLength(20);
+                        expect(elements).toHaveLength(22);
                     });
                 }
             }

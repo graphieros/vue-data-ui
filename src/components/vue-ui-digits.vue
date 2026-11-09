@@ -36,46 +36,58 @@ useHints({
     rules: [COMMON_RULES.noHint],
 });
 
-const digits = computed(() => {
-    const d = (props.dataset || 0).toString().split('');
-    const digits = [];
-    const init = {
-        x: 10,
-        y: 10,
-    };
-    let digitWidth = 0;
-    for (let i = 0; i < d.length; i += 1) {
-        const digit = d[i];
-        digits.push({
-            x: init.x + digitWidth,
-            y: init.y,
-            quanta: digit,
-        });
-        if (digit == '.') {
-            digitWidth += 2;
-        } else {
-            digitWidth += 44;
-        }
+const displayValue = computed(() => {
+    const value = Number.isFinite(props.dataset) ? props.dataset : 0;
+    const text = String(value);
+
+    if (!text.includes('e')) {
+        return text;
     }
-    return digits;
+
+    const [coefficient, exponent] = text.split('e');
+    const sign = value < 0 ? '-' : '';
+    const [integer, fraction = ''] = coefficient.replace('-', '').split('.');
+    const digits = integer + fraction;
+    const decimalIndex = integer.length + Number(exponent);
+
+    if (decimalIndex <= 0) {
+        return `${sign}0.${'0'.repeat(-decimalIndex)}${digits}`;
+    }
+
+    if (decimalIndex >= digits.length) {
+        return sign + digits.padEnd(decimalIndex, '0');
+    }
+
+    return `${sign}${digits.slice(0, decimalIndex)}.${digits.slice(decimalIndex)}`;
 });
 
-const maxY = computed(() => {
-    return Math.max(...digits.value.map((d) => d.x)) + 36;
+const digits = computed(() => {
+    let x = 10;
+    return [...displayValue.value].map((quanta) => {
+        const digit = { x, y: 10, quanta };
+        x += quanta === '.' ? 2 : 44;
+        return digit;
+    });
 });
+
+const viewBoxWidth = computed(() => digits.value.at(-1).x + 36);
 
 const uid = createUid();
 </script>
 
 <template>
     <div class="sr-only" :id="`digit-${uid}`">
-        {{ dataset }}
+        {{ displayValue }}
     </div>
     <svg
         class="vue-data-ui-component vue-ui-digits"
         :xmlns="XMLNS"
-        :viewBox="`0 0 ${maxY} 80`"
-        :style="`background:${FINAL_CONFIG.backgroundColor};${FINAL_CONFIG.height ? `height:${FINAL_CONFIG.height};` : ''}${FINAL_CONFIG.width ? `width:${FINAL_CONFIG.width}` : ''}`"
+        :viewBox="`0 0 ${viewBoxWidth} 80`"
+        :style="{
+            background: FINAL_CONFIG.backgroundColor,
+            height: FINAL_CONFIG.height || undefined,
+            width: FINAL_CONFIG.width || undefined,
+        }"
         :aria-describedby="`digit-${uid}`"
     >
         <PackageVersion />

@@ -1,10 +1,6 @@
+import { createNonlinearScale, createScaleProjector } from '../../xyScales.js';
 import {
     calculateNiceScale,
-    createStraightPath,
-    createSmoothPath,
-    dataLabel,
-    escapeXml,
-    escapeXmlAttr,
     palette,
     treeShake,
     themePalettes,
@@ -198,7 +194,19 @@ export function createVueUiXyState({
     const minValue = Math.min(0, ...finiteValues);
     const maxValue = Math.max(1, ...finiteValues);
 
-    const scale = calculateNiceScale(minValue, maxValue, 6);
+    const yAxis = finalConfig.chart.grid.labels.yAxis;
+    const logarithmic = yAxis.scale === 'log';
+    const nonlinear = logarithmic || yAxis.scale === 'symlog';
+
+    const scale = nonlinear
+        ? createNonlinearScale(values, {
+              mode: yAxis.scale,
+              constant: yAxis.symlogConstant,
+              min: yAxis.scaleMin,
+              max: yAxis.scaleMax,
+              nice: yAxis.useNiceScale,
+          })
+        : calculateNiceScale(minValue, maxValue, 6);
 
     const isContinuous = dataset.some((serie) =>
         Array.isArray(serie.series)
@@ -243,10 +251,20 @@ export function createVueUiXyState({
         return getIndexedX(index);
     };
 
+    const projectY = nonlinear
+        ? createScaleProjector(scale.min, scale.max, {
+              mode: yAxis.scale,
+              constant: yAxis.symlogConstant,
+          })
+        : null;
     const getY = (value) => {
-        const ratio =
-            (Number(value) - scale.min) / (scale.max - scale.min || 1);
-        return drawingArea.bottom - ratio * drawingArea.height;
+        const ratio = projectY
+            ? projectY(Number(value))
+            : (Number(value) - scale.min) / (scale.max - scale.min || 1);
+        return (
+            drawingArea.bottom -
+            (yAxis.reverse ? 1 - ratio : ratio) * drawingArea.height
+        );
     };
 
     const customPalette = Array.isArray(finalConfig.customPalette)
@@ -273,10 +291,13 @@ export function createVueUiXyState({
             return {
                 x,
                 y:
-                    value === null || !Number.isFinite(Number(value))
+                    value === null ||
+                    !Number.isFinite(Number(value)) ||
+                    (logarithmic && !(value > 0))
                         ? null
                         : getY(value),
                 value,
+                logOmitted: logarithmic && Number.isFinite(value) && value <= 0,
                 index,
                 rawX: isCoordinatePoint(point) ? Number(point.x) : null,
                 label: point?.name ?? point?.x ?? String(index),

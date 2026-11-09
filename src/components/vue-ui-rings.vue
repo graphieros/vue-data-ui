@@ -20,14 +20,11 @@ import {
     onMounted,
     ref,
     shallowRef,
-    toRefs,
     useSlots,
     watch,
 } from 'vue';
 import {
-    stringifyChartConfig as stringifyStructuralConfig,
     applyDataLabel,
-    checkNaN,
     convertColorToHex,
     convertCustomPalette,
     createCsvContent,
@@ -36,30 +33,22 @@ import {
     dataLabel,
     downloadCsv,
     error,
-    functionReturnsString,
     getMissingDatasetAttributes,
     isFunction,
-    objectIsEmpty,
     palette,
-    sanitizeArray,
     setOpacity,
     shiftHue,
-    themePalettes,
     treeShake,
     XMLNS,
 } from '../lib';
 import { buildValuePercentageLabel } from '../labelUtils';
-import { throttle } from '../canvas-lib';
 import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
+import { resolveChartConfigWithPalette } from '../resolveChartConfig';
 import { usePrinter } from '../usePrinter';
-import { useLoading } from '../useLoading';
-import { useNestedProp } from '../useNestedProp';
 import { useResponsive } from '../useResponsive';
-import { useThemeCheck } from '../useThemeCheck';
 import { useChartExport } from '../useChartExport';
 import { useTransitions } from '../useTransitions.js';
-import { useUserOptionState } from '../useUserOptionState';
 import { useChartAccessibility } from '../useChartAccessibility';
 import Shape from '../atoms/Shape.vue';
 import Title from '../atoms/Title.vue'; // Must be ready in responsive mode
@@ -88,7 +77,6 @@ const BaseDraggableDialog = defineAsyncComponent(
 );
 
 const { vue_ui_rings: DEFAULT_CONFIG } = useConfig();
-const { isThemeValid, warnInvalidTheme } = useThemeCheck();
 const slots = useSlots();
 
 const props = defineProps({
@@ -106,11 +94,21 @@ const props = defineProps({
     },
 });
 
-const isLoaded = ref(false);
-
-const isDataset = computed(() => {
-    return !!props.dataset && props.dataset.length;
-});
+function isValidDataset(dataset) {
+    return (
+        Array.isArray(dataset) &&
+        dataset.length > 0 &&
+        Array.from(
+            dataset,
+            (serie) =>
+                serie &&
+                Object.keys(serie).includes('name') &&
+                Array.isArray(serie.values) &&
+                serie.values.length > 0,
+        ).every(Boolean)
+    );
+}
+const isDataset = computed(() => isValidDataset(props.dataset));
 
 const uid = ref(createUid());
 const isTooltip = ref(false);
@@ -122,9 +120,6 @@ const chartTitle = ref(null);
 const chartLegend = ref(null);
 const source = ref(null);
 const noTitle = ref(null);
-const titleStep = ref(0);
-const tableStep = ref(0);
-const legendStep = ref(0);
 const resizing = ref(false);
 const readyTeleport = ref(false);
 const tableUnit = ref(null);
@@ -135,7 +130,58 @@ const tooltipA11yPosition = ref({ x: 0, y: 0 }); // a11y
 const tooltipTriggerMode = ref('pointer'); // a11y
 const isFocus = ref(false); // a11y
 
-const FINAL_CONFIG = ref(prepareConfig());
+const preparedConfig = ref(prepareConfig());
+
+watch(
+    () => props.config,
+    () => {
+        preparedConfig.value = prepareConfig();
+    },
+    { deep: true },
+);
+
+const loading = computed(() => !!props.config.loading || !isDataset.value);
+
+const FINAL_CONFIG = computed(() =>
+    loading.value
+        ? treeShake({
+              defaultConfig: preparedConfig.value,
+              userConfig: skeletonConfig.value,
+          })
+        : preparedConfig.value,
+);
+
+const skeletonConfig = computed(() => {
+    return treeShake({
+        defaultConfig: {
+            userOptions: { show: false },
+            table: { show: false },
+            style: {
+                chart: {
+                    backgroundColor: '#99999930',
+                    layout: {
+                        rings: {
+                            stroke: '#6A6A6A',
+                            gradient: {
+                                underlayerColor: '#FFFFFF',
+                            },
+                        },
+                        labels: {
+                            dataLabels: {
+                                show: false,
+                            },
+                        },
+                    },
+                    legend: {
+                        backgroundColor: 'transparent',
+                    },
+                },
+            },
+        },
+        userConfig: preparedConfig.value.skeletonConfig ?? {},
+    });
+});
+
 const cfgUserOptions = computed(() => FINAL_CONFIG.value.userOptions);
 const cfgRings = computed(() => FINAL_CONFIG.value.style.chart.layout.rings);
 const cfgLabels = computed(() => FINAL_CONFIG.value.style.chart.layout.labels);
@@ -173,150 +219,53 @@ const isCursorPointer = computed(
     () => FINAL_CONFIG.value.userOptions.useCursorPointer,
 );
 
-const skeletonConfig = computed(() => {
-    return treeShake({
-        defaultConfig: {
-            userOptions: { show: false },
-            table: { show: false },
-            style: {
-                chart: {
-                    backgroundColor: '#99999930',
-                    layout: {
-                        rings: {
-                            stroke: '#6A6A6A',
-                            gradient: {
-                                underlayerColor: '#FFFFFF',
-                            },
-                        },
-                        labels: {
-                            dataLabels: {
-                                show: false,
-                            },
-                        },
-                    },
-                    legend: {
-                        backgroundColor: 'transparent',
-                    },
-                },
-            },
-        },
-        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {},
-    });
-});
+const FINAL_DATASET = computed(() =>
+    loading.value
+        ? isValidDataset(props.config.skeletonDataset)
+            ? props.config.skeletonDataset
+            : [
+                  { name: '_', values: [13], color: '#808080' },
+                  { name: '_', values: [8], color: '#969696' },
+                  { name: '_', values: [5], color: '#ADADAD' },
+                  { name: '_', values: [3], color: '#C4C4C4' },
+                  { name: '_', values: [2], color: '#DBDBDB' },
+              ]
+        : props.dataset,
+);
 
-const { loading, FINAL_DATASET, manualLoading } = useLoading({
-    ...toRefs(props),
-    FINAL_CONFIG,
-    prepareConfig,
-    skeletonDataset: props.config?.skeletonDataset ?? [
-        { name: '_', values: [13], color: '#808080' },
-        { name: '_', values: [8], color: '#969696' },
-        { name: '_', values: [5], color: '#ADADAD' },
-        { name: '_', values: [3], color: '#C4C4C4' },
-        { name: '_', values: [2], color: '#DBDBDB' },
-    ],
-    skeletonConfig: treeShake({
-        defaultConfig: FINAL_CONFIG.value,
-        userConfig: skeletonConfig.value,
-    }),
-});
+const userOptionsVisible = ref(
+    !FINAL_CONFIG.value.userOptions.showOnChartHover,
+);
 
-const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } =
-    useUserOptionState({ config: FINAL_CONFIG.value });
-const { svgRef } = useChartAccessibility({
-    config: cfgChart.value.title,
-});
+const keepUserOptionState = computed(
+    () => FINAL_CONFIG.value.userOptions.keepStateOnChartLeave,
+);
 
-function prepareConfig() {
-    const mergedConfig = useNestedProp({
-        userConfig: props.config,
-        defaultConfig: DEFAULT_CONFIG,
-    });
-
-    const theme = mergedConfig.theme;
-    if (!theme) return mergedConfig;
-
-    if (!isThemeValid.value(mergedConfig)) {
-        warnInvalidTheme(mergedConfig);
-        return mergedConfig;
-    }
-
-    const fused = useNestedProp({
-        userConfig: themes[theme] || props.config,
-        defaultConfig: mergedConfig,
-    });
-
-    const finalConfig = useNestedProp({
-        userConfig: props.config,
-        defaultConfig: fused,
-    });
-
-    return {
-        ...finalConfig,
-        customPalette: mergedConfig.customPalette.length
-            ? mergedConfig.customPalette
-            : themePalettes[mergedConfig.theme] || palette,
-    };
+function setUserOptionsVisibility(value = false) {
+    if (FINAL_CONFIG.value.userOptions.showOnChartHover)
+        userOptionsVisible.value = value;
 }
 
-let previousStructuralConfig = stringifyStructuralConfig(props.config);
-
 watch(
-    () => props.config,
-    (newConfig, oldConfig) => {
-        const nextStructuralConfig = stringifyStructuralConfig(newConfig);
-
-        const requiresChartPreparation =
-            nextStructuralConfig !== previousStructuralConfig;
-
-        previousStructuralConfig = nextStructuralConfig;
-
-        const preparedConfig = prepareConfig();
-
-        if (!requiresChartPreparation) {
-            FINAL_CONFIG.value.style.chart.tooltip =
-                preparedConfig.style.chart.tooltip;
-
-            mutableConfig.value.showTooltip =
-                FINAL_CONFIG.value.style.chart.tooltip.show;
-
-            return;
-        }
-
-        if (!loading.value) {
-            FINAL_CONFIG.value = preparedConfig;
-        }
-        userOptionsVisible.value =
-            !FINAL_CONFIG.value.userOptions.showOnChartHover;
-        prepareChart();
-        titleStep.value += 1;
-        tableStep.value += 1;
-        legendStep.value += 1;
-
-        // Reset mutable config
-        mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
-        mutableConfig.value.showTooltip = cfgTooltip.value.show;
-        mutableConfig.value.showLabels = cfgLabels.value.dataLabels.show;
-
-        svg.value.width = cfgChart.value.size;
-        svg.value.height = cfgChart.value.size;
+    () => FINAL_CONFIG.value.userOptions.showOnChartHover,
+    (value) => {
+        userOptionsVisible.value = !value;
     },
-    { deep: true },
 );
+
+const { svgRef } = useChartAccessibility({ config: cfgChart.value.title });
+
+function prepareConfig() {
+    return resolveChartConfigWithPalette(props.config, DEFAULT_CONFIG, themes);
+}
 
 const computedOffset = computed(() => {
     const { markers } = cfgLabels.value.dataLabels;
     const r = maxHeight.value / 2;
 
-    const x = !mutableConfig.value.showLabels
-        ? 0
-        : markers.position === 'left'
-          ? r
-          : -r;
+    const x = !showLabels.value ? 0 : markers.position === 'left' ? r : -r;
 
-    const _xResp = !mutableConfig.value.showLabels
-        ? 0
-        : svg.value.width / 2 - r;
+    const _xResp = !showLabels.value ? 0 : svg.value.width / 2 - r;
     const xResp = markers.position === 'left' ? _xResp : -_xResp;
     const y = 0;
 
@@ -335,67 +284,76 @@ const CENTER = computed(() => {
     };
 });
 
-watch(
-    () => props.dataset,
-    (_) => {
-        if (Array.isArray(_) && _.length > 0) {
-            manualLoading.value = false;
-        }
-    },
-    { deep: true },
-);
-
 const resizeObserver = shallowRef(null);
-const observedEl = shallowRef(null);
+const responsiveSize = shallowRef(null);
+let resizeFrame = null;
+let disposed = false;
 
-onMounted(() => {
-    readyTeleport.value = true;
-    prepareChart();
-});
+const debug = computed(() => preparedConfig.value.debug);
 
-const debug = computed(() => FINAL_CONFIG.value.debug);
-
-function prepareChart() {
-    if (objectIsEmpty(props.dataset)) {
+function validateDataset() {
+    if (!Array.isArray(props.dataset) || !props.dataset.length) {
         error({
             componentName: 'VueUiRings',
             type: 'dataset',
             debug: debug.value,
         });
-        manualLoading.value = true;
-    } else {
-        props.dataset.forEach((ds, i) => {
-            if (!ds.values.length) {
+        return;
+    }
+    Array.from(props.dataset).forEach((serie, index) => {
+        getMissingDatasetAttributes({
+            datasetObject: serie ?? {},
+            requiredAttributes: ['name', 'values'],
+        }).forEach((property) => {
+            error({
+                componentName: 'VueUiRings',
+                type: 'datasetSerieAttribute',
+                property,
+                index,
+                debug: debug.value,
+            });
+        });
+        if (!debug.value) return;
+        if (Array.isArray(serie?.values)) {
+            if (!serie.values.length)
                 error({
                     componentName: 'VueUiRings',
                     type: 'dataset',
-                    debug: debug.value,
+                    debug: true,
                 });
-                manualLoading.value = true;
-            }
-            getMissingDatasetAttributes({
-                datasetObject: ds,
-                requiredAttributes: ['name', 'values'],
-            }).forEach((attr) => {
-                error({
-                    componentName: 'VueUiRings',
-                    type: 'datasetSerieAttribute',
-                    property: attr,
-                    index: i,
-                    debug: debug.value,
-                });
-            });
-        });
-    }
+        } else if (serie && Object.keys(serie).includes('values')) {
+            console.warn(
+                `VueUiRings: dataset[${index}].values must be an array.`,
+            );
+        }
+    });
+}
 
-    // v3
-    if (!objectIsEmpty(props.dataset)) {
-        manualLoading.value = FINAL_CONFIG.value.loading;
-    }
+watch([() => props.dataset, debug], validateDataset, {
+    immediate: true,
+    deep: true,
+});
 
-    if (FINAL_CONFIG.value.responsive) {
-        const handleResize = throttle(() => {
-            resizing.value = true;
+function teardownResponsive() {
+    resizeObserver.value?.disconnect();
+    resizeObserver.value = null;
+    if (resizeFrame !== null) cancelAnimationFrame(resizeFrame);
+    resizeFrame = null;
+    resizing.value = false;
+}
+
+function prepareChart() {
+    teardownResponsive();
+    responsiveSize.value = null;
+    if (!FINAL_CONFIG.value.responsive || !ringsChart.value?.parentNode) return;
+    const observer = new ResizeObserver(measure);
+    function measure() {
+        if (disposed || resizeObserver.value !== observer) return;
+        if (resizeFrame !== null) cancelAnimationFrame(resizeFrame);
+        resizing.value = true;
+        resizeFrame = requestAnimationFrame(() => {
+            if (disposed || resizeObserver.value !== observer) return;
+            resizeFrame = null;
             const { width, height } = useResponsive({
                 chart: ringsChart.value,
                 title: cfgChart.value.title.text ? chartTitle.value : null,
@@ -403,37 +361,48 @@ function prepareChart() {
                 source: source.value,
                 noTitle: noTitle.value,
             });
-
-            requestAnimationFrame(() => {
-                svg.value.width = width;
-                svg.value.height = height - 12;
-                resizing.value = false;
-            });
+            responsiveSize.value = {
+                width: Math.max(0.1, width),
+                height: Math.max(0.1, height - 12),
+            };
+            resizing.value = false;
         });
-
-        if (resizeObserver.value) {
-            if (observedEl.value) {
-                resizeObserver.value.unobserve(observedEl.value);
-            }
-            resizeObserver.value.disconnect();
-        }
-
-        resizeObserver.value = new ResizeObserver(handleResize);
-        observedEl.value = ringsChart.value.parentNode;
-        resizeObserver.value.observe(observedEl.value);
     }
-    setTimeout(() => {
-        isLoaded.value = true;
-    }, 600);
+    resizeObserver.value = observer;
+    for (const el of [
+        ringsChart.value.parentNode,
+        chartTitle.value,
+        chartLegend.value,
+        source.value,
+        noTitle.value,
+    ])
+        if (el) observer.observe(el);
+    measure();
 }
 
+watch(
+    [
+        () => FINAL_CONFIG.value.responsive,
+        chartTitle,
+        chartLegend,
+        source,
+        noTitle,
+        () => cfgChart.value.title.text,
+        () => cfgChart.value.legend.show,
+        () => cfgChart.value.legend.position,
+    ],
+    prepareChart,
+    { flush: 'post' },
+);
+
+onMounted(() => {
+    readyTeleport.value = true;
+    prepareChart();
+});
+
 onBeforeUnmount(() => {
-    if (resizeObserver.value) {
-        if (observedEl.value) {
-            resizeObserver.value.unobserve(observedEl.value);
-        }
-        resizeObserver.value.disconnect();
-    }
+    disposed = true;
+    teardownResponsive();
 });
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
@@ -451,28 +420,45 @@ const customPalette = computed(() => {
 });
 
 const mutableConfig = ref({
-    showTable: FINAL_CONFIG.value.table.show,
-    showTooltip: cfgTooltip.value.show,
-    showLabels: cfgLabels.value.dataLabels.show,
+    showTable: preparedConfig.value.table.show,
+    showTooltip: preparedConfig.value.style.chart.tooltip.show,
+    showLabels: preparedConfig.value.style.chart.layout.labels.dataLabels.show,
 });
 
-// v3 - Essential to make shifting between loading config and final config work
 watch(
-    FINAL_CONFIG,
-    () => {
-        mutableConfig.value = {
-            showTable: FINAL_CONFIG.value.table.show,
-            showTooltip: cfgTooltip.value.show,
-            showLabels: cfgLabels.value.dataLabels.show,
-        };
+    () => preparedConfig.value.table.show,
+    (value) => {
+        mutableConfig.value.showTable = value;
     },
-    { immediate: true },
 );
 
-const svg = ref({
-    height: cfgChart.value.size,
-    width: cfgChart.value.size,
-});
+watch(
+    () => preparedConfig.value.style.chart.tooltip.show,
+    (value) => {
+        mutableConfig.value.showTooltip = value;
+    },
+);
+
+watch(
+    () => preparedConfig.value.style.chart.layout.labels.dataLabels.show,
+    (value) => {
+        mutableConfig.value.showLabels = value;
+    },
+);
+
+const showLabels = computed(() =>
+    loading.value
+        ? cfgLabels.value.dataLabels.show
+        : mutableConfig.value.showLabels,
+);
+
+const svg = computed(
+    () =>
+        responsiveSize.value ?? {
+            height: cfgChart.value.size,
+            width: cfgChart.value.size,
+        },
+);
 
 const chartRadius = computed(() => {
     return Math.min(svg.value.height, svg.value.width);
@@ -480,9 +466,20 @@ const chartRadius = computed(() => {
 
 const emit = defineEmits(['selectLegend', 'copyAlt']);
 
+const finishedEntryAnimations = ref(new Set());
+function finishEntryAnimation(id) {
+    finishedEntryAnimations.value.add(id);
+}
+
+function finishEntryAnimations() {
+    datasetCopy.value.forEach((ring) => finishEntryAnimation(ring.uid));
+}
+
 const segregated = ref([]);
 
 function toggleLegend() {
+    if (loading.value) return;
+    finishEntryAnimations();
     if (segregated.value.length) {
         segregated.value = [];
     } else {
@@ -507,6 +504,8 @@ function emitSelectLegend() {
 }
 
 function segregate(uid) {
+    if (loading.value) return;
+    finishEntryAnimations();
     if (segregated.value.includes(uid)) {
         segregated.value = segregated.value.filter((s) => s !== uid);
     } else {
@@ -564,42 +563,59 @@ function hideSeries(name) {
     }
 }
 
-const max = computed(() => {
-    return Math.max(
-        ...datasetCopy.value
-            .filter((el) => !segregated.value.includes(el.uid))
-            .map(({ value }) => {
-                return value;
-            }),
-    );
-});
-
-function proportionToMax(val) {
-    return val / max.value;
-}
-
-const datasetCopy = computed(() => {
-    return FINAL_DATASET.value.map(({ values, name, color = null }, i) => {
-        const subTotal = sanitizeArray(values).reduce((a, b) => a + b, 0);
+// Allocate identities independently of palette and geometry computations.
+const seriesIds = new Map();
+const preparedDataset = computed(() => {
+    const occurrences = new Map();
+    const rows = FINAL_DATASET.value.map((serie, absoluteIndex) => {
+        const occurrence = occurrences.get(serie.name) ?? 0;
+        occurrences.set(serie.name, occurrence + 1);
+        const key = JSON.stringify([loading.value, serie.name, occurrence]);
+        if (!seriesIds.has(key)) seriesIds.set(key, createUid());
         return {
-            name,
-            color:
-                color ||
-                convertColorToHex(color) ||
-                customPalette.value[i] ||
-                palette[i] ||
-                palette[i % palette.length],
-            value: subTotal,
-            proportion:
-                subTotal /
-                FINAL_DATASET.value
-                    .map((ds) => (ds.values || []).reduce((a, b) => a + b, 0))
-                    .reduce((a, b) => a + b, 0),
-            uid: createUid(),
-            absoluteIndex: i,
+            name: serie.name,
+            color: serie.color,
+            absoluteValues: serie.values,
+            value: serie.values.reduce(
+                (sum, value) => sum + (Number.isFinite(value) ? value : 0),
+                0,
+            ),
+            uid: seriesIds.get(key),
+            absoluteIndex,
         };
     });
+    const total = rows.reduce((sum, row) => sum + row.value, 0);
+    return rows.map((row) => ({
+        ...row,
+        proportion: safeRatio(row.value, total),
+    }));
 });
+function safeRatio(value, total) {
+    const ratio = value / total;
+    return Number.isFinite(ratio) ? ratio : 0;
+}
+const datasetCopy = computed(() =>
+    preparedDataset.value.map((row, i) => ({
+        ...row,
+        color:
+            row.color ||
+            convertColorToHex(row.color) ||
+            customPalette.value[i] ||
+            palette[i % palette.length],
+    })),
+);
+const visibleDataset = computed(() =>
+    datasetCopy.value.filter((el) => !segregated.value.includes(el.uid)),
+);
+const max = computed(() =>
+    visibleDataset.value.reduce(
+        (maximum, row) => Math.max(maximum, row.value),
+        -Infinity,
+    ),
+);
+function proportionToMax(value) {
+    return safeRatio(value, max.value);
+}
 
 const legendSet = computed(() => {
     return datasetCopy.value
@@ -616,7 +632,9 @@ const legendSet = computed(() => {
                 { datapoint: el, index: i },
             );
 
-            const percentageDisplay = isNaN(el.value / grandTotal.value)
+            const percentageDisplay = !Number.isFinite(
+                el.value / grandTotal.value,
+            )
                 ? '-'
                 : dataLabel({
                       v: (el.value / grandTotal.value) * 100,
@@ -656,38 +674,30 @@ const legendConfig = computed(() => {
     };
 });
 
-const grandTotal = computed(() => {
-    return datasetCopy.value
-        .filter((el) => !segregated.value.includes(el.uid))
-        .map(({ value }) => {
-            return value;
-        })
-        .reduce((a, b) => a + b, 0);
-});
+const grandTotal = computed(() =>
+    visibleDataset.value.reduce((sum, row) => sum + row.value, 0),
+);
+const convertedDataset = computed(() =>
+    visibleDataset.value
+        .map((row) => ({
+            ...row,
+            proportion: proportionToMax(row.value),
+            percentage: safeRatio(row.value, grandTotal.value) * 100,
+            strokeWidth:
+                cfgRings.value.strokeWidth * proportionToMax(row.value),
+        }))
+        .toSorted((a, b) => b.value - a.value),
+);
 
-const convertedDataset = computed(() => {
-    return datasetCopy.value
-        .filter((el) => !segregated.value.includes(el.uid))
-        .map(({ name, value, color = null, uid, absoluteIndex }, i) => {
-            return {
-                absoluteIndex,
-                uid,
-                name,
-                color:
-                    color ||
-                    convertColorToHex(color) ||
-                    customPalette.value[i] ||
-                    palette[i] ||
-                    palette[i % palette.length],
-                value,
-                proportion: proportionToMax(value),
-                percentage: (value / grandTotal.value) * 100,
-                strokeWidth:
-                    cfgRings.value.strokeWidth * proportionToMax(value),
-            };
-        })
-        .toSorted((a, b) => b.value - a.value);
-});
+watch(
+    () => preparedDataset.value.map((row) => row.uid),
+    (ids) => {
+        if (!loading.value)
+            segregated.value = segregated.value.filter((id) =>
+                ids.includes(id),
+            );
+    },
+);
 
 /**
  * Return series values, absolute values, colors, and percentages.
@@ -712,16 +722,24 @@ const maxHeight = computed(() => {
 });
 
 function onTrapClick(datapoint, seriesIndex) {
+    if (loading.value) return;
     if (FINAL_CONFIG.value.events.datapointClick) {
         FINAL_CONFIG.value.events.datapointClick({ datapoint, seriesIndex });
     }
 }
 
-function onTrapLeave(datapoint, seriesIndex) {
+function clearTooltip() {
+    selectedUid.value = null;
     selectedSerie.value = null;
     isTooltip.value = false;
     activeTooltipIndex.value = null;
     tooltipTriggerMode.value = 'pointer';
+    dataTooltipSlot.value = null;
+    tooltipContent.value = '';
+}
+function onTrapLeave(datapoint, seriesIndex) {
+    if (loading.value) return;
+    clearTooltip();
     if (FINAL_CONFIG.value.events.datapointLeave) {
         FINAL_CONFIG.value.events.datapointLeave({ datapoint, seriesIndex });
     }
@@ -765,20 +783,18 @@ function getRingLabel(ring) {
 }
 
 function getRadius(ring) {
-    return checkNaN(
-        ((maxHeight.value * ring.proportion) / 2) * 0.9 <= 0
-            ? 0.0001
-            : ((maxHeight.value * ring.proportion) / 2) * 0.9,
-    );
+    return Math.max(0.0001, ((maxHeight.value * ring.proportion) / 2) * 0.9);
 }
 
-function getY(ring, i) {
-    return i === 0
-        ? CENTER.value.y
-        : CENTER.value.y +
-              (maxHeight.value * convertedDataset.value[0].proportion) / 2 -
-              (maxHeight.value * ring.proportion) / 2 -
-              2 * (i + 1);
+const baseline = computed(
+    () =>
+        CENTER.value.y +
+        (convertedDataset.value.length
+            ? getRadius(convertedDataset.value[0])
+            : 0),
+);
+function getY(ring) {
+    return baseline.value - getRadius(ring);
 }
 
 function getMarkerCoordinates(ring, i) {
@@ -791,9 +807,11 @@ function getMarkerCoordinates(ring, i) {
 }
 
 const dataTooltipSlot = ref(null);
+const selectedUid = ref(null);
 
-function useTooltip(datapoint, index, triggerMode = 'pointer') {
-    if (FINAL_CONFIG.value.events.datapointEnter) {
+function useTooltip(datapoint, index, triggerMode = 'pointer', notify = true) {
+    if (loading.value || !datapoint) return;
+    if (notify && FINAL_CONFIG.value.events.datapointEnter) {
         FINAL_CONFIG.value.events.datapointEnter({
             datapoint,
             seriesIndex: index,
@@ -809,6 +827,7 @@ function useTooltip(datapoint, index, triggerMode = 'pointer') {
         config: FINAL_CONFIG.value,
     };
 
+    selectedUid.value = datapoint.uid;
     selectedSerie.value = index;
     activeTooltipIndex.value = index;
     tooltipTriggerMode.value = triggerMode;
@@ -816,23 +835,11 @@ function useTooltip(datapoint, index, triggerMode = 'pointer') {
     const selected = convertedDataset.value[index];
     const customFormat = cfgTooltip.value.customFormat;
 
-    if (
-        isFunction(customFormat) &&
-        functionReturnsString(() =>
-            customFormat({
-                seriesIndex: index,
-                datapoint,
-                series: convertedDataset.value,
-                config: FINAL_CONFIG.value,
-            }),
-        )
-    ) {
-        tooltipContent.value = customFormat({
-            seriesIndex: index,
-            datapoint,
-            series: convertedDataset.value,
-            config: FINAL_CONFIG.value,
-        });
+    const formatted = isFunction(customFormat)
+        ? customFormat(dataTooltipSlot.value)
+        : null;
+    if (typeof formatted === 'string') {
+        tooltipContent.value = formatted;
     } else {
         let html = '';
 
@@ -855,7 +862,7 @@ function useTooltip(datapoint, index, triggerMode = 'pointer') {
                 { datapoint, seriesIndex: index },
             )}</span>`,
             percentage: dataLabel({
-                v: (selected.value / grandTotal.value) * 100,
+                v: selected.percentage,
                 s: '%',
                 r: cfgTooltip.value.roundingPercentage,
             }),
@@ -902,7 +909,7 @@ const dataTable = computed(() => {
                 s: cfgLabels.value.dataLabels.suffix,
                 r: FINAL_CONFIG.value.table.td.roundingValue,
             }),
-            isNaN(table.value.body[i] / grandTotal.value)
+            !Number.isFinite(table.value.body[i] / grandTotal.value)
                 ? '-'
                 : ((table.value.body[i] / grandTotal.value) * 100).toFixed(
                       FINAL_CONFIG.value.table.td.roundingPercentage,
@@ -955,7 +962,7 @@ function generateCsv(callback = null) {
                 [h.name],
                 [table.value.body[i]],
                 [
-                    isNaN(table.value.body[i] / grandTotal.value)
+                    !Number.isFinite(table.value.body[i] / grandTotal.value)
                         ? '-'
                         : (table.value.body[i] / grandTotal.value) * 100,
                 ],
@@ -964,7 +971,11 @@ function generateCsv(callback = null) {
         const tableXls = [
             [cfgChart.value.title.text],
             [cfgChart.value.title.subtitle.text],
-            [[''], ['val'], ['%']],
+            [
+                [FINAL_CONFIG.value.table.columnNames.series],
+                [FINAL_CONFIG.value.table.columnNames.value],
+                [FINAL_CONFIG.value.table.columnNames.percentage],
+            ],
         ].concat(labels);
         const csvContent = createCsvContent(tableXls);
 
@@ -994,7 +1005,7 @@ function toggleTooltip() {
 }
 
 function toggleLabels() {
-    mutableConfig.value.showLabels = !mutableConfig.value.showLabels;
+    mutableConfig.value.showLabels = !showLabels.value;
 }
 
 const isAnnotator = ref(false);
@@ -1022,8 +1033,16 @@ const tableComponent = computed(() =>
 );
 
 watch(
-    () => mutableConfig.value.showTable,
-    (v) => syncTableVisibility(v, FINAL_CONFIG, tableUnit),
+    [
+        () => mutableConfig.value.showTable,
+        tableUnit,
+        () => FINAL_CONFIG.value.table.useDialog,
+    ],
+    ([visible]) => {
+        if (tableUnit.value)
+            syncTableVisibility(visible, FINAL_CONFIG, tableUnit);
+    },
+    { flush: 'post' },
 );
 
 function closeTable() {
@@ -1078,20 +1097,17 @@ async function copyAlt() {
  * a11y
  **************************************************************************************************/
 function onSvgFocus() {
-    activeTooltipIndex.value = null;
+    clearTooltip();
     isFocus.value = true;
 }
 
 function onSvgBlur() {
-    activeTooltipIndex.value = null;
-    tooltipTriggerMode.value = 'pointer';
-    isTooltip.value = false;
-    selectedSerie.value = null;
+    clearTooltip();
     isFocus.value = false;
 }
 
 function onSvgKeydown(event) {
-    if (!svgRef.value || isAnnotator.value) return;
+    if (!svgRef.value || isAnnotator.value || loading.value) return;
     if (document.activeElement !== svgRef.value) return;
     if (!convertedDataset.value.length) return;
     if (segregated.value.length === props.dataset.length) return;
@@ -1108,10 +1124,7 @@ function onSvgKeydown(event) {
     event.stopPropagation();
 
     if (isEscapeKey) {
-        activeTooltipIndex.value = null;
-        tooltipTriggerMode.value = 'pointer';
-        isTooltip.value = false;
-        selectedSerie.value = null;
+        clearTooltip();
         return;
     }
 
@@ -1169,6 +1182,39 @@ function setKeyboardTooltipPositionFromIndex(index) {
     };
 }
 
+watch(
+    [convertedDataset, svg, CENTER, cfgTooltip, () => FINAL_CONFIG.value],
+    () => {
+        if (selectedUid.value === null) return;
+        const index = convertedDataset.value.findIndex(
+            (ring) => ring.uid === selectedUid.value,
+        );
+        if (loading.value || index < 0) {
+            clearTooltip();
+            return;
+        }
+        if (tooltipTriggerMode.value === 'keyboard')
+            setKeyboardTooltipPositionFromIndex(index);
+        useTooltip(
+            convertedDataset.value[index],
+            index,
+            tooltipTriggerMode.value,
+            false,
+        );
+    },
+    { flush: 'post' },
+);
+
+// Formatting and geometry stay cached during hover; public datapoint payloads remain unchanged.
+const ringLabels = computed(() => convertedDataset.value.map(getRingLabel));
+const ringGeometry = computed(() =>
+    convertedDataset.value.map((ring, i) => ({
+        radius: getRadius(ring),
+        y: getY(ring, i),
+        marker: getMarkerCoordinates(ring, i),
+    })),
+);
+
 const a11yTable = computed(() => {
     const headers = dataTable.value?.colNames ?? [];
     const rows = dataTable.value?.a11yBody ?? [];
@@ -1200,8 +1246,7 @@ defineExpose({
         :style="`font-family:${FINAL_CONFIG.style.fontFamily};text-align:center;width:100%;background:${cfgChart.backgroundColor};${FINAL_CONFIG.responsive ? 'height: 100%' : ''}`"
         :id="`rings_${uid}`"
         @mouseleave="
-            selectedSerie = null;
-            isTooltip = false;
+            clearTooltip();
             setUserOptionsVisibility(false);
         "
         @mouseenter="() => setUserOptionsVisibility(true)"
@@ -1212,7 +1257,7 @@ defineExpose({
         </div>
 
         <A11yDataTable
-            v-if="a11yTable?.rows?.length"
+            v-if="FINAL_CONFIG.a11y.includeTable && a11yTable?.rows?.length"
             :uid="uid"
             :head="a11yTable.headers"
             :body="a11yTable.rows"
@@ -1255,7 +1300,6 @@ defineExpose({
             :style="`width:100%;background:transparent`"
         >
             <Title
-                :key="`title_${titleStep}`"
                 :config="{
                     title: {
                         cy: 'rings-div-title',
@@ -1402,7 +1446,7 @@ defineExpose({
                 </defs>
 
                 <g v-if="$slots.pattern">
-                    <defs v-for="ring in convertedDataset">
+                    <defs v-for="ring in datasetCopy">
                         <slot
                             name="pattern"
                             v-bind="{
@@ -1414,48 +1458,56 @@ defineExpose({
                 </g>
 
                 <!-- RINGS -->
-                <g v-for="(ring, i) in convertedDataset" :key="`r_${ring.uid}`">
+                <g
+                    v-for="(ring, i) in convertedDataset"
+                    :key="`r_${ring.uid}`"
+                    data-cy="ring-group"
+                    @animationend.self="finishEntryAnimation(ring.uid)"
+                    :class="{
+                        'vue-rings-item-onload':
+                            FINAL_CONFIG.useCssAnimation &&
+                            FINAL_CONFIG.transitions.enable &&
+                            !loading &&
+                            !finishedEntryAnimations.has(ring.uid),
+                    }"
+                    :style="{
+                        transformOrigin: `${CENTER.x}px ${baseline}px`,
+                        animationDelay: `${(convertedDataset.length - 1 - i) * 100}ms`,
+                    }"
+                >
                     <circle
                         data-cy="ring-underlayer"
                         :class="{
-                            'vue-data-ui-transition':
-                                isLoaded && transitionEnabled,
-                            'vue-rings-item-onload':
-                                !isLoaded &&
-                                FINAL_CONFIG.useCssAnimation &&
-                                !loading,
+                            'vue-data-ui-transition': transitionEnabled,
                             'vue-ui-rings-opacity':
-                                selectedSerie !== null && selectedSerie !== i,
+                                FINAL_CONFIG.useBlurOnHover &&
+                                selectedSerie !== null &&
+                                selectedSerie !== i,
                         }"
-                        :style="`animation-delay:${i * 100}ms`"
                         :stroke="cfgRings.stroke"
                         :cx="CENTER.x"
-                        :cy="getY(ring, i)"
-                        :r="getRadius(ring)"
+                        :cy="ringGeometry[i].y"
+                        :r="ringGeometry[i].radius"
                         :fill="cfgRings.gradient.underlayerColor"
                     />
 
                     <circle
                         data-cy="ring"
                         :class="{
-                            'vue-data-ui-transition':
-                                isLoaded && transitionEnabled,
-                            'vue-rings-item-onload':
-                                !isLoaded &&
-                                FINAL_CONFIG.useCssAnimation &&
-                                !loading,
+                            'vue-data-ui-transition': transitionEnabled,
                             'vue-ui-rings-shadow': cfgRings.useShadow,
                             'vue-ui-rings-blur':
-                                selectedSerie !== null && selectedSerie !== i,
+                                FINAL_CONFIG.useBlurOnHover &&
+                                selectedSerie !== null &&
+                                selectedSerie !== i,
                         }"
-                        :style="`animation-delay:${i * 100}ms`"
                         :stroke="cfgRings.stroke"
                         :stroke-width="
                             ring.strokeWidth < 0.5 ? 0.5 : ring.strokeWidth
                         "
                         :cx="CENTER.x"
-                        :cy="getY(ring, i)"
-                        :r="getRadius(ring)"
+                        :cy="ringGeometry[i].y"
+                        :r="ringGeometry[i].radius"
                         :fill="
                             cfgRings.gradient.show
                                 ? `url(#gradient_${uid}_${i})`
@@ -1467,24 +1519,20 @@ defineExpose({
                         v-if="$slots.pattern"
                         :data-cy="`ring-pattern-${i}`"
                         :class="{
-                            'vue-data-ui-transition':
-                                isLoaded && transitionEnabled,
-                            'vue-rings-item-onload':
-                                !isLoaded &&
-                                FINAL_CONFIG.useCssAnimation &&
-                                !loading,
+                            'vue-data-ui-transition': transitionEnabled,
                             'vue-ui-rings-shadow': cfgRings.useShadow,
                             'vue-ui-rings-blur':
-                                selectedSerie !== null && selectedSerie !== i,
+                                FINAL_CONFIG.useBlurOnHover &&
+                                selectedSerie !== null &&
+                                selectedSerie !== i,
                         }"
-                        :style="`animation-delay:${i * 100}ms`"
                         :stroke="cfgRings.stroke"
                         :stroke-width="
                             ring.strokeWidth < 0.5 ? 0.5 : ring.strokeWidth
                         "
                         :cx="CENTER.x"
-                        :cy="getY(ring, i)"
-                        :r="getRadius(ring)"
+                        :cy="ringGeometry[i].y"
+                        :r="ringGeometry[i].radius"
                         :fill="`url(#pattern_${uid}_${ring.absoluteIndex})`"
                     />
 
@@ -1492,8 +1540,8 @@ defineExpose({
                         data-cy="tooltip-trap"
                         stroke="none"
                         :cx="CENTER.x"
-                        :cy="getY(ring, i)"
-                        :r="getRadius(ring)"
+                        :cy="ringGeometry[i].y"
+                        :r="ringGeometry[i].radius"
                         fill="transparent"
                         @mouseenter="useTooltip(ring, i, 'pointer')"
                         @mouseleave="onTrapLeave(ring, i)"
@@ -1501,54 +1549,44 @@ defineExpose({
                     />
 
                     <!-- DATA LABELS -->
-                    <template v-if="mutableConfig.showLabels">
+                    <template v-if="showLabels">
                         <rect
                             :x="
                                 cfgLabels.dataLabels.markers.position === 'left'
-                                    ? getMarkerCoordinates(ring, i).x
+                                    ? ringGeometry[i].marker.x
                                     : CENTER.x
                             "
                             :y="
-                                getMarkerCoordinates(ring, i).y -
+                                ringGeometry[i].marker.y -
                                 cfgLabels.dataLabels.markers.strokeWidth / 2
                             "
                             :width="
-                                Math.abs(
-                                    CENTER.x - getMarkerCoordinates(ring, i).x,
-                                )
+                                Math.abs(CENTER.x - ringGeometry[i].marker.x)
                             "
                             :height="cfgLabels.dataLabels.markers.strokeWidth"
                             :fill="cfgLabels.dataLabels.markers.stroke"
                             :rx="cfgLabels.dataLabels.markers.strokeWidth"
                             :class="{
-                                'vue-data-ui-transition':
-                                    isLoaded && transitionEnabled,
-                                'vue-rings-item-onload':
-                                    !isLoaded &&
-                                    FINAL_CONFIG.useCssAnimation &&
-                                    !loading,
+                                'vue-data-ui-transition': transitionEnabled,
                                 'vue-ui-rings-shadow': cfgRings.useShadow,
                                 'vue-ui-rings-blur':
+                                    FINAL_CONFIG.useBlurOnHover &&
                                     selectedSerie !== null &&
                                     selectedSerie !== i,
                             }"
                         />
 
                         <circle
-                            :cx="getMarkerCoordinates(ring, i).x"
-                            :cy="getMarkerCoordinates(ring, i).y"
+                            :cx="ringGeometry[i].marker.x"
+                            :cy="ringGeometry[i].marker.y"
                             :r="cfgLabels.dataLabels.markers.radius"
                             :fill="ring.color"
                             :stroke="cfgChart.backgroundColor"
                             :class="{
-                                'vue-data-ui-transition':
-                                    isLoaded && transitionEnabled,
-                                'vue-rings-item-onload':
-                                    !isLoaded &&
-                                    FINAL_CONFIG.useCssAnimation &&
-                                    !loading,
+                                'vue-data-ui-transition': transitionEnabled,
                                 'vue-ui-rings-shadow': cfgRings.useShadow,
                                 'vue-ui-rings-blur':
+                                    FINAL_CONFIG.useBlurOnHover &&
                                     selectedSerie !== null &&
                                     selectedSerie !== i,
                             }"
@@ -1566,26 +1604,22 @@ defineExpose({
                                 cfgLabels.dataLabels.bold ? 'bold' : 'normal'
                             "
                             :class="{
-                                'vue-data-ui-transition':
-                                    isLoaded && transitionEnabled,
-                                'vue-rings-item-onload':
-                                    !isLoaded &&
-                                    FINAL_CONFIG.useCssAnimation &&
-                                    !loading,
+                                'vue-data-ui-transition': transitionEnabled,
                                 'vue-ui-rings-shadow': cfgRings.useShadow,
                                 'vue-ui-rings-blur':
+                                    FINAL_CONFIG.useBlurOnHover &&
                                     selectedSerie !== null &&
                                     selectedSerie !== i,
                             }"
                             :transform="`translate(${
-                                getMarkerCoordinates(ring, i).x +
+                                ringGeometry[i].marker.x +
                                 (cfgLabels.dataLabels.markers.position ===
                                 'left'
                                     ? -cfgLabels.dataLabels.offsetX - 14
                                     : cfgLabels.dataLabels.offsetX) +
                                 6
                             }, ${
-                                getMarkerCoordinates(ring, i).y +
+                                ringGeometry[i].marker.y +
                                 cfgLabels.dataLabels.fontSize / 3
                             })`"
                             @mouseenter="useTooltip(ring, i, 'pointer')"
@@ -1593,7 +1627,7 @@ defineExpose({
                             @click="onTrapClick(ring, i)"
                             v-html="
                                 createTSpansFromLineBreaksOnX({
-                                    content: getRingLabel(ring),
+                                    content: ringLabels[i],
                                     fontSize: cfgLabels.dataLabels.fontSize,
                                     fill: cfgLabels.dataLabels.color,
                                     x: 0,
@@ -1659,7 +1693,6 @@ defineExpose({
                 <slot name="legend" v-bind:legend="legendSet">
                     <Legend
                         v-if="cfgChart.legend.show"
-                        :key="`legend_${legendStep}`"
                         :legendSet="legendSet"
                         :config="legendConfig"
                         :isCursorPointer="isCursorPointer"
@@ -1674,7 +1707,7 @@ defineExpose({
                                 :radius="30"
                                 stroke="none"
                                 :plot="{ x: 30, y: 30 }"
-                                :fill="`url(#pattern_${uid}_${index})`"
+                                :fill="`url(#pattern_${uid}_${legend.absoluteIndex})`"
                             />
                         </template>
 
@@ -1766,7 +1799,7 @@ defineExpose({
         </Tooltip>
 
         <component
-            v-if="isDataset && cfgUserOptions.buttons.table"
+            v-if="!loading && isDataset && cfgUserOptions.buttons.table"
             :is="tableComponent.component"
             v-bind="tableComponent.props"
             ref="tableUnit"
@@ -1790,7 +1823,6 @@ defineExpose({
             </template>
             <template #content>
                 <DataTable
-                    :key="`table_${tableStep}`"
                     :colNames="dataTable.colNames"
                     :head="dataTable.head"
                     :body="dataTable.body"
@@ -1850,33 +1882,22 @@ defineExpose({
     transition: opacity 0.15s ease-in-out;
 }
 
-.resizing .vue-ui-rings-item {
-    transition: none;
+.vue-rings-item-onload {
+    transform-box: view-box;
+    animation: ring-appear 0.5s ease-out both;
+    will-change: transform;
 }
 
-.vue-rings-item-onload {
-    transform-origin: bottom;
-    transform: scale(0, 0);
-    animation: ring-appear 0.5s ease-in forwards;
+.vue-rings-item-onload * {
+    transition: none !important;
 }
 
 @keyframes ring-appear {
-    0% {
-        opacity: 0;
-        transform: scale(0.8, 0.7);
+    from {
+        transform: scale(0);
     }
-    60% {
-        transform: scale(1.03, 1.05);
-    }
-    80% {
-        transform: scale(0.98, 0.96);
-    }
-    90% {
-        transform: scale(1.01, 1.02);
-    }
-    100% {
-        opacity: 1;
-        transform: scale(1, 1);
+    to {
+        transform: scale(1);
     }
 }
 
@@ -1902,7 +1923,14 @@ svg:focus-visible {
 }
 
 .vue-data-ui-transition {
-    transition: all 0.2s ease-in-out;
+    transition:
+        cx 0.12s ease-out,
+        cy 0.12s ease-out,
+        r 0.12s ease-out,
+        stroke-width 0.12s ease-out,
+        fill 0.12s ease-out,
+        filter 0.2s ease-in-out,
+        opacity 0.2s ease-in-out;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1914,6 +1942,5 @@ svg:focus-visible {
 
 .vue-data-ui-no-transition * {
     transition: none !important;
-    animation: none !important;
 }
 </style>

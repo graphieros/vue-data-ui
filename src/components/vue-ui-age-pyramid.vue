@@ -19,10 +19,7 @@ import {
     onBeforeUnmount,
     onMounted,
     ref,
-    shallowRef,
-    toRefs,
     watch,
-    watchEffect,
 } from 'vue';
 import {
     applyDataLabel,
@@ -30,11 +27,8 @@ import {
     createCsvContent,
     createUid,
     dataLabel,
-    deepClone,
     downloadCsv,
     error,
-    functionReturnsString,
-    isFunction,
     objectIsEmpty,
     setOpacity,
     shiftHue,
@@ -45,7 +39,6 @@ import {
 import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 import { useSvgLabelLayout } from '../useSvgLabelLayout';
-import { useLoading } from '../useLoading';
 import { usePrinter } from '../usePrinter';
 import { useResponsive } from '../useResponsive';
 
@@ -96,21 +89,25 @@ const props = defineProps({
 
 const emit = defineEmits(['copyAlt']);
 
-const isDataset = computed(() => {
-    return !!props.dataset && props.dataset.length;
-});
+const isDataset = computed(
+    () =>
+        Array.isArray(props.dataset) &&
+        props.dataset.length > 0 &&
+        props.dataset.every((row) => Array.isArray(row) && row.length >= 4),
+);
+const resolvedConfig = computed(prepareConfig);
+const loading = computed(
+    () => !!resolvedConfig.value.loading || !isDataset.value,
+);
 
 const uid = ref(createUid());
 const isTooltip = ref(false);
-const tooltipContent = ref('');
 const selectedIndex = ref(null);
 const step = ref(0);
 const agePyramid = ref(null);
 const chartTitle = ref(null);
 const source = ref(null);
 const noTitle = ref(null);
-const titleStep = ref(0);
-const tableStep = ref(0);
 const xAxisLabels = ref(null);
 const tableUnit = ref(null);
 const userOptionsRef = ref(null);
@@ -119,38 +116,6 @@ const activeTooltipIndex = ref(null); // a11y
 const tooltipA11yPosition = ref({ x: 0, y: 0 }); // a11y
 const tooltipTriggerMode = ref('pointer'); // a11y
 const isFocus = ref(false); // a11y
-
-const FINAL_CONFIG = ref(prepareConfig());
-
-const style = computed(() => FINAL_CONFIG.value.style);
-const layoutDataLabels = computed(
-    () => FINAL_CONFIG.value.style.layout.dataLabels,
-);
-const bars = computed(() => FINAL_CONFIG.value.style.layout.bars);
-const barLabels = computed(() => FINAL_CONFIG.value.style.layout.bars.labels);
-
-useHints({
-    config: () => FINAL_CONFIG.value,
-    dataset: () => props.dataset,
-    component: 'VueUiAgePyramid',
-    rules: [
-        COMMON_RULES.emptyArray,
-        {
-            test: (dataset) => dataset.length > 130, // oldest recorded person to ever live is 122 at the time of this comment
-            message: [
-                '👀 Dataset has > 130 points. Consider:',
-                '',
-                '▶️ Grouping small values into aggregated categories.',
-                '',
-                '▶️ Using VueUiStackline to display data in a more compact way.',
-            ],
-        },
-    ],
-});
-
-const isCursorPointer = computed(
-    () => FINAL_CONFIG.value.userOptions.useCursorPointer,
-);
 
 const skeletonConfig = computed(() => {
     return treeShake({
@@ -184,31 +149,66 @@ const skeletonConfig = computed(() => {
                 },
             },
         },
-        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {},
+        userConfig: resolvedConfig.value.skeletonConfig ?? {},
     });
 });
 
-const { loading, FINAL_DATASET, manualLoading } = useLoading({
-    ...toRefs(props),
-    FINAL_CONFIG,
-    prepareConfig,
-    skeletonDataset: props.config?.skeletonDataset ?? [
-        ['_', 9, 2, 2],
-        ['_', 8, 3, 3],
-        ['_', 7, 5, 5],
-        ['_', 6, 8, 8],
-        ['_', 5, 13, 13],
-        ['_', 4, 21, 21],
-        ['_', 3, 34, 34],
-        ['_', 2, 55, 55],
-        ['_', 1, 89, 89],
-        ['_', 0, 144, 144],
+const FINAL_CONFIG = computed(() =>
+    loading.value
+        ? treeShake({
+              defaultConfig: resolvedConfig.value,
+              userConfig: skeletonConfig.value,
+          })
+        : resolvedConfig.value,
+);
+
+const style = computed(() => FINAL_CONFIG.value.style);
+const layoutDataLabels = computed(
+    () => FINAL_CONFIG.value.style.layout.dataLabels,
+);
+const bars = computed(() => FINAL_CONFIG.value.style.layout.bars);
+const barLabels = computed(() => FINAL_CONFIG.value.style.layout.bars.labels);
+
+useHints({
+    config: () => FINAL_CONFIG.value,
+    dataset: () => props.dataset,
+    component: 'VueUiAgePyramid',
+    rules: [
+        COMMON_RULES.emptyArray,
+        {
+            test: (dataset) => dataset.length > 130, // oldest recorded person to ever live is 122 at the time of this comment
+            message: [
+                '👀 Dataset has > 130 points. Consider:',
+                '',
+                '▶️ Grouping small values into aggregated categories.',
+                '',
+                '▶️ Using VueUiStackline to display data in a more compact way.',
+            ],
+        },
     ],
-    skeletonConfig: treeShake({
-        defaultConfig: FINAL_CONFIG.value,
-        userConfig: skeletonConfig.value,
-    }),
 });
+
+const isCursorPointer = computed(
+    () => FINAL_CONFIG.value.userOptions.useCursorPointer,
+);
+
+const defaultSkeletonDataset = [
+    ['_', 9, 2, 2],
+    ['_', 8, 3, 3],
+    ['_', 7, 5, 5],
+    ['_', 6, 8, 8],
+    ['_', 5, 13, 13],
+    ['_', 4, 21, 21],
+    ['_', 3, 34, 34],
+    ['_', 2, 55, 55],
+    ['_', 1, 89, 89],
+    ['_', 0, 144, 144],
+];
+const FINAL_DATASET = computed(() =>
+    loading.value
+        ? (props.config?.skeletonDataset ?? defaultSkeletonDataset)
+        : props.dataset,
+);
 
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } =
     useUserOptionState({ config: FINAL_CONFIG.value });
@@ -220,128 +220,86 @@ function prepareConfig() {
     return resolveChartConfig(props.config, DEFAULT_CONFIG, themes);
 }
 
-function stringifyStructuralConfig(cfg) {
-    const clonedConfig = deepClone(cfg);
-    if (clonedConfig?.style?.chart) {
-        delete clonedConfig.style.tooltip;
-        // Add more properties here if they should not recompute the svg
-    }
-    return JSON.stringify(clonedConfig);
+const responsiveSizeReady = ref(false);
+let resizeObserver = null;
+let resizeFrame = null;
+let disposed = false;
+const debug = computed(() => resolvedConfig.value.debug);
+watch(
+    [() => props.dataset, debug],
+    ([dataset, enabled]) => {
+        if (!enabled) return;
+        if (objectIsEmpty(dataset))
+            error({ componentName: 'VueUiAgePyramid', type: 'dataset' });
+        else if (!isDataset.value)
+            console.warn(
+                'VueUiAgePyramid: each dataset row must be an array containing segment, age, left, and right values.',
+            );
+    },
+    { deep: true, immediate: true },
+);
+
+function resizeChart() {
+    resizeFrame = null;
+    if (
+        disposed ||
+        !FINAL_CONFIG.value.responsive ||
+        !agePyramid.value?.parentNode
+    )
+        return;
+    const { width, height } = useResponsive({
+        chart: agePyramid.value,
+        title: style.value.title.text ? chartTitle.value : null,
+        source: source.value,
+        noTitle: noTitle.value,
+    });
+    svg.value = { width, height };
+    responsiveSizeReady.value = true;
 }
-
-let previousStructuralConfig = stringifyStructuralConfig(props.config);
-
+function scheduleResize() {
+    if (!disposed && FINAL_CONFIG.value.responsive && resizeFrame === null)
+        resizeFrame = requestAnimationFrame(resizeChart);
+}
+function setupSizing() {
+    resizeObserver?.disconnect();
+    resizeObserver = null;
+    if (resizeFrame !== null) cancelAnimationFrame(resizeFrame);
+    resizeFrame = null;
+    if (disposed) return;
+    responsiveSizeReady.value = false;
+    if (FINAL_CONFIG.value.responsive && agePyramid.value?.parentNode) {
+        resizeObserver = new ResizeObserver(scheduleResize);
+        resizeObserver.observe(agePyramid.value.parentNode);
+        scheduleResize();
+    } else svg.value = { width: style.value.width, height: style.value.height };
+}
+onMounted(setupSizing);
+watch(() => FINAL_CONFIG.value.responsive, setupSizing, { flush: 'post' });
+watch([() => style.value.width, () => style.value.height], () => {
+    if (FINAL_CONFIG.value.responsive) scheduleResize();
+    else svg.value = { width: style.value.width, height: style.value.height };
+});
+watch(
+    [
+        () => style.value.title,
+        () => FINAL_CONFIG.value.userOptions.show,
+        () => FINAL_CONFIG.value.style.fontFamily,
+    ],
+    scheduleResize,
+    { deep: true, flush: 'post' },
+);
 watch(
     () => props.config,
-    (newConfig, oldConfig) => {
-        const nextStructuralConfig = stringifyStructuralConfig(newConfig);
-
-        const requiresChartPreparation =
-            nextStructuralConfig !== previousStructuralConfig;
-
-        previousStructuralConfig = nextStructuralConfig;
-
-        const preparedConfig = prepareConfig();
-
-        if (!requiresChartPreparation) {
-            FINAL_CONFIG.value.style.tooltip = preparedConfig.style.tooltip;
-            mutableConfig.value.showTooltip =
-                FINAL_CONFIG.value.style.tooltip.show;
-
-            return;
-        }
-
-        if (!loading.value) {
-            FINAL_CONFIG.value = preparedConfig;
-        }
+    () => {
         userOptionsVisible.value =
             !FINAL_CONFIG.value.userOptions.showOnChartHover;
-        prepareChart();
-        titleStep.value += 1;
-        tableStep.value += 1;
-
-        // Reset mutable config
-        mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
-        mutableConfig.value.showTooltip = FINAL_CONFIG.value.style.tooltip.show;
     },
     { deep: true },
 );
-
-watch(
-    () => props.dataset,
-    (_) => {
-        if (Array.isArray(_) && _.length > 0) {
-            manualLoading.value = false;
-        }
-    },
-    { deep: true },
-);
-
-const resizeObserver = shallowRef(null);
-const observedEl = shallowRef(null);
-
-const responsiveSizeReady = ref(false);
-let resizeFrame = 0;
-
-onMounted(() => {
-    prepareChart();
-});
-
-const debug = computed(() => FINAL_CONFIG.value.debug);
-
-function prepareChart() {
-    if (objectIsEmpty(props.dataset)) {
-        error({
-            componentName: 'VueUiAgePyramid',
-            type: 'dataset',
-            debug: debug.value,
-        });
-        manualLoading.value = true;
-    }
-
-    // v3
-    if (!objectIsEmpty(props.dataset)) {
-        manualLoading.value = FINAL_CONFIG.value.loading;
-    }
-
-    if (FINAL_CONFIG.value.responsive) {
-        const handleResize = () => {
-            const { width, height } = useResponsive({
-                chart: agePyramid.value,
-                title: style.value.title.text ? chartTitle.value : null,
-                source: source.value,
-                noTitle: noTitle.value,
-            });
-
-            cancelAnimationFrame(resizeFrame);
-            resizeFrame = requestAnimationFrame(() => {
-                svg.value.width = width;
-                svg.value.height = height;
-                responsiveSizeReady.value = true;
-            });
-        };
-
-        if (resizeObserver.value) {
-            if (observedEl.value) {
-                resizeObserver.value.unobserve(observedEl.value);
-            }
-            resizeObserver.value.disconnect();
-        }
-
-        resizeObserver.value = new ResizeObserver(handleResize);
-        observedEl.value = agePyramid.value.parentNode;
-        resizeObserver.value.observe(observedEl.value);
-    }
-}
-
 onBeforeUnmount(() => {
-    cancelAnimationFrame(resizeFrame);
-    if (resizeObserver.value) {
-        if (observedEl.value) {
-            resizeObserver.value.unobserve(observedEl.value);
-        }
-        resizeObserver.value.disconnect();
-    }
+    disposed = true;
+    if (resizeFrame !== null) cancelAnimationFrame(resizeFrame);
+    resizeObserver?.disconnect();
 });
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
@@ -359,17 +317,12 @@ const mutableConfig = ref({
     showTooltip: style.value.tooltip.show,
 });
 
-// v3 - Essential to make shifting between loading config and final config work
-watch(
-    FINAL_CONFIG,
-    () => {
-        mutableConfig.value = {
-            showTable: FINAL_CONFIG.value.table.show,
-            showTooltip: style.value.tooltip.show,
-        };
-    },
-    { immediate: true },
-);
+watch([() => FINAL_CONFIG.value.table.show, loading], ([value]) => {
+    mutableConfig.value.showTable = value;
+});
+watch([() => style.value.tooltip.show, loading], ([value]) => {
+    mutableConfig.value.showTooltip = value;
+});
 
 const svg = ref({
     height: style.value.height,
@@ -382,7 +335,6 @@ const HEIGHT = computed(() => svg.value.height);
 const {
     metrics: labelLayout,
     ready: labelLayoutReady,
-    settling: labelLayoutSettling,
     update: measureLabelLayout,
 } = useSvgLabelLayout({
     svgRef,
@@ -477,26 +429,22 @@ const xLabels = computed(() => {
 
 function closestDecimal(number) {
     if (number === 0) return 0;
-
-    const orderOfMagnitude = Math.floor(Math.log10(Math.abs(number)));
-    const powerOf10 = 10 ** orderOfMagnitude;
-
-    let roundedValue;
-    if (number < 0) {
-        roundedValue = Math.round(number / powerOf10) * powerOf10;
-    } else {
-        roundedValue = Math.round(number / powerOf10) * powerOf10;
-    }
-    return roundedValue;
+    const magnitude = 10 ** Math.floor(Math.log10(Math.abs(number)));
+    return Math.round(number / magnitude) * magnitude;
 }
-
-const max = computed(() => {
-    return Math.max(
-        ...FINAL_DATASET.value.flatMap((ds) => {
-            return ds.slice(-2).map((v) => checkNaN(v));
-        }),
-    );
-});
+function numericValue(value) {
+    return Number.isFinite(value) ? value : 0;
+}
+const max = computed(
+    () =>
+        Math.max(
+            0,
+            ...FINAL_DATASET.value.flatMap((row) => [
+                numericValue(row[2]),
+                numericValue(row[3]),
+            ]),
+        ) || 1,
+);
 
 const len = computed(() => FINAL_DATASET.value.length);
 
@@ -507,11 +455,11 @@ const mutableDataset = computed(() => {
             age: ds[1],
             left: {
                 value: ds[2],
-                proportionToMax: ds[2] / max.value,
+                proportionToMax: Math.max(0, numericValue(ds[2])) / max.value,
             },
             right: {
                 value: ds[3],
-                proportionToMax: ds[3] / max.value,
+                proportionToMax: Math.max(0, numericValue(ds[3])) / max.value,
             },
         };
     });
@@ -552,7 +500,80 @@ const drawableDataset = computed(() => {
     });
 });
 
-const dataTooltipSlot = ref(null);
+const sides = ['left', 'right'];
+const axisSides = ['right', 'left'];
+function barAttrs(side) {
+    return {
+        x: side.x,
+        y: side.y,
+        width: side.width <= 0 ? 0.0001 : side.width,
+        height: side.height <= 0 ? 0.0001 : side.height,
+        rx: bars.value.borderRadius,
+    };
+}
+function barLabelAttrs(segment, side) {
+    const point = segment[side];
+    return {
+        x:
+            side === 'left'
+                ? point.x +
+                  Math.max(0.0001, point.width) -
+                  barLabels.value.offsetX -
+                  6
+                : point.x + barLabels.value.offsetX + 6,
+        y: point.y + Math.max(0.0001, point.height / 2) + bars.value.gap / 2,
+        'text-anchor': side === 'left' ? 'end' : 'start',
+        'dominant-baseline': 'middle',
+        'font-size': barLabels.value.fontSize,
+        'font-weight': barLabels.value.bold ? 'bold' : 'normal',
+        fill: barLabels.value.color,
+        stroke: style.value.backgroundColor,
+        'paint-order': 'stroke fill',
+        'stroke-linecap': 'round',
+        'stroke-linejoin': 'round',
+        'stroke-width': 3,
+    };
+}
+function gradientStops(side) {
+    const color = bars.value[side].color;
+    const faded = setOpacity(
+        shiftHue(color, bars.value.gradient.shiftHue),
+        100 - bars.value.gradient.intensity,
+    );
+    return side === 'left'
+        ? [
+              ['0%', color, 1],
+              ['100%', faded, 1],
+          ]
+        : [
+              ['0%', faded, 1],
+              ['100%', color, 1],
+          ];
+}
+function sideTitleAttrs(side) {
+    const labels = layoutDataLabels.value.sideTitles;
+    return {
+        x: drawingArea.value[side],
+        y: labels.fontSize,
+        fill: labels.useSideColor ? bars.value[side].color : labels.color,
+        'font-size': labels.fontSize,
+        'text-anchor': side === 'left' ? 'start' : 'end',
+        'font-weight': labels.bold ? 'bold' : 'normal',
+    };
+}
+
+const dataTooltipSlot = computed(() => {
+    const index = selectedIndex.value;
+    const datapoint = props.dataset?.[index];
+    return index != null && datapoint && !loading.value
+        ? {
+              datapoint,
+              seriesIndex: index,
+              series: drawableDataset.value,
+              config: FINAL_CONFIG.value,
+          }
+        : null;
+});
 
 function convertDatapoint(dp) {
     const [segment, index, left, right] = dp;
@@ -598,130 +619,121 @@ function updateTooltipA11yPosition(index) {
 }
 
 function useTooltip(index, datapoint, triggerMode = 'pointer') {
-    if (FINAL_CONFIG.value.events.datapointEnter) {
-        FINAL_CONFIG.value.events.datapointEnter({
-            datapoint: convertDatapoint(datapoint),
-            seriesIndex: index,
-        });
-    }
-
+    if (loading.value || !drawableDataset.value[index] || !datapoint) return;
+    FINAL_CONFIG.value.events.datapointEnter?.({
+        datapoint: convertDatapoint(datapoint),
+        seriesIndex: index,
+    });
     selectedIndex.value = index;
     activeTooltipIndex.value = index;
     tooltipTriggerMode.value = triggerMode;
-
-    dataTooltipSlot.value = {
-        datapoint,
-        seriesIndex: index,
-        series: drawableDataset.value,
-        config: FINAL_CONFIG.value,
-    };
-
-    const customFormat = style.value.tooltip.customFormat;
-
-    if (
-        isFunction(customFormat) &&
-        functionReturnsString(() =>
-            customFormat({
-                seriesIndex: index,
-                datapoint: {
-                    segment: datapoint[0],
-                    index: datapoint[1],
-                    left: datapoint[2],
-                    right: datapoint[3],
-                },
-                series: drawableDataset.value,
-                config: FINAL_CONFIG.value,
-            }),
-        )
-    ) {
-        tooltipContent.value = customFormat({
-            seriesIndex: index,
-            datapoint: {
-                segment: datapoint[0],
-                index: datapoint[1],
-                left: datapoint[2],
-                right: datapoint[3],
-            },
-            series: drawableDataset.value,
-            config: FINAL_CONFIG.value,
-        });
-    } else {
-        let html = '';
-
-        const selectedSet = drawableDataset.value[index];
-        html += `<div><b>${selectedSet.segment}</b></div>`;
-        html += `<div>${FINAL_CONFIG.value.translations.age}: ${applyDataLabel(
-            layoutDataLabels.value.yAxis.formatter,
-            checkNaN(selectedSet.age),
-            dataLabel({ v: checkNaN(selectedSet.age) }),
-            { datapoint, seriesIndex: index },
-        )}</div>`;
-        html += `<div style="margin-top:6px;padding-top:6px;border-top:1px solid ${style.value.tooltip.borderColor}">`;
-        html += `<div style="display:flex; flex-direction:row;gap:12px">`;
-        html += `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center"><svg viewBox="0 0 12 12" height="12" width="12"><rect stroke="none" x="0" y="0" height="12" width="12" rx="2" fill="${bars.value.gradient.underlayer}"/><rect stroke="none" x="0" y="0" height="12" width="12" rx="2" fill="${bars.value.gradient.show ? `url(#age_pyramid_left_${uid.value})` : bars.value.left.color}"/></svg><div>${FINAL_CONFIG.value.translations.female}</div><div><b>${applyDataLabel(
-            layoutDataLabels.value.xAxis.formatter,
-            checkNaN(selectedSet.left.value),
-            dataLabel({ v: checkNaN(selectedSet.left.value) }),
-            { datapoint, seriesIndex: index },
-        )}</b></div></div>`;
-        html += `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center"><svg viewBox="0 0 12 12" height="12" width="12"><rect stroke="none" x="0" y="0" height="12" width="12" rx="2" fill="${bars.value.gradient.underlayer}"/><rect stroke="none" x="0" y="0" height="12" width="12" rx="2" fill="${bars.value.gradient.show ? `url(#age_pyramid_right_${uid.value})` : bars.value.right.color}"/></svg><div>${FINAL_CONFIG.value.translations.male}</div><div><b>${applyDataLabel(
-            layoutDataLabels.value.xAxis.formatter,
-            checkNaN(selectedSet.right.value),
-            dataLabel({ v: checkNaN(selectedSet.right.value) }),
-            { datapoint, seriesIndex: index },
-        )}</b></div></div>`;
-        html += `</div>`;
-        html += `<div style="margin-top:6px;padding-top:6px;border-top:1px solid ${style.value.tooltip.borderColor}"><div>${FINAL_CONFIG.value.translations.total}</div><div><b>${applyDataLabel(
-            layoutDataLabels.value.xAxis.formatter,
-            checkNaN(selectedSet.right.value) +
-                checkNaN(selectedSet.left.value),
-            dataLabel({
-                v:
-                    checkNaN(selectedSet.right.value) +
-                    checkNaN(selectedSet.left.value),
-            }),
-            { datapoint, seriesIndex: index },
-        )}</b></div></div>`;
-        html += `</div>`;
-
-        tooltipContent.value = `<div>${html}</div>`;
-    }
-
     isTooltip.value = true;
-
-    if (triggerMode === 'keyboard') {
+    if (triggerMode === 'keyboard')
         nextTick(() => {
-            updateTooltipA11yPosition(index);
+            if (!disposed && selectedIndex.value === index)
+                updateTooltipA11yPosition(index);
         });
-    }
 }
+const tooltipContent = computed(() => {
+    const payload = dataTooltipSlot.value;
+    if (!payload) return '';
+    const { datapoint, seriesIndex: index } = payload;
+    const customFormat = style.value.tooltip.customFormat;
+    if (typeof customFormat === 'function') {
+        const result = customFormat({
+            ...payload,
+            datapoint: convertDatapoint(datapoint),
+        });
+        if (typeof result === 'string') return result;
+    }
+    let html = '';
+
+    const selectedSet = drawableDataset.value[index];
+    html += `<div><b>${selectedSet.segment}</b></div>`;
+    html += `<div>${FINAL_CONFIG.value.translations.age}: ${applyDataLabel(
+        layoutDataLabels.value.yAxis.formatter,
+        checkNaN(selectedSet.age),
+        dataLabel({ v: checkNaN(selectedSet.age) }),
+        { datapoint, seriesIndex: index },
+    )}</div>`;
+    html += `<div style="margin-top:6px;padding-top:6px;border-top:1px solid ${style.value.tooltip.borderColor}">`;
+    html += `<div style="display:flex; flex-direction:row;gap:12px">`;
+    html += `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center"><svg viewBox="0 0 12 12" height="12" width="12"><rect stroke="none" x="0" y="0" height="12" width="12" rx="2" fill="${bars.value.gradient.underlayer}"/><rect stroke="none" x="0" y="0" height="12" width="12" rx="2" fill="${bars.value.gradient.show ? `url(#age_pyramid_left_${uid.value})` : bars.value.left.color}"/></svg><div>${FINAL_CONFIG.value.translations.female}</div><div><b>${applyDataLabel(
+        layoutDataLabels.value.xAxis.formatter,
+        checkNaN(selectedSet.left.value),
+        dataLabel({ v: checkNaN(selectedSet.left.value) }),
+        { datapoint, seriesIndex: index },
+    )}</b></div></div>`;
+    html += `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center"><svg viewBox="0 0 12 12" height="12" width="12"><rect stroke="none" x="0" y="0" height="12" width="12" rx="2" fill="${bars.value.gradient.underlayer}"/><rect stroke="none" x="0" y="0" height="12" width="12" rx="2" fill="${bars.value.gradient.show ? `url(#age_pyramid_right_${uid.value})` : bars.value.right.color}"/></svg><div>${FINAL_CONFIG.value.translations.male}</div><div><b>${applyDataLabel(
+        layoutDataLabels.value.xAxis.formatter,
+        checkNaN(selectedSet.right.value),
+        dataLabel({ v: checkNaN(selectedSet.right.value) }),
+        { datapoint, seriesIndex: index },
+    )}</b></div></div>`;
+    html += `</div>`;
+    html += `<div style="margin-top:6px;padding-top:6px;border-top:1px solid ${style.value.tooltip.borderColor}"><div>${FINAL_CONFIG.value.translations.total}</div><div><b>${applyDataLabel(
+        layoutDataLabels.value.xAxis.formatter,
+        checkNaN(selectedSet.right.value) + checkNaN(selectedSet.left.value),
+        dataLabel({
+            v:
+                checkNaN(selectedSet.right.value) +
+                checkNaN(selectedSet.left.value),
+        }),
+        { datapoint, seriesIndex: index },
+    )}</b></div></div>`;
+    html += `</div>`;
+
+    return `<div>${html}</div>`;
+});
+watch(
+    [drawableDataset, loading],
+    () => {
+        if (loading.value || !drawableDataset.value[selectedIndex.value]) {
+            selectedIndex.value = null;
+            isTooltip.value = false;
+        }
+        if (loading.value || !drawableDataset.value[activeTooltipIndex.value])
+            activeTooltipIndex.value = null;
+        if (
+            tooltipTriggerMode.value === 'keyboard' &&
+            selectedIndex.value != null
+        )
+            updateTooltipA11yPosition(selectedIndex.value);
+    },
+    { deep: true, flush: 'post' },
+);
+
+const tableHeaders = computed(() =>
+    ['year', 'age', 'female', 'male', 'total'].map(
+        (key) => FINAL_CONFIG.value.translations[key],
+    ),
+);
+const tableRows = computed(() =>
+    (Array.isArray(props.dataset) ? props.dataset : [])
+        .filter((row) => Array.isArray(row) && row.length >= 4)
+        .map((row) => [
+            row[0],
+            row[1],
+            row[2],
+            row[3],
+            numericValue(row[2]) + numericValue(row[3]),
+        ]),
+);
 
 function generateCsv(callback = null) {
     nextTick(() => {
-        const labels = [
-            FINAL_CONFIG.value.translations.year,
-            FINAL_CONFIG.value.translations.age,
-            FINAL_CONFIG.value.translations.female,
-            FINAL_CONFIG.value.translations.male,
-            FINAL_CONFIG.value.translations.total,
-        ];
-
-        const values = props.dataset.map((ds) => {
-            return [ds[0], ds[1], ds[2], ds[3], ds[2] ?? 0 + ds[3] ?? 0];
-        });
-
         const tableXls = [
             [style.value.title.text],
             [style.value.title.subtitle.text],
             [[''], [''], ['']],
         ]
-            .concat([labels])
-            .concat(values);
+            .concat([tableHeaders.value])
+            .concat(tableRows.value);
         const csvContent = createCsvContent(tableXls);
         if (!callback) {
             downloadCsv({
                 csvContent,
-                title: style.value.title.text || 'vue-ui-heatmap',
+                title: style.value.title.text || 'vue-ui-age-pyramid',
             });
         } else {
             callback(csvContent);
@@ -730,22 +742,14 @@ function generateCsv(callback = null) {
 }
 
 const dataTable = computed(() => {
-    const head = [
-        FINAL_CONFIG.value.translations.year,
-        FINAL_CONFIG.value.translations.age,
-        FINAL_CONFIG.value.translations.female,
-        FINAL_CONFIG.value.translations.male,
-        FINAL_CONFIG.value.translations.total,
-    ];
-    const body = props.dataset.map((ds) => {
-        return [
-            ds[0],
-            ds[1],
-            ds[2] == null ? '' : ds[2].toLocaleString(),
-            ds[3] == null ? '' : ds[3].toLocaleString(),
-            (ds[2] ?? 0 + ds[3] ?? 0).toLocaleString(),
-        ];
-    });
+    const head = tableHeaders.value;
+    const body = tableRows.value.map((row) => [
+        row[0],
+        row[1],
+        ...row
+            .slice(2)
+            .map((value) => (value == null ? '' : value.toLocaleString())),
+    ]);
     const config = {
         th: {
             backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
@@ -803,7 +807,10 @@ async function getImage({ scale = 2 } = {}) {
 }
 
 const dummyTimeLabels = ref([]);
-const dummySlicer = ref({ start: 0, end: drawableDataset.value.length });
+const dummySlicer = computed(() => ({
+    start: 0,
+    end: drawableDataset.value.length,
+}));
 
 useTimeLabelCollision({
     timeLabelsEls: xAxisLabels,
@@ -842,7 +849,9 @@ const tableComponent = computed(() =>
 
 watch(
     () => mutableConfig.value.showTable,
-    (v) => syncTableVisibility(v, FINAL_CONFIG, tableUnit),
+    (v) => {
+        if (tableUnit.value) syncTableVisibility(v, FINAL_CONFIG, tableUnit);
+    },
 );
 
 function closeTable() {
@@ -902,7 +911,7 @@ function onSvgBlur() {
 }
 
 function onSvgKeydown(event) {
-    if (!svgRef.value || isAnnotator.value) return;
+    if (!svgRef.value || isAnnotator.value || loading.value) return;
     if (document.activeElement !== svgRef.value) return;
     if (!drawableDataset.value.length) return;
 
@@ -1019,7 +1028,7 @@ watch(
         </div>
 
         <A11yDataTable
-            v-if="dataTable?.body?.length"
+            v-if="FINAL_CONFIG.a11y.includeTable && dataTable?.body?.length"
             :uid="uid"
             :head="dataTable.head"
             :body="dataTable.body"
@@ -1062,7 +1071,6 @@ watch(
             :style="`width:100%;background:transparent`"
         >
             <Title
-                :key="`title_${titleStep}`"
                 :config="{
                     title: {
                         cy: 'pyramid-div-title',
@@ -1181,203 +1189,53 @@ watch(
 
                 <defs>
                     <DefGrad
+                        v-for="side in sides"
+                        :key="side"
                         t="linear"
-                        :id="`age_pyramid_left_${uid}`"
+                        :id="`age_pyramid_${side}_${uid}`"
                         x1="0%"
                         y1="0%"
                         x2="100%"
                         y2="0%"
-                        :stops="[
-                            ['0%', bars.left.color, 1],
-                            [
-                                '100%',
-                                setOpacity(
-                                    shiftHue(
-                                        bars.left.color,
-                                        bars.gradient.shiftHue,
-                                    ),
-                                    100 - bars.gradient.intensity,
-                                ),
-                                1,
-                            ],
-                        ]"
-                    />
-                    <DefGrad
-                        t="linear"
-                        :id="`age_pyramid_right_${uid}`"
-                        x1="0%"
-                        y1="0%"
-                        x2="100%"
-                        y2="0%"
-                        :stops="[
-                            [
-                                '0%',
-                                setOpacity(
-                                    shiftHue(
-                                        bars.right.color,
-                                        bars.gradient.shiftHue,
-                                    ),
-                                    100 - bars.gradient.intensity,
-                                ),
-                                1,
-                            ],
-                            ['100%', bars.right.color, 1],
-                        ]"
+                        :stops="gradientStops(side)"
                     />
                 </defs>
-
-                <g v-for="(segment, i) in drawableDataset">
-                    <!-- LEFT SIDE -->
-                    <rect
-                        :x="segment.left.x"
-                        :y="segment.left.y"
-                        :width="
-                            checkNaN(
-                                segment.left.width <= 0
-                                    ? 0.0001
-                                    : segment.left.width,
-                            )
-                        "
-                        :height="
-                            segment.left.height <= 0
-                                ? 0.0001
-                                : segment.left.height
-                        "
-                        :fill="bars.gradient.underlayer"
-                        :rx="bars.borderRadius"
-                    />
-                    <rect
-                        :x="segment.left.x"
-                        :y="segment.left.y"
-                        :width="
-                            segment.left.width <= 0
-                                ? 0.0001
-                                : segment.left.width
-                        "
-                        :height="
-                            segment.left.height <= 0
-                                ? 0.0001
-                                : segment.left.height
-                        "
-                        :fill="
-                            bars.gradient.show
-                                ? `url(#age_pyramid_left_${uid})`
-                                : segment.left.color
-                        "
-                        :rx="bars.borderRadius"
-                    />
-
-                    <!-- RIGHT SIDE -->
-                    <rect
-                        :x="segment.right.x"
-                        :y="segment.right.y"
-                        :width="
-                            segment.right.width <= 0
-                                ? 0.0001
-                                : segment.right.width
-                        "
-                        :height="
-                            segment.right.height <= 0
-                                ? 0.0001
-                                : segment.right.height
-                        "
-                        :fill="bars.gradient.underlayer"
-                        :rx="bars.borderRadius"
-                    />
-                    <rect
-                        :x="segment.right.x"
-                        :y="segment.right.y"
-                        :width="
-                            segment.right.width <= 0
-                                ? 0.0001
-                                : segment.right.width
-                        "
-                        :height="
-                            segment.right.height <= 0
-                                ? 0.0001
-                                : segment.right.height
-                        "
-                        :fill="
-                            bars.gradient.show
-                                ? `url(#age_pyramid_right_${uid})`
-                                : segment.right.color
-                        "
-                        :rx="bars.borderRadius"
-                    />
-                </g>
-
-                <!-- BAR DATA LABELS -->
-                <g v-for="(segment, i) in drawableDataset">
-                    <!-- BAR DATALABEL LEFT -->
-                    <template v-if="barLabels.show">
-                        <text
-                            v-if="
-                                !barLabels.showOnHover ||
-                                (barLabels.showOnHover && selectedIndex === i)
+                <g v-for="(segment, i) in drawableDataset" :key="i">
+                    <template v-for="side in sides" :key="side">
+                        <rect
+                            v-bind="barAttrs(segment[side])"
+                            :fill="bars.gradient.underlayer"
+                        />
+                        <rect
+                            v-bind="barAttrs(segment[side])"
+                            :fill="
+                                bars.gradient.show
+                                    ? `url(#age_pyramid_${side}_${uid})`
+                                    : segment[side].color
                             "
-                            :x="
-                                segment.left.x +
-                                Math.max(0.0001, segment.left.width) -
-                                barLabels.offsetX -
-                                6
-                            "
-                            :y="
-                                segment.left.y +
-                                Math.max(0.0001, segment.left.height / 2) +
-                                bars.gap / 2
-                            "
-                            text-anchor="end"
-                            dominant-baseline="middle"
-                            :font-size="barLabels.fontSize"
-                            :font-weight="barLabels.bold ? 'bold' : 'normal'"
-                            :fill="barLabels.color"
-                            :stroke="style.backgroundColor"
-                            paint-order="stroke fill"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="3"
-                        >
-                            {{
-                                applyDataLabel(
-                                    barLabels.formatter,
-                                    segment.left.value,
-                                    dataLabel({ v: segment.left.value }),
-                                    { datapoint: segment.left, seriesIndex: i },
-                                )
-                            }}
-                        </text>
+                        />
                     </template>
-                    <!-- BAR DATALABEL RIGHT -->
-                    <template v-if="barLabels.show">
+                </g>
+                <!-- BAR DATA LABELS -->
+                <g v-for="(segment, i) in drawableDataset" :key="i">
+                    <template
+                        v-if="
+                            barLabels.show &&
+                            (!barLabels.showOnHover || selectedIndex === i)
+                        "
+                    >
                         <text
-                            v-if="
-                                !barLabels.showOnHover ||
-                                (barLabels.showOnHover && selectedIndex === i)
-                            "
-                            :x="segment.right.x + barLabels.offsetX + 6"
-                            :y="
-                                segment.right.y +
-                                Math.max(0.0001, segment.right.height / 2) +
-                                bars.gap / 2
-                            "
-                            text-anchor="start"
-                            dominant-baseline="middle"
-                            :font-size="barLabels.fontSize"
-                            :font-weight="barLabels.bold ? 'bold' : 'normal'"
-                            :fill="barLabels.color"
-                            :stroke="style.backgroundColor"
-                            paint-order="stroke fill"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="3"
+                            v-for="side in sides"
+                            :key="side"
+                            v-bind="barLabelAttrs(segment, side)"
                         >
                             {{
                                 applyDataLabel(
                                     barLabels.formatter,
-                                    segment.right.value,
-                                    dataLabel({ v: segment.right.value }),
+                                    segment[side].value,
+                                    dataLabel({ v: segment[side].value }),
                                     {
-                                        datapoint: segment.right,
+                                        datapoint: segment[side],
                                         seriesIndex: i,
                                     },
                                 )
@@ -1390,42 +1248,16 @@ watch(
                 <g>
                     <g v-if="layoutDataLabels.sideTitles.show">
                         <text
-                            data-cy="label-left"
-                            :x="drawingArea.left"
-                            :y="layoutDataLabels.sideTitles.fontSize"
-                            :fill="
-                                layoutDataLabels.sideTitles.useSideColor
-                                    ? bars.left.color
-                                    : layoutDataLabels.sideTitles.color
-                            "
-                            :font-size="layoutDataLabels.sideTitles.fontSize"
-                            text-anchor="start"
-                            :font-weight="
-                                layoutDataLabels.sideTitles.bold
-                                    ? 'bold'
-                                    : 'normal'
-                            "
+                            v-for="side in sides"
+                            :key="side"
+                            :data-cy="`label-${side}`"
+                            v-bind="sideTitleAttrs(side)"
                         >
-                            {{ FINAL_CONFIG.translations.female }}
-                        </text>
-                        <text
-                            data-cy="label-right"
-                            :x="drawingArea.right"
-                            :y="layoutDataLabels.sideTitles.fontSize"
-                            :fill="
-                                layoutDataLabels.sideTitles.useSideColor
-                                    ? bars.right.color
-                                    : layoutDataLabels.sideTitles.color
-                            "
-                            :font-size="layoutDataLabels.sideTitles.fontSize"
-                            text-anchor="end"
-                            :font-weight="
-                                layoutDataLabels.sideTitles.bold
-                                    ? 'bold'
-                                    : 'normal'
-                            "
-                        >
-                            {{ FINAL_CONFIG.translations.male }}
+                            {{
+                                FINAL_CONFIG.translations[
+                                    side === 'left' ? 'female' : 'male'
+                                ]
+                            }}
                         </text>
                     </g>
 
@@ -1475,25 +1307,11 @@ watch(
                     <g v-if="layoutDataLabels.xAxis.show">
                         <g v-if="style.layout.grid.show">
                             <line
-                                data-cy="scale-line-left"
-                                :x1="xLabels.right[0].x"
-                                :x2="xLabels.right.at(-1).x"
-                                :y1="
-                                    drawingArea.bottom +
-                                    layoutDataLabels.xAxis.fontSize / 2
-                                "
-                                :y2="
-                                    drawingArea.bottom +
-                                    layoutDataLabels.xAxis.fontSize / 2
-                                "
-                                :stroke="style.layout.grid.stroke"
-                                :stroke-width="style.layout.grid.strokeWidth"
-                                stroke-linecap="round"
-                            />
-                            <line
-                                data-cy="scale-line-right"
-                                :x1="xLabels.left[0].x"
-                                :x2="xLabels.left.at(-1).x"
+                                v-for="side in axisSides"
+                                :key="side"
+                                :data-cy="`scale-line-${side === 'right' ? 'left' : 'right'}`"
+                                :x1="xLabels[side][0].x"
+                                :x2="xLabels[side].at(-1).x"
                                 :y1="
                                     drawingArea.bottom +
                                     layoutDataLabels.xAxis.fontSize / 2
@@ -1507,125 +1325,73 @@ watch(
                                 stroke-linecap="round"
                             />
                         </g>
-                        <g v-for="(rightLabel, i) in xLabels.right">
-                            <line
-                                v-if="style.layout.grid.show"
-                                data-cy="scale-tick-right"
-                                :x1="rightLabel.x"
-                                :x2="rightLabel.x"
-                                :y1="
-                                    drawingArea.bottom +
-                                    layoutDataLabels.xAxis.fontSize / 2
-                                "
-                                :y2="
-                                    drawingArea.bottom +
-                                    layoutDataLabels.xAxis.fontSize / 2 +
-                                    4
-                                "
-                                :stroke="style.layout.grid.stroke"
-                                :stroke-width="style.layout.grid.strokeWidth"
-                                stroke-linecap="round"
-                            />
-                        </g>
-                        <g v-for="(leftLabel, i) in xLabels.left">
-                            <line
-                                v-if="style.layout.grid.show"
-                                data-cy="scale-tick-left"
-                                :x1="leftLabel.x"
-                                :x2="leftLabel.x"
-                                :y1="
-                                    drawingArea.bottom +
-                                    layoutDataLabels.xAxis.fontSize / 2
-                                "
-                                :y2="
-                                    drawingArea.bottom +
-                                    layoutDataLabels.xAxis.fontSize / 2 +
-                                    4
-                                "
-                                :stroke="style.layout.grid.stroke"
-                                :stroke-width="style.layout.grid.strokeWidth"
-                                stroke-linecap="round"
-                            />
-                        </g>
-
+                        <template v-for="side in axisSides" :key="side">
+                            <g v-for="(label, i) in xLabels[side]" :key="i">
+                                <line
+                                    v-if="style.layout.grid.show"
+                                    :data-cy="`scale-tick-${side}`"
+                                    :x1="label.x"
+                                    :x2="label.x"
+                                    :y1="
+                                        drawingArea.bottom +
+                                        layoutDataLabels.xAxis.fontSize / 2
+                                    "
+                                    :y2="
+                                        drawingArea.bottom +
+                                        layoutDataLabels.xAxis.fontSize / 2 +
+                                        4
+                                    "
+                                    :stroke="style.layout.grid.stroke"
+                                    :stroke-width="
+                                        style.layout.grid.strokeWidth
+                                    "
+                                    stroke-linecap="round"
+                                />
+                            </g>
+                        </template>
                         <g ref="xAxisLabels">
-                            <text
-                                class="vue-ui-age-pyramid-x-axis-label"
-                                v-for="(rightLabel, i) in xLabels.right"
-                                data-cy="scale-tick-right-label"
-                                :font-size="layoutDataLabels.xAxis.fontSize"
-                                :fill="layoutDataLabels.xAxis.color"
-                                :text-anchor="
-                                    layoutDataLabels.xAxis.rotation > 0
-                                        ? 'start'
-                                        : layoutDataLabels.xAxis.rotation < 0
-                                          ? 'end'
-                                          : 'middle'
-                                "
-                                :font-weight="
-                                    layoutDataLabels.xAxis.bold
-                                        ? 'bold'
-                                        : 'normal'
-                                "
-                                :transform="`translate(${rightLabel.x}, ${drawingArea.bottom + layoutDataLabels.xAxis.fontSize * 2}) rotate(${layoutDataLabels.xAxis.rotation})`"
-                            >
-                                {{
-                                    applyDataLabel(
-                                        layoutDataLabels.xAxis.formatter,
-                                        rightLabel.value /
-                                            layoutDataLabels.xAxis.scale,
-                                        dataLabel({
-                                            v:
-                                                rightLabel.value /
-                                                style.layout.dataLabels.xAxis
-                                                    .scale,
-                                        }),
-                                        {
-                                            datapoint: rightLabel,
-                                            seriesIndex: i,
-                                        },
-                                    )
-                                }}
-                            </text>
-
-                            <text
-                                class="vue-ui-age-pyramid-x-axis-label"
-                                v-for="(leftLabel, i) in xLabels.left"
-                                data-cy="scale-tick-left-label"
-                                :font-size="layoutDataLabels.xAxis.fontSize"
-                                :fill="layoutDataLabels.xAxis.color"
-                                :text-anchor="
-                                    layoutDataLabels.xAxis.rotation > 0
-                                        ? 'start'
-                                        : layoutDataLabels.xAxis.rotation < 0
-                                          ? 'end'
-                                          : 'middle'
-                                "
-                                :font-weight="
-                                    layoutDataLabels.xAxis.bold
-                                        ? 'bold'
-                                        : 'normal'
-                                "
-                                :transform="`translate(${leftLabel.x}, ${drawingArea.bottom + layoutDataLabels.xAxis.fontSize * 2}) rotate(${layoutDataLabels.xAxis.rotation})`"
-                            >
-                                {{
-                                    applyDataLabel(
-                                        layoutDataLabels.xAxis.formatter,
-                                        leftLabel.value /
-                                            layoutDataLabels.xAxis.scale,
-                                        dataLabel({
-                                            v:
-                                                leftLabel.value /
-                                                style.layout.dataLabels.xAxis
-                                                    .scale,
-                                        }),
-                                        {
-                                            datapoint: leftLabel,
-                                            seriesIndex: i,
-                                        },
-                                    )
-                                }}
-                            </text>
+                            <template v-for="side in axisSides" :key="side">
+                                <text
+                                    v-for="(label, i) in xLabels[side]"
+                                    :key="i"
+                                    class="vue-ui-age-pyramid-x-axis-label"
+                                    :data-cy="`scale-tick-${side}-label`"
+                                    :font-size="layoutDataLabels.xAxis.fontSize"
+                                    :fill="layoutDataLabels.xAxis.color"
+                                    :text-anchor="
+                                        layoutDataLabels.xAxis.rotation > 0
+                                            ? 'start'
+                                            : layoutDataLabels.xAxis.rotation <
+                                                0
+                                              ? 'end'
+                                              : 'middle'
+                                    "
+                                    :font-weight="
+                                        layoutDataLabels.xAxis.bold
+                                            ? 'bold'
+                                            : 'normal'
+                                    "
+                                    :transform="`translate(${label.x}, ${drawingArea.bottom + layoutDataLabels.xAxis.fontSize * 2}) rotate(${layoutDataLabels.xAxis.rotation})`"
+                                >
+                                    {{
+                                        applyDataLabel(
+                                            layoutDataLabels.xAxis.formatter,
+                                            label.value /
+                                                layoutDataLabels.xAxis.scale,
+                                            dataLabel({
+                                                v:
+                                                    label.value /
+                                                    layoutDataLabels.xAxis
+                                                        .scale,
+                                            }),
+                                            {
+                                                datapoint: label,
+                                                seriesIndex: i,
+                                            },
+                                        )
+                                    }}
+                                </text>
+                            </template>
                         </g>
                         <text
                             :x="drawingArea.right"
@@ -1643,35 +1409,39 @@ watch(
                 </g>
 
                 <!-- TOOLTIP TRAPS -->
-                <g v-for="(datapoint, i) in dataset">
-                    <rect
-                        data-cy="tooltip-trap"
-                        :x="drawingArea.left"
-                        :y="
-                            drawingArea.top +
-                            (drawingArea.height / len) * i -
-                            bars.gap / 2
-                        "
-                        :width="
-                            drawingArea.width <= 0 ? 0.0001 : drawingArea.width
-                        "
-                        :height="
-                            drawingArea.height / len <= 0
-                                ? 0.0001
-                                : drawingArea.height / len
-                        "
-                        :fill="
-                            selectedIndex !== null && selectedIndex === i
-                                ? setOpacity(
-                                      style.highlighter.color,
-                                      style.highlighter.opacity,
-                                  )
-                                : 'transparent'
-                        "
-                        @mouseover="useTooltip(i, datapoint, 'pointer')"
-                        @mouseleave="onTrapLeave(i, datapoint)"
-                        @click="selectDatapoint(i, datapoint)"
-                    />
+                <g v-if="!loading">
+                    <g v-for="(datapoint, i) in dataset">
+                        <rect
+                            data-cy="tooltip-trap"
+                            :x="drawingArea.left"
+                            :y="
+                                drawingArea.top +
+                                (drawingArea.height / len) * i -
+                                bars.gap / 2
+                            "
+                            :width="
+                                drawingArea.width <= 0
+                                    ? 0.0001
+                                    : drawingArea.width
+                            "
+                            :height="
+                                drawingArea.height / len <= 0
+                                    ? 0.0001
+                                    : drawingArea.height / len
+                            "
+                            :fill="
+                                selectedIndex !== null && selectedIndex === i
+                                    ? setOpacity(
+                                          style.highlighter.color,
+                                          style.highlighter.opacity,
+                                      )
+                                    : 'transparent'
+                            "
+                            @mouseover="useTooltip(i, datapoint, 'pointer')"
+                            @mouseleave="onTrapLeave(i, datapoint)"
+                            @click="selectDatapoint(i, datapoint)"
+                        />
+                    </g>
                 </g>
 
                 <slot
@@ -1790,7 +1560,6 @@ watch(
             </template>
             <template #content>
                 <DataTable
-                    :key="`table_${tableStep}`"
                     :colNames="dataTable.colNames"
                     :head="dataTable.head"
                     :body="dataTable.body"
@@ -1828,17 +1597,6 @@ watch(
 .vue-ui-age-pyramid {
     user-select: none;
     position: relative;
-}
-
-.vue-ui-age-pyramid-tooltip {
-    border: 1px solid #e1e5e8;
-    border-radius: 4px;
-    box-shadow: 0 6px 12px -6px rgba(0, 0, 0, 0.2);
-    max-width: 300px;
-    position: fixed;
-    padding: 12px;
-    z-index: 1;
-    font-variant-numeric: tabular-nums;
 }
 
 svg:focus {

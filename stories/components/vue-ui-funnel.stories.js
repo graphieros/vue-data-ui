@@ -131,6 +131,59 @@ function createCases(env) {
             }
         }
     };
+    cases.LiveUpdates = async () => {
+        const { wrapper } = await mountSubject(VueUiFunnel, {
+            props: {
+                dataset: [],
+                config: { useCssAnimation: true, userOptions: { show: false } },
+            },
+        });
+        const data = [
+            { name: 'First', value: 100 },
+            { name: 'Second', value: 40 },
+        ];
+        await wrapper.setProps({ dataset: data });
+        await waitFor(() =>
+            expect(wrapper.findAll('rect.animated')).toHaveLength(2),
+        );
+        await waitFor(() =>
+            expect(wrapper.findAll('rect.animated')).toHaveLength(0),
+        );
+        await wrapper.setProps({
+            config: {
+                useCssAnimation: false,
+                userOptions: { show: false },
+                style: {
+                    chart: {
+                        width: 900,
+                        height: 600,
+                        padding: { top: 30, bottom: 20 },
+                    },
+                },
+            },
+        });
+        expect(
+            wrapper.find('[data-cy="funnel-svg"]').attributes('viewBox'),
+        ).toBe('0 0 900 600');
+        expect(
+            Number(wrapper.find('[data-cy="datapoint-bar"]').attributes('y')),
+        ).toBeCloseTo(57.5);
+        await wrapper.setProps({
+            dataset: [
+                { name: 'Zero', value: 0 },
+                { name: 'Next', value: 10 },
+            ],
+        });
+        for (const bar of wrapper.findAll('[data-cy="datapoint-bar"]'))
+            expect(bar.attributes('width')).toBe('0');
+        const gradient = wrapper.find('linearGradient').attributes('id');
+        expect(wrapper.find('[data-cy="funnel-area"]').attributes('fill')).toBe(
+            `url(#${gradient})`,
+        );
+        expect(wrapper.find('[data-cy="funnel-svg"]').html()).not.toMatch(
+            /NaN|Infinity/,
+        );
+    };
     return {
         cases,
         hooks,
@@ -143,4 +196,9 @@ export default {
 export const Renders = {
     name: 'renders',
     play: async (context) => runScenario(context, createCases, 'Renders'),
+};
+
+export const LiveUpdates = {
+    name: 'updates dimensions, late data, and zero baseline',
+    play: async (context) => runScenario(context, createCases, 'LiveUpdates'),
 };

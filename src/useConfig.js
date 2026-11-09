@@ -39,6 +39,7 @@ export function useConfig(options = {}) {
     const COLOR_BORDER = options.colorBorder ?? COLOR_GREY_LIGHT;
 
     const A11Y = {
+        includeTable: false,
         translations: {
             keyboardNavigation:
                 'Use the left and right arrow keys to move between data points.',
@@ -759,6 +760,8 @@ export function useConfig(options = {}) {
                         stroke: COLOR_WHITE,
                     },
                     dot: {
+                        show: true,
+                        showOnHover: true,
                         hideAboveMaxSerieLength: 62,
                         useSerieColor: true,
                         fill: COLOR_WHITE,
@@ -1336,6 +1339,8 @@ export function useConfig(options = {}) {
                         reverse: false, // continuous mode only
                     },
                     yAxis: {
+                        scale: 'linear', // or 'log', 'symlog'
+                        symlogConstant: 1,
                         reverse: false,
                         position: 'left', // or 'right'
                         showBaseline: true,

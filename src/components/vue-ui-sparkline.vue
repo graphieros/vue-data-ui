@@ -252,7 +252,7 @@ const pulseDur = computed(
 );
 const pulsePathLength = ref(0);
 const pulseBegin = computed(() => pulse.value?.begin || '0ms');
-const pulseKeyPoints = ref('0;1');
+const pulseKeyPoints = '0;1';
 
 const pulseRepeatCount = computed(() => {
     return pulse.value?.loop === false ? '1' : 'indefinite';
@@ -368,7 +368,19 @@ const zoomRange = ref({ start: 0, end: null });
 const isZoomSelecting = ref(false);
 const isPointerFocused = ref(false);
 const isZoomTransitioning = ref(false);
-const zoomVisualTransform = ref('matrix(1, 0, 0, 1, 0, 0)');
+const zoomMatrix = ref({ scaleX: 1, scaleY: 1, translateX: 0, translateY: 0 });
+const zoomVisualTransform = computed(() => {
+    const { scaleX, scaleY, translateX, translateY } = zoomMatrix.value;
+    return `matrix(${scaleX}, 0, 0, ${scaleY}, ${translateX}, ${translateY})`;
+});
+const zoomTransitionStyle = computed(() => ({
+    transformOrigin: '0 0',
+    transformBox: 'view-box',
+    transition: zoomVisualTransitionEnabled.value
+        ? `transform ${ZOOM_TRANSITION_DURATION}ms cubic-bezier(0.4, 0, 0.2, 1)`
+        : 'none',
+    willChange: 'transform',
+}));
 const zoomVisualTransitionEnabled = ref(false);
 const ZOOM_TRANSITION_DURATION = 280;
 let zoomTransitionFrameId = 0;
@@ -471,15 +483,7 @@ watch(
 
         clearHoverSelection();
 
-        safeDatasetCopy.value = largestTriangleThreeBucketsArrayObjects({
-            data: visibleRawDataset.value.map((d) => {
-                return {
-                    ...d,
-                    value: ![undefined].includes(d.value) ? d.value : null,
-                };
-            }),
-            threshold: FINAL_CONFIG.value.downsample.threshold,
-        });
+        safeDatasetCopy.value = prepareDsCopy(false);
 
         const resetState = getCommittedZoomState();
         emits('update:zoomState', resetState);
@@ -490,24 +494,15 @@ watch(
 
 const safeDatasetCopy = ref(prepareDsCopy());
 
-function prepareDsCopy() {
+function prepareDsCopy(
+    hideValues = cfgStyle.value.animation.show &&
+        FINAL_DATASET.value.length > 1,
+) {
     return largestTriangleThreeBucketsArrayObjects({
-        data: visibleRawDataset.value.map((d) => {
-            if (
-                cfgStyle.value.animation.show &&
-                FINAL_DATASET.value.length > 1
-            ) {
-                return {
-                    ...d,
-                    value: null,
-                };
-            } else {
-                return {
-                    ...d,
-                    value: ![undefined].includes(d.value) ? d.value : null,
-                };
-            }
-        }),
+        data: visibleRawDataset.value.map((d) => ({
+            ...d,
+            value: hideValues ? null : d.value === undefined ? null : d.value,
+        })),
         threshold: FINAL_CONFIG.value.downsample.threshold,
     });
 }
@@ -629,27 +624,6 @@ onBeforeUnmount(() => {
     stopAnimation();
     stopZoomVisualTransition();
 });
-
-const pulseInstanceKey = ref(0);
-
-watch(
-    () => loading.value,
-    async (isLoading) => {
-        if (isLoading) return;
-        await nextTick();
-        pulseInstanceKey.value += 1;
-    },
-);
-
-watch(
-    () => isAnimating.value,
-    async (animating) => {
-        if (animating) return;
-        if (loading.value) return;
-        await nextTick();
-        pulseInstanceKey.value += 1;
-    },
-);
 
 const pulsePathId = computed(() => {
     return `sparkline_line_path_${uid.value}`;
@@ -860,13 +834,6 @@ function applyZoomState(
     return getCommittedZoomState();
 }
 
-function emitZoomState(state = getCommittedZoomState()) {
-    const normalized = normalizeZoomStateToDataset(state);
-    if (!normalized) return;
-
-    emits('update:zoomState', normalized);
-}
-
 /**
  * Apply an imperative zoom update and publish the committed range through update:zoomState.
  * Invalid input leaves the current range unchanged.
@@ -945,14 +912,17 @@ function normalizeInclusiveZoomRange(range) {
     };
 }
 
+function getScaleValue(value) {
+    return isNaN(value) ||
+        [undefined, null, 'NaN', NaN, Infinity, -Infinity].includes(value)
+        ? 0
+        : value || 0;
+}
+
 function getZoomScaleForDataset(dataset) {
-    const values = (dataset || []).map((datapoint) => {
-        const value = datapoint?.value;
-        return isNaN(value) ||
-            [undefined, null, 'NaN', NaN, Infinity, -Infinity].includes(value)
-            ? 0
-            : value || 0;
-    });
+    const values = (dataset || []).map((datapoint) =>
+        getScaleValue(datapoint?.value),
+    );
 
     const configuredMin = cfgStyle.value.scaleMin;
     const configuredMax = cfgStyle.value.scaleMax;
@@ -1019,7 +989,7 @@ function getZoomVisualMatrix(
 
     const translateY = destinationY0 - scaleY * sourceY0;
 
-    return `matrix(${scaleX}, 0, 0, ${scaleY}, ${translateX}, ${translateY})`;
+    return { scaleX, scaleY, translateX, translateY };
 }
 
 function getPlotZoomStyle(plot) {
@@ -1027,18 +997,7 @@ function getPlotZoomStyle(plot) {
         return undefined;
     }
 
-    const match = zoomVisualTransform.value.match(
-        /^matrix\(([-+\d.eE]+),\s*[-+\d.eE]+,\s*[-+\d.eE]+,\s*([-+\d.eE]+),\s*([-+\d.eE]+),\s*([-+\d.eE]+)\)$/,
-    );
-
-    if (!match) {
-        return undefined;
-    }
-
-    const scaleX = Number(match[1]);
-    const scaleY = Number(match[2]);
-    const translateX = Number(match[3]);
-    const translateY = Number(match[4]);
+    const { scaleX, scaleY, translateX, translateY } = zoomMatrix.value;
 
     if (![scaleX, scaleY, translateX, translateY].every(Number.isFinite)) {
         return undefined;
@@ -1051,12 +1010,7 @@ function getPlotZoomStyle(plot) {
 
     return {
         transform: `matrix(1, 0, 0, 1, ${offsetX}, ${offsetY})`,
-        transformOrigin: '0 0',
-        transformBox: 'view-box',
-        transition: zoomVisualTransitionEnabled.value
-            ? `transform ${ZOOM_TRANSITION_DURATION}ms cubic-bezier(0.4, 0, 0.2, 1)`
-            : 'none',
-        willChange: 'transform',
+        ...zoomTransitionStyle.value,
     };
 }
 
@@ -1065,16 +1019,7 @@ function getVerticalIndicatorZoomStyle(plot) {
         return undefined;
     }
 
-    const match = zoomVisualTransform.value.match(
-        /^matrix\(([-+\d.eE]+),\s*[-+\d.eE]+,\s*[-+\d.eE]+,\s*[-+\d.eE]+,\s*([-+\d.eE]+),\s*[-+\d.eE]+\)$/,
-    );
-
-    if (!match) {
-        return undefined;
-    }
-
-    const scaleX = Number(match[1]);
-    const translateX = Number(match[2]);
+    const { scaleX, translateX } = zoomMatrix.value;
 
     if (![scaleX, translateX].every(Number.isFinite)) {
         return undefined;
@@ -1084,12 +1029,7 @@ function getVerticalIndicatorZoomStyle(plot) {
 
     return {
         transform: `matrix(1, 0, 0, 1, ${offsetX}, 0)`,
-        transformOrigin: '0 0',
-        transformBox: 'view-box',
-        transition: zoomVisualTransitionEnabled.value
-            ? `transform ${ZOOM_TRANSITION_DURATION}ms cubic-bezier(0.4, 0, 0.2, 1)`
-            : 'none',
-        willChange: 'transform',
+        ...zoomTransitionStyle.value,
     };
 }
 
@@ -1113,7 +1053,12 @@ function stopZoomVisualTransition({ resetTransform = true } = {}) {
     isZoomTransitioning.value = false;
 
     if (resetTransform) {
-        zoomVisualTransform.value = 'matrix(1, 0, 0, 1, 0, 0)';
+        zoomMatrix.value = {
+            scaleX: 1,
+            scaleY: 1,
+            translateX: 0,
+            translateY: 0,
+        };
     }
 }
 
@@ -1162,7 +1107,12 @@ async function applyZoomRangeWithTransition(range) {
     ) {
         safeDatasetCopy.value = targetDataset;
         lastAnimationKey.value = animationKey.value;
-        zoomVisualTransform.value = 'matrix(1, 0, 0, 1, 0, 0)';
+        zoomMatrix.value = {
+            scaleX: 1,
+            scaleY: 1,
+            translateX: 0,
+            translateY: 0,
+        };
         return;
     }
 
@@ -1178,7 +1128,7 @@ async function applyZoomRangeWithTransition(range) {
 
     isZoomTransitioning.value = true;
     zoomVisualTransitionEnabled.value = false;
-    zoomVisualTransform.value = initialTransform;
+    zoomMatrix.value = initialTransform;
 
     // Render the target geometry immediately, but initially place it exactly
     // where that range lived in the previous viewport.
@@ -1195,7 +1145,12 @@ async function applyZoomRangeWithTransition(range) {
             if (token !== zoomTransitionToken) return;
 
             zoomVisualTransitionEnabled.value = true;
-            zoomVisualTransform.value = 'matrix(1, 0, 0, 1, 0, 0)';
+            zoomMatrix.value = {
+                scaleX: 1,
+                scaleY: 1,
+                translateX: 0,
+                translateY: 0,
+            };
 
             zoomTransitionTimeoutId = setTimeout(async () => {
                 zoomTransitionTimeoutId = 0;
@@ -1253,11 +1208,19 @@ function clampZoomX(x) {
     );
 }
 
+function setLocalSelection(plot, index) {
+    internalSelectedIndex.value = index;
+    activeTooltipIndex.value = index;
+    selectedPlot.value = plot;
+}
+
+function clearLocalSelection() {
+    setLocalSelection(undefined, null);
+}
+
 function clearHoverSelection() {
     previousSelectedPlot.value = selectedPlot.value;
-    selectedPlot.value = undefined;
-    internalSelectedIndex.value = null;
-    activeTooltipIndex.value = null;
+    clearLocalSelection();
     emits('hoverIndex', { index: undefined });
 }
 
@@ -1469,14 +1432,7 @@ const min = computed(() => {
         return cfgStyle.value.scaleMin;
     } else {
         return Math.min(
-            ...safeDatasetCopy.value.map((s) =>
-                isNaN(s.value) ||
-                [undefined, null, 'NaN', NaN, Infinity, -Infinity].includes(
-                    s.value,
-                )
-                    ? 0
-                    : s.value || 0,
-            ),
+            ...safeDatasetCopy.value.map((s) => getScaleValue(s.value)),
         );
     }
 });
@@ -1486,14 +1442,7 @@ const max = computed(() => {
         return cfgStyle.value.scaleMax;
     } else {
         return Math.max(
-            ...safeDatasetCopy.value.map((s) =>
-                isNaN(s.value) ||
-                [undefined, null, 'NaN', NaN, Infinity, -Infinity].includes(
-                    s.value,
-                )
-                    ? 0
-                    : s.value || 0,
-            ),
+            ...safeDatasetCopy.value.map((s) => getScaleValue(s.value)),
         );
     }
 });
@@ -1641,9 +1590,7 @@ function selectPlot(plot, index) {
     }
 
     // Keep the visible/local index internally for keyboard navigation.
-    internalSelectedIndex.value = index;
-    activeTooltipIndex.value = index;
-    selectedPlot.value = plot;
+    setLocalSelection(plot, index);
 
     if (!previousSelectedPlot.value) {
         previousSelectedPlot.value = plot;
@@ -1664,9 +1611,7 @@ function unselectPlot(plot, index) {
     }
 
     previousSelectedPlot.value = selectedPlot.value;
-    selectedPlot.value = undefined;
-    internalSelectedIndex.value = null;
-    activeTooltipIndex.value = null;
+    clearLocalSelection();
     emits('hoverIndex', { index: undefined });
 }
 
@@ -1960,6 +1905,15 @@ const dashedStraightSegments = computed(() => {
           );
 });
 
+const selectedLinePath = computed(() =>
+    cfgLine.value.smooth ? smoothLinePath.value : straightLinePath.value,
+);
+const selectedDashedSegments = computed(() =>
+    cfgLine.value.smooth
+        ? dashedSmoothSegments.value
+        : dashedStraightSegments.value,
+);
+
 const lineAreaPaths = computed(() => {
     if (isBar.value || !cfgArea.value.show) return [];
     if (!hasEnoughLineValues.value) return [];
@@ -1989,18 +1943,7 @@ const gradientSvgPathData = computed(() => {
     if (isBar.value || !FINAL_CONFIG.value.gradientPath.show) return '';
     if (FINAL_CONFIG.value.temperatureColors.show) return '';
 
-    const pathData = cfgLine.value.smooth
-        ? smoothLinePath.value
-        : straightLinePath.value;
-
-    return `M ${pathData || '0,0'}`;
-});
-
-const temperaturePlotColors = computed(() => {
-    if (!FINAL_CONFIG.value.temperatureColors.show) return null;
-    const colors = FINAL_CONFIG.value.temperatureColors.colors;
-    if (!Array.isArray(colors) || !colors.length) return null;
-    return colors.map((color) => convertColorToHex(color));
+    return `M ${selectedLinePath.value || '0,0'}`;
 });
 
 const temperatureColors = computed(() => {
@@ -2018,7 +1961,7 @@ function getTemperaturePlotRatio(plot) {
 }
 
 function getPlotFillColor(plot) {
-    const colors = temperaturePlotColors.value;
+    const colors = temperatureColors.value;
     if (!Array.isArray(colors) || !colors.length) {
         return plot.color;
     }
@@ -2075,9 +2018,7 @@ watch(
             // hover and rebind it to the freshly computed plot object. Only
             // clear when a previously controlled selectedIndex is removed.
             if (previousIndex !== undefined && previousIndex !== null) {
-                internalSelectedIndex.value = null;
-                activeTooltipIndex.value = null;
-                selectedPlot.value = undefined;
+                clearLocalSelection();
                 return;
             }
 
@@ -2094,15 +2035,11 @@ watch(
             );
 
             if (localIndex < 0) {
-                internalSelectedIndex.value = null;
-                activeTooltipIndex.value = null;
-                selectedPlot.value = undefined;
+                clearLocalSelection();
                 return;
             }
 
-            internalSelectedIndex.value = localIndex;
-            activeTooltipIndex.value = localIndex;
-            selectedPlot.value = mutableDataset.value[localIndex];
+            setLocalSelection(mutableDataset.value[localIndex], localIndex);
             return;
         }
 
@@ -2113,18 +2050,14 @@ watch(
         );
 
         if (localIndex < 0) {
-            internalSelectedIndex.value = null;
-            activeTooltipIndex.value = null;
-            selectedPlot.value = undefined;
+            clearLocalSelection();
             return;
         }
 
         const plot = mutableDataset.value[localIndex];
         if (!plot) return;
 
-        internalSelectedIndex.value = localIndex;
-        activeTooltipIndex.value = localIndex;
-        selectedPlot.value = plot;
+        setLocalSelection(plot, localIndex);
     },
 );
 
@@ -2143,9 +2076,7 @@ function onSvgFocus() {
         const plot = mutableDataset.value[controlledIndex];
 
         if (plot) {
-            activeTooltipIndex.value = controlledIndex;
-            selectedPlot.value = plot;
-            internalSelectedIndex.value = controlledIndex;
+            setLocalSelection(plot, controlledIndex);
             isFocus.value = true;
             return;
         }
@@ -2164,9 +2095,7 @@ function onSvgBlur() {
     clearPointerFocusState();
     previousSelectedPlot.value = selectedPlot.value;
     if (props.selectedIndex === undefined || props.selectedIndex === null) {
-        activeTooltipIndex.value = null;
-        selectedPlot.value = undefined;
-        internalSelectedIndex.value = null;
+        clearLocalSelection();
         emits('hoverIndex', { index: undefined });
     }
     isFocus.value = false;
@@ -2277,7 +2206,7 @@ const a11yTable = computed(() => {
         </p>
 
         <A11yDataTable
-            v-if="a11yTable?.rows?.length"
+            v-if="FINAL_CONFIG.a11y.includeTable && a11yTable?.rows?.length"
             :uid="uid"
             :head="a11yTable.headers"
             :body="a11yTable.rows"
@@ -2529,10 +2458,10 @@ const a11yTable = computed(() => {
                             />
                         </g>
 
-                        <template v-if="cfgLine.smooth && !isBar">
+                        <template v-if="!isBar">
                             <path
                                 :id="pulsePathId"
-                                :d="`M ${smoothLinePath || '0,0'}`"
+                                :d="`M ${selectedLinePath || '0,0'}`"
                                 fill="none"
                                 stroke="transparent"
                                 :stroke-width="cfgLine.strokeWidth"
@@ -2542,60 +2471,14 @@ const a11yTable = computed(() => {
 
                             <template v-if="hasDashedSegments">
                                 <path
-                                    v-for="segment in dashedSmoothSegments"
+                                    v-for="segment in selectedDashedSegments"
                                     :key="segment.path"
                                     class="vue-ui-sparkline-path"
-                                    data-cy="sparkline-smooth-path"
-                                    :d="`M ${segment.path}`"
-                                    :stroke="
-                                        !!temperatureColors
-                                            ? `url(#temperature_grad_sparkline_${uid})`
-                                            : cfgLine.color
+                                    :data-cy="
+                                        cfgLine.smooth
+                                            ? 'sparkline-smooth-path'
+                                            : 'sparkline-straight-line'
                                     "
-                                    fill="none"
-                                    :stroke-width="cfgLine.strokeWidth"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    :stroke-dasharray="
-                                        segment.dashed ? cfgLine.dashArray : 0
-                                    "
-                                />
-                            </template>
-
-                            <path
-                                v-else
-                                class="vue-ui-sparkline-path"
-                                data-cy="sparkline-smooth-path"
-                                :d="`M ${smoothLinePath || '0,0'}`"
-                                :stroke="
-                                    !!temperatureColors
-                                        ? `url(#temperature_grad_sparkline_${uid})`
-                                        : cfgLine.color
-                                "
-                                fill="none"
-                                :stroke-width="cfgLine.strokeWidth"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                            />
-                        </template>
-
-                        <template v-if="!cfgLine.smooth && !isBar">
-                            <path
-                                :id="pulsePathId"
-                                :d="`M ${straightLinePath || '0,0'}`"
-                                fill="none"
-                                stroke="transparent"
-                                :stroke-width="cfgLine.strokeWidth"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                            />
-
-                            <template v-if="hasDashedSegments">
-                                <path
-                                    v-for="segment in dashedStraightSegments"
-                                    :key="segment.path"
-                                    class="vue-ui-sparkline-path"
-                                    data-cy="sparkline-straight-line"
                                     :d="`M ${segment.path}`"
                                     :stroke="
                                         !!temperatureColors
@@ -2608,7 +2491,8 @@ const a11yTable = computed(() => {
                                     stroke-linejoin="round"
                                     :stroke-dasharray="
                                         segment.dashed
-                                            ? cfgLine.dashArray * 2
+                                            ? cfgLine.dashArray *
+                                              (cfgLine.smooth ? 1 : 2)
                                             : 0
                                     "
                                 />
@@ -2617,8 +2501,12 @@ const a11yTable = computed(() => {
                             <path
                                 v-else
                                 class="vue-ui-sparkline-path"
-                                data-cy="sparkline-straight-line"
-                                :d="`M ${straightLinePath || '0,0'}`"
+                                :data-cy="
+                                    cfgLine.smooth
+                                        ? 'sparkline-smooth-path'
+                                        : 'sparkline-straight-line'
+                                "
+                                :d="`M ${selectedLinePath || '0,0'}`"
                                 :stroke="
                                     !!temperatureColors
                                         ? `url(#temperature_grad_sparkline_${uid})`

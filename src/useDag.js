@@ -48,7 +48,6 @@ function buildCurvedPath(points) {
     let path = `M ${first.x} ${first.y}`;
 
     for (let index = 1; index < points.length - 1; index += 1) {
-        const previous = points[index - 1];
         const current = points[index];
         const next = points[index + 1];
 
@@ -161,7 +160,7 @@ export function useDag(options) {
                 );
 
                 return {
-                    id: `${edgeObject.v}->${edgeObject.w}->${createUid()}`,
+                    id: `${arrowMarkerIdentifier}-${Array.from(JSON.stringify([edgeObject.v, edgeObject.w]), (char) => char.codePointAt(0).toString(16)).join('_')}`,
                     from: edgeObject.v,
                     to: edgeObject.w,
                     points,
