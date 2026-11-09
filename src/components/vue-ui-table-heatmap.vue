@@ -11,6 +11,7 @@ import {
     defineAsyncComponent,
     nextTick,
     onMounted,
+    onBeforeUnmount,
     ref,
     useSlots,
     watch,
@@ -57,6 +58,13 @@ const props = defineProps({
 const uid = ref(createUid());
 const isResponsive = ref(false);
 const tableContainer = ref(null);
+let resizeObserver = null;
+let disposed = false;
+onBeforeUnmount(() => {
+    disposed = true;
+    resizeObserver?.disconnect();
+    resizeObserver = null;
+});
 const isFullscreen = ref(false);
 const step = ref(0);
 const slots = useSlots();
@@ -152,14 +160,17 @@ function prepareChart() {
         // FIXME: errors for each datapoint
     }
 
+    resizeObserver?.disconnect();
+    resizeObserver = null;
+    if (disposed || !tableContainer.value) return;
     const observer = new ResizeObserver((entries) => {
+        if (disposed || resizeObserver !== observer) return;
         entries.forEach((entry) => {
             isResponsive.value = entry.contentRect.width < breakpoint.value;
         });
     });
-    if (tableContainer.value) {
-        observer.observe(tableContainer.value);
-    }
+    resizeObserver = observer;
+    observer.observe(tableContainer.value);
 }
 
 const immutableDataset = computed(() => {

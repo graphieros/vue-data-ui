@@ -180,3 +180,30 @@ test.each([false, true])(
         }
     },
 );
+
+test('tooltip marker retention stays bounded without changing evicted marker markup', () => {
+    const wrapper = mount(
+        { ...VueUiXy, render: () => null },
+        { props: { dataset: [{ name: 'A', type: 'line', series: [1, 2] }] } },
+    );
+    try {
+        const s = wrapper.vm.$.setupState;
+        const first = {
+            type: 'line',
+            shape: 'circle',
+            color: '#000001',
+            slotAbsoluteIndex: 0,
+        };
+        const expected = s.getTooltipMarkerShape(first);
+        for (let i = 2; i < 500; i++) {
+            s.getTooltipMarkerShape({
+                ...first,
+                color: `#${i.toString(16).padStart(6, '0')}`,
+            });
+        }
+        expect(s.tooltipMarkerShapeCache.size).toBeLessThanOrEqual(128);
+        expect(s.getTooltipMarkerShape(first)).toBe(expected);
+    } finally {
+        wrapper.unmount();
+    }
+});

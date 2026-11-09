@@ -464,3 +464,20 @@ test('legend actions finish entry animations and restored rings do not replay th
         ),
     ).toBe(true);
 });
+
+test('streaming identity cache preserves current rows and prunes removed names', async () => {
+    const keep = { name: 'Keep', values: [5] };
+    const [w, s] = await chart({}, [keep]);
+    const id = s.preparedDataset[0].uid;
+    for (let i = 0; i < 30; i++) {
+        await w.setProps({
+            dataset: [keep, { name: `S${i}`, values: [i + 1] }],
+        });
+        expect(s.preparedDataset[0].uid).toBe(id);
+        expect(s.seriesIds.size).toBe(2);
+    }
+    await w.setProps({ config: { loading: true } });
+    void s.preparedDataset;
+    await w.setProps({ config: { loading: false } });
+    expect(s.preparedDataset[0].uid).toBe(id);
+});

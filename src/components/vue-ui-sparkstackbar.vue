@@ -1,4 +1,5 @@
 <script setup>
+import { useAnimationFrame } from '../useAnimationFrame';
 import { resolveChartConfigWithPalette } from '../resolveChartConfig';
 import {
     computed,
@@ -214,9 +215,24 @@ const safeDatasetCopy = ref(
 );
 
 const isAnimating = ref(true);
+const animation = useAnimationFrame();
 
 function animateChart() {
-    if (!cfgStyle.value.animation.show || prefersReducedMotion.value) {
+    animation.cancel();
+    if (animation.isDisposed()) return;
+    if (
+        !cfgStyle.value.animation.show ||
+        prefersReducedMotion.value ||
+        !Number.isFinite(cfgStyle.value.animation.animationFrames) ||
+        cfgStyle.value.animation.animationFrames <= 0
+    ) {
+        safeDatasetCopy.value = FINAL_DATASET.value.map((d, i) => ({
+            ...d,
+            value: d.value || 0,
+            color: d.color
+                ? convertColorToHex(d.color)
+                : customPalette.value[i] || palette[i % palette.length],
+        }));
         isAnimating.value = false;
         return;
     }
@@ -253,7 +269,7 @@ function animateChart() {
                       palette[i] ||
                       palette[i % palette.length],
             }));
-            requestAnimationFrame(animate);
+            animation.request(animate);
         } else {
             isAnimating.value = false;
             safeDatasetCopy.value = FINAL_DATASET.value.map((d, i) => ({
@@ -302,6 +318,13 @@ function prepareChart() {
 
     animateChart();
 }
+
+watch(
+    [() => cfgStyle.value.animation.show, prefersReducedMotion],
+    ([enabled, reduced]) => {
+        if (!enabled || reduced) animateChart();
+    },
+);
 
 const svg = ref({
     width: 500,

@@ -1,4 +1,5 @@
 <script setup>
+import { useAnimationFrame } from '../useAnimationFrame';
 import {
     getUserOptionsProps,
     getUserOptionSlots,
@@ -16,6 +17,7 @@ import {
     defineAsyncComponent,
     nextTick,
     onMounted,
+    onBeforeUnmount,
     ref,
     toRefs,
     watch,
@@ -91,6 +93,16 @@ const chartTitle = ref(null);
 const source = ref(null);
 const resizeObserver = ref(null);
 const observedEl = ref(null);
+const resizeFrames = useAnimationFrame();
+let resizeVersion = 0;
+function stopResize() {
+    resizeVersion += 1;
+    resizeFrames.cancel();
+    resizeObserver.value?.disconnect();
+    resizeObserver.value = null;
+    observedEl.value = null;
+}
+onBeforeUnmount(stopResize);
 
 const isDataset = computed(() => {
     return !!props.dataset && Object.keys(props.dataset).length;
@@ -158,6 +170,7 @@ const { loading, FINAL_DATASET } = useLoading({
 const debug = computed(() => FINAL_CONFIG.value.debug);
 
 function prepareChart() {
+    stopResize();
     if (objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiThermometer',
@@ -178,8 +191,10 @@ function prepareChart() {
         });
     }
 
-    if (FINAL_CONFIG.value.responsive) {
+    if (FINAL_CONFIG.value.responsive && thermoChart.value) {
+        const version = resizeVersion;
         const handleResize = throttle(() => {
+            if (version !== resizeVersion || resizeFrames.isDisposed()) return;
             const { width, height } = useResponsive({
                 chart: thermoChart.value,
                 title: FINAL_CONFIG.value.style.title.text
@@ -188,19 +203,12 @@ function prepareChart() {
                 source: source.value,
             });
 
-            requestAnimationFrame(() => {
+            resizeFrames.request(() => {
                 HEIGHT.value = Math.max(0.1, height - 12);
                 WIDTH.value = width;
                 autoSizeLabels();
             });
         });
-
-        if (resizeObserver.value) {
-            if (observedEl.value) {
-                resizeObserver.value.unobserve(observedEl.value);
-            }
-            resizeObserver.value.disconnect();
-        }
 
         resizeObserver.value = new ResizeObserver(handleResize);
         observedEl.value = thermoChart.value;

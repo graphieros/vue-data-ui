@@ -1,10 +1,12 @@
 <script setup>
+import { useAnimationFrame } from '../useAnimationFrame';
 import { resolveChartConfig } from '../resolveChartConfig';
 import {
     computed,
     defineAsyncComponent,
     nextTick,
     onMounted,
+    onBeforeUnmount,
     ref,
     toRefs,
     watch,
@@ -62,6 +64,16 @@ const chartTitle = ref(null);
 const histogramChart = ref(null);
 const resizeObserver = ref(null);
 const observedEl = ref(null);
+const resizeFrames = useAnimationFrame();
+let resizeVersion = 0;
+function stopResize() {
+    resizeVersion += 1;
+    resizeFrames.cancel();
+    resizeObserver.value?.disconnect();
+    resizeObserver.value = null;
+    observedEl.value = null;
+}
+onBeforeUnmount(stopResize);
 
 const isFocus = ref(false); // a11y
 const keyboardIndex = ref(null); // a11y
@@ -144,6 +156,7 @@ onMounted(() => {
 const debug = computed(() => FINAL_CONFIG.value.debug);
 
 function prepareChart() {
+    stopResize();
     if (objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiSparkHistogram',
@@ -168,8 +181,10 @@ function prepareChart() {
         }
     }
 
-    if (FINAL_CONFIG.value.responsive) {
+    if (FINAL_CONFIG.value.responsive && histogramChart.value?.parentNode) {
+        const version = resizeVersion;
         const handleResize = throttle(() => {
+            if (version !== resizeVersion || resizeFrames.isDisposed()) return;
             const { width, height } = useResponsive({
                 chart: histogramChart.value,
                 title: cfgStyle.value.title.text ? chartTitle.value : null,
@@ -183,7 +198,7 @@ function prepareChart() {
                 ? cfgLabels.value.valueLabel.fontSize * 2
                 : 0;
 
-            requestAnimationFrame(() => {
+            resizeFrames.request(() => {
                 WIDTH.value = Math.max(10, width);
                 HEIGHT.value = Math.max(
                     10,
@@ -192,12 +207,6 @@ function prepareChart() {
             });
         });
 
-        if (resizeObserver.value) {
-            if (observedEl.value) {
-                resizeObserver.value.unobserve(observedEl.value);
-            }
-            resizeObserver.value.disconnect();
-        }
         resizeObserver.value = new ResizeObserver(handleResize);
         observedEl.value = histogramChart.value.parentNode;
         resizeObserver.value.observe(observedEl.value);

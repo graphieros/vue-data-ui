@@ -337,3 +337,34 @@ test('reduced motion avoids focus and zoom animation frames', async () => {
     w.vm.zoomIn();
     expect(frames.size).toBe(0);
 });
+
+test('map and point identity caches prune replaced data without changing retained IDs', async () => {
+    const keep = { id: 'keep', name: 'Keep', coordinates: [1, 1] };
+    const land = map.features[0];
+    const [w, s] = await chart({ map: { geoJson: map } }, [keep]);
+    const id = s.points[0].uid;
+    const featureId = s.renderableFeatures[0].uid;
+    for (let i = 0; i < 30; i++) {
+        await w.setProps({
+            dataset: [keep, { id: `p${i}`, coordinates: [2, 2] }],
+            config: {
+                map: {
+                    geoJson: {
+                        type: 'FeatureCollection',
+                        features: [land, { ...land, id: `land${i}` }],
+                    },
+                },
+            },
+        });
+        expect(s.points[0].uid).toBe(id);
+        expect(s.renderableFeatures[0].uid).toBe(featureId);
+        expect(s.pointIdentities.size).toBe(2);
+        expect(s.featureIdentities.size).toBe(2);
+        expect(s.usedIdentities.size).toBe(4);
+    }
+    const config = w.props('config');
+    await w.setProps({ config: { ...config, loading: true } });
+    void s.points;
+    await w.setProps({ config: { ...config, loading: false } });
+    expect(s.points[0].uid).toBe(id);
+});

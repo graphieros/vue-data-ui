@@ -245,3 +245,20 @@ test('accessible headings are plain names and CSV uses configured translations',
     expect(csv.mock.calls[0][0]).toContain('Pourcentage');
     expect(csv.mock.calls[0][0]).toContain('Valeur');
 });
+
+test('streaming identities stay bounded while retained series survive loading', async () => {
+    const keep = { id: 'keep', name: 'Keep', values: [5] };
+    const [w, s] = await chart({}, [keep]);
+    const id = s.seriesIds[0];
+    for (let i = 0; i < 30; i++) {
+        await w.setProps({
+            dataset: [keep, { id: `s${i}`, name: `S${i}`, values: [i + 1] }],
+        });
+        expect(s.seriesIds[0]).toBe(id);
+        expect(s.seriesIdentity.size).toBe(2);
+    }
+    await w.setProps({ config: { loading: true } });
+    void s.seriesIds;
+    await w.setProps({ config: { loading: false } });
+    expect(s.seriesIds[0]).toBe(id);
+});

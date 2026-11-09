@@ -6220,6 +6220,12 @@ function getTooltipMarkerShape(seriesItem) {
             break;
     }
 
+    // Marker markup is reproducible; bound retention across changing styles/data.
+    if (tooltipMarkerShapeCache.size >= 128) {
+        tooltipMarkerShapeCache.delete(
+            tooltipMarkerShapeCache.keys().next().value,
+        );
+    }
     tooltipMarkerShapeCache.set(cacheKey, shape);
 
     return shape;

@@ -567,10 +567,12 @@ function hideSeries(name) {
 const seriesIds = new Map();
 const preparedDataset = computed(() => {
     const occurrences = new Map();
+    const keys = new Set();
     const rows = FINAL_DATASET.value.map((serie, absoluteIndex) => {
         const occurrence = occurrences.get(serie.name) ?? 0;
         occurrences.set(serie.name, occurrence + 1);
         const key = JSON.stringify([loading.value, serie.name, occurrence]);
+        keys.add(key);
         if (!seriesIds.has(key)) seriesIds.set(key, createUid());
         return {
             name: serie.name,
@@ -584,6 +586,10 @@ const preparedDataset = computed(() => {
             absoluteIndex,
         };
     });
+    for (const key of seriesIds.keys()) {
+        if (key.startsWith(`[${loading.value},`) && !keys.has(key))
+            seriesIds.delete(key);
+    }
     const total = rows.reduce((sum, row) => sum + row.value, 0);
     return rows.map((row) => ({
         ...row,

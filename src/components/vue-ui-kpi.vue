@@ -1,4 +1,5 @@
 <script setup>
+import { useAnimationFrame } from '../useAnimationFrame';
 import {
     ref,
     computed,
@@ -82,9 +83,23 @@ const displayedValue = ref(
         : formattedValue.value,
 );
 
+const animation = useAnimationFrame();
+
 const animateToValue = (targetValue) => {
+    animation.cancel();
+    if (animation.isDisposed()) return;
     const chunks = FINAL_CONFIG.value.animationFrames;
     const chunk = Math.abs(targetValue - displayedValue.value) / chunks;
+
+    if (
+        !FINAL_CONFIG.value.useAnimation ||
+        prefersReducedMotion.value ||
+        !Number.isFinite(chunk) ||
+        chunk <= 0
+    ) {
+        displayedValue.value = targetValue;
+        return;
+    }
 
     function animate() {
         if (displayedValue.value < targetValue) {
@@ -100,7 +115,7 @@ const animateToValue = (targetValue) => {
         }
 
         if (displayedValue.value !== targetValue) {
-            requestAnimationFrame(animate);
+            animation.request(animate);
         }
     }
 
@@ -112,6 +127,7 @@ onMounted(() => {
 });
 
 function prepareChart() {
+    animation.cancel();
     if (FINAL_CONFIG.value.useAnimation && !prefersReducedMotion.value) {
         displayedValue.value = FINAL_CONFIG.value.animationValueStart;
         animateToValue(props.dataset);
@@ -126,10 +142,17 @@ watch(
         if (FINAL_CONFIG.value.useAnimation && !prefersReducedMotion.value) {
             animateToValue(newValue);
         } else {
+            animation.cancel();
             displayedValue.value = newValue;
         }
     },
 );
+watch(prefersReducedMotion, (reduced) => {
+    if (reduced) {
+        animation.cancel();
+        displayedValue.value = props.dataset;
+    }
+});
 </script>
 
 <template>

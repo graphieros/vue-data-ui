@@ -558,9 +558,15 @@ function getIdentity(key) {
     return identityCache.get(key);
 }
 
-const seriesKeys = computed(() => {
+const identityPhaseKeys = new Map();
+const datasetIdentities = computed(() => {
+    const keys = new Set();
+    function identity(key) {
+        keys.add(key);
+        return getIdentity(key);
+    }
     const occurrences = new Map();
-    return FINAL_DATASET.value.map((serie, index) => {
+    const series = FINAL_DATASET.value.map((serie, index) => {
         const source =
             serie?.id != null
                 ? `id:${typeof serie.id}:${serie.id}`
@@ -569,14 +575,11 @@ const seriesKeys = computed(() => {
                   : `index:${index}`;
         const occurrence = occurrences.get(source) || 0;
         occurrences.set(source, occurrence + 1);
-        return getIdentity(
+        return identity(
             `${loading.value ? 'skeleton' : 'data'}:${source}:${occurrence}`,
         );
     });
-});
-
-const plotKeys = computed(() =>
-    FINAL_DATASET.value.map((serie, seriesIndex) => {
+    const plots = FINAL_DATASET.value.map((serie, seriesIndex) => {
         const occurrences = new Map();
         return (Array.isArray(serie?.values) ? serie.values : []).map(
             (point, index) => {
@@ -588,13 +591,20 @@ const plotKeys = computed(() =>
                           : `index:${index}`;
                 const occurrence = occurrences.get(source) || 0;
                 occurrences.set(source, occurrence + 1);
-                return getIdentity(
-                    `${seriesKeys.value[seriesIndex]}:${source}:${occurrence}`,
+                return identity(
+                    `${series[seriesIndex]}:${source}:${occurrence}`,
                 );
             },
         );
-    }),
-);
+    });
+    for (const key of identityPhaseKeys.get(loading.value) || []) {
+        if (!keys.has(key)) identityCache.delete(key);
+    }
+    identityPhaseKeys.set(loading.value, keys);
+    return { series, plots };
+});
+const seriesKeys = computed(() => datasetIdentities.value.series);
+const plotKeys = computed(() => datasetIdentities.value.plots);
 
 const segregated = computed(() =>
     seriesKeys.value.flatMap((key, index) =>

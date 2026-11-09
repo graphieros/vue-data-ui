@@ -439,7 +439,8 @@ function hideSeries(name) {
 const seriesIdentity = new Map();
 const seriesIds = computed(() => {
     const occurrences = new Map();
-    return FINAL_DATASET.value.map((serie, index) => {
+    const keys = new Set();
+    const ids = FINAL_DATASET.value.map((serie, index) => {
         const source =
             serie?.id == null
                 ? `index:${index}`
@@ -447,9 +448,16 @@ const seriesIds = computed(() => {
         const occurrence = occurrences.get(source) || 0;
         occurrences.set(source, occurrence + 1);
         const key = `${loading.value ? 'skeleton' : 'data'}:${source}:${occurrence}`;
+        keys.add(key);
         if (!seriesIdentity.has(key)) seriesIdentity.set(key, createUid());
         return seriesIdentity.get(key);
     });
+    const prefix = `${loading.value ? 'skeleton' : 'data'}:`;
+    for (const key of seriesIdentity.keys()) {
+        if (key.startsWith(prefix) && !keys.has(key))
+            seriesIdentity.delete(key);
+    }
+    return ids;
 });
 const immutableSet = computed(() =>
     FINAL_DATASET.value

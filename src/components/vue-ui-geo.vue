@@ -518,6 +518,14 @@ function resolveFeatureName(
 const featureIdentities = new Map();
 const pointIdentities = new Map();
 const usedIdentities = new Set();
+function pruneIdentities(cache, keys, prefix = '') {
+    for (const [key, id] of cache) {
+        if (key.startsWith(prefix) && !keys.has(key)) {
+            cache.delete(key);
+            usedIdentities.delete(id);
+        }
+    }
+}
 function stableIdentity(cache, source, fallback) {
     if (!cache.has(source)) {
         const id = usedIdentities.has(fallback)
@@ -760,7 +768,8 @@ function flattenFeatureCollectionToRenderableFeatures(featureCollection) {
         : [];
 
     const occurrences = new Map();
-    return features
+    const keys = new Set();
+    const result = features
         .filter(
             (feature) =>
                 feature && feature.type === 'Feature' && feature.geometry,
@@ -776,6 +785,7 @@ function flattenFeatureCollectionToRenderableFeatures(featureCollection) {
             const key = `${typeof identity}:${identity}`;
             const occurrence = occurrences.get(key) || 0;
             occurrences.set(key, occurrence + 1);
+            keys.add(`${key}:${occurrence}`);
 
             return {
                 feature,
@@ -790,6 +800,8 @@ function flattenFeatureCollectionToRenderableFeatures(featureCollection) {
                 index,
             };
         });
+    pruneIdentities(featureIdentities, keys);
+    return result;
 }
 
 const geoJsonFeatureCollection = computed(() =>
@@ -1348,12 +1360,14 @@ function normalizePointsDataset(datasetValue) {
 const points = computed(() => {
     const records = normalizePointsDataset(FINAL_DATASET.value);
     const occurrences = new Map();
+    const keys = new Set();
+    const prefix = `${loading.value}:`;
     const source = FINAL_DATASET.value;
     const dictionaryKeys =
         source && !Array.isArray(source) && source.type !== 'FeatureCollection'
             ? Object.keys(source)
             : null;
-    return records.map((point) => {
+    const result = records.map((point) => {
         const original = point.original;
         const properties = original?.properties || original;
         const explicitId = original?.id ?? properties?.id;
@@ -1368,15 +1382,15 @@ const points = computed(() => {
                     : `index:${point.index}`;
         const occurrence = occurrences.get(key) || 0;
         occurrences.set(key, occurrence + 1);
+        const identityKey = `${prefix}${key}:${occurrence}`;
+        keys.add(identityKey);
         return {
             ...point,
-            uid: stableIdentity(
-                pointIdentities,
-                `${key}:${occurrence}`,
-                point.uid,
-            ),
+            uid: stableIdentity(pointIdentities, identityKey, point.uid),
         };
     });
+    pruneIdentities(pointIdentities, keys, prefix);
+    return result;
 });
 
 const projectedPoints = computed(() => {

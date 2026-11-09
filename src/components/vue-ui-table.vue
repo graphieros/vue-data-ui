@@ -1199,6 +1199,7 @@ import {
     ref,
     nextTick,
     onMounted,
+    onBeforeUnmount,
     watch,
     defineAsyncComponent,
 } from 'vue';
@@ -2596,9 +2597,26 @@ function updateCurrentPage(event) {
 
 // FIXME: use BaseDraggableDialog instead of this custom modal
 
+function handleDocumentKeydown(e) {
+    const focusedElement = document.activeElement;
+    const isTableCellFocused =
+        focusedElement &&
+        Array.from(focusedElement.classList).includes('td-focusable');
+
+    if ((isTableCellFocused && e.key.includes('Arrow')) || e.code === 'Space') {
+        e.preventDefault();
+    }
+}
+
+onBeforeUnmount(() => {
+    document.removeEventListener('keydown', handleDocumentKeydown);
+    closeDragElement();
+    clearTimeout(buttonTimeout.value);
+});
+
 function closeDragElement() {
-    document.onmouseup = null;
-    document.onmousemove = null;
+    document.removeEventListener('mouseup', closeDragElement);
+    document.removeEventListener('mousemove', elementDrag);
 }
 
 const chartModal = ref(null);
@@ -2613,8 +2631,8 @@ function dragMouseDown(e) {
         modalWidth.value = rect.width;
         modalHeight.value = rect.height;
 
-        document.onmouseup = closeDragElement;
-        document.onmousemove = elementDrag;
+        document.addEventListener('mouseup', closeDragElement);
+        document.addEventListener('mousemove', elementDrag);
     }
 }
 
@@ -2650,19 +2668,7 @@ onMounted(() => {
         isLoading.value = false;
     });
 
-    document.addEventListener('keydown', (e) => {
-        const focusedElement = document.activeElement;
-        const isTableCellFocused =
-            focusedElement &&
-            Array.from(focusedElement.classList).includes('td-focusable');
-
-        if (
-            (isTableCellFocused && e.key.includes('Arrow')) ||
-            e.code === 'Space'
-        ) {
-            e.preventDefault();
-        }
-    });
+    document.addEventListener('keydown', handleDocumentKeydown);
     filename.value = cfgExportMenu.value.filename;
     chartTimeLabelSourceModel.value = dateHeaders.value[0]?.name ?? '';
 });

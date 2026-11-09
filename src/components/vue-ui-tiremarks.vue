@@ -1,4 +1,5 @@
 <script setup>
+import { useAnimationFrame } from '../useAnimationFrame';
 import {
     getUserOptionsProps,
     getUserOptionSlots,
@@ -17,6 +18,7 @@ import {
     defineAsyncComponent,
     nextTick,
     onMounted,
+    onBeforeUnmount,
     ref,
     toRefs,
     watch,
@@ -90,6 +92,16 @@ const step = ref(0);
 const titleStep = ref(0);
 const resizeObserver = ref(null);
 const observedEl = ref(null);
+const resizeFrames = useAnimationFrame();
+let resizeVersion = 0;
+function stopResize() {
+    resizeVersion += 1;
+    resizeFrames.cancel();
+    resizeObserver.value?.disconnect();
+    resizeObserver.value = null;
+    observedEl.value = null;
+}
+onBeforeUnmount(stopResize);
 
 const FINAL_CONFIG = ref(prepareConfig());
 const cfgUserOptions = computed(() => FINAL_CONFIG.value.userOptions);
@@ -186,6 +198,7 @@ watch(
         if (cfgChart.value.animation.use && !prefersReducedMotion.value) {
             useAnimation(v.percentage);
         } else {
+            animation.cancel();
             activeValue.value = v.percentage || 0;
         }
     },
@@ -196,9 +209,23 @@ onMounted(() => {
     prepareChart();
 });
 
+const animation = useAnimationFrame();
+
 function useAnimation(targetValue) {
+    animation.cancel();
+    if (animation.isDisposed()) return;
     let speed = cfgChart.value.animation.speed;
     const chunk = Math.abs(targetValue - activeValue.value) / (speed * 120);
+
+    if (
+        !cfgChart.value.animation.use ||
+        prefersReducedMotion.value ||
+        !Number.isFinite(chunk) ||
+        chunk <= 0
+    ) {
+        activeValue.value = targetValue;
+        return;
+    }
 
     function animate() {
         if (activeValue.value < targetValue) {
@@ -214,7 +241,7 @@ function useAnimation(targetValue) {
         }
 
         if (activeValue.value !== targetValue) {
-            requestAnimationFrame(animate);
+            animation.request(animate);
         }
     }
     animate();
@@ -223,6 +250,7 @@ function useAnimation(targetValue) {
 const debug = computed(() => FINAL_CONFIG.value.debug);
 
 function prepareChart() {
+    stopResize();
     if (objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiTiremarks',
@@ -231,26 +259,21 @@ function prepareChart() {
         });
     }
 
-    if (FINAL_CONFIG.value.responsive) {
+    if (FINAL_CONFIG.value.responsive && tiremarksChart.value?.parentNode) {
+        const version = resizeVersion;
         const handleResize = throttle(() => {
+            if (version !== resizeVersion || resizeFrames.isDisposed()) return;
             const { width, height } = useResponsive({
                 chart: tiremarksChart.value,
                 title: cfgChart.value.title.text ? chartTitle.value : null,
                 source: source.value,
             });
 
-            requestAnimationFrame(() => {
+            resizeFrames.request(() => {
                 WIDTH.value = Math.max(0.1, width);
                 HEIGHT.value = Math.max(0.1, height - 12);
             });
         });
-
-        if (resizeObserver.value) {
-            if (observedEl.value) {
-                resizeObserver.value.unobserve(observedEl.value);
-            }
-            resizeObserver.value.disconnect();
-        }
 
         resizeObserver.value = new ResizeObserver(handleResize);
         observedEl.value = tiremarksChart.value.parentNode;
@@ -546,6 +569,12 @@ defineExpose({
     toggleAnnotator,
     toggleFullscreen,
     copyAlt,
+});
+watch(prefersReducedMotion, (reduced) => {
+    if (reduced) {
+        animation.cancel();
+        activeValue.value = FINAL_DATASET.value.percentage || 0;
+    }
 });
 </script>
 

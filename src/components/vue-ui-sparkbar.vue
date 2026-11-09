@@ -1,4 +1,5 @@
 <script setup>
+import { useAnimationFrame } from '../useAnimationFrame';
 import { resolveChartConfigWithPalette } from '../resolveChartConfig';
 import {
     ref,
@@ -152,7 +153,7 @@ const safeDatasetCopy = ref(
     }),
 );
 
-const rafId = ref(null);
+const animation = useAnimationFrame();
 
 onMounted(async () => {
     if (objectIsEmpty(props.dataset)) {
@@ -166,7 +167,14 @@ onMounted(async () => {
 });
 
 function useAnimation() {
-    if (cfgStyle.value.animation.show && !prefersReducedMotion.value) {
+    animation.cancel();
+    if (animation.isDisposed()) return;
+    if (
+        cfgStyle.value.animation.show &&
+        !prefersReducedMotion.value &&
+        Number.isFinite(cfgStyle.value.animation.animationFrames) &&
+        cfgStyle.value.animation.animationFrames > 0
+    ) {
         const chunks = cfgStyle.value.animation.animationFrames;
         const chunkSet = FINAL_DATASET.value.map((d, i) => d.value / chunks);
         const total = FINAL_DATASET.value
@@ -183,7 +191,7 @@ function useAnimation() {
                         value: (d.value += chunkSet[i]),
                     };
                 });
-                rafId.value = requestAnimationFrame(animate);
+                animation.request(animate);
             } else {
                 safeDatasetCopy.value = FINAL_DATASET.value.map((d) => {
                     return {
@@ -195,13 +203,19 @@ function useAnimation() {
             }
         }
         animate();
+    } else {
+        safeDatasetCopy.value = FINAL_DATASET.value.map((d) => ({
+            ...d,
+            value: d.value || 0,
+            formatter: d.formatter || null,
+        }));
     }
 }
 
 watch(
     () => FINAL_DATASET.value,
     async (v) => {
-        cancelAnimationFrame(rafId.value);
+        animation.cancel();
 
         safeDatasetCopy.value = FINAL_DATASET.value.map((d) => {
             return {
@@ -217,6 +231,13 @@ watch(
         nextTick(useAnimation);
     },
     { deep: true },
+);
+
+watch(
+    [() => cfgStyle.value.animation.show, prefersReducedMotion],
+    ([enabled, reduced]) => {
+        if (!enabled || reduced) useAnimation();
+    },
 );
 
 const svg = ref({

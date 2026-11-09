@@ -277,3 +277,34 @@ test('keyboard navigation skips empty series and clears selection and slots on e
     expect(s.selectedDatapoint).toBe(null);
     expect(s.dataTooltipSlot).toBe(null);
 });
+
+test('identity retention stays bounded during streaming updates and survives loading', async () => {
+    const keep = {
+        id: 'keep',
+        name: 'Keep',
+        values: [{ id: 'keep-point', x: 0, y: 1 }],
+    };
+    const [w, s] = await chart({}, [keep]);
+    const seriesId = s.seriesKeys[0];
+    const pointId = s.plotKeys[0][0];
+    for (let i = 0; i < 30; i++) {
+        await w.setProps({
+            dataset: [
+                keep,
+                {
+                    id: `s${i}`,
+                    name: `S${i}`,
+                    values: [{ id: `p${i}`, label: `L${i}`, x: i, y: i + 1 }],
+                },
+            ],
+        });
+        expect(s.seriesKeys[0]).toBe(seriesId);
+        expect(s.plotKeys[0][0]).toBe(pointId);
+        expect(s.identityCache.size).toBe(4);
+    }
+    await w.setProps({ config: { loading: true } });
+    void s.plotKeys;
+    await w.setProps({ config: { loading: false } });
+    expect(s.seriesKeys[0]).toBe(seriesId);
+    expect(s.plotKeys[0][0]).toBe(pointId);
+});
